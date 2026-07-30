@@ -1,0 +1,144 @@
+---
+title: "Authentication"
+description: "Choose a personal access token or project API key and send it with bearer authentication."
+---
+
+Protected API routes accept one bearer credential in the `Authorization`
+header:
+
+```text
+Authorization: Bearer <token>
+```
+
+## Choose a credential
+
+| Credential | Prefix | Use it when | Create it in |
+| - | - | - | - |
+| Personal access token (PAT) | `bsb_pat_live_` | Automation acts as you across projects or performs account-level operations. The CLI uses this credential. | **Account -> Security** |
+| Project API key | `bsb_key_live_` | One service, SDK, or CI job works with one project. | **Project Settings -> API keys** |
+
+Use a PAT to create projects, inspect your memberships, or automate several
+projects. Use a project API key when an integration should stay isolated to one
+project.
+
+Missing, malformed, revoked, expired, or invalid credentials return
+`401 Unauthorized` with an `application/problem+json` body. A valid credential
+without enough permission returns `403 Forbidden`.
+
+## Create a personal access token
+
+Open **Account -> Security**, select **Create token**, then choose its name,
+permission level, and expiry. The full `bsb_pat_live_` secret is shown once.
+
+For local CLI work, browser sign-in creates and stores the PAT without requiring
+you to copy the secret:
+
+```bash
+npm install -g @bisibility/cli
+bisibility auth login --name "mbp16-cli" --scope admin --expires 90
+```
+
+For a self-hosted instance, configure both its REST API root and app origin
+before login. See [Use the CLI with this instance](/self-hosting#use-the-cli-with-this-instance).
+
+See [Personal access tokens](/api/personal-access-tokens) for account routes,
+expiry options, project selection, and token revocation.
+
+## Create a project API key
+
+Open the target project, go to **Settings -> API keys**, and select
+**Create key**. Choose the minimum permission level the integration needs and
+store the full `bsb_key_live_` secret when it appears. Bisibility stores only a hash
+and cannot show the secret again.
+
+An admin PAT can also create a key for an explicit project. This is useful for
+automated provisioning after a user has created or obtained the initial PAT:
+
+```bash
+curl "$BISIBILITY_BASE_URL/projects/prj_a00000000000000000000000/api-keys" \
+  -X POST \
+  -H "Authorization: Bearer $BISIBILITY_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{ "name": "reporting job", "scope": "read", "expires_in_days": 90 }'
+```
+
+See [API keys](/api/api-keys) for listing, creation, rotation, and revocation.
+
+## Make a request
+
+Set the API root and the credential you chose:
+
+```bash
+export BISIBILITY_BASE_URL="https://eu.bisibility.com/api/v1"
+export BISIBILITY_TOKEN="bsb_pat_live_..."
+```
+
+Then send it as a bearer token:
+
+```bash
+curl "$BISIBILITY_BASE_URL/projects" \
+  -H "Authorization: Bearer $BISIBILITY_TOKEN"
+```
+
+For a self-hosted instance, replace `https://eu.bisibility.com` with the app
+origin.
+
+## Permission levels
+
+The API uses three cumulative permission levels:
+
+| Level | Allows |
+| - | - |
+| `read` | Read protected resources. |
+| `write` | Everything in `read`, plus supported mutations. |
+| `admin` | Everything in `write`, plus sensitive operations such as credential and team management. |
+
+Both PATs and project API keys can be issued at any of these levels. Prefer the
+least privileged level that supports the integration.
+
+A PAT's effective project permission is the lower of the token level and the
+user's membership role in that project. For example, an admin PAT cannot exceed
+a viewer membership's read access. Only a project owner can delete that project.
+
+## Project selection
+
+A project API key always belongs to one project. `GET /projects` returns only
+that project, and requests cannot use the key to access another project.
+
+A PAT follows the user's memberships. Routes containing `{project_id}` select
+the project from the path. For routes without a project id, pass:
+
+```text
+X-Bisibility-Project: prj_a00000000000000000000000
+```
+
+The `?project=prj_a00000000000000000000000` query parameter is equivalent. If the user belongs to
+exactly one project, the API can infer it. If the user belongs to several
+projects and no selector is present, the API returns `400 Bad Request`.
+
+## Rate limits
+
+Every request includes rate-limit headers:
+
+```text
+RateLimit-Limit: 600
+RateLimit-Remaining: 599
+RateLimit-Reset: 60
+X-RateLimit-Limit: 600
+X-RateLimit-Remaining: 599
+X-RateLimit-Reset: 60
+```
+
+Defaults:
+
+| Identity | Default |
+| - | -: |
+| Project API key | 600 requests per minute |
+| Personal access token | 120 requests per minute |
+| Anonymous discovery request | 60 requests per minute |
+
+Self-hosters can change these limits with
+`BISIBILITY_API_KEY_RATE_LIMIT_PER_MINUTE`,
+`BISIBILITY_PAT_RATE_LIMIT_PER_MINUTE`, and
+`BISIBILITY_API_ANON_RATE_LIMIT_PER_MINUTE`. When a limit is exceeded, the API
+returns `429 Too Many Requests` and includes `Retry-After`.

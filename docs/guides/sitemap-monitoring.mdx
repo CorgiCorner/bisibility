@@ -1,0 +1,69 @@
+---
+title: "Monitor sitemap changes"
+description: "Track added, removed, and updated URLs from a project's XML sitemap."
+---
+
+Sitemap monitoring records changes to the URLs published by a project domain.
+It fetches the sitemap directly and does not use a connected account or provider.
+
+## How monitoring works
+
+Bisibility requests `https://<project-domain>/sitemap.xml` over HTTPS. Redirects
+are followed, so the default path can redirect to a sitemap index such as
+`sitemap_index.xml`.
+
+The path is fixed. Bisibility does not discover sitemaps through `robots.txt` or
+probe alternate paths. A project without a domain is skipped, and a project
+whose default sitemap path does not return a valid sitemap fails for that run.
+
+Sitemap monitoring is separate from Google Search Console. It does not require
+a GSC connection and does not submit sitemaps to search engines.
+
+## Configure the schedule
+
+Run the Temporal worker and configure:
+
+| Variable | Behavior |
+| - | - |
+| `SITEMAP_SYNC_ENABLED` | Set to `true` to opt in to the worker-owned schedule. |
+| `SITEMAP_SYNC_CRON` | Optional cron override. The default is daily at 04:45 UTC. |
+
+The Temporal worker schedule is the only scheduled sitemap-sync path. There is
+no HTTP cron fallback. See [Self-hosting](/self-hosting) for worker setup.
+
+## Fetch and sitemap limits
+
+Each sitemap file, including the parent and every child, uses these limits:
+
+| Limit | Value |
+| - | - |
+| User agent | `Bisibility Sitemap Sync/1.0` |
+| Timeout | 10 seconds |
+| Response size | 10 MB per file |
+
+A standard URL set stores at most 5,000 URLs. For a sitemap index, Bisibility
+fetches the first 5 child sitemaps in file order and stores at most 5,000 URLs
+in total across those children. It stops fetching remaining children once the
+URL budget is reached.
+
+Sitemap indexes are followed one level deep. If a child is another sitemap
+index, Bisibility does not descend into it. When the child or URL cap trims a
+snapshot, change detection covers only the stored subset. Changes beyond the
+first 5 children or 5,000 URLs do not produce timeline signals. Large sites,
+including WordPress sites that split sitemaps into files of about 1,000 URLs,
+can exceed these caps.
+
+## Change detection and retention
+
+The first successful sync stores a baseline and emits no signal. Later syncs
+compare each URL with the previous snapshot and detect:
+
+- added URLs;
+- removed URLs;
+- URLs whose `<lastmod>` value changed.
+
+When a change is detected, Bisibility emits one `sitemap.changed` signal to the
+project timeline with the source label **Sitemap**. Sitemap changes do not
+trigger alert rules; alert conditions cover ranking and CTR changes.
+
+Sitemap snapshots are retained for 90 days.

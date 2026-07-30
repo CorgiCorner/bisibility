@@ -1,0 +1,62 @@
+---
+title: "Signals"
+description: "List and ingest timeline signals."
+---
+
+Paths are relative to `/api/v1`. All routes use a project-scoped API key -
+`Authorization: Bearer <api_key>` - that must belong to the project in the
+path. See [Authentication](/authentication) for scopes.
+
+| Method | Path | Purpose |
+| - | - | - |
+| `GET` | `/projects/{project_id}/signals` | List timeline signals for a project. |
+| `POST` | `/signals` | Ingest a generic signal for the API key's project. |
+
+Signals annotate the project timeline with deploys, releases, notes, and other
+events that help explain ranking changes. Deployment-provider webhook payloads
+use the separate `POST /api/ingest/deploy` endpoint documented in
+[Deploy webhooks](/api/deploy-webhooks).
+
+## Sources
+
+Every signal carries a `source`. `POST /signals` accepts the push sources;
+the rest are emitted by bisibility itself and only appear in `GET` responses.
+
+| Source | Push | Meaning |
+| - | - | - |
+| `deploy` | Yes | Deployments. Provider webhooks use [deploy webhooks](/api/deploy-webhooks) instead. |
+| `cms` | Yes | Content events from your CMS: publishes, updates, deletions. |
+| `api` | Yes | Anything else you script against the API. |
+| `manual` | No | Notes added in the app timeline. |
+| `rank_tracker` | No | Rank check results and alerts. |
+| `search_analytics` | No | Search Console data. |
+| `url_inspection` | No | Google index status checks. |
+| `sitemap` | No | Sitemap sync events. |
+| `search_engine_status` | No | Search engine status changes. |
+
+## Push a CMS event
+
+Wire your CMS webhook (or a small handler behind it) to `POST /signals`
+whenever content ships. Ranking changes then line up with content activity
+on the timeline.
+
+```bash
+curl -X POST https://<your-instance>.example.com/api/v1/signals \
+  -H "Authorization: Bearer <api_key>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "source": "cms",
+    "type": "content.published",
+    "url": "https://acme.dev/blog/headless-cms",
+    "payload": { "title": "Headless CMS guide" }
+  }'
+```
+
+`type` is free-form but must match `lowercase.lowercase`, for example
+`content.published` or `content.updated`. Optional fields: `keyword_id` ties
+the signal to one keyword, `severity` is `info` (default), `warning`, or
+`critical`, `happened_at` backdates the event (defaults to now), and `payload`
+is any JSON object up to 8KB serialized.
+
+The generated [OpenAPI document](/api/v1/openapi.json) remains the
+authoritative request and response schema.

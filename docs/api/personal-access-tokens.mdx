@@ -1,0 +1,77 @@
+---
+title: "Personal access tokens"
+description: "Authenticate as a user across projects and automate account-level operations."
+---
+
+Personal access tokens (PATs) start with `bsb_pat_live_` and act as the user who
+created them. They are account credentials: keep them in a secret store and
+revoke them immediately if they may have leaked.
+
+Project API keys (`bsb_key_live_`) remain scoped to one project. PATs can list and
+create projects, read or update the user profile, mint project API keys, and
+manage webhook endpoints.
+
+## Permission model
+
+Choose a `read`, `write`, or `admin` tier when issuing a token. Inside a
+project, the effective tier is the lower of the token tier and the user's
+membership role. Viewer and auditor memberships cap access at `read`; member
+caps it at `write`; admin and owner allow `admin`. Only the project owner can
+delete a project.
+
+For a route whose path does not contain a project id, select the project with:
+
+```http
+X-Bisibility-Project: prj_a00000000000000000000000
+```
+
+The `?project=prj_a00000000000000000000000` query parameter is equivalent. If the user belongs to
+exactly one project, the API can infer it. With multiple memberships, omitting
+the selector returns `400`.
+
+## Create a token
+
+The settings page at `/app/account/security` can issue a token. The CLI uses
+OAuth Authorization Code with PKCE and exchanges its short-lived OAuth access
+token at the same endpoint.
+
+```http
+POST /api/v1/me/tokens
+Authorization: Bearer <personal_token_or_oauth_access_token>
+Content-Type: application/json
+
+{
+  "name": "CI automation",
+  "scope": "admin",
+  "expires_in_days": 90
+}
+```
+
+`expires_in_days` accepts `30`, `90`, `365`, or `null` for no expiry. The
+response includes `token` exactly once; only its hash is stored.
+
+## List and revoke tokens
+
+```http
+GET /api/v1/me/tokens
+Authorization: Bearer <personal_token>
+```
+
+```http
+DELETE /api/v1/me/tokens/{token_id}
+Authorization: Bearer <personal_token>
+```
+
+Listing, creating, and revoking other tokens requires an admin PAT. Any PAT
+tier may revoke itself using `DELETE /api/v1/me/tokens/current`; the CLI uses
+that route for `bisibility auth logout`.
+
+## User profile
+
+`GET /api/v1/me` returns the user and all project memberships. `PATCH
+/api/v1/me` accepts `{ "name": "New name" }` and requires a write PAT.
+
+## Rate limit
+
+PATs default to 120 requests per minute. Self-hosters can change this with
+`BISIBILITY_PAT_RATE_LIMIT_PER_MINUTE`.

@@ -1,0 +1,122 @@
+---
+title: "Rank history"
+description: "Read historical rank-check results for charts, exports, and reports."
+---
+
+Rank history is stored as rank-check rows. Each row belongs to one keyword.
+
+## Rank check resource
+
+```json
+{
+  "id": "cm5xam3k20001js0cg1qw9rle",
+  "keyword_id": "kw_a00000000000000000000000",
+  "attempts": null,
+  "checked_at": "2026-06-28T10:00:00.000Z",
+  "position": 4,
+  "previous_position": 7,
+  "provider": "dataforseo",
+  "ranking_url": "https://example.com/rank-tracker",
+  "cost_cents": 0.06,
+  "error": null,
+  "status": "completed"
+}
+```
+
+`status` can be `running`, `completed`, or `failed`. Async rank-check requests
+create a `running` row first. Workers or inline execution later update that row
+to `completed`, or persist a `failed` row with an `error` message when the
+provider run fails.
+
+`attempts` records provider fallback attempts (`{ "provider", "message" }`)
+before the final status; it is `null` when no fallback attempts were recorded.
+
+## List rank checks for a keyword
+
+```http
+GET /api/v1/keywords/{id}/rank-checks
+Authorization: Bearer <api_key>
+```
+
+Query parameters:
+
+| Query | Description |
+| - | - |
+| `limit` | Page size. Defaults to `50`, maximum `200`. |
+| `cursor` | Pagination cursor. |
+| `since` | Inclusive ISO-8601 lower bound for `checked_at`. |
+| `until` | Inclusive ISO-8601 upper bound for `checked_at`. |
+| `status` | Optional status filter: `running`, `completed`, or `failed`. |
+
+Response:
+
+```json
+{
+  "data": [
+    {
+      "id": "cm5xam3k20001js0cg1qw9rle",
+      "keyword_id": "kw_a00000000000000000000000",
+      "attempts": null,
+      "checked_at": "2026-06-28T10:00:00.000Z",
+      "position": 4,
+      "previous_position": 7,
+      "provider": "dataforseo",
+      "ranking_url": "https://example.com/rank-tracker",
+      "cost_cents": 0.06,
+      "error": null,
+      "status": "completed"
+    }
+  ],
+  "meta": { "next_cursor": null }
+}
+```
+
+## Get one rank check
+
+```http
+GET /api/v1/rank-checks/{check_id}
+Authorization: Bearer <api_key>
+```
+
+Returns one rank-check resource or `404`. For checks started asynchronously,
+poll this endpoint until `status` changes from `running` to `completed` or
+`failed`.
+
+## Export project rank history
+
+```http
+GET /api/v1/projects/{project_id}/exports/rank-history
+Authorization: Bearer <api_key>
+Accept: application/json
+```
+
+The project export supports the same history filters as the app:
+
+| Query | Description |
+| - | - |
+| `keyword_id` | Optional keyword id, repeat for multiple keywords, maximum 500. |
+| `range` | `30`, `90`, or `all`. Defaults to `30`. |
+| `granularity` | `daily` or `weekly`. Defaults to `daily`. |
+| `limit` | JSON page size. Defaults to `50`, maximum `200`. |
+| `cursor` | Opaque JSON pagination cursor. |
+| `format` | Optional `json` or `csv` override. |
+
+JSON uses the standard `data` and `meta.next_cursor` envelope. Every row includes
+`keyword_id`, `keyword`, `checked_at`, `position`, `previous_position`, and
+`ranking_url`.
+
+Send `Accept: text/csv` or `format=csv` for a streamed CSV download. CSV exports
+include the same fields and are not cursor-paginated.
+
+## Async polling flow
+
+```http
+POST /api/v1/keywords/{id}/checks?async=true
+Authorization: Bearer <api_key>
+Content-Type: application/json
+```
+
+The API returns `202` with a `running` rank-check resource when the workflow is
+queued. Use the returned `id` with `GET /api/v1/rank-checks/{check_id}` to poll
+for the final status. If the scheduler is unavailable, the request returns
+`503` and no running row is kept.

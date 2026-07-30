@@ -1,0 +1,71 @@
+name: Decline pull requests
+
+# Runs on pull_request_target because the GITHUB_TOKEN issued for a fork-based
+# pull_request event is read-only and cannot close anything.
+#
+# pull_request_target runs with a write token in the base repository context.
+# That is only dangerous when a workflow checks out and executes the pull
+# request's code. This workflow never checks anything out and never runs
+# contributor code. Do not add a checkout step to it.
+on:
+  pull_request_target:
+    types: [opened, reopened]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  decline:
+    runs-on: ubuntu-latest
+    # Only act in the public snapshot repository, never close a maintainer's own
+    # pull request, and never close bot traffic: Dependabot security updates open
+    # pull requests as dependabot[bot] regardless of any config file, and a bot
+    # cannot read a comment telling it to file an issue instead.
+    if: >-
+      github.repository == 'CorgiCorner/bisibility' &&
+      github.event.pull_request.user.type != 'Bot' &&
+      github.event.pull_request.author_association != 'OWNER' &&
+      github.event.pull_request.author_association != 'MEMBER' &&
+      github.event.pull_request.author_association != 'COLLABORATOR'
+    steps:
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const body = [
+              "Thanks for taking the time to send this.",
+              "",
+              "bisibility does not accept pull requests. This repository publishes released",
+              "snapshots of the application, so there is no branch here to merge into. A pull",
+              "request cannot be reviewed or merged even when the change is good. That is a",
+              "property of how the project is published, not a judgement about your patch.",
+              "",
+              "What does get acted on:",
+              "",
+              "- **Bug?** https://github.com/CorgiCorner/bisibility/issues/new?template=bug_report.yml",
+              "  A minimal reproduction is the fastest path to a fix.",
+              "- **Change or feature?** https://github.com/CorgiCorner/bisibility/issues/new?template=feature_spec.yml",
+              "  Accepted specs are labelled `spec:accepted`, implemented by the core team, and",
+              "  credited in the release notes.",
+              "- **Not sure yet?** https://github.com/CorgiCorner/bisibility/discussions",
+              "",
+              "Describing the problem works better here than sending a patch, and it covers",
+              "small things too - typos, dead links, and wrong commands all get fixed from a",
+              "plain report.",
+              "",
+              "Closing now rather than leaving this open and unanswered. CONTRIBUTING.md",
+              "explains why the project works this way.",
+            ].join("\n");
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body,
+            });
+
+            await github.rest.pulls.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+              state: "closed",
+            });

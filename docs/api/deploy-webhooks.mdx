@@ -1,0 +1,201 @@
+---
+title: "Deploy webhooks"
+description: "Send deploy-completed events into bisibility timeline signals."
+---
+
+Deploy webhooks turn successful deployments into `deploy.completed` timeline
+signals. They are useful when you want rank or traffic changes to line up with
+shipping activity.
+
+The endpoint is:
+
+```text
+POST /api/ingest/deploy
+```
+
+Hosted:
+
+```text
+https://bisibility.com/api/ingest/deploy
+```
+
+Self-hosted:
+
+```text
+https://<your-instance>.example.com/api/ingest/deploy
+```
+
+## Create a hook
+
+1. Open **Settings** in the app.
+2. Find **Deploy webhooks**.
+3. Select **Create webhook** and give it a label.
+4. Copy the token immediately. It is revealed once, then only a hash is stored.
+
+Use one hook per source when you want to rotate or disable sources separately.
+
+## Authentication
+
+Prefer a bearer token header:
+
+```text
+Authorization: Bearer <ingest-hook-token>
+```
+
+Use `?token=<ingest-hook-token>` only when the source cannot send custom
+headers. Query tokens can appear in proxy, CDN, and access logs.
+
+The `provider` query parameter selects a provider mapper:
+
+```text
+/api/ingest/deploy?provider=vercel
+```
+
+Omit `provider` for the generic JSON shape.
+
+## Trust boundary and rate limits
+
+Bisibility does not verify provider-native webhook signatures. The ingest token
+is the only authentication performed by this endpoint, so keep it secret and
+rotate it if it is exposed.
+
+Two rolling one-minute limits protect the endpoint: 60 anonymous requests per
+client address per minute are checked before token lookup, then 600
+authenticated requests per hook per minute are checked after authentication.
+Exceeding either limit returns `429` with rate-limit and retry headers.
+
+## Vercel
+
+Create a project webhook for successful deployments:
+
+1. Open the project in Vercel.
+2. Add a webhook for the `deployment.succeeded` event.
+3. Set the endpoint URL to:
+
+```text
+https://<your-instance>.example.com/api/ingest/deploy?provider=vercel
+```
+
+If your webhook setup cannot send an `Authorization` header, append the token:
+
+```text
+https://<your-instance>.example.com/api/ingest/deploy?provider=vercel&token=<ingest-hook-token>
+```
+
+## Netlify
+
+Create a deploy notification for successful deploys:
+
+1. Open **Site configuration** in Netlify.
+2. Add an outgoing deploy notification for **Deploy ready**.
+3. Use the endpoint URL with the token in the query string:
+
+```text
+https://<your-instance>.example.com/api/ingest/deploy?provider=netlify&token=<ingest-hook-token>
+```
+
+Netlify deploy notifications cannot send custom authorization headers, so the
+query token is expected for this provider.
+
+## AWS Amplify
+
+Amplify Hosting emits EventBridge events instead of plain webhooks. Forward the
+raw EventBridge event to bisibility with an EventBridge rule and API
+destination. Do not use an input transformer.
+
+Use this endpoint:
+
+```text
+https://<your-instance>.example.com/api/ingest/deploy?provider=amplify
+```
+
+Configure the EventBridge connection to send:
+
+```text
+Authorization: Bearer <ingest-hook-token>
+```
+
+The rule should match successful deployment events:
+
+```bash
+aws events put-rule \
+  --name bisibility-amplify-deploys \
+  --event-pattern '{
+    "source": ["aws.amplify"],
+    "detail-type": ["Amplify Deployment Status Change"],
+    "detail": { "jobStatus": ["SUCCEED"] }
+  }'
+```
+
+Create an API destination for the endpoint, then add it as the rule target:
+
+```bash
+aws events create-connection \
+  --name bisibility-deploy-hook \
+  --authorization-type API_KEY \
+  --auth-parameters '{
+    "ApiKeyAuthParameters": {
+      "ApiKeyName": "Authorization",
+      "ApiKeyValue": "Bearer <ingest-hook-token>"
+    }
+  }'
+
+aws events create-api-destination \
+  --name bisibility-deploy-hook \
+  --connection-arn <connection-arn> \
+  --invocation-endpoint 'https://<your-instance>.example.com/api/ingest/deploy?provider=amplify' \
+  --http-method POST
+
+aws events put-targets \
+  --rule bisibility-amplify-deploys \
+  --targets 'Id=bisibility-deploy-hook,Arn=<api-destination-arn>,RoleArn=<eventbridge-invoke-role-arn>'
+```
+
+The target role must trust `events.amazonaws.com` and allow
+`events:InvokeApiDestination` for the API destination ARN.
+
+## Generic JSON
+
+Send a custom deploy event when your deploy system can run `curl`:
+
+```bash
+curl -X POST 'https://<your-instance>.example.com/api/ingest/deploy' \
+  -H 'Authorization: Bearer <ingest-hook-token>' \
+  -H 'Content-Type: application/json' \
+  --data '{
+    "deployment_id": "deploy_123",
+    "environment": "production",
+    "url": "https://example.com",
+    "paths": ["/", "/pricing"]
+  }'
+```
+
+Supported fields:
+
+| Field | Type | Description |
+| - | - | - |
+| `deployment_id` | string | Deployment identifier. `deploymentId` also works. |
+| `environment` | string | Environment or branch name. |
+| `url` | string | Deployment URL. Only `http` and `https` URLs are attached to the signal. |
+| `paths` | string[] | Optional changed paths. At most 50 paths are stored. |
+
+## Delivery retries
+
+Successful events with a deployment identifier are idempotent per hook for 60
+minutes. Repeating the same `deployment_id` (or provider-native deployment ID)
+with the same hook during that window returns `202` with
+`{"ok":true,"duplicate":true}` and does not create another timeline signal.
+Events without a deployment identifier cannot be matched and are accepted
+individually.
+
+## Responses
+
+| Status | Meaning |
+| -: | - |
+| `202` | Event accepted, a duplicate was collapsed, or a known non-success provider event was acknowledged without creating a signal. |
+| `400` | Request body was not valid JSON. |
+| `401` | Missing, invalid, or disabled ingest hook token. |
+| `413` | Request body exceeded the 256 KB limit. |
+| `422` | The deploy event could not be parsed. |
+| `423` | The project is read-only, usually during migration hold. |
+| `429` | Request exceeded a rate limit. |

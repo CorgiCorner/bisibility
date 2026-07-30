@@ -1,0 +1,66 @@
+---
+title: "API errors"
+description: "Problem details returned by the bisibility REST API."
+---
+
+Errors use `application/problem+json`.
+
+```json
+{
+  "type": "https://bisibility.com/problems/validation_failed",
+  "title": "Validation failed",
+  "status": 400,
+  "detail": "Request input failed validation.",
+  "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_a00000000000000000000000/keywords",
+  "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+  "errors": {}
+}
+```
+
+## Error codes
+
+| Code | HTTP status | Meaning |
+| - | -: | - |
+| `bad_request` | 400 | Request body, query, or JSON could not be parsed. |
+| `validation_failed` | 400 | Zod validation failed. |
+| `unauthorized` | 401 | Missing or invalid bearer API key. |
+| `unauthorized` | 419 | Cloud import migration token is invalid, expired, or already used. |
+| `forbidden` | 403 | API key scope or project scope does not allow the operation. |
+| `not_found` | 404 | Route or resource was not found. |
+| `conflict` | 409 | Reserved for conflict responses. |
+| `self_import` | 409 | Cloud import package was exported from the destination project itself. |
+| `project_read_only` | 423 | Project writes are blocked by migration hold. |
+| `budget_exhausted` | 429 | Monthly rank-check budget is exhausted. |
+| `rate_limited` | 429 | Request exceeded a rate limit. |
+| `provider_unavailable` | 400, 404, or 502 | Rank-check provider path failed. |
+| `method_not_allowed` | 405 | HTTP method is not handled by the router. |
+| `scheduler_unavailable` | 503 | Async rank-check scheduler is unavailable. |
+| `internal_server_error` | 500 | Unexpected API error. |
+
+## Validation details
+
+Validation errors include an `errors` member with the flattened Zod error
+payload:
+
+```json
+{
+  "fieldErrors": {
+    "keyword": ["String must contain at least 1 character(s)"]
+  },
+  "formErrors": []
+}
+```
+
+## Rate-limit errors
+
+Rate-limit responses include the same rate-limit headers as successful requests,
+plus `Retry-After`.
+Upstream provider rate limits also surface as `rate_limited` `429` responses
+with `Retry-After`.
+
+```text
+Retry-After: 60
+RateLimit-Limit: 600
+RateLimit-Remaining: 0
+RateLimit-Reset: 60
+```

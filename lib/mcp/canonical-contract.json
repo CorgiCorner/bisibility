@@ -1,0 +1,4303 @@
+[
+  {
+    "name": "get_health",
+    "title": "Get API health",
+    "description": "Check Bisibility API health and configured SERP providers.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {}
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "get_capabilities",
+    "title": "Get API capabilities",
+    "description": "List the public Bisibility API capabilities exposed for agent workflows.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {}
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "get_cloud_import_compatibility",
+    "title": "Get cloud import compatibility",
+    "description": "Check whether a cloud export package can be imported: returns the running app version, the latest applied migration, and the cloud-import schema versions the API accepts. Anonymous preflight endpoint; no project scope or credential needed. Use before preparing a migration to confirm the export schema is still supported.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {}
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "get_provider_rates",
+    "title": "Get provider rates",
+    "description": "List public provider rate cards used for rank-check cost estimates. Each rate card is either flat-priced (per-check options such as standard, priority, live) or plan-priced (monthly plans with included checks). Anonymous endpoint; no project scope needed.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {}
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "get_cost_estimate",
+    "title": "Get cost estimate",
+    "description": "Estimate the monthly rank-check cost for a keyword portfolio using the public provider rate cards. Provide the keyword count plus optional devices per keyword (1-2), locations per keyword, and check frequency (daily, weekly, or monthly). Pick a rate card with provider (defaults to dataforseo) and optionally a flat-rate option key or a plan key; see get_provider_rates for available keys. Anonymous endpoint.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "devices": {
+          "description": "Device count per keyword (1 or 2). Defaults to 1.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2
+        },
+        "frequency": {
+          "description": "Rank-check frequency used to estimate monthly checks. Defaults to daily.",
+          "type": "string",
+          "enum": ["daily", "weekly", "monthly"]
+        },
+        "keywords": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000,
+          "description": "Keyword count to estimate for."
+        },
+        "locations": {
+          "description": "Location count per keyword. Defaults to 1.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "option": {
+          "description": "Flat-rate provider option key, for example \"standard\", \"priority\", or \"live\".",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "plan": {
+          "description": "Plan-model provider plan key; unknown values use auto selection.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "provider": {
+          "description": "Provider rate card to use. Defaults to \"dataforseo\".",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        }
+      },
+      "required": ["keywords"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "get_me",
+    "title": "Get authenticated user",
+    "description": "Get the authenticated user and all project memberships. Requires a personal access token.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {}
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "update_me",
+    "title": "Update authenticated user",
+    "description": "Update the authenticated user's display name. Requires a write PAT.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "description": "Display name chosen for your Bisibility account."
+        }
+      },
+      "required": ["name"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "list_projects",
+    "title": "List projects",
+    "description": "List projects visible to the configured credential. Project keys return one project; personal access tokens return all project memberships.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {}
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "create_project",
+    "title": "Create project",
+    "description": "Create a project. Requires a personal access token with write scope.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "domain": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 253,
+          "description": "Primary domain the new project tracks."
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "description": "Human-readable name chosen for the new project."
+        },
+        "tracking_scope": {
+          "type": "string",
+          "enum": ["city", "country"]
+        }
+      },
+      "required": ["domain", "name"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "get_project",
+    "title": "Get project",
+    "description": "Get one Bisibility project by project id.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["project_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "search_locations",
+    "title": "Search locations",
+    "description": "Search canonical keyword locations. Use the returned location_key verbatim when creating or updating keywords for city-level tracking.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "country": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "q": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 120,
+          "description": "Location name or search phrase used to find matching markets."
+        }
+      },
+      "required": ["q"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "update_project",
+    "title": "Update project",
+    "description": "Update a project's name or domain. At least one of name or domain is required.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "domain": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 253
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["project_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "delete_project",
+    "title": "Delete project",
+    "description": "Permanently delete a project and all of its keywords, rank history, and settings. This cannot be undone. Use only after the user confirms deletion.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["project_id"]
+    },
+    "annotations": {
+      "destructiveHint": true,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "get_project_defaults",
+    "title": "Get project defaults",
+    "description": "Get the effective rank-check schedule and SERP market defaults for a project. The response includes serp_depth, serp_stop_on_match, and source: explicit means the market was configured, derived means it was inferred from existing keywords, and fallback means the instance default was used.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["project_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "update_project_defaults",
+    "title": "Update project defaults",
+    "description": "Update the project default rank-check schedule and SERP market. The schedule is replaced as a whole: omitted schedule fields reset to their defaults (jitter 60, timezone UTC, no cron). Provide country and device together, or a location_key, to move the default SERP market. Use search_locations and pass its location_key verbatim for city-level tracking.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "city": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "country": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "cron_expression": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "device": {
+          "type": "string",
+          "enum": ["desktop", "mobile"],
+          "description": "Device whose search or ranking data is being selected."
+        },
+        "frequency": {
+          "type": "string",
+          "enum": ["paused", "manual", "daily", "weekly", "monthly", "custom_cron"],
+          "description": "Schedule frequency that determines when rank checks run."
+        },
+        "jitter_minutes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 120
+        },
+        "location_key": {
+          "type": "string",
+          "pattern": "^[A-Z]{2}(\\/[^/]{1,80}){0,2}$"
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "serp_stop_on_match": {
+          "description": "Set false to fetch the full configured depth for competitor snapshots.",
+          "type": "boolean"
+        },
+        "timezone": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        }
+      },
+      "required": ["frequency", "project_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "list_keywords",
+    "title": "List project keywords",
+    "description": "List keywords for a project with pagination, search, filters, and sorting.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "cursor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200
+        },
+        "country": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "device": {
+          "type": "string",
+          "enum": ["desktop", "mobile"],
+          "description": "Device whose search or ranking data is being selected."
+        },
+        "intent": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "position_gt": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "position_lt": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "search": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 180
+        },
+        "sort": {
+          "type": "string",
+          "enum": [
+            "created_at",
+            "-created_at",
+            "keyword",
+            "-keyword",
+            "text",
+            "-text",
+            "updated_at",
+            "-updated_at"
+          ]
+        },
+        "tag": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 48
+        },
+        "topic": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        }
+      },
+      "required": ["project_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "list_ranked_keyword_suggestions",
+    "title": "List ranked keyword suggestions",
+    "description": "Paid provider lookup on the project's own DataForSEO account, about $0.02 per 100-keyword page on a cache miss. Results are cached for 12 hours and shared with the UI and API. already_tracked marks keywords the project tracks.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "connection_id": {
+          "description": "Identifier of the provider connection to operate on.",
+          "type": "string",
+          "pattern": "^conn_[a-z][a-z0-9]{23}$"
+        },
+        "fresh": {
+          "type": "boolean"
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 900,
+          "multipleOf": 100
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["project_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "research_keywords",
+    "title": "Research keywords",
+    "description": "Requires API write scope. Paid keyword research uses the project's own DataForSEO account. When cost matters, call with estimate_only first for a free dry run, then use max_cost_cents as a best-effort request guard. Approximate per-source pricing comes from the current rate card exposed by get_provider_rates. Send one seed per call. Results are cached for 12 hours and shared with the API and future UI. Clickstream-refined volumes double provider cost. already_tracked marks keywords the project tracks.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "connection_id": {
+          "description": "Identifier of the provider connection to operate on.",
+          "type": "string",
+          "pattern": "^conn_[a-z][a-z0-9]{23}$"
+        },
+        "estimate_only": {
+          "description": "Return a free cost estimate without calling the provider or spending budget.",
+          "type": "boolean"
+        },
+        "fresh": {
+          "type": "boolean"
+        },
+        "include_clickstream": {
+          "type": "boolean"
+        },
+        "max_cost_cents": {
+          "description": "Best-effort maximum provider cost for this request, in cents.",
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "mode": {
+          "type": "string",
+          "enum": ["auto", "related", "suggestions", "ideas"]
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "result_limit": {
+          "anyOf": [
+            {
+              "type": "number",
+              "const": 100
+            },
+            {
+              "type": "number",
+              "const": 300
+            },
+            {
+              "type": "number",
+              "const": 500
+            }
+          ]
+        },
+        "seed": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "description": "Keyword or phrase used as the starting point for research."
+        }
+      },
+      "required": ["project_id", "seed"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "analyze_backlinks",
+    "title": "Analyze backlinks",
+    "description": "Requires API write scope because cache misses spend the project's own DataForSEO budget. Returns summary metrics, 12-month history, and per-link rows with new or lost status. Snapshots are cached for 24 hours. Call with estimate_only first for a free dry run, then use max_cost_cents as a best-effort request guard. Compute aggregate views from rows and treat them as \"within fetched rows\" only.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "estimate_only": {
+          "description": "Return a free cost estimate without calling the provider or spending budget.",
+          "type": "boolean"
+        },
+        "fresh": {
+          "description": "Bypass the current cached snapshot and request fresh provider data.",
+          "type": "boolean"
+        },
+        "include_subdomains": {
+          "description": "Include backlinks to subdomains for site targets. Ignored for page targets.",
+          "type": "boolean"
+        },
+        "max_cost_cents": {
+          "description": "Best-effort maximum provider cost for this request, in cents.",
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "mode": {
+          "description": "Return backlinks as provided or denoise to one backlink per referring domain.",
+          "type": "string",
+          "enum": ["as_is", "one_per_domain"]
+        },
+        "project_id": {
+          "description": "Project id whose provider budget and snapshot are used.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "result_limit": {
+          "description": "Maximum number of backlink rows to fetch: 100, 300, 500, or 1000.",
+          "anyOf": [
+            {
+              "type": "number",
+              "const": 100
+            },
+            {
+              "type": "number",
+              "const": 300
+            },
+            {
+              "type": "number",
+              "const": 500
+            },
+            {
+              "type": "number",
+              "const": 1000
+            }
+          ]
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048,
+          "description": "Domain or full page URL to analyze."
+        },
+        "target_scope": {
+          "description": "Analyze the whole site or one page. The API infers the scope when omitted.",
+          "type": "string",
+          "enum": ["site", "page"]
+        }
+      },
+      "required": ["project_id", "target"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "load_more_backlink_rows",
+    "title": "Load more backlink rows",
+    "description": "Requires API write scope. Extends the current unexpired backlinks snapshot at the per-100-row provider rate. Returns 409 snapshot_expired when no current snapshot exists; run analyze_backlinks first.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "include_subdomains": {
+          "description": "Include backlinks to subdomains for site targets. Ignored for page targets.",
+          "type": "boolean"
+        },
+        "limit": {
+          "description": "Number of additional rows to fetch, in multiples of 100 up to 1000.",
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 1000,
+          "multipleOf": 100
+        },
+        "project_id": {
+          "description": "Project id whose provider budget and snapshot are used.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048,
+          "description": "Domain or full page URL matching the current unexpired snapshot."
+        },
+        "target_scope": {
+          "description": "Site or page scope matching the current unexpired snapshot.",
+          "type": "string",
+          "enum": ["site", "page"]
+        }
+      },
+      "required": ["project_id", "target"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "get_keyword_metrics",
+    "title": "Get keyword metrics",
+    "description": "Requires API write scope. Paid metrics lookup uses the project's own DataForSEO account. When cost matters, call with estimate_only first for a free dry run, then use max_cost_cents as a best-effort request guard. Approximate pricing per 100 fetched keywords comes from the current rate card exposed by get_provider_rates. Batches contain up to 700 keywords and cache each keyword for 12 hours, shared with the API and future UI. Clickstream-refined volumes double provider cost.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "connection_id": {
+          "description": "Identifier of the provider connection to operate on.",
+          "type": "string",
+          "pattern": "^conn_[a-z][a-z0-9]{23}$"
+        },
+        "estimate_only": {
+          "description": "Return a free cost estimate without calling the provider or spending budget.",
+          "type": "boolean"
+        },
+        "fresh": {
+          "type": "boolean"
+        },
+        "include_clickstream": {
+          "type": "boolean"
+        },
+        "keywords": {
+          "minItems": 1,
+          "maxItems": 700,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "description": "Keywords to request metrics for, supplied as search phrases."
+        },
+        "max_cost_cents": {
+          "description": "Best-effort maximum provider cost for this request, in cents.",
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["keywords", "project_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "add_keywords",
+    "title": "Add keywords",
+    "description": "Add one or more keywords to a project, optionally with tags, target URL, and schedule. Use search_locations and pass its location_key verbatim for city-level tracking.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "city": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "intent": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "location_key": {
+          "type": "string",
+          "pattern": "^[A-Z]{2}(\\/[^/]{1,80}){0,2}$"
+        },
+        "topic": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "country": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "device": {
+          "type": "string",
+          "enum": ["desktop", "mobile"],
+          "description": "Device whose search or ranking data is being selected."
+        },
+        "keywords": {
+          "minItems": 1,
+          "maxItems": 500,
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 180
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "city": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 120
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "intent": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 80
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "location_key": {
+                    "type": "string",
+                    "pattern": "^[A-Z]{2}(\\/[^/]{1,80}){0,2}$"
+                  },
+                  "topic": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 80
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "country": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "device": {
+                    "type": "string",
+                    "enum": ["desktop", "mobile"],
+                    "description": "Device whose search or ranking data is being selected."
+                  },
+                  "keyword": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 180,
+                    "description": "Search phrase to add to the project."
+                  },
+                  "location": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "schedule": {
+                    "type": "object",
+                    "properties": {
+                      "cron_expression": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "description": "Cron expression for custom_cron schedules; use null for other frequencies."
+                      },
+                      "frequency": {
+                        "type": "string",
+                        "enum": ["paused", "manual", "daily", "weekly", "monthly", "custom_cron"],
+                        "description": "Schedule frequency that determines when rank checks run."
+                      },
+                      "jitter_minutes": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 120
+                      },
+                      "timezone": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 80
+                      }
+                    },
+                    "required": ["cron_expression", "frequency"],
+                    "additionalProperties": false
+                  },
+                  "tags": {
+                    "maxItems": 12,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 48,
+                      "description": "Tag label assigned to the keyword."
+                    }
+                  },
+                  "target_url": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 500
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Canonical destination URL or site-relative path to associate with the keyword."
+                  }
+                },
+                "required": ["keyword"],
+                "additionalProperties": false
+              }
+            ]
+          },
+          "description": "Keyword phrases or keyword objects to add to the project."
+        },
+        "location": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "schedule": {
+          "type": "object",
+          "properties": {
+            "cron_expression": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 120
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Cron expression for custom_cron schedules; use null for other frequencies."
+            },
+            "frequency": {
+              "type": "string",
+              "enum": ["paused", "manual", "daily", "weekly", "monthly", "custom_cron"],
+              "description": "Schedule frequency that determines when rank checks run."
+            },
+            "jitter_minutes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 120
+            },
+            "timezone": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            }
+          },
+          "required": ["cron_expression", "frequency"],
+          "additionalProperties": false
+        },
+        "tags": {
+          "maxItems": 12,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 48,
+            "description": "Tag label assigned to the keyword."
+          }
+        },
+        "target_url": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 500
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Canonical destination URL or site-relative path to associate with the keyword."
+        }
+      },
+      "required": ["keywords", "project_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "get_keyword",
+    "title": "Get keyword",
+    "description": "Get a keyword and its latest rank position by keyword id.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "keyword_id": {
+          "description": "Identifier of the tracked keyword to operate on.",
+          "type": "string",
+          "pattern": "^kw_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["keyword_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "update_keyword",
+    "title": "Update keyword",
+    "description": "Update keyword metadata such as text, country, device, target URL, tags, or schedule. Use search_locations and pass its location_key verbatim for city-level tracking.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "city": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "intent": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "location_key": {
+          "type": "string",
+          "pattern": "^[A-Z]{2}(\\/[^/]{1,80}){0,2}$"
+        },
+        "topic": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "country": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "device": {
+          "type": "string",
+          "enum": ["desktop", "mobile"],
+          "description": "Device whose search or ranking data is being selected."
+        },
+        "frequency": {
+          "type": "string",
+          "enum": ["paused", "manual", "daily", "weekly", "monthly", "custom_cron"],
+          "description": "Schedule frequency that determines when rank checks run."
+        },
+        "keyword": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 180
+        },
+        "keyword_id": {
+          "description": "Identifier of the tracked keyword to operate on.",
+          "type": "string",
+          "pattern": "^kw_[a-z][a-z0-9]{23}$"
+        },
+        "location": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "schedule": {
+          "type": "object",
+          "properties": {
+            "cron_expression": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 120
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Cron expression for custom_cron schedules; use null for other frequencies."
+            },
+            "frequency": {
+              "type": "string",
+              "enum": ["paused", "manual", "daily", "weekly", "monthly", "custom_cron"],
+              "description": "Schedule frequency that determines when rank checks run."
+            },
+            "jitter_minutes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 120
+            },
+            "timezone": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            }
+          },
+          "required": ["cron_expression", "frequency"],
+          "additionalProperties": false
+        },
+        "tags": {
+          "maxItems": 12,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 48,
+            "description": "Tag label assigned to the keyword."
+          }
+        },
+        "target_url": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 500
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Canonical destination URL or site-relative path to associate with the keyword."
+        }
+      },
+      "required": ["keyword_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "set_keyword_target_url",
+    "title": "Set keyword target URL",
+    "description": "Set or clear the target URL used when evaluating a keyword ranking.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "keyword_id": {
+          "description": "Identifier of the tracked keyword to operate on.",
+          "type": "string",
+          "pattern": "^kw_[a-z][a-z0-9]{23}$"
+        },
+        "target_url": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 500
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Canonical destination URL or site-relative path to associate with the keyword."
+        }
+      },
+      "required": ["keyword_id", "target_url"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "delete_keyword",
+    "title": "Delete keyword",
+    "description": "Delete one keyword by keyword id. Use only after the user confirms deletion.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "keyword_id": {
+          "description": "Identifier of the tracked keyword to operate on.",
+          "type": "string",
+          "pattern": "^kw_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["keyword_id"]
+    },
+    "annotations": {
+      "destructiveHint": true,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "bulk_update_keywords",
+    "title": "Bulk update keywords",
+    "description": "Bulk mutate keywords by adding tags, removing tags, setting frequency, setting target URL, or deleting.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "frequency": {
+          "type": "string",
+          "enum": ["paused", "manual", "daily", "weekly", "monthly", "custom_cron"],
+          "description": "Schedule frequency that determines when rank checks run."
+        },
+        "keyword_ids": {
+          "minItems": 1,
+          "maxItems": 500,
+          "type": "array",
+          "items": {
+            "description": "Identifier of the tracked keyword to operate on.",
+            "type": "string",
+            "pattern": "^kw_[a-z][a-z0-9]{23}$"
+          },
+          "description": "Keyword identifiers returned by the project's keyword list or create response."
+        },
+        "operation": {
+          "type": "string",
+          "enum": ["add_tags", "delete", "remove_tags", "set_frequency", "set_target_url"],
+          "description": "Bulk change to apply to every supplied keyword id."
+        },
+        "schedule": {
+          "type": "object",
+          "properties": {
+            "cron_expression": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 120
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Cron expression for custom_cron schedules; use null for other frequencies."
+            },
+            "frequency": {
+              "type": "string",
+              "enum": ["paused", "manual", "daily", "weekly", "monthly", "custom_cron"],
+              "description": "Schedule frequency that determines when rank checks run."
+            },
+            "jitter_minutes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 120
+            },
+            "timezone": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            }
+          },
+          "required": ["cron_expression", "frequency"],
+          "additionalProperties": false
+        },
+        "tags": {
+          "maxItems": 12,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 48,
+            "description": "Tag label assigned to the keyword."
+          }
+        },
+        "target_url": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 500
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Canonical destination URL or site-relative path to associate with the keyword."
+        }
+      },
+      "required": ["keyword_ids", "operation"]
+    },
+    "annotations": {
+      "destructiveHint": true,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "run_rank_check",
+    "title": "Run rank check",
+    "description": "Run a provider-backed rank check for one keyword. Requires write access and may incur provider cost. Ask for explicit user approval immediately before calling; this server cannot enforce the client's confirmation UI. By default the check runs synchronously and returns the completed result. Set async to true to enqueue the check and return a running rank check immediately; poll it with get_rank_check_result.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "async": {
+          "type": "boolean"
+        },
+        "keyword_id": {
+          "description": "Identifier of the tracked keyword to operate on.",
+          "type": "string",
+          "pattern": "^kw_[a-z][a-z0-9]{23}$"
+        },
+        "provider_id": {
+          "description": "SERP provider id, validated server-side. Known values: dataforseo and serpapi.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        }
+      },
+      "required": ["keyword_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "get_rank_history",
+    "title": "Get rank history",
+    "description": "List historical rank checks for a keyword with date, status, and pagination filters.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "cursor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "keyword_id": {
+          "description": "Identifier of the tracked keyword to operate on.",
+          "type": "string",
+          "pattern": "^kw_[a-z][a-z0-9]{23}$"
+        },
+        "since": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "status": {
+          "type": "string",
+          "enum": ["completed", "failed"]
+        },
+        "until": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        }
+      },
+      "required": ["keyword_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "export_rank_history",
+    "title": "Export project rank history",
+    "description": "Export project rank history as cursor-paginated JSON for reports and analysis. For full streamed CSV dumps, use the REST endpoint directly.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "cursor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200
+        },
+        "granularity": {
+          "type": "string",
+          "enum": ["daily", "weekly"]
+        },
+        "keyword_ids": {
+          "description": "Tracked keyword ids to include in the export.",
+          "maxItems": 500,
+          "type": "array",
+          "items": {
+            "description": "Identifier of the tracked keyword to operate on.",
+            "type": "string",
+            "pattern": "^kw_[a-z][a-z0-9]{23}$"
+          }
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "range": {
+          "type": "string",
+          "enum": ["30", "90", "all"]
+        }
+      },
+      "required": ["project_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "list_sitemap_monitors",
+    "title": "List sitemap monitors",
+    "description": "List the project sitemap monitor, including its status and latest snapshot summary.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["project_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "enable_sitemap_monitor",
+    "title": "Enable sitemap monitor",
+    "description": "Enable the project sitemap monitor. The next scheduled worker sync fetches the sitemap; enabling does not fetch immediately.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "monitor_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["monitor_id", "project_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "disable_sitemap_monitor",
+    "title": "Disable sitemap monitor",
+    "description": "Disable the project sitemap monitor while retaining its existing snapshots.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "monitor_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["monitor_id", "project_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "get_rank_check_result",
+    "title": "Get rank check result",
+    "description": "Get one rank check result by check id.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "check_id": {
+          "description": "Identifier of the rank check to retrieve.",
+          "type": "string",
+          "pattern": "^check_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["check_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "create_signal",
+    "title": "Create signal",
+    "description": "Ingest a signal for the key-scoped project: an external event such as a deploy, CMS content change, or custom API event that may explain ranking movements. source must be deploy, cms, or api; type is a dot-separated identifier such as \"deploy.completed\" or \"cms.page_updated\". Optionally attach an ISO-8601 happened_at (defaults to now), a related keyword_id, an http(s) url, a severity (info, warning, or critical), and a JSON payload of up to 8KB.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "happened_at": {
+          "description": "ISO-8601 date-time when the signal happened. Defaults to now on the server.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "keyword_id": {
+          "description": "Identifier of the tracked keyword to operate on.",
+          "type": "string",
+          "pattern": "^kw_[a-z][a-z0-9]{23}$"
+        },
+        "payload": {
+          "description": "JSON object payload. Serialized payloads above 8KB are rejected.",
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {}
+        },
+        "severity": {
+          "description": "Signal severity. Defaults to \"info\".",
+          "type": "string",
+          "enum": ["critical", "info", "warning"]
+        },
+        "source": {
+          "type": "string",
+          "enum": ["api", "cms", "deploy"],
+          "description": "System or workflow that produced the new signal."
+        },
+        "type": {
+          "type": "string",
+          "pattern": "^[a-z_]+\\.[a-z_]+$",
+          "description": "Dot-separated signal type such as \"deploy.completed\"."
+        },
+        "url": {
+          "type": "string",
+          "maxLength": 2000,
+          "pattern": "^https?:\\/\\/",
+          "description": "url HTTP or HTTPS URL supplied by the endpoint owner."
+        }
+      },
+      "required": ["source", "type"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "list_signals",
+    "title": "List signals",
+    "description": "List signals for a project, newest first. Filter by source (including system sources such as rank_tracker or search_analytics), exact type, and a happened-at date range via from/to ISO-8601 date-times, with cursor pagination.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "cursor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200
+        },
+        "from": {
+          "description": "Only signals that happened at or after this ISO-8601 date-time.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "api",
+            "cms",
+            "deploy",
+            "manual",
+            "rank_tracker",
+            "search_analytics",
+            "search_engine_status",
+            "sitemap",
+            "url_inspection"
+          ],
+          "description": "System or workflow that produced the signal."
+        },
+        "to": {
+          "description": "Only signals that happened at or before this ISO-8601 date-time.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "type": {
+          "description": "Exact signal type filter such as \"deploy.completed\".",
+          "type": "string",
+          "maxLength": 160,
+          "pattern": "^[a-z_]+\\.[a-z_]+$"
+        }
+      },
+      "required": ["project_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "list_traffic_snapshots",
+    "title": "List traffic snapshots",
+    "description": "List stored page traffic snapshots collected from the project's own connected analytics accounts, filtered by date range and optional page paths.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "end_date": {
+          "type": "string",
+          "format": "date",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+          "description": "Calendar date delimiting the requested reporting period."
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "paths": {
+          "maxItems": 50,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          }
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "start_date": {
+          "type": "string",
+          "format": "date",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+          "description": "Calendar date delimiting the requested reporting period."
+        }
+      },
+      "required": ["end_date", "project_id", "start_date"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "list_search_performance_query_stats",
+    "title": "List search-performance query stats",
+    "description": "Fetch live query statistics from one of the project's own connected search-performance accounts. Provider rate limits and reauthorization rules apply.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "connection_id": {
+          "description": "Identifier of the provider connection to operate on.",
+          "type": "string",
+          "pattern": "^conn_[a-z][a-z0-9]{23}$"
+        },
+        "end_date": {
+          "type": "string",
+          "format": "date",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+          "description": "Calendar date delimiting the requested reporting period."
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "query": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "start_date": {
+          "type": "string",
+          "format": "date",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+          "description": "Calendar date delimiting the requested reporting period."
+        }
+      },
+      "required": ["end_date", "project_id", "start_date"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "sync_project_traffic",
+    "title": "Synchronize project traffic",
+    "description": "Synchronize traffic snapshots from the project's own connected analytics accounts now. Provider rate limits and connection authorization rules apply.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["project_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "list_api_keys",
+    "title": "List API keys",
+    "description": "List API keys for the authenticated project, including revoked keys.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "cursor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        }
+      }
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "create_api_key",
+    "title": "Create API key",
+    "description": "Create a new API key for the authenticated project. The raw token is returned once in the response and cannot be retrieved again; store it securely.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "expires_in_days": {
+          "description": "Lifetime in days. Use null for no expiry.",
+          "anyOf": [
+            {
+              "type": "number",
+              "const": 30
+            },
+            {
+              "type": "number",
+              "const": 90
+            },
+            {
+              "type": "number",
+              "const": 365
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "description": "Label you choose to identify the API key."
+        },
+        "scope": {
+          "default": "admin",
+          "description": "Access tier. When omitted, defaults to admin for backward compatibility.",
+          "type": "string",
+          "enum": ["read", "write", "admin"]
+        }
+      },
+      "required": ["name"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "revoke_api_key",
+    "title": "Revoke API key",
+    "description": "Revoke an API key by key id. Revocation is immediate and cannot be undone; revoking the key this server is configured with locks the server out. Use only after the user confirms revocation.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "key_id": {
+          "description": "Identifier of the API key to operate on.",
+          "type": "string",
+          "pattern": "^key_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["key_id"]
+    },
+    "annotations": {
+      "destructiveHint": true,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "list_project_api_keys",
+    "title": "List project API keys",
+    "description": "List API keys scoped to a specific project, including revoked keys.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "cursor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["project_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "create_project_api_key",
+    "title": "Create project API key",
+    "description": "Create a project-scoped API key for CI or automation. The raw key is returned once.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "description": "Label you choose to identify the project API key."
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["name", "project_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "list_personal_tokens",
+    "title": "List personal tokens",
+    "description": "List the user's personal access tokens. Requires an admin PAT.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {}
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "create_personal_token",
+    "title": "Create personal token",
+    "description": "Create a personal access token. The raw account-wide token is returned once. Requires an admin PAT.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "expires_in_days": {
+          "anyOf": [
+            {
+              "type": "number",
+              "const": 30
+            },
+            {
+              "type": "number",
+              "const": 90
+            },
+            {
+              "type": "number",
+              "const": 365
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "description": "Label you choose to identify the personal token."
+        },
+        "scope": {
+          "type": "string",
+          "enum": ["admin", "read", "write"]
+        }
+      },
+      "required": ["name"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "revoke_personal_token",
+    "title": "Revoke personal token",
+    "description": "Revoke a personal token by id, or pass \"current\" to revoke the configured token.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "token_id": {
+          "description": "Identifier of the personal access token to operate on.",
+          "type": "string",
+          "pattern": "^pat_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["token_id"]
+    },
+    "annotations": {
+      "destructiveHint": true,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "list_webhooks",
+    "title": "List webhooks",
+    "description": "Webhook endpoints: list the per-project HTTP URLs that notifications and events are delivered to.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "cursor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["project_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "create_webhook",
+    "title": "Create webhook",
+    "description": "Create a webhook endpoint. The HMAC secret is write-only.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 160
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "hmac_secret": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 500,
+          "description": "Secret you provide to sign webhook deliveries with HMAC."
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "url": {
+          "type": "string",
+          "maxLength": 500,
+          "pattern": "^https?:\\/\\/",
+          "description": "url HTTP or HTTPS URL supplied by the endpoint owner."
+        }
+      },
+      "required": ["hmac_secret", "project_id", "url"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "update_webhook",
+    "title": "Update webhook",
+    "description": "Update a webhook endpoint or rotate its write-only HMAC secret.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 160
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "hmac_secret": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 500
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "url": {
+          "type": "string",
+          "maxLength": 500,
+          "pattern": "^https?:\\/\\/",
+          "description": "url HTTP or HTTPS URL supplied by the endpoint owner."
+        },
+        "webhook_id": {
+          "description": "Identifier of the webhook endpoint to operate on.",
+          "type": "string",
+          "pattern": "^we_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["project_id", "webhook_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "delete_webhook",
+    "title": "Delete webhook",
+    "description": "Delete a webhook endpoint. Requires admin access.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "webhook_id": {
+          "description": "Identifier of the webhook endpoint to operate on.",
+          "type": "string",
+          "pattern": "^we_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["project_id", "webhook_id"]
+    },
+    "annotations": {
+      "destructiveHint": true,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "list_alert_rules",
+    "title": "List alert rules",
+    "description": "Alert rules: list the per-project conditions that decide when a notification fires.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "cursor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["project_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "create_alert_rule",
+    "title": "Create alert rule",
+    "description": "Create an alert rule for project rank changes, thresholds, SERP features, or competitors.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "change_pct": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0.1,
+              "maximum": 1000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "channels": {
+          "minItems": 1,
+          "maxItems": 3,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["email", "slack", "webhook"]
+          }
+        },
+        "condition_type": {
+          "type": "string",
+          "enum": [
+            "change_pct",
+            "competitor_overtake",
+            "ctr_drop",
+            "downtrend",
+            "enters_top_n",
+            "exits_top_n",
+            "position_drop",
+            "serp_feature",
+            "threshold",
+            "url_mismatch"
+          ],
+          "description": "Condition that determines when the alert rule fires."
+        },
+        "competitor_domain": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 253
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "drop_positions": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 120,
+          "description": "Human-readable name chosen for the alert rule."
+        },
+        "recipient_ids": {
+          "maxItems": 500,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^usr_[a-z][a-z0-9]{23}$"
+          }
+        },
+        "serp_feature": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "severity": {
+          "description": "Alert severity. When omitted, the server chooses a condition-specific default.",
+          "type": "string",
+          "enum": ["info", "warning", "urgent"]
+        },
+        "target_ids": {
+          "maxItems": 500,
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^kw_[a-z][a-z0-9]{23}$"
+              },
+              {
+                "type": "string",
+                "pattern": "^tag_[a-z][a-z0-9]{23}$"
+              }
+            ]
+          }
+        },
+        "target_type": {
+          "type": "string",
+          "enum": ["all", "keyword", "tag"]
+        },
+        "threshold_position": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "top_n": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["condition_type", "name", "project_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "update_alert_rule",
+    "title": "Update alert rule",
+    "description": "Update an alert rule by rule id. The API replaces the whole rule configuration, so name and condition_type are required even when updating a single field.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "change_pct": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0.1,
+              "maximum": 1000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "channels": {
+          "minItems": 1,
+          "maxItems": 3,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["email", "slack", "webhook"]
+          }
+        },
+        "condition_type": {
+          "type": "string",
+          "enum": [
+            "change_pct",
+            "competitor_overtake",
+            "ctr_drop",
+            "downtrend",
+            "enters_top_n",
+            "exits_top_n",
+            "position_drop",
+            "serp_feature",
+            "threshold",
+            "url_mismatch"
+          ],
+          "description": "Condition that determines when the alert rule fires."
+        },
+        "competitor_domain": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 253
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "drop_positions": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 120,
+          "description": "Human-readable name chosen for the alert rule."
+        },
+        "recipient_ids": {
+          "maxItems": 500,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^usr_[a-z][a-z0-9]{23}$"
+          }
+        },
+        "serp_feature": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "severity": {
+          "description": "Alert severity. When omitted, the server chooses a condition-specific default.",
+          "type": "string",
+          "enum": ["info", "warning", "urgent"]
+        },
+        "target_ids": {
+          "maxItems": 500,
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^kw_[a-z][a-z0-9]{23}$"
+              },
+              {
+                "type": "string",
+                "pattern": "^tag_[a-z][a-z0-9]{23}$"
+              }
+            ]
+          }
+        },
+        "target_type": {
+          "type": "string",
+          "enum": ["all", "keyword", "tag"]
+        },
+        "threshold_position": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "top_n": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rule_id": {
+          "description": "Identifier of the alert rule to operate on.",
+          "type": "string",
+          "pattern": "^alr_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["condition_type", "name", "rule_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "delete_alert_rule",
+    "title": "Delete alert rule",
+    "description": "Delete an alert rule by rule id. Use only after the user confirms deletion.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "rule_id": {
+          "description": "Identifier of the alert rule to operate on.",
+          "type": "string",
+          "pattern": "^alr_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["rule_id"]
+    },
+    "annotations": {
+      "destructiveHint": true,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "list_triggered_alerts",
+    "title": "List triggered alerts",
+    "description": "List triggered alerts for a project.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "cursor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["project_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "mute_triggered_alert",
+    "title": "Mute triggered alert",
+    "description": "Mute one firing alert for 24 hours. This changes shared alert state for the whole project team.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "alert_id": {
+          "description": "Identifier of the triggered alert to operate on.",
+          "type": "string",
+          "pattern": "^al_[a-z][a-z0-9]{23}$"
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["alert_id", "project_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "mark_project_alerts_read",
+    "title": "Mark project alerts read",
+    "description": "Mark every firing alert in the project as read for the whole project team.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["project_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "list_team_members",
+    "title": "List team members",
+    "description": "List team members for a project.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "cursor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["project_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "list_team_invites",
+    "title": "List team invites",
+    "description": "List pending team invites for a project.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "cursor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["project_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "create_team_invite",
+    "title": "Create team invite",
+    "description": "Invite a user to a project team with an admin, member, or viewer role.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "email": {
+          "type": "string",
+          "maxLength": 254,
+          "format": "email",
+          "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
+          "description": "Email address of the person to invite to the project."
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["admin", "member", "viewer"],
+          "description": "Project role to grant to the invited or existing team member."
+        }
+      },
+      "required": ["email", "project_id", "role"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "revoke_team_invite",
+    "title": "Revoke team invite",
+    "description": "Revoke a pending project team invite.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "invite_id": {
+          "description": "Identifier of the team invitation to operate on.",
+          "type": "string",
+          "pattern": "^inv_[a-z][a-z0-9]{23}$"
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["invite_id", "project_id"]
+    },
+    "annotations": {
+      "destructiveHint": true,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "resend_team_invite",
+    "title": "Resend team invite",
+    "description": "Resend a pending team invitation and replace its expiration and token.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "invite_id": {
+          "description": "Identifier of the team invitation to operate on.",
+          "type": "string",
+          "pattern": "^inv_[a-z][a-z0-9]{23}$"
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["invite_id", "project_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "update_team_member_role",
+    "title": "Update team member role",
+    "description": "Change a non-owner project member role to admin, member, or viewer. Ownership transfer remains UI-only.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "member_id": {
+          "description": "Identifier of the project member to operate on.",
+          "type": "string",
+          "pattern": "^mbr_[a-z][a-z0-9]{23}$"
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["admin", "member", "viewer"],
+          "description": "Project role to grant to the invited or existing team member."
+        }
+      },
+      "required": ["member_id", "project_id", "role"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "remove_team_member",
+    "title": "Remove team member",
+    "description": "Permanently remove a non-owner project member. Confirm the user's intent before calling this tool.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "member_id": {
+          "description": "Identifier of the project member to operate on.",
+          "type": "string",
+          "pattern": "^mbr_[a-z][a-z0-9]{23}$"
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["member_id", "project_id"]
+    },
+    "annotations": {
+      "destructiveHint": true,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "list_providers",
+    "title": "List providers",
+    "description": "List provider connection options and status for a project.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "cursor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["project_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "connect_provider",
+    "title": "Connect provider",
+    "description": "Connect or update credentials for a project provider. SERP providers are dataforseo and serpapi; analytics providers are ga4, gsc, and plausible. Self-hosted providers such as Plausible accept an optional credentials.endpoint base URL.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "cost_per_check": {
+          "type": "number",
+          "minimum": 0
+        },
+        "credentials": {
+          "type": "object",
+          "properties": {
+            "api_key": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "endpoint": {
+              "description": "Base API URL for self-hosted provider instances, such as self-hosted Plausible.",
+              "type": "string",
+              "maxLength": 500,
+              "pattern": "^https?:\\/\\/"
+            },
+            "login": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "secret": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            }
+          },
+          "additionalProperties": false
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "login": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "primary": {
+          "type": "boolean"
+        },
+        "priority": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "provider_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "description": "Provider id. Known values: dataforseo, serpapi, ga4, gsc, plausible."
+        },
+        "secret": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        }
+      },
+      "required": ["project_id", "provider_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "test_provider_connection",
+    "title": "Test provider connection",
+    "description": "Test provider credentials or the saved provider connection. Self-hosted providers such as Plausible accept an optional credentials.endpoint base URL.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "credentials": {
+          "type": "object",
+          "properties": {
+            "api_key": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "endpoint": {
+              "description": "Base API URL for self-hosted provider instances, such as self-hosted Plausible.",
+              "type": "string",
+              "maxLength": 500,
+              "pattern": "^https?:\\/\\/"
+            },
+            "login": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "secret": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            }
+          },
+          "additionalProperties": false
+        },
+        "login": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "provider_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "description": "Provider id. Known values: dataforseo, serpapi, ga4, gsc, plausible."
+        },
+        "secret": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        }
+      },
+      "required": ["project_id", "provider_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "update_provider_settings",
+    "title": "Update provider settings",
+    "description": "Update provider settings such as enabled state, priority, or primary status.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "primary": {
+          "type": "boolean"
+        },
+        "priority": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "provider_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "description": "Provider id. Known values: dataforseo, serpapi, ga4, gsc, plausible."
+        }
+      },
+      "required": ["project_id", "provider_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "set_provider_enabled",
+    "title": "Set provider enabled",
+    "description": "Enable or disable a provider for a project.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether this provider connection should be active for the project."
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "provider_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "description": "Provider id. Known values: dataforseo, serpapi, ga4, gsc, plausible."
+        }
+      },
+      "required": ["enabled", "project_id", "provider_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "set_provider_priority",
+    "title": "Set provider priority",
+    "description": "Set provider priority for a project. Lower numbers are preferred first.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "priority": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000,
+          "description": "Ordering value that determines this provider's preference."
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "provider_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "description": "Provider id. Known values: dataforseo, serpapi, ga4, gsc, plausible."
+        }
+      },
+      "required": ["priority", "project_id", "provider_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "set_primary_provider",
+    "title": "Set primary provider",
+    "description": "Set or clear a provider as the primary project provider.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "primary": {
+          "type": "boolean"
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "provider_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "description": "Provider id. Known values: dataforseo, serpapi, ga4, gsc, plausible."
+        }
+      },
+      "required": ["project_id", "provider_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "disconnect_provider",
+    "title": "Disconnect provider",
+    "description": "Disconnect a provider from a project. Use only after the user confirms deletion.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "provider_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "description": "Provider id. Known values: dataforseo, serpapi, ga4, gsc, plausible."
+        }
+      },
+      "required": ["project_id", "provider_id"]
+    },
+    "annotations": {
+      "destructiveHint": true,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "list_saved_views",
+    "title": "List saved views",
+    "description": "List saved keyword views for a project.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "cursor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "surface": {
+          "type": "string",
+          "enum": ["keywords", "competitors"],
+          "description": "Application surface whose saved views should be listed or created."
+        }
+      },
+      "required": ["project_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "create_saved_view",
+    "title": "Create saved view",
+    "description": "Create a saved keyword view for a project. Known country filter values: 'all' or a supported market country code such as us, gb, ca, au, de, fr, es, it, nl, se, pl. Known serp filter values: ai, featured, image, paa, sitelinks, video. The API validates both against its data-driven market list.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "config": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "filters": {
+                  "default": {
+                    "change": "any",
+                    "contains": "",
+                    "intents": [],
+                    "last_check": "any",
+                    "position": [],
+                    "serp": [],
+                    "tags": [],
+                    "topics": [],
+                    "url_changed": false,
+                    "vol_max": 50,
+                    "vol_min": 0,
+                    "wrong_url": false
+                  },
+                  "type": "object",
+                  "properties": {
+                    "change": {
+                      "default": "any",
+                      "type": "string",
+                      "enum": ["any", "down", "lost", "new", "up"]
+                    },
+                    "contains": {
+                      "default": "",
+                      "type": "string",
+                      "maxLength": 80
+                    },
+                    "intents": {
+                      "default": [],
+                      "maxItems": 20,
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 80
+                      }
+                    },
+                    "last_check": {
+                      "default": "any",
+                      "type": "string",
+                      "enum": ["any", "completed", "failed", "running"]
+                    },
+                    "position": {
+                      "default": [],
+                      "maxItems": 4,
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": ["11-50", "51-100", "top10", "top3"]
+                      }
+                    },
+                    "serp": {
+                      "default": [],
+                      "maxItems": 8,
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 80
+                      }
+                    },
+                    "tags": {
+                      "default": [],
+                      "maxItems": 20,
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 48,
+                        "description": "Tag label assigned to the keyword."
+                      }
+                    },
+                    "topics": {
+                      "default": [],
+                      "maxItems": 20,
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 80
+                      }
+                    },
+                    "url_changed": {
+                      "default": false,
+                      "type": "boolean"
+                    },
+                    "vol_max": {
+                      "default": 50,
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 50
+                    },
+                    "vol_min": {
+                      "default": 0,
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 50
+                    },
+                    "wrong_url": {
+                      "default": false,
+                      "type": "boolean"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "lens": {
+                  "default": {
+                    "device": "all",
+                    "location_id": null
+                  },
+                  "type": "object",
+                  "properties": {
+                    "device": {
+                      "default": "all",
+                      "type": "string",
+                      "enum": ["all", "desktop", "mobile"]
+                    },
+                    "location_id": {
+                      "default": null,
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "search": {
+                  "default": "",
+                  "type": "string",
+                  "maxLength": 120
+                },
+                "surface": {
+                  "default": "keywords",
+                  "type": "string",
+                  "const": "keywords"
+                },
+                "version": {
+                  "default": 1,
+                  "type": "number",
+                  "const": 1
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "filters": {
+                  "type": "object",
+                  "properties": {
+                    "excluded_keyword_ids": {
+                      "maxItems": 10000,
+                      "type": "array",
+                      "items": {
+                        "description": "Identifier of the tracked keyword to operate on.",
+                        "type": "string",
+                        "pattern": "^kw_[a-z][a-z0-9]{23}$"
+                      }
+                    },
+                    "position": {
+                      "default": "all",
+                      "type": "string",
+                      "enum": ["all", "top3", "top10"]
+                    },
+                    "tag": {
+                      "default": null,
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 40
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "scope": {
+                  "type": "object",
+                  "properties": {
+                    "device": {
+                      "type": "string",
+                      "enum": ["desktop", "mobile"],
+                      "description": "Device selected for the competitor comparison."
+                    },
+                    "engine": {
+                      "type": "string",
+                      "const": "google",
+                      "description": "Search engine used for competitor comparison."
+                    },
+                    "location_id": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "Location identifier selected for the competitor comparison."
+                    }
+                  },
+                  "required": ["device", "engine", "location_id"],
+                  "additionalProperties": false,
+                  "description": "Market scope whose competitor view is being saved."
+                },
+                "surface": {
+                  "type": "string",
+                  "const": "competitors",
+                  "description": "Saved-view surface for competitor comparisons."
+                },
+                "version": {
+                  "type": "number",
+                  "const": 1,
+                  "description": "Competitor saved-view schema version."
+                }
+              },
+              "required": ["scope", "surface", "version"],
+              "additionalProperties": false
+            }
+          ],
+          "description": "Saved-view filters and search settings chosen by the user."
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 48,
+          "description": "Human-readable name chosen for the saved view."
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "surface": {
+          "type": "string",
+          "enum": ["keywords", "competitors"],
+          "description": "Application surface whose saved views should be listed or created."
+        }
+      },
+      "required": ["config", "name", "project_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "delete_saved_view",
+    "title": "Delete saved view",
+    "description": "Delete a project saved view. Use only after the user confirms deletion.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "view_id": {
+          "description": "Identifier of the saved view to operate on.",
+          "type": "string",
+          "pattern": "^viw_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["project_id", "view_id"]
+    },
+    "annotations": {
+      "destructiveHint": true,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "list_competitors",
+    "title": "List competitors",
+    "description": "List tracked competitors, market data, and suggestions for a project.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "cursor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["project_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "add_competitor",
+    "title": "Add competitor",
+    "description": "Add a tracked competitor domain to a project.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "domain": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 253,
+          "description": "Competitor domain to track alongside the project."
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["domain", "project_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "remove_competitor",
+    "title": "Remove competitor",
+    "description": "Remove a tracked competitor from a project.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "competitor_id": {
+          "description": "Identifier of the competitor to operate on.",
+          "type": "string",
+          "pattern": "^cmp_[a-z][a-z0-9]{23}$"
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["competitor_id", "project_id"]
+    },
+    "annotations": {
+      "destructiveHint": true,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "get_notification_preferences",
+    "title": "Get notification preferences",
+    "description": "Notification channel switches: get which channels (email, Slack, webhook) are turned on for the project. Returns no addresses or URLs; use list_webhooks for where notifications are sent.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["project_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "update_notification_preferences",
+    "title": "Update notification preferences",
+    "description": "Notification channel switches: turn the project's notification channels (email, Slack, webhook) on or off. Does not create or change webhook endpoints; use create_webhook or update_webhook for those.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "alert_email": {
+          "type": "boolean"
+        },
+        "alert_in_app": {
+          "type": "boolean"
+        },
+        "alert_slack": {
+          "type": "boolean"
+        },
+        "alert_webhook": {
+          "type": "boolean"
+        },
+        "check_email": {
+          "type": "boolean"
+        },
+        "check_in_app": {
+          "type": "boolean"
+        },
+        "import_email": {
+          "type": "boolean"
+        },
+        "import_in_app": {
+          "type": "boolean"
+        },
+        "invite_email": {
+          "type": "boolean"
+        },
+        "invite_in_app": {
+          "type": "boolean"
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["project_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "list_migration_tokens",
+    "title": "List migration tokens",
+    "description": "List active migration tokens for a project.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "cursor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["project_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "mint_migration_token",
+    "title": "Mint migration token",
+    "description": "Mint a migration token for a project.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "scope": {
+          "type": "string",
+          "enum": ["full", "keywords"]
+        }
+      },
+      "required": ["project_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "revoke_migration_token",
+    "title": "Revoke migration token",
+    "description": "Revoke a project migration token.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "project_id": {
+          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "token_id": {
+          "description": "Identifier of the migration token to operate on.",
+          "type": "string",
+          "pattern": "^ferry_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["project_id", "token_id"]
+    },
+    "annotations": {
+      "destructiveHint": true,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  }
+]

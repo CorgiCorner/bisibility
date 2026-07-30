@@ -1,0 +1,43 @@
+# Persistent Temporal fallback at localhost:7233 (UI :8233); prefer `npm run temporal:dev`.
+# Usage: `docker compose -f docker-compose.temporal.yml up`; full stack: `docker compose --profile scheduled up --build`.
+services:
+  temporal-postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: temporal
+      POSTGRES_PASSWORD: temporal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U temporal -d temporal"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    volumes:
+      - temporal-postgres-data:/var/lib/postgresql/data
+
+  temporal:
+    image: temporalio/auto-setup:1.25.2
+    depends_on:
+      temporal-postgres:
+        condition: service_healthy
+    environment:
+      DB: postgres12
+      DB_PORT: 5432
+      POSTGRES_USER: temporal
+      POSTGRES_PWD: temporal
+      POSTGRES_SEEDS: temporal-postgres
+    ports:
+      - "7233:7233"
+
+  temporal-ui:
+    image: temporalio/ui:2.34.0
+    depends_on:
+      - temporal
+    environment:
+      TEMPORAL_ADDRESS: temporal:7233
+      TEMPORAL_CORS_ORIGINS: http://localhost:8233
+    ports:
+      - "8233:8080"
+
+volumes:
+  temporal-postgres-data:

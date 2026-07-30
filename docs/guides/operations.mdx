@@ -1,0 +1,166 @@
+---
+title: "Back up and upgrade"
+description: "Protect self-hosted data, upgrade safely, verify health, and plan rollbacks."
+---
+
+## What to back up
+
+PostgreSQL is the source of truth for projects, keywords, schedules, rank checks,
+encrypted provider connections, alerts, notifications, and audit history. Keep:
+
+- regular PostgreSQL backups with tested restore procedures;
+- the exact `BISIBILITY_SECRETS_KEY` used to encrypt provider credentials;
+- `BETTER_AUTH_SECRET` and the deployment's secret/environment inventory;
+- your deployment manifests and the application version or image digest.
+
+Redis or Valkey contains rate-limit, idempotency, and realtime coordination data
+and normally does not need durable backup. If you self-host Temporal and need to
+preserve in-flight workflow history, back up its persistence database separately.
+Keyword schedule intent remains in the application database and the worker can
+reconcile Temporal schedules after recovery.
+
+Example PostgreSQL backup:
+
+```bash
+pg_dump --format=custom --no-owner "$DATABASE_URL" > bisibility.dump
+pg_restore --clean --if-exists --no-owner --dbname "$DIRECT_URL" bisibility.dump
+```
+
+Test restores in an isolated database. `--clean` is destructive and must never
+target the active production database.
+
+## Upgrade Docker Compose
+
+1. Read the changelog and note schema or environment changes.
+2. Stop writes or schedule a maintenance window.
+3. Back up PostgreSQL and secrets.
+4. Fetch the target tag, review `.env.example`, and update `.env` deliberately.
+5. Rebuild and start:
+
+   ```bash
+   docker compose pull
+   docker compose up --build -d
+   ```
+
+The one-shot `db-migrations` service runs `npm run db:migrate`, which executes
+`prisma migrate deploy` for the full tree and then all blocking data migrations
+before the web app.
+No separate operator migration job is required. With scheduled checks enabled,
+include `--profile scheduled` when starting the stack. Never enable demo OTP or
+demo seeding on a real deployment.
+
+### One-time public ID v3 cutover
+
+The public ID v3 release has an additional production gate because the previous
+web version can still create v2 identifiers while a replacement image is
+building. Its expand migration installs a database trigger that blocks
+application writes, while the blocking migration uses a session-local bypass to
+rewrite the existing data. Development and preview environments open the gate
+automatically after the migration. A production deployment keeps it blocked
+until the new web release is proven live.
+
+For Docker Compose, set `DEPLOYMENT_ENV=production` and set `APP_VERSION` to the
+exact 40-character commit SHA from the target checkout. A tag or branch name is
+not sufficient. Missing or unknown deployment environments fail closed. Keep
+the old web and worker stopped, then deploy the web application first:
+
+```bash
+target_release="$(git rev-parse --verify 'HEAD^{commit}')"
+test "${#target_release}" -eq 40
+export DEPLOYMENT_ENV=production
+export APP_VERSION="$target_release"
+docker compose stop app worker
+docker compose up --build -d app
+docker compose exec app npm run public-id:write-gate -- release \
+  --health-url https://your-host.example/api/v1/health \
+  --expected-app-release "$target_release"
+docker compose --profile scheduled up --build -d worker
+```
+
+The release command accepts health HTTP 200 or 503 because the stopped worker
+can temporarily degrade the overall endpoint. In either case, it requires the
+web application, database, and blocking migrations to be healthy and requires
+`services.appRelease` to equal the exact target SHA. It also verifies the gate's
+release phase, operator policy, target SHA, all v3 database constraints, and the
+migration ledger before it conditionally opens writes and records the release
+timestamp and SHA. It reads the existing database variables from the app
+container and does not print them. Confirm the final state with:
+
+```bash
+docker compose exec app npm run public-id:write-gate -- status
+```
+
+Do not bypass the command with manual SQL. If the new web release does not
+become healthy, leave the gate blocked and fix or redeploy it. Returning to a v2
+image after data was rewritten requires restoring the pre-upgrade database
+backup; an image rollback alone is not compatible.
+
+The later N+1 contract release is a second maintenance window. Do not skip
+directly from a populated pre-N database to N+1. First complete and verify N as
+described above. For N+1, use its own exact SHA, stop the web and worker, and
+deploy the web first. The migration runner transactionally reblocks the
+released N gate before Prisma enforces the final database catalog. Once the
+exact N+1 web release reports ready, remove the temporary lifecycle objects:
+
+```bash
+target_release="$(git rev-parse --verify 'HEAD^{commit}')"
+test "${#target_release}" -eq 40
+export DEPLOYMENT_ENV=production
+export APP_VERSION="$target_release"
+docker compose stop app worker
+docker compose up --build -d app
+docker compose exec app npm run public-id:contract-cleanup -- cleanup \
+  --health-url https://your-host.example/api/v1/health \
+  --expected-app-release "$target_release"
+docker compose --profile scheduled up --build -d worker
+```
+
+The cleanup command verifies the exact live release twice and never opens the
+gate before cleanup. In one database transaction it checks the final catalog
+and exact trigger inventory, then removes the gate triggers, gate function,
+temporary reservation ledger, and gate table. If it fails, all objects remain
+blocked and the safe recovery is to fix and redeploy the same N+1 SHA. Do not
+remove them with manual SQL and do not roll the application back to N after N+1
+has reblocked the database. Fresh databases take a guarded empty-schema path.
+Nonproduction automatic deployments clean up automatically; production still
+uses the exact-health command even when its database starts empty.
+
+After an upgrade that adds competitor organic snapshots, optionally compact the
+latest completed SERP for each keyword into the new query-friendly column:
+
+```bash
+npm run db:backfill:competitor-organics
+```
+
+Run the command with `DATABASE_URL` available. It is batched and idempotent, and
+leaves checks without a usable historical organic payload unchanged. The app
+continues to read those legacy payloads directly, so the backfill does not need
+to block the web deployment.
+
+## Keep web and worker on the same version
+
+The web app and Temporal worker share one Prisma schema. For a split deployment,
+back up PostgreSQL, deploy the web app so `npm run db:migrate` applies the full
+Prisma tree and all blocking data migrations, then immediately deploy the
+worker from the same release tag. Version skew
+commonly appears as "The column ... does not exist" errors in worker logs or as
+failing scheduled checks while the web app works.
+
+## Verify and roll back
+
+Check `GET /api/v1/health`, sign-in, one project read, and worker logs. Confirm
+that `services.migrations` is `ready`; the endpoint returns 503 when a blocking
+data migration is incomplete, has a checksum mismatch, or cannot be read.
+Confirm the Temporal worker reports ready and its maintenance schedules are
+created or already exist.
+For split deployments, verify that both processes use the same release by
+following [Keep web and worker on the same version](#keep-web-and-worker-on-the-same-version).
+
+Rolling the application image back does not reverse Prisma migrations. If a
+release contains an incompatible schema migration, restore the pre-upgrade
+database backup together with the matching application version. Practice that
+procedure before relying on it during an incident.
+
+For managed platforms, use the platform database backup and rollback features,
+but keep independent exports for disaster recovery. Deployment topology is in
+[Self-hosting](/self-hosting).

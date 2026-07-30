@@ -1,0 +1,8 @@
+{
+  "payload": {
+    "deployment": {
+      "id": "dpl_failed"
+    }
+  },
+  "type": "deployment.failed"
+}

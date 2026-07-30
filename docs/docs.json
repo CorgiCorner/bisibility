@@ -1,0 +1,125 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "name": "bisibility",
+  "description": "Self-hostable, open-source keyword rank tracker. Bring your own SERP and analytics providers, track positions over time, and get alerts.",
+  "favicon": "/favicon.svg",
+  "theme": "mint",
+  "colors": {
+    "primary": "#D97757",
+    "light": "#E08A6A",
+    "dark": "#C2603F"
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Docs",
+        "groups": [
+          {
+            "group": "Get started",
+            "pages": [
+              "index",
+              "quickstart",
+              "self-hosting",
+              "architecture",
+              "integrations",
+              "authentication",
+              "audit-log"
+            ]
+          },
+          {
+            "group": "Product guides",
+            "pages": [
+              "guides/choose-first-keywords",
+              "guides/alerts",
+              "guides/competitors",
+              "guides/teams",
+              "guides/saved-keywords",
+              "guides/saved-views",
+              "guides/analytics",
+              "guides/sitemap-monitoring",
+              "guides/migration",
+              "guides/operations",
+              "guides/email"
+            ]
+          },
+          {
+            "group": "API reference",
+            "pages": [
+              "api/overview",
+              "api/projects",
+              "api/keywords",
+              "api/ranked-keyword-suggestions",
+              "api/keyword-research",
+              "api/keyword-metrics",
+              "api/backlinks",
+              "api/locations",
+              "api/analytics",
+              "api/checks",
+              "api/rank-history",
+              "api/personal-access-tokens",
+              "api/api-keys",
+              "api/webhooks",
+              "api/discovery",
+              "api/cloud-import",
+              "api/deploy-webhooks",
+              "api/alert-rules",
+              "api/sitemap-monitors",
+              "api/competitors",
+              "api/providers",
+              "api/saved-views",
+              "api/signals",
+              "api/notification-preferences",
+              "api/team",
+              "api/errors"
+            ]
+          },
+          {
+            "group": "SDKs",
+            "pages": [
+              "sdks/overview",
+              "sdks/methods",
+              "sdks/python",
+              "sdks/typescript",
+              "sdks/go",
+              "sdks/mcp"
+            ]
+          },
+          {
+            "group": "AI / Agents",
+            "pages": ["agents"]
+          }
+        ]
+      }
+    ]
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "GitHub",
+        "href": "https://github.com/CorgiCorner/bisibility"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Open bisibility",
+      "href": "https://bisibility.com"
+    }
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/CorgiCorner/bisibility"
+    }
+  },
+  "redirects": [
+    {
+      "source": "/api/resources",
+      "destination": "/api/overview"
+    }
+  ],
+  "seo": {
+    "indexing": "all",
+    "metatags": {
+      "canonical": "https://bisibility.com/docs"
+    }
+  }
+}

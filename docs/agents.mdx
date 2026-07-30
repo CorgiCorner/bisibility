@@ -1,0 +1,149 @@
+---
+title: "AI agents"
+description: "Connect AI agents to bisibility through MCP or the REST API."
+---
+
+AI agents can create projects, add keywords, run checks, and read rank history.
+They use the same authenticated operations as other API clients.
+
+## What an agent can do
+
+- Connect and test a SERP provider.
+- Add keywords to a project.
+- Run a rank check and read the result.
+- Read ranking history and stored traffic snapshots.
+- Review, mute, or acknowledge triggered alerts.
+- Export project data or prepare a migration.
+
+## Connect through MCP
+
+Bisibility exposes a Model Context Protocol (MCP) Streamable HTTP endpoint:
+
+```text
+https://your-host.example/api/mcp
+```
+
+Use `https://bisibility.com/api/mcp` for the hosted production endpoint. A
+self-hosted client should use its own origin.
+
+For example, connect Codex to a self-hosted instance with a personal access
+token:
+
+```bash
+export BISIBILITY_TOKEN="bsb_pat_live_..."
+codex mcp add bisibility \
+  --url "https://your-host.example/api/mcp" \
+  --bearer-token-env-var BISIBILITY_TOKEN
+```
+
+Project API keys work too. Other MCP clients use different configuration fields.
+
+The MCP server card lists the endpoint and available tools:
+
+```text
+https://your-host.example/.well-known/mcp/server-card.json
+```
+
+## Authenticate
+
+Choose a personal access token when the agent acts as you across projects or
+performs account-level operations. Choose a project API key when the agent
+should stay isolated to one project. Send either credential in the HTTP
+`Authorization` header, not in a tool argument.
+
+```text
+Authorization: Bearer <token>
+```
+
+For REST clients and SDKs, set the API root and credential in the tool
+environment. The `BISIBILITY_API_KEY` variable accepts either credential:
+
+```bash
+export BISIBILITY_BASE_URL="https://your-host.example/api/v1"
+export BISIBILITY_API_KEY=placeholder
+```
+
+See [Authentication](/authentication) to choose and create a credential, select
+a project for PAT requests, and make a test request.
+
+## Example workflow
+
+1. Create or select a project.
+2. Add a keyword with its country and device.
+3. Start a rank check.
+4. Poll the check until it completes.
+5. Read the keyword's ranking history.
+
+MCP tools use the same permission model as REST API v1 and expose the same
+documented operations.
+
+## More agent tasks
+
+- Discover keywords that a domain already ranks for and annotate tracked terms.
+- Research related queries, suggestions, and keyword ideas, then hydrate their metrics.
+- Query live search-performance data or start an analytics sync.
+- Generate a weekly report of ranking gains, losses, and new entries.
+- Inspect, enable, or disable sitemap monitoring for a project.
+
+## Available tools and schemas
+
+<CardGroup cols={2}>
+  <Card
+    title="MCP server card"
+    icon="plug"
+    href="https://bisibility.com/.well-known/mcp/server-card.json"
+  >
+    The MCP endpoint and tool inventory.
+  </Card>
+  <Card
+    title="OpenAPI"
+    icon="code"
+    href="https://eu.bisibility.com/api/v1/openapi.json"
+  >
+    The exact REST API schema.
+  </Card>
+  <Card
+    title="Capabilities"
+    icon="sparkles"
+    href="https://eu.bisibility.com/api/v1/capabilities"
+  >
+    Features exposed by the production API.
+  </Card>
+  <Card
+    title="Agent skills"
+    icon="book-open"
+    href="https://bisibility.com/.well-known/agent-skills/index.json"
+  >
+    Task-focused instructions that agents can discover.
+  </Card>
+</CardGroup>
+
+## Advanced discovery
+
+These endpoints help agents discover authentication, schemas, and supported
+features. They are optional for a basic MCP connection.
+
+| Surface                           | URL                                               |
+| --------------------------------- | ------------------------------------------------- |
+| Markdown for agents               | Send `Accept: text/markdown` to public HTML pages |
+| Auth guide                        | `/auth.md`                                        |
+| OAuth protected resource metadata | `/.well-known/oauth-protected-resource`           |
+| Agent skills index                | `/.well-known/agent-skills/index.json`            |
+| MCP server card                   | `/.well-known/mcp/server-card.json`               |
+| API guide for language models     | `/api/v1/llms.txt`                                |
+| OpenAPI                           | `/api/v1/openapi.json`                            |
+| Capabilities                      | `/api/v1/capabilities`                            |
+
+## Optional DNS-AID records
+
+HTTP discovery works without DNS-AID. Operators can publish DNS records when
+they also want domain-level AI discovery:
+
+```dns
+_index._agents.your-host.example. 300 IN SVCB 1 your-host.example. alpn="h2" port="443" mandatory=alpn,port key65400="/.well-known/agent-skills/index.json" key65401="/api/v1/llms.txt"
+_mcp._agents.your-host.example. 300 IN SVCB 1 your-host.example. alpn="mcp,h2" port="443" mandatory=alpn,port key65400="/.well-known/mcp/server-card.json" key65401="/api/mcp"
+```
+
+DNS-AID and DNSSEC are separate operator settings. Sign the zone and publish
+the matching DS record before claiming authenticated DNS discovery. Verify the
+records with a validating resolver.

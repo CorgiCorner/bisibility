@@ -1,0 +1,163 @@
+---
+title: "Quickstart"
+description: "Start a self-hosted bisibility workspace, connect a provider, and run your first rank check."
+---
+
+This path gets a self-hosted workspace from an empty install to its first Google
+rank data. It assumes you run the app yourself and bring your own SERP provider
+credentials.
+
+**Read the deployment overview:** The public repository opens with the first
+public release. The steps below explain the workflow without promising an
+available clone before that release.
+
+## 1. Start the stack
+
+Follow [Self-hosting](/self-hosting) for Docker, required services,
+environment variables, migrations, and the optional Temporal worker.
+
+For a local Docker install, the short path is:
+
+> **Availability:** The public repository opens with the first public release.
+> Until then, read the deployment overview below; the clone command is not yet available.
+
+```bash
+git clone https://github.com/CorgiCorner/bisibility.git bisibility
+cd bisibility
+./scripts/dev/bootstrap-local.sh
+docker compose up --build
+```
+
+Open `http://localhost:3000` and sign in with the demo login.
+
+### Demo login
+
+Setting `DEMO_FIXED_OTP=1` together with `DEMO_INSTANCE_INSECURE_AUTH_ACK=1`
+enables a fixed demo login: email `demo@acme.dev`, one-time code `000000`. The
+login screen displays both hints while demo mode is active, so you do not need
+to memorize them.
+
+This is insecure by design - anyone who knows the code can sign in. Use it only
+for throwaway local installs. Remove both variables before any real deployment
+and configure email delivery instead (see the
+[environment variables](/self-hosting#optional-environment-variables) in
+Self-hosting).
+
+## 2. Create an account and project
+
+After signing in, complete onboarding:
+
+1. Create a project with a name and domain, such as `example.com`.
+2. Choose the ownership matching rules for URLs that should count as yours.
+3. Keep the default market and device unless your first tracked phrases need a
+   different country, city, desktop, or mobile target.
+
+The project domain is used to match organic Google results to your site.
+
+## 3. Connect a SERP provider
+
+Open **Integrations**, choose a SERP provider, then select **Connect**.
+
+Enter the provider's credentials and select **Test connection** before saving;
+credential-based, non-OAuth providers must pass the test. Set the provider as
+primary if it should be first in the fallback chain.
+
+See [Integrations](/integrations) for the supported providers, their
+credential fields, cost estimates, fallback priority, and the monthly budget
+cap.
+
+## 4. Add search terms
+
+Choose how to build the first tracking set before opening the add flow:
+
+- **Search Console:** existing sites should begin with queries that already
+  receive impressions. Connect Google Search Console and import only relevant
+  queries. It helps you find Google queries; it does not replace a rank check.
+- **Starter guide:** use [Choose your first keywords](/guides/choose-first-keywords)
+  to build a 10-20 phrase set. Each phrase should have a page that should rank
+  and a reason to track it.
+- **Manual or CSV:** add existing research, brand terms, and phrases that match
+  an important page.
+
+Open the tracking table and select the add action when the set is ready. It does
+not need to be perfect. Your first rank check gives you a starting point to
+review and improve.
+
+Use **Manual** for a short list: paste one keyword per line, choose location and
+device, add the page that should rank (called the target URL), and add tags to
+record why you are tracking it. Then select **Add & track**.
+
+Use **CSV** for imports. The drawer accepts files or pasted CSV with columns:
+
+```text
+keyword,target_url,tags,country,device
+open source analytics,/vs/ga,"Comparison",US,desktop
+self hosted seo tool,/self-host,"Product",US,desktop
+```
+
+Use the existing `tags` column to record why you track a phrase, such as
+`Improve`, `Protect`, `Launch`, `Investigate`, or `Long term`. Every phrase
+should have a target URL or a written reason that its intended page does not
+exist yet.
+
+Review the parsed rows, fix any issues, then confirm the import. Duplicate
+keyword, location, and device combinations are skipped.
+
+## 5. Run the first check
+
+For a single keyword, open the keyword detail page and select **Run check now**.
+For a project-level manual run, open **Settings** and use **Run check now** in
+the manual checks panel.
+
+If you started the scheduled Docker profile, the worker runs due checks from the
+configured schedule:
+
+```bash
+docker compose --profile scheduled up --build
+```
+
+Manual checks can run without Temporal. Scheduled checks require Temporal and the
+worker.
+
+## 6. Read results
+
+Open **Overview** after the first completed check. The dashboard shows:
+
+| Area | What to look for |
+| - | - |
+| KPIs | Average position, tracked terms, movement, and top-ranking coverage. |
+| Trend and distribution | Position history over time and how many terms sit in each rank bucket. |
+| Data source | Connected provider, last check, next check, checks this month, estimated cost, and recent failures. |
+| Highlights | Wins, terms needing attention, new top-10 rankings, and recently added terms. |
+
+Open a keyword detail page for position, best position, movement, ranking URL,
+target URL mismatch, tags, schedule, alerts, and CSV export.
+
+Open **Alerts** to create rules and read the alert feed. Rules are evaluated
+after completed rank checks, so a new workspace will not show triggered alerts
+until checks have run.
+
+## API quickstart
+
+The REST API lives under `/api/v1`. Use a project API key from **Project Settings
+-> API keys** for an integration limited to one project. Use a personal access token
+from **Account -> Security** for user, cross-project, or account-level automation.
+[Authentication](/authentication) explains both options and PAT project selection.
+
+Use an [official client library](/sdks/overview) instead of writing the
+HTTP client yourself when Python, TypeScript, Go, or MCP fits your integration.
+The example variable below can hold either bearer credential:
+
+```bash
+export BISIBILITY_BASE_URL="https://rank.example.com/api/v1"
+export BISIBILITY_API_KEY=placeholder
+```
+
+Useful API pages:
+
+- [Authentication](/authentication)
+- [Projects API](/api/projects)
+- [Tracked terms API](/api/keywords)
+- [Checks API](/api/checks)
+- [Rank history API](/api/rank-history)
+- [OpenAPI overview](/api/overview)

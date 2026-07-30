@@ -1,0 +1,114 @@
+name: Bug report
+description: Report a problem with bisibility
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Please fill in as much detail
+        as you can - it makes issues far faster to reproduce and fix.
+
+        **Do not include secrets, API keys, tokens, or production infrastructure
+        details anywhere in this report.**
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where it broke
+      description: Closest match. Manual and scheduled rank checks run through different code, so the distinction matters.
+      options:
+        - First run / setup
+        - Sign-in
+        - Rank check (manual)
+        - Rank check (scheduled)
+        - Dashboard or UI
+        - REST API
+        - MCP
+        - Import or export
+        - Integrations / SERP providers
+        - Documentation
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear description of the bug.
+      placeholder: What happened?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Minimal steps that trigger the problem.
+      placeholder: |
+        1. Go to...
+        2. Click on...
+        3. See error
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What did you expect to happen instead?
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: bisibility version / commit
+      placeholder: v0.1.0 or commit SHA
+    validations:
+      required: true
+  - type: dropdown
+    id: deployment
+    attributes:
+      label: Deployment
+      options:
+        - Docker Compose
+        - Self-hosted (other)
+        - Cloud
+        - Local development
+    validations:
+      required: true
+  - type: input
+    id: provider
+    attributes:
+      label: SERP provider
+      description: Only if the problem involves rank checks or keyword data.
+      placeholder: e.g. DataForSEO, SerpAPI, none configured
+  - type: input
+    id: market
+    attributes:
+      label: Market, language, and device
+      description: Required to reproduce anything rank-related - results differ per location, language, and device.
+      placeholder: e.g. United States / English / Desktop
+  - type: input
+    id: timezone
+    attributes:
+      label: Timezone
+      description: Only if dates, schedules, or history ranges look wrong.
+      placeholder: e.g. Europe/Warsaw
+  - type: input
+    id: environment
+    attributes:
+      label: Browser / client
+      placeholder: e.g. Chrome 138, curl, TypeScript SDK
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: Paste any relevant logs. This is formatted as code automatically. Redact secrets.
+      render: shell
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Final checks
+      options:
+        - label: I searched existing issues and this is not a duplicate.
+          required: true
+        - label: This report contains no secrets, tokens, or production infrastructure details.
+          required: true

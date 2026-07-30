@@ -1,0 +1,127 @@
+---
+title: "API keys"
+description: "List, create, and revoke API keys through the REST API."
+---
+
+API-key routes require an admin-capable key.
+
+A personal access token can manage keys for an explicit project through
+`/projects/{project_id}/api-keys`. Its effective permission for that project
+must be `admin`. The top-level `/api-keys` aliases remain useful for project
+keys and for a PAT when project selection is unambiguous.
+
+## API key resource
+
+```json
+{
+  "id": "key_a00000000000000000000000",
+  "name": "reporting job",
+  "prefix": "bsb_key_live_xxxxxxxx",
+  "scope": "read",
+  "created_at": "2026-06-28T10:00:00.000Z",
+  "expires_at": "2026-09-26T10:00:00.000Z",
+  "last_used_at": null,
+  "revoked_at": null
+}
+```
+
+The raw token is returned only in the response that creates the key. This
+applies to both `POST /api-keys` and
+`POST /projects/{project_id}/api-keys`.
+
+## List API keys
+
+```http
+GET /api/v1/api-keys
+Authorization: Bearer <api_key>
+```
+
+Query parameters:
+
+| Query | Description |
+| - | - |
+| `limit` | Page size. Defaults to `50`, maximum `200`. |
+| `cursor` | Pagination cursor. |
+
+Response:
+
+```json
+{
+  "data": [
+    {
+      "id": "key_a00000000000000000000000",
+      "name": "reporting job",
+      "prefix": "bsb_key_live_xxxxxxxx",
+      "scope": "read",
+      "created_at": "2026-06-28T10:00:00.000Z",
+      "expires_at": "2026-09-26T10:00:00.000Z",
+      "last_used_at": null,
+      "revoked_at": null
+    }
+  ],
+  "meta": { "next_cursor": null }
+}
+```
+
+## Create API key
+
+```http
+POST /api/v1/api-keys
+Authorization: Bearer <api_key>
+Content-Type: application/json
+Idempotency-Key: create-key-001
+```
+
+Request:
+
+```json
+{
+  "name": "reporting job",
+  "scope": "read",
+  "expires_in_days": 90
+}
+```
+
+`scope` accepts `read`, `write`, or `admin`; omitting it defaults to `admin`
+for backward compatibility. `expires_in_days` accepts `30`, `90`, `365`, or
+`null` for no expiry.
+
+Response status is `201`.
+
+```json
+{
+  "id": "key_a00000000000000000000000",
+  "name": "reporting job",
+  "prefix": "bsb_key_live_xxxxxxxx",
+  "masked_value": "bsb_key_live_xxxxxxxx******abcd",
+  "token": "bsb_key_live_...",
+  "scope": "read",
+  "created_at": "2026-06-28T10:00:00.000Z",
+  "expires_at": "2026-09-26T10:00:00.000Z",
+  "last_used_at": null,
+  "revoked_at": null
+}
+```
+
+Store `token` immediately. It is not returned again.
+
+For CI automation with a PAT, create a project key directly:
+
+```http
+POST /api/v1/projects/prj_a00000000000000000000000/api-keys
+Authorization: Bearer <personal_token>
+Content-Type: application/json
+
+{ "name": "deploy pipeline", "scope": "write", "expires_in_days": 90 }
+```
+
+## Revoke API key
+
+```http
+DELETE /api/v1/api-keys/{key_id}
+Authorization: Bearer <api_key>
+Idempotency-Key: revoke-key-001
+```
+
+`key_id` may include the `key_` prefix. The response is the revoked API-key
+resource with `revoked_at` set.

@@ -1,0 +1,11 @@
+{
+  "name": "@bisibility/example-mcp-quickstart",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "quickstart": "node quickstart.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.29.0"
+  }
+}

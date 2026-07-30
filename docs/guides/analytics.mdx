@@ -1,0 +1,57 @@
+---
+title: "Sync analytics traffic"
+description: "Connect GSC, GA4, or Plausible and add owned traffic context to rank data."
+---
+
+Analytics sources add clicks, impressions, sessions, key events, and page
+context. They never determine SERP rank positions.
+
+## Google Search Console and GA4
+
+1. Configure `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`, enable the Search
+   Console, Analytics Data, and Analytics Admin APIs, and add the OAuth scopes
+   listed in [Integrations](/integrations#google-oauth-client-setup).
+2. Add `https://<your-host>/api/integrations/google/callback` to the OAuth
+   client as an authorized redirect URI.
+3. Open **Integrations**, choose GSC or GA4, and complete Google consent.
+4. For GSC, bisibility selects a verified property matching the project domain
+   when possible. For GA4, select a property before connecting.
+
+Google connections store an encrypted refresh token and selected property. If
+Google does not return a refresh token during reconnection, remove the previous
+app grant in Google and reconnect with consent.
+
+## Plausible
+
+Connect the site domain, Stats API token, and optional self-hosted Plausible base
+URL. The default base is `https://plausible.io`.
+
+## Run synchronization
+
+Use **Sync now** from the app for an immediate project sync. For scheduled sync,
+run the Temporal worker and set:
+
+```dotenv
+TRAFFIC_SYNC_ENABLED=true
+# TRAFFIC_SYNC_CRON=45 5 * * *
+```
+
+Without a custom cron, the worker creates a daily 05:45 UTC schedule. It skips
+overlapping runs. This worker-owned Temporal schedule is the only scheduled
+traffic-sync path; no external HTTP scheduler is required. Analytics requests
+use a rolling 28-day window: query-level
+data ends three days before the run and page-level data ends one day before it
+to accommodate provider lag.
+
+The same surfaces are available to automations through the REST API and hosted
+MCP. Use the stored traffic-snapshot endpoint for page history, the live query
+statistics endpoint for a bounded provider lookup, and the sync endpoint to
+start the same audited project synchronization as the app. Live reads and sync
+use the project's own connected analytics accounts and remain subject to their
+provider rate limits and reauthorization state.
+
+Snapshots are retained for 180 days by default. Change this with
+`TRAFFIC_SNAPSHOT_RETENTION_DAYS`. Rate-limited connections are skipped and can
+be retried later; one failing project does not stop synchronization for others.
+
+Connection fields are documented in [Integrations](/integrations).

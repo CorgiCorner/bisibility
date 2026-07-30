@@ -1,0 +1,7 @@
+{
+  "branch": "main",
+  "commit_ref": "abc123",
+  "id": "deploy_1",
+  "ssl_url": "https://app.example.netlify.app",
+  "state": "ready"
+}

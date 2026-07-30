@@ -1,0 +1,18 @@
+{
+  "version": "0.1.20260720",
+  "status_code": 20000,
+  "status_message": "Ok.",
+  "cost": 0,
+  "tasks_count": 1,
+  "tasks_error": 1,
+  "tasks": [
+    {
+      "id": "billing-task",
+      "status_code": 40200,
+      "status_message": "Payment Required. Insufficient balance.",
+      "cost": 0,
+      "result_count": 0,
+      "result": null
+    }
+  ]
+}

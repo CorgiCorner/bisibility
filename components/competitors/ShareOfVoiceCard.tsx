@@ -1,0 +1,150 @@
+import { Card, MonoText, SectionTitle } from "@/components/ui";
+import type { CompetitorFilter, CompetitorKind, CompetitorMarket } from "@/lib/competitors/types";
+import { countLabel } from "@/lib/format/pluralize";
+import { InfoIcon as Info } from "@phosphor-icons/react";
+import { CompetitorFilterControls } from "./CompetitorFilterControls";
+import { ManagedCompetitorControls } from "./ManagedCompetitorControls";
+
+type ShareOfVoiceCardProps = {
+  canDelete: boolean;
+  canUpdate: boolean;
+  filter: CompetitorFilter;
+  market: CompetitorMarket;
+  onFilterChange: (filter: CompetitorFilter) => void;
+  projectId: string;
+};
+
+const kindStyles = {
+  You: { color: "var(--accent)", background: "var(--accent-soft)" },
+  Managed: {
+    color: "var(--blue)",
+    background: "color-mix(in srgb, var(--blue) 12%, transparent)",
+  },
+} satisfies Record<CompetitorKind, { color: string; background: string }>;
+
+export function ShareOfVoiceCard({
+  canDelete,
+  canUpdate,
+  filter,
+  market,
+  onFilterChange,
+  projectId,
+}: Readonly<ShareOfVoiceCardProps>) {
+  const maxShare = Math.max(1, ...market.shares.map((competitor) => competitor.shareOfVoice));
+  const emptyCopy = {
+    completed_unranked:
+      "Rank checks have completed for this market, but no tracked domain ranked in the top 100.",
+    filter_excludes_all:
+      "No completed rank checks match the current filters. Adjust the filters to view available market data.",
+    no_completed_checks:
+      "No completed rank checks exist for this market yet. Run a check to calculate share of voice from real positions.",
+    ranked: null,
+  }[market.dataState];
+
+  return (
+    <Card className="px-5 py-[18px]" size="md">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+        <div className="flex min-w-0 flex-col gap-1">
+          <SectionTitle>Share of voice</SectionTitle>
+          <MonoText muted>
+            {countLabel(market.checkedKeywordCount, "keyword")} in comparison · Google ·{" "}
+            {market.location} · {market.device === "mobile" ? "Mobile" : "Desktop"}
+            {market.checkedKeywordCount < market.trackedKeywordCount ? " · Partial data" : ""}
+          </MonoText>
+        </div>
+        <CompetitorFilterControls
+          filter={filter}
+          onFilterChange={onFilterChange}
+          tags={market.tags}
+        />
+      </div>
+
+      {emptyCopy ? (
+        <div className="mt-[18px] rounded-[11px] border border-dashed border-border-strong bg-bg-sunken px-3.5 py-3 text-[12.5px] leading-5 text-fg-muted">
+          {emptyCopy}
+        </div>
+      ) : null}
+
+      {market.hasRankData ? (
+        <div className="mt-[18px] flex flex-col gap-[13px]">
+          {market.shares.map((competitor) => {
+            const kind = kindStyles[competitor.kind];
+            const barWidth = `${Math.round((competitor.shareOfVoice / maxShare) * 100)}%`;
+            const managed =
+              competitor.id && competitor.kind === "Managed"
+                ? {
+                    domain: competitor.domain,
+                    id: competitor.id,
+                    initials: competitor.initials,
+                    label: competitor.label,
+                  }
+                : null;
+
+            return (
+              <div
+                className="flex flex-wrap items-center gap-x-3 gap-y-2 sm:flex-nowrap"
+                key={competitor.id ?? competitor.domain}
+              >
+                <span className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-lg bg-bg-sunken font-mono text-[11px] font-semibold text-fg-muted">
+                  {competitor.initials}
+                </span>
+                <span className="flex min-w-0 flex-1 items-center gap-[7px] sm:w-[190px] sm:flex-none">
+                  <span className="min-w-0">
+                    <span className="block truncate text-[13px] font-semibold">
+                      {competitor.label}
+                    </span>
+                    {competitor.kind === "Managed" ? (
+                      <a
+                        className="block truncate font-mono text-[10px] text-fg-faint outline-none transition-colors hover:text-accent focus-visible:text-accent"
+                        href={`https://${competitor.domain}`}
+                        rel="noopener noreferrer"
+                        target="_blank"
+                      >
+                        {competitor.domain}
+                      </a>
+                    ) : competitor.label !== competitor.domain ? (
+                      <span className="block truncate font-mono text-[10px] text-fg-faint">
+                        {competitor.domain}
+                      </span>
+                    ) : null}
+                  </span>
+                  {competitor.kind === "You" ? (
+                    <span
+                      className="shrink-0 rounded-full px-2 py-0.5 font-mono text-[9px] font-semibold uppercase"
+                      style={{ backgroundColor: kind.background, color: kind.color }}
+                    >
+                      You
+                    </span>
+                  ) : null}
+                </span>
+                <span className="h-2.5 min-w-[160px] flex-1 overflow-hidden rounded-full bg-bg-sunken">
+                  <span
+                    aria-hidden
+                    className="block h-full rounded-full"
+                    style={{ backgroundColor: competitor.color, width: barWidth }}
+                  />
+                </span>
+                <span className="w-full text-right font-mono text-xs text-fg-muted sm:w-[130px]">
+                  {competitor.sharedKeywords} kw · {competitor.shareOfVoice}%
+                </span>
+                {managed ? (
+                  <ManagedCompetitorControls
+                    canDelete={canDelete}
+                    canUpdate={canUpdate}
+                    competitor={managed}
+                    projectId={projectId}
+                  />
+                ) : null}
+              </div>
+            );
+          })}
+        </div>
+      ) : null}
+
+      <p className="m-0 mt-4 flex items-center gap-2 border-border-soft border-t pt-3.5 text-[11.5px] text-fg-faint">
+        <Info aria-hidden className="shrink-0 text-accent" size={14} />
+        SOV = share of rank-weighted top-10 visibility from completed checks in this market.
+      </p>
+    </Card>
+  );
+}

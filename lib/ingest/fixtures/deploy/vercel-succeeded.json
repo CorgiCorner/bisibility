@@ -1,0 +1,13 @@
+{
+  "payload": {
+    "deployment": {
+      "id": "dpl_123",
+      "meta": {
+        "paths": ["/", "/pricing"]
+      },
+      "target": "production",
+      "url": "app-example.vercel.app"
+    }
+  },
+  "type": "deployment.succeeded"
+}

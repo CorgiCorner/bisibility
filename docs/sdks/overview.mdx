@@ -1,0 +1,48 @@
+---
+title: "SDKs"
+description: "Choose an official client library for the Bisibility API."
+---
+
+The Python, TypeScript, and Go clients implement the same REST API
+contract. The MCP server exposes the same operations as tools for AI clients.
+Use them to work with projects, keywords, rank checks, ranking history, and
+other Bisibility resources.
+
+## Where to look
+
+| Documentation | Owns |
+| - | - |
+| SDK pages | Installation, client configuration, language-level methods, tool names, and types. |
+| [API reference](/api/overview) | The underlying HTTP contract: routes, payloads, status codes, and response shapes. |
+| [OpenAPI](/api/v1/openapi.json) | The machine-readable REST contract used for SDK parity checks. |
+
+Start with the [SDK method reference](/sdks/methods) when you need the method or
+tool name for a workflow. Follow an endpoint link only when you need its wire
+contract. SDK pages do not redirect to the API reference.
+
+## Choose a client
+
+| Client | Best fit |
+| - | - |
+| [Python](/sdks/python) | Scripts, data workflows, and Python services. |
+| [TypeScript](/sdks/typescript) | Node.js applications and TypeScript services. |
+| [Go](/sdks/go) | Go services, command-line tools, and background workers. |
+| [MCP server](/sdks/mcp) | AI clients that call Bisibility operations as tools. |
+
+## Authentication
+
+The SDK clients and MCP server use the same bearer credentials as the REST API.
+Use a project API key for a project-scoped integration. For user-level and
+cross-project automation, use a
+[personal access token](/api/personal-access-tokens).
+
+The examples use these environment variables:
+
+```bash
+export BISIBILITY_API_KEY="your-api-key"
+export BISIBILITY_BASE_URL="https://your-host.example/api/v1"
+```
+
+`BISIBILITY_BASE_URL` points to the API root for the hosted service or your
+self-hosted instance. See [Authentication](/authentication) for key
+creation and a test request.

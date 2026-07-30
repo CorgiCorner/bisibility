@@ -1,0 +1,36 @@
+name: Feature request
+description: Suggest an idea for bisibility
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Quick idea? You are in the right place. If you can already describe the
+        behavior and acceptance criteria, use the **Feature spec** form instead -
+        implementation-ready specs are the fastest way to get something built.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What are you trying to do that bisibility makes hard today?
+      placeholder: I'm always frustrated when...
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: What would you like to happen?
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any alternative solutions or workarounds you've considered.
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Anything else - screenshots, links, related issues.

@@ -1,0 +1,29 @@
+---
+title: "SDK method reference"
+description: "Map common Bisibility workflows to Python, TypeScript, Go, and MCP method names."
+---
+
+Use this page to find the language-level method or MCP tool for a common
+workflow. The SDK source packages remain the complete reference for exported
+methods, options, and types.
+
+| Workflow | Python | TypeScript | Go | MCP tool |
+| - | - | - | - | - |
+| List projects | `list_projects` | `listProjects` | `ListProjects` | `list_projects` |
+| Create a project | `create_project` | `createProject` | `CreateProject` | `create_project` |
+| Add keywords | `add_keywords` | `addKeywords` | `AddKeywords` | `add_keywords` |
+| Run a rank check | `run_rank_check` | `runRankCheck` | `RunRankCheck` | `run_rank_check` |
+| Read a rank-check result | `get_rank_check_result` | `getRankCheckResult` | `GetRankCheckResult` | `get_rank_check_result` |
+
+Creating a project requires a personal access token. Project API keys can use
+the project-scoped methods in the remaining rows.
+
+## Client pages
+
+- [Python SDK](/sdks/python)
+- [TypeScript SDK](/sdks/typescript)
+- [Go SDK](/sdks/go)
+- [MCP server](/sdks/mcp)
+
+Use the [API reference](/api/overview) when you need the underlying HTTP route,
+payload fields, status codes, or response shape.

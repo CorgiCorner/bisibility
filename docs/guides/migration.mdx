@@ -1,0 +1,78 @@
+---
+title: "Migrate an instance"
+description: "Transfer keywords and optional history between self-hosted and cloud workspaces."
+---
+
+Migration uses a JSON export package and a destination-issued `mig_...` token.
+Provider credentials, API keys, billing data, and user passwords are never part
+of the package.
+
+## Transfer from the app
+
+1. On the destination workspace, open **Settings → Import** and mint a migration
+   token with `full` or `keywords` scope.
+2. Copy the raw token immediately. It is shown once, is single-use, and expires.
+3. On the source workspace, open **Settings → Transfer project**, run the
+   compatibility check, and confirm read-only mode. The destination URL is
+   prefilled from the source instance configuration and can be changed before
+   the check. The checked URL is also used for the transfer. Then push directly
+   with the destination token, or export the package and upload it on the
+   destination import page.
+4. Review keyword and rank-check counts, start the transfer, and wait for the job
+   to reach `done`.
+5. Compare projects, keywords, schedules, and history on the destination before
+   decommissioning the source.
+
+Minting or regenerating a token consumes any previous active token. Revoke an
+unused token if it was exposed. The default expiry is constrained by
+`BISIBILITY_MIGRATION_TOKEN_TTL_MINUTES`.
+
+Small exports use one request. Large exports use resumable sessions with
+zero-based chunks, checksums, and a finalize step. Re-sending an identical chunk
+is safe; sending different data for an uploaded index returns a conflict.
+
+Imports are idempotent per project: keywords are matched by text, device, and
+location, and rank-check history rows that already exist for the same keyword
+and timestamp are skipped (reported as `history_skipped` in the job counts).
+Re-running the same package against the same destination does not duplicate
+history.
+
+Importing a package into the project it was exported from is rejected with a
+`self_import` problem (HTTP 409) - the destination compares the package's
+source project id with the token's project. Import the package into a
+different project or instance instead.
+
+## Migration hold (read-only mode)
+
+Starting a transfer asks you to confirm read-only mode on the source project so
+its data cannot diverge during the transfer. While the hold is active, writes
+and scheduled rank checks are paused for everyone and a banner is shown across
+the app. The hold is released only by cancelling the migration from the wizard
+(or the settings entry), or automatically after 24 hours of inactivity via
+worker maintenance. Back up the source database before migrating; export
+packages are application transfer artifacts, not full database backups.
+
+## After the transfer: mark the source as migrated
+
+Once you have verified the destination workspace, mark the source project as
+migrated from the wizard's final step. This puts it into the terminal
+`migrated` write mode: writes and rank checks stay off, the state never
+auto-releases, and a banner points users at the new location. A migrated
+project can be reactivated at any time from **Settings → Project migrated →
+Reactivate project** - for example if you decide to roll back.
+
+## Compatibility error codes
+
+The compatibility check in the transfer wizard reports blockers with stable
+codes:
+
+| Code | Meaning | Fix |
+| - | - | - |
+| `MIG-101` | The destination instance could not be reached. | Check the URL and that the instance is online and reachable from the source. |
+| `MIG-102` | The destination is too old to accept a project of this size (chunked sessions unsupported). | Update the destination to the latest version. |
+| `MIG-103` | The destination did not declare supported import protocol versions. | Update the destination to the latest version. |
+| `MIG-104` | The destination does not support the required import protocol version. | Update the destination to the latest version. |
+| `MIG-105` | The destination address points at this same instance. The check shows the resolved address. | Pick a different destination. If this is meant to be a Cloud deployment and the source reports self-host mode, it likely needs `DEPLOYMENT_MODE=cloud`. |
+
+Protocol details, limits, compatibility checks, and status codes are documented
+in [Cloud import](/api/cloud-import).

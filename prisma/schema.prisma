@@ -1,0 +1,1483 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  owner
+  admin
+  member
+  auditor
+  viewer
+}
+
+enum Device {
+  desktop
+  mobile
+}
+
+enum LocationKind {
+  country
+  region
+  city
+}
+
+enum RankCheckFrequency {
+  paused
+  manual
+  daily
+  weekly
+  monthly
+  custom_cron
+}
+
+enum ProviderKind {
+  serp
+  analytics
+  enrichment
+}
+
+enum ProviderStatus {
+  connected
+  needs_reauth
+  ready
+  planned
+  optional
+}
+
+enum ProviderCostFeature {
+  backlinks
+  keyword_metrics
+  keyword_research
+  rank_check
+  ranked_keywords
+}
+
+enum AlertConditionType {
+  threshold
+  change_pct
+  ctr_drop
+  position_drop
+  downtrend
+  enters_top_n
+  exits_top_n
+  competitor_overtake
+  serp_feature
+  url_mismatch
+}
+
+enum AlertSeverity {
+  info
+  warning
+  urgent
+}
+
+enum AlertTargetType {
+  keyword
+  tag
+  all
+}
+
+enum AlertChannel {
+  email
+  slack
+  webhook
+}
+
+enum TriggeredAlertStatus {
+  firing
+  resolved
+  acknowledged
+  muted
+}
+
+enum AlertDeliveryState {
+  pending
+  digest_pending
+  digesting
+  digested
+  suppressed
+  delivering
+  delivered
+  dead_letter
+  skipped
+}
+
+enum NotificationType {
+  alert_fired
+  check_complete
+  check_failed
+  invite
+  member_joined
+  import_done
+  import_failed
+  system
+}
+
+enum MigrationScope {
+  keywords
+  full
+}
+
+enum CloudImportState {
+  idle
+  receiving
+  importing
+  done
+  failed
+}
+
+enum ProjectWriteMode {
+  active
+  migration_hold
+  migrated
+}
+
+enum SignalSource {
+  rank_tracker
+  search_analytics
+  url_inspection
+  sitemap
+  deploy
+  cms
+  search_engine_status
+  manual
+  api
+}
+
+enum SignalSeverity {
+  info
+  warning
+  critical
+}
+
+model User {
+  id                       String                   @id @default(cuid())
+  publicId                 String                   @unique
+  name                     String
+  email                    String                   @unique
+  emailVerified            Boolean                  @default(false)
+  twoFactorEnabled         Boolean                  @default(false)
+  image                    String?
+  role                     Role                     @default(member)
+  isInstanceAdmin          Boolean                  @default(false)
+  deactivatedAt            DateTime?
+  sessions                 Session[]
+  accounts                 Account[]
+  twoFactors               TwoFactor[]
+  legacyOauthApplications  LegacyOauthApplication[]
+  legacyOauthAccessTokens  LegacyOauthAccessToken[]
+  legacyOauthConsents      LegacyOauthConsent[]
+  oauthClients             OauthClient[]
+  oauthRefreshTokens       OauthRefreshToken[]
+  oauthAccessTokens        OauthAccessToken[]
+  oauthConsents            OauthConsent[]
+  projects                 Project[]                @relation("ProjectOwner")
+  memberships              Membership[]
+  auditLogs                AuditLog[]               @relation("AuditActor")
+  notifications            Notification[]
+  notificationPreferences  NotificationPreference[]
+  sentInvites              Invite[]
+  createdAlertRules        AlertRule[]
+  alertRuleRecipients      AlertRuleRecipient[]
+  savedViews               SavedView[]
+  slackConnections         SlackConnection[]
+  createdMigrationTokens   MigrationToken[]
+  personalAccessTokens     PersonalAccessToken[]
+  writeModeChangedProjects Project[]                @relation("ProjectWriteModeChangedBy")
+  signalsCreated           Signal[]                 @relation("SignalCreator")
+  createdIngestHooks       IngestHook[]
+  createdAt                DateTime                 @default(now())
+  updatedAt                DateTime                 @updatedAt
+
+  @@map("users")
+}
+
+model Session {
+  id                 String              @id @default(cuid())
+  publicId           String              @unique
+  token              String              @unique
+  expiresAt          DateTime
+  ipAddress          String?
+  userAgent          String?
+  userId             String
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  oauthRefreshTokens OauthRefreshToken[]
+  oauthAccessTokens  OauthAccessToken[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  providerId            String
+  accountId             String
+  password              String?
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@unique([providerId, accountId])
+  @@index([providerId])
+  @@index([userId])
+  @@map("accounts")
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("verifications")
+}
+
+model TwoFactor {
+  id                      String    @id @default(cuid())
+  secret                  String
+  backupCodes             String
+  userId                  String
+  user                    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  verified                Boolean?  @default(true)
+  failedVerificationCount Int?      @default(0)
+  lockedUntil             DateTime?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("twoFactor")
+}
+
+model LegacyOauthApplication {
+  id           String                   @id @default(cuid())
+  name         String
+  icon         String?
+  metadata     String?
+  clientId     String                   @unique
+  clientSecret String?
+  redirectUrls String
+  type         String
+  disabled     Boolean                  @default(false)
+  userId       String?
+  user         User?                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessTokens LegacyOauthAccessToken[]
+  consents     LegacyOauthConsent[]
+  createdAt    DateTime                 @default(now())
+  updatedAt    DateTime                 @updatedAt
+
+  @@index([userId])
+  @@map("oauthApplication")
+}
+
+model LegacyOauthAccessToken {
+  id                    String                 @id @default(cuid())
+  accessToken           String                 @unique
+  refreshToken          String                 @unique
+  accessTokenExpiresAt  DateTime
+  refreshTokenExpiresAt DateTime
+  clientId              String
+  application           LegacyOauthApplication @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+  userId                String?
+  user                  User?                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scopes                String
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+
+  @@index([clientId])
+  @@index([userId])
+  @@map("oauthAccessToken")
+}
+
+model LegacyOauthConsent {
+  id           String                 @id @default(cuid())
+  clientId     String
+  application  LegacyOauthApplication @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+  userId       String
+  user         User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scopes       String
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+  consentGiven Boolean
+
+  @@index([clientId])
+  @@index([userId])
+  @@map("oauthConsent")
+}
+
+model OauthClient {
+  id                      String              @id @default(cuid())
+  clientId                String              @unique
+  clientSecret            String?
+  disabled                Boolean?            @default(false)
+  skipConsent             Boolean?
+  enableEndSession        Boolean?
+  subjectType             String?
+  scopes                  String[]
+  userId                  String?
+  user                    User?               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt               DateTime?           @default(now())
+  updatedAt               DateTime?           @updatedAt
+  name                    String?
+  uri                     String?
+  icon                    String?
+  contacts                String[]
+  tos                     String?
+  policy                  String?
+  softwareId              String?
+  softwareVersion         String?
+  softwareStatement       String?
+  redirectUris            String[]
+  postLogoutRedirectUris  String[]
+  tokenEndpointAuthMethod String?
+  grantTypes              String[]
+  responseTypes           String[]
+  public                  Boolean?
+  type                    String?
+  requirePKCE             Boolean?
+  referenceId             String?
+  metadata                Json?
+  refreshTokens           OauthRefreshToken[]
+  accessTokens            OauthAccessToken[]
+  consents                OauthConsent[]
+
+  @@index([userId])
+  @@map("oauthClient")
+}
+
+model OauthRefreshToken {
+  id           String             @id @default(cuid())
+  token        String             @unique
+  clientId     String
+  client       OauthClient        @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+  sessionId    String?
+  session      Session?           @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  userId       String
+  user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  referenceId  String?
+  expiresAt    DateTime
+  createdAt    DateTime           @default(now())
+  revoked      DateTime?
+  authTime     DateTime?
+  scopes       String[]
+  accessTokens OauthAccessToken[]
+
+  @@index([clientId])
+  @@index([sessionId])
+  @@index([userId])
+  @@map("oauthRefreshToken")
+}
+
+model OauthAccessToken {
+  id           String             @id @default(cuid())
+  token        String             @unique
+  clientId     String
+  client       OauthClient        @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+  sessionId    String?
+  session      Session?           @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  userId       String?
+  user         User?              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  referenceId  String?
+  refreshId    String?
+  refreshToken OauthRefreshToken? @relation(fields: [refreshId], references: [id], onDelete: Cascade)
+  expiresAt    DateTime
+  createdAt    DateTime           @default(now())
+  scopes       String[]
+
+  @@index([clientId])
+  @@index([sessionId])
+  @@index([userId])
+  @@index([refreshId])
+  @@map("oauthAccessTokenV2")
+}
+
+model OauthConsent {
+  id          String      @id @default(cuid())
+  clientId    String
+  client      OauthClient @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+  userId      String?
+  user        User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  referenceId String?
+  scopes      String[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([clientId])
+  @@index([userId])
+  @@map("oauthConsentV2")
+}
+
+model Jwks {
+  id         String    @id @default(cuid())
+  publicKey  String
+  privateKey String
+  createdAt  DateTime  @default(now())
+  expiresAt  DateTime?
+
+  @@map("jwks")
+}
+
+model Waitlist {
+  id              String   @id @default(cuid())
+  email           String   @unique
+  source          String
+  cloudPrice      String?
+  submissions     Int      @default(1)
+  lastSubmittedAt DateTime @default(now())
+  createdAt       DateTime @default(now())
+
+  @@map("waitlists")
+}
+
+model Project {
+  id                       String                   @id @default(cuid())
+  publicId                 String                   @unique
+  name                     String
+  domain                   String
+  isSample                 Boolean                  @default(false)
+  trackingScope            String                   @default("country")
+  writeMode                ProjectWriteMode         @default(active)
+  writeModeChangedAt       DateTime?
+  writeModeChangedById     String?
+  writeModeChangedBy       User?                    @relation("ProjectWriteModeChangedBy", fields: [writeModeChangedById], references: [id], onDelete: SetNull)
+  ownerId                  String
+  owner                    User                     @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members                  Membership[]
+  keywords                 Keyword[]
+  savedKeywords            SavedKeyword[]
+  tags                     Tag[]
+  competitors              Competitor[]
+  defaults                 ProjectDefaults?
+  providerConnections      ProviderConnection[]
+  providerCostEntries      ProviderCostEntry[]
+  queuedRankCheckBatches   QueuedRankCheckBatch[]
+  backlinkSnapshots        BacklinkSnapshot[]
+  pageTrafficSnapshots     PageTrafficSnapshot[]
+  apiKeys                  ApiKey[]
+  ingestHooks              IngestHook[]
+  auditLogs                AuditLog[]
+  alertRules               AlertRule[]
+  signals                  Signal[]
+  sitemapMonitoringEnabled Boolean                  @default(true)
+  budgetCapCents           Int                      @default(5000)
+  sitemapSnapshots         SitemapSnapshot[]
+  urlPresences             UrlPresence[]
+  webhookEndpoints         WebhookEndpoint[]
+  slackConnection          SlackConnection?
+  notifications            Notification[]
+  notificationPreferences  NotificationPreference[]
+  savedViews               SavedView[]
+  invites                  Invite[]
+  migrationTokens          MigrationToken[]
+  cloudImportJobs          CloudImportJob[]
+  createdAt                DateTime                 @default(now())
+  updatedAt                DateTime                 @updatedAt
+
+  @@index([ownerId])
+  @@index([writeModeChangedById])
+  @@map("projects")
+}
+
+model ProviderCostEntry {
+  id            String              @id @default(cuid())
+  projectId     String
+  project       Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  connectionId  String
+  feature       ProviderCostFeature @default(ranked_keywords)
+  costCents     Decimal             @db.Decimal(10, 4)
+  unitCostCents Decimal?            @db.Decimal(10, 4)
+  cached        Boolean             @default(false)
+  failed        Boolean             @default(false)
+  createdAt     DateTime            @default(now())
+
+  @@index([projectId, createdAt])
+  @@index([connectionId, createdAt])
+  @@index([connectionId, feature, createdAt])
+  @@map("provider_cost_entries")
+}
+
+model Membership {
+  id        String   @id @default(cuid())
+  publicId  String   @unique
+  userId    String
+  projectId String
+  role      Role     @default(member)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, projectId])
+  @@index([projectId])
+  @@map("memberships")
+}
+
+model ProjectDefaults {
+  id                   String             @id @default(cuid())
+  projectId            String             @unique
+  project              Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  locationKey          String?
+  locationRef          Location?          @relation("ProjectDefaultLocation", fields: [locationKey], references: [canonicalKey], onDelete: Restrict)
+  country              String?
+  city                 String?
+  device               Device?
+  serpDepth            Int                @default(100)
+  serpStopOnMatch      Boolean            @default(true)
+  frequency            RankCheckFrequency @default(daily)
+  cronExpression       String?
+  timezone             String             @default("UTC")
+  jitterMinutes        Int                @default(60)
+  inspectionDailyLimit Int                @default(50)
+  lastCheckedAt        DateTime?
+  nextCheckAt          DateTime?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  @@index([locationKey])
+  @@map("project_defaults")
+}
+
+// Migration-only expression index: keywords_projectId_normalized_text_idx
+// (20260727064500_keyword_match_index) uses lower(btrim(text)), which Prisma cannot model.
+model Keyword {
+  id                   String                   @id @default(cuid())
+  publicId             String                   @unique
+  projectId            String
+  text                 String
+  location             String
+  locationId           String
+  device               Device                   @default(desktop)
+  targetUrl            String?
+  topic                String?
+  intent               String?
+  project              Project                  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  locationRef          Location                 @relation(fields: [locationId], references: [id], onDelete: Restrict)
+  tags                 KeywordTag[]
+  schedule             KeywordSchedule?
+  dispatchState        KeywordDispatchState?
+  queuedRankCheckTasks QueuedRankCheckTask[]
+  rankChecks           RankCheck[]
+  trafficSnapshots     KeywordTrafficSnapshot[]
+  alertTargets         AlertRuleTarget[]
+  triggeredAlerts      TriggeredAlert[]
+  signals              Signal[]
+  createdAt            DateTime                 @default(now())
+  updatedAt            DateTime                 @updatedAt
+
+  @@unique([projectId, text, locationId, device])
+  @@index([projectId])
+  @@index([projectId, topic])
+  @@index([locationId])
+  @@map("keywords")
+}
+
+model SavedKeyword {
+  id             String   @id @default(cuid())
+  publicId       String   @unique
+  projectId      String
+  text           String
+  normalizedText String
+  location       String
+  volume         Int?
+  difficulty     Int?
+  cpc            Float?
+  intent         String?
+  trend          Json?
+  variantCount   Int      @default(0)
+  sourceSeed     String?
+  savedAt        DateTime @default(now())
+  project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, normalizedText, location])
+  @@index([projectId, savedAt])
+  @@map("saved_keywords")
+}
+
+model Location {
+  id               String            @id @default(cuid())
+  kind             LocationKind
+  displayName      String
+  countryCode      String
+  regionCode       String?
+  cityName         String?
+  gl               String
+  hl               String
+  languageLabel    String
+  primaryGeoCode   Int?
+  primaryGeoName   String
+  secondaryGeoName String
+  canonicalKey     String            @unique
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  keywords         Keyword[]
+  projectDefaults  ProjectDefaults[] @relation("ProjectDefaultLocation")
+
+  @@index([countryCode])
+  @@map("locations")
+}
+
+model Tag {
+  id           String            @id @default(cuid())
+  publicId     String            @unique
+  projectId    String
+  name         String
+  color        String?
+  project      Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  keywords     KeywordTag[]
+  alertTargets AlertRuleTarget[]
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  @@unique([projectId, name])
+  @@index([projectId])
+  @@map("tags")
+}
+
+model Competitor {
+  id        String   @id @default(cuid())
+  publicId  String   @unique
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  domain    String
+  label     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([projectId, domain])
+  @@index([projectId])
+  @@map("competitors")
+}
+
+model KeywordTag {
+  id        String   @id @default(cuid())
+  keywordId String
+  tagId     String
+  keyword   Keyword  @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([keywordId, tagId])
+  @@index([tagId])
+  @@map("keyword_tags")
+}
+
+model KeywordSchedule {
+  id             String             @id @default(cuid())
+  keywordId      String             @unique
+  keyword        Keyword            @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+  frequency      RankCheckFrequency
+  serpDepth      Int?
+  cronExpression String?
+  timezone       String
+  jitterMinutes  Int                @default(60)
+  lastCheckedAt  DateTime?
+  nextCheckAt    DateTime?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  @@map("keyword_schedules")
+}
+
+model KeywordDispatchState {
+  keywordId   String   @id
+  keyword     Keyword  @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+  nextCheckAt DateTime
+
+  @@index([nextCheckAt, keywordId])
+  @@map("keyword_dispatch_states")
+}
+
+model RankCheck {
+  id                 String               @id @default(cuid())
+  publicId           String               @unique
+  keywordId          String
+  keyword            Keyword              @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+  position           Int?
+  previousPosition   Int?
+  rankingUrl         String?
+  /// Allowed values: "running", "completed", "failed", "deferred".
+  status             String               @default("completed")
+  error              String?
+  checkedAt          DateTime             @default(now())
+  provider           String
+  /// Allowed values when set: "scheduled", "manual".
+  trigger            String?
+  scheduleId         String?
+  workflowRunId      String?
+  scheduledAt        DateTime?
+  startedAt          DateTime?
+  finishedAt         DateTime?
+  deferredReason     String?
+  requestedDepth     Int?
+  costCents          Decimal?             @db.Decimal(10, 4)
+  estimatedCostCents Decimal?             @db.Decimal(10, 4)
+  billingUnits       Int?
+  /// Compact top-100 organic snapshot as [{ domain, position }]. Null means unavailable or legacy.
+  organicRanks       Json?
+  raw                Json?
+  attempts           Json?
+  viaFallback        Boolean              @default(false)
+  degradedToCountry  Boolean              @default(false)
+  attemptCount       Int                  @default(1)
+  triggeredAlerts    TriggeredAlert[]
+  queuedTask         QueuedRankCheckTask?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+
+  @@unique([keywordId, checkedAt])
+  @@index([keywordId, checkedAt(sort: Desc), id(sort: Desc)])
+  @@index([checkedAt])
+  // Migration-only partial index: rank_checks (checkedAt, id) WHERE raw IS NOT NULL.
+  @@index([scheduledAt])
+  @@index([startedAt])
+  @@index([status, checkedAt])
+  @@index([viaFallback, checkedAt, id])
+  @@index([provider, checkedAt, id])
+  @@index([trigger, checkedAt, id])
+  @@map("rank_checks")
+}
+
+model RankCheckRawPurgeProgress {
+  id              String    @id
+  cutoff          DateTime?
+  retentionDays   Int?
+  maxBatches      Int
+  batchCount      Int       @default(0)
+  updatedCount    Int       @default(0)
+  completed       Boolean   @default(false)
+  hasMore         Boolean   @default(false)
+  resultClearedAt DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Migration-only partial index: id WHERE completed AND resultClearedAt IS NULL.
+  @@index([completed, resultClearedAt, id], map: "rank_check_raw_purge_progress_reclaim_idx")
+  @@map("rank_check_raw_purge_progress")
+}
+
+model QueuedRankCheckBatch {
+  id              String                @id
+  projectId       String
+  project         Project               @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  connectionId    String?
+  connection      ProviderConnection?   @relation(fields: [connectionId], references: [id], onDelete: SetNull)
+  provider        String                @default("dataforseo")
+  priority        String
+  state           String
+  claimedAt       DateTime
+  queueDeadlineAt DateTime
+  submittedAt     DateTime?
+  ambiguousAt     DateTime?
+  terminalAt      DateTime?
+  expiresAt       DateTime?
+  error           String?
+  tasks           QueuedRankCheckTask[]
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+
+  @@index([projectId, createdAt])
+  @@index([state, expiresAt])
+  // Migration-only partial index: queued_rank_check_batches (queueDeadlineAt, id) for active states.
+  @@map("queued_rank_check_batches")
+}
+
+model QueuedRankCheckTask {
+  id                        String               @id
+  batchId                   String
+  batch                     QueuedRankCheckBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  keywordId                 String
+  keyword                   Keyword              @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+  rankCheckId               String               @unique
+  rankCheck                 RankCheck            @relation(fields: [rankCheckId], references: [id], onDelete: Cascade)
+  providerTaskId            String?              @unique
+  state                     String
+  costCents                 Decimal?             @db.Decimal(10, 4)
+  error                     String?
+  persistenceLeaseOwner     String?              @unique
+  persistenceLeaseExpiresAt DateTime?
+  createdAt                 DateTime             @default(now())
+  updatedAt                 DateTime             @updatedAt
+
+  @@unique([batchId, keywordId])
+  @@index([batchId, state])
+  @@map("queued_rank_check_tasks")
+}
+
+model OperationalRun {
+  id           String    @id @default(cuid())
+  /// Initial kind: "traffic_sync".
+  kind         String
+  projectId    String?
+  connectionId String?
+  provider     String?
+  scheduledFor DateTime?
+  startedAt    DateTime
+  finishedAt   DateTime?
+  /// Allowed values: "succeeded_with_data", "succeeded_empty", "deferred_rate_limit", "failed", "not_applicable".
+  status       String
+  error        String?
+  /// Bounded failure class safe for operator/UI display; provider payloads remain redacted.
+  errorClass   String?
+  /// Traffic sync metrics include rowsFetched, rowsMatched, and rowsUpserted.
+  meta         Json?
+
+  @@index([kind, startedAt])
+  @@index([projectId, provider, startedAt])
+  @@map("operational_runs")
+}
+
+model OpsEvent {
+  id          String    @id @default(cuid())
+  kind        String
+  /// Allowed values: "info", "warning", "error".
+  severity    String
+  title       String
+  fields      Json?
+  dedupeKey   String?
+  createdAt   DateTime  @default(now())
+  deliveredAt DateTime?
+  attempts    Int       @default(0)
+  lastError   String?
+
+  @@index([deliveredAt, createdAt])
+  @@map("ops_events")
+}
+
+model EmailDailyStat {
+  id                   String    @id @default(cuid())
+  day                  DateTime  @db.Date
+  category             String
+  count                Int       @default(0)
+  exhaustionNotifiedAt DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  @@unique([day, category])
+  @@map("email_daily_stats")
+}
+
+model DailySendCounter {
+  day       DateTime @id @db.Date
+  count     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("daily_send_counters")
+}
+
+model InstanceSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+
+  @@map("instance_settings")
+}
+
+model BacklinkSnapshot {
+  id                 String        @id @default(cuid())
+  projectId          String
+  project            Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  target             String
+  targetScope        String
+  includeSubdomains  Boolean       @default(true)
+  summary            Json
+  history            Json
+  fetchedRowCount    Int
+  totalRowsAvailable Int
+  costCents          Int
+  fetchedAt          DateTime
+  expiresAt          DateTime
+  rows               BacklinkRow[]
+
+  @@index([projectId, target, targetScope, includeSubdomains, fetchedAt])
+  @@map("backlink_snapshots")
+}
+
+model BacklinkRow {
+  id              String           @id @default(cuid())
+  snapshotId      String
+  snapshot        BacklinkSnapshot @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
+  sourceDomain    String
+  sourceUrl       String?
+  anchor          String
+  targetUrl       String
+  flags           String[]
+  domainAuthority Int
+  spamScore       Float
+  linksCount      Int              @default(1)
+  firstSeen       DateTime?
+  lostAt          DateTime?
+  status          String
+
+  @@index([snapshotId, sourceDomain])
+  @@map("backlink_rows")
+}
+
+model KeywordTrafficSnapshot {
+  id          String   @id @default(cuid())
+  keywordId   String
+  keyword     Keyword  @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+  provider    String
+  date        DateTime @db.Date
+  windowDays  Int      @default(28)
+  clicks      Int
+  impressions Int
+  ctr         Float
+  position    Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([keywordId, provider, date, windowDays], map: "keyword_traffic_snapshots_keyword_provider_date_window_key")
+  @@index([keywordId, date])
+  @@map("keyword_traffic_snapshots")
+}
+
+model ProviderConnection {
+  id                     String                   @id @default(cuid())
+  publicId               String                   @unique
+  projectId              String
+  project                Project                  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  kind                   ProviderKind
+  provider               String
+  status                 ProviderStatus
+  priority               Int                      @default(100)
+  enabled                Boolean                  @default(true)
+  credentialsEncrypted   String?
+  costPerCheckCents      Decimal?                 @db.Decimal(10, 4)
+  rates                  ProviderConnectionRate[]
+  queuedRankCheckBatches QueuedRankCheckBatch[]
+  lastUsedAt             DateTime?
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime                 @updatedAt
+
+  @@unique([projectId, provider])
+  @@index([projectId])
+  @@index([projectId, kind, priority])
+  @@map("provider_connections")
+}
+
+model ProviderConnectionRate {
+  id           String              @id @default(cuid())
+  connectionId String
+  connection   ProviderConnection  @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  feature      ProviderCostFeature
+  amountCents  Decimal             @db.Decimal(10, 4)
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  @@unique([connectionId, feature])
+  @@index([connectionId])
+  @@map("provider_connection_rates")
+}
+
+model PageTrafficSnapshot {
+  id                   String   @id @default(cuid())
+  projectId            String
+  project              Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  provider             String
+  path                 String
+  date                 DateTime @db.Date
+  windowDays           Int      @default(28)
+  sessions             Int
+  visitors             Int?
+  engagementRate       Float?
+  bounceRate           Float?
+  visitDurationSeconds Float?
+  keyEvents            Float?
+  scrollDepth          Float?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@unique([projectId, provider, path, date, windowDays], map: "page_traffic_snapshots_project_provider_path_date_window_key")
+  @@index([projectId, path, date])
+  @@map("page_traffic_snapshots")
+}
+
+model ApiKey {
+  id         String    @id @default(cuid())
+  publicId   String    @unique
+  projectId  String
+  project    Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name       String
+  hashedKey  String    @unique
+  prefix     String
+  scopes     String[]  @default(["read", "write", "admin"])
+  expiresAt  DateTime?
+  lastUsedAt DateTime?
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([projectId])
+  @@index([prefix])
+  @@map("api_keys")
+}
+
+// User-scoped bearer credential (bsb_pat_live_*) that acts as the user across all
+// their project memberships, unlike project-scoped api_keys. Effective access
+// per project is the intersection of the token scope tier and the membership
+// role, computed at request time.
+model PersonalAccessToken {
+  id         String    @id @default(cuid())
+  publicId   String    @unique
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name       String
+  hashedKey  String    @unique
+  prefix     String
+  scopes     String[]  @default(["read"])
+  expiresAt  DateTime?
+  lastUsedAt DateTime?
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([prefix])
+  @@map("personal_access_tokens")
+}
+
+model IngestHook {
+  id          String    @id @default(cuid())
+  publicId    String    @unique
+  projectId   String
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  label       String
+  tokenHash   String    @unique
+  disabled    Boolean   @default(false)
+  lastUsedAt  DateTime?
+  createdById String?
+  createdBy   User?     @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([projectId])
+  @@map("ingest_hooks")
+}
+
+model AuditLog {
+  id             String   @id @default(cuid())
+  publicId       String   @unique
+  actorId        String?
+  actor          User?    @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+  projectId      String?
+  project        Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  action         String
+  targetType     String
+  targetId       String
+  before         Json?
+  after          Json?
+  sourceIpHash   String?
+  sourceIpMasked String?
+  userAgent      String?
+  correlationId  String?
+  appVersion     String?
+  status         String   @default("success")
+  statusReason   String?
+  createdAt      DateTime @default(now())
+
+  @@index([actorId])
+  @@index([projectId])
+  @@index([createdAt])
+  @@index([action, createdAt])
+  @@index([targetType, targetId])
+  @@map("audit_logs")
+}
+
+model Signal {
+  id          String         @id @default(cuid())
+  publicId    String         @unique
+  projectId   String
+  project     Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  keywordId   String?
+  keyword     Keyword?       @relation(fields: [keywordId], references: [id], onDelete: SetNull)
+  source      SignalSource
+  type        String
+  severity    SignalSeverity @default(info)
+  url         String?
+  payload     Json?
+  happenedAt  DateTime       @default(now())
+  createdById String?
+  createdBy   User?          @relation("SignalCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime       @default(now())
+
+  @@index([projectId, happenedAt(sort: Desc)])
+  @@index([projectId, source, happenedAt])
+  @@index([keywordId, happenedAt])
+  @@map("signals")
+}
+
+model SitemapSnapshot {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  sitemapUrl  String
+  urlCount    Int
+  entries     Json
+  contentHash String
+  fetchedAt   DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  @@index([projectId, fetchedAt(sort: Desc)])
+  @@map("sitemap_snapshots")
+}
+
+model UrlPresence {
+  id            String    @id @default(cuid())
+  projectId     String
+  project       Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  url           String
+  verdict       String?
+  coverageState String?
+  lastCrawlAt   DateTime?
+  canonicalOk   Boolean?
+  checkedAt     DateTime  @default(now())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([projectId, url])
+  @@index([projectId, checkedAt])
+  @@map("url_presences")
+}
+
+model AlertRule {
+  id                String               @id @default(cuid())
+  publicId          String               @unique
+  projectId         String
+  project           Project              @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name              String
+  conditionType     AlertConditionType
+  severity          AlertSeverity
+  enabled           Boolean              @default(true)
+  targetType        AlertTargetType      @default(all)
+  thresholdPosition Int?
+  changePct         Decimal?
+  dropPositions     Int?
+  topN              Int?
+  serpFeature       String?
+  competitorDomain  String?
+  channels          AlertChannel[]
+  targets           AlertRuleTarget[]
+  recipients        AlertRuleRecipient[]
+  triggered         TriggeredAlert[]
+  dailyStats        AlertRuleDailyStat[]
+  createdById       String?
+  createdBy         User?                @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+
+  @@index([projectId])
+  @@index([projectId, enabled])
+  @@map("alert_rules")
+}
+
+model AlertRuleTarget {
+  id        String    @id @default(cuid())
+  ruleId    String
+  rule      AlertRule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+  keywordId String?
+  keyword   Keyword?  @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+  tagId     String?
+  tag       Tag?      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([ruleId])
+  @@index([keywordId])
+  @@index([tagId])
+  @@map("alert_rule_targets")
+}
+
+model AlertRuleRecipient {
+  id        String    @id @default(cuid())
+  ruleId    String
+  rule      AlertRule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([ruleId, userId])
+  @@index([userId])
+  @@map("alert_rule_recipients")
+}
+
+model TriggeredAlert {
+  id                       String               @id @default(cuid())
+  publicId                 String               @unique
+  ruleId                   String
+  rule                     AlertRule            @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+  keywordId                String
+  keyword                  Keyword              @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+  rankCheckId              String?
+  rankCheck                RankCheck?           @relation(fields: [rankCheckId], references: [id], onDelete: SetNull)
+  firedAt                  DateTime             @default(now())
+  beforePosition           Int?
+  afterPosition            Int?
+  status                   TriggeredAlertStatus @default(firing)
+  snoozedUntil             DateTime?
+  resolvedAt               DateTime?
+  payload                  Json?
+  deliveredAt              DateTime?
+  deliveryState            AlertDeliveryState   @default(pending)
+  deliveryClaimedAt        DateTime?
+  deliveryClaimToken       String?
+  deliveryBudgetReservedAt DateTime?
+  deliveryAttempts         DeliveryAttempt[]
+  createdAt                DateTime             @default(now())
+  updatedAt                DateTime             @updatedAt
+
+  @@unique([ruleId, keywordId, rankCheckId])
+  @@index([ruleId])
+  @@index([keywordId, firedAt])
+  @@index([status])
+  @@index([snoozedUntil])
+  @@index([deliveryState, firedAt])
+  @@index([firedAt])
+  @@map("triggered_alerts")
+}
+
+model AlertRuleDailyStat {
+  id                 String    @id @default(cuid())
+  ruleId             String
+  rule               AlertRule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+  day                DateTime  @db.Date
+  sentCount          Int       @default(0)
+  suppressedCount    Int       @default(0)
+  overflowNotifiedAt DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@unique([ruleId, day])
+  @@map("alert_rule_daily_stats")
+}
+
+model DeliveryAttempt {
+  id                String           @id @default(cuid())
+  triggeredAlertId  String
+  triggeredAlert    TriggeredAlert   @relation(fields: [triggeredAlertId], references: [id], onDelete: Cascade)
+  webhookEndpointId String?
+  webhookEndpoint   WebhookEndpoint? @relation(fields: [webhookEndpointId], references: [id], onDelete: SetNull)
+  channel           AlertChannel
+  status            String
+  error             String?
+  attemptedAt       DateTime         @default(now())
+
+  @@index([triggeredAlertId])
+  @@index([webhookEndpointId])
+  @@index([attemptedAt])
+  @@map("delivery_attempts")
+}
+
+model WebhookEndpoint {
+  id               String            @id @default(cuid())
+  publicId         String            @unique
+  projectId        String
+  project          Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  url              String
+  hmacSecret       String
+  enabled          Boolean           @default(true)
+  description      String?
+  lastDeliveryAt   DateTime?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  deliveryAttempts DeliveryAttempt[]
+
+  @@index([projectId])
+  @@map("webhook_endpoints")
+}
+
+model SlackConnection {
+  id              String   @id @default(cuid())
+  projectId       String   @unique
+  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  teamId          String
+  teamName        String?
+  channelId       String?
+  channelName     String?
+  accessTokenHash String
+  scope           String?
+  enabled         Boolean  @default(true)
+  installedById   String?
+  installedBy     User?    @relation(fields: [installedById], references: [id], onDelete: SetNull)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("slack_connections")
+}
+
+model SavedView {
+  id          String   @id @default(cuid())
+  publicId    String   @unique
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdById String?
+  createdBy   User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  name        String
+  /// Product surface that owns this view. Existing rows default to keyword views.
+  surface     String   @default("keywords")
+  config      Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([projectId, surface])
+  @@map("saved_views")
+}
+
+model Notification {
+  id             String           @id @default(cuid())
+  publicId       String           @unique
+  userId         String
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId      String?
+  project        Project?         @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  type           NotificationType
+  title          String
+  body           String?
+  payload        Json?
+  idempotencyKey String?
+  readAt         DateTime?
+  createdAt      DateTime         @default(now())
+
+  @@unique([userId, idempotencyKey])
+  @@index([userId, readAt])
+  @@index([userId, createdAt])
+  @@index([projectId])
+  @@map("notifications")
+}
+
+model NotificationPreference {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  alertEmail  Boolean  @default(true)
+  alertInApp  Boolean  @default(true)
+  checkEmail  Boolean  @default(false)
+  checkInApp  Boolean  @default(false)
+  inviteEmail Boolean  @default(true)
+  inviteInApp Boolean  @default(true)
+  importEmail Boolean  @default(true)
+  importInApp Boolean  @default(true)
+  reportEmail Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, projectId])
+  @@index([projectId])
+  @@map("notification_preferences")
+}
+
+model Invite {
+  id          String    @id @default(cuid())
+  publicId    String    @unique
+  projectId   String
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  email       String
+  role        Role      @default(member)
+  token       String    @unique
+  expiresAt   DateTime
+  acceptedAt  DateTime?
+  invitedById String
+  invitedBy   User      @relation(fields: [invitedById], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+
+  @@unique([projectId, email])
+  @@index([projectId])
+  @@index([email])
+  @@map("invites")
+}
+
+model MigrationToken {
+  id          String           @id @default(cuid())
+  publicId    String           @unique
+  projectId   String
+  project     Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  hash        String           @unique
+  scope       MigrationScope   @default(full)
+  expiresAt   DateTime
+  singleUse   Boolean          @default(true)
+  consumedAt  DateTime?
+  createdById String
+  createdBy   User             @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  importJobs  CloudImportJob[]
+  createdAt   DateTime         @default(now())
+
+  @@index([projectId])
+  @@map("migration_tokens")
+}
+
+model CloudImportJob {
+  id             String                 @id @default(cuid())
+  publicId       String                 @unique
+  projectId      String
+  project        Project                @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tokenId        String?
+  token          MigrationToken?        @relation(fields: [tokenId], references: [id], onDelete: SetNull)
+  state          CloudImportState       @default(idle)
+  progress       Int                    @default(0)
+  counts         Json?
+  error          String?
+  chunkCount     Int?
+  chunksReceived Int                    @default(0)
+  chunksImported Int                    @default(0)
+  manifest       Json?
+  chunks         MigrationImportChunk[]
+  startedAt      DateTime?
+  finishedAt     DateTime?
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+
+  @@index([projectId])
+  @@index([state])
+  @@index([state, updatedAt])
+  @@index([finishedAt])
+  @@map("cloud_import_jobs")
+}
+
+model MigrationImportChunk {
+  id         String         @id @default(cuid())
+  jobId      String
+  job        CloudImportJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  index      Int
+  checksum   String
+  bytes      Int
+  kind       String
+  payload    Json
+  receivedAt DateTime       @default(now())
+  importedAt DateTime?
+
+  @@unique([jobId, index])
+  @@index([jobId])
+  @@map("migration_import_chunks")
+}
+
+/// Durable execution ledger for ordered repository data migrations.
+model DataMigration {
+  id         String    @id
+  checksum   String
+  attempts   Int       @default(0)
+  startedAt  DateTime
+  finishedAt DateTime?
+  failedAt   DateTime?
+  error      String?
+
+  @@map("data_migrations")
+}

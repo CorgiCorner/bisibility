@@ -1,0 +1,73 @@
+---
+title: "Backlinks"
+description: "Analyze referring domains and backlinks for a site or page through a BYO DataForSEO connection."
+---
+
+## Analyze backlinks
+
+```http
+GET /api/v1/projects/{project_id}/backlinks?target=example.com&target_scope=site&result_limit=100
+Authorization: Bearer <api_key>
+```
+
+This paid BYO-key lookup uses one eligible DataForSEO connection owned by the
+project. `target_scope=site` expects a bare domain and honors
+`include_subdomains`; `target_scope=page` expects a full URL and ignores it. The
+target is validated locally first, so an unsupported input returns the
+`unsupported_target` problem before any provider call is made.
+
+`result_limit` accepts `100`, `300`, `500`, or `1000` rows. `mode=as_is` returns
+rows as the provider stores them, `mode=one_per_domain` asks the provider for a
+single best row per referring domain across the whole corpus, not only across the
+rows you fetched. Endpoints that can spend provider budget require write scope.
+
+One paid snapshot per target is kept for 24 hours and shared with MCP and the
+UI, so filtering, sorting, and grouping the rows you already paid for is free.
+`fresh=true` skips the cache read and pays again. Use `estimate_only=true` for a
+free, cache-aware dry run: it returns no rows, sets `estimate: true`, and reports
+`estimated_cost_cents` without calling the provider, consuming budget, or writing
+the cost ledger. `max_cost_cents` is a best-effort guard applied to the
+pre-estimate; the monthly provider budget remains the hard stop.
+
+The response envelope carries `target`, `target_scope`, `include_subdomains`,
+`provider`, `fetched_at`, `cached`, `cached_until`, `cost_cents`,
+`fetched_row_count`, and `total_rows_available`. `summary` reports
+`backlinks_total`, referring domain counts, `dofollow_pct`, `domain_rank`,
+broken backlink and page counts, and provider-lifetime `new_backlinks`,
+`lost_backlinks`, `new_referring_domains`, and `lost_referring_domains`.
+`history` always holds the last twelve months as `{month, new_links,
+lost_links}`.
+
+Each row carries `source_domain`, `source_url`, `anchor`, `target_url`,
+`flags` (`nofollow`, `ugc`, `sponsored`, `image`, `sitewide`), `links_count`,
+`domain_authority` (the provider's referring-domain rank on the 0-100 scale),
+`spam_score`, `first_seen`, `lost_at`, and `status`. `status` and `lost_at` come
+straight from the provider's own new and lost markers rather than from
+comparing snapshots, and `sitewide` is a derived heuristic over `links_count`.
+A provider result with no backlinks is a successful empty response, not an error.
+
+Unsupported targets, exhausted budgets, provider throttling, reauthorization,
+and missing eligible connections use the standard problem response.
+
+## Load more rows
+
+```http
+POST /api/v1/projects/{project_id}/backlinks/rows
+Authorization: Bearer <api_key>
+Content-Type: application/json
+
+{
+  "target": "example.com",
+  "target_scope": "site",
+  "include_subdomains": true,
+  "limit": 100
+}
+```
+
+This paid call extends the current unexpired snapshot for the same target.
+`limit` is a multiple of `100` between `100` and `1000`. The response is the
+same envelope, but `rows` contains only the newly fetched rows; append them to
+the rows you already hold and use the updated `fetched_row_count` and
+`cost_cents`. When the snapshot has expired or does not exist, the endpoint
+returns the `snapshot_expired` problem with status `409`; run the analyze
+request again to pay for a fresh snapshot.

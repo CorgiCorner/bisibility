@@ -1,0 +1,195 @@
+---
+title: "Webhook endpoints"
+description: "Create, test, verify, update, and delete signed project webhook endpoints."
+---
+
+Webhook endpoints are project resources. A write-capable token can list, create,
+and update them; deletion requires admin access. Personal-token access is also
+capped by the user's project membership role. A project can have at most 10
+endpoints. Existing projects above the cap can keep and update their endpoints,
+but must delete endpoints before creating another.
+
+Every webhook-channel rule fans out to every enabled endpoint in its project.
+Endpoints are not selected per rule and do not have event filters.
+
+| Method | Path | Purpose |
+| - | - | - |
+| `GET` | `/projects/{project_id}/webhooks` | List endpoints. |
+| `POST` | `/projects/{project_id}/webhooks` | Create an endpoint. |
+| `PATCH` | `/projects/{project_id}/webhooks/{webhook_id}` | Update or rotate its secret. |
+| `DELETE` | `/projects/{project_id}/webhooks/{webhook_id}` | Delete an endpoint. |
+
+Create request:
+
+```json
+{
+  "url": "https://example.com/hooks/bisibility",
+  "description": "Rank alerts",
+  "enabled": true,
+  "hmac_secret": "a-secret-with-at-least-16-characters"
+}
+```
+
+`hmac_secret` is required on create, optional on patch, non-null, at least 16
+characters, and write-only. It is encrypted at rest and is never returned.
+Omit it on patch to keep the current secret, or send a non-empty value to
+rotate. Sending `null` or `""` is a validation error.
+
+Every endpoint response has this exact shape:
+
+| Field | Type | Meaning |
+| - | - | - |
+| `id` | string | Strict v3 public endpoint ID (`we_` plus a 24-character CUID2 suffix). |
+| `url` | string | Delivery URL. |
+| `description` | string or null | Optional label. |
+| `enabled` | boolean | Whether delivery is active. |
+| `last_delivery_at` | date-time or null | Most recent successful delivery. |
+| `created_at` | date-time | Creation time. |
+| `updated_at` | date-time | Last resource update. |
+
+Failed attempts do not change `last_delivery_at`. Private-network and loopback
+targets are rejected by default. Self-hosters who deliberately need them can
+set `WEBHOOK_ALLOW_PRIVATE_NETWORK=1` after reviewing the SSRF implications.
+
+## Event envelopes
+
+All outbound bodies are JSON objects with `event`, `created_at`, `data`, and
+`schemaVersion`. There are three event names, and every current envelope uses
+schema version 3. Every resource ID in `data` is a strict v3 public ID; raw
+database and Temporal identifiers never cross this boundary.
+
+### `alert.fired`
+
+```json
+{
+  "event": "alert.fired",
+  "schemaVersion": 3,
+  "created_at": "2026-07-25T12:00:03.000Z",
+  "data": {
+    "action": "Review the ranking page and recent SERP changes.",
+    "after_position": 11,
+    "alert_id": "al_a00000000000000000000000",
+    "before_position": 4,
+    "condition_type": "position_drop",
+    "fired_at": "2026-07-25T12:00:00.000Z",
+    "headline": "Rank tracker dropped from #4 to #11",
+    "keyword": "rank tracker",
+    "keyword_id": "kw_a00000000000000000000000",
+    "project_domain": "example.com",
+    "project_id": "prj_a00000000000000000000000",
+    "rule_id": "alr_a00000000000000000000000",
+    "rule_name": "Important position drops"
+  }
+}
+```
+
+Consumers should branch on the event and schema version before interpreting
+`data`. Version 3 establishes the final public-ID prefix contract; a future
+semantic change requires a `schemaVersion` bump. It intentionally has no event
+or delivery ID.
+
+A test delivery uses this same envelope and posting path, with `data.test: true`
+and representative values. Production alert deliveries omit `test`.
+
+### `alert.digest`
+
+`data.alerts` contains full `alert.fired.data` objects. Webhook batches contain
+at most 200 alerts and are not shortened.
+
+```json
+{
+  "event": "alert.digest",
+  "schemaVersion": 3,
+  "created_at": "2026-07-25T12:05:00.000Z",
+  "data": {
+    "alert_count": 1,
+    "alerts": [
+      {
+        "action": "Review the ranking page and recent SERP changes.",
+        "after_position": 11,
+        "alert_id": "al_a00000000000000000000000",
+        "before_position": 4,
+        "condition_type": "position_drop",
+        "fired_at": "2026-07-25T12:00:00.000Z",
+        "headline": "Rank tracker dropped from #4 to #11",
+        "keyword": "rank tracker",
+        "keyword_id": "kw_a00000000000000000000000",
+        "project_domain": "example.com",
+        "project_id": "prj_a00000000000000000000000",
+        "rule_id": "alr_a00000000000000000000000",
+        "rule_name": "Important position drops"
+      }
+    ],
+    "condition_type": "position_drop",
+    "project_domain": "example.com",
+    "project_id": "prj_a00000000000000000000000",
+    "rule_id": "alr_a00000000000000000000000",
+    "rule_name": "Important position drops",
+    "suppressed_today_count": 0
+  }
+}
+```
+
+### `alert.daily_cap_reached`
+
+This notice is sent once when a rule exhausts its daily delivery-batch budget.
+
+```json
+{
+  "event": "alert.daily_cap_reached",
+  "schemaVersion": 3,
+  "created_at": "2026-07-25T18:00:00.000Z",
+  "data": {
+    "project_id": "prj_a00000000000000000000000",
+    "rule_id": "alr_a00000000000000000000000",
+    "rule_name": "Important position drops",
+    "suppressed_count": 1
+  }
+}
+```
+
+## Verify signatures
+
+Each request has:
+
+- `X-Bisibility-Timestamp`: Unix seconds.
+- `X-Bisibility-Signature`: `sha256=<hex digest>`.
+
+The digest is HMAC-SHA256 over the exact UTF-8 signing string
+`` `${timestamp}.${body}` ``, where `body` is the raw request body before JSON
+parsing. Reject timestamps outside a 300-second window to prevent replay.
+
+```js
+import { createHmac, timingSafeEqual } from "node:crypto";
+
+export function verifyBisibilityWebhook({ rawBody, secret, signature, timestamp }) {
+  const sentAt = Number(timestamp);
+  const now = Math.floor(Date.now() / 1000);
+  if (!Number.isInteger(sentAt) || Math.abs(now - sentAt) > 300) return false;
+  if (!signature?.startsWith("sha256=")) return false;
+
+  const supplied = Buffer.from(signature.slice("sha256=".length), "hex");
+  const expected = createHmac("sha256", secret)
+    .update(`${timestamp}.${rawBody}`)
+    .digest();
+
+  return supplied.length === expected.length && timingSafeEqual(supplied, expected);
+}
+```
+
+## Test and delivery behavior
+
+In the endpoint list, select **Send test event**. A successful result shows the
+HTTP status and latency. A failure also shows the concrete reason. The receiver
+can identify the signed test through `event === "alert.fired"` and
+`data.test === true`.
+
+Each request has a 10-second timeout and redirects are not followed. HTTP 4xx
+responses are permanent except 408 and 429. Network errors, 408, and 5xx
+responses are retryable. Webhook delivery makes at most five attempts: the
+first attempt, then exponential retries after about 10, 20, 40, and 80 seconds.
+
+For 429, `Retry-After` accepts delta-seconds or an HTTP date. A missing, invalid,
+non-positive, or expired 429 value uses 60 seconds. The requested delay is
+capped at 10 minutes. This 60-second default applies only to 429, not to generic
+5xx backoff.

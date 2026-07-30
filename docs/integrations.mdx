@@ -1,0 +1,294 @@
+---
+title: "Integrations"
+description: "Connect SERP providers and analytics sources in bisibility."
+---
+
+bisibility ships without a bundled rank-data source. Connect your own provider
+accounts from the app, keep credentials encrypted in your instance, and pay each
+provider directly according to that provider's pricing.
+
+## Integration kinds
+
+| Kind | What it is for | What it is not for |
+| - | - | - |
+| SERP providers | Google rank checks for tracked search terms. | Traffic, click, or conversion reporting. |
+| Analytics sources | Owned-data context from Google Search Console, GA4, or Plausible. | Determining rank positions. |
+
+Positions come from completed SERP rank checks. Analytics sources add context,
+but they do not set or replace rank positions.
+
+Deploy webhooks are a separate inbound integration for timeline signals. Use
+them when you want deployments from a hosting provider or CI system to appear
+alongside rank and traffic changes. See [Deploy webhooks](/api/deploy-webhooks).
+
+## Connect from the app
+
+1. Open **Integrations** in the app.
+2. Choose a SERP provider and select **Connect**.
+3. Enter the provider credentials listed below.
+4. Select **Test connection**. Credential-based, non-OAuth providers must pass
+   this test before you can save the connection.
+5. Set the optional **Cost estimate per check (USD)**.
+6. Save the connection.
+7. Use **SERP fallback order** to activate providers and arrange the exact
+   top-to-bottom order used for rank checks.
+
+On self-hosted deployments, project-level credentials saved through the UI take
+precedence over optional environment fallback credentials. Blank credential
+fields on an existing connection keep the stored encrypted value.
+
+## DataForSEO
+
+Use DataForSEO when you want pay-as-you-go SERP requests with provider-reported
+per-request cost.
+
+| Field in bisibility | DataForSEO value |
+| - | - |
+| `Login` | DataForSEO API login from your account dashboard. |
+| `Password` | DataForSEO API password from your account dashboard. |
+| `Cost estimate per check (USD)` | `0.0155` is the current Live estimate for a Top 100 check; use `0.0020` for Top 10. |
+
+Bisibility currently uses DataForSEO Live. Its estimated cost is about `$0.0020`
+for Top 10 and `$0.0155` for Top 100 because additional pages are billed below
+the first-page rate. Bisibility stores the actual cost reported by DataForSEO
+for each completed check; if the provider does not report a positive cost, the
+app falls back to the connection's configured per-check estimate.
+
+When **Stop checks at first domain match** is on, Bisibility sends
+`stop_crawl_on_match` with the tracked domain. DataForSEO may then crawl fewer
+pages than the configured depth, and the actual provider-reported cost is still
+what Bisibility records.
+
+Optional environment fallback credentials:
+
+```text
+DATAFORSEO_LOGIN=
+DATAFORSEO_PASSWORD=
+```
+
+## SerpApi
+
+Use SerpApi when you prefer a subscription plan with a monthly search quota.
+
+| Field in bisibility | SerpApi value |
+| - | - |
+| `API key` | SerpApi API key from your account dashboard. |
+| `Cost estimate per check (USD)` | An estimated USD cost per logical check at your configured depth. |
+
+SerpApi plans include a monthly search allowance. SerpApi responses do not give
+Bisibility a per-response dollar cost, so configure the connection's per-check
+estimate yourself. Multiply your effective per-search price by
+`ceil(depth / 10)` for your configured depth. For example, `$275 / 30,000`
+searches is about `$0.00917` per search; a Top-100 check uses up to 10 searches,
+so enter about `0.0917`.
+
+Optional environment fallback credential:
+
+```text
+SERPAPI_API_KEY=
+```
+
+### Stop checks at first domain match
+
+This project setting is on by default. Bisibility stops as soon as the tracked
+domain is found, so actual SerpApi searches per check are often fewer than
+`ceil(depth / 10)`. The configured per-check estimate remains the worst-case
+value for the selected depth. Turn the setting off when complete full-depth
+competitor snapshots matter more than provider cost.
+
+## SERP fallback order
+
+The integrations page shows one dedicated order for SERP providers. Active
+connections are tried from top to bottom. Paused and disconnected providers are
+shown separately and are not used for rank checks.
+
+If a rank check succeeds, bisibility stores the result with the provider that
+returned it. If a provider request fails, is rate-limited, or cannot use its
+stored credentials, bisibility tries the next enabled provider in the chain.
+
+If every provider is rate-limited, the check is deferred for a later retry. If
+every provider fails for another reason, the check fails with a provider error.
+
+## Budget cap
+
+Provider spend is bounded by a monthly budget set per workspace in
+**Settings > Provider usage**. New workspaces start at `$50.00`. Workspace
+owners and admins change the cap with **Edit budget**; every budget change is
+recorded in the audit log with the actor, the old cap, and the new cap.
+
+The enforced total combines rank-check spend with paid provider lookup ledger
+entries. Scheduled and manual checks, ranked-keyword suggestions, keyword
+research, and keyword metrics pause once the workspace reaches the cap, and
+nothing is charged beyond it. Cached lookups stay free. Spend resets at the
+start of each calendar month, measured in UTC; in other timezones the reset
+lands a few hours before or after local midnight on the 1st.
+
+In-app spend meters use this same enforced monthly total. The session amount
+resets when the app reloads and uses provider-reported costs where available;
+manual rank checks use the displayed estimate until their result includes an
+actual provider cost.
+
+Raise the budget only after estimating provider spend. The public calculator at
+[`/rank-tracking-cost-calculator`](https://bisibility.com/rank-tracking-cost-calculator) estimates
+monthly volume across search-term count, locations, devices, schedule, and provider.
+
+## Analytics sources
+
+Google Search Console, Google Analytics 4, and Plausible are optional analytics
+sources.
+
+Search Console imports clicks and impressions from Search Analytics, index
+status from URL Inspection, and sitemap status. GA4 imports organic-search
+sessions, engagement rate, and key events per landing page. Analytics imports
+add owned-data context to rank reports; they do not run rank checks.
+
+### Google OAuth client setup
+
+Google Search Console and GA4 share one Google OAuth 2.0 web client. It is the
+same client used for optional Google social sign-in, extended with analytics
+scopes.
+
+1. Create or select a project in the [Google Cloud console](https://console.cloud.google.com/).
+2. Enable these APIs on the project:
+   - **Google Search Console API** - Search Analytics, URL Inspection, and
+     sitemap calls.
+   - **Google Analytics Data API** - GA4 traffic reports.
+   - **Google Analytics Admin API** - lists the GA4 accounts and properties
+     shown in the property picker during connect.
+3. Configure the OAuth consent screen (Google Auth Platform) with these scopes:
+   - `openid` and `email`
+   - `https://www.googleapis.com/auth/webmasters` for Search Console. The
+     full scope is required, not `webmasters.readonly`, because sitemap
+     re-submission is a write call.
+   - `https://www.googleapis.com/auth/analytics.readonly` for GA4.
+4. Create an OAuth client with the **Web application** type and add the
+   authorized redirect URI built from your instance origin (`SITE_URL`):
+
+   ```text
+   https://<your-bisibility-host>/api/integrations/google/callback
+   ```
+
+   For local development, `http://localhost:3000/api/integrations/google/callback`
+   works; Google allows plain `http` only for localhost.
+5. Set the client credentials in the environment and restart the app:
+
+   ```text
+   GOOGLE_CLIENT_ID=
+   GOOGLE_CLIENT_SECRET=
+   ```
+
+6. Open **Integrations** and connect Google Search Console or GA4.
+
+The connect flow requests offline access with a forced consent prompt, so
+Google returns a refresh token on every connect. Bisibility stores only the
+encrypted refresh token and mints short-lived access tokens on demand; access
+tokens are never persisted.
+
+<Warning>
+  An external Google OAuth app left in the **Testing** publishing status
+  receives refresh tokens that expire after about seven days, after which
+  scheduled imports stop and the connection shows **Reconnect required**.
+  Publish the OAuth app to **Production** for persistent scheduled imports. A
+  personal self-hosted instance can stay unverified and accept Google's
+  unverified-app warning during consent.
+</Warning>
+
+If Google does not return a refresh token, remove the app's existing grant at
+[myaccount.google.com/permissions](https://myaccount.google.com/permissions)
+and reconnect.
+
+### Finding your GA4 Property ID
+
+Google Analytics 4 exposes several identifiers. Bisibility needs the
+digits-only **Property ID** used by the Google Analytics Data API.
+
+1. Open Google Analytics 4 and select the property you want to connect.
+2. Select **Admin** (the gear in the bottom-left corner).
+3. Under **Property settings**, select **Property details**.
+4. Copy the digits-only **Property ID**, such as `123456789`.
+
+You can also type **Property ID** in the search bar at the top of Google
+Analytics to find the property details page. See Google's documentation for
+[finding the Property ID](https://developers.google.com/analytics/devguides/reporting/data/v1/property-id)
+and [identifying a web data stream's Measurement ID](https://support.google.com/analytics/answer/12270356?hl=en).
+
+<Warning>
+  Do not paste an ID beginning with `G-`. That is a web data-stream Measurement
+  ID, not a Property ID. Do not paste a legacy Universal Analytics ID beginning
+  with `UA-` either. Bisibility requires the digits-only GA4 Property ID.
+</Warning>
+
+### Troubleshooting analytics connections
+
+If a traffic sync fails with `config_invalid`, open **Integrations**, manage the
+affected connection, and re-select the property. For GA4, confirm that the
+saved value is the digits-only Property ID described above.
+
+### Data freshness and Google API quotas
+
+The daily traffic sync makes two bulk Search Analytics queries per Search
+Console property - one for the stored 28-day aggregate and one for the stored
+7-day aggregate - and matches the returned queries to tracked keywords locally.
+Each bulk query may use up to three paginated API requests on very large
+properties. The cost does not grow with the number of tracked keywords. The
+same sync makes one additional page-stats call per property. Search Analytics
+data is read with a three-day lag because Google finalizes it late; running the
+sync more often would not produce fresher data, so bisibility syncs it daily.
+CTR-drop alerts read those stored 28-day and 7-day aggregates with the same lag.
+
+Index-status checks use the separate URL Inspection API. The daily presence
+sync inspects up to the project's **Daily inspection limit** target URLs,
+oldest-checked first. This `inspectionDailyLimit` setting is the maximum number
+of URL Inspection calls the project makes per day. The default is `50`; set it
+to `0` to turn off presence sync for that project. The app reads stored
+inspection results in the UI and does not inspect URLs on demand.
+
+Google documents these [Search Console API limits](https://developers.google.com/webmaster-tools/limits):
+
+| API | Google property limit | Google user limit |
+| - | - | - |
+| Search Analytics | 1,200 queries per minute | 1,200 queries per minute |
+| URL Inspection | 2,000 inspections per day and 600 per minute | No separate user limit documented. |
+
+Search Analytics has no daily per-property cap. Google does not expose an API
+for remaining Search Console quota. Inspect usage in the Google Cloud Console
+quotas tab; an HTTP `429` response is the runtime backstop.
+
+Bisibility applies two URL Inspection controls before making a request:
+
+1. The project limit controls how many target URLs that project may inspect per
+   day.
+2. The instance applies a shared `1,600`-inspection daily safety cap to every
+   project connected to the same Google account and property. Self-hosters can
+   change it with `BISIBILITY_GSC_INSPECTION_DAILY_BUDGET`.
+
+The property cap leaves headroom below Google's 2,000-per-day limit for retries
+and other tools. It is globally consistent when the instance uses its required
+Redis or Valkey store. The in-process development fallback resets on restart,
+so Google's own `429` remains the final backstop.
+
+For `N` tracked target URLs and a project limit `L` greater than zero, each URL
+is re-inspected about every `ceil(N / L)` days. For example, 120 URLs at a limit
+of 50 rotate through all URLs in three days.
+
+| Condition | What bisibility does | Who acts |
+| - | - | - |
+| Minute rate limit | Stops only the current batch, leaves unchecked URLs untouched, and retries oldest URLs on the next run. It does not drain the daily safety budget. | Nobody; it recovers automatically. |
+| Daily safety budget or Google daily quota | Stops locally and defers the remaining URLs. The local safety budget resets at midnight UTC; Google's own daily quota resets around midnight Pacific. | Nobody. If it recurs, lower project limits or reduce the number of projects using the property. |
+| Google authorization is broken | Changes the connection to **Reconnect required** and stops all traffic and presence calls for it. | Reconnect the Google account from **Integrations**. |
+
+Quota exhaustion never requires manual unpausing. Only broken Google
+authorization requires user action.
+
+Rank positions still come exclusively from SERP providers. Search Console adds
+owned traffic and index-status context; it never sets positions.
+
+Plausible connects with these fields:
+
+| Field in bisibility | Plausible value |
+| - | - |
+| `Site domain` | The Plausible site, such as `example.com`. |
+| `API token` | Plausible Stats API key from plausible.io Settings. |
+| `API base URL` | Leave blank for Plausible Cloud. Set this only for a self-hosted Plausible instance. |
+
+Plausible imports add traffic and sessions context; they do not run rank checks.

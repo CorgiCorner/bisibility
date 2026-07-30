@@ -1,0 +1,6 @@
+{
+  "deploymentId": "deploy_generic",
+  "environment": "preview",
+  "paths": ["/docs"],
+  "url": "https://example.com/docs"
+}

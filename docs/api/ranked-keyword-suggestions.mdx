@@ -1,0 +1,52 @@
+---
+title: "Ranked keyword suggestions"
+description: "Discover queries a project domain already ranks for through its DataForSEO account."
+---
+
+## List ranked keyword suggestions
+
+```http
+GET /api/v1/projects/{project_id}/ranked-keyword-suggestions
+Authorization: Bearer <api_key>
+```
+
+The endpoint uses an eligible SERP connection owned by the project. A cache
+miss is a paid DataForSEO Labs lookup. The app shows the current estimate from
+its provider rates table before the request. Results, including empty pages,
+are cached for 12 hours and shared with onboarding and MCP. Set `fresh=true` to
+skip the cache read and replace the cached page. Because a miss can spend the
+project's provider budget, the bearer token must include write scope.
+
+| Query | Description |
+| - | - |
+| `connection_id` | Optional eligible DataForSEO connection. The project primary connection is preferred when omitted. |
+| `offset` | Defaults to `0`. Must be a multiple of `100`, maximum `900`. |
+| `limit` | Defaults to `100`, maximum `100`. |
+| `fresh` | Defaults to `false`. Fetch and cache a new provider result. |
+
+```json
+{
+  "rows": [
+    {
+      "keyword": "rank tracker api",
+      "position": 4,
+      "search_volume": 720,
+      "estimated_traffic": 61.2,
+      "already_tracked": true
+    }
+  ],
+  "total_count": 184,
+  "offset": 0,
+  "cost_cents": 2,
+  "cached": false,
+  "fetched_at": "2026-07-22T10:00:00.000Z",
+  "connections": [
+    { "id": "conn_a00000000000000000000000", "label": "DataForSEO", "provider": "dataforseo" }
+  ]
+}
+```
+
+`already_tracked` is true when the normalized suggestion matches a keyword the
+project already tracks. Budget exhaustion, provider throttling, reauthorization,
+unsupported locations, missing sources, and missing domains use the standard
+problem response format.

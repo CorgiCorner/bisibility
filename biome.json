@@ -1,0 +1,60 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.4/schema.json",
+  "files": {
+    "includes": [
+      "**",
+      "!**/node_modules",
+      "!**/.next",
+      "!**/.cache",
+      "!**/deploy/.terraform",
+      "!**/.agent-private/design-source",
+      "!**/scripts",
+      "!**/storybook-static",
+      "!**/coverage",
+      "!**/graphify-out",
+      "!**/.agent-private",
+      "!**/lib/generated/prisma",
+      "!**/prisma/generated",
+      "!**/test-results",
+      "!**/reports",
+      "!**/playwright-report"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended",
+      "a11y": {
+        "noSvgWithoutTitle": "off",
+        "useAriaPropsSupportedByRole": "off"
+      },
+      "suspicious": {
+        "noArrayIndexKey": "off",
+        "noUnknownAtRules": "off"
+      }
+    }
+  },
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": {
+          "level": "on",
+          "options": {
+            "groups": [":NODE:", "@/**", ":PACKAGE:", ":PATH:"]
+          }
+        }
+      }
+    }
+  }
+}
