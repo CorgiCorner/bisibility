@@ -13,8 +13,9 @@ other Bisibility resources.
 | Documentation | Owns |
 | - | - |
 | SDK pages | Installation, client configuration, language-level methods, tool names, and types. |
-| [API reference](/api/overview) | The underlying HTTP contract: routes, payloads, status codes, and response shapes. |
-| [OpenAPI](/api/v1/openapi.json) | The machine-readable REST contract used for SDK parity checks. |
+| [API workflows](/api/overview) | Shared HTTP contract behavior and end-to-end integration flows. |
+| **API Reference** tab | Endpoint routes, payloads, status codes, and response schemas. |
+| [OpenAPI JSON](https://bisibility.com/api/v1/openapi.json) | The machine-readable REST contract used for SDK parity checks. |
 
 Start with the [SDK method reference](/sdks/methods) when you need the method or
 tool name for a workflow. Follow an endpoint link only when you need its wire
@@ -33,8 +34,7 @@ contract. SDK pages do not redirect to the API reference.
 
 The SDK clients and MCP server use the same bearer credentials as the REST API.
 Use a project API key for a project-scoped integration. For user-level and
-cross-project automation, use a
-[personal access token](/api/personal-access-tokens).
+cross-project automation, use a personal access token.
 
 The examples use these environment variables:
 
@@ -44,5 +44,5 @@ export BISIBILITY_BASE_URL="https://your-host.example/api/v1"
 ```
 
 `BISIBILITY_BASE_URL` points to the API root for the hosted service or your
-self-hosted instance. See [Authentication](/authentication) for key
-creation and a test request.
+self-hosted instance. See [Authentication](/authentication) for credential
+selection, key creation, and a test request.

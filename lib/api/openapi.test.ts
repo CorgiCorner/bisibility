@@ -7,6 +7,54 @@ import { savedViewSchema } from "./openapi-saved-views";
 type Parameter = { name: string; schema: object };
 
 describe("OpenAPI document", () => {
+  it("groups every operation into an ordered API reference section", () => {
+    const doc = getOpenApiDocument();
+    const operations = Object.values(doc.paths).flatMap((path) => Object.values(path)) as Array<{
+      operationId?: string;
+      summary: string;
+      tags?: string[];
+    }>;
+
+    expect(doc).toHaveProperty(
+      "tags",
+      [
+        "discovery",
+        "account-access",
+        "projects",
+        "api-keys",
+        "keywords",
+        "rank-checks",
+        "keyword-research",
+        "backlinks",
+        "analytics",
+        "alerts",
+        "competitors",
+        "sitemap-monitoring",
+        "saved-views",
+        "signals",
+        "providers",
+        "webhooks",
+        "team",
+        "migration",
+      ].map((name) => expect.objectContaining({ name })),
+    );
+    expect(operations).toHaveLength(91);
+    expect(operations.every((operation) => operation.tags?.length === 1)).toBe(true);
+    expect(
+      operations.every(
+        (operation) => typeof operation.summary === "string" && operation.summary.length <= 48,
+      ),
+    ).toBe(true);
+    const referenceTitles = operations.map(
+      (operation) => `${operation.tags?.[0]}:${operation.summary}`,
+    );
+    expect(new Set(referenceTitles).size).toBe(referenceTitles.length);
+    expect(doc.paths["/projects"].get.tags).toEqual(["projects"]);
+    expect(doc.paths["/projects/{project_id}/keywords"].get.tags).toEqual(["keywords"]);
+    expect(doc.paths["/projects/{project_id}/alert-rules"].post.tags).toEqual(["alerts"]);
+    expect(doc.paths["/projects/{project_id}/webhooks"].get.tags).toEqual(["webhooks"]);
+  });
+
   it("documents personal-token account, project, API-key, and webhook routes", () => {
     const doc = getOpenApiDocument();
 

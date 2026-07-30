@@ -13,7 +13,7 @@ services:
       retries: 10
       start_period: 10s
     volumes:
-      - temporal-postgres-data:/var/lib/postgresql/data
+      - temporal-dev-postgres-data:/var/lib/postgresql/data
 
   temporal:
     image: temporalio/auto-setup:1.25.2
@@ -27,7 +27,7 @@ services:
       POSTGRES_PWD: temporal
       POSTGRES_SEEDS: temporal-postgres
     ports:
-      - "7233:7233"
+      - "127.0.0.1:7233:7233"
 
   temporal-ui:
     image: temporalio/ui:2.34.0
@@ -37,7 +37,7 @@ services:
       TEMPORAL_ADDRESS: temporal:7233
       TEMPORAL_CORS_ORIGINS: http://localhost:8233
     ports:
-      - "8233:8080"
+      - "127.0.0.1:8233:8080"
 
 volumes:
-  temporal-postgres-data:
+  temporal-dev-postgres-data:

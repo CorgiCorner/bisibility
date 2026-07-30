@@ -3533,7 +3533,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Delete an alert rule"
+        "summary": "Delete an alert rule",
+        "tags": ["alerts"]
       },
       "patch": {
         "operationId": "updateAlertRule",
@@ -3617,7 +3618,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Update an alert rule"
+        "summary": "Update an alert rule",
+        "tags": ["alerts"]
       }
     },
     "/api-keys": {
@@ -3711,9 +3713,11 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "List API keys"
+        "summary": "List API keys",
+        "tags": ["api-keys"]
       },
       "post": {
+        "description": "The scope defaults to admin when omitted.",
         "operationId": "createApiKey",
         "requestBody": {
           "content": {
@@ -3795,7 +3799,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Create an API key; omitted scope defaults to admin"
+        "summary": "Create an API key",
+        "tags": ["api-keys"]
       }
     },
     "/api-keys/{key_id}": {
@@ -3871,7 +3876,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Revoke an API key"
+        "summary": "Revoke an API key",
+        "tags": ["api-keys"]
       }
     },
     "/capabilities": {
@@ -3904,11 +3910,14 @@
             },
             "description": "JSON response"
           }
-        }
+        },
+        "summary": "Get API capabilities",
+        "tags": ["discovery"]
       }
     },
     "/cloud/import": {
       "post": {
+        "description": "Requires a migration token.",
         "operationId": "importCloudExport",
         "requestBody": {
           "content": {
@@ -4017,7 +4026,8 @@
             "MigrationToken": []
           }
         ],
-        "summary": "Import an export package with a migration token"
+        "summary": "Import a cloud export",
+        "tags": ["migration"]
       }
     },
     "/cloud/import/compatibility": {
@@ -4045,7 +4055,8 @@
             "description": "Rate limited"
           }
         },
-        "summary": "Check cloud import schema compatibility"
+        "summary": "Check cloud import schema compatibility",
+        "tags": ["migration"]
       }
     },
     "/cloud/import/sessions": {
@@ -4158,7 +4169,8 @@
             "MigrationToken": []
           }
         ],
-        "summary": "Create a chunked cloud import session"
+        "summary": "Create a chunked cloud import session",
+        "tags": ["migration"]
       }
     },
     "/cloud/import/sessions/{sessionId}/chunks/{index}": {
@@ -4311,7 +4323,8 @@
             "MigrationToken": []
           }
         ],
-        "summary": "Upload one chunk to a cloud import session"
+        "summary": "Upload a cloud import chunk",
+        "tags": ["migration"]
       }
     },
     "/cloud/import/sessions/{sessionId}/finalize": {
@@ -4447,7 +4460,8 @@
             "MigrationToken": []
           }
         ],
-        "summary": "Finalize a chunked cloud import session"
+        "summary": "Finalize a chunked cloud import session",
+        "tags": ["migration"]
       }
     },
     "/competitors/{competitor_id}": {
@@ -4523,7 +4537,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Remove a competitor"
+        "summary": "Remove a competitor by ID",
+        "tags": ["competitors"]
       }
     },
     "/cost-estimate": {
@@ -4659,7 +4674,8 @@
             "description": "Rate limited"
           }
         },
-        "summary": "Estimate monthly SERP provider cost"
+        "summary": "Estimate monthly SERP provider cost",
+        "tags": ["discovery"]
       }
     },
     "/health": {
@@ -4676,7 +4692,9 @@
             },
             "description": "JSON response"
           }
-        }
+        },
+        "summary": "Check API health",
+        "tags": ["discovery"]
       }
     },
     "/keywords/{id}": {
@@ -4752,7 +4770,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Delete one keyword"
+        "summary": "Delete one keyword",
+        "tags": ["keywords"]
       },
       "get": {
         "operationId": "getKeyword",
@@ -4826,7 +4845,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Get one keyword"
+        "summary": "Get one keyword",
+        "tags": ["keywords"]
       },
       "patch": {
         "operationId": "setKeywordTargetUrl",
@@ -4900,11 +4920,13 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Set keyword target URL or metadata"
+        "summary": "Set keyword target URL or metadata",
+        "tags": ["keywords"]
       }
     },
     "/keywords/{id}/checks": {
       "post": {
+        "description": "Runs synchronously by default or asynchronously when requested.",
         "operationId": "runRankCheck",
         "parameters": [
           {
@@ -5006,7 +5028,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Run one rank check synchronously or asynchronously"
+        "summary": "Run a rank check",
+        "tags": ["rank-checks"]
       }
     },
     "/keywords/{id}/rank-checks": {
@@ -5148,7 +5171,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "List rank checks for a keyword"
+        "summary": "List rank checks for a keyword",
+        "tags": ["rank-checks"]
       }
     },
     "/keywords/bulk": {
@@ -5224,7 +5248,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Bulk mutate keywords"
+        "summary": "Bulk mutate keywords",
+        "tags": ["keywords"]
       }
     },
     "/llms.txt": {
@@ -5241,7 +5266,9 @@
             },
             "description": "Agent-readable API capability summary"
           }
-        }
+        },
+        "summary": "Get API documentation for LLMs",
+        "tags": ["discovery"]
       }
     },
     "/locations/search": {
@@ -5347,7 +5374,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Search supported keyword locations"
+        "summary": "Search supported keyword locations",
+        "tags": ["keyword-research"]
       }
     },
     "/me": {
@@ -5420,7 +5448,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Get the authenticated user"
+        "summary": "Get the authenticated user",
+        "tags": ["account-access"]
       },
       "patch": {
         "operationId": "updateMe",
@@ -5501,7 +5530,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Update the authenticated user"
+        "summary": "Update the authenticated user",
+        "tags": ["account-access"]
       }
     },
     "/me/tokens": {
@@ -5592,9 +5622,11 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "List personal access tokens"
+        "summary": "List personal access tokens",
+        "tags": ["account-access"]
       },
       "post": {
+        "description": "Creates a personal access token or exchanges a supported OAuth credential.",
         "operationId": "createPersonalAccessToken",
         "requestBody": {
           "content": {
@@ -5673,7 +5705,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Create or exchange for a personal access token"
+        "summary": "Create a personal access token",
+        "tags": ["account-access"]
       }
     },
     "/me/tokens/{token_id}": {
@@ -5746,7 +5779,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Revoke a personal access token"
+        "summary": "Revoke a personal access token",
+        "tags": ["account-access"]
       }
     },
     "/migration-tokens/{token_id}": {
@@ -5822,7 +5856,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Revoke a migration token"
+        "summary": "Revoke a migration token by ID",
+        "tags": ["migration"]
       }
     },
     "/openapi.json": {
@@ -5839,7 +5874,9 @@
             },
             "description": "JSON response"
           }
-        }
+        },
+        "summary": "Get the OpenAPI document",
+        "tags": ["discovery"]
       }
     },
     "/projects": {
@@ -5933,9 +5970,11 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "List projects visible to this API key"
+        "summary": "List projects visible to this API key",
+        "tags": ["projects"]
       },
       "post": {
+        "description": "Requires a personal access token with permission to create projects.",
         "operationId": "createProject",
         "requestBody": {
           "content": {
@@ -6014,7 +6053,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Create a project with a personal access token"
+        "summary": "Create a project",
+        "tags": ["projects"]
       }
     },
     "/projects/{project_id}": {
@@ -6090,7 +6130,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Delete a project"
+        "summary": "Delete a project",
+        "tags": ["projects"]
       },
       "get": {
         "operationId": "getProject",
@@ -6164,7 +6205,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Get one project"
+        "summary": "Get one project",
+        "tags": ["projects"]
       },
       "patch": {
         "operationId": "updateProject",
@@ -6238,7 +6280,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Update a project"
+        "summary": "Update a project",
+        "tags": ["projects"]
       }
     },
     "/projects/{project_id}/alert-rules": {
@@ -6332,7 +6375,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "List alert rules"
+        "summary": "List alert rules",
+        "tags": ["alerts"]
       },
       "post": {
         "operationId": "createAlertRule",
@@ -6416,7 +6460,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Create an alert rule"
+        "summary": "Create an alert rule",
+        "tags": ["alerts"]
       }
     },
     "/projects/{project_id}/analytics/query-stats": {
@@ -6548,7 +6593,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "List live search-performance query statistics"
+        "summary": "List search query statistics",
+        "tags": ["analytics"]
       }
     },
     "/projects/{project_id}/analytics/sync": {
@@ -6624,7 +6670,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Synchronize project analytics traffic now"
+        "summary": "Sync analytics traffic",
+        "tags": ["analytics"]
       }
     },
     "/projects/{project_id}/analytics/traffic-snapshots": {
@@ -6752,7 +6799,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "List stored page traffic snapshots"
+        "summary": "List stored page traffic snapshots",
+        "tags": ["analytics"]
       }
     },
     "/projects/{project_id}/api-keys": {
@@ -6846,9 +6894,11 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "List project API keys"
+        "summary": "List project API keys",
+        "tags": ["api-keys"]
       },
       "post": {
+        "description": "The scope defaults to admin when omitted.",
         "operationId": "createProjectApiKey",
         "requestBody": {
           "content": {
@@ -6930,7 +6980,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Create a project API key; omitted scope defaults to admin"
+        "summary": "Create a project API key",
+        "tags": ["api-keys"]
       }
     },
     "/projects/{project_id}/competitors": {
@@ -7024,7 +7075,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "List competitors"
+        "summary": "List competitors",
+        "tags": ["competitors"]
       },
       "post": {
         "operationId": "addCompetitor",
@@ -7098,7 +7150,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Add a competitor"
+        "summary": "Add a competitor",
+        "tags": ["competitors"]
       }
     },
     "/projects/{project_id}/competitors/{competitor_id}": {
@@ -7174,7 +7227,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Remove a competitor"
+        "summary": "Remove a project competitor",
+        "tags": ["competitors"]
       }
     },
     "/projects/{project_id}/defaults": {
@@ -7250,7 +7304,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Get project defaults"
+        "summary": "Get project defaults",
+        "tags": ["projects"]
       },
       "patch": {
         "operationId": "updateProjectDefaults",
@@ -7334,11 +7389,13 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Update project defaults"
+        "summary": "Update project defaults",
+        "tags": ["projects"]
       }
     },
     "/projects/{project_id}/exports/rank-history": {
       "get": {
+        "description": "Returns paginated JSON or streams CSV.",
         "operationId": "exportRankHistory",
         "parameters": [
           {
@@ -7473,7 +7530,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Export project rank history as paginated JSON or streamed CSV"
+        "summary": "Export rank history",
+        "tags": ["rank-checks"]
       }
     },
     "/projects/{project_id}/keyword-matches": {
@@ -7559,11 +7617,13 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Match exact tracked keyword texts across project markets"
+        "summary": "Match tracked keywords",
+        "tags": ["keywords"]
       }
     },
     "/projects/{project_id}/keyword-metrics": {
       "post": {
+        "description": "Gets or estimates metrics for up to 700 keywords and requires write scope.",
         "operationId": "getKeywordMetrics",
         "requestBody": {
           "content": {
@@ -7655,11 +7715,13 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Get or estimate metrics for up to 700 keywords. Requires write scope."
+        "summary": "Get keyword metrics",
+        "tags": ["keyword-research"]
       }
     },
     "/projects/{project_id}/keyword-research": {
       "get": {
+        "description": "Researches or estimates keywords from one seed and requires write scope.",
         "operationId": "researchKeywords",
         "parameters": [
           {
@@ -7814,7 +7876,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Research or estimate keywords from one seed. Requires write scope."
+        "summary": "Research keywords",
+        "tags": ["keyword-research"]
       }
     },
     "/projects/{project_id}/keywords": {
@@ -8017,7 +8080,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "List project keywords"
+        "summary": "List project keywords",
+        "tags": ["keywords"]
       },
       "post": {
         "operationId": "addKeywords",
@@ -8091,7 +8155,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Add one or more keywords"
+        "summary": "Add one or more keywords",
+        "tags": ["keywords"]
       }
     },
     "/projects/{project_id}/migration-tokens": {
@@ -8183,7 +8248,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "List migration tokens"
+        "summary": "List migration tokens",
+        "tags": ["migration"]
       },
       "post": {
         "operationId": "mintMigrationToken",
@@ -8257,7 +8323,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Mint a migration token"
+        "summary": "Mint a migration token",
+        "tags": ["migration"]
       }
     },
     "/projects/{project_id}/migration-tokens/{token_id}": {
@@ -8333,7 +8400,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Revoke a migration token"
+        "summary": "Revoke a project migration token",
+        "tags": ["migration"]
       }
     },
     "/projects/{project_id}/notification-preferences": {
@@ -8409,7 +8477,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Get notification preferences"
+        "summary": "Get notification preferences",
+        "tags": ["alerts"]
       },
       "patch": {
         "operationId": "updateNotificationPreferences",
@@ -8483,7 +8552,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Update notification preferences"
+        "summary": "Update notification preferences",
+        "tags": ["alerts"]
       }
     },
     "/projects/{project_id}/overview": {
@@ -8590,7 +8660,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Get a numeric project overview"
+        "summary": "Get a numeric project overview",
+        "tags": ["analytics"]
       }
     },
     "/projects/{project_id}/providers": {
@@ -8684,7 +8755,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "List providers"
+        "summary": "List providers",
+        "tags": ["providers"]
       }
     },
     "/projects/{project_id}/providers/{provider_id}": {
@@ -8760,7 +8832,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Disconnect a provider"
+        "summary": "Disconnect a provider",
+        "tags": ["providers"]
       },
       "patch": {
         "operationId": "updateProviderSettings",
@@ -8834,7 +8907,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Update provider settings"
+        "summary": "Update provider settings",
+        "tags": ["providers"]
       }
     },
     "/projects/{project_id}/providers/{provider_id}/connect": {
@@ -8910,7 +8984,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Connect a provider"
+        "summary": "Connect a provider",
+        "tags": ["providers"]
       }
     },
     "/projects/{project_id}/providers/{provider_id}/test": {
@@ -8986,7 +9061,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Test a provider connection"
+        "summary": "Test a provider connection",
+        "tags": ["providers"]
       }
     },
     "/projects/{project_id}/ranked-keyword-suggestions": {
@@ -9111,7 +9187,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "List ranked keyword suggestions"
+        "summary": "List ranked keyword suggestions",
+        "tags": ["keyword-research"]
       }
     },
     "/projects/{project_id}/saved-views": {
@@ -9234,7 +9311,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "List saved views"
+        "summary": "List saved views",
+        "tags": ["saved-views"]
       },
       "post": {
         "operationId": "createSavedView",
@@ -9351,7 +9429,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Create a saved view"
+        "summary": "Create a saved view",
+        "tags": ["saved-views"]
       }
     },
     "/projects/{project_id}/saved-views/{view_id}": {
@@ -9427,7 +9506,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Delete a saved view"
+        "summary": "Delete a project saved view",
+        "tags": ["saved-views"]
       }
     },
     "/projects/{project_id}/signals": {
@@ -9587,11 +9667,13 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "List project signals"
+        "summary": "List project signals",
+        "tags": ["signals"]
       }
     },
     "/projects/{project_id}/sitemap-monitors": {
       "get": {
+        "description": "Returns the project sitemap monitor and its latest snapshot.",
         "operationId": "listSitemapMonitors",
         "responses": {
           "200": {
@@ -9663,7 +9745,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "List the project sitemap monitor and latest snapshot"
+        "summary": "Get sitemap monitor status",
+        "tags": ["sitemap-monitoring"]
       }
     },
     "/projects/{project_id}/sitemap-monitors/{monitor_id}": {
@@ -9749,7 +9832,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Enable or disable the project sitemap monitor"
+        "summary": "Update sitemap monitor",
+        "tags": ["sitemap-monitoring"]
       }
     },
     "/projects/{project_id}/team/invites": {
@@ -9843,7 +9927,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "List team invites"
+        "summary": "List team invites",
+        "tags": ["team"]
       },
       "post": {
         "operationId": "createTeamInvite",
@@ -9917,7 +10002,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Create a team invite"
+        "summary": "Create a team invite",
+        "tags": ["team"]
       }
     },
     "/projects/{project_id}/team/invites/{invite_id}": {
@@ -9993,7 +10079,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Revoke a team invite"
+        "summary": "Revoke a project team invite",
+        "tags": ["team"]
       }
     },
     "/projects/{project_id}/team/invites/{invite_id}/resend": {
@@ -10069,7 +10156,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Resend a pending team invite"
+        "summary": "Resend a pending team invite",
+        "tags": ["team"]
       }
     },
     "/projects/{project_id}/team/members": {
@@ -10163,7 +10251,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "List team members"
+        "summary": "List team members",
+        "tags": ["team"]
       }
     },
     "/projects/{project_id}/team/members/{member_id}": {
@@ -10239,7 +10328,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Remove a non-owner team member"
+        "summary": "Remove a non-owner team member",
+        "tags": ["team"]
       },
       "patch": {
         "operationId": "updateTeamMemberRole",
@@ -10323,7 +10413,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Change a non-owner team member role"
+        "summary": "Change a non-owner team member role",
+        "tags": ["team"]
       }
     },
     "/projects/{project_id}/triggered-alerts": {
@@ -10415,7 +10506,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "List triggered alerts"
+        "summary": "List triggered alerts",
+        "tags": ["alerts"]
       }
     },
     "/projects/{project_id}/triggered-alerts/{alert_id}/mute": {
@@ -10491,7 +10583,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Mute one triggered alert for 24 hours"
+        "summary": "Mute one triggered alert for 24 hours",
+        "tags": ["alerts"]
       }
     },
     "/projects/{project_id}/triggered-alerts/mark-read": {
@@ -10567,7 +10660,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Mark all firing project alerts as read"
+        "summary": "Mark all firing project alerts as read",
+        "tags": ["alerts"]
       }
     },
     "/projects/{project_id}/webhooks": {
@@ -10661,7 +10755,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "List webhook endpoints"
+        "summary": "List webhook endpoints",
+        "tags": ["webhooks"]
       },
       "post": {
         "operationId": "createWebhookEndpoint",
@@ -10745,7 +10840,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Create a webhook endpoint"
+        "summary": "Create a webhook endpoint",
+        "tags": ["webhooks"]
       }
     },
     "/projects/{project_id}/webhooks/{webhook_id}": {
@@ -10821,7 +10917,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Delete a webhook endpoint"
+        "summary": "Delete a webhook endpoint",
+        "tags": ["webhooks"]
       },
       "patch": {
         "operationId": "updateWebhookEndpoint",
@@ -10905,7 +11002,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Update a webhook endpoint"
+        "summary": "Update a webhook endpoint",
+        "tags": ["webhooks"]
       }
     },
     "/projects/{projectId}/backlinks": {
@@ -11066,7 +11164,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Analyze backlinks or return a free estimate. Requires write scope."
+        "summary": "Analyze backlinks",
+        "tags": ["backlinks"]
       }
     },
     "/projects/{projectId}/backlinks/rows": {
@@ -11173,7 +11272,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Load more rows into an unexpired backlinks snapshot. Requires write scope."
+        "summary": "Load more backlink rows",
+        "tags": ["backlinks"]
       }
     },
     "/provider-rates": {
@@ -11210,7 +11310,8 @@
             "description": "Rate limited"
           }
         },
-        "summary": "List public SERP provider rate cards"
+        "summary": "List public SERP provider rate cards",
+        "tags": ["discovery"]
       }
     },
     "/rank-checks/{check_id}": {
@@ -11286,7 +11387,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Get one rank check"
+        "summary": "Get one rank check",
+        "tags": ["rank-checks"]
       }
     },
     "/saved-views/{view_id}": {
@@ -11362,7 +11464,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Delete a saved view"
+        "summary": "Delete a saved view by ID",
+        "tags": ["saved-views"]
       }
     },
     "/signals": {
@@ -11458,7 +11561,8 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Ingest a project signal"
+        "summary": "Ingest a project signal",
+        "tags": ["signals"]
       }
     },
     "/team/invites/{invite_id}": {
@@ -11534,13 +11638,106 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Revoke a team invite"
+        "summary": "Revoke a team invite by ID",
+        "tags": ["team"]
       }
     }
   },
   "servers": [
     {
       "url": "/api/v1"
+    }
+  ],
+  "tags": [
+    {
+      "description": "Discover the API contract, capabilities, health, and public provider pricing.",
+      "name": "discovery",
+      "x-group": "Discovery"
+    },
+    {
+      "description": "Manage the authenticated account and personal access tokens.",
+      "name": "account-access",
+      "x-group": "Account & Access"
+    },
+    {
+      "description": "Create projects and manage their core settings.",
+      "name": "projects",
+      "x-group": "Projects"
+    },
+    {
+      "description": "Create, list, and revoke API keys.",
+      "name": "api-keys",
+      "x-group": "API Keys"
+    },
+    {
+      "description": "Manage tracked keywords and exact keyword matching.",
+      "name": "keywords",
+      "x-group": "Keywords"
+    },
+    {
+      "description": "Run rank checks and retrieve rank-check history.",
+      "name": "rank-checks",
+      "x-group": "Rank Checks"
+    },
+    {
+      "description": "Research keywords, metrics, locations, and ranked keyword suggestions.",
+      "name": "keyword-research",
+      "x-group": "Keyword Research"
+    },
+    {
+      "description": "Analyze backlinks and page through backlink snapshots.",
+      "name": "backlinks",
+      "x-group": "Backlinks"
+    },
+    {
+      "description": "Read project analytics, traffic snapshots, and search-performance data.",
+      "name": "analytics",
+      "x-group": "Analytics"
+    },
+    {
+      "description": "Manage alert rules, triggered alerts, and notification preferences.",
+      "name": "alerts",
+      "x-group": "Alerts"
+    },
+    {
+      "description": "Manage project competitors.",
+      "name": "competitors",
+      "x-group": "Competitors"
+    },
+    {
+      "description": "Inspect and configure project sitemap monitoring.",
+      "name": "sitemap-monitoring",
+      "x-group": "Sitemap Monitoring"
+    },
+    {
+      "description": "Create, list, and delete saved views.",
+      "name": "saved-views",
+      "x-group": "Saved Views"
+    },
+    {
+      "description": "Ingest and list project signals.",
+      "name": "signals",
+      "x-group": "Signals"
+    },
+    {
+      "description": "Connect and configure external providers.",
+      "name": "providers",
+      "x-group": "Providers"
+    },
+    {
+      "description": "Create and manage webhook endpoints.",
+      "name": "webhooks",
+      "x-group": "Webhooks"
+    },
+    {
+      "description": "Manage team members and invitations.",
+      "name": "team",
+      "x-group": "Team"
+    },
+    {
+      "description": "Manage migration tokens and cloud import sessions.",
+      "name": "migration",
+      "x-group": "Migration"
     }
   ]
 }

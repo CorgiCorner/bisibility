@@ -1,3 +1,4 @@
+import packageJson from "@/package.json";
 import type { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "./route";
@@ -41,7 +42,7 @@ describe("GET /api/cloud/import/compatibility", () => {
 
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual({
-      app_version: "0.1.0",
+      app_version: packageJson.version,
       latest_migration: "20260628234220_two_factor",
       schema_versions_supported: [5],
     });

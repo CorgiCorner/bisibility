@@ -1,5 +1,3 @@
-#!/usr/bin/env -S npx tsx
-
 import { parseArgs } from "node:util";
 import { pathToFileURL } from "node:url";
 import { databaseConnectionConfig } from "../../lib/db/pool-config";

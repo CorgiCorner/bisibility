@@ -4,7 +4,7 @@ services:
   sonarqube:
     image: sonarqube:26.7.0.124771-community
     ports:
-      - "${SONAR_PORT:-9000}:9000"
+      - "127.0.0.1:${SONAR_PORT:-9000}:9000"
     environment:
       SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
     volumes:

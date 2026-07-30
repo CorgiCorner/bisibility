@@ -85,6 +85,17 @@ assert(
   workerDockerfile.includes(`FROM node:${nodeVersion}-slim`),
   "Worker Docker image must pin the exact .nvmrc Node version",
 );
+for (const [name, contents] of [
+  ["application", dockerfile],
+  ["worker", workerDockerfile],
+]) {
+  assert(
+    contents.includes(
+      "COPY scripts/generate/root-postinstall.mjs ./scripts/generate/root-postinstall.mjs",
+    ),
+    `${name} Docker dependency stage must include the root postinstall entrypoint`,
+  );
+}
 assert(
   dockerfile.includes("scripts/deploy/migrate.ts") &&
     dockerfile.includes("scripts/data-migrations") &&

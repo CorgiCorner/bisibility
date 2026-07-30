@@ -7,9 +7,8 @@ This path gets a self-hosted workspace from an empty install to its first Google
 rank data. It assumes you run the app yourself and bring your own SERP provider
 credentials.
 
-**Read the deployment overview:** The public repository opens with the first
-public release. The steps below explain the workflow without promising an
-available clone before that release.
+**Read the deployment overview:** The steps below cover the shortest supported
+self-hosting workflow.
 
 ## 1. Start the stack
 
@@ -17,9 +16,6 @@ Follow [Self-hosting](/self-hosting) for Docker, required services,
 environment variables, migrations, and the optional Temporal worker.
 
 For a local Docker install, the short path is:
-
-> **Availability:** The public repository opens with the first public release.
-> Until then, read the deployment overview below; the clone command is not yet available.
 
 ```bash
 git clone https://github.com/CorgiCorner/bisibility.git bisibility
@@ -156,8 +152,8 @@ export BISIBILITY_API_KEY=placeholder
 Useful API pages:
 
 - [Authentication](/authentication)
-- [Projects API](/api/projects)
-- [Tracked terms API](/api/keywords)
-- [Checks API](/api/checks)
-- [Rank history API](/api/rank-history)
-- [OpenAPI overview](/api/overview)
+- [API overview](/api/overview)
+- [Run rank checks](/api/checks)
+- [Retrieve rank history](/api/rank-history)
+- [Webhook integrations](/api/webhooks)
+- **API Reference** tab for every endpoint and schema

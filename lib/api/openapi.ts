@@ -18,6 +18,7 @@ import { projectOverviewPaths } from "./openapi-project-overview";
 import { publicPaths } from "./openapi-public";
 import { rankedKeywordSuggestionPaths } from "./openapi-ranked-keywords";
 import { savedViewOperations } from "./openapi-saved-views";
+import { openApiTags, tagOpenApiPaths } from "./openapi-tags";
 import { teamMutationPaths } from "./openapi-team-mutations";
 
 const json = (schema: object) => ({ "application/json": { schema } });
@@ -130,7 +131,7 @@ export function getOpenApiDocument() {
       version: "1.0.0",
     },
     openapi: "3.1.0",
-    paths: {
+    paths: tagOpenApiPaths({
       ...apiKeyPaths({
         bearer: bearerOperation,
         created: createdBearerOperation,
@@ -298,7 +299,8 @@ export function getOpenApiDocument() {
       "/team/invites/{invite_id}": {
         delete: bearerOperation("Revoke a team invite", "revokeTeamInvite", obj),
       },
-    },
+    }),
     servers: [{ url: "/api/v1" }],
+    tags: openApiTags,
   };
 }
