@@ -99,6 +99,41 @@ async function expectPublicRoute(route) {
   console.log(`GET ${url} 200`);
 }
 
+async function expectRedirectRoute(route, expectedLocation) {
+  const url = `http://127.0.0.1:${appPort}${route}`;
+  const response = await run(
+    "curl",
+    [
+      "--silent",
+      "--show-error",
+      "--max-time",
+      "10",
+      "--output",
+      "/dev/null",
+      "--dump-header",
+      "-",
+      "--write-out",
+      "\n%{http_code}",
+      url,
+    ],
+    { capture: true, reject: false },
+  );
+  const lines = response.split(/\r?\n/);
+  const status = lines.at(-1);
+  const location =
+    lines
+      .find((line) => line.toLowerCase().startsWith("location:"))
+      ?.slice("location:".length)
+      .trim() ?? "";
+  if (status !== "307" || location !== expectedLocation) {
+    throw new Error(
+      `GET ${url} did not return 307 with Location: ${expectedLocation} ` +
+        `(response: ${status}, Location: ${location || "missing"}).`,
+    );
+  }
+  console.log(`GET ${url} 307 Location: ${location}`);
+}
+
 async function mappedPort(container, containerPort) {
   return run(
     "docker",
@@ -197,8 +232,9 @@ try {
   ]);
   appPort = await mappedPort(appName, "3000");
   await waitForApp();
-  await expectPublicRoute("/");
-  await expectPublicRoute("/login");
+  await expectRedirectRoute("/", "/setup");
+  await expectPublicRoute("/setup");
+  await expectRedirectRoute("/login", "/setup");
 } catch (error) {
   await run("docker", ["logs", migrateName], { reject: false });
   await run("docker", ["logs", appName], { reject: false });

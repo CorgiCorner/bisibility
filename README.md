@@ -104,9 +104,9 @@ a stable 1.0 contract.
 | REST API and OpenAPI | Available |
 | MCP endpoint | Available |
 | TypeScript, Python, and Go SDKs | Available |
-| CLI | Available |
+| CLI | Developer preview |
 | Self-hosting with Docker | Available |
-| Managed Cloud (open beta) | Available |
+| Managed Cloud | Open beta |
 | Domain overview | Planned |
 
 ### Included workflows
@@ -114,15 +114,15 @@ a stable 1.0 contract.
 - Keyword research with related queries, suggestions, ideas, search volume, 12-month
   trends, CPC, competition, difficulty, and intent data
 - Backlink research with referring domains and pages, 12-month new and lost link
-  history, domain authority, spam scores, and link attributes
+  history, authority and spam metrics, and link attributes
 - Rank tracking with position history, trend charts, and intended URL monitoring
 - Competitor benchmarking with Share of Voice
 - Manual, daily, weekly, monthly, and custom cron schedules
 - Rank alerts in-app and by email, plus weekly email digests for projects with
   recent rank-check activity
 - Keyword tags and saved views
-- Opt-in Search Console and GA4 connections, with queries, clicks, and impressions
-  per keyword
+- Opt-in Search Console connections, with queries, clicks, and impressions per keyword
+- Opt-in GA4 connections with landing-page sessions, engagement, and key events
 - Google index status on keyword details
 - REST API v1 with OpenAPI, an MCP endpoint, signed outbound webhooks, and CSV export
 - Owner, Admin, Editor, and Viewer team roles, with an audit log
@@ -244,7 +244,8 @@ remains available without an application subscription.
 
 ## Contributing
 
-Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) and
+Public issues and feature specifications are welcome. This repository does not
+accept pull requests. See [CONTRIBUTING.md](CONTRIBUTING.md) and
 [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
 ## Security

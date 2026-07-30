@@ -43,33 +43,14 @@
             ]
           },
           {
-            "group": "API reference",
+            "group": "API workflows",
             "pages": [
               "api/overview",
-              "api/projects",
-              "api/keywords",
-              "api/ranked-keyword-suggestions",
-              "api/keyword-research",
-              "api/keyword-metrics",
-              "api/backlinks",
-              "api/locations",
-              "api/analytics",
               "api/checks",
               "api/rank-history",
-              "api/personal-access-tokens",
-              "api/api-keys",
               "api/webhooks",
-              "api/discovery",
-              "api/cloud-import",
               "api/deploy-webhooks",
-              "api/alert-rules",
-              "api/sitemap-monitors",
-              "api/competitors",
-              "api/providers",
-              "api/saved-views",
-              "api/signals",
-              "api/notification-preferences",
-              "api/team",
+              "api/cloud-import",
               "api/errors"
             ]
           },
@@ -87,6 +68,190 @@
           {
             "group": "AI / Agents",
             "pages": ["agents"]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "openapi": "openapi.snapshot.json",
+        "groups": [
+          {
+            "group": "Discovery",
+            "pages": [
+              "GET /capabilities",
+              "GET /cost-estimate",
+              "GET /health",
+              "GET /llms.txt",
+              "GET /openapi.json",
+              "GET /provider-rates"
+            ]
+          },
+          {
+            "group": "Account & Access",
+            "pages": [
+              "GET /me",
+              "PATCH /me",
+              "GET /me/tokens",
+              "POST /me/tokens",
+              "DELETE /me/tokens/{token_id}"
+            ]
+          },
+          {
+            "group": "Projects",
+            "pages": [
+              "GET /projects",
+              "POST /projects",
+              "GET /projects/{project_id}",
+              "PATCH /projects/{project_id}",
+              "DELETE /projects/{project_id}",
+              "GET /projects/{project_id}/defaults",
+              "PATCH /projects/{project_id}/defaults"
+            ]
+          },
+          {
+            "group": "API Keys",
+            "pages": [
+              "GET /api-keys",
+              "POST /api-keys",
+              "DELETE /api-keys/{key_id}",
+              "GET /projects/{project_id}/api-keys",
+              "POST /projects/{project_id}/api-keys"
+            ]
+          },
+          {
+            "group": "Keywords",
+            "pages": [
+              "GET /projects/{project_id}/keywords",
+              "POST /projects/{project_id}/keywords",
+              "GET /keywords/{id}",
+              "PATCH /keywords/{id}",
+              "DELETE /keywords/{id}",
+              "POST /keywords/bulk",
+              "POST /projects/{project_id}/keyword-matches"
+            ]
+          },
+          {
+            "group": "Rank Checks",
+            "pages": [
+              "POST /keywords/{id}/checks",
+              "GET /keywords/{id}/rank-checks",
+              "GET /rank-checks/{check_id}",
+              "GET /projects/{project_id}/exports/rank-history"
+            ]
+          },
+          {
+            "group": "Keyword Research",
+            "pages": [
+              "GET /locations/search",
+              "POST /projects/{project_id}/keyword-metrics",
+              "GET /projects/{project_id}/keyword-research",
+              "GET /projects/{project_id}/ranked-keyword-suggestions"
+            ]
+          },
+          {
+            "group": "Backlinks",
+            "pages": [
+              "GET /projects/{projectId}/backlinks",
+              "POST /projects/{projectId}/backlinks/rows"
+            ]
+          },
+          {
+            "group": "Analytics",
+            "pages": [
+              "GET /projects/{project_id}/overview",
+              "GET /projects/{project_id}/analytics/query-stats",
+              "POST /projects/{project_id}/analytics/sync",
+              "GET /projects/{project_id}/analytics/traffic-snapshots"
+            ]
+          },
+          {
+            "group": "Alerts",
+            "pages": [
+              "GET /projects/{project_id}/alert-rules",
+              "POST /projects/{project_id}/alert-rules",
+              "PATCH /alert-rules/{rule_id}",
+              "DELETE /alert-rules/{rule_id}",
+              "GET /projects/{project_id}/triggered-alerts",
+              "POST /projects/{project_id}/triggered-alerts/{alert_id}/mute",
+              "POST /projects/{project_id}/triggered-alerts/mark-read",
+              "GET /projects/{project_id}/notification-preferences",
+              "PATCH /projects/{project_id}/notification-preferences"
+            ]
+          },
+          {
+            "group": "Competitors",
+            "pages": [
+              "GET /projects/{project_id}/competitors",
+              "POST /projects/{project_id}/competitors",
+              "DELETE /projects/{project_id}/competitors/{competitor_id}",
+              "DELETE /competitors/{competitor_id}"
+            ]
+          },
+          {
+            "group": "Sitemap Monitoring",
+            "pages": [
+              "GET /projects/{project_id}/sitemap-monitors",
+              "PATCH /projects/{project_id}/sitemap-monitors/{monitor_id}"
+            ]
+          },
+          {
+            "group": "Saved Views",
+            "pages": [
+              "GET /projects/{project_id}/saved-views",
+              "POST /projects/{project_id}/saved-views",
+              "DELETE /projects/{project_id}/saved-views/{view_id}",
+              "DELETE /saved-views/{view_id}"
+            ]
+          },
+          {
+            "group": "Signals",
+            "pages": ["GET /projects/{project_id}/signals", "POST /signals"]
+          },
+          {
+            "group": "Providers",
+            "pages": [
+              "GET /projects/{project_id}/providers",
+              "POST /projects/{project_id}/providers/{provider_id}/connect",
+              "POST /projects/{project_id}/providers/{provider_id}/test",
+              "PATCH /projects/{project_id}/providers/{provider_id}",
+              "DELETE /projects/{project_id}/providers/{provider_id}"
+            ]
+          },
+          {
+            "group": "Webhooks",
+            "pages": [
+              "GET /projects/{project_id}/webhooks",
+              "POST /projects/{project_id}/webhooks",
+              "PATCH /projects/{project_id}/webhooks/{webhook_id}",
+              "DELETE /projects/{project_id}/webhooks/{webhook_id}"
+            ]
+          },
+          {
+            "group": "Team",
+            "pages": [
+              "GET /projects/{project_id}/team/members",
+              "PATCH /projects/{project_id}/team/members/{member_id}",
+              "DELETE /projects/{project_id}/team/members/{member_id}",
+              "GET /projects/{project_id}/team/invites",
+              "POST /projects/{project_id}/team/invites",
+              "POST /projects/{project_id}/team/invites/{invite_id}/resend",
+              "DELETE /projects/{project_id}/team/invites/{invite_id}",
+              "DELETE /team/invites/{invite_id}"
+            ]
+          },
+          {
+            "group": "Migration",
+            "pages": [
+              "GET /projects/{project_id}/migration-tokens",
+              "POST /projects/{project_id}/migration-tokens",
+              "DELETE /projects/{project_id}/migration-tokens/{token_id}",
+              "DELETE /migration-tokens/{token_id}",
+              "POST /cloud/import",
+              "GET /cloud/import/compatibility",
+              "POST /cloud/import/sessions",
+              "PUT /cloud/import/sessions/{sessionId}/chunks/{index}",
+              "POST /cloud/import/sessions/{sessionId}/finalize"
+            ]
           }
         ]
       }

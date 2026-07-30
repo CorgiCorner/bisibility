@@ -9,7 +9,15 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
 const port = Number(process.env.FIRST_RUN_E2E_PORT ?? 3110);
 const postgresHostPort = process.env.FIRST_RUN_POSTGRES_PORT ?? "55447";
 const baseUrl = `http://127.0.0.1:${port}`;
-const composeArgs = ["compose", "-p", "bisibility-first-run-schema-e2e"];
+const composeArgs = [
+  "compose",
+  "-f",
+  "docker-compose.yml",
+  "-f",
+  "docker-compose.debug.yml",
+  "-p",
+  "bisibility-first-run-schema-e2e",
+];
 const postgresPassword = randomBytes(24).toString("base64url");
 const databaseUrl =
   `postgresql://bisibility:${postgresPassword}@127.0.0.1:${postgresHostPort}` +

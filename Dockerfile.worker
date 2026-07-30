@@ -14,6 +14,7 @@ COPY package.json package-lock.json ./
 COPY scripts/deploy/bake-runtime-env.mjs ./scripts/deploy/bake-runtime-env.mjs
 COPY scripts/deploy/download-rds-ca.mjs ./scripts/deploy/download-rds-ca.mjs
 COPY scripts/generate/generate-client-if-schema.mjs ./scripts/generate/generate-client-if-schema.mjs
+COPY scripts/generate/root-postinstall.mjs ./scripts/generate/root-postinstall.mjs
 RUN npm install -g npm@10.9.3 \
   && npm ci \
   && apt-get update \

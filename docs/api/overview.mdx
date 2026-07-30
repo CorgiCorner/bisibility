@@ -3,18 +3,19 @@ title: "API overview"
 description: "Common request and response behavior for the bisibility REST API."
 ---
 
-Use REST API v1 to complete four common tasks:
+Use REST API v1 to complete a typical rank-tracking workflow:
 
-1. [Create a project](/api/projects).
-2. [Add keywords](/api/keywords).
+1. Create a project.
+2. Add tracked keywords.
 3. [Start a rank check](/api/checks).
 4. [Retrieve ranking history](/api/rank-history).
 
-Start with those task guides if you are building an integration. Use the route
-inventory below as a reference after the first request works.
+This guide documents behavior shared across the HTTP API: base URLs, safe
+retries, response envelopes, pagination, and errors. Use the **API Reference**
+tab for the complete, resource-grouped endpoint inventory, request and response
+schemas, and interactive request builder.
 
-This section documents the raw HTTP contract: routes, payloads, status codes,
-and response shapes. If you use an official client, start with the
+If you use an official client, start with the
 [SDK docs](/sdks/overview) for installation, language-level methods, and types.
 
 The REST API is served from:
@@ -57,64 +58,6 @@ Idempotency-Replayed: true
 An operation still in progress returns `409 Conflict` with `Retry-After: 1`.
 Completed responses remain replayable for 24 hours. With Redis or Valkey
 configured, replay works across app instances and restarts.
-
-## Core resource routes
-
-The API exposes these core routes. See
-[`/openapi.json`](/api/v1/openapi.json) for the full generated inventory.
-
-| Method | Path | Auth |
-| - | - | - |
-| `GET` | `/health` | No |
-| `GET` | `/openapi.json` | No |
-| `GET` | `/capabilities` | No |
-| `GET` | `/llms.txt` | No |
-| `GET` | `/provider-rates` | No |
-| `GET` | `/cost-estimate` | No |
-| `GET` | `/projects` | Yes |
-| `POST` | `/projects` | Yes |
-| `GET` | `/me` | Personal token |
-| `PATCH` | `/me` | Personal token |
-| `GET` | `/me/tokens` | Personal token |
-| `POST` | `/me/tokens` | Personal or OAuth token |
-| `DELETE` | `/me/tokens/{token_id}` | Personal token |
-| `GET` | `/projects/{project_id}` | Yes |
-| `PATCH` | `/projects/{project_id}` | Yes |
-| `DELETE` | `/projects/{project_id}` | Yes |
-| `GET` | `/projects/{project_id}/keywords` | Yes |
-| `POST` | `/projects/{project_id}/keywords` | Yes |
-| `GET` | `/keywords/{id}` | Yes |
-| `PATCH` | `/keywords/{id}` | Yes |
-| `DELETE` | `/keywords/{id}` | Yes |
-| `POST` | `/keywords/bulk` | Yes |
-| `POST` | `/keywords/{id}/checks` | Yes |
-| `GET` | `/keywords/{id}/rank-checks` | Yes |
-| `GET` | `/rank-checks/{check_id}` | Yes |
-| `GET` | `/api-keys` | Yes |
-| `POST` | `/api-keys` | Yes |
-| `DELETE` | `/api-keys/{key_id}` | Yes |
-| `GET` | `/projects/{project_id}/api-keys` | Yes |
-| `POST` | `/projects/{project_id}/api-keys` | Yes |
-| `GET` | `/projects/{project_id}/webhooks` | Yes |
-| `POST` | `/projects/{project_id}/webhooks` | Yes |
-| `POST` | `/cloud/import` | Migration token |
-
-Cloud import is also mounted at `/api/cloud/import` outside the `/api/v1` base
-path for the in-app cloud migration handoff. The `/api/v1/cloud/import` path
-re-exports the same handler. It is not currently listed in `/openapi.json`.
-
-Inbound deploy hooks are also mounted outside `/api/v1` at
-`POST /api/ingest/deploy`. See [Deploy webhooks](/api/deploy-webhooks).
-
-[Alert rules](/api/alert-rules), [competitors](/api/competitors),
-[provider connections](/api/providers), [saved views](/api/saved-views),
-[signals](/api/signals), [personal access tokens](/api/personal-access-tokens),
-[webhooks](/api/webhooks),
-[notification preferences](/api/notification-preferences), and
-[team](/api/team) routes have dedicated pages. Migration tokens are
-covered in [Cloud import](/api/cloud-import).
-
-`PUT`, `OPTIONS`, and other methods return `405 Method Not Allowed`.
 
 ## Response shapes
 
@@ -166,3 +109,11 @@ Errors use `application/problem+json`.
 ```
 
 See [API errors](/api/errors).
+
+## Integration workflows
+
+- [Run rank checks](/api/checks)
+- [Retrieve rank history](/api/rank-history)
+- [Receive API webhooks](/api/webhooks)
+- [Ingest deployment webhooks](/api/deploy-webhooks)
+- [Import cloud data](/api/cloud-import)

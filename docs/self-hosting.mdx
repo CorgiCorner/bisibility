@@ -10,9 +10,8 @@ checks use your own connected SERP provider credentials.
 Read the [FAQ](https://bisibility.com/faq) for a concise comparison of Cloud
 beta and self-hosting, provider coverage, costs, and data boundaries.
 
-**Read the deployment overview:** The public repository opens with the first
-public release. The options below describe the supported deployment paths, but
-clone and one-click deploy targets are not available before that release.
+**Read the deployment overview:** The options below describe the supported
+deployment paths and their operational requirements.
 
 ## Choose your deployment
 
@@ -114,9 +113,6 @@ backups, and monitoring to your operational responsibilities.
 
 ## Docker
 
-> **Availability:** The public repository opens with the first public release.
-> Until then, read the deployment overview above; the clone command is not yet available.
-
 ```bash
 git clone https://github.com/CorgiCorner/bisibility.git bisibility
 cd bisibility
@@ -138,6 +134,13 @@ migration to have a finished row with its exact manifest checksum. When
 `DEMO_FIXED_OTP=1`, the migration service also seeds demo data for the local
 dashboard.
 
+> **Known limitation:** `services.migrations: "ready"` answers whether blocking
+> data migrations have finished with their expected checksums and whether the
+> public ID database contract is ready. It does not report whether the Prisma
+> schema is current. Run `npx prisma migrate status` in the deployed application
+> environment to check schema currency. This is unchanged from 0.1.0 and is
+> scheduled to be addressed.
+
 This default mode supports manual rank checks. Scheduled checks require Temporal
 and the worker:
 
@@ -147,6 +150,161 @@ docker compose --profile scheduled up --build
 
 That profile adds a Temporal server, Temporal Web UI on `http://localhost:8233`,
 and the worker built from `Dockerfile.worker`.
+
+### Upgrade from v0.1.0 to v0.2.0
+
+v0.2.0 has no `upgrade.sh`, automated upgrade tooling, or automatic rollback.
+This is the last release without automated upgrade tooling.
+
+This is a source upgrade. The `db-migrations`, app, and worker services are
+built from the checked-out source; only third-party service images are pulled.
+
+#### 1. Back up PostgreSQL
+
+Run the backup before fetching or replacing any source:
+
+```bash
+docker compose exec -T postgres pg_dump \
+  -U bisibility -d bisibility --format=custom \
+  > bisibility-v0.1.0-before-v0.2.0.dump
+```
+
+This command still works after v0.2.0 stops publishing the PostgreSQL port.
+`docker compose exec` reaches the container through the Docker daemon, not
+through a published network port.
+
+#### 2. Check the port change
+
+v0.2.0 stops exposing PostgreSQL on `5432` and Redis/Valkey on `6379` to the
+host. Connections from another host will lose access after the upgrade. Identify
+those clients now; apply the host-access option only after the v0.2.0 files are
+present.
+
+#### 3. Fetch v0.2.0
+
+For an existing Git checkout:
+
+```bash
+git fetch --tags --prune
+git checkout v0.2.0
+```
+
+For a tarball install, download the v0.2.0 source tarball from the release
+assets, preserve the old source directory for rollback, and extract the new
+source under the same directory name:
+
+```bash
+cd ..
+curl -fL \
+  -o bisibility-v0.2.0.tar.gz \
+  https://github.com/CorgiCorner/bisibility/archive/refs/tags/v0.2.0.tar.gz
+mv bisibility bisibility-v0.1.0
+mkdir bisibility
+tar -xzf bisibility-v0.2.0.tar.gz -C bisibility --strip-components=1
+cp bisibility-v0.1.0/.env bisibility/.env
+cd bisibility
+```
+
+Keeping the `bisibility` directory name also keeps the default Compose project
+name and its existing volumes.
+
+#### 4. Keep deliberate host-local database access
+
+If the Docker host must reach PostgreSQL or Redis/Valkey, use the debug overlay
+shipped in v0.2.0 as the upgrade command:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.debug.yml up -d --build
+```
+
+This binds both services to `127.0.0.1`. Use a hand-written
+`docker-compose.override.yml` only for other requirements, and keep the
+loopback prefix on every mapping, such as `127.0.0.1:5432:5432`. A mapping such
+as `5432:5432` binds to all interfaces and reverses this release's protection.
+
+If you run the overlay command above, do not run the base-only command in the
+next step; the overlay command performs the same rebuild and startup.
+
+#### 5. Build and start the release
+
+If you do not need the debug overlay, run:
+
+```bash
+docker compose up -d --build
+```
+
+Migrations apply automatically: the one-shot `db-migrations` service runs
+before the app, and the app waits for it to finish successfully. v0.2.0 includes
+a schema migration.
+
+`--build` performs a full Next.js build on this machine; it does not pull a
+prebuilt Bisibility image. Expect sustained CPU use, several GB of RAM or swap,
+and free disk space for Docker layers. A small VPS can exhaust RAM and fail
+mid-build.
+
+#### 6. Verify the upgrade
+
+```bash
+docker compose ps --all
+docker compose logs --no-color db-migrations
+curl -fsS http://127.0.0.1:3000/api/v1/health
+docker compose exec app npx prisma migrate status
+docker compose port postgres 5432
+docker compose port redis 6379
+```
+
+The migration service must show a successful exit, the app must be running, and
+the health request must succeed. Prisma must report that the database schema is
+up to date. Adjust `3000` if `APP_HOST_PORT` is set. On the base stack, both
+`docker compose port` commands should report no published port. With the debug
+overlay, they should report only `127.0.0.1` mappings.
+
+#### 7. Roll back
+
+There is no automatic rollback. For a Git checkout, return to the old source
+and rebuild it:
+
+> **Security warning:** Rolling back restores the v0.1.0 Compose file, which
+> publishes PostgreSQL `5432` and Redis/Valkey `6379` on all host interfaces by
+> default. If v0.1.0 will remain running beyond immediate recovery, check it out
+> without starting Compose, then remove the `ports` blocks from `postgres` and
+> `redis` when host access is not needed. Otherwise, change the mappings to
+> `127.0.0.1:${POSTGRES_HOST_PORT:-5432}:5432` and
+> `127.0.0.1:${REDIS_HOST_PORT:-6379}:6379` before running
+> `docker compose up -d --build`.
+
+```bash
+git checkout v0.1.0 && docker compose up -d --build
+```
+
+For the tarball path above, restore the retained source directory:
+
+```bash
+cd ..
+mv bisibility bisibility-v0.2.0-failed
+mv bisibility-v0.1.0 bisibility
+cd bisibility
+```
+
+If the migration did not start or completed successfully, rebuild v0.1.0 now:
+
+```bash
+docker compose up -d --build
+```
+
+If the v0.2.0 migration applied only partially, first restore the v0.1.0 source
+with `git checkout v0.1.0` or the tarball directory swap above. Do not start the
+old app yet. Stop application writes, restore the backup from step 1, and then
+rebuild v0.1.0:
+
+```bash
+docker compose stop app worker
+docker compose exec -T postgres pg_restore \
+  --clean --if-exists --no-owner \
+  -U bisibility -d bisibility \
+  < bisibility-v0.1.0-before-v0.2.0.dump
+docker compose up -d --build
+```
 
 ### Use the CLI with this instance
 
@@ -194,16 +352,36 @@ Environment variables take precedence over the CLI config file. See
 [Authentication](/authentication) for choosing between project API keys and
 personal access tokens.
 
-### Change the published ports
+### Access services from the host
 
-The stack publishes the app on `3000`, PostgreSQL on `5432`, and Redis/Valkey on
-`6379`. When a port is already taken, override it in `.env`:
+The default stack publishes only the app on `3000`. PostgreSQL and Redis/Valkey
+are reachable by the `postgres` and `redis` service names only from the Compose
+network.
+
+Temporal Server and the worker sit behind the `scheduled` profile and are not
+started by a default `docker compose up`. The profile keeps Temporal Server on
+the Compose network and publishes only the Temporal Web UI, bound to
+`127.0.0.1:8233`.
+
+For deliberate PostgreSQL or Redis/Valkey access from the Docker host, apply the
+opt-in debug override:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.debug.yml up --build
+```
+
+The override binds PostgreSQL to `127.0.0.1:5432` and Redis/Valkey to
+`127.0.0.1:6379`. Change those loopback ports, or the app port, in `.env` when a
+port is already taken:
 
 ```bash
 APP_HOST_PORT=3100
 POSTGRES_HOST_PORT=5433
 REDIS_HOST_PORT=6381
 ```
+
+For a permanent custom mapping, add the same loopback-bound ports to your own
+`docker-compose.override.yml`.
 
 A new app port also has to be set in `SITE_URL` and `BETTER_AUTH_URL`
 (`http://localhost:3100` for the example above). Both are used for auth

@@ -7,11 +7,7 @@ This repository does not accept pull requests; see
 
 ## Ways to Contribute
 
-bisibility is developed by a small core team that ships with heavy AI-agent
-assistance, and the product itself is built agent-ready (MCP server, agent
-skills, machine-readable docs). In this setup, a precise problem statement or
-an implementation-ready spec regularly turns into shipped code faster than a
-patch would.
+bisibility is developed with substantial AI-agent assistance.
 
 In rough order of leverage:
 
@@ -155,7 +151,7 @@ npm run test
 
 It chains `npm run typecheck`, `npm run lint`, and `npm run test:unit`.
 
-Run `npm run verify:build` before larger pull requests, dependency changes,
+Run `npm run verify:build` before larger changes, dependency changes,
 build configuration changes, or changes that affect Storybook or production
 bundling. It checks the Node version, linting, typechecking, unit tests, the Next
 build, and the Storybook build.

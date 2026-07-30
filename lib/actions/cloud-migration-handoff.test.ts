@@ -1,3 +1,4 @@
+import packageJson from "@/package.json";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { unwrapActionFailureResult } from "./action-result";
 import {
@@ -144,7 +145,7 @@ describe("cloud migration handoff actions", () => {
     mocks.prisma.$queryRaw.mockRejectedValue(new Error("migration table unavailable"));
 
     await expect(getCloudMigrationCompatibility({ projectId })).resolves.toMatchObject({
-      appVersion: "0.1.0",
+      appVersion: packageJson.version,
       appVersionSource: "package.json",
       schema: { count: 0, latest: null },
     });

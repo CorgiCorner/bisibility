@@ -5,6 +5,7 @@ WORKDIR /workspace
 COPY package.json package-lock.json ./
 COPY scripts/deploy/bake-runtime-env.mjs ./scripts/deploy/bake-runtime-env.mjs
 COPY scripts/generate/generate-client-if-schema.mjs ./scripts/generate/generate-client-if-schema.mjs
+COPY scripts/generate/root-postinstall.mjs ./scripts/generate/root-postinstall.mjs
 # Pin npm to the version that generated package-lock.json so `npm ci` resolves the
 # identical dependency tree (the base image's bundled npm can differ and reject the lockfile).
 RUN npm install -g npm@10.9.3 && npm ci

@@ -5,10 +5,20 @@ useDefault = true
 
 [[allowlists]]
 description = "Location identifiers and masked display values are not credentials"
+condition = "AND"
 regexTarget = "match"
+paths = [
+  '''^app/.+\.test\.[jt]sx?$''',
+  '''^components/.+\.(test|stories)\.[jt]sx?$''',
+  '''^components/.+fixtures[^/]*\.[jt]sx?$''',
+  '''^docs/api/''',
+  '''^docs/openapi\.snapshot\.json$''',
+  '''^lib/.+\.test\.[jt]sx?$''',
+  '''^lib/mcp/canonical-contract\.json$''',
+  '''^scripts/smoke/''',
+]
 regexes = [
   '''(?i)(canonical_?key|location_?key|masked_?key)["']?\s*[:=]''',
   '''rawKey\s*=\s*"bsb_key_test_[a-z0-9_]+"''',
   '''rawPersonalToken\s*=\s*"bsb_pat_live_[a-z0-9_]+"''',
-  '''LinkedinLogo,\s+ListChecksIcon''',
 ]

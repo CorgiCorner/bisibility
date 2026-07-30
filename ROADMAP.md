@@ -2,10 +2,19 @@
 
 The live roadmap is published at
 [bisibility.com/roadmap](https://bisibility.com/roadmap). It tracks every
-notable capability with an honest status: shipped, beta, building, planned,
-cloud-only, or not planned.
+notable capability with an honest status: `Available`, `Preview`, `Open beta`,
+`In progress`, `Planned`, or `Exploring`.
 
 This file explains how that roadmap is steered and how to influence it.
+
+## Status Legend
+
+- `Available`: Released and ready to use, within the early-release caveats.
+- `Preview`: Released for early use and feedback; behavior or contracts may change.
+- `Open beta`: Broadly accessible for beta use, but not generally available.
+- `In progress`: Actively being implemented and not yet released.
+- `Planned`: Committed to the roadmap, but implementation has not started.
+- `Exploring`: Under evaluation and not yet committed.
 
 ## Scope
 
@@ -18,9 +27,9 @@ misbehaves; when in doubt, file here and triage will route it.
 
 ## How Priorities Are Set
 
-bisibility is developed by a small core team that ships with heavy AI-agent
-assistance. Well-specified, clearly motivated problems get built surprisingly
-fast; vague ones wait. The queue is roughly:
+bisibility is developed with substantial AI-agent assistance.
+
+The queue is roughly:
 
 1. Correctness and security issues in shipped behavior.
 2. Accepted feature specs with clear acceptance criteria.

@@ -57,5 +57,6 @@ echo "  docker compose --profile scheduled up --build"
 echo "    App:          http://localhost:3000"
 echo "    Temporal UI:  http://localhost:8233  (scheduled checks worker included)"
 echo
-echo "Postgres listens on localhost:5432 (override with POSTGRES_HOST_PORT in .env)."
+echo "PostgreSQL is reachable only inside the Compose network."
+echo "For deliberate host access, use: docker compose -f docker-compose.yml -f docker-compose.debug.yml up --build"
 echo "Sign in at http://localhost:3000 with demo@acme.dev and OTP 000000."

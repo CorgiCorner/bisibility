@@ -28,6 +28,7 @@ export function formatKeywordCount(count: number) {
 }
 
 export function formatEstimatedCost(cents: number) {
+  if (cents > 0 && cents < 1) return "<$0.01";
   return `~${moneyFormatter.format(centsToDollars(cents))}`;
 }
 

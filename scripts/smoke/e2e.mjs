@@ -8,7 +8,15 @@ import { waitForUsableService } from "./harness-readiness.mjs";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const port = Number(process.env.E2E_PORT ?? 3100);
 const baseUrl = `http://127.0.0.1:${port}`;
-const composeArgs = ["compose", "-p", "bisibility-e2e"];
+const composeArgs = [
+  "compose",
+  "-f",
+  "docker-compose.yml",
+  "-f",
+  "docker-compose.debug.yml",
+  "-p",
+  "bisibility-e2e",
+];
 const postgresHostPort = process.env.POSTGRES_HOST_PORT || "5432";
 const postgresPassword = randomBytes(24).toString("base64url");
 const pgUrl = `postgresql://bisibility:${postgresPassword}@127.0.0.1:${postgresHostPort}/bisibility?schema=bisibility_e2e`;

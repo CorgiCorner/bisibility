@@ -147,4 +147,4 @@ tests. Public users should always provide their own `BISIBILITY_API_KEY`.
   resources.
 - Clean up resources created by the example in a `finally` block or shell trap.
 - Keep examples public-quality, small, and focused on the published SDK or API.
-- Do not import private repository internals from example code.
+- Do not import unpublished implementation internals from example code.

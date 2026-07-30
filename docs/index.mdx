@@ -23,8 +23,8 @@ when you want automation or generated client code.
   <Card title="Audit log" icon="shield" href="/audit-log">
     Entry shape, retention, and action strings emitted by the app.
   </Card>
-  <Card title="API reference" icon="code" href="/api/overview">
-    Request and response shapes for the real `/api/v1` endpoints.
+  <Card title="API workflows" icon="code" href="/api/overview">
+    Shared API behavior and end-to-end integration workflows.
   </Card>
   <Card title="SDKs" icon="boxes-stacked" href="/sdks/overview">
     Installation, method names, tools, and types for official clients.
@@ -64,5 +64,5 @@ Browser code running inside the app can use a relative base URL:
 
 The API reference documents routes handled by `app/api/v1/[[...path]]`,
 `app/api/cloud/import`, `app/api/v1/cloud/import`, and `lib/api/*`. OpenAPI is
-generated from `lib/api/openapi.ts`, so the cloud-import endpoint is documented
-manually until it is included in that document.
+generated from `lib/api/openapi.ts` and includes the cloud-import compatibility,
+single-request, and chunked-session flows.

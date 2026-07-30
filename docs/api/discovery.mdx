@@ -46,13 +46,22 @@ Response:
   },
   "services": {
     "app": "ok",
-    "database": "ok"
+    "database": "ok",
+    "migrations": "ready"
   },
   "status": "ok"
 }
 ```
 
-Status is `200` when the database check succeeds and `503` when it is degraded.
+`services.migrations` answers whether blocking data migrations have finished
+with their expected checksums and whether the public ID database contract is
+ready. It does not report whether the Prisma schema is current. Run
+`npx prisma migrate status` in the deployed application environment to check
+schema currency. This known limitation is unchanged from 0.1.0 and is scheduled
+to be addressed.
+
+Status is `200` when the reported health checks succeed and `503` when health is
+degraded.
 
 ## OpenAPI
 

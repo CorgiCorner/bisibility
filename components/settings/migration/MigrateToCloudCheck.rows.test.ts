@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { resultRows } from "./MigrateToCloudCheck.rows";
 import type { MigrationCompatibilityResult } from "./MigrateToCloudWizard.types";
 
+// Deliberately fixed UI fixture version supplied as target data.
 function compatibility(
   overrides: Partial<MigrationCompatibilityResult["target"]> = {},
 ): MigrationCompatibilityResult {

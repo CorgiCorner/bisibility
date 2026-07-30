@@ -8,6 +8,7 @@ import {
   upcomingUnblockedView,
   upcomingViewFixture,
 } from "./upcoming-fixtures";
+import { formatEstimatedCost } from "./upcoming-format";
 
 const sharedProps = {
   mode: "rail",
@@ -20,6 +21,12 @@ const sharedProps = {
 } satisfies UpcomingSectionProps;
 
 describe("UpcomingSection", () => {
+  it("keeps positive sub-cent estimates visible", () => {
+    expect(formatEstimatedCost(0)).toBe("~$0.00");
+    expect(formatEstimatedCost(0.35)).toBe("<$0.01");
+    expect(formatEstimatedCost(1)).toBe("~$0.01");
+  });
+
   it("renders the rail hierarchy and expanded day with fuzzy sample times", () => {
     render(<UpcomingSection {...sharedProps} initialExpandedDayKey="2026-07-24" />);
 
