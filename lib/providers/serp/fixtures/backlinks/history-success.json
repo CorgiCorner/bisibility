@@ -1,0 +1,41 @@
+{
+  "version": "0.1.20260720",
+  "status_code": 20000,
+  "status_message": "Ok.",
+  "cost": 0.02,
+  "tasks_count": 1,
+  "tasks_error": 0,
+  "tasks": [
+    {
+      "id": "history-task",
+      "status_code": 20000,
+      "status_message": "Ok.",
+      "cost": 0.02,
+      "result_count": 1,
+      "result": [
+        {
+          "target": "acme-store.com",
+          "items_count": 2,
+          "items": [
+            {
+              "type": "backlinks_history",
+              "date": "2025-07-01 00:00:00 +00:00",
+              "new_backlinks": 22,
+              "lost_backlinks": 8,
+              "new_referring_domains": 4,
+              "lost_reffering_domains": 2
+            },
+            {
+              "type": "backlinks_history",
+              "date": "2025-08-01 00:00:00 +00:00",
+              "new_backlinks": 31,
+              "lost_backlinks": 9,
+              "new_reffering_domains": 5,
+              "lost_referring_domains": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

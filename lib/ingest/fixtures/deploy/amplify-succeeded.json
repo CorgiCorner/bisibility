@@ -1,0 +1,13 @@
+{
+  "detail": {
+    "appId": "d1a2b3c4d5e6f7",
+    "branchName": "main",
+    "jobId": "42",
+    "jobStatus": "SUCCEED"
+  },
+  "detail-type": "Amplify Deployment Status Change",
+  "id": "event_1",
+  "region": "eu-central-1",
+  "source": "aws.amplify",
+  "version": "0"
+}

@@ -1,0 +1,10 @@
+services:
+  mailpit:
+    image: axllent/mailpit:v1.30.0
+    ports:
+      - "${MAILPIT_SMTP_HOST_PORT:-1027}:1025"
+      - "${MAILPIT_UI_HOST_PORT:-8027}:8025"
+    environment:
+      MP_MAX_MESSAGES: 500
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1

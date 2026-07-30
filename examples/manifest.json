@@ -1,0 +1,58 @@
+[
+  {
+    "id": "ts-quickstart",
+    "language": "ts",
+    "cwd": "examples/ts",
+    "command": "node --experimental-strip-types quickstart.ts",
+    "timeout_ms": 120000
+  },
+  {
+    "id": "ts-error-handling",
+    "language": "ts",
+    "cwd": "examples/ts",
+    "command": "node --experimental-strip-types error-handling.ts",
+    "timeout_ms": 120000
+  },
+  {
+    "id": "ts-alerts",
+    "language": "ts",
+    "cwd": "examples/ts",
+    "command": "node --experimental-strip-types alerts.ts",
+    "timeout_ms": 120000
+  },
+  {
+    "id": "mcp-quickstart",
+    "language": "mcp",
+    "cwd": "examples/mcp",
+    "command": "node quickstart.mjs",
+    "timeout_ms": 180000
+  },
+  {
+    "id": "go-quickstart",
+    "language": "go",
+    "cwd": "examples/go",
+    "command": "go run ./quickstart",
+    "timeout_ms": 180000
+  },
+  {
+    "id": "go-error-handling",
+    "language": "go",
+    "cwd": "examples/go",
+    "command": "go run ./error-handling",
+    "timeout_ms": 180000
+  },
+  {
+    "id": "python-quickstart",
+    "language": "python",
+    "cwd": "examples/python",
+    "command": "python quickstart.py",
+    "timeout_ms": 120000
+  },
+  {
+    "id": "python-error-handling",
+    "language": "python",
+    "cwd": "examples/python",
+    "command": "python error_handling.py",
+    "timeout_ms": 120000
+  }
+]

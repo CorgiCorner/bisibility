@@ -1,0 +1,46 @@
+---
+title: "Keyword metrics"
+description: "Hydrate nullable DataForSEO Labs metrics for up to 700 keywords with per-keyword caching."
+---
+
+## Get keyword metrics
+
+```http
+POST /api/v1/projects/{project_id}/keyword-metrics
+Authorization: Bearer <api_key>
+Content-Type: application/json
+
+{
+  "keywords": ["rank tracker", "seo api"],
+  "include_clickstream": false,
+  "fresh": false,
+  "estimate_only": false,
+  "max_cost_cents": 5
+}
+```
+
+POST is used only to accommodate up to 700 keyword strings in the request body.
+The operation has GET-like semantics, mutates no Bisibility resource, and does
+not require an Idempotency-Key. It is a paid BYO-key DataForSEO Labs lookup on
+cache misses. Endpoints that can spend provider budget require write scope.
+
+Each normalized keyword has its own 12-hour cache entry. A request reads cached
+metrics first and sends only misses to the provider. The envelope reports
+`cached_count`, `fetched_count`, and the provider-reported `cost_cents` for the
+keywords fetched by this request. `fresh=true` bypasses reads and refreshes all
+entries. `include_clickstream=true` requests clickstream-refined volumes and
+doubles the provider price. Current estimates come from Bisibility's maintained
+provider rates table.
+
+Use `estimate_only: true` for a free, cache-aware dry run. It returns no rows,
+sets `estimate: true`, and reports `cached_count`, `fetched_count_estimate`, and
+`estimated_cost_cents` without calling the provider, consuming budget, or
+writing the cost ledger. `max_cost_cents` rejects the lookup with stable code
+`cost_limit_exceeded` before the paid call when the estimate is too high.
+Estimates come from the maintained rates table, and actual provider cost can
+differ slightly. The monthly provider budget remains the hard stop.
+
+Search volume, monthly trend, CPC cents, competition, difficulty, and intent are
+nullable. Ads-only markets can return volume and CPC without difficulty or
+intent. Unsupported locations, exhausted budgets, provider throttling,
+reauthorization, and missing eligible sources use the standard problem response.

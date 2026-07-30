@@ -1,0 +1,77 @@
+{
+  "version": "0.1.20260720",
+  "status_code": 20000,
+  "status_message": "Ok.",
+  "cost": 0.03,
+  "tasks_count": 1,
+  "tasks_error": 0,
+  "tasks": [
+    {
+      "id": "backlinks-task",
+      "status_code": 20000,
+      "status_message": "Ok.",
+      "cost": 0.03,
+      "result_count": 1,
+      "result": [
+        {
+          "target": "acme-store.com",
+          "total_count": 1685,
+          "items_count": 3,
+          "items": [
+            {
+              "type": "backlink",
+              "domain_from": "lost.example",
+              "url_from": "https://lost.example/archive",
+              "url_to": "https://acme-store.com/",
+              "anchor": "archived store",
+              "rel_attributes": ["nofollow", "ugc"],
+              "item_type": "anchor",
+              "rank": 99,
+              "domain_from_rank": 42,
+              "backlink_spam_score": 7,
+              "links_count": 2,
+              "first_seen": "2025-12-01",
+              "is_new": false,
+              "is_lost": true,
+              "lost_date": "2026-07-02"
+            },
+            {
+              "type": "backlink",
+              "domain_from": "images.example",
+              "url_from": "https://images.example/gallery",
+              "url_to": "https://acme-store.com/products/widget",
+              "anchor": "",
+              "attributes": ["sponsored"],
+              "item_type": "image",
+              "rank": 4,
+              "domain_from_rank": 91,
+              "backlinks_spam_score": 2,
+              "links_count": 1,
+              "first_seen": "2026-07-20",
+              "is_new": true,
+              "is_lost": false,
+              "lost_date": null
+            },
+            {
+              "type": "backlink",
+              "domain_from": "network.example",
+              "url_from": "https://network.example/footer",
+              "url_to": "https://acme-store.com/",
+              "anchor": "Acme",
+              "rel_attributes": [],
+              "item_type": "anchor",
+              "rank": 8,
+              "domain_from_rank": 63,
+              "backlink_spam_score": 11,
+              "links_count": 120,
+              "first_seen": "2024-05-01",
+              "is_new": false,
+              "is_lost": false,
+              "lost_date": null
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

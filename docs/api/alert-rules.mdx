@@ -1,0 +1,35 @@
+---
+title: "Alert rules"
+description: "List, create, update, and delete alert rules, and read triggered alerts."
+---
+
+Paths are relative to `/api/v1`. All routes use a project-scoped API key -
+`Authorization: Bearer <api_key>` - that must belong to the project in the
+path. See [Authentication](/authentication) for scopes.
+
+| Method | Path | Purpose |
+| - | - | - |
+| `GET` | `/projects/{project_id}/alert-rules` | List configured alert rules. |
+| `POST` | `/projects/{project_id}/alert-rules` | Create an alert rule. |
+| `PATCH` | `/alert-rules/{rule_id}` | Update condition, target, channels, metadata, or enabled state. |
+| `DELETE` | `/alert-rules/{rule_id}` | Delete an alert rule. |
+| `GET` | `/projects/{project_id}/triggered-alerts` | List alerts produced by completed rank checks. |
+| `POST` | `/projects/{project_id}/triggered-alerts/{alert_id}/mute` | Mute one alert for 24 hours. |
+| `POST` | `/projects/{project_id}/triggered-alerts/mark-read` | Acknowledge every firing alert in the project. |
+
+Alert conditions currently include thresholds, percentage changes, position
+drops, downtrends, top-N transitions, competitor overtakes, SERP features, and
+ranking URL mismatches. Rules can target the whole project, selected keywords,
+or tags. Delivery channels depend on the integrations configured in the app.
+
+Email rules created through the API without `recipient_ids` default to the
+project owner. On create, an explicit empty array creates a rule with no email
+recipients and does not use that fallback. On update, omitting `recipient_ids`
+preserves the current recipient set, while an explicit empty array clears it.
+
+Mutations require write scope and honor project read-only mode. Muting preserves
+the alert's firing status and sets `snoozed_until`. Mark-read matches the app's
+bulk action and returns `{ "updated": <count> }`.
+
+The generated [OpenAPI document](/api/v1/openapi.json) remains the
+authoritative request and response schema.

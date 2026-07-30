@@ -1,0 +1,35 @@
+{
+  "version": "0.1.20260720",
+  "status_code": 20000,
+  "status_message": "Ok.",
+  "cost": 0.02,
+  "tasks_count": 1,
+  "tasks_error": 0,
+  "tasks": [
+    {
+      "id": "summary-task",
+      "status_code": 20000,
+      "status_message": "Ok.",
+      "cost": 0.02,
+      "result_count": 1,
+      "result": [
+        {
+          "target": "acme-store.com",
+          "rank": 37,
+          "backlinks": 1685,
+          "backlinks_spam_score": 3,
+          "broken_backlinks": 4,
+          "broken_pages": 2,
+          "referring_domains": 48,
+          "reffering_domains": 47,
+          "referring_pages": 1422,
+          "referring_pages_nofollow": 555,
+          "new_backlinks": 34,
+          "lost_backlinks": 12,
+          "new_reffering_domains": 3,
+          "lost_referring_domains": 1
+        }
+      ]
+    }
+  ]
+}

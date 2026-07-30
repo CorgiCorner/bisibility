@@ -1,0 +1,43 @@
+---
+title: "Locations"
+description: "Search canonical country, region, and city keys for keyword operations."
+---
+
+## Search locations
+
+```http
+GET /api/v1/locations/search?q=Austin&country=US&limit=20
+Authorization: Bearer <api_key>
+```
+
+This authenticated reference-data endpoint is not scoped to one project. It
+returns supported countries and cached cities without using a project's
+provider credentials.
+
+| Query | Description |
+| - | - |
+| `q` | Required search text, 2 to 120 characters. |
+| `country` | Optional ISO country code or supported country name. |
+| `limit` | Defaults to `20`, maximum `100`. |
+
+```json
+{
+  "data": [
+    {
+      "id": "loc_abc123",
+      "kind": "city",
+      "display_name": "Austin, Texas, United States",
+      "country_code": "US",
+      "region_code": "TX",
+      "region_name": "Texas",
+      "city_name": "Austin",
+      "location_key": "US/Texas/Austin",
+      "hl": "en",
+      "language_label": "English"
+    }
+  ],
+  "meta": { "next_cursor": null }
+}
+```
+
+Pass the returned `location_key` verbatim when creating or updating keywords.

@@ -1,0 +1,34 @@
+---
+title: "Sitemap monitors"
+description: "Read sitemap snapshot status and enable or disable project monitoring."
+---
+
+Sitemap monitoring is one project-derived resource. Its stable monitor id is the
+project id. Enabling a monitor does not fetch immediately; the worker performs
+the next scheduled sync.
+
+## List monitors
+
+```http
+GET /api/v1/projects/{project_id}/sitemap-monitors
+Authorization: Bearer <api_key>
+```
+
+The list contains one monitor with `enabled`, `status`, `sitemap_url`, and a
+`latest_snapshot` summary containing its id, URL count, sitemap URL, and fetch
+time. Status is `pending` before the first snapshot, `active` after a snapshot,
+or `disabled`.
+
+## Enable or disable
+
+```http
+PATCH /api/v1/projects/{project_id}/sitemap-monitors/{monitor_id}
+Authorization: Bearer <api_key>
+Content-Type: application/json
+
+{ "enabled": false }
+```
+
+Updates require write scope and honor project read-only mode. Existing snapshots
+are retained when monitoring is disabled. See [Sitemap monitoring](/guides/sitemap-monitoring)
+for fetch limits, scheduling, signals, and retention.

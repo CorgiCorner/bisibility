@@ -1,0 +1,44 @@
+import type { WorkspaceSummary } from "@/lib/queries/workspaces";
+
+/** Shared Storybook fixture for the workspace switcher's three data states. */
+export const mockWorkspaces: WorkspaceSummary[] = [
+  {
+    domain: "acme.dev",
+    id: "ws_acme",
+    isSample: false,
+    keywordCount: 248,
+    latestCompletedRankCheckAt: new Date("2026-07-03T10:00:00.000Z"),
+    name: "acme.dev",
+    plan: "pro",
+    publicId: "prj_7Kd2Qf9m",
+    role: "owner",
+    state: "populated",
+    writeMode: "active",
+  },
+  {
+    domain: "newsite.dev",
+    id: "ws_newsite",
+    isSample: false,
+    keywordCount: 20,
+    latestCompletedRankCheckAt: null,
+    name: "newsite.dev",
+    plan: "free",
+    publicId: "prj_Nw9Sx2pL",
+    role: "admin",
+    state: "no-data",
+    writeMode: "active",
+  },
+  {
+    domain: "vega-labs.com",
+    id: "ws_vega",
+    isSample: true,
+    keywordCount: 0,
+    latestCompletedRankCheckAt: null,
+    name: "Vega Labs",
+    plan: "free",
+    publicId: "prj_Vg4Lx0aQ",
+    role: "owner",
+    state: "empty",
+    writeMode: "active",
+  },
+];

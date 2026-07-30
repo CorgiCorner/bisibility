@@ -1,0 +1,17 @@
+primary_region = "ams"
+
+[build]
+  dockerfile = "../Dockerfile.worker"
+
+[env]
+  DEPLOYMENT_MODE = "self-host"
+  TEMPORAL_NAMESPACE = "default"
+  TEMPORAL_TASK_QUEUE = "rank-checks"
+
+[[restart]]
+  policy = "on-failure"
+  retries = 50
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "1gb"

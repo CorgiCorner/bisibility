@@ -1,0 +1,78 @@
+---
+title: "Go SDK"
+description: "Install and authenticate the Go SDK, then list projects."
+---
+
+## Install
+
+```bash
+go get bisibility.com/sdk-go
+```
+
+## Authenticate
+
+Keep the API root and credential in environment variables:
+
+```bash
+export BISIBILITY_API_KEY="your-api-key"
+export BISIBILITY_BASE_URL="https://your-host.example/api/v1"
+```
+
+The client accepts project API keys and
+[personal access tokens](/api/personal-access-tokens).
+
+## List projects
+
+The runnable quickstart constructs the client and begins with a real read against
+`GET /projects`:
+
+{/* docs-example:start go-client-usage */}
+{/* Generated from examples/go/quickstart/main.go (region client-usage). Do not edit. */}
+```go
+apiKey, err := requiredEnv("BISIBILITY_API_KEY")
+if err != nil {
+	return err
+}
+baseURL, err := requiredEnv("BISIBILITY_BASE_URL")
+if err != nil {
+	return err
+}
+
+client, err := bisibility.NewClient(
+	bisibility.WithAPIKey(apiKey),
+	bisibility.WithBaseURL(baseURL),
+)
+if err != nil {
+	return err
+}
+
+ctx := context.Background()
+var keywordID string
+defer func() {
+	if keywordID == "" {
+		return
+	}
+	fmt.Printf("Deleting keyword %s\n", keywordID)
+	if _, deleteErr := client.DeleteKeyword(ctx, keywordID); deleteErr != nil && err == nil {
+		err = deleteErr
+	}
+}()
+
+fmt.Println("Listing projects")
+projects, err := client.ListProjects(ctx)
+if err != nil {
+	return err
+}
+```
+{/* docs-example:end go-client-usage */}
+
+See [Projects](/api/projects#list-projects) for the request and response
+contract.
+
+## Next steps
+
+The [SDK method reference](/sdks/methods) maps common workflows to Go method
+names.
+
+The [Go SDK source](https://github.com/CorgiCorner/bisibility-sdk-go) contains
+the complete client surface and typed resources.

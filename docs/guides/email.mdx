@@ -1,0 +1,197 @@
+---
+title: "Email delivery"
+description: "Choose and configure Resend, Amazon SES, or an SMTP relay for transactional email."
+---
+
+Bisibility sends transactional email for sign-in codes, team invitations, ranking
+alerts, and weekly digests. Every message goes through one shared sender that
+supports three interchangeable providers:
+
+| Provider | Selector | Best for |
+| - | - | - |
+| [Resend](https://resend.com) | `EMAIL_PROVIDER=resend` | Fast setup, generous developer experience, free tier of 100 emails/day. |
+| [Amazon SES](https://aws.amazon.com/ses/) | `EMAIL_PROVIDER=ses` | Volume sending at $0.10 per 1,000 emails, existing AWS infrastructure. |
+| SMTP | `EMAIL_PROVIDER=smtp` | Existing mail servers and self-hosted relays. |
+
+Without any email configuration, production refuses to start email-dependent
+flows, while development and demo instances log the message (including sign-in
+codes and invite links) to the server console instead.
+
+## Selecting a provider
+
+```bash
+# Explicit selection (recommended)
+EMAIL_PROVIDER=ses        # or: resend, smtp
+
+# Sender for all transactional email. Must be verified with the provider.
+EMAIL_FROM="Bisibility <no-reply@your-domain.com>"
+
+# Optional dedicated sender for ranking alerts; falls back to EMAIL_FROM.
+EMAIL_ALERTS_FROM="Bisibility alerts <alerts@your-domain.com>"
+
+# Independent per-recipient UTC-day anomaly brakes.
+EMAIL_DAILY_BUDGET_TRANSACTIONAL=1000
+EMAIL_DAILY_BUDGET_BULK=1000
+```
+
+`EMAIL_PROVIDER` is the single switch: without it no email is sent, and ambient
+credentials (`RESEND_API_KEY`, AWS configuration, or `SMTP_URL`) never select a
+provider on their own. Choosing or changing the provider is always an explicit
+decision.
+
+## Weekly reports
+
+The Temporal worker attempts weekly reports for every project on Monday at
+06:15 UTC by default. Set `SCHEDULED_MAINTENANCE_ENABLED=1` on the worker to
+enable the schedule. Use `WEEKLY_DIGEST_CRON` to override its timing.
+
+A project report is sent only when:
+
+- the project has at least one completed or failed rank check from the preceding
+  seven days;
+- at least one owner or member has a verified email address and keeps
+  **Weekly report** email enabled in notification settings;
+- a report has not already been sent for the project during the preceding six
+  days; and
+- the configured email provider is available and the `bulk` email budget has
+  not been exhausted.
+
+Weekly report email is enabled by default for verified users and can be disabled
+per project. To calculate ranking movers, bisibility compares the latest
+completed check from the seven-day reporting window with the most recent
+completed check before that window. A report can still be sent without that
+older baseline, but it will not include ranking movers.
+
+## Resend
+
+1. Create an API key in the [Resend dashboard](https://resend.com/api-keys).
+2. Verify your sending domain (Resend guides you through the DNS records).
+3. Configure:
+
+```bash
+EMAIL_PROVIDER=resend
+RESEND_API_KEY=your-api-key
+EMAIL_FROM="Bisibility <no-reply@your-domain.com>"
+```
+
+The free tier is limited (100 emails/day at the time of writing). Alerting and
+digests across an active team can exceed it quickly; check your expected volume
+against your plan.
+
+## SMTP
+
+The built-in SMTP transport uses Nodemailer and accepts `smtp://` and `smtps://`
+connection URLs. Configure:
+
+```bash
+EMAIL_PROVIDER=smtp
+SMTP_URL="smtps://user:password@mail.example.com:465"
+EMAIL_FROM="Bisibility <no-reply@your-domain.com>"
+```
+
+Store `SMTP_URL` as a secret because it normally contains relay credentials. If
+the username or password contains URL-reserved characters, percent-encode those
+characters in the connection URL.
+
+The transport opens one connection per send and applies a 10-second connection
+and socket timeout. TLS mode, authentication, relay limits, and sender
+verification are controlled by the SMTP service.
+
+## Amazon SES
+
+SES pricing depends on the selected plan and enabled deliverability features.
+Production SES accounts also have account-specific sending quotas. Bisibility
+applies its own independent daily budgets before calling the provider, but those
+budgets do not replace provider quotas or a provider-side spend cap.
+
+### 1. Verify your domain
+
+In the SES console, create a verified identity for your sending domain and
+publish the DKIM records it generates. Also add an SPF record if the domain does
+not have one. Unverified senders are rejected.
+
+### 2. Leave the sandbox
+
+New SES accounts start in the sandbox: at most 200 emails per 24 hours, and only
+to verified recipient addresses. Request production access in the SES console
+("Request production access"); approval normally takes up to 24 hours and lifts
+the default quota to 50,000 emails per day.
+
+### 3. Grant credentials
+
+The SES provider uses the standard AWS SDK credential chain: environment keys,
+the shared config file, or an IAM role (recommended on EC2/ECS/EKS). The
+attached policy only needs:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "ses:SendEmail",
+      "Resource": "*"
+    }
+  ]
+}
+```
+
+For Docker Compose, pass `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` through
+your `.env`; the stack forwards them (plus `AWS_REGION`) to the app and worker
+containers.
+
+### 4. Configure
+
+```bash
+EMAIL_PROVIDER=ses
+SES_REGION=eu-central-1            # falls back to AWS_REGION / AWS_DEFAULT_REGION
+EMAIL_FROM="Bisibility <no-reply@your-domain.com>"
+# Optional SESv2 configuration set for bounce/complaint tracking dashboards.
+# SES_CONFIGURATION_SET=bisibility-transactional
+```
+
+Watch your bounce and complaint rates in the SES console: AWS pauses accounts
+whose rates stay high, so keep recipient lists clean.
+
+## Behavior shared by all providers
+
+- Every provider send reserves one recipient from either the `transactional`
+  budget (sign-in codes, invitations, and waitlist notifications) or the `bulk`
+  budget (alert email and weekly reports). The default is 1,000 per category per
+  UTC day. Development console logging and unconfigured transports do not
+  consume budget.
+- At a provider price of $0.10 per 1,000 recipients, fully consuming both
+  defaults every day costs about $6 per month. Actual cost depends on the
+  provider, plan, region, and enabled features. These are anomaly brakes, not
+  cost-fitting controls; the provider spend cap remains the outer wall. OTP
+  resend requests are also throttled per email address.
+- Requests time out after 10 seconds and are never retried inside the provider;
+  alert delivery retries centrally with backoff and honors rate-limit responses.
+- Delivery failures preserve the available provider status for logging and
+  retry classification.
+- The waitlist marketing audience sync is Resend-only: it always requires
+  `RESEND_API_KEY`, even when transactional email goes through SES or SMTP.
+  Without the key it logs and skips, which is fine for most self-hosted installs.
+
+## Adding another provider
+
+The transactional sender is deliberately pluggable, so a self-hosted instance
+can carry its own provider. To get another provider into bisibility itself, do
+not send a pull request - the project does not accept them. Instead,
+[file a feature spec](https://github.com/CorgiCorner/bisibility/issues/new?template=feature_spec.yml)
+describing the provider, its authentication, and its failure modes; accepted
+specs are implemented by the core team and credited in the release notes.
+
+Wiring a provider into your own instance takes four steps:
+
+1. Implement the `EmailProvider` interface from `lib/email/types.ts` in a new
+   file under `lib/email/providers/`: an `id`, a `label`, `isConfigured()`, and
+   a `send()` that maps failures to `EmailSendError` with the provider's HTTP
+   status (report throttling as status 429 so retries keep working).
+2. Register it in `lib/email/registry.ts` and extend the `EmailProviderId`
+   union in `lib/email/types.ts`.
+3. Add colocated tests mirroring `lib/email/providers/ses.test.ts`: message
+   shape, configuration detection, and error mapping, plus a routing case in
+   `lib/email/send.test.ts`.
+4. Forward any new environment variables in `docker-compose.yml` and
+   `scripts/deploy/bake-runtime-env.mjs`, and document them in `.env.example`.

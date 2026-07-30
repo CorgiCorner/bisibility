@@ -1,0 +1,31 @@
+primary_region = "ams"
+
+[build]
+  dockerfile = "../Dockerfile"
+
+[env]
+  DEPLOYMENT_MODE = "self-host"
+  NEXT_PUBLIC_DOCS_URL = "https://bisibility.com/docs"
+  PORT = "3000"
+
+[deploy]
+  release_command = "npm run db:migrate"
+  release_command_timeout = "30m"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    grace_period = "30s"
+    interval = "15s"
+    method = "GET"
+    path = "/api/v1/health"
+    timeout = "10s"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "1gb"

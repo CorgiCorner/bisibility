@@ -1,0 +1,381 @@
+---
+title: "Cloud import"
+description: "Import keywords and rank history with a migration token."
+---
+
+Cloud import accepts an export package and restores keywords plus optional rank
+history into the project associated with a migration token. Use the single
+request endpoint for small packages and the session protocol for large packages.
+
+The versioned paths are included in `/api/v1/openapi.json`. The unversioned
+paths are kept for CLI compatibility.
+
+## Endpoints
+
+```http
+POST /api/cloud/import
+POST /api/v1/cloud/import
+GET  /api/cloud/import/compatibility
+GET  /api/v1/cloud/import/compatibility
+POST /api/cloud/import/sessions
+POST /api/v1/cloud/import/sessions
+PUT  /api/cloud/import/sessions/{sessionId}/chunks/{index}
+PUT  /api/v1/cloud/import/sessions/{sessionId}/chunks/{index}
+POST /api/cloud/import/sessions/{sessionId}/finalize
+POST /api/v1/cloud/import/sessions/{sessionId}/finalize
+```
+
+## Authentication
+
+Cloud import uses a migration token, not a `bsb_key_live_...` API key. Every import
+endpoint requires Bearer authentication:
+
+```text
+Authorization: Bearer mig_...
+```
+
+Invalid, expired, or already-used tokens return `419` with an `unauthorized`
+problem response. Missing or malformed tokens return `401`.
+
+All import request objects reject unknown fields. Public IDs and checksums must
+use their exact lowercase representation without surrounding whitespace.
+Numbers and booleans must use native JSON types rather than strings.
+
+## Migration Tokens
+
+A migration token is bound to one project by design: it authorizes importing
+into exactly the project it was minted for, is single use, and expires after
+`BISIBILITY_MIGRATION_TOKEN_TTL_MINUTES`. This is what lets the exporting side
+push data into a destination project without ever holding that project's API
+key. There is no instance-global token; a broader credential would grant more
+than an import needs.
+
+Tokens are minted and managed through the ordinary project-scoped REST API
+using an `Authorization: Bearer <api_key>` key for the destination project:
+
+| Method | Path | Purpose |
+| - | - | - |
+| `GET` | `/api/v1/projects/{project_id}/migration-tokens` | List migration tokens without exposing raw secrets. |
+| `POST` | `/api/v1/projects/{project_id}/migration-tokens` | Mint a `full` or `keywords` migration token. |
+| `DELETE` | `/api/v1/projects/{project_id}/migration-tokens/{token_id}` | Revoke through the project-scoped route. |
+| `DELETE` | `/api/v1/migration-tokens/{token_id}` | Revoke through the short route. |
+
+The raw `mig_...` value is returned only when minted. Tokens can also be minted
+from the in-app wizard. Migration-token identifiers are strict `ferry_` v3
+public IDs; import jobs and session identifiers are strict `imp_` v3 public IDs.
+
+## Compatibility Preflight
+
+Call the public compatibility endpoint before generating an export:
+
+```http
+GET /api/v1/cloud/import/compatibility
+```
+
+Response:
+
+```json
+{
+  "schema_versions_supported": [5],
+  "app_version": "0.1.0",
+  "latest_migration": "20260708203000_project_write_mode_actor"
+}
+```
+
+The endpoint is anonymous and rate limited. `latest_migration` is `null` when
+the migration table cannot be read.
+
+## Single Request Import
+
+Post the export package directly to `/api/v1/cloud/import`:
+
+```json
+{
+  "exported_at": "2026-06-28T10:00:00.000Z",
+  "version": 4,
+  "project_id": "prj_abcdefghijklmnopqrstuvwx",
+  "scope": "history",
+  "keywords": [
+    {
+      "id": "kw_abcdefghijklmnopqrstuvwx",
+      "keyword": "rank tracker api",
+      "location": "United States",
+      "device": "desktop",
+      "target_url": "https://example.com/rank-tracker",
+      "tags": ["api"],
+      "rankingHistory": [{ "checkedAt": "2026-06-20T10:00:00.000Z", "position": 3 }]
+    }
+  ],
+  "alert_rules": [],
+  "competitors": [],
+  "notification_preferences": [],
+  "saved_views": []
+}
+```
+
+The endpoint accepts only a direct v5 package. Version 5 accepts only snake-case
+package fields, exact lowercase public IDs, and native JSON number and boolean
+types. It rejects wrapper objects, body tokens, unknown fields, and v1 through
+v4 packages.
+
+Top-level fields:
+
+| Field | Description |
+| - | - |
+| `keywords` | Required. Up to 500 keyword records. |
+| `exported_at` | Optional ISO-8601 timestamp. |
+| `project_id` | Required strict `prj_` v3 source project ID. |
+| `scope` | Optional. `current` or `history`. |
+| `alert_rules` | Required alert-rule records. |
+| `competitors` | Required competitor records. |
+| `notification_preferences` | Required notification preference records. |
+| `saved_views` | Required saved-view records. |
+
+Keyword fields:
+
+| Field | Description |
+| - | - |
+| `id` | Required strict `kw_` v3 source keyword ID. |
+| `keyword` | Required keyword text. |
+| `device` | Required: `desktop` or `mobile`. |
+| `location` | Required location label. |
+| `target_url` | Absolute URL, path, `null`, or omitted. |
+| `tags` | Up to 12 tags. Defaults to `[]`. |
+| `rankingHistory` | Optional. Up to 5000 historical checks per keyword. |
+
+Each competitor record requires its source `cmp_` public ID and canonical
+domain. The destination still matches and upserts competitors by domain.
+
+History fields:
+
+| Field | Description |
+| - | - |
+| `checkedAt` | Required ISO-8601 timestamp. |
+| `position` | Integer position or `null`. |
+| `previousPosition` | Integer previous position or `null`. |
+| `rankingUrl` | Absolute URL, path, `null`, or omitted. |
+
+Imported history rows use provider value `self-hosted-import`.
+
+<Warning>
+  Version 4 carries history in each keyword's `rankingHistory` array. Top-level
+  `rank_checks` and text-based matching are not supported.
+</Warning>
+
+Success returns `201`.
+
+```json
+{
+  "counts": {
+    "keywords": 1,
+    "keywords_created": 1,
+    "keywords_skipped": 0,
+    "history": 1,
+    "history_received": 1
+  },
+  "job_id": "imp_abcdefghijklmnopqrstuvwx",
+  "state": "done"
+}
+```
+
+Every v5 package includes every section, including empty arrays:
+
+| Count | Meaning |
+| - | - |
+| `alert_rules`, `alert_rules_skipped` | Imported and skipped alert rules. |
+| `competitors` | Imported competitors. |
+| `notification_preferences` | Imported notification preferences. |
+| `saved_views` | Imported saved views. |
+
+## Chunked Session Import
+
+Use sessions when the package is large enough that one request may exceed body
+limits or timeout. A session has three phases: create, upload chunks, finalize.
+
+### 1. Create the Session
+
+```http
+POST /api/v1/cloud/import/sessions
+Authorization: Bearer mig_...
+Content-Type: application/json
+```
+
+```json
+{
+  "version": 4,
+  "chunk_count": 3,
+  "source_project_id": "prj_abcdefghijklmnopqrstuvwx",
+  "totals": {
+    "keywords": 650,
+    "rank_checks": 12000
+  }
+}
+```
+
+`version` must be `4`. `chunk_count` must be between `1` and `500`.
+`source_project_id` is required and prevents importing a project into itself.
+`totals` is optional and is stored with the session manifest.
+
+Success returns `201`.
+
+```json
+{
+  "session_id": "imp_abcdefghijklmnopqrstuvwx",
+  "state": "receiving",
+  "chunk_limits": {
+    "max_body_bytes": 8388608,
+    "max_history_rows": 25000,
+    "max_keywords": 500
+  }
+}
+```
+
+Only one live `receiving` or `importing` session is allowed per token. A second
+live session returns `409`.
+
+### 2. Upload Chunks
+
+Upload each chunk by zero-based index:
+
+```http
+PUT /api/v1/cloud/import/sessions/imp_abcdefghijklmnopqrstuvwx/chunks/0
+Authorization: Bearer mig_...
+Content-Type: application/json
+```
+
+Keyword chunks carry keyword rows:
+
+```json
+{
+  "checksum": "sha256:d7070ee876f996d00e1254519e2bf233ea64ab2caebef347513c973e15870d05",
+  "kind": "keywords",
+  "keywords": [{ "id": "kw_abcdefghijklmnopqrstuvwx", "keyword": "rank tracker api", "device": "desktop", "location": "United States", "tags": [], "rankingHistory": [] }]
+}
+```
+
+Section chunks carry non-keyword package sections and optional source keyword
+ids used to map imported alert targets:
+
+```json
+{
+  "checksum": "sha256:7b47a34cd8d581d8a5830ada4937cdf4993f7ac1e4bd3dd8fc9f94a4b69cf935",
+  "kind": "sections",
+  "sections": {
+    "competitors": [{ "id": "cmp_abcdefghijklmnopqrstuvwx", "domain": "example.com", "label": "Example" }],
+    "source_keyword_ids": {
+        "kw_abcdefghijklmnopqrstuvwx": {
+        "text": "rank tracker api",
+        "location": "United States",
+        "device": "desktop"
+      }
+    }
+  }
+}
+```
+
+The checksum is the v5 canonical chunk-content identity for idempotent retries. Retrying the
+same `{sessionId, index}` with the same checksum returns `200`; retrying that
+index with a different checksum returns `409`. Clients should compute the
+`sha256:` value over the canonical JSON body `{ version: 5, ...chunk }`, excluding
+the `checksum` field, before gzip compression.
+
+To gzip a chunk, send the gzip-compressed JSON body with:
+
+```text
+Content-Encoding: gzip
+```
+
+The body limit applies before and after decompression. Oversized chunks return
+`413`.
+
+Success returns:
+
+```json
+{
+  "state": "receiving",
+  "chunks_received": 2,
+  "chunk_count": 3
+}
+```
+
+### 3. Finalize
+
+Finalize after every chunk has been accepted:
+
+```http
+POST /api/v1/cloud/import/sessions/imp_abcdefghijklmnopqrstuvwx/finalize
+Authorization: Bearer mig_...
+Content-Type: application/json
+```
+
+The body may be empty or `{}`. If chunks are missing, finalize returns `409`.
+If another finalize is already importing the session, it returns `409`. Once the
+session is done, a repeated finalize call returns the completed job response.
+
+```json
+{
+  "job_id": "imp_abcdefghijklmnopqrstuvwx",
+  "state": "done",
+  "counts": {
+    "keywords": 650,
+    "keywords_created": 640,
+    "keywords_skipped": 10,
+    "history": 12000,
+    "history_received": 12000
+  }
+}
+```
+
+## Crash Resume
+
+Persist `session_id`, `chunk_count`, and every chunk checksum on the client.
+After a client crash, re-upload all chunks whose success was not recorded. The
+server accepts already stored chunks when the checksum matches.
+
+If the connection drops during finalize, call finalize again. A `200` means the
+session completed. A `409` means chunks are still missing or a finalize is still
+running. Stale `receiving` and `importing` jobs are marked failed by maintenance
+after 30 minutes, after which a new migration token and session are required.
+
+## Status Codes
+
+| Status | Meaning |
+| - | - |
+| `200` | Chunk accepted, session finalized, or compatibility returned. |
+| `201` | Single request import completed or session created. |
+| `400` | Invalid JSON, invalid manifest, invalid chunk, or invalid index. |
+| `401` | Missing or malformed migration token. |
+| `409` | Live session conflict, chunk checksum conflict, missing chunks, already finalizing, or self-import (package exported from the destination project itself, code `self_import`). |
+| `413` | Request body or buffered session payload is too large. |
+| `419` | Migration token is invalid, expired, or already used. |
+| `423` | Destination project is in migration hold. |
+| `429` | Rate limit exceeded. |
+| `500` | Import failed after the job started. |
+
+## Environment Knobs
+
+| Variable | Default | Effect |
+| - | - | - |
+| `BISIBILITY_MIGRATION_IMPORT_MAX_BODY_BYTES` | `8388608` | Maximum JSON body size for single request imports and session requests. |
+| `BISIBILITY_MIGRATION_TOKEN_TTL_MINUTES` | `60` | Migration token lifetime in minutes, clamped between `5` and `1440`. |
+| `BISIBILITY_MIGRATION_HOLD_TTL_HOURS` | `24` | Hours before maintenance releases an expired migration hold. |
+| `BISIBILITY_MIGRATION_EXPORT_MAX_KEYWORDS` | `500` | Maximum keywords included in a downloadable migration package. |
+| `BISIBILITY_MIGRATION_MAX_KEYWORDS` | `50000` | Maximum keywords allowed for direct migration push. |
+| `BISIBILITY_MIGRATION_TARGET_ALLOWLIST` | empty | Comma-separated hostnames allowed as migration targets, with `*.suffix` wildcard support. Empty allows any public host. |
+
+## Existing App Surfaces
+
+The app also implements cloud-import state with server actions:
+
+| Function | Purpose |
+| - | - |
+| `mintMigrationToken` | Create a single-use migration token for a project. |
+| `regenerateMigrationToken` | Consume any active token and create a replacement. |
+| `revokeMigrationToken` | Consume an active migration token. |
+| `advanceCloudImportJob` | Advance a job through `receiving`, `importing`, `done`, or `failed`. |
+
+## In-App Wizard
+
+Open `/cloud/import`, generate or paste a migration token, then upload the JSON
+package from the wizard. The wizard uses the same import handlers as the REST
+endpoints.

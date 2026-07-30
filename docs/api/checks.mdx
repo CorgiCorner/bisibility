@@ -1,0 +1,103 @@
+---
+title: "Checks"
+description: "Run an immediate rank check for one keyword."
+---
+
+Use checks when you need a fresh position for one keyword immediately.
+
+## Run rank check
+
+```http
+POST /api/v1/keywords/{id}/checks
+Authorization: Bearer <api_key>
+Content-Type: application/json
+Idempotency-Key: run-check-001
+```
+
+Body is optional:
+
+```json
+{}
+```
+
+Use a specific connected provider:
+
+```json
+{ "provider_id": "dataforseo" }
+```
+
+If `provider_id` is omitted, the primary connected SERP provider for the project
+is used.
+
+Response status is `201` when the check completes during the request.
+
+```json
+{
+  "id": "cm5xam3k20001js0cg1qw9rle",
+  "keyword_id": "kw_a00000000000000000000000",
+  "attempts": null,
+  "checked_at": "2026-06-28T10:00:00.000Z",
+  "position": 4,
+  "previous_position": 7,
+  "provider": "dataforseo",
+  "ranking_url": "https://example.com/rank-tracker",
+  "cost_cents": 0.06,
+  "error": null,
+  "status": "completed"
+}
+```
+
+`attempts` is `null` when the selected provider succeeds immediately. When
+fallback providers are tried first, it is an array of `{ "provider", "message" }`
+objects for the failed attempts.
+
+## Run asynchronously
+
+Add `?async=true` to hand the check to the Temporal worker and poll the returned
+rank-check resource:
+
+```http
+POST /api/v1/keywords/{id}/checks?async=true
+Authorization: Bearer <api_key>
+Content-Type: application/json
+Idempotency-Key: run-check-001
+```
+
+Response status is `202`.
+
+```json
+{
+  "id": "cm5xam3k20001js0cg1qw9rle",
+  "keyword_id": "kw_a00000000000000000000000",
+  "attempts": null,
+  "checked_at": "2026-06-28T10:00:00.000Z",
+  "position": null,
+  "previous_position": null,
+  "provider": "primary",
+  "ranking_url": null,
+  "cost_cents": null,
+  "error": null,
+  "status": "running"
+}
+```
+
+Poll the resource until `status` is `completed` or `failed`:
+
+```http
+GET /api/v1/rank-checks/{check_id}
+Authorization: Bearer <api_key>
+```
+
+## Failure modes
+
+| Status | Reason |
+| - | - |
+| `404` | Keyword was not found in the API key's project. |
+| `400` | Request body failed validation. |
+| `400` | No connected SERP provider is available. |
+| `429` | Rank checks are paused because the monthly project budget is exhausted. |
+| `502` | The connected provider request failed. |
+| `503` | The async scheduler is unavailable. |
+
+Budget failures are returned as `budget_exhausted` problem responses. Provider
+failures are returned as `provider_unavailable` problem responses.

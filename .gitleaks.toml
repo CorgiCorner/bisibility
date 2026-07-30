@@ -1,0 +1,14 @@
+title = "bisibility gitleaks configuration"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Location identifiers and masked display values are not credentials"
+regexTarget = "match"
+regexes = [
+  '''(?i)(canonical_?key|location_?key|masked_?key)["']?\s*[:=]''',
+  '''rawKey\s*=\s*"bsb_key_test_[a-z0-9_]+"''',
+  '''rawPersonalToken\s*=\s*"bsb_pat_live_[a-z0-9_]+"''',
+  '''LinkedinLogo,\s+ListChecksIcon''',
+]

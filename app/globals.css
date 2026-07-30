@@ -1,0 +1,744 @@
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+@config "../tailwind.config.ts";
+
+:root,
+[data-theme="light"] {
+  --bg: #f2eee4;
+  --bg-elev: #f9f6ef;
+  --bg-sidebar: #ffffff;
+  --bg-sunken: #ece7db;
+  --bg-inset: #e2ddd0;
+  --fg: #1a1813;
+  --fg-muted: #6b6657;
+  --fg-faint: #9a9588;
+  --border: #e8e4d9;
+  --border-soft: #f0eee6;
+  --border-strong: #d9d4c7;
+  --nav-active: #edeae1;
+  --accent: #d97757;
+  --accent-hover: #c8643f;
+  --accent-soft: #f7e8e0;
+  --blue: #4f86e8;
+  --purple: #8e6fe0;
+  --green: #3c9a63;
+  --red: #c8463a;
+  --yellow: #e0a93b;
+  --rank-bucket-green: #3c9a63;
+  --rank-bucket-green-muted: #7fb36b;
+  --rank-bucket-yellow: #e0a93b;
+  --rank-bucket-orange: #e08a4e;
+  --rank-bucket-red: #c8463a;
+  /* Darker amber for amber TEXT on light/amber-tinted backgrounds (the mockup's #B07d10);
+     --yellow stays the lighter shade for dots/fills/borders. */
+  --yellow-strong: #b07d10;
+  /* HANDOFF-35 threshold TEXT tones: darker than --yellow/--red so the spend-meter
+     amounts stay readable on light backgrounds; fills keep using --yellow/--red. */
+  --yellow-text: #8a6516;
+  --red-text: #b03a2e;
+  --code-bg: #1c1a16;
+  --code-fg: #edeae0;
+  --code-faint: #8c887c;
+  /* Divider tone INSIDE the dark code surface: slightly lighter than --code-bg in both
+     themes, since the block stays dark on the light theme too. */
+  --code-border: #33302a;
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --bg: #0f0c07;
+  --bg-elev: #1b1810;
+  --bg-sidebar: #070603;
+  --bg-sunken: #15110a;
+  --bg-inset: #080704;
+  --fg: #ece7db;
+  --fg-muted: #9f998a;
+  --fg-faint: #6e685a;
+  --border: #2e281d;
+  --border-soft: #221d15;
+  --border-strong: #423b2e;
+  --nav-active: #231f17;
+  --accent: #e08a6a;
+  --accent-hover: #ec9a7c;
+  --accent-soft: #2a2018;
+  --blue: #6a9bf0;
+  --purple: #9e82e6;
+  --green: #57a77e;
+  --red: #e0705c;
+  --yellow: #e6b452;
+  --rank-bucket-green: #57a77e;
+  --rank-bucket-green-muted: #8cc07a;
+  --rank-bucket-yellow: #e6b452;
+  --rank-bucket-orange: #ec9a63;
+  --rank-bucket-red: #e0705c;
+  /* On dark, "strong" amber text reads brighter than --yellow for contrast on dark bg. */
+  --yellow-strong: #eec069;
+  /* On dark, threshold text reuses the existing bright tones (--yellow-strong amber,
+     --red) instead of the darkened light-theme values. */
+  --yellow-text: #eec069;
+  --red-text: #e0705c;
+  --code-bg: #0e0d0a;
+  --code-fg: #ece7db;
+  --code-faint: #7e7a6e;
+  --code-border: #26231e;
+  color-scheme: dark;
+}
+
+@layer base {
+  *,
+  ::before,
+  ::after {
+    box-sizing: border-box;
+    /* Preflight is disabled; restore its border reset so Tailwind border utilities
+     render consistently. */
+    border-width: 0;
+    border-style: solid;
+    border-color: var(--border);
+  }
+
+  /* Preflight is disabled; reset native block margins because spacing comes from
+   explicit utilities. */
+  blockquote,
+  dl,
+  dd,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  hr,
+  figure,
+  p,
+  pre {
+    margin: 0;
+  }
+
+  /* Tailwind preflight is off (layout-only), so bare <button>s would otherwise paint the
+   browser's grey ButtonFace background. Reset it; MUI and bg-* utilities still override. */
+  button {
+    background-color: transparent;
+    background-image: none;
+    /* Kill the native button border too; border-style stays solid so explicit
+     `border` utilities (e.g. on outlined buttons) still render. */
+    border-width: 0;
+    border-style: solid;
+  }
+
+  /* Preflight is disabled; remove native control borders while retaining solid
+   style for explicit border utilities. */
+  input,
+  select,
+  textarea {
+    border-width: 0;
+    border-style: solid;
+  }
+
+  /* Keep the anchor reset in the base layer so utilities such as `text-white`
+     can set the foreground of links that are presented as buttons. */
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  /* HANDOFF-19: placeholders never read bold/heavy. The prototype scoped this to
+   [data-bv]; this app has no data-bv, so apply it globally. */
+  input::placeholder,
+  textarea::placeholder {
+    font-weight: 400;
+    color: var(--fg-faint);
+  }
+
+  select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 256 256' fill='%239A9588'%3E%3Cpath d='M213.66 101.66l-80 80a8 8 0 0 1-11.32 0l-80-80A8 8 0 0 1 53.66 90.34L128 164.69l74.34-74.35a8 8 0 0 1 11.32 11.32Z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 11px center;
+    padding-right: 30px;
+  }
+
+  /* Legacy mockup checkbox hook. The shared Checkbox renders its own SVG tick. */
+  input[type="checkbox"].bv-cb {
+    position: relative;
+  }
+
+  input[type="checkbox"].bv-cb:checked::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 45%;
+    width: 4px;
+    height: 8px;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: translate(-50%, -50%) rotate(45deg);
+    box-sizing: border-box;
+  }
+
+  /* HANDOFF-12: global keyboard focus ring (components that opt out set outline:none). */
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  [tabindex]:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+/* HANDOFF-12: tabular figures on mono text so IDs/metrics/counts align. */
+.font-mono,
+code,
+kbd,
+pre,
+samp {
+  font-variant-numeric: tabular-nums;
+}
+
+/* HANDOFF-12: balanced wrapping on headings. */
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+/* HANDOFF-12: live-status dot pulse + KPI count-up. */
+@keyframes bvping {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, currentColor 55%, transparent);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 4px transparent;
+  }
+}
+
+@keyframes bvcountup {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.bv-ping {
+  animation: bvping 1.8s ease-out infinite;
+}
+
+.bv-countup {
+  animation: bvcountup 0.5s ease-out both;
+}
+
+@keyframes bvhero-audience-primary {
+  0%,
+  42% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 0;
+    transform: translateY(-115%);
+  }
+  51%,
+  92% {
+    opacity: 0;
+    transform: translateY(115%);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bvhero-audience-secondary {
+  0%,
+  42% {
+    opacity: 0;
+    transform: translateY(115%);
+  }
+  50%,
+  92% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-115%);
+  }
+}
+
+.bv-hero-audience {
+  display: inline-flex;
+  align-items: baseline;
+  white-space: nowrap;
+  vertical-align: top;
+}
+
+.bv-hero-audience-prefix {
+  flex: none;
+}
+
+.bv-hero-audience-slot {
+  display: inline-grid;
+  overflow: clip;
+}
+
+.bv-hero-audience-phrase {
+  grid-area: 1 / 1;
+  width: max-content;
+  animation-duration: 8s;
+  animation-iteration-count: infinite;
+  animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+  color: currentColor;
+  will-change: opacity, transform;
+}
+
+.bv-hero-audience-primary {
+  animation-name: bvhero-audience-primary;
+}
+
+.bv-hero-audience-secondary {
+  animation-name: bvhero-audience-secondary;
+}
+
+/* ---- RankWindowCard (bv-rw-*): animated hero product window ---- */
+@property --bv-rw-a {
+  syntax: "<integer>";
+  inherits: false;
+  initial-value: 0;
+}
+@property --bv-rw-b {
+  syntax: "<integer>";
+  inherits: false;
+  initial-value: 0;
+}
+
+.bv-rw-mount {
+  position: relative;
+  width: 100%;
+  padding: 0 18px 20px 0;
+}
+
+.bv-rw-alert {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+}
+
+/* Count-up KPI values via @property counters; each cell sets --bv-rw-int
+   (and --bv-rw-frac) inline from the fixture, and the keyframes animate to it. */
+.bv-rw-cnt::after {
+  font-variant-numeric: tabular-nums;
+}
+.bv-rw-cnt-decimal::after {
+  counter-reset: bvRwA var(--bv-rw-a) bvRwB var(--bv-rw-b);
+  content: counter(bvRwA) "." counter(bvRwB);
+  animation: bv-rw-count-decimal 1.1s cubic-bezier(0.2, 0.7, 0.3, 1) 0.2s forwards;
+}
+@keyframes bv-rw-count-decimal {
+  to {
+    --bv-rw-a: var(--bv-rw-int);
+    --bv-rw-b: var(--bv-rw-frac);
+  }
+}
+.bv-rw-cnt-int::after {
+  counter-reset: bvRwA var(--bv-rw-a);
+  content: counter(bvRwA);
+  animation: bv-rw-count-int 0.9s cubic-bezier(0.2, 0.7, 0.3, 1) 0.2s forwards;
+}
+@keyframes bv-rw-count-int {
+  to {
+    --bv-rw-a: var(--bv-rw-int);
+  }
+}
+
+/* Chart reveal: accent line + area wiped in together (clip scaleX);
+   competitor line draws via stroke-dashoffset. */
+.bv-rw-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: bv-rw-draw-in 1.5s ease 0.25s forwards;
+}
+@keyframes bv-rw-draw-in {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.bv-rw-reveal {
+  transform: scaleX(0);
+  transform-origin: left;
+  transform-box: fill-box;
+  animation: bv-rw-reveal-in 1.5s ease 0.25s forwards;
+}
+@keyframes bv-rw-reveal-in {
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* Floating alert rise-in. */
+.bv-rw-rise {
+  opacity: 0;
+  animation: bv-rw-rise-in 0.6s cubic-bezier(0.2, 0.7, 0.3, 1) 1.7s forwards;
+}
+@keyframes bv-rw-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Collapse the alert under the card on very narrow viewports. */
+@media (max-width: 560px) {
+  .bv-rw-mount {
+    padding-right: 0;
+    padding-bottom: 64px;
+  }
+  .bv-rw-alert {
+    position: static;
+    margin-top: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bv-rw-draw {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+  .bv-rw-reveal {
+    animation: none;
+    transform: scaleX(1);
+  }
+  .bv-rw-rise {
+    animation: none;
+    opacity: 1;
+  }
+  .bv-rw-cnt-decimal::after {
+    animation: none;
+    --bv-rw-a: var(--bv-rw-int);
+    --bv-rw-b: var(--bv-rw-frac);
+  }
+  .bv-rw-cnt-int::after {
+    animation: none;
+    --bv-rw-a: var(--bv-rw-int);
+  }
+}
+
+/* Keyword research promo (landing): staggered entry + one looping row pulse. */
+@keyframes bvkw-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes bvkw-fadeup {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes bvkw-reveal {
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes bvkw-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  62% {
+    transform: scale(1.12);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes bvkw-rowpulse {
+  0%,
+  7%,
+  100% {
+    background: transparent;
+  }
+  2.5% {
+    background: color-mix(in srgb, var(--accent) 9%, transparent);
+  }
+}
+.bv-kw-window {
+  opacity: 0;
+  animation: bvkw-rise 0.8s cubic-bezier(0.2, 0.7, 0.3, 1) 0.05s forwards;
+  box-shadow:
+    0 30px 70px -42px color-mix(in srgb, var(--fg) 24%, transparent),
+    0 10px 24px -18px color-mix(in srgb, var(--fg) 14%, transparent);
+}
+.bv-kw-fu {
+  opacity: 0;
+  animation: bvkw-fadeup 0.7s cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+}
+.bv-kw-reveal {
+  transform: scaleX(0);
+  transform-origin: left;
+  transform-box: fill-box;
+  animation: bvkw-reveal 1.4s ease 0.7s forwards;
+}
+.bv-kw-pop {
+  opacity: 0;
+  animation: bvkw-pop 0.55s cubic-bezier(0.3, 1.4, 0.5, 1) forwards;
+  box-shadow: 0 18px 40px -16px color-mix(in srgb, var(--fg) 30%, transparent);
+}
+/* Entrance + ~11s live-refresh pulse combined, mirroring the handoff shorthand. */
+.bv-kw-rowpulse {
+  opacity: 0;
+  animation:
+    bvkw-fadeup 0.7s cubic-bezier(0.2, 0.7, 0.3, 1) 0.66s forwards,
+    bvkw-rowpulse 11s linear 3s infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .bv-kw-window,
+  .bv-kw-fu,
+  .bv-kw-pop,
+  .bv-kw-rowpulse {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .bv-kw-reveal {
+    animation: none;
+    transform: scaleX(1);
+  }
+}
+
+@keyframes bvmarquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.bv-marquee-track {
+  animation: bvmarquee 14s linear infinite;
+  will-change: transform;
+}
+
+/* The pre-paint session hint avoids auth-nav flash; specificity must outrank
+   Tailwind and MUI display classes. */
+html[data-authed="true"] .bv-anon-only {
+  display: none;
+}
+
+html:not([data-authed="true"]) .bv-authed-only {
+  display: none;
+}
+
+.bv-announcement-banner {
+  background-color: color-mix(in srgb, var(--fg) 90%, var(--bg));
+  border-color: color-mix(in srgb, var(--fg) 90%, var(--bg));
+  color: color-mix(in srgb, var(--bg-elev) 93%, var(--fg));
+}
+
+[data-theme="dark"] .MuiButtonBase-root.bv-landing-cta.MuiButton-contained,
+[data-theme="dark"] button.bv-landing-cta.bg-accent {
+  color: #000;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bv-ping,
+  .bv-countup,
+  .bv-hero-audience-phrase,
+  .bv-marquee-track {
+    animation: none;
+    transform: none;
+  }
+
+  .bv-hero-audience-primary {
+    opacity: 1;
+  }
+
+  .bv-hero-audience-secondary {
+    display: none;
+  }
+}
+
+html {
+  min-height: 100%;
+  background: var(--bg);
+  overscroll-behavior: none;
+  /* geist/font exposes --font-geist-sans/-mono; alias to the names the theme + tailwind use */
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* Use the opt-in attribute so Next.js can suppress smooth scrolling during
+   route changes. */
+html[data-scroll-behavior="smooth"] {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-scroll-behavior="smooth"] {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  min-height: 100%;
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+::selection {
+  background: var(--accent);
+  color: #fff;
+}
+
+@keyframes bvpulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.8);
+  }
+}
+
+.bv-pulse {
+  animation: bvpulse 2s infinite;
+}
+
+@keyframes bvspin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes bvshake {
+  10%,
+  90% {
+    transform: translateX(-1px);
+  }
+  20%,
+  80% {
+    transform: translateX(2px);
+  }
+  30%,
+  50%,
+  70% {
+    transform: translateX(-4px);
+  }
+  40%,
+  60% {
+    transform: translateX(4px);
+  }
+}
+
+.bv-spin {
+  display: inline-block;
+  animation: bvspin 0.7s linear infinite;
+}
+
+/* Styled hover tooltip: <span class="bv-tip" data-tip="...">. A dark pill above the
+   element. Parent must be overflow:visible or the pill is clipped. */
+.bv-tip {
+  position: relative;
+}
+
+.bv-tip:hover::after,
+.bv-tip:focus-visible::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 7px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: 240px;
+  white-space: normal;
+  text-align: left;
+  line-height: 1.45;
+  background: var(--fg);
+  color: var(--bg-elev);
+  font-family: var(--font-mono), monospace;
+  font-size: 10.5px;
+  font-weight: 500;
+  padding: 5px 9px;
+  border-radius: 6px;
+  z-index: 60;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(20, 16, 8, 0.18);
+}
+
+.bv-tip:hover::before,
+.bv-tip:focus-visible::before {
+  content: "";
+  position: absolute;
+  bottom: calc(100% + 2px);
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: var(--fg);
+  z-index: 60;
+  pointer-events: none;
+}
+
+[data-m="otp-row"] > input[data-otp] {
+  outline: none;
+  box-shadow: none;
+  appearance: none;
+}
+
+[data-m="otp-row"] > input[data-otp]:focus,
+[data-m="otp-row"] > input[data-otp]:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+[data-m="otp-row"].bv-err {
+  animation: bvshake 0.4s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bv-pulse {
+    animation: none;
+  }
+}
+
+@media (max-width: 639px) {
+  input:not(
+    [type="button"],
+    [type="checkbox"],
+    [type="file"],
+    [type="hidden"],
+    [type="image"],
+    [type="radio"],
+    [type="range"],
+    [type="reset"],
+    [type="submit"]
+  ),
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}

@@ -1,0 +1,199 @@
+---
+title: "Audit log"
+description: "Audit-log entry shape, retention, and action strings emitted by bisibility."
+---
+
+The audit log records security- and data-relevant activity for a project. It is
+append-only during normal product workflows: a write creates a new row instead
+of rewriting an earlier event. Retention maintenance can delete old rows after
+the configured retention window.
+
+Each entry records:
+
+| Field | Meaning |
+| - | - |
+| `actor` | User that caused the action. A null actor is displayed as System; background workers and project-scoped API-key calls do not have a user actor. |
+| `action` | Stable event string, such as `keyword.add` or `rank_check.completed`. |
+| `created_at` | Time the audit row was written. |
+| `target` | The affected resource type and id, plus project id when the action is project-scoped. |
+| `before` | Previous state when it is useful and available. |
+| `after` | New state or summary when it is useful and available. |
+| `status` | `success` by default, or `failed` for recorded authorization and scheduling failures. |
+| `metadata` | Request context such as masked IP, hashed IP, user agent, app version, and correlation id when available. |
+
+Secrets are not stored raw in audit payloads. Values whose keys look like
+credentials, tokens, API keys, or passwords are redacted before insertion.
+
+## Retention
+
+Audit rows are kept for `AUDIT_RETENTION_DAYS`, defaulting to 365 days when the
+variable is unset. The value must be between 1 and 3650 days.
+
+Worker maintenance can run a daily audit-log purge, and the self-hosted purge
+route calls the same retention helper. The purge deletes rows older than the
+cutoff; it does not rewrite retained rows.
+
+## Action registry
+
+The actions below are the current audit-log action values emitted by the
+application. `API` means a project-scoped API-key call; those rows have a null
+actor and are shown as System in the audit UI.
+
+### Account, auth, and access
+
+| Action | Actor | Trigger |
+| - | - | - |
+| `account.avatar_updated` | User | The signed-in user sets or clears their avatar URL. |
+| `account.deleted` | User | The signed-in user confirms account deletion. |
+| `account.profile_updated` | User | The signed-in user changes their display name. |
+| `account.session_revoked` | User | The signed-in user revokes one of their other sessions. |
+| `account.sessions_revoked` | User | The signed-in user revokes all other sessions. |
+| `auth.sign_in` | User | Email one-time-code sign-in succeeds. |
+| `audit_log.purge` | System | Retention maintenance deletes audit rows older than the configured cutoff. |
+| `audit_log.view` | User | An authorized user opens a project audit log. |
+| `authorization.{create,read,update,delete,manage}.forbidden` | User | Authorization rejects a project, owner, or resource action. |
+
+### Projects, settings, and onboarding
+
+| Action | Actor | Trigger |
+| - | - | - |
+| `onboarding.matching_scope.set` | User | Onboarding saves the matching-scope choice for a project. |
+| `project.create` | User | A user creates a project in the app. API keys are scoped to one existing project and cannot create projects, so this action always has a user actor. |
+| `project.delete` | User or API | A project is deleted from settings or the REST API. |
+| `project.migration_hold.enable` | User | A manager places a project into migration hold. |
+| `project.migration_hold.release` | User | A manager releases a project from migration hold. |
+| `project.migration_hold.auto_release` | System | Worker maintenance releases an expired migration hold. |
+| `project.update` | User or API | Project name or domain is updated. |
+| `project_defaults.update` | User or API | Project default rank-check settings or default market values are updated. |
+| `sample_data.install` | User | A user installs the sample project and dashboard data. |
+| `sample_data.remove` | User | A user removes a sample project. |
+| `settings.budget_updated` | User | An owner or admin changes the monthly provider budget; the entry records the old and new cap. |
+| `settings.defaults.update` | User | Settings updates default schedule and market values. |
+| `settings.project_details.update` | User | Settings updates project name or domain. |
+| `settings.project_tracking_scope.update` | User | Settings updates project tracking scope. |
+| `settings.rank_check_frequency.update` | User | Settings updates the default rank-check frequency. |
+| `settings.run_check_now` | User | Settings queues manual checks for all project keywords. |
+
+### Keywords, tags, and saved views
+
+| Action | Actor | Trigger |
+| - | - | - |
+| `keyword.add` | User | A user creates or upserts one keyword. |
+| `keyword.batch_add` | User or API | A user or API call creates keywords in a batch. |
+| `keyword.bulk.add_tags` | API | The REST bulk endpoint adds tags to keywords. |
+| `keyword.bulk.delete` | API | The REST bulk endpoint deletes keywords. |
+| `keyword.bulk.remove_tags` | API | The REST bulk endpoint removes tags from keywords. |
+| `keyword.bulk.set_frequency` | API | The REST bulk endpoint updates keyword schedules. |
+| `keyword.bulk.set_target_url` | API | The REST bulk endpoint updates keyword target URLs. |
+| `keyword.bulk_clear_target` | User | The keyword table bulk action clears selected target URLs. |
+| `keyword.bulk_delete` | User | The keyword table bulk action deletes selected keywords. |
+| `keyword.bulk_set_frequency` | User | The keyword table bulk action updates selected keyword schedules. |
+| `keyword.bulk_set_target` | User | The keyword table bulk action updates selected target URLs. |
+| `keyword.bulk_tag` | User | The keyword table bulk action adds tags to selected keywords. |
+| `keyword.csv_export` | User | A user exports keywords as CSV. |
+| `keyword.csv_import` | User | CSV or spreadsheet import creates keywords. |
+| `keyword.delete` | API | The REST keyword delete endpoint deletes one keyword. |
+| `keyword.matrix_add` | User | Matrix add creates keyword, location, and device combinations. |
+| `keyword.update` | User or API | A keyword's text, market, target URL, topic, intent, tags, or schedule is updated. |
+| `keyword_schedule.update` | User | A user updates or creates the schedule override for one keyword. |
+| `saved_view.create` | User | A saved keyword-table view is created. |
+| `saved_view.delete` | User | A saved keyword-table view is deleted. |
+| `tag.create` | User | A project tag is created. |
+| `tag.delete` | User | A project tag is deleted. |
+| `tag.rename` | User | A tag is renamed or merged into an existing tag. |
+
+### Rank checks and worker maintenance
+
+| Action | Actor | Trigger |
+| - | - | - |
+| `rank_check.completed` | System | A worker persists a successful rank check. |
+| `rank_check.deferred` | System | A worker discards a running reservation when rate limits, read-only mode, or budget limits defer execution. |
+| `rank_check.failed` | System | A worker persists a failed rank check. |
+| `rank_check.queue_first` | User | A user queues initial checks for schedulable keywords, or records that no provider is connected. |
+| `rank_check.requested` | API | The async REST check endpoint creates a running check or records scheduler unavailability. |
+| `rank_check.run_now` | User or API | A manual rank check is requested and either queued, completed, or failed. |
+| `rank_check.running` | System | A worker creates or updates the running check reservation. |
+| `rank_check.stale_failed` | System | Maintenance marks stale running checks as failed. |
+
+### Providers and notification channels
+
+| Action | Actor | Trigger |
+| - | - | - |
+| `notification_preferences.update` | User | A user changes notification preferences or delivery-channel toggles. |
+| `provider.connect` | User | A provider connection is created. |
+| `provider.disconnect` | User | A provider connection is removed. |
+| `provider.set_settings` | User | Provider enabled, primary, or priority settings are changed. |
+| `provider.test` | User | A provider connection test succeeds. |
+| `provider.test_failed` | User | A provider connection test fails. |
+| `provider.update` | User | An existing provider connection is reconnected or refreshed. |
+| `provider.update_cost` | User | A provider connection's cost estimate is updated. |
+| `ingest_hook.create` | User | A deploy ingest hook is created. |
+| `ingest_hook.delete` | User | A deploy ingest hook is deleted. |
+| `ingest_hook.disable` | User | A deploy ingest hook is disabled. |
+| `slack_connection.create` | User | A notification-channel connection is installed. |
+| `slack_connection.update` | User | A notification-channel connection is reinstalled or enabled state changes. |
+| `webhook_endpoint.create` | User | A webhook endpoint is created. |
+| `webhook_endpoint.update` | User | A webhook endpoint is updated. |
+
+### Alerts and competitors
+
+| Action | Actor | Trigger |
+| - | - | - |
+| `alert_rule.create` | User | An alert rule is created. |
+| `alert_rule.delete` | User | An alert rule is deleted. |
+| `alert_rule.set_enabled` | User | An alert rule is enabled or paused. |
+| `alert_rule.update` | User | An alert rule's condition, targets, channels, or metadata is updated. |
+| `competitor.add` | User | A managed competitor is added to a project. |
+| `competitor.remove` | User | A managed competitor is removed from a project. |
+| `competitor.rename` | User | A managed competitor label is changed. |
+| `triggered_alert.mark_all_read` | User | All firing alerts in a project are acknowledged. |
+| `triggered_alert.snooze` | User | One triggered alert is snoozed. |
+
+### Signals, reports, and traffic
+
+| Action | Actor | Trigger |
+| - | - | - |
+| `report.weekly_digest_sent` | System | The weekly digest worker sends a project report email. |
+| `signal.ingested` | API or System | A REST API signal ingest or deploy webhook creates a timeline signal. |
+| `signal.note_added` | User | A user adds a manual timeline note. |
+| `signal.note_removed` | User | A user removes a manual timeline note. |
+| `traffic.sync_now` | User | A user starts an immediate analytics traffic sync for a project. |
+
+### Team and API keys
+
+| Action | Actor | Trigger |
+| - | - | - |
+| `api_key.issue` | User or API | An API key is issued from onboarding, settings, or the REST API. |
+| `api_key.regenerate` | User | An API key is revoked and replaced. |
+| `api_key.revoke` | User or API | An API key is revoked. |
+| `team.invite.accept` | User | An invited user accepts a team invite. |
+| `team.invite.create` | User | A manager creates or replaces an invite. |
+| `team.invite.resend` | User | A manager resends an invite with a fresh token. |
+| `team.invite.revoke` | User | A manager revokes a pending invite. |
+| `team.member.remove` | User | A manager removes a project member. |
+| `team.member.role_change` | User | A manager changes a member role. |
+| `team.ownership.transfer` | User | The project owner transfers ownership to another member. |
+
+### Migration and import
+
+| Action | Actor | Trigger |
+| - | - | - |
+| `cloud_import.advance` | User | A manager advances an import job state. |
+| `cloud_import.begin` | System | A migration-token import starts processing. |
+| `cloud_import.create` | System | A valid migration token creates or starts an import job. |
+| `cloud_import.session_create` | System | A chunked import session is created. |
+| `cloud_import.done` | System | An import finishes successfully. |
+| `cloud_import.fail` | System | An import fails after processing starts. |
+| `cloud_import.export_package` | User | A user exports a cloud-import package. |
+| `migration_token.consume` | System | A valid migration token is consumed by an import request. |
+| `migration_token.mint` | User | A manager creates a migration token and idle import job. |
+| `migration_token.regenerate` | User | A manager replaces the active migration token. |
+| `migration_token.revoke` | User | A manager revokes the active migration token. |
+
+## Related lifecycle events
+
+These related lifecycle events are not recorded as audit-log rows:
+
+| Name | Current behavior |
+| - | - |
+| `alert.{conditionType}` | Alert evaluation creates `TriggeredAlert` rows and sends `alert.fired` notifications for `threshold`, `change_pct`, `position_drop`, `downtrend`, `enters_top_n`, `exits_top_n`, `competitor_overtake`, `serp_feature`, and `url_mismatch`; it does not write `alert.*` audit actions. |

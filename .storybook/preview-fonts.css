@@ -1,0 +1,22 @@
+@font-face {
+  font-family: "Geist Storybook";
+  src: url("../node_modules/geist/dist/fonts/geist-sans/Geist-Variable.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist Mono Storybook";
+  src: url("../node_modules/geist/dist/fonts/geist-mono/GeistMono-Variable.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+:root {
+  --font-geist-sans: "Geist Storybook";
+  --font-geist-mono: "Geist Mono Storybook";
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}

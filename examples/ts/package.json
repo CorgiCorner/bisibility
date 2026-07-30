@@ -1,0 +1,16 @@
+{
+  "name": "@bisibility/example-ts-quickstart",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "alerts": "node --experimental-strip-types alerts.ts",
+    "error-handling": "node --experimental-strip-types error-handling.ts",
+    "quickstart": "node --experimental-strip-types quickstart.ts"
+  },
+  "dependencies": {
+    "@bisibility/sdk": "^0.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22"
+  }
+}

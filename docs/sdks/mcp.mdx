@@ -1,0 +1,76 @@
+---
+title: "MCP server"
+description: "Connect an MCP-compatible AI client to the Bisibility API."
+---
+
+An MCP server lets an MCP-compatible AI client call Bisibility operations as
+tools instead of composing HTTP requests itself.
+
+## Install
+
+```bash
+npm install @bisibility/mcp
+```
+
+## Authenticate
+
+The server reads the API root and credential from its environment:
+
+```bash
+export BISIBILITY_API_KEY="your-api-key"
+export BISIBILITY_BASE_URL="https://your-host.example/api/v1"
+```
+
+It accepts project API keys and
+[personal access tokens](/api/personal-access-tokens).
+
+## Connect a client
+
+The runnable quickstart starts the package's stdio server, connects a client,
+checks the advertised tools, and makes the first
+`list_projects` call:
+
+{/* docs-example:start mcp-client-usage */}
+{/* Generated from examples/mcp/quickstart.mjs (region client-usage). Do not edit. */}
+```javascript
+const launch = serverLaunch();
+const transport = new StdioClientTransport({
+  args: launch.args,
+  command: launch.command,
+  env: {
+    ...process.env,
+    BISIBILITY_API_KEY: requiredEnv("BISIBILITY_API_KEY"),
+    BISIBILITY_BASE_URL: requiredEnv("BISIBILITY_BASE_URL"),
+  },
+});
+const client = new Client({ name: "bisibility-mcp-example", version: "0.1.0" });
+
+try {
+  await client.connect(transport);
+
+  console.log("Listing MCP tools");
+  const tools = await client.listTools();
+  const names = new Set(tools.tools.map((tool) => tool.name));
+  for (const toolName of expectedTools) {
+    assert(names.has(toolName), `Missing MCP tool ${toolName}.`);
+  }
+  assertToolParity(tools.tools, await listHttpTools());
+
+  console.log("Calling list_projects");
+  const result = await client.callTool({
+    arguments: {},
+    name: "list_projects",
+  });
+```
+{/* docs-example:end mcp-client-usage */}
+
+That tool performs the documented
+[`GET /projects`](/api/projects#list-projects) read.
+
+## Next steps
+
+The [SDK method reference](/sdks/methods) maps common workflows to MCP tool
+names.
+
+The [MCP server source](https://github.com/CorgiCorner/bisibility-mcp) lists the
+complete tool surface.

@@ -1,0 +1,36 @@
+---
+title: "Manage teams and roles"
+description: "Invite teammates, assign roles, transfer ownership, and recover from invitation problems."
+---
+
+Open **Settings → Team** to manage project membership.
+
+| UI role | Stored role | Main access |
+| - | - | - |
+| Owner | `owner` | All access, billing, project deletion, and ownership transfer. |
+| Admin | `admin` | Providers, API keys, team management, keywords, alerts, and exports. |
+| Editor | `member` | Keywords, alerts, dashboards, and exports. |
+| Viewer | `viewer` | Read-only dashboards and exports. |
+
+The owner is unique. Only the owner can promote or demote the admin tier and
+transfer ownership. The application also prevents removing or demoting the last
+remaining owner/admin manager.
+
+## Invite a teammate
+
+1. Select **Invite member**, enter the teammate's email, and choose a role.
+2. Send the invitation or copy the generated link.
+3. The recipient signs in using exactly the invited email and accepts the link.
+
+Invitations expire after seven days. Resending replaces the token and restarts
+the expiry period; revoking deletes the pending invite. A token is stored only as
+a hash.
+
+Production invitation delivery requires a configured
+[email provider](/guides/email) with a verified sender. Without one,
+non-production environments log the invite link for local testing.
+Set `SITE_URL` or `BETTER_AUTH_URL` correctly so generated links use the public
+origin.
+
+All invitation, role, removal, and ownership changes are written to the audit
+log. API inventory is under [Team](/api/team).

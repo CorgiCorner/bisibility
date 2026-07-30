@@ -1,0 +1,44 @@
+---
+title: "Track competitors"
+description: "Add managed competitor domains and compare share of voice and keyword ranks."
+---
+
+Competitor reporting is derived from completed rank-check payloads. Add tracked
+keywords and run checks before expecting share-of-voice or head-to-head data.
+
+## Add competitors
+
+1. Open **Competitors**.
+2. Select **Add competitor** and enter a domain with an optional display label.
+3. Add suggested domains when they match real organic competitors.
+
+Domains are normalized and unique per project. Renaming changes only the label;
+removing a competitor does not delete keywords or rank history.
+
+## Read the report
+
+Choose a market made from location, device, and Google engine. Unavailable
+location/device combinations stay visible but disabled, and the default market
+is the one with the most completed checks. The report shows:
+
+- share of voice across keywords where comparable organic ranks exist;
+- shared keyword count for each managed competitor;
+- a head-to-head rank table and gap;
+- filters for keyword tag and position range plus explicit keyword exclusions;
+- CSV export for the selected market and filters.
+
+Suggestions use compact organic snapshots from all tracked keywords. With the
+default **Stop checks at first domain match** setting, each snapshot ends when
+the tracked domain is found; turn the setting off in project defaults when a
+complete snapshot through the configured depth matters more than provider cost.
+The selected market is queried without a silent keyword cap. Providers that
+omit organic result details cannot contribute competitor-domain observations.
+CSV generation happens only when requested and always includes every managed
+competitor, even when the table initially collapses lower-ranked columns behind
+the **+N more** control.
+
+Use separate competitors for domains that belong to the same company when you
+need domain-level comparison; bisibility does not merge them into an organization.
+
+API routes are listed under
+[Competitors](/api/competitors).

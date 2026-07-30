@@ -1,0 +1,315 @@
+---
+title: "Keywords"
+description: "Create, list, update, delete, and bulk mutate tracked keywords."
+---
+
+Keywords belong to a project and identify a search phrase, location, device, and
+target URL.
+
+## Keyword resource
+
+```json
+{
+  "id": "kw_a00000000000000000000000",
+  "project_id": "prj_a00000000000000000000000",
+  "text": "rank tracker api",
+  "country": "United States",
+  "location": "United States",
+  "device": "desktop",
+  "target_url": "https://example.com/rank-tracker",
+  "topic": "API",
+  "intent": "commercial",
+  "latest_position": 4,
+  "previous_position": 7,
+  "ranking_url": "https://example.com/rank-tracker",
+  "tags": ["api"],
+  "schedule": {
+    "frequency": "daily",
+    "cron_expression": null,
+    "timezone": "UTC",
+    "jitter_minutes": 60,
+    "last_checked_at": "2026-06-28T10:00:00.000Z",
+    "next_check_at": "2026-06-29T10:00:00.000Z"
+  },
+  "created_at": "2026-06-28T09:00:00.000Z",
+  "updated_at": "2026-06-28T10:00:00.000Z"
+}
+```
+
+`device` is `desktop` or `mobile`. `frequency` is `paused`, `manual`, `daily`,
+`weekly`, `monthly`, or `custom_cron`.
+
+## List project keywords
+
+```http
+GET /api/v1/projects/{project_id}/keywords
+Authorization: Bearer <api_key>
+```
+
+Query parameters:
+
+| Query | Description |
+| - | - |
+| `limit` | Page size. Defaults to `50`, maximum `200`. |
+| `cursor` | Pagination cursor. |
+| `search` or `q` | Case-insensitive keyword text search. |
+| `filter[device]` or `device` | `desktop` or `mobile`. |
+| `filter[country]` or `country` | Matches canonical country names and country-name aliases case-insensitively. |
+| `filter[tag]` or `tag` | Case-insensitive exact tag match. |
+| `filter[topic]` or `topic` | Case-insensitive exact topic match. |
+| `filter[intent]` or `intent` | Case-insensitive exact intent match. |
+| `filter[position_gt]` or `position_gt` | Match keywords with a rank check position greater than this number. |
+| `filter[position_lt]` or `position_lt` | Match keywords with a rank check position less than this number. |
+| `sort` | `created_at`, `-created_at`, `keyword`, `-keyword`, `text`, `-text`, `updated_at`, `-updated_at`. |
+
+Response:
+
+```json
+{
+  "data": [],
+  "meta": { "next_cursor": null }
+}
+```
+
+## Match project keyword texts
+
+```http
+POST /api/v1/projects/{project_id}/keyword-matches
+Authorization: Bearer <api_key>
+Content-Type: application/json
+
+{
+  "texts": [" Headless CMS ", "seo tooling"]
+}
+```
+
+Use this read-shaped POST to look up up to 50 exact tracked texts across their
+markets. Each request text is trimmed and lowercased before matching.
+`matched_text` contains that normalized value, so use it to join each response
+row to the normalized request. `text` remains the stored keyword text and can
+differ in case and whitespace.
+
+At most 100 market rows are returned for each `matched_text`. The response
+always includes `meta.truncated_texts`; a normalized text listed there has more
+matching markets and its returned rows are partial.
+
+```json
+{
+  "data": [
+    {
+      "keyword_id": "kw_a00000000000000000000000",
+      "matched_text": "headless cms",
+      "text": "Headless CMS",
+      "market": {
+        "country_code": "US",
+        "location": "Austin, Texas, United States",
+        "location_key": "US/Texas/Austin",
+        "device": "desktop"
+      },
+      "latest_position": 3,
+      "previous_position": 5
+    }
+  ],
+  "meta": { "truncated_texts": [] }
+}
+```
+
+## Add keywords
+
+```http
+POST /api/v1/projects/{project_id}/keywords
+Authorization: Bearer <api_key>
+Content-Type: application/json
+Idempotency-Key: add-keywords-001
+```
+
+The request body may be one keyword object, an array of keyword objects, or an
+object with a `keywords` array. String entries in `keywords` are converted to
+`{ "keyword": "..." }`.
+
+```json
+{
+  "keywords": [
+    {
+      "keyword": "rank tracker api",
+      "target_url": "https://example.com/rank-tracker",
+      "topic": "API",
+      "intent": "commercial",
+      "device": "desktop",
+      "country": "United States",
+      "location_key": "US/Texas/Austin",
+      "tags": ["api"],
+      "schedule": {
+        "frequency": "daily",
+        "cron_expression": null,
+        "timezone": "UTC",
+        "jitter_minutes": 60
+      }
+    }
+  ]
+}
+```
+
+Request fields:
+
+| Field | Description |
+| - | - |
+| `keyword` | Required. Search phrase, 1 to 180 characters. |
+| `target_url` | Absolute URL, path, `null`, or omitted. |
+| `topic` | Optional topic label, 1 to 80 characters, `null`, or omitted. |
+| `intent` | Optional intent label, 1 to 80 characters, `null`, or omitted. |
+| `device` | Optional. Defaults to `desktop`. |
+| `country` | Optional supported SERP country. Defaults to the project's default market, which falls back to United States for new projects. |
+| `city` | Optional city name resolved against the selected country. Unresolved cities fall back to country-level tracking with a warning. |
+| `location_key` | Optional canonical country, region, or city key such as `US/Texas/Austin`. Takes precedence over `country`, `location`, and `city`. |
+| `location` | Alias for `country`; prefer `country`. When both are sent, `location` wins. |
+| `tags` | Optional. Up to 12 tags, each 1 to 48 characters. |
+| `schedule` | Optional schedule object. |
+
+Within `schedule`, `jitter_minutes` must be a whole number from `0` to `120`.
+Omitting it uses `60`; `0` disables jitter. Use `cron_expression` with
+`frequency: "custom_cron"`. Daily and weekly schedules use a stable,
+keyword-specific interval phase, so `timezone` does not move their phase.
+`timezone` anchors monthly and custom cron schedules to wall-clock time.
+
+Response status is `201` when at least one keyword is created. Duplicate keyword,
+location, and device combinations are skipped. If location resolution degrades,
+the response includes per-result `warning` values and a top-level `warnings` array
+with unique warning messages.
+
+```json
+{
+  "created": 1,
+  "skipped": 0,
+  "results": [
+    {
+      "status": "created",
+      "keyword": {
+        "id": "kw_a00000000000000000000000",
+        "project_id": "prj_a00000000000000000000000",
+        "text": "rank tracker api",
+        "country": "United States",
+        "location": "United States",
+        "device": "desktop",
+        "target_url": "https://example.com/rank-tracker",
+        "topic": "API",
+        "intent": "commercial",
+        "latest_position": null,
+        "previous_position": null,
+        "ranking_url": null,
+        "tags": ["api"],
+        "schedule": null,
+        "created_at": "2026-06-28T10:00:00.000Z",
+        "updated_at": "2026-06-28T10:00:00.000Z"
+      },
+      "warning": "Could not resolve \"Austin\" in United States; tracking at country level."
+    }
+  ],
+  "warnings": ["Could not resolve \"Austin\" in United States; tracking at country level."]
+}
+```
+
+## Get keyword
+
+```http
+GET /api/v1/keywords/{id}
+Authorization: Bearer <api_key>
+```
+
+Returns one keyword resource or `404`.
+
+## Update keyword
+
+```http
+PATCH /api/v1/keywords/{id}
+Authorization: Bearer <api_key>
+Content-Type: application/json
+Idempotency-Key: update-keyword-001
+```
+
+Request body:
+
+```json
+{
+  "target_url": "https://example.com/docs/rank-tracker",
+  "topic": "Docs",
+  "intent": "informational",
+  "tags": ["docs", "api"],
+  "frequency": "weekly"
+}
+```
+
+Patch fields are optional:
+
+| Field | Description |
+| - | - |
+| `keyword` | New keyword text. |
+| `target_url` | Absolute URL, path, `null`, or omitted. |
+| `topic` | Topic label, 1 to 80 characters, `null`, or omitted. |
+| `intent` | Intent label, 1 to 80 characters, `null`, or omitted. |
+| `device` | `desktop` or `mobile`. |
+| `country` | Supported SERP country. |
+| `city` | City name resolved against the selected country. |
+| `location_key` | Canonical country, region, or city key. |
+| `location` | Alias for `country`; prefer `country`. When both are sent, `location` wins. |
+| `tags` | Replaces the full tag set. |
+| `frequency` | Sets a default schedule with timezone `UTC`, jitter `60`, and no cron expression. |
+| `schedule` | Full schedule object. Overrides `frequency` if present. |
+
+Within `schedule`, `jitter_minutes` accepts the inclusive range `0` to `120`.
+Custom schedules use `cron_expression`. Daily and weekly schedules use a stable,
+keyword-specific interval phase independent of `timezone`; monthly and custom
+cron schedules use `timezone` as their wall-clock anchor.
+
+Returns the updated keyword resource.
+
+## Delete keyword
+
+```http
+DELETE /api/v1/keywords/{id}
+Authorization: Bearer <api_key>
+Idempotency-Key: delete-keyword-001
+```
+
+Deletes the keyword and returns the deleted keyword resource.
+
+## Bulk mutate keywords
+
+```http
+POST /api/v1/keywords/bulk
+Authorization: Bearer <api_key>
+Content-Type: application/json
+Idempotency-Key: bulk-keywords-001
+```
+
+Supported operations:
+
+| Operation | Required fields |
+| - | - |
+| `add_tags` | `keyword_ids`, `tags` |
+| `remove_tags` | `keyword_ids`, `tags` |
+| `set_target_url` | `keyword_ids`, `target_url` |
+| `set_frequency` | `keyword_ids`, `frequency` or `schedule` |
+| `delete` | `keyword_ids` |
+
+Example:
+
+```json
+{
+  "operation": "add_tags",
+  "keyword_ids": ["kw_a00000000000000000000000", "kw_b00000000000000000000000"],
+  "tags": ["launch"]
+}
+```
+
+Response:
+
+```json
+{
+  "operation": "add_tags",
+  "results": [
+    { "keyword_id": "kw_a00000000000000000000000", "status": "updated" },
+    { "keyword_id": "kw_b00000000000000000000000", "status": "updated" }
+  ]
+}
+```

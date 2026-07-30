@@ -1,0 +1,698 @@
+---
+title: "Self-hosting"
+description: "Run bisibility with Docker, Railway, Fly.io, Vercel, or your own Node.js host."
+---
+
+bisibility is a Next.js app with PostgreSQL for durable data. Redis or Valkey
+backs API rate limiting, idempotency, and realtime notification fan-out. Rank
+checks use your own connected SERP provider credentials.
+
+Read the [FAQ](https://bisibility.com/faq) for a concise comparison of Cloud
+beta and self-hosting, provider coverage, costs, and data boundaries.
+
+**Read the deployment overview:** The public repository opens with the first
+public release. The options below describe the supported deployment paths, but
+clone and one-click deploy targets are not available before that release.
+
+## Choose your deployment
+
+Start with the path that matches what you need now. You can add scheduled checks
+later without changing the rank history already stored in PostgreSQL.
+
+| Goal | Start here | What it includes |
+| - | - | - |
+| Try a local demo | [Docker](#docker) | Web app, PostgreSQL, Redis or Valkey, and demo data. |
+| Run a production Compose stack | [Docker](#docker) | The same core services with your own secrets and provider account. |
+| Add scheduled checks | [Docker scheduled profile](#docker) | Temporal Server, Temporal Web UI, and the worker. |
+| Deploy web and worker separately | [Production topology](#production-topology) | Independent web and worker processes that share PostgreSQL, Redis, and Temporal. |
+| Use a hosting platform | [Railway](#railway), [Fly.io](#flyio), or [Vercel](#vercel) | Platform-specific steps and limits. |
+
+## Before you deploy
+
+| Requirement | When you need it |
+| - | - |
+| Node.js 22+ | Local builds, the app, and the CLI. |
+| PostgreSQL | Every deployment. Prisma migrations create the app schema. |
+| Redis or Valkey | Every deployment. It backs rate limits, idempotency, and realtime notifications. |
+| SERP provider | Before the first real rank check. See [Integrations](/integrations). |
+| Temporal + worker | Scheduled checks only. Manual checks work without them. |
+
+The platform links below create only part of the final setup. Review every
+generated resource, set secrets, and confirm migrations before serving
+production traffic.
+
+## Production topology
+
+Railway and Fly.io can each run the complete bisibility stack as
+multiple services on one platform:
+
+| Service | Process or image | Always required |
+| - | - | :-: |
+| Web/API | Repository `Dockerfile` | Yes |
+| Migration job | Automatic public-ID upgrade runner using the web image | Yes |
+| PostgreSQL | Managed database | Yes |
+| Redis or Valkey | Managed service or compatible endpoint | Yes |
+| Temporal worker | Repository `Dockerfile.worker` | For scheduled checks |
+| Temporal Server | Self-hosted Temporal services or Temporal Cloud | For scheduled checks |
+
+The web app and worker share one Prisma schema, so deploy both from the same
+immutable release whenever migrations are applied. The public ID v3 cutover
+specifically requires the web app first and identifies both runtimes with the
+same exact 40-character commit SHA, not a tag or branch name. Follow the
+[same-version upgrade rule](/guides/operations#keep-web-and-worker-on-the-same-version)
+to avoid version skew during split deployments.
+The one-time public ID v3 release also uses a fail-closed database write gate;
+follow the
+[public ID v3 cutover steps](/guides/operations#one-time-public-id-v3-cutover)
+before starting its worker.
+
+### Client IP behind a proxy
+
+The app never guesses the client address from a header a client can set. Point
+`BISIBILITY_CLIENT_IP_HEADER` at a header your own proxy controls.
+
+With nginx or Caddy in front of the app, have the proxy overwrite a dedicated
+header:
+
+```nginx
+proxy_set_header X-Real-IP $remote_addr;
+```
+
+then set `BISIBILITY_CLIENT_IP_HEADER=x-real-ip`. Any header the proxy
+overwrites works the same way, including a CDN header such as
+`cf-connecting-ip`.
+
+Behind a CDN that appends to `x-forwarded-for`, set
+`BISIBILITY_CLIENT_IP_HEADER=x-forwarded-for` and `BISIBILITY_CLIENT_IP_XFF_DEPTH`
+to the number of entries your own infrastructure appends at the end of the
+chain (`1` for a single edge). The address is counted from the right, so a
+client cannot move itself into that position by sending its own
+`x-forwarded-for` prefix. A depth larger than your real chain makes the app read
+a client-supplied entry, so verify the value before relying on it.
+
+<Warning>
+Do not point `BISIBILITY_CLIENT_IP_HEADER` at `x-forwarded-for` unless a proxy
+you control appends to it. The Next.js server fills `x-forwarded-for` from the
+connection only when the client did not send one, and leaves a client-supplied
+value untouched, so with no proxy in front every caller can choose its own
+rate-limit bucket by sending the header. A proxy that appends (`nginx` with
+`$proxy_add_x_forwarded_for`) or overwrites (`X-Real-IP`) removes that.
+</Warning>
+
+Without one of these, per-IP limiting is not possible inside the app: anonymous
+API callers share a single bucket, sign-in rate limiting falls back to one
+shared bucket per path, and audit entries record no source IP. Enforce the
+anonymous limit at the edge instead (a rate rule on your CDN or WAF, or
+`limit_req` in nginx); the proxy knows the peer address directly and needs no
+configuration to trust it.
+
+“Complete stack” does not have to mean running Temporal yourself. The web app
+and worker can use Temporal Cloud while PostgreSQL, Redis, and the application
+processes remain on Railway or Fly.io. Running Temporal Server on the
+same platform is also possible, but it adds Temporal persistence, upgrades,
+backups, and monitoring to your operational responsibilities.
+
+## Docker
+
+> **Availability:** The public repository opens with the first public release.
+> Until then, read the deployment overview above; the clone command is not yet available.
+
+```bash
+git clone https://github.com/CorgiCorner/bisibility.git bisibility
+cd bisibility
+./scripts/dev/bootstrap-local.sh
+docker compose up --build
+```
+
+Open `http://localhost:3000` and sign in with the
+[demo login](/quickstart#demo-login) enabled by the two `DEMO_*` variables
+above. For real deployments, remove both variables and configure an
+[email provider](/guides/email) instead.
+
+The default Docker stack starts PostgreSQL, Redis/Valkey, a one-shot
+`db-migrations` service, and the web app. The migration service runs the fixed
+`npm run db:migrate` entrypoint, which applies the full Prisma migration tree
+and then any blocking data migrations. No separate operator migration job is
+required. The Node server, Temporal worker, and `/api/v1/health` require every blocking data
+migration to have a finished row with its exact manifest checksum. When
+`DEMO_FIXED_OTP=1`, the migration service also seeds demo data for the local
+dashboard.
+
+This default mode supports manual rank checks. Scheduled checks require Temporal
+and the worker:
+
+```bash
+docker compose --profile scheduled up --build
+```
+
+That profile adds a Temporal server, Temporal Web UI on `http://localhost:8233`,
+and the worker built from `Dockerfile.worker`.
+
+### Use the CLI with this instance
+
+Install the CLI on the workstation where you use Bisibility:
+
+```bash
+npm install -g @bisibility/cli
+```
+
+Configure both URLs before browser sign-in. `baseUrl` is the REST API root;
+`cloudUrl` is the app origin used for OAuth discovery and consent:
+
+```bash
+bisibility config set baseUrl https://rank.example.com/api/v1
+bisibility config set cloudUrl https://rank.example.com
+bisibility auth login --name "workstation-cli" --scope admin --expires 90
+```
+
+The CLI opens the instance's consent page in the default browser and prints the
+same URL as a fallback. After you approve the request, the browser returns to a
+temporary loopback listener on the workstation and the CLI stores the
+reveal-once personal access token.
+
+Verify the instance, identity, and available projects:
+
+```bash
+bisibility auth status
+bisibility projects list
+bisibility projects use example.com
+```
+
+The public origin must match `SITE_URL` and `BETTER_AUTH_URL`, and the proxy must
+route both `/api/auth/*` and `/api/v1/*` to the app. Run browser login on a
+workstation with a browser. For a headless host, create a project API key or
+personal access token in your instance and provide it through the environment:
+
+```bash
+export BISIBILITY_BASE_URL=https://rank.example.com/api/v1
+export BISIBILITY_CLOUD_URL=https://rank.example.com
+export BISIBILITY_API_KEY=bsb_key_live_...
+bisibility auth status
+```
+
+Environment variables take precedence over the CLI config file. See
+[Authentication](/authentication) for choosing between project API keys and
+personal access tokens.
+
+### Change the published ports
+
+The stack publishes the app on `3000`, PostgreSQL on `5432`, and Redis/Valkey on
+`6379`. When a port is already taken, override it in `.env`:
+
+```bash
+APP_HOST_PORT=3100
+POSTGRES_HOST_PORT=5433
+REDIS_HOST_PORT=6381
+```
+
+A new app port also has to be set in `SITE_URL` and `BETTER_AUTH_URL`
+(`http://localhost:3100` for the example above). Both are used for auth
+callbacks and absolute links, so a mismatch breaks sign-in. If you use Google
+sign-in or Search Console, the redirect URIs registered with Google must carry
+the same port too.
+
+To run more than one instance on one machine, give each its own ports and its
+own Compose project name (`docker compose -p bisibility-staging up --build`).
+The project name namespaces the volumes, so every instance keeps a separate
+database.
+
+### Stop or reset the stack
+
+```bash
+docker compose down      # stop the containers, keep the data
+docker compose down -v   # stop and delete the volumes, including the database
+```
+
+`down` preserves the PostgreSQL volume, so the next `up` continues with the same
+data and applies only new migrations. `down -v` cannot be undone; use it when
+you want a clean install.
+
+## Examples
+
+Runnable API, SDK, CLI, and MCP examples live in
+[examples/README.md](https://github.com/CorgiCorner/bisibility/blob/main/examples/README.md).
+Deploy webhook examples live in
+[examples/deploy-webhooks](https://github.com/CorgiCorner/bisibility/tree/main/examples/deploy-webhooks).
+
+## Railway
+
+1. Start from the [Railway deploy link](https://railway.com/new/template?template=https%3A%2F%2Fgithub.com%2FCorgiCorner%2Fbisibility).
+2. Add a PostgreSQL service.
+3. Add a Redis or Valkey service and configure `REDIS_URL`.
+4. Set `DATABASE_URL` and `DIRECT_URL` to the PostgreSQL private connection URL.
+5. Set the required environment variables. The root `railway.json` selects the
+   web Dockerfile, healthcheck, migration command, and restart policy.
+6. For scheduled checks, create a second service from the same repository, set
+   its config file path to `/deploy/railway-worker.json`, and share the database,
+   Redis, and Temporal variables with it.
+7. Point the app and worker at either Temporal Cloud or a self-hosted Temporal
+   deployment reachable inside the Railway private network.
+
+Use the Railway-provided app URL for `SITE_URL` and `BETTER_AUTH_URL`, or set
+both to your custom domain after DNS is configured. `SITE_URL` is the primary
+origin for metadata, sitemap, robots.txt, social images, OAuth redirects, and
+auth callbacks.
+
+## Fly.io
+
+1. Create separate web and worker apps:
+
+   ```bash
+   fly apps create your-bisibility-web
+   fly apps create your-bisibility-worker
+   ```
+
+2. Provision PostgreSQL and a Redis-compatible service, or attach managed
+   endpoints reachable from the Fly private network.
+3. Set the required secrets on both apps. The web app also needs its public
+   `SITE_URL` and `BETTER_AUTH_URL`.
+4. Deploy the checked-in manifests:
+
+   ```bash
+   fly deploy --app your-bisibility-web --config deploy/fly.web.toml
+   fly deploy --app your-bisibility-worker --config deploy/fly.worker.toml
+   ```
+
+5. The web manifest runs `npm run db:migrate` as a Fly release command. It
+   applies the full Prisma tree, runs blocking data migrations, and checks
+   `/api/v1/health` before routing traffic.
+   Fly runs this command in a temporary machine without attached volumes and
+   stops the deployment on a nonzero exit. The manifest extends Fly's default
+   five-minute release-command timeout to 30 minutes for blocking migrations.
+6. Connect both apps to Temporal Cloud, or operate Temporal as
+   separate Fly apps with persistent storage.
+
+Keeping the worker separate from the web process allows independent scaling and
+prevents a web deployment from interrupting scheduled work.
+
+## Vercel
+
+1. Start from the [Vercel clone link](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FCorgiCorner%2Fbisibility).
+2. Attach a PostgreSQL database.
+3. Configure a Redis or Valkey endpoint.
+4. Set the required environment variables.
+5. Keep preview and build jobs migration-free. Do not add a `vercel.json`
+   `buildCommand` that runs database migrations.
+
+For production, use a staged operations flow from a trusted environment:
+
+```bash
+vercel --prod --skip-domain
+npm run db:migrate
+curl --fail https://staged.example.com/api/v1/health
+vercel promote https://staged.example.com
+```
+
+Set the production `DIRECT_URL` and `DATABASE_URL` only for the separate
+`npm run db:migrate` step. Replace `https://staged.example.com` with the
+unaliased deployment URL printed by the first command. Promote only after the
+migration and staged smoke check succeed. Vercel preview and build execution
+must not run migrations.
+
+Vercel is suitable for the web app, REST API, and manual checks. It cannot host
+the long-lived `npm run temporal:worker` process. For scheduled checks, host the
+worker image from `Dockerfile.worker` on Railway, Fly.io, or a VPS. The
+web app and worker can connect to Temporal Cloud or to your own
+network-reachable Temporal Server.
+
+## Temporal Server or Temporal Cloud
+
+Set the same address, namespace, and task queue on the web app and worker.
+
+For a self-hosted plaintext Temporal Server on a private network:
+
+```dotenv
+TEMPORAL_ADDRESS=temporal.internal:7233
+TEMPORAL_NAMESPACE=default
+TEMPORAL_TASK_QUEUE=rank-checks
+```
+
+For Temporal Cloud:
+
+```dotenv
+TEMPORAL_ADDRESS=your-namespace.your-account.tmprl.cloud:7233
+TEMPORAL_NAMESPACE=your-namespace.your-account
+TEMPORAL_TASK_QUEUE=rank-checks
+TEMPORAL_API_KEY=your-api-key
+```
+
+`TEMPORAL_API_KEY` automatically enables TLS. Set `TEMPORAL_TLS=true` when a
+TLS-enabled self-hosted endpoint does not use an API key. Do not expose the API
+key through any `NEXT_PUBLIC_` variable.
+
+## Required environment variables
+
+| Variable | Required | Description |
+| - | :-: | - |
+| `DATABASE_URL` | Yes | Runtime PostgreSQL connection used by the app. |
+| `DIRECT_URL` | Yes | Direct PostgreSQL connection used by Prisma migrations. |
+| `REDIS_URL` | Yes | Redis or Valkey connection URL for rate limiting, idempotency, and realtime notifications. |
+| `SITE_URL` | Yes | Primary public app URL used for metadata, sitemap, robots.txt, generated images, OAuth redirects, and auth callbacks. |
+| `BETTER_AUTH_URL` | Yes | Public app URL used by authentication callbacks and cookies. |
+| `BETTER_AUTH_SECRET` | Yes | Secret used to sign auth state. |
+| `BISIBILITY_SECRETS_KEY` | Yes | Base64-encoded 32-byte key for encrypting provider credentials. |
+| `DEPLOYMENT_MODE` | No | Use `self-host` for self-hosted deployments. |
+| `LEGAL_TERMS_URL` | No | Your terms URL, linked from the sign-in consent line. |
+| `LEGAL_PRIVACY_URL` | No | Your privacy policy URL, linked from the sign-in consent line. |
+
+Both legal variables are optional and empty by default. Your instance runs under
+your own terms and privacy policy, so the sign-in screen shows no consent line
+until you point these at your documents.
+
+Generate `BETTER_AUTH_SECRET` and `BISIBILITY_SECRETS_KEY` with:
+
+```bash
+openssl rand -base64 32
+```
+
+<Warning>
+Keep both values for the lifetime of the instance and back them up with your
+other secrets. Replacing `BETTER_AUTH_SECRET` signs every user out. Replacing
+`BISIBILITY_SECRETS_KEY` leaves the provider credentials already stored in the
+database undecryptable, and every connected provider has to be reconnected by
+hand.
+</Warning>
+
+## Optional environment variables
+
+| Variable | Purpose |
+| - | - |
+| `DEMO_FIXED_OTP` | Set to `1` to enable the throwaway [demo login](/quickstart#demo-login) on local installs. |
+| `DEMO_INSTANCE_INSECURE_AUTH_ACK` | Required acknowledgement when `DEMO_FIXED_OTP=1` runs in the production Docker image. Never set it for real users or data. |
+| `EMAIL_PROVIDER` | Transactional email provider: `resend`, `ses`, or `smtp`. Required for any email delivery. Setup guide: [Email delivery](/guides/email). |
+| `EMAIL_FROM` | Verified sender for account sign-in and notification email. |
+| `EMAIL_ALERTS_FROM` | Optional dedicated sender for ranking alerts. Falls back to `EMAIL_FROM`. |
+| `EMAIL_DAILY_BUDGET_TRANSACTIONAL` | Per-recipient UTC-day budget for sign-in codes, team invites, and waitlist notifications. Defaults to `1000`. |
+| `EMAIL_DAILY_BUDGET_BULK` | Independent per-recipient UTC-day budget for alert email and weekly reports. Defaults to `1000`. |
+| `RESEND_API_KEY` | Resend API key; required when `EMAIL_PROVIDER=resend`. |
+| `SES_REGION`, `SES_CONFIGURATION_SET` | Amazon SES region (falls back to `AWS_REGION`) and optional SESv2 configuration set; used when `EMAIL_PROVIDER=ses`. Credentials come from the standard AWS SDK chain. |
+| `SMTP_URL` | SMTP connection URL (`smtp://user:pass@host:port` or `smtps://...`); required when `EMAIL_PROVIDER=smtp`. |
+| `NEXT_PUBLIC_LOGODEV_TOKEN` | Optional logo.dev token for provider and competitor logo images. |
+| `SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `NEXT_PUBLIC_SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`, `NEXT_PUBLIC_SENTRY_RELEASE`, `SENTRY_TRACES_SAMPLE_RATE`, `NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE`, `SENTRY_AUTH_TOKEN`, `SENTRY_ORG` | Optional Sentry error monitoring. The auth token and org are build-time only and enable source map uploads to the configured project slug (`bisibility` by default; change `next.config.ts` if you use a different slug). |
+| `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | GitHub social sign-in. |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google social sign-in and Google Search Console / GA4 connections. |
+| `SLACK_CLIENT_ID`, `SLACK_CLIENT_SECRET` | Slack alert channel installation (planned feature - not yet exposed in the app UI). |
+| SERP provider fallback credentials | Optional environment fallbacks for provider credentials normally connected in the app. Variable names are listed per provider in [Integrations](/integrations). |
+| `TEMPORAL_ADDRESS`, `TEMPORAL_NAMESPACE`, `TEMPORAL_TASK_QUEUE` | Temporal connection settings shared by the web app and worker. Docker's scheduled profile sets the worker address to `temporal:7233`. |
+| `TEMPORAL_API_KEY` | Temporal Cloud API key. When set, TLS is enabled automatically. |
+| `WORKER_SCHEMA_GUARD` | Worker/database migration guard: `enforce` (default) blocks a worker whose bundled schema is older than the database, `warn` reports drift without blocking, and `off` skips the check. |
+| `TEMPORAL_TLS` | Explicitly enable or disable TLS for a Temporal endpoint. Usually omitted for local Temporal and Temporal Cloud. |
+| `AUDIT_RETENTION_DAYS`, `AUDIT_IP_HMAC_SECRET`, `APP_VERSION` | Audit retention, optional source-IP HMAC hashing, and an audit version label. |
+| `RANK_CHECK_SCHEDULER_MODE` | Exclusive automatic scheduler owner: `legacy` (default) runs the reconciler and per-keyword Schedules, `cutover` pauses both owners while allowing state healing, and `dispatcher` runs only the due-work dispatcher. Empty means `legacy`; any other non-empty value fails closed. Set the same value on the app and worker. |
+| `RANK_CHECK_RECONCILER_ENABLED`, `RANK_CHECK_DISPATCHER_ENABLED` | Deprecated D1 compatibility fallback used only when `RANK_CHECK_SCHEDULER_MODE` is absent. Both active is rejected. Both false selects `cutover`; dispatcher true plus reconciler false selects `dispatcher`; other default/false combinations select `legacy`. |
+| `RANK_CHECK_RECONCILER_INTERVAL`, `RANK_CHECK_DISPATCHER_INTERVAL`, `STALE_CHECKS_INTERVAL` | Worker-owned legacy reconciliation, dispatcher polling, and stale-check tuning. |
+| `RANK_CHECK_DISPATCHER_MAX_KEYWORDS_PER_PROJECT_PER_PASS` | Maximum due keywords one project may claim in one dispatcher pass. Defaults to `25`; valid values are integers from `1` through `100`. Invalid values fail the claim before database work. |
+| `DATAFORSEO_QUEUED_RANK_CHECKS_ENABLED` | Independent DataForSEO Standard queue route. It is OFF by default and can submit only in `dispatcher` mode. In `cutover`, already-submitted work may finish result retrieval, but no new paid submission is allowed. Manual checks remain available in every mode. |
+| `DATAFORSEO_QUEUE_PRIORITY` | `high` (default for an enabled queued path) or `normal`. High uses provider priority `2`. Invalid values fail the queued gate closed. |
+| `DATAFORSEO_QUEUE_POLL_INTERVAL_SECONDS`, `DATAFORSEO_QUEUE_MAX_AGE_SECONDS` | Optional bounded queue polling and timeout overrides. High defaults to 15-second polling and a 15-minute maximum age. Normal defaults to 60-second polling and a 60-minute maximum age. Invalid or out-of-range values fail the queued gate closed. |
+| `SCHEDULED_MAINTENANCE_ENABLED` | Explicit worker switch for audit/session purges, rank-check raw payload and queued-ledger retention, stale checks/import jobs, migration-hold release, and the weekly digest. Set it to `1` to enable these schedules or `0` to disable them. This switch does not control alert delivery. |
+| `RANK_CHECK_RAW_RETENTION_DAYS` | Retain `rank_checks.raw` for 1-3650 days, or set `unlimited`. The self-host default is `unlimited`; Cloud defaults to 90 days. This never changes `organicRanks` or deletes rank history rows. |
+| `RANK_CHECK_RAW_PROGRESS_FENCE_RETENTION_DAYS` | Keep completed raw-purge retry fences for 2-3650 days. Defaults to 7 days. Set it longer than the Temporal namespace's closed-workflow retention so a reset or late retry cannot reopen completed work. |
+| `ALERT_DIGEST_FLUSH_ENABLED`, `ALERT_DIGEST_FLUSH_INTERVAL` | Alert digest delivery switch and interval. Digest flushing is enabled by default and is independent of scheduled maintenance. |
+| `AUDIT_PURGE_CRON`, `RANK_CHECK_RAW_PURGE_CRON`, `QUEUED_RANK_CHECK_RETENTION_CRON`, `SESSION_PURGE_CRON`, `WEEKLY_DIGEST_CRON` | Optional cron overrides for maintenance schedules controlled by `SCHEDULED_MAINTENANCE_ENABLED`. |
+| `SITEMAP_SYNC_ENABLED`, `SITEMAP_SYNC_CRON` | Opt in to worker-owned sitemap sync and optionally override its cron expression. See [Sitemap monitoring](/guides/sitemap-monitoring). |
+| `PRESENCE_SYNC_ENABLED`, `PRESENCE_SYNC_CRON` | Opt in to worker-owned presence sync and optionally override its cron expression. |
+| `BISIBILITY_API_KEY_RATE_LIMIT_PER_MINUTE` | Per-key API limit. Defaults to `600`. |
+| `BISIBILITY_PAT_RATE_LIMIT_PER_MINUTE` | Per-personal-token API limit. Defaults to `120`. |
+| `BISIBILITY_API_ANON_RATE_LIMIT_PER_MINUTE` | Anonymous discovery limit. Defaults to `60`. |
+| `BISIBILITY_MAX_KEYWORDS_PER_PROJECT` | Optional per-project keyword cap. Unset or `0` means unlimited for self-hosted deployments. Hosted Cloud beta uses `1000`. |
+| `BISIBILITY_MAX_PROJECTS_PER_USER` | Optional cap on projects one user may own through the app or API. Unset or `0` means unlimited for self-hosted deployments. Hosted Cloud beta uses `3`. |
+| `BISIBILITY_CLIENT_IP_HEADER` | Header your proxy sets with the real client address. Unset means no header is trusted and the anonymous API limit uses one shared bucket. See [Client IP behind a proxy](#client-ip-behind-a-proxy). |
+| `BISIBILITY_CLIENT_IP_XFF_DEPTH` | Only for `x-forwarded-for`: how many trailing entries your own proxies append. Defaults to `1`. |
+| `BISIBILITY_PROVIDER_RATE_LIMIT_*` | Per-provider outbound rate limit overrides. See `.env.example` for provider-specific names. |
+| `BISIBILITY_GSC_INSPECTION_DAILY_BUDGET` | Shared per-property URL Inspection safety cap across all projects on the instance. Defaults to `1600`. |
+| `WEBHOOK_ALLOW_PRIVATE_NETWORK` | Security-sensitive webhook SSRF override. Set to `1` only when a self-hosted instance must deliver webhooks to trusted private, LAN, or loopback services. |
+| `REDIS_TLS_CA_B64` | Base64-encoded PEM CA for TLS Redis endpoints using a private CA. |
+| `DATA_REGION` | Optional data-residency label shown in auth and onboarding surfaces. |
+
+### Instance settings
+
+The `instance_settings` database table holds small instance-wide limits that the
+app and worker share. Missing or invalid values use these code defaults:
+
+| Key | Default | Purpose |
+| - | -: | - |
+| `google_signup_cap` | `100` | Maximum number of accounts created through Google sign-in. |
+| `email_daily_send_cap` | `100` | UTC-day email send limit used by sign-in capacity. |
+| `email_monthly_send_cap` | `3000` | UTC-month email send limit used by sign-in capacity. |
+
+Set a value from an operator environment with `DATABASE_URL` configured:
+
+```bash
+node --experimental-transform-types scripts/admin/set-instance-setting.ts \
+  --key email_daily_send_cap \
+  --value 250
+```
+
+The command validates the key and value and prints the previous and current
+values for the operator record. App reads refresh within about 60 seconds.
+
+> **Upgrade note:** The former `RANK_CHECK_MONTHLY_COST_CAP_CENTS` variable has
+> been removed. The monthly provider budget is now a per-workspace setting, and
+> the old variable is ignored after upgrade. Re-set your budget in
+> **Settings > Provider usage** after upgrading. See
+> [Budget cap](/integrations#budget-cap).
+
+### Operator observability (optional)
+
+Operator observability is an instance-level channel for proving that the
+Temporal worker and scheduled data work are healthy. It is deliberately
+separate from tenant-facing Slack alert channels and does not use
+`SlackConnection`, project OAuth tokens, or alert rules. It is off and silent
+when `OPS_SLACK_WEBHOOK_URL` is unset.
+
+Slack payloads carry identifiers and counts only by default. Keyword text,
+project names, email addresses, and tenant domains are excluded. This is the
+payload contract, rather than a best-effort redaction rule, because Slack is an external
+processor and GDPR data minimization applies. Set `OPS_SLACK_INCLUDE_NAMES=1`
+only when the operator explicitly chooses to include keyword text, project
+names, and Search Console property names for a self-hosted instance.
+
+Create a Slack app for your workspace, enable Incoming Webhooks, and add a
+webhook for the operator channel. Configure the same `OPS_*` values on both the
+web and worker services because web-side health reporting uses the feature
+gate. Both services must also share the same Redis database for worker
+liveness. Give the worker `SITE_URL` so digest links and Slack footers identify
+the instance. Configure `TEMPORAL_UI_URL` only on the worker when you want the
+digest to link to Temporal UI. On managed platforms, place the shared values in
+an environment group attached to both services.
+
+| Variable | Default | Purpose |
+| - | - | - |
+| `OPS_SLACK_WEBHOOK_URL` | Unset | Slack incoming webhook for instance-level operator events. Its presence enables the feature by default. Treat the URL as a secret. |
+| `OPS_SLACK_INCLUDE_NAMES` | `0` | Keep Slack payloads limited to identifiers and counts. Set to `1` to include keyword text, project names, and Search Console property names. |
+| `OPS_EVENTS_ENABLED` | On when the webhook URL is set | Master switch. Set to `0` to keep the configured webhook disabled. |
+| `OPS_NOTIFY_MODE` | `failures` | `failures` posts failures, warnings, worker startup, and the digest. `all` also posts successful run summaries. |
+| `OPS_HEARTBEAT_CRON` | `0 8 * * *` | Cron expression for the daily digest. |
+| `OPS_HEARTBEAT_TZ` | `Europe/Warsaw` | IANA timezone used to interpret the heartbeat cron. |
+| `OPS_THROTTLE_MINUTES` | `60` | Redis-backed duplicate suppression window for repeated events. |
+
+Failure events cover rank checks, deferred checks, traffic-source syncs, and
+schedule bootstrap. URL Inspection budget exhaustion identifies the property
+with a stable hashed identifier and lists affected project IDs when
+`OPS_NOTIFY_MODE=failures`; the raw property name appears only when
+`OPS_SLACK_INCLUDE_NAMES=1`. Startup events confirm
+how many worker schedules were ensured. Events are first persisted in an
+outbox, Slack delivery failures are retried by the next heartbeat, and payloads
+redact credentials, tokens, and URL query strings. Repeated events within the
+throttle window are counted and summarized instead of posted individually.
+
+The daily digest summarizes the previous 24 hours: rank-check outcomes and
+scheduled-to-start lag, top failures, Temporal missed-catchup and skipped-overlap
+signals, GSC/GA4/Plausible freshness and row counts per project, undelivered and
+suppressed events, worker uptime, release, and environment. Set
+`TEMPORAL_UI_URL` to include a Temporal UI link alongside the checks page link.
+Observability records are retained for 30 days.
+
+The Google OAuth client belongs to a Google Cloud project, which owns its own
+per-project Google API quota. Separately, multiple bisibility projects that
+point to the same Search Console property share that property's 2,000-per-day
+URL Inspection pool, including usage by other tools connected to that property.
+
+After configuring the webhook, send a direct formatting and delivery test from
+the worker environment:
+
+```bash
+node --experimental-transform-types scripts/ops/send-test-notification.ts
+```
+
+`GET /api/v1/health` additively reports `services.worker` as `ok`, `stale`, or
+`unknown`. A worker is stale when its startup/heartbeat marker is older than 26
+hours; stale worker health returns HTTP 503.
+
+The Slack heartbeat is a dead-man's switch read by absence: Slack cannot alert
+you when the expected message never arrives. For full process or host outage
+detection, also ping an external dead-man monitor such as healthchecks.io from
+the heartbeat path.
+
+### Instance admin
+
+An empty self-hosted installation sends marketing, sign-in, onboarding, and
+application pages to `/setup`. Enter a name and email address, then verify the
+one-time code to create the administrator account. Account creation,
+administrator assignment, and the completion audit are committed together, so
+only one submission can complete setup.
+
+The setup page is intentionally open while the installation has no accounts. If
+email delivery is not configured, the first sign-in code is printed in the
+server logs so the operator can finish setup. After the account is created,
+codes never fall back to logs in production, `/setup` never offers account
+creation again, and non-admin accounts receive a not-found response for
+`/app/admin`.
+
+> **Upgrade note:** Existing installations with user accounts do not enter the
+> setup flow, even if no administrator is assigned. Use the seed command below
+> to choose an administrator after upgrading.
+
+The instance admin panel at `/app/admin` provides cross-instance operational
+visibility without extending project permissions. It includes worker liveness
+and deployment identity, rank-check totals and schedule lag for the last 24
+hours and 7 days, recent rank-check failures, analytics-source freshness and
+row counts, Temporal schedule signals, the operator-event outbox, and
+instance-wide counts and current-month rank-check cost. It also provides
+rate-limited actions to send a test Slack notification and retry undelivered
+operator events. Existing deployments can grant the role by email after running
+migrations:
+
+```bash
+node --experimental-transform-types scripts/admin/seed-instance-admin.ts --email operator@example.com
+```
+
+Run it inside the deployed app container, where the script and the database
+connection are already in place - for example
+`docker compose exec app node --experimental-transform-types scripts/admin/seed-instance-admin.ts --email operator@example.com`
+on the Docker stack, or the equivalent shell on your platform (`fly ssh console`,
+`railway ssh`). It also works from a repository checkout on any machine, as long
+as `DATABASE_URL` points at the instance database - for hosted databases that is
+the public connection string, not the platform-internal hostname.
+
+The seed is idempotent when the target account is already an instance admin. It
+refuses to grant another account while an admin exists; pass `--force` to grant
+the named account as an additional admin without revoking existing admins. The
+email may instead be supplied through `INSTANCE_ADMIN_EMAIL`.
+
+If an account has lost its authenticator and all backup codes, verify the account
+owner's identity outside Bisibility and use the audited emergency reset:
+
+```bash
+docker compose exec app node --experimental-transform-types scripts/admin/reset-two-factor.ts \
+  --operator-email operator@example.com \
+  --email locked-account@example.com \
+  --confirm-reset-2fa
+```
+
+The operator must already be an instance administrator. The command removes the
+target account's 2FA factor, revokes every session, trusted device, pending
+enrollment, and step-up grant, and appends
+`instance_admin.account_two_factor_reset` to the audit log in the same database
+transaction. If the audit write fails, the reset rolls back. Give the account
+owner no replacement secret; after signing in again, they must enroll a new
+authenticator and save the newly generated backup codes.
+
+The panel's privacy contract is strict: cross-tenant lists contain identifiers,
+counts, statuses, durations, and categorized error summaries only. They never
+contain keyword text, project names, email addresses, tenant domains, or account
+data. Instance administration does not grant access to tenant project data; any
+link into a project is still checked by the normal project authorization path.
+
+The panel remains useful when operator Slack is disabled. Worker liveness is
+maintained independently through the shared Redis marker, instance statistics
+remain available, and Slack-specific status and actions show that Slack is not
+configured instead of failing the page.
+
+For local development without SERP credentials, set `BISIBILITY_FAKE_PROVIDER=1`
+to exercise rank-check flows without calling a real SERP provider.
+
+## Scheduled rank checks
+
+Manual rank checks are available through the app and `POST /api/v1/keywords/{id}/checks`
+without Temporal. If the app cannot reach Temporal, interactive manual checks
+fall back to inline execution.
+
+Scheduled checks are executed by the Temporal worker. With Docker, start the
+scheduled profile:
+
+```bash
+docker compose --profile scheduled up --build
+```
+
+For non-Docker local development, run a Temporal server and the worker alongside
+the web app:
+
+```bash
+npm run temporal:dev
+npm run temporal:worker
+```
+
+`RANK_CHECK_SCHEDULER_MODE=legacy` is the D1 default. In that mode the worker
+reconciler converts keyword schedule intent stored by the app into per-keyword
+Temporal Schedules. `cutover` actively pauses the reconciler and dispatcher
+singletons, stops dispatcher claims, and blocks late automatic work before
+lifecycle or provider cost while allowing bounded dispatcher-state repair.
+`dispatcher` actively retires legacy scheduling and makes the dispatcher the
+only automatic owner. Manual checks remain available in all three modes.
+
+Deploy the same explicit mode to the app and worker. App-first changes are safe:
+entering `cutover` stops new app-side legacy intent behavior before the worker is
+synchronized, while entering `dispatcher` app-first leaves the worker in
+`cutover`, so it cannot claim during version skew. The old boolean pair is a
+deprecated D1-only fallback and will be removed after the production cutover is
+proven.
+
+The worker also owns the Temporal maintenance schedules. Set
+`SCHEDULED_MAINTENANCE_ENABLED` explicitly on the worker so maintenance behavior
+does not depend on the rank-check reconciler default. This main gate controls
+eight schedules: audit purge, rank-check raw payload purge, queued rank-check
+ledger retention, session and
+verification purge, stale rank-check cleanup, stale import-job cleanup,
+migration-hold release, and the weekly digest. Sitemap and presence sync remain
+separate opt-in schedules controlled by
+`SITEMAP_SYNC_ENABLED` and `PRESENCE_SYNC_ENABLED`. Their complete worker
+configuration is `SCHEDULED_MAINTENANCE_ENABLED`,
+`RANK_CHECK_RAW_RETENTION_DAYS`,
+`RANK_CHECK_RAW_PROGRESS_FENCE_RETENTION_DAYS`, `AUDIT_PURGE_CRON`,
+`RANK_CHECK_RAW_PURGE_CRON`, `QUEUED_RANK_CHECK_RETENTION_CRON`,
+`SESSION_PURGE_CRON`, `WEEKLY_DIGEST_CRON`,
+`SITEMAP_SYNC_ENABLED`, `SITEMAP_SYNC_CRON`, `PRESENCE_SYNC_ENABLED`, and
+`PRESENCE_SYNC_CRON`.
+Alert digest delivery is independent of this maintenance gate. It is enabled by
+default and controlled by `ALERT_DIGEST_FLUSH_ENABLED` and
+`ALERT_DIGEST_FLUSH_INTERVAL`.
+
+Temporal worker schedules are the only scheduled maintenance path. You do not
+need an external HTTP scheduler or a shared bearer secret. Session cleanup also
+removes expired verification rows; the retired HTTP-only
+`verifications=false` option had no repository caller and is not reproduced by
+the worker schedule.
+
+Rank checks are bounded by the workspace's monthly provider budget, set in
+**Settings > Provider usage**. See [Budget cap](/integrations#budget-cap).
+
+### Database growth
+
+Maintenance keeps every `rank_checks` row and its `organicRanks` history, but it
+can null the larger `raw` provider response after a configurable window. Set
+`RANK_CHECK_RAW_RETENTION_DAYS` to 1-3650 days or `unlimited`. Self-hosted
+deployments default to `unlimited`, so upgrading does not remove existing raw
+payloads unless you opt in. Cloud defaults to 90 days.
+
+The worker runs this purge daily at 03:29 UTC; override it with
+`RANK_CHECK_RAW_PURGE_CRON`. Each run updates at most 1,000 eligible rows per
+statement to bound locks and PostgreSQL dead-tuple bursts, continuing until the
+eligible set is exhausted. Rows, `organicRanks`, attempts, and every other
+column remain unchanged. PostgreSQL can reuse space reclaimed by normal vacuum;
+the physical table file does not necessarily become smaller immediately.
+
+Terminal queued provider-task evidence is retained for 30 days. The worker
+deletes it independently at 03:41 UTC, even when queued submissions are disabled;
+override that schedule with `QUEUED_RANK_CHECK_RETENTION_CRON`. Each activity
+deletes at most 100 batches and continues in a new workflow run while more
+expired pages remain.
+
+Each completed purge activity keeps a content-free retry fence. Its result
+fields are scrubbed promptly, and the daily maintenance path independently
+scrubs any completed rows missed by cleanup. Fences remain closed for
+`RANK_CHECK_RAW_PROGRESS_FENCE_RETENTION_DAYS`, then an indexed sweeper deletes
+them in at most four 500-row pages per phase and invocation. Repeated daily runs
+converge without one large transaction. The fence stores no raw provider
+content, URL, domain, or keyword text.

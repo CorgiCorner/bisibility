@@ -1,0 +1,18 @@
+{
+  "version": "0.1.20260720",
+  "status_code": 20000,
+  "status_message": "Ok.",
+  "cost": 0.02,
+  "tasks_count": 1,
+  "tasks_error": 1,
+  "tasks": [
+    {
+      "id": "validation-task-charged",
+      "status_code": 40501,
+      "status_message": "Invalid Field: 'target'.",
+      "cost": 0.02,
+      "result_count": 0,
+      "result": null
+    }
+  ]
+}

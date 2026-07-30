@@ -1,0 +1,37 @@
+# Temporal's TypeScript worker loads a native Rust bridge that requires glibc.
+# Alpine/musl fails at runtime with `__register_atfork: symbol not found`.
+FROM node:22.23.1-slim
+
+ARG APP_VERSION
+
+WORKDIR /app
+
+ENV APP_VERSION=${APP_VERSION} \
+  NEXT_TELEMETRY_DISABLED=1 \
+  RANK_CHECK_DISPATCHER_MAX_KEYWORDS_PER_PROJECT_PER_PASS=25
+
+COPY package.json package-lock.json ./
+COPY scripts/deploy/bake-runtime-env.mjs ./scripts/deploy/bake-runtime-env.mjs
+COPY scripts/deploy/download-rds-ca.mjs ./scripts/deploy/download-rds-ca.mjs
+COPY scripts/generate/generate-client-if-schema.mjs ./scripts/generate/generate-client-if-schema.mjs
+RUN npm install -g npm@10.9.3 \
+  && npm ci \
+  && apt-get update \
+  && apt-get install -y --no-install-recommends ca-certificates openssl \
+  && rm -rf /var/lib/apt/lists/*
+
+COPY prisma.config.ts ./prisma.config.ts
+COPY prisma ./prisma
+RUN npm run db:download-rds-ca && npx prisma generate && npm prune --omit=dev
+
+COPY lib ./lib
+
+RUN groupadd --system --gid 1001 worker \
+  && useradd --uid 1001 --gid worker --create-home --shell /usr/sbin/nologin worker \
+  && chown worker:worker lib/deployment/runtime-env.generated.ts
+
+ENV NODE_ENV=production
+
+USER worker
+
+CMD ["node", "--experimental-transform-types", "--import", "./lib/temporal/register-loader.mjs", "lib/temporal/worker.ts"]

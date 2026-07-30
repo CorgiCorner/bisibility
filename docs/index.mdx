@@ -1,0 +1,68 @@
+---
+title: "Documentation"
+description: "Self-host bisibility, connect providers, and build against the REST API."
+---
+
+bisibility is a self-hostable rank tracker with bring-your-own SERP providers
+and a REST API under `/api/v1`. Start with the app workflow, then use the API
+when you want automation or generated client code.
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Start the stack, create a project, connect a provider, and run the first check.
+  </Card>
+  <Card title="Self-hosting" icon="server" href="/self-hosting">
+    Docker, required services, environment variables, workers, and migrations.
+  </Card>
+  <Card title="Integrations" icon="plug" href="/integrations">
+    Connect DataForSEO or SerpAPI and configure fallback, estimates, and caps.
+  </Card>
+  <Card title="Authentication" icon="key" href="/authentication">
+    Personal access tokens, project API keys, permission levels, and rate limits.
+  </Card>
+  <Card title="Audit log" icon="shield" href="/audit-log">
+    Entry shape, retention, and action strings emitted by the app.
+  </Card>
+  <Card title="API reference" icon="code" href="/api/overview">
+    Request and response shapes for the real `/api/v1` endpoints.
+  </Card>
+  <Card title="SDKs" icon="boxes-stacked" href="/sdks/overview">
+    Installation, method names, tools, and types for official clients.
+  </Card>
+  <Card title="AI agents" icon="sparkles" href="/agents">
+    REST API, OpenAPI, capabilities, and machine-readable API docs.
+  </Card>
+  <Card title="Product guides" icon="book-open" href="/guides/alerts">
+    Alerts, competitors, teams, saved views, analytics, migration, and operations.
+  </Card>
+</CardGroup>
+
+## Base URLs
+
+Use the regional API root shown by your workspace. EU Cloud currently uses:
+
+```text
+https://eu.bisibility.com/api/v1
+```
+
+Call the regional host directly instead of relying on a redirect from the
+marketing domain.
+
+For a self-hosted instance, use your own app origin with the same path:
+
+```text
+https://rank.example.com/api/v1
+```
+
+Browser code running inside the app can use a relative base URL:
+
+```text
+/api/v1
+```
+
+## What is documented
+
+The API reference documents routes handled by `app/api/v1/[[...path]]`,
+`app/api/cloud/import`, `app/api/v1/cloud/import`, and `lib/api/*`. OpenAPI is
+generated from `lib/api/openapi.ts`, so the cloud-import endpoint is documented
+manually until it is included in that document.

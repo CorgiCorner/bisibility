@@ -1,0 +1,82 @@
+import { keywordRows } from "@/components/keywords/keywords-fixtures";
+import { PositionHistoryCard } from "@/components/keywords/PositionHistoryCard";
+import type { Meta, StoryObj } from "@storybook/react";
+
+const meta = {
+  title: "Keywords/PositionHistoryCard",
+  component: PositionHistoryCard,
+  decorators: [
+    (Story) => (
+      <div className="min-h-[400px] bg-bg p-6 text-fg">
+        <Story />
+      </div>
+    ),
+  ],
+} satisfies Meta<typeof PositionHistoryCard>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
+  args: { keyword: { ...keywordRows[2], targetPosition: 3 } },
+};
+
+export const TargetReached: Story = {
+  args: {
+    keyword: {
+      ...keywordRows[1],
+      positionHistory: keywordRows[1].positionHistory.map((point, index, points) => ({
+        ...point,
+        position: index === points.length - 1 ? 1 : point.position,
+      })),
+      targetPosition: 3,
+    },
+  },
+};
+
+export const NoTarget: Story = {
+  args: { keyword: { ...keywordRows[0], targetPosition: null } },
+};
+
+export const MultipleChecksPerDay: Story = {
+  args: {
+    keyword: {
+      ...keywordRows[1],
+      positionHistory: [
+        ...keywordRows[1].positionHistory,
+        {
+          checkedAt: new Date(new Date().setHours(8, 0, 0, 0)).toISOString(),
+          label: "Today",
+          position: 2,
+        },
+        {
+          checkedAt: new Date(new Date().setHours(16, 0, 0, 0)).toISOString(),
+          label: "Today",
+          position: 1,
+        },
+      ],
+    },
+  },
+};
+
+export const NoChecksInRange: Story = {
+  args: {
+    keyword: {
+      ...keywordRows[1],
+      positionHistory: [
+        {
+          checkedAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString(),
+          label: "45 days ago",
+          position: 2,
+        },
+        {
+          checkedAt: new Date(Date.now() - 35 * 24 * 60 * 60 * 1000).toISOString(),
+          label: "35 days ago",
+          position: 1,
+        },
+      ],
+      schedule: { ...keywordRows[1].schedule, frequency: "paused", next_check_at: null },
+    },
+  },
+};

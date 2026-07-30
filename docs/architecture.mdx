@@ -1,0 +1,133 @@
+---
+title: "Architecture"
+description: "How bisibility stores keywords, schedules rank checks, calls SERP providers, and delivers alerts."
+---
+
+bisibility has two main processes:
+
+- The web app serves the dashboard, REST API, Model Context Protocol (MCP), and
+  live notifications.
+- The Temporal worker runs scheduled rank checks and maintenance jobs.
+
+Both processes use PostgreSQL. Redis or Valkey handles rate limits, idempotency,
+and notifications. Rank data comes from a SERP provider that you connect
+yourself.
+
+## Runtime components
+
+| Component | Lives in | Responsibility |
+| - | - | - |
+| Web app | `app/`, `components/` | Authenticated dashboard, onboarding, settings, keyword and alert views. |
+| REST API v1 | `app/api/v1/`, `lib/api/` | API-key auth, rate limits, idempotency, and all `/api/v1` endpoints. |
+| MCP endpoint | `lib/mcp/` | Streamable HTTP transport whose tools call the same REST router. |
+| Notification stream | `app/api/notifications/` | Server-sent events for the in-app bell, fanned out through Redis pub/sub. |
+| Temporal worker | `lib/temporal/` | Runs scheduled rank checks, schedule reconciliation, and maintenance jobs. |
+| PostgreSQL | `prisma/schema.prisma` | All durable state: projects, keywords, checks, providers, alerts, audit log. |
+| Redis or Valkey | `lib/redis/` | API and provider rate limiting, idempotency replay, notification pub/sub. |
+| Providers | `lib/providers/` | Pluggable SERP and analytics adapters. See [Integrations](/integrations). |
+
+The MCP endpoint uses the same router as REST. Manual and scheduled checks also
+use the same rank-check runner. These shared paths keep behavior consistent.
+
+## Data model
+
+A `Project` owns its keywords, provider connections, alert rules,
+notifications, and audit entries. Each keyword is unique by text, location, and
+device.
+
+Scheduling is stored as *intent*, not as jobs: `ProjectDefaults` holds the
+project-wide schedule and market, and an optional per-keyword `KeywordSchedule`
+overrides it. Each executed check is a `RankCheck` row recording status,
+position, ranking URL, provider, and cost. Alerts connect `AlertRule` to
+`TriggeredAlert` and `DeliveryAttempt` rows.
+
+## Rank data retention by deployment
+
+Each completed check can store the raw response from the connected SERP provider
+in `rank_checks.raw`. That payload is separate from the rank-history fields that
+remain on the row.
+
+| Data | Self-hosted | Cloud |
+| - | - | - |
+| Rank-check row, `position`, and `organicRanks` | Kept for the lifetime of the workspace. | Kept for the lifetime of the workspace, with no plan-based retention tier. |
+| Raw SERP provider payload (`rank_checks.raw`) | Kept indefinitely by default. The operator can set `RANK_CHECK_RAW_RETENTION_DAYS` to 1-3650 days or `unlimited`. | Kept for 90 days. |
+
+Raw payload access is a self-hosted feature through direct PostgreSQL access to
+`rank_checks.raw`; the REST API rank-check resource does not expose this field.
+Once a configured window expires, an older check can therefore have a null
+`raw` value while its row, `position`, and `organicRanks` remain available. See
+[Database growth](/self-hosting#database-growth) for worker configuration and
+purge behavior.
+
+## Rank-check lifecycle
+
+```text
+schedule intent (Postgres)
+  -> worker reconciler converges Temporal Schedules to match intent
+  -> a due schedule starts a rank-check workflow
+  -> runner tries the provider chain (priority order, fallback on failure)
+  -> result persists as a RankCheck row
+  -> alert evaluation
+  -> notifications and channel deliveries
+```
+
+The app never creates Temporal Schedules directly. It only writes schedule
+intent to Postgres; a singleton reconciler in the worker periodically converges
+per-keyword Temporal Schedules to match that intent, creating, updating, and
+pruning them as keywords change. Postgres stays the single source of truth, and
+the worker is safe to restart or temporarily disable.
+
+Manual checks go through the same runner and persistence (`lib/rank-check/`)
+as scheduled checks. When Temporal is unreachable, interactive manual checks
+fall back to inline execution in the app process; the REST API can also start
+a check asynchronously and return `202`.
+
+## Extensibility: providers
+
+Providers are the main extension point, under `lib/providers/`.
+
+**Kinds.** Every provider has a kind. `serp` providers answer "where does this
+keyword rank" and are tried in a user-configured fallback chain; `analytics`
+providers add owned-data context such as traffic and clicks, and never set
+positions. A new category of data source - social media, for example - would be
+a new kind following the same pattern.
+
+**Registry.** `PROVIDER_CATALOG` in `lib/providers/registry.ts` is the single
+source of truth for which providers exist, their kind, and the credentials
+they require. The user-facing roster and setup details live in
+[Integrations](/integrations).
+
+**Adapters.** Each provider is one adapter module implementing a small
+interface: identify itself, test a connection, fetch a rank. Adding a search
+engine such as Bing means writing one new `serp` adapter and registering it in
+the catalog - the scheduling, fallback, cost, and alerting machinery is
+provider-agnostic and does not change.
+
+Connected credentials are stored encrypted per project. Optional environment
+fallbacks for local development are documented in
+[Integrations](/integrations).
+
+## Alerts and notifications
+
+After a successful check persists, the alert evaluator applies each enabled
+rule's conditions to the new result. Matching rules create a triggered alert,
+which is delivered to the configured channels - email and signed webhooks -
+with every delivery attempt recorded. Slack delivery is planned. Successful
+deliveries and completed checks also create in-app notifications, pushed live
+to the browser over SSE.
+
+## Operational notes
+
+**Redis** backs the cross-process concerns: API and outbound provider rate
+limits, idempotency replay for non-GET API requests, and pub/sub fan-out for
+realtime notifications. Local development degrades to in-memory fallbacks when
+Redis is absent.
+
+**Temporal workflow code stays deterministic.** Workflows contain no database,
+network, or Node-specific calls; all side effects live in activities. This
+standard Temporal boundary is what makes scheduled checks replayable and safe
+across worker restarts.
+
+**Code layering** - which modules may import which - is lint-enforced; see
+[CONTRIBUTING.md](https://github.com/CorgiCorner/bisibility/blob/main/CONTRIBUTING.md#code-conventions)
+in the repository.

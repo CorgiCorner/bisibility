@@ -1,0 +1,27 @@
+title: "[Idea]: "
+labels: ["idea"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Share the problem first - solutions can come later. Ideas that firm up
+        graduate into a feature spec issue, which is the fastest path to getting
+        built. Do not include secrets, API keys, tokens, or production
+        infrastructure details.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do?
+      description: The job you are trying to get done with bisibility, and where it falls short today.
+    validations:
+      required: true
+  - type: textarea
+    id: today
+    attributes:
+      label: How do you handle it today?
+      description: Workarounds, other tools, manual steps.
+  - type: textarea
+    id: sketch
+    attributes:
+      label: Rough idea (optional)
+      description: If you already have a direction in mind, sketch it here.

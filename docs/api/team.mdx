@@ -1,0 +1,31 @@
+---
+title: "Team"
+description: "List project members and manage invitations."
+---
+
+Paths are relative to `/api/v1`. All routes use a project-scoped API key -
+`Authorization: Bearer <api_key>` - that must belong to the project in the
+path. See [Authentication](/authentication) for scopes.
+
+| Method | Path | Purpose |
+| - | - | - |
+| `GET` | `/projects/{project_id}/team/members` | List project members and roles. |
+| `GET` | `/projects/{project_id}/team/invites` | List pending invitations. |
+| `POST` | `/projects/{project_id}/team/invites` | Create or replace an invitation. |
+| `DELETE` | `/projects/{project_id}/team/invites/{invite_id}` | Revoke an invitation through the project route. |
+| `POST` | `/projects/{project_id}/team/invites/{invite_id}/resend` | Resend a pending invitation with a new token and expiration. |
+| `PATCH` | `/projects/{project_id}/team/members/{member_id}` | Change a non-owner member role. |
+| `DELETE` | `/projects/{project_id}/team/members/{member_id}` | Remove a non-owner member. |
+| `DELETE` | `/team/invites/{invite_id}` | Revoke the same invitation through the short route. |
+
+Invite roles are `admin`, `member`, or `viewer`. Creating and revoking invites
+also applies the app's project-role authorization rules; an API key alone does
+not bypass them.
+
+Update a member role with `{ "role": "admin" }`, `{ "role": "member" }`, or
+`{ "role": "viewer" }`. Owner role changes and ownership transfer are not
+available through REST or MCP; use the guarded app workflow. Member removal is
+permanent and clients should confirm the user's intent before calling it.
+
+The generated [OpenAPI document](/api/v1/openapi.json) remains the
+authoritative request and response schema.

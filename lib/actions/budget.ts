@@ -1,0 +1,54 @@
+"use server";
+
+import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
+import { prisma } from "@/lib/db/prisma";
+import { z } from "zod";
+import {
+  getActionActor,
+  parseActionInput,
+  requireProjectScope,
+  revalidateBudgetViews,
+} from "./_shared";
+
+const MAX_BUDGET_CAP_CENTS = 100_000_000;
+
+const updateWorkspaceBudgetSchema = z.object({
+  capCents: z.number().int().positive().max(MAX_BUDGET_CAP_CENTS),
+  projectId: z.string().trim().min(1).max(120),
+});
+
+/**
+ * Updates the per-workspace monthly provider budget cap. Owner/admin only: the
+ * "manage" action on the project resource requires at least the admin role.
+ */
+export async function updateWorkspaceBudgetAction(input: unknown) {
+  const data = parseActionInput(updateWorkspaceBudgetSchema, input);
+  const actor = await getActionActor();
+  const project = await requireProjectScope(actor, "manage", data.projectId, { type: "project" });
+  const before = await prisma.project.findUnique({
+    select: { budgetCapCents: true },
+    where: { id: project.id },
+  });
+  if (!before) {
+    throw new Error("Project not found.");
+  }
+
+  const updated = await prisma.project.update({
+    data: { budgetCapCents: data.capCents },
+    select: { budgetCapCents: true },
+    where: { id: project.id },
+  });
+
+  await writeAudit({
+    action: "settings.budget_updated",
+    actorId: actor.id,
+    after: { capCents: updated.budgetCapCents },
+    before: { capCents: before.budgetCapCents },
+    projectId: project.id,
+    targetId: requiredPublicAuditId(project.publicId, "prj", "Project"),
+    targetType: "project",
+  });
+  revalidateBudgetViews();
+
+  return { capCents: updated.budgetCapCents };
+}

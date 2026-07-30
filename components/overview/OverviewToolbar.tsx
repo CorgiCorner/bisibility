@@ -1,0 +1,217 @@
+"use client";
+
+import { Toolbar } from "@/components/shell/Toolbar";
+import { Pill } from "@/components/ui";
+import { appPath } from "@/lib/routing/app-path";
+import Button from "@mui/material/Button";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
+import {
+  ArrowsClockwiseIcon as ArrowsClockwise,
+  CalendarBlankIcon as CalendarBlank,
+  CaretDownIcon as CaretDown,
+  CheckIcon as Check,
+  MonitorIcon as Monitor,
+  PlusIcon as Plus,
+  TagIcon as Tag,
+} from "@phosphor-icons/react";
+import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
+import { type ReactNode, useState } from "react";
+import type { OverviewView } from "./types";
+
+type MenuKey = "range" | "device" | "tag";
+type SelectedFilters = OverviewView["toolbar"];
+
+type FilterOption = { label: string; value: string | null };
+type FilterMenu = {
+  active?: boolean;
+  icon: ReactNode;
+  key: MenuKey;
+  options: readonly FilterOption[];
+  prefix: string;
+  selected: string | null;
+};
+
+const RANGE_OPTIONS: readonly FilterOption[] = [
+  { label: "Last 7 days", value: "7d" },
+  { label: "Last 28 days", value: "28d" },
+  { label: "Last 90 days", value: "90d" },
+];
+
+const DEVICE_OPTIONS: readonly FilterOption[] = [
+  { label: "All devices", value: "all" },
+  { label: "Desktop", value: "desktop" },
+  { label: "Mobile", value: "mobile" },
+];
+
+function tagOptions(tags: readonly string[]): FilterOption[] {
+  return [{ label: "All tags", value: null }, ...tags.map((tag) => ({ label: tag, value: tag }))];
+}
+
+function filterMenus(selected: SelectedFilters): readonly FilterMenu[] {
+  return [
+    {
+      icon: <CalendarBlank aria-hidden className="text-fg-muted" size={15} />,
+      key: "range",
+      options: RANGE_OPTIONS,
+      prefix: "",
+      selected: selected.rangeValue,
+    },
+    {
+      icon: <Monitor aria-hidden className="text-fg-muted" size={15} />,
+      key: "device",
+      options: DEVICE_OPTIONS,
+      prefix: "",
+      selected: selected.deviceValue,
+    },
+    {
+      active: Boolean(selected.tagValue),
+      icon: <Tag aria-hidden className="text-fg-muted" size={15} />,
+      key: "tag",
+      options: tagOptions(selected.availableTags),
+      prefix: "Tag: ",
+      selected: selected.tagValue,
+    },
+  ];
+}
+
+const PAPER_SX = {
+  backgroundColor: "var(--bg-elev)",
+  border: "1px solid var(--border)",
+  borderRadius: "12px",
+  boxShadow: "none",
+  color: "var(--fg)",
+  marginTop: "6px",
+  minWidth: 168,
+  padding: "6px",
+} as const;
+
+const ROW_SX = {
+  borderRadius: "9px",
+  color: "var(--fg-muted)",
+  fontSize: "13px",
+  gap: "12px",
+  justifyContent: "space-between",
+  minHeight: 0,
+  paddingX: "9px",
+  paddingY: "8px",
+  "&:hover": { backgroundColor: "var(--nav-active)" },
+  "&.Mui-focusVisible": { backgroundColor: "var(--nav-active)" },
+} as const;
+
+export function OverviewToolbar({
+  initialSelected,
+  projectRef,
+}: Readonly<{ initialSelected?: SelectedFilters; projectRef: string }>) {
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const [openKey, setOpenKey] = useState<MenuKey | null>(null);
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const selected = initialSelected ?? {
+    availableTags: [],
+    device: "All devices",
+    deviceValue: "all",
+    range: "Last 28 days",
+    rangeValue: "28d",
+    refresh: "Daily",
+    tag: "All tags",
+    tagValue: null,
+  };
+  const menus = filterMenus(selected);
+
+  function openMenu(key: MenuKey, target: HTMLElement) {
+    setAnchorEl(target);
+    setOpenKey(key);
+  }
+
+  function hrefFor(key: MenuKey, value: string | null) {
+    const params = new URLSearchParams(searchParams.toString());
+    const defaults = { device: "all", range: "28d", tag: null } satisfies Record<
+      MenuKey,
+      string | null
+    >;
+    if (value === defaults[key] || value === null) {
+      params.delete(key);
+    } else {
+      params.set(key, value);
+    }
+    const query = params.toString();
+    return query ? `${pathname}?${query}` : pathname;
+  }
+
+  return (
+    <div className="-mx-4 -mt-4 mb-[22px] sm:-mx-5 lg:-mx-7 lg:-mt-[22px]">
+      <Toolbar
+        action={
+          <Button
+            startIcon={<Plus size={15} weight="bold" />}
+            sx={{ minHeight: 40, whiteSpace: "nowrap" }}
+            variant="contained"
+            component={Link}
+            href={appPath(projectRef, "keywords?add=1")}
+          >
+            <span className="hidden sm:inline">Add keyword</span>
+            <span className="sm:hidden">Add</span>
+          </Button>
+        }
+      >
+        <Pill active aria-label={`Refresh cadence ${selected.refresh}`}>
+          <ArrowsClockwise aria-hidden className="text-accent" size={15} />
+          {`Refresh: ${selected.refresh}`}
+        </Pill>
+        {menus.map((menu) => {
+          const open = openKey === menu.key;
+          return (
+            <Pill
+              active={menu.active}
+              aria-controls={open ? `overview-${menu.key}-menu` : undefined}
+              aria-expanded={open}
+              aria-haspopup="menu"
+              key={menu.key}
+              onClick={(event) => openMenu(menu.key, event.currentTarget)}
+            >
+              {menu.icon}
+              {`${menu.prefix}${selected[menu.key]}`}
+              <CaretDown aria-hidden className="text-fg-faint" size={11} weight="bold" />
+            </Pill>
+          );
+        })}
+      </Toolbar>
+      {menus.map((menu) => (
+        <Menu
+          anchorEl={anchorEl}
+          disableRestoreFocus
+          id={`overview-${menu.key}-menu`}
+          key={menu.key}
+          onClose={() => setOpenKey(null)}
+          open={openKey === menu.key}
+          slotProps={{
+            list: { "aria-label": menu.key, dense: true, sx: { padding: 0 } },
+            paper: { sx: PAPER_SX },
+          }}
+        >
+          {menu.options.map((option) => {
+            const current = menu.selected === option.value;
+            return (
+              <MenuItem
+                component={Link}
+                href={hrefFor(menu.key, option.value)}
+                key={`${menu.key}:${option.value ?? "all"}`}
+                onClick={() => setOpenKey(null)}
+                sx={ROW_SX}
+              >
+                <span className={current ? "font-semibold text-fg" : undefined}>
+                  {option.label}
+                </span>
+                {current ? (
+                  <Check aria-hidden className="text-accent" size={15} weight="bold" />
+                ) : null}
+              </MenuItem>
+            );
+          })}
+        </Menu>
+      ))}
+    </div>
+  );
+}

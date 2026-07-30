@@ -1,0 +1,80 @@
+name: Feature spec
+description: An implementation-ready proposal the core team can build from
+title: "[Spec]: "
+labels: ["spec"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for writing a spec - this is the highest-leverage way to contribute
+        to bisibility. Describe observable behavior, not implementation; the core
+        team takes it from there. Shipped specs are credited in the release notes.
+
+        Drafting the spec together with your own AI assistant is welcome, as long
+        as the problem is real for you and you sanity-check the result. If the
+        proposal is not fully formed yet, use the feature request form or start a
+        discussion instead.
+
+        **Do not include secrets, API keys, tokens, or production infrastructure
+        details anywhere in this spec.**
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What are you trying to do that bisibility makes hard today? Who hits this and how often?
+      placeholder: As an agency tracking rankings for 20 client sites, I need... but today...
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Proposed behavior
+      description: What should a user see and be able to do once this ships? Describe user-visible behavior on every affected surface.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: A short checklist a reviewer, or a coding agent, can verify one item at a time.
+      placeholder: |
+        - [ ] A keyword list can be exported as CSV from the keywords view
+        - [ ] The export respects the active saved view filters
+        - [ ] The public API exposes the same export on the keywords resource
+    validations:
+      required: true
+  - type: textarea
+    id: boundaries
+    attributes:
+      label: Out of scope and constraints
+      description: What this spec deliberately does not cover, plus known constraints and edge cases (providers, quotas, large keyword sets, self-host vs cloud).
+  - type: checkboxes
+    id: surfaces
+    attributes:
+      label: Affected surfaces
+      options:
+        - label: Web UI
+        - label: REST API (v1)
+        - label: Webhooks
+        - label: Imports / exports
+        - label: Scheduling / worker
+        - label: Provider integrations
+        - label: MCP / agent skills
+        - label: SDKs / client libraries
+        - label: CLI
+        - label: Docs
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Workarounds you use today, or behavior in other tools worth copying or avoiding.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Final checks
+      options:
+        - label: I searched existing issues and discussions and this is not a duplicate.
+          required: true
+        - label: This spec contains no secrets, tokens, or production infrastructure details.
+          required: true
+        - label: Credit me in the release notes if this ships.

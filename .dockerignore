@@ -1,0 +1,11 @@
+node_modules
+.next
+.cache
+coverage
+storybook-static
+.git
+.env
+.env.local
+*.log
+*.tsbuildinfo
+prisma/generated

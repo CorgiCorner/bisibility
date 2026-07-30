@@ -1,0 +1,127 @@
+---
+title: "Configure alerts"
+description: "Create rank-change rules with in-app, email, and signed webhook delivery."
+---
+
+Alerts are evaluated after a completed rank check. Creating a rule does not
+immediately query a SERP provider or evaluate historical checks.
+
+## Create and verify a webhook endpoint
+
+1. Open **Alerts**, select **New rule**, and choose **Webhook** under Delivery.
+2. Enter an HTTP or HTTPS endpoint URL.
+3. Select **Generate** to create a strong HMAC secret, then copy and store it.
+   The encrypted secret cannot be read back after the endpoint is saved.
+4. Save the enabled endpoint.
+5. Select **Send test event** in its endpoint row.
+6. Confirm that the inline result shows the receiver's HTTP status and latency.
+7. Verify `X-Bisibility-Signature` against the raw request body with the
+   [copy-pasteable verifier](/api/webhooks#verify-signatures).
+
+The test is a real signed `alert.fired` envelope with `data.test: true`.
+After it succeeds, create a webhook-channel rule. Every enabled project endpoint
+receives every webhook event; endpoints are not filtered by rule or event name.
+
+## Create a rule
+
+1. Open **Alerts** and select **New rule**.
+2. Choose all keywords, one keyword, or one tag as the scope.
+3. Select a condition and enter its threshold when required.
+4. Select one or more delivery channels.
+5. Save the rule and leave it enabled.
+
+| Condition | Fires when |
+| - | - |
+| Threshold | Position crosses the configured rank. |
+| Change percent | The relative position change reaches the configured percentage. |
+| Position drop | A keyword loses at least the configured number of positions. |
+| Downtrend | Five complete checks with known positions form a sustained downward trend. |
+| Enters or exits top N | Position crosses a configured top-N boundary. |
+| Competitor overtake | The configured competitor moves ahead. |
+| SERP feature | The requested feature appears in the provider payload. |
+| URL mismatch | The ranking URL differs from the keyword target URL. |
+
+An incomplete downtrend window or an unranked check with no known position is
+treated as unknown, not as recovery. An existing downtrend alert remains open
+until five complete checks show that the condition cleared. It can be manually
+muted while the state is unknown.
+
+## Delivery channels
+
+- **In-app:** successful external delivery creates an in-app notification and
+  the triggered alert remains visible in the alert feed.
+- **Email:** requires a configured [email provider](/guides/email) with a
+  verified sender (`EMAIL_FROM`). A user's alert-email preference can disable
+  delivery.
+- **Webhook:** sends signed JSON to every enabled project endpoint when the rule
+  includes the webhook channel.
+
+Webhook targets resolving to loopback, link-local, or private networks are
+blocked by default. `WEBHOOK_ALLOW_PRIVATE_NETWORK=1` is limited to trusted
+self-hosted networks.
+
+Delivery attempts are recorded for every channel. A failed channel does not
+prevent the remaining selected channels from being attempted.
+
+## Webhook events
+
+Every outbound webhook is an HTTP `POST` with `Content-Type: application/json`,
+`X-Bisibility-Timestamp` (Unix seconds), and
+`X-Bisibility-Signature: sha256=<hex digest>`. The signature is an HMAC-SHA256
+of `<timestamp>.<raw request body>` using the endpoint secret. Verify the
+signature against the raw body before parsing JSON.
+
+An immediate alert uses `alert.fired`. Manual checks and other non-scheduled
+checks stay immediate. All current envelopes use `schemaVersion: 3`, snake_case
+field names, and strict public resource IDs: `al_`, `kw_`, `prj_`, and
+`alr_`. The authoritative example and field contract are under
+[Webhook endpoints](/api/webhooks#event-envelopes).
+
+### Digest event
+
+Scheduled checks queue matching alerts until the digest flush runs. The default
+flush interval is five minutes and can be changed with
+`ALERT_DIGEST_FLUSH_INTERVAL`. Alerts are grouped by rule, then one digest is
+delivered to each configured channel and enabled webhook endpoint. This means a
+consumer can receive one `alert.digest` containing multiple alerts for a
+rule-and-endpoint pair during a flush.
+
+`alert.digest` has the same version-2, snake_case contract. `data.alerts`
+contains the complete batch, and every item has the same shape as
+`alert.fired.data`. Its aggregate fields are `alert_count`, `project_id`,
+`rule_id`, and `suppressed_today_count`.
+
+Digest jobs contain at most 200 alerts. Any remaining pending alerts wait for a
+later flush. Email summaries display the first 20 entries and a `+N more` line,
+but webhook `data.alerts` is not shortened. `alert_count` always matches the
+length of `data.alerts`.
+
+Each rule has a daily budget of 20 delivery batches. An immediate alert or one
+digest consumes one batch regardless of the number of recipients and channels.
+One batch can fan out to every email recipient and enabled webhook endpoint.
+When the budget is exhausted, pending alerts are suppressed until 00:00 UTC and
+remain visible in the app. A webhook endpoint receives one
+`alert.daily_cap_reached` notice for that rule and day; its data contains
+`project_id`, `rule_id`, `rule_name`, and `suppressed_count`.
+`suppressed_today_count` on a later digest reports alerts already suppressed for
+that rule on the current UTC day.
+
+### Migration for webhook consumers
+
+Keep handling `alert.fired` as one alert per request. Add an `alert.digest`
+branch that verifies the same signature and iterates `data.alerts`; do not treat
+the digest object itself as a single alert. Consumers that only support
+`alert.fired` should ignore unknown event types until they are updated. Handle
+`alert.daily_cap_reached` separately if the integration needs to surface
+delivery suppression.
+
+## Operate the feed
+
+Use the feed filters for unread and urgent alerts. **Mark all read** acknowledges
+the current project feed. Snoozing hides a triggered alert until its snooze
+expires; it does not disable the underlying rule. Pause or delete the rule to
+stop future evaluation.
+
+API automation is documented under
+[Alert rules](/api/alert-rules). The complete endpoint, event, signing,
+timeout, and retry contract is under [Webhook endpoints](/api/webhooks).

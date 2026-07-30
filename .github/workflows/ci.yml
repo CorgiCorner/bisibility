@@ -1,0 +1,150 @@
+name: CI
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+  push:
+    branches:
+      - main
+
+# Cancel superseded runs on the same PR. Non-PR runs (pushes to main) get a
+# unique group per run so they neither cancel nor queue behind each other.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  static:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      # The Action requires a paid organization license; use the OSS CLI before npm ci.
+      # Pin its version and verify SHA-256 so a moved tag cannot replace the binary.
+      - name: Install gitleaks
+        run: |
+          curl -sSfL -o gitleaks.tar.gz https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz
+          echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  gitleaks.tar.gz" | sha256sum -c -
+          tar -xzf gitleaks.tar.gz gitleaks
+          sudo mv gitleaks /usr/local/bin/gitleaks
+          rm gitleaks.tar.gz
+      - name: Scan working tree
+        run: gitleaks dir . --redact --config .gitleaks.toml
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      # Lockfile is generated with npm 10.9.3; npm 11 dedupes nested esbuild entries and breaks npm ci.
+      - run: npm i -g npm@10.9.3
+      - run: npm ci
+      - run: npm run check:node
+      - run: npm run check:docs
+      - run: npm run check:doc-content
+      - run: npm run check:openapi-snapshot
+      - run: npm run check:deploy-config
+      - run: npm run check:quickstart
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run smoke:worker
+
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    env:
+      RUN_COVERAGE: ${{ github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'ci-coverage') }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      # Lockfile is generated with npm 10.9.3; npm 11 dedupes nested esbuild entries and breaks npm ci.
+      - run: npm i -g npm@10.9.3
+      - run: npm ci
+      - name: Unit tests
+        if: env.RUN_COVERAGE != 'true'
+        run: npm run test:unit -- --shard=${{ matrix.shard }}/4
+      - name: Unit tests with coverage blob report
+        if: env.RUN_COVERAGE == 'true'
+        # Partial shards cannot satisfy global thresholds; coverage enforces them after merging all four reports.
+        run: npm run test:unit:blob -- --shard=${{ matrix.shard }}/4 --coverage.thresholds.functions=0 --coverage.thresholds.lines=0 --coverage.thresholds.statements=0
+      - name: Upload blob report
+        if: env.RUN_COVERAGE == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: blob-report-${{ matrix.shard }}
+          path: .vitest-reports/
+          if-no-files-found: error
+          include-hidden-files: true
+
+  coverage:
+    needs: test
+    if: github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'ci-coverage')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      # Lockfile is generated with npm 10.9.3; npm 11 dedupes nested esbuild entries and breaks npm ci.
+      - run: npm i -g npm@10.9.3
+      - run: npm ci
+      - name: Download blob reports
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        with:
+          pattern: blob-report-*
+          path: .vitest-reports
+          merge-multiple: true
+      - run: npm run test:coverage:merge
+
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      # Lockfile is generated with npm 10.9.3; npm 11 dedupes nested esbuild entries and breaks npm ci.
+      - run: npm i -g npm@10.9.3
+      - name: Restore Next.js build cache
+        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+        with:
+          path: .next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}-${{ hashFiles('**/*.ts', '**/*.tsx') }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}-
+      - run: npm ci
+      - run: npm run build
+
+  ci-ok:
+    needs: [static, test, coverage, build]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify required jobs
+        env:
+          STATIC_RESULT: ${{ needs.static.result }}
+          TEST_RESULT: ${{ needs.test.result }}
+          COVERAGE_RESULT: ${{ needs.coverage.result }}
+          BUILD_RESULT: ${{ needs.build.result }}
+        run: |
+          for result in "$STATIC_RESULT" "$TEST_RESULT" "$BUILD_RESULT"; do
+            if [ "$result" != "success" ]; then
+              exit 1
+            fi
+          done
+
+          if [ "$COVERAGE_RESULT" != "success" ] && [ "$COVERAGE_RESULT" != "skipped" ]; then
+            exit 1
+          fi

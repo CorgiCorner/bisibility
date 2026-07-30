@@ -1,0 +1,44 @@
+---
+title: "Analytics"
+description: "Read stored traffic snapshots, query live search performance, and synchronize analytics."
+---
+
+All paths are relative to `/api/v1` and require a bearer key scoped to the
+project. Live query reads and synchronization use the project's own connected
+analytics accounts. Provider rate limits and reauthorization rules still
+apply.
+
+## List page traffic snapshots
+
+```http
+GET /projects/{project_id}/analytics/traffic-snapshots?start_date=2026-06-01&end_date=2026-06-30&path=/pricing&limit=50&offset=0
+```
+
+`start_date` and `end_date` are required inclusive ISO dates. Repeat `path` to
+filter up to 50 page paths. `limit` defaults to 50 and has a maximum of 200.
+The response contains `rows`, `total_count`, and `offset`; each row includes
+the stored provider, path, date, window, sessions, visitor, engagement, event,
+duration, and scroll metrics.
+
+## List live search-performance query statistics
+
+```http
+GET /projects/{project_id}/analytics/query-stats?start_date=2026-06-01&end_date=2026-06-30&connection_id=conn_a00000000000000000000000&query=rank%20tracker&limit=100
+```
+
+`connection_id` and `query` are optional. Bisibility prefers the primary
+eligible connection when no connection is selected. `limit` defaults to 100
+and has a maximum of 1000. The response returns the selected connection and
+rows with query, optional page, clicks, impressions, CTR, and average position.
+This is a live provider read, not a stored snapshot query.
+
+## Synchronize analytics now
+
+```http
+POST /projects/{project_id}/analytics/sync
+Idempotency-Key: analytics-sync-001
+```
+
+This runs the same audited project synchronization used by the app and returns
+per-connection run status plus fetched, matched, and upserted row counts. A
+project in read-only migration mode cannot start a sync.
