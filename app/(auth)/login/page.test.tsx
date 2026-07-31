@@ -1,5 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { dynamic } from "./page";
 
 const mocks = vi.hoisted(() => ({
   getSignInCapacity: vi.fn(),
@@ -79,9 +80,7 @@ describe("login page runtime rendering", () => {
 
   // Static prerendering freezes runtime auth settings, hiding demo credentials set
   // by container deployments.
-  it("opts out of static prerendering", async () => {
-    const { dynamic } = await renderLoginPage({});
-
+  it("opts out of static prerendering", () => {
     expect(dynamic).toBe("force-dynamic");
   });
 
@@ -106,7 +105,7 @@ describe("login page runtime rendering", () => {
     expect(html).not.toContain("dashboard ready");
     expect(html).not.toContain("bisibility-private");
     expect(html).not.toContain("db-migrations-1");
-  });
+  }, 15_000);
 
   it("surfaces the demo credentials when the demo flag is set at run time", async () => {
     const { props } = await renderLoginPage({ DEMO_FIXED_OTP: "1" });

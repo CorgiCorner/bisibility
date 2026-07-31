@@ -5,7 +5,7 @@
     "dockerfilePath": "Dockerfile"
   },
   "deploy": {
-    "healthcheckPath": "/api/v1/health",
+    "healthcheckPath": "/api/v1/readiness",
     "healthcheckTimeout": 300,
     "preDeployCommand": ["npm run db:migrate"],
     "restartPolicyType": "ON_FAILURE",

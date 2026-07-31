@@ -26,8 +26,14 @@ https://your-host.example/api/mcp
 Use `https://bisibility.com/api/mcp` for the hosted production endpoint. A
 self-hosted client should use its own origin.
 
-For example, connect Codex to a self-hosted instance with a personal access
-token:
+Hosted MCP clients that implement the MCP OAuth flow discover Bisibility's
+authorization server automatically. The flow uses Authorization Code with PKCE,
+dynamic client registration, and access tokens bound to the `/api/mcp`
+resource. The user reviews `read`, `write`, and `admin` scopes before approval.
+
+Clients that manage bearer credentials outside the MCP OAuth flow can still use
+a personal access token or project API key. For example, connect Codex to a
+self-hosted instance with a personal access token:
 
 ```bash
 export BISIBILITY_TOKEN="bsb_pat_live_..."
@@ -50,6 +56,9 @@ Choose a personal access token when the agent acts as you across projects or
 performs account-level operations. Choose a project API key when the agent
 should stay isolated to one project. Send either credential in the HTTP
 `Authorization` header, not in a tool argument.
+
+For hosted interactive clients, prefer the OAuth flow so the client never asks
+the user to copy a long-lived API credential.
 
 ```text
 Authorization: Bearer <token>
@@ -127,7 +136,7 @@ features. They are optional for a basic MCP connection.
 | --------------------------------- | ------------------------------------------------- |
 | Markdown for agents               | Send `Accept: text/markdown` to public HTML pages |
 | Auth guide                        | `/auth.md`                                        |
-| OAuth protected resource metadata | `/.well-known/oauth-protected-resource`           |
+| MCP OAuth protected resource metadata | `/.well-known/oauth-protected-resource/api/mcp`   |
 | Agent skills index                | `/.well-known/agent-skills/index.json`            |
 | MCP server card                   | `/.well-known/mcp/server-card.json`               |
 | API guide for language models     | `/api/v1/llms.txt`                                |

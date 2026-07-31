@@ -103,7 +103,8 @@ The project export supports the same history filters as the app:
 
 JSON uses the standard `data` and `meta.next_cursor` envelope. Every row includes
 `keyword_id`, `keyword`, `checked_at`, `position`, `previous_position`, and
-`ranking_url`.
+`ranking_url`, plus `provider`, `requested_depth`, and `normalization_version`.
+Only completed rank checks are included.
 
 Send `Accept: text/csv` or `format=csv` for a streamed CSV download. CSV exports
 include the same fields and are not cursor-paginated.

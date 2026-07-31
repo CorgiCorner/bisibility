@@ -1,48 +1,85 @@
 import "server-only";
 
+import { bundledMigrationNames } from "@/lib/db/migration-state";
 import { prisma } from "@/lib/db/prisma";
 import { readPublicIdContractReadiness } from "@/lib/public-id-contract/readiness";
-import { blockingDataMigrationManifest, DATA_MIGRATION_RECOVERY_COMMAND } from "./manifest";
+import { activeDataMigrationManifest, DATA_MIGRATION_RECOVERY_COMMAND } from "./manifest";
 
 export type MigrationReadiness = "incomplete" | "ready";
+type MigrationReadinessFailure = "data-migration" | "prisma-migration" | "public-id-contract";
 
 type ReadinessDatabase = {
   $queryRawUnsafe<T>(query: string, ...values: unknown[]): Promise<T>;
 };
 
-export async function readMigrationReadiness(
-  db: ReadinessDatabase = prisma,
-): Promise<MigrationReadiness> {
-  const blocking = blockingDataMigrationManifest();
-  if (blocking.length === 0) {
-    return (await readPublicIdContractReadiness(db)) ? "ready" : "incomplete";
+const PRISMA_MIGRATION_RECOVERY_COMMAND = "npx prisma migrate deploy";
+const bundledPrismaMigrations = bundledMigrationNames();
+
+async function readPrismaMigrationReadiness(db: ReadinessDatabase, migrations: readonly string[]) {
+  const rows = await db.$queryRawUnsafe<{ migration_name: string }[]>(
+    `SELECT "migration_name"
+       FROM "_prisma_migrations"
+      WHERE "finished_at" IS NOT NULL
+        AND "rolled_back_at" IS NULL
+        AND "migration_name" = ANY($1::text[])`,
+    migrations,
+  );
+  const applied = new Set(rows.map((row) => row.migration_name));
+  return migrations.every((migration) => applied.has(migration));
+}
+
+async function readMigrationReadinessFailure(
+  db: ReadinessDatabase,
+  migrations: readonly string[],
+): Promise<MigrationReadinessFailure | null> {
+  if (!(await readPrismaMigrationReadiness(db, migrations))) return "prisma-migration";
+
+  const active = activeDataMigrationManifest();
+  if (active.length === 0) {
+    return (await readPublicIdContractReadiness(db)) ? null : "public-id-contract";
   }
 
   const [ledger] = await db.$queryRawUnsafe<{ exists: boolean }[]>(
     `SELECT to_regclass('data_migrations') IS NOT NULL AS "exists"`,
   );
-  if (ledger?.exists !== true) return "incomplete";
+  if (ledger?.exists !== true) return "data-migration";
 
-  const blockingIds = blocking.map((migration) => migration.id);
+  const activeIds = active.map((migration) => migration.id);
   const rows = await db.$queryRawUnsafe<
     { checksum: string; finishedAt: Date | null; id: string }[]
   >(
     `SELECT "id", "checksum", "finishedAt"
        FROM "data_migrations"
       WHERE "id" = ANY($1::text[])`,
-    blockingIds,
+    activeIds,
   );
   const completed = new Map(rows.map((row) => [row.id, row]));
-  const dataMigrationsReady = blocking.every((migration) => {
+  const dataMigrationsReady = active.every((migration) => {
     const row = completed.get(migration.id);
     return row?.finishedAt != null && row.checksum === migration.checksum;
   });
-  return dataMigrationsReady && (await readPublicIdContractReadiness(db)) ? "ready" : "incomplete";
+  if (!dataMigrationsReady) return "data-migration";
+  return (await readPublicIdContractReadiness(db)) ? null : "public-id-contract";
 }
 
-export async function assertMigrationsReady(db?: ReadinessDatabase) {
-  const readiness = await readMigrationReadiness(db);
-  if (readiness !== "ready") {
+export async function readMigrationReadiness(
+  db: ReadinessDatabase = prisma,
+  migrations: readonly string[] = bundledPrismaMigrations,
+): Promise<MigrationReadiness> {
+  return (await readMigrationReadinessFailure(db, migrations)) === null ? "ready" : "incomplete";
+}
+
+export async function assertMigrationsReady(
+  db: ReadinessDatabase = prisma,
+  migrations: readonly string[] = bundledPrismaMigrations,
+) {
+  const failure = await readMigrationReadinessFailure(db, migrations);
+  if (failure === "prisma-migration") {
+    throw new Error(
+      `Prisma schema migrations are pending; run ${PRISMA_MIGRATION_RECOVERY_COMMAND} before starting the app.`,
+    );
+  }
+  if (failure !== null) {
     throw new Error(
       `The public ID final database contract is incomplete; run ${DATA_MIGRATION_RECOVERY_COMMAND} before starting the app.`,
     );

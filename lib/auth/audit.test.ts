@@ -119,11 +119,17 @@ describe("writeAudit", () => {
     );
   });
 
-  it("sanitizes arrays, bigint values, credentials, status reasons, and explicit context", async () => {
+  it("serializes only declared fields and keeps status-reason redaction independent", async () => {
     await writeAudit({
       action: "keyword.update",
       actorId: "user_1",
-      after: [{ apiKey: "secret", count: 4n, unsupported: Symbol("x") }],
+      after: {
+        apiKey: "secret",
+        count: 4n,
+        targetUrl: "https://user:pass@example.com/hook?token=secret",
+        text: "rank tracker",
+        unsupported: Symbol("x"),
+      },
       before: null,
       requestContext: {
         appVersion: "explicit",
@@ -138,10 +144,52 @@ describe("writeAudit", () => {
     });
     expect(mocks.prisma.auditLog.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
-        after: [{ apiKey: "[redacted]", count: "4", unsupported: null }],
+        after: {
+          targetUrl: "https://example.com/hook",
+          text: "rank tracker",
+        },
         appVersion: "explicit",
         before: expect.anything(),
         statusReason: "[redacted]",
+      }),
+    });
+  });
+
+  it("writes no payload fields for an undeclared action", async () => {
+    await writeAudit({
+      action: "audit.new_producer",
+      actorId: "user_1",
+      after: { target: "postgresql://user:pass@example.com/database" },
+      targetId: publicId("prj"),
+      targetType: "project",
+    });
+
+    expect(mocks.prisma.auditLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        action: "audit.new_producer",
+        after: undefined,
+      }),
+    });
+  });
+
+  it("keeps declared manual-note content needed after deletion", async () => {
+    await writeAudit({
+      action: "signal.note_removed",
+      actorId: "user_1",
+      before: {
+        payload: { note: "Investigated and resolved." },
+        severity: "info",
+      },
+      targetId: publicId("sig"),
+      targetType: "signal",
+    });
+
+    expect(mocks.prisma.auditLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        before: {
+          payload: { note: "Investigated and resolved." },
+          severity: "info",
+        },
       }),
     });
   });

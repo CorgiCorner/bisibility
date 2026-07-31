@@ -4,6 +4,7 @@ import {
   compareMigrationState,
   type MigrationComparison,
 } from "@/lib/db/migration-state";
+import { getBakedAppRevision } from "@/lib/deployment/runtime-env.generated";
 import {
   type RankCheckSchedulerMode,
   rankCheckSchedulerMode,
@@ -26,6 +27,7 @@ export type WorkerLiveness = {
   heartbeatState: WorkerHeartbeatState;
   lastSeenAt: string | null;
   release: string;
+  revision: string;
   schedulerMode: RankCheckSchedulerMode | "unknown";
   schemaComparison: MigrationComparison;
   status: WorkerLivenessStatus;
@@ -37,6 +39,7 @@ type WorkerLivenessRecord = {
   environment: string;
   lastSeenAt: string;
   release: string;
+  revision: string;
   schedulerMode: RankCheckSchedulerMode | "unknown";
   schemaComparison: MigrationComparison;
 };
@@ -63,6 +66,7 @@ function unknownLiveness(): WorkerLiveness {
     heartbeatState: "absent",
     lastSeenAt: null,
     release: "unknown",
+    revision: "unknown",
     schedulerMode: "unknown",
     schemaComparison: "unknown",
     status: "unknown",
@@ -87,6 +91,7 @@ function parseLivenessRecord(raw: string): WorkerLivenessRecord | null {
       environment: typeof value.environment === "string" ? value.environment : "unknown",
       lastSeenAt: value.lastSeenAt,
       release: typeof value.release === "string" ? value.release : "unknown",
+      revision: typeof value.revision === "string" ? value.revision : "unknown",
       schedulerMode:
         value.schedulerMode === "legacy" ||
         value.schedulerMode === "cutover" ||
@@ -104,6 +109,7 @@ function parseLivenessRecord(raw: string): WorkerLivenessRecord | null {
           environment: "unknown",
           lastSeenAt: raw,
           release: "unknown",
+          revision: "unknown",
           schedulerMode: "unknown",
           schemaComparison: "unknown",
         }
@@ -145,6 +151,7 @@ export async function refreshWorkerLiveness(now = new Date()): Promise<void> {
         environment: workerEnvironment(),
         lastSeenAt: now.toISOString(),
         release: workerRelease(),
+        revision: getBakedAppRevision(),
         schedulerMode: rankCheckSchedulerMode(),
       } satisfies WorkerLivenessRecord),
     );
@@ -183,6 +190,7 @@ export async function getWorkerLivenessDetails(now = new Date()): Promise<Worker
       heartbeatState,
       lastSeenAt: new Date(lastSeen).toISOString(),
       release: record.release,
+      revision: record.revision,
       schedulerMode: record.schedulerMode,
       schemaComparison: record.schemaComparison,
       status: heartbeatState === "fresh" ? "ok" : heartbeatState === "stale" ? "stale" : "unknown",

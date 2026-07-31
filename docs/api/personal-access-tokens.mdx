@@ -35,6 +35,10 @@ The settings page at `/app/account/security` can issue a token. The CLI uses
 OAuth Authorization Code with PKCE and exchanges its short-lived OAuth access
 token at the same endpoint.
 
+OAuth access tokens issued for the `/api/mcp` resource authenticate the hosted
+MCP endpoint directly. They are audience-bound and are not accepted as REST API
+credentials.
+
 ```http
 POST /api/v1/me/tokens
 Authorization: Bearer <personal_token_or_oauth_access_token>

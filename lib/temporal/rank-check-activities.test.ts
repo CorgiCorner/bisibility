@@ -396,6 +396,7 @@ describe("rank-check activities", () => {
         deferredReason: "rate limited",
         degradedToCountry: false,
         finishedAt: new Date("2026-01-01T06:01:00.000Z"),
+        normalizationVersion: null,
         status: "deferred",
         viaFallback: false,
       },

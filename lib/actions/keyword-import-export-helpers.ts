@@ -48,9 +48,12 @@ export type KeywordExportRow = {
   publicId: string;
   rankChecks: {
     checkedAt: Date;
+    normalizationVersion: string | null;
     position: number | null;
     previousPosition: number | null;
+    provider: string;
     rankingUrl: string | null;
+    requestedDepth: number | null;
   }[];
   tags: { tag: { name: string } }[];
   targetUrl: string | null;
@@ -164,7 +167,7 @@ function weekKey(date: Date) {
   return `${date.getUTCFullYear()}-${Math.floor(day / 7)}`;
 }
 
-function selectedChecks(row: KeywordExportRow, options: KeywordExportOptions) {
+export function selectedChecks(row: KeywordExportRow, options: KeywordExportOptions) {
   const minDate = cutoff(options.range);
   const checks = row.rankChecks.filter((check) => !minDate || check.checkedAt >= minDate);
   if (options.granularity === "daily") return checks;
@@ -234,15 +237,26 @@ function currentRows(keywords: KeywordExportRow[], options: KeywordExportOptions
 }
 
 function historyRows(keywords: KeywordExportRow[], options: KeywordExportOptions) {
-  const headers = ["keyword", "checked_at", "position", "ranking_url"];
+  const headers = [
+    "keyword",
+    "checked_at",
+    "position",
+    "ranking_url",
+    "provider",
+    "requested_depth",
+    "normalization_version",
+  ];
   return {
     headers,
     rows: keywords.flatMap((row) =>
       selectedChecks(row, options).map((check) => ({
         checked_at: check.checkedAt,
         keyword: row.text,
+        normalization_version: check.normalizationVersion ?? "",
         position: check.position ?? "",
+        provider: check.provider,
         ranking_url: check.rankingUrl ?? "",
+        requested_depth: check.requestedDepth ?? "",
       })),
     ),
   };
@@ -289,32 +303,4 @@ export async function serializeKeywordExportXlsx(
   }
   const buffer = await workbook.xlsx.writeBuffer();
   return Buffer.from(buffer as ArrayBuffer).toString("base64");
-}
-
-export function keywordExportJson(
-  keywords: KeywordExportRow[],
-  options: KeywordExportOptions,
-  projectId: string,
-) {
-  return {
-    exportedAt: new Date().toISOString(),
-    keywords: keywords.map((row) => ({
-      device: row.device,
-      id: row.publicId,
-      keyword: row.text,
-      location: row.location,
-      intent: row.intent,
-      rankingHistory: selectedChecks(row, options).map((check) => ({
-        checkedAt: check.checkedAt.toISOString(),
-        position: check.position,
-        previousPosition: check.previousPosition,
-        rankingUrl: check.rankingUrl,
-      })),
-      tags: row.tags.map((item) => item.tag.name),
-      targetUrl: row.targetUrl,
-      topic: row.topic,
-    })),
-    projectId,
-    scope: options.scope,
-  };
 }

@@ -1,6 +1,6 @@
 {
   "name": "bisibility",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "description": "Self-hostable open-source keyword rank tracker with keyword and backlink research, MCP, and bring-your-own providers.",
   "license": "AGPL-3.0-only",
@@ -74,6 +74,7 @@
     "build-storybook": "NEXT_PRIVATE_LOCAL_WEBPACK=true STORYBOOK_DISABLE_TELEMETRY=1 storybook build",
     "smoke:app": "node tools/smoke-app.mjs",
     "smoke:alerts-remediation": "node tools/check-node.mjs && node scripts/smoke/smoke-alert-remediation.mjs",
+    "smoke:temporal-upgrade": "node scripts/smoke/temporal-upgrade.mjs",
     "smoke:worker": "node scripts/smoke/smoke-worker.mjs",
     "screenshot:dashboard": "node tools/check-node.mjs && node scripts/generate/generate-dashboard-screenshot.mjs",
     "check:node": "node tools/check-node.mjs",
@@ -81,6 +82,7 @@
     "verify:deployment": "node scripts/smoke/verify-deployment.mjs",
     "test:e2e": "node scripts/smoke/e2e.mjs",
     "test:e2e:first-run-schema": "node scripts/smoke/first-run-schema-e2e.mjs",
+    "test:data-migration-runner-postgres": "node --experimental-transform-types --import ./lib/temporal/register-loader.mjs scripts/smoke/data-migration-runner-postgres.ts",
     "test:public-id-contract": "node scripts/smoke/test-public-id-contract.mjs",
     "smoke:visual": "node scripts/smoke/smoke-visual.mjs",
     "smoke:docker": "node scripts/smoke/smoke-docker.mjs",

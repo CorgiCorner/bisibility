@@ -13,18 +13,36 @@ export type DataMigrationContext = {
   log: (message: string) => void;
 };
 
-export type DataMigrationDefinition = DataMigrationManifestEntry & {
-  afterFinish?: (
-    context: Pick<DataMigrationContext, "db" | "log">,
-  ) => Promise<void>;
-  checksumInputs: readonly {
-    label: string;
-    url: URL;
-  }[];
+export type DataMigrationChecksumInput = {
+  label: string;
+  url: URL;
+};
+
+export type DataMigrationImplementation = {
+  checksumInputs: readonly DataMigrationChecksumInput[];
+  finalize?: (context: Pick<DataMigrationContext, "db" | "log">) => Promise<void>;
+  id: string;
   run: (context: DataMigrationContext) => Promise<void>;
   sourceUrl: URL;
 };
 
-export type ResolvedDataMigration = DataMigrationDefinition & {
+/**
+ * Immutable adapter for historical migration modules. New migrations use
+ * DataMigrationImplementation and keep lifecycle metadata in the manifest.
+ */
+export type DataMigrationDefinition = {
+  afterFinish?: (
+    context: Pick<DataMigrationContext, "db" | "log">,
+  ) => Promise<void>;
+  blocking: boolean;
+  blocksSchemaMigration: string;
   checksum: string;
+  checksumInputs: readonly DataMigrationChecksumInput[];
+  id: string;
+  requiresSchemaThrough: string;
+  run: (context: DataMigrationContext) => Promise<void>;
+  sourceUrl: URL;
+  writeGatePhase?: string;
 };
+
+export type ResolvedDataMigration = DataMigrationManifestEntry & DataMigrationImplementation;

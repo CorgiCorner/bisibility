@@ -10,6 +10,7 @@ import {
   serpMarketOptions,
 } from "@/lib/serp/markets";
 import { apiKeyCreateProperties } from "./api-key-contract";
+import { API_VERSION_HEADER, getApiVersionCapabilities } from "./api-versions";
 import { cloudImportCapabilitySchemas } from "./cloud-import-capabilities";
 import { loopClosureToolInputSchemas } from "./loop-closure-capabilities";
 import { getOpenApiDocument } from "./openapi";
@@ -255,6 +256,7 @@ export function getCapabilities() {
 
 // Keep `/api/v1/llms.txt` distinct from the site-level `/llms.txt` agent entry point.
 export function getLlmsText() {
+  const { apiVersions } = getApiVersionCapabilities();
   const capabilities = getCapabilities()
     .map((tool) => `- ${tool.name}: ${tool.description}`)
     .join("\n");
@@ -266,6 +268,8 @@ export function getLlmsText() {
     "see /llms.txt.",
     "",
     "Base URL: /api/v1",
+    `API versions: ${apiVersions.join(", ")}.`,
+    `Optional declaration: ${API_VERSION_HEADER}: ${apiVersions[0]}.`,
     "Auth: Authorization: Bearer <api_key>.",
     "Exception: cloud-import operations authenticate only with Authorization: Bearer mig_.... Request bodies never carry credentials. GET /cloud/import/compatibility is public.",
     "Errors use application/problem+json. Lists use data/meta.next_cursor.",

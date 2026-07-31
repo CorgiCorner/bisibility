@@ -77,6 +77,7 @@ export async function markStaleRunningChecks(
         error: STALE_RUNNING_CHECK_ERROR,
         estimatedCostCents: null,
         finishedAt: now,
+        normalizationVersion: null,
         status: "failed",
         viaFallback: false,
       },

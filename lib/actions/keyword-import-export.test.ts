@@ -6,7 +6,6 @@ import {
   type KeywordExportOptions,
   type KeywordExportRow,
   keywordExportColumns,
-  keywordExportJson,
   keywordExportOptions,
   keywordExportTable,
   keywordImportKey,
@@ -15,6 +14,7 @@ import {
   serializeKeywordExportCsv,
   serializeKeywordExportXlsx,
 } from "./keyword-import-export-helpers";
+import { keywordExportJson } from "./keyword-import-export-json";
 
 const FIXED_NOW = new Date("2026-07-20T12:00:00.000Z");
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -45,15 +45,21 @@ function keywordFixture(): KeywordExportRow {
     rankChecks: [
       {
         checkedAt: daysBeforeFixedNow(1),
+        normalizationVersion: "v1",
         position: 3,
         previousPosition: 7,
+        provider: "dataforseo",
         rankingUrl: "https://example.com/rank,tracker",
+        requestedDepth: 100,
       },
       {
         checkedAt: daysBeforeFixedNow(2),
+        normalizationVersion: "v1",
         position: 4,
         previousPosition: 6,
+        provider: "serpapi",
         rankingUrl: "https://example.com/older",
+        requestedDepth: 100,
       },
     ],
     tags: [{ tag: { name: "core, seo" } }, { tag: { name: "product" } }],
@@ -266,12 +272,14 @@ bad,not a url,tag,US,desktop`);
   it("serializes ranking history rows as CSV", () => {
     const csv = serializeKeywordExportCsv([keywordFixture()], exportOptions({ scope: "history" }));
 
-    expect(csv.split("\n")[0]).toBe("keyword,checked_at,position,ranking_url");
-    expect(csv).toContain(
-      `"rank ""tracker""",${daysBeforeFixedNow(1).toISOString()},3,"https://example.com/rank,tracker"`,
+    expect(csv.split("\n")[0]).toBe(
+      "keyword,checked_at,position,ranking_url,provider,requested_depth,normalization_version",
     );
     expect(csv).toContain(
-      `"rank ""tracker""",${daysBeforeFixedNow(2).toISOString()},4,https://example.com/older`,
+      `"rank ""tracker""",${daysBeforeFixedNow(1).toISOString()},3,"https://example.com/rank,tracker",dataforseo,100,v1`,
+    );
+    expect(csv).toContain(
+      `"rank ""tracker""",${daysBeforeFixedNow(2).toISOString()},4,https://example.com/older,serpapi,100,v1`,
     );
   });
 
@@ -281,9 +289,12 @@ bad,not a url,tag,US,desktop`);
       ...keyword.rankChecks,
       {
         checkedAt: daysBeforeFixedNow(31),
+        normalizationVersion: "v1",
         position: null,
         previousPosition: null,
+        provider: "serpapi",
         rankingUrl: null,
+        requestedDepth: 100,
       },
     ];
     const table = keywordExportTable(
@@ -325,13 +336,19 @@ bad,not a url,tag,US,desktop`);
           rankingHistory: [
             {
               checkedAt: daysBeforeFixedNow(1).toISOString(),
+              normalizationVersion: "v1",
               position: 3,
               previousPosition: 7,
+              provider: "dataforseo",
               rankingUrl: "https://example.com/rank,tracker",
+              requestedDepth: 100,
             },
             {
               checkedAt: daysBeforeFixedNow(2).toISOString(),
+              normalizationVersion: "v1",
               position: 4,
+              provider: "serpapi",
+              requestedDepth: 100,
             },
           ],
           topic: "Product",

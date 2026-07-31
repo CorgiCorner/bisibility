@@ -66,6 +66,7 @@ function row(overrides: Partial<KeywordRow> = {}): KeywordRow {
     ctr: overrides.ctr ?? null,
     impressions: overrides.impressions ?? null,
     positionBaseline: overrides.positionBaseline === undefined ? 1 : overrides.positionBaseline,
+    positionHistoryBoundaryAt: overrides.positionHistoryBoundaryAt ?? null,
   };
 }
 

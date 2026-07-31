@@ -37,9 +37,11 @@ const project = {
 function rankCheck(overrides: Record<string, unknown>) {
   return {
     checkedAt: new Date("2026-06-28T10:00:00.000Z"),
+    normalizationVersion: "v2",
     position: 10,
     previousPosition: null,
     rankingUrl: "/",
+    requestedDepth: 100,
     status: "completed",
     ...overrides,
   };

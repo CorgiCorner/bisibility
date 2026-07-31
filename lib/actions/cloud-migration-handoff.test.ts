@@ -21,7 +21,7 @@ function packageContent(overrides: Record<string, unknown> = {}) {
     notification_preferences: [],
     project_id: sourceProjectId,
     saved_views: [],
-    version: 5,
+    version: 6,
     ...overrides,
   });
 }
@@ -134,7 +134,7 @@ describe("cloud migration handoff actions", () => {
     expect(mocks.prisma.rankCheck.count).toHaveBeenCalledWith({
       where: {
         keyword: { projectId: "project_1" },
-        status: { not: "deferred" },
+        status: "completed",
       },
     });
   });
@@ -338,7 +338,7 @@ describe("cloud migration handoff actions", () => {
         JSON.stringify({
           app_version: "1.2.3",
           latest_migration: "20260708010000_target",
-          schema_versions_supported: [5],
+          schema_versions_supported: [6],
         }),
         { status: 200 },
       ),
@@ -352,7 +352,7 @@ describe("cloud migration handoff actions", () => {
       origin: "https://target.example.com",
       reachable: true,
       sameInstance: false,
-      schemaVersionsSupported: [5],
+      schemaVersionsSupported: [6],
       sourceDeploymentMode: "cloud",
       supportsSessions: true,
     });
@@ -364,7 +364,7 @@ describe("cloud migration handoff actions", () => {
     mocks.migrationFetch.mockResolvedValueOnce(new Response(null, { status: 404 }));
     await expect(preflightMigrationTarget({ projectId })).resolves.toMatchObject({
       reachable: true,
-      reason: "Target instance does not support strict v5 migration packages.",
+      reason: "Target instance does not support strict v6 migration packages.",
       supportsSessions: false,
     });
 

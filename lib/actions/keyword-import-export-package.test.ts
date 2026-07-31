@@ -49,10 +49,12 @@ function keyword(overrides: Record<string, unknown> = {}) {
         checkedAt: new Date("2026-06-20T10:00:00.000Z"),
         costCents: null,
         id: "check_1",
+        normalizationVersion: "v1",
         position: 3,
         previousPosition: 7,
-        provider: "self-hosted",
+        provider: "dataforseo",
         rankingUrl: "https://example.com/rank-tracker",
+        requestedDepth: 100,
       },
     ],
     tags: [{ tag: { name: "SEO" } }, { tag: { name: "Product" } }],
@@ -140,7 +142,7 @@ describe("keyword export packages", () => {
     vi.useRealTimers();
   });
 
-  it("exports the complete strict version 4 cloud import package", async () => {
+  it("exports the complete strict version 6 cloud import package", async () => {
     const result = await exportCloudImportPackage({ projectId: ids.project });
     const payload = JSON.parse(result.content);
 
@@ -161,7 +163,7 @@ describe("keyword export packages", () => {
         include: {
           rankChecks: {
             orderBy: { checkedAt: "desc" },
-            where: { status: { not: "deferred" } },
+            where: { status: "completed" },
           },
           tags: { include: { tag: true } },
         },
@@ -172,7 +174,7 @@ describe("keyword export packages", () => {
       exported_at: "2026-06-28T12:00:00.000Z",
       project_id: ids.project,
       scope: "history",
-      version: 5,
+      version: 6,
     });
     expect(payload.keywords).toEqual([
       expect.objectContaining({
@@ -188,9 +190,12 @@ describe("keyword export packages", () => {
     expect(payload.keywords[0].rankingHistory).toEqual([
       {
         checkedAt: "2026-06-20T10:00:00.000Z",
+        normalizationVersion: "v1",
         position: 3,
         previousPosition: 7,
+        provider: "dataforseo",
         rankingUrl: "https://example.com/rank-tracker",
+        requestedDepth: 100,
       },
     ]);
     expect(payload.alert_rules).toEqual([
@@ -219,6 +224,23 @@ describe("keyword export packages", () => {
     });
     expect(mocks.writeAudit).not.toHaveBeenCalledWith(
       expect.objectContaining({ targetId: "project_1" }),
+    );
+  });
+
+  it("fails closed when completed history has no normalization version", async () => {
+    mocks.prisma.keyword.findMany.mockResolvedValue([
+      keyword({
+        rankChecks: [
+          {
+            ...keyword().rankChecks[0],
+            normalizationVersion: null,
+          },
+        ],
+      }),
+    ]);
+
+    await expect(exportCloudImportPackage({ projectId: ids.project })).rejects.toThrow(
+      "Completed rank check is missing a supported normalization version.",
     );
   });
 

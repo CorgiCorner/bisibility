@@ -4,6 +4,7 @@ import { SIGNAL_TYPES, type SignalInput } from "./types";
 
 export type RankCheckSignalArgs = {
   checkedAt: Date;
+  comparisonAllowed: boolean;
   keywordId: string;
   position: number | null;
   previousPosition: number | null;
@@ -44,6 +45,7 @@ function rankingUrlChangedSeverity(
 }
 
 export function signalsForRankCheck(args: RankCheckSignalArgs): SignalInput[] {
+  if (!args.comparisonAllowed) return [];
   const signals: SignalInput[] = [];
 
   if (args.previousPosition !== args.position) {

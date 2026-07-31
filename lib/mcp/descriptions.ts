@@ -39,7 +39,7 @@ export const descriptions: Record<string, string> = {
   exportRankHistory:
     "Export project rank history as capped cursor-paginated JSON. CSV streaming is available through REST only.",
   getCapabilities: "List public API capabilities exposed for agent workflows.",
-  getHealth: "Check API health and provider readiness.",
+  getHealth: "Read composite API, database, migration, worker, and Temporal diagnostics.",
   getKeyword: "Get one keyword and its latest rank position by keyword id.",
   get_keyword_metrics: `Write scope is required. Paid metrics lookup on the project's own DataForSEO account, ${metricsCost}. Batches contain up to 700 keywords and cache each keyword for 12 hours, shared with the API and future UI. Clickstream-refined volumes double provider cost. When cost matters, call with estimate_only first, then use max_cost_cents as a best-effort guard.`,
   getMe: "Get the authenticated user and their project memberships (personal-token auth only).",

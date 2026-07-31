@@ -1,13 +1,19 @@
 import "server-only";
 
 import { alertSeverities, defaultAlertSeverity } from "@/lib/alerts/severity";
-import { keywordLocation } from "@/lib/api/keyword-utils";
 import { keywordCreateItemSchema } from "@/lib/api/schemas";
 import { type PublicIdPrefix, parsePublicId } from "@/lib/db/public-id";
 import { normalizeDomain } from "@/lib/domains/normalize";
 import { IMPORT_PACKAGE_MAX_KEYWORDS } from "@/lib/migration/package-limits";
+import {
+  CLOUD_MIGRATION_PACKAGE_VERSION,
+  LEGACY_CLOUD_MIGRATION_PACKAGE_VERSION,
+} from "@/lib/migration/package-version";
 import { savedViewSurfaceSchema } from "@/lib/saved-views/model";
 import { z } from "zod";
+import { importKeywordSchema, legacyImportKeywordSchema } from "./keyword-schema";
+
+export { importKeywordSchema } from "./keyword-schema";
 
 function record(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" && !Array.isArray(value)
@@ -37,43 +43,7 @@ const alertConditionSchema = z.enum([
 ]);
 const alertTargetSchema = z.enum(["all", "keyword", "tag"]);
 const alertSeveritySchema = z.enum(alertSeverities);
-const rankingUrlSchema = z
-  .string()
-  .max(500)
-  .refine((value) => value.startsWith("/") || URL.canParse(value), {
-    message: "Ranking URL must be an absolute URL or a path.",
-  })
-  .nullable()
-  .optional();
-const historySchema = z
-  .object({
-    checkedAt: z.iso.datetime().transform((value) => new Date(value)),
-    position: rankPositionSchema,
-    previousPosition: rankPositionSchema,
-    rankingUrl: rankingUrlSchema,
-  })
-  .strict();
 export const tokenSchema = z.string().min(20).max(256);
-export const importKeywordSchema = z
-  .object({
-    device: keywordCreateItemSchema.shape.device,
-    id: strictPublicId("kw"),
-    keyword: keywordCreateItemSchema.shape.keyword,
-    location: locationSchema,
-    rankingHistory: z.array(historySchema).max(5000).default([]),
-    tags: keywordCreateItemSchema.shape.tags,
-    target_url: keywordCreateItemSchema.shape.target_url,
-  })
-  .strict()
-  .transform((value) => ({
-    device: value.device,
-    id: value.id,
-    keyword: value.keyword,
-    location: keywordLocation(value),
-    rankingHistory: value.rankingHistory,
-    tags: value.tags,
-    target_url: value.target_url ?? null,
-  }));
 const keywordTargetSchema = z
   .object({
     device: keywordCreateItemSchema.shape.device.optional(),
@@ -253,27 +223,32 @@ const cloudImportBodyShape = {
   projectId: strictPublicId("prj").optional(),
   savedViews: z.array(savedViewSchema).max(500).default([]),
   scope: z.enum(["current", "history"]).optional(),
-  version: z.literal(5).optional(),
+  version: z.literal(CLOUD_MIGRATION_PACKAGE_VERSION).optional(),
 };
 
 export const cloudImportBodySchema = z.preprocess(
   normalizeSections,
   z.looseObject(cloudImportBodyShape),
 );
+type CloudImportBodyValue = z.infer<typeof cloudImportBodySchema>;
 const packageSections = [
   "alertRules",
   "competitors",
   "notificationPreferences",
   "savedViews",
 ] as const;
-export const cloudImportPackageSchema = z.preprocess(
-  normalizePackage,
-  z
+function packageSchema(version: 5 | 6) {
+  const keywords =
+    version === LEGACY_CLOUD_MIGRATION_PACKAGE_VERSION
+      ? z.array(legacyImportKeywordSchema).max(IMPORT_PACKAGE_MAX_KEYWORDS)
+      : importKeywordsSchema;
+  return z
     .looseObject({
       ...cloudImportBodyShape,
       __packageExtra: z.array(z.string()).max(0),
+      keywords: keywords.default([]),
       projectId: strictPublicId("prj"),
-      version: z.literal(5),
+      version: z.literal(version),
     })
     .superRefine((value, ctx) => {
       for (const section of packageSections) {
@@ -285,10 +260,42 @@ export const cloudImportPackageSchema = z.preprocess(
           });
         }
       }
-    }),
-);
+      if (
+        version === LEGACY_CLOUD_MIGRATION_PACKAGE_VERSION &&
+        value.keywords.some((keyword) => keyword.rankingHistory.length > 0)
+      ) {
+        ctx.addIssue({
+          code: "custom",
+          message:
+            "Version 5 ranking history has ambiguous statuses; update Bisibility and re-export the package.",
+          path: ["keywords"],
+        });
+      }
+    });
+}
 
-export type CloudImportBody = z.infer<typeof cloudImportBodySchema>;
+const normalizedCloudImportPackageSchema = z.discriminatedUnion("version", [
+  packageSchema(CLOUD_MIGRATION_PACKAGE_VERSION),
+  packageSchema(LEGACY_CLOUD_MIGRATION_PACKAGE_VERSION),
+]);
+
+export const cloudImportPackageSchema = z
+  .preprocess(normalizePackage, normalizedCloudImportPackageSchema)
+  .transform(
+    (value): CloudImportBodyValue =>
+      ({
+        ...value,
+        keywords:
+          value.version === LEGACY_CLOUD_MIGRATION_PACKAGE_VERSION
+            ? value.keywords.map((keyword) =>
+                importKeywordSchema.parse({ ...keyword, rankingHistory: [] }),
+              )
+            : value.keywords,
+        version: CLOUD_MIGRATION_PACKAGE_VERSION,
+      }) as unknown as CloudImportBodyValue,
+  );
+
+export type CloudImportBody = CloudImportBodyValue;
 export type ImportAlertRule = CloudImportBody["alertRules"][number];
 export type ImportKeyword = CloudImportBody["keywords"][number];
 export type ImportNotificationPreference = CloudImportBody["notificationPreferences"][number];

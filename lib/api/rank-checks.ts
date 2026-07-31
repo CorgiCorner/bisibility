@@ -175,6 +175,7 @@ export async function runRankCheck(ctx: ApiContext, keywordId: string) {
         attemptCount: 0,
         degradedToCountry: false,
         keywordId: keyword.id,
+        normalizationVersion: null,
         publicId: makePublicId("check"),
         provider: data.provider_id ?? "primary",
         status: RANK_CHECK_RUNNING_STATUS,

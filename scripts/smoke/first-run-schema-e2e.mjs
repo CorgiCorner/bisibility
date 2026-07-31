@@ -123,6 +123,7 @@ const testEnv = {
   BISIBILITY_FIRST_RUN_SCHEMA_E2E: "1",
   BISIBILITY_SECRETS_KEY: randomBytes(32).toString("base64"),
   DATABASE_URL: databaseUrl,
+  DEPLOYMENT_ENV: "test",
   DEPLOYMENT_MODE: "self-host",
   DIRECT_URL: databaseUrl,
   E2E_BASE_URL: baseUrl,
@@ -139,7 +140,7 @@ try {
   await fs.writeFile(otpFile, "{}");
   await run("docker", [...composeArgs, "up", "-d", "--wait", "postgres"], { env: testEnv });
   await waitForPostgres(testEnv);
-  await run("npx", ["prisma", "migrate", "deploy"], { env: testEnv });
+  await run("npm", ["run", "db:migrate"], { env: testEnv });
   await run("npm", ["run", "build"], { env: testEnv });
 
   server = spawn("npm", ["run", "start", "--", "-p", String(port)], {

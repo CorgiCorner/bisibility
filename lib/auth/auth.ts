@@ -9,6 +9,11 @@ import { demoEmailOtpRateLimit } from "@/lib/auth/demo-email-otp";
 import { emailOtpTwoFactorPlugin } from "@/lib/auth/email-otp-two-factor";
 import { prepareFirstRunUserCreation } from "@/lib/auth/first-run";
 import { firstRunCreationState, isPendingFirstRunUser } from "@/lib/auth/first-run-context";
+import {
+  OAUTH_ACCESS_TOKEN_TTL_SECONDS,
+  OAUTH_AUTHORIZATION_TTL_SECONDS,
+  OAUTH_REFRESH_TOKEN_TTL_SECONDS,
+} from "@/lib/auth/oauth-policy";
 import { oidcScopes } from "@/lib/auth/oidc-scopes";
 import { sendOtpEmail } from "@/lib/auth/otp-email";
 import { addAuthPublicId } from "@/lib/auth/public-id-hooks";
@@ -32,7 +37,10 @@ import { emailOTP, jwt, twoFactor } from "better-auth/plugins";
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30;
 
 const AUTH_SECRET = resolveAuthSecret();
-const AUTH_URL = process.env.BETTER_AUTH_URL ?? `http://localhost:${process.env.PORT ?? "3000"}`;
+export const AUTH_URL_CONFIGURED = Boolean(process.env.BETTER_AUTH_URL?.trim());
+export const AUTH_URL =
+  process.env.BETTER_AUTH_URL ?? `http://localhost:${process.env.PORT ?? "3000"}`;
+export const MCP_RESOURCE_URL = new URL("/api/mcp", AUTH_URL).toString();
 const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID;
 const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET;
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
@@ -246,8 +254,13 @@ export const auth = betterAuth({
     oauthProvider({
       loginPage: "/login",
       consentPage: "/oauth/consent",
+      accessTokenExpiresIn: OAUTH_ACCESS_TOKEN_TTL_SECONDS,
+      codeExpiresIn: OAUTH_AUTHORIZATION_TTL_SECONDS,
+      refreshTokenExpiresIn: OAUTH_REFRESH_TOKEN_TTL_SECONDS,
       allowDynamicClientRegistration: true,
+      allowUnauthenticatedClientRegistration: true,
       scopes: [...oidcScopes],
+      validAudiences: [AUTH_URL, MCP_RESOURCE_URL],
     }),
     authAuditPlugin,
     emailOtpTwoFactorPlugin,

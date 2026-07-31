@@ -14,7 +14,7 @@ npm install @bisibility/mcp
 
 ## Authenticate
 
-The server reads the API root and credential from its environment:
+The local stdio server reads the API root and credential from its environment:
 
 ```bash
 export BISIBILITY_API_KEY="your-api-key"
@@ -23,6 +23,17 @@ export BISIBILITY_BASE_URL="https://your-host.example/api/v1"
 
 It accepts project API keys and
 [personal access tokens](/api/personal-access-tokens).
+
+The hosted Streamable HTTP server is available at:
+
+```text
+https://bisibility.com/api/mcp
+```
+
+MCP clients that support OAuth discover the authorization flow automatically.
+Bisibility uses Authorization Code with PKCE, dynamic client registration, and
+access tokens bound to the MCP resource. API keys and personal access tokens
+remain available for clients that manage bearer credentials directly.
 
 ## Connect a client
 

@@ -79,8 +79,20 @@ Discovery routes are mixed:
 | - | - |
 | `/health` | Raw JSON object |
 | `/openapi.json` | Raw OpenAPI document |
-| `/capabilities` | `{ "data": [...] }` |
+| `/capabilities` | `{ "apiVersions": ["v1"], "data": [...] }` |
 | `/llms.txt` | Plain text |
+
+## API version declarations
+
+`GET /capabilities` advertises the API contracts the server serves in
+`apiVersions`. Clients may declare one of those values with
+`Bisibility-API-Version: v1`. The header is optional: an undeclared request
+continues through the same authentication, validation, and routing path used
+before version negotiation was added.
+
+An unsupported declared version returns `409 Conflict` with problem type
+`https://bisibility.com/problems/unsupported_api_version`. See
+[API errors](/api/errors) for the response shape.
 
 ## Pagination
 

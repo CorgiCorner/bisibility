@@ -3,6 +3,7 @@ export type JsonObject = Record<string, unknown>;
 export type McpToolDefinition = {
   annotations: {
     destructiveHint: boolean;
+    openWorldHint: boolean;
     readOnlyHint: boolean;
   };
   description: string;

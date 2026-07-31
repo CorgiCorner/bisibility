@@ -46,18 +46,24 @@ describe("rank-history export core", () => {
           {
             checkedAt: new Date("2026-07-20T10:00:00.000Z"),
             id: "check_2",
+            normalizationVersion: "v1",
             position: 4,
             previousPosition: 7,
+            provider: "dataforseo",
             publicId: CHECK_PUBLIC_ID_2,
             rankingUrl: "https://example.com/rank,tracker",
+            requestedDepth: 100,
           },
           {
             checkedAt: new Date("2026-07-19T10:00:00.000Z"),
             id: "check_1",
+            normalizationVersion: "v1",
             position: 5,
             previousPosition: 8,
+            provider: "serpapi",
             publicId: CHECK_PUBLIC_ID,
             rankingUrl: null,
+            requestedDepth: 100,
           },
         ],
         tags: [],
@@ -85,11 +91,15 @@ describe("rank-history export core", () => {
             orderBy: [{ checkedAt: "desc" }, { publicId: "desc" }],
             select: {
               checkedAt: true,
+              normalizationVersion: true,
               position: true,
               previousPosition: true,
+              provider: true,
               publicId: true,
               rankingUrl: true,
+              requestedDepth: true,
             },
+            where: expect.objectContaining({ status: "completed" }),
           }),
         }),
         where: expect.objectContaining({
@@ -113,8 +123,11 @@ describe("rank-history export core", () => {
     expect(rankHistoryRows(loaded, "daily")).toHaveLength(2);
     const weekly = rankHistoryRows(loaded, "weekly");
     expect(weekly).toHaveLength(1);
-    expect(rankHistoryCsvHeader).toContain("checked_at");
+    expect(rankHistoryCsvHeader).toBe(
+      "keyword_id,keyword,checked_at,position,previous_position,ranking_url,provider,requested_depth,normalization_version",
+    );
     expect(rankHistoryCsvLine(weekly[0])).toContain('"https://example.com/rank,tracker"');
+    expect(rankHistoryCsvLine(weekly[0])).toContain(",dataforseo,100,v1");
   });
 
   it("rejects an actor without project membership", async () => {

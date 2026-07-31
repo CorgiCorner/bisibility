@@ -88,7 +88,7 @@ function importBody(overrides: Record<string, unknown> = {}) {
     notification_preferences: [],
     project_id: ids.sourceProject,
     saved_views: [],
-    version: 5,
+    version: 6,
     ...overrides,
   });
 }
@@ -131,9 +131,12 @@ function fullPayload() {
         rankingHistory: [
           {
             checkedAt: "2026-06-20T10:00:00.000Z",
+            normalizationVersion: "v1",
             position: 3,
             previousPosition: 7,
+            provider: "dataforseo",
             rankingUrl: "https://example.com/rank-tracker",
+            requestedDepth: 100,
           },
         ],
         tags: ["SEO"],

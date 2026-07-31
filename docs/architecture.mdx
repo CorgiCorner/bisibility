@@ -29,6 +29,44 @@ yourself.
 The MCP endpoint uses the same router as REST. Manual and scheduled checks also
 use the same rank-check runner. These shared paths keep behavior consistent.
 
+## The worker is not the Temporal server
+
+Temporal is split into two independent pieces, and only one of them ships in the
+bisibility images.
+
+The **Temporal server** stores workflow state, history, schedules, and task
+queues. It runs no bisibility code and knows nothing about rank checks. It is
+infrastructure that the stack connects to.
+
+The **Temporal worker** is a bisibility process. It hosts the workflow and
+activity code, polls the server for due work, and executes it. This is the
+`bisibility-worker` image.
+
+```mermaid
+flowchart LR
+  web["Web app<br/>dashboard, REST, MCP"]
+  worker["Temporal worker<br/>bisibility workflow code"]
+  server["Temporal server<br/>state, schedules, task queues<br/>runs no bisibility code"]
+  pg[("PostgreSQL<br/>single source of truth")]
+
+  web -- "writes schedule intent" --> pg
+  web -- "starts manual check workflows" --> server
+  worker -- "polls task queues" --> server
+  worker -- "reconciles schedules from intent" --> pg
+```
+
+Two consequences follow.
+
+Starting the worker on its own does nothing. It needs a reachable Temporal
+server, which is why `TEMPORAL_ADDRESS`, `TEMPORAL_NAMESPACE`, and
+`TEMPORAL_TASK_QUEUE` are required. The web app needs the same address, not to
+manage schedules, but to start workflows for manual checks.
+
+The Temporal server is replaceable. The Docker `scheduled` profile bundles one
+for convenience, but the same worker image runs unchanged against a self-managed
+cluster or Temporal Cloud. See
+[Temporal Server or Temporal Cloud](/self-hosting#temporal-server-or-temporal-cloud).
+
 ## Data model
 
 A `Project` owns its keywords, provider connections, alert rules,
@@ -43,16 +81,17 @@ position, ranking URL, provider, and cost. Alerts connect `AlertRule` to
 
 ## Rank data retention by deployment
 
-Each completed check can store the raw response from the connected SERP provider
-in `rank_checks.raw`. That payload is separate from the rank-history fields that
-remain on the row.
+Each completed check can store a normalized SERP snapshot in `rank_checks.raw`.
+The adapters reduce provider responses to normalized organic results and SERP
+feature labels before storage. That snapshot is separate from the rank-history
+fields that remain on the row.
 
 | Data | Self-hosted | Cloud |
 | - | - | - |
 | Rank-check row, `position`, and `organicRanks` | Kept for the lifetime of the workspace. | Kept for the lifetime of the workspace, with no plan-based retention tier. |
-| Raw SERP provider payload (`rank_checks.raw`) | Kept indefinitely by default. The operator can set `RANK_CHECK_RAW_RETENTION_DAYS` to 1-3650 days or `unlimited`. | Kept for 90 days. |
+| Normalized SERP snapshot (`rank_checks.raw`) | Kept indefinitely by default. The operator can set `RANK_CHECK_RAW_RETENTION_DAYS` to 1-3650 days or `unlimited`. | Kept for 90 days. |
 
-Raw payload access is a self-hosted feature through direct PostgreSQL access to
+Snapshot access is a self-hosted feature through direct PostgreSQL access to
 `rank_checks.raw`; the REST API rank-check resource does not expose this field.
 Once a configured window expires, an older check can therefore have a null
 `raw` value while its row, `position`, and `organicRanks` remain available. See

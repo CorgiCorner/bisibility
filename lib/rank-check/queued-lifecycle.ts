@@ -138,6 +138,7 @@ async function reconcileTaskAtDeadline(
       error: reason,
       estimatedCostCents: null,
       finishedAt: now,
+      normalizationVersion: null,
       status: "deferred",
     },
     where: { id: task.rankCheckId, status: "running" },

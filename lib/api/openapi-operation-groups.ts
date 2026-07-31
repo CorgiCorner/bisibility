@@ -1,0 +1,142 @@
+import type { openApiTags } from "./openapi-tags";
+
+type OpenApiTagName = (typeof openApiTags)[number]["name"];
+
+export const operationGroups: ReadonlyArray<readonly [OpenApiTagName, readonly string[]]> = [
+  [
+    "discovery",
+    [
+      "getCapabilities",
+      "getCostEstimate",
+      "getHealth",
+      "getLiveness",
+      "getLlmsTxt",
+      "getOpenApi",
+      "getProviderRates",
+      "getReadiness",
+    ],
+  ],
+  [
+    "account-access",
+    [
+      "getMe",
+      "updateMe",
+      "listPersonalAccessTokens",
+      "createPersonalAccessToken",
+      "revokePersonalAccessToken",
+    ],
+  ],
+  [
+    "projects",
+    [
+      "listProjects",
+      "createProject",
+      "getProject",
+      "updateProject",
+      "deleteProject",
+      "getProjectDefaults",
+      "updateProjectDefaults",
+    ],
+  ],
+  [
+    "api-keys",
+    ["listApiKeys", "createApiKey", "revokeApiKey", "listProjectApiKeys", "createProjectApiKey"],
+  ],
+  [
+    "keywords",
+    [
+      "listKeywords",
+      "addKeywords",
+      "getKeyword",
+      "setKeywordTargetUrl",
+      "deleteKeyword",
+      "bulkUpdateKeywords",
+      "matchProjectKeywords",
+    ],
+  ],
+  ["rank-checks", ["runRankCheck", "listRankChecks", "getRankCheckResult", "exportRankHistory"]],
+  [
+    "keyword-research",
+    ["searchLocations", "getKeywordMetrics", "researchKeywords", "listRankedKeywordSuggestions"],
+  ],
+  ["backlinks", ["analyzeBacklinks", "loadMoreBacklinkRows"]],
+  [
+    "analytics",
+    [
+      "getProjectOverview",
+      "listSearchPerformanceQueryStats",
+      "syncProjectTraffic",
+      "listTrafficSnapshots",
+    ],
+  ],
+  [
+    "alerts",
+    [
+      "listAlertRules",
+      "createAlertRule",
+      "updateAlertRule",
+      "deleteAlertRule",
+      "listTriggeredAlerts",
+      "muteTriggeredAlert",
+      "markProjectAlertsRead",
+      "getNotificationPreferences",
+      "updateNotificationPreferences",
+    ],
+  ],
+  [
+    "competitors",
+    ["listCompetitors", "addCompetitor", "removeProjectCompetitor", "removeCompetitor"],
+  ],
+  ["sitemap-monitoring", ["listSitemapMonitors", "updateSitemapMonitor"]],
+  [
+    "saved-views",
+    ["listSavedViews", "createSavedView", "deleteProjectSavedView", "deleteSavedView"],
+  ],
+  ["signals", ["listSignals", "createSignal"]],
+  [
+    "providers",
+    [
+      "listProviders",
+      "connectProvider",
+      "testProviderConnection",
+      "updateProviderSettings",
+      "disconnectProvider",
+    ],
+  ],
+  [
+    "webhooks",
+    [
+      "listWebhookEndpoints",
+      "createWebhookEndpoint",
+      "updateWebhookEndpoint",
+      "deleteWebhookEndpoint",
+    ],
+  ],
+  [
+    "team",
+    [
+      "listTeamMembers",
+      "updateTeamMemberRole",
+      "removeTeamMember",
+      "listTeamInvites",
+      "createTeamInvite",
+      "resendTeamInvite",
+      "revokeProjectTeamInvite",
+      "revokeTeamInvite",
+    ],
+  ],
+  [
+    "migration",
+    [
+      "listMigrationTokens",
+      "mintMigrationToken",
+      "revokeProjectMigrationToken",
+      "revokeMigrationToken",
+      "importCloudExport",
+      "getCloudImportCompatibility",
+      "createCloudImportSession",
+      "uploadCloudImportChunk",
+      "finalizeCloudImportSession",
+    ],
+  ],
+];

@@ -1,10 +1,11 @@
 x-app-build: &app-build
   context: .
   args:
+    APP_REVISION: ${APP_REVISION:-}
+    APP_VERSION: ${APP_VERSION:-}
     NEXT_PUBLIC_DOCS_URL: ${NEXT_PUBLIC_DOCS_URL:-https://bisibility.com/docs}
 
 x-app-env: &app-env
-  APP_VERSION: ${APP_VERSION:-}
   ALERT_DELIVERY_FAILURE_RATE_THRESHOLD: ${ALERT_DELIVERY_FAILURE_RATE_THRESHOLD:-}
   ALERT_DELIVERY_MIN_ATTEMPTS: ${ALERT_DELIVERY_MIN_ATTEMPTS:-}
   ALERT_DELIVERY_SWEEP_ENABLED: ${ALERT_DELIVERY_SWEEP_ENABLED:-}
@@ -23,7 +24,7 @@ x-app-env: &app-env
   AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
   AWS_SESSION_TOKEN: ${AWS_SESSION_TOKEN:-}
   BETTER_AUTH_SECRET: "${BETTER_AUTH_SECRET:?Set BETTER_AUTH_SECRET in .env. Generate one with: openssl rand -base64 32}"
-  BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:3000}
+  BETTER_AUTH_URL: "${BETTER_AUTH_URL:?Set BETTER_AUTH_URL to the public app origin in .env}"
   BISIBILITY_API_ANON_RATE_LIMIT_PER_MINUTE: ${BISIBILITY_API_ANON_RATE_LIMIT_PER_MINUTE:-}
   BISIBILITY_API_KEY_RATE_LIMIT_PER_MINUTE: ${BISIBILITY_API_KEY_RATE_LIMIT_PER_MINUTE:-}
   BISIBILITY_CLIENT_IP_HEADER: ${BISIBILITY_CLIENT_IP_HEADER:-}
@@ -49,7 +50,7 @@ x-app-env: &app-env
   DATA_REGION: ${DATA_REGION:-}
   DEMO_FIXED_OTP: ${DEMO_FIXED_OTP:-}
   DEMO_INSTANCE_INSECURE_AUTH_ACK: ${DEMO_INSTANCE_INSECURE_AUTH_ACK:-}
-  DEPLOYMENT_ENV: ${DEPLOYMENT_ENV:-development}
+  DEPLOYMENT_ENV: ${DEPLOYMENT_ENV:-production}
   DEPLOYMENT_MODE: ${DEPLOYMENT_MODE:-self-host}
   DIRECT_URL: "${DIRECT_URL:?Set DIRECT_URL in .env}"
   EMAIL_ALERTS_FROM: ${EMAIL_ALERTS_FROM:-}
@@ -81,7 +82,7 @@ x-app-env: &app-env
   SERPAPI_API_KEY: ${SERPAPI_API_KEY:-}
   SES_CONFIGURATION_SET: ${SES_CONFIGURATION_SET:-}
   SES_REGION: ${SES_REGION:-}
-  SITE_URL: ${SITE_URL:-http://localhost:3000}
+  SITE_URL: "${SITE_URL:?Set SITE_URL to the public app origin in .env}"
   SLACK_CLIENT_ID: ${SLACK_CLIENT_ID:-}
   SLACK_CLIENT_SECRET: ${SLACK_CLIENT_SECRET:-}
   SMTP_URL: ${SMTP_URL:-}
@@ -99,6 +100,8 @@ x-app-env: &app-env
 
 services:
   db-migrations:
+    image: ${BISIBILITY_IMAGE:-docker.io/corgicorner/bisibility:0.2.1}
+    pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     build:
       <<: *app-build
       target: migrate
@@ -111,6 +114,8 @@ services:
         condition: service_healthy
 
   app:
+    image: ${BISIBILITY_IMAGE:-docker.io/corgicorner/bisibility:0.2.1}
+    pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     build: *app-build
     restart: unless-stopped
     ports:
@@ -148,28 +153,113 @@ services:
     environment:
       POSTGRES_USER: temporal
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U temporal -d temporal"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
     volumes:
       - temporal-postgres-data:/var/lib/postgresql/data
 
-  temporal:
-    image: temporalio/auto-setup:1.25.2
+  temporal-schema:
+    image: temporalio/admin-tools:1.31.2
     profiles: ["scheduled"]
-    restart: unless-stopped
+    user: "0:0"
+    restart: "no"
     depends_on:
-      - temporal-postgres
+      temporal-postgres:
+        condition: service_healthy
     environment:
       DB: postgres12
       DB_PORT: 5432
       POSTGRES_USER: temporal
       POSTGRES_PWD: "${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}"
       POSTGRES_SEEDS: temporal-postgres
+    volumes:
+      - temporal-dynamic-config:/etc/temporal/config/dynamicconfig
+    entrypoint: ["/bin/sh", "-eu", "-c"]
+    command:
+      - |
+        export SQL_PLUGIN="$$DB"
+        export SQL_HOST="$$POSTGRES_SEEDS"
+        export SQL_PORT="$$DB_PORT"
+        export SQL_USER="$$POSTGRES_USER"
+        export SQL_PASSWORD="$$POSTGRES_PWD"
+        ensure_database() {
+          database="$$1"
+          if output=$$(temporal-sql-tool --db "$$database" create 2>&1); then
+            printf '%s\n' "$$output"
+            return 0
+          fi
+          if printf '%s\n' "$$output" | grep -qi 'already exists'; then
+            printf 'Database %s already exists; applying versioned updates.\n' "$$database"
+            return 10
+          fi
+          printf '%s\n' "$$output" >&2
+          return 1
+        }
+        if ensure_database temporal; then
+          temporal-sql-tool --db temporal setup-schema -v 0.0
+        elif [ "$$?" -ne 10 ]; then
+          exit 1
+        fi
+        temporal-sql-tool --db temporal update-schema -d /etc/temporal/schema/postgresql/v12/temporal/versioned
+        if ensure_database temporal_visibility; then
+          temporal-sql-tool --db temporal_visibility setup-schema -v 0.0
+        elif [ "$$?" -ne 10 ]; then
+          exit 1
+        fi
+        temporal-sql-tool --db temporal_visibility update-schema -d /etc/temporal/schema/postgresql/v12/visibility/versioned
+        printf '{}\n' > /etc/temporal/config/dynamicconfig/docker.yaml
 
-  temporal-ui:
-    image: temporalio/ui:2.34.0
+  temporal:
+    image: temporalio/server:1.31.2
     profiles: ["scheduled"]
     restart: unless-stopped
     depends_on:
+      temporal-schema:
+        condition: service_completed_successfully
+    environment:
+      BIND_ON_IP: 0.0.0.0
+      DB: postgres12
+      DB_PORT: 5432
+      POSTGRES_USER: temporal
+      POSTGRES_PWD: "${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}"
+      POSTGRES_SEEDS: temporal-postgres
+      DBNAME: temporal
+      VISIBILITY_DBNAME: temporal_visibility
+      NUM_HISTORY_SHARDS: "4"
+      DYNAMIC_CONFIG_FILE_PATH: /etc/temporal/config/dynamicconfig/docker.yaml
+    volumes:
+      - temporal-dynamic-config:/etc/temporal/config/dynamicconfig:ro
+
+  temporal-namespace:
+    image: temporalio/admin-tools:1.31.2
+    profiles: ["scheduled"]
+    restart: "no"
+    depends_on:
       - temporal
+    environment:
+      TEMPORAL_NAMESPACE: ${TEMPORAL_NAMESPACE:-default}
+    entrypoint: ["/bin/sh", "-eu", "-c"]
+    command:
+      - |
+        timeout 300 sh -c 'until temporal operator cluster health --address temporal:7233 | grep -q SERVING; do echo "Waiting for the Temporal frontend..."; sleep 2; done'
+        if temporal operator namespace describe --address temporal:7233 --namespace "$$TEMPORAL_NAMESPACE" >/dev/null 2>&1; then
+          temporal operator namespace update --address temporal:7233 --namespace "$$TEMPORAL_NAMESPACE" --retention 24h
+        else
+          temporal operator namespace create --address temporal:7233 --namespace "$$TEMPORAL_NAMESPACE" --retention 24h --description "bisibility application namespace"
+        fi
+        timeout 120 sh -c 'until temporal operator namespace describe --address temporal:7233 --namespace "$$TEMPORAL_NAMESPACE" >/dev/null 2>&1; do echo "Waiting for the namespace cache..."; sleep 2; done'
+
+  temporal-ui:
+    image: temporalio/ui:2.49.1
+    profiles: ["scheduled"]
+    restart: unless-stopped
+    depends_on:
+      temporal-namespace:
+        condition: service_completed_successfully
     environment:
       TEMPORAL_ADDRESS: temporal:7233
       TEMPORAL_CORS_ORIGINS: http://localhost:8233
@@ -177,9 +267,14 @@ services:
       - "127.0.0.1:${TEMPORAL_UI_HOST_PORT:-8233}:8080"
 
   worker:
+    image: ${BISIBILITY_WORKER_IMAGE:-docker.io/corgicorner/bisibility-worker:0.2.1}
+    pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     build:
       context: .
       dockerfile: Dockerfile.worker
+      args:
+        APP_REVISION: ${APP_REVISION:-}
+        APP_VERSION: ${APP_VERSION:-}
     profiles: ["scheduled"]
     restart: unless-stopped
     environment:
@@ -214,9 +309,10 @@ services:
         condition: service_completed_successfully
       redis:
         condition: service_started
-      temporal:
-        condition: service_started
+      temporal-namespace:
+        condition: service_completed_successfully
 
 volumes:
   postgres-data:
   temporal-postgres-data:
+  temporal-dynamic-config:

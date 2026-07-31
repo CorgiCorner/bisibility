@@ -99,7 +99,7 @@ describe("POST /api/cloud/import/sessions", () => {
       chunk_count: 4,
       source_project_id: sourceProjectId,
       totals: { keywords: 3 },
-      version: 5,
+      version: 6,
     });
 
     expect(response.status).toBe(201);
@@ -126,7 +126,7 @@ describe("POST /api/cloud/import/sessions", () => {
     const response = await post({
       chunk_count: 2,
       source_project_id: sourceProjectId,
-      version: 5,
+      version: 6,
     });
 
     expect(response.status).toBe(409);
@@ -157,8 +157,8 @@ describe("POST /api/cloud/import/sessions", () => {
     });
 
     const bodies = [
-      { chunk_count: 2, source_project_id: sourceProjectId, version: 5 },
-      { chunk_count: 3, source_project_id: sourceProjectId, version: 5 },
+      { chunk_count: 2, source_project_id: sourceProjectId, version: 6 },
+      { chunk_count: 3, source_project_id: sourceProjectId, version: 6 },
     ];
     const responses = await Promise.all(bodies.map((body) => post(body)));
     const statuses = responses.map((response) => response.status);
@@ -179,7 +179,7 @@ describe("POST /api/cloud/import/sessions", () => {
     const response = await post({
       chunk_count: 2,
       source_project_id: projectId,
-      version: 5,
+      version: 6,
     });
 
     expect(response.status).toBe(409);
@@ -191,7 +191,7 @@ describe("POST /api/cloud/import/sessions", () => {
 
   it("returns 401 when no migration token is supplied", async () => {
     const response = await post(
-      { chunk_count: 2, source_project_id: sourceProjectId, version: 5 },
+      { chunk_count: 2, source_project_id: sourceProjectId, version: 6 },
       {},
     );
 
@@ -205,7 +205,7 @@ describe("POST /api/cloud/import/sessions", () => {
         chunk_count: 2,
         source_project_id: sourceProjectId,
         token: rawToken,
-        version: 5,
+        version: 6,
       },
       {},
     );
@@ -222,7 +222,7 @@ describe("POST /api/cloud/import/sessions", () => {
     const response = await post({
       chunk_count: 2,
       source_project_id: sourceProjectId,
-      version: 5,
+      version: 6,
     });
 
     expect(response.status).toBe(419);
@@ -235,7 +235,7 @@ describe("POST /api/cloud/import/sessions", () => {
     const response = await post({
       chunk_count: 2,
       source_project_id: sourceProjectId,
-      version: 5,
+      version: 6,
     });
 
     expect(response.status).toBe(500);
@@ -249,7 +249,7 @@ describe("POST /api/cloud/import/sessions", () => {
     const response = await post({
       chunk_count: 2,
       source_project_id: sourceProjectId,
-      version: 5,
+      version: 6,
     });
 
     expect(response.status).toBe(201);
@@ -265,7 +265,7 @@ describe("POST /api/cloud/import/sessions", () => {
   });
 
   it("rejects a session without source_project_id", async () => {
-    const response = await post({ chunk_count: 2, version: 5 });
+    const response = await post({ chunk_count: 2, version: 6 });
 
     expect(response.status).toBe(400);
     expect(mocks.verifyMigrationToken).not.toHaveBeenCalled();

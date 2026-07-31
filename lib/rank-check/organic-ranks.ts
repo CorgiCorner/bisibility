@@ -41,7 +41,7 @@ function legacyItem(value: unknown) {
   return domain && position ? { domain, position } : null;
 }
 
-export function organicDomainRanksFromResults(results: readonly SerpOrganicResult[]) {
+export function organicDomainRanksFromV2Results(results: readonly SerpOrganicResult[]) {
   return compactRanks(
     results.flatMap((item) => {
       const domain = normalizeDomain(item.domain ?? item.url);
@@ -50,6 +50,8 @@ export function organicDomainRanksFromResults(results: readonly SerpOrganicResul
     }),
   );
 }
+
+export const organicDomainRanksFromResults = organicDomainRanksFromV2Results;
 
 /** Returns null only when the payload has no recognized organic result container. */
 export function organicDomainRanksFromRaw(raw: unknown): OrganicDomainRank[] | null {

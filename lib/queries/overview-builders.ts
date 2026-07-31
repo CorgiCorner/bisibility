@@ -1,3 +1,4 @@
+import { comparableCompletedWindow } from "@/lib/checks/status";
 import { relativePast } from "@/lib/format/relative-time";
 import { notRankedLabel, rankObservationState } from "@/lib/serp/rank-depth";
 import { rankBucketColors } from "@/lib/theme/chart-colors";
@@ -58,15 +59,16 @@ function averageDeltaCopy(hasData: boolean, averageDelta: number) {
 
 export function snapshotFor(keyword: Keyword, volume: number | null = null) {
   const latestAttempt = keyword.rankChecks[0] ?? null;
-  const latest = keyword.rankChecks.find((check) => pos(check.position)) ?? null;
+  const comparableChecks = comparableCompletedWindow(keyword.rankChecks).checks;
+  const latest = comparableChecks.find((check) => pos(check.position)) ?? null;
   const current = pos(latest?.position);
   // Compare only with a genuine earlier positive check in the selected window.
   // Stored previousPosition may refer to a check outside that window.
-  const latestIndex = latest ? keyword.rankChecks.indexOf(latest) : -1;
+  const latestIndex = latest ? comparableChecks.indexOf(latest) : -1;
   const previous =
     latestIndex < 0
       ? null
-      : (keyword.rankChecks
+      : (comparableChecks
           .slice(latestIndex + 1)
           .map((check) => pos(check.position))
           .find(Boolean) ?? null);

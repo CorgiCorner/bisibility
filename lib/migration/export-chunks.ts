@@ -1,9 +1,10 @@
 import "server-only";
 
-import { whereExecutedChecks } from "@/lib/checks/status";
+import { whereCompletedChecks } from "@/lib/checks/status";
 import { prisma } from "@/lib/db/prisma";
 import { requirePublicId } from "@/lib/db/public-id";
 import { CHUNK_MAX_HISTORY_ROWS, CHUNK_TARGET_KEYWORDS } from "@/lib/migration/limits";
+import { requireRankNormalizationVersion } from "@/lib/rank-check/normalization-version";
 
 const preferenceSelect = {
   alertEmail: true,
@@ -36,9 +37,12 @@ function positiveLimit(value: number | undefined, fallback: number) {
 function rankHistory(checks: KeywordRow["rankChecks"]) {
   return checks.map((check) => ({
     checkedAt: check.checkedAt.toISOString(),
+    normalizationVersion: requireRankNormalizationVersion(check.normalizationVersion),
     position: check.position,
     previousPosition: check.previousPosition,
+    provider: check.provider,
     rankingUrl: check.rankingUrl,
+    requestedDepth: check.requestedDepth,
   }));
 }
 
@@ -72,7 +76,7 @@ export async function exportKeywordChunk(input: ExportKeywordChunkInput) {
     include: {
       rankChecks: {
         orderBy: { checkedAt: "desc" },
-        where: whereExecutedChecks(),
+        where: whereCompletedChecks(),
       },
       tags: { include: { tag: true } },
     },
@@ -109,7 +113,7 @@ export async function countKeywordChunks(input: ExportKeywordChunkInput) {
     orderBy: { publicId: "asc" },
     select: {
       _count: {
-        select: { rankChecks: { where: whereExecutedChecks() } },
+        select: { rankChecks: { where: whereCompletedChecks() } },
       },
       publicId: true,
     },
@@ -241,9 +245,12 @@ export async function exportSectionsChunk({ projectId, userId }: ExportSectionsC
 type KeywordRow = Awaited<ReturnType<typeof prisma.keyword.findMany>>[number] & {
   rankChecks: {
     checkedAt: Date;
+    normalizationVersion: string | null;
     position: number | null;
     previousPosition: number | null;
+    provider: string;
     rankingUrl: string | null;
+    requestedDepth: number | null;
   }[];
   tags: { tag: { name: string } }[];
 };

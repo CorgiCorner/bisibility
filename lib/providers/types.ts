@@ -81,6 +81,11 @@ export type SerpOrganicResult = {
 };
 
 export type SerpRawPayload = {
+  normalization?: {
+    anomalies: Array<{ code: string; index: number }>;
+    outcome: "match" | "no_match";
+    version: "v2";
+  };
   organic_results: SerpOrganicResult[];
   serp_features?: string[];
 };

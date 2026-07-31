@@ -42,11 +42,14 @@ Please report installation problems, bugs, and workflow feedback through
 git clone https://github.com/CorgiCorner/bisibility.git bisibility
 cd bisibility
 ./scripts/dev/bootstrap-local.sh
-docker compose up --build
+docker compose up -d
 ```
 
 Open [http://localhost:3000](http://localhost:3000) and sign in with email
 `demo@acme.dev` and OTP `000000`.
+
+Compose pulls the version-pinned web image from Docker Hub by default. To build
+the checked-out source instead, run `docker compose up --build`.
 
 > [!WARNING]
 > Demo authentication is intentionally insecure and is meant for a throwaway local
@@ -60,11 +63,13 @@ The default Compose stack runs manual rank checks only. To run recurring schedul
 start the Temporal worker profile:
 
 ```bash
-docker compose --profile scheduled up --build
+docker compose --profile scheduled up -d
 ```
 
 The scheduled profile also serves the Temporal Web UI at
 [http://localhost:8233](http://localhost:8233).
+It pulls the version-pinned worker image by default; add `--build` to build both
+first-party images from the checkout.
 
 ## Why bisibility?
 
@@ -82,7 +87,7 @@ Provider APIs return individual datasets and result snapshots. bisibility turns 
 into persistent research, monitoring, alerting, and automation workflows:
 
 - normalizes rank results from DataForSEO and SerpAPI behind one application model,
-  with stored SERP payload access when you self-host;
+  with access to stored normalized SERP snapshots when you self-host;
 - stores position history in PostgreSQL and runs per-keyword schedules with
   project-level defaults and per-keyword overrides;
 - records provider-reported rank-check costs when available and stores estimates
@@ -186,7 +191,7 @@ flags, and output formats may change before 1.0.
 | Google rank checks | Available | Available |
 | Keyword research | Available | Not supported |
 | Backlink research | Available | Not supported |
-| Stored SERP payload access (self-hosted) | Available | Available |
+| Stored normalized SERP snapshot (self-hosted) | Available | Available |
 | Rank-check cost record | Provider reported | Configured or estimated |
 
 ## Self-hosting in production

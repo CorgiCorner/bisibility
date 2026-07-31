@@ -5,12 +5,7 @@ export function normalizeDomain(value: string) {
   try {
     return new URL(candidate).hostname.replace(/^www\./, "").replace(/\.$/, "") || null;
   } catch {
-    return (
-      trimmed
-        .replace(/^www\./, "")
-        .split("/", 1)[0]
-        ?.replace(/\.$/, "") || null
-    );
+    return null;
   }
 }
 

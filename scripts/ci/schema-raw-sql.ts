@@ -95,6 +95,7 @@ async function createHealthFixture(
       error: failed ? "public sentinel" : null,
       id: `check_${userId}`,
       keywordId: keyword.id,
+      normalizationVersion: null,
       provider: "schema-regression",
       publicId: makePublicId("check"),
       status: failed ? "failed" : "running",

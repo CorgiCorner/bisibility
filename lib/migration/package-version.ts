@@ -1,0 +1,2 @@
+export const CLOUD_MIGRATION_PACKAGE_VERSION = 6 as const;
+export const LEGACY_CLOUD_MIGRATION_PACKAGE_VERSION = 5 as const;

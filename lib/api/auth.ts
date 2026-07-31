@@ -3,6 +3,7 @@ import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import type { Role } from "@/lib/generated/prisma/client";
 import { verifyApiKey } from "@/lib/providers/crypto";
+import { type ApiScope, isApiScope, scopesForTier } from "./scope-policy";
 
 const API_KEY_PREFIX_LENGTH = 21;
 
@@ -10,19 +11,14 @@ export const PROJECT_API_KEY_PREFIX = "bsb_key_";
 export const PERSONAL_TOKEN_PREFIX = "bsb_pat_live_";
 export const LEGACY_BEARER_PREFIXES = ["bsk_", "bsp_"] as const;
 
-export type ApiScope = "admin" | "read" | "write";
-
-const VALID_SCOPES = new Set<ApiScope>(["admin", "read", "write"]);
-const DEFAULT_API_SCOPES: readonly ApiScope[] = ["read", "write", "admin"];
+export type { ApiScope } from "./scope-policy";
 
 function resolveApiKeyScopes(apiKey: { scopes?: unknown }): readonly ApiScope[] {
   if (!Array.isArray(apiKey.scopes)) {
-    return DEFAULT_API_SCOPES;
+    return scopesForTier("admin");
   }
-  const scopes = apiKey.scopes.filter((scope): scope is ApiScope =>
-    VALID_SCOPES.has(scope as ApiScope),
-  );
-  return scopes.length ? scopes : DEFAULT_API_SCOPES;
+  const scopes = apiKey.scopes.filter(isApiScope);
+  return scopes.length ? scopes : scopesForTier("admin");
 }
 
 export class ApiAuthError extends Error {
@@ -98,12 +94,10 @@ function bearerToken(req: Request) {
 // least-privileged tier instead of ApiKey's permissive legacy default.
 function resolvePersonalTokenScopes(token: { scopes?: unknown }): readonly ApiScope[] {
   if (!Array.isArray(token.scopes)) {
-    return ["read"];
+    return scopesForTier("read");
   }
-  const scopes = token.scopes.filter((scope): scope is ApiScope =>
-    VALID_SCOPES.has(scope as ApiScope),
-  );
-  return scopes.length ? scopes : ["read"];
+  const scopes = token.scopes.filter(isApiScope);
+  return scopes.length ? scopes : scopesForTier("read");
 }
 
 async function authenticatePersonalToken(rawKey: string): Promise<PersonalTokenAuth> {

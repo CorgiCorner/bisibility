@@ -1,8 +1,10 @@
 import type { Prisma } from "@/lib/generated/prisma/client";
 import type { SerpDepth } from "@/lib/serp/markets";
+import type { RankNormalizationVersion } from "./normalization-version";
 import type { OrganicDomainRank } from "./organic-ranks";
 
 export type RankCheckRunResult = {
+  comparisonAllowed: boolean;
   providerCostCents?: number;
   rankCheck: {
     billingUnits: number | null;
@@ -10,6 +12,7 @@ export type RankCheckRunResult = {
     costCents: number;
     estimatedCostCents: number | null;
     keywordId: string;
+    normalizationVersion: RankNormalizationVersion;
     organicRanks: OrganicDomainRank[] | null;
     position: number | null;
     previousPosition: number | null;

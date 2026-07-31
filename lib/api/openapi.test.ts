@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { API_VERSION_HEADER } from "./api-versions";
 import { getCapabilities, getLlmsText } from "./capabilities";
 import { getOpenApiDocument } from "./openapi";
 import { ref } from "./openapi-components";
@@ -38,7 +39,7 @@ describe("OpenAPI document", () => {
         "migration",
       ].map((name) => expect.objectContaining({ name })),
     );
-    expect(operations).toHaveLength(91);
+    expect(operations).toHaveLength(93);
     expect(operations.every((operation) => operation.tags?.length === 1)).toBe(true);
     expect(
       operations.every(
@@ -53,6 +54,45 @@ describe("OpenAPI document", () => {
     expect(doc.paths["/projects/{project_id}/keywords"].get.tags).toEqual(["keywords"]);
     expect(doc.paths["/projects/{project_id}/alert-rules"].post.tags).toEqual(["alerts"]);
     expect(doc.paths["/projects/{project_id}/webhooks"].get.tags).toEqual(["webhooks"]);
+  });
+
+  it("documents optional API version declarations and mismatch responses", () => {
+    const doc = getOpenApiDocument();
+    const operations = Object.values(doc.paths).flatMap((path) => Object.values(path)) as Array<{
+      parameters: Array<{
+        in: string;
+        name: string;
+        required: boolean;
+        schema: { enum: string[]; type: string };
+      }>;
+      responses: Record<string, unknown>;
+    }>;
+
+    for (const operation of operations) {
+      expect(operation.parameters).toContainEqual({
+        description: expect.stringContaining("Omit this header"),
+        in: "header",
+        name: API_VERSION_HEADER,
+        required: false,
+        schema: { enum: ["v1"], type: "string" },
+      });
+      expect(operation.responses["409"]).toMatchObject({
+        description: expect.stringContaining("Unsupported API version"),
+      });
+    }
+
+    expect(
+      doc.paths["/capabilities"].get.responses["200"].content["application/json"].schema,
+    ).toMatchObject({
+      properties: {
+        apiVersions: {
+          items: { enum: ["v1"], type: "string" },
+          minItems: 1,
+          type: "array",
+        },
+      },
+      required: ["apiVersions", "data"],
+    });
   });
 
   it("documents personal-token account, project, API-key, and webhook routes", () => {
@@ -183,6 +223,7 @@ describe("OpenAPI document", () => {
     const parameters = operation.parameters as Parameter[];
 
     expect(parameters.map((parameter) => parameter.name)).toEqual([
+      API_VERSION_HEADER,
       "limit",
       "cursor",
       "search",
@@ -284,6 +325,7 @@ describe("OpenAPI document", () => {
     const responseSchema = operation.responses["200"].content["application/json"].schema;
 
     expect(parameters.map((parameter) => parameter.name)).toEqual([
+      API_VERSION_HEADER,
       "limit",
       "cursor",
       "status",
@@ -410,6 +452,7 @@ describe("OpenAPI document", () => {
       responses: { "201": expect.any(Object), "423": expect.any(Object) },
     });
     expect((listSignals.parameters as Parameter[]).map((parameter) => parameter.name)).toEqual([
+      API_VERSION_HEADER,
       "limit",
       "cursor",
       "source",
@@ -552,6 +595,7 @@ describe("OpenAPI document", () => {
       requestBody: { content: { "application/json": { schema: ref("CloudImportUploadChunk") } } },
     });
     expect((uploadChunk.parameters as Parameter[]).map((parameter) => parameter.name)).toEqual([
+      API_VERSION_HEADER,
       "sessionId",
       "index",
       "Content-Encoding",

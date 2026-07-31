@@ -7,6 +7,7 @@ const checkedAt = new Date("2026-07-04T19:30:00.000Z");
 function rankCheckArgs(overrides: Partial<RankCheckSignalArgs> = {}): RankCheckSignalArgs {
   return {
     checkedAt,
+    comparisonAllowed: true,
     keywordId: "keyword_1",
     position: 8,
     previousPosition: 8,
@@ -21,6 +22,19 @@ function rankCheckArgs(overrides: Partial<RankCheckSignalArgs> = {}): RankCheckS
 }
 
 describe("signalsForRankCheck", () => {
+  it("suppresses comparison signals across a normalization boundary", () => {
+    expect(
+      signalsForRankCheck(
+        rankCheckArgs({
+          comparisonAllowed: false,
+          position: 3,
+          previousPosition: null,
+          previousRankingUrl: null,
+        }),
+      ),
+    ).toEqual([]);
+  });
+
   it("returns no signals when position and ranking URL are unchanged", () => {
     expect(signalsForRankCheck(rankCheckArgs())).toEqual([]);
   });

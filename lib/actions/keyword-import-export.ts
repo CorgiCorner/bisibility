@@ -1,7 +1,7 @@
 "use server";
 
 import { writeAudit } from "@/lib/auth/audit";
-import { whereExecutedChecks } from "@/lib/checks/status";
+import { whereCompletedChecks } from "@/lib/checks/status";
 import { prisma } from "@/lib/db/prisma";
 import { isPublicIdOfType, requirePublicId } from "@/lib/db/public-id";
 import { auditKeywordExport } from "@/lib/keywords/export-audit";
@@ -28,13 +28,13 @@ import { createKeywordBatchSet, type KeywordBatchRow } from "./keyword-helpers";
 import { keywordImportDefaults } from "./keyword-import-defaults";
 import {
   keywordExportColumns,
-  keywordExportJson,
   keywordExportOptions,
   keywordImportKey,
   parseKeywordImportCsv,
   serializeKeywordExportCsv,
   serializeKeywordExportXlsx,
 } from "./keyword-import-export-helpers";
+import { keywordExportJson } from "./keyword-import-export-json";
 
 const projectIdSchema = z
   .string()
@@ -235,7 +235,7 @@ async function loadExportKeywords(projectId: string, keywordIds?: string[]) {
   if (keywordIds?.length === 0) return [];
   // biome-ignore format: compact Prisma shape keeps this server action under the file line cap.
   return prisma.keyword.findMany({
-    include: { rankChecks: { orderBy: { checkedAt: "desc" }, where: whereExecutedChecks() }, tags: { include: { tag: true } } }, orderBy: { createdAt: "desc" }, where: { projectId, ...(keywordIds?.length ? { publicId: { in: keywordIds } } : {}) },
+    include: { rankChecks: { orderBy: { checkedAt: "desc" }, where: whereCompletedChecks() }, tags: { include: { tag: true } } }, orderBy: { createdAt: "desc" }, where: { projectId, ...(keywordIds?.length ? { publicId: { in: keywordIds } } : {}) },
   });
 }
 

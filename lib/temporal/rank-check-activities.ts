@@ -84,24 +84,15 @@ export async function createRunningRankCheckActivity(
   input: CreateRunningRankCheckActivityInput,
 ): Promise<RunningRankCheckActivityResult> {
   const reservation = await runningReservation(input);
+  // biome-ignore format: compact data keeps this activity module under the line cap.
   const data = {
-    attemptCount: 0,
-    checkedAt: new Date(),
-    costCents: null,
-    error: null,
+    attemptCount: 0, checkedAt: new Date(), costCents: null, error: null,
     estimatedCostCents: reservation.estimatedCostCents,
     degradedToCountry: false,
-    keywordId: input.keywordId,
-    position: null,
-    previousPosition: null,
+    keywordId: input.keywordId, normalizationVersion: null, position: null, previousPosition: null,
     provider: input.providerId ?? "primary",
-    rankingUrl: null,
-    scheduleId: input.scheduleId,
-    scheduledAt: input.scheduledAt,
-    startedAt: new Date(),
-    status: "running",
-    trigger: input.trigger,
-    viaFallback: false,
+    rankingUrl: null, scheduleId: input.scheduleId, scheduledAt: input.scheduledAt,
+    startedAt: new Date(), status: "running", trigger: input.trigger, viaFallback: false,
     workflowRunId: input.workflowRunId,
   };
   const createData = { ...data, publicId: makePublicId("check") };
@@ -145,6 +136,7 @@ export async function discardRankCheckActivity(input: DiscardRankCheckActivityIn
         degradedToCountry: false,
         deferredReason: input.reason,
         finishedAt: new Date(),
+        normalizationVersion: null,
         status: "deferred",
         viaFallback: false,
       },

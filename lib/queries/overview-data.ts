@@ -56,8 +56,10 @@ export async function loadOverviewMetricData(
           orderBy: { checkedAt: "desc" },
           select: {
             checkedAt: true,
+            normalizationVersion: true,
             position: true,
             previousPosition: true,
+            requestedDepth: true,
             rankingUrl: true,
             status: true,
           },

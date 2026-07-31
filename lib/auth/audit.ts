@@ -3,7 +3,9 @@ import "server-only";
 import { auditTargetPolicy } from "@/lib/audit/target-policy";
 import { prisma } from "@/lib/db/prisma";
 import { makePublicId, type PublicIdPrefix, parsePublicId } from "@/lib/db/public-id";
-import { Prisma } from "@/lib/generated/prisma/client";
+import { Prisma as PrismaRuntime } from "@/lib/generated/prisma/client";
+import { auditPayloadPolicy } from "./audit-field-declarations";
+import { sanitizeDeclaredAuditPayload } from "./audit-payload-policy";
 import {
   type AuditRequestContext,
   fallbackAuditRequestContext,
@@ -11,8 +13,6 @@ import {
 } from "./request-context";
 
 const redacted = "[redacted]";
-const sensitiveKeyPattern =
-  /(authorization|credential|password|secret|token|apiKey|api_key|hashedKey|hashed_key|otp|code)/i;
 const sensitiveStatusPattern =
   /(authorization|bearer|credential|password|secret|token|api[_ -]?key)/i;
 const MAX_STATUS_REASON_LENGTH = 300;
@@ -36,7 +36,7 @@ export type WriteAuditFailureInput = Omit<WriteAuditInput, "status"> & {
   status?: "failed";
   statusReason: string;
 };
-export type AuditClient = Pick<Prisma.TransactionClient, "auditLog">;
+export type AuditClient = Pick<PrismaRuntime.TransactionClient, "auditLog">;
 
 function jsonKeywordId(value: unknown) {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
@@ -69,35 +69,6 @@ export function validateAuditTarget(
   if (input.targetType === "rank_check") {
     requiredPublicAuditId(jsonKeywordId(input.after), "kw", "Rank-check");
   }
-}
-
-function sanitizeAuditValue(value: unknown): Prisma.InputJsonValue | null {
-  if (value === null || value === undefined) {
-    return null;
-  }
-
-  if (value instanceof Date) {
-    return value.toISOString();
-  }
-
-  if (Array.isArray(value)) {
-    return value.map((item) => sanitizeAuditValue(item));
-  }
-
-  if (typeof value === "object") {
-    return Object.fromEntries(
-      Object.entries(value).map(([key, item]) => [
-        key,
-        sensitiveKeyPattern.test(key) ? redacted : sanitizeAuditValue(item),
-      ]),
-    );
-  }
-
-  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
-    return value;
-  }
-
-  return typeof value === "bigint" ? value.toString() : null;
 }
 
 function sanitizeStatusReason(reason: string | undefined) {
@@ -139,10 +110,11 @@ export async function writeAudit(
   client: AuditClient = prisma,
 ) {
   validateAuditTarget({ after, targetId, targetType });
-  const sanitizedBefore =
-    before === undefined ? undefined : (sanitizeAuditValue(before) ?? Prisma.JsonNull);
-  const sanitizedAfter =
-    after === undefined ? undefined : (sanitizeAuditValue(after) ?? Prisma.JsonNull);
+  const policy = auditPayloadPolicy(action);
+  const declaredBefore = sanitizeDeclaredAuditPayload(before, policy?.before);
+  const declaredAfter = sanitizeDeclaredAuditPayload(after, policy?.after);
+  const sanitizedBefore = declaredBefore === null ? PrismaRuntime.JsonNull : declaredBefore;
+  const sanitizedAfter = declaredAfter === null ? PrismaRuntime.JsonNull : declaredAfter;
   const context = await resolveRequestContext(requestContext);
 
   return client.auditLog.create({

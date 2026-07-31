@@ -1,6 +1,8 @@
 import { alertSeverities } from "@/lib/alerts/severity";
+import { CLOUD_MIGRATION_PACKAGE_VERSION } from "@/lib/migration/package-version";
 import { savedViewSurfaces } from "@/lib/saved-views/model";
 import { serpDeviceValues, serpMarketOptions } from "@/lib/serp/markets";
+import { cloudImportRankingHistorySchema } from "./openapi-migration-ranking-history";
 
 const ref = (name: string) => ({ $ref: `#/components/schemas/${name}` });
 const text = { type: "string" };
@@ -106,7 +108,10 @@ export const migrationSchemas = {
     properties: {
       app_version: { type: "string" },
       latest_migration: { type: ["string", "null"] },
-      schema_versions_supported: { items: { enum: [5], type: "integer" }, type: "array" },
+      schema_versions_supported: {
+        items: { enum: [CLOUD_MIGRATION_PACKAGE_VERSION], type: "integer" },
+        type: "array",
+      },
     },
     required: ["schema_versions_supported", "app_version", "latest_migration"],
     type: "object",
@@ -179,7 +184,7 @@ export const migrationSchemas = {
       ...keywordSectionProperties,
       ...importSectionProperties,
       exported_at: { format: "date-time", type: "string" },
-      version: { const: 5, type: "integer" },
+      version: { const: CLOUD_MIGRATION_PACKAGE_VERSION, type: "integer" },
     },
     required: [
       "version",
@@ -192,17 +197,7 @@ export const migrationSchemas = {
     ],
     type: "object",
   },
-  CloudImportRankingHistory: {
-    additionalProperties: false,
-    properties: {
-      checkedAt: { format: "date-time", type: "string" },
-      position,
-      previousPosition: position,
-      rankingUrl: targetUrl,
-    },
-    required: ["checkedAt"],
-    type: "object",
-  },
+  CloudImportRankingHistory: cloudImportRankingHistorySchema,
   CloudImportSavedView: {
     additionalProperties: false,
     properties: {
@@ -227,7 +222,7 @@ export const migrationSchemas = {
         type: "object",
       },
       source_project_id: publicId("prj"),
-      version: { const: 5, type: "integer" },
+      version: { const: CLOUD_MIGRATION_PACKAGE_VERSION, type: "integer" },
     },
     required: ["version", "chunk_count", "source_project_id"],
     type: "object",

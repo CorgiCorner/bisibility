@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { API_VERSION_HEADER } from "./api-versions";
 import { getOpenApiDocument } from "./openapi";
 import { listRankChecks, runRankCheck } from "./rank-checks";
 
@@ -192,6 +193,7 @@ describe("rank-check API resources", () => {
         attemptCount: 0,
         degradedToCountry: false,
         keywordId: "keyword_1",
+        normalizationVersion: null,
         publicId: expect.any(String),
         provider: "serpapi",
         status: "running",
@@ -295,7 +297,10 @@ describe("rank-check API resources", () => {
 
     expect(doc.paths).not.toHaveProperty("/jobs/{job_id}");
     expect(runCheck).toMatchObject({
-      parameters: [expect.objectContaining({ name: "async" })],
+      parameters: [
+        expect.objectContaining({ name: API_VERSION_HEADER }),
+        expect.objectContaining({ name: "async" }),
+      ],
       responses: {
         "202": expect.objectContaining({
           content: {

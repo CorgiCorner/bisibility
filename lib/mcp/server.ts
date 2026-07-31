@@ -3,11 +3,12 @@ import "server-only";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import { getMcpToolDefinitions } from "./definitions";
+import type { McpApiAuthorization } from "./rest-call";
 import { errorToolResult, jsonToolResult } from "./result";
 import { dispatchMcpTool } from "./tools";
 
 type CreateMcpServerOptions = {
-  apiKey: string;
+  authorization: McpApiAuthorization;
   name?: string;
   version?: string;
 };
@@ -34,7 +35,7 @@ export function createBisibilityMcpServer(options: CreateMcpServerOptions) {
       const result = await dispatchMcpTool(
         request.params.name,
         request.params.arguments ?? {},
-        options.apiKey,
+        options.authorization,
       );
       if (!result.ok) {
         return errorToolResult({

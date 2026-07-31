@@ -53,6 +53,17 @@ export function createOAuthProtectedResource(origin: string) {
   };
 }
 
+export function createMcpOAuthProtectedResource(origin: string) {
+  const authorizationServer = origin.replace(/\/+$/, "");
+
+  return {
+    authorization_servers: [authorizationServer],
+    bearer_methods_supported: ["header"],
+    resource: `${authorizationServer}/api/mcp`,
+    scopes_supported: ["read", "write", "admin"],
+  };
+}
+
 export function createAuthMarkdown(origin: string) {
   return [
     "# Bisibility auth.md",
@@ -84,8 +95,8 @@ export function createAuthMarkdown(origin: string) {
     "the `tokens:write` scope and exchanges it at `POST /api/v1/me/tokens` for a",
     "PAT. The stored API credential is the PAT.",
     "",
-    "An OAuth access token is not a direct REST API credential. REST clients use",
-    "the resulting PAT or a project API key.",
+    "An OAuth access token issued for the `/api/mcp` resource is a direct MCP",
+    "credential. REST clients use the resulting PAT or a project API key.",
     "",
     "## Credential use",
     "",
@@ -105,6 +116,10 @@ export function createAuthMarkdown(origin: string) {
       origin,
       "/.well-known/oauth-protected-resource",
     )}`,
+    `- MCP OAuth protected resource metadata: ${absoluteUrl(
+      origin,
+      "/.well-known/oauth-protected-resource/api/mcp",
+    )}`,
     `- OAuth authorization server metadata: ${absoluteUrl(
       origin,
       "/.well-known/oauth-authorization-server",
@@ -118,14 +133,16 @@ export function createAuthMarkdown(origin: string) {
     `- MCP server card: ${absoluteUrl(origin, "/.well-known/mcp/server-card.json")}`,
     "",
     "The OAuth server supports `openid`, `profile`, `email`, `offline_access`,",
-    "and `tokens:write` scopes. Dynamic clients receive `oauth2_client`",
-    "credentials and use the browser consent flow.",
+    "`tokens:write`, `read`, `write`, and `admin` scopes. Dynamic clients",
+    "receive `oauth2_client` credentials and use the browser consent flow.",
     "",
     "## Useful API links",
     "",
     `- OpenAPI: ${absoluteUrl(origin, "/api/v1/openapi.json")}`,
     `- Capabilities: ${absoluteUrl(origin, "/api/v1/capabilities")}`,
-    `- Health: ${absoluteUrl(origin, "/api/v1/health")}`,
+    `- Liveness: ${absoluteUrl(origin, "/api/v1/liveness")}`,
+    `- Readiness: ${absoluteUrl(origin, "/api/v1/readiness")}`,
+    `- Composite health: ${absoluteUrl(origin, "/api/v1/health")}`,
     `- Authentication docs: ${absoluteUrl(origin, "/docs/authentication")}`,
     `- Personal access token docs: ${absoluteUrl(origin, "/docs/api/personal-access-tokens")}`,
     `- API key docs: ${absoluteUrl(origin, "/docs/api/api-keys")}`,

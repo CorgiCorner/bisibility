@@ -6,15 +6,17 @@ import { chargedProviderCostCents } from "@/lib/providers/call-error";
 import { resolveProviderCredentials } from "@/lib/providers/credentials";
 import { DataForSeoError } from "@/lib/providers/serp/dataforseo-errors";
 import {
-  dataForSeoItemPosition,
+  dataForSeoOrganicDecision,
   dataForSeoRawPayload,
   dataForSeoResponseCostCents,
-  findDataForSeoRankingItem,
 } from "@/lib/providers/serp/dataforseo-payload";
 import { fetchDataForSeoQueuedResult } from "@/lib/providers/serp/dataforseo-queued";
+import { requireDeterminateOrganicResult } from "@/lib/providers/serp/payload-contract-error";
 import { resolveSerpDepth } from "@/lib/serp/markets";
+import { findCurrentComparablePredecessor } from "./comparable-history";
 import { rankCheckCostCents } from "./cost";
-import { organicDomainRanksFromResults } from "./organic-ranks";
+import { CURRENT_RANK_NORMALIZATION_VERSION } from "./normalization-version";
+import { organicDomainRanksFromV2Results } from "./organic-ranks";
 import { RankCheckClosedBeforePersistenceError } from "./persistence-errors";
 import { deferQueuedRankCheckBatch, finalizeQueuedBatchState } from "./queued-lifecycle";
 import { authorizeQueuedRankCheckBatch } from "./queued-mode";
@@ -53,11 +55,6 @@ async function loadTask(
       keyword: {
         include: {
           project: { include: { defaults: true } },
-          rankChecks: {
-            orderBy: { checkedAt: "desc" },
-            take: 1,
-            where: { status: "completed" },
-          },
           schedule: true,
         },
       },
@@ -65,6 +62,11 @@ async function loadTask(
     },
     where: { id },
   });
+}
+
+async function loadComparablePrevious(task: QueuedTask) {
+  // biome-ignore format: keep the queue persistence module under its enforced line cap.
+  return findCurrentComparablePredecessor(task.keyword.id, resolveSerpDepth(task.rankCheck.requestedDepth ?? undefined));
 }
 
 async function claimTask(taskId: string) {
@@ -87,6 +89,7 @@ async function persistProviderFailure(
   costCents: number,
   lease: QueuedPersistenceLease,
 ) {
+  const previous = await loadComparablePrevious(task);
   await persistFailedRankCheck({
     attempts: [{ message, provider: "dataforseo" }],
     checkedAt: new Date(),
@@ -96,7 +99,7 @@ async function persistProviderFailure(
     keywordId: task.keyword.id,
     keywordPublicId: task.keyword.publicId,
     keywordText: task.keyword.text,
-    previousPosition: task.keyword.rankChecks[0]?.position ?? null,
+    previousPosition: previous?.position ?? null,
     persistenceFinalize: terminalizeLease(lease, "failed"),
     persistenceGuard: (tx) => assertQueuedPersistenceLease(tx, lease),
     projectDomain: task.keyword.project.domain,
@@ -143,15 +146,19 @@ async function persistProviderResult(
       terminalCostCents || null,
     );
   }
-  const items = providerTask.result?.flatMap((result) => result.items ?? []) ?? [];
-  const rankingItem = findDataForSeoRankingItem(items, task.keyword.project.domain);
+  // biome-ignore format: keep the queue persistence module under its enforced line cap.
+  const items = Array.isArray(providerTask.result) ? providerTask.result.flatMap((result) => result.items ?? []) : [null];
   const checkedAt = new Date();
   const requestedDepth = resolveSerpDepth(task.rankCheck.requestedDepth ?? undefined);
+  const decision = requireDeterminateOrganicResult(
+    "DataForSEO",
+    dataForSeoOrganicDecision(items, task.keyword.project.domain, requestedDepth),
+  );
   const reportedCost = terminalCostCents || Number(task.costCents ?? 0);
   const costCents = rankCheckCostCents(reportedCost, task.batch.connection.costPerCheckCents);
-  const previous = task.keyword.rankChecks[0];
+  const previous = await loadComparablePrevious(task);
   const schedule = task.keyword.schedule ?? task.keyword.project.defaults ?? fallbackSchedule();
-  const rawPayload = dataForSeoRawPayload(items);
+  const rawPayload = dataForSeoRawPayload(items, decision);
   const raw = rawPayload as unknown as Prisma.InputJsonObject;
   await persistRankCheck(
     {
@@ -171,6 +178,7 @@ async function persistProviderResult(
       transactionOptions: queuedResultTransactionOptions,
     },
     {
+      comparisonAllowed: previous !== null,
       providerCostCents: reportedCost > 0 ? reportedCost : undefined,
       rankCheck: {
         billingUnits: queuedBillingUnits(requestedDepth),
@@ -184,11 +192,12 @@ async function persistProviderResult(
                 requestedDepth,
               ),
         keywordId: task.keyword.id,
-        organicRanks: organicDomainRanksFromResults(rawPayload.organic_results),
-        position: dataForSeoItemPosition(rankingItem),
+        normalizationVersion: CURRENT_RANK_NORMALIZATION_VERSION,
+        organicRanks: organicDomainRanksFromV2Results(rawPayload.organic_results),
+        position: decision.position,
         previousPosition: previous?.position ?? null,
         provider: "dataforseo",
-        rankingUrl: rankingItem?.url ?? null,
+        rankingUrl: decision.rankingUrl,
         raw,
         requestedDepth,
       },

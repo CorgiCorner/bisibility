@@ -3,6 +3,10 @@ import "server-only";
 import { createHash } from "node:crypto";
 import { keywordCreateItemSchema } from "@/lib/api/schemas";
 import { parsePublicId } from "@/lib/db/public-id";
+import {
+  CLOUD_MIGRATION_PACKAGE_VERSION,
+  LEGACY_CLOUD_MIGRATION_PACKAGE_VERSION,
+} from "@/lib/migration/package-version";
 import { z } from "zod";
 import { cloudImportBodySchema, importKeywordSchema } from "./schemas";
 
@@ -30,14 +34,20 @@ function canonicalJson(value: unknown): string {
     .join(",")}}`;
 }
 
-export function importChunkChecksum(payload: {
+type ChunkChecksumPayload = {
   kind: string;
   keywords?: unknown;
   sections?: unknown;
-}) {
+};
+
+function importChunkChecksumForVersion(payload: ChunkChecksumPayload, version: 5 | 6) {
   return `sha256:${createHash("sha256")
-    .update(canonicalJson({ version: 5, ...payload }))
+    .update(canonicalJson({ version, ...payload }))
     .digest("hex")}`;
+}
+
+export function importChunkChecksum(payload: ChunkChecksumPayload) {
+  return importChunkChecksumForVersion(payload, CLOUD_MIGRATION_PACKAGE_VERSION);
 }
 
 function checksumMatches(input: unknown) {
@@ -49,7 +59,10 @@ function checksumMatches(input: unknown) {
       : body.kind === "sections"
         ? { kind: body.kind, sections: body.sections }
         : null;
-  return payload !== null && body.checksum === importChunkChecksum(payload);
+  if (payload === null) return false;
+  return [CLOUD_MIGRATION_PACKAGE_VERSION, LEGACY_CLOUD_MIGRATION_PACKAGE_VERSION].some(
+    (version) => body.checksum === importChunkChecksumForVersion(payload, version),
+  );
 }
 
 const checksumSchema = z.string().regex(/^sha256:[0-9a-f]{64}$/);
@@ -75,7 +88,7 @@ export const importSessionCreateSchema = z
       .strict()
       .partial()
       .optional(),
-    version: z.literal(5),
+    version: z.literal(CLOUD_MIGRATION_PACKAGE_VERSION),
   })
   .strict()
   .transform((value) => ({

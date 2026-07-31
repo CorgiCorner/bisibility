@@ -1,3 +1,5 @@
+import { unsupportedApiVersionResponse } from "@/lib/api/api-versions";
+import { selfHostedRobotsTag } from "@/lib/deployment/crawl-control";
 import { type NextRequest, NextResponse } from "next/server";
 import {
   createMarkdownForRequest,
@@ -11,6 +13,8 @@ import { SESSION_HINT_COOKIE, SESSION_HINT_COOKIE_OPTIONS } from "./lib/auth/ses
 const sessionCookieNames = ["better-auth.session_token", "__Secure-better-auth.session_token"];
 const CANONICAL_APP_HOST = "eu.bisibility.com";
 const CANONICAL_MARKETING_HOST = "bisibility.com";
+const CANONICAL_MCP_RESOURCE_URL = `https://${CANONICAL_MARKETING_HOST}/api/mcp`;
+const REGIONAL_MCP_PATHS = new Set(["/api/mcp", "/.well-known/oauth-protected-resource/api/mcp"]);
 const MARKETING_HOSTS = new Set([CANONICAL_MARKETING_HOST, "www.bisibility.com"]);
 // Interactive and API routes stay in the user's regional cell. Everything else
 // is a public surface whose canonical production origin is the marketing apex.
@@ -62,7 +66,42 @@ function isAppSurface(pathname: string) {
   return APP_SURFACE_PATHS.some((path) => matchesPathSegment(pathname, path));
 }
 
+function regionalMcpResponse(request: NextRequest) {
+  if (
+    isSelfHostDeployment() ||
+    requestHost(request) !== CANONICAL_APP_HOST ||
+    !REGIONAL_MCP_PATHS.has(request.nextUrl.pathname)
+  ) {
+    return null;
+  }
+
+  const headers = {
+    "Cache-Control": "no-store",
+    Link: `<${CANONICAL_MCP_RESOURCE_URL}>; rel="canonical"`,
+  };
+  if (request.method === "HEAD") {
+    return new NextResponse(null, { headers, status: 421 });
+  }
+
+  return NextResponse.json(
+    {
+      canonical_resource: CANONICAL_MCP_RESOURCE_URL,
+      detail: `Hosted MCP is available only at ${CANONICAL_MCP_RESOURCE_URL}.`,
+      status: 421,
+      title: "Misdirected MCP request",
+      type: `https://${CANONICAL_MARKETING_HOST}/problems/misdirected-mcp-request`,
+    },
+    { headers, status: 421 },
+  );
+}
+
 function canonicalSurfaceRedirect(request: NextRequest) {
+  // The advertised MCP transport is the apex URL. Keep it there so an
+  // Authorization header never crosses hosts while following a redirect.
+  if (request.nextUrl.pathname === "/api/mcp") {
+    return null;
+  }
+
   const host = requestHost(request);
   const appSurface = isAppSurface(request.nextUrl.pathname);
   const destinationHost = (() => {
@@ -123,7 +162,7 @@ function nextResponse(request: NextRequest) {
 
 // Sync the client-readable auth hint with the httpOnly cookie for pre-hydration nav;
 // emit Set-Cookie only when stale to keep steady-state responses cacheable.
-function withSessionHint(request: NextRequest, response: NextResponse) {
+function withResponsePolicies(request: NextRequest, response: NextResponse) {
   const authed = hasSessionCookie(request);
   const hint = request.cookies.get(SESSION_HINT_COOKIE)?.value;
 
@@ -133,13 +172,32 @@ function withSessionHint(request: NextRequest, response: NextResponse) {
     response.cookies.set(SESSION_HINT_COOKIE, "", { ...SESSION_HINT_COOKIE_OPTIONS, maxAge: 0 });
   }
 
+  if (isSelfHostDeployment()) {
+    const robotsTag = selfHostedRobotsTag();
+    if (robotsTag) {
+      response.headers.set("X-Robots-Tag", robotsTag);
+    }
+  }
+
   return response;
 }
 
 export function middleware(request: NextRequest) {
+  if (matchesPathSegment(request.nextUrl.pathname, "/api/v1")) {
+    const versionError = unsupportedApiVersionResponse(request);
+    if (versionError) {
+      return withResponsePolicies(request, versionError);
+    }
+  }
+
+  const misdirectedMcp = regionalMcpResponse(request);
+  if (misdirectedMcp) {
+    return withResponsePolicies(request, misdirectedMcp);
+  }
+
   const canonicalRedirect = canonicalSurfaceRedirect(request);
   if (canonicalRedirect) {
-    return canonicalRedirect;
+    return withResponsePolicies(request, canonicalRedirect);
   }
 
   const protectedPath =
@@ -151,25 +209,25 @@ export function middleware(request: NextRequest) {
   if (protectedPath && !isSelfHostDeployment() && !hasSessionCookie(request)) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("next", `${request.nextUrl.pathname}${request.nextUrl.search}`);
-    return withSessionHint(request, NextResponse.redirect(loginUrl));
+    return withResponsePolicies(request, NextResponse.redirect(loginUrl));
   }
 
   const anchorRedirect = appAnchorRedirect(request);
   if (anchorRedirect) {
-    return withSessionHint(request, anchorRedirect);
+    return withResponsePolicies(request, anchorRedirect);
   }
 
   if (!shouldVaryOnAccept(request)) {
-    return withSessionHint(request, nextResponse(request));
+    return withResponsePolicies(request, nextResponse(request));
   }
 
   if (!shouldServeMarkdown(request)) {
-    return withSessionHint(request, withAcceptVary(nextResponse(request)));
+    return withResponsePolicies(request, withAcceptVary(nextResponse(request)));
   }
 
   const markdown = createMarkdownForRequest(request);
   const body = markdown.endsWith("\n") ? markdown : `${markdown}\n`;
-  return withSessionHint(
+  return withResponsePolicies(
     request,
     withAcceptVary(
       new NextResponse(request.method === "HEAD" ? null : body, {

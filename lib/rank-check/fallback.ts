@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/db/prisma";
 import { assertProjectWritable } from "@/lib/deployment/project-write-mode";
-import type { Location } from "@/lib/generated/prisma/client";
 import {
   loadProviderRateContexts,
   providerRateContextKey,
@@ -10,18 +9,15 @@ import { ProviderRateLimitedError } from "@/lib/providers/rate-limit";
 import { getSerpProvider } from "@/lib/providers/registry";
 import type { SerpProvider } from "@/lib/providers/types";
 import {
-  countryDegradedRankLocation,
-  type SerpRankLocation,
-  serpRankLocation,
-  serpRankLocationFromLegacy,
-} from "@/lib/serp/location";
-import {
   resolveEffectiveSerpDepth,
   resolveSerpStopOnMatch,
   type SerpDepth,
 } from "@/lib/serp/markets";
 import { assertBudgetAvailable } from "./budget";
+import { findComparablePredecessor } from "./comparable-history";
 import { estimatedRankCheckCostCents } from "./default-cost";
+import { keywordRankLocation, locationForProvider } from "./fallback-location";
+import { CURRENT_RANK_NORMALIZATION_VERSION } from "./normalization-version";
 import { serpProviderChainOrderBy } from "./provider-chain-order";
 import {
   fallbackSchedule,
@@ -35,6 +31,9 @@ import {
 } from "./runner";
 import type { RankCheckScheduleInput } from "./schedule";
 
+export type { KeywordRankLocation } from "./fallback-location";
+export { keywordRankLocation } from "./fallback-location";
+
 const FALLBACK_CODES: ReadonlySet<RankCheckRunnerErrorCode> = new Set([
   "provider_failed",
   "provider_rate_limited",
@@ -47,6 +46,7 @@ export type FallbackAttempt = {
 };
 
 export type RunCheckChainInput = {
+  comparisonAllowed?: boolean;
   keyword: RankCheckKeywordInput;
   schedule: RankCheckScheduleInput;
   depth?: SerpDepth;
@@ -73,44 +73,6 @@ export type RunCheckChainResult = {
   /** Providers that failed before the successful one (empty on first-try success). */
   attempts: FallbackAttempt[];
 };
-
-// Granularity drives the provider-agnostic city-to-country degrade guard below.
-export type KeywordRankLocation = {
-  handles: SerpRankLocation;
-  granular: boolean;
-};
-
-// Missing joined rows derive a country handle synchronously from the legacy string.
-export function keywordRankLocation(
-  location: Location | null | undefined,
-  legacyLocation: string,
-): KeywordRankLocation {
-  if (!location) {
-    return { granular: false, handles: serpRankLocationFromLegacy(legacyLocation) };
-  }
-  return { granular: location.kind === "city", handles: serpRankLocation(location) };
-}
-
-// Degrade granular locations to country when the active provider lacks its city
-// handle; unlisted providers accept the available granularity unchanged.
-const PROVIDER_LACKS_CITY_HANDLE: Record<string, (handles: SerpRankLocation) => boolean> = {
-  // Code-based provider: a city request needs the numeric primaryGeoCode; without it
-  // the name-based fallback may receive a city name it cannot match, so degrade.
-  dataforseo: (handles) => handles.primaryGeoCode === null,
-};
-
-function locationForProvider(
-  providerId: string,
-  handles: SerpRankLocation,
-  granular: boolean,
-): SerpRankLocation {
-  if (!granular) {
-    return handles;
-  }
-  return PROVIDER_LACKS_CITY_HANDLE[providerId]?.(handles)
-    ? countryDegradedRankLocation(handles)
-    : handles;
-}
 
 export class ProviderChainError extends RankCheckRunnerError {
   constructor(readonly attempts: FallbackAttempt[]) {
@@ -197,6 +159,7 @@ export async function runCheckWithFallback(
 
     try {
       const result = await runCheck({
+        comparisonAllowed: input.comparisonAllowed,
         connection,
         depth: input.depth,
         stopOnMatch: input.stopOnMatch,
@@ -264,7 +227,6 @@ export async function runKeywordCheckWithFallback(input: RunKeywordCheckWithFall
       locationRef: true,
       project: { include: { defaults: true } },
       _count: { select: { rankChecks: { where: { status: "completed" } } } },
-      rankChecks: { orderBy: { checkedAt: "desc" }, take: 1, where: { status: "completed" } },
       schedule: true,
     },
     where: { id: input.keywordId },
@@ -292,9 +254,14 @@ export async function runKeywordCheckWithFallback(input: RunKeywordCheckWithFall
     excludeRankCheckId: input.rankCheckId,
   });
 
-  const previous = keyword.rankChecks[0];
+  const previous = await findComparablePredecessor(keyword.id, {
+    normalizationVersion: CURRENT_RANK_NORMALIZATION_VERSION,
+    requestedDepth: depth,
+  });
+  const comparisonAllowed = previous !== null;
   const { handles, granular } = keywordRankLocation(keyword.locationRef, keyword.location);
   const outcome = await runCheckWithFallback({
+    comparisonAllowed,
     connections,
     depth,
     stopOnMatch,
@@ -308,7 +275,7 @@ export async function runKeywordCheckWithFallback(input: RunKeywordCheckWithFall
     locationGranular: granular,
     now: input.now,
     previousPosition: previous?.position ?? null,
-    completedCheckCount: keyword._count?.rankChecks ?? keyword.rankChecks.length,
+    completedCheckCount: keyword._count?.rankChecks ?? 0,
     projectId: keyword.projectId,
     resolveProvider: input.resolveProvider,
     schedule: keyword.schedule ?? keyword.project.defaults ?? fallbackSchedule(),

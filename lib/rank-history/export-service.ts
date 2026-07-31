@@ -2,7 +2,7 @@ import "server-only";
 
 import type { Actor } from "@/lib/auth/authorize";
 import { authorize } from "@/lib/auth/authorize";
-import { whereExecutedChecks } from "@/lib/checks/status";
+import { whereCompletedChecks } from "@/lib/checks/status";
 import { prisma } from "@/lib/db/prisma";
 import { type PublicIdPrefix, parsePublicId } from "@/lib/db/public-id";
 import { auditKeywordExport } from "@/lib/keywords/export-audit";
@@ -60,13 +60,16 @@ export async function loadRankHistoryExport(input: RankHistoryExportOptions) {
               orderBy: [{ checkedAt: "desc" }, { publicId: "desc" }],
               select: {
                 checkedAt: true,
+                normalizationVersion: true,
                 position: true,
                 previousPosition: true,
+                provider: true,
                 publicId: true,
                 rankingUrl: true,
+                requestedDepth: true,
               },
               where: {
-                ...whereExecutedChecks(),
+                ...whereCompletedChecks(),
                 ...(minDate ? { checkedAt: { gte: minDate } } : {}),
               },
             },
@@ -122,9 +125,12 @@ export function rankHistoryRows(
           id,
           keyword: keyword.text,
           keywordId,
+          normalizationVersion: check.normalizationVersion,
           position: check.position,
           previousPosition: check.previousPosition,
+          provider: check.provider,
           rankingUrl: check.rankingUrl,
+          requestedDepth: check.requestedDepth,
         },
       ];
     });
@@ -153,10 +159,13 @@ export function rankHistoryCsvLine(row: ReturnType<typeof rankHistoryRows>[numbe
     row.position,
     row.previousPosition,
     row.rankingUrl,
+    row.provider,
+    row.requestedDepth,
+    row.normalizationVersion,
   ]
     .map(csvCell)
     .join(",");
 }
 
 export const rankHistoryCsvHeader =
-  "keyword_id,keyword,checked_at,position,previous_position,ranking_url";
+  "keyword_id,keyword,checked_at,position,previous_position,ranking_url,provider,requested_depth,normalization_version";

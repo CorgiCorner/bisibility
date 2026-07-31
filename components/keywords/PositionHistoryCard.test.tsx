@@ -40,6 +40,26 @@ vi.mock("@mui/x-charts/LineChart", () => ({
 }));
 
 describe("PositionHistoryCard", () => {
+  it("shows a discontinuity marker only when the visible history crosses a contract boundary", () => {
+    render(
+      <PositionHistoryCard
+        keyword={{
+          ...keywordRows[0],
+          positionHistoryBoundaryAt: "2026-07-01T10:00:00.000Z",
+        }}
+      />,
+    );
+
+    expect(
+      screen.getByText("Comparison restarted after a ranking normalization change."),
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "7d" }));
+    expect(
+      screen.queryByText("Comparison restarted after a ranking normalization change."),
+    ).not.toBeInTheDocument();
+  });
+
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-07-20T12:00:00.000Z"));

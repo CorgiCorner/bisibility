@@ -1,0 +1,301 @@
+
+x-app-env: &app-env
+  ALERT_DELIVERY_FAILURE_RATE_THRESHOLD: ${ALERT_DELIVERY_FAILURE_RATE_THRESHOLD:-}
+  ALERT_DELIVERY_MIN_ATTEMPTS: ${ALERT_DELIVERY_MIN_ATTEMPTS:-}
+  ALERT_DELIVERY_SWEEP_ENABLED: ${ALERT_DELIVERY_SWEEP_ENABLED:-}
+  ALERT_DELIVERY_SWEEP_INTERVAL: ${ALERT_DELIVERY_SWEEP_INTERVAL:-}
+  ALERT_DELIVERY_WINDOW_HOURS: ${ALERT_DELIVERY_WINDOW_HOURS:-}
+  ALERT_DIGEST_FLUSH_ENABLED: ${ALERT_DIGEST_FLUSH_ENABLED:-}
+  ALERT_DIGEST_FLUSH_INTERVAL: ${ALERT_DIGEST_FLUSH_INTERVAL:-}
+  ALERT_FIRE_SPIKE_MIN: ${ALERT_FIRE_SPIKE_MIN:-}
+  ALERT_FIRE_SPIKE_MULTIPLIER: ${ALERT_FIRE_SPIKE_MULTIPLIER:-}
+  ALERT_HEALTH_INTERVAL: ${ALERT_HEALTH_INTERVAL:-}
+  AUDIT_IP_HMAC_SECRET: ${AUDIT_IP_HMAC_SECRET:-}
+  AUDIT_RETENTION_DAYS: ${AUDIT_RETENTION_DAYS:-}
+  AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+  AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-}
+  AWS_REGION: ${AWS_REGION:-}
+  AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+  AWS_SESSION_TOKEN: ${AWS_SESSION_TOKEN:-}
+  BETTER_AUTH_SECRET: "${BETTER_AUTH_SECRET:?Set BETTER_AUTH_SECRET in .env. Generate one with: openssl rand -base64 32}"
+  BETTER_AUTH_URL: "${BETTER_AUTH_URL:?Set BETTER_AUTH_URL to the public app origin in .env}"
+  BISIBILITY_API_ANON_RATE_LIMIT_PER_MINUTE: ${BISIBILITY_API_ANON_RATE_LIMIT_PER_MINUTE:-}
+  BISIBILITY_API_KEY_RATE_LIMIT_PER_MINUTE: ${BISIBILITY_API_KEY_RATE_LIMIT_PER_MINUTE:-}
+  BISIBILITY_CLIENT_IP_HEADER: ${BISIBILITY_CLIENT_IP_HEADER:-}
+  BISIBILITY_CLIENT_IP_XFF_DEPTH: ${BISIBILITY_CLIENT_IP_XFF_DEPTH:-}
+  BISIBILITY_PROVIDER_RATE_LIMIT_DATAFORSEO_PER_MINUTE: ${BISIBILITY_PROVIDER_RATE_LIMIT_DATAFORSEO_PER_MINUTE:-}
+  BISIBILITY_PROVIDER_RATE_LIMIT_DATAFORSEO_WINDOW_SECONDS: ${BISIBILITY_PROVIDER_RATE_LIMIT_DATAFORSEO_WINDOW_SECONDS:-}
+  BISIBILITY_PROVIDER_RATE_LIMIT_DISABLED: ${BISIBILITY_PROVIDER_RATE_LIMIT_DISABLED:-}
+  BISIBILITY_PROVIDER_RATE_LIMIT_GA4_PER_MINUTE: ${BISIBILITY_PROVIDER_RATE_LIMIT_GA4_PER_MINUTE:-}
+  BISIBILITY_PROVIDER_RATE_LIMIT_GA4_WINDOW_SECONDS: ${BISIBILITY_PROVIDER_RATE_LIMIT_GA4_WINDOW_SECONDS:-}
+  BISIBILITY_PROVIDER_RATE_LIMIT_GSC_PER_MINUTE: ${BISIBILITY_PROVIDER_RATE_LIMIT_GSC_PER_MINUTE:-}
+  BISIBILITY_PROVIDER_RATE_LIMIT_GSC_WINDOW_SECONDS: ${BISIBILITY_PROVIDER_RATE_LIMIT_GSC_WINDOW_SECONDS:-}
+  BISIBILITY_PROVIDER_RATE_LIMIT_SERPAPI_PER_MINUTE: ${BISIBILITY_PROVIDER_RATE_LIMIT_SERPAPI_PER_MINUTE:-}
+  BISIBILITY_PROVIDER_RATE_LIMIT_SERPAPI_WINDOW_SECONDS: ${BISIBILITY_PROVIDER_RATE_LIMIT_SERPAPI_WINDOW_SECONDS:-}
+  BISIBILITY_SECRETS_KEY: "${BISIBILITY_SECRETS_KEY:?Set BISIBILITY_SECRETS_KEY in .env. Generate one with: openssl rand -base64 32}"
+  BISIBILITY_SECRETS_KEYS_RETIRED: ${BISIBILITY_SECRETS_KEYS_RETIRED:-}
+  DATABASE_URL: "${DATABASE_URL:?Set DATABASE_URL in .env}"
+  DATABASE_POOL_MAX: ${DATABASE_POOL_MAX:-3}
+  DATABASE_CONNECT_TIMEOUT_MS: ${DATABASE_CONNECT_TIMEOUT_MS:-5000}
+  DATABASE_IDLE_TIMEOUT_MS: ${DATABASE_IDLE_TIMEOUT_MS:-10000}
+  DATABASE_APPLICATION_NAME: ${DATABASE_APPLICATION_NAME:-bisibility-ssr}
+  DATAFORSEO_LOGIN: ${DATAFORSEO_LOGIN:-}
+  DATAFORSEO_PASSWORD: ${DATAFORSEO_PASSWORD:-}
+  DATA_REGION: ${DATA_REGION:-}
+  DEMO_FIXED_OTP: ${DEMO_FIXED_OTP:-}
+  DEMO_INSTANCE_INSECURE_AUTH_ACK: ${DEMO_INSTANCE_INSECURE_AUTH_ACK:-}
+  DEPLOYMENT_ENV: ${DEPLOYMENT_ENV:-production}
+  DEPLOYMENT_MODE: ${DEPLOYMENT_MODE:-self-host}
+  DIRECT_URL: "${DIRECT_URL:?Set DIRECT_URL in .env}"
+  EMAIL_ALERTS_FROM: ${EMAIL_ALERTS_FROM:-}
+  EMAIL_DAILY_BUDGET_BULK: ${EMAIL_DAILY_BUDGET_BULK:-}
+  EMAIL_DAILY_BUDGET_TRANSACTIONAL: ${EMAIL_DAILY_BUDGET_TRANSACTIONAL:-}
+  EMAIL_FROM: ${EMAIL_FROM:-}
+  EMAIL_PROVIDER: ${EMAIL_PROVIDER:-}
+  GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
+  GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
+  GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+  GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+  LEGAL_CONTACT_EMAIL: ${LEGAL_CONTACT_EMAIL:-}
+  LEGAL_OPERATOR_NAME: ${LEGAL_OPERATOR_NAME:-}
+  LEGAL_PRIVACY_URL: ${LEGAL_PRIVACY_URL:-}
+  LEGAL_TERMS_URL: ${LEGAL_TERMS_URL:-}
+  OPS_EVENTS_ENABLED: ${OPS_EVENTS_ENABLED:-}
+  OPS_HEARTBEAT_CRON: ${OPS_HEARTBEAT_CRON:-}
+  OPS_HEARTBEAT_TZ: ${OPS_HEARTBEAT_TZ:-}
+  OPS_NOTIFY_MODE: ${OPS_NOTIFY_MODE:-}
+  OPS_SLACK_INCLUDE_NAMES: ${OPS_SLACK_INCLUDE_NAMES:-}
+  OPS_SLACK_WEBHOOK_URL: ${OPS_SLACK_WEBHOOK_URL:-}
+  OPS_THROTTLE_MINUTES: ${OPS_THROTTLE_MINUTES:-}
+  RANK_CHECK_SCHEDULER_MODE: ${RANK_CHECK_SCHEDULER_MODE:-}
+  RANK_CHECK_DISPATCHER_ENABLED: ${RANK_CHECK_DISPATCHER_ENABLED:-}
+  REDIS_TLS_CA_B64: ${REDIS_TLS_CA_B64:-}
+  REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+  RANK_CHECK_RAW_RETENTION_DAYS: ${RANK_CHECK_RAW_RETENTION_DAYS:-}
+  RESEND_API_KEY: ${RESEND_API_KEY:-}
+  SERPAPI_API_KEY: ${SERPAPI_API_KEY:-}
+  SES_CONFIGURATION_SET: ${SES_CONFIGURATION_SET:-}
+  SES_REGION: ${SES_REGION:-}
+  SITE_URL: "${SITE_URL:?Set SITE_URL to the public app origin in .env}"
+  SLACK_CLIENT_ID: ${SLACK_CLIENT_ID:-}
+  SLACK_CLIENT_SECRET: ${SLACK_CLIENT_SECRET:-}
+  SMTP_URL: ${SMTP_URL:-}
+  TEMPORAL_ADDRESS: ${TEMPORAL_ADDRESS:-temporal:7233}
+  TEMPORAL_API_KEY: ${TEMPORAL_API_KEY:-}
+  TEMPORAL_ALERT_DELIVERY_TASK_QUEUE: ${TEMPORAL_ALERT_DELIVERY_TASK_QUEUE:-}
+  TEMPORAL_SCHEDULE_CATCHUP_WINDOW: ${TEMPORAL_SCHEDULE_CATCHUP_WINDOW:-}
+  TEMPORAL_NAMESPACE: ${TEMPORAL_NAMESPACE:-default}
+  TEMPORAL_TASK_QUEUE: ${TEMPORAL_TASK_QUEUE:-rank-checks}
+  TEMPORAL_MAX_CONCURRENT_ACTIVITIES: ${TEMPORAL_MAX_CONCURRENT_ACTIVITIES:-5}
+  TEMPORAL_TLS: ${TEMPORAL_TLS:-}
+  TRAFFIC_SNAPSHOT_RETENTION_DAYS: ${TRAFFIC_SNAPSHOT_RETENTION_DAYS:-}
+  WEBHOOK_ALLOW_PRIVATE_NETWORK: ${WEBHOOK_ALLOW_PRIVATE_NETWORK:-}
+  WORKER_SCHEMA_GUARD: ${WORKER_SCHEMA_GUARD:-}
+
+services:
+  db-migrations:
+    image: docker.io/corgicorner/bisibility:0.2.1
+    pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
+    command: >
+      sh -c 'npm run db:migrate && if [ "$$DEMO_FIXED_OTP" = "1" ]; then node --experimental-strip-types prisma/seed.ts; fi'
+    environment: *app-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  app:
+    image: docker.io/corgicorner/bisibility:0.2.1
+    pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:${APP_HOST_PORT:-3000}:3000
+    environment: *app-env
+    depends_on:
+      db-migrations:
+        condition: service_completed_successfully
+      redis:
+        condition: service_started
+
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: bisibility
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}"
+      POSTGRES_DB: bisibility
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U bisibility -d bisibility" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  redis:
+    image: valkey/valkey:8-alpine
+    restart: unless-stopped
+
+  temporal-postgres:
+    image: postgres:16
+    profiles: [ "scheduled" ]
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: temporal
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U temporal -d temporal" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    volumes:
+      - temporal-postgres-data:/var/lib/postgresql/data
+
+  temporal-schema:
+    image: temporalio/admin-tools:1.31.2
+    profiles: [ "scheduled" ]
+    user: "0:0"
+    restart: "no"
+    depends_on:
+      temporal-postgres:
+        condition: service_healthy
+    environment:
+      DB: postgres12
+      DB_PORT: 5432
+      POSTGRES_USER: temporal
+      POSTGRES_PWD: "${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}"
+      POSTGRES_SEEDS: temporal-postgres
+    volumes:
+      - temporal-dynamic-config:/etc/temporal/config/dynamicconfig
+    entrypoint: [ "/bin/sh", "-eu", "-c" ]
+    command:
+      - |
+        export SQL_PLUGIN="$$DB"
+        export SQL_HOST="$$POSTGRES_SEEDS"
+        export SQL_PORT="$$DB_PORT"
+        export SQL_USER="$$POSTGRES_USER"
+        export SQL_PASSWORD="$$POSTGRES_PWD"
+        ensure_database() {
+          database="$$1"
+          if output=$$(temporal-sql-tool --db "$$database" create 2>&1); then
+            printf '%s\n' "$$output"
+            return 0
+          fi
+          if printf '%s\n' "$$output" | grep -qi 'already exists'; then
+            printf 'Database %s already exists; applying versioned updates.\n' "$$database"
+            return 10
+          fi
+          printf '%s\n' "$$output" >&2
+          return 1
+        }
+        if ensure_database temporal; then
+          temporal-sql-tool --db temporal setup-schema -v 0.0
+        elif [ "$$?" -ne 10 ]; then
+          exit 1
+        fi
+        temporal-sql-tool --db temporal update-schema -d /etc/temporal/schema/postgresql/v12/temporal/versioned
+        if ensure_database temporal_visibility; then
+          temporal-sql-tool --db temporal_visibility setup-schema -v 0.0
+        elif [ "$$?" -ne 10 ]; then
+          exit 1
+        fi
+        temporal-sql-tool --db temporal_visibility update-schema -d /etc/temporal/schema/postgresql/v12/visibility/versioned
+        printf '{}\n' > /etc/temporal/config/dynamicconfig/docker.yaml
+
+  temporal:
+    image: temporalio/server:1.31.2
+    profiles: [ "scheduled" ]
+    restart: unless-stopped
+    depends_on:
+      temporal-schema:
+        condition: service_completed_successfully
+    environment:
+      BIND_ON_IP: 0.0.0.0
+      DB: postgres12
+      DB_PORT: 5432
+      POSTGRES_USER: temporal
+      POSTGRES_PWD: "${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}"
+      POSTGRES_SEEDS: temporal-postgres
+      DBNAME: temporal
+      VISIBILITY_DBNAME: temporal_visibility
+      NUM_HISTORY_SHARDS: "4"
+      DYNAMIC_CONFIG_FILE_PATH: /etc/temporal/config/dynamicconfig/docker.yaml
+    volumes:
+      - temporal-dynamic-config:/etc/temporal/config/dynamicconfig:ro
+
+  temporal-namespace:
+    image: temporalio/admin-tools:1.31.2
+    profiles: [ "scheduled" ]
+    restart: "no"
+    depends_on:
+      - temporal
+    environment:
+      TEMPORAL_NAMESPACE: ${TEMPORAL_NAMESPACE:-default}
+    entrypoint: [ "/bin/sh", "-eu", "-c" ]
+    command:
+      - |
+        timeout 300 sh -c 'until temporal operator cluster health --address temporal:7233 | grep -q SERVING; do echo "Waiting for the Temporal frontend..."; sleep 2; done'
+        if temporal operator namespace describe --address temporal:7233 --namespace "$$TEMPORAL_NAMESPACE" >/dev/null 2>&1; then
+          temporal operator namespace update --address temporal:7233 --namespace "$$TEMPORAL_NAMESPACE" --retention 24h
+        else
+          temporal operator namespace create --address temporal:7233 --namespace "$$TEMPORAL_NAMESPACE" --retention 24h --description "bisibility application namespace"
+        fi
+        timeout 120 sh -c 'until temporal operator namespace describe --address temporal:7233 --namespace "$$TEMPORAL_NAMESPACE" >/dev/null 2>&1; do echo "Waiting for the namespace cache..."; sleep 2; done'
+
+  temporal-ui:
+    image: temporalio/ui:2.49.1
+    profiles: [ "scheduled" ]
+    restart: unless-stopped
+    depends_on:
+      temporal-namespace:
+        condition: service_completed_successfully
+    environment:
+      TEMPORAL_ADDRESS: temporal:7233
+      TEMPORAL_CORS_ORIGINS: http://localhost:8233
+    ports:
+      - "127.0.0.1:${TEMPORAL_UI_HOST_PORT:-8233}:8080"
+
+  worker:
+    image: docker.io/corgicorner/bisibility-worker:0.2.1
+    pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
+    profiles: [ "scheduled" ]
+    restart: unless-stopped
+    environment:
+      <<: *app-env
+      DATABASE_APPLICATION_NAME: bisibility-worker
+      DATABASE_POOL_MAX: ${BISIBILITY_WORKER_DATABASE_POOL_MAX:-4}
+      AUDIT_PURGE_CRON: ${AUDIT_PURGE_CRON:-}
+      DATAFORSEO_QUEUED_RANK_CHECKS_ENABLED: ${DATAFORSEO_QUEUED_RANK_CHECKS_ENABLED:-}
+      DATAFORSEO_QUEUE_MAX_AGE_SECONDS: ${DATAFORSEO_QUEUE_MAX_AGE_SECONDS:-}
+      DATAFORSEO_QUEUE_POLL_INTERVAL_SECONDS: ${DATAFORSEO_QUEUE_POLL_INTERVAL_SECONDS:-}
+      DATAFORSEO_QUEUE_PRIORITY: ${DATAFORSEO_QUEUE_PRIORITY:-}
+      PRESENCE_SYNC_CRON: ${PRESENCE_SYNC_CRON:-}
+      PRESENCE_SYNC_ENABLED: ${PRESENCE_SYNC_ENABLED:-}
+      QUEUED_RANK_CHECK_RETENTION_CRON: ${QUEUED_RANK_CHECK_RETENTION_CRON:-}
+      RANK_CHECK_DISPATCHER_INTERVAL: ${RANK_CHECK_DISPATCHER_INTERVAL:-}
+      RANK_CHECK_DISPATCHER_MAX_KEYWORDS_PER_PROJECT_PER_PASS: ${RANK_CHECK_DISPATCHER_MAX_KEYWORDS_PER_PROJECT_PER_PASS:-25}
+      RANK_CHECK_RAW_PROGRESS_FENCE_RETENTION_DAYS: ${RANK_CHECK_RAW_PROGRESS_FENCE_RETENTION_DAYS:-}
+      RANK_CHECK_RAW_PURGE_CRON: ${RANK_CHECK_RAW_PURGE_CRON:-}
+      RANK_CHECK_RECONCILER_ENABLED: ${RANK_CHECK_RECONCILER_ENABLED:-}
+      RANK_CHECK_RECONCILER_INTERVAL: ${RANK_CHECK_RECONCILER_INTERVAL:-}
+      SCHEDULED_MAINTENANCE_ENABLED: ${SCHEDULED_MAINTENANCE_ENABLED:-}
+      SESSION_PURGE_CRON: ${SESSION_PURGE_CRON:-}
+      SITEMAP_SYNC_CRON: ${SITEMAP_SYNC_CRON:-}
+      SITEMAP_SYNC_ENABLED: ${SITEMAP_SYNC_ENABLED:-}
+      STALE_CHECKS_INTERVAL: ${STALE_CHECKS_INTERVAL:-}
+      TEMPORAL_UI_URL: ${TEMPORAL_UI_URL:-}
+      TRAFFIC_SYNC_CRON: ${TRAFFIC_SYNC_CRON:-}
+      TRAFFIC_SYNC_ENABLED: ${TRAFFIC_SYNC_ENABLED:-}
+      WEEKLY_DIGEST_CRON: ${WEEKLY_DIGEST_CRON:-}
+    depends_on:
+      db-migrations:
+        condition: service_completed_successfully
+      redis:
+        condition: service_started
+      temporal-namespace:
+        condition: service_completed_successfully
+
+volumes:
+  postgres-data:
+  temporal-postgres-data:
+  temporal-dynamic-config:

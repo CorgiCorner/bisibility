@@ -1,10 +1,15 @@
-import { domainMatches, normalizeDomain } from "@/lib/domains/normalize";
 import type {
   KeywordMetrics,
   RankedKeywordsPage,
   ResearchPage,
   SerpRawPayload,
 } from "@/lib/providers/types";
+import type { SerpDepth } from "@/lib/serp/markets";
+import {
+  decideOrganicResult,
+  type OrganicResultDecision,
+  organicResultNormalization,
+} from "./organic-result-decision";
 
 export type DataForSeoItem = {
   domain?: string;
@@ -140,39 +145,57 @@ export function dataForSeoRankedKeywordsPage(data: DataForSeoResponse): RankedKe
   };
 }
 
-export function findDataForSeoRankingItem(items: DataForSeoItem[] | undefined, domain: string) {
-  return items?.find(
-    (item) => item.type === "organic" && domainMatches(item.domain ?? item.url, domain),
-  );
-}
-
-export function dataForSeoItemPosition(item: DataForSeoItem | undefined) {
-  return item?.rank_group ?? item?.rank_absolute ?? null;
-}
-
 function featureLabel(value: string) {
   return value.trim().replace(/[_-]+/g, " ");
 }
 
-function rawOrganicResult(item: DataForSeoItem) {
-  const rank = dataForSeoItemPosition(item);
-  if (item.type !== "organic" || !item.url || !rank) return null;
-  const domain = normalizeDomain(item.domain ?? item.url);
-  if (!domain) return null;
+function record(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function organicCandidate(value: unknown) {
+  const item = record(value);
+  if (!item || typeof item.type !== "string") return {};
+  if (item.type !== "organic") return null;
   return {
-    domain,
-    rank,
-    title: typeof item.title === "string" ? item.title : null,
+    domain: item.domain,
+    rank: item.rank_group,
+    title: item.title,
     url: item.url,
   };
 }
 
-export function dataForSeoRawPayload(items: DataForSeoItem[] = []): SerpRawPayload {
+export function dataForSeoOrganicDecision(
+  items: readonly unknown[] | undefined,
+  domain: string,
+  depth: SerpDepth,
+) {
+  return decideOrganicResult({
+    candidates: (items ?? []).flatMap((item) => {
+      const candidate = organicCandidate(item);
+      return candidate === null ? [] : [candidate];
+    }),
+    depth,
+    domain,
+  });
+}
+
+export function dataForSeoRawPayload(
+  items: readonly unknown[] = [],
+  decision: Exclude<OrganicResultDecision, { outcome: "indeterminate" }>,
+): SerpRawPayload {
   const features = new Set<string>();
-  for (const item of items)
-    if (item.type && item.type !== "organic") features.add(featureLabel(item.type));
+  for (const value of items) {
+    const item = record(value);
+    if (typeof item?.type === "string" && item.type !== "organic") {
+      features.add(featureLabel(item.type));
+    }
+  }
   return {
-    organic_results: items.map(rawOrganicResult).filter((item) => item !== null),
+    normalization: organicResultNormalization(decision),
+    organic_results: decision.organicResults,
     ...(features.size ? { serp_features: [...features] } : {}),
   };
 }

@@ -194,7 +194,7 @@ describe("instance migration actions", () => {
       chunk_count: 3,
       source_project_id: projectId,
       totals: { keywords: 1, rank_checks: 0 },
-      version: 5,
+      version: 6,
     });
 
     const [, keywordInit] = mocks.migrationFetch.mock.calls[1];

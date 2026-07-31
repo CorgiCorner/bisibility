@@ -29,12 +29,14 @@ export const openApiOperationPresentation: Record<string, OperationPresentation>
   },
   getCapabilities: { summary: "Get API capabilities" },
   getHealth: { summary: "Check API health" },
+  getLiveness: { summary: "Check web process liveness" },
   getKeywordMetrics: {
     description: "Gets or estimates metrics for up to 700 keywords and requires write scope.",
     summary: "Get keyword metrics",
   },
   getLlmsTxt: { summary: "Get API documentation for LLMs" },
   getOpenApi: { summary: "Get the OpenAPI document" },
+  getReadiness: { summary: "Check web traffic readiness" },
   importCloudExport: {
     description: "Requires a migration token.",
     summary: "Import a cloud export",

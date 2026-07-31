@@ -1,4 +1,5 @@
 export const HOSTED_EU_API_BASE_URL = "https://eu.bisibility.com/api/v1";
+export const HOSTED_MCP_URL = "https://bisibility.com/api/mcp";
 
 function withoutTrailingSlashes(value: string) {
   let end = value.length;

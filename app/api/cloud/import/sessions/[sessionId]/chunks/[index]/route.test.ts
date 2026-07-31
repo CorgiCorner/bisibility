@@ -39,7 +39,17 @@ const keywords = [
     id: keywordId,
     keyword: "rank tracker",
     location: "United States",
-    rankingHistory: [{ checkedAt: "2026-07-08T20:00:00.000Z", position: 3 }],
+    rankingHistory: [
+      {
+        checkedAt: "2026-07-08T20:00:00.000Z",
+        normalizationVersion: "v1",
+        position: 3,
+        previousPosition: null,
+        provider: "dataforseo",
+        rankingUrl: null,
+        requestedDepth: 100,
+      },
+    ],
     tags: [],
   },
 ];

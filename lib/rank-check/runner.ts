@@ -18,7 +18,8 @@ import type { SerpRankLocation } from "@/lib/serp/location";
 import { DEFAULT_SERP_DEPTH, resolveSerpStopOnMatch, type SerpDepth } from "@/lib/serp/markets";
 import { rankCheckCostCents } from "./cost";
 import { estimatedRankCheckCostCents } from "./default-cost";
-import { organicDomainRanksFromResults } from "./organic-ranks";
+import { CURRENT_RANK_NORMALIZATION_VERSION } from "./normalization-version";
+import { organicDomainRanksFromV2Results } from "./organic-ranks";
 import type { RankCheckRunResult } from "./runner-result";
 
 export { RankCheckClosedBeforePersistenceError } from "./persistence-errors";
@@ -53,6 +54,7 @@ export type RankCheckConnectionInput = {
 };
 
 export type RunCheckInput = {
+  comparisonAllowed?: boolean;
   keyword: RankCheckKeywordInput;
   schedule: RankCheckScheduleInput;
   connection: RankCheckConnectionInput;
@@ -177,12 +179,13 @@ export async function runCheck(input: RunCheckInput): Promise<RankCheckRunResult
   const reportedCostCents = Number(rank.costCents);
 
   return {
+    comparisonAllowed: input.comparisonAllowed ?? false,
     providerCostCents:
       Number.isFinite(reportedCostCents) && reportedCostCents > 0 ? reportedCostCents : undefined,
     rankCheck: {
       billingUnits: rank.billingUnits ?? null,
       keywordId: input.keyword.id,
-      organicRanks: rank.raw ? organicDomainRanksFromResults(rank.raw.organic_results) : null,
+      organicRanks: rank.raw ? organicDomainRanksFromV2Results(rank.raw.organic_results) : null,
       position: rank.position,
       previousPosition: input.previousPosition ?? null,
       rankingUrl: rank.rankingUrl,
@@ -199,6 +202,7 @@ export async function runCheck(input: RunCheckInput): Promise<RankCheckRunResult
               input.connection.costPerCheckCents,
               input.connection.rateContext ?? LIST_PROVIDER_RATE_CONTEXT,
             ),
+      normalizationVersion: CURRENT_RANK_NORMALIZATION_VERSION,
       raw: rankCheckRaw(rank),
     },
     scheduleUpdate: {

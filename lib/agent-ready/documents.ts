@@ -183,7 +183,10 @@ export function createMcpServerCard(origin: string) {
   return {
     $schema: "https://modelcontextprotocol.io/schemas/server-card/2025-11-25.json",
     authentication: {
-      protectedResourceMetadata: absoluteUrl(origin, "/.well-known/oauth-protected-resource"),
+      protectedResourceMetadata: absoluteUrl(
+        origin,
+        "/.well-known/oauth-protected-resource/api/mcp",
+      ),
       required: true,
       schemes: ["bearer"],
     },

@@ -13,13 +13,13 @@ function sectionsChunk(sections: Record<string, unknown>) {
   return { ...payload, checksum: importChunkChecksum(payload) };
 }
 
-describe("cloud import session v5 schemas", () => {
+describe("cloud import session v6 schemas", () => {
   it("requires an exact lowercase source project ID and native counts", () => {
     const manifest = {
       chunk_count: 2,
       source_project_id: projectId,
       totals: { keywords: 1, rank_checks: 2 },
-      version: 5,
+      version: 6,
     };
     expect(importSessionCreateSchema.safeParse(manifest).success).toBe(true);
     expect(
@@ -68,6 +68,47 @@ describe("cloud import session v5 schemas", () => {
     expect(importSessionChunkSchema.safeParse({ ...chunk, checksum: ` ${checksum}` }).success).toBe(
       false,
     );
+  });
+
+  it("accepts an in-flight v5 metadata-only chunk but not ambiguous v5 history", () => {
+    const metadataOnlyKeywords = [
+      {
+        device: "desktop",
+        id: keywordId,
+        keyword: "rank tracker",
+        location: "United States",
+        rankingHistory: [],
+        tags: [],
+      },
+    ];
+    expect(
+      importSessionChunkSchema.safeParse({
+        checksum: "sha256:29db664fdc7bef39721ef57092917923199d39d28c417384e80f97c36b6a999a",
+        keywords: metadataOnlyKeywords,
+        kind: "keywords",
+      }).success,
+    ).toBe(true);
+
+    const ambiguousHistoryKeywords = [
+      {
+        ...metadataOnlyKeywords[0],
+        rankingHistory: [
+          {
+            checkedAt: "2026-01-01T00:00:00.000Z",
+            position: 3,
+            previousPosition: 4,
+            rankingUrl: "https://example.com/page",
+          },
+        ],
+      },
+    ];
+    expect(
+      importSessionChunkSchema.safeParse({
+        checksum: "sha256:28b5788e6554cd1972d437ea6c7617cf2d806ac54c5fe1e34524647ff6431eb7",
+        keywords: ambiguousHistoryKeywords,
+        kind: "keywords",
+      }).success,
+    ).toBe(false);
   });
 
   it.each([

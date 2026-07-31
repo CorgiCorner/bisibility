@@ -7,13 +7,9 @@ import type {
 } from "@/lib/providers/types";
 import type { SerpRankLocation } from "@/lib/serp/location";
 import { resolveSerpDepth, resolveSerpStopOnMatch, type SerpDepth } from "@/lib/serp/markets";
-import {
-  findRankingItem,
-  rawPayload,
-  type SerpApiOrganicResult,
-  type SerpApiRankedOrganicResult,
-  type SerpApiResponse,
-} from "./serpapi-payload";
+import { decideOrganicResult, type OrganicResultCandidate } from "./organic-result-decision";
+import { requireDeterminateOrganicResult } from "./payload-contract-error";
+import { rawPayload, type SerpApiResponse, serpApiOrganicCandidates } from "./serpapi-payload";
 
 const ACCOUNT_URL = "https://serpapi.com/account.json";
 const SEARCH_URL = "https://serpapi.com/search.json";
@@ -155,27 +151,6 @@ function searchPageStarts(depth: SerpDepth) {
   );
 }
 
-function rankOrganicResults(
-  results: SerpApiOrganicResult[],
-  start: number,
-  depth: SerpDepth,
-): SerpApiRankedOrganicResult[] {
-  return results
-    .map((item) => {
-      if (
-        typeof item.position !== "number" ||
-        !Number.isFinite(item.position) ||
-        item.position < 1
-      ) {
-        return null;
-      }
-
-      const rank = start + item.position;
-      return rank <= depth ? { ...item, rank } : null;
-    })
-    .filter((item) => item !== null);
-}
-
 function buildSearchUrl(
   input: SerpRankInput,
   apiKey: string,
@@ -203,7 +178,7 @@ async function fetchGoogleOrganicResults(input: SerpRankInput, apiKey: string) {
     location: input.location,
   });
   const pages: SerpApiResponse[] = [];
-  const results: SerpApiRankedOrganicResult[] = [];
+  const candidates: OrganicResultCandidate[] = [];
 
   for (const start of searchPageStarts(depth)) {
     const data = await requestJson(buildSearchUrl(input, apiKey, googleParams, start), credentials);
@@ -217,9 +192,10 @@ async function fetchGoogleOrganicResults(input: SerpRankInput, apiKey: string) {
     }
 
     pages.push(data);
-    results.push(...rankOrganicResults(pageResults, start, depth));
+    candidates.push(...serpApiOrganicCandidates(pageResults, start));
 
-    if (resolveSerpStopOnMatch(input.stopOnMatch) && findRankingItem(results, input.domain)) {
+    const decision = decideOrganicResult({ candidates, depth, domain: input.domain });
+    if (resolveSerpStopOnMatch(input.stopOnMatch) && decision.outcome === "match") {
       break;
     }
 
@@ -228,7 +204,7 @@ async function fetchGoogleOrganicResults(input: SerpRankInput, apiKey: string) {
     }
   }
 
-  return { pages, results };
+  return { candidates, depth, pages };
 }
 
 export const serpApiProvider: SerpProvider = {
@@ -256,16 +232,22 @@ export const serpApiProvider: SerpProvider = {
 
   async fetchRank(input: SerpRankInput): Promise<SerpRankResult> {
     const credentials = input.credentials ?? {};
-    const { pages, results } = await fetchGoogleOrganicResults(input, requireApiKey(credentials));
-    const rankingItem = findRankingItem(results, input.domain);
+    const { candidates, depth, pages } = await fetchGoogleOrganicResults(
+      input,
+      requireApiKey(credentials),
+    );
+    const decision = requireDeterminateOrganicResult(
+      "SerpAPI",
+      decideOrganicResult({ candidates, depth, domain: input.domain }),
+    );
 
     return {
       billingUnits: pages.length,
-      position: rankingItem?.rank ?? null,
-      rankingUrl: rankingItem?.link ?? null,
+      position: decision.position,
+      rankingUrl: decision.rankingUrl,
       costCents: 0,
       checkedAt: new Date(),
-      raw: rawPayload(pages, results),
+      raw: rawPayload(pages, decision),
     };
   },
 };

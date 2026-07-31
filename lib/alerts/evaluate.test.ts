@@ -12,9 +12,9 @@ const mocks = vi.hoisted(() => ({
   reserveRuleDailyBudget: vi.fn(),
   sendAlertOverflowNotice: vi.fn(),
   prisma: {
-    $queryRaw: vi.fn(),
     alertRule: { findMany: vi.fn() },
     keyword: { findUnique: vi.fn() },
+    rankCheck: { findMany: vi.fn() },
     signal: { findFirst: vi.fn() },
     triggeredAlert: {
       create: vi.fn(),
@@ -53,7 +53,12 @@ function rule(input: Partial<AlertConditionRule>): AlertConditionRule {
 }
 
 function snap(position: number | null, extra: Partial<AlertRankSnapshot> = {}) {
-  return { position, ...extra } as AlertRankSnapshot;
+  return {
+    normalizationVersion: "v2",
+    position,
+    requestedDepth: 100,
+    ...extra,
+  } as AlertRankSnapshot;
 }
 
 function trend(...positions: (number | null)[]) {
@@ -69,7 +74,9 @@ function storedTrend(...positions: (number | null)[]) {
     checkedAt: check.checkedAt,
     id: check.rankCheckId,
     keywordId: "keyword_1",
+    normalizationVersion: "v2",
     position: check.position,
+    requestedDepth: 100,
   }));
 }
 
@@ -283,7 +290,7 @@ describe("matchesAlertCondition", () => {
 describe("evaluateKeywordAlerts", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.prisma.$queryRaw.mockResolvedValue([]);
+    mocks.prisma.rankCheck.findMany.mockResolvedValue([]);
     mocks.loadGscCtrMetrics.mockResolvedValue(null);
     mocks.prisma.keyword.findUnique.mockResolvedValue({
       id: "keyword_1",
@@ -340,6 +347,30 @@ describe("evaluateKeywordAlerts", () => {
     expect(mocks.reserveRuleDailyBudget).not.toHaveBeenCalled();
   });
 
+  it("suppresses transition alerts but keeps current-state alerts across a boundary", async () => {
+    mocks.prisma.alertRule.findMany.mockResolvedValue([
+      storedRule({ conditionType: "threshold", thresholdPosition: 10 }, "transition_rule"),
+      storedRule({ conditionType: "url_mismatch" }, "current_state_rule"),
+    ]);
+
+    const fired = await evaluateKeywordAlerts(
+      "keyword_1",
+      snap(8),
+      snap(14, {
+        rankCheckId: "check_1",
+        rankingUrl: "https://example.com/other-page",
+      }),
+      { comparisonAllowed: false },
+    );
+
+    expect(fired).toHaveLength(1);
+    expect(mocks.prisma.triggeredAlert.create).toHaveBeenCalledOnce();
+    expect(mocks.prisma.triggeredAlert.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ ruleId: "current_state_rule" }),
+    });
+    expect(mocks.prisma.triggeredAlert.updateMany).not.toHaveBeenCalled();
+  });
+
   it("writes a triggered alert for matching targets", async () => {
     mocks.prisma.alertRule.findMany.mockResolvedValue([
       {
@@ -393,7 +424,7 @@ describe("evaluateKeywordAlerts", () => {
 
   it("hydrates completed history for downtrend rules", async () => {
     mocks.prisma.alertRule.findMany.mockResolvedValue([storedRule({ conditionType: "downtrend" })]);
-    mocks.prisma.$queryRaw.mockResolvedValue(storedTrend(8, 10, 9, 12, 15));
+    mocks.prisma.rankCheck.findMany.mockResolvedValue(storedTrend(8, 10, 9, 12, 15).reverse());
 
     const fired = await evaluateKeywordAlerts(
       "keyword_1",
@@ -402,7 +433,7 @@ describe("evaluateKeywordAlerts", () => {
     );
 
     expect(fired).toHaveLength(1);
-    expect(mocks.prisma.$queryRaw).toHaveBeenCalledOnce();
+    expect(mocks.prisma.rankCheck.findMany).toHaveBeenCalledOnce();
     expect(mocks.prisma.triggeredAlert.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         afterPosition: 15,
@@ -551,7 +582,7 @@ describe("evaluateKeywordAlerts", () => {
     ["a position in the five-check window is unknown", storedTrend(8, 9, null, 10)],
   ])("does not auto-resolve downtrend when %s", async (_name, history) => {
     mocks.prisma.alertRule.findMany.mockResolvedValue([storedRule({ conditionType: "downtrend" })]);
-    mocks.prisma.$queryRaw.mockResolvedValue(history);
+    mocks.prisma.rankCheck.findMany.mockResolvedValue([...history].reverse());
 
     await evaluateKeywordAlerts("keyword_1", snap(10), snap(9, { rankCheckId: "current_check" }));
 
@@ -560,7 +591,7 @@ describe("evaluateKeywordAlerts", () => {
 
   it("auto-resolves downtrend after five known checks show recovery", async () => {
     mocks.prisma.alertRule.findMany.mockResolvedValue([storedRule({ conditionType: "downtrend" })]);
-    mocks.prisma.$queryRaw.mockResolvedValue(storedTrend(12, 10, 11, 9));
+    mocks.prisma.rankCheck.findMany.mockResolvedValue(storedTrend(12, 10, 11, 9).reverse());
 
     await evaluateKeywordAlerts("keyword_1", snap(9), snap(8, { rankCheckId: "current_check" }));
 

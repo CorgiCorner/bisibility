@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   organicDomainRanksFromRaw,
   organicDomainRanksFromResults,
+  organicDomainRanksFromV2Results,
   storedOrganicDomainRanks,
 } from "./organic-ranks";
 
@@ -52,5 +53,16 @@ describe("organic rank snapshots", () => {
       ]),
     ).toEqual([{ domain: "example.com", position: 2 }]);
     expect(storedOrganicDomainRanks(null)).toBeNull();
+  });
+
+  it("never accepts provider-specific absolute ranks in the v2 parser", () => {
+    const providerSpecific = {
+      domain: "example.org",
+      rank: Number.NaN,
+      rank_absolute: 1,
+      title: null,
+      url: "https://example.org/page",
+    };
+    expect(organicDomainRanksFromV2Results([providerSpecific])).toEqual([]);
   });
 });

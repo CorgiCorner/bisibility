@@ -1,4 +1,6 @@
 import { openApiOperationPresentation } from "./openapi-operation-presentation";
+import { withApiVersionContract } from "./openapi-versioning";
+import { assertOperationPolicy } from "./operation-policy";
 
 export const openApiTags = [
   {
@@ -95,142 +97,7 @@ export const openApiTags = [
 
 type OpenApiTagName = (typeof openApiTags)[number]["name"];
 
-const operationGroups: ReadonlyArray<readonly [OpenApiTagName, readonly string[]]> = [
-  [
-    "discovery",
-    [
-      "getCapabilities",
-      "getCostEstimate",
-      "getHealth",
-      "getLlmsTxt",
-      "getOpenApi",
-      "getProviderRates",
-    ],
-  ],
-  [
-    "account-access",
-    [
-      "getMe",
-      "updateMe",
-      "listPersonalAccessTokens",
-      "createPersonalAccessToken",
-      "revokePersonalAccessToken",
-    ],
-  ],
-  [
-    "projects",
-    [
-      "listProjects",
-      "createProject",
-      "getProject",
-      "updateProject",
-      "deleteProject",
-      "getProjectDefaults",
-      "updateProjectDefaults",
-    ],
-  ],
-  [
-    "api-keys",
-    ["listApiKeys", "createApiKey", "revokeApiKey", "listProjectApiKeys", "createProjectApiKey"],
-  ],
-  [
-    "keywords",
-    [
-      "listKeywords",
-      "addKeywords",
-      "getKeyword",
-      "setKeywordTargetUrl",
-      "deleteKeyword",
-      "bulkUpdateKeywords",
-      "matchProjectKeywords",
-    ],
-  ],
-  ["rank-checks", ["runRankCheck", "listRankChecks", "getRankCheckResult", "exportRankHistory"]],
-  [
-    "keyword-research",
-    ["searchLocations", "getKeywordMetrics", "researchKeywords", "listRankedKeywordSuggestions"],
-  ],
-  ["backlinks", ["analyzeBacklinks", "loadMoreBacklinkRows"]],
-  [
-    "analytics",
-    [
-      "getProjectOverview",
-      "listSearchPerformanceQueryStats",
-      "syncProjectTraffic",
-      "listTrafficSnapshots",
-    ],
-  ],
-  [
-    "alerts",
-    [
-      "listAlertRules",
-      "createAlertRule",
-      "updateAlertRule",
-      "deleteAlertRule",
-      "listTriggeredAlerts",
-      "muteTriggeredAlert",
-      "markProjectAlertsRead",
-      "getNotificationPreferences",
-      "updateNotificationPreferences",
-    ],
-  ],
-  [
-    "competitors",
-    ["listCompetitors", "addCompetitor", "removeProjectCompetitor", "removeCompetitor"],
-  ],
-  ["sitemap-monitoring", ["listSitemapMonitors", "updateSitemapMonitor"]],
-  [
-    "saved-views",
-    ["listSavedViews", "createSavedView", "deleteProjectSavedView", "deleteSavedView"],
-  ],
-  ["signals", ["listSignals", "createSignal"]],
-  [
-    "providers",
-    [
-      "listProviders",
-      "connectProvider",
-      "testProviderConnection",
-      "updateProviderSettings",
-      "disconnectProvider",
-    ],
-  ],
-  [
-    "webhooks",
-    [
-      "listWebhookEndpoints",
-      "createWebhookEndpoint",
-      "updateWebhookEndpoint",
-      "deleteWebhookEndpoint",
-    ],
-  ],
-  [
-    "team",
-    [
-      "listTeamMembers",
-      "updateTeamMemberRole",
-      "removeTeamMember",
-      "listTeamInvites",
-      "createTeamInvite",
-      "resendTeamInvite",
-      "revokeProjectTeamInvite",
-      "revokeTeamInvite",
-    ],
-  ],
-  [
-    "migration",
-    [
-      "listMigrationTokens",
-      "mintMigrationToken",
-      "revokeProjectMigrationToken",
-      "revokeMigrationToken",
-      "importCloudExport",
-      "getCloudImportCompatibility",
-      "createCloudImportSession",
-      "uploadCloudImportChunk",
-      "finalizeCloudImportSession",
-    ],
-  ],
-];
+import { operationGroups } from "./openapi-operation-groups";
 
 const operationEntries = operationGroups.flatMap(([tag, operationIds]) =>
   operationIds.map((operationId) => [operationId, tag] as const),
@@ -240,18 +107,37 @@ const operationTags: Record<string, OpenApiTagName> = Object.fromEntries(operati
 type OpenApiOperation = {
   description?: string;
   operationId?: string;
+  parameters?: object[];
+  responses?: Record<string, unknown>;
   summary?: string;
   tags?: string[];
   [key: string]: unknown;
 };
 
-type TaggedOperation<T> = T & { summary: string; tags: [OpenApiTagName] };
+type TaggedOperation<T> = T & {
+  parameters: object[];
+  responses: Record<string, unknown>;
+  summary: string;
+  tags: [OpenApiTagName];
+};
 
 type TaggedPaths<T extends Record<string, Record<string, object>>> = {
   [Path in keyof T]: {
     [Method in keyof T[Path]]: TaggedOperation<T[Path][Method]>;
   };
 };
+
+function usesApiCredential(operation: OpenApiOperation) {
+  return (
+    Array.isArray(operation.security) &&
+    operation.security.some(
+      (requirement) =>
+        requirement &&
+        typeof requirement === "object" &&
+        ("PersonalAccessToken" in requirement || "ProjectApiKey" in requirement),
+    )
+  );
+}
 
 export function tagOpenApiPaths<T extends Record<string, Record<string, object>>>(
   paths: T,
@@ -264,6 +150,9 @@ export function tagOpenApiPaths<T extends Record<string, Record<string, object>>
           const operation = rawOperation as OpenApiOperation;
           if (!operation.operationId) {
             return [method, operation] as const;
+          }
+          if (usesApiCredential(operation)) {
+            assertOperationPolicy(operation.operationId, method, path);
           }
 
           const tag = operationTags[operation.operationId];
@@ -282,6 +171,7 @@ export function tagOpenApiPaths<T extends Record<string, Record<string, object>>
               ...operation,
               ...(presentation ?? {}),
               ...(description ? { description } : {}),
+              ...withApiVersionContract(operation),
               tags: [tag],
             },
           ] as const;

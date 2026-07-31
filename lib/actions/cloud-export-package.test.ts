@@ -16,7 +16,7 @@ const payload = {
   notification_preferences: [],
   project_id: "prj_abcdefghijklmnopqrstuvwx",
   saved_views: [],
-  version: 5,
+  version: 6,
 };
 
 describe("exportCloudImportPackage", () => {
@@ -37,7 +37,7 @@ describe("exportCloudImportPackage", () => {
     });
   });
 
-  it("delegates the strict v5 package serializer without reintroducing legacy sections", async () => {
+  it("delegates the strict v6 package serializer without reintroducing legacy sections", async () => {
     await expect(
       exportCloudImportPackage({ projectId: payload.project_id }),
     ).resolves.toMatchObject({

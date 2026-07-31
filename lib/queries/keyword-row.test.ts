@@ -94,6 +94,7 @@ describe("mapKeyword traffic fields", () => {
           {
             checkedAt: new Date("2026-07-01T10:00:00.000Z"),
             id: "check_first",
+            normalizationVersion: "v2",
             position: 1,
             previousPosition: null,
             rankingUrl: "https://example.com/rank",
@@ -117,6 +118,7 @@ describe("mapKeyword traffic fields", () => {
           {
             checkedAt: new Date("2026-07-03T12:00:00.000Z"),
             id: "check_latest",
+            normalizationVersion: "v2",
             position: 6,
             previousPosition: 6,
             rankingUrl: "https://example.com/rank",
@@ -126,6 +128,7 @@ describe("mapKeyword traffic fields", () => {
           {
             checkedAt: new Date("2026-07-03T09:00:00.000Z"),
             id: "check_same_day",
+            normalizationVersion: "v2",
             position: 6,
             previousPosition: 4,
             rankingUrl: "https://example.com/rank",
@@ -135,6 +138,7 @@ describe("mapKeyword traffic fields", () => {
           {
             checkedAt: new Date("2026-07-01T10:00:00.000Z"),
             id: "check_earlier_day",
+            normalizationVersion: "v2",
             position: 4,
             previousPosition: null,
             rankingUrl: "https://example.com/rank",
@@ -204,6 +208,7 @@ describe("mapKeyword traffic fields", () => {
         {
           checkedAt: new Date("2026-07-02T10:00:00.000Z"),
           id: "check_deferred",
+          normalizationVersion: null,
           position: null,
           previousPosition: null,
           rankingUrl: null,
@@ -213,6 +218,7 @@ describe("mapKeyword traffic fields", () => {
         {
           checkedAt: new Date("2026-07-01T10:00:00.000Z"),
           id: "check_completed",
+          normalizationVersion: "v2",
           position: 7,
           previousPosition: 9,
           rankingUrl: "https://example.com/rank",
@@ -230,5 +236,41 @@ describe("mapKeyword traffic fields", () => {
     expect(row.positionHistory).toEqual([
       { checkedAt: "2026-07-01T10:00:00.000Z", label: "Jul 1", position: 7 },
     ]);
+  });
+
+  it("segments history and marks only a boundary inside the visible window", () => {
+    const current = {
+      checkedAt: new Date("2026-07-03T10:00:00.000Z"),
+      id: "check_v2",
+      normalizationVersion: "v2",
+      position: 5,
+      previousPosition: null,
+      rankingUrl: "https://example.com/current",
+      requestedDepth: 100,
+      status: "completed",
+    };
+    const legacy = {
+      ...current,
+      checkedAt: new Date("2026-07-01T10:00:00.000Z"),
+      id: "check_v1",
+      normalizationVersion: "v1",
+      position: 2,
+      rankingUrl: "https://example.com/legacy",
+    };
+
+    const segmented = mapKeyword(
+      { ...keywordRow(), rankChecks: [current, legacy] },
+      project,
+      metrics,
+    );
+    const legacyOnly = mapKeyword({ ...keywordRow(), rankChecks: [legacy] }, project, metrics);
+
+    expect(segmented).toMatchObject({
+      bestPosition: 5,
+      position: 5,
+      positionHistoryBoundaryAt: "2026-07-01T10:00:00.000Z",
+    });
+    expect(segmented.positionHistory).toHaveLength(1);
+    expect(legacyOnly.positionHistoryBoundaryAt).toBeNull();
   });
 });
