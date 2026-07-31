@@ -4,6 +4,7 @@ import type { Actor } from "@/lib/auth/authorize";
 import { isProjectReadOnly, ProjectReadOnlyError } from "@/lib/deployment/project-write-mode";
 import { handleAccountRequest } from "./account-router";
 import { isAccountRoute, isPersonalTokenOnlyRoute } from "./account-routes";
+import { unsupportedApiVersionResponse } from "./api-versions";
 import {
   type ApiAuth,
   ApiAuthError,
@@ -14,15 +15,14 @@ import {
   PROJECT_API_KEY_PREFIX,
 } from "./auth";
 import type { ApiContext } from "./context";
-import { capabilities, getHealth, getOpenApi, llmsText } from "./discovery";
+import { handleDiscovery } from "./discovery-router";
 import { errorFromUnknown } from "./error-mapper";
 import { withIdempotency } from "./idempotency";
+import { operationPolicyForRequest } from "./operation-policy";
 import { resolvePersonalProjectScope } from "./personal-scope";
-import { getCostEstimate, getProviderRates } from "./public-cost";
 import { checkRateLimit, rateLimitExceeded } from "./ratelimit";
-import { isReadShapedProjectPostRoute } from "./read-shaped-post-routes";
-import { hasScope, requiredScope } from "./request-scope";
-import { errorResponse, methodNotAllowed } from "./responses";
+import { hasScope } from "./request-scope";
+import { errorResponse, methodNotAllowed, routeNotFound } from "./responses";
 import { dispatchRoute } from "./routes";
 
 type RouteContext = {
@@ -30,6 +30,7 @@ type RouteContext = {
 };
 
 type AuthResult = { auth: ApiAuth; headers: Headers } | { response: Response };
+type PreauthenticatedApiRequest = { auth: ApiAuth; headers?: Headers };
 type AnonymousLimitResult = { headers: Headers } | { response: Response };
 
 const methods = ["DELETE", "GET", "PATCH", "POST"] as const;
@@ -111,50 +112,16 @@ function projectCreateForbiddenResponse(headers: Headers, url: URL) {
   });
 }
 
-function hasReadSemantics(method: string, path: string[]) {
-  return method === "GET" || isReadShapedProjectPostRoute(method, path);
-}
-
-async function handleDiscovery(req: Request, path: string[]) {
-  if (
-    path.length !== 1 ||
-    ![
-      "capabilities",
-      "cost-estimate",
-      "health",
-      "llms.txt",
-      "openapi.json",
-      "provider-rates",
-    ].includes(path[0])
-  ) {
-    return null;
-  }
-  const limited = await limitAnonymous(req);
-  if ("response" in limited) {
-    return limited.response;
-  }
-  if (path[0] === "health") {
-    return getHealth(limited);
-  }
-  if (path[0] === "openapi.json") {
-    return getOpenApi(limited);
-  }
-  if (path[0] === "capabilities") {
-    return capabilities(limited);
-  }
-  if (path[0] === "provider-rates") {
-    return getProviderRates(limited);
-  }
-  if (path[0] === "cost-estimate") {
-    return getCostEstimate(req, limited);
-  }
-  return llmsText(limited);
-}
-
-export async function handleApiRequest(req: Request, contextOrPath?: RouteContext | string[]) {
+async function dispatchApiRequest(
+  req: Request,
+  contextOrPath?: RouteContext | string[],
+  preauthenticated?: PreauthenticatedApiRequest,
+) {
   const path = Array.isArray(contextOrPath) ? contextOrPath : await pathFromContext(contextOrPath);
   const method = req.method.toUpperCase();
   const url = new URL(req.url);
+  const versionError = unsupportedApiVersionResponse(req);
+  if (versionError) return versionError;
   if (!methods.includes(method as (typeof methods)[number])) {
     return methodNotAllowed(methods, { instance: instance(url) });
   }
@@ -173,8 +140,11 @@ export async function handleApiRequest(req: Request, contextOrPath?: RouteContex
       routes.exchangeOauthToken(req, url, { headers: limited.headers, instance: instance(url) }),
     );
   }
+  const declaredOperation = operationPolicyForRequest(method, path);
 
-  const authResult = await requireAuth(req);
+  const authResult = preauthenticated
+    ? { auth: preauthenticated.auth, headers: preauthenticated.headers ?? new Headers() }
+    : await requireAuth(req);
   if ("response" in authResult) {
     return authResult.response;
   }
@@ -186,9 +156,12 @@ export async function handleApiRequest(req: Request, contextOrPath?: RouteContex
       instance: instance(url),
     });
   }
+  if (!declaredOperation) {
+    return routeNotFound({ headers: authResult.headers, instance: instance(url) });
+  }
   if (method === "GET" && path[0] === "locations" && path[1] === "search" && path.length === 2) {
     const scopes = auth.kind === "personal_token" ? auth.token.scopes : auth.apiKey.scopes;
-    if (!hasScope(scopes, "read")) {
+    if (!hasScope(scopes, declaredOperation.requiredScope)) {
       return errorResponse("forbidden", "API key scope does not allow this operation.", 403, {
         headers: authResult.headers,
         instance: instance(url),
@@ -210,7 +183,7 @@ export async function handleApiRequest(req: Request, contextOrPath?: RouteContex
     actorId = auth.user.id;
     if (isAccountRoute(path)) {
       return handleAccountRequest({
-        allowed: hasScope(auth.token.scopes, requiredScope(method, path)),
+        allowed: hasScope(auth.token.scopes, declaredOperation.requiredScope),
         auth,
         headers: authResult.headers,
         method,
@@ -250,7 +223,7 @@ export async function handleApiRequest(req: Request, contextOrPath?: RouteContex
     };
   }
 
-  if (!hasScope(projectAuth.apiKey.scopes, requiredScope(method, path))) {
+  if (!hasScope(projectAuth.apiKey.scopes, declaredOperation.requiredScope)) {
     return errorResponse("forbidden", "API key scope does not allow this operation.", 403, {
       headers: authResult.headers,
       instance: instance(url),
@@ -259,7 +232,10 @@ export async function handleApiRequest(req: Request, contextOrPath?: RouteContex
   if (auth.kind === "project_key" && isProjectCollectionCreate(method, path)) {
     return projectCreateForbiddenResponse(authResult.headers, url);
   }
-  if (!hasReadSemantics(method, path) && isProjectReadOnly(projectAuth.project.writeMode)) {
+  if (
+    declaredOperation.projectAccess === "write" &&
+    isProjectReadOnly(projectAuth.project.writeMode)
+  ) {
     return projectReadOnlyResponse(authResult.headers, url);
   }
 
@@ -277,13 +253,7 @@ export async function handleApiRequest(req: Request, contextOrPath?: RouteContex
   const execute = async () => {
     try {
       const response = await dispatchRoute(ctx);
-      return (
-        response ??
-        errorResponse("not_found", "Route not found.", 404, {
-          headers: ctx.headers,
-          instance: ctx.instance,
-        })
-      );
+      return response ?? routeNotFound({ headers: ctx.headers, instance: ctx.instance });
     } catch (error) {
       return errorFromUnknown(error, ctx.headers, url);
     }
@@ -301,4 +271,16 @@ export async function handleApiRequest(req: Request, contextOrPath?: RouteContex
         },
         execute,
       );
+}
+
+export function handleApiRequest(req: Request, contextOrPath?: RouteContext | string[]) {
+  return dispatchApiRequest(req, contextOrPath);
+}
+
+export function handleMcpPreauthenticatedApiRequest(
+  req: Request,
+  path: string[],
+  preauthenticated: PreauthenticatedApiRequest,
+) {
+  return dispatchApiRequest(req, path, preauthenticated);
 }

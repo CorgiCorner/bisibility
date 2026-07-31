@@ -23,7 +23,7 @@ primary_region = "ams"
     grace_period = "30s"
     interval = "15s"
     method = "GET"
-    path = "/api/v1/health"
+    path = "/api/v1/readiness"
     timeout = "10s"
 
 [[vm]]

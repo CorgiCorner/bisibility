@@ -29,6 +29,7 @@ Errors use `application/problem+json`.
 | `not_found` | 404 | Route or resource was not found. |
 | `conflict` | 409 | Reserved for conflict responses. |
 | `self_import` | 409 | Cloud import package was exported from the destination project itself. |
+| `unsupported_api_version` | 409 | `Bisibility-API-Version` declares a version the server does not advertise. |
 | `project_read_only` | 423 | Project writes are blocked by migration hold. |
 | `budget_exhausted` | 429 | Monthly rank-check budget is exhausted. |
 | `rate_limited` | 429 | Request exceeded a rate limit. |

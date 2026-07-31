@@ -580,7 +580,7 @@
           },
           "schema_versions_supported": {
             "items": {
-              "enum": [5],
+              "enum": [6],
               "type": "integer"
             },
             "type": "array"
@@ -846,7 +846,7 @@
             "type": "string"
           },
           "version": {
-            "const": 5,
+            "const": 6,
             "type": "integer"
           }
         },
@@ -868,6 +868,10 @@
             "format": "date-time",
             "type": "string"
           },
+          "normalizationVersion": {
+            "enum": ["v1", "v2"],
+            "type": "string"
+          },
           "position": {
             "minimum": 1,
             "type": ["integer", "null"]
@@ -876,13 +880,30 @@
             "minimum": 1,
             "type": ["integer", "null"]
           },
+          "provider": {
+            "maxLength": 120,
+            "minLength": 1,
+            "type": "string"
+          },
           "rankingUrl": {
             "description": "Absolute URL, path, null, or omitted.",
             "maxLength": 500,
             "type": ["string", "null"]
+          },
+          "requestedDepth": {
+            "enum": [10, 20, 50, 100],
+            "type": ["integer", "null"]
           }
         },
-        "required": ["checkedAt"],
+        "required": [
+          "checkedAt",
+          "normalizationVersion",
+          "position",
+          "previousPosition",
+          "provider",
+          "rankingUrl",
+          "requestedDepth"
+        ],
         "type": "object"
       },
       "CloudImportSavedView": {
@@ -933,7 +954,7 @@
             "type": "object"
           },
           "version": {
-            "const": 5,
+            "const": 6,
             "type": "integer"
           }
         },
@@ -3454,7 +3475,7 @@
     }
   },
   "info": {
-    "description": "Public REST API for Bisibility keyword rank tracking. Resource IDs use strict v3 prefixed public IDs and list cursors are version 3.",
+    "description": "Public REST API for Bisibility keyword rank tracking. Clients may optionally declare v1 with the Bisibility-API-Version header. Resource IDs use strict v3 prefixed public IDs and list cursors are version 3.",
     "title": "Bisibility Public API",
     "version": "1.0.0"
   },
@@ -3463,6 +3484,18 @@
     "/alert-rules/{rule_id}": {
       "delete": {
         "operationId": "deleteAlertRule",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -3514,6 +3547,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -3538,6 +3581,18 @@
       },
       "patch": {
         "operationId": "updateAlertRule",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -3599,6 +3654,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -3625,6 +3690,18 @@
     "/api-keys": {
       "get": {
         "operationId": "listApiKeys",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -3694,6 +3771,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -3719,6 +3806,18 @@
       "post": {
         "description": "The scope defaults to admin when omitted.",
         "operationId": "createApiKey",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -3780,6 +3879,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -3806,6 +3915,18 @@
     "/api-keys/{key_id}": {
       "delete": {
         "operationId": "revokeApiKey",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -3857,6 +3978,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -3883,32 +4014,55 @@
     "/capabilities": {
       "get": {
         "operationId": "getCapabilities",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
                   "properties": {
-                    "data": {
-                      "items": {},
+                    "apiVersions": {
+                      "items": {
+                        "enum": ["v1"],
+                        "type": "string"
+                      },
+                      "minItems": 1,
                       "type": "array"
                     },
-                    "meta": {
-                      "properties": {
-                        "next_cursor": {
-                          "type": ["string", "null"]
-                        }
+                    "data": {
+                      "items": {
+                        "type": "object"
                       },
-                      "required": ["next_cursor"],
-                      "type": "object"
+                      "type": "array"
                     }
                   },
-                  "required": ["data", "meta"],
+                  "required": ["apiVersions", "data"],
                   "type": "object"
                 }
               }
             },
             "description": "JSON response"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
           }
         },
         "summary": "Get API capabilities",
@@ -3919,6 +4073,18 @@
       "post": {
         "description": "Requires a migration token.",
         "operationId": "importCloudExport",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -3966,9 +4132,14 @@
                 "schema": {
                   "$ref": "#/components/schemas/Problem"
                 }
+              },
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
               }
             },
-            "description": "Conflict"
+            "description": "Conflict; Unsupported API version"
           },
           "413": {
             "content": {
@@ -4033,6 +4204,18 @@
     "/cloud/import/compatibility": {
       "get": {
         "operationId": "getCloudImportCompatibility",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -4043,6 +4226,16 @@
               }
             },
             "description": "Compatibility preflight"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
           },
           "429": {
             "content": {
@@ -4062,6 +4255,18 @@
     "/cloud/import/sessions": {
       "post": {
         "operationId": "createCloudImportSession",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -4109,9 +4314,14 @@
                 "schema": {
                   "$ref": "#/components/schemas/Problem"
                 }
+              },
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
               }
             },
-            "description": "Conflict"
+            "description": "Conflict; Unsupported API version"
           },
           "413": {
             "content": {
@@ -4177,6 +4387,16 @@
       "put": {
         "operationId": "uploadCloudImportChunk",
         "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          },
           {
             "in": "path",
             "name": "sessionId",
@@ -4263,9 +4483,14 @@
                 "schema": {
                   "$ref": "#/components/schemas/Problem"
                 }
+              },
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
               }
             },
-            "description": "Conflict"
+            "description": "Conflict; Unsupported API version"
           },
           "413": {
             "content": {
@@ -4331,6 +4556,16 @@
       "post": {
         "operationId": "finalizeCloudImportSession",
         "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          },
           {
             "in": "path",
             "name": "sessionId",
@@ -4400,9 +4635,14 @@
                 "schema": {
                   "$ref": "#/components/schemas/Problem"
                 }
+              },
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
               }
             },
-            "description": "Conflict"
+            "description": "Conflict; Unsupported API version"
           },
           "413": {
             "content": {
@@ -4467,6 +4707,18 @@
     "/competitors/{competitor_id}": {
       "delete": {
         "operationId": "removeCompetitor",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -4518,6 +4770,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -4545,6 +4807,16 @@
       "get": {
         "operationId": "getCostEstimate",
         "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          },
           {
             "description": "Keyword count. Must be an integer greater than or equal to 0.",
             "in": "query",
@@ -4663,6 +4935,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -4681,16 +4963,302 @@
     "/health": {
       "get": {
         "operationId": "getHealth",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
+                  "properties": {
+                    "checked_at": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "liveness": {
+                      "enum": ["ok"],
+                      "type": "string"
+                    },
+                    "providers": {
+                      "additionalProperties": {
+                        "items": {
+                          "type": "string"
+                        },
+                        "type": "array"
+                      },
+                      "type": "object"
+                    },
+                    "rate_limits": {
+                      "additionalProperties": {
+                        "type": "object"
+                      },
+                      "type": "object"
+                    },
+                    "readiness": {
+                      "enum": ["degraded", "ok"],
+                      "type": "string"
+                    },
+                    "serp": {
+                      "type": "object"
+                    },
+                    "services": {
+                      "properties": {
+                        "app": {
+                          "enum": ["ok"],
+                          "type": "string"
+                        },
+                        "appEnvironment": {
+                          "type": "string"
+                        },
+                        "appRankCheckSchedulerMode": {
+                          "enum": ["cutover", "dispatcher", "legacy", "unknown"],
+                          "type": "string"
+                        },
+                        "appRelease": {
+                          "type": "string"
+                        },
+                        "appRevision": {
+                          "type": "string"
+                        },
+                        "database": {
+                          "enum": ["degraded", "ok"],
+                          "type": "string"
+                        },
+                        "lastHeartbeatAt": {
+                          "format": "date-time",
+                          "type": ["string", "null"]
+                        },
+                        "migrations": {
+                          "enum": ["incomplete", "ready", "unknown"],
+                          "type": "string"
+                        },
+                        "temporal": {
+                          "enum": ["degraded", "down", "ok", "unknown"],
+                          "type": "string"
+                        },
+                        "worker": {
+                          "enum": ["degraded", "down", "ok", "unknown"],
+                          "type": "string"
+                        },
+                        "workerEnvironment": {
+                          "type": "string"
+                        },
+                        "workerHeartbeatState": {
+                          "enum": ["absent", "fresh", "future", "invalid", "stale", "unknown"],
+                          "type": "string"
+                        },
+                        "workerRankCheckSchedulerMode": {
+                          "enum": ["cutover", "dispatcher", "legacy", "unknown"],
+                          "type": "string"
+                        },
+                        "workerRelease": {
+                          "type": "string"
+                        },
+                        "workerRevision": {
+                          "type": "string"
+                        },
+                        "workerSchema": {
+                          "enum": ["drift", "ok", "unknown"],
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "app",
+                        "appRelease",
+                        "appRevision",
+                        "database",
+                        "migrations",
+                        "appEnvironment",
+                        "appRankCheckSchedulerMode",
+                        "lastHeartbeatAt",
+                        "temporal",
+                        "worker",
+                        "workerEnvironment",
+                        "workerHeartbeatState",
+                        "workerRankCheckSchedulerMode",
+                        "workerRelease",
+                        "workerRevision",
+                        "workerSchema"
+                      ],
+                      "type": "object"
+                    },
+                    "status": {
+                      "enum": ["degraded", "ok"],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "checked_at",
+                    "liveness",
+                    "providers",
+                    "rate_limits",
+                    "readiness",
+                    "serp",
+                    "services",
+                    "status"
+                  ],
                   "type": "object"
                 }
               }
             },
-            "description": "JSON response"
+            "description": "Composite health report is healthy"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "checked_at": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "liveness": {
+                      "enum": ["ok"],
+                      "type": "string"
+                    },
+                    "providers": {
+                      "additionalProperties": {
+                        "items": {
+                          "type": "string"
+                        },
+                        "type": "array"
+                      },
+                      "type": "object"
+                    },
+                    "rate_limits": {
+                      "additionalProperties": {
+                        "type": "object"
+                      },
+                      "type": "object"
+                    },
+                    "readiness": {
+                      "enum": ["degraded", "ok"],
+                      "type": "string"
+                    },
+                    "serp": {
+                      "type": "object"
+                    },
+                    "services": {
+                      "properties": {
+                        "app": {
+                          "enum": ["ok"],
+                          "type": "string"
+                        },
+                        "appEnvironment": {
+                          "type": "string"
+                        },
+                        "appRankCheckSchedulerMode": {
+                          "enum": ["cutover", "dispatcher", "legacy", "unknown"],
+                          "type": "string"
+                        },
+                        "appRelease": {
+                          "type": "string"
+                        },
+                        "appRevision": {
+                          "type": "string"
+                        },
+                        "database": {
+                          "enum": ["degraded", "ok"],
+                          "type": "string"
+                        },
+                        "lastHeartbeatAt": {
+                          "format": "date-time",
+                          "type": ["string", "null"]
+                        },
+                        "migrations": {
+                          "enum": ["incomplete", "ready", "unknown"],
+                          "type": "string"
+                        },
+                        "temporal": {
+                          "enum": ["degraded", "down", "ok", "unknown"],
+                          "type": "string"
+                        },
+                        "worker": {
+                          "enum": ["degraded", "down", "ok", "unknown"],
+                          "type": "string"
+                        },
+                        "workerEnvironment": {
+                          "type": "string"
+                        },
+                        "workerHeartbeatState": {
+                          "enum": ["absent", "fresh", "future", "invalid", "stale", "unknown"],
+                          "type": "string"
+                        },
+                        "workerRankCheckSchedulerMode": {
+                          "enum": ["cutover", "dispatcher", "legacy", "unknown"],
+                          "type": "string"
+                        },
+                        "workerRelease": {
+                          "type": "string"
+                        },
+                        "workerRevision": {
+                          "type": "string"
+                        },
+                        "workerSchema": {
+                          "enum": ["drift", "ok", "unknown"],
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "app",
+                        "appRelease",
+                        "appRevision",
+                        "database",
+                        "migrations",
+                        "appEnvironment",
+                        "appRankCheckSchedulerMode",
+                        "lastHeartbeatAt",
+                        "temporal",
+                        "worker",
+                        "workerEnvironment",
+                        "workerHeartbeatState",
+                        "workerRankCheckSchedulerMode",
+                        "workerRelease",
+                        "workerRevision",
+                        "workerSchema"
+                      ],
+                      "type": "object"
+                    },
+                    "status": {
+                      "enum": ["degraded", "ok"],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "checked_at",
+                    "liveness",
+                    "providers",
+                    "rate_limits",
+                    "readiness",
+                    "serp",
+                    "services",
+                    "status"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Composite health report is degraded"
           }
         },
         "summary": "Check API health",
@@ -4700,6 +5268,18 @@
     "/keywords/{id}": {
       "delete": {
         "operationId": "deleteKeyword",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -4750,6 +5330,16 @@
               }
             },
             "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
           },
           "429": {
             "content": {
@@ -4775,6 +5365,18 @@
       },
       "get": {
         "operationId": "getKeyword",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -4825,6 +5427,16 @@
               }
             },
             "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
           },
           "429": {
             "content": {
@@ -4850,6 +5462,18 @@
       },
       "patch": {
         "operationId": "setKeywordTargetUrl",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -4900,6 +5524,16 @@
               }
             },
             "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
           },
           "429": {
             "content": {
@@ -4929,6 +5563,16 @@
         "description": "Runs synchronously by default or asynchronously when requested.",
         "operationId": "runRankCheck",
         "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          },
           {
             "description": "When true, enqueue the check and return a running rank-check resource.",
             "in": "query",
@@ -4999,6 +5643,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -5036,6 +5690,16 @@
       "get": {
         "operationId": "listRankChecks",
         "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          },
           {
             "description": "Maximum rank checks to return. Defaults to 50.",
             "in": "query",
@@ -5152,6 +5816,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -5178,6 +5852,18 @@
     "/keywords/bulk": {
       "post": {
         "operationId": "bulkUpdateKeywords",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -5229,6 +5915,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -5252,9 +5948,89 @@
         "tags": ["keywords"]
       }
     },
+    "/liveness": {
+      "get": {
+        "operationId": "getLiveness",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "checked_at": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "services": {
+                      "properties": {
+                        "app": {
+                          "enum": ["ok"],
+                          "type": "string"
+                        },
+                        "appRelease": {
+                          "type": "string"
+                        },
+                        "appRevision": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["app", "appRelease", "appRevision"],
+                      "type": "object"
+                    },
+                    "status": {
+                      "enum": ["ok"],
+                      "type": "string"
+                    }
+                  },
+                  "required": ["checked_at", "services", "status"],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Web process is alive"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          }
+        },
+        "summary": "Check web process liveness",
+        "tags": ["discovery"]
+      }
+    },
     "/llms.txt": {
       "get": {
         "operationId": "getLlmsTxt",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -5265,6 +6041,16 @@
               }
             },
             "description": "Agent-readable API capability summary"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
           }
         },
         "summary": "Get API documentation for LLMs",
@@ -5275,6 +6061,16 @@
       "get": {
         "operationId": "searchLocations",
         "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          },
           {
             "in": "query",
             "name": "q",
@@ -5355,6 +6151,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -5381,6 +6187,18 @@
     "/me": {
       "get": {
         "operationId": "getMe",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -5432,6 +6250,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -5453,6 +6281,18 @@
       },
       "patch": {
         "operationId": "updateMe",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -5514,6 +6354,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -5537,6 +6387,18 @@
     "/me/tokens": {
       "get": {
         "operationId": "listPersonalAccessTokens",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -5606,6 +6468,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -5628,6 +6500,18 @@
       "post": {
         "description": "Creates a personal access token or exchanges a supported OAuth credential.",
         "operationId": "createPersonalAccessToken",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -5689,6 +6573,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -5712,6 +6606,18 @@
     "/me/tokens/{token_id}": {
       "delete": {
         "operationId": "revokePersonalAccessToken",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -5763,6 +6669,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -5786,6 +6702,18 @@
     "/migration-tokens/{token_id}": {
       "delete": {
         "operationId": "revokeMigrationToken",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -5837,6 +6765,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -5863,6 +6801,18 @@
     "/openapi.json": {
       "get": {
         "operationId": "getOpenApi",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -5873,6 +6823,16 @@
               }
             },
             "description": "JSON response"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
           }
         },
         "summary": "Get the OpenAPI document",
@@ -5882,6 +6842,18 @@
     "/projects": {
       "get": {
         "operationId": "listProjects",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -5951,6 +6923,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -5976,6 +6958,18 @@
       "post": {
         "description": "Requires a personal access token with permission to create projects.",
         "operationId": "createProject",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -6037,6 +7031,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -6060,6 +7064,18 @@
     "/projects/{project_id}": {
       "delete": {
         "operationId": "deleteProject",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -6110,6 +7126,16 @@
               }
             },
             "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
           },
           "429": {
             "content": {
@@ -6135,6 +7161,18 @@
       },
       "get": {
         "operationId": "getProject",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -6185,6 +7223,16 @@
               }
             },
             "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
           },
           "429": {
             "content": {
@@ -6210,6 +7258,18 @@
       },
       "patch": {
         "operationId": "updateProject",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -6260,6 +7320,16 @@
               }
             },
             "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
           },
           "429": {
             "content": {
@@ -6287,6 +7357,18 @@
     "/projects/{project_id}/alert-rules": {
       "get": {
         "operationId": "listAlertRules",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -6356,6 +7438,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -6380,6 +7472,18 @@
       },
       "post": {
         "operationId": "createAlertRule",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -6441,6 +7545,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -6468,6 +7582,16 @@
       "get": {
         "operationId": "listSearchPerformanceQueryStats",
         "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          },
           {
             "in": "query",
             "name": "start_date",
@@ -6564,6 +7688,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -6600,6 +7734,18 @@
     "/projects/{project_id}/analytics/sync": {
       "post": {
         "operationId": "syncProjectTraffic",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -6651,6 +7797,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -6678,6 +7834,16 @@
       "get": {
         "operationId": "listTrafficSnapshots",
         "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          },
           {
             "in": "query",
             "name": "start_date",
@@ -6780,6 +7946,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -6806,6 +7982,18 @@
     "/projects/{project_id}/api-keys": {
       "get": {
         "operationId": "listProjectApiKeys",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -6875,6 +8063,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -6900,6 +8098,18 @@
       "post": {
         "description": "The scope defaults to admin when omitted.",
         "operationId": "createProjectApiKey",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -6961,6 +8171,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -6987,6 +8207,18 @@
     "/projects/{project_id}/competitors": {
       "get": {
         "operationId": "listCompetitors",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -7056,6 +8288,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -7080,6 +8322,18 @@
       },
       "post": {
         "operationId": "addCompetitor",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -7130,6 +8384,16 @@
               }
             },
             "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
           },
           "429": {
             "content": {
@@ -7157,6 +8421,18 @@
     "/projects/{project_id}/competitors/{competitor_id}": {
       "delete": {
         "operationId": "removeProjectCompetitor",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -7208,6 +8484,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -7234,6 +8520,18 @@
     "/projects/{project_id}/defaults": {
       "get": {
         "operationId": "getProjectDefaults",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -7285,6 +8583,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -7309,6 +8617,18 @@
       },
       "patch": {
         "operationId": "updateProjectDefaults",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -7370,6 +8690,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -7398,6 +8728,16 @@
         "description": "Returns paginated JSON or streams CSV.",
         "operationId": "exportRankHistory",
         "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          },
           {
             "in": "query",
             "name": "format",
@@ -7511,6 +8851,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -7537,6 +8887,18 @@
     "/projects/{project_id}/keyword-matches": {
       "post": {
         "operationId": "matchProjectKeywords",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -7598,6 +8960,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -7625,6 +8997,18 @@
       "post": {
         "description": "Gets or estimates metrics for up to 700 keywords and requires write scope.",
         "operationId": "getKeywordMetrics",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -7686,6 +9070,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -7724,6 +9118,16 @@
         "description": "Researches or estimates keywords from one seed and requires write scope.",
         "operationId": "researchKeywords",
         "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          },
           {
             "in": "query",
             "name": "seed",
@@ -7847,6 +9251,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -7884,6 +9298,16 @@
       "get": {
         "operationId": "listKeywords",
         "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          },
           {
             "description": "Maximum keywords to return. Defaults to 50.",
             "in": "query",
@@ -8061,6 +9485,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -8085,6 +9519,18 @@
       },
       "post": {
         "operationId": "addKeywords",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -8136,6 +9582,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -8162,6 +9618,18 @@
     "/projects/{project_id}/migration-tokens": {
       "get": {
         "operationId": "listMigrationTokens",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -8229,6 +9697,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -8253,6 +9731,18 @@
       },
       "post": {
         "operationId": "mintMigrationToken",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -8303,6 +9793,16 @@
               }
             },
             "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
           },
           "429": {
             "content": {
@@ -8330,6 +9830,18 @@
     "/projects/{project_id}/migration-tokens/{token_id}": {
       "delete": {
         "operationId": "revokeProjectMigrationToken",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -8380,6 +9892,16 @@
               }
             },
             "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
           },
           "429": {
             "content": {
@@ -8407,6 +9929,18 @@
     "/projects/{project_id}/notification-preferences": {
       "get": {
         "operationId": "getNotificationPreferences",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -8457,6 +9991,16 @@
               }
             },
             "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
           },
           "429": {
             "content": {
@@ -8482,6 +10026,18 @@
       },
       "patch": {
         "operationId": "updateNotificationPreferences",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -8532,6 +10088,16 @@
               }
             },
             "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
           },
           "429": {
             "content": {
@@ -8560,6 +10126,16 @@
       "get": {
         "operationId": "getProjectOverview",
         "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          },
           {
             "description": "Rank-history window used for overview comparisons.",
             "in": "query",
@@ -8641,6 +10217,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -8667,6 +10253,18 @@
     "/projects/{project_id}/providers": {
       "get": {
         "operationId": "listProviders",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -8736,6 +10334,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -8762,6 +10370,18 @@
     "/projects/{project_id}/providers/{provider_id}": {
       "delete": {
         "operationId": "disconnectProvider",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -8812,6 +10432,16 @@
               }
             },
             "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
           },
           "429": {
             "content": {
@@ -8837,6 +10467,18 @@
       },
       "patch": {
         "operationId": "updateProviderSettings",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -8887,6 +10529,16 @@
               }
             },
             "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
           },
           "429": {
             "content": {
@@ -8914,6 +10566,18 @@
     "/projects/{project_id}/providers/{provider_id}/connect": {
       "post": {
         "operationId": "connectProvider",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -8964,6 +10628,16 @@
               }
             },
             "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
           },
           "429": {
             "content": {
@@ -8991,6 +10665,18 @@
     "/projects/{project_id}/providers/{provider_id}/test": {
       "post": {
         "operationId": "testProviderConnection",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -9041,6 +10727,16 @@
               }
             },
             "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
           },
           "429": {
             "content": {
@@ -9069,6 +10765,16 @@
       "get": {
         "operationId": "listRankedKeywordSuggestions",
         "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          },
           {
             "in": "query",
             "name": "connection_id",
@@ -9158,6 +10864,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -9195,6 +10911,16 @@
       "get": {
         "operationId": "listSavedViews",
         "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          },
           {
             "in": "query",
             "name": "surface",
@@ -9292,6 +11018,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -9316,6 +11052,18 @@
       },
       "post": {
         "operationId": "createSavedView",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -9410,6 +11158,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -9436,6 +11194,18 @@
     "/projects/{project_id}/saved-views/{view_id}": {
       "delete": {
         "operationId": "deleteProjectSavedView",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -9487,6 +11257,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -9514,6 +11294,16 @@
       "get": {
         "operationId": "listSignals",
         "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          },
           {
             "description": "Maximum signals to return. Defaults to 50.",
             "in": "query",
@@ -9648,6 +11438,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -9675,6 +11475,18 @@
       "get": {
         "description": "Returns the project sitemap monitor and its latest snapshot.",
         "operationId": "listSitemapMonitors",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -9726,6 +11538,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -9752,6 +11574,18 @@
     "/projects/{project_id}/sitemap-monitors/{monitor_id}": {
       "patch": {
         "operationId": "updateSitemapMonitor",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -9813,6 +11647,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -9839,6 +11683,18 @@
     "/projects/{project_id}/team/invites": {
       "get": {
         "operationId": "listTeamInvites",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -9908,6 +11764,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -9932,6 +11798,18 @@
       },
       "post": {
         "operationId": "createTeamInvite",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -9982,6 +11860,16 @@
               }
             },
             "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
           },
           "429": {
             "content": {
@@ -10009,6 +11897,18 @@
     "/projects/{project_id}/team/invites/{invite_id}": {
       "delete": {
         "operationId": "revokeProjectTeamInvite",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -10060,6 +11960,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -10086,6 +11996,18 @@
     "/projects/{project_id}/team/invites/{invite_id}/resend": {
       "post": {
         "operationId": "resendTeamInvite",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -10137,6 +12059,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -10163,6 +12095,18 @@
     "/projects/{project_id}/team/members": {
       "get": {
         "operationId": "listTeamMembers",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -10232,6 +12176,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -10258,6 +12212,18 @@
     "/projects/{project_id}/team/members/{member_id}": {
       "delete": {
         "operationId": "removeTeamMember",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -10309,6 +12275,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -10333,6 +12309,18 @@
       },
       "patch": {
         "operationId": "updateTeamMemberRole",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -10394,6 +12382,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -10420,6 +12418,18 @@
     "/projects/{project_id}/triggered-alerts": {
       "get": {
         "operationId": "listTriggeredAlerts",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -10487,6 +12497,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -10513,6 +12533,18 @@
     "/projects/{project_id}/triggered-alerts/{alert_id}/mute": {
       "post": {
         "operationId": "muteTriggeredAlert",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -10564,6 +12596,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -10590,6 +12632,18 @@
     "/projects/{project_id}/triggered-alerts/mark-read": {
       "post": {
         "operationId": "markProjectAlertsRead",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -10641,6 +12695,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -10667,6 +12731,18 @@
     "/projects/{project_id}/webhooks": {
       "get": {
         "operationId": "listWebhookEndpoints",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -10736,6 +12812,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -10760,6 +12846,18 @@
       },
       "post": {
         "operationId": "createWebhookEndpoint",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -10821,6 +12919,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -10847,6 +12955,18 @@
     "/projects/{project_id}/webhooks/{webhook_id}": {
       "delete": {
         "operationId": "deleteWebhookEndpoint",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -10898,6 +13018,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -10922,6 +13052,18 @@
       },
       "patch": {
         "operationId": "updateWebhookEndpoint",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -10983,6 +13125,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -11011,6 +13163,16 @@
         "description": "Requires write scope because cache misses spend provider budget. estimate_only is a free dry run, and max_cost_cents is a best-effort pre-estimate gate. Snapshots are cached for 24 hours. Aggregated referring-domain, page, and anchor views are consumer-side and must be labeled \"within fetched rows\".",
         "operationId": "analyzeBacklinks",
         "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          },
           {
             "description": "Domain for site scope or full URL for page scope.",
             "in": "query",
@@ -11135,6 +13297,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -11172,6 +13344,18 @@
       "post": {
         "description": "Extends the current unexpired snapshot. The response contains only newly fetched rows plus the updated fetched_row_count and cost_cents.",
         "operationId": "loadMoreBacklinkRows",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -11239,9 +13423,14 @@
                 "schema": {
                   "$ref": "#/components/schemas/Problem"
                 }
+              },
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
               }
             },
-            "description": "snapshot_expired: no unexpired backlinks snapshot exists"
+            "description": "snapshot_expired: no unexpired backlinks snapshot exists; Unsupported API version"
           },
           "422": {
             "content": {
@@ -11279,6 +13468,18 @@
     "/provider-rates": {
       "get": {
         "operationId": "getProviderRates",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -11299,6 +13500,16 @@
             },
             "description": "JSON response"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -11317,6 +13528,18 @@
     "/rank-checks/{check_id}": {
       "get": {
         "operationId": "getRankCheckResult",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -11368,6 +13591,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -11391,9 +13624,142 @@
         "tags": ["rank-checks"]
       }
     },
+    "/readiness": {
+      "get": {
+        "operationId": "getReadiness",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "checked_at": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "services": {
+                      "properties": {
+                        "app": {
+                          "enum": ["ok"],
+                          "type": "string"
+                        },
+                        "appRelease": {
+                          "type": "string"
+                        },
+                        "appRevision": {
+                          "type": "string"
+                        },
+                        "database": {
+                          "enum": ["degraded", "ok"],
+                          "type": "string"
+                        },
+                        "migrations": {
+                          "enum": ["incomplete", "ready", "unknown"],
+                          "type": "string"
+                        }
+                      },
+                      "required": ["app", "appRelease", "appRevision", "database", "migrations"],
+                      "type": "object"
+                    },
+                    "status": {
+                      "enum": ["degraded", "ok"],
+                      "type": "string"
+                    }
+                  },
+                  "required": ["checked_at", "services", "status"],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Web process is ready to serve traffic"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "checked_at": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "services": {
+                      "properties": {
+                        "app": {
+                          "enum": ["ok"],
+                          "type": "string"
+                        },
+                        "appRelease": {
+                          "type": "string"
+                        },
+                        "appRevision": {
+                          "type": "string"
+                        },
+                        "database": {
+                          "enum": ["degraded", "ok"],
+                          "type": "string"
+                        },
+                        "migrations": {
+                          "enum": ["incomplete", "ready", "unknown"],
+                          "type": "string"
+                        }
+                      },
+                      "required": ["app", "appRelease", "appRevision", "database", "migrations"],
+                      "type": "object"
+                    },
+                    "status": {
+                      "enum": ["degraded", "ok"],
+                      "type": "string"
+                    }
+                  },
+                  "required": ["checked_at", "services", "status"],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Web process is not ready to serve traffic"
+          }
+        },
+        "summary": "Check web traffic readiness",
+        "tags": ["discovery"]
+      }
+    },
     "/saved-views/{view_id}": {
       "delete": {
         "operationId": "deleteSavedView",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -11445,6 +13811,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "429": {
             "content": {
               "application/json": {
@@ -11471,6 +13847,18 @@
     "/signals": {
       "post": {
         "operationId": "createSignal",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -11532,6 +13920,16 @@
             },
             "description": "Not found"
           },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
           "423": {
             "content": {
               "application/json": {
@@ -11568,6 +13966,18 @@
     "/team/invites/{invite_id}": {
       "delete": {
         "operationId": "revokeTeamInvite",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -11618,6 +14028,16 @@
               }
             },
             "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
           },
           "429": {
             "content": {

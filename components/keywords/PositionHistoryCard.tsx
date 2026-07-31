@@ -169,6 +169,13 @@ export function PositionHistoryCard({ keyword }: Readonly<PositionHistoryCardPro
   const { readOnly } = useProjectWriteMode();
   const activeRange = RANGES.find((option) => option.label === range) ?? RANGES[1];
   const history = dailyPositionPoints(keyword.positionHistory, activeRange.days);
+  const boundaryVisible =
+    history.length > 0 &&
+    Boolean(
+      keyword.positionHistoryBoundaryAt &&
+        dailyPositionPoints([{ checkedAt: keyword.positionHistoryBoundaryAt }], activeRange.days)
+          .length,
+    );
   const labels = history.map((point) => point.label);
   const positions = history.map((point) => point.position);
   const target = keyword.targetPosition ?? null;
@@ -185,6 +192,11 @@ export function PositionHistoryCard({ keyword }: Readonly<PositionHistoryCardPro
         <div>
           <SectionTitle>Position history</SectionTitle>
           <MonoText muted>{`GOOGLE RANK OVER TIME / ${POSITION_DIRECTION_CUE}`}</MonoText>
+          {boundaryVisible ? (
+            <p className="mt-1 text-[11px] text-fg-muted">
+              Comparison restarted after a ranking normalization change.
+            </p>
+          ) : null}
         </div>
         <div className="flex items-center gap-0.5 rounded-[9px] border border-border-strong bg-bg-elev p-0.5">
           {RANGES.map((option) => (

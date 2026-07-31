@@ -73,6 +73,7 @@ const unavailableWorker: WorkerLiveness = {
   heartbeatState: "absent",
   lastSeenAt: null,
   release: "unknown",
+  revision: "unknown",
   schedulerMode: "unknown",
   schemaComparison: "unknown",
   status: "unknown",

@@ -40,26 +40,34 @@ target the active production database.
 2. Stop writes or schedule a maintenance window.
 3. Back up PostgreSQL and secrets.
 4. Fetch the target tag, review `.env.example`, and update `.env` deliberately.
-5. Rebuild and start:
+5. Run the shipped upgrade path with the exact target version:
 
    ```bash
-   docker compose pull
-   docker compose up --build -d
+   ./upgrade.sh --version vX.Y.Z
    ```
 
-The one-shot `db-migrations` service runs `npm run db:migrate`, which executes
-`prisma migrate deploy` for the full tree and then all blocking data migrations
-before the web app.
-No separate operator migration job is required. With scheduled checks enabled,
-include `--profile scheduled` when starting the stack. Never enable demo OTP or
-demo seeding on a real deployment.
+The script requires Docker with Buildx and Node.js. It reads
+`distribution-manifest.json`, refuses a version or image-metadata mismatch,
+pulls the verified web and worker pair, stops the old app and worker, runs the
+one-shot `db-migrations` service without a source-build fallback, and then starts
+the matched services. `db-migrations` executes `prisma migrate deploy` for the
+full tree and then all blocking data migrations before the web app. A failed
+verification or migration leaves the upgrade incomplete instead of continuing
+with a mismatched worker. Never enable demo OTP or demo seeding on a real
+deployment.
+
+The migration ledger distinguishes completed data work from final completion.
+If optional settlement fails, the command exits nonzero and records the
+settlement error while leaving the migration unfinished. Rerun
+`npm run db:migrate`; it retries settlement without repeating completed data
+work. Existing rows already marked `finishedAt` remain final after upgrading.
 
 ### One-time public ID v3 cutover
 
 The public ID v3 release has an additional production gate because the previous
 web version can still create v2 identifiers while a replacement image is
 building. Its expand migration installs a database trigger that blocks
-application writes, while the blocking migration uses a session-local bypass to
+application writes, while the cutover migration uses a session-local bypass to
 rewrite the existing data. Development and preview environments open the gate
 automatically after the migration. A production deployment keeps it blocked
 until the new web release is proven live.
@@ -84,7 +92,7 @@ docker compose --profile scheduled up --build -d worker
 
 The release command accepts health HTTP 200 or 503 because the stopped worker
 can temporarily degrade the overall endpoint. In either case, it requires the
-web application, database, and blocking migrations to be healthy and requires
+web application, database, and cutover migration to be healthy and requires
 `services.appRelease` to equal the exact target SHA. It also verifies the gate's
 release phase, operator policy, target SHA, all v3 database constraints, and the
 migration ledger before it conditionally opens writes and records the release
@@ -146,7 +154,7 @@ to block the web deployment.
 
 The web app and Temporal worker share one Prisma schema. For a split deployment,
 back up PostgreSQL, deploy the web app so `npm run db:migrate` applies the full
-Prisma tree and all blocking data migrations, then immediately deploy the
+Prisma tree and all active deploy-blocking data migrations, then immediately deploy the
 worker from the same release tag. Version skew
 commonly appears as "The column ... does not exist" errors in worker logs or as
 failing scheduled checks while the web app works.
@@ -154,19 +162,14 @@ failing scheduled checks while the web app works.
 ## Verify and roll back
 
 Check `GET /api/v1/health`, sign-in, one project read, and worker logs. Confirm
-that `services.migrations` is `ready`. This field answers whether every blocking
-data migration has finished with its expected checksum and whether the public ID
-database contract is ready. It does not report whether the Prisma schema is
-current. Run `npx prisma migrate status` in the deployed application environment;
-for Docker Compose:
+that `services.migrations` is `ready`; the endpoint returns 503 when a bundled
+Prisma migration has not been applied, an active data migration is incomplete,
+has a checksum mismatch, or cannot be read, or the public ID database contract
+is not ready. For detailed Prisma status in Docker Compose, run:
 
 ```bash
 docker compose exec app npx prisma migrate status
 ```
-
-This limitation is unchanged from 0.1.0 and is scheduled to be addressed. The
-health endpoint returns 503 when a blocking data migration is incomplete, has a
-checksum mismatch, or cannot be read.
 Confirm the Temporal worker reports ready and its maintenance schedules are
 created or already exist.
 For split deployments, verify that both processes use the same release by

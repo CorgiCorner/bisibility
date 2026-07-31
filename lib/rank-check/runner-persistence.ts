@@ -152,6 +152,7 @@ export async function persistRankCheck(
 
     const signals = signalsForRankCheck({
       checkedAt: result.rankCheck.checkedAt,
+      comparisonAllowed: result.comparisonAllowed,
       keywordId: target.keywordId,
       position: result.rankCheck.position,
       previousPosition: result.rankCheck.previousPosition,
@@ -171,6 +172,7 @@ export async function persistRankCheck(
   }, target.transactionOptions);
   const currentSnapshot = {
     checkedAt: result.rankCheck.checkedAt,
+    normalizationVersion: result.rankCheck.normalizationVersion,
     position: result.rankCheck.position,
     rankCheckId: rankCheck.id,
     rankingUrl: result.rankCheck.rankingUrl,
@@ -181,7 +183,10 @@ export async function persistRankCheck(
     target.keywordId,
     { position: result.rankCheck.previousPosition, raw: target.previousRaw },
     currentSnapshot,
-    { deliveryMode: rankCheck.trigger === "scheduled" ? "deferred" : "immediate" },
+    {
+      comparisonAllowed: result.comparisonAllowed,
+      deliveryMode: rankCheck.trigger === "scheduled" ? "deferred" : "immediate",
+    },
   ).catch(() => []);
   if (rankCheck.trigger !== "scheduled" && alerts.length > 0) {
     // The worker sweep recovers alerts when the best-effort Temporal kick is unavailable.
@@ -192,7 +197,7 @@ export async function persistRankCheck(
     checkedAt: result.rankCheck.checkedAt,
     keywordId: target.keywordId,
     position: result.rankCheck.position,
-    previousPosition: result.rankCheck.previousPosition,
+    previousPosition: result.comparisonAllowed ? result.rankCheck.previousPosition : null,
     projectId: target.projectId,
     rankCheckId: rankCheck.id,
   }).catch(() => undefined);
@@ -217,6 +222,7 @@ export async function persistFailedRankCheckInTransaction(
     finishedAt: new Date(),
     attempts,
     keywordId: target.keywordId,
+    normalizationVersion: null,
     position: null,
     previousPosition: target.previousPosition ?? null,
     provider: target.provider,

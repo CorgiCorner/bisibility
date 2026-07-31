@@ -16,6 +16,7 @@ const instrumentation = readFileSync("instrumentation.ts", "utf8");
 const health = readFileSync("lib/api/discovery.ts", "utf8");
 const temporalWorker = readFileSync("lib/temporal/worker.ts", "utf8");
 const deployMigration = readFileSync("scripts/deploy/migrate.ts", "utf8");
+const ci = readFileSync(".github/workflows/ci.yml", "utf8");
 const writeGateMigration = readFileSync(
   "prisma/migrations/20260729210500_public_id_v3_write_gate/migration.sql",
   "utf8",
@@ -43,7 +44,7 @@ assert(
 assert(
   deployMigration.indexOf("const afterPrisma = await pipeline.reblock(context, true)") <
     deployMigration.indexOf("await pipeline.runData()"),
-  "db:migrate must apply schema changes before running the retired data-migration registry",
+  "db:migrate must apply schema changes before running active data migrations",
 );
 assert(
   deployMigration.indexOf("await pipeline.runData()") <
@@ -67,6 +68,10 @@ assert(
   "The generic wrapper must not cap or emulate the Prisma migration tree",
 );
 assert(railway.build?.dockerfilePath === "Dockerfile", "Railway web must use Dockerfile");
+assert(
+  railway.deploy?.healthcheckPath === "/api/v1/readiness",
+  "Railway web must use the readiness probe",
+);
 assert(
   railway.deploy?.preDeployCommand?.includes(migrationRunner),
   "Railway web must run the coordinated migration runner",
@@ -122,12 +127,16 @@ assert(
 );
 assert(
   instrumentation.includes("enforceMigrationsAtStartup"),
-  "Node startup must fail closed when blocking migrations are incomplete",
+  "Node startup must fail closed when active data migrations are incomplete",
+);
+assert(
+  instrumentation.includes("assertCanonicalHostedMcpOrigin"),
+  "Node startup must fail closed when hosted MCP origins diverge",
 );
 assert(
   health.includes("readMigrationReadiness") &&
     health.includes('migrations !== "ready"'),
-  "Health readiness must fail when blocking migrations are incomplete",
+  "Health readiness must fail when active data migrations are incomplete",
 );
 assert(
   temporalWorker.includes('from "./worker-write-gate"') &&
@@ -139,7 +148,12 @@ assert(
   temporalWorker.includes('from "../data-migrations/readiness"') &&
     temporalWorker.indexOf("await assertMigrationsReady()") <
       temporalWorker.indexOf("await enforceWorkerSchemaGuard()"),
-  "Temporal worker startup must require blocking data migrations before its schema guard",
+  "Temporal worker startup must require active data migrations before its schema guard",
+);
+assert(
+  ci.includes("npm run test:data-migration-runner-postgres") &&
+    ci.includes("needs: [classifier, static, test, coverage, build, fresh-migration-apply]"),
+  "Required CI must exercise data migration settlement retries against PostgreSQL",
 );
 
 const flyWeb = readFileSync("deploy/fly.web.toml", "utf8");
@@ -148,9 +162,9 @@ assert(flyWeb.includes(`dockerfile = "../Dockerfile"`), "Fly web must use the re
 assert(flyWeb.includes(migrationRunner), "Fly web must run the coordinated migration runner");
 assert(
   flyWeb.includes('release_command_timeout = "30m"'),
-  "Fly web must allow blocking data migrations to exceed the five-minute default",
+  "Fly web must allow deploy-blocking data migrations to exceed the five-minute default",
 );
-assert(flyWeb.includes('path = "/api/v1/health"'), "Fly web health check is missing");
+assert(flyWeb.includes('path = "/api/v1/readiness"'), "Fly web readiness check is missing");
 assert(flyWorker.includes(`dockerfile = "../Dockerfile.worker"`), "Fly worker must use the repository-root Dockerfile.worker (path is relative to the config file)");
 assert(flyWorker.includes('[[restart]]'), "Fly worker restart policy is missing");
 assert(flyWorker.includes('policy = "on-failure"'), "Fly worker must restart on failure");

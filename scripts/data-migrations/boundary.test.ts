@@ -2,15 +2,15 @@ import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import type { DataMigrationManifestEntry } from "@/lib/data-migrations/manifest";
 import { dataMigrationManifest } from "@/lib/data-migrations/manifest";
-import { validateDataMigrationBoundaries } from "./boundary";
+import { lintDataMigrationReleaseBoundaries } from "./boundary";
 
 const pending = {
-  blocking: true,
-  blocksSchemaMigration: "20260728063000_contract",
   checksum: "a".repeat(64),
-  contractState: "pending",
+  contractMigrationId: "20260728063000_contract",
+  execution: "deploy-blocking",
   id: "20260728060000_prepare",
-  requiresSchemaThrough: "20260728050000_ledger",
+  lifecycle: "active",
+  prerequisiteSchemaMigrationId: "20260728050000_ledger",
 } as const satisfies DataMigrationManifestEntry;
 
 function fileSystem(files: Readonly<Record<string, string>>) {
@@ -27,7 +27,7 @@ const contract = "/repo/prisma/migrations/20260728063000_contract/migration.sql"
 describe("data migration release boundary", () => {
   it("accepts the repository's enforced boundary", async () => {
     await expect(
-      validateDataMigrationBoundaries(process.cwd(), dataMigrationManifest),
+      lintDataMigrationReleaseBoundaries(process.cwd(), dataMigrationManifest),
     ).resolves.toBeUndefined();
   });
 
@@ -64,45 +64,49 @@ describe("data migration release boundary", () => {
     );
   });
 
-  it("accepts a pending data migration only while its contract is absent", async () => {
+  it("accepts an active data migration only while its contract is absent", async () => {
     await expect(
-      validateDataMigrationBoundaries("/repo", [pending], fileSystem({ [prerequisite]: "" })),
+      lintDataMigrationReleaseBoundaries(
+        "/repo",
+        [pending],
+        fileSystem({ [prerequisite]: "" }),
+      ),
     ).resolves.toBeUndefined();
     await expect(
-      validateDataMigrationBoundaries(
+      lintDataMigrationReleaseBoundaries(
         "/repo",
         [pending],
         fileSystem({ [contract]: "", [prerequisite]: "" }),
       ),
-    ).rejects.toThrow("must not ship blocking schema migration");
+    ).rejects.toThrow("must not ship contract schema migration");
   });
 
   it("requires the exact prerequisite, preparation, and contract timestamp order", async () => {
     await expect(
-      validateDataMigrationBoundaries(
+      lintDataMigrationReleaseBoundaries(
         "/repo",
-        [{ ...pending, blocksSchemaMigration: "20260728055000_contract" }],
+        [{ ...pending, contractMigrationId: "20260728055000_contract" }],
         fileSystem({ [prerequisite]: "" }),
       ),
     ).rejects.toThrow("must be ordered");
     await expect(
-      validateDataMigrationBoundaries(
+      lintDataMigrationReleaseBoundaries(
         "/repo",
-        [{ ...pending, requiresSchemaThrough: "20260728061000_ledger" }],
+        [{ ...pending, prerequisiteSchemaMigrationId: "20260728061000_ledger" }],
         fileSystem({ [prerequisite]: "" }),
       ),
     ).rejects.toThrow("must be ordered");
   });
 
   it("accepts an enforced contract only when its migration is self-guarding", async () => {
-    const enforced = {
+    const retired = {
       ...pending,
-      contractState: "enforced",
+      lifecycle: "retired",
     } as const satisfies DataMigrationManifestEntry;
     await expect(
-      validateDataMigrationBoundaries(
+      lintDataMigrationReleaseBoundaries(
         "/repo",
-        [enforced],
+        [retired],
         fileSystem({
           [contract]: [
             "-- data-migration-contract: self-guarding",
@@ -114,11 +118,11 @@ describe("data migration release boundary", () => {
       ),
     ).resolves.toBeUndefined();
     await expect(
-      validateDataMigrationBoundaries(
+      lintDataMigrationReleaseBoundaries(
         "/repo",
-        [enforced],
+        [retired],
         fileSystem({ [contract]: "SELECT 1;", [prerequisite]: "" }),
       ),
-    ).rejects.toThrow("self-guard requirement");
+    ).rejects.toThrow("self-guard lint marker");
   });
 });

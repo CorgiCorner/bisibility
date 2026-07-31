@@ -1,3 +1,5 @@
+import { API_SCOPE_ORDER } from "./scope-policy";
+
 export const apiKeyCreateProperties = {
   expires_in_days: {
     description: "Lifetime in days. Use null for no expiry.",
@@ -8,7 +10,7 @@ export const apiKeyCreateProperties = {
   scope: {
     default: "admin",
     description: "Access tier. When omitted, defaults to admin for backward compatibility.",
-    enum: ["read", "write", "admin"],
+    enum: API_SCOPE_ORDER,
     type: "string",
   },
 } as const;

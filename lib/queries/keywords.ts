@@ -1,6 +1,10 @@
 import "server-only";
 
-import { whereExecutedChecks } from "@/lib/checks/status";
+import {
+  comparableCompletedWindow,
+  whereComparableTo,
+  whereExecutedChecks,
+} from "@/lib/checks/status";
 import { prisma } from "@/lib/db/prisma";
 import { parsePublicId } from "@/lib/db/public-id";
 import type { Prisma } from "@/lib/generated/prisma/client";
@@ -41,6 +45,7 @@ const EMPTY_METRICS: Metrics = {
 const rankCheckSelect = {
   checkedAt: true,
   id: true,
+  normalizationVersion: true,
   position: true,
   previousPosition: true,
   requestedDepth: true,
@@ -216,12 +221,22 @@ export async function getKeywordDetail(projectId: string, keywordId: string) {
   if (!record) return null;
 
   const url = presenceUrl(record.targetUrl);
+  const currentComparableCheck = comparableCompletedWindow(record.rankChecks).checks[0] ?? null;
+  const comparablePredicate = currentComparableCheck
+    ? whereComparableTo(currentComparableCheck)
+    : null;
   const [metrics, aggregate, traffic, urlPresence] = await Promise.all([
     fetchKeywordMetrics(record.id, DETAIL_CHECK_HISTORY),
-    prisma.rankCheck.aggregate({
-      _min: { position: true },
-      where: { keywordId: record.id, position: { not: null }, status: "completed" },
-    }),
+    comparablePredicate
+      ? prisma.rankCheck.aggregate({
+          _min: { position: true },
+          where: {
+            keywordId: record.id,
+            position: { not: null },
+            ...comparablePredicate,
+          },
+        })
+      : Promise.resolve({ _min: { position: null } }),
     getKeywordTraffic(project.id, record.id, {
       rankingUrl: record.rankChecks.find((check) => check.rankingUrl)?.rankingUrl ?? null,
       targetUrl: record.targetUrl,

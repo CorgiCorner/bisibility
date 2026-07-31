@@ -192,6 +192,9 @@ const mocks = vi.hoisted(() => {
         },
       ),
     },
+    rankCheck: {
+      findFirst: vi.fn(),
+    },
   };
   return {
     consumeProviderLimit: vi.fn(),
@@ -246,6 +249,11 @@ describe("queued result persistence", () => {
       mocks.makeTask("failure", "provider_failed", "one task was rejected"),
     );
     mocks.resolveCredentials.mockReturnValue({ login: "login", password: "password" });
+    mocks.prisma.rankCheck.findFirst.mockResolvedValue({
+      position: 8,
+      rankingUrl: "https://example.com/old",
+      raw: null,
+    });
     mocks.consumeProviderLimit.mockResolvedValue({
       accountKey: "dataforseo:account",
       cooling: false,
@@ -319,11 +327,29 @@ describe("queued result persistence", () => {
     expect(mocks.persistRankCheck).toHaveBeenCalledOnce();
     expect(mocks.persistRankCheck.mock.calls[0]?.[1]).toMatchObject({
       providerCostCents: 1.2,
+      comparisonAllowed: true,
       rankCheck: {
         billingUnits: 10,
         costCents: 1.2,
+        normalizationVersion: "v2",
         position: 3,
         rankingUrl: "https://example.com/new",
+        raw: {
+          normalization: {
+            anomalies: [],
+            outcome: "match",
+            version: "v2",
+          },
+        },
+      },
+    });
+    expect(mocks.prisma.rankCheck.findFirst).toHaveBeenCalledWith({
+      orderBy: [{ checkedAt: "desc" }, { id: "desc" }],
+      where: {
+        keywordId: "keyword_success",
+        normalizationVersion: "v2",
+        requestedDepth: 100,
+        status: "completed",
       },
     });
     expect(mocks.persistFailed).toHaveBeenCalledOnce();
@@ -338,6 +364,99 @@ describe("queued result persistence", () => {
     await persistReadyQueuedRankCheckTasks("batch_1");
     expect(mocks.persistRankCheck).toHaveBeenCalledOnce();
     expect(mocks.persistFailed).toHaveBeenCalledOnce();
+  });
+
+  it("selects the minimum rank_group from all matching queued results", async () => {
+    mocks.tasks.splice(0, mocks.tasks.length, mocks.makeTask("success", "ready", null));
+    mocks.fetchResult.mockResolvedValue({
+      status_code: 20000,
+      tasks: [
+        {
+          cost: 0.012,
+          result: [
+            {
+              items: [
+                {
+                  domain: "example.com",
+                  rank_absolute: 3,
+                  rank_group: 8,
+                  type: "organic",
+                  url: "https://example.com/later",
+                },
+                {
+                  domain: "www.example.com",
+                  rank_absolute: 7,
+                  rank_group: 2,
+                  type: "organic",
+                  url: "https://www.example.com/best",
+                },
+              ],
+            },
+          ],
+          status_code: 20000,
+        },
+      ],
+    });
+    mocks.finalize.mockResolvedValue({
+      completed: 1,
+      failed: 0,
+      pending: 0,
+      state: "completed",
+    });
+
+    await persistReadyQueuedRankCheckTasks("batch_1");
+
+    expect(mocks.persistRankCheck).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        rankCheck: expect.objectContaining({
+          position: 2,
+          rankingUrl: "https://www.example.com/best",
+        }),
+      }),
+    );
+    expect(mocks.persistFailed).not.toHaveBeenCalled();
+  });
+
+  it("fails a queued result when a matching organic item lacks rank_group", async () => {
+    mocks.tasks.splice(0, mocks.tasks.length, mocks.makeTask("success", "ready", null));
+    mocks.fetchResult.mockResolvedValue({
+      status_code: 20000,
+      tasks: [
+        {
+          cost: 0.012,
+          result: [
+            {
+              items: [
+                {
+                  domain: "example.com",
+                  rank_absolute: 1,
+                  type: "organic",
+                  url: "https://example.com/malformed",
+                },
+              ],
+            },
+          ],
+          status_code: 20000,
+        },
+      ],
+    });
+    mocks.finalize.mockResolvedValue({
+      completed: 0,
+      failed: 1,
+      pending: 0,
+      state: "failed",
+    });
+
+    await persistReadyQueuedRankCheckTasks("batch_1");
+
+    expect(mocks.persistRankCheck).not.toHaveBeenCalled();
+    expect(mocks.persistFailed).toHaveBeenCalledWith(
+      expect.objectContaining({
+        error: expect.stringContaining("organic_rank_missing"),
+      }),
+    );
+    expect(mocks.tasks[0]?.state).toBe("failed");
   });
 
   it("leaves retryable result failures pending for the next workflow timer", async () => {

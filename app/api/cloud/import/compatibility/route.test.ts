@@ -44,7 +44,7 @@ describe("GET /api/cloud/import/compatibility", () => {
     await expect(response.json()).resolves.toEqual({
       app_version: packageJson.version,
       latest_migration: "20260628234220_two_factor",
-      schema_versions_supported: [5],
+      schema_versions_supported: [6],
     });
     expect(mocks.checkRateLimit).toHaveBeenCalledWith(expect.any(Request), {
       kind: "anonymous",

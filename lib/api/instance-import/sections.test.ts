@@ -51,7 +51,7 @@ function version4Body() {
     ],
     notification_preferences: [{ check_email: true, report_email: false }],
     saved_views: [{ config: { search: "rank" }, id: ids.view, name: "Rank", surface: "keywords" }],
-    version: 5,
+    version: 6,
   });
 }
 
@@ -297,7 +297,7 @@ describe("saved view import", () => {
           surface: "competitors",
         },
       ],
-      version: 5,
+      version: 6,
     });
 
     expect(parsed.success).toBe(true);

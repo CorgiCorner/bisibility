@@ -1,7 +1,8 @@
+import { API_SCOPE_VALUES } from "@/lib/api/scope-policy";
 import { z } from "zod";
 
 const idSchema = z.string().trim().min(1).max(120);
-export const apiKeyScopeSchema = z.enum(["admin", "read", "write"]);
+export const apiKeyScopeSchema = z.enum(API_SCOPE_VALUES);
 
 export const issueApiKeySchema = z.object({
   expiresInDays: z.union([z.literal(30), z.literal(90), z.null()]).default(90),

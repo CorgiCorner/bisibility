@@ -55,6 +55,7 @@ export type KeywordRow = RawKeyword & {
   rankingPages: number;
   schedule: KeywordSchedule;
   positionBaseline: number | null;
+  positionHistoryBoundaryAt: string | null;
   positionHistory: PositionPoint[];
   rankingUrlHistory: RankingUrlEvent[];
   targetPosition: number | null;
@@ -294,6 +295,7 @@ function decorateKeyword(row: RawKeyword): KeywordRow {
     rankingPages: row.idNumber % 4 === 0 ? 2 : 1,
     schedule: buildSchedule(row.idNumber),
     positionBaseline: row.sparkline.at(-2) ?? null,
+    positionHistoryBoundaryAt: null,
     positionHistory: buildPositionHistory(row.sparkline),
     rankingUrlHistory: buildUrlHistory(row),
   };

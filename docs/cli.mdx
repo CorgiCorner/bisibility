@@ -1,0 +1,58 @@
+---
+title: "CLI"
+description: "Install the Bisibility CLI, sign in with OAuth, and run rank checks from a terminal."
+---
+
+The Bisibility CLI manages projects, tracked keywords, rank checks, alerts, and
+other API resources from a terminal. Use `--json` when another program consumes
+the output.
+
+## Install
+
+```bash
+npm install -g @bisibility/cli
+bisibility --help
+```
+
+## Sign in
+
+The hosted CLI login uses browser consent. It stores the resulting personal
+access token locally, so the token does not need to be copied from the browser.
+
+```bash
+bisibility auth login --name "mbp16-cli" --scope admin --expires 90
+```
+
+Choose the smallest scope needed for the work. See the
+[personal access token guide](/api/personal-access-tokens) for scopes, expiry,
+storage, and revocation.
+
+## Run a rank check
+
+Select a project, add a keyword, and run its first check:
+
+```bash
+bisibility config set projectId prj_a00000000000000000000000
+bisibility keywords add "headless cms" --device desktop --country "United States"
+bisibility check run kw_b00000000000000000000000 --json
+```
+
+The completed response includes the current and previous position:
+
+```json
+{
+  "position": 7,
+  "previous_position": 10,
+  "status": "completed"
+}
+```
+
+Run `bisibility <command> --help` for command-specific options. Provider
+credentials are connected during product onboarding and are not part of the CLI
+first-run sequence.
+
+## Related guides
+
+- [API overview](/api/overview)
+- [SDKs](/sdks/overview)
+- [AI agents and MCP](/agents)

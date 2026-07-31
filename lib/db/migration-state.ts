@@ -27,14 +27,18 @@ export async function appliedMigrationSummary(): Promise<MigrationSummary> {
   }
 }
 
+export function bundledMigrationNames(): string[] {
+  return readdirSync(join(process.cwd(), "prisma", "migrations"), {
+    withFileTypes: true,
+  })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .sort();
+}
+
 export function bundledMigrationSummary(): MigrationSummary {
   try {
-    const migrations = readdirSync(join(process.cwd(), "prisma", "migrations"), {
-      withFileTypes: true,
-    })
-      .filter((entry) => entry.isDirectory())
-      .map((entry) => entry.name)
-      .sort();
+    const migrations = bundledMigrationNames();
     return { count: migrations.length, latest: migrations.at(-1) ?? null };
   } catch {
     return { count: 0, latest: null };

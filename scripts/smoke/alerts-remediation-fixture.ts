@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { prisma } from "@/lib/db/prisma";
 import { makePublicId } from "@/lib/db/public-id";
+import { CURRENT_RANK_NORMALIZATION_VERSION } from "@/lib/rank-check/normalization-version";
 import type { RankCheckRunResult } from "@/lib/rank-check/runner-result";
 import {
   persistRankCheck,
@@ -126,22 +127,25 @@ export async function persistAcceptanceCheck(
       checkedAt: input.checkedAt,
       id: rankCheckId,
       keywordId: input.keyword.id,
+      normalizationVersion: null,
       previousPosition: input.previousPosition,
       provider: "acceptance-fake",
       publicId: makePublicId("check"),
       status: "running",
       trigger: input.trigger,
     },
-    update: { status: "running" },
+    update: { normalizationVersion: null, status: "running" },
     where: { id: rankCheckId },
   });
   const result: RankCheckRunResult = {
+    comparisonAllowed: true,
     rankCheck: {
       billingUnits: null,
       checkedAt: input.checkedAt,
       costCents: 0,
       estimatedCostCents: null,
       keywordId: input.keyword.id,
+      normalizationVersion: CURRENT_RANK_NORMALIZATION_VERSION,
       organicRanks: null,
       position: input.position,
       previousPosition: input.previousPosition,

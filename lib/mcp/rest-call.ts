@@ -1,6 +1,7 @@
 import "server-only";
 
-import { handleApiRequest } from "@/lib/api/router";
+import type { ApiAuth } from "@/lib/api/auth";
+import { handleApiRequest, handleMcpPreauthenticatedApiRequest } from "@/lib/api/router";
 
 type RestMethod = "DELETE" | "GET" | "PATCH" | "POST";
 
@@ -21,8 +22,13 @@ function routePath(url: URL) {
     .map(decodeURIComponent);
 }
 
-export async function dispatchMcpRestCall(rest: RestCall, apiKey: string) {
-  const headers = new Headers({ authorization: `Bearer ${apiKey}` });
+export type McpApiAuthorization = string | ApiAuth;
+
+export async function dispatchMcpRestCall(rest: RestCall, authorization: McpApiAuthorization) {
+  const headers = new Headers();
+  if (typeof authorization === "string") {
+    headers.set("authorization", `Bearer ${authorization}`);
+  }
   let bodyInit: BodyInit | undefined;
   if (rest.body !== undefined) {
     headers.set("Content-Type", "application/json");
@@ -32,10 +38,12 @@ export async function dispatchMcpRestCall(rest: RestCall, apiKey: string) {
   if (rest.preferAsync) headers.set("Prefer", "respond-async");
   if (rest.projectId) headers.set("X-Bisibility-Project", rest.projectId);
   const url = new URL(`https://mcp.local/api/v1${rest.path}`);
-  const response = await handleApiRequest(
-    new Request(url, { body: bodyInit, headers, method: rest.method }),
-    routePath(url),
-  );
+  const request = new Request(url, { body: bodyInit, headers, method: rest.method });
+  const path = routePath(url);
+  const response =
+    typeof authorization === "string"
+      ? await handleApiRequest(request, path)
+      : await handleMcpPreauthenticatedApiRequest(request, path, { auth: authorization });
   const contentType = response.headers.get("content-type") ?? "";
   const payload = contentType.includes("json") ? await response.json() : await response.text();
   return { ok: response.ok, payload, status: response.status };

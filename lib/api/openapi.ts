@@ -1,3 +1,4 @@
+import { API_VERSION_HEADER } from "./api-versions";
 import { analyticsPaths } from "./openapi-analytics";
 import { apiKeyPaths } from "./openapi-api-keys";
 import { backlinksPaths, backlinksSchemas } from "./openapi-backlinks";
@@ -125,8 +126,7 @@ export function getOpenApiDocument() {
       },
     },
     info: {
-      description:
-        "Public REST API for Bisibility keyword rank tracking. Resource IDs use strict v3 prefixed public IDs and list cursors are version 3.",
+      description: `Public REST API for Bisibility keyword rank tracking. Clients may optionally declare v1 with the ${API_VERSION_HEADER} header. Resource IDs use strict v3 prefixed public IDs and list cursors are version 3.`,
       title: "Bisibility Public API",
       version: "1.0.0",
     },

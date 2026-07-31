@@ -49,7 +49,7 @@ function request() {
       notification_preferences: [],
       project_id: "prj_bbcdefghijklmnopqrstuvwx",
       saved_views: [],
-      version: 5,
+      version: 6,
     }),
     headers: {
       authorization: `Bearer ${rawToken}`,

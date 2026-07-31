@@ -197,6 +197,7 @@ export async function prepareQueuedRankCheckBatch(
           estimatedCostCents: deferredReason ? null : estimate,
           finishedAt: deferredReason ? now : null,
           keywordId: keyword.id,
+          normalizationVersion: null,
           previousPosition: keyword.rankChecks[0]?.position ?? null,
           provider: "dataforseo",
           publicId,

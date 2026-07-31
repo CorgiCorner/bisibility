@@ -1,10 +1,12 @@
 "use server";
 
-import { whereExecutedChecks } from "@/lib/checks/status";
+import { whereCompletedChecks } from "@/lib/checks/status";
 import { prisma } from "@/lib/db/prisma";
 import { parsePublicId, requirePublicId } from "@/lib/db/public-id";
 import { auditCloudPackageExport } from "@/lib/keywords/export-audit";
 import { exportSectionsChunk } from "@/lib/migration/export-chunks";
+import { CLOUD_MIGRATION_PACKAGE_VERSION } from "@/lib/migration/package-version";
+import { requireRankNormalizationVersion } from "@/lib/rank-check/normalization-version";
 import { z } from "zod";
 import { getActionActor, parseActionInput, requireProjectScope } from "./_shared";
 import { assertCloudImportPackageLimits } from "./keyword-export-limits";
@@ -18,7 +20,7 @@ const inputSchema = z.object({
 async function loadKeywords(projectId: string) {
   return prisma.keyword.findMany({
     include: {
-      rankChecks: { orderBy: { checkedAt: "desc" }, where: whereExecutedChecks() },
+      rankChecks: { orderBy: { checkedAt: "desc" }, where: whereCompletedChecks() },
       tags: { include: { tag: true } },
     },
     orderBy: { createdAt: "desc" },
@@ -34,9 +36,12 @@ function packageKeywords(keywords: Awaited<ReturnType<typeof loadKeywords>>) {
     location: keyword.location,
     rankingHistory: keyword.rankChecks.map((check) => ({
       checkedAt: check.checkedAt.toISOString(),
+      normalizationVersion: requireRankNormalizationVersion(check.normalizationVersion),
       position: check.position,
       previousPosition: check.previousPosition,
+      provider: check.provider,
       rankingUrl: check.rankingUrl,
+      requestedDepth: check.requestedDepth,
     })),
     tags: keyword.tags.map((item) => item.tag.name),
     target_url: keyword.targetUrl,
@@ -82,7 +87,7 @@ export async function exportCloudImportPackage(input: unknown) {
     project_id: projectId,
     saved_views: sections.saved_views,
     scope: "history",
-    version: 5,
+    version: CLOUD_MIGRATION_PACKAGE_VERSION,
   };
   const content = JSON.stringify(packagePayload, null, 2);
   await auditCloudPackageExport(actor.id, scoped.id, projectId, keywords.length);

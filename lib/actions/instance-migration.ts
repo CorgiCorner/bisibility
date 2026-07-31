@@ -5,13 +5,14 @@ import { getActionActor, parseActionInput, requireProjectScope } from "@/lib/act
 import { type ActionResult, actionFailureResult, destinationRejectionFailure } from "@/lib/actions/action-result";
 import { resolveMigrationTargetActionResult } from "@/lib/actions/migration-target";
 import { importChunkChecksum } from "@/lib/api/instance-import/session-schemas";
-import { whereExecutedChecks } from "@/lib/checks/status";
+import { whereCompletedChecks } from "@/lib/checks/status";
 import { prisma } from "@/lib/db/prisma";
 import { parsePublicId, requirePublicId } from "@/lib/db/public-id";
 // biome-ignore format: compact imports keep this action module under the file line cap.
 import { countKeywordChunks, exportKeywordChunk, exportSectionsChunk } from "@/lib/migration/export-chunks";
 // biome-ignore format: compact imports keep this action module under the file line cap.
 import { assertPushMigrationKeywordLimit, CHUNK_MAX_HISTORY_ROWS, CHUNK_TARGET_KEYWORDS, shouldUseSessions } from "@/lib/migration/limits";
+import { CLOUD_MIGRATION_PACKAGE_VERSION } from "@/lib/migration/package-version";
 import { migrationFetch } from "@/lib/migration/transfer-client";
 import { absoluteSiteUrl } from "@/lib/seo/jsonld";
 import { z } from "zod";
@@ -157,7 +158,7 @@ export async function planChunkedTransfer(input: unknown) {
   const [totalKeywords, totalRankChecks] = await Promise.all([
     prisma.keyword.count({ where: { projectId: project.id } }),
     prisma.rankCheck.count({
-      where: { keyword: { projectId: project.id }, ...whereExecutedChecks() },
+      where: { keyword: { projectId: project.id }, ...whereCompletedChecks() },
     }),
   ]);
   assertPushMigrationKeywordLimit(totalKeywords);
@@ -187,7 +188,7 @@ export async function createRemoteImportSession(input: unknown): Promise<CreateS
       chunk_count: data.chunkCount,
       source_project_id: requirePublicId(project.publicId, "prj"),
       totals: { keywords: data.totals.keywords, rank_checks: data.totals.rankChecks },
-      version: 5,
+      version: CLOUD_MIGRATION_PACKAGE_VERSION,
     }),
     cache: "no-store",
     headers: authHeaders(data.token),

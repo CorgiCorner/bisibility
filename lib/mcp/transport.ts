@@ -1,26 +1,14 @@
 import "server-only";
 
-import { ApiAuthError, authenticateBearer } from "@/lib/api/auth";
+import { type ApiAuth, ApiAuthError, authenticateBearer } from "@/lib/api/auth";
 import { checkRateLimit, rateLimitExceeded } from "@/lib/api/ratelimit";
 import { errorResponse, methodNotAllowed } from "@/lib/api/responses";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
+import { authenticateMcpOAuthRequest, isApiCredential, requireBearerToken } from "./oauth-auth";
+import type { McpApiAuthorization } from "./rest-call";
 import { createBisibilityMcpServer } from "./server";
 
 const methods = ["DELETE", "GET", "POST"] as const;
-
-function bearerToken(req: Request) {
-  const header = req.headers.get("authorization");
-  if (!header) {
-    throw new ApiAuthError("A bearer API key is required.");
-  }
-
-  const [scheme, token, extra] = header.trim().split(/\s+/);
-  if (scheme?.toLowerCase() !== "bearer" || !token || extra) {
-    throw new ApiAuthError("A bearer API key is required.");
-  }
-
-  return token;
-}
 
 function instance(req: Request) {
   return `urn:bisibility:mcp:${new URL(req.url).pathname}`;
@@ -37,8 +25,25 @@ function hasInvalidOrigin(req: Request) {
 }
 
 async function authenticateMcpRequest(req: Request) {
-  const apiKey = bearerToken(req);
-  const auth = await authenticateBearer(req);
+  let credential: string | null = null;
+  try {
+    credential = requireBearerToken(req);
+  } catch {
+    // The OAuth path returns the standards-based discovery challenge.
+  }
+
+  let auth: ApiAuth;
+  let authorization: McpApiAuthorization;
+  if (credential && isApiCredential(credential)) {
+    auth = await authenticateBearer(req);
+    authorization = credential;
+  } else {
+    const oauth = await authenticateMcpOAuthRequest(req);
+    if ("response" in oauth) return oauth;
+    auth = oauth.auth;
+    authorization = oauth.auth;
+  }
+
   const identity =
     auth.kind === "personal_token"
       ? ({ id: auth.token.id, kind: "personal-token" } as const)
@@ -48,7 +53,7 @@ async function authenticateMcpRequest(req: Request) {
     return { response: rateLimitExceeded(limit) };
   }
 
-  return { apiKey };
+  return { authorization };
 }
 
 export async function handleMcpHttpRequest(req: Request) {
@@ -75,7 +80,9 @@ export async function handleMcpHttpRequest(req: Request) {
     return auth.response;
   }
 
-  const server = createBisibilityMcpServer({ apiKey: auth.apiKey });
+  const server = createBisibilityMcpServer({
+    authorization: auth.authorization,
+  });
   const transport = new WebStandardStreamableHTTPServerTransport({
     enableJsonResponse: true,
     sessionIdGenerator: undefined,

@@ -38,9 +38,11 @@ vi.mock("./keyword-traffic", () => ({
 const rankCheckSelect = {
   checkedAt: true,
   id: true,
+  normalizationVersion: true,
   position: true,
   previousPosition: true,
   rankingUrl: true,
+  requestedDepth: true,
   status: true,
 };
 const noMetrics = (overrides: Partial<Metrics> = {}): Metrics => ({
@@ -55,9 +57,11 @@ function rankCheck(overrides: Record<string, unknown> = {}) {
   return {
     checkedAt: new Date("2026-06-20T08:00:00.000Z"),
     id: "check_1",
+    normalizationVersion: "v2",
     position: 7,
     previousPosition: null,
     rankingUrl: "https://example.com/old",
+    requestedDepth: 100,
     status: "completed",
     ...overrides,
   };

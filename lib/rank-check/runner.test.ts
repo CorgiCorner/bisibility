@@ -431,12 +431,14 @@ describe("persistRankCheck", () => {
         projectId: "project_1",
       },
       {
+        comparisonAllowed: true,
         rankCheck: {
           billingUnits: 4,
           checkedAt,
           costCents: 0,
           estimatedCostCents: 5,
           keywordId: "keyword_1",
+          normalizationVersion: "v1",
           organicRanks: [{ domain: "rankzly.io", position: 1 }],
           position: 4,
           previousPosition: 8,
@@ -465,7 +467,7 @@ describe("persistRankCheck", () => {
       "keyword_1",
       { position: 8, raw: previousRaw },
       expect.objectContaining({ position: 4, rankCheckId: "rank_1", raw }),
-      { deliveryMode: "immediate" },
+      { comparisonAllowed: true, deliveryMode: "immediate" },
     );
     expect(mocks.prisma.providerConnection.update).toHaveBeenCalledWith({
       data: { lastUsedAt: checkedAt },

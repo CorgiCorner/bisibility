@@ -90,6 +90,7 @@ describe("rank-check persistence update path", () => {
         projectId: "project_1",
       },
       {
+        comparisonAllowed: true,
         providerCostCents: 0.04,
         rankCheck: {
           billingUnits: 4,
@@ -97,6 +98,7 @@ describe("rank-check persistence update path", () => {
           costCents: 0.06,
           estimatedCostCents: null,
           keywordId: "keyword_1",
+          normalizationVersion: "v1",
           organicRanks: null,
           position: 4,
           previousPosition: 8,
@@ -216,12 +218,14 @@ describe("rank-check persistence update path", () => {
         projectId: "project_1",
       },
       {
+        comparisonAllowed: true,
         rankCheck: {
           billingUnits: null,
           checkedAt,
           costCents: 0.06,
           estimatedCostCents: null,
           keywordId: "keyword_1",
+          normalizationVersion: "v1",
           organicRanks: null,
           position: 4,
           previousPosition: 4,
@@ -279,12 +283,14 @@ describe("rank-check persistence update path", () => {
         projectId: "project_1",
       },
       {
+        comparisonAllowed: true,
         rankCheck: {
           billingUnits: null,
           checkedAt,
           costCents: 0.06,
           estimatedCostCents: null,
           keywordId: "keyword_1",
+          normalizationVersion: "v1",
           organicRanks: null,
           position: 4,
           previousPosition: 8,
@@ -316,12 +322,14 @@ describe("rank-check persistence update path", () => {
         projectId: "project_1",
       },
       {
+        comparisonAllowed: true,
         rankCheck: {
           billingUnits: null,
           checkedAt,
           costCents: 0,
           estimatedCostCents: null,
           keywordId: "keyword_1",
+          normalizationVersion: "v1",
           organicRanks: null,
           position: 4,
           previousPosition: 8,
@@ -356,12 +364,14 @@ describe("rank-check persistence update path", () => {
           projectId: "project_1",
         },
         {
+          comparisonAllowed: true,
           rankCheck: {
             billingUnits: null,
             checkedAt,
             costCents: 0.06,
             estimatedCostCents: null,
             keywordId: "keyword_1",
+            normalizationVersion: "v1",
             organicRanks: null,
             position: 4,
             previousPosition: 8,
@@ -392,12 +402,14 @@ describe("rank-check persistence update path", () => {
         projectId: "project_1",
       },
       {
+        comparisonAllowed: true,
         rankCheck: {
           billingUnits: null,
           checkedAt,
           costCents: 0.06,
           estimatedCostCents: null,
           keywordId: "keyword_1",
+          normalizationVersion: "v1",
           organicRanks: null,
           position: 4,
           previousPosition: 4,
@@ -436,12 +448,14 @@ describe("rank-check persistence update path", () => {
         projectId: "project_1",
       },
       {
+        comparisonAllowed: true,
         rankCheck: {
           billingUnits: null,
           checkedAt,
           costCents: 0.06,
           estimatedCostCents: null,
           keywordId: "keyword_1",
+          normalizationVersion: "v1",
           organicRanks: null,
           position: 4,
           previousPosition: 8,
@@ -458,7 +472,7 @@ describe("rank-check persistence update path", () => {
       "keyword_1",
       expect.any(Object),
       expect.any(Object),
-      { deliveryMode },
+      { comparisonAllowed: true, deliveryMode },
     );
   });
 
@@ -606,12 +620,14 @@ describe("rank-check persistence update path", () => {
           projectId: "project_1",
         },
         {
+          comparisonAllowed: true,
           rankCheck: {
             billingUnits: null,
             checkedAt,
             costCents: 0,
             estimatedCostCents: null,
             keywordId: "keyword_1",
+            normalizationVersion: "v1",
             organicRanks: null,
             position: 4,
             previousPosition: null,

@@ -51,6 +51,19 @@ Response status is `201` when the check completes during the request.
 fallback providers are tried first, it is an array of `{ "provider", "message" }`
 objects for the failed attempts.
 
+## Position semantics
+
+`position` is the 1-based position of the best matching organic result within
+the requested depth. Ads, featured snippets, local packs, and other SERP
+features do not change that value. `ranking_url` preserves the URL reported by
+the provider; bisibility does not replace it after resolving redirects or
+canonicals.
+
+`position: null` is a valid ranking observation only when a completed check
+found no matching organic result within the requested depth. A malformed
+provider payload fails the provider attempt and can use the configured fallback
+chain; it is not stored as a completed no-match.
+
 ## Run asynchronously
 
 Add `?async=true` to hand the check to the Temporal worker and poll the returned

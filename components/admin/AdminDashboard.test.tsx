@@ -101,6 +101,7 @@ const baseData = {
     heartbeatState: "fresh",
     lastSeenAt: "2026-07-17T12:00:00.000Z",
     release: "worker-image-sha",
+    revision: "worker-public-revision",
     schedulerMode: "legacy",
     schemaComparison: "ok",
     status: "ok",

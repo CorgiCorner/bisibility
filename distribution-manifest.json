@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 2,
+  "release": "v0.2.1",
+  "source": {
+    "repository": "https://github.com/CorgiCorner/bisibility",
+    "tag": "v0.2.1"
+  },
+  "images": {
+    "web": "ghcr.io/corgicorner/bisibility:0.2.1",
+    "worker": "ghcr.io/corgicorner/bisibility-worker:0.2.1"
+  },
+  "artifacts": {
+    "compose": {
+      "name": "docker-compose.self-host.yml",
+      "sha256": "0ff75d8f903919183e6e2b6fbf3475d8e950e2a0511d7d03d65a8ba5e4ceb7d6"
+    },
+    "environment": {
+      "name": "bisibility.env.example",
+      "sha256": "8502fcc74264d156fc8eeb55061139fc7fa560eb84f9bc5048a731dddeaae3f0"
+    },
+    "generator": {
+      "name": "generate-self-host-env.mjs",
+      "sha256": "7b3c3832c3a36c36671e23586ddd2c2d6e825ee1ceaa27e010b78a733927b7ac"
+    }
+  }
+}

@@ -19,6 +19,7 @@
             "pages": [
               "index",
               "quickstart",
+              "cli",
               "self-hosting",
               "architecture",
               "integrations",
@@ -81,9 +82,11 @@
               "GET /capabilities",
               "GET /cost-estimate",
               "GET /health",
+              "GET /liveness",
               "GET /llms.txt",
               "GET /openapi.json",
-              "GET /provider-rates"
+              "GET /provider-rates",
+              "GET /readiness"
             ]
           },
           {

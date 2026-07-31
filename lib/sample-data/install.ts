@@ -9,6 +9,7 @@ import {
   Role,
 } from "@/lib/generated/prisma/client";
 import { seedKeywordDispatchStates } from "@/lib/rank-check/dispatcher-state";
+import { CURRENT_RANK_NORMALIZATION_VERSION } from "@/lib/rank-check/normalization-version";
 import type { SampleSignalFixture } from "./fixture-types";
 import { buildSampleDataset } from "./fixtures";
 import { makeSamplePublicId } from "./public-id";
@@ -146,6 +147,7 @@ async function installSampleDatasetInTransaction(
         estimatedCostCents: "0",
         degradedToCountry: false,
         keywordId,
+        normalizationVersion: CURRENT_RANK_NORMALIZATION_VERSION,
         organicRanks: [],
         position: check.position,
         previousPosition: check.previousPosition,

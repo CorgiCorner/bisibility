@@ -21,6 +21,7 @@ const mocks = vi.hoisted(() => ({
     rankCheck: {
       aggregate: vi.fn(),
       create: vi.fn(),
+      findFirst: vi.fn(),
       findUniqueOrThrow: vi.fn(),
       updateMany: vi.fn(),
     },
@@ -49,6 +50,7 @@ describe("runKeywordCheckWithFallback persistence", () => {
     mocks.prisma.providerCostEntry.aggregate.mockResolvedValue({ _sum: { costCents: 0 } });
     mocks.prisma.providerCostEntry.create.mockResolvedValue({ id: "cost_1" });
     mocks.prisma.providerConnectionRate.findMany.mockResolvedValue([]);
+    mocks.prisma.rankCheck.findFirst.mockResolvedValue(null);
     mocks.prisma.signal.create.mockImplementation(({ data }) =>
       Promise.resolve({ id: "signal_1", ...data }),
     );
@@ -100,13 +102,15 @@ describe("runKeywordCheckWithFallback persistence", () => {
       resolveProvider: () => primary,
     });
 
-    expect(mocks.prisma.keyword.findUnique).toHaveBeenCalledWith(
-      expect.objectContaining({
-        include: expect.objectContaining({
-          rankChecks: expect.objectContaining({ where: { status: "completed" } }),
-        }),
-      }),
-    );
+    expect(mocks.prisma.rankCheck.findFirst).toHaveBeenCalledWith({
+      orderBy: [{ checkedAt: "desc" }, { id: "desc" }],
+      where: {
+        keywordId: "keyword_1",
+        normalizationVersion: "v2",
+        requestedDepth: 20,
+        status: "completed",
+      },
+    });
     expect(mocks.prisma.rankCheck.create).not.toHaveBeenCalled();
     expect(mocks.prisma.rankCheck.updateMany).toHaveBeenCalledWith({
       data: expect.objectContaining({

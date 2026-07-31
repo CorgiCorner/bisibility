@@ -5,9 +5,13 @@ const mocks = vi.hoisted(() => ({
   bundledMigrationSummary: vi.fn(),
   get: vi.fn(),
   getRedisClient: vi.fn(),
+  revision: vi.fn(),
   set: vi.fn(),
 }));
 
+vi.mock("@/lib/deployment/runtime-env.generated", () => ({
+  getBakedAppRevision: mocks.revision,
+}));
 vi.mock("@/lib/db/migration-state", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/db/migration-state")>()),
   appliedMigrationSummary: mocks.appliedMigrationSummary,
@@ -28,6 +32,7 @@ describe("worker liveness", () => {
   beforeEach(() => {
     vi.unstubAllEnvs();
     vi.clearAllMocks();
+    mocks.revision.mockReturnValue("unknown");
     mocks.appliedMigrationSummary.mockResolvedValue({
       count: 2,
       latest: "20260724220000_instance_settings",
@@ -53,6 +58,7 @@ describe("worker liveness", () => {
       heartbeatState: "fresh",
       lastSeenAt: "2026-07-16T08:00:00.000Z",
       release: "unknown",
+      revision: "unknown",
       schedulerMode: "unknown",
       schemaComparison: "unknown",
       status: "ok",
@@ -62,6 +68,7 @@ describe("worker liveness", () => {
   it("round-trips the worker identity and migration state", async () => {
     const now = new Date("2026-07-16T08:00:00.000Z");
     let stored: string | null = null;
+    mocks.revision.mockReturnValue("worker-public-revision");
     vi.stubEnv("APP_VERSION", "worker-sha");
     vi.stubEnv("DEPLOYMENT_ENV", "production");
     vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", "cutover");
@@ -79,6 +86,7 @@ describe("worker liveness", () => {
       environment: "production",
       lastSeenAt: now.toISOString(),
       release: "worker-sha",
+      revision: "worker-public-revision",
       schedulerMode: "cutover",
       schemaComparison: "ok",
     });
@@ -90,6 +98,7 @@ describe("worker liveness", () => {
       heartbeatState: "fresh",
       lastSeenAt: now.toISOString(),
       release: "worker-sha",
+      revision: "worker-public-revision",
       schedulerMode: "cutover",
       schemaComparison: "ok",
       status: "ok",
@@ -113,6 +122,7 @@ describe("worker liveness", () => {
       heartbeatState: "fresh",
       lastSeenAt: "2026-07-16T08:00:00.000Z",
       release: "worker-image-sha",
+      revision: "unknown",
       schedulerMode: "unknown",
       schemaComparison: "unknown",
       status: "ok",

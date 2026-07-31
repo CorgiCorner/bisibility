@@ -20,8 +20,8 @@ later without changing the rank history already stored in PostgreSQL.
 
 | Goal | Start here | What it includes |
 | - | - | - |
-| Try a local demo | [Docker](#docker) | Web app, PostgreSQL, Redis or Valkey, and demo data. |
-| Run a production Compose stack | [Docker](#docker) | The same core services with your own secrets and provider account. |
+| Try a local demo | [Local demo](#local-demo) | The Compose stack with a fixed sign-in code and seeded sample data. Insecure by design, and no SERP provider, so no real rank data. |
+| Run a production Compose stack | [Production Compose](#production-compose) | Versioned release assets with pull-only images, generated secrets, your public URL, and a SERP provider you connect. Starts empty. |
 | Add scheduled checks | [Docker scheduled profile](#docker) | Temporal Server, Temporal Web UI, and the worker. |
 | Deploy web and worker separately | [Production topology](#production-topology) | Independent web and worker processes that share PostgreSQL, Redis, and Temporal. |
 | Use a hosting platform | [Railway](#railway), [Fly.io](#flyio), or [Vercel](#vercel) | Platform-specific steps and limits. |
@@ -39,6 +39,26 @@ later without changing the rank history already stored in PostgreSQL.
 The platform links below create only part of the final setup. Review every
 generated resource, set secrets, and confirm migrations before serving
 production traffic.
+
+## Production checklist
+
+This applies to every deployment path on this page, not only Docker. Work
+through it before the instance serves anyone other than you. Each row links to
+the section that explains the setting in full.
+
+| Check | Why it matters | Details |
+| - | - | - |
+| `BETTER_AUTH_SECRET` and `BISIBILITY_SECRETS_KEY` generated and backed up | Replacing them later signs out every user and leaves stored provider credentials undecryptable | [Required environment variables](#required-environment-variables) |
+| `SITE_URL` and `BETTER_AUTH_URL` point at the public origin | Both are blank and fail before Compose starts; incorrect origins break OAuth redirects and auth callbacks | [Required environment variables](#required-environment-variables) |
+| `DEPLOYMENT_ENV` set to `production` | The public template ships the production value and has no development fallback | [Operations](/guides/operations) |
+| `DEMO_FIXED_OTP` and `DEMO_INSTANCE_INSECURE_AUTH_ACK` unset | Together they accept a fixed sign-in code from anyone who reaches the app | [Optional environment variables](#optional-environment-variables) |
+| Email provider configured | Without one, nobody can receive a sign-in code | [Email delivery](/guides/email) |
+| `BISIBILITY_CLIENT_IP_HEADER` set when a proxy or CDN is in front | Without it, anonymous API callers share one rate-limit bucket and audit entries record no source IP | [Client IP behind a proxy](#client-ip-behind-a-proxy) |
+| `SELF_HOSTED_ALLOW_INDEXING` reviewed | Fails closed to a restrictive policy; set `true` only if the instance should appear in search results | [Optional environment variables](#optional-environment-variables) |
+| SERP provider connected and its monthly budget capped | No provider means no real rank data, and no cap means no spend ceiling | [Integrations](/integrations) |
+| PostgreSQL backups running and a restore tested | Every upgrade and migration path assumes you can roll back | [Upgrade with a distribution manifest](#upgrade-with-a-distribution-manifest) |
+| Web app and worker pinned to the same release | Version skew fails the worker schema guard and can corrupt a cutover | [Production topology](#production-topology) |
+| `LEGAL_TERMS_URL` and `LEGAL_PRIVACY_URL` set if you need a consent line | The sign-in consent line stays hidden until at least one of them points at your document | [Required environment variables](#required-environment-variables) |
 
 ## Production topology
 
@@ -113,43 +133,184 @@ backups, and monitoring to your operational responsibilities.
 
 ## Docker
 
-```bash
-git clone https://github.com/CorgiCorner/bisibility.git bisibility
-cd bisibility
-./scripts/dev/bootstrap-local.sh
-docker compose up --build
-```
+There are two Docker paths. The local demo builds from a repository checkout.
+Production Compose downloads immutable release assets and pulls published
+images, so the repository does not need to be present on the server.
 
-Open `http://localhost:3000` and sign in with the
-[demo login](/quickstart#demo-login) enabled by the two `DEMO_*` variables
-above. For real deployments, remove both variables and configure an
-[email provider](/guides/email) instead.
+| Path | Sign-in | Starting data | Use it for |
+| - | - | - | - |
+| [Local demo](#local-demo) | Fixed code `000000`, no email provider needed | Seeded sample projects and rank history | Evaluating the app on a throwaway install |
+| [Production Compose](#production-compose) | One-time codes delivered by email | Empty until you connect a SERP provider | A production instance installed from release assets |
+
+<Warning>
+Do not convert a demo install into a production one by editing its `.env` in
+place. Demo mode writes a fixed sign-in code that anyone who knows it can use,
+and the seeded sample data stays in the database. Start production from a fresh
+`.env.example` and a fresh database.
+</Warning>
+
+### How the stack starts
+
+Both paths start the same application services. The production asset contains
+no `build:` entries; the local checkout keeps them for source development.
 
 The default Docker stack starts PostgreSQL, Redis/Valkey, a one-shot
 `db-migrations` service, and the web app. The migration service runs the fixed
 `npm run db:migrate` entrypoint, which applies the full Prisma migration tree
-and then any blocking data migrations. No separate operator migration job is
-required. The Node server, Temporal worker, and `/api/v1/health` require every blocking data
-migration to have a finished row with its exact manifest checksum. When
+and then any active deploy-blocking data migrations. No separate operator
+migration job is required. The Node server, Temporal worker, and
+`/api/v1/health` require every active migration to have a finished row with its
+exact manifest checksum. When
 `DEMO_FIXED_OTP=1`, the migration service also seeds demo data for the local
 dashboard.
 
-> **Known limitation:** `services.migrations: "ready"` answers whether blocking
-> data migrations have finished with their expected checksums and whether the
-> public ID database contract is ready. It does not report whether the Prisma
-> schema is current. Run `npx prisma migrate status` in the deployed application
-> environment to check schema currency. This is unchanged from 0.1.0 and is
-> scheduled to be addressed.
+Compose pulls the version-pinned web image from Docker Hub and uses it for both
+the migration job and app. The production asset pins the exact release and
+cannot build from a checkout. The repository Compose file retains
+`BISIBILITY_IMAGE`, `BISIBILITY_WORKER_IMAGE`, and `--build` for source testing.
+
+A migration is marked finished only after its data work and optional settlement
+both succeed. If settlement fails after the data work completed, run
+`npm run db:migrate` again. The durable ledger skips the completed data work and
+retries only settlement. Docker Compose keeps the app and worker stopped until
+the one-shot migration service exits successfully.
+
+`services.migrations: "ready"` requires every bundled Prisma migration to be
+applied, every active data migration to be finished with its expected checksum,
+and the public ID database contract to be ready. Run
+`npx prisma migrate status` in the deployed application environment for detailed
+Prisma status.
 
 This default mode supports manual rank checks. Scheduled checks require Temporal
 and the worker:
 
 ```bash
-docker compose --profile scheduled up --build
+docker compose --profile scheduled up -d
 ```
 
-That profile adds a Temporal server, Temporal Web UI on `http://localhost:8233`,
-and the worker built from `Dockerfile.worker`.
+That profile adds Temporal Server 1.31.2, Temporal Web UI on
+`http://localhost:8233`, and the version-pinned worker image from Docker Hub.
+An idempotent Admin Tools job creates or upgrades both Temporal schemas and the
+namespace before the worker starts. Set
+`BISIBILITY_WORKER_IMAGE` to another complete image reference, or add `--build`
+to build the web and worker images from the checkout.
+
+Use `/api/v1/liveness` for process restart decisions and `/api/v1/readiness` for
+traffic admission. The compatibility `/api/v1/health` endpoint remains the full
+diagnostic report and can return `503` for worker or Temporal failures that do
+not stop the web process from serving reads. The optional `APP_REVISION`
+source-build argument bakes the public checkout commit into both app and worker
+reporting; omitting it reports `"unknown"`.
+
+### Local demo
+
+```bash
+git clone https://github.com/CorgiCorner/bisibility.git bisibility
+cd bisibility
+./scripts/dev/bootstrap-local.sh
+docker compose up -d
+```
+
+`bootstrap-local.sh` writes a new `.env` with generated secrets and sets
+`DEMO_FIXED_OTP=1` together with `DEMO_INSTANCE_INSECURE_AUTH_ACK=1`. Those two
+variables make sign-in accept a fixed code, show that code on the login screen,
+and tell the migration service to seed demo data so the dashboard is not empty.
+
+Open `http://localhost:3000` and sign in with `demo@acme.dev` and code `000000`,
+also described under [demo login](/quickstart#demo-login).
+
+The script refuses to run when `.env` already exists, so it cannot overwrite a
+configured install.
+
+<Warning>
+Demo mode is insecure by design: anyone who can reach the app can sign in. Keep
+it on a throwaway local install and never expose it on a public address.
+</Warning>
+
+The seeded rank history is synthetic and no SERP provider is connected, so rank
+checks return nothing real. Connect a provider from **Integrations** if you want
+to run a live check.
+
+### Production Compose
+
+Download the immutable assets for one exact release into an empty directory.
+Do not run `bootstrap-local.sh` - it exists to enable demo mode in a repository
+checkout.
+
+```bash
+mkdir bisibility && cd bisibility
+VERSION=v0.2.1
+BASE_URL="https://github.com/CorgiCorner/bisibility/releases/download/${VERSION}"
+curl -fLO "${BASE_URL}/docker-compose.self-host.yml"
+curl -fLO "${BASE_URL}/bisibility.env.example"
+curl -fLO "${BASE_URL}/generate-self-host-env.mjs"
+curl -fLO "${BASE_URL}/distribution-manifest.json"
+node generate-self-host-env.mjs --site-url https://rank.example.com
+chmod 600 .env
+```
+
+The generator refuses to overwrite an existing `.env`, creates independent
+cryptographic secrets for this installation, and sets both public origins and
+`DEPLOYMENT_ENV=production`. Replace `https://rank.example.com` with the final
+public origin, then review `.env`:
+
+1. **Secrets.** Back up `BETTER_AUTH_SECRET` and `BISIBILITY_SECRETS_KEY` before
+   starting. Replacing either later has destructive consequences; see
+   [Required environment variables](#required-environment-variables).
+2. **Public URL.** Confirm `SITE_URL` and `BETTER_AUTH_URL` are the final public
+   origin. The template leaves both blank and Compose fails before starting if
+   the generator has not filled them.
+3. **Deployment stage.** Keep `DEPLOYMENT_ENV=production`; see
+   [Operations](/guides/operations).
+4. **Email.** Set `EMAIL_PROVIDER` and `EMAIL_FROM` so sign-in
+   codes can be delivered. See [Email delivery](/guides/email).
+5. **Demo variables stay unset.** Leave `DEMO_FIXED_OTP` and
+   `DEMO_INSTANCE_INSECURE_AUTH_ACK` commented out. The production image
+   deliberately refuses a fixed OTP without the acknowledgement.
+6. **Client IP.** Add `BISIBILITY_CLIENT_IP_HEADER` if a proxy or CDN sits in
+   front of the app. See [Client IP behind a proxy](#client-ip-behind-a-proxy).
+
+Start the stack:
+
+```bash
+docker compose --env-file .env -f docker-compose.self-host.yml up -d
+```
+
+The database starts empty, so the first visit redirects to `/setup`, where you
+create the instance admin. See [Instance admin](#instance-admin) for what that
+flow covers. Then connect a SERP provider from **Integrations** before the first
+rank check.
+
+Work through the [production checklist](#production-checklist) before pointing
+real users at the instance.
+
+For scheduled checks, start the same versioned asset with its scheduled profile:
+
+```bash
+docker compose --env-file .env -f docker-compose.self-host.yml \
+  --profile scheduled up -d
+```
+
+The release manifest records SHA-256 hashes for the Compose, environment, and
+generator assets. The public release workflow verifies those bytes before
+publishing them.
+
+### Upgrade with a distribution manifest
+
+Releases after v0.2.0 include `distribution-manifest.json` and `upgrade.sh`.
+After backing up PostgreSQL and fetching the exact target tag, run:
+
+```bash
+./upgrade.sh --version vX.Y.Z
+```
+
+The script requires Docker with Buildx and Node.js. It verifies that the
+manifest names the requested public release, both canonical images are
+anonymously available for amd64 and arm64, and their public source revisions
+match. Only then does it pull the image pair, stop the old app and worker, apply
+migrations, and start the matched services. A missing image, unreadable
+manifest, invalid JSON, or metadata mismatch stops before the database is
+changed.
 
 ### Upgrade from v0.1.0 to v0.2.0
 
@@ -452,11 +613,11 @@ auth callbacks.
    ```
 
 5. The web manifest runs `npm run db:migrate` as a Fly release command. It
-   applies the full Prisma tree, runs blocking data migrations, and checks
+   applies the full Prisma tree, runs active deploy-blocking data migrations, and checks
    `/api/v1/health` before routing traffic.
    Fly runs this command in a temporary machine without attached volumes and
    stops the deployment on a nonzero exit. The manifest extends Fly's default
-   five-minute release-command timeout to 30 minutes for blocking migrations.
+   five-minute release-command timeout to 30 minutes for deploy-blocking migrations.
 6. Connect both apps to Temporal Cloud, or operate Temporal as
    separate Fly apps with persistent storage.
 
@@ -495,6 +656,23 @@ network-reachable Temporal Server.
 
 ## Temporal Server or Temporal Cloud
 
+The Temporal worker is not a Temporal server. It executes bisibility workflow
+code and needs a server to poll; see
+[the worker is not the Temporal server](/architecture#the-worker-is-not-the-temporal-server)
+for how the two relate.
+
+There are three ways to provide that server. The worker is identical in all
+three; only the connection settings change.
+
+| Option | How you get it | Suited to |
+| - | - | - |
+| Bundled with Compose | `docker compose --profile scheduled up -d` starts a Temporal server, its database, and the Temporal Web UI alongside the worker. No configuration. | Evaluation and small self-hosted instances |
+| Self-managed cluster | You run Temporal yourself and point `TEMPORAL_ADDRESS` at it. | Instances that outgrow the bundled server |
+| Temporal Cloud | Managed by Temporal. Set `TEMPORAL_ADDRESS` and `TEMPORAL_API_KEY`. | Per-service platforms such as Railway or Fly.io |
+
+On per-service platforms, Temporal Cloud removes three containers from the
+deployment and leaves the web app, the worker, and the databases.
+
 Set the same address, namespace, and task queue on the web app and worker.
 
 For a self-hosted plaintext Temporal Server on a private network:
@@ -518,6 +696,10 @@ TEMPORAL_API_KEY=your-api-key
 TLS-enabled self-hosted endpoint does not use an API key. Do not expose the API
 key through any `NEXT_PUBLIC_` variable.
 
+Self-hosted instances ship a restrictive `robots.txt` and no `sitemap.xml` or
+`llms.txt` because a self-hosted tracker is not a public website; set
+`SELF_HOSTED_ALLOW_INDEXING=true` to opt into indexing.
+
 ## Required environment variables
 
 | Variable | Required | Description |
@@ -525,7 +707,7 @@ key through any `NEXT_PUBLIC_` variable.
 | `DATABASE_URL` | Yes | Runtime PostgreSQL connection used by the app. |
 | `DIRECT_URL` | Yes | Direct PostgreSQL connection used by Prisma migrations. |
 | `REDIS_URL` | Yes | Redis or Valkey connection URL for rate limiting, idempotency, and realtime notifications. |
-| `SITE_URL` | Yes | Primary public app URL used for metadata, sitemap, robots.txt, generated images, OAuth redirects, and auth callbacks. |
+| `SITE_URL` | Yes | Primary public app URL used for metadata, generated images, OAuth redirects, and auth callbacks. |
 | `BETTER_AUTH_URL` | Yes | Public app URL used by authentication callbacks and cookies. |
 | `BETTER_AUTH_SECRET` | Yes | Secret used to sign auth state. |
 | `BISIBILITY_SECRETS_KEY` | Yes | Base64-encoded 32-byte key for encrypting provider credentials. |
@@ -535,7 +717,8 @@ key through any `NEXT_PUBLIC_` variable.
 
 Both legal variables are optional and empty by default. Your instance runs under
 your own terms and privacy policy, so the sign-in screen shows no consent line
-until you point these at your documents.
+while both are unset. Setting either one alone is enough to show the line, which
+then links only to the document you provided.
 
 Generate `BETTER_AUTH_SECRET` and `BISIBILITY_SECRETS_KEY` with:
 
@@ -557,6 +740,7 @@ hand.
 | - | - |
 | `DEMO_FIXED_OTP` | Set to `1` to enable the throwaway [demo login](/quickstart#demo-login) on local installs. |
 | `DEMO_INSTANCE_INSECURE_AUTH_ACK` | Required acknowledgement when `DEMO_FIXED_OTP=1` runs in the production Docker image. Never set it for real users or data. |
+| `SELF_HOSTED_ALLOW_INDEXING` | Set to `true` to serve `Allow: /` and omit `X-Robots-Tag: noindex`; `false` keeps the restrictive policy. Values are case-insensitive, and missing or malformed values fail closed to the restrictive policy. |
 | `EMAIL_PROVIDER` | Transactional email provider: `resend`, `ses`, or `smtp`. Required for any email delivery. Setup guide: [Email delivery](/guides/email). |
 | `EMAIL_FROM` | Verified sender for account sign-in and notification email. |
 | `EMAIL_ALERTS_FROM` | Optional dedicated sender for ranking alerts. Falls back to `EMAIL_FROM`. |

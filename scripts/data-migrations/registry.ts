@@ -1,3 +1,4 @@
-import type { DataMigrationDefinition } from "./types";
+import type { DataMigrationImplementation } from "./types";
 
-export const dataMigrationRegistry = [] as const satisfies readonly DataMigrationDefinition[];
+export const activeDataMigrationImplementations =
+  [] as const satisfies readonly DataMigrationImplementation[];

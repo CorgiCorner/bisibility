@@ -6,9 +6,11 @@ const now = new Date("2026-07-22T12:00:00.000Z");
 function check(daysAgo: number, position: number): Check {
   return {
     checkedAt: new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000),
+    normalizationVersion: "v2",
     position,
     previousPosition: null,
     rankingUrl: null,
+    requestedDepth: 100,
     status: "completed",
   };
 }

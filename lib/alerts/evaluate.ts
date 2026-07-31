@@ -25,6 +25,7 @@ export type AlertRankSnapshot = {
   checkedAt?: Date;
   competitorsAbove?: string[];
   ctrDropMetrics?: CtrDropMetrics | null;
+  normalizationVersion?: string | null;
   position: number | null;
   rankCheckId?: string | null;
   raw?: unknown;
@@ -154,8 +155,9 @@ export async function evaluateKeywordAlerts(
   keywordId: string,
   before: AlertRankSnapshot,
   after: AlertRankSnapshot,
-  options: { deliveryMode?: AlertDeliveryMode } = {},
+  options: { comparisonAllowed?: boolean; deliveryMode?: AlertDeliveryMode } = {},
 ) {
+  const comparisonAllowed = options.comparisonAllowed ?? true;
   const deliveryMode = options.deliveryMode ?? "immediate";
   const keyword = await prisma.keyword.findUnique({
     select: {
@@ -194,11 +196,13 @@ export async function evaluateKeywordAlerts(
   const targetRules = rules.filter((rule) => targetMatches(rule, keyword.id, tagIds));
   const currentCheck = {
     checkedAt: afterSnapshot.checkedAt,
+    normalizationVersion: afterSnapshot.normalizationVersion,
     position: afterSnapshot.position,
     rankCheckId: afterSnapshot.rankCheckId,
+    requestedDepth: afterSnapshot.requestedDepth,
   };
   const [recentChecks, ctrDropMetrics] = await Promise.all([
-    targetRules.some((rule) => rule.conditionType === "downtrend")
+    comparisonAllowed && targetRules.some((rule) => rule.conditionType === "downtrend")
       ? loadRecentCompletedChecks(keyword.id, currentCheck)
       : undefined,
     targetRules.some((rule) => rule.conditionType === "ctr_drop")
@@ -216,6 +220,13 @@ export async function evaluateKeywordAlerts(
   const triggered = [];
 
   for (const rule of targetRules) {
+    if (
+      !comparisonAllowed &&
+      rule.conditionType !== "ctr_drop" &&
+      rule.conditionType !== "url_mismatch"
+    ) {
+      continue;
+    }
     const depthConflict = alertDepthConflict(rule, hydratedAfterSnapshot.requestedDepth);
     if (depthConflict) {
       await emitDepthConflictSignal({

@@ -39,6 +39,7 @@ vi.mock("./keyword-traffic", () => ({
 const rankCheckSelect = {
   checkedAt: true,
   id: true,
+  normalizationVersion: true,
   position: true,
   previousPosition: true,
   rankingUrl: true,
@@ -63,9 +64,11 @@ function rankCheck(overrides: Record<string, unknown> = {}) {
   return {
     checkedAt: new Date("2026-06-20T08:00:00.000Z"),
     id: "check_1",
+    normalizationVersion: "v2",
     position: 7,
     previousPosition: null,
     rankingUrl: "https://example.com/old",
+    requestedDepth: 100,
     status: "completed",
     ...overrides,
   };
@@ -277,6 +280,35 @@ describe("keyword detail query", () => {
       bestPosition: 2,
       position: 4,
     });
+    expect(mocks.prisma.rankCheck.aggregate).toHaveBeenCalledWith({
+      _min: { position: true },
+      where: {
+        keywordId: "keyword_1",
+        normalizationVersion: "v2",
+        position: { not: null },
+        requestedDepth: 100,
+        status: "completed",
+      },
+    });
+  });
+
+  it("does not aggregate best position when the current completed check is incomparable", async () => {
+    mocks.prisma.keyword.findFirst.mockResolvedValue(
+      keyword({
+        rankChecks: [
+          rankCheck({
+            normalizationVersion: null,
+          }),
+        ],
+      }),
+    );
+
+    await expect(
+      getKeywordDetail("prj_a00000000000000000000000", "kw_d00000000000000000000000"),
+    ).resolves.toMatchObject({
+      bestPosition: null,
+    });
+    expect(mocks.prisma.rankCheck.aggregate).not.toHaveBeenCalled();
   });
 
   it("exposes keyword traffic detail data", async () => {

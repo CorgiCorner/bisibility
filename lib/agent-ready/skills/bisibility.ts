@@ -49,8 +49,11 @@ Fetch these to learn what a given instance supports before routing:
 ## Orientation calls
 
 \`\`\`bash
-# Liveness (getHealth) - no auth needed on most instances
-curl -s https://eu.bisibility.com/api/v1/health
+# Liveness (getLiveness) - no auth needed on most instances
+curl -s https://eu.bisibility.com/api/v1/liveness
+
+# Traffic readiness (getReadiness)
+curl -s https://eu.bisibility.com/api/v1/readiness
 
 # What this instance can do (getCapabilities)
 curl -s https://eu.bisibility.com/api/v1/capabilities \\
@@ -112,7 +115,9 @@ Origin is either \`https://bisibility.com\` (hosted) or
 
 | METHOD path | operationId | Notes |
 |-|-|-|
-| GET /health | getHealth | Liveness; usually unauthenticated |
+| GET /liveness | getLiveness | Web process liveness; usually unauthenticated |
+| GET /readiness | getReadiness | Database and blocking-migration readiness |
+| GET /health | getHealth | Composite diagnostics, including worker and Temporal |
 | GET /capabilities | getCapabilities | Feature/limit discovery |
 | GET /projects | listProjects | Find your \`project_id\` |
 

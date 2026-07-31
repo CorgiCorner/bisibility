@@ -150,11 +150,14 @@ export async function importHistory(
           checkedAt: check.checkedAt,
           degradedToCountry: false,
           keywordId,
+          normalizationVersion: check.normalizationVersion,
           position: check.position ?? null,
           previousPosition: check.previousPosition ?? null,
-          provider: "self-hosted-import",
+          provider: check.provider,
           publicId: makePublicId("check"),
           rankingUrl: check.rankingUrl ?? null,
+          requestedDepth: check.requestedDepth,
+          status: "completed",
           viaFallback: false,
         }))
       : [];

@@ -15,6 +15,7 @@ import { errorResponse, resourceResponse } from "@/lib/api/responses";
 import { ProjectReadOnlyError } from "@/lib/deployment/project-write-mode";
 import {
   IMPORT_PACKAGE_MAX_BODY_BYTES,
+  IMPORT_PACKAGE_MAX_KEYWORDS,
   keywordLimitDetail,
   payloadLimitDetail,
 } from "@/lib/migration/package-limits";
@@ -47,7 +48,7 @@ function validationError(req: Request, error: z.ZodError, input: unknown, header
     (issue) => issue.code === "too_big" && issue.path.length === 1 && issue.path[0] === "keywords",
   );
   const detail =
-    keywordLimitIssue && keywordCount !== null
+    keywordCount !== null && (keywordCount > IMPORT_PACKAGE_MAX_KEYWORDS || keywordLimitIssue)
       ? keywordLimitDetail(keywordCount)
       : "Request input failed validation.";
   return errorResponse("validation_failed", detail, 400, {

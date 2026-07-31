@@ -19,7 +19,7 @@ const realFileSystem: BoundaryFileSystem = {
   read: (path) => readFile(path, "utf8"),
 };
 
-export async function validateDataMigrationBoundaries(
+export async function lintDataMigrationReleaseBoundaries(
   root: string,
   manifest: readonly DataMigrationManifestEntry[],
   fileSystem: BoundaryFileSystem = realFileSystem,
@@ -27,24 +27,24 @@ export async function validateDataMigrationBoundaries(
   for (const entry of manifest) {
     if (
       !(
-        entry.requiresSchemaThrough < entry.id &&
-        entry.id < entry.blocksSchemaMigration
+        entry.prerequisiteSchemaMigrationId < entry.id &&
+        entry.id < entry.contractMigrationId
       )
     ) {
       throw new Error(
-        `Data migration ${entry.id} must be ordered after ${entry.requiresSchemaThrough} and before ${entry.blocksSchemaMigration}.`,
+        `Data migration ${entry.id} must be ordered after ${entry.prerequisiteSchemaMigrationId} and before ${entry.contractMigrationId}.`,
       );
     }
     const prerequisite = join(
       root,
       "prisma",
       "migrations",
-      entry.requiresSchemaThrough,
+      entry.prerequisiteSchemaMigrationId,
       "migration.sql",
     );
     if (!(await fileSystem.exists(prerequisite))) {
       throw new Error(
-        `Data migration ${entry.id} requires missing schema migration ${entry.requiresSchemaThrough}.`,
+        `Data migration ${entry.id} requires missing schema migration ${entry.prerequisiteSchemaMigrationId}.`,
       );
     }
 
@@ -52,21 +52,21 @@ export async function validateDataMigrationBoundaries(
       root,
       "prisma",
       "migrations",
-      entry.blocksSchemaMigration,
+      entry.contractMigrationId,
       "migration.sql",
     );
     const contractExists = await fileSystem.exists(contract);
-    if (entry.contractState === "pending") {
+    if (entry.lifecycle === "active") {
       if (contractExists) {
         throw new Error(
-          `Pending data migration ${entry.id} must not ship blocking schema migration ${entry.blocksSchemaMigration}.`,
+          `Active data migration ${entry.id} must not ship contract schema migration ${entry.contractMigrationId}.`,
         );
       }
       continue;
     }
     if (!contractExists) {
       throw new Error(
-        `Enforced data migration ${entry.id} requires schema migration ${entry.blocksSchemaMigration}.`,
+        `Enforced data migration ${entry.id} requires schema migration ${entry.contractMigrationId}.`,
       );
     }
     const sql = await fileSystem.read(contract);
@@ -77,7 +77,7 @@ export async function validateDataMigrationBoundaries(
     ]) {
       if (!sql.includes(requirement)) {
         throw new Error(
-          `Schema migration ${entry.blocksSchemaMigration} is missing self-guard requirement: ${requirement}.`,
+          `Schema migration ${entry.contractMigrationId} is missing self-guard lint marker: ${requirement}.`,
         );
       }
     }

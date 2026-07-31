@@ -19,6 +19,7 @@ export type ApiErrorCode =
   | "self_import"
   | "snapshot_expired"
   | "unauthorized"
+  | "unsupported_api_version"
   | "unsupported_target"
   | "unsupported_location"
   | "validation_failed";
@@ -69,6 +70,7 @@ const errorTitles = {
   self_import: "Self import blocked",
   snapshot_expired: "Snapshot expired",
   unauthorized: "Unauthorized",
+  unsupported_api_version: "Unsupported API version",
   unsupported_target: "Unsupported target",
   unsupported_location: "Unsupported location",
   validation_failed: "Validation failed",
@@ -132,4 +134,8 @@ export function methodNotAllowed(methods: readonly string[], init: ApiResponseIn
   headers.set("Allow", methods.join(", "));
 
   return errorResponse("method_not_allowed", "Method not allowed.", 405, { headers });
+}
+
+export function routeNotFound(init: ApiResponseInit = {}) {
+  return errorResponse("not_found", "Route not found.", 404, init);
 }

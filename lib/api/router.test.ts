@@ -239,8 +239,8 @@ function rawAuthedRequest(method: string, path: string, body: string, headers: H
   });
 }
 
-function anonRequest(path: string) {
-  return new Request(`https://example.test/api/v1${path}`, { method: "GET" });
+function anonRequest(path: string, headers: HeadersInit = {}) {
+  return new Request(`https://example.test/api/v1${path}`, { headers, method: "GET" });
 }
 
 async function call(req: Request, path: string) {
@@ -1319,15 +1319,18 @@ describe("public API router", () => {
     await expect(response.json()).resolves.toMatchObject({ title: "Not found" });
   });
 
-  it("serves openapi and capabilities without API-key auth", async () => {
+  it("keeps undeclared requests working without API-key auth", async () => {
     const openapi = await call(anonRequest("/openapi.json"), "/openapi.json");
     const capabilities = await call(anonRequest("/capabilities"), "/capabilities");
 
+    expect(openapi.status).toBe(200);
+    expect(capabilities.status).toBe(200);
     await expect(openapi.json()).resolves.toMatchObject({
       openapi: "3.1.0",
       paths: expect.objectContaining({ "/projects/{project_id}/keywords": expect.any(Object) }),
     });
     await expect(capabilities.json()).resolves.toMatchObject({
+      apiVersions: ["v1"],
       data: expect.arrayContaining([
         expect.objectContaining({
           input_schema: expect.objectContaining({
@@ -1341,6 +1344,36 @@ describe("public API router", () => {
           operationId: "addKeywords",
         }),
       ]),
+    });
+  });
+
+  it("accepts requests declaring a served API version", async () => {
+    const response = await call(
+      anonRequest("/capabilities", { "Bisibility-API-Version": "v1" }),
+      "/capabilities",
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({ apiVersions: ["v1"] });
+  });
+
+  it("returns an explicit version error for an unserved declared API version", async () => {
+    const response = await call(
+      anonRequest("/capabilities", { "Bisibility-API-Version": "v2" }),
+      "/capabilities",
+    );
+
+    expect(response.status).toBe(409);
+    expect(response.headers.get("content-type")).toContain("application/problem+json");
+    await expect(response.json()).resolves.toMatchObject({
+      detail: "The declared API version v2 is not served by this server.",
+      errors: {
+        apiVersions: ["v1"],
+        declaredApiVersion: "v2",
+      },
+      status: 409,
+      title: "Unsupported API version",
+      type: "https://bisibility.com/problems/unsupported_api_version",
     });
   });
 });

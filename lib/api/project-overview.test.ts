@@ -1,5 +1,6 @@
 import { computeNextCheckAt } from "@/lib/rank-check/schedule";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { API_VERSION_HEADER } from "./api-versions";
 import { handleApiRequest } from "./router";
 
 const mocks = vi.hoisted(() => ({
@@ -40,9 +41,11 @@ const now = new Date("2026-07-27T12:00:00.000Z");
 function rankCheck(position: number | null, previousPosition: number | null, checkedAt: Date) {
   return {
     checkedAt,
+    normalizationVersion: "v2",
     position,
     previousPosition,
     rankingUrl: position ? "/" : null,
+    requestedDepth: 100,
     status: "completed",
   };
 }
@@ -254,6 +257,7 @@ describe("project overview API", () => {
     expect(body.paths["/projects/{project_id}/overview"].get).toMatchObject({
       operationId: "getProjectOverview",
       parameters: [
+        expect.objectContaining({ name: API_VERSION_HEADER }),
         expect.objectContaining({
           name: "range",
           schema: { default: "28d", enum: ["7d", "28d", "90d"], type: "string" },

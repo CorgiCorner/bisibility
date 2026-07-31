@@ -1,9 +1,13 @@
+import { comparableCompletedWindow } from "@/lib/checks/status";
+
 type DateFormatter = { formatDate(date: Date): string };
 export type Check = {
   checkedAt: Date;
+  normalizationVersion: string | null;
   position: number | null;
   previousPosition: number | null;
   rankingUrl: string | null;
+  requestedDepth: number | null;
   status: string;
 };
 export type Keyword = {
@@ -31,7 +35,7 @@ function average(values: readonly number[]) {
 function dailyAverages(keywords: readonly Keyword[], start?: Date) {
   const groups = new Map<string, { date: Date; positions: number[] }>();
   for (const keyword of keywords) {
-    for (const check of keyword.rankChecks) {
+    for (const check of comparableCompletedWindow(keyword.rankChecks).checks) {
       const current = position(check.position);
       if (!current || check.status !== "completed" || (start && check.checkedAt < start)) continue;
       const key = check.checkedAt.toISOString().slice(0, 10);
@@ -72,8 +76,8 @@ function leadKeyword(
 ) {
   return keywords
     .flatMap((keyword) => {
-      const checks = keyword.rankChecks
-        .filter(
+      const checks = comparableCompletedWindow(keyword.rankChecks)
+        .checks.filter(
           (check) =>
             check.status === "completed" && check.checkedAt >= start && position(check.position),
         )

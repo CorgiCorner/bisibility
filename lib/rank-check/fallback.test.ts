@@ -40,7 +40,7 @@ const mocks = vi.hoisted(() => ({
     providerConnection: { findFirst: vi.fn(), findMany: vi.fn(), update: vi.fn() },
     providerConnectionRate: { findMany: vi.fn() },
     providerCostEntry: { create: vi.fn(), findMany: vi.fn() },
-    rankCheck: { create: vi.fn() },
+    rankCheck: { create: vi.fn(), findFirst: vi.fn() },
     signal: { create: vi.fn() },
   },
 }));
@@ -78,6 +78,7 @@ beforeEach(() => {
   mocks.prisma.providerConnectionRate.findMany.mockResolvedValue([]);
   mocks.prisma.$queryRaw.mockResolvedValue([]);
   mocks.prisma.providerCostEntry.create.mockResolvedValue({ id: "cost_1" });
+  mocks.prisma.rankCheck.findFirst.mockResolvedValue(null);
 });
 
 function provider(id: string, fetchRank: SerpProvider["fetchRank"]): SerpProvider {
@@ -720,6 +721,13 @@ describe("runKeywordCheckWithFallback", () => {
       },
     ]);
     mocks.prisma.providerConnection.findFirst.mockResolvedValue({ id: "connection_secondary" });
+    mocks.prisma.rankCheck.findFirst.mockResolvedValue({
+      normalizationVersion: "v2",
+      position: 8,
+      rankingUrl: "https://example.com/old",
+      raw: previousRaw,
+      requestedDepth: 100,
+    });
     mocks.prisma.rankCheck.create.mockImplementation(({ data }) =>
       Promise.resolve({ id: "rank_1", ...data }),
     );
@@ -738,8 +746,17 @@ describe("runKeywordCheckWithFallback", () => {
       "keyword_1",
       { position: 8, raw: previousRaw },
       expect.objectContaining({ rankCheckId: "rank_1" }),
-      { deliveryMode: "immediate" },
+      { comparisonAllowed: true, deliveryMode: "immediate" },
     );
+    expect(mocks.prisma.rankCheck.findFirst).toHaveBeenCalledWith({
+      orderBy: [{ checkedAt: "desc" }, { id: "desc" }],
+      where: {
+        keywordId: "keyword_1",
+        normalizationVersion: "v2",
+        requestedDepth: 100,
+        status: "completed",
+      },
+    });
     expect(mocks.prisma.providerConnection.update).toHaveBeenCalledWith({
       data: { lastUsedAt: new Date("2026-01-01T06:00:00.000Z") },
       where: { id: "connection_secondary" },

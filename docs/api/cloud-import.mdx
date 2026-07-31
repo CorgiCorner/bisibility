@@ -76,9 +76,9 @@ Response:
 
 ```json
 {
-  "schema_versions_supported": [5],
-  "app_version": "0.1.0",
-  "latest_migration": "20260708203000_project_write_mode_actor"
+  "schema_versions_supported": [6],
+  "app_version": "0.2.0",
+  "latest_migration": "20260730204200_rank_check_normalization_version"
 }
 ```
 
@@ -92,7 +92,7 @@ Post the export package directly to `/api/v1/cloud/import`:
 ```json
 {
   "exported_at": "2026-06-28T10:00:00.000Z",
-  "version": 4,
+  "version": 6,
   "project_id": "prj_abcdefghijklmnopqrstuvwx",
   "scope": "history",
   "keywords": [
@@ -103,7 +103,17 @@ Post the export package directly to `/api/v1/cloud/import`:
       "device": "desktop",
       "target_url": "https://example.com/rank-tracker",
       "tags": ["api"],
-      "rankingHistory": [{ "checkedAt": "2026-06-20T10:00:00.000Z", "position": 3 }]
+      "rankingHistory": [
+        {
+          "checkedAt": "2026-06-20T10:00:00.000Z",
+          "normalizationVersion": "v1",
+          "position": 3,
+          "previousPosition": 4,
+          "provider": "dataforseo",
+          "rankingUrl": "https://example.com/rank-tracker",
+          "requestedDepth": 100
+        }
+      ]
     }
   ],
   "alert_rules": [],
@@ -113,10 +123,11 @@ Post the export package directly to `/api/v1/cloud/import`:
 }
 ```
 
-The endpoint accepts only a direct v5 package. Version 5 accepts only snake-case
+The endpoint accepts direct v6 packages. Version 6 accepts only snake-case
 package fields, exact lowercase public IDs, and native JSON number and boolean
-types. It rejects wrapper objects, body tokens, unknown fields, and v1 through
-v4 packages.
+types. It rejects wrapper objects, body tokens, and unknown fields. A version 5
+package is accepted only when every `rankingHistory` array is empty; update and
+re-export any version 5 package that carries ranking history.
 
 Top-level fields:
 
@@ -151,15 +162,22 @@ History fields:
 | Field | Description |
 | - | - |
 | `checkedAt` | Required ISO-8601 timestamp. |
-| `position` | Integer position or `null`. |
-| `previousPosition` | Integer previous position or `null`. |
-| `rankingUrl` | Absolute URL, path, `null`, or omitted. |
+| `normalizationVersion` | Required normalization contract version, currently `v1`. |
+| `position` | Required integer position or `null`. |
+| `previousPosition` | Required integer previous position or `null`. |
+| `provider` | Required provider identifier captured by the source check. |
+| `rankingUrl` | Required absolute URL, path, or `null`. |
+| `requestedDepth` | Required requested SERP depth (`10`, `20`, `50`, `100`, or `null`). |
 
-Imported history rows use provider value `self-hosted-import`.
+Only successfully completed source checks are exported as ranking history.
+Failed, running, and deferred attempts are not ranking observations and are not
+included. Imported rows preserve their provider, depth, and normalization
+version.
 
 <Warning>
-  Version 4 carries history in each keyword's `rankingHistory` array. Top-level
-  `rank_checks` and text-based matching are not supported.
+  Version 5 history does not distinguish failed attempts from successful
+  no-match observations. Bisibility rejects it rather than importing ambiguous
+  ranking data. Update the source instance and create a version 6 export.
 </Warning>
 
 Success returns `201`.
@@ -178,7 +196,7 @@ Success returns `201`.
 }
 ```
 
-Every v5 package includes every section, including empty arrays:
+Every v6 package includes every section, including empty arrays:
 
 | Count | Meaning |
 | - | - |
@@ -202,7 +220,7 @@ Content-Type: application/json
 
 ```json
 {
-  "version": 4,
+  "version": 6,
   "chunk_count": 3,
   "source_project_id": "prj_abcdefghijklmnopqrstuvwx",
   "totals": {
@@ -212,7 +230,7 @@ Content-Type: application/json
 }
 ```
 
-`version` must be `4`. `chunk_count` must be between `1` and `500`.
+`version` must be `6`. `chunk_count` must be between `1` and `500`.
 `source_project_id` is required and prevents importing a project into itself.
 `totals` is optional and is stored with the session manifest.
 
@@ -247,7 +265,7 @@ Keyword chunks carry keyword rows:
 
 ```json
 {
-  "checksum": "sha256:d7070ee876f996d00e1254519e2bf233ea64ab2caebef347513c973e15870d05",
+  "checksum": "sha256:4f8d72fb6ca13e3140cfb4251850959f3a7a3bfc6f3d898cf0f71ba1a76218bb",
   "kind": "keywords",
   "keywords": [{ "id": "kw_abcdefghijklmnopqrstuvwx", "keyword": "rank tracker api", "device": "desktop", "location": "United States", "tags": [], "rankingHistory": [] }]
 }
@@ -258,7 +276,7 @@ ids used to map imported alert targets:
 
 ```json
 {
-  "checksum": "sha256:7b47a34cd8d581d8a5830ada4937cdf4993f7ac1e4bd3dd8fc9f94a4b69cf935",
+  "checksum": "sha256:f25d1e411a68b72a52872a86c2bf94fba85436aecc335dc172826a7d2be4197e",
   "kind": "sections",
   "sections": {
     "competitors": [{ "id": "cmp_abcdefghijklmnopqrstuvwx", "domain": "example.com", "label": "Example" }],
@@ -273,10 +291,10 @@ ids used to map imported alert targets:
 }
 ```
 
-The checksum is the v5 canonical chunk-content identity for idempotent retries. Retrying the
+The checksum is the v6 canonical chunk-content identity for idempotent retries. Retrying the
 same `{sessionId, index}` with the same checksum returns `200`; retrying that
 index with a different checksum returns `409`. Clients should compute the
-`sha256:` value over the canonical JSON body `{ version: 5, ...chunk }`, excluding
+`sha256:` value over the canonical JSON body `{ version: 6, ...chunk }`, excluding
 the `checksum` field, before gzip compression.
 
 To gzip a chunk, send the gzip-compressed JSON body with:

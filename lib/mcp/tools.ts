@@ -6,7 +6,7 @@ import { dispatchExtendedToolRoute } from "./extended-tool-routes";
 import { dispatchKeywordResearchTool } from "./keyword-research-tools";
 import { dispatchLoopClosureTool } from "./loop-closure-tools";
 import { validateMcpPublicIds } from "./public-id-input";
-import { dispatchMcpRestCall, type RestCall } from "./rest-call";
+import { dispatchMcpRestCall, type McpApiAuthorization, type RestCall } from "./rest-call";
 import type { JsonObject } from "./types";
 
 type ToolArgs = JsonObject;
@@ -290,6 +290,10 @@ function dispatchProjectTool(name: string, input: ToolArgs, page: string): RestC
   }
 }
 
-export async function dispatchMcpTool(name: string, input: ToolArgs, apiKey: string) {
-  return dispatchMcpRestCall(dispatchToRest(internalMcpToolName(name), input), apiKey);
+export async function dispatchMcpTool(
+  name: string,
+  input: ToolArgs,
+  authorization: McpApiAuthorization,
+) {
+  return dispatchMcpRestCall(dispatchToRest(internalMcpToolName(name), input), authorization);
 }

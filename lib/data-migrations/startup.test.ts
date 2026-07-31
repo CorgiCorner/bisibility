@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { enforceMigrationsAtStartup, shouldEnforceMigrationsAtStartup } from "./startup";
 
-describe("blocking migration startup guard", () => {
+describe("active migration startup guard", () => {
   it("enforces migration readiness for the Node server runtime", async () => {
     const assertReady = vi.fn().mockResolvedValue(undefined);
 

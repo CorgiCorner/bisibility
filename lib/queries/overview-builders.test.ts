@@ -14,9 +14,11 @@ const now = new Date("2026-06-28T12:00:00.000Z");
 function check(position: number | null, overrides: Partial<Check> = {}): Check {
   return {
     checkedAt: new Date("2026-06-28T10:00:00.000Z"),
+    normalizationVersion: "v2",
     position,
     previousPosition: null,
     rankingUrl: position ? `/position-${position}` : null,
+    requestedDepth: 100,
     status: "completed",
     ...overrides,
   };
@@ -66,6 +68,32 @@ describe("overview builders", () => {
 
     expect(firstInWindow).toMatchObject({ movement: null, position: 3, previous: null });
     expect(twoInWindow).toMatchObject({ movement: 5, position: 3, previous: 8 });
+  });
+
+  it("does not calculate movement across a normalization boundary", () => {
+    const snapshot = snapshotFor(
+      keyword("boundary", [
+        check(3),
+        check(8, {
+          checkedAt: new Date("2026-06-21T10:00:00.000Z"),
+          normalizationVersion: "v1",
+        }),
+      ]),
+    );
+
+    expect(snapshot).toMatchObject({ movement: null, position: 3, previous: null });
+  });
+
+  it("keeps comparable movement when a failed attempt is newer", () => {
+    const snapshot = snapshotFor(
+      keyword("failed-attempt", [
+        check(null, { status: "failed" }),
+        check(3, { checkedAt: new Date("2026-06-27T10:00:00.000Z") }),
+        check(8, { checkedAt: new Date("2026-06-21T10:00:00.000Z") }),
+      ]),
+    );
+
+    expect(snapshot).toMatchObject({ movement: 5, position: 3, previous: 8 });
   });
 
   it("lists keywords added in the last seven days, including checked keywords", () => {

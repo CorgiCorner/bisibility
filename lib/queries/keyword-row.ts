@@ -1,85 +1,30 @@
 import { alertPositionThreshold } from "@/lib/alerts/depth-conflict";
+import { comparableCompletedWindow } from "@/lib/checks/status";
 import { resolveEffectiveSchedule } from "@/lib/keywords/effective-schedule";
 import { earlierDayPosition, positionDateLabel } from "@/lib/keywords/position-history";
-import { resolveSerpDepth, type SerpDepth } from "@/lib/serp/markets";
+import { resolveSerpDepth } from "@/lib/serp/markets";
 import { type KeywordLocation, locationView } from "./keyword-location";
 import type { Metrics } from "./keyword-metrics";
 import { deviceLabel, pathFromUrl } from "./keyword-row-format";
+import type {
+  KeywordCheckState,
+  KeywordRow,
+  KeywordSchedule,
+  KeywordTrafficSummary,
+  LastCheckStatus,
+  UrlPresenceView,
+} from "./keyword-row-types";
 
-export type KeywordSchedule = {
-  cron_expression: string | null;
-  frequency: "custom_cron" | "daily" | "manual" | "monthly" | "paused" | "weekly";
-  jitter_minutes: number;
-  last_checked_at: string | null;
-  next_check_at: string | null;
-  serp_depth?: SerpDepth | null;
-  timezone: string;
-};
-export type PositionPoint = { checkedAt: string; label: string; position: number };
-export type RankingUrlEvent = { date: string; note: string; position: number; url: string };
-export type LastCheckStatus = "completed" | "failed" | "running" | null;
-export type KeywordCheckState = "failed" | "never_checked" | "not_ranked" | "ranked" | "running";
-type ScheduleOrigin = "fallback" | "keyword" | "project";
-export type KeywordTrafficSummary = {
-  clicks: number;
-  ctr: number;
-  date: Date;
-  impressions: number;
-  provider: string;
-};
-export type UrlPresenceView = {
-  canonicalOk: boolean | null;
-  checkedAt: string;
-  coverageState: string | null;
-  indexed: boolean;
-  lastCrawlAt: string | null;
-  url: string;
-  verdict: string | null;
-};
-export type KeywordRow = {
-  bestPosition: number | null;
-  clicks: number | null;
-  cpc: string;
-  cpcKnown?: boolean;
-  createdAt: string;
-  ctr: number | null;
-  device: string;
-  difficulty: number;
-  difficultyKnown?: boolean;
-  engine: string;
-  checkState?: KeywordCheckState;
-  hasRankData: boolean;
-  id: string;
-  impressions: number | null;
-  keyword: string;
-  lastCheckAt: string | null;
-  lastCheckStatus: LastCheckStatus;
-  location: KeywordLocation;
-  locationName: string;
-  position: number;
-  positionBaseline: number | null;
-  positionHistory: PositionPoint[];
-  projectSerpDepth?: SerpDepth;
-  previousPosition: number | null;
-  rankingPages: number;
-  rankingPath: string | null;
-  rankingUrl: string | null;
-  rankingUrlHistory: RankingUrlEvent[];
-  schedule: KeywordSchedule;
-  scheduleSource?: ScheduleOrigin;
-  trackedDepth?: SerpDepth;
-  serpFeatures: string[];
-  sparkline: number[];
-  tags: string[];
-  targetPosition?: number | null;
-  targetUrl: string | null;
-  urlPresence?: UrlPresenceView | null;
-  topic: string | null;
-  trafficDate?: Date | string;
-  intent: string | null;
-  volume: number;
-  volumeKnown?: boolean;
-};
+export type {
+  KeywordCheckState,
+  KeywordRow,
+  KeywordSchedule,
+  KeywordTrafficSummary,
+  LastCheckStatus,
+  PositionPoint,
+  RankingUrlEvent,
+  UrlPresenceView,
+} from "./keyword-row-types";
 
 type ScheduleSource = {
   cronExpression: string | null;
@@ -130,6 +75,7 @@ type KeywordRowInput = {
   rankChecks: {
     checkedAt: Date;
     id: string;
+    normalizationVersion: string | null;
     position: number | null;
     previousPosition: number | null;
     rankingUrl: string | null;
@@ -216,7 +162,8 @@ export function mapKeyword(
   traffic?: KeywordTrafficSummary,
 ) {
   const visibleChecks = row.rankChecks.filter((check) => check.status !== "deferred");
-  const completedChecks = visibleChecks.filter(isCompletedCheck);
+  const comparableWindow = comparableCompletedWindow(visibleChecks);
+  const completedChecks = comparableWindow.checks;
   const checks = completedChecks.slice().reverse();
   const latest = completedChecks[0];
   const latestAttempt = visibleChecks[0] ?? null;
@@ -234,7 +181,7 @@ export function mapKeyword(
     .sort((left, right) => right.rule.updatedAt.getTime() - left.rule.updatedAt.getTime())
     .map(({ rule }) => alertPositionThreshold(rule))
     .find((target): target is number => target !== null && target > 0);
-  let scheduleSource: ScheduleOrigin = "fallback";
+  let scheduleSource: NonNullable<KeywordRow["scheduleSource"]> = "fallback";
   let schedule = fallbackSchedule();
   if (row.schedule) {
     scheduleSource = "keyword";
@@ -268,6 +215,7 @@ export function mapKeyword(
     locationName: row.location,
     position,
     positionBaseline,
+    positionHistoryBoundaryAt: iso(comparableWindow.boundary?.checkedAt),
     positionHistory: checks.flatMap((check) =>
       check.position === null
         ? []

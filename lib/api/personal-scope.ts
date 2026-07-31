@@ -2,36 +2,27 @@ import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
 import type { Role } from "@/lib/generated/prisma/client";
-import type { ApiScope, AuthenticatedApiKey, PersonalTokenAuth } from "./auth";
+import type { AuthenticatedApiKey, PersonalTokenAuth } from "./auth";
 import { requireApiPublicId } from "./public-id";
 import { errorResponse } from "./responses";
+import { type ApiScope, apiScopeRank, scopesForTier, tierFromScopes } from "./scope-policy";
 
 export const PROJECT_HEADER = "x-bisibility-project";
 
-const SCOPE_RANK = { admin: 3, read: 1, write: 2 } satisfies Record<ApiScope, number>;
-
 // Membership roles map onto the same tiers as token scopes so effective
 // access is simply the lower of the two.
-const ROLE_RANK: Record<Role, number> = {
-  admin: SCOPE_RANK.admin,
-  auditor: SCOPE_RANK.read,
-  member: SCOPE_RANK.write,
-  owner: SCOPE_RANK.admin,
-  viewer: SCOPE_RANK.read,
+const ROLE_SCOPE: Record<Role, ApiScope> = {
+  admin: "admin",
+  auditor: "read",
+  member: "write",
+  owner: "admin",
+  viewer: "read",
 };
-
-const TIER_SCOPES: Record<number, readonly ApiScope[]> = {
-  1: ["read"],
-  2: ["read", "write"],
-  3: ["read", "write", "admin"],
-};
-
-function tokenRank(scopes: readonly ApiScope[]) {
-  return scopes.reduce((rank, scope) => Math.max(rank, SCOPE_RANK[scope]), SCOPE_RANK.read);
-}
 
 export function effectiveScopes(tokenScopes: readonly ApiScope[], role: Role): readonly ApiScope[] {
-  return TIER_SCOPES[Math.min(tokenRank(tokenScopes), ROLE_RANK[role])];
+  const tokenTier = tierFromScopes(tokenScopes);
+  const roleTier = ROLE_SCOPE[role];
+  return scopesForTier(apiScopeRank(tokenTier) <= apiScopeRank(roleTier) ? tokenTier : roleTier);
 }
 
 const projectSelect = {

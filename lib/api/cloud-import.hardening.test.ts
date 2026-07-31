@@ -89,7 +89,7 @@ function importBody(input: unknown) {
     notification_preferences: [],
     project_id: ids.sourceProject,
     saved_views: [],
-    version: 5,
+    version: 6,
     ...(input as Record<string, unknown>),
   });
 }
@@ -103,9 +103,12 @@ function keyword(text: string, sourceId: string) {
     rankingHistory: [
       {
         checkedAt: "2026-06-20T10:00:00.000Z",
+        normalizationVersion: "v1",
         position: 3,
         previousPosition: 7,
+        provider: "dataforseo",
         rankingUrl: `https://example.com/${sourceId}`,
+        requestedDepth: 100,
       },
     ],
     tags: ["SEO"],
@@ -270,11 +273,14 @@ describe("importCloudExport hardening", () => {
           checkedAt: new Date("2026-06-20T10:00:00.000Z"),
           degradedToCountry: false,
           keywordId: "keyword_1",
+          normalizationVersion: "v1",
           position: 3,
           previousPosition: 7,
-          provider: "self-hosted-import",
+          provider: "dataforseo",
           publicId: expect.stringMatching(/^check_[a-z][a-z0-9]{23}$/),
           rankingUrl: `https://example.com/${ids.firstKeyword}`,
+          requestedDepth: 100,
+          status: "completed",
           viaFallback: false,
         },
       ],

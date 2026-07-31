@@ -33,6 +33,7 @@ function location(overrides: Partial<SerpRankLocation> = {}): SerpRankLocation {
 function rankInput(
   input: {
     depth?: 10 | 20 | 50 | 100;
+    device?: "desktop" | "mobile";
     domain?: string;
     location?: SerpRankLocation;
     password?: string;
@@ -42,7 +43,7 @@ function rankInput(
   return {
     credentials: { login: "login", password: input.password ?? "secret" },
     depth: input.depth,
-    device: "desktop" as const,
+    device: input.device ?? ("desktop" as const),
     domain: input.domain ?? "example.com",
     keyword: "rank tracker",
     location: input.location ?? location(),
@@ -152,11 +153,19 @@ describe("dataForSeoProvider", () => {
   });
 
   it("prefers the numeric location_code and sends language_code=hl for a resolved city", async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValue(
-        jsonResponse(serpEnvelope([{ domain: "example.com", rank_absolute: 12, type: "organic" }])),
-      );
+    const fetchMock = vi.fn().mockResolvedValue(
+      jsonResponse(
+        serpEnvelope([
+          {
+            domain: "example.com",
+            rank_absolute: 12,
+            rank_group: 12,
+            type: "organic",
+            url: "https://example.com/city",
+          },
+        ]),
+      ),
+    );
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(
@@ -185,12 +194,42 @@ describe("dataForSeoProvider", () => {
     ]);
   });
 
+  it("preserves the requested mobile device", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      jsonResponse(
+        serpEnvelope([
+          {
+            domain: "example.com",
+            rank_group: 1,
+            type: "organic",
+            url: "https://example.com/mobile",
+          },
+        ]),
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await dataForSeoProvider.fetchRank(rankInput({ device: "mobile" }));
+
+    expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body))[0]).toMatchObject({
+      device: "mobile",
+    });
+  });
+
   it("falls back to location_name when the resolved row has no numeric code", async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValue(
-        jsonResponse(serpEnvelope([{ domain: "example.com", rank_absolute: 12, type: "organic" }])),
-      );
+    const fetchMock = vi.fn().mockResolvedValue(
+      jsonResponse(
+        serpEnvelope([
+          {
+            domain: "example.com",
+            rank_absolute: 12,
+            rank_group: 12,
+            type: "organic",
+            url: "https://example.com/country",
+          },
+        ]),
+      ),
+    );
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(
@@ -247,7 +286,7 @@ describe("dataForSeoProvider", () => {
     });
   });
 
-  it("falls back safely when an organic result contains a malformed domain URL", async () => {
+  it("rejects an organic result with an unclassifiable domain URL", async () => {
     vi.stubGlobal(
       "fetch",
       vi
@@ -258,13 +297,13 @@ describe("dataForSeoProvider", () => {
           ),
         ),
     );
-    await expect(dataForSeoProvider.fetchRank(rankInput())).resolves.toMatchObject({
-      position: null,
-      rankingUrl: null,
+    await expect(dataForSeoProvider.fetchRank(rankInput())).rejects.toMatchObject({
+      anomalyCodes: ["organic_result_unclassifiable"],
+      name: "ProviderPayloadContractError",
     });
   });
 
-  it("uses the first matching organic result after normalizing www and subdomains", async () => {
+  it("uses the best matching organic result after normalizing www and subdomains", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue(
@@ -273,6 +312,7 @@ describe("dataForSeoProvider", () => {
             {
               domain: "blog.example.com",
               rank_absolute: 8,
+              rank_group: 8,
               title: "First matching result",
               type: "organic",
               url: "https://blog.example.com/first",
@@ -280,6 +320,7 @@ describe("dataForSeoProvider", () => {
             {
               domain: "example.com",
               rank_absolute: 2,
+              rank_group: 2,
               title: "Better rank but later",
               type: "organic",
               url: "https://example.com/later",
@@ -292,8 +333,8 @@ describe("dataForSeoProvider", () => {
     await expect(
       dataForSeoProvider.fetchRank(rankInput({ domain: "www.example.com" })),
     ).resolves.toMatchObject({
-      position: 8,
-      rankingUrl: "https://blog.example.com/first",
+      position: 2,
+      rankingUrl: "https://example.com/later",
       raw: {
         organic_results: [
           {
@@ -309,6 +350,96 @@ describe("dataForSeoProvider", () => {
             url: "https://example.com/later",
           },
         ],
+      },
+    });
+  });
+
+  it("selects the minimum rank_group across every matching organic URL", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse(
+          serpEnvelope([
+            {
+              domain: "blog.example.com",
+              rank_absolute: 3,
+              rank_group: 8,
+              type: "organic",
+              url: "https://blog.example.com/first",
+            },
+            {
+              domain: "example.com",
+              rank_absolute: 9,
+              rank_group: 2,
+              type: "organic",
+              url: "https://example.com/best",
+            },
+          ]),
+        ),
+      ),
+    );
+
+    await expect(dataForSeoProvider.fetchRank(rankInput())).resolves.toMatchObject({
+      position: 2,
+      rankingUrl: "https://example.com/best",
+    });
+  });
+
+  it("rejects a matching organic item that has rank_absolute but no rank_group", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse(
+          serpEnvelope([
+            {
+              domain: "example.com",
+              rank_absolute: 3,
+              type: "organic",
+              url: "https://example.com/ambiguous",
+            },
+          ]),
+        ),
+      ),
+    );
+
+    await expect(dataForSeoProvider.fetchRank(rankInput())).rejects.toMatchObject({
+      anomalyCodes: ["organic_rank_missing"],
+      name: "ProviderPayloadContractError",
+    });
+  });
+
+  it("records but skips a malformed rank on a known nonmatching organic item", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse(
+          serpEnvelope([
+            {
+              domain: "competitor.example.org",
+              rank_absolute: 1,
+              type: "organic",
+              url: "https://competitor.example.org/page",
+            },
+            {
+              domain: "example.com",
+              rank_absolute: 5,
+              rank_group: 3,
+              type: "organic",
+              url: "https://example.com/ranking",
+            },
+          ]),
+        ),
+      ),
+    );
+
+    await expect(dataForSeoProvider.fetchRank(rankInput())).resolves.toMatchObject({
+      position: 3,
+      raw: {
+        normalization: {
+          anomalies: [{ code: "organic_rank_missing", index: 0 }],
+          outcome: "match",
+          version: "v2",
+        },
       },
     });
   });
@@ -332,6 +463,22 @@ describe("dataForSeoProvider", () => {
     });
   });
 
+  it("rejects a successful task whose result container is missing", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse({
+          status_code: 20000,
+          tasks: [{ cost: 0.0001, status_code: 20000 }],
+        }),
+      ),
+    );
+
+    await expect(dataForSeoProvider.fetchRank(rankInput())).rejects.toThrow(
+      "organic_result_unclassifiable",
+    );
+  });
+
   it("rejects malformed task items instead of returning an invalid rank", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse(serpEnvelope([null]))));
 
@@ -343,7 +490,17 @@ describe("dataForSeoProvider", () => {
       .fn()
       .mockResolvedValueOnce(jsonResponse({ status_message: "rate limited" }, 429))
       .mockResolvedValueOnce(
-        jsonResponse(serpEnvelope([{ domain: "example.com", rank_absolute: 9, type: "organic" }])),
+        jsonResponse(
+          serpEnvelope([
+            {
+              domain: "example.com",
+              rank_absolute: 9,
+              rank_group: 9,
+              type: "organic",
+              url: "https://example.com/retry",
+            },
+          ]),
+        ),
       );
     vi.stubGlobal("fetch", fetchMock);
 
@@ -427,7 +584,17 @@ describe("dataForSeoProvider", () => {
       .fn()
       .mockRejectedValueOnce(abortError())
       .mockResolvedValueOnce(
-        jsonResponse(serpEnvelope([{ domain: "example.com", rank_absolute: 7, type: "organic" }])),
+        jsonResponse(
+          serpEnvelope([
+            {
+              domain: "example.com",
+              rank_absolute: 7,
+              rank_group: 7,
+              type: "organic",
+              url: "https://example.com/timeout-retry",
+            },
+          ]),
+        ),
       );
     vi.stubGlobal("fetch", fetchMock);
 

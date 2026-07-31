@@ -26,7 +26,7 @@ RUN npm install --prefix /migrate-cli --no-save --no-audit --no-fund \
 RUN npm install --prefix /seed-cli --no-save --no-audit --no-fund \
   pg@"$(node -p "require('./node_modules/pg/package.json').version")" \
   @prisma/adapter-pg@"$(node -p "require('./node_modules/@prisma/adapter-pg/package.json').version")"
-# Blocking data migrations can use application libraries before their schema
+# Deploy-blocking data migrations can use application libraries before their schema
 # contract is applied. The standalone trace does not include the current
 # migration dependency closure, so carry the exact lockfile-resolved packages.
 RUN npm install --prefix /public-id-cli --no-save --no-audit --no-fund \
@@ -37,9 +37,13 @@ RUN npm install --prefix /public-id-cli --no-save --no-audit --no-fund \
 
 FROM node:22.23.1-alpine AS builder
 WORKDIR /workspace
+ARG APP_REVISION
+ARG APP_VERSION
 ARG NEXT_PUBLIC_DOCS_URL=https://bisibility.com/docs
-ENV NEXT_PUBLIC_DOCS_URL=$NEXT_PUBLIC_DOCS_URL
-ENV NEXT_TELEMETRY_DISABLED=1
+ENV APP_REVISION=$APP_REVISION \
+  APP_VERSION=$APP_VERSION \
+  NEXT_PUBLIC_DOCS_URL=$NEXT_PUBLIC_DOCS_URL \
+  NEXT_TELEMETRY_DISABLED=1
 COPY --from=deps /workspace/node_modules ./node_modules
 COPY . .
 RUN npm run db:download-rds-ca && npx prisma generate && npm run build
@@ -52,8 +56,20 @@ USER node
 CMD ["npm", "run", "db:migrate"]
 
 FROM node:22.23.1-alpine AS runner
+ARG APP_REVISION
+ARG APP_VERSION
+
+LABEL org.opencontainers.image.title="bisibility" \
+  org.opencontainers.image.description="Open-source search visibility platform" \
+  org.opencontainers.image.source="https://github.com/CorgiCorner/bisibility" \
+  org.opencontainers.image.licenses="AGPL-3.0-only" \
+  org.opencontainers.image.version="${APP_VERSION}" \
+  org.opencontainers.image.revision="${APP_REVISION}"
+
 WORKDIR /workspace
-ENV NODE_ENV=production
+ENV APP_VERSION=${APP_VERSION} \
+  APP_REVISION=${APP_REVISION} \
+  NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV HOSTNAME=0.0.0.0
 

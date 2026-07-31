@@ -1,10 +1,12 @@
 #!/usr/bin/env -S node --experimental-transform-types
 
 import { pathToFileURL } from "node:url";
+import { dataMigrationManifest } from "@/lib/data-migrations/manifest";
 import { databaseConnectionConfig } from "@/lib/db/pool-config";
 import pg from "pg";
-import { dataMigrationRegistry } from "./registry";
-import { resolveDataMigrationRegistry, runBlockingDataMigrations } from "./runner";
+import { activeDataMigrationImplementations } from "./registry";
+import { resolveActiveDataMigrations } from "./resolver";
+import { runActiveDataMigrations } from "./runner";
 import type { DataMigrationDatabase } from "./types";
 
 const { Client } = pg;
@@ -46,8 +48,11 @@ export function dataMigrationLockTimeoutMs(
 }
 
 export async function runDataMigrations() {
-  const registry = await resolveDataMigrationRegistry(dataMigrationRegistry);
-  if (registry.length === 0) return;
+  const migrations = await resolveActiveDataMigrations(
+    dataMigrationManifest,
+    activeDataMigrationImplementations,
+  );
+  if (migrations.length === 0) return;
   const url = migrationDatabaseUrl();
   const db = new Client({
     connectionString: url,
@@ -55,9 +60,9 @@ export async function runDataMigrations() {
   });
   await db.connect();
   try {
-    await runBlockingDataMigrations(
+    await runActiveDataMigrations(
       db as unknown as DataMigrationDatabase,
-      registry,
+      migrations,
       {
         batchSize: dataMigrationBatchSize(),
         lockTimeoutMs: dataMigrationLockTimeoutMs(),

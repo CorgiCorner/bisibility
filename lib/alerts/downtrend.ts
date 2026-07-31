@@ -1,7 +1,9 @@
 export type AlertTrendCheck = {
   checkedAt?: Date;
+  normalizationVersion?: string | null;
   position: number | null;
   rankCheckId?: string | null;
+  requestedDepth?: number | null;
 };
 
 export type DowntrendSummary = {

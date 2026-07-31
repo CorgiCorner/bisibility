@@ -19,13 +19,13 @@ import {
 } from "./dataforseo-errors";
 import {
   type DataForSeoResponse,
-  dataForSeoItemPosition,
+  dataForSeoOrganicDecision,
   dataForSeoRankedKeywordsPage,
   dataForSeoRawPayload,
   dataForSeoResponseCostCents,
-  findDataForSeoRankingItem,
 } from "./dataforseo-payload";
 import { createDataForSeoResearchMethods } from "./dataforseo-research";
+import { requireDeterminateOrganicResult } from "./payload-contract-error";
 
 const USER_DATA_URL = "https://api.dataforseo.com/v3/appendix/user_data";
 const SERP_URL = "https://api.dataforseo.com/v3/serp/google/organic/live/advanced";
@@ -316,18 +316,19 @@ export const dataForSeoProvider: SerpProvider = {
       );
     }
 
-    const items = task.result?.flatMap((result) => result.items ?? []) as
-      | import("./dataforseo-payload").DataForSeoItem[]
-      | undefined;
-    const rankingItem = findDataForSeoRankingItem(items, input.domain);
+    const items = Array.isArray(task.result)
+      ? task.result.flatMap((result) => result.items ?? [])
+      : [null];
+    // biome-ignore format: keep the provider module under its enforced line cap.
+    const decision = requireDeterminateOrganicResult("DataForSEO", dataForSeoOrganicDecision(items, input.domain, requestParams.depth));
 
     return {
       billingUnits: 1,
-      position: dataForSeoItemPosition(rankingItem),
-      rankingUrl: rankingItem?.url ?? null,
+      position: decision.position,
+      rankingUrl: decision.rankingUrl,
       costCents: dataForSeoResponseCostCents(data),
       checkedAt: new Date(),
-      raw: dataForSeoRawPayload(items),
+      raw: dataForSeoRawPayload(items, decision),
     };
   },
 

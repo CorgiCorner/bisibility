@@ -3,6 +3,7 @@ import "server-only";
 import { type MigrationReadiness, readMigrationReadiness } from "@/lib/data-migrations/readiness";
 import type { MigrationComparison } from "@/lib/db/migration-state";
 import { prisma } from "@/lib/db/prisma";
+import { getBakedAppRevision } from "@/lib/deployment/runtime-env.generated";
 import { getWorkerLivenessDetails, type WorkerLivenessStatus } from "@/lib/ops/liveness";
 import { getTemporalSnapshot, type TemporalSnapshotState } from "@/lib/ops/temporal-snapshot";
 import { providerRateLimitPolicy } from "@/lib/providers/rate-limit";
@@ -17,6 +18,7 @@ import {
   serpDeviceOptions,
   serpMarkets,
 } from "@/lib/serp/markets";
+import { getApiVersionCapabilities } from "./api-versions";
 import { getCapabilities, getLlmsText } from "./capabilities";
 import type { ApiContext } from "./context";
 import { getOpenApiDocument } from "./openapi";
@@ -82,7 +84,19 @@ function workerSchemaHealth(comparison: MigrationComparison): "drift" | "ok" | "
   return comparison === "unknown" ? "unknown" : "drift";
 }
 
-export async function getHealth(ctx: Pick<ApiContext, "headers">) {
+function appRelease() {
+  return process.env.APP_VERSION?.trim() || process.env.SENTRY_RELEASE?.trim() || "unknown";
+}
+
+function appIdentity() {
+  return {
+    app: "ok",
+    appRelease: appRelease(),
+    appRevision: getBakedAppRevision(),
+  };
+}
+
+async function readApplicationReadiness() {
   let database = "ok";
   let migrations: MigrationReadiness | "unknown" = "unknown";
 
@@ -92,6 +106,39 @@ export async function getHealth(ctx: Pick<ApiContext, "headers">) {
   } catch {
     database = "degraded";
   }
+  return { database, migrations };
+}
+
+function readinessFailed(readiness: Awaited<ReturnType<typeof readApplicationReadiness>>) {
+  return readiness.database !== "ok" || readiness.migrations !== "ready";
+}
+
+export function getLiveness(ctx: Pick<ApiContext, "headers">) {
+  return jsonResponse(
+    {
+      checked_at: new Date().toISOString(),
+      services: appIdentity(),
+      status: "ok",
+    },
+    { headers: ctx.headers },
+  );
+}
+
+export async function getReadiness(ctx: Pick<ApiContext, "headers">) {
+  const readiness = await readApplicationReadiness();
+  const degraded = readinessFailed(readiness);
+  return jsonResponse(
+    {
+      checked_at: new Date().toISOString(),
+      services: { ...appIdentity(), ...readiness },
+      status: degraded ? "degraded" : "ok",
+    },
+    { headers: ctx.headers, status: degraded ? 503 : 200 },
+  );
+}
+
+export async function getHealth(ctx: Pick<ApiContext, "headers">) {
+  const readiness = await readApplicationReadiness();
   const [workerLiveness, temporalSnapshot] = await Promise.all([
     getWorkerLivenessDetails(),
     getTemporalSnapshot(),
@@ -100,8 +147,7 @@ export async function getHealth(ctx: Pick<ApiContext, "headers">) {
   const workerSchema = workerSchemaHealth(workerLiveness.schemaComparison);
   const temporal = runtimeHealthStatus(temporalSnapshot?.status ?? null);
   const degraded =
-    database !== "ok" ||
-    migrations !== "ready" ||
+    readinessFailed(readiness) ||
     runtimeHealthFailed(worker) ||
     runtimeHealthFailed(temporal) ||
     workerSchema === "drift";
@@ -111,28 +157,28 @@ export async function getHealth(ctx: Pick<ApiContext, "headers">) {
       checked_at: new Date().toISOString(),
       providers: providersByKind(),
       rate_limits: providerRateLimits(),
+      readiness: readinessFailed(readiness) ? "degraded" : "ok",
       serp: serpCapabilities(),
       services: {
-        app: "ok",
+        ...appIdentity(),
         appEnvironment:
           process.env.DEPLOYMENT_ENV?.trim() ||
           process.env.BISIBILITY_ENV?.trim() ||
           process.env.NODE_ENV?.trim() ||
           "unknown",
         appRankCheckSchedulerMode: rankCheckSchedulerMode(),
-        appRelease:
-          process.env.APP_VERSION?.trim() || process.env.SENTRY_RELEASE?.trim() || "unknown",
-        database,
+        ...readiness,
         lastHeartbeatAt: workerLiveness.lastSeenAt,
-        migrations,
         temporal,
         worker,
         workerEnvironment: workerLiveness.environment,
         workerHeartbeatState: workerLiveness.heartbeatState,
         workerRankCheckSchedulerMode: workerLiveness.schedulerMode,
         workerRelease: workerLiveness.release,
+        workerRevision: workerLiveness.revision ?? "unknown",
         workerSchema,
       },
+      liveness: "ok",
       status: degraded ? "degraded" : "ok",
     },
     { headers: ctx.headers, status: degraded ? 503 : 200 },
@@ -144,7 +190,10 @@ export function getOpenApi(ctx: Pick<ApiContext, "headers">) {
 }
 
 export function capabilities(ctx: Pick<ApiContext, "headers">) {
-  return jsonResponse({ data: getCapabilities() }, { headers: ctx.headers });
+  return jsonResponse(
+    { ...getApiVersionCapabilities(), data: getCapabilities() },
+    { headers: ctx.headers },
+  );
 }
 
 export function llmsText(ctx: Pick<ApiContext, "headers">) {

@@ -27,6 +27,9 @@ awk \
   -v auth="$auth_secret" \
   -v key="$secrets_key" '
     /^POSTGRES_PASSWORD=/ { print "POSTGRES_PASSWORD=" postgres; next }
+    /^SITE_URL=/ { print "SITE_URL=http://localhost:3000"; next }
+    /^BETTER_AUTH_URL=/ { print "BETTER_AUTH_URL=http://localhost:3000"; next }
+    /^DEPLOYMENT_ENV=/ { print "DEPLOYMENT_ENV=development"; next }
     /^BETTER_AUTH_SECRET=/ { print "BETTER_AUTH_SECRET=" auth; next }
     /^BISIBILITY_SECRETS_KEY=/ { print "BISIBILITY_SECRETS_KEY=" key; next }
     /^# DEMO_FIXED_OTP=/ { print "DEMO_FIXED_OTP=1"; next }
@@ -37,6 +40,11 @@ awk \
 for required in POSTGRES_PASSWORD BETTER_AUTH_SECRET BISIBILITY_SECRETS_KEY; do
   grep -Eq "^${required}=.+" "$tmp_file" || fail "$required was not generated"
 done
+grep -Fxq "SITE_URL=http://localhost:3000" "$tmp_file" || fail "SITE_URL was not configured"
+grep -Fxq "BETTER_AUTH_URL=http://localhost:3000" "$tmp_file" \
+  || fail "BETTER_AUTH_URL was not configured"
+grep -Fxq "DEPLOYMENT_ENV=development" "$tmp_file" \
+  || fail "DEPLOYMENT_ENV was not configured for the demo"
 grep -Fxq "DEMO_FIXED_OTP=1" "$tmp_file" || fail "DEMO_FIXED_OTP was not enabled"
 grep -Fxq "DEMO_INSTANCE_INSECURE_AUTH_ACK=1" "$tmp_file" \
   || fail "DEMO_INSTANCE_INSECURE_AUTH_ACK was not enabled"

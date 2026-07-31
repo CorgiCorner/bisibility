@@ -704,41 +704,42 @@ model KeywordDispatchState {
 }
 
 model RankCheck {
-  id                 String               @id @default(cuid())
-  publicId           String               @unique
-  keywordId          String
-  keyword            Keyword              @relation(fields: [keywordId], references: [id], onDelete: Cascade)
-  position           Int?
-  previousPosition   Int?
-  rankingUrl         String?
+  id                   String               @id @default(cuid())
+  publicId             String               @unique
+  keywordId            String
+  keyword              Keyword              @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+  position             Int?
+  previousPosition     Int?
+  rankingUrl           String?
   /// Allowed values: "running", "completed", "failed", "deferred".
-  status             String               @default("completed")
-  error              String?
-  checkedAt          DateTime             @default(now())
-  provider           String
+  status               String               @default("completed")
+  error                String?
+  checkedAt            DateTime             @default(now())
+  provider             String
   /// Allowed values when set: "scheduled", "manual".
-  trigger            String?
-  scheduleId         String?
-  workflowRunId      String?
-  scheduledAt        DateTime?
-  startedAt          DateTime?
-  finishedAt         DateTime?
-  deferredReason     String?
-  requestedDepth     Int?
-  costCents          Decimal?             @db.Decimal(10, 4)
-  estimatedCostCents Decimal?             @db.Decimal(10, 4)
-  billingUnits       Int?
+  trigger              String?
+  scheduleId           String?
+  workflowRunId        String?
+  scheduledAt          DateTime?
+  startedAt            DateTime?
+  finishedAt           DateTime?
+  deferredReason       String?
+  requestedDepth       Int?
+  normalizationVersion String?              @default("v1")
+  costCents            Decimal?             @db.Decimal(10, 4)
+  estimatedCostCents   Decimal?             @db.Decimal(10, 4)
+  billingUnits         Int?
   /// Compact top-100 organic snapshot as [{ domain, position }]. Null means unavailable or legacy.
-  organicRanks       Json?
-  raw                Json?
-  attempts           Json?
-  viaFallback        Boolean              @default(false)
-  degradedToCountry  Boolean              @default(false)
-  attemptCount       Int                  @default(1)
-  triggeredAlerts    TriggeredAlert[]
-  queuedTask         QueuedRankCheckTask?
-  createdAt          DateTime             @default(now())
-  updatedAt          DateTime             @updatedAt
+  organicRanks         Json?
+  raw                  Json?
+  attempts             Json?
+  viaFallback          Boolean              @default(false)
+  degradedToCountry    Boolean              @default(false)
+  attemptCount         Int                  @default(1)
+  triggeredAlerts      TriggeredAlert[]
+  queuedTask           QueuedRankCheckTask?
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
 
   @@unique([keywordId, checkedAt])
   @@index([keywordId, checkedAt(sort: Desc), id(sort: Desc)])
@@ -1471,13 +1472,17 @@ model MigrationImportChunk {
 
 /// Durable execution ledger for ordered repository data migrations.
 model DataMigration {
-  id         String    @id
-  checksum   String
-  attempts   Int       @default(0)
-  startedAt  DateTime
-  finishedAt DateTime?
-  failedAt   DateTime?
-  error      String?
+  id                 String    @id
+  checksum           String
+  attempts           Int       @default(0)
+  startedAt          DateTime
+  runCompletedAt     DateTime?
+  finishedAt         DateTime?
+  failedAt           DateTime?
+  error              String?
+  finalizationAttempts Int       @default(0)
+  finalizationFailedAt DateTime?
+  finalizationError    String?
 
   @@map("data_migrations")
 }

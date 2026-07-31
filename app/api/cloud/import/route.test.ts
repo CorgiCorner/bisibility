@@ -96,9 +96,12 @@ function exportBody() {
         rankingHistory: [
           {
             checkedAt: "2026-06-20T10:00:00.000Z",
+            normalizationVersion: "v1",
             position: 3,
             previousPosition: 7,
+            provider: "dataforseo",
             rankingUrl: "https://example.com/rank-tracker",
+            requestedDepth: 100,
           },
         ],
         tags: ["SEO"],
@@ -109,7 +112,7 @@ function exportBody() {
     project_id: ids.sourceProject,
     saved_views: [],
     scope: "history",
-    version: 5,
+    version: 6,
   };
 }
 
@@ -217,11 +220,14 @@ describe("POST /api/cloud/import", () => {
           checkedAt: new Date("2026-06-20T10:00:00.000Z"),
           degradedToCountry: false,
           keywordId: "keyword_1",
+          normalizationVersion: "v1",
           position: 3,
           previousPosition: 7,
-          provider: "self-hosted-import",
+          provider: "dataforseo",
           publicId: expect.stringMatching(/^check_[a-z][a-z0-9]{23}$/),
           rankingUrl: "https://example.com/rank-tracker",
+          requestedDepth: 100,
+          status: "completed",
           viaFallback: false,
         },
       ],
@@ -279,7 +285,7 @@ describe("POST /api/cloud/import", () => {
             project_id: ids.sourceProject,
             saved_views: [],
             scope: "current",
-            version: 5,
+            version: 6,
           },
           migrationToken: rawToken,
         },

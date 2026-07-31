@@ -2,7 +2,7 @@
 
 import { parseArgs } from "node:util";
 import { pathToFileURL } from "node:url";
-import { blockingDataMigrationManifest } from "@/lib/data-migrations/manifest";
+import { activeDataMigrationManifest } from "@/lib/data-migrations/manifest";
 import { databaseConnectionConfig } from "@/lib/db/pool-config";
 import { assertPublicIdContractPrepared } from "@/lib/public-id-contract/prepare";
 import {
@@ -182,20 +182,20 @@ function assertReleasedState(state: PublicIdWriteGateState, expectedAppRelease: 
   }
 }
 
-async function assertBlockingMigrationReady(db: PublicIdMigrationDatabase) {
-  const blocking = blockingDataMigrationManifest();
+async function assertActiveMigrationReady(db: PublicIdMigrationDatabase) {
+  const active = activeDataMigrationManifest();
   const result = await db.query(
     `SELECT "id", "checksum", "finishedAt"
        FROM "data_migrations"
       WHERE "id" = ANY($1::text[])`,
-    [blocking.map((migration) => migration.id)],
+    [active.map((migration) => migration.id)],
   );
   const completed = new Map(result.rows.map((row) => [String(row.id), row]));
-  const ready = blocking.every((migration) => {
+  const ready = active.every((migration) => {
     const row = completed.get(migration.id);
     return row?.finishedAt != null && row.checksum === migration.checksum;
   });
-  if (!ready) throw new Error("Blocking public ID data migration is not ready.");
+  if (!ready) throw new Error("Active public ID data migration is not ready.");
 }
 
 export async function runPublicIdWriteGateCommand(args = process.argv.slice(2)) {
@@ -239,7 +239,7 @@ export async function runPublicIdWriteGateCommand(args = process.argv.slice(2)) 
       throw new Error("Application release verification did not return a commit SHA.");
     }
     assertPublicIdWriteGateState(before, expectedRelease);
-    await assertBlockingMigrationReady(migrationDb);
+    await assertActiveMigrationReady(migrationDb);
     await assertPublicIdContractPrepared(migrationDb);
     if (before.blocked) {
       await releasePublicIdWriteGate(migrationDb, expectedRelease);

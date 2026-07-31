@@ -11,8 +11,8 @@ import { MCP_TOOL_NAMES } from "./canonical-tools";
 import { getMcpToolDefinitions } from "./definitions";
 import { dispatchMcpTool } from "./tools";
 
-const mocks = vi.hoisted(() => ({
-  handleApiRequest: vi.fn(async (req: Request, path: string[]) => {
+const mocks = vi.hoisted(() => {
+  const handler = async (req: Request, path: string[]) => {
     const contentType = req.headers.get("content-type") ?? "";
     const body = contentType.includes("json") ? await req.json() : null;
     const url = new URL(req.url);
@@ -26,11 +26,16 @@ const mocks = vi.hoisted(() => ({
       prefer: req.headers.get("prefer"),
       search: url.search,
     });
-  }),
-}));
+  };
+  return {
+    handleApiRequest: vi.fn(handler),
+    handleMcpPreauthenticatedApiRequest: vi.fn(handler),
+  };
+});
 
 vi.mock("@/lib/api/router", () => ({
   handleApiRequest: mocks.handleApiRequest,
+  handleMcpPreauthenticatedApiRequest: mocks.handleMcpPreauthenticatedApiRequest,
 }));
 
 describe("MCP tool dispatch", () => {
@@ -60,10 +65,17 @@ describe("MCP tool dispatch", () => {
     }
     expect(definitions.find((tool) => tool.name === "get_rank_history")?.annotations).toEqual({
       destructiveHint: false,
+      openWorldHint: false,
       readOnlyHint: true,
+    });
+    expect(definitions.find((tool) => tool.name === "run_rank_check")?.annotations).toEqual({
+      destructiveHint: false,
+      openWorldHint: true,
+      readOnlyHint: false,
     });
     expect(definitions.find((tool) => tool.name === "delete_project")?.annotations).toEqual({
       destructiveHint: true,
+      openWorldHint: false,
       readOnlyHint: false,
     });
   });
@@ -156,6 +168,36 @@ describe("MCP tool dispatch", () => {
       path: ["projects", "prj_a00000000000000000000000", "keywords"],
       search: "?limit=25&search=rank+tracker&tag=Product",
     });
+  });
+
+  it("passes OAuth authorization as internal context without forwarding the token", async () => {
+    const oauthAuth = {
+      kind: "personal_token",
+      memberships: [],
+      token: {
+        id: "oauth:test",
+        name: "MCP OAuth",
+        prefix: "oauth",
+        publicId: null,
+        scopes: ["read"],
+        userId: "user_1",
+      },
+      user: {
+        email: "owner@example.com",
+        id: "user_1",
+        name: "Owner",
+        publicId: "usr_a00000000000000000000000",
+      },
+    } as const;
+
+    await dispatchMcpTool("list_projects", {}, oauthAuth);
+
+    const [request, , preauthenticated] = mocks.handleMcpPreauthenticatedApiRequest.mock.calls.at(
+      -1,
+    ) as unknown as [Request, string[], { auth: unknown }];
+    expect(request.headers.get("authorization")).toBeNull();
+    expect(preauthenticated.auth).toBe(oauthAuth);
+    expect(mocks.handleApiRequest).not.toHaveBeenCalled();
   });
 
   it("normalizes keyword creation payloads and forwards idempotency", async () => {

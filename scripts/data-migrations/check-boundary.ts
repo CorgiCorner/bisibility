@@ -2,10 +2,10 @@
 
 import { pathToFileURL } from "node:url";
 import { dataMigrationManifest } from "@/lib/data-migrations/manifest";
-import { validateDataMigrationBoundaries } from "./boundary";
+import { lintDataMigrationReleaseBoundaries } from "./boundary";
 
 export async function checkDataMigrationBoundary(root = process.cwd()) {
-  await validateDataMigrationBoundaries(root, dataMigrationManifest);
+  await lintDataMigrationReleaseBoundaries(root, dataMigrationManifest);
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

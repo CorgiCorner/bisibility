@@ -2,28 +2,26 @@ import { publicIdV3CutoverMetadata } from "./definitions/20260729213000_public_i
 
 export const DATA_MIGRATION_RECOVERY_COMMAND = "npm run db:migrate";
 
-export type DataMigrationMetadata = {
-  blocking: boolean;
-  blocksSchemaMigration: string;
-  contractState: "enforced" | "pending";
-  id: string;
-  requiresSchemaThrough: string;
-  writeGatePhase?: string;
-};
-
-export type DataMigrationManifestEntry = DataMigrationMetadata & {
+export type DataMigrationManifestEntry = {
   checksum: string;
+  contractMigrationId: string;
+  execution: "deploy-blocking";
+  id: string;
+  lifecycle: "active" | "retired";
+  prerequisiteSchemaMigrationId: string;
 };
 
-export const dataMigrationManifest = [
+export const dataMigrationManifest: readonly DataMigrationManifestEntry[] = [
   {
-    ...publicIdV3CutoverMetadata,
-    blocking: false,
     checksum: "396deeba223f6d6d9bfacc8f5f15b4972fef65e2c877f82761448fcf65f27f1a",
-    contractState: "enforced",
+    contractMigrationId: publicIdV3CutoverMetadata.blocksSchemaMigration,
+    execution: "deploy-blocking",
+    id: publicIdV3CutoverMetadata.id,
+    lifecycle: "retired",
+    prerequisiteSchemaMigrationId: publicIdV3CutoverMetadata.requiresSchemaThrough,
   },
-] as const satisfies readonly DataMigrationManifestEntry[];
+];
 
-export function blockingDataMigrationManifest() {
-  return dataMigrationManifest.filter((migration) => migration.blocking);
+export function activeDataMigrationManifest() {
+  return dataMigrationManifest.filter((migration) => migration.lifecycle === "active");
 }

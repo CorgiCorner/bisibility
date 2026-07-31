@@ -30,6 +30,7 @@ function rankInput(
   input: {
     apiKey?: string;
     depth?: 10 | 20 | 50 | 100;
+    device?: "desktop" | "mobile";
     domain?: string;
     location?: SerpRankLocation;
     stopOnMatch?: boolean;
@@ -38,7 +39,7 @@ function rankInput(
   return {
     credentials: { apiKey: input.apiKey ?? "serp-key" },
     depth: input.depth,
-    device: "desktop" as const,
+    device: input.device ?? ("desktop" as const),
     domain: input.domain ?? "example.com",
     keyword: "rank tracker",
     location: input.location ?? location(),
@@ -239,6 +240,100 @@ describe("serpApiProvider", () => {
     });
   });
 
+  it("preserves the requested mobile device", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      jsonResponse(
+        searchResponse([
+          {
+            displayed_link: "example.com",
+            link: "https://example.com/mobile",
+            position: 1,
+          },
+        ]),
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await serpApiProvider.fetchRank(rankInput({ device: "mobile", stopOnMatch: true }));
+
+    expect(String(fetchMock.mock.calls[0][0])).toContain("device=mobile");
+  });
+
+  it("selects the minimum organic position across every matching URL on a page", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse(
+          searchResponse([
+            {
+              link: "https://blog.example.com/first",
+              position: 8,
+            },
+            {
+              link: "https://example.com/best",
+              position: 2,
+            },
+          ]),
+        ),
+      ),
+    );
+
+    await expect(serpApiProvider.fetchRank(rankInput())).resolves.toMatchObject({
+      position: 2,
+      rankingUrl: "https://example.com/best",
+    });
+  });
+
+  it("rejects a matching organic item without a position", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse(
+          searchResponse([
+            {
+              link: "https://example.com/missing-rank",
+            },
+          ]),
+        ),
+      ),
+    );
+
+    await expect(serpApiProvider.fetchRank(rankInput())).rejects.toMatchObject({
+      anomalyCodes: ["organic_rank_missing"],
+      name: "ProviderPayloadContractError",
+    });
+  });
+
+  it("records but skips a malformed rank on a known nonmatching organic item", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse(
+          searchResponse([
+            {
+              link: "https://competitor.example.org/missing-rank",
+            },
+            {
+              link: "https://example.com/ranking",
+              position: 3,
+            },
+          ]),
+        ),
+      ),
+    );
+
+    await expect(serpApiProvider.fetchRank(rankInput())).resolves.toMatchObject({
+      position: 3,
+      raw: {
+        normalization: {
+          anomalies: [{ code: "organic_rank_missing", index: 0 }],
+          outcome: "match",
+          version: "v2",
+        },
+      },
+    });
+  });
+
   it("pins on the canonical city string plus gl/hl for a resolved city location", async () => {
     const fetchMock = vi
       .fn()
@@ -331,7 +426,7 @@ describe("serpApiProvider", () => {
     expect(String(fetchMock.mock.calls[4][0])).toContain("start=40");
   });
 
-  it("ignores malformed positions and results beyond the requested depth", async () => {
+  it("rejects a matching malformed position even when another result is beyond depth", async () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(
@@ -347,10 +442,9 @@ describe("serpApiProvider", () => {
       );
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(serpApiProvider.fetchRank(rankInput({ depth: 20 }))).resolves.toMatchObject({
-      position: null,
-      rankingUrl: null,
-      raw: { organic_results: [] },
+    await expect(serpApiProvider.fetchRank(rankInput({ depth: 20 }))).rejects.toMatchObject({
+      anomalyCodes: ["organic_rank_invalid"],
+      name: "ProviderPayloadContractError",
     });
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
