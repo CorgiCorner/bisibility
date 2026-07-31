@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## [0.2.3] - 2026-07-31
+
+- Fixed release completion when GHCR visibility updates are unavailable but the published images
+  already pass anonymous pull verification.
+
 ## [0.2.2] - 2026-07-31
 
 - Fixed public multi-architecture image publication so release builds reliably publish the web and

@@ -309,11 +309,13 @@ jobs:
           GH_TOKEN: ${{ secrets.GHCR_TOKEN || github.token }}
           PACKAGE_NAME: ${{ matrix.image.package }}
         run: |
-          gh api --method PATCH \
-            -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            "/orgs/corgicorner/packages/container/${PACKAGE_NAME}/visibility" \
-            -f visibility=public
+          if ! gh api --method PATCH \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "/orgs/corgicorner/packages/container/${PACKAGE_NAME}/visibility" \
+              -f visibility=public; then
+            echo "::notice::GHCR visibility update was unavailable; anonymous pull verification remains authoritative."
+          fi
 
       - name: Verify anonymous pull access
         if: (matrix.image.registry == 'ghcr' && needs.prepare.outputs.ghcr_enabled == 'true') || (matrix.image.registry == 'dockerhub' && needs.prepare.outputs.dockerhub_enabled == 'true')
