@@ -44,7 +44,7 @@ export function buildAlternativeJsonLd(competitor: CompetitorContent) {
         {
           "@type": "ListItem",
           position: 3,
-          name: competitor.entityFirst ? competitor.name : `Bisibility vs ${competitor.name}`,
+          name: competitor.entityFirst ? competitor.name : `bisibility vs ${competitor.name}`,
           item: pageUrl,
         },
       ],

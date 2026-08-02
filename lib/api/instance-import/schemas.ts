@@ -267,7 +267,7 @@ function packageSchema(version: 5 | 6) {
         ctx.addIssue({
           code: "custom",
           message:
-            "Version 5 ranking history has ambiguous statuses; update Bisibility and re-export the package.",
+            "Version 5 ranking history has ambiguous statuses; update bisibility and re-export the package.",
           path: ["keywords"],
         });
       }

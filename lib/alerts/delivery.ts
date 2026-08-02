@@ -151,7 +151,7 @@ export async function sendAlertEmail(to: string, payload: TriggeredAlertDelivery
     category: "bulk",
     from: alertsEmailFrom(),
     html: `<p><strong>${escapeHtml(payload.headline)}</strong></p><p>${escapeHtml(payload.action)}</p>`,
-    subject: `[Bisibility] ${payload.headline}`,
+    subject: `[bisibility] ${payload.headline}`,
     text: `${payload.headline}\n\n${payload.action}`,
     to,
   });

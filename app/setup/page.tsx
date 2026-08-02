@@ -18,8 +18,8 @@ import { SetupWizard } from "./SetupWizard";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = createNoindexMetadata({
-  title: "Set up Bisibility",
-  description: "Create the administrator account for this Bisibility installation.",
+  title: "Set up bisibility",
+  description: "Create the administrator account for this bisibility installation.",
 });
 
 function SetupFrame({ children }: Readonly<{ children: React.ReactNode }>) {

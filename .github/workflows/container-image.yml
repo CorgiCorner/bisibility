@@ -423,3 +423,53 @@ jobs:
             --verify-tag \
             --generate-notes \
             --title "$RELEASE_TAG"
+
+  sync-dockerhub-descriptions:
+    name: Sync Docker Hub descriptions
+    if: >-
+      github.repository == 'CorgiCorner/bisibility' &&
+      github.event_name == 'repository_dispatch' &&
+      needs.prepare.outputs.dockerhub_enabled == 'true' &&
+      needs.publish-release.result == 'success'
+    needs:
+      - prepare
+      - publish-release
+    concurrency:
+      group: dockerhub-description-sync
+      cancel-in-progress: false
+    runs-on: ${{ github.repository != 'CorgiCorner/bisibility' && vars.CI_USE_DEPOT == 'true' && 'depot-ubuntu-24.04' || 'ubuntu-latest' }}
+    timeout-minutes: 10
+    permissions:
+      contents: read
+
+    steps:
+      - name: Resolve latest public release
+        id: latest-release
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          latest_tag="$(gh api "repos/${GITHUB_REPOSITORY}/releases/latest" --jq '.tag_name')"
+          if ! [[ "$latest_tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([+-][0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::Latest public release tag is invalid: $latest_tag"
+            exit 1
+          fi
+          echo "tag=$latest_tag" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout latest public release
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ steps.latest-release.outputs.tag }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
+        with:
+          node-version-file: .nvmrc
+
+      - name: Update and verify Docker Hub descriptions
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.latest-release.outputs.tag }}
+        run: node .github/scripts/sync-dockerhub-descriptions.mjs --version "$RELEASE_TAG"

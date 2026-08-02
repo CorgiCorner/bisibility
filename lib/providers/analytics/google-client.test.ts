@@ -197,7 +197,7 @@ describe("listGa4Properties", () => {
           accountSummaries: [
             {
               displayName: "CorgiCorner",
-              propertySummaries: [{ displayName: "Bisibility", property: "properties/123456789" }],
+              propertySummaries: [{ displayName: "bisibility", property: "properties/123456789" }],
             },
           ],
           nextPageToken: "page-2",
@@ -218,7 +218,7 @@ describe("listGa4Properties", () => {
     await expect(listGa4Properties("access-token")).resolves.toEqual([
       {
         accountDisplayName: "CorgiCorner",
-        displayName: "Bisibility",
+        displayName: "bisibility",
         propertyId: "123456789",
       },
       {

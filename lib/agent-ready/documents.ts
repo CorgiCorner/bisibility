@@ -1,5 +1,7 @@
 import { createHash } from "node:crypto";
 import { getCapabilities } from "@/lib/api/capabilities";
+import { protectedResourceMetadataUrl } from "@/lib/deployment/mcp-origin-contract";
+import packageJson from "@/package.json";
 import type { MetadataRoute } from "next";
 import { getSkillArchive } from "./archive";
 import { absoluteUrl } from "./origin";
@@ -41,7 +43,7 @@ function skillSlug(name: string) {
 }
 
 function generatedToolDescription(tool: (typeof mcpToolCapabilities)[number]) {
-  return `${tool.description}. Use when an agent needs the exact Bisibility API input schema and operation details for ${tool.operationId}.`;
+  return `${tool.description}. Use when an agent needs the exact bisibility API input schema and operation details for ${tool.operationId}.`;
 }
 
 function toolMarkdown(tool: (typeof mcpToolCapabilities)[number]) {
@@ -52,7 +54,7 @@ function toolMarkdown(tool: (typeof mcpToolCapabilities)[number]) {
     `name: ${name}`,
     `description: ${JSON.stringify(generatedToolDescription(tool))}`,
     "license: AGPL-3.0-only",
-    "compatibility: Requires access to a Bisibility origin and a bearer credential with the required permission.",
+    "compatibility: Requires access to a bisibility origin and a bearer credential with the required permission.",
     "metadata:",
     "  publisher: bisibility",
     "  bisibility.kind: generated-tool-reference",
@@ -63,7 +65,7 @@ function toolMarkdown(tool: (typeof mcpToolCapabilities)[number]) {
     "",
     tool.description,
     "",
-    "Use this document as a generated Bisibility API tool reference, not a full task workflow.",
+    "Use this document as a generated bisibility API tool reference, not a full task workflow.",
     "",
     "- Base URL: `/api/v1`",
     "- Auth: `Authorization: Bearer <token>`",
@@ -179,14 +181,14 @@ export function createSkillArchiveBytes(slug: string): Buffer | null {
   return skill ? getSkillArchive(skill).bytes : null;
 }
 
-export function createMcpServerCard(origin: string) {
+export function createMcpServerCard(
+  origin: string,
+  mcpResource: string = absoluteUrl(origin, "/api/mcp"),
+) {
   return {
     $schema: "https://modelcontextprotocol.io/schemas/server-card/2025-11-25.json",
     authentication: {
-      protectedResourceMetadata: absoluteUrl(
-        origin,
-        "/.well-known/oauth-protected-resource/api/mcp",
-      ),
+      protectedResourceMetadata: protectedResourceMetadataUrl(mcpResource),
       required: true,
       schemes: ["bearer"],
     },
@@ -204,7 +206,10 @@ export function createMcpServerCard(origin: string) {
       openapi: absoluteUrl(origin, "/api/v1/openapi.json"),
     },
     protocolVersion: "2025-11-25",
-    serverInfo: { name: "bisibility", version: process.env.npm_package_version ?? "0.0.0" },
+    serverInfo: {
+      name: "bisibility",
+      version: process.env.npm_package_version?.trim() || packageJson.version,
+    },
     transport: {
       endpoint: absoluteUrl(origin, "/api/v1"),
       note: "REST fallback because @modelcontextprotocol/sdk is not installed in this app.",

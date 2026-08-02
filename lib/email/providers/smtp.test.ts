@@ -16,7 +16,7 @@ vi.mock("nodemailer", () => ({
 }));
 
 const message = {
-  from: "Bisibility <reports@example.com>",
+  from: "bisibility <reports@example.com>",
   html: "<p>Report ready</p>",
   subject: "Weekly report",
   text: "Report ready",
@@ -57,7 +57,7 @@ describe("smtp email provider", () => {
       socketTimeout: 10_000,
     });
     expect(sendMailMock).toHaveBeenCalledWith({
-      from: "Bisibility <reports@example.com>",
+      from: "bisibility <reports@example.com>",
       html: "<p>Report ready</p>",
       subject: "Weekly report",
       text: "Report ready",

@@ -48,16 +48,16 @@ per-request cost.
 | `Password` | DataForSEO API password from your account dashboard. |
 | `Cost estimate per check (USD)` | `0.0155` is the current Live estimate for a Top 100 check; use `0.0020` for Top 10. |
 
-Bisibility currently uses DataForSEO Live. Its estimated cost is about `$0.0020`
+bisibility currently uses DataForSEO Live. Its estimated cost is about `$0.0020`
 for Top 10 and `$0.0155` for Top 100 because additional pages are billed below
-the first-page rate. Bisibility stores the actual cost reported by DataForSEO
+the first-page rate. bisibility stores the actual cost reported by DataForSEO
 for each completed check; if the provider does not report a positive cost, the
 app falls back to the connection's configured per-check estimate.
 
-When **Stop checks at first domain match** is on, Bisibility sends
+When **Stop checks at first domain match** is on, bisibility sends
 `stop_crawl_on_match` with the tracked domain. DataForSEO may then crawl fewer
 pages than the configured depth, and the actual provider-reported cost is still
-what Bisibility records.
+what bisibility records.
 
 Optional environment fallback credentials:
 
@@ -76,7 +76,7 @@ Use SerpApi when you prefer a subscription plan with a monthly search quota.
 | `Cost estimate per check (USD)` | An estimated USD cost per logical check at your configured depth. |
 
 SerpApi plans include a monthly search allowance. SerpApi responses do not give
-Bisibility a per-response dollar cost, so configure the connection's per-check
+bisibility a per-response dollar cost, so configure the connection's per-check
 estimate yourself. Multiply your effective per-search price by
 `ceil(depth / 10)` for your configured depth. For example, `$275 / 30,000`
 searches is about `$0.00917` per search; a Top-100 check uses up to 10 searches,
@@ -90,7 +90,7 @@ SERPAPI_API_KEY=
 
 ### Stop checks at first domain match
 
-This project setting is on by default. Bisibility stops as soon as the tracked
+This project setting is on by default. bisibility stops as soon as the tracked
 domain is found, so actual SerpApi searches per check are often fewer than
 `ceil(depth / 10)`. The configured per-check estimate remains the worst-case
 value for the selected depth. Turn the setting off when complete full-depth
@@ -180,7 +180,7 @@ scopes.
 6. Open **Integrations** and connect Google Search Console or GA4.
 
 The connect flow requests offline access with a forced consent prompt, so
-Google returns a refresh token on every connect. Bisibility stores only the
+Google returns a refresh token on every connect. bisibility stores only the
 encrypted refresh token and mints short-lived access tokens on demand; access
 tokens are never persisted.
 
@@ -199,7 +199,7 @@ and reconnect.
 
 ### Finding your GA4 Property ID
 
-Google Analytics 4 exposes several identifiers. Bisibility needs the
+Google Analytics 4 exposes several identifiers. bisibility needs the
 digits-only **Property ID** used by the Google Analytics Data API.
 
 1. Open Google Analytics 4 and select the property you want to connect.
@@ -215,7 +215,7 @@ and [identifying a web data stream's Measurement ID](https://support.google.com/
 <Warning>
   Do not paste an ID beginning with `G-`. That is a web data-stream Measurement
   ID, not a Property ID. Do not paste a legacy Universal Analytics ID beginning
-  with `UA-` either. Bisibility requires the digits-only GA4 Property ID.
+  with `UA-` either. bisibility requires the digits-only GA4 Property ID.
 </Warning>
 
 ### Troubleshooting analytics connections
@@ -254,7 +254,7 @@ Search Analytics has no daily per-property cap. Google does not expose an API
 for remaining Search Console quota. Inspect usage in the Google Cloud Console
 quotas tab; an HTTP `429` response is the runtime backstop.
 
-Bisibility applies two URL Inspection controls before making a request:
+bisibility applies two URL Inspection controls before making a request:
 
 1. The project limit controls how many target URLs that project may inspect per
    day.
@@ -264,7 +264,7 @@ Bisibility applies two URL Inspection controls before making a request:
 
 The property cap leaves headroom below Google's 2,000-per-day limit for retries
 and other tools. It is globally consistent when the instance uses its required
-Redis or Valkey store. The in-process development fallback resets on restart,
+Valkey or another Redis-compatible store. The in-process development fallback resets on restart,
 so Google's own `429` remains the final backstop.
 
 For `N` tracked target URLs and a project limit `L` greater than zero, each URL

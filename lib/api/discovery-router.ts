@@ -6,6 +6,7 @@ import {
   getReadiness,
   llmsText,
 } from "./discovery";
+import { canReadDetailedHealth } from "./probe-auth";
 import { getCostEstimate, getProviderRates } from "./public-cost";
 import { checkRateLimit, rateLimitExceeded } from "./ratelimit";
 
@@ -20,7 +21,7 @@ const discoveryRoutes = new Set([
   "readiness",
 ]);
 
-export async function handleDiscovery(req: Request, path: string[]) {
+export async function handleDiscovery(req: Request, path: string[], preauthenticated = false) {
   if (path.length !== 1 || !discoveryRoutes.has(path[0])) {
     return null;
   }
@@ -31,7 +32,7 @@ export async function handleDiscovery(req: Request, path: string[]) {
   }
 
   if (path[0] === "health") {
-    return getHealth(limit);
+    return getHealth(limit, await canReadDetailedHealth(req, preauthenticated));
   }
   if (path[0] === "liveness") {
     return getLiveness(limit);

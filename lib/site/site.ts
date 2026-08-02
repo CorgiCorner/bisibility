@@ -12,7 +12,7 @@ export const CLOUD_BETA_EMAIL_NOTICE =
 export const GITHUB_ISSUES_URL = `${GITHUB_URL}/issues/new`;
 export const GITHUB_STARS = "0";
 export const DISCORD_URL = "https://discord.gg/bisibility";
-export const FEEDBACK_URL = "mailto:feedback@bisibility.com?subject=Bisibility%20feedback";
+export const FEEDBACK_URL = "mailto:feedback@bisibility.com?subject=bisibility%20feedback";
 export const LICENSE = "AGPL-3.0";
 
 export function isDocsHref(href: string): boolean {

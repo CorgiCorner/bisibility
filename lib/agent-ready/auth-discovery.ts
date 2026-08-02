@@ -1,15 +1,21 @@
 import { oidcScopes } from "@/lib/auth/oidc-scopes";
+import {
+  normalizeAuthorizationServerOrigin,
+  protectedResourceMetadataUrl,
+} from "@/lib/deployment/mcp-origin-contract";
 import { absoluteUrl } from "./origin";
 
 export function createAuthorizationServerMetadata(origin: string) {
+  const issuer = normalizeAuthorizationServerOrigin(origin);
+
   return {
-    issuer: origin,
-    authorization_endpoint: absoluteUrl(origin, "/api/auth/oauth2/authorize"),
-    token_endpoint: absoluteUrl(origin, "/api/auth/oauth2/token"),
-    userinfo_endpoint: absoluteUrl(origin, "/api/auth/oauth2/userinfo"),
-    jwks_uri: absoluteUrl(origin, "/api/auth/jwks"),
-    registration_endpoint: absoluteUrl(origin, "/api/auth/oauth2/register"),
-    end_session_endpoint: absoluteUrl(origin, "/api/auth/oauth2/endsession"),
+    issuer,
+    authorization_endpoint: absoluteUrl(issuer, "/api/auth/oauth2/authorize"),
+    token_endpoint: absoluteUrl(issuer, "/api/auth/oauth2/token"),
+    userinfo_endpoint: absoluteUrl(issuer, "/api/auth/oauth2/userinfo"),
+    jwks_uri: absoluteUrl(issuer, "/api/auth/jwks"),
+    registration_endpoint: absoluteUrl(issuer, "/api/auth/oauth2/register"),
+    end_session_endpoint: absoluteUrl(issuer, "/api/auth/oauth2/endsession"),
     response_types_supported: ["code"],
     response_modes_supported: ["query"],
     grant_types_supported: ["authorization_code", "refresh_token"],
@@ -31,50 +37,53 @@ export function createAuthorizationServerMetadata(origin: string) {
       "name",
     ],
     agent_auth: {
-      skill: absoluteUrl(origin, "/auth.md"),
-      register_uri: absoluteUrl(origin, "/api/auth/oauth2/register"),
+      skill: absoluteUrl(issuer, "/auth.md"),
+      register_uri: absoluteUrl(issuer, "/api/auth/oauth2/register"),
       registration: ["dynamic_client_registration"],
       identity_types_supported: ["anonymous"],
       anonymous: {
         credential_types_supported: ["oauth2_client"],
-        claim_uri: absoluteUrl(origin, "/login"),
+        claim_uri: absoluteUrl(issuer, "/login"),
       },
-      claim_uri: absoluteUrl(origin, "/login"),
+      claim_uri: absoluteUrl(issuer, "/login"),
     },
   };
 }
 
-export function createOAuthProtectedResource(origin: string) {
+export function createOAuthProtectedResource(resource: string, authorizationServer: string) {
   return {
-    authorization_servers: [origin],
+    authorization_servers: [normalizeAuthorizationServerOrigin(authorizationServer)],
     bearer_methods_supported: ["header"],
-    resource: absoluteUrl(origin, "/api/v1"),
+    resource,
     scopes_supported: ["read", "write", "admin"],
   };
 }
 
-export function createMcpOAuthProtectedResource(origin: string) {
-  const authorizationServer = origin.replace(/\/+$/, "");
-
-  return {
-    authorization_servers: [authorizationServer],
-    bearer_methods_supported: ["header"],
-    resource: `${authorizationServer}/api/mcp`,
-    scopes_supported: ["read", "write", "admin"],
-  };
+export function createMcpOAuthProtectedResource(resource: string, authorizationServer: string) {
+  return createOAuthProtectedResource(resource, authorizationServer);
 }
 
-export function createAuthMarkdown(origin: string) {
+type AuthMarkdownOrigins = {
+  authorizationServer?: string;
+  mcpResource?: string;
+};
+
+export function createAuthMarkdown(origin: string, origins: AuthMarkdownOrigins = {}) {
+  const authorizationServer = normalizeAuthorizationServerOrigin(
+    origins.authorizationServer ?? origin,
+  );
+  const mcpResource = origins.mcpResource ?? absoluteUrl(origin, "/api/mcp");
+
   return [
-    "# Bisibility auth.md",
+    "# bisibility auth.md",
     "",
-    "Bisibility supports agent access through personal access tokens (PATs)",
+    "bisibility supports agent access through personal access tokens (PATs)",
     "and project API keys.",
     "",
     "## Audience",
     "",
     "Agents, MCP clients, scripts, and integrations that need to read or update",
-    "rank-tracking data through the Bisibility REST API.",
+    "rank-tracking data through the bisibility REST API.",
     "",
     "## Choose a credential",
     "",
@@ -113,22 +122,25 @@ export function createAuthMarkdown(origin: string) {
     "## Discovery metadata",
     "",
     `- OAuth protected resource metadata: ${absoluteUrl(
-      origin,
+      authorizationServer,
       "/.well-known/oauth-protected-resource",
     )}`,
-    `- MCP OAuth protected resource metadata: ${absoluteUrl(
-      origin,
-      "/.well-known/oauth-protected-resource/api/mcp",
-    )}`,
+    `- MCP OAuth protected resource metadata: ${protectedResourceMetadataUrl(mcpResource)}`,
     `- OAuth authorization server metadata: ${absoluteUrl(
-      origin,
+      authorizationServer,
       "/.well-known/oauth-authorization-server",
     )}`,
-    `- OpenID Connect metadata: ${absoluteUrl(origin, "/.well-known/openid-configuration")}`,
-    `- Authorization endpoint: ${absoluteUrl(origin, "/api/auth/oauth2/authorize")}`,
-    `- Token endpoint: ${absoluteUrl(origin, "/api/auth/oauth2/token")}`,
-    `- Userinfo endpoint: ${absoluteUrl(origin, "/api/auth/oauth2/userinfo")}`,
-    `- Dynamic client registration: ${absoluteUrl(origin, "/api/auth/oauth2/register")}`,
+    `- OpenID Connect metadata: ${absoluteUrl(
+      authorizationServer,
+      "/.well-known/openid-configuration",
+    )}`,
+    `- Authorization endpoint: ${absoluteUrl(authorizationServer, "/api/auth/oauth2/authorize")}`,
+    `- Token endpoint: ${absoluteUrl(authorizationServer, "/api/auth/oauth2/token")}`,
+    `- Userinfo endpoint: ${absoluteUrl(authorizationServer, "/api/auth/oauth2/userinfo")}`,
+    `- Dynamic client registration: ${absoluteUrl(
+      authorizationServer,
+      "/api/auth/oauth2/register",
+    )}`,
     `- Agent Skills index: ${absoluteUrl(origin, "/.well-known/agent-skills/index.json")}`,
     `- MCP server card: ${absoluteUrl(origin, "/.well-known/mcp/server-card.json")}`,
     "",

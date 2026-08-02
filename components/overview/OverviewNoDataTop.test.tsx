@@ -129,7 +129,7 @@ describe("NoDataBanner", () => {
     fireEvent.click(confirmButton);
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "Bisibility was updated while this page was open. Refresh the app to continue.",
+      "bisibility was updated while this page was open. Refresh the app to continue.",
     );
     expect(screen.queryByText(/deadbeef/)).not.toBeInTheDocument();
   });

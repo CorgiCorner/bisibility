@@ -247,6 +247,12 @@ function dispatchProjectTool(name: string, input: ToolArgs, page: string): RestC
       );
     case "disconnectProvider":
       return call(member("providers", "provider_id"), "DELETE", input);
+    case "listSavedKeywords":
+      return call(`${project("saved-keywords")}${page}`, "GET");
+    case "createSavedKeywords":
+      return call(project("saved-keywords"), "POST", input, body(input, ["project_id"]));
+    case "deleteSavedKeyword":
+      return call(member("saved-keywords", "saved_keyword_id"), "DELETE", input);
     case "listSavedViews":
       return call(
         `${project("saved-views")}${query(input, ["cursor", "limit", "surface"])}`,

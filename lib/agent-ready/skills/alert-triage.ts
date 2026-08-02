@@ -4,14 +4,14 @@ export const skill: TaskSkill = {
   slug: "alert-triage",
   title: "Alert triage",
   description:
-    "Investigate Bisibility ranking alerts that have fired and tune the rules that produce them; use this when a project's alerts are noisy, a sudden drop needs root-causing, or you need to confirm an alert reflects a real rank movement.",
+    "Investigate bisibility ranking alerts that have fired and tune the rules that produce them; use this when a project's alerts are noisy, a sudden drop needs root-causing, or you need to confirm an alert reflects a real rank movement.",
   compatibility:
-    "Requires a Bisibility origin and a bearer API key with write scope (reading alerts/checks works with read; creating or editing alert rules needs write).",
+    "Requires a bisibility origin and a bearer API key with write scope (reading alerts/checks works with read; creating or editing alert rules needs write).",
   kind: "task-skill",
   version: "0.1.0",
   body: `# Alert triage
 
-Triage the ranking alerts that have fired for a Bisibility project: confirm each
+Triage the ranking alerts that have fired for a bisibility project: confirm each
 one against the underlying rank-check data, separate signal from noise, and then
 adjust the alert rules so future alerts are trustworthy.
 
@@ -23,7 +23,7 @@ asked to "look at the alerts" and decide which ones are real and what to change.
 
 ## Prerequisites
 
-- A Bisibility **origin / base URL**. EU Cloud is \`https://eu.bisibility.com/api/v1\`;
+- A bisibility **origin / base URL**. EU Cloud is \`https://eu.bisibility.com/api/v1\`;
   self-hosted is \`https://your-host.example/api/v1\`. Resolve which one applies
   before making calls and reuse it everywhere below.
 - A **bearer API key**. Reading triggered alerts and rank checks needs \`read\`;

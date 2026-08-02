@@ -77,7 +77,7 @@ describe("team actions", () => {
     process.env.SITE_URL = "https://app.example.com";
     process.env.EMAIL_PROVIDER = "resend";
     process.env.RESEND_API_KEY = "resend_test";
-    process.env.EMAIL_FROM = "Bisibility <notifications@example.com>";
+    process.env.EMAIL_FROM = "bisibility <notifications@example.com>";
     globalThis.fetch = vi.fn(() => Promise.resolve(new Response(null, { status: 202 })));
     mocks.reserveEmailDailyBudget.mockResolvedValue({
       day: new Date("2026-07-23T00:00:00.000Z"),

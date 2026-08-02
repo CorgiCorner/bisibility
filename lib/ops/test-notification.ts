@@ -10,7 +10,7 @@ export const opsTestNotificationEvent: OpsEventInput = {
   fields: { Source: "instance operator" },
   kind: "test",
   severity: "info",
-  title: "Bisibility operator observability test",
+  title: "bisibility operator observability test",
 };
 
 /**

@@ -1,5 +1,5 @@
 export const STALE_DEPLOYMENT_MESSAGE =
-  "Bisibility was updated while this page was open. Refresh the app to continue. Any unsaved changes will be lost.";
+  "bisibility was updated while this page was open. Refresh the app to continue. Any unsaved changes will be lost.";
 
 const stalePatterns = [
   /failed to find server action/i,

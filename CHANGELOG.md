@@ -2,6 +2,29 @@
 
 ## Unreleased
 
+## [0.3.0] - 2026-08-02
+
+- Preserved OAuth consent and other return destinations when email OTP sign-in requires two-factor
+  verification.
+- **Breaking:** Resend contact and segment sync now requires `RESEND_CONTACTS_API_KEY`;
+  `RESEND_API_KEY` is only for deployments sending email with `EMAIL_PROVIDER=resend`.
+- **Breaking:** `BETTER_AUTH_SECRETS` must list versions in strictly descending order, and any
+  configured `BETTER_AUTH_SECRET` must contain at least 16 characters.
+- Added complete verification modes for rotating Better Auth 2FA envelopes and
+  application-encrypted provider credentials without partial scans.
+- Added REST and hosted MCP operations to list, save, and delete keyword ideas without starting
+  rank tracking.
+- Fixed hosted MCP discovery: the apex uses the regional authorization issuer, REST metadata stays
+  regional, and self-hosted installs keep one origin.
+- Fixed MCP discovery and initialization metadata to report the application package version
+  instead of `0.0.0` when npm lifecycle variables are unavailable.
+
+- Added a canonical cross-language SDK behavior contract covering authentication, timeouts,
+  retries, cancellation, errors, headers, cursor iteration, and sync/async parity.
+
+- Added status-only anonymous `/liveness` and `/readiness` responses, and protected detailed
+  `/health` diagnostics behind API credentials or the optional `INTERNAL_PROBE_TOKEN`.
+
 ## [0.2.3] - 2026-07-31
 
 - Fixed release completion when GHCR visibility updates are unavailable but the published images

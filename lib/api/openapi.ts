@@ -18,6 +18,7 @@ import * as personalAccess from "./openapi-pat";
 import { projectOverviewPaths } from "./openapi-project-overview";
 import { publicPaths } from "./openapi-public";
 import { rankedKeywordSuggestionPaths } from "./openapi-ranked-keywords";
+import { savedKeywordPaths } from "./openapi-saved-keywords";
 import { savedViewOperations } from "./openapi-saved-views";
 import { openApiTags, tagOpenApiPaths } from "./openapi-tags";
 import { teamMutationPaths } from "./openapi-team-mutations";
@@ -126,8 +127,8 @@ export function getOpenApiDocument() {
       },
     },
     info: {
-      description: `Public REST API for Bisibility keyword rank tracking. Clients may optionally declare v1 with the ${API_VERSION_HEADER} header. Resource IDs use strict v3 prefixed public IDs and list cursors are version 3.`,
-      title: "Bisibility Public API",
+      description: `Public REST API for bisibility keyword rank tracking. Clients may optionally declare v1 with the ${API_VERSION_HEADER} header. Resource IDs use strict v3 prefixed public IDs and list cursors are version 3.`,
+      title: "bisibility Public API",
       version: "1.0.0",
     },
     openapi: "3.1.0",
@@ -256,6 +257,7 @@ export function getOpenApiDocument() {
       "/projects/{project_id}/providers/{provider_id}/test": {
         post: bearerOperation("Test a provider connection", "testProviderConnection", obj),
       },
+      ...savedKeywordPaths(list, bearerOperation, createdBearerOperation),
       "/projects/{project_id}/saved-views": savedViewOperations(
         list,
         bearerOperation,

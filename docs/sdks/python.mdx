@@ -42,10 +42,35 @@ with BisibilityClient(
 See [Projects](/api/projects#list-projects) for the request and response
 contract.
 
+## Use the async client
+
+`AsyncBisibilityClient` exposes the same API operations with non-blocking HTTP,
+retry delays, and cursor iteration. Use `async with` when the client owns its
+HTTP transport:
+
+```python
+from bisibility import AsyncBisibilityClient
+
+
+async with AsyncBisibilityClient(
+    api_key=required_env("BISIBILITY_API_KEY"),
+    base_url=required_env("BISIBILITY_BASE_URL"),
+) as client:
+    projects = await client.list_projects()
+    async for keyword in client.iter_keywords(projects.data[0].id):
+        print(keyword.text)
+```
+
+Call `await client.aclose()` when lifecycle management cannot use a context
+manager.
+
 ## Next steps
 
 The [SDK method reference](/sdks/methods) maps common workflows to Python
 method names.
+
+The [canonical SDK behavior contract](/sdks/behavior) defines retries, timeouts,
+cancellation, errors, headers, cursor iteration, and sync/async parity.
 
 The [Python SDK source](https://github.com/CorgiCorner/bisibility-sdk-python)
 contains the complete client surface and typed models.

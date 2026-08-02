@@ -1,3 +1,4 @@
+import { dateFromFrozenNow } from "@/tests/clock";
 import { beforeEach, describe, expect, expectTypeOf, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -316,7 +317,7 @@ describe("instance admin queries", () => {
       now,
       {
         rank24h: new Date("2026-07-16T12:00:00.000Z"),
-        rank7d: new Date("2026-07-10T12:00:00.000Z"),
+        rank7d: dateFromFrozenNow({ hours: -11 }),
       },
       ["rank24h"],
     );

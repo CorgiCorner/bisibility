@@ -4,13 +4,13 @@ export const skill: TaskSkill = {
   slug: "team-api-governance",
   title: "Team & API governance",
   description:
-    "Audit and manage Bisibility API keys, project team membership/invites, and migration tokens. Use this skill when an agent must rotate or revoke API keys, review or change who can access a project, or mint/revoke a one-time data-migration token.",
-  compatibility: "Requires a Bisibility origin and a bearer API key with admin scope.",
+    "Audit and manage bisibility API keys, project team membership/invites, and migration tokens. Use this skill when an agent must rotate or revoke API keys, review or change who can access a project, or mint/revoke a one-time data-migration token.",
+  compatibility: "Requires a bisibility origin and a bearer API key with admin scope.",
   kind: "task-skill",
   version: "0.1.0",
   body: `# Team & API governance
 
-Governs the sensitive, admin-scoped surface of a Bisibility instance: API keys,
+Governs the sensitive, admin-scoped surface of a bisibility instance: API keys,
 project team members/invites, and migration tokens. All operations here can grant
 or revoke access, so plan every change before issuing a write.
 

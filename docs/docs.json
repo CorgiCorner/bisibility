@@ -59,6 +59,7 @@
             "group": "SDKs",
             "pages": [
               "sdks/overview",
+              "sdks/behavior",
               "sdks/methods",
               "sdks/python",
               "sdks/typescript",
@@ -195,6 +196,14 @@
             "pages": [
               "GET /projects/{project_id}/sitemap-monitors",
               "PATCH /projects/{project_id}/sitemap-monitors/{monitor_id}"
+            ]
+          },
+          {
+            "group": "Saved Keywords",
+            "pages": [
+              "GET /projects/{project_id}/saved-keywords",
+              "POST /projects/{project_id}/saved-keywords",
+              "DELETE /projects/{project_id}/saved-keywords/{saved_keyword_id}"
             ]
           },
           {

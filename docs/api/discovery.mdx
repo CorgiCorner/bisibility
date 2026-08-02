@@ -1,10 +1,12 @@
 ---
 title: "Discovery"
-description: "Unauthenticated API discovery endpoints for health checks and agent clients."
+description: "Public probe status, protected diagnostics, and agent discovery endpoints."
 ---
 
-Discovery endpoints do not require an API key. They are still rate limited by
-client identity.
+Discovery endpoints expose their public response without an API key and remain
+rate limited by client identity. Valid API credentials change only `/health`:
+they unlock its detailed operator response. Deployment automation can use an
+optional `INTERNAL_PROBE_TOKEN` instead of a database-backed credential.
 
 ## Liveness and readiness
 
@@ -18,6 +20,10 @@ Liveness performs no database, migration, worker, or Temporal checks. A response
 means the web process can execute the handler, so it returns `200` even when the
 database contract is not ready.
 
+```json
+{ "status": "ok" }
+```
+
 Use readiness to decide whether to send web traffic:
 
 ```http
@@ -29,13 +35,36 @@ migrations report `ready`; otherwise it returns `503`. Worker heartbeat,
 Temporal, and worker-schema parity do not decide web readiness because reads can
 still be served while those asynchronous subsystems are unavailable.
 
+Both the `200` and `503` responses contain only aggregate status:
+
+```json
+{ "status": "degraded" }
+```
+
 ## Composite health
 
 ```http
 GET /api/v1/health
 ```
 
-Response:
+Anonymous response:
+
+```json
+{ "status": "ok" }
+```
+
+Send a valid API credential to inspect detailed diagnostics:
+
+```bash
+curl -sS "$BISIBILITY_BASE/health" \
+  -H "Authorization: Bearer $BISIBILITY_API_KEY"
+```
+
+Deployment automation can instead configure the same random value, at least 32
+characters long, as `INTERNAL_PROBE_TOKEN` on the application and send it as a
+Bearer token. Never expose or log that value.
+
+Detailed response:
 
 ```json
 {
@@ -85,10 +114,14 @@ Response:
 }
 ```
 
-`/health` remains the compatibility and diagnostics endpoint. Its composite
+`/health` remains the composite diagnostics endpoint. Its aggregate
 `status` still degrades for a database or migration failure, a degraded or down
 worker or Temporal service, or worker-schema drift. Use the explicit probe
 endpoints for restart and traffic decisions.
+
+The detailed body is an operator surface, not part of the public SDK response
+schema. Anonymous clients and official SDK probe methods receive only
+`{ "status": ... }`.
 
 `services.appRevision` and `services.workerRevision` identify the public source
 revision baked into each artifact. They are `"unknown"` when the build did not

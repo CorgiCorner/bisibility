@@ -24,7 +24,7 @@ export type TwoFactorMigrationStore = {
 export type TwoFactorMigrationCounts = {
   concurrent: number;
   eligibleRows: number;
-  encryptedValues: number;
+  eligibleValues: number;
   migratedRows: number;
   scanned: number;
   skippedRows: number;
@@ -47,7 +47,8 @@ export async function classifyTwoFactorValue(value: string, key: AuthCryptoKey) 
 
   try {
     await symmetricDecrypt({ data: value, key });
-    return "encrypted" as const;
+    if (typeof key === "string") return "current" as const;
+    return envelope?.version === key.currentVersion ? ("current" as const) : ("rotatable" as const);
   } catch {
     throw new Error(
       "Native Better Auth two-factor value could not be decrypted with the current auth secret configuration.",
@@ -59,7 +60,7 @@ function emptyCounts(): TwoFactorMigrationCounts {
   return {
     concurrent: 0,
     eligibleRows: 0,
-    encryptedValues: 0,
+    eligibleValues: 0,
     migratedRows: 0,
     scanned: 0,
     skippedRows: 0,
@@ -88,26 +89,38 @@ export async function migrateLegacyTwoFactorSecrets(
         classifyTwoFactorValue(row.secret, options.key),
         classifyTwoFactorValue(row.backupCodes, options.key),
       ]);
-      const plaintextValues =
-        Number(secretState === "plaintext") + Number(backupCodesState === "plaintext");
-      if (plaintextValues === 0) {
+      const eligibleValues =
+        Number(secretState !== "current") + Number(backupCodesState !== "current");
+      if (eligibleValues === 0) {
         counts.skippedRows += 1;
         continue;
       }
 
       counts.eligibleRows += 1;
-      counts.encryptedValues += plaintextValues;
+      counts.eligibleValues += eligibleValues;
       if (options.dryRun) continue;
 
       const replacement = {
         backupCodes:
-          backupCodesState === "plaintext"
-            ? await symmetricEncrypt({ data: row.backupCodes, key: options.key })
-            : row.backupCodes,
+          backupCodesState === "current"
+            ? row.backupCodes
+            : await symmetricEncrypt({
+                data:
+                  backupCodesState === "plaintext"
+                    ? row.backupCodes
+                    : await symmetricDecrypt({ data: row.backupCodes, key: options.key }),
+                key: options.key,
+              }),
         secret:
-          secretState === "plaintext"
-            ? await symmetricEncrypt({ data: row.secret, key: options.key })
-            : row.secret,
+          secretState === "current"
+            ? row.secret
+            : await symmetricEncrypt({
+                data:
+                  secretState === "plaintext"
+                    ? row.secret
+                    : await symmetricDecrypt({ data: row.secret, key: options.key }),
+                key: options.key,
+              }),
       };
       if (await store.compareAndSwap(row, replacement)) {
         counts.migratedRows += 1;

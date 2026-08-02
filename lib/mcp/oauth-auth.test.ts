@@ -2,8 +2,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { authenticateMcpOAuthRequest } from "./oauth-auth";
 
 const mocks = vi.hoisted(() => ({
-  authUrl: "https://configured.example",
+  authUrl: "https://auth.example.com",
   authUrlConfigured: true,
+  resourceUrl: "https://resource.example.com/api/mcp",
   userFindUnique: vi.fn(),
   verifyAccessToken: vi.fn(),
 }));
@@ -16,7 +17,7 @@ vi.mock("@/lib/auth/auth", () => ({
     return mocks.authUrlConfigured;
   },
   get MCP_RESOURCE_URL() {
-    return new URL("/api/mcp", mocks.authUrl).toString();
+    return mocks.resourceUrl;
   },
 }));
 
@@ -28,7 +29,7 @@ vi.mock("better-auth/oauth2", () => ({
   verifyAccessToken: mocks.verifyAccessToken,
 }));
 
-function request(token?: string, host = "rank.example") {
+function request(token?: string, host = "rank.example.com") {
   const headers = new Headers({
     Host: host,
     "X-Forwarded-Proto": "https",
@@ -41,8 +42,9 @@ function request(token?: string, host = "rank.example") {
 describe("MCP OAuth authentication", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.authUrl = "https://configured.example";
+    mocks.authUrl = "https://auth.example.com";
     mocks.authUrlConfigured = true;
+    mocks.resourceUrl = "https://resource.example.com/api/mcp";
   });
 
   afterEach(() => {
@@ -64,14 +66,14 @@ describe("MCP OAuth authentication", () => {
     });
 
     const result = await authenticateMcpOAuthRequest(
-      request("oauth-access-token", "attacker.example"),
+      request("oauth-access-token", "attacker.example.com"),
     );
 
     expect(mocks.verifyAccessToken).toHaveBeenCalledWith("oauth-access-token", {
-      jwksUrl: "https://configured.example/api/auth/jwks",
+      jwksUrl: "https://auth.example.com/api/auth/jwks",
       verifyOptions: {
-        audience: "https://configured.example/api/mcp",
-        issuer: "https://configured.example",
+        audience: "https://resource.example.com/api/mcp",
+        issuer: "https://auth.example.com",
       },
     });
     expect(result).toMatchObject({
@@ -101,9 +103,9 @@ describe("MCP OAuth authentication", () => {
     await authenticateMcpOAuthRequest(request("oauth-access-token"));
 
     const verificationOptions = mocks.verifyAccessToken.mock.calls[0]?.[1];
-    expect(verificationOptions?.jwksUrl).not.toContain("rank.example");
-    expect(verificationOptions?.verifyOptions.audience).not.toContain("rank.example");
-    expect(verificationOptions?.verifyOptions.issuer).not.toContain("rank.example");
+    expect(verificationOptions?.jwksUrl).not.toContain("rank.example.com");
+    expect(verificationOptions?.verifyOptions.audience).not.toContain("rank.example.com");
+    expect(verificationOptions?.verifyOptions.issuer).not.toContain("rank.example.com");
   });
 
   it("ignores TRUST_REQUEST_ORIGIN when selecting token verification inputs", async () => {
@@ -120,13 +122,13 @@ describe("MCP OAuth authentication", () => {
       publicId: "usr_a00000000000000000000000",
     });
 
-    await authenticateMcpOAuthRequest(request("oauth-access-token", "attacker.example"));
+    await authenticateMcpOAuthRequest(request("oauth-access-token", "attacker.example.com"));
 
     expect(mocks.verifyAccessToken).toHaveBeenCalledWith("oauth-access-token", {
-      jwksUrl: "https://configured.example/api/auth/jwks",
+      jwksUrl: "https://auth.example.com/api/auth/jwks",
       verifyOptions: {
-        audience: "https://configured.example/api/mcp",
-        issuer: "https://configured.example",
+        audience: "https://resource.example.com/api/mcp",
+        issuer: "https://auth.example.com",
       },
     });
   });
@@ -137,7 +139,7 @@ describe("MCP OAuth authentication", () => {
 
     expect(result.response.status).toBe(401);
     expect(result.response.headers.get("www-authenticate")).toBe(
-      'Bearer resource_metadata="https://configured.example/.well-known/oauth-protected-resource/api/mcp"',
+      'Bearer resource_metadata="https://resource.example.com/.well-known/oauth-protected-resource/api/mcp"',
     );
     expect(mocks.verifyAccessToken).not.toHaveBeenCalled();
   });
@@ -146,13 +148,14 @@ describe("MCP OAuth authentication", () => {
     const result = await authenticateMcpOAuthRequest(request());
     if (!("response" in result)) throw new Error("Expected an OAuth challenge response.");
 
-    expect(result.response.headers.get("www-authenticate")).not.toContain("rank.example");
+    expect(result.response.headers.get("www-authenticate")).not.toContain("rank.example.com");
     expect(mocks.verifyAccessToken).not.toHaveBeenCalled();
   });
 
   it("keeps the challenge available when no authentication server URL is configured", async () => {
     mocks.authUrl = "http://localhost:3000";
     mocks.authUrlConfigured = false;
+    mocks.resourceUrl = "http://localhost:3000/api/mcp";
 
     const result = await authenticateMcpOAuthRequest(request());
     if (!("response" in result)) throw new Error("Expected an OAuth challenge response.");
@@ -173,7 +176,7 @@ describe("MCP OAuth authentication", () => {
     expect(mocks.verifyAccessToken).not.toHaveBeenCalled();
   });
 
-  it("rejects tokens without a user subject or Bisibility access scope", async () => {
+  it("rejects tokens without a user subject or bisibility access scope", async () => {
     mocks.verifyAccessToken.mockResolvedValue({ scope: "openid", sub: "user_1" });
 
     const result = await authenticateMcpOAuthRequest(request("oauth-access-token"));

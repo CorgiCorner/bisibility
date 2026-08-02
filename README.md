@@ -196,7 +196,7 @@ flags, and output formats may change before 1.0.
 
 ## Self-hosting in production
 
-Production deployments need PostgreSQL, Redis or Valkey, and a supported SERP provider
+Production deployments need PostgreSQL, Valkey or another Redis-compatible endpoint, and a supported SERP provider
 account. Scheduled checks additionally require the Temporal worker. Read the
 [self-hosting guide](https://bisibility.com/docs/self-hosting) before serving real
 traffic.
@@ -221,7 +221,7 @@ before enabling a large schedule.
 
 - Next.js serves the dashboard and the REST API.
 - PostgreSQL is the durable source of truth.
-- Redis or Valkey holds shared runtime state.
+- Valkey ships by default; any Redis-compatible endpoint can hold shared runtime state.
 - Temporal runs recurring rank checks; manual and scheduled checks share the same
   runner and persistence model.
 - SERP and analytics providers are pluggable adapters.
@@ -229,10 +229,10 @@ before enabling a large schedule.
 ## Managed Cloud
 
 bisibility Cloud is available in open beta and is not generally available yet. It runs
-the same core application without requiring you to operate PostgreSQL, Redis or Valkey,
+the same core application without requiring you to operate PostgreSQL, Valkey,
 or the Temporal worker.
 
-Bisibility Cloud itself is free during the open beta and does not require a payment
+bisibility Cloud itself is free during the open beta and does not require a payment
 method. Provider usage is not included: DataForSEO or SerpAPI requests are billed
 directly to your connected provider account. Cloud pricing will be announced before
 the beta ends, and nothing will be charged without explicit confirmation. Self-hosting

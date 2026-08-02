@@ -14,6 +14,7 @@ const publicIdInputs = {
   monitor_id: "prj",
   project_id: "prj",
   rule_id: "alr",
+  saved_keyword_id: "svkw",
   view_id: "viw",
   webhook_id: "we",
 } as const satisfies Record<string, PublicIdPrefix>;

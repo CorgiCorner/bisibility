@@ -8,8 +8,8 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 export const metadata: Metadata = createNoindexMetadata({
-  title: "Onboarding | Bisibility",
-  description: "Set up a Bisibility project.",
+  title: "Onboarding | bisibility",
+  description: "Set up a bisibility project.",
 });
 
 type OnboardingLayoutProps = {

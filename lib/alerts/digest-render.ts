@@ -33,11 +33,11 @@ function visibleLines(alerts: TriggeredAlertDeliveryPayload[]) {
 
 export function renderAlertDigest(input: AlertDigestRenderInput) {
   const count = input.alerts.length;
-  const subject = `[Bisibility] ${alertCountLabel(count)} - ${input.ruleName} - ${input.projectName}`;
+  const subject = `[bisibility] ${alertCountLabel(count)} - ${input.ruleName} - ${input.projectName}`;
   const lines = visibleLines(input.alerts);
   const suppressionSummary =
     input.suppressedTodayCount > 0
-      ? `${alertCountLabel(input.suppressedTodayCount)} suppressed after the daily delivery-batch cap; suppressed alerts remain visible in Bisibility.`
+      ? `${alertCountLabel(input.suppressedTodayCount)} suppressed after the daily delivery-batch cap; suppressed alerts remain visible in bisibility.`
       : null;
   const header = [
     subject,

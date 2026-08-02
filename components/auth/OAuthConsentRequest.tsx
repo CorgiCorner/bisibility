@@ -59,7 +59,7 @@ function TokenLifetime({ refresh }: Readonly<{ refresh: boolean }>) {
         <Clock aria-hidden className="text-fg-faint" size={14} />
         <dt className="flex items-center gap-1.5 text-fg-muted">
           Access token
-          <InfoTooltip text="The short-lived credential this client uses to call Bisibility. It expires after 1 hour." />
+          <InfoTooltip text="The short-lived credential this client uses to call bisibility. It expires after 1 hour." />
         </dt>
         <dd className="ml-auto font-mono font-semibold text-fg">{OAUTH_ACCESS_TOKEN_TTL_LABEL}</dd>
       </div>

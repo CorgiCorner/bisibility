@@ -17,7 +17,8 @@ x-app-env: &app-env
   AWS_REGION: ${AWS_REGION:-}
   AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
   AWS_SESSION_TOKEN: ${AWS_SESSION_TOKEN:-}
-  BETTER_AUTH_SECRET: "${BETTER_AUTH_SECRET:?Set BETTER_AUTH_SECRET in .env. Generate one with: openssl rand -base64 32}"
+  BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-}
+  BETTER_AUTH_SECRETS: ${BETTER_AUTH_SECRETS:-}
   BETTER_AUTH_URL: "${BETTER_AUTH_URL:?Set BETTER_AUTH_URL to the public app origin in .env}"
   BISIBILITY_API_ANON_RATE_LIMIT_PER_MINUTE: ${BISIBILITY_API_ANON_RATE_LIMIT_PER_MINUTE:-}
   BISIBILITY_API_KEY_RATE_LIMIT_PER_MINUTE: ${BISIBILITY_API_KEY_RATE_LIMIT_PER_MINUTE:-}
@@ -56,6 +57,7 @@ x-app-env: &app-env
   GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
   GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
   GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+  INTERNAL_PROBE_TOKEN: ${INTERNAL_PROBE_TOKEN:-}
   LEGAL_CONTACT_EMAIL: ${LEGAL_CONTACT_EMAIL:-}
   LEGAL_OPERATOR_NAME: ${LEGAL_OPERATOR_NAME:-}
   LEGAL_PRIVACY_URL: ${LEGAL_PRIVACY_URL:-}
@@ -73,6 +75,10 @@ x-app-env: &app-env
   REDIS_URL: ${REDIS_URL:-redis://redis:6379}
   RANK_CHECK_RAW_RETENTION_DAYS: ${RANK_CHECK_RAW_RETENTION_DAYS:-}
   RESEND_API_KEY: ${RESEND_API_KEY:-}
+  RESEND_CONTACTS_API_KEY: ${RESEND_CONTACTS_API_KEY:-}
+  RESEND_SEGMENT_CLOUD: ${RESEND_SEGMENT_CLOUD:-}
+  RESEND_SEGMENT_EARLY_ADOPTERS: ${RESEND_SEGMENT_EARLY_ADOPTERS:-}
+  RESEND_SEGMENT_GENERAL: ${RESEND_SEGMENT_GENERAL:-}
   SERPAPI_API_KEY: ${SERPAPI_API_KEY:-}
   SES_CONFIGURATION_SET: ${SES_CONFIGURATION_SET:-}
   SES_REGION: ${SES_REGION:-}
@@ -94,7 +100,7 @@ x-app-env: &app-env
 
 services:
   db-migrations:
-    image: docker.io/corgicorner/bisibility:0.2.3
+    image: docker.io/corgicorner/bisibility:0.3.0
     pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     command: >
       sh -c 'npm run db:migrate && if [ "$$DEMO_FIXED_OTP" = "1" ]; then node --experimental-strip-types prisma/seed.ts; fi'
@@ -104,7 +110,7 @@ services:
         condition: service_healthy
 
   app:
-    image: docker.io/corgicorner/bisibility:0.2.3
+    image: docker.io/corgicorner/bisibility:0.3.0
     pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     restart: unless-stopped
     ports:
@@ -256,13 +262,16 @@ services:
       - "127.0.0.1:${TEMPORAL_UI_HOST_PORT:-8233}:8080"
 
   worker:
-    image: docker.io/corgicorner/bisibility-worker:0.2.3
+    image: docker.io/corgicorner/bisibility-worker:0.3.0
     pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     profiles: [ "scheduled" ]
     restart: unless-stopped
     environment:
       <<: *app-env
+      BETTER_AUTH_SECRET: ""
+      BETTER_AUTH_SECRETS: ""
       DATABASE_APPLICATION_NAME: bisibility-worker
+      DIRECT_URL: ""
       DATABASE_POOL_MAX: ${BISIBILITY_WORKER_DATABASE_POOL_MAX:-4}
       AUDIT_PURGE_CRON: ${AUDIT_PURGE_CRON:-}
       DATAFORSEO_QUEUED_RANK_CHECKS_ENABLED: ${DATAFORSEO_QUEUED_RANK_CHECKS_ENABLED:-}
@@ -278,6 +287,10 @@ services:
       RANK_CHECK_RAW_PURGE_CRON: ${RANK_CHECK_RAW_PURGE_CRON:-}
       RANK_CHECK_RECONCILER_ENABLED: ${RANK_CHECK_RECONCILER_ENABLED:-}
       RANK_CHECK_RECONCILER_INTERVAL: ${RANK_CHECK_RECONCILER_INTERVAL:-}
+      RESEND_CONTACTS_API_KEY: ""
+      RESEND_SEGMENT_CLOUD: ""
+      RESEND_SEGMENT_EARLY_ADOPTERS: ""
+      RESEND_SEGMENT_GENERAL: ""
       SCHEDULED_MAINTENANCE_ENABLED: ${SCHEDULED_MAINTENANCE_ENABLED:-}
       SESSION_PURGE_CRON: ${SESSION_PURGE_CRON:-}
       SITEMAP_SYNC_CRON: ${SITEMAP_SYNC_CRON:-}

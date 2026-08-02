@@ -23,9 +23,11 @@ export function resolveWaitlistSegmentId(source: WaitlistSource) {
 }
 
 export async function syncWaitlistContact(input: WaitlistContact) {
-  const apiKey = process.env.RESEND_API_KEY;
+  const apiKey = process.env.RESEND_CONTACTS_API_KEY;
   if (!apiKey) {
-    console.info("[waitlist] contact sync skipped because RESEND_API_KEY is not configured.");
+    console.info(
+      "[waitlist] contact sync skipped because RESEND_CONTACTS_API_KEY is not configured.",
+    );
     return;
   }
 

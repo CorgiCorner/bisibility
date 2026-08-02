@@ -8,11 +8,11 @@ It fetches the sitemap directly and does not use a connected account or provider
 
 ## How monitoring works
 
-Bisibility requests `https://<project-domain>/sitemap.xml` over HTTPS. Redirects
+bisibility requests `https://<project-domain>/sitemap.xml` over HTTPS. Redirects
 are followed, so the default path can redirect to a sitemap index such as
 `sitemap_index.xml`.
 
-The path is fixed. Bisibility does not discover sitemaps through `robots.txt` or
+The path is fixed. bisibility does not discover sitemaps through `robots.txt` or
 probe alternate paths. A project without a domain is skipped, and a project
 whose default sitemap path does not return a valid sitemap fails for that run.
 
@@ -37,17 +37,17 @@ Each sitemap file, including the parent and every child, uses these limits:
 
 | Limit | Value |
 | - | - |
-| User agent | `Bisibility Sitemap Sync/1.0` |
+| User agent | `bisibility Sitemap Sync/1.0` |
 | Timeout | 10 seconds |
 | Response size | 10 MB per file |
 
-A standard URL set stores at most 5,000 URLs. For a sitemap index, Bisibility
+A standard URL set stores at most 5,000 URLs. For a sitemap index, bisibility
 fetches the first 5 child sitemaps in file order and stores at most 5,000 URLs
 in total across those children. It stops fetching remaining children once the
 URL budget is reached.
 
 Sitemap indexes are followed one level deep. If a child is another sitemap
-index, Bisibility does not descend into it. When the child or URL cap trims a
+index, bisibility does not descend into it. When the child or URL cap trims a
 snapshot, change detection covers only the stored subset. Changes beyond the
 first 5 children or 5,000 URLs do not produce timeline signals. Large sites,
 including WordPress sites that split sitemaps into files of about 1,000 URLs,
@@ -62,7 +62,7 @@ compare each URL with the previous snapshot and detect:
 - removed URLs;
 - URLs whose `<lastmod>` value changed.
 
-When a change is detected, Bisibility emits one `sitemap.changed` signal to the
+When a change is detected, bisibility emits one `sitemap.changed` signal to the
 project timeline with the source label **Sitemap**. Sitemap changes do not
 trigger alert rules; alert conditions cover ranking and CTR changes.
 

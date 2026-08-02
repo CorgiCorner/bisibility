@@ -114,30 +114,19 @@ function readinessFailed(readiness: Awaited<ReturnType<typeof readApplicationRea
 }
 
 export function getLiveness(ctx: Pick<ApiContext, "headers">) {
-  return jsonResponse(
-    {
-      checked_at: new Date().toISOString(),
-      services: appIdentity(),
-      status: "ok",
-    },
-    { headers: ctx.headers },
-  );
+  return jsonResponse({ status: "ok" }, { headers: ctx.headers });
 }
 
 export async function getReadiness(ctx: Pick<ApiContext, "headers">) {
   const readiness = await readApplicationReadiness();
   const degraded = readinessFailed(readiness);
   return jsonResponse(
-    {
-      checked_at: new Date().toISOString(),
-      services: { ...appIdentity(), ...readiness },
-      status: degraded ? "degraded" : "ok",
-    },
+    { status: degraded ? "degraded" : "ok" },
     { headers: ctx.headers, status: degraded ? 503 : 200 },
   );
 }
 
-export async function getHealth(ctx: Pick<ApiContext, "headers">) {
+export async function getHealth(ctx: Pick<ApiContext, "headers">, detailed = false) {
   const readiness = await readApplicationReadiness();
   const [workerLiveness, temporalSnapshot] = await Promise.all([
     getWorkerLivenessDetails(),
@@ -152,37 +141,38 @@ export async function getHealth(ctx: Pick<ApiContext, "headers">) {
     runtimeHealthFailed(temporal) ||
     workerSchema === "drift";
 
-  return jsonResponse(
-    {
-      checked_at: new Date().toISOString(),
-      providers: providersByKind(),
-      rate_limits: providerRateLimits(),
-      readiness: readinessFailed(readiness) ? "degraded" : "ok",
-      serp: serpCapabilities(),
-      services: {
-        ...appIdentity(),
-        appEnvironment:
-          process.env.DEPLOYMENT_ENV?.trim() ||
-          process.env.BISIBILITY_ENV?.trim() ||
-          process.env.NODE_ENV?.trim() ||
-          "unknown",
-        appRankCheckSchedulerMode: rankCheckSchedulerMode(),
-        ...readiness,
-        lastHeartbeatAt: workerLiveness.lastSeenAt,
-        temporal,
-        worker,
-        workerEnvironment: workerLiveness.environment,
-        workerHeartbeatState: workerLiveness.heartbeatState,
-        workerRankCheckSchedulerMode: workerLiveness.schedulerMode,
-        workerRelease: workerLiveness.release,
-        workerRevision: workerLiveness.revision ?? "unknown",
-        workerSchema,
-      },
-      liveness: "ok",
-      status: degraded ? "degraded" : "ok",
-    },
-    { headers: ctx.headers, status: degraded ? 503 : 200 },
-  );
+  const status = degraded ? "degraded" : "ok";
+  const body = detailed
+    ? {
+        checked_at: new Date().toISOString(),
+        providers: providersByKind(),
+        rate_limits: providerRateLimits(),
+        readiness: readinessFailed(readiness) ? "degraded" : "ok",
+        serp: serpCapabilities(),
+        services: {
+          ...appIdentity(),
+          appEnvironment:
+            process.env.DEPLOYMENT_ENV?.trim() ||
+            process.env.BISIBILITY_ENV?.trim() ||
+            process.env.NODE_ENV?.trim() ||
+            "unknown",
+          appRankCheckSchedulerMode: rankCheckSchedulerMode(),
+          ...readiness,
+          lastHeartbeatAt: workerLiveness.lastSeenAt,
+          temporal,
+          worker,
+          workerEnvironment: workerLiveness.environment,
+          workerHeartbeatState: workerLiveness.heartbeatState,
+          workerRankCheckSchedulerMode: workerLiveness.schedulerMode,
+          workerRelease: workerLiveness.release,
+          workerRevision: workerLiveness.revision ?? "unknown",
+          workerSchema,
+        },
+        liveness: "ok",
+        status,
+      }
+    : { status };
+  return jsonResponse(body, { headers: ctx.headers, status: degraded ? 503 : 200 });
 }
 
 export function getOpenApi(ctx: Pick<ApiContext, "headers">) {

@@ -1,3 +1,4 @@
+import { isoFromFrozenNow } from "@/tests/clock";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CloudImport } from "./CloudImport";
@@ -92,17 +93,17 @@ const issuedTokenId = "ferry_bbcdefghijklmnopqrstuvwx";
 const projectId = "prj_abcdefghijklmnopqrstuvwx";
 
 const activeToken: ActiveMigrationToken = {
-  createdAt: "2026-07-11T12:00:00.000Z",
+  createdAt: isoFromFrozenNow({ hours: 13 }),
   createdBy: { email: "owner@example.com", name: "Owner" },
-  expiresAt: "2026-07-11T13:00:00.000Z",
+  expiresAt: isoFromFrozenNow({ hours: 14 }),
   id: activeTokenId,
   scope: "full",
   singleUse: true,
 };
 
 const issuedToken: IssuedMigrationToken = {
-  createdAt: "2026-07-11T12:00:00.000Z",
-  expiresAt: "2026-07-11T13:00:00.000Z",
+  createdAt: isoFromFrozenNow({ hours: 13 }),
+  expiresAt: isoFromFrozenNow({ hours: 14 }),
   id: issuedTokenId,
   importJob: {
     counts: null,

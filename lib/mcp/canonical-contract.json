@@ -2,7 +2,7 @@
   {
     "name": "get_health",
     "title": "Get API health",
-    "description": "Check Bisibility API health and configured SERP providers.",
+    "description": "Check bisibility API health and configured SERP providers.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -20,7 +20,7 @@
   {
     "name": "get_capabilities",
     "title": "Get API capabilities",
-    "description": "List the public Bisibility API capabilities exposed for agent workflows.",
+    "description": "List the public bisibility API capabilities exposed for agent workflows.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -167,7 +167,7 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 120,
-          "description": "Display name chosen for your Bisibility account."
+          "description": "Display name chosen for your bisibility account."
         }
       },
       "required": ["name"]
@@ -243,13 +243,13 @@
   {
     "name": "get_project",
     "title": "Get project",
-    "description": "Get one Bisibility project by project id.",
+    "description": "Get one bisibility project by project id.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
       "properties": {
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         }
@@ -325,7 +325,7 @@
           "maxLength": 120
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         }
@@ -355,7 +355,7 @@
           "maxLength": 160
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         }
@@ -380,7 +380,7 @@
       "type": "object",
       "properties": {
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         }
@@ -427,6 +427,7 @@
           "maxLength": 120
         },
         "cron_expression": {
+          "description": "Cron expression used when frequency is custom_cron; otherwise null.",
           "anyOf": [
             {
               "type": "string",
@@ -458,7 +459,7 @@
           "pattern": "^[A-Z]{2}(\\/[^/]{1,80}){0,2}$"
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         },
@@ -527,7 +528,7 @@
           "maximum": 9007199254740991
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         },
@@ -599,7 +600,7 @@
           "multipleOf": 100
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         }
@@ -649,7 +650,7 @@
           "enum": ["auto", "related", "suggestions", "ideas"]
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         },
@@ -855,7 +856,7 @@
           "maximum": 9007199254740991
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         }
@@ -1080,7 +1081,7 @@
           "maxLength": 120
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         },
@@ -1162,7 +1163,7 @@
       "type": "object",
       "properties": {
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         },
@@ -1197,7 +1198,7 @@
           "maxLength": 160
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         },
@@ -1354,7 +1355,7 @@
           "maxLength": 160
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         },
@@ -1401,7 +1402,7 @@
           "maxLength": 160
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         },
@@ -1436,7 +1437,7 @@
           "maxLength": 160
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         },
@@ -1544,7 +1545,7 @@
           "maxLength": 160
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         },
@@ -1593,7 +1594,7 @@
           "maximum": 200
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         },
@@ -1661,7 +1662,7 @@
           }
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         },
@@ -1690,7 +1691,7 @@
       "type": "object",
       "properties": {
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         }
@@ -1720,12 +1721,12 @@
           "maxLength": 160
         },
         "monitor_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         }
@@ -1755,12 +1756,12 @@
           "maxLength": 160
         },
         "monitor_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         }
@@ -1785,7 +1786,7 @@
       "type": "object",
       "properties": {
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         },
@@ -1820,7 +1821,7 @@
           "maxLength": 160
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         },
@@ -1901,7 +1902,7 @@
           "maxLength": 80
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         },
@@ -1978,7 +1979,7 @@
           }
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         },
@@ -2025,7 +2026,7 @@
           "maximum": 1000
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         },
@@ -2066,7 +2067,7 @@
           "maxLength": 160
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         }
@@ -2101,7 +2102,7 @@
           "maximum": 200
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         }
@@ -2130,7 +2131,7 @@
           "maxLength": 160
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         },
@@ -2192,7 +2193,7 @@
           "maxLength": 160
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         },
@@ -2232,7 +2233,7 @@
           "maximum": 200
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         }
@@ -2268,7 +2269,7 @@
           "description": "Label you choose to identify the project API key."
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         }
@@ -2405,7 +2406,7 @@
           "maximum": 200
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         }
@@ -2455,7 +2456,7 @@
           "description": "Secret you provide to sign webhook deliveries with HMAC."
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         },
@@ -2510,7 +2511,7 @@
           "maxLength": 500
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         },
@@ -2551,7 +2552,7 @@
           "maxLength": 160
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         },
@@ -2591,7 +2592,7 @@
           "maximum": 200
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         }
@@ -2760,7 +2761,7 @@
           ]
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         }
@@ -2790,7 +2791,7 @@
           "maxLength": 160
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         },
@@ -2964,7 +2965,7 @@
           "maxLength": 160
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         },
@@ -3004,7 +3005,7 @@
           "maximum": 200
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         }
@@ -3039,7 +3040,7 @@
           "pattern": "^al_[a-z][a-z0-9]{23}$"
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         }
@@ -3069,7 +3070,7 @@
           "maxLength": 160
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         }
@@ -3104,7 +3105,7 @@
           "maximum": 200
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         }
@@ -3139,7 +3140,7 @@
           "maximum": 200
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         }
@@ -3176,7 +3177,7 @@
           "description": "Email address of the person to invite to the project."
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         },
@@ -3216,7 +3217,7 @@
           "pattern": "^inv_[a-z][a-z0-9]{23}$"
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         }
@@ -3251,7 +3252,7 @@
           "pattern": "^inv_[a-z][a-z0-9]{23}$"
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         }
@@ -3286,7 +3287,7 @@
           "pattern": "^mbr_[a-z][a-z0-9]{23}$"
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         },
@@ -3326,7 +3327,7 @@
           "pattern": "^mbr_[a-z][a-z0-9]{23}$"
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         }
@@ -3361,7 +3362,7 @@
           "maximum": 200
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         }
@@ -3438,7 +3439,7 @@
           "maximum": 1000
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         },
@@ -3506,7 +3507,7 @@
           "maxLength": 4096
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         },
@@ -3558,7 +3559,7 @@
           "maximum": 1000
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         },
@@ -3598,7 +3599,7 @@
           "description": "Whether this provider connection should be active for the project."
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         },
@@ -3640,7 +3641,7 @@
           "description": "Ordering value that determines this provider's preference."
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         },
@@ -3679,7 +3680,7 @@
           "type": "boolean"
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         },
@@ -3715,7 +3716,7 @@
           "maxLength": 160
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         },
@@ -3727,6 +3728,205 @@
         }
       },
       "required": ["project_id", "provider_id"]
+    },
+    "annotations": {
+      "destructiveHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "list_saved_keywords",
+    "title": "List saved keywords",
+    "description": "List keyword ideas saved without rank tracking for a project.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "cursor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200
+        },
+        "project_id": {
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["project_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "create_saved_keywords",
+    "title": "Create saved keywords",
+    "description": "Save keyword ideas without starting paid rank tracking. Keywords already tracked or saved are skipped.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "keywords": {
+          "minItems": 1,
+          "maxItems": 500,
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 180,
+                "description": "Keyword phrase to save without starting rank tracking."
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "cpc_cents": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "difficulty": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 100
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "intent": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 80
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "keyword": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 180,
+                    "description": "Keyword phrase represented by this research snapshot."
+                  },
+                  "location": {
+                    "type": "string",
+                    "pattern": "^[A-Z]{2}(\\/[^/]{1,80}){0,2}$"
+                  },
+                  "search_volume": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "source_seed": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 180,
+                        "description": "Keyword phrase to save without starting rank tracking."
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "variant_count": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": ["keyword"],
+                "additionalProperties": false
+              }
+            ]
+          },
+          "description": "Keyword ideas to save without starting rank tracking."
+        },
+        "project_id": {
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["keywords", "project_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "delete_saved_keyword",
+    "title": "Delete saved keyword",
+    "description": "Delete one saved keyword. Use only after the user confirms deletion.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "project_id": {
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "saved_keyword_id": {
+          "description": "Identifier of the saved keyword to delete.",
+          "type": "string",
+          "pattern": "^svkw_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["project_id", "saved_keyword_id"]
     },
     "annotations": {
       "destructiveHint": true,
@@ -3756,7 +3956,7 @@
           "maximum": 200
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         },
@@ -3815,7 +4015,8 @@
                     "change": {
                       "default": "any",
                       "type": "string",
-                      "enum": ["any", "down", "lost", "new", "up"]
+                      "enum": ["any", "down", "lost", "new", "up"],
+                      "description": "Ranking change category included in the saved view."
                     },
                     "contains": {
                       "default": "",
@@ -3843,7 +4044,8 @@
                       "type": "array",
                       "items": {
                         "type": "string",
-                        "enum": ["11-50", "51-100", "top10", "top3"]
+                        "enum": ["11-50", "51-100", "top10", "top3"],
+                        "description": "Ranking position range stored in the saved view."
                       }
                     },
                     "serp": {
@@ -3853,7 +4055,8 @@
                       "items": {
                         "type": "string",
                         "minLength": 1,
-                        "maxLength": 80
+                        "maxLength": 80,
+                        "description": "SERP feature filter stored in the saved view."
                       }
                     },
                     "tags": {
@@ -3898,7 +4101,8 @@
                       "type": "boolean"
                     }
                   },
-                  "additionalProperties": false
+                  "additionalProperties": false,
+                  "description": "Filters stored in the saved view."
                 },
                 "lens": {
                   "default": {
@@ -3910,7 +4114,8 @@
                     "device": {
                       "default": "all",
                       "type": "string",
-                      "enum": ["all", "desktop", "mobile"]
+                      "enum": ["all", "desktop", "mobile"],
+                      "description": "Device filter stored in the saved view."
                     },
                     "location_id": {
                       "default": null,
@@ -4028,7 +4233,7 @@
           "description": "Human-readable name chosen for the saved view."
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         },
@@ -4063,7 +4268,7 @@
           "maxLength": 160
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         },
@@ -4103,7 +4308,7 @@
           "maximum": 200
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         }
@@ -4144,7 +4349,7 @@
           "maxLength": 120
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         }
@@ -4179,7 +4384,7 @@
           "pattern": "^cmp_[a-z][a-z0-9]{23}$"
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         }
@@ -4204,7 +4409,7 @@
       "type": "object",
       "properties": {
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         }
@@ -4264,7 +4469,7 @@
           "type": "boolean"
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         }
@@ -4299,7 +4504,7 @@
           "maximum": 200
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         }
@@ -4329,7 +4534,7 @@
           "maxLength": 160
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         },
@@ -4363,7 +4568,7 @@
           "maxLength": 160
         },
         "project_id": {
-          "description": "Identifier of the Bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         },

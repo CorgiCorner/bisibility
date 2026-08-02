@@ -358,7 +358,7 @@ describe("alert delivery transports", () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 202 }));
     vi.stubEnv("EMAIL_PROVIDER", "resend");
     vi.stubEnv("RESEND_API_KEY", "email-key");
-    vi.stubEnv("EMAIL_FROM", "Bisibility <alerts@example.com>");
+    vi.stubEnv("EMAIL_FROM", "bisibility <alerts@example.com>");
     vi.stubGlobal("fetch", fetchMock);
 
     await sendAlertEmail("owner@example.com", {
@@ -382,19 +382,19 @@ describe("alert delivery transports", () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 202 }));
     vi.stubEnv("EMAIL_PROVIDER", "resend");
     vi.stubEnv("RESEND_API_KEY", "email-key");
-    vi.stubEnv("EMAIL_FROM", "Bisibility <reports@example.com>");
-    vi.stubEnv("EMAIL_ALERTS_FROM", "Bisibility Alerts <alerts@example.com>");
+    vi.stubEnv("EMAIL_FROM", "bisibility <reports@example.com>");
+    vi.stubEnv("EMAIL_ALERTS_FROM", "bisibility alerts <alerts@example.com>");
     vi.stubGlobal("fetch", fetchMock);
 
     await sendAlertEmail("owner@example.com", payload());
     expect(JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body)).from).toBe(
-      "Bisibility Alerts <alerts@example.com>",
+      "bisibility alerts <alerts@example.com>",
     );
 
     vi.stubEnv("EMAIL_ALERTS_FROM", "");
     await sendAlertEmail("owner@example.com", payload());
     expect(JSON.parse(String(fetchMock.mock.calls[1]?.[1]?.body)).from).toBe(
-      "Bisibility <reports@example.com>",
+      "bisibility <reports@example.com>",
     );
   });
 });

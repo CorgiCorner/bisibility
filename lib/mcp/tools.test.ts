@@ -43,11 +43,11 @@ describe("MCP tool dispatch", () => {
     vi.clearAllMocks();
   });
 
-  it("publishes the canonical unprefixed 84-tool contract", () => {
+  it("publishes the canonical unprefixed 87-tool contract", () => {
     const definitions = getMcpToolDefinitions();
 
     expect(definitions.map((tool) => tool.name)).toEqual(MCP_TOOL_NAMES);
-    expect(definitions).toHaveLength(84);
+    expect(definitions).toHaveLength(87);
     expect(definitions.every((tool) => /^[a-z][a-z0-9_]*$/.test(tool.name))).toBe(true);
     expect(definitions.some((tool) => tool.name.startsWith("bisibility_"))).toBe(false);
     expect(definitions.some((tool) => tool.name === "list_rank_checks")).toBe(false);
@@ -877,6 +877,52 @@ describe("MCP tool dispatch", () => {
       properties: expect.objectContaining({
         surface: expect.objectContaining({ enum: ["keywords", "competitors"] }),
       }),
+    });
+  });
+
+  it("maps saved-keyword tools to project-scoped REST routes", async () => {
+    const listed = await dispatchMcpTool(
+      "list_saved_keywords",
+      { cursor: "saved_cursor", limit: 10, project_id: "prj_a00000000000000000000000" },
+      "bsb_key_live_test",
+    );
+    const created = await dispatchMcpTool(
+      "create_saved_keywords",
+      {
+        idempotency_key: "idem_saved",
+        keywords: ["rank tracker"],
+        project_id: "prj_a00000000000000000000000",
+      },
+      "bsb_key_live_test",
+    );
+    const deleted = await dispatchMcpTool(
+      "delete_saved_keyword",
+      {
+        project_id: "prj_a00000000000000000000000",
+        saved_keyword_id: "svkw_a00000000000000000000000",
+      },
+      "bsb_key_live_test",
+    );
+
+    expect(listed.payload).toMatchObject({
+      method: "GET",
+      path: ["projects", "prj_a00000000000000000000000", "saved-keywords"],
+      search: "?cursor=saved_cursor&limit=10",
+    });
+    expect(created.payload).toMatchObject({
+      body: { keywords: ["rank tracker"] },
+      idempotencyKey: "idem_saved",
+      method: "POST",
+      path: ["projects", "prj_a00000000000000000000000", "saved-keywords"],
+    });
+    expect(deleted.payload).toMatchObject({
+      method: "DELETE",
+      path: [
+        "projects",
+        "prj_a00000000000000000000000",
+        "saved-keywords",
+        "svkw_a00000000000000000000000",
+      ],
     });
   });
 

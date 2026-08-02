@@ -8,6 +8,7 @@ import {
 } from "@/lib/auth/two-factor-migration";
 import { databaseConnectionConfig } from "@/lib/db/pool-config";
 import pg from "pg";
+import { withWriteBlockedVerification } from "./locked-verification";
 
 const { Client } = pg;
 
@@ -27,6 +28,7 @@ export function parseTwoFactorMigrationOptions(args: string[] = process.argv.sli
       "batch-size": { type: "string" },
       "dry-run": { type: "boolean" },
       "id-prefix": { type: "string" },
+      verify: { type: "boolean" },
     },
     strict: true,
   });
@@ -34,10 +36,15 @@ export function parseTwoFactorMigrationOptions(args: string[] = process.argv.sli
   if (!Number.isInteger(batchSize) || batchSize < 1 || batchSize > 1_000) {
     throw new Error("--batch-size must be between 1 and 1000.");
   }
+  const verify = parsed.values.verify ?? false;
+  const idPrefix = parsed.values["id-prefix"]?.trim() || null;
+  if (verify && idPrefix) throw new Error("--verify must scan the complete table without --id-prefix.");
+  if (verify && parsed.values["dry-run"]) throw new Error("Use --verify without --dry-run.");
   return {
     batchSize,
-    dryRun: parsed.values["dry-run"] ?? false,
-    idPrefix: parsed.values["id-prefix"]?.trim() || null,
+    dryRun: verify || (parsed.values["dry-run"] ?? false),
+    idPrefix,
+    verify,
   };
 }
 
@@ -86,12 +93,24 @@ async function main() {
   }) as MigrationDatabase;
   await db.connect();
   try {
-    const counts = await migrateLegacyTwoFactorSecrets(createTwoFactorMigrationStore(db), {
-      ...options,
-      key: resolveAuthCryptoKey(),
-    });
+    const migrate = () =>
+      migrateLegacyTwoFactorSecrets(createTwoFactorMigrationStore(db), {
+        ...options,
+        key: resolveAuthCryptoKey(),
+      });
+    const counts = options.verify
+      ? await withWriteBlockedVerification(db, ["twoFactor"], async () => {
+          const verified = await migrate();
+          if (verified.eligibleRows !== 0 || verified.concurrent !== 0) {
+            throw new Error(
+              "Two-factor verification found values that are not encrypted with the primary key.",
+            );
+          }
+          return verified;
+        })
+      : await migrate();
     console.log(
-      `${options.dryRun ? "Dry run" : "Migration"}: scanned=${counts.scanned} eligibleRows=${counts.eligibleRows} encryptedValues=${counts.encryptedValues} migratedRows=${counts.migratedRows} skippedRows=${counts.skippedRows} concurrent=${counts.concurrent}`,
+      `${options.verify ? "Verify" : options.dryRun ? "Dry run" : "Migration"}: scanned=${counts.scanned} eligibleRows=${counts.eligibleRows} eligibleValues=${counts.eligibleValues} migratedRows=${counts.migratedRows} skippedRows=${counts.skippedRows} concurrent=${counts.concurrent}`,
     );
   } finally {
     await db.end();

@@ -103,7 +103,7 @@ function job(): AlertDigestJob {
 describe("queued alert digest delivery", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.stubEnv("EMAIL_FROM", "Bisibility <alerts@example.com>");
+    vi.stubEnv("EMAIL_FROM", "bisibility <alerts@example.com>");
     mocks.notifyTriggeredAlertDelivered.mockResolvedValue(undefined);
     mocks.prisma.$transaction.mockImplementation((callback) => callback(mocks.prisma));
     mocks.prisma.$queryRaw.mockResolvedValue([{ id: "webhook_1" }, { id: "webhook_2" }]);

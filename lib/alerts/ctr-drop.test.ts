@@ -1,3 +1,4 @@
+import { dateFromFrozenNow } from "@/tests/clock";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   ctrDropDateRanges,
@@ -132,7 +133,7 @@ describe("CTR drop evaluation", () => {
       select: { ctr: true, date: true, impressions: true, position: true },
       where: {
         date: {
-          gte: new Date("2026-07-11T00:00:00.000Z"),
+          gte: dateFromFrozenNow({ hours: 1 }),
           lte: new Date("2026-07-13T00:00:00.000Z"),
         },
         keywordId: "keyword_1",

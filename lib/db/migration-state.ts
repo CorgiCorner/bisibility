@@ -13,15 +13,23 @@ type AppliedMigrationRow = {
   migration_name: string;
 };
 
+export function latestAppliedMigrationName(rows: readonly AppliedMigrationRow[]): string | null {
+  return (
+    rows
+      .map((row) => row.migration_name)
+      .sort()
+      .at(-1) ?? null
+  );
+}
+
 export async function appliedMigrationSummary(): Promise<MigrationSummary> {
   try {
     const rows = await prisma.$queryRaw<AppliedMigrationRow[]>`
       SELECT "migration_name"
       FROM "_prisma_migrations"
       WHERE "finished_at" IS NOT NULL
-      ORDER BY "finished_at" ASC, "migration_name" ASC
     `;
-    return { count: rows.length, latest: rows.at(-1)?.migration_name ?? null };
+    return { count: rows.length, latest: latestAppliedMigrationName(rows) };
   } catch {
     return { count: 0, latest: null };
   }

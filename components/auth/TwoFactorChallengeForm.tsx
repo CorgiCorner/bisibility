@@ -1,6 +1,7 @@
 "use client";
 
 import { authClient } from "@/lib/auth/client";
+import { loginErrorReturnTo, returnToOrDefault } from "@/lib/auth/return-to";
 import { SIGNED_IN_HOME_PATH } from "@/lib/auth/two-factor-routes";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { cn } from "@/lib/ui/cn";
@@ -47,8 +48,15 @@ const methodButtonSx = {
   },
 } as const;
 
-export function TwoFactorChallengeForm() {
+type TwoFactorChallengeFormProps = {
+  returnTo?: string;
+};
+
+export function TwoFactorChallengeForm({
+  returnTo = SIGNED_IN_HOME_PATH,
+}: Readonly<TwoFactorChallengeFormProps> = {}) {
   const router = useRouter();
+  const destination = returnToOrDefault(returnTo);
   const [message, setMessage] = useState<string | null>(null);
   const form = useForm<ChallengeValues>({
     defaultValues: { method: "totp", code: "" },
@@ -77,7 +85,7 @@ export function TwoFactorChallengeForm() {
       return;
     }
 
-    router.replace(SIGNED_IN_HOME_PATH);
+    router.replace(destination);
     router.refresh();
   }
 
@@ -187,7 +195,7 @@ export function TwoFactorChallengeForm() {
 
       <a
         className="mt-5 block text-center text-[13px] font-semibold text-fg-muted no-underline hover:text-fg"
-        href="/login"
+        href={loginErrorReturnTo(destination)}
       >
         Cancel and return to sign in
       </a>

@@ -48,7 +48,7 @@ vi.mock("./two-factor-material", () => ({
   generateTwoFactorBackupCodes: mocks.generateBackupCodes,
   generateTwoFactorSecret: mocks.generateSecret,
   twoFactorTotp: () => ({
-    url: () => "otpauth://totp/Bisibility:user?secret=NEWSECRET",
+    url: () => "otpauth://totp/bisibility:user?secret=NEWSECRET",
     verify: mocks.totpVerify,
   }),
 }));

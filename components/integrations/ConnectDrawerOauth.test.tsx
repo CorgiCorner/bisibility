@@ -150,7 +150,7 @@ describe("ConnectDrawerOauth", () => {
           properties: [
             {
               kind: "ga4" as const,
-              label: "Bisibility (123456789)",
+              label: "bisibility (123456789)",
               permissionLevel: "CorgiCorner",
               value: "123456789",
             },
@@ -163,7 +163,7 @@ describe("ConnectDrawerOauth", () => {
     render(<ConnectDrawerOauth projectId="prj_1" provider={provider} scopes={["analytics"]} />);
 
     expect(screen.getByRole("button", { name: "Google Analytics property" })).toHaveTextContent(
-      "Bisibility (123456789)",
+      "bisibility (123456789)",
     );
     expect(screen.getByRole("button", { name: "Use selected property" })).toBeEnabled();
   });

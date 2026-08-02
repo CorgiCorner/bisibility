@@ -5,9 +5,9 @@ import { createNoindexMetadata } from "@/lib/seo/noindex";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = createNoindexMetadata({
-  title: "Import from another instance | Bisibility",
+  title: "Import from another instance | bisibility",
   description:
-    "Create a one-time migration token that authorizes another Bisibility instance to push its data into this workspace.",
+    "Create a one-time migration token that authorizes another bisibility instance to push its data into this workspace.",
 });
 
 type SettingsImportPageProps = {

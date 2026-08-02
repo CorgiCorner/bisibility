@@ -17,14 +17,14 @@ export type OtpEmail = {
 
 function signInSubject(type: OtpEmail["type"]) {
   if (type === "forget-password") {
-    return "Reset your Bisibility password";
+    return "Reset your bisibility password";
   }
 
   if (type === "change-email") {
-    return "Confirm your new Bisibility email";
+    return "Confirm your new bisibility email";
   }
 
-  return "Your Bisibility sign-in code";
+  return "Your bisibility sign-in code";
 }
 
 export async function sendOtpEmail(
@@ -66,10 +66,10 @@ export async function sendOtpEmail(
 
   await sendEmail({
     category: "transactional",
-    html: `<p>Your Bisibility code is <strong>${otp}</strong>.</p><p>It expires in 5 minutes.</p>`,
+    html: `<p>Your bisibility code is <strong>${otp}</strong>.</p><p>It expires in 5 minutes.</p>`,
     sendCounterReserved,
     subject: signInSubject(type),
-    text: `Your Bisibility code is ${otp}. It expires in 5 minutes.`,
+    text: `Your bisibility code is ${otp}. It expires in 5 minutes.`,
     to: email,
   });
 }

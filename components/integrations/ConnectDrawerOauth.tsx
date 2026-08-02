@@ -178,7 +178,7 @@ export function ConnectDrawerOauth({
             <p className="m-0 mt-1 text-[11.5px] leading-5 text-fg-muted">
               {isGa4
                 ? "Choose a property returned by Google Analytics, or enter its numeric ID manually."
-                : "Bisibility stores the exact property ID returned by Google."}
+                : "bisibility stores the exact property ID returned by Google."}
             </p>
           </div>
           {propertyOptions.length > 0 ? (

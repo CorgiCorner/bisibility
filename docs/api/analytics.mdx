@@ -26,7 +26,7 @@ duration, and scroll metrics.
 GET /projects/{project_id}/analytics/query-stats?start_date=2026-06-01&end_date=2026-06-30&connection_id=conn_a00000000000000000000000&query=rank%20tracker&limit=100
 ```
 
-`connection_id` and `query` are optional. Bisibility prefers the primary
+`connection_id` and `query` are optional. bisibility prefers the primary
 eligible connection when no connection is selected. `limit` defaults to 100
 and has a maximum of 1000. The response returns the selected connection and
 rows with query, optional page, clicks, impressions, CTR, and average position.

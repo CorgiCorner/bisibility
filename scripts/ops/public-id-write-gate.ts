@@ -4,6 +4,7 @@ import { parseArgs } from "node:util";
 import { pathToFileURL } from "node:url";
 import { activeDataMigrationManifest } from "@/lib/data-migrations/manifest";
 import { databaseConnectionConfig } from "@/lib/db/pool-config";
+import { internalProbeHeaders } from "@/lib/ops/probe-request";
 import { assertPublicIdContractPrepared } from "@/lib/public-id-contract/prepare";
 import {
   PUBLIC_ID_V3_WRITE_GATE_PHASE,
@@ -66,6 +67,7 @@ export async function verifyLiveApplication(
 
   const response = await fetch(url, {
     cache: "no-store",
+    headers: internalProbeHeaders({ accept: "application/json" }),
     signal: AbortSignal.timeout(15_000),
   });
   if (response.status !== 200 && response.status !== 503) {

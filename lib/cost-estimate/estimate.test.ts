@@ -1,4 +1,5 @@
 import { centsToDollars } from "@/lib/format/currency";
+import { dateOnlyFromFrozenNow } from "@/tests/clock";
 import { describe, expect, it } from "vitest";
 import {
   type CheckVolumeInput,
@@ -122,7 +123,7 @@ describe("provider plan selection", () => {
       providerId: "flat",
       label: "Flat",
       sourceUrl: "https://example.com",
-      checkedAt: "2026-07-11",
+      checkedAt: dateOnlyFromFrozenNow({ days: 1 }),
       pricingModel: "flat" as const,
       options: [
         {

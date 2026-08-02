@@ -9,7 +9,8 @@ bisibility has two main processes:
   live notifications.
 - The Temporal worker runs scheduled rank checks and maintenance jobs.
 
-Both processes use PostgreSQL. Redis or Valkey handles rate limits, idempotency,
+Both processes use PostgreSQL. Valkey ships by default, while any Redis-compatible
+endpoint can handle rate limits, idempotency,
 and notifications. Rank data comes from a SERP provider that you connect
 yourself.
 
@@ -23,7 +24,7 @@ yourself.
 | Notification stream | `app/api/notifications/` | Server-sent events for the in-app bell, fanned out through Redis pub/sub. |
 | Temporal worker | `lib/temporal/` | Runs scheduled rank checks, schedule reconciliation, and maintenance jobs. |
 | PostgreSQL | `prisma/schema.prisma` | All durable state: projects, keywords, checks, providers, alerts, audit log. |
-| Redis or Valkey | `lib/redis/` | API and provider rate limiting, idempotency replay, notification pub/sub. |
+| Valkey or another Redis-compatible endpoint | `lib/redis/` | API and provider rate limiting, idempotency replay, notification pub/sub. |
 | Providers | `lib/providers/` | Pluggable SERP and analytics adapters. See [Integrations](/integrations). |
 
 The MCP endpoint uses the same router as REST. Manual and scheduled checks also
@@ -157,7 +158,7 @@ to the browser over SSE.
 
 ## Operational notes
 
-**Redis** backs the cross-process concerns: API and outbound provider rate
+**Valkey** backs the cross-process concerns by default: API and outbound provider rate
 limits, idempotency replay for non-GET API requests, and pub/sub fan-out for
 realtime notifications. Local development degrades to in-memory fallbacks when
 Redis is absent.

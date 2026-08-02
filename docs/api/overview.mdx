@@ -56,7 +56,7 @@ Idempotency-Replayed: true
 ```
 
 An operation still in progress returns `409 Conflict` with `Retry-After: 1`.
-Completed responses remain replayable for 24 hours. With Redis or Valkey
+Completed responses remain replayable for 24 hours. With Valkey or another Redis-compatible
 configured, replay works across app instances and restarts.
 
 ## Response shapes
@@ -77,7 +77,8 @@ Discovery routes are mixed:
 
 | Route | Shape |
 | - | - |
-| `/health` | Raw JSON object |
+| `/health`, `/readiness` | `{ "status": "ok" | "degraded" }` |
+| `/liveness` | `{ "status": "ok" }` |
 | `/openapi.json` | Raw OpenAPI document |
 | `/capabilities` | `{ "apiVersions": ["v1"], "data": [...] }` |
 | `/llms.txt` | Plain text |

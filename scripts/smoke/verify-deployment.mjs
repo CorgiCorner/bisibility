@@ -14,6 +14,7 @@ const { values } = parseArgs({
 const baseUrl = values.url?.replace(/\/+$/, "");
 const timeoutMs = Number(values.timeout);
 const waitSeconds = Number(values.wait);
+const probeToken = process.env.INTERNAL_PROBE_TOKEN?.trim();
 
 if (!baseUrl || !PROFILES.includes(values.profile) || !Number.isFinite(timeoutMs) || !Number.isFinite(waitSeconds)) {
   console.error(
@@ -27,7 +28,10 @@ if (!baseUrl || !PROFILES.includes(values.profile) || !Number.isFinite(timeoutMs
 async function request(path, options = {}) {
   const started = performance.now();
   const response = await fetch(`${baseUrl}${path}`, {
-    headers: { "user-agent": "bisibility-verify-deployment" },
+    headers: {
+      ...(probeToken ? { authorization: `Bearer ${probeToken}` } : {}),
+      "user-agent": "bisibility-verify-deployment",
+    },
     redirect: options.redirect ?? "follow",
     signal: AbortSignal.timeout(timeoutMs),
   });

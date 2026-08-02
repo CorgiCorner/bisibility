@@ -28,7 +28,7 @@ vi.mock("@aws-sdk/client-sesv2", () => {
 });
 
 const message = {
-  from: "Bisibility <reports@example.com>",
+  from: "bisibility <reports@example.com>",
   html: "<p>Report ready</p>",
   subject: "Weekly report",
   text: "Report ready",
@@ -87,7 +87,7 @@ describe("ses email provider", () => {
         },
       },
       Destination: { ToAddresses: ["owner@example.com"] },
-      FromEmailAddress: "Bisibility <reports@example.com>",
+      FromEmailAddress: "bisibility <reports@example.com>",
     });
   });
 

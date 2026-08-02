@@ -17,7 +17,7 @@ They use the same authenticated operations as other API clients.
 
 ## Connect through MCP
 
-Bisibility exposes a Model Context Protocol (MCP) Streamable HTTP endpoint:
+bisibility exposes a Model Context Protocol (MCP) Streamable HTTP endpoint:
 
 ```text
 https://your-host.example/api/mcp
@@ -26,7 +26,7 @@ https://your-host.example/api/mcp
 Use `https://bisibility.com/api/mcp` for the hosted production endpoint. A
 self-hosted client should use its own origin.
 
-Hosted MCP clients that implement the MCP OAuth flow discover Bisibility's
+Hosted MCP clients that implement the MCP OAuth flow discover bisibility's
 authorization server automatically. The flow uses Authorization Code with PKCE,
 dynamic client registration, and access tokens bound to the `/api/mcp`
 resource. The user reviews `read`, `write`, and `admin` scopes before approval.

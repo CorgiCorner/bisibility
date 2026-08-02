@@ -1,11 +1,13 @@
 ---
 title: "Self-hosting"
-description: "Run bisibility with Docker, Railway, Fly.io, Vercel, or your own Node.js host."
+description: "Run bisibility with Docker or prepare the complete stack for another container platform."
 ---
 
-bisibility is a Next.js app with PostgreSQL for durable data. Redis or Valkey
-backs API rate limiting, idempotency, and realtime notification fan-out. Rank
-checks use your own connected SERP provider credentials.
+bisibility is a Next.js app with PostgreSQL for durable data. Valkey ships by
+default, and any Redis-compatible endpoint can back API rate limiting,
+idempotency, and realtime notification fan-out. The Compose service name
+`redis` and the `REDIS_URL` variable intentionally keep the protocol name for
+compatibility. Rank checks use your own connected SERP provider credentials.
 
 Read the [FAQ](https://bisibility.com/faq) for a concise comparison of Cloud
 beta and self-hosting, provider coverage, costs, and data boundaries.
@@ -24,7 +26,7 @@ later without changing the rank history already stored in PostgreSQL.
 | Run a production Compose stack | [Production Compose](#production-compose) | Versioned release assets with pull-only images, generated secrets, your public URL, and a SERP provider you connect. Starts empty. |
 | Add scheduled checks | [Docker scheduled profile](#docker) | Temporal Server, Temporal Web UI, and the worker. |
 | Deploy web and worker separately | [Production topology](#production-topology) | Independent web and worker processes that share PostgreSQL, Redis, and Temporal. |
-| Use a hosting platform | [Railway](#railway), [Fly.io](#flyio), or [Vercel](#vercel) | Platform-specific steps and limits. |
+| Prepare another container platform | [Production topology](#production-topology) | The complete service set and shared configuration a platform must support. |
 
 ## Before you deploy
 
@@ -32,13 +34,12 @@ later without changing the rank history already stored in PostgreSQL.
 | - | - |
 | Node.js 22+ | Local builds, the app, and the CLI. |
 | PostgreSQL | Every deployment. Prisma migrations create the app schema. |
-| Redis or Valkey | Every deployment. It backs rate limits, idempotency, and realtime notifications. |
+| Valkey or another Redis-compatible endpoint | Every deployment. It backs rate limits, idempotency, and realtime notifications. |
 | SERP provider | Before the first real rank check. See [Integrations](/integrations). |
 | Temporal + worker | Scheduled checks only. Manual checks work without them. |
 
-The platform links below create only part of the final setup. Review every
-generated resource, set secrets, and confirm migrations before serving
-production traffic.
+Review every generated resource, set secrets, and confirm migrations before
+serving production traffic.
 
 ## Production checklist
 
@@ -60,17 +61,21 @@ the section that explains the setting in full.
 | Web app and worker pinned to the same release | Version skew fails the worker schema guard and can corrupt a cutover | [Production topology](#production-topology) |
 | `LEGAL_TERMS_URL` and `LEGAL_PRIVACY_URL` set if you need a consent line | The sign-in consent line stays hidden until at least one of them points at your document | [Required environment variables](#required-environment-variables) |
 
+<span id="flyio"></span>
+<span id="vercel"></span>
+
 ## Production topology
 
-Railway and Fly.io can each run the complete bisibility stack as
-multiple services on one platform:
+Any platform that runs the web and worker Docker images alongside PostgreSQL,
+Valkey, and Temporal can host bisibility. Railway is the one-click path being
+certified; guides for other platforms will return as they pass certification.
 
 | Service | Process or image | Always required |
 | - | - | :-: |
 | Web/API | Repository `Dockerfile` | Yes |
 | Migration job | Automatic public-ID upgrade runner using the web image | Yes |
 | PostgreSQL | Managed database | Yes |
-| Redis or Valkey | Managed service or compatible endpoint | Yes |
+| Valkey | Managed service or compatible Redis endpoint | Yes |
 | Temporal worker | Repository `Dockerfile.worker` | For scheduled checks |
 | Temporal Server | Self-hosted Temporal services or Temporal Cloud | For scheduled checks |
 
@@ -126,10 +131,10 @@ anonymous limit at the edge instead (a rate rule on your CDN or WAF, or
 configuration to trust it.
 
 “Complete stack” does not have to mean running Temporal yourself. The web app
-and worker can use Temporal Cloud while PostgreSQL, Redis, and the application
-processes remain on Railway or Fly.io. Running Temporal Server on the
-same platform is also possible, but it adds Temporal persistence, upgrades,
-backups, and monitoring to your operational responsibilities.
+and worker can use Temporal Cloud while PostgreSQL, Valkey, and the application
+processes remain on your platform. Running Temporal Server on the same platform
+is also possible, but it adds Temporal persistence, upgrades, backups, and
+monitoring to your operational responsibilities.
 
 ## Docker
 
@@ -154,7 +159,7 @@ and the seeded sample data stays in the database. Start production from a fresh
 Both paths start the same application services. The production asset contains
 no `build:` entries; the local checkout keeps them for source development.
 
-The default Docker stack starts PostgreSQL, Redis/Valkey, a one-shot
+The default Docker stack starts PostgreSQL, Valkey, a one-shot
 `db-migrations` service, and the web app. The migration service runs the fixed
 `npm run db:migrate` entrypoint, which applies the full Prisma migration tree
 and then any active deploy-blocking data migrations. No separate operator
@@ -196,9 +201,10 @@ namespace before the worker starts. Set
 to build the web and worker images from the checkout.
 
 Use `/api/v1/liveness` for process restart decisions and `/api/v1/readiness` for
-traffic admission. The compatibility `/api/v1/health` endpoint remains the full
-diagnostic report and can return `503` for worker or Temporal failures that do
-not stop the web process from serving reads. The optional `APP_REVISION`
+traffic admission. Anonymous probe responses expose only aggregate status. A
+valid API credential or the optional `INTERNAL_PROBE_TOKEN` unlocks the full
+`/api/v1/health` diagnostic report, which can return `503` for worker or Temporal
+failures that do not stop the web process from serving reads. The optional `APP_REVISION`
 source-build argument bakes the public checkout commit into both app and worker
 reporting; omitting it reports `"unknown"`.
 
@@ -239,7 +245,7 @@ checkout.
 
 ```bash
 mkdir bisibility && cd bisibility
-VERSION=v0.2.3
+VERSION=v0.3.0
 BASE_URL="https://github.com/CorgiCorner/bisibility/releases/download/${VERSION}"
 curl -fLO "${BASE_URL}/docker-compose.self-host.yml"
 curl -fLO "${BASE_URL}/bisibility.env.example"
@@ -336,7 +342,7 @@ through a published network port.
 
 #### 2. Check the port change
 
-v0.2.0 stops exposing PostgreSQL on `5432` and Redis/Valkey on `6379` to the
+v0.2.0 stops exposing PostgreSQL on `5432` and Valkey on `6379` to the
 host. Connections from another host will lose access after the upgrade. Identify
 those clients now; apply the host-access option only after the v0.2.0 files are
 present.
@@ -371,7 +377,7 @@ name and its existing volumes.
 
 #### 4. Keep deliberate host-local database access
 
-If the Docker host must reach PostgreSQL or Redis/Valkey, use the debug overlay
+If the Docker host must reach PostgreSQL or Valkey, use the debug overlay
 shipped in v0.2.0 as the upgrade command:
 
 ```bash
@@ -399,7 +405,7 @@ before the app, and the app waits for it to finish successfully. v0.2.0 includes
 a schema migration.
 
 `--build` performs a full Next.js build on this machine; it does not pull a
-prebuilt Bisibility image. Expect sustained CPU use, several GB of RAM or swap,
+prebuilt bisibility image. Expect sustained CPU use, several GB of RAM or swap,
 and free disk space for Docker layers. A small VPS can exhaust RAM and fail
 mid-build.
 
@@ -426,7 +432,7 @@ There is no automatic rollback. For a Git checkout, return to the old source
 and rebuild it:
 
 > **Security warning:** Rolling back restores the v0.1.0 Compose file, which
-> publishes PostgreSQL `5432` and Redis/Valkey `6379` on all host interfaces by
+> publishes PostgreSQL `5432` and Valkey `6379` on all host interfaces by
 > default. If v0.1.0 will remain running beyond immediate recovery, check it out
 > without starting Compose, then remove the `ports` blocks from `postgres` and
 > `redis` when host access is not needed. Otherwise, change the mappings to
@@ -469,7 +475,7 @@ docker compose up -d --build
 
 ### Use the CLI with this instance
 
-Install the CLI on the workstation where you use Bisibility:
+Install the CLI on the workstation where you use bisibility:
 
 ```bash
 npm install -g @bisibility/cli
@@ -515,7 +521,7 @@ personal access tokens.
 
 ### Access services from the host
 
-The default stack publishes only the app on `3000`. PostgreSQL and Redis/Valkey
+The default stack publishes only the app on `3000`. PostgreSQL and Valkey
 are reachable by the `postgres` and `redis` service names only from the Compose
 network.
 
@@ -524,14 +530,14 @@ started by a default `docker compose up`. The profile keeps Temporal Server on
 the Compose network and publishes only the Temporal Web UI, bound to
 `127.0.0.1:8233`.
 
-For deliberate PostgreSQL or Redis/Valkey access from the Docker host, apply the
+For deliberate PostgreSQL or Valkey access from the Docker host, apply the
 opt-in debug override:
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.debug.yml up --build
 ```
 
-The override binds PostgreSQL to `127.0.0.1:5432` and Redis/Valkey to
+The override binds PostgreSQL to `127.0.0.1:5432` and Valkey to
 `127.0.0.1:6379`. Change those loopback ports, or the app port, in `.env` when a
 port is already taken:
 
@@ -575,84 +581,10 @@ Deploy webhook examples live in
 
 ## Railway
 
-1. Start from the [Railway deploy link](https://railway.com/new/template?template=https%3A%2F%2Fgithub.com%2FCorgiCorner%2Fbisibility).
-2. Add a PostgreSQL service.
-3. Add a Redis or Valkey service and configure `REDIS_URL`.
-4. Set `DATABASE_URL` and `DIRECT_URL` to the PostgreSQL private connection URL.
-5. Set the required environment variables. The root `railway.json` selects the
-   web Dockerfile, healthcheck, migration command, and restart policy.
-6. For scheduled checks, create a second service from the same repository, set
-   its config file path to `/deploy/railway-worker.json`, and share the database,
-   Redis, and Temporal variables with it.
-7. Point the app and worker at either Temporal Cloud or a self-hosted Temporal
-   deployment reachable inside the Railway private network.
-
-Use the Railway-provided app URL for `SITE_URL` and `BETTER_AUTH_URL`, or set
-both to your custom domain after DNS is configured. `SITE_URL` is the primary
-origin for metadata, sitemap, robots.txt, social images, OAuth redirects, and
-auth callbacks.
-
-## Fly.io
-
-1. Create separate web and worker apps:
-
-   ```bash
-   fly apps create your-bisibility-web
-   fly apps create your-bisibility-worker
-   ```
-
-2. Provision PostgreSQL and a Redis-compatible service, or attach managed
-   endpoints reachable from the Fly private network.
-3. Set the required secrets on both apps. The web app also needs its public
-   `SITE_URL` and `BETTER_AUTH_URL`.
-4. Deploy the checked-in manifests:
-
-   ```bash
-   fly deploy --app your-bisibility-web --config deploy/fly.web.toml
-   fly deploy --app your-bisibility-worker --config deploy/fly.worker.toml
-   ```
-
-5. The web manifest runs `npm run db:migrate` as a Fly release command. It
-   applies the full Prisma tree, runs active deploy-blocking data migrations, and checks
-   `/api/v1/health` before routing traffic.
-   Fly runs this command in a temporary machine without attached volumes and
-   stops the deployment on a nonzero exit. The manifest extends Fly's default
-   five-minute release-command timeout to 30 minutes for deploy-blocking migrations.
-6. Connect both apps to Temporal Cloud, or operate Temporal as
-   separate Fly apps with persistent storage.
-
-Keeping the worker separate from the web process allows independent scaling and
-prevents a web deployment from interrupting scheduled work.
-
-## Vercel
-
-1. Start from the [Vercel clone link](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FCorgiCorner%2Fbisibility).
-2. Attach a PostgreSQL database.
-3. Configure a Redis or Valkey endpoint.
-4. Set the required environment variables.
-5. Keep preview and build jobs migration-free. Do not add a `vercel.json`
-   `buildCommand` that runs database migrations.
-
-For production, use a staged operations flow from a trusted environment:
-
-```bash
-vercel --prod --skip-domain
-npm run db:migrate
-curl --fail https://staged.example.com/api/v1/health
-vercel promote https://staged.example.com
-```
-
-Set the production `DIRECT_URL` and `DATABASE_URL` only for the separate
-`npm run db:migrate` step. Replace `https://staged.example.com` with the
-unaliased deployment URL printed by the first command. Promote only after the
-migration and staged smoke check succeed. Vercel preview and build execution
-must not run migrations.
-
-Vercel is suitable for the web app, REST API, and manual checks. It cannot host
-the long-lived `npm run temporal:worker` process. For scheduled checks, host the
-worker image from `Dockerfile.worker` on Railway, Fly.io, or a VPS. The
-web app and worker can connect to Temporal Cloud or to your own
-network-reachable Temporal Server.
+Railway is the bundled project path. Its template runs the web app, worker,
+PostgreSQL, Valkey, Temporal Server, and Temporal persistence inside one Railway
+project, with no Temporal Cloud account. The topology remains under R0
+validation.
 
 ## Temporal Server or Temporal Cloud
 
@@ -668,10 +600,10 @@ three; only the connection settings change.
 | - | - | - |
 | Bundled with Compose | `docker compose --profile scheduled up -d` starts a Temporal server, its database, and the Temporal Web UI alongside the worker. No configuration. | Evaluation and small self-hosted instances |
 | Self-managed cluster | You run Temporal yourself and point `TEMPORAL_ADDRESS` at it. | Instances that outgrow the bundled server |
-| Temporal Cloud | Managed by Temporal. Set `TEMPORAL_ADDRESS` and `TEMPORAL_API_KEY`. | Per-service platforms such as Railway or Fly.io |
+| Temporal Cloud | Managed by Temporal. Set `TEMPORAL_ADDRESS` and `TEMPORAL_API_KEY`. | Installations already standardized on managed Temporal |
 
-On per-service platforms, Temporal Cloud removes three containers from the
-deployment and leaves the web app, the worker, and the databases.
+The Railway template bundles Temporal instead of requiring Temporal Cloud. R0
+certifies that complete topology.
 
 Set the same address, namespace, and task queue on the web app and worker.
 
@@ -692,9 +624,24 @@ TEMPORAL_TASK_QUEUE=rank-checks
 TEMPORAL_API_KEY=your-api-key
 ```
 
-`TEMPORAL_API_KEY` automatically enables TLS. Set `TEMPORAL_TLS=true` when a
-TLS-enabled self-hosted endpoint does not use an API key. Do not expose the API
-key through any `NEXT_PUBLIC_` variable.
+Choose the TLS setting from the endpoint you operate:
+
+| Endpoint | TLS setting |
+| - | - |
+| Temporal Cloud with `TEMPORAL_API_KEY` | TLS enables automatically; omit `TEMPORAL_TLS`. |
+| Self-managed TLS without an API key | Set `TEMPORAL_TLS=true`. |
+| Plaintext Temporal on a private network | Set `TEMPORAL_TLS=false`. |
+
+Do not expose the API key through any `NEXT_PUBLIC_` variable. Do not share one
+Temporal namespace and task queue between independent bisibility installations.
+A worker polls by task queue, so a shared namespace and `TEMPORAL_TASK_QUEUE`
+can silently make one installation pick up another installation's work.
+
+### Worker startup troubleshooting
+
+If the worker restarts in a loop, verify `TEMPORAL_ADDRESS`, `TEMPORAL_TLS`, and
+`TEMPORAL_NAMESPACE` first. The worker image contains only the bisibility
+Temporal worker; it does not contain or start a Temporal server.
 
 Self-hosted instances ship a restrictive `robots.txt` and no `sitemap.xml` or
 `llms.txt` because a self-hosted tracker is not a public website; set
@@ -706,7 +653,7 @@ Self-hosted instances ship a restrictive `robots.txt` and no `sitemap.xml` or
 | - | :-: | - |
 | `DATABASE_URL` | Yes | Runtime PostgreSQL connection used by the app. |
 | `DIRECT_URL` | Yes | Direct PostgreSQL connection used by Prisma migrations. |
-| `REDIS_URL` | Yes | Redis or Valkey connection URL for rate limiting, idempotency, and realtime notifications. |
+| `REDIS_URL` | Yes | Valkey or another Redis-compatible connection URL for rate limiting, idempotency, and realtime notifications. |
 | `SITE_URL` | Yes | Primary public app URL used for metadata, generated images, OAuth redirects, and auth callbacks. |
 | `BETTER_AUTH_URL` | Yes | Public app URL used by authentication callbacks and cookies. |
 | `BETTER_AUTH_SECRET` | Yes | Secret used to sign auth state. |
@@ -720,7 +667,8 @@ your own terms and privacy policy, so the sign-in screen shows no consent line
 while both are unset. Setting either one alone is enough to show the line, which
 then links only to the document you provided.
 
-Generate `BETTER_AUTH_SECRET` and `BISIBILITY_SECRETS_KEY` with:
+Generate `BETTER_AUTH_SECRET`, `BISIBILITY_SECRETS_KEY`, and the optional
+`INTERNAL_PROBE_TOKEN` with separate invocations of:
 
 ```bash
 openssl rand -base64 32
@@ -740,6 +688,7 @@ hand.
 | - | - |
 | `DEMO_FIXED_OTP` | Set to `1` to enable the throwaway [demo login](/quickstart#demo-login) on local installs. |
 | `DEMO_INSTANCE_INSECURE_AUTH_ACK` | Required acknowledgement when `DEMO_FIXED_OTP=1` runs in the production Docker image. Never set it for real users or data. |
+| `INTERNAL_PROBE_TOKEN` | Optional Bearer token for detailed `/api/v1/health` diagnostics before database-backed credentials exist. Generate at least 32 random bytes and share it only with deployment health checks. |
 | `SELF_HOSTED_ALLOW_INDEXING` | Set to `true` to serve `Allow: /` and omit `X-Robots-Tag: noindex`; `false` keeps the restrictive policy. Values are case-insensitive, and missing or malformed values fail closed to the restrictive policy. |
 | `EMAIL_PROVIDER` | Transactional email provider: `resend`, `ses`, or `smtp`. Required for any email delivery. Setup guide: [Email delivery](/guides/email). |
 | `EMAIL_FROM` | Verified sender for account sign-in and notification email. |
@@ -758,7 +707,7 @@ hand.
 | `TEMPORAL_ADDRESS`, `TEMPORAL_NAMESPACE`, `TEMPORAL_TASK_QUEUE` | Temporal connection settings shared by the web app and worker. Docker's scheduled profile sets the worker address to `temporal:7233`. |
 | `TEMPORAL_API_KEY` | Temporal Cloud API key. When set, TLS is enabled automatically. |
 | `WORKER_SCHEMA_GUARD` | Worker/database migration guard: `enforce` (default) blocks a worker whose bundled schema is older than the database, `warn` reports drift without blocking, and `off` skips the check. |
-| `TEMPORAL_TLS` | Explicitly enable or disable TLS for a Temporal endpoint. Usually omitted for local Temporal and Temporal Cloud. |
+| `TEMPORAL_TLS` | Omit when an API key enables TLS automatically; set `true` for TLS without an API key; set `false` for plaintext private networking. |
 | `AUDIT_RETENTION_DAYS`, `AUDIT_IP_HMAC_SECRET`, `APP_VERSION` | Audit retention, optional source-IP HMAC hashing, and an audit version label. |
 | `RANK_CHECK_SCHEDULER_MODE` | Exclusive automatic scheduler owner: `legacy` (default) runs the reconciler and per-keyword Schedules, `cutover` pauses both owners while allowing state healing, and `dispatcher` runs only the due-work dispatcher. Empty means `legacy`; any other non-empty value fails closed. Set the same value on the app and worker. |
 | `RANK_CHECK_RECONCILER_ENABLED`, `RANK_CHECK_DISPATCHER_ENABLED` | Deprecated D1 compatibility fallback used only when `RANK_CHECK_SCHEDULER_MODE` is absent. Both active is rejected. Both false selects `cutover`; dispatcher true plus reconciler false selects `dispatcher`; other default/false combinations select `legacy`. |
@@ -878,9 +827,11 @@ the worker environment:
 node --experimental-transform-types scripts/ops/send-test-notification.ts
 ```
 
-`GET /api/v1/health` additively reports `services.worker` as `ok`, `stale`, or
-`unknown`. A worker is stale when its startup/heartbeat marker is older than 26
-hours; stale worker health returns HTTP 503.
+Authenticated `GET /api/v1/health` additively reports `services.worker` as `ok`,
+`stale`, or `unknown`. Use an API credential or `INTERNAL_PROBE_TOKEN` Bearer
+header to request that detailed body. A worker is stale when its
+startup/heartbeat marker is older than 26 hours; stale worker health returns
+HTTP 503.
 
 The Slack heartbeat is a dead-man's switch read by absence: Slack cannot alert
 you when the expected message never arrives. For full process or host outage
@@ -934,7 +885,7 @@ the named account as an additional admin without revoking existing admins. The
 email may instead be supplied through `INSTANCE_ADMIN_EMAIL`.
 
 If an account has lost its authenticator and all backup codes, verify the account
-owner's identity outside Bisibility and use the audited emergency reset:
+owner's identity outside bisibility and use the audited emergency reset:
 
 ```bash
 docker compose exec app node --experimental-transform-types scripts/admin/reset-two-factor.ts \

@@ -6,10 +6,14 @@ const mocks = vi.hoisted(() => ({
   complete: vi.fn(),
   requestCode: vi.fn(),
   signIn: vi.fn(),
+  signInRedirectUrl: vi.fn(),
 }));
 
 vi.mock("@/lib/auth/client", () => ({
   authClient: { signIn: { emailOtp: mocks.signIn } },
+}));
+vi.mock("@/lib/auth/sign-in-redirect", () => ({
+  signInRedirectUrl: mocks.signInRedirectUrl,
 }));
 vi.mock("./actions", () => ({
   completeSetupAction: mocks.complete,
@@ -44,6 +48,7 @@ describe("SetupWizard", () => {
     mocks.requestCode.mockResolvedValue({ status: "ready" });
     mocks.complete.mockResolvedValue({ status: "complete" });
     mocks.signIn.mockResolvedValue({ data: { user: { id: "user_admin" } }, error: null });
+    mocks.signInRedirectUrl.mockReturnValue(null);
   });
 
   it("keeps the mailer-backed verification flow unchanged", async () => {
@@ -110,5 +115,20 @@ describe("SetupWizard", () => {
     ).toBeInTheDocument();
     expect(document.querySelectorAll('[data-step-state="complete"]')).toHaveLength(2);
     expect(document.querySelector('[data-step-state="current"]')).toHaveTextContent("3");
+  });
+
+  it("hands an unexpected second-factor challenge to the auth redirect owner", async () => {
+    const response = { data: { twoFactorRedirect: true }, error: null };
+    mocks.signIn.mockResolvedValue(response);
+    mocks.signInRedirectUrl.mockReturnValue("#two-factor");
+    const user = userEvent.setup();
+    render(<SetupWizard mailerConfigured={false} />);
+
+    await enterAccount(user);
+    await enterOtp(user);
+    await user.click(screen.getByRole("button", { name: "Verify and create account" }));
+
+    expect(mocks.signInRedirectUrl).toHaveBeenCalledWith(response, window.location.origin);
+    expect(mocks.complete).not.toHaveBeenCalled();
   });
 });
