@@ -1,4 +1,5 @@
-import { TWO_FACTOR_CHALLENGE_PATH } from "@/lib/auth/two-factor-routes";
+import { validateReturnTo } from "@/lib/auth/return-to";
+import { SIGNED_IN_HOME_PATH, TWO_FACTOR_CHALLENGE_PATH } from "@/lib/auth/two-factor-routes";
 
 function safeRedirectUrl(url: string, origin: string) {
   try {
@@ -9,7 +10,18 @@ function safeRedirectUrl(url: string, origin: string) {
   }
 }
 
-export function signInRedirectUrl(response: unknown, origin: string) {
+function twoFactorChallengePath(returnTo?: string) {
+  const destination = validateReturnTo(returnTo);
+
+  if (!destination || destination === SIGNED_IN_HOME_PATH) {
+    return TWO_FACTOR_CHALLENGE_PATH;
+  }
+
+  const params = new URLSearchParams({ next: destination });
+  return `${TWO_FACTOR_CHALLENGE_PATH}?${params.toString()}`;
+}
+
+export function signInRedirectUrl(response: unknown, origin: string, returnTo?: string) {
   const payloads = [(response as { data?: unknown } | null)?.data, response];
 
   for (const payload of payloads) {
@@ -20,7 +32,7 @@ export function signInRedirectUrl(response: unknown, origin: string) {
     } | null;
 
     if (maybeRedirect?.twoFactorRedirect === true) {
-      return safeRedirectUrl(TWO_FACTOR_CHALLENGE_PATH, origin);
+      return safeRedirectUrl(twoFactorChallengePath(returnTo), origin);
     }
 
     if (maybeRedirect?.redirect === true && typeof maybeRedirect.url === "string") {

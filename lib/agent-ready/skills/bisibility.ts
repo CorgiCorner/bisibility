@@ -2,16 +2,16 @@ import type { TaskSkill } from "./types";
 
 export const skill: TaskSkill = {
   slug: "bisibility",
-  title: "Bisibility (router)",
+  title: "bisibility (router)",
   description:
-    "Orient on a Bisibility instance and route to the right task skill; use this first whenever an agent is asked to do anything with Bisibility rank tracking and is not yet sure which task or endpoint applies.",
+    "Orient on a bisibility instance and route to the right task skill; use this first whenever an agent is asked to do anything with bisibility rank tracking and is not yet sure which task or endpoint applies.",
   compatibility:
-    "Requires a Bisibility origin and a bearer API key with read scope (individual tasks may need write or admin).",
+    "Requires a bisibility origin and a bearer API key with read scope (individual tasks may need write or admin).",
   kind: "task-router",
   version: "0.1.0",
-  body: `# Bisibility (router)
+  body: `# bisibility (router)
 
-Bisibility is a search-rank-tracking platform: you organize **projects** (a domain
+bisibility is a search-rank-tracking platform: you organize **projects** (a domain
 plus its defaults), connect a bring-your-own search-data **provider**, track
 **keywords**, run **rank checks**, and fire **alerts** on rank movement. This is
 the **router** skill - it does not perform a task. Use it to orient yourself on an
@@ -19,7 +19,7 @@ instance, resolve credentials, and pick the specific task skill that does the wo
 
 ## When to use this skill
 
-Start here whenever you are asked to do something with Bisibility but are not yet
+Start here whenever you are asked to do something with bisibility but are not yet
 sure which task or endpoint applies. Once you know the goal, hand off to the
 matching task skill (listed below) and follow that skill's steps.
 
@@ -95,7 +95,7 @@ skills in order and reuse the resolved origin, key, and \`project_id\` across th
   references: [
     {
       path: "references/discovery.md",
-      content: `# Bisibility discovery & orientation cheat-sheet
+      content: `# bisibility discovery & orientation cheat-sheet
 
 Base path: \`/api/v1\`. Auth: \`Authorization: Bearer <api_key>\`.
 Origin is either \`https://bisibility.com\` (hosted) or
@@ -117,7 +117,7 @@ Origin is either \`https://bisibility.com\` (hosted) or
 |-|-|-|
 | GET /liveness | getLiveness | Web process liveness; usually unauthenticated |
 | GET /readiness | getReadiness | Database and blocking-migration readiness |
-| GET /health | getHealth | Composite diagnostics, including worker and Temporal |
+| GET /health | getHealth | Aggregate status anonymously; API auth unlocks detailed diagnostics |
 | GET /capabilities | getCapabilities | Feature/limit discovery |
 | GET /projects | listProjects | Find your \`project_id\` |
 

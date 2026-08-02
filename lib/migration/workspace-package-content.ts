@@ -21,7 +21,7 @@ function csvBytes(payload: Record<string, unknown>, key: string, headers: readon
 export function cloudWorkspacePackageEntries(content: string): ZipEntryInput[] {
   const payload = JSON.parse(content) as Record<string, unknown>;
   const readme = [
-    "Bisibility workspace package",
+    "bisibility workspace package",
     "",
     "To restore this workspace, upload this .zip file as it is, under",
     "Settings > Import from another instance. Do not unpack it first.",

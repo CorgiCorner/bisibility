@@ -282,7 +282,7 @@ export async function serializeKeywordExportXlsx(
 ) {
   const table = keywordExportTable(keywords, options);
   const workbook = new ExcelJS.Workbook();
-  workbook.creator = "Bisibility";
+  workbook.creator = "bisibility";
   workbook.created = new Date();
   const sheet = workbook.addWorksheet(options.scope === "history" ? "Ranking history" : "Keywords");
   sheet.addRow(table.headers);

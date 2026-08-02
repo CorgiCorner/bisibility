@@ -2,7 +2,9 @@ import { parseArgs } from "node:util";
 import { pathToFileURL } from "node:url";
 import { databaseConnectionConfig } from "../../lib/db/pool-config";
 import pg from "pg";
+import { withWriteBlockedVerification } from "./locked-verification";
 import {
+  PERSISTED_SECRET_TARGETS,
   type ProviderSecretRotationCounts,
   type ProviderSecretRotationStore,
   type ProviderSecretRow,
@@ -32,6 +34,7 @@ export function parseProviderSecretRotationOptions(args: string[] = process.argv
       "batch-size": { type: "string" },
       "dry-run": { type: "boolean" },
       "id-prefix": { type: "string" },
+      verify: { type: "boolean" },
     },
     strict: true,
   });
@@ -44,7 +47,17 @@ export function parseProviderSecretRotationOptions(args: string[] = process.argv
     throw new Error(`--batch-size must be between ${MIN_BATCH_SIZE} and ${MAX_BATCH_SIZE}.`);
   }
   const idPrefix = parsed.values["id-prefix"]?.trim() || null;
-  return { batchSize, dryRun: parsed.values["dry-run"] ?? false, idPrefix };
+  const verify = parsed.values.verify ?? false;
+  if (verify && idPrefix) {
+    throw new Error("--verify requires a complete scan without --id-prefix.");
+  }
+  if (verify && parsed.values["dry-run"]) throw new Error("Use --verify without --dry-run.");
+  return {
+    batchSize,
+    dryRun: verify || (parsed.values["dry-run"] ?? false),
+    idPrefix,
+    verify,
+  };
 }
 
 function quoted(identifier: string) {
@@ -112,25 +125,48 @@ async function main() {
   }) as RotationDatabase;
   await db.connect();
   try {
-    const results = await rotatePersistedProviderSecrets(
-      createProviderSecretRotationStore(db, options.idPrefix),
-      options,
-    );
-    const total: ProviderSecretRotationCounts = {
-      concurrent: 0,
-      eligible: 0,
-      rotated: 0,
-      scanned: 0,
-      skipped: 0,
+    const rotate = () =>
+      rotatePersistedProviderSecrets(
+        createProviderSecretRotationStore(db, options.idPrefix),
+        options,
+      );
+    const verifyAndReturn = async () => {
+      const verified = await rotate();
+      const total = sumCounts(verified);
+      if (total.eligible !== 0 || total.concurrent !== 0) {
+        throw new Error("Provider secret verification found values outside the primary key.");
+      }
+      return verified;
     };
+    const results = options.verify
+      ? await withWriteBlockedVerification(
+          db,
+          PERSISTED_SECRET_TARGETS.map((target) => target.table),
+          verifyAndReturn,
+        )
+      : await rotate();
+    const total = sumCounts(results);
     for (const [target, counts] of results) {
       printCounts(target, counts);
-      addCounts(total, counts);
     }
-    printCounts(options.dryRun ? "Dry run total" : "Rotation total", total);
+    printCounts(options.verify ? "Verify total" : options.dryRun ? "Dry run total" : "Rotation total", total);
   } finally {
     await db.end();
   }
+}
+
+function sumCounts(results: Map<string, ProviderSecretRotationCounts>) {
+  const total: ProviderSecretRotationCounts = {
+    concurrent: 0,
+    eligible: 0,
+    rotated: 0,
+    scanned: 0,
+    skipped: 0,
+  };
+  for (const counts of results.values()) {
+    addCounts(total, counts);
+  }
+  return total;
 }
 
 // OAuth state, pending Google OAuth, and Slack install-state cookies are

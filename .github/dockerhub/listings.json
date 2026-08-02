@@ -1,0 +1,12 @@
+{
+  "web": {
+    "repository": "corgicorner/bisibility",
+    "description": "Self-hosted open-source Google rank tracker. Keyword position tracking with REST API and MCP.",
+    "template": "bisibility.md"
+  },
+  "worker": {
+    "repository": "corgicorner/bisibility-worker",
+    "description": "Worker image for Bisibility rank tracker - scheduled rank checks. Use with corgicorner/bisibility",
+    "template": "bisibility-worker.md"
+  }
+}

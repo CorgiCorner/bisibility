@@ -1,3 +1,4 @@
+import { isoFromFrozenNow } from "@/tests/clock";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CheckStep } from "./MigrateToCloudCheck";
@@ -72,7 +73,7 @@ describe("migration compatibility check", () => {
     renderStep({
       compatibility: {
         blockers: [],
-        checkedAt: "2026-07-11T12:00:00.000Z",
+        checkedAt: isoFromFrozenNow({ hours: 13 }),
         compatible: true,
         contextKey: "ctx",
         source: { ...source, limits: { ...source.limits, sessionsRequired: true } },

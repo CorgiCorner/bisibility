@@ -1,6 +1,6 @@
 import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
 import { PROVIDER_CATALOG } from "@/lib/providers/registry";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import {
   backlinksRates,
@@ -284,10 +284,11 @@ describe("provider rates", () => {
   it("keeps provider-rate verification fresh", () => {
     // Intentional CI staleness alarm: rate cards must be re-verified at least every 180 days.
     const maxAgeMs = 180 * 24 * 60 * 60 * 1000;
+    const now = vi.getRealSystemTime();
 
     for (const rate of [...PROVIDER_RATES, ...PROVIDER_FEATURE_RATES]) {
       const checkedAt = new Date(`${rate.checkedAt}T00:00:00.000Z`);
-      const ageMs = Date.now() - checkedAt.getTime();
+      const ageMs = now - checkedAt.getTime();
 
       expect(ageMs).toBeGreaterThanOrEqual(0);
       expect(ageMs).toBeLessThanOrEqual(maxAgeMs);

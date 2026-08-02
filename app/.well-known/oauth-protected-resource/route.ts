@@ -1,9 +1,11 @@
 import { createOAuthProtectedResource } from "@/lib/agent-ready/auth-discovery";
-import { getOriginFromRequest } from "@/lib/agent-ready/origin";
 import { jsonResponse } from "@/lib/agent-ready/responses";
+import { AUTH_URL } from "@/lib/auth/auth";
 
 export const dynamic = "force-dynamic";
 
-export function GET(request: Request) {
-  return jsonResponse(createOAuthProtectedResource(getOriginFromRequest(request)));
+export function GET() {
+  return jsonResponse(
+    createOAuthProtectedResource(new URL("/api/v1", AUTH_URL).toString(), AUTH_URL),
+  );
 }

@@ -13,7 +13,7 @@ encrypted provider connections, alerts, notifications, and audit history. Keep:
 - `BETTER_AUTH_SECRET` and the deployment's secret/environment inventory;
 - your deployment manifests and the application version or image digest.
 
-Redis or Valkey contains rate-limit, idempotency, and realtime coordination data
+Valkey contains rate-limit, idempotency, and realtime coordination data
 and normally does not need durable backup. If you self-host Temporal and need to
 preserve in-flight workflow history, back up its persistence database separately.
 Keyword schedule intent remains in the application database and the worker can
@@ -161,7 +161,8 @@ failing scheduled checks while the web app works.
 
 ## Verify and roll back
 
-Check `GET /api/v1/health`, sign-in, one project read, and worker logs. Confirm
+Check authenticated `GET /api/v1/health`, sign-in, one project read, and worker logs. Use an API
+credential or the deployment's `INTERNAL_PROBE_TOKEN` Bearer header, then confirm
 that `services.migrations` is `ready`; the endpoint returns 503 when a bundled
 Prisma migration has not been applied, an active data migration is incomplete,
 has a checksum mismatch, or cannot be read, or the public ID database contract

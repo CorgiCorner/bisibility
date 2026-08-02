@@ -78,14 +78,14 @@ describe("sendEmail orchestration", () => {
     clearEmailEnv();
     vi.stubEnv("EMAIL_PROVIDER", "resend");
     vi.stubEnv("RESEND_API_KEY", "email-key");
-    vi.stubEnv("EMAIL_FROM", "Bisibility <reports@example.com>");
+    vi.stubEnv("EMAIL_FROM", "bisibility <reports@example.com>");
     vi.stubGlobal("fetch", fetchMock);
 
     await sendEmail(input);
 
     expect(reserveBudgetMock).toHaveBeenCalledWith("bulk");
     expect(JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body))).toMatchObject({
-      from: "Bisibility <reports@example.com>",
+      from: "bisibility <reports@example.com>",
       to: ["owner@example.com"],
     });
   });
@@ -95,13 +95,13 @@ describe("sendEmail orchestration", () => {
     clearEmailEnv();
     vi.stubEnv("EMAIL_PROVIDER", "resend");
     vi.stubEnv("RESEND_API_KEY", "email-key");
-    vi.stubEnv("EMAIL_FROM", "Bisibility <reports@example.com>");
+    vi.stubEnv("EMAIL_FROM", "bisibility <reports@example.com>");
     vi.stubGlobal("fetch", fetchMock);
 
-    await sendEmail({ ...input, from: "Bisibility Alerts <alerts@example.com>" });
+    await sendEmail({ ...input, from: "bisibility Alerts <alerts@example.com>" });
 
     expect(JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body)).from).toBe(
-      "Bisibility Alerts <alerts@example.com>",
+      "bisibility Alerts <alerts@example.com>",
     );
   });
 
@@ -111,7 +111,7 @@ describe("sendEmail orchestration", () => {
     clearEmailEnv();
     vi.stubEnv("EMAIL_PROVIDER", "ses");
     vi.stubEnv("SES_REGION", "eu-central-1");
-    vi.stubEnv("EMAIL_FROM", "Bisibility <reports@example.com>");
+    vi.stubEnv("EMAIL_FROM", "bisibility <reports@example.com>");
     vi.stubGlobal("fetch", fetchMock);
 
     await sendEmail(input);
@@ -119,7 +119,7 @@ describe("sendEmail orchestration", () => {
     expect(sendMock).toHaveBeenCalledOnce();
     expect(sendMock.mock.calls[0]?.[0]?.input).toMatchObject({
       Destination: { ToAddresses: ["owner@example.com"] },
-      FromEmailAddress: "Bisibility <reports@example.com>",
+      FromEmailAddress: "bisibility <reports@example.com>",
     });
     expect(fetchMock).not.toHaveBeenCalled();
   });
@@ -137,7 +137,7 @@ describe("sendEmail orchestration", () => {
     clearEmailEnv();
     vi.stubGlobal("fetch", fetchMock);
 
-    await sendEmail({ ...input, subject: "[Bisibility] Alert fired" });
+    await sendEmail({ ...input, subject: "[bisibility] Alert fired" });
 
     expect(fetchMock).not.toHaveBeenCalled();
     expect(sendMock).not.toHaveBeenCalled();
@@ -158,7 +158,7 @@ describe("sendEmail orchestration", () => {
   it("does not reserve budget for a selected but unconfigured provider", async () => {
     clearEmailEnv();
     vi.stubEnv("EMAIL_PROVIDER", "resend");
-    vi.stubEnv("EMAIL_FROM", "Bisibility <reports@example.com>");
+    vi.stubEnv("EMAIL_FROM", "bisibility <reports@example.com>");
 
     await expect(sendEmail(input)).rejects.toThrow("RESEND_API_KEY is required");
 
@@ -170,7 +170,7 @@ describe("sendEmail orchestration", () => {
     clearEmailEnv();
     vi.stubEnv("EMAIL_PROVIDER", "resend");
     vi.stubEnv("RESEND_API_KEY", "email-key");
-    vi.stubEnv("EMAIL_FROM", "Bisibility <reports@example.com>");
+    vi.stubEnv("EMAIL_FROM", "bisibility <reports@example.com>");
     vi.stubGlobal("fetch", fetchMock);
     reserveBudgetMock.mockResolvedValue({
       day: new Date("2026-07-23T00:00:00.000Z"),

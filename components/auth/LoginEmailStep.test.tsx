@@ -238,7 +238,7 @@ describe("LoginEmailStep", () => {
 
     expect(screen.getByRole("heading", { name: "We're at capacity today" })).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: "Self-host Bisibility - it's open source" }),
+      screen.getByRole("link", { name: "Self-host bisibility - it's open source" }),
     ).toHaveAttribute("href", "https://bisibility.com/docs/self-hosting");
     expect(screen.queryByRole("button", { name: "Continue with Google" })).toBeNull();
   });

@@ -54,6 +54,10 @@ describe("return-to validation", () => {
     );
   });
 
+  it("omits the default destination from the login URL", () => {
+    expect(loginErrorReturnTo(appRootPath())).toBe("/login");
+  });
+
   it("removes a legacy destination fragment from the OAuth error callback", () => {
     expect(loginErrorReturnTo("/app/settings#api-keys")).toBe(
       "/login?next=%2Fapp%2Fsettings%3Fsection%3Dapi-keys",

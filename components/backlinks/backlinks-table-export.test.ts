@@ -1,4 +1,5 @@
 import type { BacklinksRow } from "@/lib/backlinks/types";
+import { dateOnlyFromFrozenNow } from "@/tests/clock";
 import { describe, expect, it } from "vitest";
 import { backlinksExportContent } from "./backlinks-table-export";
 
@@ -7,7 +8,7 @@ const rows: BacklinksRow[] = [
   {
     anchor: 'Acme, "desk"',
     domainAuthority: 51,
-    firstSeen: "2026-07-10",
+    firstSeen: dateOnlyFromFrozenNow(),
     flags: ["nofollow"],
     linksCount: 2,
     lostAt: null,

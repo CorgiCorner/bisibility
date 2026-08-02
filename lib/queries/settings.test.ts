@@ -1,3 +1,4 @@
+import { dateFromFrozenNow } from "@/tests/clock";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getNewWorkspaceSettings, getSettings } from "./settings";
 
@@ -143,7 +144,7 @@ describe("settings queries", () => {
     mocks.prisma.providerCostEntry.aggregate.mockResolvedValue({ _sum: { costCents: 300 } });
 
     const result = await getSettings("prj_abcdefghijklmnopqrstuvwx", {
-      now: new Date("2026-07-10T23:00:00.000Z"),
+      now: dateFromFrozenNow(),
     });
 
     expect(result.usage.budget).toEqual({ capCents: 5_000, spentCents: 1_500 });
@@ -195,7 +196,9 @@ describe("settings queries", () => {
       { costCents: 50, provider: "dataforseo", status: "completed" },
     ]);
 
-    const result = await getSettings("prj_abcdefghijklmnopqrstuvwx");
+    const result = await getSettings("prj_abcdefghijklmnopqrstuvwx", {
+      now: new Date("2026-06-01T12:00:00.000Z"),
+    });
 
     expect(mocks.prisma.rankCheck.findMany).toHaveBeenCalledWith({
       select: { costCents: true, estimatedCostCents: true, provider: true, status: true },
@@ -417,7 +420,7 @@ describe("settings queries", () => {
     ]);
 
     const result = await getSettings("prj_abcdefghijklmnopqrstuvwx", {
-      now: new Date("2026-07-10T23:00:00.000Z"),
+      now: dateFromFrozenNow(),
     });
 
     expect(mocks.prisma.providerCostEntry.groupBy).toHaveBeenCalledWith({
@@ -490,7 +493,7 @@ describe("settings queries", () => {
     });
 
     const result = await getSettings("prj_abcdefghijklmnopqrstuvwx", {
-      now: new Date("2026-07-10T23:00:00.000Z"),
+      now: dateFromFrozenNow(),
     });
 
     expect(result.usage.budget.spentCents).toBe(165);

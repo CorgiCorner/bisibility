@@ -22,11 +22,15 @@ import {
   DEMO_FIXED_OTP_ENABLED,
   FIXED_OTP_ENABLED,
 } from "@/lib/auth/runtime-config";
-import { resolveAuthSecret } from "@/lib/auth/secret";
+import { resolveAuthSecret, resolveAuthSecrets } from "@/lib/auth/secret";
 import { recordSignInAudit } from "@/lib/auth/sign-in-audit";
 import { enforceGoogleSignupCapacity } from "@/lib/auth/signin-capacity";
 import { twoFactorRouteGuard } from "@/lib/auth/two-factor-route-guard";
 import { prisma } from "@/lib/db/prisma";
+import {
+  normalizeAuthorizationServerOrigin,
+  resolveMcpResourceUrl,
+} from "@/lib/deployment/mcp-origin-contract";
 import { oauthProvider } from "@better-auth/oauth-provider";
 import { type BetterAuthOptions, type BetterAuthPlugin, betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
@@ -37,10 +41,12 @@ import { emailOTP, jwt, twoFactor } from "better-auth/plugins";
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30;
 
 const AUTH_SECRET = resolveAuthSecret();
+const AUTH_SECRETS = resolveAuthSecrets();
 export const AUTH_URL_CONFIGURED = Boolean(process.env.BETTER_AUTH_URL?.trim());
-export const AUTH_URL =
-  process.env.BETTER_AUTH_URL ?? `http://localhost:${process.env.PORT ?? "3000"}`;
-export const MCP_RESOURCE_URL = new URL("/api/mcp", AUTH_URL).toString();
+export const AUTH_URL = normalizeAuthorizationServerOrigin(
+  process.env.BETTER_AUTH_URL ?? `http://localhost:${process.env.PORT ?? "3000"}`,
+);
+export const MCP_RESOURCE_URL = resolveMcpResourceUrl(AUTH_URL);
 const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID;
 const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET;
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
@@ -167,9 +173,10 @@ export const auth = betterAuth({
   advanced: {
     ipAddress: AUTH_IP_ADDRESS_OPTIONS,
   },
-  appName: "Bisibility",
+  appName: "bisibility",
   baseURL: AUTH_URL,
   secret: AUTH_SECRET,
+  secrets: AUTH_SECRETS,
   database: prismaAdapter(authDatabase, {
     provider: "postgresql",
     transaction: true,
@@ -243,7 +250,7 @@ export const auth = betterAuth({
     twoFactorRouteGuard(),
     twoFactor({
       allowPasswordless: true,
-      issuer: "Bisibility",
+      issuer: "bisibility",
     }),
     jwt({
       jwt: {

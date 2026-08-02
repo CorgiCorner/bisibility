@@ -1,5 +1,20 @@
 import { describe, expect, it } from "vitest";
-import { compareMigrationState } from "./migration-state";
+import { compareMigrationState, latestAppliedMigrationName } from "./migration-state";
+
+describe("latestAppliedMigrationName", () => {
+  it("uses migration-name order when an older migration finishes later", () => {
+    expect(
+      latestAppliedMigrationName([
+        { migration_name: "20260730204300_rank_check_normalization_backfill" },
+        { migration_name: "20260730073000_data_migration_finalization" },
+      ]),
+    ).toBe("20260730204300_rank_check_normalization_backfill");
+  });
+
+  it("returns null when no migration has finished", () => {
+    expect(latestAppliedMigrationName([])).toBeNull();
+  });
+});
 
 describe("compareMigrationState", () => {
   it.each([

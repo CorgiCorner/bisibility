@@ -47,7 +47,7 @@ describe("databasePoolConfig", () => {
     ["DATABASE_POOL_MAX", "21"],
     ["DATABASE_CONNECT_TIMEOUT_MS", "fast"],
     ["DATABASE_IDLE_TIMEOUT_MS", "999"],
-    ["DATABASE_APPLICATION_NAME", "Bisibility Worker"],
+    ["DATABASE_APPLICATION_NAME", "bisibility Worker"],
   ] as const)("rejects invalid %s=%s", (name, value) => {
     expect(() => databasePoolConfig({ [name]: value })).toThrow(name);
   });

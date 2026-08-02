@@ -40,7 +40,7 @@ describe("getOAuthConsentClient", () => {
   it("marks the seeded CLI client as registered", async () => {
     mocks.prisma.oauthClient.findUnique.mockResolvedValue({
       clientId: "bisibility-cli",
-      name: "Bisibility CLI",
+      name: "bisibility CLI",
       redirectUris: ["http://127.0.0.1/callback"],
     });
 

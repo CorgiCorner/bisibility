@@ -79,7 +79,7 @@ describe("dispatcher recurrence", () => {
     const daily = { frequency: "daily" as const, jitterMinutes: 0, timezone: "UTC" };
     const nextCheckAt = computeDispatcherNextCheckAt(daily, keywordId, from);
 
-    expect(dispatcherNextCheckAtMatchesRecurrence(daily, keywordId, nextCheckAt)).toBe(true);
+    expect(dispatcherNextCheckAtMatchesRecurrence(daily, keywordId, nextCheckAt, from)).toBe(true);
     expect(
       dispatcherNextCheckAtMatchesRecurrence(
         {
@@ -90,6 +90,7 @@ describe("dispatcher recurrence", () => {
         },
         keywordId,
         nextCheckAt,
+        from,
       ),
     ).toBe(false);
   });

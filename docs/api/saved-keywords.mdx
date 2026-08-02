@@ -1,0 +1,26 @@
+---
+title: "Saved keywords"
+description: "Save keyword ideas without starting paid rank tracking."
+---
+
+Paths are relative to `/api/v1`. All routes require a bearer credential scoped
+to the project in the path. See [Authentication](/authentication) for scopes.
+
+| Method | Path | Purpose |
+| - | - | - |
+| `GET` | `/projects/{project_id}/saved-keywords` | List keyword ideas in the Saved tab. |
+| `POST` | `/projects/{project_id}/saved-keywords` | Save up to 500 keyword ideas without tracking them. |
+| `DELETE` | `/projects/{project_id}/saved-keywords/{saved_keyword_id}` | Remove one saved keyword. |
+
+The create route accepts bare strings or metric snapshots. When a snapshot
+does not specify `location`, the project default market is used. A keyword
+that is already tracked or already saved is skipped without failing the batch;
+the response reports `created` or `skipped` for every input item.
+
+Saving a keyword does not create a rank-check schedule or consume provider
+budget. Tracking starts only after the user promotes the saved keyword from
+the Saved tab and chooses the tracking settings, including device.
+
+The generated
+[OpenAPI JSON](https://bisibility.com/api/v1/openapi.json) is the
+machine-readable source of truth for request and response schemas.

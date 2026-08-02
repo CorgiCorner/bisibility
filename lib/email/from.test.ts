@@ -13,15 +13,15 @@ describe("email sender helpers", () => {
 
   it("reads the sender from EMAIL_FROM", () => {
     clearFromEnv();
-    vi.stubEnv("EMAIL_FROM", "Bisibility <hello@example.com>");
+    vi.stubEnv("EMAIL_FROM", "bisibility <hello@example.com>");
 
-    expect(configuredEmailFrom()).toBe("Bisibility <hello@example.com>");
+    expect(configuredEmailFrom()).toBe("bisibility <hello@example.com>");
   });
 
   it("ignores retired Resend sender variables", () => {
     clearFromEnv();
-    vi.stubEnv("RESEND_FROM_EMAIL", "Bisibility <legacy@example.com>");
-    vi.stubEnv("RESEND_FROM", "Bisibility <legacy@example.com>");
+    vi.stubEnv("RESEND_FROM_EMAIL", "bisibility <legacy@example.com>");
+    vi.stubEnv("RESEND_FROM", "bisibility <legacy@example.com>");
 
     expect(configuredEmailFrom()).toBeNull();
   });
@@ -41,17 +41,17 @@ describe("email sender helpers", () => {
 
   it("prefers the dedicated alerts sender", () => {
     clearFromEnv();
-    vi.stubEnv("EMAIL_FROM", "Bisibility <hello@example.com>");
-    vi.stubEnv("EMAIL_ALERTS_FROM", "Bisibility alerts <alerts@example.com>");
+    vi.stubEnv("EMAIL_FROM", "bisibility <hello@example.com>");
+    vi.stubEnv("EMAIL_ALERTS_FROM", "bisibility alerts <alerts@example.com>");
 
-    expect(alertsEmailFrom()).toBe("Bisibility alerts <alerts@example.com>");
+    expect(alertsEmailFrom()).toBe("bisibility alerts <alerts@example.com>");
   });
 
   it("falls back to the default sender when no alerts sender is set", () => {
     clearFromEnv();
-    vi.stubEnv("EMAIL_FROM", "Bisibility <hello@example.com>");
-    vi.stubEnv("RESEND_ALERTS_FROM", "Bisibility alerts <legacy-alerts@example.com>");
+    vi.stubEnv("EMAIL_FROM", "bisibility <hello@example.com>");
+    vi.stubEnv("RESEND_ALERTS_FROM", "bisibility alerts <legacy-alerts@example.com>");
 
-    expect(alertsEmailFrom()).toBe("Bisibility <hello@example.com>");
+    expect(alertsEmailFrom()).toBe("bisibility <hello@example.com>");
   });
 });

@@ -453,7 +453,7 @@ describe("integration queries", () => {
       properties: [
         {
           kind: "ga4" as const,
-          label: "Bisibility (123456789)",
+          label: "bisibility (123456789)",
           permissionLevel: "CorgiCorner",
           value: "123456789",
         },

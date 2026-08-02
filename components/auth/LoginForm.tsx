@@ -212,14 +212,15 @@ export function LoginForm({
 
     setAuthStatus("idle");
     clearCooldown();
-    const redirectUrl = signInRedirectUrl(response, window.location.origin);
+    const destination = mergeReturnToHash(returnTo, window.location.hash);
+    const redirectUrl = signInRedirectUrl(response, window.location.origin, destination);
 
     if (redirectUrl) {
       window.location.assign(redirectUrl);
       return;
     }
 
-    window.location.assign(mergeReturnToHash(returnTo, window.location.hash));
+    window.location.assign(destination);
   }
 
   async function resendCode() {

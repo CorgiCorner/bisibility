@@ -88,6 +88,7 @@ export const operationGroups: ReadonlyArray<readonly [OpenApiTagName, readonly s
     ["listCompetitors", "addCompetitor", "removeProjectCompetitor", "removeCompetitor"],
   ],
   ["sitemap-monitoring", ["listSitemapMonitors", "updateSitemapMonitor"]],
+  ["saved-keywords", ["listSavedKeywords", "createSavedKeywords", "deleteProjectSavedKeyword"]],
   [
     "saved-views",
     ["listSavedViews", "createSavedView", "deleteProjectSavedView", "deleteSavedView"],

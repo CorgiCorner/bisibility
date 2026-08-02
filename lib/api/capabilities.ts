@@ -262,7 +262,7 @@ export function getLlmsText() {
     .join("\n");
 
   return [
-    "# Bisibility API v1",
+    "# bisibility API v1",
     "",
     "Machine-readable API capability summary. For the site and agent entry point,",
     "see /llms.txt.",

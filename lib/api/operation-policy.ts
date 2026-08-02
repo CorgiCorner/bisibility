@@ -34,6 +34,7 @@ export const operationPolicy = {
   createPersonalAccessToken: policy("POST", "/me/tokens", "admin"),
   createProject: policy("POST", "/projects", "write"),
   createProjectApiKey: policy("POST", "/projects/{project_id}/api-keys", "admin"),
+  createSavedKeywords: policy("POST", "/projects/{project_id}/saved-keywords", "write"),
   createSavedView: policy("POST", "/projects/{project_id}/saved-views", "write"),
   createSignal: policy("POST", "/signals", "write"),
   createTeamInvite: policy("POST", "/projects/{project_id}/team/invites", "admin"),
@@ -41,6 +42,11 @@ export const operationPolicy = {
   deleteAlertRule: policy("DELETE", "/alert-rules/{rule_id}", "write"),
   deleteKeyword: policy("DELETE", "/keywords/{id}", "write"),
   deleteProject: policy("DELETE", "/projects/{project_id}", "admin"),
+  deleteProjectSavedKeyword: policy(
+    "DELETE",
+    "/projects/{project_id}/saved-keywords/{saved_keyword_id}",
+    "write",
+  ),
   deleteProjectSavedView: policy("DELETE", "/projects/{project_id}/saved-views/{view_id}", "write"),
   deleteSavedView: policy("DELETE", "/saved-views/{view_id}", "write"),
   deleteWebhookEndpoint: policy("DELETE", "/projects/{project_id}/webhooks/{webhook_id}", "admin"),
@@ -73,6 +79,7 @@ export const operationPolicy = {
     "/projects/{project_id}/ranked-keyword-suggestions",
     "write",
   ),
+  listSavedKeywords: policy("GET", "/projects/{project_id}/saved-keywords", "read"),
   listSavedViews: policy("GET", "/projects/{project_id}/saved-views", "read"),
   listSearchPerformanceQueryStats: policy(
     "GET",

@@ -54,7 +54,7 @@ describe("JSON-LD builders", () => {
     expect(organization).toMatchObject({
       "@type": "Organization",
       logo: { "@type": "ImageObject", url: `${origin}/icon.svg` },
-      name: "Bisibility",
+      name: "bisibility",
       sameAs: [githubUrl, linkedinUrl],
       url: `${origin}/`,
     });
@@ -85,14 +85,14 @@ describe("JSON-LD builders", () => {
   it("omits FAQPage when there are no real FAQ entries", () => {
     expect(createFaqPageJsonLd([])).toBeNull();
     expect(
-      createFaqPageJsonLd([{ question: "Can I self-host Bisibility?", answer: "Yes." }]),
+      createFaqPageJsonLd([{ question: "Can I self-host bisibility?", answer: "Yes." }]),
     ).toMatchObject({
       "@type": "FAQPage",
       mainEntity: [
         {
           "@type": "Question",
           acceptedAnswer: { "@type": "Answer", text: "Yes." },
-          name: "Can I self-host Bisibility?",
+          name: "Can I self-host bisibility?",
         },
       ],
     });

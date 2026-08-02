@@ -89,7 +89,7 @@ describe("alert digest flush", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.unstubAllGlobals();
-    vi.stubEnv("EMAIL_FROM", "Bisibility <alerts@example.com>");
+    vi.stubEnv("EMAIL_FROM", "bisibility <alerts@example.com>");
     mocks.reserveDeliveryBudgetOnce.mockResolvedValue({ granted: true, reused: false });
     mocks.recordSuppressed.mockResolvedValue({ overflowNoticeDue: false });
     mocks.prisma.alertRuleDailyStat.findUnique.mockResolvedValue({ suppressedCount: 0 });

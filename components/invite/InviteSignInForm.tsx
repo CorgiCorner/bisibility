@@ -1,6 +1,8 @@
 "use client";
 
 import { authClient } from "@/lib/auth/client";
+import { mergeReturnToHash } from "@/lib/auth/return-to";
+import { signInRedirectUrl } from "@/lib/auth/sign-in-redirect";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import {
   ArrowRightIcon as ArrowRight,
@@ -79,6 +81,17 @@ export function InviteSignInForm({ email }: Readonly<{ email: string }>) {
         setFormError(errorMessage(response.error));
         return;
       }
+
+      const destination = mergeReturnToHash(
+        `${window.location.pathname}${window.location.search}`,
+        window.location.hash,
+      );
+      const redirectUrl = signInRedirectUrl(response, window.location.origin, destination);
+      if (redirectUrl) {
+        window.location.assign(redirectUrl);
+        return;
+      }
+
       router.refresh();
     } catch (error) {
       setFormError(errorMessage(error));

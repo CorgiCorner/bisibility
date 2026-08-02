@@ -1,5 +1,10 @@
 import { unsupportedApiVersionResponse } from "@/lib/api/api-versions";
 import { selfHostedRobotsTag } from "@/lib/deployment/crawl-control";
+import {
+  MANAGED_AUTHORIZATION_SERVER_ORIGIN,
+  MANAGED_MCP_RESOURCE_ORIGIN,
+  MANAGED_MCP_RESOURCE_URL,
+} from "@/lib/deployment/mcp-origin-contract";
 import { type NextRequest, NextResponse } from "next/server";
 import {
   createMarkdownForRequest,
@@ -11,10 +16,14 @@ import { ANCHOR_PARAM, RETURN_TO_REQUEST_HEADER, validateAnchor } from "./lib/au
 import { SESSION_HINT_COOKIE, SESSION_HINT_COOKIE_OPTIONS } from "./lib/auth/session-hint";
 
 const sessionCookieNames = ["better-auth.session_token", "__Secure-better-auth.session_token"];
-const CANONICAL_APP_HOST = "eu.bisibility.com";
-const CANONICAL_MARKETING_HOST = "bisibility.com";
-const CANONICAL_MCP_RESOURCE_URL = `https://${CANONICAL_MARKETING_HOST}/api/mcp`;
+const CANONICAL_APP_HOST = new URL(MANAGED_AUTHORIZATION_SERVER_ORIGIN).hostname;
+const CANONICAL_MARKETING_HOST = new URL(MANAGED_MCP_RESOURCE_ORIGIN).hostname;
 const REGIONAL_MCP_PATHS = new Set(["/api/mcp", "/.well-known/oauth-protected-resource/api/mcp"]);
+const REGIONAL_AUTH_METADATA_PATHS = new Set([
+  "/.well-known/oauth-authorization-server",
+  "/.well-known/oauth-protected-resource",
+  "/.well-known/openid-configuration",
+]);
 const MARKETING_HOSTS = new Set([CANONICAL_MARKETING_HOST, "www.bisibility.com"]);
 // Interactive and API routes stay in the user's regional cell. Everything else
 // is a public surface whose canonical production origin is the marketing apex.
@@ -77,7 +86,7 @@ function regionalMcpResponse(request: NextRequest) {
 
   const headers = {
     "Cache-Control": "no-store",
-    Link: `<${CANONICAL_MCP_RESOURCE_URL}>; rel="canonical"`,
+    Link: `<${MANAGED_MCP_RESOURCE_URL}>; rel="canonical"`,
   };
   if (request.method === "HEAD") {
     return new NextResponse(null, { headers, status: 421 });
@@ -85,8 +94,8 @@ function regionalMcpResponse(request: NextRequest) {
 
   return NextResponse.json(
     {
-      canonical_resource: CANONICAL_MCP_RESOURCE_URL,
-      detail: `Hosted MCP is available only at ${CANONICAL_MCP_RESOURCE_URL}.`,
+      canonical_resource: MANAGED_MCP_RESOURCE_URL,
+      detail: `Hosted MCP is available only at ${MANAGED_MCP_RESOURCE_URL}.`,
       status: 421,
       title: "Misdirected MCP request",
       type: `https://${CANONICAL_MARKETING_HOST}/problems/misdirected-mcp-request`,
@@ -96,6 +105,10 @@ function regionalMcpResponse(request: NextRequest) {
 }
 
 function canonicalSurfaceRedirect(request: NextRequest) {
+  if (isSelfHostDeployment()) {
+    return null;
+  }
+
   // The advertised MCP transport is the apex URL. Keep it there so an
   // Authorization header never crosses hosts while following a redirect.
   if (request.nextUrl.pathname === "/api/mcp") {
@@ -104,7 +117,11 @@ function canonicalSurfaceRedirect(request: NextRequest) {
 
   const host = requestHost(request);
   const appSurface = isAppSurface(request.nextUrl.pathname);
+  const regionalAuthMetadata = REGIONAL_AUTH_METADATA_PATHS.has(request.nextUrl.pathname);
   const destinationHost = (() => {
+    if (regionalAuthMetadata) {
+      return MARKETING_HOSTS.has(host) ? CANONICAL_APP_HOST : null;
+    }
     if (appSurface && MARKETING_HOSTS.has(host)) {
       return CANONICAL_APP_HOST;
     }

@@ -1,4 +1,5 @@
 import type { NotificationFeed } from "@/lib/queries/notifications";
+import { dateFromFrozenNow, isoFromFrozenNow } from "@/tests/clock";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NotificationBellClient } from "./NotificationBellClient";
@@ -13,7 +14,7 @@ const feed: NotificationFeed = {
   items: [
     {
       body: null,
-      createdAt: "2026-07-11T12:00:00.000Z",
+      createdAt: isoFromFrozenNow({ hours: 13 }),
       href: "/app/overview",
       id: "ntf_abcdefghijklmnopqrstuvwx",
       meta: "Project",
@@ -26,13 +27,13 @@ const feed: NotificationFeed = {
     },
     {
       body: null,
-      createdAt: "2026-07-10T12:00:00.000Z",
+      createdAt: isoFromFrozenNow({ hours: -11 }),
       href: "/app/overview",
       id: "ntf_bbcdefghijklmnopqrstuvwx",
       meta: "System",
       payload: null,
       projectId: null,
-      readAt: "2026-07-10T13:00:00.000Z",
+      readAt: isoFromFrozenNow({ hours: -10 }),
       time: "1d",
       title: "Maintenance",
       type: "system",
@@ -72,6 +73,7 @@ describe("NotificationBellClient", () => {
   });
 
   it("marks all notifications read and renders offline state", async () => {
+    vi.setSystemTime(dateFromFrozenNow({ hours: 14 }));
     mocks.status = "offline";
     const markAll = vi.fn(async () => ({ updated: 1 }));
     render(

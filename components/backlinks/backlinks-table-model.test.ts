@@ -1,4 +1,5 @@
 import type { BacklinksRow } from "@/lib/backlinks/types";
+import { dateOnlyFromFrozenNow } from "@/tests/clock";
 import { describe, expect, it } from "vitest";
 import {
   aggregateBacklinksView,
@@ -14,7 +15,7 @@ function row(overrides: Partial<BacklinksRow> = {}): BacklinksRow {
   return {
     anchor: "Acme",
     domainAuthority: 40,
-    firstSeen: "2026-07-10",
+    firstSeen: dateOnlyFromFrozenNow(),
     flags: [],
     linksCount: 1,
     lostAt: null,

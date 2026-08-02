@@ -11,7 +11,7 @@ describe("security factor helpers", () => {
   it("extracts the TOTP secret from an otpauth URI", () => {
     expect(
       secretFromTotpUri(
-        "otpauth://totp/Bisibility:jan@example.com?secret=ABC123&issuer=Bisibility",
+        "otpauth://totp/bisibility:jan@example.com?secret=ABC123&issuer=bisibility",
       ),
     ).toBe("ABC123");
   });
@@ -31,7 +31,7 @@ describe("security factor helpers", () => {
 
   it("creates a local QR data URL without leaking the otpauth URI to a remote service", () => {
     const url = createTotpQrDataUrl(
-      "otpauth://totp/Bisibility:jan@example.com?secret=ABC123&issuer=Bisibility",
+      "otpauth://totp/bisibility:jan@example.com?secret=ABC123&issuer=bisibility",
     );
 
     expect(url).toMatch(/^data:image\/svg\+xml;utf8,/);

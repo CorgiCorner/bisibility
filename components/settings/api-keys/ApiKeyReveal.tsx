@@ -32,7 +32,7 @@ export function ApiKeyRevealContent({
               Copy your key now - it will not be shown again.
             </div>
             <p className="m-0 mt-1 text-[12px] leading-[1.5] text-fg-muted">
-              Bisibility stores only a hash and display prefix after this window closes.
+              bisibility stores only a hash and display prefix after this window closes.
             </p>
           </div>
         </div>

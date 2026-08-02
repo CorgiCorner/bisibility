@@ -82,7 +82,7 @@ export async function beginTwoFactorEnrollment(context: TwoFactorSecurityContext
     enrollmentId,
     expiresAt: expiresAt.toISOString(),
     secret,
-    totpURI: twoFactorTotp(secret).url("Bisibility", context.email),
+    totpURI: twoFactorTotp(secret).url("bisibility", context.email),
   };
 }
 

@@ -31,6 +31,7 @@ describe("OpenAPI document", () => {
         "alerts",
         "competitors",
         "sitemap-monitoring",
+        "saved-keywords",
         "saved-views",
         "signals",
         "providers",
@@ -39,7 +40,7 @@ describe("OpenAPI document", () => {
         "migration",
       ].map((name) => expect.objectContaining({ name })),
     );
-    expect(operations).toHaveLength(93);
+    expect(operations).toHaveLength(96);
     expect(operations.every((operation) => operation.tags?.length === 1)).toBe(true);
     expect(
       operations.every(

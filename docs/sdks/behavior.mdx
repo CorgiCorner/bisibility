@@ -1,0 +1,104 @@
+---
+title: "SDK behavior"
+description: "Canonical cross-language behavior for official Bisibility SDKs."
+---
+
+This page is the source of truth for behavior shared by the official TypeScript, Python, and Go
+SDKs. Language-specific pages document syntax and types, while the OpenAPI document defines routes,
+payloads, and response schemas.
+
+## Authentication and project selection
+
+Authenticated operations send the configured API key or personal access token as
+`Authorization: Bearer <token>`. Discovery and explicitly public operations omit this header. SDKs
+must not forward credentials through redirects.
+
+When a project identifier is configured, SDKs send it as `X-Bisibility-Project` unless the caller
+provided that header for the individual request. This selects a project for personal access token
+requests whose route does not contain a project identifier.
+
+## Public identifiers
+
+All resource identifiers at the SDK boundary use public ID v3. A public ID has one of the
+registered resource prefixes, an underscore, and a lowercase 24-character CUID2 suffix:
+`prefix_[a-z][a-z0-9]{23}`. SDKs reject database primary keys, legacy formats, mixed-case values,
+and wrong resource prefixes before sending a request.
+
+Public method parameters and response types use the matching resource-specific ID type. Locations
+remain keyed only by `location_key`. Cursor values are opaque and pass through unchanged. Cloud
+import and export schemas are versioned and validated locally. The current OpenAPI document defines
+the version emitted by new exports, while compatibility discovery identifies any older import
+versions accepted during a migration window.
+
+## Requests, cancellation, and timeouts
+
+Caller headers override SDK defaults except where a language runtime forbids a header. Request
+options expose `Idempotency-Key` without changing its value. Its presence also makes an otherwise
+non-idempotent request eligible for retry.
+
+Each attempt has a default 30-second timeout when the caller supplies no explicit timeout. A caller
+may configure another positive timeout or explicitly disable timeouts. Every retry receives a fresh
+per-attempt timeout.
+
+Cancellation must interrupt both an active request and any retry delay. It must propagate through
+the language's normal cancellation mechanism instead of being converted into an API or decoding
+error.
+
+## Retry policy
+
+SDKs retry HTTP 429 and 503 responses and network errors. A request is retryable only when it is
+idempotent: GET, HEAD, PUT, or DELETE, or any method carrying an `Idempotency-Key` header.
+
+The default is two retries after the initial attempt; zero disables retries. The fallback delay is
+exponential backoff of `0.5 seconds * 2^attempt`, capped at 8 seconds, where the first retry has
+attempt zero. A valid `Retry-After` response header overrides that delay. Both delta-seconds and
+HTTP-date forms are accepted and capped at 60 seconds.
+
+## Client identification
+
+SDKs identify themselves as `bisibility-sdk-<lang>/<version>`. They set this value as `User-Agent`
+when the runtime permits and the caller has not already supplied one. They always send it as
+`X-Bisibility-Client`.
+
+## Responses and errors
+
+Successful JSON responses must match the documented envelope expected by the operation. Invalid
+JSON, a missing required envelope, or an incompatible value is a response-decoding error rather
+than a partial success. Empty successful responses are accepted only for operations that document
+an empty response.
+
+An error JSON object is treated as RFC 9457 problem details when it contains either a string
+`type`, or both a string `title` and numeric `status`. Other recognized members are retained only
+when their types are valid. Extension members are preserved.
+
+SDKs expose a common Bisibility error base that consumers can catch or match. Configuration, API,
+network, and response-decoding errors derive from that base. API errors expose the status, parsed
+problem details, safely redacted response headers, request method, and URL. They also provide
+rate-limit, not-found, and parsed `Retry-After` helpers.
+
+Before response headers are attached to an exposed error, SDKs remove these names
+case-insensitively: `Authorization`, `Cookie`, `Proxy-Authorization`, `Set-Cookie`, `X-Api-Key`, and
+`X-Auth-Token`.
+
+## Cursor pagination
+
+Cursor-paginated list responses contain items in `data` and the continuation cursor in
+`meta.next_cursor`. Iterators pass the original filters through unchanged, replace only `cursor`
+between page requests, yield items in server order, and stop when `next_cursor` is null.
+
+## Sync and async parity
+
+When an SDK offers both synchronous and asynchronous clients, both expose the same API operations,
+request options, validation, serialization, errors, retry eligibility, and response types. Async
+clients use non-blocking requests and retry delays, support their language's async context lifecycle,
+and provide async iterators for every synchronous cursor iterator.
+
+## Contract and versioning
+
+Each released SDK must cover every applicable OpenAPI `operationId` or record an explicit,
+reviewed exception. CI checks coverage in both directions against the current OpenAPI snapshot.
+
+Public behavior changes are documented in the SDK changelog. Compatible additions use the
+language package's normal minor release path. Breaking public-surface changes require the next
+allowed breaking release under that SDK's versioning policy. Deprecated compatibility methods stay
+functional for their documented migration window.

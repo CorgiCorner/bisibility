@@ -152,6 +152,16 @@ function standardProjectCollectionRoute(
           routes.listRankedKeywordSuggestions(ctx, projectId),
         ),
     },
+    "saved-keywords": {
+      GET: () =>
+        import("./saved-keywords").then((routes) =>
+          routes.listProjectSavedKeywords(ctx, projectId),
+        ),
+      POST: () =>
+        import("./saved-keywords").then((routes) =>
+          routes.createProjectSavedKeywords(ctx, projectId),
+        ),
+    },
     "saved-views": {
       GET: () =>
         import("./saved-views").then((routes) => routes.listProjectSavedViews(ctx, projectId)),
@@ -261,6 +271,11 @@ function projectMemberRoutes(ctx: ApiContext) {
   }
   if (resource === "webhooks" && ctx.method === "DELETE") {
     return import("./webhooks").then((routes) => routes.deleteWebhook(ctx, projectId, id));
+  }
+  if (resource === "saved-keywords" && ctx.method === "DELETE") {
+    return import("./saved-keywords").then((routes) =>
+      routes.deleteProjectSavedKeyword(ctx, id, projectId),
+    );
   }
   if (resource === "saved-views" && ctx.method === "DELETE") {
     return import("./saved-views").then((routes) =>

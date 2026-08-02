@@ -30,11 +30,11 @@ vi.mock("@/lib/auth/audit", () => ({
   requiredPublicAuditId: (value: string) => value,
   writeAudit: mocks.writeAudit,
 }));
+vi.mock("@/lib/db/public-id", () => ({ makePublicId: mocks.makePublicId }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 vi.mock("./_shared", async (importOriginal) => ({
   ...(await importOriginal<typeof import("./_shared")>()),
   getActionActor: mocks.getActionActor,
-  makePublicId: mocks.makePublicId,
   requireProjectScope: mocks.requireProjectScope,
 }));
 

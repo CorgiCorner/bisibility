@@ -15,8 +15,11 @@ type HostedMcpServerCard = Omit<ServerCard, "capabilities" | "links" | "transpor
   };
 };
 
-export function createHostedMcpServerCard(origin: string): HostedMcpServerCard {
-  const card = createMcpServerCard(origin);
+export function createHostedMcpServerCard(
+  origin: string,
+  mcpResource: string = absoluteUrl(origin, "/api/mcp"),
+): HostedMcpServerCard {
+  const card = createMcpServerCard(origin, mcpResource);
 
   return {
     ...card,
@@ -29,7 +32,7 @@ export function createHostedMcpServerCard(origin: string): HostedMcpServerCard {
       rest: absoluteUrl(origin, "/api/v1"),
     },
     transport: {
-      endpoint: absoluteUrl(origin, "/api/mcp"),
+      endpoint: mcpResource,
       note: "REST fallback remains available at /api/v1 for clients that cannot use MCP Streamable HTTP.",
       type: "streamable-http",
     },

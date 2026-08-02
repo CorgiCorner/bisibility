@@ -1,20 +1,21 @@
+import { dateFromFrozenNow, isoFromFrozenNow } from "@/tests/clock";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ActiveMigrationToken, IssuedMigrationToken } from "./cloud-token";
 import { MigrationTokenCard, type MigrationTokenStatus } from "./MigrationTokenCard";
 
 const activeToken: ActiveMigrationToken = {
-  createdAt: "2026-07-11T12:00:00.000Z",
+  createdAt: isoFromFrozenNow({ hours: 13 }),
   createdBy: { email: "owner@example.com", name: "Owner" },
-  expiresAt: "2026-07-11T13:00:00.000Z",
+  expiresAt: isoFromFrozenNow({ hours: 14 }),
   id: "ferry_abcdefghijklmnopqrstuvwx",
   scope: "full",
   singleUse: true,
 };
 
 const issuedToken: IssuedMigrationToken = {
-  createdAt: "2026-07-11T12:00:00.000Z",
-  expiresAt: "2026-07-11T13:00:00.000Z",
+  createdAt: isoFromFrozenNow({ hours: 13 }),
+  expiresAt: isoFromFrozenNow({ hours: 14 }),
   id: "ferry_bbcdefghijklmnopqrstuvwx",
   importJob: {
     counts: null,
@@ -59,7 +60,7 @@ function renderCard(
 describe("MigrationTokenCard", () => {
   beforeEach(() => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-07-11T12:30:00.000Z"));
+    vi.setSystemTime(dateFromFrozenNow({ hours: 13, minutes: 30 }));
   });
 
   afterEach(() => vi.useRealTimers());

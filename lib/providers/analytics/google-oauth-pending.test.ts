@@ -81,7 +81,7 @@ describe("pending Google OAuth property selection", () => {
     mocks.listGa4Properties.mockResolvedValue([
       {
         accountDisplayName: "CorgiCorner",
-        displayName: "Bisibility",
+        displayName: "bisibility",
         propertyId: "123456789",
       },
     ]);
@@ -94,7 +94,7 @@ describe("pending Google OAuth property selection", () => {
       properties: [
         {
           kind: "ga4",
-          label: "Bisibility (123456789)",
+          label: "bisibility (123456789)",
           permissionLevel: "CorgiCorner",
           value: "123456789",
         },

@@ -87,7 +87,7 @@ function payload(): TriggeredAlertDeliveryPayload {
 describe("alert delivery activities", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.stubEnv("EMAIL_FROM", "Bisibility <alerts@example.com>");
+    vi.stubEnv("EMAIL_FROM", "bisibility <alerts@example.com>");
     mocks.prisma.deliveryAttempt.create.mockResolvedValue({});
     mocks.prisma.notificationPreference.findMany.mockResolvedValue([]);
     mocks.prisma.triggeredAlert.update.mockResolvedValue({});

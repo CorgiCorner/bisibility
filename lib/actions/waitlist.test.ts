@@ -54,9 +54,10 @@ describe("joinWaitlist", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     process.env.EMAIL_PROVIDER = "resend";
-    process.env.EMAIL_FROM = "Bisibility <notifications@example.com>";
+    process.env.EMAIL_FROM = "bisibility <notifications@example.com>";
     process.env.SES_REGION = "";
     process.env.RESEND_API_KEY = "resend_test";
+    process.env.RESEND_CONTACTS_API_KEY = "resend_contacts_test";
     process.env.RESEND_SEGMENT_CLOUD = "segment_cloud";
     process.env.RESEND_SEGMENT_EARLY_ADOPTERS = "segment_early_adopters";
     process.env.RESEND_SEGMENT_GENERAL = "segment_general";
@@ -238,6 +239,7 @@ describe("joinWaitlist", () => {
   it("persists without email delivery when no provider is configured", async () => {
     process.env.EMAIL_PROVIDER = "";
     process.env.RESEND_API_KEY = "";
+    process.env.RESEND_CONTACTS_API_KEY = "";
     mocks.prisma.waitlist.upsert.mockResolvedValue(
       storedWaitlist({ email: "log@example.com", source: "landing_capture" }),
     );
@@ -264,7 +266,7 @@ describe("joinWaitlist", () => {
     expect(mocks.sesSend).toHaveBeenCalledOnce();
     expect(mocks.sesSend.mock.calls[0]?.[0]?.input).toMatchObject({
       Content: {
-        Simple: { Subject: { Data: "Bisibility waitlist: person@example.com" } },
+        Simple: { Subject: { Data: "bisibility waitlist: person@example.com" } },
       },
       Destination: { ToAddresses: ["owner@example.com"] },
     });

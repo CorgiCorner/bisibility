@@ -68,7 +68,7 @@ export function createContentOpenGraphImage({ description, label, title }: Conte
               B
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-              <div style={{ fontSize: 56, fontWeight: 800, letterSpacing: 0 }}>Bisibility</div>
+              <div style={{ fontSize: 56, fontWeight: 800, letterSpacing: 0 }}>bisibility</div>
               <div style={{ color: "#6b6657", fontSize: 24 }}>SEO observability for developers</div>
             </div>
           </div>

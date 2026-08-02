@@ -11,7 +11,7 @@ vi.mock("@/lib/email/send-counter", () => ({
 }));
 
 const message = {
-  from: "Bisibility <reports@example.com>",
+  from: "bisibility <reports@example.com>",
   html: "<p>Report ready</p>",
   subject: "Weekly report",
   text: "Report ready",
@@ -58,7 +58,7 @@ describe("resend email provider", () => {
       "Content-Type": "application/json",
     });
     expect(JSON.parse(String(request?.body))).toEqual({
-      from: "Bisibility <reports@example.com>",
+      from: "bisibility <reports@example.com>",
       html: "<p>Report ready</p>",
       subject: "Weekly report",
       text: "Report ready",

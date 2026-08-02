@@ -64,6 +64,11 @@ export const openApiTags = [
     "x-group": "Sitemap Monitoring",
   },
   {
+    name: "saved-keywords",
+    description: "Save keywords for later without putting them under rank tracking.",
+    "x-group": "Saved Keywords",
+  },
+  {
     name: "saved-views",
     description: "Create, list, and delete saved views.",
     "x-group": "Saved Views",

@@ -11,7 +11,10 @@ import {
 const legacyKey = "legacy-auth-secret-for-two-factor-tests";
 const versionedKey: SecretConfig = {
   currentVersion: 3,
-  keys: new Map([[3, "current-versioned-auth-secret-for-tests"]]),
+  keys: new Map([
+    [3, "current-versioned-auth-secret-for-tests"],
+    [2, "retired-versioned-auth-secret-for-tests"],
+  ]),
   legacySecret: legacyKey,
 };
 
@@ -47,13 +50,17 @@ class MemoryStore implements TwoFactorMigrationStore {
 }
 
 describe("legacy two-factor secret migration", () => {
-  it("distinguishes plaintext from native bare-hex and versioned envelopes", async () => {
+  it("distinguishes plaintext, legacy, retired, and current values", async () => {
     const bareHex = await symmetricEncrypt({ data: "TOTPSECRET", key: legacyKey });
     const envelope = await symmetricEncrypt({ data: "TOTPSECRET", key: versionedKey });
+    const retiredKey: SecretConfig = { ...versionedKey, currentVersion: 2 };
+    const retiredEnvelope = await symmetricEncrypt({ data: "TOTPSECRET", key: retiredKey });
 
     await expect(classifyTwoFactorValue("JBSWY3DPEHPK3PXP", legacyKey)).resolves.toBe("plaintext");
-    await expect(classifyTwoFactorValue(bareHex, legacyKey)).resolves.toBe("encrypted");
-    await expect(classifyTwoFactorValue(envelope, versionedKey)).resolves.toBe("encrypted");
+    await expect(classifyTwoFactorValue(bareHex, legacyKey)).resolves.toBe("current");
+    await expect(classifyTwoFactorValue(bareHex, versionedKey)).resolves.toBe("rotatable");
+    await expect(classifyTwoFactorValue(retiredEnvelope, versionedKey)).resolves.toBe("rotatable");
+    await expect(classifyTwoFactorValue(envelope, versionedKey)).resolves.toBe("current");
     expect(envelope).toMatch(/^\$ba\$3\$/);
   });
 
@@ -94,7 +101,7 @@ describe("legacy two-factor secret migration", () => {
     expect(first).toEqual({
       concurrent: 0,
       eligibleRows: 2,
-      encryptedValues: 3,
+      eligibleValues: 3,
       migratedRows: 2,
       scanned: 2,
       skippedRows: 0,
@@ -114,6 +121,31 @@ describe("legacy two-factor secret migration", () => {
     expect(second.skippedRows).toBe(2);
   });
 
+  it("rewrites retired versioned envelopes with the primary version", async () => {
+    const retiredKey: SecretConfig = { ...versionedKey, currentVersion: 2 };
+    const store = new MemoryStore([
+      {
+        backupCodes: await symmetricEncrypt({ data: '["abcde-12345"]', key: retiredKey }),
+        id: "retired",
+        secret: await symmetricEncrypt({ data: "JBSWY3DPEHPK3PXP", key: retiredKey }),
+      },
+    ]);
+
+    const result = await migrateLegacyTwoFactorSecrets(store, {
+      batchSize: 10,
+      dryRun: false,
+      key: versionedKey,
+    });
+
+    expect(result.eligibleValues).toBe(2);
+    expect(result.migratedRows).toBe(1);
+    expect(store.rows[0]?.secret).toMatch(/^\$ba\$3\$/);
+    expect(store.rows[0]?.backupCodes).toMatch(/^\$ba\$3\$/);
+    await expect(
+      symmetricDecrypt({ data: store.rows[0]?.secret ?? "", key: versionedKey }),
+    ).resolves.toBe("JBSWY3DPEHPK3PXP");
+  });
+
   it("supports no-write dry runs and compare-and-swap conflicts", async () => {
     const store = new MemoryStore([{ backupCodes: "[]", id: "a", secret: "JBSWY3DPEHPK3PXP" }]);
 
@@ -122,7 +154,7 @@ describe("legacy two-factor secret migration", () => {
       dryRun: true,
       key: legacyKey,
     });
-    expect(dryRun.encryptedValues).toBe(2);
+    expect(dryRun.eligibleValues).toBe(2);
     expect(store.writes).toBe(0);
 
     store.concurrent = true;

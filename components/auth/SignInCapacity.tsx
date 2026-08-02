@@ -102,8 +102,8 @@ export function EmailCapacityPanel({
                 : "All of today's login codes are used up."}
             </strong>{" "}
             {monthly
-              ? "More free up at the start of next month (UTC) - come back later, or run Bisibility yourself. It's open source."
-              : "More free up within 24 hours - come back later, or run Bisibility yourself. It's open source."}
+              ? "More free up at the start of next month (UTC) - come back later, or run bisibility yourself. It's open source."
+              : "More free up within 24 hours - come back later, or run bisibility yourself. It's open source."}
           </p>
         </div>
         <a
@@ -147,7 +147,7 @@ export function FullCapacityCard({
           target="_blank"
         >
           <HardDrives aria-hidden size={16} />
-          Self-host Bisibility - it&apos;s open source
+          Self-host bisibility - it&apos;s open source
         </a>
         <a
           className="flex items-center justify-center rounded-[10px] border border-border-strong bg-transparent p-[11px] text-[13.5px] font-semibold text-fg-muted no-underline hover:bg-bg-sunken"

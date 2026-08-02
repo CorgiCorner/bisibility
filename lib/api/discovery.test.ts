@@ -26,7 +26,7 @@ async function result(response: Response | Promise<Response>) {
 }
 
 async function health() {
-  const response = getHealth({ headers: new Headers() });
+  const response = getHealth({ headers: new Headers() }, true);
   return result(response);
 }
 
@@ -190,10 +190,7 @@ describe("API health worker and Temporal liveness", () => {
     mocks.migrationReadiness.mockResolvedValue("incomplete");
 
     await expect(readiness()).resolves.toMatchObject({
-      body: {
-        services: { database: "ok", migrations: "incomplete" },
-        status: "degraded",
-      },
+      body: { status: "degraded" },
       status: 503,
     });
   });
@@ -202,10 +199,7 @@ describe("API health worker and Temporal liveness", () => {
     mocks.migrationReadiness.mockRejectedValue(new Error("migration table unavailable"));
 
     await expect(readiness()).resolves.toMatchObject({
-      body: {
-        services: { database: "degraded", migrations: "unknown" },
-        status: "degraded",
-      },
+      body: { status: "degraded" },
       status: 503,
     });
   });
@@ -214,14 +208,7 @@ describe("API health worker and Temporal liveness", () => {
     mocks.migrationReadiness.mockResolvedValue("incomplete");
 
     await expect(liveness()).resolves.toMatchObject({
-      body: {
-        services: {
-          app: "ok",
-          appRelease: "app-build-sha",
-          appRevision: "app-public-revision",
-        },
-        status: "ok",
-      },
+      body: { status: "ok" },
       status: 200,
     });
     expect(mocks.migrationReadiness).not.toHaveBeenCalled();
@@ -249,13 +236,7 @@ describe("API health worker and Temporal liveness", () => {
     });
 
     await expect(readiness()).resolves.toMatchObject({
-      body: {
-        services: {
-          database: "ok",
-          migrations: "ready",
-        },
-        status: "ok",
-      },
+      body: { status: "ok" },
       status: 200,
     });
     expect(mocks.liveness).not.toHaveBeenCalled();
@@ -284,5 +265,11 @@ describe("API health worker and Temporal liveness", () => {
         },
       },
     });
+  });
+
+  it("keeps anonymous composite health details private", async () => {
+    const response = await result(getHealth({ headers: new Headers() }));
+
+    expect(response).toEqual({ body: { status: "ok" }, status: 200 });
   });
 });

@@ -6,7 +6,7 @@ import { requireEmailFrom } from "./from";
 import { resolveEmailProvider } from "./registry";
 import { EmailBudgetExceededError, type EmailCategory, SUPPORTED_EMAIL_PROVIDERS } from "./types";
 
-const SUBJECT_PREFIX = "[Bisibility] ";
+const SUBJECT_PREFIX = "[bisibility] ";
 
 export { EmailBudgetExceededError, EmailSendError } from "./types";
 

@@ -88,8 +88,8 @@ async function notifyOwner(input: StoredWaitlist) {
   const text = details.join("\n");
   await sendEmail({
     category: "transactional",
-    html: `<p>New Bisibility waitlist submission.</p><pre>${escapeHtml(text)}</pre>`,
-    subject: `Bisibility waitlist: ${input.email}`,
+    html: `<p>New bisibility waitlist submission.</p><pre>${escapeHtml(text)}</pre>`,
+    subject: `bisibility waitlist: ${input.email}`,
     text,
     to,
   });

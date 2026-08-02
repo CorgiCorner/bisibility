@@ -33,7 +33,7 @@ function enrollmentStarted() {
       enrollmentId: "11111111-1111-4111-8111-111111111111",
       expiresAt: "2026-07-27T12:10:00.000Z",
       secret: "ABC123",
-      totpURI: "otpauth://totp/Bisibility:jan@example.com?secret=ABC123&issuer=Bisibility",
+      totpURI: "otpauth://totp/bisibility:jan@example.com?secret=ABC123&issuer=bisibility",
     },
   };
 }

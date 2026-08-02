@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 export const metadata: Metadata = {
   alternates: { canonical: "/screenshots/dashboard-overview-mock" },
   description:
-    "Internal Bisibility dashboard screenshot source rendered from the overview mock fixture.",
+    "Internal bisibility dashboard screenshot source rendered from the overview mock fixture.",
   robots: { follow: false, index: false },
   title: "Dashboard overview mock screenshot",
 };

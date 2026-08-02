@@ -75,7 +75,7 @@ describe("OAuthConsentForm", () => {
     expect(screen.getByText("30 days")).toBeInTheDocument();
     expect(
       screen.getByLabelText(
-        "The short-lived credential this client uses to call Bisibility. It expires after 1 hour.",
+        "The short-lived credential this client uses to call bisibility. It expires after 1 hour.",
       ),
     ).toBeInTheDocument();
     expect(

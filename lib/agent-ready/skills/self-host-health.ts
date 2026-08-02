@@ -4,13 +4,13 @@ export const skill: TaskSkill = {
   slug: "self-host-health",
   title: "Self-host health check",
   description:
-    "Run a read-only health and readiness check of a Bisibility instance (hosted or self-hosted): confirm the API is up, inspect capabilities, list projects, verify provider connections, and follow up on async jobs. Use this to triage a slow/failing instance or to verify a fresh deployment before relying on it.",
-  compatibility: "Requires a Bisibility origin and a bearer API key with read scope.",
+    "Run a read-only health and readiness check of a bisibility instance (hosted or self-hosted): confirm the API is up, inspect capabilities, list projects, verify provider connections, and follow up on async jobs. Use this to triage a slow/failing instance or to verify a fresh deployment before relying on it.",
+  compatibility: "Requires a bisibility origin and a bearer API key with read scope.",
   kind: "task-skill",
   version: "0.1.0",
   body: `# Self-host health check
 
-Performs a fast, read-only assessment of a Bisibility instance so an agent can
+Performs a fast, read-only assessment of a bisibility instance so an agent can
 answer "is this instance healthy and correctly configured?" without changing any
 state. Every call in this workflow is a GET; no \`write\`/\`admin\` scope is needed.
 
@@ -50,7 +50,7 @@ process rather than auth.
 
 \`\`\`bash
 curl -fsS "$BISIBILITY_BASE/liveness"
-# -> { "status": "ok", "services": { "app": "ok" } }
+# -> { "status": "ok" }
 \`\`\`
 
 Interpretation: connection refused / timeout = process down or unreachable;
@@ -65,7 +65,17 @@ ready. A 503 means the process is alive but should not receive traffic yet.
 curl -fsS "$BISIBILITY_BASE/readiness"
 \`\`\`
 
-### 3. Auth + feature set - \`GET /capabilities\` (getCapabilities)
+### 3. Composite diagnostics - \`GET /health\` (getHealth)
+
+Anonymous health exposes aggregate status only. Send the read credential to
+inspect database, migration, worker, Temporal, and schema diagnostics.
+
+\`\`\`bash
+curl -sS "$BISIBILITY_BASE/health" \\
+  -H "Authorization: Bearer $BISIBILITY_API_KEY"
+\`\`\`
+
+### 4. Auth + feature set - \`GET /capabilities\` (getCapabilities)
 
 First *authenticated* call. Confirms the key is valid and shows which features,
 limits, and provider types this instance supports. A 401/403 here means the key
@@ -79,7 +89,7 @@ curl -fsS "$BISIBILITY_BASE/capabilities" \\
 Note the supported provider types and any version/limit fields - you will compare
 providers against this in step 5, and it tells you if an upgrade landed.
 
-### 4. Inventory - \`GET /projects\` (listProjects)
+### 5. Inventory - \`GET /projects\` (listProjects)
 
 Lists projects the key can see and confirms the data layer (DB) is reachable.
 This is a list endpoint: it returns \`{ "data": [...], "meta": { "next_cursor": "..." } }\`.
@@ -95,7 +105,7 @@ A 200 with \`data: []\` is healthy-but-empty (fresh instance). A 5xx here while
 and blocking migrations.
 Set \`PROJECT_ID\` to one of the returned public project ids before continuing.
 
-### 5. Provider wiring - \`GET /projects/{project_id}/providers\` (listProviders)
+### 6. Provider wiring - \`GET /projects/{project_id}/providers\` (listProviders)
 
 For each project of interest (use a \`prj_...\` id from step 4), confirm the
 configured providers and their connection status. Look for entries reporting a
@@ -111,7 +121,7 @@ Provider credentials are bring-your-own and stored in the instance - they are
 never returned in full; do not attempt to read or echo them. To repair a bad
 connection, hand off to the **provider-setup** skill.
 
-### 6. Async rank checks - \`GET /rank-checks/{check_id}\` (getRankCheckResult)
+### 7. Async rank checks - \`GET /rank-checks/{check_id}\` (getRankCheckResult)
 
 Async rank checks return a pollable rank-check id. Poll a known id from a recent
 manual or API-triggered check to confirm the worker is executing and persisting
@@ -160,7 +170,7 @@ paginate with \`?limit=<n>&cursor=<next_cursor>\`. Errors: \`application/problem
 |-|-|-|
 | GET /liveness | getLiveness | Web process liveness; usually unauthenticated. |
 | GET /readiness | getReadiness | Database and blocking-migration readiness. |
-| GET /health | getHealth | Composite diagnostics, including worker and Temporal. |
+| GET /health | getHealth | Aggregate status anonymously; API auth unlocks worker and Temporal diagnostics. |
 | GET /capabilities | getCapabilities | Auth check + supported features, limits, provider types. |
 | GET /projects | listProjects | Inventory of visible projects (\`prj_...\`); confirms DB reachable. Supports \`limit\`, \`cursor\`. |
 | GET /projects/{project_id}/providers | listProviders | Provider connection status per project. Credentials never returned in full. |

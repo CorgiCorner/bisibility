@@ -8,6 +8,11 @@ const sentryOrg = process.env.SENTRY_ORG;
 const canUploadSentrySourceMaps = Boolean(sentryAuthToken && sentryOrg);
 
 const nextConfig: NextConfig = {
+  // Keep managed 8 GB builds below their process limit. More workers made page-data
+  // collection fail with spawn ENOMEM and forced the 2.5x compute rate as a workaround.
+  experimental: {
+    cpus: 2,
+  },
   outputFileTracingIncludes: {
     "/*": ["./prisma/rds-ca.pem"],
   },
@@ -15,11 +20,17 @@ const nextConfig: NextConfig = {
     // The CSP deliberately leaves script/style/img unrestricted so the Next runtime,
     // Sentry, and analytics keep working; tightening script-src needs nonces.
     const securityHeaders = [
-      { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
+      {
+        key: "Strict-Transport-Security",
+        value: "max-age=63072000; includeSubDomains; preload",
+      },
       { key: "X-Content-Type-Options", value: "nosniff" },
       { key: "X-Frame-Options", value: "SAMEORIGIN" },
       { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-      { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+      {
+        key: "Permissions-Policy",
+        value: "camera=(), microphone=(), geolocation=()",
+      },
       {
         key: "Content-Security-Policy",
         value:

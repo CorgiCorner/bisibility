@@ -12,7 +12,7 @@ import { buildPageMetadata } from "./page-metadata";
 export const defaultSiteUrl = defaultCanonicalOrigin;
 export const githubUrl = GITHUB_URL;
 export const linkedinUrl = LINKEDIN_URL;
-export const siteName = "Bisibility";
+export const siteName = "bisibility";
 
 const rootDescription =
   "Open-source keyword rank tracking and SEO observability for developers: self-hostable rank tracking, intended URLs, signal timelines, BYO SERP providers, and REST API access.";
@@ -64,15 +64,15 @@ export const homeMetadata: Metadata = buildPageMetadata({
     "Open-source keyword rank tracking and SEO observability for developers: track Google positions, intended URLs, indexing status, and SEO signals in one self-hostable dashboard.",
   path: "/",
   socialDescription:
-    "Self-host Bisibility for keyword rank tracking, intended URL monitoring, indexing status, and SEO observability with BYO SERP providers.",
+    "Self-host bisibility for keyword rank tracking, intended URL monitoring, indexing status, and SEO observability with BYO SERP providers.",
 });
 
 export const roadmapMetadata: Metadata = buildPageMetadata({
   title: "Roadmap",
   description:
-    "Follow the Bisibility roadmap for SEO observability: signals, visibility timelines, Search Console data, alerts, and self-hosting improvements.",
+    "Follow the bisibility roadmap for SEO observability: signals, visibility timelines, Search Console data, alerts, and self-hosting improvements.",
   path: "/roadmap",
-  socialTitle: "Bisibility roadmap",
+  socialTitle: "bisibility roadmap",
   socialDescription:
     "Follow planned improvements for signals, visibility timelines, provider connections, API access, and alerts.",
 });
@@ -80,10 +80,10 @@ export const roadmapMetadata: Metadata = buildPageMetadata({
 export const loginMetadata: Metadata = createNoindexMetadata({
   title: "Sign in",
   description:
-    "Sign in to Bisibility with a one-time email code to manage self-hosted SEO observability projects.",
+    "Sign in to bisibility with a one-time email code to manage self-hosted SEO observability projects.",
   openGraph: {
-    title: "Sign in to Bisibility",
-    description: "Access your Bisibility projects and manage self-hosted SEO observability.",
+    title: "Sign in to bisibility",
+    description: "Access your bisibility projects and manage self-hosted SEO observability.",
     url: "/login",
   },
 });
@@ -218,7 +218,7 @@ export function createIntegrationsJsonLd(origin = resolveSiteUrl()): JsonLdGraph
           "Bring-your-own SERP providers and read-only analytics sources for rank positions, traffic context, signals, alerts, MCP, and REST API access.",
         inLanguage: "en",
         isPartOf: { "@id": `${absoluteSiteUrl("/", origin)}#website` },
-        name: "Bisibility rank tracking integrations",
+        name: "bisibility rank tracking integrations",
         url,
       },
     ],

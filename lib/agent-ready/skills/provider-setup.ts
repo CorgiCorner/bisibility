@@ -4,15 +4,15 @@ export const skill: TaskSkill = {
   slug: "provider-setup",
   title: "Provider setup",
   description:
-    "Connect, test, tune, or disconnect a search-data provider for a Bisibility project. Use when an agent must wire up bring-your-own provider credentials so rank checks can run, or diagnose a provider that is failing.",
-  compatibility: "Requires a Bisibility origin and a bearer API key with write scope.",
+    "Connect, test, tune, or disconnect a search-data provider for a bisibility project. Use when an agent must wire up bring-your-own provider credentials so rank checks can run, or diagnose a provider that is failing.",
+  compatibility: "Requires a bisibility origin and a bearer API key with write scope.",
   kind: "task-skill",
   version: "0.1.0",
   body: `# Provider setup
 
-Connect a search-data provider to a Bisibility project, verify the connection,
+Connect a search-data provider to a bisibility project, verify the connection,
 adjust its settings, and disconnect it when no longer needed. Providers are
-bring-your-own: you supply the provider's own credentials and Bisibility stores
+bring-your-own: you supply the provider's own credentials and bisibility stores
 them in the instance. Rank checks cannot run until at least one provider is
 connected and passing its test.
 
@@ -22,7 +22,7 @@ provider's settings, or triage a provider whose checks are failing.
 
 ## Prerequisites
 
-- A Bisibility **origin / base URL**. Resolve it before calling anything:
+- A bisibility **origin / base URL**. Resolve it before calling anything:
   EU Cloud is \`https://eu.bisibility.com/api/v1\`; self-hosted is
   \`https://your-host.example/api/v1\`. Use whichever the user/instance gives you.
 - A **bearer API key with \`write\` scope** in \`$BISIBILITY_API_KEY\`. Send it as

@@ -78,7 +78,7 @@ function requireDigestPublicId(value: string | null, prefix: PublicIdPrefix) {
 function deliveryPayload(alert: PendingAlertDigestRecord): TriggeredAlertDeliveryPayload {
   const stored = payloadRecord(alert.payload);
   return {
-    action: String(stored.action ?? "Review the alert in Bisibility."),
+    action: String(stored.action ?? "Review the alert in bisibility."),
     afterPosition: alert.afterPosition,
     alertId: requireDigestPublicId(alert.publicId, "al"),
     beforePosition: alert.beforePosition,

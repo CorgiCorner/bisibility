@@ -48,8 +48,8 @@ describe("auth OTP email", () => {
       category: "transactional",
       html: expect.stringContaining("482913"),
       sendCounterReserved: true,
-      subject: "Your Bisibility sign-in code",
-      text: "Your Bisibility code is 482913. It expires in 5 minutes.",
+      subject: "Your bisibility sign-in code",
+      text: "Your bisibility code is 482913. It expires in 5 minutes.",
       to: "owner@example.com",
     });
     expect(firstRunMock).not.toHaveBeenCalled();
@@ -63,8 +63,8 @@ describe("auth OTP email", () => {
     await sendOtpEmail({ ...input, type: "forget-password" }, { fixedOtpEnabled: false });
     await sendOtpEmail({ ...input, type: "change-email" }, { fixedOtpEnabled: false });
 
-    expect(sendEmailMock.mock.calls[0]?.[0]?.subject).toBe("Reset your Bisibility password");
-    expect(sendEmailMock.mock.calls[1]?.[0]?.subject).toBe("Confirm your new Bisibility email");
+    expect(sendEmailMock.mock.calls[0]?.[0]?.subject).toBe("Reset your bisibility password");
+    expect(sendEmailMock.mock.calls[1]?.[0]?.subject).toBe("Confirm your new bisibility email");
   });
 
   it("logs the code instead of sending when no provider is configured", async () => {

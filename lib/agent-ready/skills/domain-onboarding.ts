@@ -4,13 +4,13 @@ export const skill: TaskSkill = {
   slug: "domain-onboarding",
   title: "Domain onboarding",
   description:
-    "Stand up rank tracking for a new domain end-to-end - create the project, set its defaults, connect a data provider, add the first keywords, and kick off an initial rank check. Use this when a user says they want to start tracking a new website/domain in Bisibility.",
-  compatibility: "Requires a Bisibility origin and a bearer API key with write scope.",
+    "Stand up rank tracking for a new domain end-to-end - create the project, set its defaults, connect a data provider, add the first keywords, and kick off an initial rank check. Use this when a user says they want to start tracking a new website/domain in bisibility.",
+  compatibility: "Requires a bisibility origin and a bearer API key with write scope.",
   kind: "task-skill",
   version: "0.1.0",
   body: `# Domain onboarding
 
-Onboard a brand-new domain into Bisibility so it is fully ready for rank
+Onboard a brand-new domain into bisibility so it is fully ready for rank
 tracking: create the project, configure its defaults (locale, search engine,
 device), connect a data provider, add the initial keyword set, and trigger a
 first rank check so the user immediately has data flowing.

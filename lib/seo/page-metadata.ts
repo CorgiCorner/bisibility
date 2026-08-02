@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const defaultSocialImage = {
-  alt: "Bisibility SEO observability for developers",
+  alt: "bisibility SEO observability for developers",
   height: 630,
   type: "image/png",
   url: "/opengraph-image",
@@ -58,7 +58,7 @@ export function buildPageMetadata({
     alternates: { canonical: path },
     openGraph: {
       type: ogType,
-      siteName: "Bisibility",
+      siteName: "bisibility",
       locale: "en_US",
       url: path,
       title: resolvedTitle,

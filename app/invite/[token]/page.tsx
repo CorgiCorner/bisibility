@@ -55,8 +55,8 @@ const invalidInviteCopy = {
 } satisfies Record<InviteStatus, { body: string; title: string }>;
 
 export const metadata: Metadata = createNoindexMetadata({
-  title: "Team invite | Bisibility",
-  description: "Accept a Bisibility workspace invitation.",
+  title: "Team invite | bisibility",
+  description: "Accept a bisibility workspace invitation.",
 });
 
 export const dynamic = "force-dynamic";

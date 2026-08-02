@@ -30,13 +30,13 @@ describe("syncWaitlistContact", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     vi.unstubAllEnvs();
-    vi.stubEnv("RESEND_API_KEY", "resend_test");
+    vi.stubEnv("RESEND_CONTACTS_API_KEY", "resend_contacts_test");
     vi.stubEnv("RESEND_SEGMENT_CLOUD", "segment_cloud");
     globalThis.fetch = vi.fn(() => Promise.resolve(new Response(null, { status: 201 })));
   });
 
   it("skips contact sync when the API key is missing", async () => {
-    vi.stubEnv("RESEND_API_KEY", "");
+    vi.stubEnv("RESEND_CONTACTS_API_KEY", "");
     const info = vi.spyOn(console, "info").mockImplementation(() => undefined);
 
     await syncWaitlistContact({
@@ -90,7 +90,7 @@ describe("syncWaitlistContact", () => {
       "https://api.resend.com/contacts",
       expect.objectContaining({
         headers: {
-          Authorization: "Bearer resend_test",
+          Authorization: "Bearer resend_contacts_test",
           "Content-Type": "application/json",
         },
         method: "POST",

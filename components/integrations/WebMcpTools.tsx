@@ -88,7 +88,7 @@ function apiGuide(input: ToolInput = {}) {
 const tools: readonly WebMcpTool[] = [
   {
     description:
-      "Open a Bisibility product or documentation surface. Set navigate=true only when the user asked to move the browser.",
+      "Open a bisibility product or documentation surface. Set navigate=true only when the user asked to move the browser.",
     execute: openSurface,
     inputSchema: {
       properties: {
@@ -100,13 +100,13 @@ const tools: readonly WebMcpTool[] = [
     name: "bisibility_open_surface",
   },
   {
-    description: "List Bisibility agent discovery, API, Auth.md, and MCP metadata URLs.",
+    description: "List bisibility agent discovery, API, Auth.md, and MCP metadata URLs.",
     execute: discovery,
     inputSchema: { properties: {}, type: "object" },
     name: "bisibility_discovery_links",
   },
   {
-    description: "Explain how an agent should authenticate to the Bisibility REST API.",
+    description: "Explain how an agent should authenticate to the bisibility REST API.",
     execute: apiGuide,
     inputSchema: {
       properties: {

@@ -3,7 +3,7 @@ title: "Email delivery"
 description: "Choose and configure Resend, Amazon SES, or an SMTP relay for transactional email."
 ---
 
-Bisibility sends transactional email for sign-in codes, team invitations, ranking
+bisibility sends transactional email for sign-in codes, team invitations, ranking
 alerts, and weekly digests. Every message goes through one shared sender that
 supports three interchangeable providers:
 
@@ -24,10 +24,10 @@ codes and invite links) to the server console instead.
 EMAIL_PROVIDER=ses        # or: resend, smtp
 
 # Sender for all transactional email. Must be verified with the provider.
-EMAIL_FROM="Bisibility <no-reply@your-domain.com>"
+EMAIL_FROM="bisibility <no-reply@your-domain.com>"
 
 # Optional dedicated sender for ranking alerts; falls back to EMAIL_FROM.
-EMAIL_ALERTS_FROM="Bisibility alerts <alerts@your-domain.com>"
+EMAIL_ALERTS_FROM="bisibility alerts <alerts@your-domain.com>"
 
 # Independent per-recipient UTC-day anomaly brakes.
 EMAIL_DAILY_BUDGET_TRANSACTIONAL=1000
@@ -71,7 +71,7 @@ older baseline, but it will not include ranking movers.
 ```bash
 EMAIL_PROVIDER=resend
 RESEND_API_KEY=your-api-key
-EMAIL_FROM="Bisibility <no-reply@your-domain.com>"
+EMAIL_FROM="bisibility <no-reply@your-domain.com>"
 ```
 
 The free tier is limited (100 emails/day at the time of writing). Alerting and
@@ -86,7 +86,7 @@ connection URLs. Configure:
 ```bash
 EMAIL_PROVIDER=smtp
 SMTP_URL="smtps://user:password@mail.example.com:465"
-EMAIL_FROM="Bisibility <no-reply@your-domain.com>"
+EMAIL_FROM="bisibility <no-reply@your-domain.com>"
 ```
 
 Store `SMTP_URL` as a secret because it normally contains relay credentials. If
@@ -100,7 +100,7 @@ verification are controlled by the SMTP service.
 ## Amazon SES
 
 SES pricing depends on the selected plan and enabled deliverability features.
-Production SES accounts also have account-specific sending quotas. Bisibility
+Production SES accounts also have account-specific sending quotas. bisibility
 applies its own independent daily budgets before calling the provider, but those
 budgets do not replace provider quotas or a provider-side spend cap.
 
@@ -145,7 +145,7 @@ containers.
 ```bash
 EMAIL_PROVIDER=ses
 SES_REGION=eu-central-1            # falls back to AWS_REGION / AWS_DEFAULT_REGION
-EMAIL_FROM="Bisibility <no-reply@your-domain.com>"
+EMAIL_FROM="bisibility <no-reply@your-domain.com>"
 # Optional SESv2 configuration set for bounce/complaint tracking dashboards.
 # SES_CONFIGURATION_SET=bisibility-transactional
 ```

@@ -126,7 +126,7 @@ async function dispatchApiRequest(
     return methodNotAllowed(methods, { instance: instance(url) });
   }
   if (method === "GET") {
-    const discovery = await handleDiscovery(req, path);
+    const discovery = await handleDiscovery(req, path, preauthenticated !== undefined);
     if (discovery) {
       return discovery;
     }

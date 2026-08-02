@@ -9,6 +9,7 @@ import {
   type SetupFormValues,
   setupCompletionSchema,
 } from "@/lib/auth/first-run-schema";
+import { signInRedirectUrl } from "@/lib/auth/sign-in-redirect";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import {
   ArrowRightIcon as ArrowRight,
@@ -101,6 +102,12 @@ export function SetupWizard({ mailerConfigured }: Readonly<{ mailerConfigured: b
       return;
     }
 
+    const redirectUrl = signInRedirectUrl(response, window.location.origin);
+    if (redirectUrl) {
+      window.location.assign(redirectUrl);
+      return;
+    }
+
     const result = await completeSetupAction();
     if (result.status === "error") {
       applyActionError(result, form, setFormError);
@@ -131,7 +138,7 @@ export function SetupWizard({ mailerConfigured }: Readonly<{ mailerConfigured: b
       {step === "account" ? (
         <>
           <div className="flex flex-col gap-1.5">
-            <h1 className="m-0 text-[23px] font-bold tracking-[-0.02em]">Welcome to Bisibility</h1>
+            <h1 className="m-0 text-[23px] font-bold tracking-[-0.02em]">Welcome to bisibility</h1>
             <p className="m-0 text-[14px] leading-[1.55] text-fg-muted">
               This instance has no accounts yet. Create the administrator account to finish setting
               it up.

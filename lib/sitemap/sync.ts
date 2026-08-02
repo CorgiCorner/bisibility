@@ -16,7 +16,7 @@ import { contentHash, jsonEntries } from "./snapshot";
 const FETCH_TIMEOUT_MS = 10_000;
 const MAX_RESPONSE_BYTES = 10 * 1024 * 1024;
 const RETENTION_DAYS = 90;
-const USER_AGENT = "Bisibility Sitemap Sync/1.0";
+const USER_AGENT = "bisibility Sitemap Sync/1.0";
 
 type ResolvedSitemap = {
   childSitemapCount: number;

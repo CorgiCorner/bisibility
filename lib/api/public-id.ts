@@ -49,6 +49,7 @@ export function requireApiPathPublicIds(path: string[]) {
   if (first === "projects" && second) {
     requireApiPublicId(second, "prj");
     if (third === "webhooks") requirePathId(path, 3, "we");
+    if (third === "saved-keywords") requirePathId(path, 3, "svkw");
     if (third === "saved-views") requirePathId(path, 3, "viw");
     if (third === "competitors") requirePathId(path, 3, "cmp");
     if (third === "migration-tokens") requirePathId(path, 3, "ferry");

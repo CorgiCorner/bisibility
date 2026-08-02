@@ -67,7 +67,7 @@ export function shouldServeMarkdown(request: Request) {
 
 function titleForPath(pathname: string) {
   if (pathname === "/") {
-    return "Bisibility";
+    return "bisibility";
   }
 
   return pathname
@@ -91,7 +91,7 @@ export function createMarkdownForRequest(request: Request) {
   return [
     `# ${title}`,
     "",
-    "Bisibility is an open-source keyword rank tracker with bring-your-own SERP",
+    "bisibility is an open-source keyword rank tracker with bring-your-own SERP",
     "provider credentials, owned Postgres history, a REST API, OpenAPI metadata,",
     "Agent Skills, and MCP discovery surfaces.",
     "",

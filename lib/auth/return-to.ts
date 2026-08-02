@@ -80,6 +80,10 @@ export function mergeReturnToHash(value: unknown, hash: string) {
 export function loginErrorReturnTo(destination: unknown) {
   const target = mergeReturnToHash(destination, "");
 
+  if (target === SIGNED_IN_HOME_PATH) {
+    return "/login";
+  }
+
   const login = new URL("/login", validationOrigin);
   login.searchParams.set("next", target);
   return `${login.pathname}${login.search}`;

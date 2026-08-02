@@ -8,9 +8,9 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 export const metadata: Metadata = createNoindexMetadata({
-  title: "Get started | Bisibility Cloud",
+  title: "Get started | bisibility Cloud",
   description:
-    "Start your first Bisibility Cloud workspace: create a fresh workspace or import from a self-hosted instance.",
+    "Start your first bisibility Cloud workspace: create a fresh workspace or import from a self-hosted instance.",
 });
 
 /**

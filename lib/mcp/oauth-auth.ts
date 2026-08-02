@@ -6,6 +6,8 @@ import { errorResponse } from "@/lib/api/responses";
 import { grantedApiScopes } from "@/lib/api/scope-policy";
 import { AUTH_URL, AUTH_URL_CONFIGURED, MCP_RESOURCE_URL } from "@/lib/auth/auth";
 import { prisma } from "@/lib/db/prisma";
+import { protectedResourceMetadataUrl } from "@/lib/deployment/mcp-origin-contract";
+import { logOauthValidationFailure } from "@/lib/mcp/oauth-validation-diagnostics";
 import { verifyAccessToken } from "better-auth/oauth2";
 
 type OAuthAuthentication = { auth: PersonalTokenAuth } | { response: Response };
@@ -17,8 +19,7 @@ function bearerToken(req: Request) {
 }
 
 function oauthChallenge() {
-  const metadata = new URL("/.well-known/oauth-protected-resource/api/mcp", AUTH_URL).toString();
-  return `Bearer resource_metadata="${metadata}"`;
+  return `Bearer resource_metadata="${protectedResourceMetadataUrl(MCP_RESOURCE_URL)}"`;
 }
 
 function unauthorized(req: Request, detail = "A bearer credential is required.") {
@@ -58,7 +59,11 @@ export async function authenticateMcpOAuthRequest(req: Request): Promise<OAuthAu
   let payload: Awaited<ReturnType<typeof verifyAccessToken>>;
   try {
     payload = await verifyAccessToken(rawToken, verificationOptions);
-  } catch {
+  } catch (error) {
+    logOauthValidationFailure(rawToken, error, {
+      audience: verificationOptions.verifyOptions.audience,
+      issuer: verificationOptions.verifyOptions.issuer,
+    });
     return { response: unauthorized(req, "Invalid or expired OAuth access token.") };
   }
 

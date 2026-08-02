@@ -4,13 +4,13 @@ export const skill: TaskSkill = {
   slug: "keyword-import",
   title: "Keyword import",
   description:
-    "Bulk-import and update tracked keywords for a Bisibility project, set target URLs, and kick off rank checks. Use when an agent needs to seed or reconcile a keyword set from a list, spreadsheet, or competitor research.",
-  compatibility: "Requires a Bisibility origin and a bearer API key with write scope.",
+    "Bulk-import and update tracked keywords for a bisibility project, set target URLs, and kick off rank checks. Use when an agent needs to seed or reconcile a keyword set from a list, spreadsheet, or competitor research.",
+  compatibility: "Requires a bisibility origin and a bearer API key with write scope.",
   kind: "task-skill",
   version: "0.1.0",
   body: `# Keyword import
 
-Import a batch of keywords into a Bisibility project, attach the target URL each
+Import a batch of keywords into a bisibility project, attach the target URL each
 keyword should rank, optionally update existing rows in bulk, and trigger rank
 checks. Use this skill when you have a list of keywords (from a brief, CSV,
 competitor scan, or a search-console export) and need them tracked under one

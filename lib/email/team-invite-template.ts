@@ -56,7 +56,7 @@ export function teamInviteEmail(input: TeamInviteEmailInput) {
           <tr>
             <td style="padding:22px 24px;border-bottom:1px solid #E8E4D9;">
               <span style="display:inline-block;width:32px;height:32px;line-height:32px;text-align:center;border-radius:9px;background:#D97757;color:#1A1813;font-size:18px;font-weight:700;">B</span>
-              <span style="display:inline-block;margin-left:10px;font-size:18px;font-weight:700;vertical-align:9px;">Bisibility</span>
+              <span style="display:inline-block;margin-left:10px;font-size:18px;font-weight:700;vertical-align:9px;">bisibility</span>
             </td>
           </tr>
           <tr>
@@ -82,7 +82,7 @@ export function teamInviteEmail(input: TeamInviteEmailInput) {
             </td>
           </tr>
           <tr>
-            <td style="padding:18px 24px;border-top:1px solid #E8E4D9;font-size:12px;line-height:18px;color:#6B6657;">You received this email because ${safe.inviter} invited you to Bisibility. If you did not expect it, you can ignore this message.</td>
+            <td style="padding:18px 24px;border-top:1px solid #E8E4D9;font-size:12px;line-height:18px;color:#6B6657;">You received this email because ${safe.inviter} invited you to bisibility. If you did not expect it, you can ignore this message.</td>
           </tr>
         </table>
       </td>
@@ -94,7 +94,7 @@ export function teamInviteEmail(input: TeamInviteEmailInput) {
   const text = [
     `Invitation to ${input.projectName}`,
     "",
-    `${inviter} invited you to join ${input.projectName} on Bisibility.`,
+    `${inviter} invited you to join ${input.projectName} on bisibility.`,
     `Role: ${role}`,
     `Invited by: ${inviter}`,
     `Expires: ${expires}`,
@@ -102,7 +102,7 @@ export function teamInviteEmail(input: TeamInviteEmailInput) {
     "Accept invitation:",
     input.inviteLink,
     "",
-    `You received this email because ${inviter} invited you to Bisibility.`,
+    `You received this email because ${inviter} invited you to bisibility.`,
     "If you did not expect it, you can ignore this message.",
   ].join("\n");
 

@@ -1,3 +1,4 @@
+import { dateFromFrozenNow } from "@/tests/clock";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getAccount, getPreferences } from "./account";
 
@@ -19,7 +20,7 @@ describe("account queries", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-07-11T12:00:00.000Z"));
+    vi.setSystemTime(dateFromFrozenNow({ hours: 13 }));
     mocks.requireSession.mockResolvedValue({
       session: { id: "session_current" },
       user: { email: "fallback@example.com", id: "user-ABC_1234567890", name: "Fallback" },
@@ -42,14 +43,14 @@ describe("account queries", () => {
         id: "session_current",
         ipAddress: " 127.0.0.1 ",
         publicId: "sid_abcdefghijklmnopqrstuvwx",
-        updatedAt: new Date("2026-07-11T11:59:45.000Z"),
+        updatedAt: dateFromFrozenNow({ hours: 12, minutes: 59, seconds: 45 }),
         userAgent: "Mozilla/5.0 (Macintosh) Chrome/120 Safari/537",
       },
       {
         id: "session_hour",
         ipAddress: "",
         publicId: "sid_bbcdefghijklmnopqrstuvwx",
-        updatedAt: new Date("2026-07-11T10:30:00.000Z"),
+        updatedAt: dateFromFrozenNow({ hours: 11, minutes: 30 }),
         userAgent: "Firefox/120 Windows",
       },
       {

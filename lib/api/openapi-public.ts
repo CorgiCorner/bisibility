@@ -13,85 +13,15 @@ const envelope = (schema: object) => ({
   required: ["data"],
   type: "object",
 });
-const string = { type: "string" };
-const unknownAware = (values: string[]) => ({ enum: [...values, "unknown"], type: "string" });
 const probeStatus = { enum: ["degraded", "ok"], type: "string" };
-const appIdentityProperties = {
-  app: { enum: ["ok"], type: "string" },
-  appRelease: string,
-  appRevision: string,
-};
-const checkedAt = { format: "date-time", type: "string" };
 const livenessResponse = {
-  properties: {
-    checked_at: checkedAt,
-    services: {
-      properties: appIdentityProperties,
-      required: Object.keys(appIdentityProperties),
-      type: "object",
-    },
-    status: { enum: ["ok"], type: "string" },
-  },
-  required: ["checked_at", "services", "status"],
+  properties: { status: { enum: ["ok"], type: "string" } },
+  required: ["status"],
   type: "object",
 };
-const readinessServiceProperties = {
-  ...appIdentityProperties,
-  database: { enum: ["degraded", "ok"], type: "string" },
-  migrations: unknownAware(["incomplete", "ready"]),
-};
-const readinessResponse = {
-  properties: {
-    checked_at: checkedAt,
-    services: {
-      properties: readinessServiceProperties,
-      required: Object.keys(readinessServiceProperties),
-      type: "object",
-    },
-    status: probeStatus,
-  },
-  required: ["checked_at", "services", "status"],
-  type: "object",
-};
-const healthServiceProperties = {
-  ...readinessServiceProperties,
-  appEnvironment: string,
-  appRankCheckSchedulerMode: unknownAware(["cutover", "dispatcher", "legacy"]),
-  lastHeartbeatAt: { format: "date-time", type: ["string", "null"] },
-  temporal: unknownAware(["degraded", "down", "ok"]),
-  worker: unknownAware(["degraded", "down", "ok"]),
-  workerEnvironment: string,
-  workerHeartbeatState: unknownAware(["absent", "fresh", "future", "invalid", "stale"]),
-  workerRankCheckSchedulerMode: unknownAware(["cutover", "dispatcher", "legacy"]),
-  workerRelease: string,
-  workerRevision: string,
-  workerSchema: unknownAware(["drift", "ok"]),
-};
-const healthResponse = {
-  properties: {
-    checked_at: checkedAt,
-    liveness: { enum: ["ok"], type: "string" },
-    providers: { additionalProperties: { items: string, type: "array" }, type: "object" },
-    rate_limits: { additionalProperties: obj, type: "object" },
-    readiness: probeStatus,
-    serp: obj,
-    services: {
-      properties: healthServiceProperties,
-      required: Object.keys(healthServiceProperties),
-      type: "object",
-    },
-    status: probeStatus,
-  },
-  required: [
-    "checked_at",
-    "liveness",
-    "providers",
-    "rate_limits",
-    "readiness",
-    "serp",
-    "services",
-    "status",
-  ],
+const statusResponse = {
+  properties: { status: probeStatus },
+  required: ["status"],
   type: "object",
 };
 const apiVersions = getApiVersionCapabilities().apiVersions;
@@ -130,10 +60,12 @@ export const publicPaths = {
   },
   "/health": {
     get: {
+      description:
+        "Anonymous responses expose only status. Valid API credentials or INTERNAL_PROBE_TOKEN receive additional operator diagnostics outside the public SDK schema.",
       operationId: "getHealth",
       responses: {
-        "200": response(healthResponse, "Composite health report is healthy"),
-        "503": response(healthResponse, "Composite health report is degraded"),
+        "200": response(statusResponse, "Composite health report is healthy"),
+        "503": response(statusResponse, "Composite health report is degraded"),
       },
     },
   },
@@ -171,8 +103,8 @@ export const publicPaths = {
     get: {
       operationId: "getReadiness",
       responses: {
-        "200": response(readinessResponse, "Web process is ready to serve traffic"),
-        "503": response(readinessResponse, "Web process is not ready to serve traffic"),
+        "200": response(statusResponse, "Web process is ready to serve traffic"),
+        "503": response(statusResponse, "Web process is not ready to serve traffic"),
       },
     },
   },

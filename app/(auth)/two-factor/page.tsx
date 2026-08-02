@@ -1,6 +1,6 @@
 import { TwoFactorChallengeForm } from "@/components/auth/TwoFactorChallengeForm";
+import { returnToOrDefault } from "@/lib/auth/return-to";
 import { getSession } from "@/lib/auth/session";
-import { SIGNED_IN_HOME_PATH } from "@/lib/auth/two-factor-routes";
 import { createNoindexMetadata } from "@/lib/seo/noindex";
 import { ChartLineUpIcon as ChartLineUp } from "@phosphor-icons/react/dist/ssr";
 import type { Metadata } from "next";
@@ -9,9 +9,17 @@ import { redirect } from "next/navigation";
 
 export const metadata: Metadata = createNoindexMetadata();
 
-export default async function TwoFactorPage() {
+type TwoFactorPageProps = {
+  searchParams?: Promise<{ next?: string | string[] }>;
+};
+
+export default async function TwoFactorPage({ searchParams }: Readonly<TwoFactorPageProps> = {}) {
+  const params = await searchParams;
+  const next = Array.isArray(params?.next) ? params.next[0] : params?.next;
+  const destination = returnToOrDefault(next);
+
   if (await getSession()) {
-    redirect(SIGNED_IN_HOME_PATH);
+    redirect(destination);
   }
 
   return (
@@ -23,7 +31,7 @@ export default async function TwoFactorPage() {
           </span>
           <span className="text-[18px] font-bold tracking-[-0.5px]">bisibility</span>
         </Link>
-        <TwoFactorChallengeForm />
+        <TwoFactorChallengeForm returnTo={destination} />
       </section>
     </main>
   );

@@ -7,7 +7,7 @@ describe("BackupCodes", () => {
     vi.restoreAllMocks();
   });
 
-  it("downloads recovery codes as a Bisibility text file", async () => {
+  it("downloads recovery codes as a bisibility text file", async () => {
     const createObjectUrl = vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:recovery-codes");
     const revokeObjectUrl = vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => undefined);
     let downloadedFilename = "";

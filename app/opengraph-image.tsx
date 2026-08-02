@@ -1,7 +1,7 @@
 import { LICENSE } from "@/lib/site/site";
 import { ImageResponse } from "next/og";
 
-export const alt = "Bisibility SEO observability for developers";
+export const alt = "bisibility SEO observability for developers";
 export const contentType = "image/png";
 export const runtime = "edge";
 export const size = {
@@ -54,7 +54,7 @@ export default function Image() {
             B
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-            <div style={{ fontSize: 56, fontWeight: 800, letterSpacing: 0 }}>Bisibility</div>
+            <div style={{ fontSize: 56, fontWeight: 800, letterSpacing: 0 }}>bisibility</div>
             <div style={{ color: "#6b6657", fontSize: 24 }}>SEO observability for developers</div>
           </div>
         </div>
