@@ -1,8 +1,8 @@
 name: Container Image
 
 on:
-  # Atomic release pushes of main + vX.Y.Z do not emit a separate tag run.
-  # Releases arrive through repository_dispatch with explicit semver payloads.
+  # Release commits skip the ordinary main build. Tagged releases arrive only
+  # after exact-SHA public CI through repository_dispatch.
   push:
     branches:
       - main
@@ -33,26 +33,46 @@ jobs:
     runs-on: ${{ github.repository != 'CorgiCorner/bisibility' && vars.CI_USE_DEPOT == 'true' && 'depot-ubuntu-24.04' || 'ubuntu-latest' }}
     timeout-minutes: 10
     permissions:
+      actions: read
       contents: read
       packages: write
     outputs:
       ghcr_enabled: ${{ steps.registries.outputs.ghcr_enabled }}
       dockerhub_enabled: ${{ steps.registries.outputs.dockerhub_enabled }}
       version: ${{ steps.version.outputs.version }}
+      source_sha: ${{ steps.version.outputs.source_sha }}
       web_labels: ${{ steps.web-meta.outputs.labels }}
       worker_labels: ${{ steps.worker-meta.outputs.labels }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.public_sha || github.sha }}
 
       - name: Resolve image version
         id: version
         env:
           DISPATCH_VERSION: ${{ github.event.client_payload.version }}
+          DISPATCH_MINOR: ${{ github.event.client_payload.minor }}
+          DISPATCH_MAJOR: ${{ github.event.client_payload.major }}
+          DISPATCH_PUBLIC_SHA: ${{ github.event.client_payload.public_sha }}
         run: |
           package_version="$(node -p "require('./package.json').version")"
           version="${DISPATCH_VERSION:-$package_version}"
+          source_sha="${DISPATCH_PUBLIC_SHA:-$GITHUB_SHA}"
+          if [ "${GITHUB_EVENT_NAME}" = "repository_dispatch" ] && [ -z "${DISPATCH_PUBLIC_SHA}" ]; then
+            echo "::error::repository_dispatch requires client_payload.public_sha."
+            exit 1
+          fi
+          if ! [[ "$source_sha" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::Source commit is not a full Git SHA: $source_sha"
+            exit 1
+          fi
+          if [ "$(git rev-parse HEAD)" != "$source_sha" ]; then
+            echo "::error::Checkout does not match source commit $source_sha."
+            exit 1
+          fi
           if [ "${GITHUB_EVENT_NAME}" = "repository_dispatch" ] && [ "$version" != "$package_version" ]; then
             echo "::error::Dispatched version $version does not match package.json $package_version."
             exit 1
@@ -61,7 +81,27 @@ jobs:
             echo "::error::Image version is not valid SemVer: $version"
             exit 1
           fi
+          expected_minor="${version%.*}"
+          expected_major="${version%%.*}"
+          if [ "${GITHUB_EVENT_NAME}" = "repository_dispatch" ] \
+            && { [ "${DISPATCH_MINOR}" != "$expected_minor" ] || [ "${DISPATCH_MAJOR}" != "$expected_major" ]; }; then
+            echo "::error::Dispatched major/minor tags do not match version $version."
+            exit 1
+          fi
           echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "source_sha=$source_sha" >> "$GITHUB_OUTPUT"
+
+      - name: Verify tested public release source
+        if: github.event_name == 'repository_dispatch'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          PUBLIC_SHA: ${{ steps.version.outputs.source_sha }}
+          RELEASE_TAG: v${{ steps.version.outputs.version }}
+        run: >-
+          node scripts/ci/verify-public-release-source.mjs
+          --repo "$GITHUB_REPOSITORY"
+          --sha "$PUBLIC_SHA"
+          --tag "$RELEASE_TAG"
 
       - name: Select registries
         id: registries
@@ -109,7 +149,7 @@ jobs:
             org.opencontainers.image.source=https://github.com/CorgiCorner/bisibility
             org.opencontainers.image.documentation=https://bisibility.com/docs/self-hosting
             org.opencontainers.image.version=${{ steps.version.outputs.version }}
-            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.revision=${{ steps.version.outputs.source_sha }}
 
       - name: Extract worker metadata
         id: worker-meta
@@ -124,7 +164,7 @@ jobs:
             org.opencontainers.image.source=https://github.com/CorgiCorner/bisibility
             org.opencontainers.image.documentation=https://bisibility.com/docs/self-hosting
             org.opencontainers.image.version=${{ steps.version.outputs.version }}
-            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.revision=${{ steps.version.outputs.source_sha }}
 
   build:
     name: Build ${{ matrix.image.registry }} ${{ matrix.image.runtime }} ${{ matrix.platform.arch }}
@@ -175,6 +215,8 @@ jobs:
       - name: Checkout
         if: (matrix.image.registry == 'ghcr' && needs.prepare.outputs.ghcr_enabled == 'true') || (matrix.image.registry == 'dockerhub' && needs.prepare.outputs.dockerhub_enabled == 'true')
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ needs.prepare.outputs.source_sha }}
 
       - name: Set up Docker Buildx
         if: (matrix.image.registry == 'ghcr' && needs.prepare.outputs.ghcr_enabled == 'true') || (matrix.image.registry == 'dockerhub' && needs.prepare.outputs.dockerhub_enabled == 'true')
@@ -197,8 +239,8 @@ jobs:
           file: ${{ matrix.image.dockerfile }}
           platforms: ${{ matrix.platform.value }}
           build-args: |
-            APP_VERSION=${{ github.sha }}
-            APP_REVISION=${{ github.sha }}
+            APP_VERSION=${{ needs.prepare.outputs.source_sha }}
+            APP_REVISION=${{ needs.prepare.outputs.source_sha }}
           labels: ${{ matrix.image.runtime == 'web' && needs.prepare.outputs.web_labels || needs.prepare.outputs.worker_labels }}
           outputs: type=image,name=${{ matrix.image.image }},push-by-digest=true,name-canonical=true,push=true
           cache-from: type=gha,scope=public-${{ matrix.image.runtime }}-${{ matrix.platform.arch }}
@@ -285,6 +327,7 @@ jobs:
           RELEASE_VERSION: ${{ github.event.client_payload.version }}
           RELEASE_MINOR: ${{ github.event.client_payload.minor }}
           RELEASE_MAJOR: ${{ github.event.client_payload.major }}
+          SOURCE_SHA: ${{ needs.prepare.outputs.source_sha }}
         run: |
           tag_names=()
           if [ "${GITHUB_EVENT_NAME}" = "repository_dispatch" ]; then
@@ -292,7 +335,7 @@ jobs:
           elif [ "${GITHUB_REF}" = "refs/heads/main" ]; then
             tag_names+=("edge")
           fi
-          tag_names+=("sha-${GITHUB_SHA::7}")
+          tag_names+=("sha-${SOURCE_SHA::7}")
           tag_args=()
           for tag in "${tag_names[@]}"; do
             tag_args+=("-t" "${IMAGE_NAME}:${tag}")
@@ -321,15 +364,16 @@ jobs:
         if: (matrix.image.registry == 'ghcr' && needs.prepare.outputs.ghcr_enabled == 'true') || (matrix.image.registry == 'dockerhub' && needs.prepare.outputs.dockerhub_enabled == 'true')
         env:
           IMAGE_NAME: ${{ matrix.image.image }}
+          SOURCE_SHA: ${{ needs.prepare.outputs.source_sha }}
         run: |
           docker logout "${{ matrix.image.host }}"
           for ((attempt = 1; attempt <= 5; attempt++)); do
-            if docker buildx imagetools inspect "${IMAGE_NAME}:sha-${GITHUB_SHA::7}" >/dev/null; then
+            if docker buildx imagetools inspect "${IMAGE_NAME}:sha-${SOURCE_SHA::7}" >/dev/null; then
               exit 0
             fi
             sleep 5
           done
-          echo "::error::Published image is not anonymously pullable: ${IMAGE_NAME}:sha-${GITHUB_SHA::7}"
+          echo "::error::Published image is not anonymously pullable: ${IMAGE_NAME}:sha-${SOURCE_SHA::7}"
           exit 1
 
   verify-release:
@@ -352,6 +396,8 @@ jobs:
     steps:
       - name: Checkout public release
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ needs.prepare.outputs.source_sha }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4
@@ -365,7 +411,7 @@ jobs:
           node scripts/distribution/verify.mjs \
             --manifest distribution-manifest.json \
             --artifacts-dir "$RUNNER_TEMP/release-assets" \
-            --revision "$GITHUB_SHA"
+            --revision "${{ needs.prepare.outputs.source_sha }}"
 
   publish-release:
     name: Publish immutable release assets
@@ -374,6 +420,7 @@ jobs:
       github.event_name == 'repository_dispatch' &&
       needs.verify-release.result == 'success'
     needs:
+      - prepare
       - verify-release
     runs-on: ${{ github.repository != 'CorgiCorner/bisibility' && vars.CI_USE_DEPOT == 'true' && 'depot-ubuntu-24.04' || 'ubuntu-latest' }}
     timeout-minutes: 10
@@ -383,6 +430,8 @@ jobs:
     steps:
       - name: Checkout public release
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ needs.prepare.outputs.source_sha }}
 
       - name: Stage immutable release assets
         run: |
@@ -443,23 +492,10 @@ jobs:
       contents: read
 
     steps:
-      - name: Resolve latest public release
-        id: latest-release
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          latest_tag="$(gh api "repos/${GITHUB_REPOSITORY}/releases/latest" --jq '.tag_name')"
-          if ! [[ "$latest_tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([+-][0-9A-Za-z.-]+)?$ ]]; then
-            echo "::error::Latest public release tag is invalid: $latest_tag"
-            exit 1
-          fi
-          echo "tag=$latest_tag" >> "$GITHUB_OUTPUT"
-
-      - name: Checkout latest public release
+      - name: Checkout dispatched public release
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          ref: ${{ steps.latest-release.outputs.tag }}
+          ref: ${{ needs.prepare.outputs.source_sha }}
 
       - name: Set up Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
@@ -471,5 +507,5 @@ jobs:
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
           GITHUB_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ steps.latest-release.outputs.tag }}
+          RELEASE_TAG: v${{ github.event.client_payload.version }}
         run: node .github/scripts/sync-dockerhub-descriptions.mjs --version "$RELEASE_TAG"

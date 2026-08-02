@@ -16,7 +16,6 @@ const instrumentation = readFileSync("instrumentation.ts", "utf8");
 const health = readFileSync("lib/api/discovery.ts", "utf8");
 const temporalWorker = readFileSync("lib/temporal/worker.ts", "utf8");
 const deployMigration = readFileSync("scripts/deploy/migrate.ts", "utf8");
-const ci = readFileSync(".github/workflows/ci.yml", "utf8");
 const writeGateMigration = readFileSync(
   "prisma/migrations/20260729210500_public_id_v3_write_gate/migration.sql",
   "utf8",
@@ -150,12 +149,6 @@ assert(
       temporalWorker.indexOf("await enforceWorkerSchemaGuard()"),
   "Temporal worker startup must require active data migrations before its schema guard",
 );
-assert(
-  ci.includes("npm run test:data-migration-runner-postgres") &&
-    ci.includes("needs: [classifier, static, test, coverage, build, fresh-migration-apply]"),
-  "Required CI must exercise data migration settlement retries against PostgreSQL",
-);
-
 const flyWeb = readFileSync("deploy/fly.web.toml", "utf8");
 const flyWorker = readFileSync("deploy/fly.worker.toml", "utf8");
 assert(flyWeb.includes(`dockerfile = "../Dockerfile"`), "Fly web must use the repository-root Dockerfile (path is relative to the config file)");

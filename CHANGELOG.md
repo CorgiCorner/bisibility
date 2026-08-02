@@ -2,7 +2,24 @@
 
 ## Unreleased
 
+## [0.3.3] - 2026-08-02
+
+- Fixed public snapshot validation builds to use a 4 GiB Node heap when the caller has not set a
+  larger limit.
+
+## [0.3.2] - 2026-08-02
+
+- Fixed the public CI contract validator so release security scans pass without constructing
+  regular expressions from validator arguments.
+
+## [0.3.1] - 2026-08-02
+
+- Fixed public CI to exercise PostgreSQL migration settlement retries and identify failing tests in sharded logs.
+
 ## [0.3.0] - 2026-08-02
+
+Known issue: Public source CI for this release contained a workflow-validation mismatch. The
+release process and public CI contract were corrected in v0.3.3.
 
 - Preserved OAuth consent and other return destinations when email OTP sign-in requires two-factor
   verification.
