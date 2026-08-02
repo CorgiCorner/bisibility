@@ -1,18 +1,18 @@
 {
   "schemaVersion": 2,
-  "release": "v0.3.0",
+  "release": "v0.3.3",
   "source": {
     "repository": "https://github.com/CorgiCorner/bisibility",
-    "tag": "v0.3.0"
+    "tag": "v0.3.3"
   },
   "images": {
-    "web": "ghcr.io/corgicorner/bisibility:0.3.0",
-    "worker": "ghcr.io/corgicorner/bisibility-worker:0.3.0"
+    "web": "ghcr.io/corgicorner/bisibility:0.3.3",
+    "worker": "ghcr.io/corgicorner/bisibility-worker:0.3.3"
   },
   "artifacts": {
     "compose": {
       "name": "docker-compose.self-host.yml",
-      "sha256": "523c4963431f3bc7661dc8af391c504986b98c71680f325085481ec756e13d39"
+      "sha256": "6d77191703f702bcfa49361ff55f35ff445599f6df53e7cc0386951b565a9219"
     },
     "environment": {
       "name": "bisibility.env.example",
