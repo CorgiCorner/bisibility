@@ -390,6 +390,10 @@ export function unwrapActionResult<T>(result: {
   throw new Error(result.error?.message ?? "Action failed.");
 }
 
+export function unwrapActionFailureResult<T>(result: T) {
+  return result;
+}
+
 export async function joinWaitlist(input: { email?: string }) {
   return { email: input.email ?? "preview@example.com" };
 }
@@ -558,4 +562,5 @@ export const updateProjectDetails = asyncNoop;
 export const updateProjectSchedule = asyncNoop;
 export const updateProjectTrackingScope = asyncNoop;
 export const updateProviderCost = asyncNoop;
+export const updateProviderRate = asyncNoop;
 export const updateRankCheckFrequency = asyncNoop;

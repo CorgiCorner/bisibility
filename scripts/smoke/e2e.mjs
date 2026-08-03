@@ -86,6 +86,18 @@ async function waitForHttp(url) {
   throw new Error(`${url} did not become ready.`);
 }
 
+async function warmDevelopmentRoutes() {
+  const paths = ["/login", "/onboarding", "/app/prj_e2e_warmup/overview"];
+
+  for (const routePath of paths) {
+    const response = await fetch(new URL(routePath, baseUrl), { redirect: "manual" });
+    await response.arrayBuffer();
+    if (response.status >= 500) {
+      throw new Error(`E2E route warmup failed for ${routePath}: HTTP ${response.status}`);
+    }
+  }
+}
+
 function wireOtpCapture(child) {
   const otps = new Map();
   let buffer = "";
@@ -195,6 +207,7 @@ const testEnv = {
   BISIBILITY_FAKE_PROVIDER: "1",
   BISIBILITY_SECRETS_KEY: secretKey,
   DATABASE_URL: pgUrl,
+  DEPLOYMENT_ENV: "test",
   DIRECT_URL: pgUrl,
   POSTGRES_PASSWORD: postgresPassword,
   POSTGRES_HOST_PORT: postgresHostPort,
@@ -216,7 +229,7 @@ try {
   await fs.writeFile(otpFile, "{}");
   await run("docker", [...composeArgs, "up", "-d", "--wait", "postgres"], { env: testEnv });
   await waitForPostgres();
-  await run("npx", ["prisma", "migrate", "deploy"], { env: testEnv });
+  await run("npm", ["run", "db:migrate"], { env: testEnv });
   await run("npm", ["run", "db:seed"], { env: testEnv });
 
   // Run the dev server so OTP codes appear in the log (no mailer in dev). `next start`
@@ -228,6 +241,7 @@ try {
   });
   wireOtpCapture(server);
   await waitForHttp(baseUrl);
+  await warmDevelopmentRoutes();
   await run("npx", ["playwright", "test"], {
     env: { ...serverEnv, BISIBILITY_E2E_OTP_FILE: otpFile, E2E_BASE_URL: baseUrl },
   });

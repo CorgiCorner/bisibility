@@ -36,20 +36,15 @@ export async function signIn(page: Page, email: string) {
   await firstBox.focus();
   await page.keyboard.type(await latestOtpFor(email));
   await page.getByRole("button", { name: "Verify & continue" }).click();
-  await expect(page).toHaveURL(/\/(app\/overview|onboarding)(\?|$)/);
+  await expect(page).toHaveURL(/\/(app\/[^/]+\/overview|onboarding)(\?|$)/);
 }
 
 async function clickWizardPrimary(page: Page, label: string, nextUrl: RegExp) {
+  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
   const button = page.getByRole("button", { name: label, exact: true });
   await expect(button).toBeEnabled();
   await button.click();
-  try {
-    await expect(page).toHaveURL(nextUrl, { timeout: 5000 });
-  } catch {
-    await page.waitForLoadState("networkidle");
-    await page.getByRole("button", { name: label, exact: true }).click();
-    await expect(page).toHaveURL(nextUrl, { timeout: 10000 });
-  }
+  await expect(page).toHaveURL(nextUrl, { timeout: 10000 });
 }
 
 async function clickProviderContinue(page: Page, nextUrl: RegExp) {
@@ -86,7 +81,9 @@ export async function completeOnboarding(page: Page, suffix: string) {
   await clickWizardPrimary(page, "Continue", /[?&]step=5(?:&|$)/);
   await page.getByPlaceholder("One keyword per line").fill(keyword);
   await clickWizardPrimary(page, "Continue", /[?&]step=6(?:&|$)/);
-  await clickWizardPrimary(page, "Open dashboard", /\/app\/overview$/);
+  await clickWizardPrimary(page, "Open dashboard", /\/app\/prj_[^/]+\/overview$/);
 
-  return { keyword };
+  const projectRef = new URL(page.url()).pathname.split("/")[2];
+  if (!projectRef) throw new Error("Onboarding did not land on a project-scoped dashboard.");
+  return { keyword, projectRef };
 }

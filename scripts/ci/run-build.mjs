@@ -1,14 +1,10 @@
 #!/usr/bin/env node
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-
-const defaultHeapOption = "--max-old-space-size=4096";
-const heapOptionPattern = /(?:^|\s)--max[-_]old[-_]space[-_]size(?:=|\s+)\d+(?=\s|$)/;
+import { applyPinnedNodeOptions } from "./node-memory-limit.mjs";
 
 export function buildNodeOptions(current = "") {
-  const normalized = current.trim();
-  if (heapOptionPattern.test(normalized)) return normalized;
-  return [normalized, defaultHeapOption].filter(Boolean).join(" ");
+  return applyPinnedNodeOptions(current);
 }
 
 export function runBuild() {

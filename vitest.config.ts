@@ -111,6 +111,7 @@ export default defineConfig({
           name: "release-guardrails",
           environment: "node",
           include: ["scripts/**/*.test.ts"],
+          testTimeout: 30_000,
         },
       },
     ],

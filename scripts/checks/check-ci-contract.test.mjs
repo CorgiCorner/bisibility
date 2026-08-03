@@ -33,7 +33,8 @@ test("runs the release SAST gate before private changes can merge", () => {
   const commands = workflow.jobs.static.steps.flatMap((step) =>
     typeof step.run === "string" ? [step.run.trim()] : [],
   );
-  assert.ok(commands.includes("npm run security:sast"));
+  assert.ok(commands.includes("npm run ci:release-checks"));
+  assert.match(packageManifest.scripts["ci:release-checks"], /npm run security:sast/);
 });
 
 test("rejects a missing PostgreSQL contract job", () => {

@@ -44,19 +44,12 @@ async function signIn(page: Page, email: string) {
   await expect(page).toHaveURL(/\/onboarding(\?|$)/);
 }
 
-// The primary button can natively submit before hydration and reload the same step;
-// verify navigation and retry once.
 async function clickWizardPrimary(page: Page, label: string, nextUrl: RegExp) {
+  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
   const button = page.getByRole("button", { name: label, exact: true });
   await expect(button).toBeEnabled();
   await button.click();
-  try {
-    await expect(page).toHaveURL(nextUrl, { timeout: 5000 });
-  } catch {
-    await page.waitForLoadState("networkidle");
-    await page.getByRole("button", { name: label, exact: true }).click();
-    await expect(page).toHaveURL(nextUrl, { timeout: 10000 });
-  }
+  await expect(page).toHaveURL(nextUrl, { timeout: 10000 });
 }
 
 // The hydrated provider step submits twice to connect then advance; pre-hydration
@@ -220,8 +213,8 @@ test("release flow: auth, onboarding, app pages, keyword detail, logout", async 
   await page.getByRole("button", { name: "Account menu" }).focus();
   await page.keyboard.press("Enter");
   await page.getByRole("menuitem", { name: "Sign out" }).click();
-  await expect(page).toHaveURL(/\/login$/, { timeout: 30_000 });
+  await expect(page).toHaveURL((url) => url.pathname === "/login", { timeout: 30_000 });
 
   await page.goto(`/app/${projectRef}/overview`);
-  await expect(page).toHaveURL(/\/login$/);
+  await expect(page).toHaveURL((url) => url.pathname === "/login");
 });

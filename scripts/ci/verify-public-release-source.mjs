@@ -9,8 +9,20 @@ function required(value, label) {
   return normalized;
 }
 
-function assertSha(value) {
-  if (!/^[0-9a-f]{40}$/.test(value)) throw new Error(`Invalid public SHA: ${value}`);
+function assertSha(value, label = "public SHA") {
+  if (!/^[0-9a-f]{40}$/.test(value)) throw new Error(`Invalid ${label}: ${value}`);
+}
+
+export async function verifyOriginRevision(api, publicSha, originSha) {
+  assertSha(originSha, "origin SHA");
+  const commit = await api(`/git/commits/${publicSha}`);
+  const revisions = (commit.message ?? "")
+    .split("\n")
+    .map((line) => line.match(/^GitOrigin-RevId: ([0-9a-f]{40})$/)?.[1])
+    .filter(Boolean);
+  if (revisions.length !== 1 || revisions[0] !== originSha) {
+    throw new Error(`Public commit ${publicSha} is not bound to ${originSha} by GitOrigin-RevId.`);
+  }
 }
 
 function apiClient({ repo, token }) {
@@ -55,7 +67,7 @@ export async function inspectPublicCi(api, sha) {
   return { gate, run, state: "success" };
 }
 
-export async function verifyPublicReleaseSource({ api, sha, tag, wait }) {
+export async function verifyPublicReleaseSource({ api, originSha, sha, tag, wait }) {
   assertSha(sha);
   const main = await api("/git/ref/heads/main");
   if (main.object?.sha !== sha) {
@@ -65,6 +77,7 @@ export async function verifyPublicReleaseSource({ api, sha, tag, wait }) {
     const tagCommit = await resolveTagCommit(api, tag);
     if (tagCommit !== sha) throw new Error(`Public tag ${tag} does not match ${sha}.`);
   }
+  if (originSha) await verifyOriginRevision(api, sha, originSha);
 
   const deadline = Date.now() + (wait ? 30 * 60_000 : 0);
   for (;;) {
@@ -86,7 +99,9 @@ function options(argv) {
   for (let index = 0; index < argv.length; index += 1) {
     const item = argv[index];
     if (item === "--wait") parsed.wait = true;
-    else if (["--repo", "--sha", "--tag"].includes(item)) parsed[item.slice(2)] = argv[++index];
+    else if (["--repo", "--sha", "--tag", "--origin-sha"].includes(item)) {
+      parsed[item.slice(2).replace("-", "_")] = argv[++index];
+    }
     else throw new Error(`Unknown argument: ${item}`);
   }
   return parsed;
@@ -99,6 +114,7 @@ async function main() {
   const token = required(process.env.GITHUB_TOKEN, "GITHUB_TOKEN");
   const result = await verifyPublicReleaseSource({
     api: apiClient({ repo, token }),
+    originSha: parsed.origin_sha,
     sha,
     tag: parsed.tag,
     wait: parsed.wait,

@@ -7,8 +7,8 @@ test("backlinks smoke: analyze, filter, expand, and load more", async ({ page })
   const email = `e2e-${suffix}@example.com`;
 
   await signIn(page, email);
-  await completeOnboarding(page, suffix);
-  await page.goto("/app/backlinks");
+  const { projectRef } = await completeOnboarding(page, suffix);
+  await page.goto(`/app/${projectRef}/backlinks`);
 
   await expect(page.getByText("Point it at any domain")).toBeVisible();
   const analyze = page.getByRole("button", { name: "Analyze", exact: true });
