@@ -4,11 +4,11 @@ import { fileURLToPath } from "node:url";
 import { parse } from "yaml";
 
 const canonicalScripts = {
-  build: "ci:build",
-  coverage: "ci:coverage:merge",
-  postgres: "ci:postgres-migration-contract",
-  static: "ci:static",
-  test: "ci:test:coverage-shard",
+  build: ["ci:build"],
+  coverage: ["ci:coverage:merge"],
+  postgres: ["ci:postgres-migration-contract"],
+  static: ["ci:static", "ci:release-checks"],
+  test: ["ci:test:coverage-shard", "ci:release-unit-shard"],
 };
 
 function assert(condition, message) {
@@ -33,9 +33,11 @@ function invokes(command, script) {
   return [...invocations].some((match) => match[1] === script);
 }
 
-function jobsInvoking(jobs, script) {
+function jobsInvoking(jobs, scripts) {
   return Object.entries(jobs)
-    .filter(([, job]) => commands(job).some((command) => invokes(command, script)))
+    .filter(([, job]) =>
+      commands(job).some((command) => scripts.some((script) => invokes(command, script))),
+    )
     .map(([name]) => name);
 }
 
@@ -132,12 +134,15 @@ export function validateCiContract(source, label = ".github/workflows/ci.yml") {
     );
   }
 
-  for (const [kind, script] of Object.entries(canonicalScripts)) {
-    const matchingJobs = jobsInvoking(jobs, script);
-    assert(matchingJobs.length > 0, `${label}: canonical ${kind} script ${script} is required`);
+  for (const [kind, scripts] of Object.entries(canonicalScripts)) {
+    const matchingJobs = jobsInvoking(jobs, scripts);
+    assert(
+      matchingJobs.length > 0,
+      `${label}: canonical ${kind} script (${scripts.join(" or ")}) is required`,
+    );
     assert(
       matchingJobs.some((jobName) => closure.has(jobName)),
-      `${label}: canonical ${kind} script ${script} must reach ci-ok`,
+      `${label}: canonical ${kind} script (${scripts.join(" or ")}) must reach ci-ok`,
     );
   }
 

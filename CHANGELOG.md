@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## [0.3.4] - 2026-08-03
+
+- Fixed public CI and snapshot validation to replace inherited Node heap settings with the pinned 4 GiB limit.
+
 ## [0.3.3] - 2026-08-02
 
 - Fixed public snapshot validation builds to use a 4 GiB Node heap when the caller has not set a
