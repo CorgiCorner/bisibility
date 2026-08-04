@@ -59,6 +59,7 @@ describe("OAuthConsentForm", () => {
     expect(screen.getByText("Sign-in & session")).toBeInTheDocument();
     expect(screen.getByText("MCP & API access")).toBeInTheDocument();
     expect(screen.getByText("Credentials")).toBeInTheDocument();
+    expect(screen.getByText("create API tokens for your account")).toBeInTheDocument();
     for (const scope of [
       "openid",
       "profile",
@@ -73,6 +74,17 @@ describe("OAuthConsentForm", () => {
     }
     expect(screen.getByText("1 hour")).toBeInTheDocument();
     expect(screen.getByText("30 days")).toBeInTheDocument();
+    expect(screen.getByText("30, 90, 365 days, or never")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Approval lets this client create a personal API token for your account. The client chooses its expiry.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "After approving you will be redirected to 127.0.0.1; you can close the tab.",
+      ),
+    ).toBeInTheDocument();
     expect(
       screen.getByLabelText(
         "The short-lived credential this client uses to call bisibility. It expires after 1 hour.",
@@ -93,6 +105,23 @@ describe("OAuthConsentForm", () => {
 
     expect(screen.getByText("Other")).toBeInTheDocument();
     expect(screen.getByText("custom:scope")).toBeInTheDocument();
+  });
+
+  it("does not describe a non-loopback callback as a local redirect", () => {
+    render(
+      <OAuthConsentForm
+        {...consentProps({
+          client: {
+            dynamic: true,
+            id: "dynamic_client_3",
+            name: "Example client",
+            redirectUri: "client.example.com/callback",
+          },
+        })}
+      />,
+    );
+
+    expect(screen.queryByText(/After approving you will be redirected/)).not.toBeInTheDocument();
   });
 
   it("disables consent when the client identifier is missing", () => {
@@ -117,6 +146,48 @@ describe("OAuthConsentForm", () => {
     expect(screen.getByText("Request expired")).toBeInTheDocument();
     expect(screen.getByText("codex mcp login bisibility")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Allow" })).not.toBeInTheDocument();
+  });
+
+  it("shows CLI-specific token and retry guidance", () => {
+    const client = {
+      dynamic: false,
+      id: "bisibility-cli",
+      name: "Bisibility CLI",
+      redirectUri: "127.0.0.1:8976/callback",
+    };
+    const view = render(
+      <OAuthConsentForm
+        {...consentProps({ client, scopes: ["openid", "profile", "email", "tokens:write"] })}
+      />,
+    );
+
+    expect(
+      screen.getByText("The CLI will create one API token for this device."),
+    ).toBeInTheDocument();
+
+    view.rerender(<OAuthConsentForm {...consentProps({ client, expiresAt: Date.now() - 1 })} />);
+    expect(screen.getByText("bisibility auth login")).toBeInTheDocument();
+    expect(screen.queryByText("codex mcp login bisibility")).not.toBeInTheDocument();
+  });
+
+  it("does not suggest another client's command when an unknown request expires", () => {
+    render(
+      <OAuthConsentForm
+        {...consentProps({
+          client: {
+            dynamic: true,
+            id: "dynamic_client_2",
+            name: "Unknown client",
+            redirectUri: null,
+          },
+          expiresAt: Date.now() - 1,
+        })}
+      />,
+    );
+
+    expect(screen.getByText("Start a fresh login from your client.")).toBeInTheDocument();
+    expect(screen.queryByText("codex mcp login bisibility")).not.toBeInTheDocument();
+    expect(screen.queryByText("bisibility auth login")).not.toBeInTheDocument();
   });
 
   it("accepts a signed-query request without a legacy consent code", async () => {

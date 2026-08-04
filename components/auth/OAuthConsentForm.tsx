@@ -83,7 +83,7 @@ export function OAuthConsentForm({
     void form.handleSubmit(submitConsent)();
   }
 
-  if (secondsLeft <= 0) return <OAuthConsentExpired />;
+  if (secondsLeft <= 0) return <OAuthConsentExpired client={client} />;
 
   return (
     <div className="w-full max-w-[520px]">

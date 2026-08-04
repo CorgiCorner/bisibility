@@ -65,7 +65,7 @@ function numericArrays(value, found = []) {
     return found;
   }
   if (typeof value === "string") {
-    for (const match of value.matchAll(/\[(?:\s*\d+\s*,?)+\]/g)) {
+    for (const match of value.matchAll(/\[\s*\d[\d\s,]*\]/g)) {
       try {
         const parsed = JSON.parse(match[0]);
         if (Array.isArray(parsed) && parsed.every((item) => Number.isInteger(item))) {

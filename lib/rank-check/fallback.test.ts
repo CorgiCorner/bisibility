@@ -25,6 +25,11 @@ const US_LOCATION: SerpRankLocation = {
   secondaryGeoName: "United States",
 };
 
+function hasRequestHostname(input: string | URL | Request, hostname: string) {
+  const requestUrl = new URL(input instanceof Request ? input.url : input);
+  return requestUrl.hostname === hostname;
+}
+
 const mocks = vi.hoisted(() => ({
   assertBudgetAvailable: vi.fn(),
   evaluateKeywordAlerts: vi.fn(() => Promise.resolve([])),
@@ -338,7 +343,7 @@ describe("runKeywordCheckWithFallback", () => {
 
   it("integrates a top-10 schedule with provider requests, persistence, budget, and top-100 calculator prefill", async () => {
     const fetchMock = vi.fn((url: string | URL | Request, _init?: RequestInit) => {
-      if (String(url).includes("serpapi.com")) {
+      if (hasRequestHostname(url, "serpapi.com")) {
         return Promise.resolve(
           new Response(
             JSON.stringify({ organic_results: [{ link: "https://example.com", position: 4 }] }),
@@ -393,7 +398,7 @@ describe("runKeywordCheckWithFallback", () => {
     });
 
     expect(
-      fetchMock.mock.calls.filter(([url]) => String(url).includes("serpapi.com")),
+      fetchMock.mock.calls.filter(([url]) => hasRequestHostname(url, "serpapi.com")),
     ).toHaveLength(1);
     expect(mocks.assertBudgetAvailable).toHaveBeenCalledWith("project_1", expect.any(Date), {
       capCents: 500,
@@ -413,7 +418,7 @@ describe("runKeywordCheckWithFallback", () => {
       location: US_LOCATION,
     });
     const dataForSeoCall = fetchMock.mock.calls.find(([url]) =>
-      String(url).includes("dataforseo.com"),
+      hasRequestHostname(url, "api.dataforseo.com"),
     );
     expect(JSON.parse(String(dataForSeoCall?.[1]?.body))).toEqual([
       expect.objectContaining({ depth: 10 }),

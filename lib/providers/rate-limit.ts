@@ -52,7 +52,8 @@ export function providerRateLimitPolicy(providerId: string): ProviderPolicy {
   };
 }
 
-function sha(value: string) {
+function rateLimitBucketFingerprint(value: string) {
+  // codeql[js/insufficient-password-hash] -- Non-authentication rate-limit bucket fingerprint.
   return createHash("sha256").update(value).digest("hex").slice(0, 16);
 }
 
@@ -67,21 +68,23 @@ function projectFallback(providerId: string, projectId?: string) {
 }
 
 function apiKeyAccountKey(providerId: string, apiKey: string | undefined, projectId?: string) {
-  return apiKey ? `${providerId}:${sha(apiKey)}` : projectFallback(providerId, projectId);
+  return apiKey
+    ? `${providerId}:${rateLimitBucketFingerprint(apiKey)}`
+    : projectFallback(providerId, projectId);
 }
 
 function googleAccountKey(providerId: string, creds: ProviderCredentials, projectId?: string) {
   if (!creds.apiKey) return projectFallback(providerId, projectId);
-  const property = creds.login ? `:${sha(creds.login)}` : "";
-  return `${providerId}:${sha(creds.apiKey)}${property}`;
+  const property = creds.login ? `:${rateLimitBucketFingerprint(creds.login)}` : "";
+  return `${providerId}:${rateLimitBucketFingerprint(creds.apiKey)}${property}`;
 }
 
 function plausibleAccountKey(creds: ProviderCredentials, projectId?: string) {
   if (!creds.apiKey) return projectFallback("plausible", projectId);
-  const site = creds.login ? `:${sha(creds.login)}` : "";
+  const site = creds.login ? `:${rateLimitBucketFingerprint(creds.login)}` : "";
   const normalizedEndpoint = creds.endpoint ? withoutTrailingSlashes(creds.endpoint) : undefined;
-  const endpoint = normalizedEndpoint ? `:${sha(normalizedEndpoint)}` : "";
-  return `plausible:${sha(creds.apiKey)}${site}${endpoint}`;
+  const endpoint = normalizedEndpoint ? `:${rateLimitBucketFingerprint(normalizedEndpoint)}` : "";
+  return `plausible:${rateLimitBucketFingerprint(creds.apiKey)}${site}${endpoint}`;
 }
 
 // Hash provider plus non-secret quota-owner identity for bucket keys; fall back
@@ -95,7 +98,7 @@ export function providerAccountKey(
   switch (providerId) {
     case "dataforseo":
       return c.login
-        ? `dataforseo:${sha(c.login)}`
+        ? `dataforseo:${rateLimitBucketFingerprint(c.login)}`
         : projectFallback(providerId, options?.projectId);
     case "serpapi":
       return apiKeyAccountKey(providerId, c.apiKey, options?.projectId);

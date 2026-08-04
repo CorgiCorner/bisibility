@@ -85,7 +85,6 @@ export async function WorkspaceShell({
             <Sidebar
               activeProjectId={active.publicId}
               canCreateWorkspace={canCreateWorkspace}
-              defaultCollapsed={collapsed}
               projectRef={projectRef}
               showHostedLinks={isCloud}
               user={user}

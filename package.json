@@ -1,6 +1,6 @@
 {
   "name": "bisibility",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "private": true,
   "description": "Self-hostable open-source keyword rank tracker with keyword and backlink research, MCP, and bring-your-own providers.",
   "license": "AGPL-3.0-only",
@@ -122,7 +122,7 @@
     "@emotion/react": "^11",
     "@emotion/styled": "^11",
     "@hookform/resolvers": "^5.4.0",
-    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "@mui/material": "^6",
     "@mui/material-nextjs": "^9",
     "@mui/system": "^6.5.0",
@@ -133,7 +133,7 @@
     "@phosphor-icons/react": "^2",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
-    "@sentry/nextjs": "^10.66.0",
+    "@sentry/nextjs": "^10.67.0",
     "@temporalio/client": "^1.20.3",
     "@temporalio/common": "^1.20.3",
     "@temporalio/worker": "^1.20.3",
@@ -154,12 +154,12 @@
     "redis": "^6.1.0",
     "server-only": "0.0.1",
     "tailwind-merge": "^3.6.0",
-    "undici": "^8.7.0",
+    "undici": "^8.9.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@biomejs/biome": "^2",
-    "@electric-sql/pglite": "0.4.1",
+    "@electric-sql/pglite": "0.5.4",
     "@playwright/test": "^1",
     "@storybook/addon-essentials": "^8.6.18",
     "@storybook/nextjs": "^8",
@@ -168,10 +168,10 @@
     "@tailwindcss/postcss": "^4.3.3",
     "@temporalio/testing": "^1.20.3",
     "@testing-library/dom": "^10.4.1",
-    "@testing-library/jest-dom": "^6",
+    "@testing-library/jest-dom": "^7",
     "@testing-library/react": "^16",
     "@testing-library/user-event": "^14",
-    "@types/node": "^22",
+    "@types/node": "^26",
     "@types/nodemailer": "^8.0.1",
     "@types/pg": "^8.20.0",
     "@types/react": "^19.2.17",
@@ -199,13 +199,16 @@
     "@sentry/bundler-plugin-core": {
       "glob": {
         "minimatch": {
-          "brace-expansion": "5.0.8"
+          "brace-expansion": "5.0.9"
         }
       }
     },
-    "fast-uri": "3.1.4",
+    "fast-uri": "3.1.5",
+    "ip-address": "10.4.0",
     "sharp": "0.35.3",
-    "postcss": "$postcss"
+    "postcss": "$postcss",
+    "uuid": "11.1.1",
+    "valibot": "1.4.2"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx,mjs,cjs,json,md}": "biome format --write --no-errors-on-unmatched"

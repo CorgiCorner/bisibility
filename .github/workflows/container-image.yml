@@ -224,7 +224,7 @@ jobs:
 
       - name: Log in to registry
         if: (matrix.image.registry == 'ghcr' && needs.prepare.outputs.ghcr_enabled == 'true') || (matrix.image.registry == 'dockerhub' && needs.prepare.outputs.dockerhub_enabled == 'true')
-        uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4
+        uses: docker/login-action@abd2ef45e78c5afb21d64d4ca52ee8550d9572c7 # v4
         with:
           registry: ${{ matrix.image.host }}
           username: ${{ matrix.image.registry == 'ghcr' && (secrets.GHCR_USERNAME || github.actor) || secrets.DOCKERHUB_USERNAME }}
@@ -305,7 +305,7 @@ jobs:
 
       - name: Log in to registry
         if: (matrix.image.registry == 'ghcr' && needs.prepare.outputs.ghcr_enabled == 'true') || (matrix.image.registry == 'dockerhub' && needs.prepare.outputs.dockerhub_enabled == 'true')
-        uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4
+        uses: docker/login-action@abd2ef45e78c5afb21d64d4ca52ee8550d9572c7 # v4
         with:
           registry: ${{ matrix.image.host }}
           username: ${{ matrix.image.registry == 'ghcr' && (secrets.GHCR_USERNAME || github.actor) || secrets.DOCKERHUB_USERNAME }}

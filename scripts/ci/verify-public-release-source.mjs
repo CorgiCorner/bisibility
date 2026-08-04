@@ -2,6 +2,11 @@
 import { fileURLToPath } from "node:url";
 
 const workflow = "ci.yml";
+const pollIntervalMs = 60_000;
+
+function pause(milliseconds) {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
 
 function required(value, label) {
   const normalized = value?.trim();
@@ -67,11 +72,26 @@ export async function inspectPublicCi(api, sha) {
   return { gate, run, state: "success" };
 }
 
-export async function verifyPublicReleaseSource({ api, originSha, sha, tag, wait }) {
+export async function verifyPublicReleaseSource({
+  api,
+  originSha,
+  pause: waitFor = pause,
+  sha,
+  tag,
+  wait,
+}) {
   assertSha(sha);
-  const main = await api("/git/ref/heads/main");
-  if (main.object?.sha !== sha) {
-    throw new Error(`Public main ${main.object?.sha ?? "missing"} does not match ${sha}.`);
+  const deadline = Date.now() + (wait ? 30 * 60_000 : 0);
+  for (;;) {
+    const main = await api("/git/ref/heads/main");
+    if (main.object?.sha === sha) break;
+    if (!wait || Date.now() >= deadline) {
+      throw new Error(`Public main ${main.object?.sha ?? "missing"} does not match ${sha}.`);
+    }
+    console.log(
+      `Public main is ${main.object?.sha ?? "missing"}; checking for ${sha} again in 60 seconds.`,
+    );
+    await waitFor(pollIntervalMs);
   }
   if (tag) {
     const tagCommit = await resolveTagCommit(api, tag);
@@ -79,7 +99,6 @@ export async function verifyPublicReleaseSource({ api, originSha, sha, tag, wait
   }
   if (originSha) await verifyOriginRevision(api, sha, originSha);
 
-  const deadline = Date.now() + (wait ? 30 * 60_000 : 0);
   for (;;) {
     const status = await inspectPublicCi(api, sha);
     if (status.state === "success") return status;
@@ -90,7 +109,7 @@ export async function verifyPublicReleaseSource({ api, originSha, sha, tag, wait
       throw new Error(`Public CI is ${status.state} for ${sha}.`);
     }
     console.log(`Public CI is ${status.state} for ${sha}; checking again in 60 seconds.`);
-    await new Promise((resolve) => setTimeout(resolve, 60_000));
+    await waitFor(pollIntervalMs);
   }
 }
 

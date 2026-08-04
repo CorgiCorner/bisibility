@@ -1,9 +1,10 @@
 # Bisibility worker
 
-Background worker for **Bisibility** - open-source, self-hosted rank tracker.
+This image contains the Bisibility Temporal worker only. It contains no Temporal
+server and never falls back to a local server when the configured endpoint fails.
 
-This image is not standalone. It executes scheduled rank checks, alert delivery,
-and maintenance jobs for `corgicorner/bisibility`.
+The worker executes scheduled rank checks, alert delivery, and maintenance jobs
+for `corgicorner/bisibility`. It is not standalone.
 
 - Web image: https://hub.docker.com/r/corgicorner/bisibility
 - Website: https://bisibility.com
@@ -34,5 +35,5 @@ reachable Temporal server does nothing.
 
 `TEMPORAL_ADDRESS` can point at Temporal Cloud or a self-hosted cluster. For
 Temporal Cloud, set `TEMPORAL_API_KEY`; the API key enables TLS automatically.
-For a TLS-enabled self-hosted endpoint without an API key, set
-`TEMPORAL_TLS=true`.
+A custom `TEMPORAL_ADDRESS` alone does not enable TLS. For a TLS-enabled
+self-hosted endpoint without an API key, set `TEMPORAL_TLS=true`.

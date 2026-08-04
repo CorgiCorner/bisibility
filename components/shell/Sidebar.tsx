@@ -1,5 +1,6 @@
 "use client";
 
+import { useSidebarCollapsed } from "@/components/shell/SidebarCollapsedState";
 import type { ShellUser } from "@/components/shell/SidebarFooter";
 import { SidebarFooter } from "@/components/shell/SidebarFooter";
 import { WorkspaceSwitcher } from "@/components/shell/WorkspaceSwitcher";
@@ -13,15 +14,10 @@ import {
 } from "@phosphor-icons/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
-
-const COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
-
 export type SidebarProps = {
   activeHref?: string;
   activeProjectId: string;
   canCreateWorkspace: boolean;
-  defaultCollapsed?: boolean;
   projectRef: string;
   showHostedLinks?: boolean;
   user?: ShellUser;
@@ -32,26 +28,18 @@ export function Sidebar({
   activeHref,
   activeProjectId,
   canCreateWorkspace,
-  defaultCollapsed = false,
   projectRef,
   showHostedLinks = false,
   user,
   workspaces,
 }: Readonly<SidebarProps>) {
-  const [collapsed, setCollapsed] = useState(defaultCollapsed);
+  const { collapsed, setCollapsed } = useSidebarCollapsed();
   const pathname = usePathname();
   const currentHref = activeHref ?? pathname ?? appPath(projectRef, "overview");
   const items = navItems(projectRef);
 
-  function handleToggle(event: React.SyntheticEvent<HTMLElement>) {
-    const next = !collapsed;
-    setCollapsed(next);
-    const root = event.currentTarget.closest<HTMLElement>("[data-shell-root]");
-    if (root) {
-      root.dataset.collapsed = String(next);
-    }
-    // biome-ignore lint/suspicious/noDocumentCookie: The sidebar preference must survive the next server request.
-    document.cookie = `sidebar-collapsed=${next}; path=/; max-age=${COOKIE_MAX_AGE}; SameSite=Lax`;
+  function handleToggle() {
+    setCollapsed(!collapsed);
   }
 
   return (
@@ -75,7 +63,7 @@ export function Sidebar({
           onKeyDown={(event) => {
             if (event.key === "Enter" || event.key === " ") {
               event.preventDefault();
-              handleToggle(event);
+              handleToggle();
             }
           }}
           type="button"
