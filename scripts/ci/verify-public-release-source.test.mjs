@@ -85,6 +85,29 @@ test("rejects a public main or tag pointing at another commit", async () => {
   );
 });
 
+test("waits for the pushed public main ref to become visible", async () => {
+  const fixture = apiFixture();
+  const staleSha = "b".repeat(40);
+  const mainResponses = [staleSha, sha];
+  const pauses = [];
+  const api = async (path) => {
+    if (path === "/git/ref/heads/main") {
+      return { object: { sha: mainResponses.shift() ?? sha } };
+    }
+    return fixture(path);
+  };
+
+  const result = await verifyPublicReleaseSource({
+    api,
+    pause: async (milliseconds) => pauses.push(milliseconds),
+    sha,
+    wait: true,
+  });
+
+  assert.equal(result.state, "success");
+  assert.deepEqual(pauses, [60_000]);
+});
+
 test("rejects missing, pending, and failed public CI", async () => {
   const missingApi = async (path) => {
     if (path === "/git/ref/heads/main") return { object: { sha } };

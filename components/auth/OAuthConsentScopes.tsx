@@ -1,3 +1,5 @@
+import { getOAuthConsentCopy } from "@/lib/auth/oauth-consent-copy";
+import type { OAuthConsentClient } from "@/lib/auth/oauth-consent-types";
 import { cn } from "@/lib/ui/cn";
 import {
   ArrowsClockwiseIcon as ArrowsClockwise,
@@ -47,7 +49,12 @@ const scopeDefinitions: Record<string, Omit<ScopeItem, "value"> & { group: Scope
 const groupDefinitions: Array<Omit<ScopeGroup, "scopes">> = [
   { icon: UserCircle, id: "identity", note: "who you are", title: "Sign-in & session" },
   { icon: PlugsConnected, id: "access", note: "your rank data", title: "MCP & API access" },
-  { icon: Key, id: "credentials", note: "acts on your behalf later", title: "Credentials" },
+  {
+    icon: Key,
+    id: "credentials",
+    note: "create API tokens for your account",
+    title: "Credentials",
+  },
   { icon: Question, id: "other", note: "additional permission", title: "Other" },
 ];
 
@@ -88,7 +95,11 @@ function ScopeChip({ scope }: Readonly<{ scope: ScopeItem }>) {
   );
 }
 
-export function OAuthConsentScopes({ scopes }: Readonly<{ scopes: string[] }>) {
+export function OAuthConsentScopes({
+  client,
+  scopes,
+}: Readonly<{ client: OAuthConsentClient; scopes: string[] }>) {
+  const persona = getOAuthConsentCopy(client).persona;
   return (
     <section className="mt-4" aria-labelledby="requested-scopes-title">
       <p
@@ -122,6 +133,11 @@ export function OAuthConsentScopes({ scopes }: Readonly<{ scopes: string[] }>) {
                   <ScopeChip key={scope.value} scope={scope} />
                 ))}
               </div>
+              {group.id === "credentials" && persona === "cli" ? (
+                <p className="mt-2 mb-0 pl-[22px] text-[12px] text-fg-muted">
+                  The CLI will create one API token for this device.
+                </p>
+              ) : null}
             </div>
           );
         })}

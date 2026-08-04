@@ -180,6 +180,7 @@ export function decryptProviderCredentials(encrypted: string | null | undefined)
 }
 
 export function hashApiKey(raw: string) {
+  // codeql[js/insufficient-password-hash] -- Opaque API token lookup, not password verification.
   return `${HASH_PREFIX}${createHash("sha256").update(raw).digest("hex")}`;
 }
 

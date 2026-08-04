@@ -13,6 +13,7 @@ import {
   RankCheckFrequency,
   Role,
 } from "../lib/generated/prisma/client.ts";
+import { hashApiKey } from "../lib/providers/crypto.ts";
 import { acmeSeedKeywords } from "../lib/sample-data/acme-seed-keywords.ts";
 import { densePositionSeries } from "../lib/sample-data/dense-position-series.ts";
 import {
@@ -58,10 +59,6 @@ function seedProjects() {
 type SeedProject = { domain: string; name: string; publicId: string };
 type SeedKeyword = AcmeKeywordFixture;
 
-function hashKey(value: string) {
-  return `sha256:${createHash("sha256").update(value).digest("hex")}`;
-}
-
 async function upsertWorkspace(ownerId: string, project: SeedProject) {
   const workspace = await prisma.project.upsert({
     where: { publicId: project.publicId },
@@ -94,7 +91,7 @@ async function upsertApiKey({
   prefix: string;
   projectId: string;
 }) {
-  const keyHash = hashedKey ?? hashKey(prefix);
+  const keyHash = hashedKey ?? hashApiKey(prefix);
   await prisma.apiKey.upsert({
     where: { hashedKey: keyHash },
     update: { lastUsedAt, name, prefix, projectId, revokedAt: null },
@@ -126,7 +123,7 @@ async function upsertEnvSeededApiKey(projectId: string) {
 
   validateEnvSeededApiKey(raw);
   await upsertApiKey({
-    hashedKey: hashKey(raw),
+    hashedKey: hashApiKey(raw),
     name: ENV_SEEDED_API_KEY_NAME,
     prefix: raw.slice(0, API_KEY_PREFIX_LENGTH),
     projectId,

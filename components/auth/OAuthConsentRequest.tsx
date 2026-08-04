@@ -1,4 +1,5 @@
 import { Button, Card, InfoTooltip } from "@/components/ui";
+import { API_KEY_EXPIRY_DAYS } from "@/lib/api/api-key-policy";
 import type { OAuthConsentClient } from "@/lib/auth/oauth-consent-types";
 import {
   OAUTH_ACCESS_TOKEN_TTL_LABEL,
@@ -9,6 +10,7 @@ import {
   ArrowUDownLeftIcon as ArrowUDownLeft,
   ClockIcon as Clock,
   HourglassIcon as Hourglass,
+  KeyIcon as Key,
   ShieldCheckIcon as ShieldCheck,
 } from "@phosphor-icons/react";
 import { OAuthConsentScopes } from "./OAuthConsentScopes";
@@ -23,6 +25,8 @@ type OAuthConsentRequestProps = {
   secondsLeft: number;
   scopes: string[];
 };
+
+const API_TOKEN_EXPIRY_LABEL = `${API_KEY_EXPIRY_DAYS.join(", ")} days, or never`;
 
 function ClientBox({ client }: Readonly<{ client: OAuthConsentClient }>) {
   return (
@@ -52,7 +56,10 @@ function ClientBox({ client }: Readonly<{ client: OAuthConsentClient }>) {
   );
 }
 
-function TokenLifetime({ refresh }: Readonly<{ refresh: boolean }>) {
+function TokenLifetime({
+  canCreateApiTokens,
+  refresh,
+}: Readonly<{ canCreateApiTokens: boolean; refresh: boolean }>) {
   return (
     <dl className="mt-4 mb-0 border-border border-t pt-3">
       <div className="flex items-center gap-2 text-[12.5px]">
@@ -75,8 +82,25 @@ function TokenLifetime({ refresh }: Readonly<{ refresh: boolean }>) {
           </dd>
         </div>
       ) : null}
+      {canCreateApiTokens ? (
+        <div className="mt-2">
+          <div className="flex items-center gap-2 text-[12.5px]">
+            <Key aria-hidden className="text-fg-faint" size={14} />
+            <dt className="text-fg-muted">API token</dt>
+            <dd className="ml-auto font-mono font-semibold text-fg">{API_TOKEN_EXPIRY_LABEL}</dd>
+          </div>
+          <p className="mt-2 mb-0 text-[12px] leading-[1.5] text-fg-faint">
+            Approval lets this client create a personal API token for your account. The client
+            chooses its expiry.
+          </p>
+        </div>
+      ) : null}
     </dl>
   );
+}
+
+function loopbackRedirectHost(redirectUri: string | null) {
+  return /^(127\.0\.0\.1|localhost|\[::1\]|::1)(?=[:/]|$)/.exec(redirectUri ?? "")?.[1];
 }
 
 export function OAuthConsentRequest({
@@ -89,6 +113,7 @@ export function OAuthConsentRequest({
   secondsLeft,
 }: Readonly<OAuthConsentRequestProps>) {
   const expiring = secondsLeft <= 60;
+  const redirectHost = loopbackRedirectHost(client.redirectUri);
   return (
     <Card className="w-full max-w-[520px] p-5 sm:p-6" size="lg">
       <div className="flex flex-wrap items-start gap-3">
@@ -114,8 +139,17 @@ export function OAuthConsentRequest({
       </div>
 
       <ClientBox client={client} />
-      <OAuthConsentScopes scopes={scopes} />
-      <TokenLifetime refresh={scopes.includes("offline_access")} />
+      <OAuthConsentScopes client={client} scopes={scopes} />
+      <TokenLifetime
+        canCreateApiTokens={scopes.includes("tokens:write")}
+        refresh={scopes.includes("offline_access")}
+      />
+
+      {redirectHost ? (
+        <p className="mt-4 mb-0 text-[12.5px] leading-[1.5] text-fg-faint">
+          After approving you will be redirected to {redirectHost}; you can close the tab.
+        </p>
+      ) : null}
 
       {error ? <p className="mt-4 mb-0 text-[13px] text-red">{error}</p> : null}
 

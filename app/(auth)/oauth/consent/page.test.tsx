@@ -80,7 +80,29 @@ describe("OAuth consent page", () => {
       ],
     });
     expect(markup).toContain("Review agent access.");
-    expect(markup).not.toContain("codex mcp add");
+    expect(markup).toContain("PKCE S256");
+    expect(markup).not.toContain("codex mcp login bisibility");
+  });
+
+  it("uses first-party CLI consent copy for the stable client id", async () => {
+    mocks.getOAuthConsentClient.mockResolvedValue({
+      dynamic: false,
+      id: "bisibility-cli",
+      name: "Bisibility CLI",
+      redirectUri: "127.0.0.1:8976/callback",
+    });
+
+    const markup = renderToStaticMarkup(
+      await OAuthConsentPage({
+        searchParams: Promise.resolve({
+          client_id: "bisibility-cli",
+          scope: "openid tokens:write",
+        }),
+      }),
+    );
+
+    expect(markup).toContain("Sign in to Bisibility CLI");
+    expect(markup).not.toContain("Review agent access.");
   });
 
   it("uses a short fallback expiry only when the signed request omits one", async () => {

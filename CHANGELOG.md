@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## [0.3.5] - 2026-08-03
+
+- Updated HTTP and URI parsing dependencies to address newly disclosed security advisories.
+
+- Improved OAuth consent and expiry screens with client-specific guidance, clearer API token consequences, and correct retry instructions.
+
+- Fixed the app sidebar showing collapsed, icon-only content at full expanded width after returning to a background tab.
+
 ## [0.3.4] - 2026-08-03
 
 - Fixed public CI and snapshot validation to replace inherited Node heap settings with the pinned 4 GiB limit.

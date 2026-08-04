@@ -1,4 +1,6 @@
 import { OAuthConsentForm } from "@/components/auth/OAuthConsentForm";
+import { InfoTooltip } from "@/components/ui";
+import { getOAuthConsentCopy } from "@/lib/auth/oauth-consent-copy";
 import { OAUTH_AUTHORIZATION_TTL_SECONDS } from "@/lib/auth/oauth-policy";
 import { requireSession } from "@/lib/auth/session";
 import { getOAuthConsentClient } from "@/lib/queries/oauth-consent";
@@ -6,7 +8,6 @@ import { createNoindexMetadata } from "@/lib/seo/noindex";
 import {
   ChartLineUpIcon as ChartLineUp,
   FingerprintIcon as Fingerprint,
-  ShieldCheckIcon as ShieldCheck,
 } from "@phosphor-icons/react/dist/ssr";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -49,6 +50,7 @@ export default async function OAuthConsentPage({ searchParams }: Readonly<Consen
   const scopes = scopesFromParam(params.scope);
   const session = await requireSession();
   const client = await getOAuthConsentClient(clientId, firstParam(params.redirect_uri));
+  const copy = getOAuthConsentCopy(client);
 
   return (
     <main className="grid min-h-dvh bg-bg text-fg md:grid-cols-[0.82fr_1.18fr]">
@@ -65,23 +67,19 @@ export default async function OAuthConsentPage({ searchParams }: Readonly<Consen
             OAuth consent
           </div>
           <h1 className="mt-[14px] mb-0 text-[32px] font-semibold leading-[1.2] tracking-[-1.1px]">
-            Review agent access.
+            {copy.heading}
           </h1>
           <p className="mt-[14px] mb-0 text-[15px] leading-[1.6] text-fg-muted">
-            Approve only clients you just started yourself, and scopes that match the work they need
-            to do.
+            {copy.description}
           </p>
         </div>
 
-        <div className="flex flex-col gap-2 font-mono text-[11.5px] text-fg-faint">
-          <p className="m-0 flex items-center gap-2">
+        <div className="font-mono text-[11px] text-fg-faint">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-border-strong px-2.5 py-1">
             <Fingerprint aria-hidden className="text-green" size={14} weight="fill" />
-            PKCE S256 - no client secret
-          </p>
-          <p className="m-0 flex items-center gap-2">
-            <ShieldCheck aria-hidden size={14} />
-            Deny any request you did not start yourself
-          </p>
+            PKCE S256
+            <InfoTooltip text="PKCE binds this authorization request to the client that started it without using a stored client secret." />
+          </span>
         </div>
       </section>
 

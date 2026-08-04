@@ -1,3 +1,4 @@
+import { AppThemeRoot } from "@/components/shell/AppThemeRoot";
 import { CommandPaletteProvider } from "@/components/shell/CommandPalette";
 import { Sidebar } from "@/components/shell/Sidebar";
 import { mockWorkspaces } from "@/components/shell/workspaces.mock";
@@ -5,9 +6,10 @@ import type { Meta, StoryObj } from "@storybook/react";
 
 function Frame({ collapsed = false }: { collapsed?: boolean }) {
   return (
-    <div
+    <AppThemeRoot
       data-collapsed={collapsed ? "true" : "false"}
       data-shell-root
+      defaultTheme="light"
       className="min-h-[620px] bg-bg text-fg lg:grid lg:grid-cols-[248px_minmax(0,1fr)] data-[collapsed=true]:lg:grid-cols-[72px_minmax(0,1fr)]"
     >
       <CommandPaletteProvider
@@ -17,7 +19,6 @@ function Frame({ collapsed = false }: { collapsed?: boolean }) {
         <Sidebar
           activeProjectId={mockWorkspaces[0].id}
           canCreateWorkspace
-          defaultCollapsed={collapsed}
           projectRef={mockWorkspaces[0].publicId}
           workspaces={mockWorkspaces}
         />
@@ -25,7 +26,7 @@ function Frame({ collapsed = false }: { collapsed?: boolean }) {
           <h1 className="m-0 text-[21px] font-semibold">Overview</h1>
         </div>
       </CommandPaletteProvider>
-    </div>
+    </AppThemeRoot>
   );
 }
 
