@@ -121,6 +121,10 @@ describe("Temporal namespace retention ownership", () => {
       "TEMPORAL_NAMESPACE_RETENTION: ${TEMPORAL_NAMESPACE_RETENTION:-24h}",
     );
     expect(temporalOverlay).toContain("temporal operator namespace update");
+    expect(temporalOverlay).toContain("temporal operator search-attribute create");
+    for (const attribute of ["keywordId", "projectId", "provider"]) {
+      expect(temporalOverlay).toContain(attribute);
+    }
     expect(temporalOverlay).not.toContain('user: "0:0"');
     expect(temporalOverlay).not.toContain("temporal-dynamic-config:");
     expect(temporalOverlay).toContain("/tmp/temporal-dynamic/docker.yaml");

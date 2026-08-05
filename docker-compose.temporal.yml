@@ -98,6 +98,41 @@ services:
         else
           temporal operator namespace create --address temporal:7233 --namespace default --retention 24h --description "bisibility development namespace"
         fi
+        timeout 120 sh -c 'until temporal operator namespace describe --address temporal:7233 --namespace default >/dev/null 2>&1; do echo "Waiting for the namespace cache..."; sleep 2; done'
+        list_search_attributes() {
+          deadline=$$(( $$(date +%s) + 120 ))
+          until current=$$(temporal operator search-attribute list --address temporal:7233 --namespace default --output json 2>/dev/null); do
+            if [ "$$(date +%s)" -ge "$$deadline" ]; then
+              echo "Timed out waiting for Temporal search-attribute namespace visibility." >&2
+              return 1
+            fi
+            echo "Waiting for Temporal search-attribute namespace visibility..." >&2
+            sleep 2
+          done
+          printf '%s' "$$current" | tr -d '[:space:]'
+        }
+        ensure_search_attribute() {
+          attribute="$$1"
+          current=$$(list_search_attributes)
+          if printf '%s' "$$current" | grep -Fq "\"$$attribute\":\"INDEXED_VALUE_TYPE_KEYWORD\""; then
+            echo "Temporal search attribute $$attribute already exists as Keyword."
+            return 0
+          fi
+          if output=$$(temporal operator search-attribute create --address temporal:7233 --namespace default --name "$$attribute" --type Keyword 2>&1); then
+            printf '%s\n' "$$output"
+            return 0
+          fi
+          current=$$(list_search_attributes)
+          if printf '%s' "$$current" | grep -Fq "\"$$attribute\":\"INDEXED_VALUE_TYPE_KEYWORD\""; then
+            echo "Temporal search attribute $$attribute was created concurrently."
+            return 0
+          fi
+          printf '%s\n' "$$output" >&2
+          return 1
+        }
+        for attribute in keywordId projectId provider; do
+          ensure_search_attribute "$$attribute"
+        done
 
   temporal-ui:
     image: temporalio/ui:2.49.1

@@ -111,6 +111,9 @@ COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/deploy/migrate.ts .
 COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/data-migrations ./scripts/data-migrations
 COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/ops/public-id-write-gate.ts ./scripts/ops/public-id-write-gate.ts
 COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/ops/public-id-v3-contract-cleanup.ts ./scripts/ops/public-id-v3-contract-cleanup.ts
+COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/ops/locked-verification.ts ./scripts/ops/locked-verification.ts
+COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/ops/provider-secret-rotation.ts ./scripts/ops/provider-secret-rotation.ts
+COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/ops/rotate-provider-secrets.ts ./scripts/ops/rotate-provider-secrets.ts
 COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/admin/seed-instance-admin.ts ./scripts/admin/seed-instance-admin.ts
 COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/admin/reset-two-factor.ts ./scripts/admin/reset-two-factor.ts
 

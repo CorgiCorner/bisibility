@@ -610,8 +610,30 @@ Deploy webhook examples live in
 
 Railway is the bundled project path. Its template runs the web app, worker,
 PostgreSQL, Valkey, Temporal Server, and Temporal persistence inside one Railway
-project, with no Temporal Cloud account. The topology remains under R0
-validation.
+project, with no Temporal Cloud account. The version-pinned topology must pass
+the private R0 certification before its public listing is activated.
+
+### Upgrade a Railway template deployment
+
+Railway templates do not update projects that were already deployed from them. Subscribe to
+[Bisibility releases](https://github.com/CorgiCorner/bisibility/releases), read the target release
+notes, and update the pinned images manually. Keep Temporal Server at its existing version unless
+the release notes explicitly name a separately tested Temporal upgrade.
+
+1. Back up the `app-postgres` and `temporal-postgres` Railway databases independently.
+2. In the `web` service settings, change the image to
+   `corgicorner/bisibility:X.Y.Z`. Deploy it and wait for its pre-deploy migrations and
+   `/api/v1/readiness` check to succeed.
+3. Set `app-contract-cleanup` to that same web image tag, deploy it, and wait for the one-shot job
+   to reach `Completed`.
+4. Set `worker` to `corgicorner/bisibility-worker:X.Y.Z`, deploy it, then require
+   `/api/v1/health` to report a fresh worker heartbeat and matching exact app and worker source
+   revisions.
+5. Leave `temporal`, `temporal-schema`, and `temporal-namespace` pinned at 1.31.2 unless the release
+   notes explicitly say otherwise.
+
+Stop on the first failed step. Do not advance the next service or change Temporal as an attempted
+fix. Restore both database backups if the target release requires a database rollback.
 
 ## Temporal Server or Temporal Cloud
 

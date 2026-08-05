@@ -40,14 +40,16 @@ export async function ensureRankCheckSearchAttributes(
     namespace: string;
   },
 ) {
-  if (!shouldProvisionRankCheckSearchAttributes(input.address)) {
-    return { attributes: [], status: "skipped" as const };
-  }
-
   const custom = await listCustomSearchAttributes(connection, input.namespace);
   const missing = missingRankCheckSearchAttributes(custom);
   if (missing.length === 0) {
     return { attributes: [], status: "exists" as const };
+  }
+  if (!shouldProvisionRankCheckSearchAttributes(input.address)) {
+    throw new Error(
+      `Temporal namespace ${input.namespace} is missing required Keyword search attributes: ${missing.join(", ")}. ` +
+        "Provision them in the namespace owner bootstrap before starting the worker.",
+    );
   }
   try {
     await connection.withDeadline(Date.now() + 10_000, () =>
