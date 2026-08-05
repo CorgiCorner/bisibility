@@ -13,11 +13,11 @@ for `corgicorner/bisibility`. It is not standalone.
 
 ## Quick start
 
-Download the same {{RELEASE_TAG}} assets shown in the web image overview, then start the
-worker under the `scheduled` Compose profile:
+Download the {{RELEASE_TAG}} core, worker, and Temporal overlays, then start the
+bundled scheduling topology:
 
-    docker compose --env-file .env -f docker-compose.self-host.yml \
-      --profile scheduled up -d
+    docker compose --env-file .env \
+      -f compose.yaml -f compose.worker.yaml -f compose.temporal.yaml up -d
 
 ## How it works
 
@@ -30,10 +30,11 @@ reachable Temporal server does nothing.
 - `DATABASE_URL` - the same PostgreSQL instance as the web service
 - `BISIBILITY_SECRETS_KEY` - must be identical to the web service; it decrypts
   stored provider credentials
-- `TEMPORAL_ADDRESS` (default `temporal:7233`), `TEMPORAL_NAMESPACE`
-  (default `default`), `TEMPORAL_TASK_QUEUE` (default `rank-checks`)
+- `SCHEDULER_DRIVER=temporal`
+- `TEMPORAL_ADDRESS`, `TEMPORAL_NAMESPACE`, `TEMPORAL_TASK_QUEUE`, and
+  `TEMPORAL_ALERT_DELIVERY_TASK_QUEUE`, shared exactly with the web service
 
 `TEMPORAL_ADDRESS` can point at Temporal Cloud or a self-hosted cluster. For
-Temporal Cloud, set `TEMPORAL_API_KEY`; the API key enables TLS automatically.
+Temporal Cloud, set `TEMPORAL_API_KEY`; `TEMPORAL_TLS=auto` then enables TLS.
 A custom `TEMPORAL_ADDRESS` alone does not enable TLS. For a TLS-enabled
 self-hosted endpoint without an API key, set `TEMPORAL_TLS=true`.

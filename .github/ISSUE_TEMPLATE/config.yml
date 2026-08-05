@@ -5,7 +5,7 @@ contact_links:
     about: Please report security issues privately via a security advisory, not a public issue. See SECURITY.md.
   - name: Ideas and feedback
     url: https://github.com/CorgiCorner/bisibility/discussions/categories/ideas
-    about: Not sure it is a bug or a fully formed spec yet? Start a discussion.
+    about: Not sure it is a bug or a fully formed feature request yet? Start a discussion.
   - name: Roadmap
     url: https://bisibility.com/roadmap
     about: See what is shipped, building, and planned, and how to influence it.

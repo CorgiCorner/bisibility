@@ -59,13 +59,14 @@ flowchart LR
 Two consequences follow.
 
 Starting the worker on its own does nothing. It needs a reachable Temporal
-server, which is why `TEMPORAL_ADDRESS`, `TEMPORAL_NAMESPACE`, and
-`TEMPORAL_TASK_QUEUE` are required. The web app needs the same address, not to
-manage schedules, but to start workflows for manual checks.
+server, which is why the Temporal topology needs `TEMPORAL_ADDRESS`, a dedicated
+`TEMPORAL_NAMESPACE`, and both task queues. The web app needs the same values,
+not to manage schedules, but to start workflows. `SCHEDULER_DRIVER=none` keeps
+manual checks inline and disables scheduled execution in the core topology.
 
-The Temporal server is replaceable. The Docker `scheduled` profile bundles one
-for convenience, but the same worker image runs unchanged against a self-managed
-cluster or Temporal Cloud. See
+The Temporal server is replaceable. Docker can add the bundled Temporal overlay,
+but the same worker image runs unchanged against a self-managed cluster or
+Temporal Cloud. See
 [Temporal Server or Temporal Cloud](/self-hosting#temporal-server-or-temporal-cloud).
 
 ## Data model

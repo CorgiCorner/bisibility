@@ -14,6 +14,11 @@ const envelope = (schema: object) => ({
   type: "object",
 });
 const probeStatus = { enum: ["degraded", "ok"], type: "string" };
+const rankCheckSchedulerMode = {
+  enum: ["cutover", "dispatcher", "invalid", "legacy"],
+  type: "string",
+};
+const schedulerDriver = { enum: ["invalid", "legacy-auto", "none", "temporal"], type: "string" };
 const livenessResponse = {
   properties: { status: { enum: ["ok"], type: "string" } },
   required: ["status"],
@@ -33,8 +38,10 @@ const capabilitiesResponse = {
       type: "array",
     },
     data: { items: obj, type: "array" },
+    rank_check_scheduler_mode: rankCheckSchedulerMode,
+    scheduler_driver: schedulerDriver,
   },
-  required: ["apiVersions", "data"],
+  required: ["apiVersions", "data", "rank_check_scheduler_mode", "scheduler_driver"],
   type: "object",
 };
 

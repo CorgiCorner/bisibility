@@ -6,7 +6,7 @@ import {
 } from "@/components/checks/runs/check-runs-fixtures";
 import { appPath } from "@/lib/routing/app-path";
 import type { Meta, StoryObj } from "@storybook/react";
-import { expect, fn, userEvent, within } from "@storybook/test";
+import { expect, fn, userEvent, within } from "storybook/test";
 
 const callbacks = {
   onFilterChange: fn(),

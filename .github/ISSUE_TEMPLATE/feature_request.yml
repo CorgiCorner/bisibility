@@ -1,36 +1,81 @@
 name: Feature request
-description: Suggest an idea for bisibility
+description: Suggest what bisibility should do - from a quick idea to an implementation-ready proposal
 title: "[Feature]: "
-labels: ["enhancement"]
+labels: ["feature"]
 body:
   - type: markdown
     attributes:
       value: |
-        Quick idea? You are in the right place. If you can already describe the
-        behavior and acceptance criteria, use the **Feature spec** form instead -
-        implementation-ready specs are the fastest way to get something built.
+        Quick idea? You are in the right place - only the first two fields are
+        required. The more of the optional fields you fill in, the closer the
+        request is to implementation-ready, and implementation-ready requests
+        ship fastest: the core team builds with heavy AI-agent assistance, and
+        a precise request turns into shipped code quickly. Requests that
+        materially shape what ships may receive credit in the changelog.
+
+        Drafting the request together with your own AI assistant is welcome,
+        as long as the problem is real for you and you sanity-check the
+        result. If the idea is not fully formed yet, start a discussion
+        instead.
+
+        **Do not include secrets, API keys, tokens, or production
+        infrastructure details anywhere in this request.**
   - type: textarea
     id: problem
     attributes:
       label: Problem
-      description: What are you trying to do that bisibility makes hard today?
-      placeholder: I'm always frustrated when...
+      description: What are you trying to do that bisibility makes hard today? Who hits this and how often?
+      placeholder: As an agency tracking rankings for 20 client sites, I need... but today...
     validations:
       required: true
   - type: textarea
-    id: solution
+    id: behavior
     attributes:
-      label: Proposed solution
-      description: What would you like to happen?
+      label: Proposed behavior
+      description: What should a user see and be able to do once this ships? Describe user-visible behavior on every affected surface.
     validations:
       required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria (optional, speeds things up)
+      description: A short checklist a reviewer, or a coding agent, can verify one item at a time.
+      placeholder: |
+        - [ ] A keyword list can be exported as CSV from the keywords view
+        - [ ] The export respects the active saved view filters
+        - [ ] The public API exposes the same export on the keywords resource
+  - type: textarea
+    id: boundaries
+    attributes:
+      label: Out of scope and constraints (optional)
+      description: What this request deliberately does not cover, plus known constraints and edge cases (providers, quotas, large keyword sets, self-host vs cloud).
+  - type: checkboxes
+    id: surfaces
+    attributes:
+      label: Affected surfaces
+      options:
+        - label: Web UI
+        - label: REST API (v1)
+        - label: Webhooks
+        - label: Imports / exports
+        - label: Scheduling / worker
+        - label: Provider integrations
+        - label: MCP / agent skills
+        - label: SDKs / client libraries
+        - label: CLI
+        - label: Docs
   - type: textarea
     id: alternatives
     attributes:
       label: Alternatives considered
-      description: Any alternative solutions or workarounds you've considered.
-  - type: textarea
-    id: context
+      description: Workarounds you use today, or behavior in other tools worth copying or avoiding.
+  - type: checkboxes
+    id: checks
     attributes:
-      label: Additional context
-      description: Anything else - screenshots, links, related issues.
+      label: Final checks
+      options:
+        - label: I searched existing issues and discussions and this is not a duplicate.
+          required: true
+        - label: This request contains no secrets, tokens, or production infrastructure details.
+          required: true
+        - label: Credit me in the changelog if this request materially shapes what ships.

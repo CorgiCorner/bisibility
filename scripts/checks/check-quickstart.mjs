@@ -20,7 +20,7 @@ try {
     path.join(tempRoot, "scripts/dev/bootstrap-local.sh"),
   );
   cpSync(path.join(root, ".env.example"), path.join(tempRoot, ".env.example"));
-  cpSync(path.join(root, "docker-compose.yml"), path.join(tempRoot, "docker-compose.yml"));
+  cpSync(path.join(root, "compose.yaml"), path.join(tempRoot, "compose.yaml"));
 
   const dockerArgsPath = path.join(tempRoot, "docker-args.txt");
   const fakeDocker = path.join(tempRoot, "bin/docker");
@@ -42,7 +42,13 @@ try {
   assert(result.status === 0, result.stderr || result.stdout || "bootstrap exited non-zero");
 
   const environment = readFileSync(path.join(tempRoot, ".env"), "utf8");
-  for (const required of ["POSTGRES_PASSWORD", "BETTER_AUTH_SECRET", "BISIBILITY_SECRETS_KEY"]) {
+  for (const required of [
+    "POSTGRES_PASSWORD",
+    "TEMPORAL_POSTGRES_PASSWORD",
+    "BETTER_AUTH_SECRET",
+    "BISIBILITY_SECRETS_KEY",
+    "BISIBILITY_DEPLOYMENT_SUFFIX",
+  ]) {
     assert(new RegExp(`^${required}=.+$`, "m").test(environment), `${required} is missing`);
   }
   assert(environment.includes("DEMO_FIXED_OTP=1\n"), "demo OTP is not enabled");
@@ -60,7 +66,9 @@ try {
     result.stdout.includes("http://localhost:8233"),
     "Temporal UI endpoint is missing from output",
   );
-  assert(result.stdout.includes("--profile scheduled"), "Scheduled profile is missing from output");
+  assert(result.stdout.includes("compose.worker.yaml"), "Worker overlay is missing from output");
+  assert(result.stdout.includes("compose.temporal.yaml"), "Temporal overlay is missing from output");
+  assert(result.stdout.includes("--profile temporal-ui"), "Temporal UI profile is missing from output");
 
   console.log("Public quickstart generates every required value and validates Docker Compose.");
 } finally {

@@ -92,7 +92,7 @@ describe("OpenAPI document", () => {
           type: "array",
         },
       },
-      required: ["apiVersions", "data"],
+      required: ["apiVersions", "data", "rank_check_scheduler_mode", "scheduler_driver"],
     });
   });
 

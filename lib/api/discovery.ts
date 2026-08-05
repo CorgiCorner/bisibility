@@ -9,6 +9,7 @@ import { getTemporalSnapshot, type TemporalSnapshotState } from "@/lib/ops/tempo
 import { providerRateLimitPolicy } from "@/lib/providers/rate-limit";
 import { PROVIDER_CATALOG } from "@/lib/providers/registry";
 import { rankCheckSchedulerMode } from "@/lib/rank-check/scheduler-mode";
+import { resolveSchedulerDriver } from "@/lib/scheduler/driver";
 import {
   DEFAULT_SERP_DEPTH,
   DEFAULT_SERP_DEVICE,
@@ -63,7 +64,16 @@ function serpCapabilities() {
   };
 }
 
-type RuntimeHealthStatus = "degraded" | "down" | "ok" | "unknown";
+type RuntimeHealthStatus = "degraded" | "disabled" | "down" | "ok" | "unknown";
+type DiagnosticRankCheckSchedulerMode = ReturnType<typeof rankCheckSchedulerMode> | "invalid";
+
+function resolveRankCheckSchedulerMode(): DiagnosticRankCheckSchedulerMode {
+  try {
+    return rankCheckSchedulerMode();
+  } catch {
+    return "invalid";
+  }
+}
 
 // Missing telemetry is healthy for web-only deployments; only observed-then-lost
 // telemetry or partial signals degrade health.
@@ -119,7 +129,10 @@ export function getLiveness(ctx: Pick<ApiContext, "headers">) {
 
 export async function getReadiness(ctx: Pick<ApiContext, "headers">) {
   const readiness = await readApplicationReadiness();
-  const degraded = readinessFailed(readiness);
+  const schedulerMode = resolveRankCheckSchedulerMode();
+  const driver = resolveSchedulerDriver().driver;
+  const degraded =
+    readinessFailed(readiness) || schedulerMode === "invalid" || driver === "invalid";
   return jsonResponse(
     { status: degraded ? "degraded" : "ok" },
     { headers: ctx.headers, status: degraded ? 503 : 200 },
@@ -127,19 +140,40 @@ export async function getReadiness(ctx: Pick<ApiContext, "headers">) {
 }
 
 export async function getHealth(ctx: Pick<ApiContext, "headers">, detailed = false) {
+  const driver = resolveSchedulerDriver().driver;
+  const schedulerMode = resolveRankCheckSchedulerMode();
   const readiness = await readApplicationReadiness();
   const [workerLiveness, temporalSnapshot] = await Promise.all([
     getWorkerLivenessDetails(),
     getTemporalSnapshot(),
   ]);
-  const worker = runtimeHealthStatus(workerLiveness.status);
+  const schedulerConfiguration =
+    driver === "invalid" || schedulerMode === "invalid"
+      ? "invalid"
+      : workerLiveness.status === "ok" &&
+          workerLiveness.schedulerDriver !== "unknown" &&
+          workerLiveness.schedulerDriver !== driver
+        ? "driver-mismatch"
+        : "ok";
+  const worker =
+    schedulerConfiguration !== "ok"
+      ? "degraded"
+      : driver === "none"
+        ? "disabled"
+        : runtimeHealthStatus(workerLiveness.status);
   const workerSchema = workerSchemaHealth(workerLiveness.schemaComparison);
-  const temporal = runtimeHealthStatus(temporalSnapshot?.status ?? null);
+  const temporal =
+    driver === "invalid"
+      ? "degraded"
+      : driver === "none"
+        ? "disabled"
+        : runtimeHealthStatus(temporalSnapshot?.status ?? null);
   const degraded =
     readinessFailed(readiness) ||
     runtimeHealthFailed(worker) ||
     runtimeHealthFailed(temporal) ||
-    workerSchema === "drift";
+    schedulerConfiguration !== "ok" ||
+    (driver !== "none" && driver !== "invalid" && workerSchema === "drift");
 
   const status = degraded ? "degraded" : "ok";
   const body = detailed
@@ -148,6 +182,8 @@ export async function getHealth(ctx: Pick<ApiContext, "headers">, detailed = fal
         providers: providersByKind(),
         rate_limits: providerRateLimits(),
         readiness: readinessFailed(readiness) ? "degraded" : "ok",
+        rank_check_scheduler_mode: schedulerMode,
+        scheduler_driver: driver,
         serp: serpCapabilities(),
         services: {
           ...appIdentity(),
@@ -156,14 +192,17 @@ export async function getHealth(ctx: Pick<ApiContext, "headers">, detailed = fal
             process.env.BISIBILITY_ENV?.trim() ||
             process.env.NODE_ENV?.trim() ||
             "unknown",
-          appRankCheckSchedulerMode: rankCheckSchedulerMode(),
+          appRankCheckSchedulerMode: schedulerMode,
+          appSchedulerDriver: driver,
           ...readiness,
           lastHeartbeatAt: workerLiveness.lastSeenAt,
+          schedulerConfiguration,
           temporal,
           worker,
           workerEnvironment: workerLiveness.environment,
           workerHeartbeatState: workerLiveness.heartbeatState,
           workerRankCheckSchedulerMode: workerLiveness.schedulerMode,
+          workerSchedulerDriver: workerLiveness.schedulerDriver,
           workerRelease: workerLiveness.release,
           workerRevision: workerLiveness.revision ?? "unknown",
           workerSchema,
@@ -181,7 +220,12 @@ export function getOpenApi(ctx: Pick<ApiContext, "headers">) {
 
 export function capabilities(ctx: Pick<ApiContext, "headers">) {
   return jsonResponse(
-    { ...getApiVersionCapabilities(), data: getCapabilities() },
+    {
+      ...getApiVersionCapabilities(),
+      data: getCapabilities(),
+      rank_check_scheduler_mode: resolveRankCheckSchedulerMode(),
+      scheduler_driver: resolveSchedulerDriver().driver,
+    },
     { headers: ctx.headers },
   );
 }

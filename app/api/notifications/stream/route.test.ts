@@ -28,6 +28,12 @@ function streamRequest() {
   return new Request("http://localhost/api/notifications/stream?project=prj_1") as NextRequest;
 }
 
+function redirectError() {
+  return Object.assign(new Error("NEXT_REDIRECT"), {
+    digest: "NEXT_REDIRECT;replace;/login;307;",
+  });
+}
+
 describe("notification stream route", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -146,6 +152,15 @@ describe("notification stream route", () => {
 
   it("returns unauthorized when the session scope cannot be resolved", async () => {
     mocks.getQueryActor.mockRejectedValue(new Error("session unavailable"));
+
+    const response = await GET(streamRequest());
+
+    expect(response.status).toBe(401);
+    expect(await response.text()).toBe("Unauthorized");
+  });
+
+  it("answers a redirect from getQueryActor with 401", async () => {
+    mocks.getQueryActor.mockRejectedValue(redirectError());
 
     const response = await GET(streamRequest());
 

@@ -71,6 +71,7 @@ describe("instance admin queries", () => {
   const now = new Date("2026-07-17T12:00:00.000Z");
 
   beforeEach(() => {
+    vi.unstubAllEnvs();
     vi.clearAllMocks();
     mocks.userCount.mockResolvedValue(3);
     mocks.projectCount.mockResolvedValue(2);
@@ -335,6 +336,21 @@ describe("instance admin queries", () => {
       status: "unavailable",
     });
     expect(mocks.getTemporalSnapshot).toHaveBeenCalledWith(now);
+  });
+
+  it("reports the scheduler as disabled without reading worker or Temporal liveness", async () => {
+    vi.stubEnv("SCHEDULER_DRIVER", "none");
+
+    const result = await getInstanceAdminDashboard(now);
+
+    expect(result.worker).toMatchObject({ schedulerDriver: "none", status: "unknown" });
+    expect(result.temporal).toMatchObject({
+      collectedAt: null,
+      heartbeat: null,
+      status: "disabled",
+    });
+    expect(mocks.liveness).not.toHaveBeenCalled();
+    expect(mocks.getTemporalSnapshot).not.toHaveBeenCalled();
   });
 
   it("resolves empty tables with missing operational configuration", async () => {

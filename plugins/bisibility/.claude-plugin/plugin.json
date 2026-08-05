@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "bisibility",
+  "displayName": "Bisibility",
+  "version": "0.1.0",
+  "description": "Connect Claude Code to Bisibility through OAuth-protected MCP and run evidence-backed SEO workflows.",
+  "author": {
+    "name": "CorgiCorner",
+    "url": "https://github.com/CorgiCorner"
+  },
+  "homepage": "https://bisibility.com/docs/agents",
+  "repository": "https://github.com/CorgiCorner/bisibility",
+  "license": "MIT",
+  "keywords": ["seo", "rank-tracking", "keyword-research", "backlinks", "mcp"],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json"
+}

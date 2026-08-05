@@ -73,14 +73,17 @@ export async function inspectPublicCi(api, sha) {
 }
 
 export async function verifyPublicReleaseSource({
+  allowMissingOrigin = false,
   api,
   originSha,
   pause: waitFor = pause,
   sha,
+  sourceOnly = false,
   tag,
   wait,
 }) {
   assertSha(sha);
+  if (!originSha && !allowMissingOrigin) throw new Error("origin SHA is required.");
   const deadline = Date.now() + (wait ? 30 * 60_000 : 0);
   for (;;) {
     const main = await api("/git/ref/heads/main");
@@ -98,6 +101,7 @@ export async function verifyPublicReleaseSource({
     if (tagCommit !== sha) throw new Error(`Public tag ${tag} does not match ${sha}.`);
   }
   if (originSha) await verifyOriginRevision(api, sha, originSha);
+  if (sourceOnly) return { state: "source-only" };
 
   for (;;) {
     const status = await inspectPublicCi(api, sha);
@@ -114,10 +118,12 @@ export async function verifyPublicReleaseSource({
 }
 
 function options(argv) {
-  const parsed = { wait: false };
+  const parsed = { allowMissingOrigin: false, sourceOnly: false, wait: false };
   for (let index = 0; index < argv.length; index += 1) {
     const item = argv[index];
     if (item === "--wait") parsed.wait = true;
+    else if (item === "--source-only") parsed.sourceOnly = true;
+    else if (item === "--allow-missing-origin") parsed.allowMissingOrigin = true;
     else if (["--repo", "--sha", "--tag", "--origin-sha"].includes(item)) {
       parsed[item.slice(2).replace("-", "_")] = argv[++index];
     }
@@ -132,13 +138,16 @@ async function main() {
   const sha = required(parsed.sha, "--sha");
   const token = required(process.env.GITHUB_TOKEN, "GITHUB_TOKEN");
   const result = await verifyPublicReleaseSource({
+    allowMissingOrigin: parsed.allowMissingOrigin,
     api: apiClient({ repo, token }),
     originSha: parsed.origin_sha,
     sha,
+    sourceOnly: parsed.sourceOnly,
     tag: parsed.tag,
     wait: parsed.wait,
   });
-  console.log(`Public ci-ok passed for ${sha}: ${result.run.html_url}`);
+  if (result.state === "source-only") console.log(`Public source binding passed for ${sha}.`);
+  else console.log(`Public ci-ok passed for ${sha}: ${result.run.html_url}`);
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

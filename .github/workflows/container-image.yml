@@ -1,8 +1,8 @@
 name: Container Image
 
 on:
-  # Release commits skip the ordinary main build. Tagged releases arrive only
-  # after exact-SHA public CI through repository_dispatch.
+  # Release commits skip the ordinary main build. Tagged releases arrive through
+  # repository_dispatch while exact-SHA public CI is verified after publication.
   push:
     branches:
       - main
@@ -56,6 +56,7 @@ jobs:
           DISPATCH_VERSION: ${{ github.event.client_payload.version }}
           DISPATCH_MINOR: ${{ github.event.client_payload.minor }}
           DISPATCH_MAJOR: ${{ github.event.client_payload.major }}
+          DISPATCH_ORIGIN_SHA: ${{ github.event.client_payload.origin_sha }}
           DISPATCH_PUBLIC_SHA: ${{ github.event.client_payload.public_sha }}
         run: |
           package_version="$(node -p "require('./package.json').version")"
@@ -63,6 +64,15 @@ jobs:
           source_sha="${DISPATCH_PUBLIC_SHA:-$GITHUB_SHA}"
           if [ "${GITHUB_EVENT_NAME}" = "repository_dispatch" ] && [ -z "${DISPATCH_PUBLIC_SHA}" ]; then
             echo "::error::repository_dispatch requires client_payload.public_sha."
+            exit 1
+          fi
+          if [ "${GITHUB_EVENT_NAME}" = "repository_dispatch" ] && [ -z "${DISPATCH_ORIGIN_SHA}" ]; then
+            echo "::error::repository_dispatch requires client_payload.origin_sha."
+            exit 1
+          fi
+          if [ "${GITHUB_EVENT_NAME}" = "repository_dispatch" ] \
+            && ! [[ "${DISPATCH_ORIGIN_SHA}" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::Origin commit is not a full Git SHA: ${DISPATCH_ORIGIN_SHA}"
             exit 1
           fi
           if ! [[ "$source_sha" =~ ^[0-9a-f]{40}$ ]]; then
@@ -91,10 +101,11 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "source_sha=$source_sha" >> "$GITHUB_OUTPUT"
 
-      - name: Verify tested public release source
+      - name: Verify published public release source
         if: github.event_name == 'repository_dispatch'
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          ORIGIN_SHA: ${{ github.event.client_payload.origin_sha }}
           PUBLIC_SHA: ${{ steps.version.outputs.source_sha }}
           RELEASE_TAG: v${{ steps.version.outputs.version }}
         run: >-
@@ -102,6 +113,8 @@ jobs:
           --repo "$GITHUB_REPOSITORY"
           --sha "$PUBLIC_SHA"
           --tag "$RELEASE_TAG"
+          --origin-sha "$ORIGIN_SHA"
+          --source-only
 
       - name: Select registries
         id: registries
@@ -405,6 +418,9 @@ jobs:
       - name: Verify manifest against published images
         run: |
           mkdir -p "$RUNNER_TEMP/release-assets"
+          cp compose.yaml "$RUNNER_TEMP/release-assets/"
+          cp compose.worker.yaml "$RUNNER_TEMP/release-assets/"
+          cp compose.temporal.yaml "$RUNNER_TEMP/release-assets/"
           cp docker-compose.self-host.yml "$RUNNER_TEMP/release-assets/"
           cp .env.example "$RUNNER_TEMP/release-assets/bisibility.env.example"
           cp scripts/self-host/generate-env.mjs "$RUNNER_TEMP/release-assets/generate-self-host-env.mjs"
@@ -436,6 +452,9 @@ jobs:
       - name: Stage immutable release assets
         run: |
           mkdir -p "$RUNNER_TEMP/release-assets"
+          cp compose.yaml "$RUNNER_TEMP/release-assets/"
+          cp compose.worker.yaml "$RUNNER_TEMP/release-assets/"
+          cp compose.temporal.yaml "$RUNNER_TEMP/release-assets/"
           cp docker-compose.self-host.yml "$RUNNER_TEMP/release-assets/"
           cp .env.example "$RUNNER_TEMP/release-assets/bisibility.env.example"
           cp scripts/self-host/generate-env.mjs "$RUNNER_TEMP/release-assets/generate-self-host-env.mjs"
@@ -448,6 +467,9 @@ jobs:
         run: |
           set -euo pipefail
           assets=(
+            compose.yaml
+            compose.worker.yaml
+            compose.temporal.yaml
             docker-compose.self-host.yml
             bisibility.env.example
             generate-self-host-env.mjs
@@ -465,6 +487,9 @@ jobs:
             exit 0
           fi
           gh release create "$RELEASE_TAG" \
+            "$RUNNER_TEMP/release-assets/compose.yaml" \
+            "$RUNNER_TEMP/release-assets/compose.worker.yaml" \
+            "$RUNNER_TEMP/release-assets/compose.temporal.yaml" \
             "$RUNNER_TEMP/release-assets/docker-compose.self-host.yml" \
             "$RUNNER_TEMP/release-assets/bisibility.env.example" \
             "$RUNNER_TEMP/release-assets/generate-self-host-env.mjs" \

@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 import { readFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { parse } from "yaml";
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -11,6 +13,10 @@ const dockerfile = readFileSync("Dockerfile", "utf8");
 const workerDockerfile = readFileSync("Dockerfile.worker", "utf8");
 const nodeVersion = readFileSync(".nvmrc", "utf8").trim().replace(/^v/, "");
 const compose = readFileSync("docker-compose.yml", "utf8");
+const composeCore = readFileSync("compose.yaml", "utf8");
+const composeWorker = readFileSync("compose.worker.yaml", "utf8");
+const composeTemporal = readFileSync("compose.temporal.yaml", "utf8");
+const composeBuild = readFileSync("compose.build.yaml", "utf8");
 const alertRemediationSmoke = readFileSync("scripts/smoke/smoke-alert-remediation.mjs", "utf8");
 const instrumentation = readFileSync("instrumentation.ts", "utf8");
 const health = readFileSync("lib/api/discovery.ts", "utf8");
@@ -116,6 +122,133 @@ for (const dependency of ["@paralleldrive/cuid2", "@noble/hashes", "bignumber.js
   );
 }
 assert(compose.includes(migrationRunner), "Compose must run the coordinated migration runner");
+const composeEnv = {
+  ...process.env,
+  BETTER_AUTH_SECRET: "test-auth-secret",
+  BETTER_AUTH_URL: "https://example.com",
+  BISIBILITY_DEPLOYMENT_SUFFIX: "a1b2c3d4",
+  BISIBILITY_SECRETS_KEY: "test-secrets-key",
+  DATABASE_URL: "postgresql://bisibility:test@postgres:5432/bisibility",
+  DIRECT_URL: "postgresql://bisibility:test@postgres:5432/bisibility",
+  POSTGRES_PASSWORD: "test",
+  SITE_URL: "https://example.com",
+  TEMPORAL_ADDRESS: "temporal.example.com:7233",
+  TEMPORAL_POSTGRES_PASSWORD: "temporal-test",
+};
+function renderCompose(files, environment = {}) {
+  const result = spawnSync("docker", ["compose", ...files.flatMap((file) => ["-f", file]), "config"], {
+    encoding: "utf8",
+    env: { ...composeEnv, ...environment },
+  });
+  if (result.error?.code === "ENOENT") {
+    throw new Error(
+      "Deployment config validation requires the Docker CLI with the Compose plugin installed.",
+    );
+  }
+  if (result.error || result.status !== 0) {
+    throw new Error(
+      `Compose config failed for ${files.join(", ")}: ${result.error?.message ?? result.stderr}`,
+    );
+  }
+  return parse(result.stdout);
+}
+const coreConfig = renderCompose(["compose.yaml"]);
+const workerConfig = renderCompose(["compose.yaml", "compose.worker.yaml"]);
+const bundledConfig = renderCompose([
+  "compose.yaml",
+  "compose.worker.yaml",
+  "compose.temporal.yaml",
+]);
+const legacyTemporalPasswordConfig = renderCompose(
+  ["compose.yaml", "compose.worker.yaml", "compose.temporal.yaml"],
+  { TEMPORAL_POSTGRES_PASSWORD: "" },
+);
+const explicitTemporalConfig = renderCompose(["compose.yaml", "compose.worker.yaml"], {
+  BISIBILITY_DEPLOYMENT_SUFFIX: "",
+  TEMPORAL_ALERT_DELIVERY_TASK_QUEUE: "explicit-alert-deliveries",
+  TEMPORAL_NAMESPACE: "explicit-namespace",
+  TEMPORAL_TASK_QUEUE: "explicit-rank-checks",
+});
+assert(
+  JSON.stringify(Object.keys(coreConfig.services).sort()) ===
+    JSON.stringify(["app", "db-migrations", "postgres", "redis"]),
+  "Core Compose must contain only the app, migration, PostgreSQL, and Redis services",
+);
+for (const service of [coreConfig.services.app, coreConfig.services["db-migrations"]]) {
+  assert(service.environment.SCHEDULER_DRIVER === "none", "Core services must disable scheduling");
+  assert(
+    !Object.keys(service.environment).some((key) => key.startsWith("TEMPORAL_")),
+    "Core services must not receive Temporal defaults",
+  );
+}
+assert(workerConfig.services.worker, "Worker overlay must add the worker service");
+assert(
+  !workerConfig.services.worker.depends_on?.temporal,
+  "External worker overlay must not depend on a service named temporal",
+);
+for (const serviceName of ["app", "worker"]) {
+  const environment = workerConfig.services[serviceName].environment;
+  assert(environment.SCHEDULER_DRIVER === "temporal", `${serviceName} must use the Temporal driver`);
+  assert(
+    environment.BISIBILITY_DEPLOYMENT_SUFFIX === "a1b2c3d4",
+    `${serviceName} must receive the shared deployment suffix`,
+  );
+}
+for (const key of [
+  "BISIBILITY_DEPLOYMENT_SUFFIX",
+  "TEMPORAL_NAMESPACE",
+  "TEMPORAL_TASK_QUEUE",
+  "TEMPORAL_ALERT_DELIVERY_TASK_QUEUE",
+]) {
+  assert(
+    workerConfig.services.app.environment[key] === workerConfig.services.worker.environment[key],
+    `Web and worker must receive the same ${key}`,
+  );
+}
+for (const serviceName of ["app", "worker"]) {
+  const environment = explicitTemporalConfig.services[serviceName].environment;
+  assert(
+    environment.TEMPORAL_NAMESPACE === "explicit-namespace" &&
+      environment.TEMPORAL_TASK_QUEUE === "explicit-rank-checks" &&
+      environment.TEMPORAL_ALERT_DELIVERY_TASK_QUEUE === "explicit-alert-deliveries",
+    `${serviceName} must accept every explicit Temporal identifier without a suffix`,
+  );
+}
+assert(
+  workerConfig.services.worker.restart === "unless-stopped",
+  "Compose worker must retain a restart policy after bounded startup retries are exhausted",
+);
+assert(
+  legacyTemporalPasswordConfig.services["temporal-postgres"].environment.POSTGRES_PASSWORD ===
+    composeEnv.POSTGRES_PASSWORD,
+  "Existing installs without TEMPORAL_POSTGRES_PASSWORD must retain the legacy password fallback",
+);
+assert(
+  railwayWorker.deploy?.restartPolicyType === "ON_FAILURE" &&
+    railwayWorker.deploy?.restartPolicyMaxRetries === 10,
+  "Railway worker must restart bounded startup failures",
+);
+for (const serviceName of ["temporal-postgres", "temporal-schema", "temporal", "temporal-namespace"]) {
+  assert(bundledConfig.services[serviceName], `Bundled overlay is missing ${serviceName}`);
+}
+assert(
+  bundledConfig.services.worker.depends_on?.["temporal-namespace"]?.condition ===
+    "service_completed_successfully",
+  "Bundled worker must wait for namespace initialization",
+);
+assert(
+  composeTemporal.includes("update-schema") && composeTemporal.includes("namespace create"),
+  "Bundled overlay must initialize both persistence schemas and the namespace",
+);
+assert(
+  composeCore.includes("SCHEDULER_DRIVER: none") &&
+    composeWorker.includes("SCHEDULER_DRIVER: temporal"),
+  "Compose driver declarations are missing",
+);
+assert(
+  composeBuild.includes("dockerfile: Dockerfile.worker"),
+  "Source build overlay must build the worker from Dockerfile.worker",
+);
 assert(
   alertRemediationSmoke.includes('"npm", ["run", "db:migrate"]'),
   "Alert remediation smoke must run the coordinated migration runner",

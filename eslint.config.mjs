@@ -235,7 +235,6 @@ export default [
       "coverage/**",
       "lib/generated/prisma/**",
       "prisma/generated/**",
-      ".agent-private/design-source/**",
     ],
   },
   {

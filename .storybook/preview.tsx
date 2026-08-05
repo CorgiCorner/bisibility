@@ -7,7 +7,7 @@ import {
 import { theme } from "@/lib/theme/theme";
 import CssBaseline from "@mui/material/CssBaseline";
 import { StyledEngineProvider, ThemeProvider } from "@mui/material/styles";
-import type { Decorator, Preview } from "@storybook/react";
+import type { Decorator, Preview } from "@storybook/nextjs-vite";
 import "../app/globals.css";
 import "./preview-fonts.css";
 
@@ -75,7 +75,7 @@ const withMuiTheme: Decorator = (Story, context) => {
 const preview: Preview = {
   decorators: [withMuiTheme],
   parameters: {
-    backgrounds: { disable: true },
+    backgrounds: { disabled: true },
     controls: { expanded: true },
   },
 };

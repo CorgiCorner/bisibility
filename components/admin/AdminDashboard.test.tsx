@@ -102,6 +102,7 @@ const baseData = {
     lastSeenAt: "2026-07-17T12:00:00.000Z",
     release: "worker-image-sha",
     revision: "worker-public-revision",
+    schedulerDriver: "temporal",
     schedulerMode: "legacy",
     schemaComparison: "ok",
     status: "ok",
@@ -242,6 +243,35 @@ describe("AdminDashboard", () => {
     ).toBeInTheDocument();
     expect(within(temporal).getAllByText("-")).toHaveLength(7);
     expect(within(temporal).queryByText("Never")).not.toBeInTheDocument();
+  });
+
+  it("distinguishes a disabled scheduler from a failed worker or Temporal service", () => {
+    render(
+      <AdminDashboard
+        data={{
+          ...baseData,
+          temporal: {
+            bootstrapErrors: [],
+            collectedAt: null,
+            heartbeat: null,
+            status: "disabled",
+          },
+          worker: {
+            ...baseData.worker,
+            schedulerDriver: "none",
+            status: "unknown",
+          },
+        }}
+      />,
+    );
+
+    expect(
+      screen.getByText(/Scheduled worker is disabled for this topology\./),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Temporal scheduling is disabled for this topology."),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/Snapshot unavailable/)).not.toBeInTheDocument();
   });
 
   it("renders stale Temporal snapshots as unknown while preserving their collection time", () => {

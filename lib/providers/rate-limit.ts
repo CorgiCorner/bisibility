@@ -52,8 +52,10 @@ export function providerRateLimitPolicy(providerId: string): ProviderPolicy {
   };
 }
 
+/** Returns a deterministic, non-secret rate-limit bucket identifier. */
+// codeql[js/insufficient-password-hash] -- Non-authentication rate-limit bucket fingerprint.
 function rateLimitBucketFingerprint(value: string) {
-  // codeql[js/insufficient-password-hash] -- Non-authentication rate-limit bucket fingerprint.
+  // Truncation is intentional: collisions only share a bucket, and width changes reset live counters.
   return createHash("sha256").update(value).digest("hex").slice(0, 16);
 }
 

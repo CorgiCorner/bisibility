@@ -3,7 +3,7 @@ import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import { isProjectReadOnly } from "@/lib/deployment/project-write-mode";
 import { RECONCILER_SCHEDULE_ID } from "@/lib/temporal/bootstrap";
-import { getTemporalClient } from "@/lib/temporal/client";
+import { getSchedulerTemporalClient } from "@/lib/temporal/scheduler-client";
 import type { ReconcileResult } from "./reconcile-result";
 import { isScheduledFrequency, type RankCheckScheduleInput } from "./schedule";
 import { legacySchedulingAllowed } from "./scheduler-mode";
@@ -66,7 +66,7 @@ async function scheduleClient(
     return client;
   }
 
-  return (await getTemporalClient()).schedule as unknown as ReconcilerScheduleClient;
+  return (await getSchedulerTemporalClient()).schedule as unknown as ReconcilerScheduleClient;
 }
 
 type IntentSweep = {

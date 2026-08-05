@@ -38,13 +38,35 @@ test("accepts an exact main, tag, workflow run, and ci-ok job", async () => {
   assert.equal(result.state, "success");
 });
 
-test("accepts legacy verification when no origin SHA is available", async () => {
+test("rejects a missing origin SHA unless diagnostic mode is explicit", async () => {
+  await assert.rejects(
+    verifyPublicReleaseSource({
+      api: apiFixture({ originSha: "b".repeat(40) }),
+      sha,
+      wait: false,
+    }),
+    /origin SHA is required/,
+  );
+
   const result = await verifyPublicReleaseSource({
+    allowMissingOrigin: true,
     api: apiFixture({ originSha: "b".repeat(40) }),
     sha,
     wait: false,
   });
   assert.equal(result.state, "success");
+});
+
+test("accepts a bound source before public CI completes when explicitly requested", async () => {
+  const result = await verifyPublicReleaseSource({
+    api: apiFixture({ status: "in_progress" }),
+    originSha: sha,
+    sha,
+    sourceOnly: true,
+    tag: "v0.3.1",
+    wait: false,
+  });
+  assert.equal(result.state, "source-only");
 });
 
 test("rejects a mismatched or missing Copybara origin revision", async () => {
@@ -71,12 +93,18 @@ test("rejects a mismatched or missing Copybara origin revision", async () => {
 
 test("rejects a public main or tag pointing at another commit", async () => {
   await assert.rejects(
-    verifyPublicReleaseSource({ api: apiFixture({ mainSha: "b".repeat(40) }), sha, wait: false }),
+    verifyPublicReleaseSource({
+      api: apiFixture({ mainSha: "b".repeat(40) }),
+      originSha: sha,
+      sha,
+      wait: false,
+    }),
     /Public main/,
   );
   await assert.rejects(
     verifyPublicReleaseSource({
       api: apiFixture({ tagSha: "b".repeat(40) }),
+      originSha: sha,
       sha,
       tag: "v0.3.1",
       wait: false,
@@ -99,6 +127,7 @@ test("waits for the pushed public main ref to become visible", async () => {
 
   const result = await verifyPublicReleaseSource({
     api,
+    originSha: sha,
     pause: async (milliseconds) => pauses.push(milliseconds),
     sha,
     wait: true,
@@ -111,18 +140,31 @@ test("waits for the pushed public main ref to become visible", async () => {
 test("rejects missing, pending, and failed public CI", async () => {
   const missingApi = async (path) => {
     if (path === "/git/ref/heads/main") return { object: { sha } };
+    if (path === `/git/commits/${sha}`) {
+      return { message: `chore(release): v0.3.1\n\nGitOrigin-RevId: ${sha}` };
+    }
     return { workflow_runs: [] };
   };
   await assert.rejects(
-    verifyPublicReleaseSource({ api: missingApi, sha, wait: false }),
+    verifyPublicReleaseSource({ api: missingApi, originSha: sha, sha, wait: false }),
     /Public CI is missing/,
   );
   await assert.rejects(
-    verifyPublicReleaseSource({ api: apiFixture({ status: "in_progress" }), sha, wait: false }),
+    verifyPublicReleaseSource({
+      api: apiFixture({ status: "in_progress" }),
+      originSha: sha,
+      sha,
+      wait: false,
+    }),
     /Public CI is pending/,
   );
   await assert.rejects(
-    verifyPublicReleaseSource({ api: apiFixture({ conclusion: "failure" }), sha, wait: false }),
+    verifyPublicReleaseSource({
+      api: apiFixture({ conclusion: "failure" }),
+      originSha: sha,
+      sha,
+      wait: false,
+    }),
     /Public CI failed/,
   );
 });

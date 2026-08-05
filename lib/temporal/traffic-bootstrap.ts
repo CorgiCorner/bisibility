@@ -7,7 +7,8 @@ import {
   ScheduleOverlapPolicy,
   type ScheduleSpec,
 } from "@temporalio/client";
-import { getTemporalClient, TEMPORAL_TASK_QUEUE } from "./client";
+import { TEMPORAL_TASK_QUEUE } from "./client";
+import { getSchedulerTemporalClient } from "./scheduler-client";
 
 export const TRAFFIC_SYNC_SCHEDULE_ID = "maintenance-traffic-sync";
 export const TRAFFIC_SYNC_WORKFLOW_TYPE = "syncTrafficWorkflow";
@@ -78,7 +79,7 @@ export async function ensureTrafficSyncSchedule(
   }
 
   try {
-    const temporal = client ?? (await getTemporalClient()).schedule;
+    const temporal = client ?? (await getSchedulerTemporalClient()).schedule;
     await temporal.create(buildTrafficSyncScheduleOptions());
     return { scheduleId: TRAFFIC_SYNC_SCHEDULE_ID, status: "created" };
   } catch (error) {

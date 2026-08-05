@@ -35,7 +35,7 @@ migrations report `ready`; otherwise it returns `503`. Worker heartbeat,
 Temporal, and worker-schema parity do not decide web readiness because reads can
 still be served while those asynchronous subsystems are unavailable.
 
-Both the `200` and `503` responses contain only aggregate status:
+Both the `200` and `503` responses contain aggregate status only:
 
 ```json
 { "status": "degraded" }
@@ -97,17 +97,22 @@ Detailed response:
     ]
   },
   "liveness": "ok",
+  "rank_check_scheduler_mode": "legacy",
   "readiness": "ok",
+  "scheduler_driver": "temporal",
   "services": {
     "app": "ok",
     "appRelease": "0.2.1",
     "appRevision": "0123456789abcdef0123456789abcdef01234567",
+    "appSchedulerDriver": "temporal",
     "database": "ok",
     "migrations": "ready",
+    "schedulerConfiguration": "ok",
     "temporal": "ok",
     "worker": "ok",
     "workerRelease": "0.2.1",
     "workerRevision": "0123456789abcdef0123456789abcdef01234567",
+    "workerSchedulerDriver": "temporal",
     "workerSchema": "ok"
   },
   "status": "ok"
@@ -127,6 +132,13 @@ schema. Anonymous clients and official SDK probe methods receive only
 revision baked into each artifact. They are `"unknown"` when the build did not
 provide `APP_REVISION`. Runtime environment overrides cannot change the reported
 revision after the artifact is built.
+
+`scheduler_driver` distinguishes a core deployment (`none`) from Temporal
+scheduling (`temporal`) and legacy compatibility (`legacy-auto`). In core mode,
+the detailed `worker` and `temporal` service states are `disabled`, not failed.
+Invalid scheduler configuration reports `invalid` and degrades the probes. A
+fresh worker heartbeat carrying a different driver reports
+`schedulerConfiguration: "driver-mismatch"` and also degrades health.
 
 `services.migrations` answers whether blocking data migrations have finished
 with their expected checksums and whether the public ID database contract is
@@ -159,6 +171,8 @@ Response:
 ```json
 {
   "apiVersions": ["v1"],
+  "rank_check_scheduler_mode": "legacy",
+  "scheduler_driver": "temporal",
   "data": [
     {
       "name": "listKeywords",
@@ -172,7 +186,9 @@ Response:
 }
 ```
 
-`apiVersions` is the set of API contracts this server serves. It belongs here
+`apiVersions` is the set of API contracts this server serves.
+`scheduler_driver` reports the execution backend available to API clients, and
+`rank_check_scheduler_mode` reports automatic scheduling ownership. They belong here
 because capabilities is the machine-readable contract discovery surface.
 `/health`, `/liveness`, and `/readiness` remain operational probes and do not
 duplicate API compatibility state.

@@ -117,9 +117,10 @@ describe("provider crypto", () => {
   });
 
   it("hashes and verifies issued API keys without storing the raw key", () => {
-    const raw = "bisi_live_secret";
+    const raw = "bsb_key_test_e2e_quickstart_0001";
     const hash = hashApiKey(raw);
 
+    expect(hash).toBe("sha256:3f9b1339a5372cb2c24f68bc228ed3805caad109fcdafdb1ae39f179ec5adaf5");
     expect(hash).not.toContain(raw);
     expect(verifyApiKey(raw, hash)).toBe(true);
     expect(verifyApiKey("wrong", hash)).toBe(false);

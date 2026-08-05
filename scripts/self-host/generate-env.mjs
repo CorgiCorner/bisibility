@@ -53,8 +53,10 @@ function run() {
   let contents = readFileSync(template, "utf8");
   const origin = siteUrl.origin;
   contents = replace(contents, "POSTGRES_PASSWORD", randomBytes(24).toString("hex"));
+  contents = replace(contents, "TEMPORAL_POSTGRES_PASSWORD", randomBytes(24).toString("hex"));
   contents = replace(contents, "BETTER_AUTH_SECRET", randomBytes(32).toString("base64"));
   contents = replace(contents, "BISIBILITY_SECRETS_KEY", randomBytes(32).toString("base64"));
+  contents = replace(contents, "BISIBILITY_DEPLOYMENT_SUFFIX", randomBytes(4).toString("hex"));
   contents = replace(contents, "SITE_URL", origin);
   contents = replace(contents, "BETTER_AUTH_URL", origin);
   contents = replace(contents, "DEPLOYMENT_ENV", "production");

@@ -1,6 +1,7 @@
+import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { StorybookConfig } from "@storybook/nextjs";
-import webpack from "webpack";
+import type { StorybookConfig } from "@storybook/nextjs-vite";
+import type { Plugin } from "vite";
 
 const runtimeStubs = fileURLToPath(new URL("./browser-runtime-stubs.tsx", import.meta.url));
 const prismaRuntimeStub = fileURLToPath(new URL("./prisma-runtime-stub.ts", import.meta.url));
@@ -56,96 +57,109 @@ const prismaRuntimeStubPatterns = [
   /[\\/]lib[\\/]db[\\/]prisma\.ts$/,
   /[\\/]lib[\\/]generated[\\/]prisma[\\/]client\.ts$/,
 ];
+const nodeRuntimeStubPattern = /^node:(async_hooks|crypto|dns\/promises|net|tls)$/;
+
+const runtimeAliases = {
+  ...Object.fromEntries(serverActionAliases.map((name) => [name, runtimeStubs])),
+  "@/components/shell/keyword-search": runtimeStubs,
+  "@/lib/auth/auth": runtimeStubs,
+  "@/lib/auth/client": runtimeStubs,
+  "@/lib/auth/otp-resend": runtimeStubs,
+  "@/lib/api/ratelimit": runtimeStubs,
+  "@/lib/auth/session": runtimeStubs,
+  "@/lib/db/prisma": prismaRuntimeStub,
+  "@/lib/generated/prisma/client": prismaRuntimeStub,
+  "@/lib/redis/redis": runtimeStubs,
+  "@/lib/queries/notifications": runtimeStubs,
+  "@upstash/ratelimit": runtimeStubs,
+  "@upstash/redis": runtimeStubs,
+  "@grpc/grpc-js": runtimeStubs,
+  "@temporalio/activity": runtimeStubs,
+  "@temporalio/client": runtimeStubs,
+  "@temporalio/common": runtimeStubs,
+  "@temporalio/worker": runtimeStubs,
+  "@temporalio/workflow": runtimeStubs,
+  async_hooks: runtimeStubs,
+  "client-only": runtimeStubs,
+  crypto: runtimeStubs,
+  "geist/font/mono": fontStub,
+  "geist/font/sans": fontStub,
+  net: runtimeStubs,
+  "next/cache": runtimeStubs,
+  "next/font/google": fontStub,
+  "next/font/local": fontStub,
+  "next/headers": runtimeStubs,
+  "next/image": imageStub,
+  "next/link": runtimeStubs,
+  "next/navigation": runtimeStubs,
+  "node:async_hooks": runtimeStubs,
+  "node:crypto": runtimeStubs,
+  "node:dns/promises": runtimeStubs,
+  "node:net": runtimeStubs,
+  "node:tls": runtimeStubs,
+  redis: runtimeStubs,
+  "server-only": runtimeStubs,
+  tls: runtimeStubs,
+};
+
+function candidateModuleIds(source: string, importer?: string): string[] {
+  const cleanSource = source.split("?", 1)[0];
+  if (!(importer && cleanSource.startsWith("."))) {
+    return [cleanSource];
+  }
+
+  const importerPath = importer.split("?", 1)[0];
+  const absoluteSource = resolve(dirname(importerPath), cleanSource);
+  return [cleanSource, absoluteSource, `${absoluteSource}.ts`, `${absoluteSource}.tsx`];
+}
+
+function matchesAny(patterns: RegExp[], candidates: string[]): boolean {
+  return patterns.some((pattern) => candidates.some((candidate) => pattern.test(candidate)));
+}
+
+const runtimeStubPlugin = {
+  name: "storybook-runtime-stubs",
+  enforce: "pre",
+  resolveId(source, importer) {
+    const candidates = candidateModuleIds(source, importer);
+
+    if (
+      serverActionPattern.test(source) ||
+      nodeRuntimeStubPattern.test(source) ||
+      matchesAny(runtimeStubPatterns, candidates)
+    ) {
+      return runtimeStubs;
+    }
+
+    if (matchesAny(prismaRuntimeStubPatterns, candidates)) {
+      return prismaRuntimeStub;
+    }
+
+    return null;
+  },
+} satisfies Plugin;
 
 const config: StorybookConfig = {
   stories: ["../components/**/*.stories.@(ts|tsx)"],
-  addons: ["@storybook/addon-essentials"],
   framework: {
-    name: "@storybook/nextjs",
+    name: "@storybook/nextjs-vite",
     options: {},
   },
-  core: {
-    builder: {
-      name: "@storybook/builder-webpack5",
-      options: {
-        fsCache: false,
-      },
-    },
-  },
-  docs: {
-    autodocs: "tag",
-  },
-  webpackFinal: async (webpackConfig) => {
-    webpackConfig.resolve ??= {};
-    webpackConfig.resolve.alias = {
-      ...(webpackConfig.resolve.alias ?? {}),
-      ...Object.fromEntries(serverActionAliases.map((name) => [name, runtimeStubs])),
-      "@/components/shell/keyword-search": runtimeStubs,
-      "@/lib/auth/auth": runtimeStubs,
-      "@/lib/auth/client": runtimeStubs,
-      "@/lib/auth/otp-resend": runtimeStubs,
-      "@/lib/api/ratelimit": runtimeStubs,
-      "@/lib/auth/session": runtimeStubs,
-      "@/lib/db/prisma": prismaRuntimeStub,
-      "@/lib/generated/prisma/client": prismaRuntimeStub,
-      "@/lib/redis/redis": runtimeStubs,
-      "@/lib/queries/notifications": runtimeStubs,
-      "@upstash/ratelimit": runtimeStubs,
-      "@upstash/redis": runtimeStubs,
-      "@grpc/grpc-js": runtimeStubs,
-      "@temporalio/activity": runtimeStubs,
-      "@temporalio/client": runtimeStubs,
-      "@temporalio/common": runtimeStubs,
-      "@temporalio/worker": runtimeStubs,
-      "@temporalio/workflow": runtimeStubs,
-      crypto: runtimeStubs,
-      "geist/font/mono": fontStub,
-      "geist/font/sans": fontStub,
-      async_hooks: runtimeStubs,
-      net: runtimeStubs,
-      "node:async_hooks": runtimeStubs,
-      "node:crypto": runtimeStubs,
-      "node:dns/promises": runtimeStubs,
-      "node:net": runtimeStubs,
-      "next/cache": runtimeStubs,
-      "next/font/google": fontStub,
-      "next/font/local": fontStub,
-      "next/headers": runtimeStubs,
-      "next/image": imageStub,
-      "next/link": runtimeStubs,
-      "next/navigation": runtimeStubs,
-      redis: runtimeStubs,
-      "server-only": runtimeStubs,
-      "client-only": runtimeStubs,
-    };
-    webpackConfig.resolve.fallback = {
-      ...(webpackConfig.resolve.fallback ?? {}),
-      crypto: false,
-      net: false,
-      tls: false,
-    };
-    webpackConfig.performance = {
-      ...(webpackConfig.performance ?? {}),
-      hints: false,
-    };
-    webpackConfig.plugins ??= [];
-    webpackConfig.plugins.push(
-      new webpack.NormalModuleReplacementPlugin(serverActionPattern, runtimeStubs),
-    );
-    for (const pattern of runtimeStubPatterns) {
-      webpackConfig.plugins.push(new webpack.NormalModuleReplacementPlugin(pattern, runtimeStubs));
-    }
-    for (const pattern of prismaRuntimeStubPatterns) {
-      webpackConfig.plugins.push(
-        new webpack.NormalModuleReplacementPlugin(pattern, prismaRuntimeStub),
-      );
-    }
-    webpackConfig.plugins.push(
-      new webpack.NormalModuleReplacementPlugin(/^node:(async_hooks|crypto|net)$/, runtimeStubs),
-      new webpack.NormalModuleReplacementPlugin(/^node:dns\/promises$/, runtimeStubs),
-    );
+  viteFinal: async (viteConfig) => {
+    viteConfig.resolve ??= {};
+    const existingAliases = viteConfig.resolve.alias;
+    viteConfig.resolve.alias = Array.isArray(existingAliases)
+      ? [
+          ...Object.entries(runtimeAliases).map(([find, replacement]) => ({
+            find,
+            replacement,
+          })),
+          ...existingAliases,
+        ]
+      : { ...(existingAliases ?? {}), ...runtimeAliases };
+    viteConfig.plugins = [runtimeStubPlugin, ...(viteConfig.plugins ?? [])];
 
-    return webpackConfig;
+    return viteConfig;
   },
 };
 

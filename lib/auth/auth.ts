@@ -267,7 +267,11 @@ export const auth = betterAuth({
       allowDynamicClientRegistration: true,
       allowUnauthenticatedClientRegistration: true,
       scopes: [...oidcScopes],
-      validAudiences: [AUTH_URL, MCP_RESOURCE_URL],
+      // GHSA-p2fr-6hmx-4528: on this provider line a grant or refresh token bound to one
+      // allowed audience can be exchanged for a token addressed to another allowed audience.
+      // Listing exactly one resource removes the second audience to switch to. Keep this list
+      // at one entry until the provider gains per-client resource binding.
+      validAudiences: [MCP_RESOURCE_URL],
     }),
     authAuditPlugin,
     emailOtpTwoFactorPlugin,

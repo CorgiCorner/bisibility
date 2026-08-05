@@ -10,6 +10,7 @@ import {
   rankCheckSchedulerMode,
 } from "@/lib/rank-check/scheduler-mode";
 import { getRedisClient } from "@/lib/redis/redis";
+import { type ResolvedSchedulerDriver, schedulerDriver } from "@/lib/scheduler/driver";
 
 export const WORKER_LAST_SEEN_KEY = "ops:worker:lastSeen";
 export const WORKER_LIVENESS_REFRESH_MS = 5 * 60 * 1000;
@@ -28,6 +29,7 @@ export type WorkerLiveness = {
   lastSeenAt: string | null;
   release: string;
   revision: string;
+  schedulerDriver: ResolvedSchedulerDriver | "unknown";
   schedulerMode: RankCheckSchedulerMode | "unknown";
   schemaComparison: MigrationComparison;
   status: WorkerLivenessStatus;
@@ -40,6 +42,7 @@ type WorkerLivenessRecord = {
   lastSeenAt: string;
   release: string;
   revision: string;
+  schedulerDriver: ResolvedSchedulerDriver | "unknown";
   schedulerMode: RankCheckSchedulerMode | "unknown";
   schemaComparison: MigrationComparison;
 };
@@ -67,6 +70,7 @@ function unknownLiveness(): WorkerLiveness {
     lastSeenAt: null,
     release: "unknown",
     revision: "unknown",
+    schedulerDriver: "unknown",
     schedulerMode: "unknown",
     schemaComparison: "unknown",
     status: "unknown",
@@ -92,6 +96,12 @@ function parseLivenessRecord(raw: string): WorkerLivenessRecord | null {
       lastSeenAt: value.lastSeenAt,
       release: typeof value.release === "string" ? value.release : "unknown",
       revision: typeof value.revision === "string" ? value.revision : "unknown",
+      schedulerDriver:
+        value.schedulerDriver === "temporal" ||
+        value.schedulerDriver === "none" ||
+        value.schedulerDriver === "legacy-auto"
+          ? value.schedulerDriver
+          : "unknown",
       schedulerMode:
         value.schedulerMode === "legacy" ||
         value.schedulerMode === "cutover" ||
@@ -110,6 +120,7 @@ function parseLivenessRecord(raw: string): WorkerLivenessRecord | null {
           lastSeenAt: raw,
           release: "unknown",
           revision: "unknown",
+          schedulerDriver: "unknown",
           schedulerMode: "unknown",
           schemaComparison: "unknown",
         }
@@ -152,6 +163,7 @@ export async function refreshWorkerLiveness(now = new Date()): Promise<void> {
         lastSeenAt: now.toISOString(),
         release: workerRelease(),
         revision: getBakedAppRevision(),
+        schedulerDriver: schedulerDriver(),
         schedulerMode: rankCheckSchedulerMode(),
       } satisfies WorkerLivenessRecord),
     );
@@ -191,6 +203,7 @@ export async function getWorkerLivenessDetails(now = new Date()): Promise<Worker
       lastSeenAt: new Date(lastSeen).toISOString(),
       release: record.release,
       revision: record.revision,
+      schedulerDriver: record.schedulerDriver,
       schedulerMode: record.schedulerMode,
       schemaComparison: record.schemaComparison,
       status: heartbeatState === "fresh" ? "ok" : heartbeatState === "stale" ? "stale" : "unknown",

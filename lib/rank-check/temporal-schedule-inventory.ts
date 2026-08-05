@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createHash } from "node:crypto";
-import { getTemporalClient } from "@/lib/temporal/client";
+import { getSchedulerTemporalClient } from "@/lib/temporal/scheduler-client";
 import type { Client, ScheduleDescription } from "@temporalio/client";
 import { classifyRankCheckSchedule, listSummaryContradiction } from "./temporal-schedule-ownership";
 import type { RankCheckScheduleInventory } from "./temporal-schedule-retirement";
@@ -31,7 +31,7 @@ export async function inventoryRankCheckSchedules(
   pageSize: number,
   injectedClient?: ScheduleInventoryClient,
 ): Promise<RankCheckScheduleInventory> {
-  const client = injectedClient ?? (await getTemporalClient()).schedule;
+  const client = injectedClient ?? (await getSchedulerTemporalClient()).schedule;
   const ambiguousIds: string[] = [];
   const ownedIds: string[] = [];
   const pausedOwnedIds: string[] = [];
@@ -105,7 +105,7 @@ export async function pauseOwnedRankCheckSchedule(
   scheduleId: string,
   injectedClient?: ScheduleInventoryClient,
 ) {
-  const client = injectedClient ?? (await getTemporalClient()).schedule;
+  const client = injectedClient ?? (await getSchedulerTemporalClient()).schedule;
   const description = await ownedDescription(scheduleId, client);
   if (!description) return "absent";
   if (description.state.paused) return "already_paused";
@@ -117,13 +117,13 @@ export async function deleteOwnedRankCheckSchedule(
   scheduleId: string,
   injectedClient?: ScheduleInventoryClient,
 ) {
-  const client = injectedClient ?? (await getTemporalClient()).schedule;
+  const client = injectedClient ?? (await getSchedulerTemporalClient()).schedule;
   if (!(await ownedDescription(scheduleId, client))) return "absent";
   await client.getHandle(scheduleId).delete();
   return "deleted";
 }
 
 export async function countTemporalSystemSchedulers(injectedClient?: Client) {
-  const client = injectedClient ?? (await getTemporalClient());
+  const client = injectedClient ?? (await getSchedulerTemporalClient());
   return (await client.workflow.count(TEMPORAL_SYSTEM_SCHEDULER_QUERY)).count;
 }

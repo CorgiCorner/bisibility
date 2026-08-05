@@ -34,9 +34,13 @@ const prisma = withPublicIdWrites(
   }),
 );
 const API_KEY_PREFIX_LENGTH = 21;
+const ENV_SEEDED_API_KEY_MIN_BODY_LENGTH = 19;
+const ENV_SEEDED_API_KEY_PREFIXES = ["bsb_key_live_", "bsb_key_test_"] as const;
 const ENV_SEEDED_API_KEY_NAME = "E2E examples key (env-seeded)";
 const CLI_OAUTH_CLIENT_ID = "bisibility-cli";
 
+/** Derives a deterministic, non-secret fixture identifier from seed material. */
+// codeql[js/insufficient-password-hash] -- Deterministic seed identifier, not password verification.
 function seededPublicId(prefix: PublicIdPrefix, key: string) {
   return `${prefix}_a${createHash("sha256").update(key).digest("hex").slice(0, 23)}`;
 }
@@ -107,13 +111,18 @@ async function upsertApiKey({
 }
 
 function validateEnvSeededApiKey(raw: string) {
-  if (!raw.startsWith("bsb_key_")) {
-    throw new Error("BISIBILITY_SEED_API_KEY must start with bsb_key_.");
+  const prefix = ENV_SEEDED_API_KEY_PREFIXES.find((candidate) => raw.startsWith(candidate));
+  if (!prefix) {
+    throw new Error("BISIBILITY_SEED_API_KEY must start with bsb_key_live_ or bsb_key_test_.");
   }
-  if (raw.length <= API_KEY_PREFIX_LENGTH) {
+  const body = raw.slice(prefix.length);
+  if (body.length < ENV_SEEDED_API_KEY_MIN_BODY_LENGTH) {
     throw new Error(
-      `BISIBILITY_SEED_API_KEY must be longer than ${API_KEY_PREFIX_LENGTH} characters.`,
+      `BISIBILITY_SEED_API_KEY body must be at least ${ENV_SEEDED_API_KEY_MIN_BODY_LENGTH} characters.`,
     );
+  }
+  if (!/^[A-Za-z0-9_-]+$/.test(body)) {
+    throw new Error("BISIBILITY_SEED_API_KEY body must contain only A-Z, a-z, 0-9, _, or -.");
   }
 }
 

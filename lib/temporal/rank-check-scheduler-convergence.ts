@@ -8,8 +8,8 @@ import {
   ensureReconcilerSchedule,
   RECONCILER_SCHEDULE_ID,
 } from "./bootstrap";
-import { getTemporalClient } from "./client";
 import { ensureRankCheckDispatcherSchedule } from "./rank-check-dispatcher-bootstrap";
+import { getSchedulerTemporalClient } from "./scheduler-client";
 
 export type RankCheckSingletonRetirementStatus = "absent" | "already_paused" | "paused";
 
@@ -57,7 +57,8 @@ export async function convergeRankCheckSchedulerSingletons(
 ): Promise<RankCheckSingletonConvergenceResult> {
   const mode = rankCheckSchedulerMode();
   const client =
-    injectedClient ?? ((await getTemporalClient()).schedule as RankCheckSchedulerConvergenceClient);
+    injectedClient ??
+    ((await getSchedulerTemporalClient()).schedule as RankCheckSchedulerConvergenceClient);
 
   if (mode === "legacy") {
     const dispatcher = await retireSingleton(client, RANK_CHECK_DISPATCHER_SCHEDULE_ID);
