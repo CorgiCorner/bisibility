@@ -13,6 +13,7 @@ import { getWorkerLivenessDetails, type WorkerLiveness } from "@/lib/ops/livenes
 import { getTemporalSnapshot } from "@/lib/ops/temporal-snapshot";
 import { monthStartUtc } from "@/lib/rank-check/budget";
 import { aggregateProviderReferenceUsage } from "@/lib/rank-check/reference-usage";
+import { schedulerDriver } from "@/lib/scheduler/driver";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -74,6 +75,7 @@ const unavailableWorker: WorkerLiveness = {
   lastSeenAt: null,
   release: "unknown",
   revision: "unknown",
+  schedulerDriver: "unknown",
   schedulerMode: "unknown",
   schemaComparison: "unknown",
   status: "unknown",
@@ -123,6 +125,7 @@ export async function getInstanceAdminDashboard(now = new Date()) {
   const oneDayAgo = new Date(now.getTime() - DAY_MS);
   const sevenDaysAgo = new Date(now.getTime() - 7 * DAY_MS);
   const opsConfig = getOpsConfig();
+  const driver = schedulerDriver();
   const [
     workerResult,
     databaseResult,
@@ -132,11 +135,16 @@ export async function getInstanceAdminDashboard(now = new Date()) {
     presenceResult,
     statsResult,
   ] = await Promise.all([
-    loadDashboardSection(
-      "worker heartbeat",
-      () => getWorkerLivenessDetails(now),
-      unavailableWorker,
-    ),
+    driver === "none"
+      ? Promise.resolve({
+          available: true,
+          data: { ...unavailableWorker, schedulerDriver: "none" as const },
+        })
+      : loadDashboardSection(
+          "worker heartbeat",
+          () => getWorkerLivenessDetails(now),
+          unavailableWorker,
+        ),
     loadDashboardSection(
       "operational heartbeat",
       () => collectOperationalHeartbeat(now),
@@ -148,7 +156,9 @@ export async function getInstanceAdminDashboard(now = new Date()) {
         collectRankHeartbeatWindows(now, { rank24h: oneDayAgo, rank7d: sevenDaysAgo }, ["rank24h"]),
       { rank24h: unavailableRankHeartbeat, rank7d: unavailableRankHeartbeat },
     ),
-    loadDashboardSection("Temporal snapshot", () => getTemporalSnapshot(now), null),
+    driver === "none"
+      ? Promise.resolve({ available: true, data: null })
+      : loadDashboardSection("Temporal snapshot", () => getTemporalSnapshot(now), null),
     loadDashboardSection(
       "ops events",
       () =>
@@ -242,7 +252,10 @@ export async function getInstanceAdminDashboard(now = new Date()) {
       bootstrapErrors: database.bootstrapErrors,
       collectedAt: temporalSnapshot?.collectedAt ?? null,
       heartbeat: temporalSnapshot?.heartbeat ?? null,
-      status: temporalSnapshot?.status ?? ("unavailable" as const),
+      status:
+        driver === "none"
+          ? ("disabled" as const)
+          : (temporalSnapshot?.status ?? ("unavailable" as const)),
     },
     worker,
   };

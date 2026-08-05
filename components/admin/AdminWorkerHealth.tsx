@@ -33,6 +33,10 @@ export function AdminWorkerHealth({
     >
       {!available ? (
         <AdminSectionUnavailable>Worker diagnostics are unavailable.</AdminSectionUnavailable>
+      ) : worker.schedulerDriver === "none" ? (
+        <AdminSectionUnavailable>
+          Scheduled worker is disabled for this topology.
+        </AdminSectionUnavailable>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <Metric label="Status" value={<Badge status={worker.status} />} />
@@ -42,6 +46,7 @@ export function AdminWorkerHealth({
           />
           <Metric label="Release" value={<MonoText>{worker.release}</MonoText>} />
           <Metric label="Environment" value={<MonoText>{worker.environment}</MonoText>} />
+          <Metric label="Scheduler driver" value={<MonoText>{worker.schedulerDriver}</MonoText>} />
           <Metric
             label="Schema status"
             value={<Badge status={schema.tone}>{schema.label}</Badge>}

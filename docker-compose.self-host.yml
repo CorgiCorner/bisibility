@@ -100,7 +100,7 @@ x-app-env: &app-env
 
 services:
   db-migrations:
-    image: docker.io/corgicorner/bisibility:0.3.5
+    image: docker.io/corgicorner/bisibility:0.4.0
     pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     command: >
       sh -c 'npm run db:migrate && if [ "$$DEMO_FIXED_OTP" = "1" ]; then node --experimental-strip-types prisma/seed.ts; fi'
@@ -110,7 +110,7 @@ services:
         condition: service_healthy
 
   app:
-    image: docker.io/corgicorner/bisibility:0.3.5
+    image: docker.io/corgicorner/bisibility:0.4.0
     pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     restart: unless-stopped
     ports:
@@ -147,7 +147,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: temporal
-      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}"
+      POSTGRES_PASSWORD: "${TEMPORAL_POSTGRES_PASSWORD:-${POSTGRES_PASSWORD:?Set TEMPORAL_POSTGRES_PASSWORD or POSTGRES_PASSWORD in .env}}"
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U temporal -d temporal" ]
       interval: 5s
@@ -160,7 +160,6 @@ services:
   temporal-schema:
     image: temporalio/admin-tools:1.31.2
     profiles: [ "scheduled" ]
-    user: "0:0"
     restart: "no"
     depends_on:
       temporal-postgres:
@@ -169,10 +168,8 @@ services:
       DB: postgres12
       DB_PORT: 5432
       POSTGRES_USER: temporal
-      POSTGRES_PWD: "${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}"
+      POSTGRES_PWD: "${TEMPORAL_POSTGRES_PASSWORD:-${POSTGRES_PASSWORD:?Set TEMPORAL_POSTGRES_PASSWORD or POSTGRES_PASSWORD in .env}}"
       POSTGRES_SEEDS: temporal-postgres
-    volumes:
-      - temporal-dynamic-config:/etc/temporal/config/dynamicconfig
     entrypoint: [ "/bin/sh", "-eu", "-c" ]
     command:
       - |
@@ -206,7 +203,6 @@ services:
           exit 1
         fi
         temporal-sql-tool --db temporal_visibility update-schema -d /etc/temporal/schema/postgresql/v12/visibility/versioned
-        printf '{}\n' > /etc/temporal/config/dynamicconfig/docker.yaml
 
   temporal:
     image: temporalio/server:1.31.2
@@ -220,14 +216,18 @@ services:
       DB: postgres12
       DB_PORT: 5432
       POSTGRES_USER: temporal
-      POSTGRES_PWD: "${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}"
+      POSTGRES_PWD: "${TEMPORAL_POSTGRES_PASSWORD:-${POSTGRES_PASSWORD:?Set TEMPORAL_POSTGRES_PASSWORD or POSTGRES_PASSWORD in .env}}"
       POSTGRES_SEEDS: temporal-postgres
       DBNAME: temporal
       VISIBILITY_DBNAME: temporal_visibility
       NUM_HISTORY_SHARDS: "4"
-      DYNAMIC_CONFIG_FILE_PATH: /etc/temporal/config/dynamicconfig/docker.yaml
-    volumes:
-      - temporal-dynamic-config:/etc/temporal/config/dynamicconfig:ro
+      DYNAMIC_CONFIG_FILE_PATH: /tmp/temporal-dynamic/docker.yaml
+    entrypoint: [ "/bin/sh", "-eu", "-c" ]
+    command:
+      - |
+        mkdir -p /tmp/temporal-dynamic
+        printf '{}\n' > /tmp/temporal-dynamic/docker.yaml
+        exec /etc/temporal/entrypoint.sh
 
   temporal-namespace:
     image: temporalio/admin-tools:1.31.2
@@ -262,7 +262,7 @@ services:
       - "127.0.0.1:${TEMPORAL_UI_HOST_PORT:-8233}:8080"
 
   worker:
-    image: docker.io/corgicorner/bisibility-worker:0.3.5
+    image: docker.io/corgicorner/bisibility-worker:0.4.0
     pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     profiles: [ "scheduled" ]
     restart: unless-stopped
@@ -311,4 +311,3 @@ services:
 volumes:
   postgres-data:
   temporal-postgres-data:
-  temporal-dynamic-config:

@@ -11,7 +11,7 @@ pull request will be closed automatically.
 Where the same work lands instead:
 
 - **Bug** - https://github.com/CorgiCorner/bisibility/issues/new?template=bug_report.yml
-- **Change or feature** - https://github.com/CorgiCorner/bisibility/issues/new?template=feature_spec.yml
+- **Change or feature** - https://github.com/CorgiCorner/bisibility/issues/new?template=feature_request.yml
 - **Not sure yet** - https://github.com/CorgiCorner/bisibility/discussions
 
 Describe the problem rather than sending a patch. A bug report with a minimal

@@ -4,7 +4,9 @@ import { randomUUID } from "node:crypto";
 import { Client, Connection } from "@temporalio/client";
 import type { SearchAttributePair } from "@temporalio/common";
 import { RANK_CHECK_WORKFLOW_TYPE, rankCheckWorkflowId } from "../rank-check/workflow-id";
-import { temporalConnectionOptions } from "./connection-options";
+import { assertTemporalSchedulerEnabled } from "../scheduler/driver";
+import { temporalConnectionOptions, temporalSdkConnectionOptions } from "./connection-options";
+import { temporalDeploymentConfig } from "./deployment-config";
 import {
   type RankCheckSearchAttributeInput,
   rankCheckSearchAttributes,
@@ -15,9 +17,9 @@ import type { RankCheckWorkflowInput, RankCheckWorkflowResult } from "./workflow
 // than by importing the workflow function, so `@temporalio/workflow` and the
 // sandboxed workflow code never get pulled into the Next.js bundle.
 
-export const TEMPORAL_ADDRESS = temporalConnectionOptions().address;
-export const TEMPORAL_NAMESPACE = process.env.TEMPORAL_NAMESPACE ?? "default";
-export const TEMPORAL_TASK_QUEUE = process.env.TEMPORAL_TASK_QUEUE ?? "rank-checks";
+const deploymentConfig = temporalDeploymentConfig();
+export const TEMPORAL_NAMESPACE = deploymentConfig.namespace;
+export const TEMPORAL_TASK_QUEUE = deploymentConfig.taskQueue;
 
 export type { RankCheckSearchAttributeInput };
 export { RANK_CHECK_WORKFLOW_TYPE, rankCheckSearchAttributes, rankCheckWorkflowId };
@@ -25,10 +27,17 @@ export { RANK_CHECK_WORKFLOW_TYPE, rankCheckSearchAttributes, rankCheckWorkflowI
 let clientPromise: Promise<Client> | null = null;
 
 export async function getTemporalClient(): Promise<Client> {
-  clientPromise ??= (async () => {
-    const connection = await Connection.connect(temporalConnectionOptions());
-    return new Client({ connection, namespace: TEMPORAL_NAMESPACE });
-  })();
+  if (!clientPromise) {
+    const options = temporalConnectionOptions();
+    const pending = (async () => {
+      const connection = await Connection.connect(temporalSdkConnectionOptions(options));
+      return new Client({ connection, namespace: TEMPORAL_NAMESPACE });
+    })();
+    clientPromise = pending;
+    void pending.catch(() => {
+      if (clientPromise === pending) clientPromise = null;
+    });
+  }
 
   return clientPromise;
 }
@@ -59,6 +68,7 @@ export async function startRankCheckWorkflow(
   input: RankCheckWorkflowInput,
   options?: { searchAttributes?: SearchAttributePair[]; workflowId?: string },
 ): Promise<StartRankCheckWorkflowResult> {
+  assertTemporalSchedulerEnabled();
   const client = await getTemporalClient();
   const workflowId = options?.workflowId ?? manualRankCheckWorkflowId(input.keywordId);
 

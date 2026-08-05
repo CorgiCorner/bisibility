@@ -1,0 +1,144 @@
+services:
+  app:
+    environment:
+      TEMPORAL_ADDRESS: temporal:7233
+      TEMPORAL_TLS: "false"
+
+  worker:
+    environment:
+      TEMPORAL_ADDRESS: temporal:7233
+      TEMPORAL_TLS: "false"
+    depends_on:
+      temporal-namespace:
+        condition: service_completed_successfully
+
+  temporal-postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: temporal
+      POSTGRES_PASSWORD: "${TEMPORAL_POSTGRES_PASSWORD:-${POSTGRES_PASSWORD:?Set TEMPORAL_POSTGRES_PASSWORD or POSTGRES_PASSWORD in .env}}"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U temporal -d temporal"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    volumes:
+      - temporal-postgres-data:/var/lib/postgresql/data
+
+  temporal-schema:
+    image: temporalio/admin-tools:1.31.2
+    restart: "no"
+    depends_on:
+      temporal-postgres:
+        condition: service_healthy
+    environment:
+      DB: postgres12
+      DB_PORT: 5432
+      POSTGRES_USER: temporal
+      POSTGRES_PWD: "${TEMPORAL_POSTGRES_PASSWORD:-${POSTGRES_PASSWORD:?Set TEMPORAL_POSTGRES_PASSWORD or POSTGRES_PASSWORD in .env}}"
+      POSTGRES_SEEDS: temporal-postgres
+    entrypoint: ["/bin/sh", "-eu", "-c"]
+    command:
+      - |
+        export SQL_PLUGIN="$$DB"
+        export SQL_HOST="$$POSTGRES_SEEDS"
+        export SQL_PORT="$$DB_PORT"
+        export SQL_USER="$$POSTGRES_USER"
+        export SQL_PASSWORD="$$POSTGRES_PWD"
+        ensure_database() {
+          database="$$1"
+          if output=$$(temporal-sql-tool --db "$$database" create 2>&1); then
+            printf '%s\n' "$$output"
+            return 0
+          fi
+          if printf '%s\n' "$$output" | grep -qi 'already exists'; then
+            printf 'Database %s already exists; applying versioned updates.\n' "$$database"
+            return 10
+          fi
+          printf '%s\n' "$$output" >&2
+          return 1
+        }
+        if ensure_database temporal; then
+          temporal-sql-tool --db temporal setup-schema -v 0.0
+        elif [ "$$?" -ne 10 ]; then
+          exit 1
+        fi
+        temporal-sql-tool --db temporal update-schema -d /etc/temporal/schema/postgresql/v12/temporal/versioned
+        if ensure_database temporal_visibility; then
+          temporal-sql-tool --db temporal_visibility setup-schema -v 0.0
+        elif [ "$$?" -ne 10 ]; then
+          exit 1
+        fi
+        temporal-sql-tool --db temporal_visibility update-schema -d /etc/temporal/schema/postgresql/v12/visibility/versioned
+
+  temporal:
+    image: temporalio/server:1.31.2
+    restart: unless-stopped
+    depends_on:
+      temporal-schema:
+        condition: service_completed_successfully
+    environment:
+      BIND_ON_IP: 0.0.0.0
+      DB: postgres12
+      DB_PORT: 5432
+      POSTGRES_USER: temporal
+      POSTGRES_PWD: "${TEMPORAL_POSTGRES_PASSWORD:-${POSTGRES_PASSWORD:?Set TEMPORAL_POSTGRES_PASSWORD or POSTGRES_PASSWORD in .env}}"
+      POSTGRES_SEEDS: temporal-postgres
+      DBNAME: temporal
+      VISIBILITY_DBNAME: temporal_visibility
+      NUM_HISTORY_SHARDS: "4"
+      DYNAMIC_CONFIG_FILE_PATH: /tmp/temporal-dynamic/docker.yaml
+    entrypoint: ["/bin/sh", "-eu", "-c"]
+    command:
+      - |
+        mkdir -p /tmp/temporal-dynamic
+        printf '{}\n' > /tmp/temporal-dynamic/docker.yaml
+        exec /etc/temporal/entrypoint.sh
+
+  temporal-namespace:
+    image: temporalio/admin-tools:1.31.2
+    restart: "no"
+    depends_on:
+      temporal:
+        condition: service_started
+    environment:
+      BISIBILITY_DEPLOYMENT_SUFFIX: ${BISIBILITY_DEPLOYMENT_SUFFIX:-}
+      TEMPORAL_NAMESPACE: ${TEMPORAL_NAMESPACE:-}
+      TEMPORAL_NAMESPACE_RETENTION: ${TEMPORAL_NAMESPACE_RETENTION:-24h}
+    entrypoint: ["/bin/sh", "-eu", "-c"]
+    command:
+      - |
+        namespace="$${TEMPORAL_NAMESPACE:-}"
+        if [ -z "$$namespace" ]; then
+          if [ -z "$${BISIBILITY_DEPLOYMENT_SUFFIX:-}" ]; then
+            echo "Set BISIBILITY_DEPLOYMENT_SUFFIX or TEMPORAL_NAMESPACE." >&2
+            exit 1
+          fi
+          namespace="bisibility-$${BISIBILITY_DEPLOYMENT_SUFFIX}"
+        fi
+        timeout 300 sh -c 'until temporal operator cluster health --address temporal:7233 | grep -q SERVING; do echo "Waiting for the Temporal frontend..."; sleep 2; done'
+        if temporal operator namespace describe --address temporal:7233 --namespace "$$namespace" >/dev/null 2>&1; then
+          echo "Updating retention for the bundled namespace $$namespace to $$TEMPORAL_NAMESPACE_RETENTION."
+          temporal operator namespace update --address temporal:7233 --namespace "$$namespace" --retention "$$TEMPORAL_NAMESPACE_RETENTION"
+        else
+          temporal operator namespace create --address temporal:7233 --namespace "$$namespace" --retention "$$TEMPORAL_NAMESPACE_RETENTION" --description "bisibility application namespace"
+        fi
+        timeout 120 sh -c 'until temporal operator namespace describe --address temporal:7233 --namespace "'"$$namespace"'" >/dev/null 2>&1; do echo "Waiting for the namespace cache..."; sleep 2; done'
+
+  temporal-ui:
+    image: temporalio/ui:2.49.1
+    profiles: ["temporal-ui"]
+    restart: unless-stopped
+    depends_on:
+      temporal-namespace:
+        condition: service_completed_successfully
+    environment:
+      TEMPORAL_ADDRESS: temporal:7233
+      TEMPORAL_CORS_ORIGINS: http://localhost:8233
+    ports:
+      - "127.0.0.1:${TEMPORAL_UI_HOST_PORT:-8233}:8080"
+
+volumes:
+  temporal-postgres-data:

@@ -43,7 +43,7 @@ export default function NotFound() {
         <TerminalBlock
           note="try one of these instead"
           path="/this-page"
-          routes={selfHost ? [appRootPath(), "/login"] : ["/dashboard", "/docs", "/"]}
+          routes={selfHost ? [appRootPath(), "/login"] : [appRootPath(), "/docs", "/"]}
           status="404"
         />
       }

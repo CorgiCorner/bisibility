@@ -20,7 +20,7 @@ This file explains how that roadmap is steered and how to influence it.
 
 This repository is the front door for the whole bisibility surface: the app,
 the public REST API, the MCP server and agent skills, the client libraries,
-and the CLI. File feature specs and ideas here even when they concern a
+and the CLI. File feature requests and ideas here even when they concern a
 client repository such as [bisibility-sdk-ts][sdk-ts] or
 [bisibility-cli][cli]. Bug reports belong in the repository whose code
 misbehaves; when in doubt, file here and triage will route it.
@@ -32,7 +32,7 @@ bisibility is developed with substantial AI-agent assistance.
 The queue is roughly:
 
 1. Correctness and security issues in shipped behavior.
-2. Accepted feature specs with clear acceptance criteria.
+2. Accepted feature requests with clear acceptance criteria.
 3. Everything else, guided by discussions and operator feedback.
 
 What gets built next is driven by how many different people hit the same
@@ -42,18 +42,18 @@ does not.
 
 ## How to Influence the Roadmap
 
-- **Write a [feature spec][spec-form].** An implementation-ready spec is the
-  strongest signal you can send; accepted specs are labeled `spec:accepted`
-  and credited in the release notes when they ship. See
-  [CONTRIBUTING.md](CONTRIBUTING.md#spec-first-contributions) for what makes a
-  spec implementation-ready.
+- **Write a [feature request][request-form].** An implementation-ready
+  request is the strongest signal you can send; accepted requests are labeled
+  `feature:accepted` and may receive changelog credit when they materially
+  shape what ships. See [CONTRIBUTING.md](CONTRIBUTING.md#feature-requests)
+  for what makes a request implementation-ready.
 - **Start an [idea discussion][discussions]** when the proposal is not fully
-  formed yet. Good discussions graduate into specs.
+  formed yet. Good discussions graduate into feature requests.
 - **Report bugs** with a minimal reproduction; correctness work always jumps
   the queue.
-- **React to existing specs.** Thumbs-up reactions are counted during triage.
+- **React to existing requests.** Thumbs-up reactions are counted during triage.
 
-[spec-form]: https://github.com/CorgiCorner/bisibility/issues/new?template=feature_spec.yml
+[request-form]: https://github.com/CorgiCorner/bisibility/issues/new?template=feature_request.yml
 [discussions]: https://github.com/CorgiCorner/bisibility/discussions
 [sdk-ts]: https://github.com/CorgiCorner/bisibility-sdk-ts
 [cli]: https://github.com/CorgiCorner/bisibility-cli

@@ -4045,9 +4045,22 @@
                         "type": "object"
                       },
                       "type": "array"
+                    },
+                    "rank_check_scheduler_mode": {
+                      "enum": ["cutover", "dispatcher", "invalid", "legacy"],
+                      "type": "string"
+                    },
+                    "scheduler_driver": {
+                      "enum": ["invalid", "legacy-auto", "none", "temporal"],
+                      "type": "string"
                     }
                   },
-                  "required": ["apiVersions", "data"],
+                  "required": [
+                    "apiVersions",
+                    "data",
+                    "rank_check_scheduler_mode",
+                    "scheduler_driver"
+                  ],
                   "type": "object"
                 }
               }

@@ -11,20 +11,23 @@ bisibility is developed with substantial AI-agent assistance.
 
 In rough order of leverage:
 
-1. **Feature specs.** Implementation-ready proposals through the
-   [feature spec form][spec-form]. Accepted specs are labeled `spec:accepted`,
-   are usually implemented by the core team, and are credited in the release
-   notes. See [Spec-First Contributions](#spec-first-contributions).
+1. **Feature requests.** From a quick idea to an implementation-ready
+   proposal, through the [feature request form][request-form]. Accepted
+   requests are labeled `feature:accepted`, are usually implemented by the
+   core team, and may receive changelog credit when they materially shape what
+   ships (see [Credits](#credits)). See [Feature Requests](#feature-requests).
 2. **Bug reports.** A minimal reproduction through the
    [bug report form][bug-form] is the fastest path to a fix.
 3. **Ideas and feedback.** Use [GitHub Discussions][discussions] when a
-   proposal is not fully formed yet; good discussions graduate into specs.
+   proposal is not fully formed yet; good discussions graduate into feature
+   requests.
 4. **Docs, examples, and provider know-how.** Corrections, self-hosting notes,
    example configurations, and real-world provider behavior (quotas, SERP
    quirks, locale edge cases) that only operators run into.
-5. **Not pull requests.** This repository does not accept them. See
-   [Pull Requests](#pull-requests) for why, and for where the same work lands
-   instead.
+
+Pull requests are not on this list because this repository does not accept
+them. See [Pull Requests](#pull-requests) for why, and for where the same
+work lands instead.
 
 The [roadmap](ROADMAP.md) explains how all of this feeds into what gets built
 next, including how reactions and engagement on existing issues are weighed
@@ -35,22 +38,24 @@ mean the queue has not been read yet, not that a report was dismissed.
 
 ### One Front Door
 
-File feature specs and ideas in this repository for every part of bisibility:
-the app, the public REST API, the MCP server and agent skills, the client
-libraries, and the CLI. Bug reports belong in the repository whose code
-misbehaves, for example [bisibility-sdk-ts][sdk-ts] or [bisibility-cli][cli];
-when in doubt, file here and triage will route it.
+File feature requests and ideas in this repository for every part of
+bisibility: the app, the public REST API, the MCP server and agent skills,
+the client libraries, and the CLI. Bug reports belong in the repository whose
+code misbehaves, for example [bisibility-sdk-ts][sdk-ts] or
+[bisibility-cli][cli]; when in doubt, file here and triage will route it.
 
-[spec-form]: https://github.com/CorgiCorner/bisibility/issues/new?template=feature_spec.yml
+[request-form]: https://github.com/CorgiCorner/bisibility/issues/new?template=feature_request.yml
 [bug-form]: https://github.com/CorgiCorner/bisibility/issues/new?template=bug_report.yml
 [discussions]: https://github.com/CorgiCorner/bisibility/discussions
 [sdk-ts]: https://github.com/CorgiCorner/bisibility-sdk-ts
 [cli]: https://github.com/CorgiCorner/bisibility-cli
 
-## Spec-First Contributions
+## Feature Requests
 
-A spec describes observable behavior, not implementation; the core team takes
-it from there. A spec is implementation-ready when it answers four questions:
+A feature request describes observable behavior, not implementation; the core
+team takes it from there. Only the problem and the proposed behavior are
+required - a quick idea is a valid request. A request is implementation-ready
+when it answers four questions:
 
 - **Problem.** What are you trying to do that bisibility makes hard today, and
   who hits it?
@@ -61,24 +66,34 @@ it from there. A spec is implementation-ready when it answers four questions:
 - **Boundaries.** What is explicitly out of scope, plus known constraints and
   edge cases (providers, quotas, large keyword sets, self-host vs cloud).
 
-Drafting a spec together with your own AI assistant is welcome and encouraged.
-What matters is that the problem is real for you and that you sanity-check the
-result. Specs move through a simple lifecycle: submitted, discussed in the
-issue, then `spec:accepted` (or declined with a reason), implemented, and
-finally released and credited.
+Implementation-ready requests ship fastest, so filling in the optional fields
+is worth the extra minutes. Drafting a request together with your own AI
+assistant is welcome and encouraged. What matters is that the problem is real
+for you and that you sanity-check the result. Requests move through a simple
+lifecycle: submitted, discussed in the issue, then `feature:accepted` (or
+declined with a reason), implemented, and finally released.
 
 ## Credits
 
-- Code contributions are credited by name in the release notes and in the
-  changelog entry for the release that contains them.
-- Git authorship is preserved in the project's own history when maintainers
-  port an accepted patch. It may also surface publicly through release
-  co-author metadata, but public attribution is not guaranteed.
-- Shipped feature specs are credited in the changelog entry of the release
-  that contains them, for example `keyword group exports (spec by @handle)`.
-- Substantial docs, examples, and triage help are credited the same way.
+This repository receives releases as snapshots (see
+[Snapshot Releases](#snapshot-releases)), so contributor commit authorship
+does not appear in the public git history. The changelog is where public
+credit happens.
 
-Say so in the issue if you prefer not to be credited.
+- Feature requests that materially shape a shipped change may be credited by
+  GitHub handle in the changelog entry for that release, for example
+  `Added keyword group exports (#123, thanks @handle).`
+- Substantial docs, examples, provider know-how, and triage help are credited
+  the same way.
+- In the rare case where the project asks to include code or other material
+  you submitted (see [License](#license)), it is credited the same way. Git
+  authorship is additionally preserved in the development history when
+  maintainers port the material, and may surface through co-author metadata
+  on the public release - that part is best-effort, not guaranteed.
+
+The credit checkbox on the request records your preference; attribution is
+added when the request materially shaped the result. Say so in the issue if
+you prefer not to be credited, or if you would like a different name used.
 
 ## Development Setup
 
@@ -227,8 +242,9 @@ automatically with a pointer to the right form.
 
 This is a capacity decision, and it is easier to state plainly than to dress
 up: a small team cannot run a public review process and ship at the same time,
-so review time goes to specs and bug reports, which turn into shipped code
-faster. Everything the application does is in this repository either way.
+so review time goes to feature requests and bug reports, which turn into
+shipped code faster. Everything the application does is in this repository
+either way.
 
 Describe the problem rather than sending a patch. A bug report with a minimal
 reproduction is enough to get a fix written, including for typos, dead links,

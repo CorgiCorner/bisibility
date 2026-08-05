@@ -178,9 +178,10 @@ whose rates stay high, so keep recipient lists clean.
 The transactional sender is deliberately pluggable, so a self-hosted instance
 can carry its own provider. To get another provider into bisibility itself, do
 not send a pull request - the project does not accept them. Instead,
-[file a feature spec](https://github.com/CorgiCorner/bisibility/issues/new?template=feature_spec.yml)
+[file a feature request](https://github.com/CorgiCorner/bisibility/issues/new?template=feature_request.yml)
 describing the provider, its authentication, and its failure modes; accepted
-specs are implemented by the core team and credited in the release notes.
+requests are implemented by the core team, and requests that materially shape
+what ships may receive changelog credit.
 
 Wiring a provider into your own instance takes four steps:
 
@@ -193,5 +194,5 @@ Wiring a provider into your own instance takes four steps:
 3. Add colocated tests mirroring `lib/email/providers/ses.test.ts`: message
    shape, configuration detection, and error mapping, plus a routing case in
    `lib/email/send.test.ts`.
-4. Forward any new environment variables in `docker-compose.yml` and
+4. Forward any new environment variables in `compose.yaml`, `compose.worker.yaml`, and
    `scripts/deploy/bake-runtime-env.mjs`, and document them in `.env.example`.

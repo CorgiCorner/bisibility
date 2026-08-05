@@ -5,7 +5,7 @@ import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/prisma";
 import { parsePublicId } from "@/lib/db/public-id";
 import { asProjectRef, type ProjectRef } from "@/lib/routing/app-path";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { cache } from "react";
 
 // Collapse repeated RSC session and membership reads per request without caching
@@ -27,10 +27,22 @@ export const getQueryActor = perRequestCache(async (): Promise<Actor> => {
     where: { id: session.user.id },
   });
 
+  // single primary - null means the row is gone, not a lagging replica; revisit before adding read replicas.
+  // A session whose user row is gone is not an actor with no memberships - treating it as one
+  // renders "not found" on every project and hides the real cause. End the session instead.
+  if (!user) {
+    try {
+      await prisma.session.deleteMany({ where: { userId: session.user.id } });
+    } catch {
+      console.error("[auth] Failed to clean up a session for a missing account.");
+    }
+    redirect("/login");
+  }
+
   return {
     id: session.user.id,
-    memberships: user?.memberships ?? [],
-    role: user?.role ?? null,
+    memberships: user.memberships,
+    role: user.role,
   };
 });
 
@@ -76,6 +88,12 @@ export const resolveProjectAccess = perRequestCache(
     publicId: ProjectRef;
     mode: "member";
   }> => {
+    // A ref that is not a project publicId is a construction bug, not a permission problem.
+    // Short-circuit before the query so the 404 that reaches the user means "no access".
+    if (parsePublicId(ref)?.prefix !== "prj") {
+      notFound();
+    }
+
     const actor = await getQueryActor();
     const project = await prisma.project.findUnique({
       select: { id: true, isSample: true, publicId: true },

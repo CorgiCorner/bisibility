@@ -18,7 +18,7 @@ vi.mock("@/lib/data-migrations/readiness", () => ({
   readMigrationReadiness: mocks.migrationReadiness,
 }));
 
-import { getHealth, getLiveness, getReadiness } from "./discovery";
+import { capabilities, getHealth, getLiveness, getReadiness } from "./discovery";
 
 async function result(response: Response | Promise<Response>) {
   const resolved = await response;
@@ -47,6 +47,7 @@ describe("API health worker and Temporal liveness", () => {
     mocks.appRevision.mockReturnValue("app-public-revision");
     vi.stubEnv("APP_VERSION", "app-build-sha");
     vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", "cutover");
+    vi.stubEnv("SCHEDULER_DRIVER", "temporal");
     mocks.migrationReadiness.mockResolvedValue("ready");
     mocks.queryRaw.mockResolvedValue([{ one: 1 }]);
     mocks.liveness.mockResolvedValue({
@@ -56,6 +57,7 @@ describe("API health worker and Temporal liveness", () => {
       lastSeenAt: "2026-07-21T10:08:44.000Z",
       release: "worker-image-sha",
       revision: "worker-public-revision",
+      schedulerDriver: "temporal",
       schedulerMode: "cutover",
       schemaComparison: "ok",
       status: "ok",
@@ -73,6 +75,7 @@ describe("API health worker and Temporal liveness", () => {
         services: {
           app: "ok",
           appRankCheckSchedulerMode: "cutover",
+          appSchedulerDriver: "temporal",
           appRelease: "app-build-sha",
           appRevision: "app-public-revision",
           database: "ok",
@@ -83,8 +86,11 @@ describe("API health worker and Temporal liveness", () => {
           workerRelease: "worker-image-sha",
           workerRevision: "worker-public-revision",
           workerRankCheckSchedulerMode: "cutover",
+          workerSchedulerDriver: "temporal",
           workerSchema: "ok",
         },
+        rank_check_scheduler_mode: "cutover",
+        scheduler_driver: "temporal",
         status: "ok",
       },
       status: 200,
@@ -98,6 +104,7 @@ describe("API health worker and Temporal liveness", () => {
       environment: "worker-production",
       lastSeenAt: "2026-07-21T09:53:43.999Z",
       release: "worker-image-sha",
+      schedulerDriver: "temporal",
       schedulerMode: "cutover",
       schemaComparison: "ok",
       status: "stale",
@@ -128,6 +135,7 @@ describe("API health worker and Temporal liveness", () => {
       environment: "unknown",
       lastSeenAt: null,
       release: "unknown",
+      schedulerDriver: "unknown",
       schedulerMode: "unknown",
       schemaComparison: "unknown",
       status: "unknown",
@@ -150,6 +158,36 @@ describe("API health worker and Temporal liveness", () => {
     });
   });
 
+  it("reports scheduler services as disabled in a core-only deployment", async () => {
+    vi.stubEnv("SCHEDULER_DRIVER", "none");
+    mocks.liveness.mockResolvedValue({
+      appliedMigration: null,
+      bundledMigration: null,
+      environment: "unknown",
+      lastSeenAt: null,
+      release: "unknown",
+      revision: "unknown",
+      schedulerDriver: "unknown",
+      schedulerMode: "unknown",
+      schemaComparison: "unknown",
+      status: "unknown",
+    });
+    mocks.temporalSnapshot.mockResolvedValue(null);
+
+    await expect(health()).resolves.toMatchObject({
+      body: {
+        scheduler_driver: "none",
+        services: {
+          appSchedulerDriver: "none",
+          temporal: "disabled",
+          worker: "disabled",
+        },
+        status: "ok",
+      },
+      status: 200,
+    });
+  });
+
   it("degrades health when the reported worker schema has drifted", async () => {
     mocks.liveness.mockResolvedValue({
       appliedMigration: "20260725010000_newer_database",
@@ -157,6 +195,7 @@ describe("API health worker and Temporal liveness", () => {
       environment: "worker-production",
       lastSeenAt: "2026-07-21T10:08:44.000Z",
       release: "worker-image-sha",
+      schedulerDriver: "temporal",
       schedulerMode: "cutover",
       schemaComparison: "worker-behind",
       status: "ok",
@@ -225,6 +264,7 @@ describe("API health worker and Temporal liveness", () => {
       lastSeenAt: "2026-07-21T09:53:43.999Z",
       release: "worker-image-sha",
       revision: "worker-public-revision",
+      schedulerDriver: "temporal",
       schedulerMode: "cutover",
       schemaComparison: "ok",
       status: "stale",
@@ -252,6 +292,7 @@ describe("API health worker and Temporal liveness", () => {
       lastSeenAt: null,
       release: "unknown",
       revision: "unknown",
+      schedulerDriver: "unknown",
       schedulerMode: "unknown",
       schemaComparison: "unknown",
       status: "unknown",
@@ -270,6 +311,48 @@ describe("API health worker and Temporal liveness", () => {
   it("keeps anonymous composite health details private", async () => {
     const response = await result(getHealth({ headers: new Headers() }));
 
-    expect(response).toEqual({ body: { status: "ok" }, status: 200 });
+    expect(response).toEqual({
+      body: { status: "ok" },
+      status: 200,
+    });
+  });
+
+  it("fails probes readably when the scheduler driver is invalid", async () => {
+    vi.stubEnv("SCHEDULER_DRIVER", "worker");
+
+    await expect(readiness()).resolves.toEqual({ body: { status: "degraded" }, status: 503 });
+    await expect(result(getHealth({ headers: new Headers() }))).resolves.toEqual({
+      body: { status: "degraded" },
+      status: 503,
+    });
+    await expect(result(capabilities({ headers: new Headers() }))).resolves.toMatchObject({
+      body: { scheduler_driver: "invalid" },
+      status: 200,
+    });
+  });
+
+  it("degrades detailed health when a live worker uses a conflicting driver", async () => {
+    vi.stubEnv("SCHEDULER_DRIVER", "none");
+
+    await expect(health()).resolves.toMatchObject({
+      body: {
+        services: {
+          schedulerConfiguration: "driver-mismatch",
+          worker: "degraded",
+          workerSchedulerDriver: "temporal",
+        },
+        status: "degraded",
+      },
+      status: 503,
+    });
+  });
+
+  it("reports both scheduler contracts through capabilities", async () => {
+    const response = await result(capabilities({ headers: new Headers() }));
+
+    expect(response.body).toMatchObject({
+      rank_check_scheduler_mode: "cutover",
+      scheduler_driver: "temporal",
+    });
   });
 });

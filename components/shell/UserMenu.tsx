@@ -10,6 +10,7 @@ import {
   resourceLinksForDeployment,
   signOutLink,
 } from "@/components/shell/user-menu-items";
+import { useToast } from "@/components/ui";
 import { authClient } from "@/lib/auth/client";
 import Divider from "@mui/material/Divider";
 import Menu from "@mui/material/Menu";
@@ -55,6 +56,7 @@ export function UserMenu({
 }: Readonly<UserMenuProps>) {
   const [pending, setPending] = useState(false);
   const { openPalette } = useCommandPalette();
+  const { showToast } = useToast();
 
   function closeAfterNavigate() {
     onClose();
@@ -68,8 +70,16 @@ export function UserMenu({
 
   async function handleSignOut() {
     setPending(true);
+    try {
+      await authClient.signOut();
+    } catch {
+      // The session is still live, and /login would redirect straight back into the app,
+      // so surface the failure here instead of navigating into a no-op.
+      setPending(false);
+      showToast("Could not sign out. Please try again.", { tint: "red" });
+      return;
+    }
     closeAfterNavigate();
-    await authClient.signOut();
     window.location.href = "/login";
   }
 

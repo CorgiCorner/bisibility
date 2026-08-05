@@ -21,13 +21,13 @@ For a local Docker install, the short path is:
 git clone https://github.com/CorgiCorner/bisibility.git bisibility
 cd bisibility
 ./scripts/dev/bootstrap-local.sh
-docker compose up -d
+docker compose -f compose.yaml up -d
 ```
 
 Open `http://localhost:3000` and sign in with the demo login.
 
 Compose pulls version-pinned web and migration images from Docker Hub by
-default. Run `docker compose up --build` to build the checked-out source
+default. Add `-f compose.build.yaml --build` to build the checked-out web source
 instead.
 
 ### Demo login
@@ -109,15 +109,15 @@ For a single keyword, open the keyword detail page and select **Run check now**.
 For a project-level manual run, open **Settings** and use **Run check now** in
 the manual checks panel.
 
-If you started the scheduled Docker profile, the worker runs due checks from the
+If you started the scheduling overlays, the worker runs due checks from the
 configured schedule:
 
 ```bash
-docker compose --profile scheduled up -d
+docker compose -f compose.yaml -f compose.worker.yaml -f compose.temporal.yaml up -d
 ```
 
 Manual checks can run without Temporal. Scheduled checks require Temporal and the
-worker. Add `--build` to build the web and worker images from source.
+worker.
 
 ## 6. Read results
 

@@ -12,11 +12,11 @@ sites, with a REST API and a built-in MCP server for AI agents.
 
     VERSION={{RELEASE_TAG}}
     BASE_URL="https://github.com/CorgiCorner/bisibility/releases/download/${VERSION}"
-    curl -fLO "${BASE_URL}/docker-compose.self-host.yml"
+    curl -fLO "${BASE_URL}/compose.yaml"
     curl -fLO "${BASE_URL}/bisibility.env.example"
     curl -fLO "${BASE_URL}/generate-self-host-env.mjs"
     node generate-self-host-env.mjs --site-url https://rank.example.com
-    docker compose --env-file .env -f docker-compose.self-host.yml up -d
+    docker compose --env-file .env -f compose.yaml up -d
 
 Replace `https://rank.example.com` with the final public origin. The app binds
 to `127.0.0.1:3000` for a reverse proxy by default.

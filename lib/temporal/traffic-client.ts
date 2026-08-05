@@ -1,12 +1,13 @@
 import "server-only";
 
 import { WorkflowIdConflictPolicy, WorkflowIdReusePolicy } from "@temporalio/common";
-import { getTemporalClient, TEMPORAL_TASK_QUEUE } from "./client";
+import { TEMPORAL_TASK_QUEUE } from "./client";
+import { getSchedulerTemporalClient } from "./scheduler-client";
 import { TRAFFIC_SYNC_SCHEDULE_ID, TRAFFIC_SYNC_WORKFLOW_TYPE } from "./traffic-bootstrap";
 
 /** Start the singleton traffic workflow, or reuse the currently running execution. */
 export async function startTrafficSyncWorkflow() {
-  const client = await getTemporalClient();
+  const client = await getSchedulerTemporalClient();
   const handle = await client.workflow.start(TRAFFIC_SYNC_WORKFLOW_TYPE, {
     args: [],
     taskQueue: TEMPORAL_TASK_QUEUE,

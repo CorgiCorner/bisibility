@@ -80,7 +80,7 @@ Discovery routes are mixed:
 | `/health`, `/readiness` | `{ "status": "ok" | "degraded" }` |
 | `/liveness` | `{ "status": "ok" }` |
 | `/openapi.json` | Raw OpenAPI document |
-| `/capabilities` | `{ "apiVersions": ["v1"], "data": [...] }` |
+| `/capabilities` | `{ "apiVersions": ["v1"], "scheduler_driver": "temporal", "data": [...] }` |
 | `/llms.txt` | Plain text |
 
 ## API version declarations

@@ -1,0 +1,18 @@
+x-app-build: &app-build
+  context: .
+  args:
+    APP_REVISION: ${APP_REVISION:-}
+    APP_VERSION: ${APP_VERSION:-}
+    NEXT_PUBLIC_DOCS_URL: ${NEXT_PUBLIC_DOCS_URL:-https://bisibility.com/docs}
+
+services:
+  app:
+    build: *app-build
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+      args:
+        APP_REVISION: ${APP_REVISION:-}
+        APP_VERSION: ${APP_VERSION:-}

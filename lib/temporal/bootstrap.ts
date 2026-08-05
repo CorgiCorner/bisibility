@@ -11,7 +11,8 @@ import {
 } from "@temporalio/client";
 import { msToNumber } from "@temporalio/common";
 import { legacySchedulingAllowed } from "../rank-check/scheduler-mode";
-import { getTemporalClient, TEMPORAL_TASK_QUEUE } from "./client";
+import { TEMPORAL_TASK_QUEUE } from "./client";
+import { getSchedulerTemporalClient } from "./scheduler-client";
 
 // Idempotent worker bootstrap for worker-owned Temporal Schedules. Rank-check
 // singleton ownership is converged separately from independent maintenance,
@@ -118,7 +119,7 @@ export async function deleteRetiredJobProcessorSchedule(
   client?: RetiredScheduleCleanupClient,
 ): Promise<RetiredScheduleCleanupResult> {
   try {
-    const temporal = client ?? (await getTemporalClient()).schedule;
+    const temporal = client ?? (await getSchedulerTemporalClient()).schedule;
     await temporal.getHandle(RETIRED_JOB_PROCESSOR_SCHEDULE_ID).delete();
     return { scheduleId: RETIRED_JOB_PROCESSOR_SCHEDULE_ID, status: "deleted" };
   } catch (error) {
@@ -235,7 +236,7 @@ export async function ensureSingletonSchedule(
   }
 
   try {
-    const temporal = client ?? (await getTemporalClient()).schedule;
+    const temporal = client ?? (await getSchedulerTemporalClient()).schedule;
     try {
       await temporal.create(buildScheduleOptions(config));
       return { scheduleId: config.scheduleId, status: "created" };

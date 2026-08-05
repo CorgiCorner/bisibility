@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { fn, userEvent, within } from "@storybook/test";
+import { fn, userEvent, within } from "storybook/test";
 import { AnalyzeCard } from "./AnalyzeCard";
 import { EMPTY_BACKLINKS_ESTIMATE } from "./backlinks-workspace-model";
 

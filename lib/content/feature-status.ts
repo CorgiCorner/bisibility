@@ -15,6 +15,8 @@ export type FeatureStatusEntry = {
   scope?: "self-host";
 };
 
+const exploringAvailability = "on the roadmap";
+
 export const featureStatus = {
   selfHosting: {
     label: "self-hosting",
@@ -22,7 +24,7 @@ export const featureStatus = {
     docs: "/docs/self-hosting",
   },
   customerDatabase: {
-    label: "customer-controlled PostgreSQL database",
+    label: "PostgreSQL database you control",
     status: "shipped",
     docs: "/docs/architecture",
     scope: "self-host",
@@ -242,7 +244,7 @@ export function featureClaim(key: FeatureKey) {
     case "planned":
       return `${feature.label} is planned`;
     case "exploring":
-      return `${feature.label} is being explored`;
+      return `${feature.label} is ${exploringAvailability}`;
   }
 }
 
@@ -265,7 +267,7 @@ export function featureAvailabilitySentence(key: FeatureKey, verb: "are" | "is" 
             : status === "not-planned"
               ? "not planned"
               : status === "exploring"
-                ? "being explored"
+                ? exploringAvailability
                 : "planned";
   const label = sentenceCaseLabel(feature.label);
   const scope = feature.scope === "self-host" ? " (self-hosted)" : "";

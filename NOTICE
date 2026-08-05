@@ -4,4 +4,7 @@ Copyright (c) 2026 CorgiCorner
 This product is licensed under the GNU Affero General Public License v3.0 only
 (AGPL-3.0-only). See the LICENSE file for the full license text.
 
+The Claude Code plugin under plugins/bisibility/ is licensed separately under
+the MIT License. See plugins/bisibility/LICENSE for the full license text.
+
 Third-party dependency licenses are listed in DEPENDENCY_LICENSES.md.

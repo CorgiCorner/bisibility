@@ -5,7 +5,7 @@ body:
     attributes:
       value: |
         Share the problem first - solutions can come later. Ideas that firm up
-        graduate into a feature spec issue, which is the fastest path to getting
+        graduate into a feature request issue, which is the fastest path to getting
         built. Do not include secrets, API keys, tokens, or production
         infrastructure details.
   - type: textarea

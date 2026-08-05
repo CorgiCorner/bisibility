@@ -13,6 +13,7 @@ import { notifyOps } from "../ops/notify";
 import { publishTemporalSnapshot } from "../ops/temporal-snapshot";
 import { RANK_CHECK_DISPATCHER_SCHEDULE_ID } from "../rank-check/dispatcher-constants";
 import { rankCheckSchedulerMode } from "../rank-check/scheduler-mode";
+import { assertTemporalSchedulerEnabled, schedulerDriver } from "../scheduler/driver";
 import * as activities from "./activities";
 import { ensureAlertDeliverySweepSchedule } from "./alert-delivery-bootstrap";
 import { ALERT_DELIVERY_TASK_QUEUE } from "./alert-delivery-client";
@@ -21,7 +22,12 @@ import {
   ensureTrafficSyncSchedule,
   RECONCILER_SCHEDULE_ID,
 } from "./bootstrap";
-import { temporalConnectionOptions, temporalWebUiUrl } from "./connection-options";
+import {
+  temporalConnectionOptions,
+  temporalSdkConnectionOptions,
+  temporalWebUiUrl,
+} from "./connection-options";
+import { temporalDeploymentConfig } from "./deployment-config";
 import {
   ensureAlertDigestFlushSchedule,
   ensureAlertHealthSchedule,
@@ -39,8 +45,10 @@ import {
 import { ensureOpsHeartbeatSchedule } from "./ops-bootstrap";
 import { convergeRankCheckSchedulerSingletons } from "./rank-check-scheduler-convergence";
 import { ensureRankCheckSearchAttributes } from "./search-attribute-bootstrap";
+import { probeTemporalTransport } from "./transport-probe";
 import { maxConcurrentActivities } from "./worker-config";
 import { decideWorkerSchemaGuard, workerSchemaGuardMode } from "./worker-schema-guard";
+import { runWorkerStartupStage } from "./worker-startup-retry";
 import { assertPublicIdV3WriteGateAllowsWorkerStartup } from "./worker-write-gate";
 
 // Worker entry point. Run with Node's TS runtime plus the resolve hook that lets
@@ -56,12 +64,14 @@ import { assertPublicIdV3WriteGateAllowsWorkerStartup } from "./worker-write-gat
 
 const connectionOptions = temporalConnectionOptions();
 const address = connectionOptions.address;
-const namespace = process.env.TEMPORAL_NAMESPACE ?? "default";
-const taskQueue = process.env.TEMPORAL_TASK_QUEUE ?? "rank-checks";
+const deploymentConfig = temporalDeploymentConfig();
+const namespace = deploymentConfig.namespace;
+const taskQueue = deploymentConfig.taskQueue;
 const deliveryTaskQueue = ALERT_DELIVERY_TASK_QUEUE;
 const smokeMode = process.env.TEMPORAL_WORKER_SMOKE === "1";
 const release = process.env.APP_VERSION?.trim() || "unknown";
 const schedulerMode = rankCheckSchedulerMode();
+const schedulerDriverValue = schedulerDriver();
 const workerIdentity = `bisibility-worker/${release}/${process.pid}@${hostname()}`;
 
 type WorkerScheduleResult = { scheduleId: string; status: string };
@@ -143,6 +153,7 @@ async function reportWorkerStartup(schedules: WorkerScheduleResult[]) {
       "Failed schedules": failed.length,
       Namespace: namespace,
       "Rank-check scheduler mode": schedulerMode,
+      "Scheduler driver": schedulerDriverValue,
       "Task queues": `${taskQueue}, ${deliveryTaskQueue}`,
     },
     kind: "worker_started",
@@ -152,16 +163,36 @@ async function reportWorkerStartup(schedules: WorkerScheduleResult[]) {
 }
 
 async function run() {
-  await assertPublicIdV3WriteGateAllowsWorkerStartup();
-  await assertMigrationsReady();
-  await enforceWorkerSchemaGuard();
-  const connection = await NativeConnection.connect(connectionOptions);
+  assertTemporalSchedulerEnabled();
+  console.error("[temporal] worker startup config", {
+    address,
+    namespace,
+    rank_check_scheduler_mode: schedulerMode,
+    scheduler_driver: schedulerDriverValue,
+    task_queues: [taskQueue, deliveryTaskQueue],
+    tls: connectionOptions.tls ?? false,
+    tls_source: connectionOptions.tlsSource,
+  });
+  await runWorkerStartupStage("app-database-write-gate", async () => {
+    await assertPublicIdV3WriteGateAllowsWorkerStartup();
+    await assertMigrationsReady();
+    await enforceWorkerSchemaGuard();
+  });
+  await runWorkerStartupStage("transport", () => probeTemporalTransport(address));
+  const connection = await runWorkerStartupStage("tls-auth", () =>
+    NativeConnection.connect(temporalSdkConnectionOptions(connectionOptions)),
+  );
 
   try {
-    const searchAttributes = await ensureRankCheckSearchAttributes(connection, {
-      address,
-      namespace,
-    });
+    await runWorkerStartupStage("persistence-schema", () =>
+      connection.workflowService.getSystemInfo({}),
+    );
+    await runWorkerStartupStage("namespace-cache", () =>
+      connection.workflowService.describeNamespace({ namespace }),
+    );
+    const searchAttributes = await runWorkerStartupStage("search-attributes-bootstrap", () =>
+      ensureRankCheckSearchAttributes(connection, { address, namespace }),
+    );
     console.error("[temporal] rank-check search attributes", searchAttributes);
     const worker = await Worker.create({
       activities,
@@ -185,35 +216,38 @@ async function run() {
 
     // Rank-check scheduler convergence is a startup gate. Retire the
     // non-selected singleton before ensuring the selected owner.
-    const rankCheckSchedulers = await convergeRankCheckSchedulerSingletons();
-    const schedules = await Promise.all([
-      deleteRetiredJobProcessorSchedule(),
-      ensureAlertDeliverySweepSchedule(),
-      ensureAuditPurgeSchedule(),
-      ensureRankCheckRawPurgeSchedule(),
-      ensureQueuedRankCheckRetentionSchedule(),
-      ensureAlertDigestFlushSchedule(),
-      ensureAlertHealthSchedule(),
-      ensureSessionPurgeSchedule(),
-      ensureStaleChecksSchedule(),
-      ensureStaleImportJobsSchedule(),
-      ensureMigrationHoldReleaseSchedule(),
-      ensureWeeklyDigestSchedule(),
-      ensureTrafficSyncSchedule(),
-      ensureSitemapSyncSchedule(),
-      ensurePresenceSyncSchedule(),
-      safeOpsHeartbeatBootstrap(),
-    ]);
-    schedules.push(
-      {
-        scheduleId: RECONCILER_SCHEDULE_ID,
-        status: rankCheckSchedulers.reconciler,
-      },
-      {
-        scheduleId: RANK_CHECK_DISPATCHER_SCHEDULE_ID,
-        status: rankCheckSchedulers.dispatcher,
-      },
-    );
+    const schedules = await runWorkerStartupStage("schedule-bootstrap", async () => {
+      const rankCheckSchedulers = await convergeRankCheckSchedulerSingletons();
+      const ensured = await Promise.all([
+        deleteRetiredJobProcessorSchedule(),
+        ensureAlertDeliverySweepSchedule(),
+        ensureAuditPurgeSchedule(),
+        ensureRankCheckRawPurgeSchedule(),
+        ensureQueuedRankCheckRetentionSchedule(),
+        ensureAlertDigestFlushSchedule(),
+        ensureAlertHealthSchedule(),
+        ensureSessionPurgeSchedule(),
+        ensureStaleChecksSchedule(),
+        ensureStaleImportJobsSchedule(),
+        ensureMigrationHoldReleaseSchedule(),
+        ensureWeeklyDigestSchedule(),
+        ensureTrafficSyncSchedule(),
+        ensureSitemapSyncSchedule(),
+        ensurePresenceSyncSchedule(),
+        safeOpsHeartbeatBootstrap(),
+      ]);
+      ensured.push(
+        {
+          scheduleId: RECONCILER_SCHEDULE_ID,
+          status: rankCheckSchedulers.reconciler,
+        },
+        {
+          scheduleId: RANK_CHECK_DISPATCHER_SCHEDULE_ID,
+          status: rankCheckSchedulers.dispatcher,
+        },
+      );
+      return ensured;
+    });
     for (const schedule of schedules) {
       console.error("[temporal] schedule status", {
         scheduleId: schedule.scheduleId,
@@ -227,8 +261,9 @@ async function run() {
       address,
       identity: workerIdentity,
       namespace,
-      rankCheckSchedulerMode: schedulerMode,
-      taskQueues: [taskQueue, deliveryTaskQueue],
+      rank_check_scheduler_mode: schedulerMode,
+      scheduler_driver: schedulerDriverValue,
+      task_queues: [taskQueue, deliveryTaskQueue],
     });
     const webUiUrl = temporalWebUiUrl(connectionOptions);
     if (webUiUrl) {

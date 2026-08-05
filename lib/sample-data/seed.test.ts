@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { hashApiKey, verifyApiKey } from "@/lib/providers/crypto";
 import { DENSE_CHECK_COUNT } from "@/lib/sample-data/dense-position-series";
 import { seed } from "@/prisma/seed";
@@ -121,7 +122,7 @@ describe("database seed", () => {
     );
   });
 
-  it("creates an auth-compatible API key when the env var is set", async () => {
+  it("accepts the deterministic quickstart test API key", async () => {
     vi.stubEnv("BISIBILITY_SEED_API_KEY", rawSeedKey);
 
     await seed();
@@ -132,6 +133,27 @@ describe("database seed", () => {
     expect(row?.prefix).toBe(rawSeedKey.slice(0, 21));
     expect(row?.hashedKey).toBe(hashApiKey(rawSeedKey));
     expect(verifyApiKey(rawSeedKey, row?.hashedKey ?? "")).toBe(true);
+  });
+
+  it("accepts an application-generated live API key", async () => {
+    const raw = `bsb_key_live_${randomBytes(24).toString("base64url")}`;
+    vi.stubEnv("BISIBILITY_SEED_API_KEY", raw);
+
+    await seed();
+
+    expect(envSeededKey()?.hashedKey).toBe(hashApiKey(raw));
+  });
+
+  it.each([
+    ["a passphrase", "correct horse battery staple"],
+    ["a short body", "bsb_key_live_x"],
+    ["whitespace in the body", "bsb_key_live_1234567890 12345678"],
+    ["punctuation in the body", "bsb_key_live_123456789012345678$"],
+  ])("rejects %s as an env-seeded API key", async (_description, raw) => {
+    vi.stubEnv("BISIBILITY_SEED_API_KEY", raw);
+
+    await expect(seed()).rejects.toThrow("BISIBILITY_SEED_API_KEY");
+    expect(envSeededKey()).toBeUndefined();
   });
 
   it("uses the explicit seeded project ID shared with integration consumers", async () => {

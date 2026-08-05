@@ -14,6 +14,7 @@ import { estimatedRankCheckCostCents } from "@/lib/rank-check/default-cost";
 import { refreshKeywordDispatchStates } from "@/lib/rank-check/dispatcher-state";
 import { loadSerpProviderChain, runKeywordCheckWithFallback } from "@/lib/rank-check/fallback";
 import { isScheduledFrequency, SCHEDULED_FREQUENCIES } from "@/lib/rank-check/schedule";
+import { SchedulerDisabledError } from "@/lib/scheduler/driver";
 import { queueFirstChecksSchema, runCheckNowSchema } from "@/lib/schemas/keyword";
 import { resolveEffectiveSerpDepth } from "@/lib/serp/markets";
 import {
@@ -61,6 +62,7 @@ type FirstCheckSchedule = {
 };
 
 function isTemporalUnavailable(error: unknown) {
+  if (error instanceof SchedulerDisabledError) return true;
   const message = error instanceof Error ? `${error.name} ${error.message}` : String(error);
   return /ECONNREFUSED|UNAVAILABLE|Unavailable|connection refused|failed to connect|No connection established|deadline exceeded/i.test(
     message,

@@ -3,17 +3,8 @@
 > Own your search visibility data.
 
 bisibility is an open-source SEO platform for researching keywords, inspecting
-backlinks, and tracking Google rankings.
-
-Start with the Cloud beta or self-host it. Use your data in the dashboard, through
-the API or MCP, or directly from PostgreSQL.
-
-For rank checks, connect your own DataForSEO or SerpAPI account. Self-hosted
-deployments keep provider credentials in your instance; Cloud beta stores them
-encrypted in the managed service. Billing remains directly between you and the provider.
-
-bisibility stays focused on search visibility workflows. It is not a general-purpose
-technical site-audit, content-writing, or on-page optimization suite.
+backlinks, and tracking Google rankings - in a PostgreSQL database you own.
+Self-host it or start with the Cloud beta.
 
 [![CI](https://github.com/CorgiCorner/bisibility/actions/workflows/ci.yml/badge.svg)](https://github.com/CorgiCorner/bisibility/actions/workflows/ci.yml)
 [![License: AGPL-3.0-only](https://img.shields.io/badge/license-AGPL--3.0--only-blue.svg)](LICENSE)
@@ -24,6 +15,10 @@ technical site-audit, content-writing, or on-page optimization suite.
 [FAQ](https://bisibility.com/faq) ·
 [Roadmap](https://bisibility.com/roadmap)
 
+![bisibility dashboard](public/screenshots/dashboard-overview.png)
+
+*Dashboard running with demo data.*
+
 ## Early release
 
 bisibility is an early release. Everything listed as Available can be tested today, but
@@ -32,9 +27,26 @@ you may encounter rough edges and breaking changes before 1.0.
 Please report installation problems, bugs, and workflow feedback through
 [GitHub Issues](https://github.com/CorgiCorner/bisibility/issues).
 
-![bisibility dashboard](public/screenshots/dashboard-overview.png)
+## Why bisibility?
 
-*Dashboard running with demo data.*
+- **Research before you track.** Explore keyword opportunities and backlink data, then
+  use the findings to decide what belongs in a tracked project.
+- **Own the history.** Positions, ranking URLs, timestamps, and per-check provider
+  cost data live in a PostgreSQL database you operate, with direct SQL access and
+  full-history export.
+- **Connect the context.** Compare Share of Voice, add opt-in Search Console and GA4
+  metrics, and line ranking movement up with deploy and CMS signals.
+- **Operate as a team.** Use Owner, Admin, Editor, and Viewer roles, review the audit
+  log, and deliver events through signed outbound webhooks.
+- **Inspect the system.** The dashboard, scheduler, provider adapters, and delivery
+  pipeline are open source under AGPL-3.0.
+
+bisibility stays focused on search visibility workflows. It is not a general-purpose
+technical site-audit, content-writing, or on-page optimization suite.
+
+For rank checks, connect your own DataForSEO or SerpAPI account. Self-hosted
+deployments keep provider credentials in your instance; Cloud beta stores them
+encrypted in the managed service. Billing remains directly between you and the provider.
 
 ## Try the local demo
 
@@ -42,14 +54,14 @@ Please report installation problems, bugs, and workflow feedback through
 git clone https://github.com/CorgiCorner/bisibility.git bisibility
 cd bisibility
 ./scripts/dev/bootstrap-local.sh
-docker compose up -d
+docker compose -f compose.yaml up -d
 ```
 
 Open [http://localhost:3000](http://localhost:3000) and sign in with email
 `demo@acme.dev` and OTP `000000`.
 
-Compose pulls the version-pinned web image from Docker Hub by default. To build
-the checked-out source instead, run `docker compose up --build`.
+Compose pulls version-pinned images from Docker Hub by default. To build the
+checked-out web and worker source instead, add `-f compose.build.yaml --build`.
 
 > [!WARNING]
 > Demo authentication is intentionally insecure and is meant for a throwaway local
@@ -60,26 +72,15 @@ the checked-out source instead, run `docker compose up --build`.
 ### Enable scheduled checks
 
 The default Compose stack runs manual rank checks only. To run recurring schedules,
-start the Temporal worker profile:
+add the worker and bundled Temporal overlays:
 
 ```bash
-docker compose --profile scheduled up -d
+docker compose -f compose.yaml -f compose.worker.yaml -f compose.temporal.yaml up -d
 ```
 
-The scheduled profile also serves the Temporal Web UI at
-[http://localhost:8233](http://localhost:8233).
-It pulls the version-pinned worker image by default; add `--build` to build both
-first-party images from the checkout.
-
-## Why bisibility?
-
-- **Research before you track.** Explore keyword opportunities and backlink data, then
-  use the findings to decide what belongs in a tracked project.
-- **Own the history.** Positions, ranking URLs, timestamps, and per-check provider
-  cost data live in a PostgreSQL database you operate, with direct SQL access and
-  full-history export.
-- **Inspect the system.** The dashboard, scheduler, provider adapters, and delivery
-  pipeline are open source under AGPL-3.0.
+Add `--profile temporal-ui` to serve the Temporal Web UI at
+[http://localhost:8233](http://localhost:8233). The worker image contains only
+the bisibility worker; the Temporal overlay supplies the pinned server separately.
 
 ## Why use bisibility instead of raw provider APIs?
 
@@ -106,6 +107,11 @@ a stable 1.0 contract.
 | Google rank tracking | Available |
 | Keyword research | Available |
 | Backlink research | Available |
+| Competitor benchmarking and Share of Voice | Available |
+| Search Console and GA4 connections | Available |
+| Deploy and CMS signal timeline | Available |
+| Signed outbound webhooks | Available |
+| Team roles and audit log | Available |
 | REST API and OpenAPI | Available |
 | MCP endpoint | Available |
 | TypeScript, Python, and Go SDKs | Available |
@@ -128,6 +134,7 @@ a stable 1.0 contract.
 - Keyword tags and saved views
 - Opt-in Search Console connections, with queries, clicks, and impressions per keyword
 - Opt-in GA4 connections with landing-page sessions, engagement, and key events
+- A signal timeline for rank checks, deploys, CMS events, and manual notes
 - Google index status on keyword details
 - REST API v1 with OpenAPI, an MCP endpoint, signed outbound webhooks, and CSV export
 - Owner, Admin, Editor, and Viewer team roles, with an audit log
@@ -249,7 +256,7 @@ remains available without an application subscription.
 
 ## Contributing
 
-Public issues and feature specifications are welcome. This repository does not
+Public issues and feature requests are welcome. This repository does not
 accept pull requests. See [CONTRIBUTING.md](CONTRIBUTING.md) and
 [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
@@ -260,7 +267,12 @@ for responsible disclosure.
 
 ## License
 
+The Bisibility application and repository content are licensed under
 `AGPL-3.0-only`. See [LICENSE](LICENSE).
+
+The Claude Code plugin under [`plugins/bisibility/`](plugins/bisibility/) is
+licensed separately under the [MIT License](plugins/bisibility/LICENSE). This
+exception covers that directory and all content beneath it.
 
 You may use, modify, and self-host bisibility. If you modify it and let users interact
 with that version over a network, the license requires you to offer those users the

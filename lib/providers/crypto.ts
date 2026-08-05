@@ -179,8 +179,12 @@ export function decryptProviderCredentials(encrypted: string | null | undefined)
   }
 }
 
+/**
+ * Hashes an application-generated, high-entropy opaque token for deterministic lookup.
+ * This is not password verification; a slow KDF would only add cost to every authenticated request.
+ */
+// codeql[js/insufficient-password-hash] -- Opaque API token lookup, not password verification.
 export function hashApiKey(raw: string) {
-  // codeql[js/insufficient-password-hash] -- Opaque API token lookup, not password verification.
   return `${HASH_PREFIX}${createHash("sha256").update(raw).digest("hex")}`;
 }
 

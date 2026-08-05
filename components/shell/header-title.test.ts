@@ -20,6 +20,7 @@ const routeCases = [
     pattern: "/app/admin/audit",
     title: "Instance administration",
   },
+  { path: "/app/overview", pattern: "/app/overview", title: "Overview" },
   {
     path: appPath("prj_1", "alerts"),
     pattern: appPath("[project]", "alerts"),

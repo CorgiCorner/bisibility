@@ -1,4 +1,3 @@
-.agent-private/
 .github/
 .husky/
 .next/
@@ -7,8 +6,6 @@ app/
 components/
 content/
 coverage/
-.agent-private/design-source/
-docs/private/
 e2e/
 hooks/
 lib/

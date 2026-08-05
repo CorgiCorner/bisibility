@@ -1,5 +1,5 @@
 # GENERATED - do not edit directly.
-# Source hash: b83bb3f8c91a99ce234fb2875e0a00e9bb27ca14f727e9eab7268566cdb73b35
+# Source hash: 80e757f477b664228f72776c4305b6fd037d3b60ccec1802b8111c7351179eda
 name: CI
 
 on:
@@ -43,6 +43,17 @@ jobs:
       - run: npm i -g npm@10.9.3
       - run: npm ci
       - run: npm run ci:static
+
+  compose-contract:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    runs-on: ${{ github.repository != 'CorgiCorner/bisibility' && vars.CI_USE_DEPOT == 'true' && 'depot-ubuntu-24.04' || 'ubuntu-latest' }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
+        with:
+          node-version-file: .nvmrc
+      - run: npm run smoke:compose-contract
 
   test:
     runs-on: ubuntu-latest

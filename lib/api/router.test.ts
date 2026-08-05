@@ -1331,6 +1331,7 @@ describe("public API router", () => {
     });
     await expect(capabilities.json()).resolves.toMatchObject({
       apiVersions: ["v1"],
+      scheduler_driver: "legacy-auto",
       data: expect.arrayContaining([
         expect.objectContaining({
           input_schema: expect.objectContaining({

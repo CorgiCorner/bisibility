@@ -82,12 +82,13 @@ target_release="$(git rev-parse --verify 'HEAD^{commit}')"
 test "${#target_release}" -eq 40
 export DEPLOYMENT_ENV=production
 export APP_VERSION="$target_release"
-docker compose stop app worker
-docker compose up --build -d app
-docker compose exec app npm run public-id:write-gate -- release \
+compose=(docker compose -f compose.yaml -f compose.worker.yaml -f compose.temporal.yaml)
+"${compose[@]}" stop app worker
+"${compose[@]}" up -d app
+"${compose[@]}" exec app npm run public-id:write-gate -- release \
   --health-url https://your-host.example/api/v1/health \
   --expected-app-release "$target_release"
-docker compose --profile scheduled up --build -d worker
+"${compose[@]}" up -d worker
 ```
 
 The release command accepts health HTTP 200 or 503 because the stopped worker
@@ -120,12 +121,13 @@ target_release="$(git rev-parse --verify 'HEAD^{commit}')"
 test "${#target_release}" -eq 40
 export DEPLOYMENT_ENV=production
 export APP_VERSION="$target_release"
-docker compose stop app worker
-docker compose up --build -d app
-docker compose exec app npm run public-id:contract-cleanup -- cleanup \
+compose=(docker compose -f compose.yaml -f compose.worker.yaml -f compose.temporal.yaml)
+"${compose[@]}" stop app worker
+"${compose[@]}" up -d app
+"${compose[@]}" exec app npm run public-id:contract-cleanup -- cleanup \
   --health-url https://your-host.example/api/v1/health \
   --expected-app-release "$target_release"
-docker compose --profile scheduled up --build -d worker
+"${compose[@]}" up -d worker
 ```
 
 The cleanup command verifies the exact live release twice and never opens the

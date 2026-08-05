@@ -1,12 +1,12 @@
 import "server-only";
 
 import {
-  getTemporalClient,
   RANK_CHECK_WORKFLOW_TYPE,
   rankCheckSearchAttributes,
   rankCheckWorkflowId,
   TEMPORAL_TASK_QUEUE,
 } from "@/lib/temporal/client";
+import { getSchedulerTemporalClient } from "@/lib/temporal/scheduler-client";
 import type { RankCheckWorkflowInput, RankCheckWorkflowResult } from "@/lib/temporal/workflows";
 import {
   type Client,
@@ -177,7 +177,7 @@ async function scheduleClient(client?: TemporalScheduleClient) {
     return client;
   }
 
-  return (await getTemporalClient()).schedule;
+  return (await getSchedulerTemporalClient()).schedule;
 }
 
 function requireLegacyScheduleWriter() {

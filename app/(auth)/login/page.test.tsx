@@ -1,10 +1,13 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { dynamic } from "./page";
 
 const mocks = vi.hoisted(() => ({
+  getGitHubStars: vi.fn(),
+  getSession: vi.fn(),
   getSignInCapacity: vi.fn(),
   loginForm: vi.fn(),
+  redirect: vi.fn(),
 }));
 
 vi.mock("server-only", () => ({}));
@@ -16,9 +19,15 @@ vi.mock("@/lib/auth/signin-capacity", () => ({
   enforceGoogleSignupCapacity: vi.fn(),
   getSignInCapacity: mocks.getSignInCapacity,
 }));
+vi.mock("@/lib/site/github-stars", () => ({ getGitHubStars: mocks.getGitHubStars }));
+vi.mock("@/lib/auth/session", () => ({ getSession: mocks.getSession }));
 vi.mock("@/lib/auth/auth", () => {
   throw new Error("The login page must not initialize the full auth server");
 });
+vi.mock("next/navigation", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("next/navigation")>()),
+  redirect: mocks.redirect,
+}));
 vi.mock("@/components/auth/LoginForm", () => ({
   LoginForm: (props: Record<string, unknown>) => {
     mocks.loginForm(props);
@@ -44,9 +53,19 @@ type LoginFormProps = {
   returnTo: string;
 };
 
+type LoginSearchParams = {
+  error?: string | string[];
+  next?: string | string[];
+  switch?: string | string[];
+};
+
 // Re-import the page (and the env-derived module constants behind it) with a fresh
 // module registry so each case observes the environment as a running container would.
-async function renderLoginPage(env: Record<string, string | undefined>) {
+async function renderLoginPage(
+  env: Record<string, string | undefined>,
+  searchParams: LoginSearchParams = {},
+  githubStars: string | null = "2",
+) {
   vi.resetModules();
   mocks.loginForm.mockClear();
 
@@ -63,8 +82,11 @@ async function renderLoginPage(env: Record<string, string | undefined>) {
     googleSpots: { cap: 100, left: 14 },
     signupsToday: 26,
   });
+  mocks.getGitHubStars.mockResolvedValue(githubStars);
   const pageModule = await import("./page");
-  const html = renderToStaticMarkup(await pageModule.default());
+  const html = renderToStaticMarkup(
+    await pageModule.default({ searchParams: Promise.resolve(searchParams) }),
+  );
 
   return {
     dynamic: pageModule.dynamic,
@@ -73,11 +95,17 @@ async function renderLoginPage(env: Record<string, string | undefined>) {
   };
 }
 
-describe("login page runtime rendering", () => {
-  afterEach(() => {
-    vi.unstubAllEnvs();
-  });
+beforeEach(() => {
+  mocks.getSession.mockResolvedValue(null);
+  mocks.redirect.mockClear();
+});
 
+afterEach(() => {
+  vi.unstubAllEnvs();
+  vi.clearAllMocks();
+});
+
+describe("login page runtime rendering", () => {
   // Static prerendering freezes runtime auth settings, hiding demo credentials set
   // by container deployments.
   it("opts out of static prerendering", () => {
@@ -87,7 +115,9 @@ describe("login page runtime rendering", () => {
   it("summarizes Compose progress around the app and scheduled worker", async () => {
     const { html } = await renderLoginPage({});
 
-    expect(html).toContain("docker compose --profile scheduled up -d");
+    expect(html).toContain("Open-source SEO platform");
+    expect(html).toContain("docker compose -f compose.yaml -f");
+    expect(html).toContain("compose.worker.yaml -f compose.temporal.yaml up -d");
     expect(html).toContain("app <span");
     expect(html).toContain("scheduled worker <span");
     expect(html).toContain("+ 6 supporting services");
@@ -106,6 +136,19 @@ describe("login page runtime rendering", () => {
     expect(html).not.toContain("bisibility-private");
     expect(html).not.toContain("db-migrations-1");
   }, 15_000);
+
+  it("renders the current GitHub star count", async () => {
+    const { html } = await renderLoginPage({}, {}, "42");
+
+    expect(html).toContain("42 stars");
+    expect(html).not.toContain("0 stars");
+  });
+
+  it("omits the star statistic when GitHub is unavailable", async () => {
+    const { html } = await renderLoginPage({}, {}, null);
+
+    expect(html).not.toContain("stars");
+  });
 
   it("surfaces the demo credentials when the demo flag is set at run time", async () => {
     const { props } = await renderLoginPage({ DEMO_FIXED_OTP: "1" });
@@ -218,5 +261,40 @@ describe("login page runtime rendering", () => {
     });
 
     expect(unconfigured.props.enabledProviders).toEqual({ github: false, google: false });
+  });
+});
+
+describe("session-aware sign in", () => {
+  it("redirects a signed-in visitor to the default home", async () => {
+    mocks.getSession.mockResolvedValue({ user: { id: "usr_1" } });
+    await renderLoginPage({}, {});
+    expect(mocks.redirect).toHaveBeenCalledWith("/app");
+    expect(mocks.loginForm).not.toHaveBeenCalled();
+  });
+
+  it("honors a validated next destination", async () => {
+    mocks.getSession.mockResolvedValue({ user: { id: "usr_1" } });
+    await renderLoginPage({}, { next: "/cloud/onboarding" });
+    expect(mocks.redirect).toHaveBeenCalledWith("/cloud/onboarding");
+  });
+
+  it("rejects an off-origin next destination", async () => {
+    mocks.getSession.mockResolvedValue({ user: { id: "usr_1" } });
+    await renderLoginPage({}, { next: "https://evil.example.com/steal" });
+    expect(mocks.redirect).toHaveBeenCalledWith("/app");
+  });
+
+  it("renders the form for an explicit account switch", async () => {
+    mocks.getSession.mockResolvedValue({ user: { id: "usr_1" } });
+    await renderLoginPage({}, { switch: "1" });
+    expect(mocks.redirect).not.toHaveBeenCalled();
+    expect(mocks.loginForm).toHaveBeenCalled();
+  });
+
+  it("renders the form with no session", async () => {
+    mocks.getSession.mockResolvedValue(null);
+    await renderLoginPage({}, {});
+    expect(mocks.redirect).not.toHaveBeenCalled();
+    expect(mocks.loginForm).toHaveBeenCalled();
   });
 });

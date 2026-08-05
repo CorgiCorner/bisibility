@@ -46,7 +46,9 @@ ENV APP_REVISION=$APP_REVISION \
   NEXT_TELEMETRY_DISABLED=1
 COPY --from=deps /workspace/node_modules ./node_modules
 COPY . .
-RUN npm run db:download-rds-ca && npx prisma generate && npm run build
+RUN npm run db:download-rds-ca \
+  && npx prisma generate \
+  && NODE_OPTIONS="$(node scripts/ci/node-memory-limit.mjs --merge)" npm run build
 
 FROM builder AS migrate
 ENV NODE_ENV=production

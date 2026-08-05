@@ -55,6 +55,10 @@ export async function GET(req: NextRequest) {
   }
 
   let actor: Awaited<ReturnType<typeof getQueryActor>>;
+  // Both catches below deliberately absorb Next control-flow throws instead of rethrowing them.
+  // An EventSource follows redirects, so a redirect here fetches the HTML login page, fails to
+  // parse, and reconnects in a loop. Session cleanup has already run by then, and notFound() is
+  // not supported in a route handler, so plain statuses are the honest answer for this client.
   try {
     actor = await getQueryActor();
   } catch {

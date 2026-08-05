@@ -24,7 +24,7 @@ later without changing the rank history already stored in PostgreSQL.
 | - | - | - |
 | Try a local demo | [Local demo](#local-demo) | The Compose stack with a fixed sign-in code and seeded sample data. Insecure by design, and no SERP provider, so no real rank data. |
 | Run a production Compose stack | [Production Compose](#production-compose) | Versioned release assets with pull-only images, generated secrets, your public URL, and a SERP provider you connect. Starts empty. |
-| Add scheduled checks | [Docker scheduled profile](#docker) | Temporal Server, Temporal Web UI, and the worker. |
+| Add scheduled checks | [Docker scheduling overlays](#docker) | Temporal Server, schema and namespace jobs, and the worker. Temporal UI is optional. |
 | Deploy web and worker separately | [Production topology](#production-topology) | Independent web and worker processes that share PostgreSQL, Redis, and Temporal. |
 | Prepare another container platform | [Production topology](#production-topology) | The complete service set and shared configuration a platform must support. |
 
@@ -138,7 +138,7 @@ monitoring to your operational responsibilities.
 
 ## Docker
 
-There are two Docker paths. The local demo builds from a repository checkout.
+There are two Docker paths. The local demo runs from a repository checkout.
 Production Compose downloads immutable release assets and pulls published
 images, so the repository does not need to be present on the server.
 
@@ -154,10 +154,32 @@ and the seeded sample data stays in the database. Start production from a fresh
 `.env.example` and a fresh database.
 </Warning>
 
+### Compose topology commands
+
+Topology is selected by files, not by an environment switch:
+
+```bash
+# Core: web, migrations, PostgreSQL, and Valkey. Manual checks only.
+docker compose -f compose.yaml up -d
+
+# Worker with an external Temporal endpoint from .env.
+docker compose -f compose.yaml -f compose.worker.yaml up -d
+
+# Worker with the bundled Temporal Server 1.31.2.
+docker compose -f compose.yaml -f compose.worker.yaml -f compose.temporal.yaml up -d
+```
+
+The core file sets `SCHEDULER_DRIVER=none`; both worker topologies set
+`SCHEDULER_DRIVER=temporal`. An environment value never adds or removes a
+service. The bundled topology owns its namespace retention. The external
+topology validates its namespace but never creates it or changes its policy.
+
 ### How the stack starts
 
-Both paths start the same application services. The production asset contains
-no `build:` entries; the local checkout keeps them for source development.
+Both paths start the same application services. The deployment overlays contain
+no `build:` entries. A repository checkout can add `compose.build.yaml` when it
+needs to build the web and worker images from source. The migration job uses the
+same web image.
 
 The default Docker stack starts PostgreSQL, Valkey, a one-shot
 `db-migrations` service, and the web app. The migration service runs the fixed
@@ -170,9 +192,8 @@ exact manifest checksum. When
 dashboard.
 
 Compose pulls the version-pinned web image from Docker Hub and uses it for both
-the migration job and app. The production asset pins the exact release and
-cannot build from a checkout. The repository Compose file retains
-`BISIBILITY_IMAGE`, `BISIBILITY_WORKER_IMAGE`, and `--build` for source testing.
+the migration job and app. `BISIBILITY_IMAGE` and `BISIBILITY_WORKER_IMAGE` can
+select another complete image reference for source testing.
 
 A migration is marked finished only after its data work and optional settlement
 both succeed. If settlement fails after the data work completed, run
@@ -186,19 +207,21 @@ and the public ID database contract to be ready. Run
 `npx prisma migrate status` in the deployed application environment for detailed
 Prisma status.
 
-This default mode supports manual rank checks. Scheduled checks require Temporal
-and the worker:
+This default mode supports manual rank checks. Scheduled checks require the
+worker overlay plus either an external Temporal endpoint or the bundled Temporal
+overlay:
 
 ```bash
-docker compose --profile scheduled up -d
+docker compose -f compose.yaml -f compose.worker.yaml -f compose.temporal.yaml up -d
 ```
 
-That profile adds Temporal Server 1.31.2, Temporal Web UI on
-`http://localhost:8233`, and the version-pinned worker image from Docker Hub.
+That topology adds Temporal Server 1.31.2 and the version-pinned worker image
+from Docker Hub. Add `--profile temporal-ui` to expose Temporal Web UI on
+`http://localhost:8233`.
 An idempotent Admin Tools job creates or upgrades both Temporal schemas and the
-namespace before the worker starts. Set
-`BISIBILITY_WORKER_IMAGE` to another complete image reference, or add `--build`
-to build the web and worker images from the checkout.
+namespace before the worker starts. To test a source checkout, add
+`-f compose.build.yaml --build`; the build overlay covers the web and worker
+images, and the migration job runs from the web image.
 
 Use `/api/v1/liveness` for process restart decisions and `/api/v1/readiness` for
 traffic admission. Anonymous probe responses expose only aggregate status. A
@@ -245,8 +268,11 @@ checkout.
 
 ```bash
 mkdir bisibility && cd bisibility
-VERSION=v0.3.0
+VERSION=vX.Y.Z
 BASE_URL="https://github.com/CorgiCorner/bisibility/releases/download/${VERSION}"
+curl -fLO "${BASE_URL}/compose.yaml"
+curl -fLO "${BASE_URL}/compose.worker.yaml"
+curl -fLO "${BASE_URL}/compose.temporal.yaml"
 curl -fLO "${BASE_URL}/docker-compose.self-host.yml"
 curl -fLO "${BASE_URL}/bisibility.env.example"
 curl -fLO "${BASE_URL}/generate-self-host-env.mjs"
@@ -279,7 +305,7 @@ public origin, then review `.env`:
 Start the stack:
 
 ```bash
-docker compose --env-file .env -f docker-compose.self-host.yml up -d
+docker compose --env-file .env -f compose.yaml up -d
 ```
 
 The database starts empty, so the first visit redirects to `/setup`, where you
@@ -290,16 +316,17 @@ rank check.
 Work through the [production checklist](#production-checklist) before pointing
 real users at the instance.
 
-For scheduled checks, start the same versioned asset with its scheduled profile:
+For scheduled checks with the bundled server, add both scheduling overlays:
 
 ```bash
-docker compose --env-file .env -f docker-compose.self-host.yml \
-  --profile scheduled up -d
+docker compose --env-file .env \
+  -f compose.yaml -f compose.worker.yaml -f compose.temporal.yaml up -d
 ```
 
-The release manifest records SHA-256 hashes for the Compose, environment, and
-generator assets. The public release workflow verifies those bytes before
-publishing them.
+The release manifest records SHA-256 hashes for every Compose overlay, the
+environment template, and the generator. The public release workflow verifies
+those bytes before publishing them. `docker-compose.self-host.yml` remains as a
+one-minor compatibility asset for the former `--profile scheduled` command.
 
 ### Upgrade with a distribution manifest
 
@@ -525,16 +552,16 @@ The default stack publishes only the app on `3000`. PostgreSQL and Valkey
 are reachable by the `postgres` and `redis` service names only from the Compose
 network.
 
-Temporal Server and the worker sit behind the `scheduled` profile and are not
-started by a default `docker compose up`. The profile keeps Temporal Server on
-the Compose network and publishes only the Temporal Web UI, bound to
+Temporal Server and the worker are separate overlays and are not started by the
+core invocation. The Temporal overlay keeps the server on the Compose network.
+Its optional `temporal-ui` profile publishes only Temporal Web UI, bound to
 `127.0.0.1:8233`.
 
 For deliberate PostgreSQL or Valkey access from the Docker host, apply the
 opt-in debug override:
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.debug.yml up --build
+docker compose -f compose.yaml -f docker-compose.debug.yml up -d
 ```
 
 The override binds PostgreSQL to `127.0.0.1:5432` and Valkey to
@@ -598,21 +625,25 @@ three; only the connection settings change.
 
 | Option | How you get it | Suited to |
 | - | - | - |
-| Bundled with Compose | `docker compose --profile scheduled up -d` starts a Temporal server, its database, and the Temporal Web UI alongside the worker. No configuration. | Evaluation and small self-hosted instances |
+| Bundled with Compose | The worker and Temporal overlays start a pinned server, its database, schema and namespace jobs, and the worker. Temporal UI is an opt-in profile. | Evaluation and small self-hosted instances |
 | Self-managed cluster | You run Temporal yourself and point `TEMPORAL_ADDRESS` at it. | Instances that outgrow the bundled server |
 | Temporal Cloud | Managed by Temporal. Set `TEMPORAL_ADDRESS` and `TEMPORAL_API_KEY`. | Installations already standardized on managed Temporal |
 
 The Railway template bundles Temporal instead of requiring Temporal Cloud. R0
 certifies that complete topology.
 
-Set the same address, namespace, and task queue on the web app and worker.
+Set the same address, namespace, rank-check task queue, and alert-delivery task
+queue on the web app and worker. A generated `BISIBILITY_DEPLOYMENT_SUFFIX`
+derives all three deployment-scoped identifiers unless you override every one.
 
 For a self-hosted plaintext Temporal Server on a private network:
 
 ```dotenv
 TEMPORAL_ADDRESS=temporal.internal:7233
-TEMPORAL_NAMESPACE=default
-TEMPORAL_TASK_QUEUE=rank-checks
+BISIBILITY_DEPLOYMENT_SUFFIX=a1b2c3d4
+TEMPORAL_NAMESPACE=bisibility-a1b2c3d4
+TEMPORAL_TASK_QUEUE=bisibility-rank-checks-a1b2c3d4
+TEMPORAL_ALERT_DELIVERY_TASK_QUEUE=bisibility-alert-deliveries-a1b2c3d4
 ```
 
 For Temporal Cloud:
@@ -620,7 +651,8 @@ For Temporal Cloud:
 ```dotenv
 TEMPORAL_ADDRESS=your-namespace.your-account.tmprl.cloud:7233
 TEMPORAL_NAMESPACE=your-namespace.your-account
-TEMPORAL_TASK_QUEUE=rank-checks
+TEMPORAL_TASK_QUEUE=bisibility-rank-checks-a1b2c3d4
+TEMPORAL_ALERT_DELIVERY_TASK_QUEUE=bisibility-alert-deliveries-a1b2c3d4
 TEMPORAL_API_KEY=your-api-key
 ```
 
@@ -628,7 +660,7 @@ Choose the TLS setting from the endpoint you operate:
 
 | Endpoint | TLS setting |
 | - | - |
-| Temporal Cloud with `TEMPORAL_API_KEY` | TLS enables automatically; omit `TEMPORAL_TLS`. |
+| Temporal Cloud with `TEMPORAL_API_KEY` | `TEMPORAL_TLS=auto` enables TLS from the API key. |
 | Self-managed TLS without an API key | Set `TEMPORAL_TLS=true`. |
 | Plaintext Temporal on a private network | Set `TEMPORAL_TLS=false`. |
 
@@ -638,6 +670,12 @@ A worker polls by task queue, so a shared namespace and `TEMPORAL_TASK_QUEUE`
 can silently make one installation pick up another installation's work.
 
 ### Worker startup troubleshooting
+
+Every worker deployment requires an `on-failure` or equivalent restart policy.
+The worker retries transient startup stages with a bounded in-process budget and
+then exits nonzero so persistent configuration errors remain visible. Compose,
+the checked-in Railway worker config, and the Fly worker manifest already carry
+that policy; custom platforms must configure it explicitly.
 
 If the worker restarts in a loop, verify `TEMPORAL_ADDRESS`, `TEMPORAL_TLS`, and
 `TEMPORAL_NAMESPACE` first. The worker image contains only the bisibility
@@ -704,10 +742,14 @@ hand.
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google social sign-in and Google Search Console / GA4 connections. |
 | `SLACK_CLIENT_ID`, `SLACK_CLIENT_SECRET` | Slack alert channel installation (planned feature - not yet exposed in the app UI). |
 | SERP provider fallback credentials | Optional environment fallbacks for provider credentials normally connected in the app. Variable names are listed per provider in [Integrations](/integrations). |
-| `TEMPORAL_ADDRESS`, `TEMPORAL_NAMESPACE`, `TEMPORAL_TASK_QUEUE` | Temporal connection settings shared by the web app and worker. Docker's scheduled profile sets the worker address to `temporal:7233`. |
+| `SCHEDULER_DRIVER` | Execution backend: `none` for the core topology or `temporal` when the worker overlay is present. `external-cron` is reserved but not supported. New Compose files set this value; an absent value preserves legacy installs. This is independent from `RANK_CHECK_SCHEDULER_MODE`. |
+| `BISIBILITY_DEPLOYMENT_SUFFIX` | One generated suffix used to derive a dedicated namespace and both task queues for a new deployment. Existing installs without it retain their old defaults. |
+| `TEMPORAL_POSTGRES_PASSWORD` | Separate generated password used only by the bundled Temporal PostgreSQL service. The environment generator creates it automatically. Existing installations without it temporarily fall back to `POSTGRES_PASSWORD`. |
+| `TEMPORAL_ADDRESS`, `TEMPORAL_NAMESPACE`, `TEMPORAL_TASK_QUEUE`, `TEMPORAL_ALERT_DELIVERY_TASK_QUEUE` | Temporal connection and deployment-isolation settings shared by the web app and worker. External deployments must use a dedicated namespace or explicitly unique queue names. |
 | `TEMPORAL_API_KEY` | Temporal Cloud API key. When set, TLS is enabled automatically. |
 | `WORKER_SCHEMA_GUARD` | Worker/database migration guard: `enforce` (default) blocks a worker whose bundled schema is older than the database, `warn` reports drift without blocking, and `off` skips the check. |
-| `TEMPORAL_TLS` | Omit when an API key enables TLS automatically; set `true` for TLS without an API key; set `false` for plaintext private networking. |
+| `TEMPORAL_TLS` | `auto` preserves compatibility: an API key enables TLS and an address alone does not. Set `true` or `false` to override it explicitly. Legacy boolean spellings remain accepted. |
+| `TEMPORAL_NAMESPACE_RETENTION` | Retention managed by the bundled namespace job, default `24h`. External Temporal namespaces are validated but never created or mutated by the app or worker. |
 | `AUDIT_RETENTION_DAYS`, `AUDIT_IP_HMAC_SECRET`, `APP_VERSION` | Audit retention, optional source-IP HMAC hashing, and an audit version label. |
 | `RANK_CHECK_SCHEDULER_MODE` | Exclusive automatic scheduler owner: `legacy` (default) runs the reconciler and per-keyword Schedules, `cutover` pauses both owners while allowing state healing, and `dispatcher` runs only the due-work dispatcher. Empty means `legacy`; any other non-empty value fails closed. Set the same value on the app and worker. |
 | `RANK_CHECK_RECONCILER_ENABLED`, `RANK_CHECK_DISPATCHER_ENABLED` | Deprecated D1 compatibility fallback used only when `RANK_CHECK_SCHEDULER_MODE` is absent. Both active is rejected. Both false selects `cutover`; dispatcher true plus reconciler false selects `dispatcher`; other default/false combinations select `legacy`. |
@@ -922,11 +964,11 @@ Manual rank checks are available through the app and `POST /api/v1/keywords/{id}
 without Temporal. If the app cannot reach Temporal, interactive manual checks
 fall back to inline execution.
 
-Scheduled checks are executed by the Temporal worker. With Docker, start the
-scheduled profile:
+Scheduled checks are executed by the Temporal worker. With Docker, add the
+worker and bundled Temporal overlays:
 
 ```bash
-docker compose --profile scheduled up --build
+docker compose -f compose.yaml -f compose.worker.yaml -f compose.temporal.yaml up -d
 ```
 
 For non-Docker local development, run a Temporal server and the worker alongside
@@ -937,7 +979,9 @@ npm run temporal:dev
 npm run temporal:worker
 ```
 
-`RANK_CHECK_SCHEDULER_MODE=legacy` is the D1 default. In that mode the worker
+`SCHEDULER_DRIVER` selects the execution backend, while
+`RANK_CHECK_SCHEDULER_MODE` selects the owner of automatic scheduling. They are
+orthogonal. `RANK_CHECK_SCHEDULER_MODE=legacy` is the D1 default. In that mode the worker
 reconciler converts keyword schedule intent stored by the app into per-keyword
 Temporal Schedules. `cutover` actively pauses the reconciler and dispatcher
 singletons, stops dispatcher claims, and blocks late automatic work before

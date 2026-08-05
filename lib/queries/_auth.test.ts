@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { requireReadableProject, resolveProjectAccess } from "./_auth";
+import { getQueryActor, requireReadableProject, resolveProjectAccess } from "./_auth";
 
 const mocks = vi.hoisted(() => ({
   authorize: vi.fn(),
@@ -9,8 +9,12 @@ const mocks = vi.hoisted(() => ({
   }),
   prisma: {
     project: { findFirst: vi.fn(), findMany: vi.fn(), findUnique: vi.fn() },
+    session: { deleteMany: vi.fn() },
     user: { findUnique: vi.fn() },
   },
+  redirect: vi.fn(() => {
+    throw new Error("NEXT_REDIRECT");
+  }),
   requireSession: vi.fn(),
 }));
 
@@ -29,7 +33,7 @@ vi.mock("react", () => ({
       return entries.get(key);
     },
 }));
-vi.mock("next/navigation", () => ({ notFound: mocks.notFound }));
+vi.mock("next/navigation", () => ({ notFound: mocks.notFound, redirect: mocks.redirect }));
 vi.mock("@/lib/auth/authorize", () => ({ authorize: mocks.authorize }));
 vi.mock("@/lib/auth/session", () => ({ requireSession: mocks.requireSession }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
@@ -89,6 +93,18 @@ describe("resolveProjectAccess", () => {
     );
     expect(mocks.notFound).toHaveBeenCalledOnce();
   });
+
+  it("rejects a ref that is not a project public id without touching the database", async () => {
+    await expect(resolveProjectAccess("overview")).rejects.toThrow("NEXT_NOT_FOUND");
+    expect(mocks.prisma.project.findUnique).not.toHaveBeenCalled();
+  });
+
+  it("rejects a public id from another resource", async () => {
+    await expect(resolveProjectAccess("kw_aaaaaaaaaaaaaaaaaaaaaaaa")).rejects.toThrow(
+      "NEXT_NOT_FOUND",
+    );
+    expect(mocks.prisma.project.findUnique).not.toHaveBeenCalled();
+  });
 });
 
 describe("requireReadableProject", () => {
@@ -123,5 +139,26 @@ describe("requireReadableProject", () => {
 
     expect(mocks.prisma.project.findFirst).not.toHaveBeenCalled();
     expect(mocks.authorize).not.toHaveBeenCalled();
+  });
+});
+
+describe("getQueryActor", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.cacheEntries.clear();
+    mockMemberships([]);
+  });
+
+  it("redirects to sign in when the session references a deleted account", async () => {
+    mocks.prisma.user.findUnique.mockResolvedValue(null);
+
+    await expect(getQueryActor()).rejects.toThrow("NEXT_REDIRECT");
+    expect(mocks.prisma.session.deleteMany).toHaveBeenCalledWith({ where: { userId: "user_1" } });
+  });
+
+  it("keeps a real account with no memberships as a valid actor", async () => {
+    mocks.prisma.user.findUnique.mockResolvedValue({ memberships: [], role: "member" });
+
+    await expect(getQueryActor()).resolves.toMatchObject({ id: "user_1", memberships: [] });
   });
 });

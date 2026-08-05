@@ -6,7 +6,10 @@ const IMAGE_REPOSITORIES = {
 const SEMVER_PATTERN = /^[0-9]+\.[0-9]+\.[0-9]+(?:[+-][0-9A-Za-z.-]+)?$/;
 const SHA256_PATTERN = /^[0-9a-f]{64}$/;
 const ARTIFACTS = {
-  compose: "docker-compose.self-host.yml",
+  composeCompatibility: "docker-compose.self-host.yml",
+  composeCore: "compose.yaml",
+  composeTemporal: "compose.temporal.yaml",
+  composeWorker: "compose.worker.yaml",
   environment: "bisibility.env.example",
   generator: "generate-self-host-env.mjs",
 };
@@ -39,7 +42,7 @@ export function distributionManifest(versionValue, artifactSha256) {
   const release = `v${version}`;
   assertExactKeys(artifactSha256, Object.keys(ARTIFACTS), "Artifact SHA-256 input");
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     release,
     source: {
       repository: PUBLIC_REPOSITORY,
@@ -74,7 +77,7 @@ export function parseDistributionManifest(contents) {
     ["artifacts", "images", "release", "schemaVersion", "source"],
     "Distribution manifest",
   );
-  if (manifest.schemaVersion !== 2) {
+  if (manifest.schemaVersion !== 3) {
     throw new Error(`Unsupported distribution manifest schema: ${manifest.schemaVersion}`);
   }
 
@@ -85,7 +88,14 @@ export function parseDistributionManifest(contents) {
   assertExactKeys(images, ["web", "worker"], "Distribution manifest images");
   assertExactKeys(
     artifacts,
-    ["compose", "environment", "generator"],
+    [
+      "composeCompatibility",
+      "composeCore",
+      "composeTemporal",
+      "composeWorker",
+      "environment",
+      "generator",
+    ],
     "Distribution manifest artifacts",
   );
   for (const [key, name] of Object.entries(ARTIFACTS)) {
@@ -102,7 +112,7 @@ export function parseDistributionManifest(contents) {
   const version = normalizeVersion(manifest.release);
   const release = `v${version}`;
   const expected = {
-    schemaVersion: 2,
+    schemaVersion: 3,
     release,
     source: { repository: PUBLIC_REPOSITORY, tag: release },
     images: {

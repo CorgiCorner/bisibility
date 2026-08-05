@@ -1,5 +1,5 @@
 export type DistributionManifest = {
-  schemaVersion: 2;
+  schemaVersion: 3;
   release: string;
   source: {
     repository: string;
@@ -10,7 +10,12 @@ export type DistributionManifest = {
     worker: string;
   };
   artifacts: Record<
-    "compose" | "environment" | "generator",
+    | "composeCompatibility"
+    | "composeCore"
+    | "composeTemporal"
+    | "composeWorker"
+    | "environment"
+    | "generator",
     { name: string; sha256: string }
   >;
 };
@@ -18,7 +23,15 @@ export type DistributionManifest = {
 export function normalizeVersion(value: string): string;
 export function distributionManifest(
   versionValue: string,
-  artifactSha256: Record<"compose" | "environment" | "generator", string>,
+  artifactSha256: Record<
+    | "composeCompatibility"
+    | "composeCore"
+    | "composeTemporal"
+    | "composeWorker"
+    | "environment"
+    | "generator",
+    string
+  >,
 ): DistributionManifest;
 export function parseDistributionManifest(contents: string): DistributionManifest;
 
@@ -28,5 +41,13 @@ export const distributionContract: {
     worker: string;
   };
   publicRepository: string;
-  artifacts: Record<"compose" | "environment" | "generator", string>;
+  artifacts: Record<
+    | "composeCompatibility"
+    | "composeCore"
+    | "composeTemporal"
+    | "composeWorker"
+    | "environment"
+    | "generator",
+    string
+  >;
 };

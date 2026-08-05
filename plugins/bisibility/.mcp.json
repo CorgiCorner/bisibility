@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "bisibility": {
+      "type": "http",
+      "url": "${BISIBILITY_MCP_URL:-https://bisibility.com/api/mcp}"
+    }
+  }
+}

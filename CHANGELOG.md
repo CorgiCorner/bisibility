@@ -2,6 +2,40 @@
 
 ## Unreleased
 
+## [0.4.0] - 2026-08-05
+
+- Signing in with an existing session now goes straight to the requested page instead of showing the sign-in form again; add `?switch=1` to reach the form.
+
+- A project you cannot open now explains which account you are signed in as and offers an account switch, and the 404 page no longer suggests a route that does not exist.
+
+- Legacy `/app/overview` links, including those in browser extension 0.3.0, now redirect to the workspace entry point instead of returning 404.
+
+- A session whose account no longer exists now ends and returns you to sign-in, and a failed sign-out reports the error instead of appearing to do nothing.
+
+- Aligned landing-page category and feature copy with shipped keyword, backlink, analytics, and signal-timeline capabilities.
+
+- Reconciled public product claims with shipped Share of Voice, team roles, audit logging, signed webhooks, analytics connections, and deploy/CMS signals.
+
+- Added an MIT-licensed Claude Code marketplace plugin with OAuth MCP setup and three cost-gated SEO workflow skills.
+
+- Refreshed alternatives copy, AI-visibility roadmap wording, and the OpenSEO comparison with current pricing, issue, provider, and Domain Overview evidence.
+
+- Merged the feature spec and feature request forms into a single feature request form and renamed spec terminology across contribution docs.
+
+- Seeding with `BISIBILITY_SEED_API_KEY` now requires a generated `bsb_key_live_` or `bsb_key_test_` token, so a passphrase can no longer become a project API key.
+
+- Updated Prisma and Hono dependencies so the installation tree no longer contains the advisory-affected Hono server and middleware versions.
+
+- Added explicit scheduler drivers and versioned Compose overlays for core, external-worker, and bundled Temporal deployments.
+
+- Added a generated separate Temporal PostgreSQL credential for bundled scheduling, with a compatibility fallback for existing installations.
+
+- OAuth access tokens are now issued only for the MCP resource, so an authorization grant can no longer be redeemed for a token addressed to the authorization server.
+
+- Storybook now builds with Vite instead of Webpack, which removes the advisory-affected development-only `elliptic` dependency from the install tree.
+
+- Fixed Docker application builds to use the supported 4 GiB heap ceiling instead of Node's lower container default.
+
 ## [0.3.5] - 2026-08-03
 
 - Updated HTTP and URI parsing dependencies to address newly disclosed security advisories.

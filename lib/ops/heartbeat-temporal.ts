@@ -1,6 +1,6 @@
 import "server-only";
 
-import { getTemporalClient } from "@/lib/temporal/client";
+import { getSchedulerTemporalClient } from "@/lib/temporal/scheduler-client";
 import type { Client, ScheduleDescription } from "@temporalio/client";
 
 export type TemporalScheduleIssue = {
@@ -35,7 +35,7 @@ export async function collectTemporalHeartbeat(
   now: Date,
   injectedClient?: OpsScheduleClient,
 ): Promise<TemporalHeartbeat> {
-  const scheduleClient = injectedClient ?? (await getTemporalClient()).schedule;
+  const scheduleClient = injectedClient ?? (await getSchedulerTemporalClient()).schedule;
   const since = new Date(now.getTime() - 24 * 60 * 60 * 1000);
   const descriptions: ScheduleDescription[] = [];
   const issueSchedules: string[] = [];

@@ -1,0 +1,27 @@
+{
+  "name": "bisibility",
+  "description": "Official Bisibility plugins for SEO workflows in Claude Code.",
+  "version": "0.1.0",
+  "owner": {
+    "name": "CorgiCorner"
+  },
+  "plugins": [
+    {
+      "name": "bisibility",
+      "source": "./plugins/bisibility",
+      "displayName": "Bisibility",
+      "description": "Connect Claude Code to Bisibility through OAuth-protected MCP and run evidence-backed SEO workflows.",
+      "version": "0.1.0",
+      "author": {
+        "name": "CorgiCorner",
+        "url": "https://github.com/CorgiCorner"
+      },
+      "homepage": "https://bisibility.com/docs/agents",
+      "repository": "https://github.com/CorgiCorner/bisibility",
+      "license": "MIT",
+      "keywords": ["seo", "rank-tracking", "keyword-research", "backlinks", "mcp"],
+      "category": "productivity",
+      "tags": ["seo", "marketing", "mcp"]
+    }
+  ]
+}

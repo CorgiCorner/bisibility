@@ -59,6 +59,7 @@ describe("worker liveness", () => {
       lastSeenAt: "2026-07-16T08:00:00.000Z",
       release: "unknown",
       revision: "unknown",
+      schedulerDriver: "unknown",
       schedulerMode: "unknown",
       schemaComparison: "unknown",
       status: "ok",
@@ -72,6 +73,7 @@ describe("worker liveness", () => {
     vi.stubEnv("APP_VERSION", "worker-sha");
     vi.stubEnv("DEPLOYMENT_ENV", "production");
     vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", "cutover");
+    vi.stubEnv("SCHEDULER_DRIVER", "temporal");
     mocks.set.mockImplementation(async (_key, value) => {
       stored = value;
     });
@@ -87,6 +89,7 @@ describe("worker liveness", () => {
       lastSeenAt: now.toISOString(),
       release: "worker-sha",
       revision: "worker-public-revision",
+      schedulerDriver: "temporal",
       schedulerMode: "cutover",
       schemaComparison: "ok",
     });
@@ -99,6 +102,7 @@ describe("worker liveness", () => {
       lastSeenAt: now.toISOString(),
       release: "worker-sha",
       revision: "worker-public-revision",
+      schedulerDriver: "temporal",
       schedulerMode: "cutover",
       schemaComparison: "ok",
       status: "ok",
@@ -123,6 +127,7 @@ describe("worker liveness", () => {
       lastSeenAt: "2026-07-16T08:00:00.000Z",
       release: "worker-image-sha",
       revision: "unknown",
+      schedulerDriver: "unknown",
       schedulerMode: "unknown",
       schemaComparison: "unknown",
       status: "ok",

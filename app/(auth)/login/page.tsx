@@ -5,6 +5,7 @@ import {
   DEV_FIXED_OTP_CODE,
   ENABLED_SOCIAL_PROVIDERS,
 } from "@/lib/auth/runtime-config";
+import { getSession } from "@/lib/auth/session";
 import { getSignInCapacity } from "@/lib/auth/signin-capacity";
 import {
   GOOGLE_CAPACITY_EXHAUSTED,
@@ -12,7 +13,8 @@ import {
 } from "@/lib/auth/signin-capacity-types";
 import { dataResidencyMessage, isCloud } from "@/lib/deployment/deployment";
 import { legalConsentLinks } from "@/lib/deployment/legal";
-import { GITHUB_STARS, LICENSE } from "@/lib/site/site";
+import { getGitHubStars } from "@/lib/site/github-stars";
+import { LICENSE } from "@/lib/site/site";
 import {
   ChartLineUpIcon as ChartLineUp,
   GithubLogoIcon as GithubLogo,
@@ -20,27 +22,48 @@ import {
   ShieldCheckIcon as ShieldCheck,
 } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 // Runtime auth settings and cloud capacity must not be frozen at build time.
 export const dynamic = "force-dynamic";
 
-const brandStats: { icon: typeof GithubLogo; label: string; tone?: string }[] = [
-  { icon: GithubLogo, label: `${GITHUB_STARS} stars` },
-  { icon: ShieldCheck, label: LICENSE, tone: "text-green" },
-  { icon: LockKey, label: "Self-hosted" },
-];
-
 type LoginPageProps = {
-  searchParams?: Promise<{ error?: string | string[]; next?: string | string[] }>;
+  searchParams?: Promise<{
+    error?: string | string[];
+    next?: string | string[];
+    switch?: string | string[];
+  }>;
 };
+
+function firstParam(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
 
 export default async function LoginPage({ searchParams }: Readonly<LoginPageProps> = {}) {
   const params = await searchParams;
-  const error = Array.isArray(params?.error) ? params.error[0] : params?.error;
-  const next = Array.isArray(params?.next) ? params.next[0] : params?.next;
+  const error = firstParam(params?.error);
+  const next = firstParam(params?.next);
+  // An explicit switch keeps the form reachable while signed in; the app-scoped
+  // recovery page links here when the session is the wrong account.
+  const switchingAccount = firstParam(params?.switch) === "1";
+
+  // The sign-in endpoint is the only surface that knows about the session, so marketing
+  // navigation can stay static: "Sign in" is always safe to click.
+  if (!switchingAccount && (await getSession())) {
+    return redirect(returnToOrDefault(next));
+  }
+
   const capacityMiss: SignInCapacityMiss =
     error?.toLowerCase() === GOOGLE_CAPACITY_EXHAUSTED ? "google" : null;
-  const capacity = isCloud ? await getSignInCapacity() : null;
+  const [capacity, githubStars] = await Promise.all([
+    isCloud ? getSignInCapacity() : Promise.resolve(null),
+    getGitHubStars(),
+  ]);
+  const brandStats: { icon: typeof GithubLogo; label: string; tone?: string }[] = [
+    ...(githubStars ? [{ icon: GithubLogo, label: `${githubStars} stars` }] : []),
+    { icon: ShieldCheck, label: LICENSE, tone: "text-green" },
+    { icon: LockKey, label: "Self-hosted" },
+  ];
 
   return (
     <main className="grid min-h-dvh bg-bg text-fg md:grid-cols-[1.05fr_1fr]">
@@ -54,7 +77,7 @@ export default async function LoginPage({ searchParams }: Readonly<LoginPageProp
 
         <div className="max-w-[420px]">
           <div className="font-mono text-[11px] uppercase tracking-[0.6px] text-accent">
-            Open-source rank tracking
+            Open-source SEO platform
           </div>
           <h2 className="mt-[14px] mb-0 text-[32px] font-semibold leading-[1.2] tracking-[-1.1px]">
             Know exactly where you rank, and why.
@@ -74,7 +97,8 @@ export default async function LoginPage({ searchParams }: Readonly<LoginPageProp
             <pre className="m-0 overflow-x-auto bg-code-bg px-4 py-[15px] font-mono text-[12.5px] leading-[1.7] text-code-fg">
               <span className="text-code-faint"># self-host in one command</span>
               {"\n"}
-              <span className="text-accent">$</span> docker compose --profile scheduled up -d
+              <span className="text-accent">$</span> docker compose -f compose.yaml -f
+              compose.worker.yaml -f compose.temporal.yaml up -d
               {"\n"}
               <span className="block">
                 <span className="text-blue">✓</span> app <span className="text-green">started</span>
