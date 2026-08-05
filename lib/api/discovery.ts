@@ -98,6 +98,10 @@ function appRelease() {
   return process.env.APP_VERSION?.trim() || process.env.SENTRY_RELEASE?.trim() || "unknown";
 }
 
+function isExactRevision(value: string | null | undefined): value is string {
+  return Boolean(value && /^[0-9a-f]{40}$/.test(value));
+}
+
 function appIdentity() {
   return {
     app: "ok",
@@ -142,6 +146,7 @@ export async function getReadiness(ctx: Pick<ApiContext, "headers">) {
 export async function getHealth(ctx: Pick<ApiContext, "headers">, detailed = false) {
   const driver = resolveSchedulerDriver().driver;
   const schedulerMode = resolveRankCheckSchedulerMode();
+  const app = appIdentity();
   const readiness = await readApplicationReadiness();
   const [workerLiveness, temporalSnapshot] = await Promise.all([
     getWorkerLivenessDetails(),
@@ -154,7 +159,12 @@ export async function getHealth(ctx: Pick<ApiContext, "headers">, detailed = fal
           workerLiveness.schedulerDriver !== "unknown" &&
           workerLiveness.schedulerDriver !== driver
         ? "driver-mismatch"
-        : "ok";
+        : workerLiveness.status === "ok" &&
+            isExactRevision(app.appRevision) &&
+            isExactRevision(workerLiveness.revision) &&
+            workerLiveness.revision !== app.appRevision
+          ? "release-mismatch"
+          : "ok";
   const worker =
     schedulerConfiguration !== "ok"
       ? "degraded"
@@ -186,7 +196,7 @@ export async function getHealth(ctx: Pick<ApiContext, "headers">, detailed = fal
         scheduler_driver: driver,
         serp: serpCapabilities(),
         services: {
-          ...appIdentity(),
+          ...app,
           appEnvironment:
             process.env.DEPLOYMENT_ENV?.trim() ||
             process.env.BISIBILITY_ENV?.trim() ||

@@ -146,6 +146,31 @@ try {
   if (!namespace.stdout.includes("bisibility-contract")) {
     throw new Error("The deployment-scoped namespace was not observable after bootstrap.");
   }
+  const searchAttributes = run(
+    [
+      "run",
+      "--rm",
+      "--entrypoint",
+      "temporal",
+      "temporal-namespace",
+      "operator",
+      "search-attribute",
+      "list",
+      "--address",
+      "temporal:7233",
+      "--namespace",
+      "bisibility-contract",
+      "--output",
+      "json",
+    ],
+    { capture: true },
+  );
+  const provisionedAttributes = JSON.parse(searchAttributes.stdout).customAttributes ?? {};
+  for (const attribute of ["keywordId", "projectId", "provider"]) {
+    if (provisionedAttributes[attribute] !== "INDEXED_VALUE_TYPE_KEYWORD") {
+      throw new Error(`Bundled namespace did not provision ${attribute} as Keyword.`);
+    }
+  }
   console.log("Compose bootstrap contract passed twice.");
 
   if (fullRuntime) {

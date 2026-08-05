@@ -347,6 +347,34 @@ describe("API health worker and Temporal liveness", () => {
     });
   });
 
+  it("degrades detailed health when web and worker revisions differ", async () => {
+    mocks.appRevision.mockReturnValue("a".repeat(40));
+    vi.stubEnv("APP_VERSION", "a".repeat(40));
+    mocks.liveness.mockResolvedValue({
+      appliedMigration: "20260724220000_instance_settings",
+      bundledMigration: "20260724220000_instance_settings",
+      environment: "worker-production",
+      lastSeenAt: "2026-07-21T10:08:44.000Z",
+      release: "b".repeat(40),
+      revision: "b".repeat(40),
+      schedulerDriver: "temporal",
+      schedulerMode: "cutover",
+      schemaComparison: "ok",
+      status: "ok",
+    });
+
+    await expect(health()).resolves.toMatchObject({
+      body: {
+        services: {
+          schedulerConfiguration: "release-mismatch",
+          worker: "degraded",
+        },
+        status: "degraded",
+      },
+      status: 503,
+    });
+  });
+
   it("reports both scheduler contracts through capabilities", async () => {
     const response = await result(capabilities({ headers: new Headers() }));
 

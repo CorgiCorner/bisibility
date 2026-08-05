@@ -139,6 +139,9 @@ the detailed `worker` and `temporal` service states are `disabled`, not failed.
 Invalid scheduler configuration reports `invalid` and degrades the probes. A
 fresh worker heartbeat carrying a different driver reports
 `schedulerConfiguration: "driver-mismatch"` and also degrades health.
+A fresh worker heartbeat carrying a different known source revision reports
+`schedulerConfiguration: "release-mismatch"` and also degrades health. Deploy web and worker
+from the same immutable release before admitting traffic.
 
 `services.migrations` answers whether blocking data migrations have finished
 with their expected checksums and whether the public ID database contract is

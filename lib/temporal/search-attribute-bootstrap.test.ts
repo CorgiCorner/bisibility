@@ -30,6 +30,20 @@ describe("rank-check search attribute bootstrap", () => {
     expect(shouldProvisionRankCheckSearchAttributes("temporal.example.com:7233")).toBe(false);
   });
 
+  it("fails closed when an externally owned namespace is missing required attributes", async () => {
+    const state = connection({ keywordId: 2 });
+
+    await expect(
+      ensureRankCheckSearchAttributes(state.connection, {
+        address: "temporal.railway.internal:7233",
+        namespace: "bisibility-example",
+      }),
+    ).rejects.toThrow(
+      "Temporal namespace bisibility-example is missing required Keyword search attributes: projectId, provider.",
+    );
+    expect(state.operatorService.addSearchAttributes).not.toHaveBeenCalled();
+  });
+
   it("creates only missing Keyword attributes", async () => {
     const state = connection({ keywordId: 2 });
 

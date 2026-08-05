@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## [0.4.1] - 2026-08-05
+
+- Packaged provider-secret rotation commands in the production image for documented self-hosted key rotation.
+
+- Made detailed health fail closed when web and worker report different exact source revisions.
+
+- Provisioned required Temporal search attributes for bundled deployments and made external namespace validation fail closed.
+
 ## [0.4.0] - 2026-08-05
 
 - Signing in with an existing session now goes straight to the requested page instead of showing the sign-in form again; add `?switch=1` to reach the form.
