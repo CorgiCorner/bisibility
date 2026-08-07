@@ -49,7 +49,6 @@ import { probeTemporalTransport } from "./transport-probe";
 import { maxConcurrentActivities } from "./worker-config";
 import { decideWorkerSchemaGuard, workerSchemaGuardMode } from "./worker-schema-guard";
 import { runWorkerStartupStage } from "./worker-startup-retry";
-import { assertPublicIdV3WriteGateAllowsWorkerStartup } from "./worker-write-gate";
 
 // Worker entry point. Run with Node's TS runtime plus the resolve hook that lets
 // Node load the app's extensionless lib imports. We use --experimental-transform
@@ -173,8 +172,7 @@ async function run() {
     tls: connectionOptions.tls ?? false,
     tls_source: connectionOptions.tlsSource,
   });
-  await runWorkerStartupStage("app-database-write-gate", async () => {
-    await assertPublicIdV3WriteGateAllowsWorkerStartup();
+  await runWorkerStartupStage("app-database-migrations", async () => {
     await assertMigrationsReady();
     await enforceWorkerSchemaGuard();
   });

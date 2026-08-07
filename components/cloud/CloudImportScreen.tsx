@@ -46,7 +46,7 @@ const instanceCopy: CloudImportCopy = {
 function screenCopy(context: CloudImportScreenContext, projectRef: string): ScreenCopy {
   if (context === "cloud-onboard") {
     return {
-      back: { href: "/cloud/onboarding", label: "Back to start" },
+      back: { href: "/onboarding?new=1", label: "Back to setup" },
       copy: cloudCopy,
       subtitle: "This becomes your new Cloud workspace.",
       title: "Import your self-hosted data",

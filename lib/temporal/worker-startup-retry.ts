@@ -1,5 +1,5 @@
 export type WorkerStartupStage =
-  | "app-database-write-gate"
+  | "app-database-migrations"
   | "namespace-cache"
   | "persistence-schema"
   | "schedule-bootstrap"

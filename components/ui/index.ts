@@ -66,6 +66,7 @@ export {
 } from "./SummaryStrip";
 export { Switch, type SwitchProps } from "./Switch";
 export { Textarea, type TextareaProps } from "./Textarea";
+export { ThemeToggle } from "./ThemeToggle";
 export {
   type ToastContextValue,
   type ToastOptions,

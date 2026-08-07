@@ -133,35 +133,11 @@ function CloudTopBarSkeleton() {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
       <BrandMark />
-      <SkeletonBlock className="h-[30px] w-[168px] rounded-full" />
+      <div className="flex flex-none items-center gap-3">
+        <SkeletonBlock className="h-10 w-10 rounded-[9px]" />
+        <SkeletonBlock className="h-[30px] w-[168px] rounded-full" />
+      </div>
     </div>
-  );
-}
-
-export function CloudOnboardingLoadingPage() {
-  return (
-    <>
-      <CloudTopBarSkeleton />
-      <main className="pt-11">
-        <SkeletonBlock className="h-[42px] w-[72%] rounded-[10px]" />
-        <div className="mt-3 max-w-[560px]">
-          <TextStack widths={["100%", "78%"]} />
-        </div>
-        <div className="mt-[24px] grid gap-3 sm:grid-cols-3">
-          {[
-            { id: "cloud-step-1", tone: "surface" as const },
-            { id: "cloud-step-2", tone: "accent" as const },
-            { id: "cloud-step-3", tone: "surface" as const },
-          ].map((step) => (
-            <SkeletonBlock className="h-[54px] rounded-[14px]" key={step.id} tone={step.tone} />
-          ))}
-        </div>
-        <div className="mt-[30px] grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <FeatureCardSkeleton />
-          <FeatureCardSkeleton />
-        </div>
-      </main>
-    </>
   );
 }
 

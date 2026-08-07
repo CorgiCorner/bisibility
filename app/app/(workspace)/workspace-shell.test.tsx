@@ -126,6 +126,29 @@ describe("workspace layout", () => {
     expect(mocks.listWorkspaces).toHaveBeenCalledOnce();
   });
 
+  it.each([
+    ["an absent cookie", undefined, "false"],
+    ['cookie "true"', "true", "true"],
+    ['cookie "false"', "false", "false"],
+  ])(
+    "renders the expected sidebar state for %s",
+    async (_scenario, cookieValue, expectedCollapsed) => {
+      mocks.cookies.mockResolvedValue({
+        get: vi.fn((name: string) =>
+          name === "sidebar-collapsed" && cookieValue ? { value: cookieValue } : undefined,
+        ),
+      });
+
+      const result = await WorkspaceShell({
+        activeProjectId: "project_1",
+        children: <div>Workspace content</div>,
+        projectRef: "prj_f00000000000000000000000",
+      });
+
+      expect(renderToStaticMarkup(result)).toContain(`data-collapsed="${expectedCollapsed}"`);
+    },
+  );
+
   it("renders worker state in the footer only for instance admins", async () => {
     const regularResult = await WorkspaceShell({
       activeProjectId: "project_1",

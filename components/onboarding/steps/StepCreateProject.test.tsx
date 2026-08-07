@@ -4,9 +4,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { type CreateProjectFormValues, StepCreateProject } from "./StepCreateProject";
 
 const push = vi.fn();
+const mocks = vi.hoisted(() => ({
+  createCloudImportWorkspace: vi.fn(),
+}));
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push }),
+}));
+vi.mock("@/lib/actions/cloud", () => ({
+  createCloudImportWorkspace: mocks.createCloudImportWorkspace,
 }));
 
 const project = {
@@ -40,6 +46,8 @@ function renderCreateProjectStep(props: Partial<ComponentProps<typeof StepCreate
 describe("StepCreateProject", () => {
   beforeEach(() => {
     push.mockClear();
+    mocks.createCloudImportWorkspace.mockReset();
+    mocks.createCloudImportWorkspace.mockResolvedValue(undefined);
   });
 
   it("starts blank with placeholder examples instead of fixture values", () => {
@@ -72,6 +80,55 @@ describe("StepCreateProject", () => {
       screen.getByText("Only counts pages under a specific path, for example example.com/docs/."),
     ).toBeInTheDocument();
     expect(screen.queryByText(/Track acme\.dev/)).not.toBeInTheDocument();
+  });
+
+  it("offers a self-hosted import action only on cloud deployments", async () => {
+    const { rerender } = renderCreateProjectStep({ isCloud: true });
+
+    const importButton = screen.getByRole("button", {
+      name: "Migrating from a self-hosted instance? Import it instead",
+    });
+    fireEvent.click(importButton);
+
+    await waitFor(() => expect(mocks.createCloudImportWorkspace).toHaveBeenCalledOnce());
+
+    rerender(
+      <StepCreateProject
+        defaultValues={defaultValues()}
+        isCloud={false}
+        saveMatchingScopeAction={vi.fn(async () => undefined)}
+      />,
+    );
+
+    expect(
+      screen.queryByRole("button", {
+        name: "Migrating from a self-hosted instance? Import it instead",
+      }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("disables the import action while its workspace is being created", async () => {
+    let resolveImport: (() => void) | undefined;
+    mocks.createCloudImportWorkspace.mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveImport = resolve;
+        }),
+    );
+    renderCreateProjectStep({ isCloud: true });
+
+    const importButton = screen.getByRole("button", {
+      name: "Migrating from a self-hosted instance? Import it instead",
+    });
+    fireEvent.click(importButton);
+
+    await waitFor(() => expect(importButton).toBeDisabled());
+    expect(importButton).toHaveTextContent("Opening import...");
+    fireEvent.click(importButton);
+    expect(mocks.createCloudImportWorkspace).toHaveBeenCalledOnce();
+
+    resolveImport?.();
+    await waitFor(() => expect(importButton).not.toBeDisabled());
   });
 
   it("creates the project, saves matching scope, and advances after both actions succeed", async () => {

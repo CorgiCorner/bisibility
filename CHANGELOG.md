@@ -2,6 +2,25 @@
 
 ## Unreleased
 
+## [0.5.0] - 2026-08-07
+
+- Self-hosted deployments now receive a 404 for all Cloud-only routes.
+
+- Documented Cloud data portability: full-history export and a migration path to self-hosting.
+
+- The workspace sidebar now starts expanded for accounts that never collapsed it; an explicit collapse is still remembered across reloads.
+
+- The collapsed sidebar now shows a dedicated expand control instead of revealing one on hover, and the workspace switcher and account button gained tooltips in that state.
+
+- The theme toggle is now available on the onboarding, sign-in and hosted top-bar surfaces, not only inside the workspace shell.
+
+- Linked the certified Railway template and documented its topology, safe cleanup job, backups,
+  and manual upgrades.
+
+- New signups now go straight into the workspace setup wizard; importing from a self-hosted instance is an option inside its first step.
+
+- **Breaking:** v0.5.0 is fresh-install only: new self-hosted deployments use one compact Prisma baseline, and Railway creates eight roles with two completed jobs.
+
 ## [0.4.1] - 2026-08-05
 
 - Packaged provider-secret rotation commands in the production image for documented self-hosted key rotation.

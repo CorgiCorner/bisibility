@@ -18,9 +18,7 @@ vi.mock("@/components/shell/WorkspaceSwitcher", () => ({
   ),
 }));
 
-vi.mock("@mui/material/Tooltip", () => ({
-  default: ({ children }: { children: ReactNode }) => children,
-}));
+vi.mock("@mui/material/Tooltip", () => import("@/tests/mui-tooltip"));
 
 vi.mock("next/link", () => ({
   default: ({ children, href }: { children: ReactNode; href: string }) => (
@@ -74,5 +72,51 @@ describe("Sidebar", () => {
     expect(screen.getByTestId("shell-root")).toHaveAttribute("data-theme", "dark");
     expect(screen.getByTestId("shell-root")).toHaveAttribute("data-collapsed", "true");
     expect(screen.queryByText("bisibility")).not.toBeInTheDocument();
+  });
+
+  it("keeps the collapsed logo visible until hover reveals the expand affordance", () => {
+    function shell(collapsed: boolean) {
+      return (
+        <AppThemeRoot data-collapsed={collapsed ? "true" : "false"} defaultTheme="light">
+          <Sidebar
+            activeProjectId={mockWorkspaces[0].id}
+            canCreateWorkspace
+            projectRef={mockWorkspaces[0].publicId}
+            workspaces={mockWorkspaces}
+          />
+        </AppThemeRoot>
+      );
+    }
+
+    render(shell(true));
+
+    const expandButton = screen.getByRole("button", { name: "Expand sidebar" });
+    const logoMark = screen.getByTestId("sidebar-logo-mark");
+    const expandMark = screen.getByTestId("sidebar-expand-mark");
+    expect(expandButton.closest("[data-tooltip]")).toHaveAttribute(
+      "data-tooltip",
+      "Expand sidebar",
+    );
+    expect(expandButton.closest("[data-tooltip]")).toHaveAttribute(
+      "data-tooltip-placement",
+      "right",
+    );
+    expect(expandButton.closest("[data-tooltip]")).toHaveAttribute("data-tooltip-enter-delay", "0");
+    expect(expandButton).toHaveClass("group");
+    expect(logoMark).not.toHaveClass("hidden");
+    expect(logoMark).toHaveClass("group-hover:hidden");
+    expect(expandMark).toHaveClass("hidden", "group-hover:grid");
+
+    fireEvent.click(expandButton);
+
+    const collapseButton = screen.getByRole("button", { name: "Collapse sidebar" });
+    expect(collapseButton.closest("[data-tooltip]")).toHaveAttribute("data-tooltip", "");
+    expect(collapseButton.closest("[data-tooltip]")).toHaveAttribute(
+      "data-tooltip-placement",
+      "right",
+    );
+    expect(screen.getByText("bisibility")).toBeInTheDocument();
+    expect(screen.getByTestId("sidebar-logo-mark")).not.toHaveClass("group-hover:hidden");
+    expect(screen.queryByTestId("sidebar-expand-mark")).not.toBeInTheDocument();
   });
 });

@@ -6,7 +6,7 @@ import { whereCompletedChecks } from "@/lib/checks/status";
 import { appliedMigrationSummary } from "@/lib/db/migration-state";
 import { prisma } from "@/lib/db/prisma";
 import { parsePublicId, requirePublicId } from "@/lib/db/public-id";
-import { isSelfHost } from "@/lib/deployment/deployment";
+import { isCloud, isSelfHost } from "@/lib/deployment/deployment";
 import type { CloudImportJob } from "@/lib/generated/prisma/client";
 import { advanceCloudImportJobForProject } from "@/lib/migration/job-service";
 import { pushMigrationLimits, shouldUseSessions } from "@/lib/migration/limits";
@@ -153,24 +153,20 @@ export async function pollCloudImportJob(input: unknown) {
   return getCloudImportJobStatus(data.projectId);
 }
 
-async function createCloudWorkspaceDestination(destination: "import" | "overview") {
+async function createCloudImportWorkspaceDestination() {
   const suffix = randomBytes(4).toString("hex");
   const { createProject } = await import("./project");
   // biome-ignore format: compact action body keeps this module under the file line cap.
   const project = await createProject({ domain: `workspace-${suffix}.bisibility.cloud`, name: "New workspace" });
-  const { redirect } = await import("next/navigation");
-  if (destination === "import") {
-    return redirect(`/cloud/import?ctx=onboard&project=${encodeURIComponent(project.publicId)}`);
-  }
-  return redirect(appPath(project.publicId, "overview"));
-}
-
-export async function createCloudWorkspace() {
-  return createCloudWorkspaceDestination("overview");
+  return `/cloud/import?ctx=onboard&project=${encodeURIComponent(project.publicId)}`;
 }
 
 export async function createCloudImportWorkspace() {
-  return createCloudWorkspaceDestination("import");
+  if (!isCloud) {
+    throw new Error("Cloud import workspaces are available only on Cloud deployments.");
+  }
+  const { redirect } = await import("next/navigation");
+  return redirect(await createCloudImportWorkspaceDestination());
 }
 
 // biome-ignore format: compact action keeps this action module under the file line cap.

@@ -5,15 +5,7 @@ import { describe, expect, it } from "vitest";
 const source = (relativePath: string) =>
   readFileSync(fileURLToPath(new URL(relativePath, import.meta.url)), "utf8");
 const schema = source("../../prisma/schema.prisma");
-const coreMigration = source(
-  "../../prisma/migrations/20260727200000_public_id_expand_core/migration.sql",
-);
-const highVolumeMigration = source(
-  "../../prisma/migrations/20260727203000_public_id_expand_high_volume/migration.sql",
-);
-const contractMigration = source(
-  "../../prisma/migrations/20260728063000_public_id_contract/migration.sql",
-);
+const baseline = source("../../prisma/migrations/20260806000000_squashed_migrations/migration.sql");
 
 function model(name: string) {
   const heading = `model ${name} {`;
@@ -66,19 +58,17 @@ describe("public-ID final schema contract", () => {
     expect(model("BacklinkSnapshot")).not.toMatch(/publicId/);
   });
 
-  it("ships the self-guarding final contract migration", () => {
-    expect(coreMigration).toContain('CREATE TABLE "public_id_migrations"');
-    expect(highVolumeMigration).toContain('ALTER TABLE "rank_checks" ADD COLUMN "publicId"');
-    expect(contractMigration).toContain("-- data-migration-contract: self-guarding");
-    expect(contractMigration).toContain("SET lock_timeout = '5s';");
-    expect(contractMigration).toContain("RAISE EXCEPTION");
-    expect(contractMigration).toContain('DROP TABLE "public_id_migrations";');
-    expect(contractMigration).toContain('DROP TYPE "PublicIdEntityType";');
-    expect(contractMigration).toContain('ALTER TABLE "backlink_snapshots" DROP COLUMN "publicId";');
-    expect(
-      contractMigration.match(/regexp_replace\(constraint_definition, ' NOT VALID\$', ''\)/g),
-    ).toHaveLength(2);
-    expect(contractMigration).not.toMatch(/data_migrations/);
-    expect(contractMigration).not.toMatch(/IF EXISTS|CASCADE/);
+  it("ships the strict final public ID catalog in the squashed baseline", () => {
+    expect(baseline).toContain('CREATE TABLE "users"');
+    expect(baseline).not.toContain('"public".');
+    expect(baseline).toContain('CREATE UNIQUE INDEX "users_publicId_key"');
+    expect(baseline).toContain('CONSTRAINT "users_public_id_contract_format" CHECK');
+    expect(baseline).not.toContain("public_id_migrations");
+    expect(baseline).not.toContain("PublicIdEntityType");
+    const backlinkTable = baseline.slice(
+      baseline.indexOf('CREATE TABLE "backlink_snapshots"'),
+      baseline.indexOf(";", baseline.indexOf('CREATE TABLE "backlink_snapshots"')),
+    );
+    expect(backlinkTable).not.toContain('"publicId"');
   });
 });

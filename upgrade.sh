@@ -54,6 +54,11 @@ if [[ "$MANIFEST_VERSION" != "$EXPECTED_VERSION" ]]; then
   exit 1
 fi
 
+if [[ "$MANIFEST_VERSION" == "v0.5.0" ]]; then
+  echo "Upgrade refused: v0.5.0 resets the Prisma migration history and supports fresh installations only. Existing v0.4.1 and earlier databases must remain on their current release." >&2
+  exit 1
+fi
+
 node "$VERIFY_SCRIPT" --manifest "$MANIFEST"
 WEB_IMAGE="$(node "$VERIFY_SCRIPT" --manifest "$MANIFEST" --get web)"
 WORKER_IMAGE="$(node "$VERIFY_SCRIPT" --manifest "$MANIFEST" --get worker)"

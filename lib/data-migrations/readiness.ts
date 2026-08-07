@@ -2,11 +2,10 @@ import "server-only";
 
 import { bundledMigrationNames } from "@/lib/db/migration-state";
 import { prisma } from "@/lib/db/prisma";
-import { readPublicIdContractReadiness } from "@/lib/public-id-contract/readiness";
 import { activeDataMigrationManifest, DATA_MIGRATION_RECOVERY_COMMAND } from "./manifest";
 
 export type MigrationReadiness = "incomplete" | "ready";
-type MigrationReadinessFailure = "data-migration" | "prisma-migration" | "public-id-contract";
+type MigrationReadinessFailure = "data-migration" | "prisma-migration";
 
 type ReadinessDatabase = {
   $queryRawUnsafe<T>(query: string, ...values: unknown[]): Promise<T>;
@@ -35,9 +34,7 @@ async function readMigrationReadinessFailure(
   if (!(await readPrismaMigrationReadiness(db, migrations))) return "prisma-migration";
 
   const active = activeDataMigrationManifest();
-  if (active.length === 0) {
-    return (await readPublicIdContractReadiness(db)) ? null : "public-id-contract";
-  }
+  if (active.length === 0) return null;
 
   const [ledger] = await db.$queryRawUnsafe<{ exists: boolean }[]>(
     `SELECT to_regclass('data_migrations') IS NOT NULL AS "exists"`,
@@ -59,7 +56,7 @@ async function readMigrationReadinessFailure(
     return row?.finishedAt != null && row.checksum === migration.checksum;
   });
   if (!dataMigrationsReady) return "data-migration";
-  return (await readPublicIdContractReadiness(db)) ? null : "public-id-contract";
+  return null;
 }
 
 export async function readMigrationReadiness(
@@ -79,9 +76,9 @@ export async function assertMigrationsReady(
       `Prisma schema migrations are pending; run ${PRISMA_MIGRATION_RECOVERY_COMMAND} before starting the app.`,
     );
   }
-  if (failure !== null) {
+  if (failure === "data-migration") {
     throw new Error(
-      `The public ID final database contract is incomplete; run ${DATA_MIGRATION_RECOVERY_COMMAND} before starting the app.`,
+      `Deploy-blocking data migrations are incomplete; run ${DATA_MIGRATION_RECOVERY_COMMAND} before starting the app.`,
     );
   }
 }

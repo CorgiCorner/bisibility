@@ -148,6 +148,23 @@ for (const term of ["personal access token", "project API key"]) {
   }
 }
 
+const selfHostingDocs = readFileSync(join(docsRoot, "self-hosting.mdx"), "utf8");
+for (const term of [
+  "https://railway.com/deploy/bisibility",
+  "### What the template creates",
+  "Eight resources are expected.",
+  "A completed bootstrap job is not a crashed service.",
+  "two one-shot jobs",
+  "immutable release",
+]) {
+  if (!selfHostingDocs.includes(term)) {
+    failures.push(`self-hosting.mdx is missing Railway deployment guidance: ${term}`);
+  }
+}
+if (selfHostingDocs.includes("https://railway.com/new/template?template=")) {
+  failures.push("self-hosting.mdx uses the repository importer instead of the certified Railway template.");
+}
+
 const apiOverviewDocs = readFileSync(join(docsRoot, "api/overview.mdx"), "utf8");
 if (apiOverviewDocs.includes("## Client libraries")) {
   failures.push("api/overview.mdx duplicates the SDK section with a client-library section.");

@@ -1,6 +1,7 @@
 "use client";
 
 import { readTheme, subscribeTheme, type ThemeMode } from "@/lib/theme/browser-theme";
+import { isSidebarCollapsed } from "@/lib/ui/sidebar-collapsed";
 import { type ComponentPropsWithoutRef, useSyncExternalStore } from "react";
 import { SidebarCollapsedProvider, useSidebarCollapsed } from "./SidebarCollapsedState";
 
@@ -24,7 +25,7 @@ function AppThemeRootContent({ defaultTheme, ...props }: Readonly<AppThemeRootPr
 }
 
 export function AppThemeRoot({ defaultTheme, ...props }: Readonly<AppThemeRootProps>) {
-  const defaultCollapsed = props["data-collapsed"] !== "false";
+  const defaultCollapsed = isSidebarCollapsed(props["data-collapsed"]);
 
   return (
     <SidebarCollapsedProvider defaultCollapsed={defaultCollapsed}>

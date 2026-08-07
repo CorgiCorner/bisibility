@@ -18,6 +18,7 @@ import { getQuerySession } from "@/lib/queries/_auth";
 import { getLatestCloudPackageExport } from "@/lib/queries/cloud-beta-export";
 import { loadWorkspaceBudgetSummary } from "@/lib/queries/workspace-budget-summary";
 import { listWorkspaces } from "@/lib/queries/workspaces";
+import { isSidebarCollapsed } from "@/lib/ui/sidebar-collapsed";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
@@ -57,8 +58,7 @@ export async function WorkspaceShell({
 
   const cookieStore = await cookies();
   const theme = normalizeTheme(cookieStore.get("theme")?.value);
-  // Mini sidebar by default: only an explicit "false" (user expanded it) opens it.
-  const collapsed = cookieStore.get("sidebar-collapsed")?.value !== "false";
+  const collapsed = isSidebarCollapsed(cookieStore.get("sidebar-collapsed")?.value);
   const cloudBetaDismissed = isCloudBetaDismissed(
     cookieStore.get(CLOUD_BETA_DISMISSAL_COOKIE)?.value,
   );

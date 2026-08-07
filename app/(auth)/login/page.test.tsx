@@ -34,6 +34,9 @@ vi.mock("@/components/auth/LoginForm", () => ({
     return null;
   },
 }));
+vi.mock("@/components/ui", () => ({
+  ThemeToggle: () => <span data-testid="theme-toggle" />,
+}));
 
 type LoginFormProps = {
   capacity: {
@@ -136,6 +139,12 @@ describe("login page runtime rendering", () => {
     expect(html).not.toContain("bisibility-private");
     expect(html).not.toContain("db-migrations-1");
   }, 15_000);
+
+  it("renders the shared theme toggle on the sign-in surface", async () => {
+    const { html } = await renderLoginPage({});
+
+    expect(html).toContain('data-testid="theme-toggle"');
+  });
 
   it("renders the current GitHub star count", async () => {
     const { html } = await renderLoginPage({}, {}, "42");
@@ -274,8 +283,8 @@ describe("session-aware sign in", () => {
 
   it("honors a validated next destination", async () => {
     mocks.getSession.mockResolvedValue({ user: { id: "usr_1" } });
-    await renderLoginPage({}, { next: "/cloud/onboarding" });
-    expect(mocks.redirect).toHaveBeenCalledWith("/cloud/onboarding");
+    await renderLoginPage({}, { next: "/cloud/import" });
+    expect(mocks.redirect).toHaveBeenCalledWith("/cloud/import");
   });
 
   it("rejects an off-origin next destination", async () => {

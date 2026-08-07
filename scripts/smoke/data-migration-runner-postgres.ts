@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
 import { databaseConnectionConfig } from "@/lib/db/pool-config";
 import pg from "pg";
 import { runActiveDataMigrations } from "../data-migrations/runner";
@@ -18,7 +17,6 @@ function requiredDatabaseUrl() {
 
 const cleanId = "20990101000000_clean_finalization_probe";
 const interruptedId = "20990101001000_interrupted_finalization_probe";
-const upgradeSchema = "data_migration_upgrade_probe";
 const databaseUrl = requiredDatabaseUrl();
 const client = new Client({
   connectionString: databaseUrl,
@@ -71,55 +69,6 @@ async function readProbe(id: string) {
     [id],
   );
   return result.rows[0];
-}
-
-async function verifyFinishedRowBackfill() {
-  await client.query(`DROP SCHEMA IF EXISTS "${upgradeSchema}" CASCADE`);
-  await client.query(`CREATE SCHEMA "${upgradeSchema}"`);
-  const upgradeUrl = new URL(databaseUrl);
-  upgradeUrl.searchParams.set("schema", upgradeSchema);
-  const upgradeClient = new Client({
-    connectionString: upgradeUrl.href,
-    ...databaseConnectionConfig(upgradeUrl.href),
-  });
-  await upgradeClient.connect();
-  try {
-    await upgradeClient.query(
-      `CREATE TABLE "data_migrations" (
-         "id" TEXT PRIMARY KEY,
-         "checksum" TEXT NOT NULL,
-         "attempts" INTEGER NOT NULL DEFAULT 0,
-         "startedAt" TIMESTAMP(3) NOT NULL,
-         "finishedAt" TIMESTAMP(3),
-         "failedAt" TIMESTAMP(3),
-         "error" TEXT
-       )`,
-    );
-    await upgradeClient.query(
-      `INSERT INTO "data_migrations"
-         ("id", "checksum", "attempts", "startedAt", "finishedAt")
-       VALUES ($1, $2, 1, NOW(), NOW())`,
-      ["20260729000000_finished_history", "d".repeat(64)],
-    );
-    const sql = await readFile(
-      "prisma/migrations/20260730073000_data_migration_finalization/migration.sql",
-      "utf8",
-    );
-    await upgradeClient.query(sql);
-    const result = await upgradeClient.query(
-      `SELECT "finishedAt", "runCompletedAt", "finalizationAttempts"
-         FROM "data_migrations"
-        WHERE "id" = $1`,
-      ["20260729000000_finished_history"],
-    );
-    assert.equal(
-      result.rows[0]?.runCompletedAt?.getTime(),
-      result.rows[0]?.finishedAt?.getTime(),
-    );
-    assert.equal(result.rows[0]?.finalizationAttempts, 0);
-  } finally {
-    await upgradeClient.end();
-  }
 }
 
 await client.connect();
@@ -191,14 +140,11 @@ try {
     "finalization retry: run=1 finalize=2 finishedAt=set finalizationError=null",
   );
 
-  await verifyFinishedRowBackfill();
-  console.log("historical backfill: runCompletedAt copied from finishedAt");
 } finally {
   await client
     .query(`DELETE FROM "data_migrations" WHERE "id" = ANY($1::text[])`, [
       [cleanId, interruptedId],
     ])
     .catch(() => undefined);
-  await client.query(`DROP SCHEMA IF EXISTS "${upgradeSchema}" CASCADE`).catch(() => undefined);
   await client.end();
 }
