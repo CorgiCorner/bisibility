@@ -12,6 +12,11 @@ compatibility. Rank checks use your own connected SERP provider credentials.
 Read the [FAQ](https://bisibility.com/faq) for a concise comparison of Cloud
 beta and self-hosting, provider coverage, costs, and data boundaries.
 
+Cloud users do not own or operate the managed database. The ownership promise
+on Cloud is exit rights: [full-history export](/api/rank-history) and the
+[migration path](/guides/migration) to a self-hosted instance keep workspace
+data portable.
+
 **Read the deployment overview:** The options below describe the supported
 deployment paths and their operational requirements.
 
@@ -67,28 +72,23 @@ the section that explains the setting in full.
 ## Production topology
 
 Any platform that runs the web and worker Docker images alongside PostgreSQL,
-Valkey, and Temporal can host bisibility. Railway is the one-click path being
-certified; guides for other platforms will return as they pass certification.
+Valkey, and Temporal can host bisibility. Railway is the supported bundled
+one-click path; guides for other platforms will return after their deployment
+and upgrade paths have been verified.
 
 | Service | Process or image | Always required |
 | - | - | :-: |
 | Web/API | Repository `Dockerfile` | Yes |
-| Migration job | Automatic public-ID upgrade runner using the web image | Yes |
+| Migration job | Prisma and data migration runner using the web image | Yes |
 | PostgreSQL | Managed database | Yes |
 | Valkey | Managed service or compatible Redis endpoint | Yes |
 | Temporal worker | Repository `Dockerfile.worker` | For scheduled checks |
 | Temporal Server | Self-hosted Temporal services or Temporal Cloud | For scheduled checks |
 
 The web app and worker share one Prisma schema, so deploy both from the same
-immutable release whenever migrations are applied. The public ID v3 cutover
-specifically requires the web app first and identifies both runtimes with the
-same exact 40-character commit SHA, not a tag or branch name. Follow the
+immutable release whenever migrations are applied. Follow the
 [same-version upgrade rule](/guides/operations#keep-web-and-worker-on-the-same-version)
 to avoid version skew during split deployments.
-The one-time public ID v3 release also uses a fail-closed database write gate;
-follow the
-[public ID v3 cutover steps](/guides/operations#one-time-public-id-v3-cutover)
-before starting its worker.
 
 ### Client IP behind a proxy
 
@@ -329,6 +329,13 @@ those bytes before publishing them. `docker-compose.self-host.yml` remains as a
 one-minor compatibility asset for the former `--profile scheduled` command.
 
 ### Upgrade with a distribution manifest
+
+<Warning>
+v0.5.0 resets the Prisma migration history to one final-schema baseline and is
+for fresh installations only. Existing v0.4.1 and earlier databases do not have
+a supported upgrade path to v0.5.0. Keep those installations on their current
+release; the v0.5.0 `upgrade.sh` fails before changing Compose or PostgreSQL.
+</Warning>
 
 Releases after v0.2.0 include `distribution-manifest.json` and `upgrade.sh`.
 After backing up PostgreSQL and fetching the exact target tag, run:
@@ -608,10 +615,84 @@ Deploy webhook examples live in
 
 ## Railway
 
-Railway is the bundled project path. Its template runs the web app, worker,
+[Deploy bisibility on Railway](https://railway.com/deploy/bisibility).
+
+Railway is the bundled one-click path. Its template runs the web app, worker,
 PostgreSQL, Valkey, Temporal Server, and Temporal persistence inside one Railway
-project, with no Temporal Cloud account. The version-pinned topology must pass
-the private R0 certification before its public listing is activated.
+project, with no Temporal Cloud account. The listing is pinned to a tested
+bisibility release and uses private Railway networking for every internal
+connection.
+
+### Before you deploy
+
+The template asks for two values:
+
+| Variable | What to enter |
+| - | - |
+| `EMAIL_FROM` | A sender address that is already verified in Resend. Sign-in codes are sent from this address. |
+| `RESEND_API_KEY` | A Resend API key allowed to send from that verified sender. Treat it as a secret. |
+
+Railway generates the database passwords, auth secret, provider-credential
+encryption key, internal probe token, and deployment suffix. Reference variables
+share each generated value with the services that need it; do not replace those
+references with separately generated values. In particular, web and worker must
+share `BISIBILITY_SECRETS_KEY`, the Temporal namespace, and both task queues.
+
+You also need a SERP provider account, but you connect it from **Integrations**
+after the application is running. The template does not include provider usage,
+credits, or a provider subscription.
+
+<Warning>
+Review [Railway pricing](https://docs.railway.com/pricing) and configure an
+appropriate [usage alert or hard limit](https://docs.railway.com/pricing/cost-control)
+before deploying. Six services keep running, the application PostgreSQL,
+Temporal PostgreSQL, and Redis volumes retain data, and two bootstrap jobs
+stop after they complete. Deleting or redeploying a completed job is not a way
+to reduce the cost of the six persistent services. Railway estimates monthly
+usage from observed runtime consumption, not on the template review screen.
+</Warning>
+
+### What the template creates
+
+Eight resources are expected. `Running` is normal for the six persistent roles,
+and `Completed` is the successful terminal state for the two one-shot jobs.
+A completed bootstrap job is not a crashed service.
+
+| Resource | Purpose | Expected steady state |
+| - | - | - |
+| `web` | Public Next.js application and REST API. Its pre-deploy step applies application database migrations before traffic is admitted. | Running, with the only public domain in the project |
+| `worker` | Executes scheduled rank checks, alert delivery, and configured maintenance through Temporal. | Running, private only |
+| `app-postgres` | Stores accounts, projects, keywords, rank history, provider configuration, and application migration state. | Running with a persistent volume |
+| `redis` | Backs rate limits, idempotency, realtime notifications, and worker liveness. | Running, private only, with a persistent volume |
+| `temporal` | Coordinates scheduled workflows for this bisibility deployment. It is the Temporal Server, not the bisibility worker. | Running, private only |
+| `temporal-postgres` | Stores Temporal workflow history and Temporal persistence schemas independently from application data. | Running with a persistent volume |
+| `temporal-schema` | Creates or upgrades the Temporal persistence and visibility schemas before Temporal starts using them. It is safe to rerun. | Completed |
+| `temporal-namespace` | Creates the deployment-specific Temporal namespace, retention policy, and required search attributes after the server is reachable. It is safe to rerun. | Completed |
+
+Only `web` should receive a public domain. Do not add public domains or TCP
+proxies to either PostgreSQL service, Redis, Temporal Server, the worker, or the
+bootstrap jobs. They communicate through Railway private networking.
+
+### First deployment
+
+1. Open the [public Railway template](https://railway.com/deploy/bisibility)
+   and review all eight resources. Check current Railway pricing and set the
+   workspace usage controls appropriate for this six-service deployment.
+2. Enter `EMAIL_FROM` and `RESEND_API_KEY`, then deploy the template.
+3. Wait for the six persistent services to report healthy and both one-shot
+   jobs to report `Completed`.
+4. Open the generated domain on `web`. An empty installation redirects to
+   `/setup`, where you verify the first administrator by email.
+5. Connect a SERP provider from **Integrations** and set its monthly budget before
+   running a real rank check.
+6. Check `/api/v1/readiness` for traffic admission and `/api/v1/health` for the
+   full database, Temporal, worker, migration, and release report.
+7. Create a scheduled check and confirm that the worker heartbeat becomes fresh.
+
+Back up `app-postgres` and `temporal-postgres` independently. Application data
+and Temporal workflow history have different restore paths, and a backup of one
+does not protect the other. Work through the page-wide
+[production checklist](#production-checklist) before inviting users.
 
 ### Upgrade a Railway template deployment
 
@@ -624,12 +705,10 @@ the release notes explicitly name a separately tested Temporal upgrade.
 2. In the `web` service settings, change the image to
    `corgicorner/bisibility:X.Y.Z`. Deploy it and wait for its pre-deploy migrations and
    `/api/v1/readiness` check to succeed.
-3. Set `app-contract-cleanup` to that same web image tag, deploy it, and wait for the one-shot job
-   to reach `Completed`.
-4. Set `worker` to `corgicorner/bisibility-worker:X.Y.Z`, deploy it, then require
+3. Set `worker` to `corgicorner/bisibility-worker:X.Y.Z`, deploy it, then require
    `/api/v1/health` to report a fresh worker heartbeat and matching exact app and worker source
    revisions.
-5. Leave `temporal`, `temporal-schema`, and `temporal-namespace` pinned at 1.31.2 unless the release
+4. Leave `temporal`, `temporal-schema`, and `temporal-namespace` pinned at 1.31.2 unless the release
    notes explicitly say otherwise.
 
 Stop on the first failed step. Do not advance the next service or change Temporal as an attempted
@@ -651,8 +730,8 @@ three; only the connection settings change.
 | Self-managed cluster | You run Temporal yourself and point `TEMPORAL_ADDRESS` at it. | Instances that outgrow the bundled server |
 | Temporal Cloud | Managed by Temporal. Set `TEMPORAL_ADDRESS` and `TEMPORAL_API_KEY`. | Installations already standardized on managed Temporal |
 
-The Railway template bundles Temporal instead of requiring Temporal Cloud. R0
-certifies that complete topology.
+The Railway template bundles this complete Temporal topology instead of
+requiring a Temporal Cloud account.
 
 Set the same address, namespace, rank-check task queue, and alert-delivery task
 queue on the web app and worker. A generated `BISIBILITY_DEPLOYMENT_SUFFIX`

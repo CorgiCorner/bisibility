@@ -35,7 +35,7 @@ import { installSampleData } from "@/lib/actions/sample-data";
 import { updateDefaultRankCheckSettings } from "@/lib/actions/settings";
 import { syncProjectTraffic } from "@/lib/actions/traffic-sync";
 import { requireApiPublicId } from "@/lib/api/public-id";
-import { dataResidencyMessage } from "@/lib/deployment/deployment";
+import { dataResidencyMessage, isCloud } from "@/lib/deployment/deployment";
 import { isGoogleOAuthConfigured } from "@/lib/providers/analytics/google-client";
 import { getPendingGoogleOAuthSetup } from "@/lib/providers/analytics/google-oauth-pending";
 import { requireReadableProject } from "@/lib/queries/_auth";
@@ -279,6 +279,7 @@ export default async function OnboardingPage({ searchParams }: Readonly<Onboardi
         initialProject={project}
         initialSerpConnections={providerState.serpConnections}
         initialStep={currentStep}
+        isCloud={isCloud}
         monthlyCapCents={project?.budgetCapCents ?? DEFAULT_MONTHLY_COST_CAP_CENTS}
         providerConnected={providerState.providerConnected}
         rankedKeywordConnections={providerState.rankedKeywordConnections}

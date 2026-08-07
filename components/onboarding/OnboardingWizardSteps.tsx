@@ -34,6 +34,7 @@ export type OnboardingWizardStepsProps = {
   hasAnalyticsSource: boolean;
   hasApiKey: boolean;
   hasConnectedProvider: boolean;
+  isCloud: boolean;
   initialSerpConnections?: ConnectedProviderMap;
   keywordCount: number;
   monthlyCapCents: number;
@@ -66,6 +67,7 @@ export function OnboardingWizardSteps({
   hasAnalyticsSource,
   hasApiKey,
   hasConnectedProvider,
+  isCloud,
   initialSerpConnections,
   keywordCount,
   monthlyCapCents,
@@ -91,6 +93,7 @@ export function OnboardingWizardSteps({
           defaultValues={draft.createProject}
           flowState={flowState}
           initialProject={project}
+          isCloud={isCloud}
           onComplete={onCreateProjectComplete}
           saveMatchingScopeAction={actions.saveMatchingScopeAction}
         />

@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   getIntegrationCategories: vi.fn(),
   getKeywordCount: vi.fn(),
   getProjectCostContext: vi.fn(),
+  isCloud: true,
   listWorkspaces: vi.fn(),
   prisma: {
     apiKey: { findFirst: vi.fn() },
@@ -36,7 +37,12 @@ vi.mock("@/lib/actions/providers", () => ({
 vi.mock("@/lib/actions/rankCheck", () => ({ queueFirstChecks: vi.fn() }));
 vi.mock("@/lib/actions/settings", () => ({ updateDefaultRankCheckSettings: vi.fn() }));
 vi.mock("@/lib/actions/traffic-sync", () => ({ syncProjectTraffic: vi.fn() }));
-vi.mock("@/lib/deployment/deployment", () => ({ dataResidencyMessage: () => "EU data residency" }));
+vi.mock("@/lib/deployment/deployment", () => ({
+  dataResidencyMessage: () => "EU data residency",
+  get isCloud() {
+    return mocks.isCloud;
+  },
+}));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 vi.mock("@/lib/providers/analytics/google-client", () => ({
   isGoogleOAuthConfigured: () => true,
@@ -75,6 +81,7 @@ const project = {
 describe("OnboardingPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.isCloud = true;
     mocks.listWorkspaces.mockResolvedValue([{ publicId: "prj_1" }]);
     mocks.requireReadableProject.mockResolvedValue({ project });
     mocks.getIntegrationCategories.mockResolvedValue([]);
@@ -95,6 +102,19 @@ describe("OnboardingPage", () => {
     ).resolves.toBeTruthy();
 
     expect(mocks.requireReadableProject).toHaveBeenCalledWith("prj_1");
+  });
+
+  it("starts at step 1 for a fresh workspace even when the actor already has one", async () => {
+    const page = await OnboardingPage({
+      searchParams: Promise.resolve({ new: "1" }),
+    });
+    render(page);
+
+    expect(mocks.redirect).not.toHaveBeenCalled();
+    expect(mocks.requireReadableProject).not.toHaveBeenCalled();
+    expect(mocks.wizard).toHaveBeenCalledWith(
+      expect.objectContaining({ initialProject: null, initialStep: 1 }),
+    );
   });
 
   it("clamps final-step URL entry to add-keywords when the project has no keywords", async () => {
@@ -163,6 +183,7 @@ describe("OnboardingPage", () => {
         rankedKeywordConnections: [
           expect.objectContaining({ id: "conn_a00000000000000000000000" }),
         ],
+        isCloud: true,
       }),
     );
   });

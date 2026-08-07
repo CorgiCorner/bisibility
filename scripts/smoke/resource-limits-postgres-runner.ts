@@ -1,4 +1,3 @@
-import { readFile } from "node:fs/promises";
 import { createKeywordBatch } from "@/lib/actions/keyword-helpers";
 import { prisma } from "@/lib/db/prisma";
 import { createProjectRecord } from "@/lib/api/project-service";
@@ -125,59 +124,6 @@ async function keywordRace(ownerId: string, locationId: string) {
   };
 }
 
-async function migrationClamp(ownerId: string, locationId: string) {
-  process.env.BISIBILITY_MAX_PROJECTS_PER_USER = "0";
-  const project = await prisma.project.create({
-    data: {
-      defaults: {
-        create: {
-          cronExpression: null,
-          frequency: "daily",
-          jitterMinutes: 500,
-          nextCheckAt: null,
-          timezone: "UTC",
-        },
-      },
-      domain: "migration.example",
-      name: "Migration clamp",
-      ownerId,
-      publicId: "prj_a00000000000000000000002",
-      trackingScope: "country",
-    },
-  });
-  const keyword = await prisma.keyword.create({
-    data: {
-      device: "desktop",
-      location: "United States",
-      locationId,
-      projectId: project.id,
-      publicId: "kw_a00000000000000000000001",
-      schedule: {
-        create: {
-          cronExpression: null,
-          frequency: "daily",
-          jitterMinutes: 700,
-          nextCheckAt: null,
-          timezone: "UTC",
-        },
-      },
-      text: "migration clamp",
-    },
-  });
-  const sql = await readFile(
-    "prisma/migrations/20260728212000_clamp_schedule_jitter_minutes/migration.sql",
-    "utf8",
-  );
-  await prisma.$executeRawUnsafe(sql);
-  const [defaults, schedule] = await Promise.all([
-    prisma.projectDefaults.findUniqueOrThrow({ where: { projectId: project.id } }),
-    prisma.keywordSchedule.findUniqueOrThrow({ where: { keywordId: keyword.id } }),
-  ]);
-  assert(defaults.jitterMinutes === 120, "project-default jitter was not clamped");
-  assert(schedule.jitterMinutes === 120, "keyword-schedule jitter was not clamped");
-  return { keywordJitter: schedule.jitterMinutes, projectJitter: defaults.jitterMinutes };
-}
-
 async function main() {
   const version = await prisma.$queryRaw<Array<{ version: string }>>`SELECT version()`;
   assert(version[0]?.version.includes("PostgreSQL 16"), `unexpected PostgreSQL: ${version[0]?.version}`);
@@ -212,7 +158,6 @@ async function main() {
   });
   const evidence = {
     keywordRace: await keywordRace(user.id, location.id),
-    migrationClamp: await migrationClamp(user.id, location.id),
     postgres: version[0]?.version,
     projectRace: await projectRace(projectRaceUser.id),
     restBatch: await restBatch(user.id),

@@ -7,7 +7,10 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/components/onboarding/OnboardingLogoutButton", () => ({
-  OnboardingLogoutButton: () => null,
+  OnboardingLogoutButton: () => <span data-testid="logout-button">Log out</span>,
+}));
+vi.mock("@/components/ui", () => ({
+  ThemeToggle: () => <span data-testid="theme-toggle" />,
 }));
 vi.mock("@/components/shell/types", () => ({
   shellUserEmail: (user: { email: string }) => user.email,
@@ -25,7 +28,7 @@ describe("onboarding setup-first gate", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.firstRunGate.mockResolvedValue(undefined);
-    mocks.requireSession.mockResolvedValue({ user: { email: "admin@example.test", id: "user_1" } });
+    mocks.requireSession.mockResolvedValue({ user: { email: "admin@example.com", id: "user_1" } });
   });
 
   it("renders onboarding after setup is complete", async () => {
@@ -33,6 +36,15 @@ describe("onboarding setup-first gate", () => {
 
     expect(renderToStaticMarkup(result)).toContain("Onboarding content");
     expect(mocks.firstRunGate).toHaveBeenCalledOnce();
+  });
+
+  it("keeps the theme toggle ahead of the signed-in identity and logout pair", async () => {
+    const result = await OnboardingLayout({ children: <div>Onboarding content</div> });
+    const markup = renderToStaticMarkup(result);
+
+    expect(markup).toMatch(
+      /data-testid="theme-toggle"[\s\S]*admin@example\.com[\s\S]*Not you\?[\s\S]*data-testid="logout-button"/,
+    );
   });
 
   it("redirects to setup before rendering tenant onboarding", async () => {

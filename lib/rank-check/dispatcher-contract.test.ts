@@ -1,12 +1,8 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-const migration = readFileSync(
-  "prisma/migrations/20260728200000_keyword_dispatch_state/migration.sql",
-  "utf8",
-);
-const fairnessIndexMigration = readFileSync(
-  "prisma/migrations/20260729203000_dispatch_fairness_index/migration.sql",
+const baseline = readFileSync(
+  "prisma/migrations/20260806000000_squashed_migrations/migration.sql",
   "utf8",
 );
 const schema = readFileSync("prisma/schema.prisma", "utf8");
@@ -23,20 +19,24 @@ const dispatcherSources = [
 
 describe("dispatcher persistence contract", () => {
   it("stores only keywordId and indexed nextCheckAt with cascade delete", () => {
-    const columns = [...migration.matchAll(/^\s*"([^"]+)"\s+[A-Z]/gm)].map((match) => match[1]);
+    const table = baseline.slice(
+      baseline.indexOf('CREATE TABLE "keyword_dispatch_states"'),
+      baseline.indexOf(";", baseline.indexOf('CREATE TABLE "keyword_dispatch_states"')),
+    );
+    const columns = [...table.matchAll(/^\s*"([^"]+)"\s+[A-Z]/gm)].map((match) => match[1]);
     expect(columns).toEqual(["keywordId", "nextCheckAt"]);
-    expect(migration).toContain('"keyword_dispatch_states_nextCheckAt_idx"');
-    expect(migration).toContain("ON DELETE CASCADE");
-    expect(migration).not.toMatch(/frequency|cronExpression|timezone|jitterMinutes/);
+    expect(baseline).toContain('"keyword_dispatch_states_nextCheckAt_keywordId_idx"');
+    expect(baseline).toContain(
+      'FOREIGN KEY ("keywordId") REFERENCES "keywords"("id") ON DELETE CASCADE',
+    );
+    expect(table).not.toMatch(/frequency|cronExpression|timezone|jitterMinutes/);
   });
 
-  it("replaces the narrow due index with the deterministic composite index", () => {
-    expect(fairnessIndexMigration.trim()).toBe(
-      'CREATE INDEX "keyword_dispatch_states_nextCheckAt_keywordId_idx"\n' +
-        'ON "keyword_dispatch_states"("nextCheckAt", "keywordId");\n\n' +
-        'DROP INDEX "keyword_dispatch_states_nextCheckAt_idx";',
+  it("ships only the deterministic composite due index", () => {
+    expect(baseline).toContain(
+      'CREATE INDEX "keyword_dispatch_states_nextCheckAt_keywordId_idx" ON "keyword_dispatch_states"("nextCheckAt" ASC, "keywordId" ASC);',
     );
-    expect(fairnessIndexMigration).not.toMatch(/\b(?:ALTER|ADD|COLUMN|TABLE)\b/);
+    expect(baseline).not.toContain('"keyword_dispatch_states_nextCheckAt_idx"');
     const model = schema.slice(
       schema.indexOf("model KeywordDispatchState"),
       schema.indexOf("model RankCheck"),

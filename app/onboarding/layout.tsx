@@ -1,5 +1,6 @@
 import { OnboardingLogoutButton } from "@/components/onboarding/OnboardingLogoutButton";
 import { shellUserEmail, shellUserInitials } from "@/components/shell/types";
+import { ThemeToggle } from "@/components/ui";
 import { redirectToSetupIfFirstRun } from "@/lib/auth/first-run";
 import { requireSession } from "@/lib/auth/session";
 import { createNoindexMetadata } from "@/lib/seo/noindex";
@@ -34,6 +35,7 @@ export default async function OnboardingLayout({ children }: Readonly<Onboarding
             <span className="text-lg font-bold tracking-[-0.5px]">bisibility</span>
           </div>
           <div className="inline-flex items-center gap-2 text-[12.5px] text-fg-muted">
+            <ThemeToggle />
             <span className="inline-flex items-center gap-1.5">
               <span className="grid h-[22px] w-[22px] place-items-center rounded-md bg-accent font-mono text-[9px] font-semibold text-white">
                 {initials}

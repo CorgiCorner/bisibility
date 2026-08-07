@@ -36,6 +36,12 @@ target the active production database.
 
 ## Upgrade Docker Compose
 
+<Warning>
+v0.5.0 is a fresh-install reset with one squashed Prisma baseline. Existing
+v0.4.1 and earlier databases do not have a supported upgrade path to v0.5.0,
+and the v0.5.0 `upgrade.sh` refuses before changing Compose or the database.
+</Warning>
+
 1. Read the changelog and note schema or environment changes.
 2. Stop writes or schedule a maintenance window.
 3. Back up PostgreSQL and secrets.
@@ -57,88 +63,10 @@ with a mismatched worker. Never enable demo OTP or demo seeding on a real
 deployment.
 
 The migration ledger distinguishes completed data work from final completion.
-If optional settlement fails, the command exits nonzero and records the
-settlement error while leaving the migration unfinished. Rerun
-`npm run db:migrate`; it retries settlement without repeating completed data
+If optional finalization fails, the command exits nonzero and records the
+finalization error while leaving the migration unfinished. Rerun
+`npm run db:migrate`; it retries finalization without repeating completed data
 work. Existing rows already marked `finishedAt` remain final after upgrading.
-
-### One-time public ID v3 cutover
-
-The public ID v3 release has an additional production gate because the previous
-web version can still create v2 identifiers while a replacement image is
-building. Its expand migration installs a database trigger that blocks
-application writes, while the cutover migration uses a session-local bypass to
-rewrite the existing data. Development and preview environments open the gate
-automatically after the migration. A production deployment keeps it blocked
-until the new web release is proven live.
-
-For Docker Compose, set `DEPLOYMENT_ENV=production` and set `APP_VERSION` to the
-exact 40-character commit SHA from the target checkout. A tag or branch name is
-not sufficient. Missing or unknown deployment environments fail closed. Keep
-the old web and worker stopped, then deploy the web application first:
-
-```bash
-target_release="$(git rev-parse --verify 'HEAD^{commit}')"
-test "${#target_release}" -eq 40
-export DEPLOYMENT_ENV=production
-export APP_VERSION="$target_release"
-compose=(docker compose -f compose.yaml -f compose.worker.yaml -f compose.temporal.yaml)
-"${compose[@]}" stop app worker
-"${compose[@]}" up -d app
-"${compose[@]}" exec app npm run public-id:write-gate -- release \
-  --health-url https://your-host.example/api/v1/health \
-  --expected-app-release "$target_release"
-"${compose[@]}" up -d worker
-```
-
-The release command accepts health HTTP 200 or 503 because the stopped worker
-can temporarily degrade the overall endpoint. In either case, it requires the
-web application, database, and cutover migration to be healthy and requires
-`services.appRelease` to equal the exact target SHA. It also verifies the gate's
-release phase, operator policy, target SHA, all v3 database constraints, and the
-migration ledger before it conditionally opens writes and records the release
-timestamp and SHA. It reads the existing database variables from the app
-container and does not print them. Confirm the final state with:
-
-```bash
-docker compose exec app npm run public-id:write-gate -- status
-```
-
-Do not bypass the command with manual SQL. If the new web release does not
-become healthy, leave the gate blocked and fix or redeploy it. Returning to a v2
-image after data was rewritten requires restoring the pre-upgrade database
-backup; an image rollback alone is not compatible.
-
-The later N+1 contract release is a second maintenance window. Do not skip
-directly from a populated pre-N database to N+1. First complete and verify N as
-described above. For N+1, use its own exact SHA, stop the web and worker, and
-deploy the web first. The migration runner transactionally reblocks the
-released N gate before Prisma enforces the final database catalog. Once the
-exact N+1 web release reports ready, remove the temporary lifecycle objects:
-
-```bash
-target_release="$(git rev-parse --verify 'HEAD^{commit}')"
-test "${#target_release}" -eq 40
-export DEPLOYMENT_ENV=production
-export APP_VERSION="$target_release"
-compose=(docker compose -f compose.yaml -f compose.worker.yaml -f compose.temporal.yaml)
-"${compose[@]}" stop app worker
-"${compose[@]}" up -d app
-"${compose[@]}" exec app npm run public-id:contract-cleanup -- cleanup \
-  --health-url https://your-host.example/api/v1/health \
-  --expected-app-release "$target_release"
-"${compose[@]}" up -d worker
-```
-
-The cleanup command verifies the exact live release twice and never opens the
-gate before cleanup. In one database transaction it checks the final catalog
-and exact trigger inventory, then removes the gate triggers, gate function,
-temporary reservation ledger, and gate table. If it fails, all objects remain
-blocked and the safe recovery is to fix and redeploy the same N+1 SHA. Do not
-remove them with manual SQL and do not roll the application back to N after N+1
-has reblocked the database. Fresh databases take a guarded empty-schema path.
-Nonproduction automatic deployments clean up automatically; production still
-uses the exact-health command even when its database starts empty.
 
 After an upgrade that adds competitor organic snapshots, optionally compact the
 latest completed SERP for each keyword into the new query-friendly column:

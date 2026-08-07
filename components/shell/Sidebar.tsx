@@ -9,6 +9,7 @@ import type { WorkspaceSummary } from "@/lib/queries/workspaces";
 import { appPath } from "@/lib/routing/app-path";
 import Tooltip from "@mui/material/Tooltip";
 import {
+  CaretDoubleRightIcon as CaretDoubleRight,
   ChartLineUpIcon as ChartLineUp,
   SidebarSimpleIcon as SidebarSimple,
 } from "@phosphor-icons/react";
@@ -50,9 +51,7 @@ export function Sidebar({
         collapsed ? "px-3 py-4" : "px-[14px] py-4",
       ].join(" ")}
     >
-      {/* The whole logo row is the collapse toggle, a clickable div per the mockup,
-          not a <button> (which can't legitimately wrap the collapse glyph below). */}
-      <Tooltip title="Toggle sidebar">
+      <Tooltip enterDelay={0} placement="right" title={collapsed ? "Expand sidebar" : ""}>
         <button
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           className={[
@@ -60,28 +59,24 @@ export function Sidebar({
             collapsed ? "justify-center px-0 pt-1.5" : "gap-[9px] px-2 pt-1.5",
           ].join(" ")}
           onClick={handleToggle}
-          onKeyDown={(event) => {
-            if (event.key === "Enter" || event.key === " ") {
-              event.preventDefault();
-              handleToggle();
-            }
-          }}
           type="button"
         >
           <span className="relative grid h-7 w-7 flex-none place-items-center">
-            {/* Logo mark: hidden on hover while collapsed, signalling the toggle. */}
             <span
               className={[
                 "grid h-7 w-7 place-items-center rounded-[7px] bg-accent text-white",
                 collapsed ? "group-hover:hidden" : "",
               ].join(" ")}
+              data-testid="sidebar-logo-mark"
             >
               <ChartLineUp aria-hidden size={16} weight="bold" />
             </span>
-            {/* Collapse glyph: only revealed on hover while collapsed (accent-soft). */}
             {collapsed ? (
-              <span className="absolute inset-0 hidden place-items-center rounded-[7px] bg-accent-soft text-accent group-hover:grid">
-                <SidebarSimple aria-hidden size={16} weight="bold" />
+              <span
+                className="absolute inset-0 hidden place-items-center rounded-[7px] bg-accent-soft text-accent group-hover:grid"
+                data-testid="sidebar-expand-mark"
+              >
+                <CaretDoubleRight aria-hidden size={16} weight="bold" />
               </span>
             ) : null}
           </span>

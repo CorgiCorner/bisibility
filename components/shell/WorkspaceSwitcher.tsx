@@ -7,6 +7,7 @@ import { appPath } from "@/lib/routing/app-path";
 import Divider from "@mui/material/Divider";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
+import Tooltip from "@mui/material/Tooltip";
 import {
   CaretUpDownIcon as CaretUpDown,
   GearSixIcon as GearSix,
@@ -78,37 +79,39 @@ export function WorkspaceSwitcher({
 
   return (
     <div className="relative mb-[14px]">
-      <button
-        aria-controls={open ? "workspace-switcher-menu" : undefined}
-        aria-expanded={open}
-        aria-haspopup="menu"
-        aria-label="Switch workspace"
-        className={[
-          "group flex w-full items-center rounded-[10px] text-left text-fg outline-none transition-colors",
-          collapsed
-            ? "justify-center border border-transparent bg-transparent px-0 py-2.5"
-            : "gap-2.5 border border-border-strong bg-bg-elev px-[11px] py-2.5 hover:bg-bg-sunken focus-visible:border-accent",
-        ].join(" ")}
-        onClick={(event) => setAnchorEl(event.currentTarget)}
-        type="button"
-      >
-        <span className="grid h-[30px] w-[30px] flex-none place-items-center rounded-lg bg-accent-soft text-accent">
-          <TriggerIcon aria-hidden size={14} weight="bold" />
-        </span>
-        {collapsed ? null : (
-          <>
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-[13px] font-semibold leading-tight">
-                {active?.name ?? "Workspace"}
+      <Tooltip placement="right" title={collapsed ? "Switch workspace" : ""}>
+        <button
+          aria-controls={open ? "workspace-switcher-menu" : undefined}
+          aria-expanded={open}
+          aria-haspopup="menu"
+          aria-label="Switch workspace"
+          className={[
+            "group flex w-full items-center rounded-[10px] text-left text-fg outline-none transition-colors",
+            collapsed
+              ? "justify-center border border-transparent bg-transparent px-0 py-2.5"
+              : "gap-2.5 border border-border-strong bg-bg-elev px-[11px] py-2.5 hover:bg-bg-sunken focus-visible:border-accent",
+          ].join(" ")}
+          onClick={(event) => setAnchorEl(event.currentTarget)}
+          type="button"
+        >
+          <span className="grid h-[30px] w-[30px] flex-none place-items-center rounded-lg bg-accent-soft text-accent">
+            <TriggerIcon aria-hidden size={14} weight="bold" />
+          </span>
+          {collapsed ? null : (
+            <>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[13px] font-semibold leading-tight">
+                  {active?.name ?? "Workspace"}
+                </span>
+                <span className="block font-mono text-[10px] text-fg-faint">
+                  {active ? workspaceSublabel(active) : "New workspace"}
+                </span>
               </span>
-              <span className="block font-mono text-[10px] text-fg-faint">
-                {active ? workspaceSublabel(active) : "New workspace"}
-              </span>
-            </span>
-            <CaretUpDown aria-hidden className="text-fg-faint" size={13} weight="bold" />
-          </>
-        )}
-      </button>
+              <CaretUpDown aria-hidden className="text-fg-faint" size={13} weight="bold" />
+            </>
+          )}
+        </button>
+      </Tooltip>
       <Menu
         anchorEl={anchorEl}
         anchorOrigin={

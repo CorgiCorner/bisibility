@@ -1,4 +1,4 @@
-import { DOCS_URL, GITHUB_URL } from "@/lib/site/site";
+import { DOCS_URL } from "@/lib/site/site";
 
 export type DeployTarget = "docker" | "other" | "railway";
 
@@ -9,8 +9,6 @@ export type DeployLink = {
   href: string;
   muted?: boolean;
 };
-
-const repositoryUrl = encodeURIComponent(GITHUB_URL);
 
 export const deployLinks = {
   docker: {
@@ -31,7 +29,7 @@ export const deployLinks = {
     id: "railway",
     label: "Deploy to Railway",
     description: "Everything runs inside your Railway project. No Temporal Cloud needed.",
-    href: `https://railway.com/new/template?template=${repositoryUrl}`,
+    href: "https://railway.com/deploy/bisibility",
   },
 } as const satisfies Record<DeployTarget, DeployLink>;
 

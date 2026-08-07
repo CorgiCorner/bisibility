@@ -48,6 +48,7 @@ describe("MCP OAuth authentication", () => {
   });
 
   afterEach(() => {
+    vi.restoreAllMocks();
     vi.unstubAllEnvs();
   });
 
@@ -174,6 +175,25 @@ describe("MCP OAuth authentication", () => {
       "MCP OAuth token verification requires BETTER_AUTH_URL to be configured.",
     );
     expect(mocks.verifyAccessToken).not.toHaveBeenCalled();
+  });
+
+  it("rejects verifier failures without emitting temporary diagnostics", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    mocks.verifyAccessToken.mockRejectedValue(new Error("invalid audience"));
+
+    const result = await authenticateMcpOAuthRequest(request("oauth-access-token"));
+    if (!("response" in result)) throw new Error("Expected an OAuth rejection response.");
+
+    expect(result.response.status).toBe(401);
+    expect(mocks.verifyAccessToken).toHaveBeenCalledWith("oauth-access-token", {
+      jwksUrl: "https://auth.example.com/api/auth/jwks",
+      verifyOptions: {
+        audience: "https://resource.example.com/api/mcp",
+        issuer: "https://auth.example.com",
+      },
+    });
+    expect(mocks.userFindUnique).not.toHaveBeenCalled();
+    expect(warn).not.toHaveBeenCalled();
   });
 
   it("rejects tokens without a user subject or bisibility access scope", async () => {

@@ -1,3 +1,4 @@
+import { ThemeToggle } from "@/components/ui";
 import {
   CaretDownIcon as CaretDown,
   ChartLineUpIcon as ChartLineUp,
@@ -37,6 +38,7 @@ export function CloudTopBar({
         </span>
       </div>
       <div className="flex flex-none items-center gap-3">
+        <ThemeToggle />
         {ctx === "onboard" ? (
           <SetupPill step={onboardStep} />
         ) : (

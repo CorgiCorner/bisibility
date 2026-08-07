@@ -57,6 +57,7 @@ export async function runPostgresMigrationContract() {
     DATABASE_URL: databaseUrl,
     DIRECT_URL: directUrl,
     DEPLOYMENT_ENV: process.env.DEPLOYMENT_ENV ?? "test",
+    EXPECT_SINGLE_BASELINE: "1",
   };
   const sentinelEnv = {
     ...configuredEnv,
@@ -91,6 +92,7 @@ export async function runPostgresMigrationContract() {
     configuredEnv,
   );
   run("npm", ["run", "test:data-migration-runner-postgres"], configuredEnv);
+  run("npm", ["run", "test:baseline-catalog"], configuredEnv);
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

@@ -1,4 +1,4 @@
-import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { ThemeToggle } from "@/components/ui";
 import {
   initializeThemeFromCookie,
   readTheme,

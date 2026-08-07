@@ -22,46 +22,17 @@ const instrumentation = readFileSync("instrumentation.ts", "utf8");
 const health = readFileSync("lib/api/discovery.ts", "utf8");
 const temporalWorker = readFileSync("lib/temporal/worker.ts", "utf8");
 const deployMigration = readFileSync("scripts/deploy/migrate.ts", "utf8");
-const writeGateMigration = readFileSync(
-  "prisma/migrations/20260729210500_public_id_v3_write_gate/migration.sql",
-  "utf8",
-);
 const packageJson = JSON.parse(readFileSync("package.json", "utf8"));
+const seedCliInstall =
+  dockerfile.match(/RUN npm install --prefix \/seed-cli[\s\S]*?(?=\nFROM )/)?.[0] ?? "";
 const migrationRunner = "npm run db:migrate";
 const migrationScript =
   "node --experimental-transform-types --import ./lib/temporal/register-loader.mjs scripts/deploy/migrate.ts";
 assert(packageJson.scripts?.["db:migrate"] === migrationScript, "db:migrate must use the generic migration runner");
 assert(
-  deployMigration.indexOf("migrationWriteGateContext()") <
-    deployMigration.indexOf("await runMigrationPipeline"),
-  "db:migrate must establish the fail-closed write-gate context before applying schema changes",
-);
-assert(
-  deployMigration.indexOf("const beforePrisma = await pipeline.reblock(context, true)") <
-    deployMigration.indexOf("await pipeline.prisma()"),
-  "db:migrate must reblock or validate a recoverable fresh gate before applying N+1 schema changes",
-);
-assert(
   deployMigration.indexOf("await pipeline.prisma()") <
-    deployMigration.indexOf("const afterPrisma = await pipeline.reblock(context, true)"),
-  "db:migrate must recheck and retarget the write gate after Prisma",
-);
-assert(
-  deployMigration.indexOf("const afterPrisma = await pipeline.reblock(context, true)") <
     deployMigration.indexOf("await pipeline.runData()"),
   "db:migrate must apply schema changes before running active data migrations",
-);
-assert(
-  deployMigration.indexOf("await pipeline.runData()") <
-    deployMigration.indexOf("await pipeline.cleanup(context)"),
-  "db:migrate must clean automatic N+1 artifacts only after final migration readiness",
-);
-assert(
-  writeGateMigration.includes("'automatic'") &&
-    writeGateMigration.includes("'0000000000000000000000000000000000000000'") &&
-    writeGateMigration.includes('"writesBlocked"') &&
-    !writeGateMigration.includes("current_setting('bisibility.public_id_write_gate_policy'"),
-  "The schema migration must install a neutral blocked gate for post-Prisma retargeting",
 );
 assert(
   deployMigration.includes('"migrate-cli", "node_modules", "prisma"'),
@@ -109,18 +80,14 @@ for (const [name, contents] of [
 assert(
   dockerfile.includes("scripts/deploy/migrate.ts") &&
     dockerfile.includes("scripts/data-migrations") &&
-    dockerfile.includes("scripts/ops/public-id-write-gate.ts") &&
-    dockerfile.includes("scripts/ops/public-id-v3-contract-cleanup.ts") &&
     dockerfile.includes("/workspace/package.json ./package.json"),
-  "Final Docker runner must package the migration runner, registry, and public ID write-gate command",
+  "Final Docker runner must package the migration runner and data-migration registry",
+);
+assert(
+  seedCliInstall.includes("@paralleldrive/cuid2@"),
+  "The final Docker runner seed closure must include the public-ID generator",
 );
 assert(dockerfile.includes('CMD ["npm", "run", "db:migrate"]'), "Docker migrate target must run db:migrate");
-for (const dependency of ["@paralleldrive/cuid2", "@noble/hashes", "bignumber.js", "error-causes"]) {
-  assert(
-    dockerfile.includes(dependency),
-    `Final Docker runner must package the ${dependency} public ID dependency closure`,
-  );
-}
 assert(compose.includes(migrationRunner), "Compose must run the coordinated migration runner");
 const composeEnv = {
   ...process.env,
@@ -255,7 +222,7 @@ assert(
 );
 assert(
   alertRemediationSmoke.includes('DEPLOYMENT_ENV: "test"'),
-  "Alert remediation smoke must use the explicit test write-gate context",
+  "Alert remediation smoke must use the explicit test migration context",
 );
 assert(
   instrumentation.includes("enforceMigrationsAtStartup"),
@@ -269,12 +236,6 @@ assert(
   health.includes("readMigrationReadiness") &&
     health.includes('migrations !== "ready"'),
   "Health readiness must fail when active data migrations are incomplete",
-);
-assert(
-  temporalWorker.includes('from "./worker-write-gate"') &&
-    temporalWorker.indexOf("await assertPublicIdV3WriteGateAllowsWorkerStartup()") <
-      temporalWorker.indexOf("await assertMigrationsReady()"),
-  "Temporal worker startup must refuse an active public ID write gate before other startup work",
 );
 assert(
   temporalWorker.includes('from "../data-migrations/readiness"') &&

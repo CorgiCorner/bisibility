@@ -3,7 +3,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   advanceCloudImportJob,
   createCloudImportWorkspace,
-  createCloudWorkspace,
   mintMigrationToken,
   mintMigrationTokenResult,
   pollCloudImportJob,
@@ -29,6 +28,7 @@ const mocks = vi.hoisted(() => {
     consume: vi.fn(),
     createProject: vi.fn(),
     getCloudImportJobStatus: vi.fn(),
+    isCloud: true,
     notifyCloudImportDone: vi.fn(() => Promise.resolve()),
     notifyCloudImportFailed: vi.fn(() => Promise.resolve()),
     prisma: {
@@ -69,6 +69,14 @@ vi.mock("@/lib/auth/audit", () => ({
 }));
 vi.mock("@/lib/auth/session", () => ({ requireSession: mocks.requireSession }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
+vi.mock("@/lib/deployment/deployment", () => ({
+  get isCloud() {
+    return mocks.isCloud;
+  },
+  get isSelfHost() {
+    return !mocks.isCloud;
+  },
+}));
 vi.mock("@/lib/notifications/events", () => ({
   notifyCloudImportDone: mocks.notifyCloudImportDone,
   notifyCloudImportFailed: mocks.notifyCloudImportFailed,
@@ -132,6 +140,7 @@ function jobRow(overrides: Record<string, unknown> = {}) {
 describe("cloud migration actions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.isCloud = true;
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-06-28T12:00:00.000Z"));
     mockActor();
@@ -431,19 +440,6 @@ describe("cloud migration actions", () => {
     },
   );
 
-  it("creates a random cloud workspace and redirects to its public URL", async () => {
-    mocks.createProject.mockResolvedValue({
-      id: "project_new",
-      publicId: "prj_bbcdefghijklmnopqrstuvwx",
-    });
-    await createCloudWorkspace();
-    expect(mocks.createProject).toHaveBeenCalledWith({
-      domain: expect.stringMatching(/^workspace-[a-f0-9]{8}\.bisibility\.cloud$/),
-      name: "New workspace",
-    });
-    expect(mocks.redirect).toHaveBeenCalledWith("/app/prj_bbcdefghijklmnopqrstuvwx/overview");
-  });
-
   it("creates a dedicated import workspace and redirects to its onboarding import", async () => {
     mocks.createProject.mockResolvedValue({
       id: "project_new",
@@ -461,5 +457,16 @@ describe("cloud migration actions", () => {
     expect(mocks.redirect).toHaveBeenCalledWith(
       "/cloud/import?ctx=onboard&project=prj_bbcdefghijklmnopqrstuvwx",
     );
+  });
+
+  it("rejects import workspace creation on self-hosted deployments", async () => {
+    mocks.isCloud = false;
+
+    await expect(createCloudImportWorkspace()).rejects.toThrow(
+      "Cloud import workspaces are available only on Cloud deployments.",
+    );
+
+    expect(mocks.createProject).not.toHaveBeenCalled();
+    expect(mocks.redirect).not.toHaveBeenCalled();
   });
 });

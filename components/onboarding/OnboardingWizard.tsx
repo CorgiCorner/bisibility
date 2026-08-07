@@ -44,6 +44,7 @@ type OnboardingWizardProps = {
   initialProject: OnboardingProject | null;
   initialSerpConnections?: ConnectedProviderMap;
   initialStep: OnboardingStepNumber;
+  isCloud?: boolean;
   monthlyCapCents: number;
   providerConnected: boolean;
   rankedKeywordConnections?: RankedKeywordConnection[];
@@ -64,6 +65,7 @@ export function OnboardingWizard({
   initialProject,
   initialSerpConnections,
   initialStep,
+  isCloud = false,
   monthlyCapCents,
   providerConnected,
   rankedKeywordConnections = [],
@@ -233,6 +235,7 @@ export function OnboardingWizard({
           hasAnalyticsSource={hasAnalyticsSource}
           hasApiKey={hasApiKey}
           hasConnectedProvider={hasConnectedProvider}
+          isCloud={isCloud}
           initialSerpConnections={initialSerpConnections}
           keywordCount={keywordCount}
           monthlyCapCents={monthlyCapCents}

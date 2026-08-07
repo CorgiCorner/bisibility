@@ -3,6 +3,7 @@ import { CommandPaletteProvider } from "@/components/shell/CommandPalette";
 import { Sidebar } from "@/components/shell/Sidebar";
 import { mockWorkspaces } from "@/components/shell/workspaces.mock";
 import type { Meta, StoryObj } from "@storybook/react";
+import { userEvent, within } from "storybook/test";
 
 function Frame({ collapsed = false }: { collapsed?: boolean }) {
   return (
@@ -51,5 +52,14 @@ export const Expanded: Story = {
 };
 
 export const Collapsed: Story = {
+  name: "Collapsed - logo with hover expand affordance",
   render: () => <Frame collapsed />,
+};
+
+export const CollapsedHovered: Story = {
+  name: "Collapsed - expand affordance on hover",
+  render: () => <Frame collapsed />,
+  play: async ({ canvasElement }) => {
+    await userEvent.hover(within(canvasElement).getByRole("button", { name: "Expand sidebar" }));
+  },
 };

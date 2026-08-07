@@ -3,7 +3,7 @@ import { canProjectAction } from "@/lib/auth/capabilities";
 import type { Role } from "@/lib/generated/prisma/client";
 import { FIELD_HELP } from "@/lib/settings/field-help";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DefaultsSection } from "./DefaultsSection";
 
 const mocks = vi.hoisted(() => ({
@@ -54,7 +54,14 @@ function renderCustomCronDefaults() {
 describe("DefaultsSection", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // The complete IANA catalogue is covered by lib/settings/timezones.test.ts.
+    // Keep this component contract focused on the menu wiring and search surface.
+    vi.spyOn(Intl, "supportedValuesOf").mockReturnValue(["America/Los_Angeles", "Europe/Warsaw"]);
     fetchMock.mockResolvedValue({ ok: true, json: async () => ({ data: [] }) } as Response);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it("labels the default market controls as defaults", () => {
@@ -69,7 +76,7 @@ describe("DefaultsSection", () => {
     expect(screen.queryByRole("combobox", { name: "Location" })).not.toBeInTheDocument();
   });
 
-  it("shows schedule field help and a searchable full timezone menu", () => {
+  it("shows schedule field help and wires the searchable timezone menu", () => {
     renderCustomCronDefaults();
 
     expect(screen.getByRole("button", { name: FIELD_HELP.frequency })).toBeInTheDocument();

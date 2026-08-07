@@ -219,6 +219,7 @@ export function middleware(request: NextRequest) {
 
   const protectedPath =
     matchesPathSegment(request.nextUrl.pathname, "/app") ||
+    matchesPathSegment(request.nextUrl.pathname, "/cloud") ||
     matchesPathSegment(request.nextUrl.pathname, "/onboarding");
 
   // Self-hosted routes reach their RSC layouts first so an empty installation can

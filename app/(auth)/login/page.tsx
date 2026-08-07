@@ -1,4 +1,5 @@
 import { LoginForm } from "@/components/auth/LoginForm";
+import { ThemeToggle } from "@/components/ui";
 import { returnToOrDefault } from "@/lib/auth/return-to";
 import {
   DEV_DEMO_EMAIL,
@@ -122,7 +123,10 @@ export default async function LoginPage({ searchParams }: Readonly<LoginPageProp
         </div>
       </section>
 
-      <section className="flex items-center justify-center px-6 py-11">
+      <section className="relative flex items-center justify-center px-6 py-11">
+        <div className="absolute top-4 right-4 sm:top-6 sm:right-6">
+          <ThemeToggle />
+        </div>
         <LoginForm
           capacity={capacity}
           capacityMiss={capacityMiss}

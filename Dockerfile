@@ -25,16 +25,8 @@ RUN npm install --prefix /migrate-cli --no-save --no-audit --no-fund \
 # /workspace/prisma/seed.ts finds it.
 RUN npm install --prefix /seed-cli --no-save --no-audit --no-fund \
   pg@"$(node -p "require('./node_modules/pg/package.json').version")" \
-  @prisma/adapter-pg@"$(node -p "require('./node_modules/@prisma/adapter-pg/package.json').version")"
-# Deploy-blocking data migrations can use application libraries before their schema
-# contract is applied. The standalone trace does not include the current
-# migration dependency closure, so carry the exact lockfile-resolved packages.
-RUN npm install --prefix /public-id-cli --no-save --no-audit --no-fund \
-  @paralleldrive/cuid2@"$(node -p "require('./node_modules/@paralleldrive/cuid2/package.json').version")" \
-  @noble/hashes@"$(node -p "require('./node_modules/@noble/hashes/package.json').version")" \
-  bignumber.js@"$(node -p "require('./node_modules/bignumber.js/package.json').version")" \
-  error-causes@"$(node -p "require('./node_modules/error-causes/package.json').version")"
-
+  @prisma/adapter-pg@"$(node -p "require('./node_modules/@prisma/adapter-pg/package.json').version")" \
+  @paralleldrive/cuid2@"$(node -p "require('./node_modules/@paralleldrive/cuid2/package.json').version")"
 FROM node:22.23.1-alpine AS builder
 WORKDIR /workspace
 ARG APP_REVISION
@@ -102,15 +94,12 @@ COPY --from=builder --chown=nextjs:nodejs /workspace/prisma ./prisma
 # the builder. Verified: without the closure the demo seed fails on
 # "Cannot find package 'postgres-array'".
 COPY --from=deps --chown=nextjs:nodejs /seed-cli/node_modules ./node_modules
-COPY --from=deps --chown=nextjs:nodejs /public-id-cli/node_modules ./node_modules
 COPY --from=builder --chown=nextjs:nodejs /workspace/lib ./lib
 # Railway and Fly execute db:migrate in this final image. The wrapper selects
 # the packaged Prisma CLI/config above, applies the full migration tree, then
 # runs the generic data-migration registry.
 COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/deploy/migrate.ts ./scripts/deploy/migrate.ts
 COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/data-migrations ./scripts/data-migrations
-COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/ops/public-id-write-gate.ts ./scripts/ops/public-id-write-gate.ts
-COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/ops/public-id-v3-contract-cleanup.ts ./scripts/ops/public-id-v3-contract-cleanup.ts
 COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/ops/locked-verification.ts ./scripts/ops/locked-verification.ts
 COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/ops/provider-secret-rotation.ts ./scripts/ops/provider-secret-rotation.ts
 COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/ops/rotate-provider-secrets.ts ./scripts/ops/rotate-provider-secrets.ts

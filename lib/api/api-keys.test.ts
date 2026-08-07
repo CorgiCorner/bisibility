@@ -194,7 +194,7 @@ model Example {
     ]);
   });
 
-  it("matches every added migration column to its Prisma database field", () => {
+  it("matches every incrementally added migration column to its Prisma database field", () => {
     const migrationsRoot = resolve(process.cwd(), "prisma/migrations");
     const migrations = readdirSync(migrationsRoot, { withFileTypes: true })
       .filter((entry) => entry.isDirectory())
@@ -204,7 +204,8 @@ model Example {
 
     const result = migrationColumnMismatches(source("prisma/schema.prisma"), migrations);
 
-    expect(result.additions.length).toBeGreaterThan(0);
+    expect(migrations.length).toBeGreaterThan(0);
+    expect(migrations.some(([, sql]) => sql.includes("CREATE TABLE"))).toBe(true);
     expect(result.mismatches).toEqual([]);
   });
 });

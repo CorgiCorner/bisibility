@@ -1,7 +1,9 @@
 import { mockWorkspaces } from "@/components/shell/workspaces.mock";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
+
+vi.mock("@mui/material/Tooltip", () => import("@/tests/mui-tooltip"));
 
 describe("WorkspaceSwitcher", () => {
   it.each([true, false])(
@@ -27,4 +29,33 @@ describe("WorkspaceSwitcher", () => {
       ).toHaveAttribute("href", `/app/${mockWorkspaces[1].publicId}/overview`);
     },
   );
+
+  it("labels the collapsed trigger with a right-aligned tooltip", () => {
+    render(
+      <WorkspaceSwitcher
+        activeProjectId={mockWorkspaces[0].id}
+        canCreateWorkspace
+        collapsed
+        workspaces={mockWorkspaces}
+      />,
+    );
+
+    const trigger = screen.getByRole("button", { name: "Switch workspace" });
+    expect(trigger.closest("[data-tooltip]")).toHaveAttribute("data-tooltip", "Switch workspace");
+    expect(trigger.closest("[data-tooltip]")).toHaveAttribute("data-tooltip-placement", "right");
+  });
+
+  it("suppresses the expanded trigger tooltip", () => {
+    render(
+      <WorkspaceSwitcher
+        activeProjectId={mockWorkspaces[0].id}
+        canCreateWorkspace
+        workspaces={mockWorkspaces}
+      />,
+    );
+
+    expect(
+      screen.getByRole("button", { name: "Switch workspace" }).closest("[data-tooltip]"),
+    ).toHaveAttribute("data-tooltip", "");
+  });
 });

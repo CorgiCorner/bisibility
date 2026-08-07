@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import type { DataMigrationManifestEntry } from "@/lib/data-migrations/manifest";
 import { dataMigrationManifest } from "@/lib/data-migrations/manifest";
@@ -29,39 +28,6 @@ describe("data migration release boundary", () => {
     await expect(
       lintDataMigrationReleaseBoundaries(process.cwd(), dataMigrationManifest),
     ).resolves.toBeUndefined();
-  });
-
-  it("requires the repository contract to self-guard without ledger gates", async () => {
-    const sql = await import("node:fs/promises").then((fs) =>
-      fs.readFile("prisma/migrations/20260728063000_public_id_contract/migration.sql", "utf8"),
-    );
-
-    expect(sql).toContain("-- data-migration-contract: self-guarding");
-    expect(sql).not.toMatch(/data_migrations/);
-    expect(sql).not.toMatch(/public_id_migrations(?!\";)/);
-  });
-
-  it("keeps N1 lifecycle artifacts for exact-release operator cleanup", async () => {
-    const sql = await import("node:fs/promises").then((fs) =>
-      fs.readFile(
-        "prisma/migrations/20260729220000_public_id_v3_contract/migration.sql",
-        "utf8",
-      ),
-    );
-
-    expect(sql).toContain("-- data-migration-contract: self-guarding");
-    expect(sql).toContain("'public-id-v3-n1'");
-    expect(sql).toContain("format('%I.public_id_v3_write_gate', current_schema())");
-    expect(sql).toContain("format('%I.public_id_v3_migrations', current_schema())");
-    expect(sql).not.toContain("to_regclass('public_id_v3_write_gate')");
-    expect(sql).not.toContain("to_regclass('public_id_v3_migrations')");
-    expect(sql).not.toContain('DROP TABLE "public_id_v3_migrations"');
-    expect(sql).not.toContain('DROP TABLE "public_id_v3_write_gate"');
-    expect(sql).not.toContain('DROP FUNCTION "enforce_public_id_v3_write_gate"');
-    expect(sql).not.toContain("DROP TRIGGER");
-    expect(createHash("sha256").update(sql).digest("hex")).toBe(
-      "e8cc60047a84cc47ea9e7a85e2b121ae413c28c80011e17ae7d8f5175e74a7dd",
-    );
   });
 
   it("accepts an active data migration only while its contract is absent", async () => {

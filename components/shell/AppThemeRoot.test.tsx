@@ -27,4 +27,23 @@ describe("AppThemeRoot", () => {
 
     expect(screen.getByTestId("theme-root")).toHaveAttribute("data-theme", "dark");
   });
+
+  it.each([
+    ["an absent cookie", undefined, "false"],
+    ['cookie "true"', "true", "true"],
+    ['cookie "false"', "false", "false"],
+  ])(
+    "sets the expected initial sidebar state for %s",
+    (_scenario, dataCollapsed, expectedCollapsed) => {
+      render(
+        <AppThemeRoot
+          data-collapsed={dataCollapsed}
+          data-testid="theme-root"
+          defaultTheme="light"
+        />,
+      );
+
+      expect(screen.getByTestId("theme-root")).toHaveAttribute("data-collapsed", expectedCollapsed);
+    },
+  );
 });
