@@ -73,6 +73,47 @@ describe("serpApiProvider", () => {
     expect(result.billingUnits).toBe(requests);
   });
 
+  it("allows a slow search page within the provider response window", async () => {
+    vi.useFakeTimers();
+
+    try {
+      const fetchMock = vi.fn((_url: string | URL | Request, init?: RequestInit) => {
+        return new Promise<Response>((resolve, reject) => {
+          const timeout = setTimeout(
+            () =>
+              resolve(
+                jsonResponse(
+                  searchResponse([{ link: "https://www.example.com/page", position: 3 }]),
+                ),
+              ),
+            42_000,
+          );
+          init?.signal?.addEventListener(
+            "abort",
+            () => {
+              clearTimeout(timeout);
+              reject(new DOMException("The operation was aborted.", "AbortError"));
+            },
+            { once: true },
+          );
+        });
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      const result = expect(
+        serpApiProvider.fetchRank(rankInput({ depth: 10 })),
+      ).resolves.toMatchObject({
+        billingUnits: 1,
+        position: 3,
+      });
+
+      await vi.advanceTimersByTimeAsync(42_000);
+      await result;
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("stops after the first page when the tracked domain is found", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       jsonResponse(
