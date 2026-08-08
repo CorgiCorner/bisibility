@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## [0.5.1] - 2026-08-08
+
+- Increased search and workflow timeouts so deep rank checks can finish when valid provider pages respond slowly.
+
 ## [0.5.0] - 2026-08-07
 
 - Self-hosted deployments now receive a 404 for all Cloud-only routes.

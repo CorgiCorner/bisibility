@@ -51,7 +51,11 @@ const mocks = vi.hoisted(() => {
     ApplicationFailure: TestApplicationFailure,
     activities,
     continueAsNew: vi.fn(),
-    proxyActivities: vi.fn(() => activities),
+    proxies: [] as unknown[],
+    proxyActivities: vi.fn((options) => {
+      mocks.proxies.push(options);
+      return activities;
+    }),
     runId: "run_manual_1",
     searchAttributes: new Map<string, unknown>(),
   };
@@ -79,6 +83,17 @@ function activityFailure(type: string, message: string) {
 describe("retired workflow compatibility", () => {
   it("keeps the retired job processor type in the bundle as a no-op tombstone", async () => {
     await expect(processQueuedJobsWorkflow()).resolves.toBeUndefined();
+  });
+});
+
+describe("rank check activity contract", () => {
+  it("allows a complete ten-page provider lookup to finish", () => {
+    expect(mocks.proxies).toContainEqual(
+      expect.objectContaining({
+        scheduleToStartTimeout: `${DEFAULT_STALE_RUNNING_CHECK_MINUTES - 1} minutes`,
+        startToCloseTimeout: "15 minutes",
+      }),
+    );
   });
 });
 

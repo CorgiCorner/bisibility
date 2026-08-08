@@ -32,6 +32,7 @@ export const RANK_CHECK_QUEUE_LEASE_MARGIN_MINUTES = 1;
 export const RANK_CHECK_SCHEDULE_TO_START_TIMEOUT_MINUTES =
   DEFAULT_STALE_RUNNING_CHECK_MINUTES - RANK_CHECK_QUEUE_LEASE_MARGIN_MINUTES;
 export const RANK_CHECK_SCHEDULE_TO_START_TIMEOUT = `${RANK_CHECK_SCHEDULE_TO_START_TIMEOUT_MINUTES} minutes`;
+export const RANK_CHECK_START_TO_CLOSE_TIMEOUT = "15 minutes";
 const DEFERRED_FAILURE_TYPES = new Set([
   AUTOMATIC_EXECUTION_DISABLED_FAILURE,
   PROVIDER_RATE_LIMITED_FAILURE,
@@ -93,7 +94,7 @@ const { runRankCheckActivity } = proxyActivities<RankCheckActivities>({
     maximumInterval: "1 minute",
   },
   scheduleToStartTimeout: RANK_CHECK_SCHEDULE_TO_START_TIMEOUT,
-  startToCloseTimeout: "2 minutes",
+  startToCloseTimeout: RANK_CHECK_START_TO_CLOSE_TIMEOUT,
 });
 
 const {

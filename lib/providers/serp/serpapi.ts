@@ -15,6 +15,7 @@ const ACCOUNT_URL = "https://serpapi.com/account.json";
 const SEARCH_URL = "https://serpapi.com/search.json";
 const MAX_ATTEMPTS = 3;
 const REQUEST_TIMEOUT_MS = 10_000;
+const SEARCH_REQUEST_TIMEOUT_MS = 60_000;
 const RETRY_BASE_MS = 200;
 const GOOGLE_ORGANIC_PAGE_SIZE = 10;
 
@@ -126,12 +127,16 @@ function providerError(error: unknown, creds: ProviderCredentials) {
   return new SerpApiError(redactedMessage(message, creds), error instanceof TypeError);
 }
 
-async function requestJson(url: string, creds: ProviderCredentials): Promise<SerpApiResponse> {
+async function requestJson(
+  url: string,
+  creds: ProviderCredentials,
+  timeoutMs = REQUEST_TIMEOUT_MS,
+): Promise<SerpApiResponse> {
   let lastError: SerpApiError | null = null;
 
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt += 1) {
     try {
-      return await readResponse(await fetchWithTimeout(url, {}), creds);
+      return await readResponse(await fetchWithTimeout(url, {}, timeoutMs), creds);
     } catch (error) {
       lastError = providerError(error, creds);
       if (!lastError.retryable || attempt === MAX_ATTEMPTS - 1) {
@@ -181,7 +186,11 @@ async function fetchGoogleOrganicResults(input: SerpRankInput, apiKey: string) {
   const candidates: OrganicResultCandidate[] = [];
 
   for (const start of searchPageStarts(depth)) {
-    const data = await requestJson(buildSearchUrl(input, apiKey, googleParams, start), credentials);
+    const data = await requestJson(
+      buildSearchUrl(input, apiKey, googleParams, start),
+      credentials,
+      SEARCH_REQUEST_TIMEOUT_MS,
+    );
     const pageResults = data.organic_results;
 
     if (!Array.isArray(pageResults)) {
