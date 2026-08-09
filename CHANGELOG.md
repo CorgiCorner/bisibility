@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.6.1] - 2026-08-09
+
+- Routed Railway deployment links through a stable Bisibility URL so template slug changes no longer break docs or launch buttons.
+
+- Corrected cost calculator copy for the hosted beta and keyword-location-device tracking combinations.
+
+- Polished account and overview UI with a single theme setting, aligned chart axes, an unclipped start date, quieter beta actions, and clearer refresh labels.
+
+- Focused the alternatives closing call to action on the self-hosting or managed-hosting choice.
+
+- Reduced worker container disk usage by excluding build-only dependencies from runtime image layers.
+
 ## [0.6.0] - 2026-08-09
 
 - Text, links and status colours meet WCAG AA in both themes.

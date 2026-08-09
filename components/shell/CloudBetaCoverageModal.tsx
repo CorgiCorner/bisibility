@@ -126,8 +126,9 @@ export function CloudBetaCoverageModal({
               <div>
                 <div className="text-[12.5px] font-semibold">On our side</div>
                 <p className="m-0 mt-0.5 text-[11.5px] leading-[1.45] text-fg-muted">
-                  Nightly snapshots are kept for 7 days on a best-effort basis. We send email and
-                  status-page notices for incidents lasting more than 15 minutes.
+                  Nightly snapshots are kept for 7 days on a best-effort basis. A small team runs
+                  this open beta, so there is no on-call rota and no incident notice you can rely
+                  on: assume you will notice an outage before we do.
                 </p>
               </div>
             </div>

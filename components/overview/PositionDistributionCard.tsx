@@ -130,13 +130,13 @@ export function PositionDistributionCard({
       </div>
       {empty ? (
         <div className="relative mt-3 min-w-0 flex-1 pt-1.5">
-          <div aria-hidden className="h-[190px]" />
+          <div aria-hidden className="h-[244px]" />
           <ChartNoDataOverlay />
         </div>
       ) : (
         <div className="relative mt-3 min-w-0 pt-1.5">
           <ChartRegion
-            className="relative h-[190px]"
+            className="relative h-[244px]"
             label={`Position distribution chart. ${buckets
               .map((bucket) => `${bucketRangeLabel(bucket.label)}: ${bucket.count} keywords`)
               .join("; ")}`}
@@ -145,7 +145,7 @@ export function PositionDistributionCard({
               axisHighlight={{ x: "none", y: "none" }}
               borderRadius={5}
               disableAxisListener
-              height={190}
+              height={244}
               hideLegend
               margin={{ top: 22, right: 8, bottom: 28, left: 8 }}
               series={[

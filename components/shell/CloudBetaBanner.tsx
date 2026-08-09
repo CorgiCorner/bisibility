@@ -5,11 +5,7 @@ import { loadCloudBackupCounts } from "@/lib/actions/cloud";
 import type { CloudBackupCounts } from "@/lib/migration/cloud-backup-sections";
 import type { CloudPackageExportSummary } from "@/lib/queries/cloud-beta-export";
 import { actionErrorMessage } from "@/lib/ui/action-error";
-import {
-  DownloadSimpleIcon as DownloadSimple,
-  WarningCircleIcon as WarningCircle,
-  XIcon as X,
-} from "@phosphor-icons/react";
+import { WarningCircleIcon as WarningCircle, XIcon as X } from "@phosphor-icons/react";
 import { useState } from "react";
 import { CloudBackupModal } from "./CloudBackupModal";
 import { CloudBetaCoverageModal } from "./CloudBetaCoverageModal";
@@ -29,6 +25,28 @@ type CloudBetaBannerProps = {
   projectId: string;
   projectRef: string;
   projectName: string;
+};
+
+/**
+ * The two actions read as links, not buttons: full foreground colour so they carry contrast
+ * against the tint, a resting underline so they are recognisable as controls without a chip, and
+ * the message's own weight so neither competes with the page's primary action.
+ */
+const quietAction = {
+  color: "var(--fg)",
+  fontSize: "11.5px",
+  fontWeight: 400,
+  minHeight: 20,
+  paddingX: 0,
+  paddingY: 0,
+  textDecorationColor: "color-mix(in srgb, var(--fg) 35%, transparent)",
+  textDecorationLine: "underline",
+  textUnderlineOffset: "3px",
+  "&:hover": {
+    backgroundColor: "transparent",
+    color: "var(--fg)",
+    textDecorationColor: "var(--fg)",
+  },
 };
 
 function persistDismissal() {
@@ -82,81 +100,82 @@ export function CloudBetaBanner({
     <>
       <div className="@container">
         <div
-          className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-2.5 gap-y-2 border-b border-border bg-yellow/[0.1] px-3 py-3 @sm:px-4 @4xl:grid-cols-[auto_minmax(0,1fr)_auto_auto] @4xl:items-center"
+          className="flex flex-wrap items-center gap-x-2 gap-y-1.5 border-b border-border bg-yellow/[0.1] px-3 py-2.5 @sm:px-4"
           role="status"
         >
-          <span
-            aria-hidden
-            className="col-start-1 row-start-1 flex h-lh self-start items-center text-[12.5px] leading-[1.55] text-yellow-text"
-            data-testid="cloud-beta-warning-line"
-          >
-            <WarningCircle
-              className="shrink-0"
-              data-testid="cloud-beta-warning-icon"
-              size={17}
-              weight="fill"
-            />
-          </span>
-          <div className="col-start-2 row-start-1 min-w-0" data-testid="cloud-beta-content">
-            <div className="flex flex-wrap items-center gap-2">
-              <strong className="text-[12.5px] font-semibold text-fg">
-                You're on the hosted beta
-              </strong>
-            </div>
-            <p className="m-0 mt-0.5 text-[12px] leading-[1.45] text-fg-muted">
-              Tracking and history match self-hosted. Managed restores are not guaranteed yet - keep
-              an export.
-            </p>
-          </div>
-          <div
-            className="col-start-2 col-end-4 row-start-2 grid grid-cols-1 gap-1.5 @lg:grid-cols-2 @4xl:col-start-3 @4xl:row-start-1 @4xl:flex @4xl:shrink-0 @4xl:items-center"
-            data-testid="cloud-beta-actions"
-          >
-            <Button
-              className="w-full @4xl:w-auto"
-              onClick={() => setActiveModal("coverage")}
-              size="sm"
-              /* The banner sits on a yellow wash. The default opaque --bg-sunken hover
-                 disappears into it on light, and any yellow tint turns muddy on both
-                 themes. Overlay --fg instead: it is near-black on light and near-white on
-                 dark, so one value darkens or lightens the wash without adding a hue. */
-              sx={{
-                "&:hover": {
-                  backgroundColor: "color-mix(in srgb, var(--fg) 7%, transparent)",
-                  color: "var(--fg)",
-                },
-              }}
-              variant="ghost"
+          {/* Glyph and message form one item so the row centres them together against the taller
+              actions. Inside it they align to the top, which is where the first line is: centring
+              the glyph against a wrapped three-line message would park it beside line two. Both
+              carry the same font size and leading, so their first line boxes are identical.
+
+              The wrapper then lifts the glyph by 1px. That is not taste: the font's ascent and
+              descent are asymmetric (12 and 4 at this size), so the cap band of the text centres
+              at 22.94px while a box-centred 17px glyph centres at 23.98px. Geometry alone reads
+              as a low glyph; the correction puts the two optical centres together. It sits here
+              rather than on the icon, which stays free of layout classes. */}
+          <div className="flex min-w-0 flex-1 items-start gap-x-2">
+            <span
+              aria-hidden
+              className="-translate-y-px flex h-lh shrink-0 items-center text-[12px] leading-[1.45] text-yellow-text"
+              data-testid="cloud-beta-warning-line"
             >
-              What beta covers
-            </Button>
-            <Button
-              className="w-full @4xl:w-auto"
-              loading={backupLoading}
-              loadingLabel="Loading..."
-              onClick={() => void openBackup()}
-              size="sm"
-              startIcon={<DownloadSimple aria-hidden size={14} weight="bold" />}
-            >
-              Export data
-            </Button>
-          </div>
-          {backupLoadError ? (
+              <WarningCircle
+                className="shrink-0"
+                data-testid="cloud-beta-warning-icon"
+                size={17}
+                weight="fill"
+              />
+            </span>
             <p
-              className="col-start-2 col-end-4 m-0 text-[11px] text-red-text @4xl:col-end-5"
-              role="alert"
+              className="m-0 min-w-0 flex-1 text-[12px] leading-[1.45] text-fg-muted"
+              data-testid="cloud-beta-content"
             >
-              {backupLoadError}
+              {/* A single word space after a semibold clause reads as a collision; the extra
+                  2px separates the lead from the sentence that qualifies it. */}
+              <strong className="mr-0.5 font-semibold text-fg">You're on the hosted beta.</strong>{" "}
+              Restores aren't guaranteed yet - keep an export.
             </p>
-          ) : null}
+          </div>
           <button
             aria-label="Dismiss hosted beta banner"
-            className="col-start-3 row-start-1 grid h-8 w-8 shrink-0 place-items-center rounded-[7px] text-fg-muted transition-colors hover:bg-yellow/[0.14] hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid @4xl:col-start-4"
+            className="grid h-7 w-7 shrink-0 place-items-center rounded-[7px] text-fg-muted transition-colors hover:bg-yellow/[0.14] hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid @xl:order-3"
             onClick={dismiss}
             type="button"
           >
             <X aria-hidden size={13} weight="bold" />
           </button>
+          {/* Below the container's xl width the message needs the whole line, so the actions take
+              a row of their own, indented to the message's text edge. The dismiss control keeps
+              the first row in both layouts, which is why it precedes them in the markup and only
+              moves past them once one row is wide enough for everything. */}
+          <div
+            className="flex shrink-0 basis-full items-center gap-x-3 pl-[25px] @xl:order-2 @xl:basis-auto @xl:pl-0"
+            data-testid="cloud-beta-actions"
+          >
+            <Button
+              onClick={() => setActiveModal("coverage")}
+              size="sm"
+              sx={quietAction}
+              variant="ghost"
+            >
+              What beta covers
+            </Button>
+            <Button
+              loading={backupLoading}
+              loadingLabel="Loading..."
+              onClick={() => void openBackup()}
+              size="sm"
+              sx={quietAction}
+              variant="ghost"
+            >
+              Export data
+            </Button>
+          </div>
+          {backupLoadError ? (
+            <p className="m-0 basis-full pl-[25px] text-[11px] text-red-text" role="alert">
+              {backupLoadError}
+            </p>
+          ) : null}
         </div>
       </div>
       {backupCounts ? (

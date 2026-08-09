@@ -29,7 +29,7 @@ export const deployLinks = {
     id: "railway",
     label: "Deploy to Railway",
     description: "Everything runs inside your Railway project. No Temporal Cloud needed.",
-    href: "https://railway.com/deploy/bisibility",
+    href: "https://bisibility.com/deploy/railway",
   },
 } as const satisfies Record<DeployTarget, DeployLink>;
 
