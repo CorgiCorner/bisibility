@@ -1,10 +1,11 @@
 "use client";
 
+import { Button } from "@/components/ui";
 import { migrationImportCountSummary } from "@/lib/migration/import-counts";
 import { appPath } from "@/lib/routing/app-path";
 import {
-  ArrowRightIcon as ArrowRight,
   ArrowsClockwiseIcon as ArrowsClockwise,
+  CaretRightIcon as CaretRight,
   CheckCircleIcon as CheckCircle,
   CloudArrowDownIcon as CloudArrowDown,
   DatabaseIcon as Database,
@@ -29,10 +30,10 @@ type StateConfig = {
 };
 
 const TONES: Record<Tone, { tile: string; text: string; dot: string }> = {
-  blue: { tile: "bg-blue/15 text-blue", text: "text-blue", dot: "bg-blue" },
-  green: { tile: "bg-green/15 text-green", text: "text-green", dot: "bg-green" },
-  neutral: { tile: "bg-bg-sunken text-fg-faint", text: "text-fg-muted", dot: "bg-fg-faint" },
-  red: { tile: "bg-red/10 text-red", text: "text-red", dot: "bg-red" },
+  blue: { tile: "bg-blue/15 text-blue-text", text: "text-blue-text", dot: "bg-blue" },
+  green: { tile: "bg-green/15 text-green-text", text: "text-green-text", dot: "bg-green" },
+  neutral: { tile: "bg-bg-sunken text-fg-muted", text: "text-fg-muted", dot: "bg-fg-muted" },
+  red: { tile: "bg-red/10 text-red-text", text: "text-red-text", dot: "bg-red" },
 };
 
 function countEntries(counts: unknown) {
@@ -85,7 +86,7 @@ function configFor(job: CloudImportJobData, sourceLabel: string): StateConfig {
       weight: "regular",
     },
     importing: {
-      desc: "Restoring keywords, ranking history, tags and alert rules into this workspace.",
+      desc: "Restoring keywords, ranking history, tags and alert rules into this project.",
       icon: Database,
       pill: "Importing",
       title: "Importing data",
@@ -110,7 +111,7 @@ function errorLogHref(job: CloudImportJobData) {
     `transfer_id=${job.id ?? "pending"}`,
     `state=${job.state}`,
     `progress=${job.progress}`,
-    `message=${job.error ?? "Cloud import failed."}`,
+    `message=${job.error ?? "Instance import failed."}`,
   ].join("\n");
 
   return `data:text/plain;charset=utf-8,${encodeURIComponent(log)}`;
@@ -179,16 +180,16 @@ export function TransferPanel({
 
       {job.state === "done" ? (
         <div className="flex items-center gap-[9px] border-border-soft border-t p-[14px_20px]">
-          <LinkIcon aria-hidden className="flex-none text-fg-faint" size={15} />
+          <LinkIcon aria-hidden className="flex-none text-fg-muted" size={15} />
           <span className="min-w-0 flex-1 truncate font-mono text-[11.5px] text-fg-muted">
             Import job {job.id}
           </span>
           <a
-            className="inline-flex flex-none items-center gap-1.5 rounded-lg bg-accent px-[14px] py-2 font-semibold text-[12px] text-white"
+            className="inline-flex flex-none items-center gap-1.5 rounded-lg bg-accent-solid px-[14px] py-2 font-semibold text-[12px] text-primary-contrast"
             href={appPath(projectRef, "overview")}
           >
-            Open workspace
-            <ArrowRight aria-hidden size={12} weight="bold" />
+            Open project
+            <CaretRight aria-hidden size={12} weight="bold" />
           </a>
         </div>
       ) : null}
@@ -198,20 +199,20 @@ export function TransferPanel({
           <div className="flex items-start gap-2.5 rounded-[11px] border border-red bg-red/10 px-3.5 py-3">
             <WarningOctagon
               aria-hidden
-              className="mt-px flex-none text-red"
+              className="mt-px flex-none text-red-text"
               size={16}
               weight="fill"
             />
             <div className="min-w-0 flex-1 text-[12.5px] leading-[1.5] text-fg">
               <strong className="font-semibold">Import stopped at {job.progress}%.</strong>{" "}
               <span className="text-fg-muted">
-                {job.error ?? "No partial data was written and this workspace is unchanged."}
+                {job.error ?? "No partial data was written and this project is unchanged."}
               </span>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-x-[11px] gap-y-2 font-mono text-[11px] text-fg-faint">
-            <span className="text-red">failed</span>
+          <div className="flex flex-wrap items-center gap-x-[11px] gap-y-2 font-mono text-[11px] text-fg-muted">
+            <span className="text-red-text">failed</span>
             <span className="h-2.5 w-px bg-border-strong" />
             <span>transfer_id {job.id ?? "pending"}</span>
             {job.finishedAt ? (
@@ -223,14 +224,16 @@ export function TransferPanel({
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">
-            <button
-              className="inline-flex flex-none items-center gap-1.5 rounded-lg bg-accent px-[14px] py-2 font-semibold text-[12px] text-white"
+            <Button
               onClick={onNewToken}
+              size="sm"
+              startIcon={<ArrowsClockwise aria-hidden size={13} />}
+              sx={{ flex: "none" }}
               type="button"
+              variant="primary"
             >
-              <ArrowsClockwise aria-hidden size={13} />
               New token
-            </button>
+            </Button>
             <a
               className="inline-flex flex-none items-center gap-1.5 rounded-lg border border-border-strong bg-bg-elev px-[14px] py-2 font-semibold text-[12px] text-fg"
               download={`${job.id ?? "cloud-import"}-error.log`}

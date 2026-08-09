@@ -173,7 +173,7 @@ export function NotificationBellClient({
         aria-haspopup="dialog"
         aria-label="Notifications"
         className={[
-          "grid h-[38px] w-[38px] place-items-center rounded-[10px] border border-border-strong text-fg-muted outline-none transition-colors hover:border-accent focus-visible:border-accent",
+          "grid h-8 w-8 place-items-center rounded-[9px] border border-border-strong bg-bg-elev text-fg-muted transition-colors hover:bg-bg-sunken hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid",
           open ? "bg-bg-sunken" : "bg-bg-elev",
         ].join(" ")}
         onClick={(event) => setAnchorEl(event.currentTarget)}
@@ -182,7 +182,7 @@ export function NotificationBellClient({
       >
         <Bell aria-hidden size={17} />
         {unreadCount > 0 ? (
-          <span className="absolute right-1.5 top-[5px] grid h-[15px] min-w-[15px] place-items-center rounded-full border-[1.5px] border-bg bg-accent px-[3px] font-mono text-[9px] font-semibold leading-none text-white">
+          <span className="absolute right-1.5 top-[5px] grid h-[15px] min-w-[15px] place-items-center rounded-full border-[1.5px] border-bg bg-accent-solid px-[3px] font-mono text-[9px] font-semibold leading-none text-white">
             {unreadCount}
           </span>
         ) : null}
@@ -202,20 +202,20 @@ export function NotificationBellClient({
             <span
               className={[
                 "inline-flex items-center gap-1.5 rounded-full bg-bg-sunken px-2 py-0.5 font-mono text-[9.5px] font-semibold uppercase tracking-[0.4px]",
-                isLive ? "text-green" : "text-fg-faint",
+                isLive ? "text-green-text" : "text-fg-muted",
               ].join(" ")}
             >
               <span className="relative grid h-[7px] w-[7px] place-items-center">
                 <span
                   className={[
                     "absolute h-[7px] w-[7px] rounded-full",
-                    isLive ? "bv-ping bg-green" : "bg-fg-faint",
+                    isLive ? "bv-ping bg-green" : "bg-fg-muted",
                   ].join(" ")}
                 />
                 <span
                   className={[
                     "h-[5px] w-[5px] rounded-full",
-                    isLive ? "bg-green" : "bg-fg-faint",
+                    isLive ? "bg-green" : "bg-fg-muted",
                   ].join(" ")}
                 />
               </span>
@@ -223,7 +223,7 @@ export function NotificationBellClient({
             </span>
           </div>
           <button
-            className="p-0 text-xs font-semibold text-accent disabled:text-fg-faint"
+            className="p-0 text-xs font-semibold text-accent-text disabled:text-fg-muted"
             disabled={unreadCount === 0 || isPending}
             onClick={markAllRead}
             type="button"
@@ -245,11 +245,11 @@ export function NotificationBellClient({
               />
             ))
           ) : (
-            <div className="px-4 py-8 text-center text-xs text-fg-faint">No notifications</div>
+            <div className="px-4 py-8 text-center text-xs text-fg-muted">No notifications</div>
           )}
         </div>
         <Link
-          className="flex w-full items-center justify-center gap-1.5 border-t border-border-soft bg-transparent px-3 py-2.5 text-xs font-medium text-fg-muted transition-colors hover:text-accent"
+          className="flex w-full items-center justify-center gap-1.5 border-t border-border-soft bg-transparent px-3 py-2.5 text-xs font-medium text-fg-muted transition-colors hover:text-accent-text"
           href={appPath(projectRef, "settings", "audit")}
           onClick={close}
         >
@@ -285,10 +285,10 @@ function NotificationRow({ item, onNavigate, unread }: Readonly<NotificationRowP
       </span>
       <span className="min-w-0 flex-1">
         <span className="block text-[13px] font-medium leading-[1.35] text-fg">{item.title}</span>
-        <span className="mt-0.5 block font-mono text-[11px] text-fg-faint">{item.meta}</span>
+        <span className="mt-0.5 block font-mono text-[11px] text-fg-muted">{item.meta}</span>
       </span>
       <span className="flex flex-none flex-col items-end gap-[5px]">
-        <span className="font-mono text-[10.5px] text-fg-faint">{item.time}</span>
+        <span className="font-mono text-[10.5px] text-fg-muted">{item.time}</span>
         <span
           className="h-[7px] w-[7px] rounded-full bg-accent"
           style={{ visibility: unread ? "visible" : "hidden" }}

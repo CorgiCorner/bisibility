@@ -199,7 +199,7 @@ export function SecurityFactors({
           </span>
           <span className="min-w-0 flex-1">
             <span className="block text-[13.5px] font-semibold text-fg">Authenticator app</span>
-            <span className="block text-[11.5px] text-fg-faint">{factorStatusLabel(enabled)}</span>
+            <span className="block text-[11.5px] text-fg-muted">{factorStatusLabel(enabled)}</span>
           </span>
           {enabled ? (
             <div className="flex flex-wrap justify-end gap-2">
@@ -274,7 +274,7 @@ export function SecurityFactors({
                     {...verificationForm.register("code")}
                   />
                   {verificationForm.formState.errors.code ? (
-                    <span className={cn(feedbackClass, "text-red")}>
+                    <span className={cn(feedbackClass, "text-red-text")}>
                       {verificationForm.formState.errors.code.message}
                     </span>
                   ) : null}

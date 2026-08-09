@@ -25,7 +25,7 @@ existing project, use **provider-setup**.
 
 ## Prerequisites
 
-- **Origin**: resolve the base URL first. EU Cloud is
+- **Origin**: resolve the base URL first. EU hosted region is
   \`https://eu.bisibility.com/api/v1\`; a self-hosted instance is
   \`https://your-host.example/api/v1\`. Ask the user (or read it from config) and
   use it consistently as \`$BISIBILITY_BASE\`.

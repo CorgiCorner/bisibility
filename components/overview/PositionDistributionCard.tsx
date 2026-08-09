@@ -14,7 +14,7 @@ export type PositionDistributionCardProps = {
 };
 
 const axisTextStyle = {
-  fill: "var(--fg-faint)",
+  fill: "var(--fg-muted)",
   fontFamily: "var(--font-mono), monospace",
   fontSize: 10,
 };

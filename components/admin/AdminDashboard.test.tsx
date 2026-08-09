@@ -68,7 +68,7 @@ const baseData = {
         billableUnits: 12,
         checks: 3,
         provider: "serpapi",
-        providerLabel: "SerpAPI",
+        providerLabel: "SerpApi",
         rateBasis: "Production plan equivalent",
         referenceCostCents: 12,
         referenceCostKnown: true,
@@ -136,7 +136,7 @@ describe("AdminDashboard", () => {
     const table = screen.getByRole("table", { name: "SERP usage this month by provider" });
     const rows = within(table).getAllByRole("row");
     expect(rows).toHaveLength(3);
-    expect(within(rows[1] as HTMLElement).getByText("SerpAPI")).toBeInTheDocument();
+    expect(within(rows[1] as HTMLElement).getByText("SerpApi")).toBeInTheDocument();
     expect(within(rows[1] as HTMLElement).getByText("12", { selector: "td" })).toBeInTheDocument();
     expect(within(rows[1] as HTMLElement).getByText("$0.12")).toBeInTheDocument();
     expect(within(rows[2] as HTMLElement).getByText("$0.002")).toBeInTheDocument();

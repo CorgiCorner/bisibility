@@ -1,6 +1,5 @@
 import { Toolbar } from "@/components/shell/Toolbar";
-import { Pill } from "@/components/ui";
-import Button from "@mui/material/Button";
+import { Button, Pill } from "@/components/ui";
 import {
   ArrowsClockwiseIcon as ArrowsClockwise,
   CalendarBlankIcon as CalendarBlank,
@@ -22,7 +21,7 @@ type Story = StoryObj<typeof meta>;
 export const Filters: Story = {
   args: {
     action: (
-      <Button startIcon={<Plus size={15} />} variant="contained">
+      <Button startIcon={<Plus size={15} />} variant="primary">
         Add keyword
       </Button>
     ),

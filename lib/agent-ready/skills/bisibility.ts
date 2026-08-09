@@ -25,7 +25,7 @@ matching task skill (listed below) and follow that skill's steps.
 
 ## Prerequisites
 
-1. **Origin / base URL.** Either the EU Cloud instance
+1. **Origin / base URL.** Either the EU hosted region
    \`https://eu.bisibility.com/api/v1\` or a self-hosted instance
    \`https://your-host.example/api/v1\`. Resolve which one you are targeting from the
    user or environment before making any call; do not assume hosted.

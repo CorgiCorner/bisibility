@@ -35,7 +35,7 @@ export function AddKeywordManualPanel({
           <label className="text-[12.5px] font-semibold text-fg" htmlFor="add-keywords-input">
             Keywords
           </label>
-          <span className="font-mono text-[11px] text-fg-faint">
+          <span className="font-mono text-[11px] text-fg-muted">
             {count} {count === 1 ? "keyword" : "keywords"}
           </span>
         </div>
@@ -47,17 +47,17 @@ export function AddKeywordManualPanel({
           }
           {...register("keywords")}
         />
-        <p className="mt-[7px] text-[11.5px] text-fg-faint">
+        <p className="mt-[7px] text-[11.5px] text-fg-muted">
           One keyword per line. Add <code className="font-mono text-fg-muted">| URL</code> after a
           keyword to pin just that one.
         </p>
         {errors.keywords ? (
-          <p className="mt-2 font-mono text-[11.5px] text-red">{errors.keywords.message}</p>
+          <p className="mt-2 font-mono text-[11.5px] text-red-text">{errors.keywords.message}</p>
         ) : null}
       </div>
 
       <div className="border-t border-border pt-4">
-        <p className="m-0 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint">
+        <p className="m-0 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
           Applies to all keywords in this batch
         </p>
       </div>
@@ -68,12 +68,12 @@ export function AddKeywordManualPanel({
           <label className="text-[12.5px] font-semibold text-fg" htmlFor="add-target-input">
             Target URL
           </label>
-          <span className="font-mono text-[10px] uppercase tracking-[0.4px] text-fg-faint">
+          <span className="font-mono text-[10px] uppercase tracking-[0.4px] text-fg-muted">
             Optional
           </span>
         </div>
-        <div className="mt-2 flex items-center gap-2 rounded-[9px] border border-border-strong bg-bg-sunken px-3 transition-colors focus-within:border-accent">
-          {domain ? <span className="font-mono text-[13px] text-fg-faint">{domain}</span> : null}
+        <div className="mt-2 flex items-center gap-2 rounded-[9px] border border-border-strong bg-transparent px-3 transition-colors focus-within:border-accent">
+          {domain ? <span className="font-mono text-[13px] text-fg-muted">{domain}</span> : null}
           <input
             className="min-w-0 flex-1 border-none bg-transparent py-2.5 font-mono text-[13px] text-fg outline-none focus-visible:outline-none"
             id="add-target-input"
@@ -82,9 +82,9 @@ export function AddKeywordManualPanel({
           />
         </div>
         {errors.targetUrl ? (
-          <p className="mt-2 font-mono text-[11.5px] text-red">{errors.targetUrl.message}</p>
+          <p className="mt-2 font-mono text-[11.5px] text-red-text">{errors.targetUrl.message}</p>
         ) : null}
-        <p className="mt-[7px] text-[11.5px] text-fg-faint">
+        <p className="mt-[7px] text-[11.5px] text-fg-muted">
           Pins every keyword in this batch to one page. Leave blank to auto-match the best ranking
           URL; a per-line <code className="font-mono text-fg-muted">| URL</code> overrides this pin.
         </p>
@@ -120,7 +120,7 @@ export function AddKeywordManualPanel({
         />
         {tagSuggestions.length > 0 ? (
           <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-            <span className="font-mono text-[10px] uppercase tracking-[0.4px] text-fg-faint">
+            <span className="font-mono text-[10px] uppercase tracking-[0.4px] text-fg-muted">
               Suggested
             </span>
             {tagSuggestions.map((tag) => (
@@ -159,7 +159,7 @@ function OptionalMetadataField({
         <label className="text-[12.5px] font-semibold text-fg" htmlFor={`add-${name}-input`}>
           {label}
         </label>
-        <span className="font-mono text-[10px] uppercase tracking-[0.4px] text-fg-faint">
+        <span className="font-mono text-[10px] uppercase tracking-[0.4px] text-fg-muted">
           Optional
         </span>
       </div>
@@ -169,7 +169,7 @@ function OptionalMetadataField({
         placeholder={placeholder}
         {...register(name)}
       />
-      {error ? <p className="mt-2 font-mono text-[11.5px] text-red">{error.message}</p> : null}
+      {error ? <p className="mt-2 font-mono text-[11.5px] text-red-text">{error.message}</p> : null}
     </div>
   );
 }

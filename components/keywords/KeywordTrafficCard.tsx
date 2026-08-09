@@ -13,7 +13,7 @@ type KeywordTrafficCardProps = {
 };
 
 const providerLabels: Record<string, string> = {
-  ga4: "GA4",
+  ga4: "Google Analytics 4",
   gsc: "Search Console",
   plausible: "Plausible",
 };
@@ -64,7 +64,7 @@ function StatCell({ label, value }: Readonly<Stat>) {
         {label}
       </MonoText>
       <div className="mt-1 truncate text-[18px] font-semibold text-fg">
-        {value ?? <span className="text-fg-faint">-</span>}
+        {value ?? <span className="text-fg-muted">-</span>}
       </div>
     </div>
   );
@@ -153,7 +153,7 @@ function TrafficEmptyState({
     <Card className="rounded-[14px]" size="lg">
       <SectionTitle>Search &amp; page stats</SectionTitle>
       {connected ? (
-        <div className="mt-3 rounded-[11px] border border-dashed border-border-strong bg-bg-sunken px-4 py-5">
+        <div className="mt-3 rounded-[11px] border border-dashed border-border-strong bg-transparent px-4 py-5">
           <p className="m-0 text-[13.5px] font-medium text-fg">Awaiting first traffic sync.</p>
           <MonoText className="mt-1 block" muted>
             Search Console data arrives with an approximately {QUERY_STATS_LAG_DAYS}-day reporting
@@ -161,12 +161,12 @@ function TrafficEmptyState({
           </MonoText>
         </div>
       ) : (
-        <div className="mt-3 rounded-[11px] border border-dashed border-border-strong bg-bg-sunken px-4 py-5">
+        <div className="mt-3 rounded-[11px] border border-dashed border-border-strong bg-transparent px-4 py-5">
           <p className="m-0 text-[13.5px] text-fg-muted">
             Connect Search Console to see clicks, impressions and CTR for this keyword.
           </p>
           <Link
-            className="mt-3 inline-flex text-[13px] font-semibold text-accent hover:text-accent-hover"
+            className="mt-3 inline-flex text-[13px] font-semibold text-accent-text hover:text-accent-text"
             href={appPath(projectRef, "integrations")}
           >
             Connect Search Console

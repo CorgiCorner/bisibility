@@ -41,7 +41,7 @@ export type AuthenticatedApiKey = {
   };
   project: {
     createdAt: Date;
-    domain: string;
+    domain: string | null;
     id: string;
     name: string;
     ownerId?: string;

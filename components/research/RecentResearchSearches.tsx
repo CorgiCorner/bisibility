@@ -32,7 +32,7 @@ export function RecentResearchSearches({
   const now = new Date();
   return (
     <section aria-label="Recent searches">
-      <div className="mb-2 flex items-center gap-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.5px] text-fg-faint">
+      <div className="mb-2 flex items-center gap-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.5px] text-fg-muted">
         <Clock size={13} /> Recent searches
       </div>
       <div className="flex gap-2 overflow-x-auto pb-1">
@@ -43,7 +43,7 @@ export function RecentResearchSearches({
           >
             <button
               aria-describedby={hintId}
-              className="flex items-center gap-2 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex items-center gap-2 text-left transition-colors disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted"
               disabled={disabled}
               onClick={() => onOpen(search)}
               type="button"
@@ -51,16 +51,16 @@ export function RecentResearchSearches({
               <strong className="max-w-[180px] truncate text-[12px] font-semibold">
                 {search.seed}
               </strong>
-              <span className="font-mono text-[10px] text-fg-faint">
+              <span className="font-mono text-[10px] text-fg-muted">
                 {search.market} - {relativePast(new Date(search.createdAt), now)}
               </span>
-              <span className="rounded-full bg-accent-soft px-2 py-0.5 font-mono text-[9.5px] text-accent">
+              <span className="rounded-full bg-accent-soft px-2 py-0.5 font-mono text-[9.5px] text-accent-text">
                 {freeFor(search.cachedUntil)}
               </span>
             </button>
             <button
               aria-label={`Remove ${search.seed} from recent searches`}
-              className="grid h-5 w-5 shrink-0 place-items-center rounded-full text-fg-faint transition-colors hover:text-fg"
+              className="grid h-5 w-5 shrink-0 place-items-center rounded-full text-fg-muted transition-colors hover:text-fg"
               onClick={() => onRemove(search)}
               type="button"
             >
@@ -70,7 +70,7 @@ export function RecentResearchSearches({
         ))}
       </div>
       {hintId ? (
-        <p className="mb-0 mt-2 text-[11.5px] text-fg-faint" id={hintId}>
+        <p className="mb-0 mt-2 text-[11.5px] text-fg-muted" id={hintId}>
           {disabledHint}
         </p>
       ) : null}

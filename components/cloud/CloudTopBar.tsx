@@ -1,9 +1,5 @@
-import { ThemeToggle } from "@/components/ui";
-import {
-  CaretDownIcon as CaretDown,
-  ChartLineUpIcon as ChartLineUp,
-  CloudIcon as Cloud,
-} from "@phosphor-icons/react/dist/ssr";
+import { BrandLockup } from "@/components/ui";
+import { CaretDownIcon as CaretDown, CloudIcon as Cloud } from "@phosphor-icons/react/dist/ssr";
 
 export type CloudTopBarContext = "onboard" | "settings";
 
@@ -23,22 +19,18 @@ type CloudTopBarProps = {
 export function CloudTopBar({
   ctx,
   onboardStep = 2,
-  workspaceName = "Workspace",
+  workspaceName = "Project",
 }: Readonly<CloudTopBarProps>) {
   return (
     <nav className="flex h-16 items-center justify-between gap-3 border-border border-b">
       <div className="flex min-w-0 items-center gap-[11px]">
-        <span className="grid h-[30px] w-[30px] flex-none place-items-center rounded-lg bg-accent text-white">
-          <ChartLineUp aria-hidden size={18} weight="bold" />
-        </span>
-        <span className="text-[19px] font-bold tracking-[-0.6px]">bisibility</span>
-        <span className="inline-flex flex-none items-center gap-1.5 rounded-full bg-accent-soft px-[9px] py-[3px] font-mono text-[10px] font-bold uppercase tracking-[0.4px] text-accent">
+        <BrandLockup className="flex-none" />
+        <span className="inline-flex flex-none items-center gap-1.5 rounded-full bg-accent-soft px-[9px] py-[3px] font-mono text-[10px] font-bold uppercase tracking-[0.4px] text-accent-text">
           <Cloud aria-hidden size={11} weight="fill" />
-          Cloud
+          Beta
         </span>
       </div>
       <div className="flex flex-none items-center gap-3">
-        <ThemeToggle />
         {ctx === "onboard" ? (
           <SetupPill step={onboardStep} />
         ) : (
@@ -60,21 +52,18 @@ function SetupPill({ step }: Readonly<{ step: number }>) {
 }
 
 function initialFor(name: string) {
-  return name.trim().slice(0, 1).toUpperCase() || "W";
+  return name.trim().slice(0, 1).toUpperCase() || "P";
 }
 
 function WorkspaceChrome({ workspaceName }: Readonly<{ workspaceName: string }>) {
   return (
     <>
       <span className="inline-flex items-center gap-[7px] rounded-[9px] border border-border-strong bg-bg-elev px-[11px] py-1.5 text-[13px] font-semibold">
-        <span className="grid h-[18px] w-[18px] place-items-center rounded-[5px] bg-accent text-[9px] font-bold text-white">
+        <span className="grid h-[18px] w-[18px] place-items-center rounded-[5px] bg-accent-solid text-[9px] font-bold text-primary-contrast">
           {initialFor(workspaceName)}
         </span>
         <span className="max-w-[150px] truncate">{workspaceName}</span>
-        <CaretDown aria-hidden className="text-fg-faint" size={9} weight="bold" />
-      </span>
-      <span className="grid h-8 w-8 place-items-center rounded-full bg-bg-sunken font-mono text-[11px] font-semibold text-fg-muted">
-        {initialFor(workspaceName)}
+        <CaretDown aria-hidden className="text-fg-muted" size={9} weight="bold" />
       </span>
     </>
   );

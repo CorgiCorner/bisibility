@@ -16,6 +16,9 @@ export type OnboardingWizardActions = {
   completeGooglePropertySelectionAction: NonNullable<
     Parameters<typeof StepConnectGscCard>[0]["completePropertySelection"]
   >;
+  completeOnboardingAction: NonNullable<
+    Parameters<typeof StepFirstCheck>[0]["completeOnboardingAction"]
+  >;
   createProjectAction: NonNullable<Parameters<typeof StepCreateProject>[0]["createProjectAction"]>;
   // Sample-data loader mounted in the wizard footer (step 1), not on a step component.
   installSampleDataAction: () => Promise<unknown>;

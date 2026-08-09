@@ -136,7 +136,7 @@ function renderImport(overrides: Record<string, unknown> = {}) {
       canManage
       importJob={issuedToken.importJob}
       projectId={projectId}
-      workspaceName="SEO Workspace"
+      workspaceName="SEO Project"
       {...actions}
       {...overrides}
     />,
@@ -156,7 +156,7 @@ describe("CloudImport", () => {
   it("renders migration state without token or transfer controls below admin", () => {
     renderImport({ activeToken, canManage: false });
 
-    expect(screen.getByText(/Migration controls are available to workspace admins/)).toBeVisible();
+    expect(screen.getByText(/Migration controls are available to project admins/)).toBeVisible();
     expect(screen.queryByRole("button", { name: "Generate" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Regenerate" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Revoke" })).not.toBeInTheDocument();
@@ -223,7 +223,7 @@ describe("CloudImport", () => {
         canManage
         importJob={issuedToken.importJob}
         projectId={projectId}
-        workspaceName="SEO Workspace"
+        workspaceName="SEO Project"
         {...actions}
       />,
     );
@@ -241,7 +241,7 @@ describe("CloudImport", () => {
         canManage
         importJob={issuedToken.importJob}
         projectId={projectId}
-        workspaceName="SEO Workspace"
+        workspaceName="SEO Project"
         {...actions}
       />,
     );
@@ -295,6 +295,17 @@ describe("CloudImport", () => {
     await waitFor(() => expect(revoke).toHaveBeenCalledOnce());
     expect(await screen.findByText("Revoke unavailable")).toBeInTheDocument();
     expect(screen.getByText("Couldn't revoke token")).toBeInTheDocument();
+  });
+
+  it("uses migration-only fallback copy when an action has no error message", async () => {
+    const mintMigrationTokenAction = vi.fn(async () => {
+      throw new Error("");
+    });
+    renderImport({ mintMigrationTokenAction });
+
+    fireEvent.click(screen.getByRole("button", { name: "Generate" }));
+
+    expect(await screen.findByText("Migration action failed.")).toBeInTheDocument();
   });
 
   it("renders a handled read-only token failure without a rejected action", async () => {

@@ -2,7 +2,14 @@
 
 import { ApiKeyRevealContent } from "@/components/settings/api-keys/ApiKeyReveal";
 import { apiKeyScopeLabel, apiKeyScopeOptions } from "@/components/settings/api-keys/api-key-model";
-import { Button, ConfirmModal, ExpiryChoiceGroup, Modal, MonoText } from "@/components/ui";
+import {
+  Button,
+  ConfirmModal,
+  ExpiryChoiceGroup,
+  inputClassName,
+  Modal,
+  MonoText,
+} from "@/components/ui";
 import type { PersonalTokenData } from "@/lib/queries/personal-tokens";
 import type { IssuePersonalTokenInput } from "@/lib/schemas/personalToken";
 import { actionErrorMessage } from "@/lib/ui/action-error";
@@ -36,9 +43,8 @@ const expiryOptions = [
   { days: null, label: "No expiry" },
 ] as const;
 
-const inputClass =
-  "mt-[7px] min-h-11 w-full rounded-[9px] border border-border-strong bg-bg-sunken px-[13px] font-mono text-[13.5px] font-medium text-fg outline-none focus:border-accent";
-const labelClass = "font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint";
+const inputClass = `${inputClassName} mt-[7px] min-h-11 w-full rounded-[9px] px-[13px] font-mono text-[13.5px] font-medium`;
+const labelClass = "font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted";
 
 export function PersonalTokensSection({
   issueToken,
@@ -116,7 +122,7 @@ export function PersonalTokensSection({
               <span className="min-w-0 flex-1">
                 <span className="block text-[13px] font-semibold">
                   {token.name}
-                  <span className="ml-2 rounded-[7px] border border-border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint">
+                  <span className="ml-2 rounded-[7px] border border-border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
                     {apiKeyScopeLabel(token.scope)}
                   </span>
                 </span>
@@ -129,7 +135,7 @@ export function PersonalTokensSection({
               </span>
               <button
                 aria-label={`Revoke ${token.name} token`}
-                className="grid h-[30px] w-[30px] flex-none place-items-center rounded-lg border border-border-strong bg-bg-elev text-red hover:border-red disabled:cursor-not-allowed disabled:opacity-55"
+                className="grid h-[30px] w-[30px] flex-none place-items-center rounded-lg border border-border-strong bg-bg-elev text-red-text hover:border-red disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted"
                 disabled={isPending}
                 onClick={() => setRevokeTarget(token)}
                 type="button"
@@ -141,7 +147,7 @@ export function PersonalTokensSection({
         </div>
       ) : (
         <div className="flex flex-col items-center rounded-[14px] border border-border bg-bg-elev px-6 py-8 text-center">
-          <span className="grid h-12 w-12 place-items-center rounded-[13px] bg-bg-sunken text-fg-faint">
+          <span className="grid h-12 w-12 place-items-center rounded-[13px] bg-bg-sunken text-fg-muted">
             <UserGear aria-hidden size={23} />
           </span>
           <div className="mt-3 text-[14.5px] font-semibold">No personal tokens yet</div>
@@ -274,7 +280,9 @@ export function PersonalTokensSection({
               options={expiryOptions}
               value={expiresInDays}
             />
-            {message ? <div className="text-[12px] font-medium text-red">{message}</div> : null}
+            {message ? (
+              <div className="text-[12px] font-medium text-red-text">{message}</div>
+            ) : null}
           </div>
         )}
       </Modal>

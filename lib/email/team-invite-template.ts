@@ -29,7 +29,7 @@ function expiryLabel(expiresAt: Date) {
 }
 
 function subjectFor(projectName: string) {
-  const normalized = projectName.replace(/[\r\n\t]+/g, " ").trim() || "your workspace";
+  const normalized = projectName.replace(/[\r\n\t]+/g, " ").trim() || "your project";
   const prefix = "Invitation to ";
   return `${prefix}${normalized.slice(0, 59 - prefix.length)}`;
 }
@@ -48,7 +48,7 @@ export function teamInviteEmail(input: TeamInviteEmailInput) {
 
   const html = `<!doctype html>
 <html lang="en">
-<body style="margin:0;padding:0;background:#F2EEE4;color:#1A1813;font-family:Arial,sans-serif;">
+<body style="margin:0;padding:0;background:#F2EEE4;color:#1A1813;font-family:system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;background:#F2EEE4;">
     <tr>
       <td align="center" style="padding:24px 12px;">
@@ -61,13 +61,13 @@ export function teamInviteEmail(input: TeamInviteEmailInput) {
           </tr>
           <tr>
             <td style="padding:30px 24px 14px;">
-              <div style="font-size:13px;line-height:20px;color:#6B6657;">Workspace invitation</div>
+              <div style="font-size:13px;line-height:20px;color:#6B6657;">Project invitation</div>
               <h1 style="margin:6px 0 0;font-size:28px;line-height:34px;font-weight:700;overflow-wrap:anywhere;">${safe.projectName}</h1>
             </td>
           </tr>
           <tr>
             <td style="padding:0 24px 22px;">
-              <p style="margin:0 0 18px;font-size:15px;line-height:23px;color:#6B6657;">${safe.inviter} invited you to join this workspace.</p>
+              <p style="margin:0 0 18px;font-size:15px;line-height:23px;color:#6B6657;">${safe.inviter} invited you to join this project.</p>
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;background:#ECE7DB;border-radius:10px;">
                 <tr><td style="padding:12px 14px;font-size:13px;color:#6B6657;">Role</td><td align="right" style="padding:12px 14px;font-size:13px;font-weight:700;">${safe.role}</td></tr>
                 <tr><td style="padding:0 14px 12px;font-size:13px;color:#6B6657;">Expires</td><td align="right" style="padding:0 14px 12px;font-size:13px;font-weight:700;">${safe.expires}</td></tr>

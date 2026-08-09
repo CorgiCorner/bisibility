@@ -44,7 +44,7 @@ export function DataSourcePanel({ checkHealth, health }: Readonly<DataSourcePane
               className="inline-flex flex-none items-center gap-[7px] rounded-full px-[11px] py-1.5 font-mono text-[11.5px] font-semibold"
               style={{
                 backgroundColor: "color-mix(in srgb, var(--yellow) 12%, transparent)",
-                color: "var(--yellow-strong)",
+                color: "var(--yellow-text)",
               }}
             >
               <span
@@ -60,7 +60,7 @@ export function DataSourcePanel({ checkHealth, health }: Readonly<DataSourcePane
       <div className="mt-[18px] grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-x-[18px] gap-y-3.5">
         {metrics.map((metric) => (
           <div className="min-w-0" key={metric.label}>
-            <div className="font-mono text-[10px] uppercase tracking-[0.6px] text-fg-faint">
+            <div className="font-mono text-[10px] uppercase tracking-[0.6px] text-fg-muted">
               {metric.label}
             </div>
             <div className="mt-[5px] truncate text-sm font-semibold text-fg">{metric.value}</div>
@@ -69,7 +69,7 @@ export function DataSourcePanel({ checkHealth, health }: Readonly<DataSourcePane
       </div>
       <div className="mt-4 flex items-start gap-[9px] border-t border-border-soft pt-3.5 text-[12.5px] leading-5 text-fg-muted">
         <span className="flex h-5 shrink-0 items-center">
-          <Info aria-hidden className="text-accent" size={15} />
+          <Info aria-hidden className="text-accent-text" size={15} />
         </span>
         <span>{health.note}</span>
       </div>

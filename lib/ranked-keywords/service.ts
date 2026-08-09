@@ -8,6 +8,7 @@ import { ProviderLookupSignal, paidProviderCall } from "@/lib/provider-lookups/p
 import { getSerpProvider } from "@/lib/providers/registry";
 import type { RankedKeywordRow, SerpProvider } from "@/lib/providers/types";
 import { providerChainOrderBy, providerChainWhere } from "@/lib/rank-check/provider-chain-order";
+import { trackedProjectDomain } from "@/lib/schemas/project";
 import { projectDefaultSerpMarket } from "@/lib/serp/default-market";
 import { serpRankLocation } from "@/lib/serp/location";
 import { resolveKeywordLocation } from "@/lib/serp/location-service";
@@ -152,7 +153,7 @@ export async function fetchRankedKeywords(input: {
 }): Promise<RankedKeywordsOutcome> {
   const project = await projectState(input.projectId);
   if (!project) return { ok: false, reason: "no_source" };
-  const domain = normalizeDomain(project.domain);
+  const domain = normalizeDomain(trackedProjectDomain(project.domain) ?? "");
   if (!domain) return { ok: false, reason: "no_domain" };
   const eligible = eligibleConnections(project);
   const requestedConnectionId = input.connectionId

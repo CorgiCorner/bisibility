@@ -21,7 +21,7 @@ export function Providers({ children }: Readonly<ProvidersProps>) {
     <AppRouterCacheProvider options={{ key: "mui" }}>
       <StyledEngineProvider injectFirst>
         <ThemeProvider
-          defaultMode="light"
+          defaultMode="system"
           modeStorageKey="theme"
           storageManager={themeCookieStorageManager}
           theme={theme}

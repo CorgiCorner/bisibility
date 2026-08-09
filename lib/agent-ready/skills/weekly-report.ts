@@ -22,7 +22,7 @@ checks or changes settings.
 ## Prerequisites
 
 1. **Origin (base URL).** Resolve it before doing anything:
-   - EU Cloud: \`https://eu.bisibility.com/api/v1\`
+   - EU hosted region: \`https://eu.bisibility.com/api/v1\`
    - Self-hosted: \`https://your-host.example/api/v1\`
    Prefer an explicit \`BISIBILITY_BASE_URL\`; otherwise ask the user which origin
    they use. All paths below are relative to this base.

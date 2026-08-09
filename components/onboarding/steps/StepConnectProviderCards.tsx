@@ -72,7 +72,7 @@ export function StepConnectProviderCards({
         ))}
       </div>
       {Object.keys(connections).length > 0 ? (
-        <p className="m-0 mt-2 text-[11.5px] text-fg-faint">
+        <p className="m-0 mt-2 text-[11.5px] text-fg-muted">
           Connections are saved per provider - switching does not disconnect.
         </p>
       ) : null}

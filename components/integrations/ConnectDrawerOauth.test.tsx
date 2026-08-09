@@ -179,7 +179,7 @@ describe("ConnectDrawerOauth", () => {
 
     render(<ConnectDrawerOauth projectId="prj_1" provider={provider} scopes={["analytics"]} />);
 
-    const input = screen.getByLabelText("GA4 property id");
+    const input = screen.getByLabelText("Google Analytics 4 property id");
     expect(input).toHaveAttribute("placeholder", "123456789");
     expect(screen.getByText(/Admin \(gear, bottom-left\).*Property details/s)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Property ID guide" })).toHaveAttribute(
@@ -194,7 +194,7 @@ describe("ConnectDrawerOauth", () => {
     fireEvent.blur(input);
 
     expect(screen.getByRole("alert")).toHaveTextContent(
-      "Measurement ID for a web data stream, not a GA4 Property ID",
+      "Measurement ID for a web data stream, not a Google Analytics 4 Property ID",
     );
     expect(screen.getByRole("button", { name: "Use entered property" })).toBeDisabled();
   });

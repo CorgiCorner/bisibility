@@ -4,7 +4,7 @@ import {
   ProjectReadOnlyTooltip,
   useProjectWriteMode,
 } from "@/components/shell/ProjectWriteModeProvider";
-import { MenuSelectOptionItem, menuSelectPaperSx } from "@/components/ui";
+import { Button, MenuSelectOptionItem, menuSelectPaperSx } from "@/components/ui";
 import {
   type CostRateInfo,
   formatEstimateCents,
@@ -12,7 +12,8 @@ import {
 } from "@/lib/cost-estimate/project-estimate";
 import type { SerpDepth } from "@/lib/serp/markets";
 import { serpDepthValues } from "@/lib/serp/markets";
-import Button from "@mui/material/Button";
+// ButtonGroup children must stay MUI Buttons so the group keeps its joined corners.
+import MuiButton from "@mui/material/Button";
 import ButtonGroup from "@mui/material/ButtonGroup";
 import Menu from "@mui/material/Menu";
 import {
@@ -85,46 +86,36 @@ export function KeywordHeaderActions({
       {canUpdateKeyword ? (
         <ProjectReadOnlyTooltip>
           <Button
-            color={alertCreated ? "primary" : "inherit"}
             disabled={readOnly || !canCreateAlert || alertCreating || alertCreated}
             onClick={onCreateAlert}
-            size="small"
             startIcon={<AlertIcon size={15} weight={alertCreated ? "fill" : "bold"} />}
-            sx={{
-              border: alertCreated ? "1px solid var(--accent)" : "1px solid var(--border-strong)",
-              color: alertCreated ? "var(--accent)" : "var(--fg-muted)",
-              minHeight: 36,
-            }}
-            variant="outlined"
+            sx={
+              alertCreated
+                ? { border: "1px solid var(--accent)", color: "var(--accent)" }
+                : { color: "var(--fg-muted)" }
+            }
+            variant="secondary"
           >
             {alertLabel}
           </Button>
         </ProjectReadOnlyTooltip>
       ) : null}
       <Button
-        color="inherit"
         onClick={onExport}
-        size="small"
         startIcon={<DownloadSimple size={15} />}
-        sx={{ border: "1px solid var(--border-strong)", color: "var(--fg-muted)", minHeight: 36 }}
-        variant="outlined"
+        sx={{ color: "var(--fg-muted)" }}
+        variant="secondary"
       >
         Export CSV
       </Button>
       {canUpdateKeyword ? (
         <ProjectReadOnlyTooltip>
           <Button
-            color="inherit"
             disabled={readOnly}
             onClick={onToggleEdit}
-            size="small"
             startIcon={<PencilSimple size={15} weight="bold" />}
-            sx={{
-              border: "1px solid var(--border-strong)",
-              color: "var(--fg-muted)",
-              minHeight: 36,
-            }}
-            variant="outlined"
+            sx={{ color: "var(--fg-muted)" }}
+            variant="secondary"
           >
             {editing ? "Close edit" : "Edit"}
           </Button>
@@ -133,7 +124,7 @@ export function KeywordHeaderActions({
       {canUpdateKeyword ? (
         <ProjectReadOnlyTooltip>
           <ButtonGroup size="small" variant="contained">
-            <Button
+            <MuiButton
               disabled={readOnly || runPending}
               onClick={() => onRunCheck(selectedDepth)}
               startIcon={<ArrowsClockwise size={15} weight="bold" />}
@@ -142,15 +133,15 @@ export function KeywordHeaderActions({
               {runPending
                 ? "Starting..."
                 : `Check now (${checkLabel(selectedDepth, providerRate)})`}
-            </Button>
-            <Button
+            </MuiButton>
+            <MuiButton
               aria-label="Choose check depth"
               disabled={readOnly || runPending}
               onClick={(event) => setDepthMenuAnchor(event.currentTarget)}
               sx={{ minHeight: 36, minWidth: 34, paddingX: 0.75 }}
             >
               <CaretDown aria-hidden size={13} weight="bold" />
-            </Button>
+            </MuiButton>
           </ButtonGroup>
         </ProjectReadOnlyTooltip>
       ) : null}

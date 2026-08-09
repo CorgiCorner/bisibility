@@ -1,4 +1,5 @@
 import { ProjectReadOnlyError } from "@/lib/deployment/project-write-mode";
+import { ProjectDomainRequiredError } from "@/lib/projects/tracked-domain";
 import { ProviderRateLimitedError } from "@/lib/providers/rate-limit";
 import { BudgetExhaustedError } from "@/lib/rank-check/budget";
 import { RankCheckRunnerError } from "@/lib/rank-check/runner";
@@ -29,6 +30,9 @@ export function errorFromUnknown(error: unknown, headers: Headers, url: URL) {
   }
   if (error instanceof ProjectReadOnlyError) {
     return errorResponse("project_read_only", error.message, 423, { headers, instance });
+  }
+  if (error instanceof ProjectDomainRequiredError) {
+    return errorResponse("project_domain_required", error.message, 422, { headers, instance });
   }
   if (error instanceof BudgetExhaustedError) {
     return errorResponse("budget_exhausted", error.message, 429, { headers, instance });

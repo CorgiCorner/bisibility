@@ -44,7 +44,7 @@ describe("onboarding actions", () => {
     mocks.writeAudit.mockResolvedValue({ id: "audit_1" });
   });
 
-  it("returns the created workspace so the wizard can save scope and continue", async () => {
+  it("returns the created project so the wizard can save scope and continue", async () => {
     const input = { domain: "example.com", name: "Example", trackingScope: "city" as const };
 
     await expect(createOnboardingProject(input)).resolves.toMatchObject({

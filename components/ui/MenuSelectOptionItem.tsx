@@ -39,15 +39,15 @@ export function MenuSelectOptionItem({
       title={option.tooltip}
     >
       <span className="flex min-w-0 items-center gap-2.5">
-        {option.icon ? <span className="flex shrink-0 text-fg-faint">{option.icon}</span> : null}
+        {option.icon ? <span className="flex shrink-0 text-fg-muted">{option.icon}</span> : null}
         <span className="min-w-0">
           <span className={current ? "block font-semibold text-fg" : "block"}>{option.label}</span>
           {option.secondary ? (
-            <span className="block font-mono text-[10px] text-fg-faint">{option.secondary}</span>
+            <span className="block font-mono text-[10px] text-fg-muted">{option.secondary}</span>
           ) : null}
         </span>
       </span>
-      {current ? <Check aria-hidden className="text-accent" size={15} weight="bold" /> : null}
+      {current ? <Check aria-hidden className="text-accent-text" size={15} weight="bold" /> : null}
     </MenuItem>
   );
 }

@@ -63,15 +63,15 @@ export function StepConnectGscCard({
   }
 
   return (
-    <section className="mb-5 rounded-xl border border-border-strong bg-bg-sunken p-4">
+    <section className="mb-5 rounded-xl border border-border-strong bg-transparent p-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="grid h-8 w-8 place-items-center rounded-[9px] bg-bg-elev text-accent">
+            <span className="grid h-8 w-8 place-items-center rounded-[9px] bg-bg-elev text-accent-text">
               <MagnifyingGlass aria-hidden size={17} weight="bold" />
             </span>
             <span className="text-[15px] font-semibold text-fg">Google Search Console</span>
-            <span className="rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-semibold text-accent">
+            <span className="rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-semibold text-accent-text">
               Recommended
             </span>
             <span className="rounded-full bg-bg-elev px-2 py-0.5 text-[11px] font-semibold text-fg-muted">
@@ -83,7 +83,7 @@ export function StepConnectGscCard({
             Console. No API key is needed.
           </p>
           {connected ? (
-            <p className="m-0 mt-3 inline-flex items-center gap-2 rounded-[9px] bg-bg-elev px-3 py-2 text-[12.5px] font-semibold text-green">
+            <p className="m-0 mt-3 inline-flex items-center gap-2 rounded-[9px] bg-bg-elev px-3 py-2 text-[12.5px] font-semibold text-green-text">
               <CheckCircle aria-hidden size={15} weight="fill" />
               {connectedMessage(connectedPropertyLabel)}
             </p>
@@ -124,13 +124,17 @@ export function StepConnectGscCard({
                 </>
               ) : (
                 <p className="m-0 flex gap-2 rounded-[9px] bg-bg-sunken px-3 py-2.5 text-[12px] leading-5 text-fg-muted">
-                  <WarningCircle aria-hidden className="mt-0.5 shrink-0 text-yellow" size={15} />
+                  <WarningCircle
+                    aria-hidden
+                    className="mt-0.5 shrink-0 text-yellow-text"
+                    size={15}
+                  />
                   {googleOAuth.error ??
                     "This account has no verified Search Console properties. Verify one or connect a different Google account."}
                 </p>
               )}
               {error ? (
-                <p className="m-0 text-[12px] text-red" role="alert">
+                <p className="m-0 text-[12px] text-red-text" role="alert">
                   {error}
                 </p>
               ) : null}
@@ -142,7 +146,7 @@ export function StepConnectGscCard({
               <InlineCode>GOOGLE_CLIENT_ID</InlineCode> and{" "}
               <InlineCode>GOOGLE_CLIENT_SECRET</InlineCode>. See the{" "}
               <a
-                className="inline-flex items-center gap-0.5 font-medium text-accent hover:underline"
+                className="inline-flex items-center gap-0.5 font-medium text-accent-text hover:underline"
                 href="/docs/integrations#analytics-sources"
                 {...docsLinkProps("/docs/integrations#analytics-sources")}
               >

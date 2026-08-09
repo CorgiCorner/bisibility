@@ -25,7 +25,11 @@ import {
   primaryProviderConnection,
   providerChainOrderBy,
 } from "@/lib/rank-check/provider-chain-order";
-import { normalizeTrackingScope, type TrackingScope } from "@/lib/schemas/project";
+import {
+  normalizeTrackingScope,
+  type TrackingScope,
+  trackedProjectDomain,
+} from "@/lib/schemas/project";
 import { projectDefaultSerpMarket } from "@/lib/serp/default-market";
 import { resolveSerpDepth, resolveSerpStopOnMatch, type SerpDepth } from "@/lib/serp/markets";
 import type { ProviderUsageData } from "@/lib/settings/options";
@@ -37,9 +41,6 @@ import {
   settingsConnectionUsage,
   settingsProviderSummaries,
 } from "./settings-provider-summaries";
-
-export { getNewWorkspaceSettings } from "./settings-new-workspace";
-export type { NewWorkspaceSettings } from "./settings-types";
 
 export type SettingsView = {
   apiKeys: {
@@ -229,7 +230,7 @@ export async function getSettings(projectId: string, options: { now?: Date; pref
       maxAlertsPerDay: MAX_ALERT_DELIVERIES_PER_RULE_PER_DAY,
     },
     project: {
-      domain: fullProject.domain,
+      domain: trackedProjectDomain(fullProject.domain) ?? "",
       name: fullProject.name,
       projectId: fullProject.publicId,
       trackingScope: normalizeTrackingScope(fullProject.trackingScope),

@@ -185,7 +185,7 @@ export function ChecksWorkspace({
   );
   const errorMessage = error ? (
     <p
-      className="m-0 rounded-xl border border-red/30 bg-red/8 px-3.5 py-3 text-sm text-red"
+      className="m-0 rounded-xl border border-red/30 bg-red/8 px-3.5 py-3 text-sm text-red-text"
       role="alert"
     >
       {error}

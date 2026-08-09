@@ -10,7 +10,9 @@ import { PositionTrendCard } from "@/components/overview/PositionTrendCard";
 import type { OverviewView } from "@/components/overview/types";
 import { SampleProjectBanner } from "@/components/sample-data/SampleProjectBanner";
 import { PageContent } from "@/components/shell/PageContent";
-import { AlertBanner } from "@/components/ui";
+import { AlertBanner, Button } from "@/components/ui";
+import { addKeywords } from "@/lib/actions/keyword";
+import { importTopQueries } from "@/lib/actions/keyword-suggest";
 import { getFirstCheckRunPlan } from "@/lib/actions/rank-check-preview";
 import { queueFirstChecks, runCheckNow } from "@/lib/actions/rankCheck";
 import { getProjectRole } from "@/lib/auth/authorize";
@@ -19,11 +21,11 @@ import { pluralize } from "@/lib/format/pluralize";
 import { getQueryActor, resolveProjectAccess } from "@/lib/queries/_auth";
 import { getPreferences } from "@/lib/queries/account";
 import { getCheckHealth } from "@/lib/queries/check-health";
+import { getProjectCostContext } from "@/lib/queries/cost-calculator";
 import { getOverview, type OverviewFilters, parseOverviewFilters } from "@/lib/queries/overview";
 import type { WorkspaceDataState } from "@/lib/queries/workspace-state";
 import { appPath } from "@/lib/routing/app-path";
-import Button from "@mui/material/Button";
-import { ArrowRightIcon as ArrowRight } from "@phosphor-icons/react/dist/ssr";
+import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import { type ComponentProps, type ReactNode, Suspense } from "react";
 
@@ -70,7 +72,7 @@ function CheckHealthBanners({
               Spent {moneyFromCents(checkHealth.budget.spentCents)} of{" "}
               {moneyFromCents(checkHealth.budget.capCents)} this month.{" "}
               <Link
-                className="font-semibold text-accent hover:underline"
+                className="font-semibold text-accent-text hover:underline"
                 href={appPath(projectRef, "settings#provider-usage")}
               >
                 Raise the budget
@@ -134,18 +136,15 @@ function OverviewSections({
         <DataSourcePanel checkHealth={checkHealth} health={dataSource} />
         <HighlightLists lists={highlights} projectRef={projectRef} />
         <Button
-          color="inherit"
           component={Link}
-          endIcon={<ArrowRight size={15} weight="bold" />}
+          endIcon={<CaretRight size={15} weight="bold" />}
           href={appPath(projectRef, "keywords")}
           sx={{
             alignSelf: "flex-start",
-            borderColor: "var(--border-strong)",
-            color: "var(--fg)",
             minHeight: 38,
-            "&:hover": { borderColor: "var(--accent)", color: "var(--accent)" },
+            "&:hover": { borderColor: "var(--accent)", color: "var(--accent-text)" },
           }}
-          variant="outlined"
+          variant="secondary"
         >
           View all keywords
         </Button>
@@ -168,9 +167,10 @@ async function OverviewData({
   isSample: boolean;
 }>) {
   const now = new Date();
-  const [overview, checkHealth] = await Promise.all([
+  const [overview, checkHealth, costContext] = await Promise.all([
     getOverview(projectRef, { filters, preferences }),
     getCheckHealth(projectRef, { now }),
+    getProjectCostContext(projectRef),
   ]);
   const state: WorkspaceDataState = overview.state ?? (overview.isEmpty ? "empty" : "populated");
   const overviewView: OverviewView = { ...overview, state };
@@ -183,8 +183,11 @@ async function OverviewData({
       <div className="flex min-w-0 flex-col gap-[18px]">
         {sampleBanner}
         <OverviewEmpty
+          addKeywordsAction={addKeywords}
           capabilities={capabilities}
+          costContext={costContext}
           gettingStarted={overviewView.gettingStarted}
+          importTopQueriesAction={importTopQueries}
           workspaceName={overviewView.workspaceName}
         />
       </div>

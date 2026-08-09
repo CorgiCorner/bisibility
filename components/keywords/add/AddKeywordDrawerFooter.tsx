@@ -129,7 +129,7 @@ export function AddKeywordDrawerFooter({
       />
       <div className="flex items-start gap-[9px] rounded-[10px] bg-bg-sunken px-[13px] py-[11px]">
         <span className="flex h-[18px] flex-none items-center">
-          <Database className="text-accent" size={15} weight="bold" />
+          <Database className="text-accent-text" size={15} weight="bold" />
         </span>
         <p className="m-0 text-[12px] leading-[1.5] text-fg-muted">
           Rankings come from your connected SERP provider. You control cadence and pay the provider

@@ -1,7 +1,7 @@
 "use client";
 
 import { actionErrorMessage } from "@/components/keywords/action-utils";
-import { Modal, useToast } from "@/components/ui";
+import { Button, Modal, useToast } from "@/components/ui";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import {
   type CreateSavedViewInput,
@@ -77,15 +77,17 @@ export function SaveViewModal({
           >
             Cancel
           </button>
-          <button
-            className="inline-flex items-center gap-[7px] rounded-[9px] bg-accent px-4 py-2.5 text-[13px] font-semibold text-white outline-none hover:opacity-90 focus-visible:opacity-90 disabled:opacity-60"
-            disabled={isSubmitting || !createSavedViewAction}
+          <Button
+            disabled={!createSavedViewAction}
             form="save-keyword-view"
+            loading={isSubmitting}
+            loadingLabel="Saving..."
+            startIcon={<BookmarkSimple size={15} weight="bold" />}
             type="submit"
+            variant="primary"
           >
-            <BookmarkSimple size={15} weight="bold" />
-            {isSubmitting ? "Saving..." : "Save view"}
-          </button>
+            Save view
+          </Button>
         </>
       }
       onClose={onClose}
@@ -105,29 +107,31 @@ export function SaveViewModal({
         id="save-keyword-view"
         onSubmit={handleSubmit((values) => void submit(values))}
       >
-        <div className="flex items-center gap-2 rounded-[11px] border border-dashed border-border-strong bg-bg-sunken px-[14px] py-3">
-          <span className="font-mono text-[9.5px] uppercase tracking-[0.5px] text-fg-faint">
+        <div className="flex items-center gap-2 rounded-[11px] border border-dashed border-border-strong bg-transparent px-[14px] py-3">
+          <span className="font-mono text-[9.5px] uppercase tracking-[0.5px] text-fg-muted">
             Preview
           </span>
-          <span className="inline-flex min-w-0 items-center gap-1.5 truncate rounded-lg border border-border-strong bg-accent-soft px-3 py-1.5 text-[12px] font-semibold text-accent">
+          <span className="inline-flex min-w-0 items-center gap-1.5 truncate rounded-lg border border-border-strong bg-accent-soft px-3 py-1.5 text-[12px] font-semibold text-accent-text">
             <BookmarkSimple className="shrink-0" size={13} weight="fill" />
             <span className="truncate">{previewName}</span>
           </span>
         </div>
 
-        <label className="grid gap-[7px] font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint">
+        <label className="grid gap-[7px] font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
           {"View name "}
           <input
-            className="rounded-[9px] border border-border-strong bg-bg-sunken px-3 py-2.5 font-sans text-[13.5px] font-medium normal-case tracking-normal text-fg outline-none focus:border-accent"
+            className="rounded-[9px] border border-border-strong bg-transparent px-3 py-2.5 font-sans text-[13.5px] font-medium normal-case tracking-normal text-fg outline-none focus:border-accent"
             placeholder="e.g. Product pages down"
             {...register("name")}
           />
-          {errors.name ? <span className="text-[11px] text-red">{errors.name.message}</span> : null}
+          {errors.name ? (
+            <span className="text-[11px] text-red-text">{errors.name.message}</span>
+          ) : null}
         </label>
 
         <div className="flex items-start gap-2 rounded-[10px] border border-border bg-bg px-[13px] py-[11px]">
           <span className="flex h-[17px] shrink-0 items-center">
-            <FunnelSimple className="text-accent" size={14} />
+            <FunnelSimple className="text-accent-text" size={14} />
           </span>
           <span className="text-[11.5px] leading-[1.45] text-fg-muted">
             <strong className="font-semibold text-fg">Captured view:</strong> {activeFiltersSummary}
@@ -135,7 +139,7 @@ export function SaveViewModal({
         </div>
 
         {errors.root ? (
-          <p className="m-0 flex items-center gap-1.5 font-mono text-[11.5px] text-red">
+          <p className="m-0 flex items-center gap-1.5 font-mono text-[11.5px] text-red-text">
             <X size={12} weight="bold" />
             {errors.root.message}
           </p>

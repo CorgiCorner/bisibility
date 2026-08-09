@@ -119,7 +119,7 @@ export function advanceJob(
   return client.cloudImportJob.update({
     data: {
       counts,
-      error: state === "failed" ? (error ?? "Cloud import failed.") : null,
+      error: state === "failed" ? (error ?? "Instance import failed.") : null,
       finishedAt: state === "done" || state === "failed" ? new Date() : null,
       progress,
       state,

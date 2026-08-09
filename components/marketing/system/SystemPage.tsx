@@ -1,9 +1,8 @@
+import { BrandLockup, Button, type ButtonProps } from "@/components/ui";
 import { DOCS_URL } from "@/lib/site/site";
-import Button, { type ButtonProps } from "@mui/material/Button";
 import {
   ArrowUpRightIcon as ArrowUpRight,
   BinocularsIcon as Binoculars,
-  ChartLineUpIcon as ChartLineUp,
   LifebuoyIcon as Lifebuoy,
 } from "@phosphor-icons/react/dist/ssr";
 import type { ReactNode } from "react";
@@ -33,40 +32,11 @@ const actionSx = {
 };
 
 export function SystemPrimaryAction(props: ButtonProps) {
-  return (
-    <Button
-      sx={{
-        ...actionSx,
-        backgroundColor: "var(--accent)",
-        color: "white",
-        "&:hover": {
-          backgroundColor: "var(--accent-hover)",
-        },
-      }}
-      variant="contained"
-      {...props}
-    />
-  );
+  return <Button size="lg" sx={actionSx} variant="primary" {...props} />;
 }
 
 export function SystemSecondaryAction(props: ButtonProps) {
-  return (
-    <Button
-      color="inherit"
-      sx={{
-        ...actionSx,
-        backgroundColor: "var(--bg-elev)",
-        borderColor: "var(--border-strong)",
-        color: "var(--fg)",
-        "&:hover": {
-          backgroundColor: "var(--bg-sunken)",
-          borderColor: "var(--border-strong)",
-        },
-      }}
-      variant="outlined"
-      {...props}
-    />
-  );
+  return <Button size="lg" sx={actionSx} variant="secondary" {...props} />;
 }
 
 export function SystemPage({
@@ -80,20 +50,19 @@ export function SystemPage({
   return (
     <main className="flex min-h-screen flex-col bg-bg text-fg">
       <div className="flex items-center justify-between px-5 py-[22px] sm:px-8">
-        <a className="flex min-w-0 items-center gap-[9px]" href="/">
-          <span className="grid h-[30px] w-[30px] place-items-center rounded-lg bg-accent text-white">
-            <ChartLineUp aria-hidden size={18} weight="bold" />
-          </span>
-          <span className="text-[18px] font-bold tracking-[-0.5px]">bisibility</span>
+        <a className="flex min-w-0" href="/">
+          <BrandLockup />
         </a>
-        <span className="font-mono text-[11px] text-fg-faint">{statusLabel}</span>
+        <span className="font-mono text-[11px] text-fg-muted">{statusLabel}</span>
       </div>
 
       <section className="flex flex-1 flex-col items-center justify-center px-6 pb-[90px] pt-10 text-center">
-        <span className="grid h-16 w-16 place-items-center rounded-[17px] bg-accent-soft text-accent">
+        <span className="grid h-16 w-16 place-items-center rounded-[17px] bg-accent-soft text-accent-text">
           <Binoculars aria-hidden size={34} weight="bold" />
         </span>
-        <p className="mb-0 mt-6 font-mono text-[13px] tracking-[0.5px] text-accent">{kicker}</p>
+        <p className="mb-0 mt-6 font-mono text-[13px] tracking-[0.5px] text-accent-text">
+          {kicker}
+        </p>
         <h1 className="mb-0 mt-3 max-w-[760px] text-[34px] font-semibold leading-[1.05] tracking-[-1.6px] sm:text-[44px] lg:text-[52px]">
           {title}
         </h1>
@@ -103,7 +72,7 @@ export function SystemPage({
         <div className="mt-7 flex flex-wrap justify-center gap-[11px]">{actions}</div>
         {terminal}
         <a
-          className="mt-[22px] inline-flex items-center gap-[7px] text-[13px] text-fg-muted hover:text-accent"
+          className="mt-[22px] inline-flex items-center gap-[7px] text-[13px] text-fg-muted hover:text-accent-text"
           href={DOCS_URL}
           rel="noreferrer noopener"
           target="_blank"
@@ -132,16 +101,16 @@ export function TerminalBlock({ note, path, routes, status }: Readonly<TerminalB
         }}
       >
         <div className="whitespace-nowrap">
-          <span className="text-accent">GET</span> {path}
+          <span className="text-accent-text">GET</span> {path}
           <span className="text-code-faint"> -&gt; </span>
-          <span className="text-red">{status}</span>
+          <span className="text-red-text">{status}</span>
         </div>
         <div className="whitespace-nowrap text-code-faint"># {note}</div>
         <div className="whitespace-nowrap">
           {routes.map((route, index) => (
             <span key={route}>
               {index > 0 ? " " : null}
-              <span className="text-blue">-&gt;</span>
+              <span className="text-blue-text">-&gt;</span>
               {route}
             </span>
           ))}
@@ -155,17 +124,14 @@ export function SystemLoadingPage() {
   return (
     <main className="flex min-h-screen flex-col bg-bg text-fg">
       <div className="flex items-center justify-between px-5 py-[22px] sm:px-8">
-        <a className="flex min-w-0 items-center gap-[9px]" href="/">
-          <span className="grid h-[30px] w-[30px] place-items-center rounded-lg bg-accent text-white">
-            <ChartLineUp aria-hidden size={18} weight="bold" />
-          </span>
-          <span className="text-[18px] font-bold tracking-[-0.5px]">bisibility</span>
+        <a className="flex min-w-0" href="/">
+          <BrandLockup />
         </a>
-        <span className="font-mono text-[11px] text-fg-faint">INDEXING</span>
+        <span className="font-mono text-[11px] text-fg-muted">INDEXING</span>
       </div>
 
       <section className="flex flex-1 flex-col items-center justify-center px-6 pb-[90px] pt-10 text-center">
-        <span className="grid h-16 w-16 place-items-center rounded-[17px] bg-accent-soft text-accent">
+        <span className="grid h-16 w-16 place-items-center rounded-[17px] bg-accent-soft text-accent-text">
           <Binoculars aria-hidden size={34} weight="bold" />
         </span>
         <SkeletonBlock className="mt-6 h-[15px] w-[136px]" />

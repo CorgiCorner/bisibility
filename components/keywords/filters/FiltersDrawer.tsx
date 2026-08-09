@@ -108,7 +108,7 @@ export function FiltersDrawer({
       title={
         <span className="inline-flex items-center gap-2">
           {"Filters "}
-          <span className="grid h-[19px] min-w-[19px] place-items-center rounded-full bg-accent-soft px-1.5 font-mono text-[10.5px] font-semibold text-accent">
+          <span className="grid h-[19px] min-w-[19px] place-items-center rounded-full bg-accent-soft px-1.5 font-mono text-[10.5px] font-semibold text-accent-text">
             {activeCount}
           </span>
         </span>
@@ -124,7 +124,7 @@ export function FiltersDrawer({
                   basePath={basePath}
                   lens={lens}
                   locationOptions={locationOptions}
-                  triggerClassName="w-full justify-between bg-bg-sunken"
+                  triggerClassName="w-full justify-between bg-transparent"
                   viewId={viewId}
                 />
               </div>
@@ -166,7 +166,7 @@ export function FiltersDrawer({
         <FilterSection icon={TextAa} title="Keyword attributes">
           <div className="mb-2 mt-[13px] flex items-center justify-between">
             <span className="text-[12px] text-fg-muted">Search volume / mo</span>
-            <span className="font-mono text-[11px] font-semibold text-accent">
+            <span className="font-mono text-[11px] font-semibold text-accent-text">
               {filters.volMin}k - {filters.volMax >= 50 ? "50k+" : `${filters.volMax}k`}
             </span>
           </div>
@@ -181,15 +181,15 @@ export function FiltersDrawer({
             sx={{ color: "var(--accent)", mx: 0.5 }}
             value={[filters.volMin, filters.volMax]}
           />
-          <div className="flex justify-between font-mono text-[10px] text-fg-faint">
+          <div className="flex justify-between font-mono text-[10px] text-fg-muted">
             <span>0</span>
             <span>50k+</span>
           </div>
           <label className="mt-4 block text-[12px] text-fg-muted" htmlFor="keyword-contains">
             Keyword contains
           </label>
-          <div className="mt-2 flex items-center gap-2 rounded-[9px] border border-border-strong bg-bg-sunken px-[11px] py-2 transition-colors focus-within:border-accent">
-            <TextAa className="text-fg-faint" size={14} />
+          <div className="mt-2 flex items-center gap-2 rounded-[9px] border border-border-strong bg-transparent px-[11px] py-2 transition-colors focus-within:border-accent">
+            <TextAa className="text-fg-muted" size={14} />
             <input
               className="min-w-0 flex-1 bg-transparent font-mono text-[12.5px] text-fg outline-none focus-visible:outline-none"
               id="keyword-contains"

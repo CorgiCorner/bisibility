@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, ConfirmModal, PasswordInput, Switch } from "@/components/ui";
+import { Button, ConfirmModal, inputClassName, PasswordInput, Switch } from "@/components/ui";
 import type { WebhookEndpointView } from "@/lib/alerts/alert-data";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -15,8 +15,7 @@ type WebhookEndpointRowProps = {
   upsertAction: EndpointAction;
 };
 
-const fieldClass =
-  "min-h-10 w-full rounded-[9px] border border-border-strong bg-bg-elev px-3 py-2 text-[13px] text-fg outline-none focus:border-accent";
+const fieldClass = `${inputClassName} min-h-10 w-full rounded-[9px] px-3 py-2 text-[13px]`;
 
 function actionResponse(result: unknown) {
   return result && typeof result === "object" ? (result as Record<string, unknown>) : {};
@@ -148,7 +147,7 @@ export function WebhookEndpointRow({
     <li className="grid min-w-0 gap-2 rounded-[9px] border border-border bg-bg-elev p-2.5">
       <div className="flex min-w-0 flex-wrap items-center gap-2">
         <span className="min-w-0 flex-1 truncate">{endpoint.url}</span>
-        <span className={endpoint.enabled ? "text-green" : "text-fg-faint"}>
+        <span className={endpoint.enabled ? "text-green-text" : "text-fg-muted"}>
           {endpoint.enabled ? "enabled" : "disabled"}
         </span>
       </div>
@@ -261,7 +260,7 @@ export function WebhookEndpointRow({
                   </time>{" "}
                   {attempt.event} {attempt.status}
                 </span>
-                {attempt.error ? <span className="text-red">{attempt.error}</span> : null}
+                {attempt.error ? <span className="text-red-text">{attempt.error}</span> : null}
               </li>
             ))}
           </ul>
@@ -270,12 +269,12 @@ export function WebhookEndpointRow({
         )}
       </div>
       {error ? (
-        <p className="m-0 text-[10.5px] text-red" role="alert">
+        <p className="m-0 text-[10.5px] text-red-text" role="alert">
           {error}
         </p>
       ) : null}
       {status ? (
-        <p className="m-0 text-[10.5px] text-green" role="status">
+        <p className="m-0 text-[10.5px] text-green-text" role="status">
           {status}
         </p>
       ) : null}

@@ -25,7 +25,7 @@ import type {
   SavedViewResource,
 } from "@/lib/saved-views/model";
 import {
-  ArrowRightIcon as ArrowRight,
+  CaretRightIcon as CaretRight,
   ExportIcon as Export,
   FunnelSimpleIcon as FunnelSimple,
 } from "@phosphor-icons/react";
@@ -111,11 +111,11 @@ export function CompetitorsWorkspace({
       <EmptyState
         action={
           <Link
-            className="inline-flex min-h-10 items-center gap-2 rounded-[10px] border border-border-strong bg-bg-elev px-[18px] text-[13.5px] font-semibold text-fg hover:border-accent hover:text-accent"
+            className="inline-flex min-h-10 items-center gap-2 rounded-[10px] border border-border-strong bg-bg-elev px-[18px] text-[13.5px] font-semibold text-fg hover:border-accent hover:text-accent-text"
             href={appPath(projectRef, "keywords")}
           >
             Add keywords first
-            <ArrowRight aria-hidden size={14} weight="bold" />
+            <CaretRight aria-hidden size={14} weight="bold" />
           </Link>
         }
         description={`${view.managedCompetitors.length} managed competitor${view.managedCompetitors.length === 1 ? "" : "s"} (${competitorNames}) saved. Track at least one keyword before benchmarking.`}

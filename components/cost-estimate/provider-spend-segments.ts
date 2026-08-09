@@ -12,7 +12,7 @@ export type SpendSegment = {
 };
 
 export const OTHER_SEGMENT_LABEL = "Other";
-export const OTHER_SEGMENT_COLOR = "var(--fg-faint)";
+export const OTHER_SEGMENT_COLOR = "var(--fg-muted)";
 
 function segmentColor(index: number): string {
   if (index < 2) {

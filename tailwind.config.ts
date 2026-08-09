@@ -1,5 +1,5 @@
 import type { Config } from "tailwindcss";
-import { tailwindTokenColors } from "./lib/theme/tokens";
+import { tailwindSemanticColors } from "./lib/theme/tokens";
 
 const config = {
   darkMode: ["selector", '[data-theme="dark"]'],
@@ -17,7 +17,7 @@ const config = {
       lg: "1024px",
     },
     extend: {
-      colors: tailwindTokenColors,
+      colors: tailwindSemanticColors,
       fontFamily: {
         sans: ["var(--font-sans)", "system-ui", "sans-serif"],
         mono: ["var(--font-mono)", "monospace"],

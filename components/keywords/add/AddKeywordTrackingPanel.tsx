@@ -61,7 +61,7 @@ export function AddKeywordTrackingPanel({
           showSchedule={showSchedule}
         />
       </div>
-      <p className="mt-2 text-[11.5px] text-fg-faint">
+      <p className="mt-2 text-[11.5px] text-fg-muted">
         You pay your SERP provider per check. Optionally narrow to a city, or duplicate after adding
         for more devices/locations.
       </p>

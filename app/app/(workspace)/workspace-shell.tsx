@@ -11,6 +11,7 @@ import {
   ProjectWriteModeProvider,
 } from "@/components/shell/ProjectWriteModeProvider";
 import { Sidebar } from "@/components/shell/Sidebar";
+import { appVersion } from "@/lib/app-version";
 import { getInstanceAdminSession } from "@/lib/auth/instance-admin";
 import { isCloud } from "@/lib/deployment/deployment";
 import { getWorkerLivenessDetails } from "@/lib/ops/liveness";
@@ -18,6 +19,7 @@ import { getQuerySession } from "@/lib/queries/_auth";
 import { getLatestCloudPackageExport } from "@/lib/queries/cloud-beta-export";
 import { loadWorkspaceBudgetSummary } from "@/lib/queries/workspace-budget-summary";
 import { listWorkspaces } from "@/lib/queries/workspaces";
+import { normalizeThemePreference, serverThemeMode } from "@/lib/theme/browser-theme";
 import { isSidebarCollapsed } from "@/lib/ui/sidebar-collapsed";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
@@ -28,10 +30,6 @@ type WorkspaceShellProps = {
   children: ReactNode;
   projectRef: string;
 };
-
-function normalizeTheme(value: string | undefined): "dark" | "light" {
-  return value === "dark" ? "dark" : "light";
-}
 
 export async function WorkspaceShell({
   activeProjectId,
@@ -57,7 +55,7 @@ export async function WorkspaceShell({
   const canCreateWorkspace = Boolean(session.user.id);
 
   const cookieStore = await cookies();
-  const theme = normalizeTheme(cookieStore.get("theme")?.value);
+  const theme = normalizeThemePreference(cookieStore.get("theme")?.value);
   const collapsed = isSidebarCollapsed(cookieStore.get("sidebar-collapsed")?.value);
   const cloudBetaDismissed = isCloudBetaDismissed(
     cookieStore.get(CLOUD_BETA_DISMISSAL_COOKIE)?.value,
@@ -74,10 +72,10 @@ export async function WorkspaceShell({
 
   return (
     <AppThemeRoot
-      defaultTheme={theme}
+      defaultTheme={serverThemeMode(theme)}
       data-shell-root
       data-collapsed={collapsed ? "true" : "false"}
-      className="min-h-dvh bg-bg text-fg lg:grid lg:grid-cols-[248px_minmax(0,1fr)] data-[collapsed=true]:lg:grid-cols-[72px_minmax(0,1fr)]"
+      className="min-h-dvh bg-bg text-fg lg:grid lg:grid-cols-[248px_minmax(0,1fr)] data-[collapsed=true]:lg:grid-cols-[80px_minmax(0,1fr)]"
     >
       <ProjectWriteModeProvider projectRef={projectRef} writeMode={active.writeMode}>
         <SessionSpendProvider key={active.publicId}>
@@ -88,6 +86,7 @@ export async function WorkspaceShell({
               projectRef={projectRef}
               showHostedLinks={isCloud}
               user={user}
+              version={appVersion()}
               workspaces={workspaces}
             />
             <div className="flex min-w-0 flex-col">
@@ -109,6 +108,7 @@ export async function WorkspaceShell({
               <ProjectWriteModeBanner />
               <CloudBetaBanner
                 dismissed={cloudBetaDismissed}
+                hasExportableData={active.keywordCount > 0}
                 isCloud={isCloud}
                 key={active.publicId}
                 lastExport={lastCloudExport}

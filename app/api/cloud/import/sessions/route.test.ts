@@ -240,7 +240,7 @@ describe("POST /api/cloud/import/sessions", () => {
 
     expect(response.status).toBe(500);
     await expect(response.json()).resolves.toMatchObject({
-      detail: "Cloud import failed.",
+      detail: "Instance import failed.",
       status: 500,
     });
   });

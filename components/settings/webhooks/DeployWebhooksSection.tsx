@@ -37,7 +37,7 @@ export type DeployWebhooksSectionProps = {
 };
 
 const iconButtonClass =
-  "grid h-[30px] w-[30px] place-items-center rounded-lg border border-border-strong bg-bg-elev text-fg-muted hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-55";
+  "grid h-[30px] w-[30px] place-items-center rounded-lg border border-border-strong bg-bg-elev text-fg-muted hover:border-accent hover:text-accent-text disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted";
 const feedbackClass = "text-[11.5px] font-medium text-fg-muted";
 
 export function DeployWebhooksSection({
@@ -158,7 +158,7 @@ export function DeployWebhooksSection({
                 <span className="flex flex-wrap items-center gap-2 text-[13px] font-semibold">
                   {hook.label}
                   {hook.disabled ? (
-                    <span className="rounded-full border border-border-strong px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint">
+                    <span className="rounded-full border border-border-strong px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
                       Disabled
                     </span>
                   ) : null}
@@ -173,7 +173,7 @@ export function DeployWebhooksSection({
                   <span className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11.5px] font-medium text-fg-muted">
                     {testResult.message}
                     {testResult.href ? (
-                      <Link className="text-accent hover:underline" href={testResult.href}>
+                      <Link className="text-accent-text hover:underline" href={testResult.href}>
                         View signal
                       </Link>
                     ) : null}
@@ -227,7 +227,7 @@ export function DeployWebhooksSection({
                   {deleteHook ? (
                     <button
                       aria-label={`Delete ${hook.label} webhook`}
-                      className="grid h-[30px] w-[30px] place-items-center rounded-lg border border-border-strong bg-bg-elev text-red hover:border-red disabled:cursor-not-allowed disabled:opacity-55"
+                      className="grid h-[30px] w-[30px] place-items-center rounded-lg border border-border-strong bg-bg-elev text-red-text hover:border-red disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted"
                       disabled={isPending || !projectId}
                       onClick={() => {
                         const warning = `Delete ${hook.label}? Sources using this token will start failing immediately. This cannot be undone.`;
@@ -252,7 +252,7 @@ export function DeployWebhooksSection({
         </div>
       ) : (
         <div className="flex flex-col items-center rounded-[14px] border border-border bg-bg-elev px-6 py-8 text-center">
-          <span className="grid h-12 w-12 place-items-center rounded-[13px] bg-bg-sunken text-fg-faint">
+          <span className="grid h-12 w-12 place-items-center rounded-[13px] bg-bg-sunken text-fg-muted">
             <Plugs aria-hidden size={23} />
           </span>
           <div className="mt-3 text-[14.5px] font-semibold">No deploy webhooks yet</div>

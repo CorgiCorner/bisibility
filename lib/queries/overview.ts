@@ -17,6 +17,7 @@ import {
   providerChainOrderBy,
 } from "@/lib/rank-check/provider-chain-order";
 import { asProjectRef } from "@/lib/routing/app-path";
+import { trackedProjectDomain } from "@/lib/schemas/project";
 import { requireReadableProject } from "./_auth";
 import {
   buildDistribution,
@@ -57,7 +58,7 @@ function deviceLabelForFilter(device: OverviewDevice) {
 }
 
 // biome-ignore format: compact label helpers keep this file under the line cap.
-function providerLabel(provider: string) { if (provider === "dataforseo") { return "DataForSEO"; } if (provider === "serpapi") { return "SerpAPI"; } return provider.split(/[-_]/).map((part) => `${part.slice(0, 1).toUpperCase()}${part.slice(1)}`).join(" "); }
+function providerLabel(provider: string) { if (provider === "dataforseo") { return "DataForSEO"; } if (provider === "serpapi") { return "SerpApi"; } return provider.split(/[-_]/).map((part) => `${part.slice(0, 1).toUpperCase()}${part.slice(1)}`).join(" "); }
 
 // biome-ignore format: dense query assembly keeps this file under the project line cap.
 export async function getOverview(projectId: string, options: { filters?: Partial<OverviewFilters>; now?: Date; preferences?: DateTimePreferences } = {}) {
@@ -130,7 +131,7 @@ export async function getOverview(projectId: string, options: { filters?: Partia
     checksThisMonth,
     dataSource,
     distribution: buildDistribution(positions),
-    domain: project.domain,
+    domain: trackedProjectDomain(project.domain) ?? "",
     estimatedProviderCost,
     firstPendingKeywordId: state === "no-data" ? (keywords[0]?.publicId ?? null) : null,
     gettingStarted: { gscOAuthConfigured: isGoogleOAuthConfigured(), hasAnalyticsSource, hasCheck: hasEverChecked, hasKeywords: totalKeywordCount > 0, projectId: project.publicId, projectRef: asProjectRef(project.publicId), providerConnected } as { gscOAuthConfigured: boolean; hasAnalyticsSource: boolean; hasCheck: boolean; hasKeywords: boolean; projectId: string; projectRef?: import("@/lib/routing/app-path").ProjectRef; providerConnected: boolean },

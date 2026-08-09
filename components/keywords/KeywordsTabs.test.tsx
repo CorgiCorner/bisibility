@@ -28,12 +28,12 @@ describe("KeywordsTabs", () => {
     );
 
     expect(screen.getByTestId("saved-tab-icon")).toHaveAttribute("data-weight", "fill");
-    expect(screen.getByTestId("saved-tab-icon")).toHaveClass("text-accent");
+    expect(screen.getByTestId("saved-tab-icon")).toHaveClass("text-accent-text");
 
     rerender(
       <KeywordsTabs activeTab="tracked" projectRef="prj_1" savedCount={3} trackedCount={10} />,
     );
     expect(screen.getByTestId("saved-tab-icon")).toHaveAttribute("data-weight", "regular");
-    expect(screen.getByTestId("saved-tab-icon")).not.toHaveClass("text-accent");
+    expect(screen.getByTestId("saved-tab-icon")).not.toHaveClass("text-accent-text");
   });
 });

@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui";
 import {
   CheckCircleIcon as CheckCircle,
   CircleNotchIcon as CircleNotch,
@@ -58,7 +59,7 @@ function TestStatus({
   }
   if (savedConnection || testResult?.ok) {
     return (
-      <span className={`${statusChip} text-green`}>
+      <span className={`${statusChip} text-green-text`}>
         <CheckCircle aria-hidden size={14} weight="fill" />
         {providerLabel} connected
       </span>
@@ -66,13 +67,13 @@ function TestStatus({
   }
   if (testResult) {
     return (
-      <span className={`${statusChip} text-red`} role="alert">
+      <span className={`${statusChip} text-red-text`} role="alert">
         <WarningCircle aria-hidden size={14} weight="fill" />
         {testResult.message}
       </span>
     );
   }
-  return <span className="text-[12px] text-fg-faint">Not tested yet</span>;
+  return <span className="text-[12px] text-fg-muted">Not tested yet</span>;
 }
 
 export function ProviderCredentialForm({
@@ -110,22 +111,24 @@ export function ProviderCredentialForm({
         ))}
       </div>
       <div className="mt-4 flex flex-wrap items-center gap-2.5">
-        <button
-          className="inline-flex cursor-pointer items-center gap-[7px] rounded-[9px] border border-border-strong bg-bg-elev px-3.5 py-[9px] text-[13px] font-semibold text-fg disabled:cursor-not-allowed disabled:opacity-60"
+        <Button
           disabled={busy || testDisabled}
           onClick={onTest}
+          startIcon={
+            testing ? (
+              <CircleNotch aria-hidden className="bv-spin" size={15} weight="bold" />
+            ) : (
+              <Plug aria-hidden size={15} />
+            )
+          }
           type="button"
+          variant="secondary"
         >
-          {testing ? (
-            <CircleNotch aria-hidden className="bv-spin" size={15} weight="bold" />
-          ) : (
-            <Plug aria-hidden size={15} />
-          )}
           Test connection
-        </button>
+        </Button>
         {onConnectBackup ? (
           <button
-            className="inline-flex cursor-pointer items-center gap-[7px] rounded-[9px] border border-border-strong bg-fg px-3.5 py-[9px] text-[13px] font-semibold text-bg-elev disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex cursor-pointer items-center gap-[7px] rounded-[9px] border border-border-strong bg-fg px-3.5 py-[9px] text-[13px] font-semibold text-bg-elev disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted"
             disabled={busy || connectBackupDisabled}
             onClick={onConnectBackup}
             type="button"
@@ -142,7 +145,7 @@ export function ProviderCredentialForm({
         />
       </div>
       {savedConnection ? null : (
-        <p className="m-0 mt-2.5 text-[11.5px] leading-[1.5] text-fg-faint">{saveHint}</p>
+        <p className="m-0 mt-2.5 text-[11.5px] leading-[1.5] text-fg-muted">{saveHint}</p>
       )}
     </section>
   );

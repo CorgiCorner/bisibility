@@ -280,7 +280,7 @@ export function StepConnectProvider({
         testResults={testResults}
       />
       {errors.providerId ? (
-        <p className={`m-0 mt-2 ${feedbackClass} text-red`}>{errors.providerId.message}</p>
+        <p className={`m-0 mt-2 ${feedbackClass} text-red-text`}>{errors.providerId.message}</p>
       ) : null}
 
       <StepConnectProviderCredentials
@@ -304,7 +304,9 @@ export function StepConnectProvider({
         testResult={currentTestResult}
         testing={testingProviderId === selectedProvider.value}
       />
-      {actionError ? <p className={`m-0 mt-3 ${feedbackClass} text-red`}>{actionError}</p> : null}
+      {actionError ? (
+        <p className={`m-0 mt-3 ${feedbackClass} text-red-text`}>{actionError}</p>
+      ) : null}
 
       <StepConnectProviderSkip flowState={flowState} getValues={getValues} onSkip={onSkip} />
     </form>

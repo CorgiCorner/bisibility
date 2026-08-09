@@ -40,7 +40,7 @@ function SavedAt({ savedAt }: Readonly<{ savedAt: string }>) {
       aria-label={stale ? "Saved snapshot is getting stale" : undefined}
       className={cn(
         "inline-flex items-center gap-1 font-mono text-[12px]",
-        stale ? "text-yellow-strong" : "text-fg-muted",
+        stale ? "text-yellow-text" : "text-fg-muted",
       )}
     >
       {stale ? <Clock size={12} /> : null}
@@ -54,7 +54,7 @@ function KeywordCell({ row }: Readonly<{ row: SavedKeywordRow }>) {
     <span className="flex min-w-0 items-center gap-2">
       <span className="truncate text-[13.5px] font-medium text-fg">{row.text}</span>
       {row.variantCount > 0 ? (
-        <span className="whitespace-nowrap text-[11px] text-fg-faint">
+        <span className="whitespace-nowrap text-[11px] text-fg-muted">
           +{row.variantCount} variants
         </span>
       ) : null}
@@ -104,7 +104,7 @@ export function SavedKeywordsTableRows({
               <th
                 className={cn(
                   "px-1 py-[9px] text-left font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-fg-muted",
-                  header === "Volume" && "text-right font-semibold text-accent-hover",
+                  header === "Volume" && "text-right font-semibold text-accent-text",
                   header === "CPC" && "text-right",
                 )}
                 key={header}
@@ -173,7 +173,7 @@ export function SavedKeywordsTableRows({
                 <td className="px-1 py-2.5">
                   <Link
                     aria-label={`${row.sourceSeed ?? "Research"} / ${row.location}`}
-                    className="inline-block max-w-full truncate rounded bg-bg-sunken px-1.5 py-0.5 font-mono text-[10px] text-fg-faint hover:text-accent"
+                    className="inline-block max-w-full truncate rounded bg-bg-sunken px-1.5 py-0.5 font-mono text-[10px] text-fg-muted hover:text-accent-text"
                     href={savedKeywordResearchHref(projectRef, row)}
                     onClick={(event) => event.stopPropagation()}
                   >

@@ -1,6 +1,6 @@
 import { dateFromFrozenNow } from "@/tests/clock";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getNewWorkspaceSettings, getSettings } from "./settings";
+import { getSettings } from "./settings";
 
 const mocks = vi.hoisted(() => ({
   prisma: {
@@ -31,7 +31,7 @@ vi.mock("@/lib/providers/registry", () => ({
     {
       id: "serpapi",
       kind: "serp",
-      label: "SerpAPI",
+      label: "SerpApi",
       logoDomain: "serpapi.com",
     },
     {
@@ -451,7 +451,7 @@ describe("settings queries", () => {
         costPerCheck: "$0.0100",
         lookups: null,
         primary: false,
-        provider: "SerpAPI",
+        provider: "SerpApi",
         rankChecks: { costCents: 400, count: 1 },
       },
     ]);
@@ -581,49 +581,5 @@ describe("settings queries", () => {
     const result = await getSettings("prj_abcdefghijklmnopqrstuvwx");
 
     expect(result.usage.primaryProvider).toBe("DataForSEO");
-  });
-
-  it("does not label an old never-used API key as new or created just now", async () => {
-    mocks.prisma.project.findUnique.mockResolvedValue({
-      _count: { members: 3 },
-      apiKeys: [
-        {
-          createdAt: new Date("2026-04-01T00:00:00.000Z"),
-          id: "key_old",
-          lastUsedAt: null,
-          name: "Development",
-          prefix: "bsb_key_test_old",
-          publicId: "key_cccdefghijklmnopqrstuvwx",
-        },
-      ],
-      domain: "example.com",
-      members: [{ user: user() }],
-      name: "Example",
-      publicId: "prj_abcdefghijklmnopqrstuvwx",
-    });
-
-    const result = await getNewWorkspaceSettings("prj_abcdefghijklmnopqrstuvwx", {
-      now: new Date("2026-06-01T00:00:00.000Z"),
-    });
-
-    expect(result.devKey).toMatchObject({ isNew: false });
-    expect(result.devKey?.createdLabel).toContain("never used");
-    expect(result.devKey?.createdLabel).not.toContain("just now");
-    expect(result.memberCount).toBe(3);
-    expect(mocks.prisma.project.findUnique).toHaveBeenCalledWith(
-      expect.objectContaining({
-        include: expect.objectContaining({
-          apiKeys: expect.objectContaining({
-            where: {
-              OR: [
-                { expiresAt: null },
-                { expiresAt: { gt: new Date("2026-06-01T00:00:00.000Z") } },
-              ],
-              revokedAt: null,
-            },
-          }),
-        }),
-      }),
-    );
   });
 });

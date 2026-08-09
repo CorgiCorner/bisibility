@@ -144,7 +144,9 @@ export function AddKeywordDrawer({
   function handleDeviceChange(next: string) {
     setValue("device", next as SerpDevice, { shouldDirty: true, shouldValidate: true });
   }
-  function handleClose() {
+  // Closing is one thing and resetting is another: the reset used to run before the panel had
+  // finished sliding out, so the tabs snapped back to Manual and the fields emptied in view.
+  function handleExited() {
     setActionError(null);
     setActionWarning(null);
     setActiveTab("manual");
@@ -165,7 +167,6 @@ export function AddKeywordDrawer({
       tags: [],
       targetUrl: "",
     });
-    onClose();
   }
 
   function handleTabChange(tab: AddKeywordTab) {
@@ -229,7 +230,7 @@ export function AddKeywordDrawer({
         return;
       }
       onAdded?.(addedKeywords);
-      handleClose();
+      onClose();
       router.refresh();
     } catch (error) {
       setActionError(actionErrorMessage(error));
@@ -264,7 +265,8 @@ export function AddKeywordDrawer({
           }
         />
       }
-      onClose={handleClose}
+      onClose={onClose}
+      onExited={handleExited}
       open={open}
       title="Add keywords"
     >

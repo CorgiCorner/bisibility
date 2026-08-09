@@ -13,7 +13,7 @@ function searchResponse(results: unknown[], extras: Record<string, unknown> = {}
   return { organic_results: results, search_metadata: { status: "Success" }, ...extras };
 }
 
-// Neutral, pre-resolved handles the runner hands the adapter (design §2.3). SerpAPI
+// Neutral, pre-resolved handles the runner hands the adapter (design §2.3). SerpApi
 // pins on secondaryGeoName + gl/hl; it never receives the numeric primary code.
 function location(overrides: Partial<SerpRankLocation> = {}): SerpRankLocation {
   return {
@@ -389,7 +389,7 @@ describe("serpApiProvider", () => {
         depth: 20,
         location: location({
           // A city resolved for the code-based provider still carries a code, but
-          // SerpAPI ignores it and pins on the canonical secondaryGeoName string.
+          // SerpApi ignores it and pins on the canonical secondaryGeoName string.
           primaryGeoCode: 1026339,
           primaryGeoName: "Austin,Texas,United States",
           secondaryGeoName: "Austin, Texas, United States",
@@ -545,13 +545,13 @@ describe("serpApiProvider", () => {
     await expect(serpApiProvider.fetchRank(rankInput())).rejects.toThrow();
   });
 
-  it("throws when SerpAPI reports an error field", async () => {
+  it("throws when SerpApi reports an error field", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({ error: "Invalid API key" })));
 
     await expect(serpApiProvider.fetchRank(rankInput())).rejects.toThrow("Invalid API key");
   });
 
-  it("maps final HTTP 429 responses to a SerpAPI rate-limit error message", async () => {
+  it("maps final HTTP 429 responses to a SerpApi rate-limit error message", async () => {
     const fetchMock = vi
       .fn()
       .mockImplementation(() =>
@@ -566,7 +566,7 @@ describe("serpApiProvider", () => {
     expect(fetchMock).toHaveBeenCalledTimes(3);
   });
 
-  it("maps HTTP quota responses to non-retryable SerpAPI errors", async () => {
+  it("maps HTTP quota responses to non-retryable SerpApi errors", async () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValue(jsonResponse({ error: "Account quota exhausted" }, 403));
@@ -579,12 +579,12 @@ describe("serpApiProvider", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it("retries fetch rejections and maps them to a SerpAPI request failure", async () => {
+  it("retries fetch rejections and maps them to a SerpApi request failure", async () => {
     const fetchMock = vi.fn().mockRejectedValue(new TypeError("network down"));
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(serpApiProvider.fetchRank(rankInput())).rejects.toMatchObject({
-      message: "SerpAPI request failed.",
+      message: "SerpApi request failed.",
       name: "SerpApiError",
     });
     expect(fetchMock).toHaveBeenCalledTimes(3);

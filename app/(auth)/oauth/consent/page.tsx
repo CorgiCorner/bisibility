@@ -1,14 +1,11 @@
 import { OAuthConsentForm } from "@/components/auth/OAuthConsentForm";
-import { InfoTooltip } from "@/components/ui";
+import { BrandLockup, InfoTooltip } from "@/components/ui";
 import { getOAuthConsentCopy } from "@/lib/auth/oauth-consent-copy";
 import { OAUTH_AUTHORIZATION_TTL_SECONDS } from "@/lib/auth/oauth-policy";
 import { requireSession } from "@/lib/auth/session";
 import { getOAuthConsentClient } from "@/lib/queries/oauth-consent";
 import { createNoindexMetadata } from "@/lib/seo/noindex";
-import {
-  ChartLineUpIcon as ChartLineUp,
-  FingerprintIcon as Fingerprint,
-} from "@phosphor-icons/react/dist/ssr";
+import { FingerprintIcon as Fingerprint } from "@phosphor-icons/react/dist/ssr";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -55,15 +52,12 @@ export default async function OAuthConsentPage({ searchParams }: Readonly<Consen
   return (
     <main className="grid min-h-dvh bg-bg text-fg md:grid-cols-[0.82fr_1.18fr]">
       <section className="hidden flex-col justify-between border-border border-r bg-bg-sidebar p-8 md:flex lg:p-11">
-        <Link className="flex items-center gap-[9px] text-fg no-underline" href="/">
-          <span className="grid h-[30px] w-[30px] place-items-center rounded-lg bg-accent text-white">
-            <ChartLineUp aria-hidden size={17} weight="bold" />
-          </span>
-          <span className="text-[18px] font-bold tracking-[-0.5px]">bisibility</span>
+        <Link className="inline-flex w-fit no-underline" href="/">
+          <BrandLockup />
         </Link>
 
         <div className="max-w-[420px]">
-          <div className="font-mono text-[11px] uppercase tracking-[0.6px] text-accent">
+          <div className="font-mono text-[11px] uppercase tracking-[0.6px] text-accent-text">
             OAuth consent
           </div>
           <h1 className="mt-[14px] mb-0 text-[32px] font-semibold leading-[1.2] tracking-[-1.1px]">
@@ -74,9 +68,9 @@ export default async function OAuthConsentPage({ searchParams }: Readonly<Consen
           </p>
         </div>
 
-        <div className="font-mono text-[11px] text-fg-faint">
+        <div className="font-mono text-[11px] text-fg-muted">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-border-strong px-2.5 py-1">
-            <Fingerprint aria-hidden className="text-green" size={14} weight="fill" />
+            <Fingerprint aria-hidden className="text-green-text" size={14} weight="fill" />
             PKCE S256
             <InfoTooltip text="PKCE binds this authorization request to the client that started it without using a stored client secret." />
           </span>

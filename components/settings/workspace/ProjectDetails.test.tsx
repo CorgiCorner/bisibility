@@ -52,6 +52,53 @@ describe("ProjectDetails", () => {
     expect(mocks.refresh).toHaveBeenCalled();
   });
 
+  it("keeps a generated instance host out of the domain field", async () => {
+    const updateProject = vi.fn(async () => ({}));
+    const { container } = render(
+      <ProjectDetails
+        canEdit
+        project={{ ...project, domain: "workspace-8abefb1f.bisibility.cloud" }}
+        updateProject={updateProject}
+      />,
+    );
+
+    expect(screen.getByLabelText("Domain")).toHaveValue("");
+    expect(screen.getByLabelText("Domain")).toHaveAttribute("placeholder", "yourdomain.com");
+    expect(screen.queryByText(/workspace-8abefb1f\.bisibility\.cloud/)).toBeNull();
+
+    fireEvent.submit(container.querySelector("form") as HTMLFormElement);
+
+    await waitFor(() =>
+      expect(updateProject).toHaveBeenCalledWith({
+        domain: null,
+        name: "Example",
+        projectId: "prj_1",
+      }),
+    );
+  });
+
+  it("saves a real domain typed over a generated instance host", async () => {
+    const updateProject = vi.fn(async () => ({}));
+    const { container } = render(
+      <ProjectDetails
+        canEdit
+        project={{ ...project, domain: "workspace-8abefb1f.bisibility.cloud" }}
+        updateProject={updateProject}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText("Domain"), { target: { value: "example.org" } });
+    fireEvent.submit(container.querySelector("form") as HTMLFormElement);
+
+    await waitFor(() =>
+      expect(updateProject).toHaveBeenCalledWith({
+        domain: "example.org",
+        name: "Example",
+        projectId: "prj_1",
+      }),
+    );
+  });
+
   it.each(["viewer", "auditor", "member", "admin", "owner"] satisfies Role[])(
     "renders project identity fields for the %s role at the update threshold",
     (role) => {

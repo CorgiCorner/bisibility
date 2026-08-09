@@ -1,6 +1,6 @@
 "use client";
 
-import { FieldLabel } from "@/components/ui";
+import { FieldLabel, Input, inputClassName } from "@/components/ui";
 import {
   GlobeHemisphereWestIcon as GlobeHemisphereWest,
   MapPinIcon as MapPin,
@@ -35,12 +35,11 @@ type LocationFieldProps = {
 };
 
 const fieldClassByVariant = {
-  form: "min-h-10 w-full rounded-[9px] border border-border-strong bg-bg-sunken px-9 text-[13px] font-medium text-fg outline-none focus:border-accent",
-  toolbar:
-    "min-h-[34px] w-full rounded-[9px] border border-border-strong bg-bg-elev px-9 text-[12.5px] font-medium text-fg outline-none focus:border-accent",
+  form: `${inputClassName} min-h-10 w-full rounded-[9px] px-9 text-[13px] font-medium`,
+  toolbar: `${inputClassName} min-h-[34px] w-full rounded-[9px] px-9 text-[12.5px] font-medium`,
 } as const;
 const labelClass =
-  "m-0 flex min-w-0 flex-col gap-1.5 border-0 p-0 font-mono text-[10px] uppercase tracking-[0.4px] text-fg-faint";
+  "m-0 flex min-w-0 flex-col gap-1.5 border-0 p-0 font-mono text-[10px] uppercase tracking-[0.4px] text-fg-muted";
 
 function cityCaption(option: LocationSuggestion) {
   return [option.regionName, countryNameForCode(option.countryCode) ?? option.countryCode]
@@ -150,11 +149,11 @@ export function LocationField({
       <div className="relative">
         <span className="relative flex items-center">
           <MapPin
-            className="pointer-events-none absolute left-2.5 text-fg-faint"
+            className="pointer-events-none absolute left-2.5 text-fg-muted"
             size={14}
             weight="bold"
           />
-          <input
+          <Input
             aria-activedescendant={activeId(listId, activeOption)}
             aria-autocomplete="list"
             aria-controls={visible ? listId : undefined}
@@ -174,7 +173,7 @@ export function LocationField({
           {draft !== null ? (
             <button
               aria-label="Clear location search"
-              className="absolute right-2 grid h-5 w-5 place-items-center rounded-full text-fg-faint hover:text-fg"
+              className="absolute right-2 grid h-5 w-5 place-items-center rounded-full text-fg-muted hover:text-fg"
               onClick={clearDraft}
               type="button"
             >
@@ -194,7 +193,7 @@ export function LocationField({
           visible={visible}
         />
       </div>
-      {error ? <span className="normal-case text-red">{error}</span> : null}
+      {error ? <span className="normal-case text-red-text">{error}</span> : null}
     </fieldset>
   );
 }
@@ -247,10 +246,10 @@ function LocationResults({
         />
       ) : null}
       {loading && !hasOptions ? (
-        <span className="block px-3 py-2 normal-case text-fg-faint">Searching locations...</span>
+        <span className="block px-3 py-2 normal-case text-fg-muted">Searching locations...</span>
       ) : null}
       {showEmpty ? (
-        <span className="block px-3 py-2 normal-case text-fg-faint">
+        <span className="block px-3 py-2 normal-case text-fg-muted">
           No matches yet. City suggestions are powered by your connected providers.
         </span>
       ) : null}
@@ -275,7 +274,7 @@ function LocationGroup({
 }: Readonly<LocationGroupProps>) {
   return (
     <span className="block">
-      <span className="block px-3 pb-1 pt-2 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint">
+      <span className="block px-3 pb-1 pt-2 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
         {label}
       </span>
       {options.map((option) => {
@@ -294,13 +293,13 @@ function LocationGroup({
               role="option"
               type="button"
             >
-              <Icon className="mt-0.5 flex-none text-accent" size={14} weight="bold" />
+              <Icon className="mt-0.5 flex-none text-accent-text" size={14} weight="bold" />
               <span className="min-w-0">
                 <span className="block truncate text-[12.5px] font-semibold">
                   {option.kind === "city" ? option.cityName : option.displayName}
                 </span>
                 {option.kind === "city" ? (
-                  <span className="block truncate text-[11.5px] text-fg-faint">
+                  <span className="block truncate text-[11.5px] text-fg-muted">
                     {cityCaption(option)}
                   </span>
                 ) : null}

@@ -35,7 +35,7 @@ type ResearchDetailPanelProps = {
 };
 
 const axisTextStyle = {
-  fill: "var(--fg-faint)",
+  fill: "var(--fg-muted)",
   fontFamily: "var(--font-mono), monospace",
   fontSize: 10,
 };
@@ -89,7 +89,7 @@ function costLine(
 
 function Eyebrow({ children }: Readonly<{ children: string }>) {
   return (
-    <p className="m-0 font-mono text-[10px] font-semibold uppercase tracking-[0.5px] text-fg-faint">
+    <p className="m-0 font-mono text-[10px] font-semibold uppercase tracking-[0.5px] text-fg-muted">
       {children}
     </p>
   );
@@ -191,7 +191,7 @@ export function ResearchDetailPanel({
                   yAxis={[{ max: trendMax, min: 0, position: "none" }]}
                 />
               ) : (
-                <div className="grid h-full place-items-center rounded-[10px] bg-bg-sunken text-[12px] text-fg-faint">
+                <div className="grid h-full place-items-center rounded-[10px] bg-bg-sunken text-[12px] text-fg-muted">
                   No monthly trend available
                 </div>
               )}
@@ -204,13 +204,13 @@ export function ResearchDetailPanel({
                 {active.variants.map((variant) => (
                   <div className="flex justify-between gap-3 text-[12px]" key={variant.keyword}>
                     <span className="truncate text-fg-muted">{variant.keyword}</span>
-                    <span className="font-mono text-fg-faint">
+                    <span className="font-mono text-fg-muted">
                       {metric(variant.searchVolume, (value) => value.toLocaleString("en-US"))}
                     </span>
                   </div>
                 ))}
               </div>
-              <p className="mb-0 mt-2 text-[11px] leading-5 text-fg-faint">
+              <p className="mb-0 mt-2 text-[11px] leading-5 text-fg-muted">
                 Variants share one Google volume unless clickstream volumes are on.
               </p>
             </div>
@@ -228,7 +228,7 @@ export function ResearchDetailPanel({
           <p className="mb-0 mt-2 text-[12.5px] text-fg-muted">
             Already tracked.{" "}
             <Link
-              className="font-semibold text-accent hover:underline"
+              className="font-semibold text-accent-text hover:underline"
               href={appPath(projectId, "keywords")}
             >
               Open in the keyword grid
@@ -276,7 +276,7 @@ export function ResearchDetailPanel({
 function Metric({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
     <div className="rounded-[10px] bg-bg-sunken p-3">
-      <span className="block font-mono text-[9.5px] uppercase tracking-[0.4px] text-fg-faint">
+      <span className="block font-mono text-[9.5px] uppercase tracking-[0.4px] text-fg-muted">
         {label}
       </span>
       <strong className="mt-1 block font-mono text-[14px] text-fg">{value}</strong>

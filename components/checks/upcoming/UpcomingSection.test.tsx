@@ -67,7 +67,7 @@ describe("UpcomingSection", () => {
     expect(days.querySelector(".grid-cols-2")).not.toBeNull();
     expect(within(days).queryByText("example")).not.toBeInTheDocument();
     expect(
-      within(days).getByRole("link", { name: "Manage schedules in Keywords →" }),
+      within(days).getByRole("link", { name: "Manage schedules in Keywords" }),
     ).toHaveAttribute("href", "/app/keywords");
   });
 
@@ -84,7 +84,7 @@ describe("UpcomingSection", () => {
     const dialog = screen.getByRole("dialog", { name: "Today" });
     expect(within(dialog).getByText("flow dictation app")).toBeInTheDocument();
     expect(
-      within(dialog).getByRole("link", { name: "Manage schedules in Keywords →" }),
+      within(dialog).getByRole("link", { name: "Manage schedules in Keywords" }),
     ).toHaveAttribute("href", "/app/keywords");
 
     fireEvent.click(screen.getByLabelText("Close upcoming details"));
@@ -140,7 +140,7 @@ describe("UpcomingSection", () => {
     expect(
       screen.getByText("Set a schedule in Keywords to see the next checks here."),
     ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Manage schedules in Keywords →" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Manage schedules in Keywords" })).toHaveAttribute(
       "href",
       "/app/keywords",
     );

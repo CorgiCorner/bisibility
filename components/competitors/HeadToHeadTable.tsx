@@ -25,7 +25,7 @@ function formatGap(gap: number | null) {
 
 function gapColor(gap: number | null) {
   if (gap === null) {
-    return "var(--fg-faint)";
+    return "var(--fg-muted)";
   }
   if (gap > 0) {
     return "var(--green)";
@@ -33,7 +33,7 @@ function gapColor(gap: number | null) {
   if (gap < 0) {
     return "var(--red)";
   }
-  return "var(--fg-faint)";
+  return "var(--fg-muted)";
 }
 
 function rankColor(columnIndex: number, gap: number | null) {
@@ -69,7 +69,7 @@ export function HeadToHeadTable({ market, onExport }: Readonly<HeadToHeadTablePr
         <div className="flex items-center gap-2">
           {hiddenCount > 0 ? (
             <button
-              className="inline-flex min-h-8 items-center rounded-lg border border-border-strong bg-bg-elev px-3 text-xs font-semibold text-fg-muted outline-none hover:border-accent hover:text-accent"
+              className="inline-flex min-h-8 items-center rounded-lg border border-border-strong bg-bg-elev px-3 text-xs font-semibold text-fg-muted hover:border-accent hover:text-accent-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid"
               onClick={() => setExpanded((value) => !value)}
               type="button"
             >
@@ -77,7 +77,7 @@ export function HeadToHeadTable({ market, onExport }: Readonly<HeadToHeadTablePr
             </button>
           ) : null}
           <button
-            className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-border-strong bg-bg-elev px-3 text-xs font-semibold text-fg-muted outline-none transition-colors hover:border-accent hover:text-accent focus-visible:border-accent focus-visible:text-accent"
+            className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-border-strong bg-bg-elev px-3 text-xs font-semibold text-fg-muted outline-none transition-colors hover:border-accent hover:text-accent-text focus-visible:border-accent focus-visible:text-accent-text"
             onClick={onExport}
             type="button"
           >
@@ -88,7 +88,7 @@ export function HeadToHeadTable({ market, onExport }: Readonly<HeadToHeadTablePr
       </div>
 
       {!hasCompetitors ? (
-        <div className="border-border-soft border-b bg-bg-sunken px-[18px] py-3 font-mono text-[10.5px] text-fg-faint">
+        <div className="border-border-soft border-b bg-bg-sunken px-[18px] py-3 font-mono text-[10.5px] text-fg-muted">
           Add at least one managed competitor to compare head-to-head ranks.
         </div>
       ) : null}
@@ -101,7 +101,7 @@ export function HeadToHeadTable({ market, onExport }: Readonly<HeadToHeadTablePr
           >
             <span>Keyword</span>
             {columns.map((column, index) => (
-              <span className={index === 0 ? "text-accent" : undefined} key={column.domain}>
+              <span className={index === 0 ? "text-accent-text" : undefined} key={column.domain}>
                 {column.label}
               </span>
             ))}
@@ -140,7 +140,7 @@ export function HeadToHeadTable({ market, onExport }: Readonly<HeadToHeadTablePr
                 Showing {rows.length} of {market.rows.length} keywords
               </span>
               <button
-                className="inline-flex min-h-8 items-center rounded-lg border border-border-strong bg-bg-elev px-3 font-semibold text-fg-muted outline-none hover:border-accent hover:text-accent"
+                className="inline-flex min-h-8 items-center rounded-lg border border-border-strong bg-bg-elev px-3 font-semibold text-fg-muted hover:border-accent hover:text-accent-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid"
                 onClick={() => setVisibleRows((count) => count + ROW_PAGE_SIZE)}
                 type="button"
               >

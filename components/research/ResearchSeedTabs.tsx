@@ -43,7 +43,7 @@ export function ResearchSeedTabs({
             {onClose ? (
               <button
                 aria-label={`Close ${tab.seed}`}
-                className={`grid h-5 w-5 shrink-0 place-items-center rounded transition-colors ${active ? "text-accent hover:text-fg" : "text-fg-muted hover:text-fg"}`}
+                className={`grid h-5 w-5 shrink-0 place-items-center rounded transition-colors ${active ? "text-accent-text hover:text-fg" : "text-fg-muted hover:text-fg"}`}
                 onClick={() => onClose(tab.id)}
                 type="button"
               >

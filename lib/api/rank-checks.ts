@@ -7,6 +7,7 @@ import { prisma } from "@/lib/db/prisma";
 import { makePublicId } from "@/lib/db/public-id";
 import { ProviderChainError, runKeywordCheckWithFallback } from "@/lib/rank-check/fallback";
 import { persistFailedRankCheck, RankCheckRunnerError } from "@/lib/rank-check/runner";
+import { trackedProjectDomain } from "@/lib/schemas/project";
 import {
   manualRankCheckWorkflowId,
   rankCheckSearchAttributes,
@@ -256,7 +257,7 @@ export async function runRankCheck(ctx: ApiContext, keywordId: string) {
         keywordId: keyword.id,
         keywordPublicId: keyword.publicId,
         keywordText: keyword.text,
-        projectDomain: keyword.project.domain,
+        projectDomain: trackedProjectDomain(keyword.project.domain) ?? "",
         projectId: ctx.auth.project.id,
         provider: data.provider_id ?? "unknown",
       }).catch(() => undefined);

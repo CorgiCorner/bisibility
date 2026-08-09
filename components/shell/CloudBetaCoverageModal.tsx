@@ -29,7 +29,7 @@ const covered = [
 const notYet = [
   "No restore guarantee. If we lose data, we cannot roll you back.",
   "No uptime SLA. Maintenance can interrupt checks without notice.",
-  "No guaranteed migration path between Cloud regions.",
+  "No guaranteed migration path between hosted regions.",
   "Support is best-effort over email, with no response target.",
 ] as const;
 
@@ -45,7 +45,7 @@ function PolicyColumn({
   const coveredTone = tone === "covered";
   return (
     <section className="min-w-0 rounded-[12px] border border-border bg-bg-elev p-3.5">
-      <h3 className="m-0 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint">
+      <h3 className="m-0 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
         {title}
       </h3>
       <ul className="m-0 mt-3 grid list-none gap-3 p-0">
@@ -53,7 +53,7 @@ function PolicyColumn({
           <li className="flex items-start gap-2 text-[12px] leading-[1.45]" key={item}>
             <span
               className={`mt-0.5 grid h-[17px] w-[17px] shrink-0 place-items-center rounded-[5px] ${
-                coveredTone ? "bg-green/10 text-green" : "bg-red/10 text-red"
+                coveredTone ? "bg-green/10 text-green-text" : "bg-red/10 text-red-text"
               }`}
             >
               {coveredTone ? (
@@ -97,9 +97,9 @@ export function CloudBetaCoverageModal({
       open={open}
       title={
         <span className="block">
-          <span className="block">What the Cloud beta covers</span>
+          <span className="block">What the hosted beta covers</span>
           <span className="mt-1 block text-[12.5px] font-normal tracking-normal text-fg-muted">
-            Managed Cloud beta policy
+            Hosted beta policy
           </span>
         </span>
       }
@@ -112,7 +112,7 @@ export function CloudBetaCoverageModal({
         </div>
 
         <section>
-          <h3 className="m-0 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint">
+          <h3 className="m-0 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
             Who does what
           </h3>
           <div className="mt-2 grid gap-2">
@@ -134,7 +134,7 @@ export function CloudBetaCoverageModal({
             <div className="flex items-start gap-3 rounded-[11px] border border-accent bg-accent-soft px-3.5 py-3">
               <DownloadSimple
                 aria-hidden
-                className="mt-0.5 shrink-0 text-accent"
+                className="mt-0.5 shrink-0 text-accent-text"
                 size={17}
                 weight="bold"
               />
@@ -150,7 +150,7 @@ export function CloudBetaCoverageModal({
         </section>
 
         <section>
-          <h3 className="m-0 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint">
+          <h3 className="m-0 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
             When the beta ends
           </h3>
           <div className="mt-2 flex items-start gap-3 rounded-[11px] border border-border bg-bg-sunken px-3.5 py-3">
@@ -159,7 +159,7 @@ export function CloudBetaCoverageModal({
               30 days notice before pricing. Nothing charged without your confirmation. Self-host
               stays available.{" "}
               <Link
-                className="font-semibold text-accent hover:text-accent-hover"
+                className="font-semibold text-accent-text hover:text-accent-text"
                 href={`${appPath(projectRef, "settings")}#${USAGE_BILLING_TARGET.id}`}
                 onClick={onClose}
               >

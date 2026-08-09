@@ -68,7 +68,9 @@ export function AlertTargetUrlDialog({
         <Button disabled={isSubmitting} sx={{ minHeight: 40 }} type="submit" variant="contained">
           {isSubmitting ? "Saving..." : "Save target URL"}
         </Button>
-        {actionError ? <span className="font-mono text-[11px] text-red">{actionError}</span> : null}
+        {actionError ? (
+          <span className="font-mono text-[11px] text-red-text">{actionError}</span>
+        ) : null}
       </form>
     </AppDrawer>
   );

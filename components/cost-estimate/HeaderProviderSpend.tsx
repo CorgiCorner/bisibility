@@ -25,7 +25,7 @@ export function HeaderProviderSpend({
         aria-label="Provider spend temporarily unavailable"
         className="hidden min-w-[210px] flex-none pt-[3px] md:block"
       >
-        <span className="block font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-fg-faint">
+        <span className="block font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-fg-muted">
           PROVIDER SPEND
         </span>
         <span className="mt-1 block font-mono text-xs text-fg-muted">Temporarily unavailable</span>

@@ -4,8 +4,8 @@ import { RateSourceChip } from "./RateSourceChip";
 
 describe("RateSourceChip", () => {
   it.each([
-    [{ source: "manual" as const, unit: "calls" }, "your rate", "text-accent"],
-    [{ sampleSize: 7, source: "measured" as const, unit: "checks" }, "7 checks", "text-green"],
+    [{ source: "manual" as const, unit: "calls" }, "your rate", "text-accent-text"],
+    [{ sampleSize: 7, source: "measured" as const, unit: "checks" }, "7 checks", "text-green-text"],
     [
       {
         checkedAt: "2026-07-22T00:00:00.000Z",
@@ -13,7 +13,7 @@ describe("RateSourceChip", () => {
         unit: "calls",
       },
       "list price, Jul 22",
-      "text-fg-faint",
+      "text-fg-muted",
     ],
     [{ source: "unknown" as const, unit: "calls" }, "no rate yet", "text-yellow-text"],
   ])("renders %s provenance", (rate, label, className) => {

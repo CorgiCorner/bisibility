@@ -32,8 +32,8 @@ describe("AdminProviderHealth", () => {
     expect(screen.getByText("ok 941")).toBeInTheDocument();
     expect(screen.getByText("p95 last success: 36 h")).toBeInTheDocument();
     expect(screen.getByText("p95 last success: -")).toBeInTheDocument();
-    expect(screen.getByText("4.9% failed")).toHaveClass("text-green");
-    expect(screen.getByText("28% failed")).toHaveClass("text-red");
+    expect(screen.getByText("4.9% failed")).toHaveClass("text-green-text");
+    expect(screen.getByText("28% failed")).toHaveClass("text-red-text");
     expect(container.querySelector('[data-tone="ok"]')).toBeInTheDocument();
     expect(container.querySelector('[data-tone="failed"]')).toBeInTheDocument();
     expect(container).not.toHaveTextContent("Project ID");

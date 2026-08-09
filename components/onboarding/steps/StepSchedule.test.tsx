@@ -62,7 +62,7 @@ describe("StepSchedule", () => {
       />,
     );
 
-    expect(screen.getByDisplayValue("SerpAPI")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("SerpApi")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Add location" }));
     fireEvent.change(screen.getByRole("combobox", { name: "Add location" }), {

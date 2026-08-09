@@ -2,7 +2,7 @@ import { RemoveNoteAction } from "@/components/timeline/RemoveNoteAction";
 import { MonoText } from "@/components/ui";
 import type { TimelineItem } from "@/lib/timeline/timeline-data";
 import {
-  ArrowSquareOutIcon as ArrowSquareOut,
+  ArrowUpRightIcon as ArrowUpRight,
   FileMagnifyingGlassIcon as FileMagnifyingGlass,
   MedalIcon as Medal,
   NotePencilIcon as NotePencil,
@@ -24,7 +24,7 @@ const itemIcons = {
 const tintStyles = {
   amber: {
     bg: "color-mix(in srgb, var(--yellow) 16%, transparent)",
-    color: "var(--yellow-strong)",
+    color: "var(--yellow-text)",
   },
   green: { bg: "color-mix(in srgb, var(--green) 13%, transparent)", color: "var(--green)" },
   red: { bg: "color-mix(in srgb, var(--red) 10%, transparent)", color: "var(--red)" },
@@ -54,7 +54,7 @@ export function TimelineRow({ canDelete, item, projectId }: Readonly<TimelineRow
       <div className="grid min-w-0 flex-1 gap-2 md:grid-cols-[124px_minmax(0,1fr)_auto] md:items-start">
         <MonoText className="text-fg-muted" component="span">
           {item.date}
-          <span className="mt-0.5 block text-fg-faint">{item.time}</span>
+          <span className="mt-0.5 block text-fg-muted">{item.time}</span>
         </MonoText>
         <div className="min-w-0">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
@@ -79,16 +79,16 @@ export function TimelineRow({ canDelete, item, projectId }: Readonly<TimelineRow
               </span>
             ) : null}
           </div>
-          <div className="mt-1 min-w-0 font-mono text-[11px] text-fg-faint">{item.meta}</div>
+          <div className="mt-1 min-w-0 font-mono text-[11px] text-fg-muted">{item.meta}</div>
           {item.url ? (
             <a
-              className="mt-1 inline-flex max-w-full items-center gap-1 truncate font-mono text-[12px] text-fg hover:text-accent hover:underline"
+              className="mt-1 inline-flex max-w-full items-center gap-1 truncate font-mono text-[12px] text-fg hover:text-accent-text hover:underline"
               href={item.url}
               rel="noreferrer noopener"
               target="_blank"
             >
               <span className="truncate">{item.urlLabel}</span>
-              <ArrowSquareOut aria-hidden className="shrink-0" size={11} />
+              <ArrowUpRight aria-hidden className="shrink-0" size={11} />
             </a>
           ) : null}
           {item.note ? (
@@ -101,7 +101,7 @@ export function TimelineRow({ canDelete, item, projectId }: Readonly<TimelineRow
                   className="flex min-w-0 items-baseline gap-1 rounded-md border border-border bg-bg-sunken px-2 py-1"
                   key={detail.label}
                 >
-                  <dt className="font-mono text-[9.5px] uppercase tracking-[0.4px] text-fg-faint">
+                  <dt className="font-mono text-[9.5px] uppercase tracking-[0.4px] text-fg-muted">
                     {detail.label}
                   </dt>
                   <dd className="m-0 min-w-0">

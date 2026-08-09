@@ -4,6 +4,7 @@ import { writeAudit } from "@/lib/auth/audit";
 import { type Actor, AuthorizationError, authorize, getProjectRole } from "@/lib/auth/authorize";
 import { prisma } from "@/lib/db/prisma";
 import { parsePublicId } from "@/lib/db/public-id";
+import { trackedProjectDomain } from "@/lib/schemas/project";
 import { getQueryActor } from "./_auth";
 import { type AuditDiff, diffFor } from "./audit-diff";
 import { publicAuditTargetIdOrNull, redactAuditIds, requiredPublicId } from "./audit-public-values";
@@ -55,7 +56,7 @@ export type AuditProject = {
 type AuditProjectRecord = {
   id: string;
   publicId: string;
-  domain: string;
+  domain: string | null;
   name: string;
 };
 // biome-ignore format: compact view union keeps this module under the line cap.
@@ -82,7 +83,7 @@ function operationFor(action: string): AuditOperation {
 }
 function auditProjectView(project: AuditProjectRecord): AuditProject {
   return {
-    domain: project.domain,
+    domain: trackedProjectDomain(project.domain) ?? "",
     id: project.publicId,
     name: project.name,
     publicId: project.publicId,

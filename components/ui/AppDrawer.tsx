@@ -8,6 +8,9 @@ import type { ReactNode } from "react";
 export type AppDrawerProps = {
   open: boolean;
   onClose: () => void;
+  /** Runs after the exit transition. Reset drawer state here, not in onClose: state cleared
+      while the panel is still sliding out looks like the drawer never animated at all. */
+  onExited?: () => void;
   title: string;
   description?: string;
   children: ReactNode;
@@ -17,6 +20,7 @@ export type AppDrawerProps = {
 export function AppDrawer({
   open,
   onClose,
+  onExited,
   title,
   description,
   children,
@@ -29,6 +33,7 @@ export function AppDrawer({
       onClose={onClose}
       transitionDuration={{ enter: 340, exit: 280 }}
       slotProps={{
+        transition: { onExited },
         paper: {
           sx: {
             backgroundColor: "var(--bg-elev)",

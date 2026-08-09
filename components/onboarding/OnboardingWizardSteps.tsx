@@ -156,13 +156,14 @@ export function OnboardingWizardSteps({
             monthlyCapCents={monthlyCapCents}
             onComplete={onKeywordsComplete}
             onKeywordsChange={onKeywordsChange}
-            projectDomain={project?.domain}
+            projectDomain={project?.domain ?? undefined}
             rankedKeywordConnections={rankedKeywordConnections}
           />
         </>
       ) : null}
       {currentStep === 6 ? (
         <StepFirstCheck
+          completeOnboardingAction={actions.completeOnboardingAction}
           defaults={draft.schedule}
           flowState={flowState}
           getObservedPositionsAction={actions.getObservedPositionsAction}

@@ -37,7 +37,7 @@ const money = new Intl.NumberFormat("en-US", { currency: "USD", style: "currency
 function MetadataTile({ label, value }: Readonly<{ label: string; value: React.ReactNode }>) {
   return (
     <div className="flex min-w-0 flex-col rounded-xl border border-border-soft bg-bg-elev px-3 py-2.5">
-      <div className="font-mono text-[9.5px] uppercase tracking-[0.4px] text-fg-faint">{label}</div>
+      <div className="font-mono text-[9.5px] uppercase tracking-[0.4px] text-fg-muted">{label}</div>
       <div className="mt-auto pt-1 text-[13px] font-semibold text-fg">{value}</div>
     </div>
   );
@@ -56,7 +56,7 @@ function AccountMetadata({
         <span className="font-mono text-[12.5px] font-bold">{account.id}</span>
         <span aria-hidden className="h-3 w-px bg-border-strong" />
         <span className="font-mono text-[11.5px] text-fg-muted">{account.email}</span>
-        <span className="inline-flex rounded-full bg-green/10 px-2.5 py-1 font-mono text-[10px] font-bold uppercase text-green">
+        <span className="inline-flex rounded-full bg-green/10 px-2.5 py-1 font-mono text-[10px] font-bold uppercase text-green-text">
           {account.status}
         </span>
       </div>
@@ -110,7 +110,7 @@ function LookupOutcome({
   if (result.status === "not_found") {
     return (
       <div className="mt-4 flex items-center gap-2.5 rounded-[13px] border border-border-strong border-dashed bg-bg-sunken px-4 py-3.5">
-        <User aria-hidden className="text-fg-faint" size={16} />
+        <User aria-hidden className="text-fg-muted" size={16} />
         <span className="text-[12.5px] text-fg-muted">No account matches this identifier.</span>
       </div>
     );
@@ -118,7 +118,7 @@ function LookupOutcome({
 
   return (
     <p
-      className={`mt-3 text-xs ${result.status === "rate_limited" ? "text-yellow" : "text-red"}`}
+      className={`mt-3 text-xs ${result.status === "rate_limited" ? "text-yellow-text" : "text-red-text"}`}
       role="alert"
     >
       {result.message}
@@ -171,8 +171,8 @@ export function AdminAccountLookup() {
           Exact email or user ID
         </label>
         <div className="mt-1.5 flex flex-wrap items-start gap-2.5">
-          <span className="flex min-h-10 min-w-[240px] max-w-[420px] flex-1 items-center gap-2 rounded-[10px] border border-border-strong bg-bg-sunken px-3 focus-within:border-accent">
-            <MagnifyingGlass aria-hidden className="shrink-0 text-fg-faint" size={14} />
+          <span className="flex min-h-10 min-w-[240px] max-w-[420px] flex-1 items-center gap-2 rounded-[10px] border border-border-strong bg-transparent px-3 focus-within:border-accent">
+            <MagnifyingGlass aria-hidden className="shrink-0 text-fg-muted" size={14} />
             <input
               aria-invalid={errors.identifier ? "true" : undefined}
               className="min-w-0 flex-1 border-0 bg-transparent py-2 font-mono text-[12.5px] text-fg outline-none"
@@ -187,12 +187,12 @@ export function AdminAccountLookup() {
           </Button>
         </div>
         {errors.identifier ? (
-          <p className="mt-1.5 text-[11px] text-red" role="alert">
+          <p className="mt-1.5 text-[11px] text-red-text" role="alert">
             {errors.identifier.message}
           </p>
         ) : null}
       </form>
-      <p className="mt-2 flex items-center gap-1.5 text-[11.5px] text-fg-faint">
+      <p className="mt-2 flex items-center gap-1.5 text-[11.5px] text-fg-muted">
         <ClockCounterClockwise aria-hidden size={12} />
         Lookups are recorded in the admin audit log.
       </p>

@@ -1,6 +1,12 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { AppFooter } from "./AppFooter";
+
+vi.mock("@/components/ui", () => ({
+  ThemeSegments: ({ size }: { size?: "sm" | "md" }) => (
+    <span data-size={size} data-testid="theme-segments" />
+  ),
+}));
 
 describe("AppFooter", () => {
   it("prioritizes schema drift with a red status", () => {
@@ -33,7 +39,7 @@ describe("AppFooter", () => {
     expect(container.querySelector('[role="alert"]')).not.toBeInTheDocument();
     expect(container.querySelector('[style*="var(--yellow)"]')).not.toBeInTheDocument();
     expect(container.querySelector('[style*="var(--red)"]')).not.toBeInTheDocument();
-    expect(container.querySelector('[style*="var(--fg-faint)"]')).toBeInTheDocument();
+    expect(container.querySelector('[style*="var(--fg-muted)"]')).toBeInTheDocument();
   });
 
   it("shows a healthy worker with a green status", () => {
@@ -44,5 +50,11 @@ describe("AppFooter", () => {
       "/app/admin",
     );
     expect(document.querySelector('[style*="var(--green)"]')).toBeInTheDocument();
+  });
+
+  it("mounts the theme switch beside the instance status", () => {
+    render(<AppFooter schemaStatus="ok" workerStatus="ok" />);
+
+    expect(screen.getByTestId("theme-segments")).toHaveAttribute("data-size", "sm");
   });
 });

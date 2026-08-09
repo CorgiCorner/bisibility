@@ -14,14 +14,13 @@ import {
   locationFieldValueFromKeywordLocation,
 } from "@/components/keywords/location-field-value";
 import { TargetUrlField } from "@/components/keywords/TargetUrlField";
-import { FieldLabel, MenuSelect } from "@/components/ui";
+import { Button, FieldLabel, MenuSelect } from "@/components/ui";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { type UpdateKeywordInput, updateKeywordSchema } from "@/lib/schemas/keyword";
 import { normalizeSerpMarketName, serpDeviceOptions } from "@/lib/serp/markets";
 import { FIELD_HELP } from "@/lib/settings/field-help";
 import { cn } from "@/lib/ui/cn";
-import Button from "@mui/material/Button";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { type FieldErrors, useForm } from "react-hook-form";
@@ -199,20 +198,20 @@ export function KeywordInlineEdit({
         error={errors.targetUrl?.message}
         {...register("targetUrl")}
       />
-      <div className="flex flex-col gap-1.5 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint">
+      <div className="flex flex-col gap-1.5 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
         <FieldLabel help={FIELD_HELP.device} label="Device" />
         <input type="hidden" {...register("device")} />
         <MenuSelect
           ariaLabel="Device"
           onChange={handleDeviceChange}
           options={deviceOptions}
-          triggerClassName="min-h-10 w-full justify-between rounded-lg border-border-strong bg-bg-sunken px-3 text-[13px] font-medium normal-case tracking-normal"
+          triggerClassName="min-h-10 w-full justify-between rounded-lg border-border-strong bg-transparent px-3 text-[13px] font-medium normal-case tracking-normal"
           value={selectedDevice}
         />
       </div>
       <div
         className={cn(
-          "flex flex-col gap-1.5 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint",
+          "flex flex-col gap-1.5 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted",
           layout === "inline" && "md:col-span-3",
         )}
       >
@@ -252,17 +251,12 @@ export function KeywordInlineEdit({
           className={cn("flex flex-col justify-end gap-2", layout === "inline" && "md:col-span-3")}
         >
           {!hideSubmit ? (
-            <Button
-              disabled={isSubmitting}
-              sx={{ minHeight: 40 }}
-              type="submit"
-              variant="contained"
-            >
+            <Button disabled={isSubmitting} sx={{ minHeight: 40 }} type="submit" variant="primary">
               {isSubmitting ? "Saving..." : "Save"}
             </Button>
           ) : null}
           {actionError ? (
-            <span className="font-mono text-[11px] text-red">{actionError}</span>
+            <span className="font-mono text-[11px] text-red-text">{actionError}</span>
           ) : null}
           <LocationActionWarning message={actionWarning} />
         </div>

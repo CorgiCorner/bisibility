@@ -9,6 +9,7 @@ import {
   ProjectReadOnlyTooltip,
   useProjectWriteMode,
 } from "@/components/shell/ProjectWriteModeProvider";
+import { Button } from "@/components/ui";
 import type { TopQuerySuggestion } from "@/lib/keyword-suggest/sanitize-top-queries";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import { appPath } from "@/lib/routing/app-path";
@@ -130,7 +131,7 @@ export function KeywordsEmptyState({
         ))}
       </div>
       <div className="flex flex-col items-center px-6 py-10 text-center">
-        <span className="grid h-[54px] w-[54px] place-items-center rounded-[14px] bg-accent-soft text-accent">
+        <span className="grid h-[54px] w-[54px] place-items-center rounded-[14px] bg-accent-soft text-accent-text">
           <MagnifyingGlass size={27} weight="bold" />
         </span>
         <h3 className="mt-[18px] text-lg font-semibold tracking-[-0.4px] text-fg">
@@ -150,20 +151,23 @@ export function KeywordsEmptyState({
                 Import observed queries live, then pick the ones to track in the review picker.
               </p>
               <ProjectReadOnlyTooltip className="mt-auto inline-flex pt-4">
-                <button
-                  className="inline-flex min-h-10 items-center gap-2 rounded-[10px] bg-accent px-4 text-[13px] font-semibold text-white outline-none hover:opacity-90 focus-visible:opacity-90 disabled:cursor-not-allowed disabled:opacity-55"
-                  disabled={readOnly || importPending || !importTopQueriesAction}
+                <Button
+                  disabled={readOnly || !importTopQueriesAction}
+                  loading={importPending}
+                  loadingLabel="Importing queries..."
                   onClick={() => void handleSearchConsoleImport()}
+                  startIcon={<ArrowLineDown aria-hidden size={15} weight="bold" />}
+                  sx={{ minHeight: 40 }}
                   type="button"
+                  variant="primary"
                 >
-                  <ArrowLineDown aria-hidden size={15} weight="bold" />
-                  {importPending ? "Importing queries..." : "Find Search Console queries"}
-                </button>
+                  Find Search Console queries
+                </Button>
               </ProjectReadOnlyTooltip>
               {importFeedback ? (
                 <p
                   className={`mt-3 text-[11.5px] leading-[1.5] ${
-                    importFeedback.kind === "error" ? "text-red" : "text-fg-muted"
+                    importFeedback.kind === "error" ? "text-red-text" : "text-fg-muted"
                   }`}
                   role="status"
                 >
@@ -172,7 +176,7 @@ export function KeywordsEmptyState({
                     <>
                       {" "}
                       <Link
-                        className="font-semibold text-accent"
+                        className="font-semibold text-accent-text"
                         href={appPath(projectId, "integrations")}
                       >
                         {importFeedback.kind === "needs_reauth"
@@ -193,26 +197,27 @@ export function KeywordsEmptyState({
               <form className="mt-auto flex items-center gap-2 pt-4" onSubmit={handleSubmit}>
                 <input
                   aria-label="Keyword"
-                  className="min-w-0 flex-1 rounded-[10px] border border-border-strong bg-bg px-3 py-2.5 text-[13.5px] font-medium text-fg outline-none focus:border-accent"
+                  className="min-w-0 flex-1 rounded-[10px] border border-border-strong bg-transparent px-3 py-2.5 text-[13.5px] font-medium text-fg outline-none focus:border-accent"
                   onChange={(event) => setKeyword(event.target.value)}
                   placeholder="e.g. headless cms"
                   value={keyword}
                 />
                 <ProjectReadOnlyTooltip>
-                  <button
-                    className="inline-flex flex-none items-center gap-1.5 rounded-[10px] bg-accent px-3.5 py-2.5 text-[13px] font-semibold text-white outline-none hover:opacity-90 focus-visible:opacity-90 disabled:cursor-not-allowed disabled:opacity-55"
+                  <Button
                     disabled={readOnly}
+                    startIcon={<Plus size={14} weight="bold" />}
+                    sx={{ flex: "none", minHeight: 40 }}
                     type="submit"
+                    variant="primary"
                   >
-                    <Plus size={14} weight="bold" />
                     Add
-                  </button>
+                  </Button>
                 </ProjectReadOnlyTooltip>
               </form>
-              <div className="mt-3 flex flex-wrap items-center gap-3 text-[12px] text-fg-faint">
+              <div className="mt-3 flex flex-wrap items-center gap-3 text-[12px] text-fg-muted">
                 <ProjectReadOnlyTooltip>
                   <button
-                    className="inline-flex items-center gap-1.5 font-semibold text-fg-muted outline-none hover:text-accent focus-visible:text-accent disabled:cursor-not-allowed disabled:opacity-55"
+                    className="inline-flex items-center gap-1.5 font-semibold text-fg-muted outline-none hover:text-accent-text focus-visible:text-accent-text disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted"
                     disabled={readOnly}
                     onClick={onImportCsv}
                     type="button"
@@ -230,7 +235,10 @@ export function KeywordsEmptyState({
           <p className="mt-4 max-w-[520px] text-[12px] leading-[1.5] text-fg-muted">
             Rank checks need a connected SERP provider. You can add keywords now - they start
             checking once you{" "}
-            <Link className="font-semibold text-accent" href={appPath(projectId, "integrations")}>
+            <Link
+              className="font-semibold text-accent-text"
+              href={appPath(projectId, "integrations")}
+            >
               connect one
             </Link>
             .
@@ -240,7 +248,7 @@ export function KeywordsEmptyState({
         <p className="mt-5 text-[12.5px] text-fg-muted">
           Not sure where to start? Most existing sites should begin with Search Console.{" "}
           <Link
-            className="font-semibold text-accent"
+            className="font-semibold text-accent-text"
             href="/docs/guides/choose-first-keywords"
             {...docsLinkProps("/docs/guides/choose-first-keywords")}
           >

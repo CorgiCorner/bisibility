@@ -12,7 +12,7 @@ describe("defaultCostPerCheckCents", () => {
     [20, 2],
     [50, 5],
     [100, 10],
-  ] as const)("returns the conservative SerpAPI top-%i estimate", (depth, expected) => {
+  ] as const)("returns the conservative SerpApi top-%i estimate", (depth, expected) => {
     expect(defaultCostPerCheckCents("serpapi", depth)).toBe(expected);
   });
 

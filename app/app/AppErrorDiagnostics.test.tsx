@@ -38,8 +38,8 @@ describe("AppErrorDiagnostics", () => {
   it("keeps the error reference metadata compact", () => {
     render(<AppErrorDiagnostics details={details} />);
 
-    expect(screen.getByText("err_9c41f2")).toHaveClass("text-[10px]");
-    expect(screen.getByText("TypeError · 01:28:57 UTC")).toHaveClass("text-[10px]");
+    expect(screen.getByText("err_9c41f2")).toHaveClass("text-[9px]");
+    expect(screen.getByText("TypeError · 01:28:57 UTC")).toHaveClass("text-[9px]");
   });
 
   it("opens on the trace and collapses it on demand", async () => {

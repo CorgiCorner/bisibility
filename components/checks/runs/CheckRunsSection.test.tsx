@@ -28,7 +28,7 @@ function props(overrides: Partial<CheckRunsSectionProps> = {}): CheckRunsSection
     provider: "all",
     providerOptions: [
       { label: "DataForSEO", value: "dataforseo" },
-      { label: "SerpAPI", value: "serpapi" },
+      { label: "SerpApi", value: "serpapi" },
     ],
     range: "24h",
     reorderProvidersHref: "/app/integrations",
@@ -87,7 +87,7 @@ describe("CheckRunsSection", () => {
     render(<CheckRunsSection {...props({ onProviderChange, onTriggerChange })} />);
 
     fireEvent.click(screen.getByRole("button", { name: "Filter by provider" }));
-    fireEvent.click(await screen.findByRole("menuitem", { name: "SerpAPI" }));
+    fireEvent.click(await screen.findByRole("menuitem", { name: "SerpApi" }));
     fireEvent.click(screen.getByRole("button", { name: "Filter by trigger" }));
     fireEvent.click(await screen.findByRole("menuitem", { name: "Scheduled" }));
 
@@ -217,7 +217,7 @@ describe("CheckRunsSection", () => {
                 failed: 0,
                 isPrimary: false,
                 provider: "serpapi",
-                providerLabel: "SerpAPI",
+                providerLabel: "SerpApi",
                 rateLimited: 0,
               },
               {

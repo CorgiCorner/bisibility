@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, ExpiryChoiceGroup, Modal } from "@/components/ui";
+import { Button, ExpiryChoiceGroup, inputClassName, Modal } from "@/components/ui";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { type IssueApiKeyInput, issueApiKeySchema } from "@/lib/schemas/apiKey";
 import { actionErrorMessage } from "@/lib/ui/action-error";
@@ -24,9 +24,8 @@ export type ApiKeyCreateModalProps = {
   projectId?: string;
 };
 
-const inputClass =
-  "mt-[7px] min-h-11 w-full rounded-[9px] border border-border-strong bg-bg-sunken px-[13px] font-mono text-[13.5px] font-medium text-fg outline-none focus:border-accent";
-const labelClass = "font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint";
+const inputClass = `${inputClassName} mt-[7px] min-h-11 w-full rounded-[9px] px-[13px] font-mono text-[13.5px] font-medium`;
+const labelClass = "font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted";
 
 export function ApiKeyCreateModal({
   defaultName = "",
@@ -67,7 +66,7 @@ export function ApiKeyCreateModal({
 
   async function onSubmit(values: IssueForm) {
     if (!issueKey || !projectId) {
-      setSubmitError("API key creation is unavailable for this workspace.");
+      setSubmitError("API key creation is unavailable for this project.");
       return;
     }
 
@@ -148,7 +147,7 @@ export function ApiKeyCreateModal({
               {...form.register("name")}
             />
             {form.formState.errors.name ? (
-              <div className="mt-1.5 text-[11.5px] font-medium text-red">
+              <div className="mt-1.5 text-[11.5px] font-medium text-red-text">
                 {form.formState.errors.name.message}
               </div>
             ) : null}
@@ -196,7 +195,7 @@ export function ApiKeyCreateModal({
               })}
             </div>
             {selectedScope === "admin" ? (
-              <p className="m-0 mt-2 text-[12px] font-medium text-yellow">
+              <p className="m-0 mt-2 text-[12px] font-medium text-yellow-text">
                 Full access can perform admin operations for this project.
               </p>
             ) : null}
@@ -213,13 +212,13 @@ export function ApiKeyCreateModal({
               value={selectedExpiry}
             />
             {selectedExpiry === null ? (
-              <p className="m-0 mt-2 text-[12px] font-medium text-yellow">
+              <p className="m-0 mt-2 text-[12px] font-medium text-yellow-text">
                 This key never expires and must be rolled or revoked manually.
               </p>
             ) : null}
           </div>
           {submitError ? (
-            <div className="text-[12px] font-medium text-red">{submitError}</div>
+            <div className="text-[12px] font-medium text-red-text">{submitError}</div>
           ) : null}
         </form>
       )}

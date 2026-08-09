@@ -29,7 +29,7 @@ const RANGES = [
 type RangeLabel = (typeof RANGES)[number]["label"];
 
 const axisTextStyle = {
-  fill: "var(--fg-faint)",
+  fill: "var(--fg-muted)",
   fontFamily: "var(--font-mono), monospace",
   fontSize: 11,
 };
@@ -203,7 +203,9 @@ export function PositionHistoryCard({ keyword }: Readonly<PositionHistoryCardPro
             <button
               className={[
                 "rounded-[7px] px-3 py-1.5 font-mono text-[11.5px] outline-none transition-colors focus-visible:outline-none",
-                option.label === range ? "bg-accent text-white" : "text-fg-muted hover:text-fg",
+                option.label === range
+                  ? "bg-accent-solid text-primary-contrast"
+                  : "text-fg-muted hover:text-fg",
               ].join(" ")}
               key={option.label}
               onClick={() => setRange(option.label)}

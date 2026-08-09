@@ -174,7 +174,7 @@ export const integrationCategories = [
       {
         id: "serpapi",
         kind: "serp",
-        name: "SerpAPI",
+        name: "SerpApi",
         icon: "globe",
         tint: "#6B6657",
         description:

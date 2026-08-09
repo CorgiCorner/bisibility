@@ -111,14 +111,14 @@ every provider fails for another reason, the check fails with a provider error.
 
 ## Budget cap
 
-Provider spend is bounded by a monthly budget set per workspace in
-**Settings > Provider usage**. New workspaces start at `$50.00`. Workspace
+Provider spend is bounded by a monthly budget set per project in
+**Settings > Provider usage**. New projects start at `$50.00`. Project
 owners and admins change the cap with **Edit budget**; every budget change is
 recorded in the audit log with the actor, the old cap, and the new cap.
 
 The enforced total combines rank-check spend with paid provider lookup ledger
 entries. Scheduled and manual checks, ranked-keyword suggestions, keyword
-research, and keyword metrics pause once the workspace reaches the cap, and
+research, and keyword metrics pause once the project reaches the cap, and
 nothing is charged beyond it. Cached lookups stay free. Spend resets at the
 start of each calendar month, measured in UTC; in other timezones the reset
 lands a few hours before or after local midnight on the 1st.

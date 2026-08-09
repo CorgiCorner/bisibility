@@ -1,25 +1,31 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("@mui/material/Tooltip", () => import("@/tests/mui-tooltip"));
 vi.mock("./UserMenu", () => ({ UserMenu: () => null }));
 
 import { SidebarUserButton } from "./SidebarUserButton";
 
 describe("SidebarUserButton", () => {
-  it("labels the collapsed account button with a right-aligned tooltip", () => {
+  // The button moved from the sidebar foot into the header's right cluster, beside two other
+  // icon buttons that carry no tooltip. Its aria-label already named it, so the tooltip was a
+  // second accessible name competing with the first.
+  it("names the collapsed account button without wrapping it in a tooltip", () => {
     render(<SidebarUserButton collapsed />);
 
     const button = screen.getByRole("button", { name: "Account menu" });
-    expect(button.closest("[data-tooltip]")).toHaveAttribute("data-tooltip", "Account menu");
-    expect(button.closest("[data-tooltip]")).toHaveAttribute("data-tooltip-placement", "right");
+    expect(button.closest("[data-tooltip]")).toBeNull();
   });
 
-  it("suppresses the expanded account tooltip", () => {
+  it("keeps the same accessible name when expanded", () => {
     render(<SidebarUserButton />);
 
-    expect(
-      screen.getByRole("button", { name: "Account menu" }).closest("[data-tooltip]"),
-    ).toHaveAttribute("data-tooltip", "");
+    const button = screen.getByRole("button", { name: "Account menu" });
+    expect(button.closest("[data-tooltip]")).toBeNull();
+  });
+
+  it("sizes the collapsed button to match the header icon buttons beside it", () => {
+    render(<SidebarUserButton collapsed />);
+
+    expect(screen.getByRole("button", { name: "Account menu" })).toHaveClass("h-8", "w-8");
   });
 });

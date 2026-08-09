@@ -14,6 +14,10 @@ describe("CloudBetaCoverageModal", () => {
     expect(screen.getByRole("heading", { name: "Not yet" }).parentElement).toHaveTextContent(
       "No restore guarantee.",
     );
+    expect(screen.getByText("What the hosted beta covers")).toBeInTheDocument();
+    expect(
+      screen.getByText("No guaranteed migration path between hosted regions."),
+    ).toBeInTheDocument();
     expect(screen.getByText("On our side").parentElement).toHaveTextContent(
       "Nightly snapshots are kept for 7 days",
     );
@@ -26,7 +30,7 @@ describe("CloudBetaCoverageModal", () => {
     expect(onClose).toHaveBeenCalledOnce();
   });
 
-  it("opens the workspace export from its footer CTA", () => {
+  it("opens the project export from its footer CTA", () => {
     const onExport = vi.fn();
     render(
       <CloudBetaCoverageModal onClose={vi.fn()} onExport={onExport} open projectRef="prj_1" />,

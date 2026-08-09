@@ -95,7 +95,7 @@ describe("MenuSelect", () => {
 
     expect(screen.getByRole("button", { name: "Location scope" })).toHaveClass(
       "min-h-[34px]",
-      "bg-bg-elev",
+      "bg-transparent",
       "text-[12.5px]",
       "font-medium",
     );

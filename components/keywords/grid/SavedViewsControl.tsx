@@ -1,7 +1,7 @@
 "use client";
 
 import { actionErrorMessage } from "@/components/keywords/action-utils";
-import { useToast } from "@/components/ui";
+import { Button, useToast } from "@/components/ui";
 import {
   type CreateSavedViewInput,
   type DeleteSavedViewInput,
@@ -9,7 +9,6 @@ import {
   type SavedViewConfig,
   savedViewHref,
 } from "@/lib/keywords/saved-view-model";
-import Button from "@mui/material/Button";
 import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
 import Menu from "@mui/material/Menu";
@@ -89,17 +88,14 @@ export function SavedViewsControl({
         aria-controls={open ? "keyword-saved-views-menu" : undefined}
         aria-expanded={open ? "true" : undefined}
         aria-haspopup="menu"
-        color="inherit"
         onClick={(event) => setAnchorEl(event.currentTarget)}
-        size="small"
+        size="sm"
         startIcon={<BookmarkSimple size={15} />}
         sx={{
-          border: "1px solid var(--border-strong)",
           color: activeView ? "var(--accent)" : "var(--fg-muted)",
           maxWidth: 190,
-          minHeight: 34,
         }}
-        variant="outlined"
+        variant="secondary"
       >
         <span className="min-w-0 truncate">{activeView?.name ?? "All keywords"}</span>
         <CaretDown className="ml-1 shrink-0" size={12} />
@@ -111,7 +107,7 @@ export function SavedViewsControl({
         open={open}
         slotProps={{ paper: { sx: { border: "1px solid var(--border)", minWidth: 240 } } }}
       >
-        <div className="px-4 pb-1 pt-2 font-mono text-[10px] uppercase tracking-[0.6px] text-fg-faint">
+        <div className="px-4 pb-1 pt-2 font-mono text-[10px] uppercase tracking-[0.6px] text-fg-muted">
           Saved views
         </div>
         <MenuItem onClick={() => applyView(null)} selected={!activeViewId}>
@@ -142,7 +138,7 @@ export function SavedViewsControl({
                       deleteView(view.id);
                     }}
                     size="small"
-                    sx={{ color: "var(--fg-faint)", ml: 1 }}
+                    sx={{ color: "var(--fg-muted)", ml: 1 }}
                   >
                     <Trash size={13} />
                   </IconButton>
@@ -161,7 +157,7 @@ export function SavedViewsControl({
             setSaveOpen(true);
           }}
         >
-          <span className="mr-2 grid h-4 w-4 place-items-center text-accent">
+          <span className="mr-2 grid h-4 w-4 place-items-center text-accent-text">
             <Plus size={13} weight="bold" />
           </span>
           {"Save current view "}

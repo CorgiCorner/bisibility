@@ -21,6 +21,8 @@ import {
 
 type CloudBetaBannerProps = {
   dismissed?: boolean;
+  /** The banner's whole message is "keep an export"; hold it back until there is data. */
+  hasExportableData?: boolean;
   isCloud: boolean;
   lastExport: CloudPackageExportSummary | null;
   now: string;
@@ -36,6 +38,7 @@ function persistDismissal() {
 
 export function CloudBetaBanner({
   dismissed = false,
+  hasExportableData = true,
   isCloud,
   lastExport,
   now,
@@ -50,7 +53,9 @@ export function CloudBetaBanner({
   const [backupLoading, setBackupLoading] = useState(false);
   const [latestExport, setLatestExport] = useState(lastExport);
 
-  if (!isCloud || isDismissed) {
+  // An empty workspace has nothing to export, so the warning would only distract from
+  // onboarding; it appears once the first keywords exist.
+  if (!isCloud || isDismissed || !hasExportableData) {
     return null;
   }
 
@@ -67,7 +72,7 @@ export function CloudBetaBanner({
       setBackupCounts(await loadCloudBackupCounts({ projectId }));
       setActiveModal("backup");
     } catch (error) {
-      setBackupLoadError(actionErrorMessage(error, "Workspace backup counts could not be loaded."));
+      setBackupLoadError(actionErrorMessage(error, "Project backup counts could not be loaded."));
     } finally {
       setBackupLoading(false);
     }
@@ -82,7 +87,7 @@ export function CloudBetaBanner({
         >
           <span
             aria-hidden
-            className="col-start-1 row-start-1 flex h-lh self-start items-center text-[12.5px] leading-[1.55] text-yellow-strong"
+            className="col-start-1 row-start-1 flex h-lh self-start items-center text-[12.5px] leading-[1.55] text-yellow-text"
             data-testid="cloud-beta-warning-line"
           >
             <WarningCircle
@@ -95,7 +100,7 @@ export function CloudBetaBanner({
           <div className="col-start-2 row-start-1 min-w-0" data-testid="cloud-beta-content">
             <div className="flex flex-wrap items-center gap-2">
               <strong className="text-[12.5px] font-semibold text-fg">
-                Managed Cloud is in beta
+                You're on the hosted beta
               </strong>
             </div>
             <p className="m-0 mt-0.5 text-[12px] leading-[1.45] text-fg-muted">
@@ -138,15 +143,15 @@ export function CloudBetaBanner({
           </div>
           {backupLoadError ? (
             <p
-              className="col-start-2 col-end-4 m-0 text-[11px] text-red @4xl:col-end-5"
+              className="col-start-2 col-end-4 m-0 text-[11px] text-red-text @4xl:col-end-5"
               role="alert"
             >
               {backupLoadError}
             </p>
           ) : null}
           <button
-            aria-label="Dismiss Cloud beta banner"
-            className="col-start-3 row-start-1 grid h-8 w-8 shrink-0 place-items-center rounded-[7px] text-fg-muted outline-none transition-colors hover:bg-yellow/[0.14] hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent @4xl:col-start-4"
+            aria-label="Dismiss hosted beta banner"
+            className="col-start-3 row-start-1 grid h-8 w-8 shrink-0 place-items-center rounded-[7px] text-fg-muted transition-colors hover:bg-yellow/[0.14] hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid @4xl:col-start-4"
             onClick={dismiss}
             type="button"
           >

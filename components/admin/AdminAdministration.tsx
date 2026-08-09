@@ -45,7 +45,7 @@ function deltaLabel(metric: GrowthMetric) {
 function GrowthCard({ label, metric }: Readonly<{ label: string; metric: GrowthMetric }>) {
   return (
     <div className="flex min-w-0 flex-col rounded-xl border border-border-soft bg-bg-sunken px-3 py-2.5">
-      <div className="font-mono text-[10px] uppercase tracking-[0.4px] text-fg-faint">{label}</div>
+      <div className="font-mono text-[10px] uppercase tracking-[0.4px] text-fg-muted">{label}</div>
       <div className="mt-auto pt-1 text-xl font-semibold tracking-[-0.4px] text-fg">
         {count.format(metric.total)}
       </div>
@@ -59,7 +59,7 @@ function GrowthCard({ label, metric }: Readonly<{ label: string; metric: GrowthM
         <path
           d={sparklinePath(metric)}
           fill="none"
-          stroke="var(--fg-faint)"
+          stroke="var(--fg-muted)"
           strokeWidth="1.5"
           vectorEffect="non-scaling-stroke"
         />
@@ -81,7 +81,7 @@ function Growth({ data }: Readonly<{ data: InstanceAdminAdministration }>) {
           <GrowthCard key={card.key} label={card.label} metric={data.growth[card.key]} />
         ))}
         <div className="flex min-w-0 flex-col rounded-xl border border-border-soft bg-bg-sunken px-3 py-2.5">
-          <div className="font-mono text-[10px] uppercase tracking-[0.4px] text-fg-faint">
+          <div className="font-mono text-[10px] uppercase tracking-[0.4px] text-fg-muted">
             Active accounts (approx.)
           </div>
           <div className="pt-1 text-xl font-semibold tracking-[-0.4px] text-fg">

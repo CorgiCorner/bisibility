@@ -154,7 +154,7 @@ export function KeywordRankedImport({
           </Button>
         </div>
         {error ? <ErrorMessage projectRef={projectId} reason={error} /> : null}
-        {feedback ? <p className={`m-0 mt-2 ${feedbackClass} text-red`}>{feedback}</p> : null}
+        {feedback ? <p className={`m-0 mt-2 ${feedbackClass} text-red-text`}>{feedback}</p> : null}
       </section>
     );
   }
@@ -221,7 +221,7 @@ export function KeywordRankedImport({
                     <td className="py-2 font-medium">
                       {group.row.keyword}
                       {group.count > 1 ? (
-                        <span className="ml-1 text-fg-faint">+{group.count - 1} variants</span>
+                        <span className="ml-1 text-fg-muted">+{group.count - 1} variants</span>
                       ) : null}
                       {tracked ? (
                         <span className="ml-2 rounded-full bg-bg-inset px-2 py-0.5 text-[10px] text-fg-muted">
@@ -246,7 +246,7 @@ export function KeywordRankedImport({
       <p className="m-0 mt-3 text-[12px] text-fg-muted">
         {activeSelected.length} of {selectable.length} selected
       </p>
-      <p className="m-0 mt-1 text-[11.5px] text-fg-faint">
+      <p className="m-0 mt-1 text-[11.5px] text-fg-muted">
         Spent this session: ${(spent / 100).toFixed(2)}.{" "}
         {pages
           .map((page, index) => (page.cached ? `Page ${index + 1} cached.` : null))
@@ -279,12 +279,15 @@ function ErrorMessage({
   reason,
 }: Readonly<{ projectRef: string; reason: RankedKeywordError }>) {
   return (
-    <p className={`m-0 mt-2 ${feedbackClass} text-red`}>
+    <p className={`m-0 mt-2 ${feedbackClass} text-red-text`}>
       {rankedKeywordErrorCopy(reason)}
       {reason === "needs_reauth" ? (
         <>
           {" "}
-          <Link className="font-semibold text-accent" href={appPath(projectRef, "integrations")}>
+          <Link
+            className="font-semibold text-accent-text"
+            href={appPath(projectRef, "integrations")}
+          >
             Reconnect DataForSEO
           </Link>
         </>
@@ -293,7 +296,7 @@ function ErrorMessage({
         <>
           {" "}
           <Link
-            className="font-semibold text-accent"
+            className="font-semibold text-accent-text"
             href={`${appPath(projectRef, "settings")}#provider-usage`}
           >
             Raise the budget

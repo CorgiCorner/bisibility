@@ -76,7 +76,7 @@ export function TwoFactorManagementForm({
             {...form.register("password")}
           />
           {form.formState.errors.password ? (
-            <span className={cn(feedbackClass, "text-red")}>
+            <span className={cn(feedbackClass, "text-red-text")}>
               {form.formState.errors.password.message}
             </span>
           ) : null}
@@ -115,7 +115,7 @@ export function TwoFactorManagementForm({
               {...form.register("code")}
             />
             {form.formState.errors.code ? (
-              <span className={cn(feedbackClass, "text-red")}>
+              <span className={cn(feedbackClass, "text-red-text")}>
                 {form.formState.errors.code.message}
               </span>
             ) : null}

@@ -448,13 +448,15 @@ model Project {
   id                       String                   @id @default(cuid())
   publicId                 String                   @unique
   name                     String
-  domain                   String
+  // Optional: a workspace exists before the user says which domain to track.
+  domain                   String?
   isSample                 Boolean                  @default(false)
   trackingScope            String                   @default("country")
   writeMode                ProjectWriteMode         @default(active)
   writeModeChangedAt       DateTime?
   writeModeChangedById     String?
   writeModeChangedBy       User?                    @relation("ProjectWriteModeChangedBy", fields: [writeModeChangedById], references: [id], onDelete: SetNull)
+  onboardingCompletedAt    DateTime?
   ownerId                  String
   owner                    User                     @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: Cascade)
   members                  Membership[]

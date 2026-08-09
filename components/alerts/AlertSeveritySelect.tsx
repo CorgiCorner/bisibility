@@ -21,7 +21,7 @@ export function AlertSeveritySelect({
 }: Readonly<{ onChange: (value: AlertSeverity) => void; value: AlertSeverity }>) {
   return (
     <div className="flex flex-col gap-[7px]">
-      <span className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint">
+      <span className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
         Severity
       </span>
       <MenuSelect
@@ -34,7 +34,7 @@ export function AlertSeveritySelect({
         }
         onChange={(next) => onChange(next as AlertSeverity)}
         options={options}
-        triggerClassName="mb-3 min-h-10 w-full justify-between rounded-[9px] border-border-strong bg-bg-sunken px-3 text-[13px] font-medium"
+        triggerClassName="mb-3 min-h-10 w-full justify-between rounded-[9px] border-border-strong bg-transparent px-3 text-[13px] font-medium"
         value={value}
       />
     </div>

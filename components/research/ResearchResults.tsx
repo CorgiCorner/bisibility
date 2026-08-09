@@ -97,9 +97,9 @@ function DiagnosticsBanner({
       data-testid="research-diagnostics-banner"
     >
       {warning ? (
-        <WarningCircle className="shrink-0 text-yellow-strong" size={14} weight="fill" />
+        <WarningCircle className="shrink-0 text-yellow-text" size={14} weight="fill" />
       ) : (
-        <Info className="shrink-0 text-fg-faint" size={14} weight="fill" />
+        <Info className="shrink-0 text-fg-muted" size={14} weight="fill" />
       )}
       <div
         className="flex min-w-0 flex-wrap gap-x-4 gap-y-1 py-0.5 leading-[1.45]"
@@ -109,7 +109,7 @@ function DiagnosticsBanner({
       </div>
       <button
         aria-label="Dismiss"
-        className="grid h-8 w-8 shrink-0 cursor-pointer place-items-center rounded-[7px] p-0 text-fg-faint hover:text-fg"
+        className="grid h-8 w-8 shrink-0 cursor-pointer place-items-center rounded-[7px] p-0 text-fg-muted hover:text-fg"
         onClick={onDismiss}
         type="button"
       >

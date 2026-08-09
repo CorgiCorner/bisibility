@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui";
 import {
   ArrowRightIcon as ArrowRight,
   CheckCircleIcon as CheckCircle,
@@ -39,14 +40,14 @@ export function ImportStepper({ step }: Readonly<{ step: number }>) {
                 style={{
                   backgroundColor: active ? "var(--accent)" : "var(--bg-sunken)",
                   borderColor: number === step ? "var(--accent)" : "transparent",
-                  color: active ? "#fff" : "var(--fg-faint)",
+                  color: active ? "#fff" : "var(--fg-muted)",
                 }}
               >
                 {number}
               </span>
               <span
                 className="whitespace-nowrap text-[10px] font-semibold"
-                style={{ color: number === step ? "var(--fg)" : "var(--fg-faint)" }}
+                style={{ color: number === step ? "var(--fg)" : "var(--fg-muted)" }}
               >
                 {label}
               </span>
@@ -70,19 +71,21 @@ export function TemplateStep() {
       <h3 className="m-0 text-[15px] font-semibold">Start from the template</h3>
       <p className="m-0 mt-1.5 text-[13px] leading-[1.55] text-fg-muted">
         Download the CSV template, fill in your keywords, then upload it on the next step. Only{" "}
-        <code className="font-mono text-[12px] text-accent">keyword</code> is required.
+        <code className="font-mono text-[12px] text-accent-text">keyword</code> is required.
       </p>
-      <button
-        className="mt-4 inline-flex items-center gap-2 rounded-[10px] bg-accent px-4 py-2.5 text-[13.5px] font-semibold text-white"
+      <Button
+        size="lg"
+        startIcon={<DownloadSimple size={16} weight="bold" />}
+        sx={{ marginTop: "16px" }}
         type="button"
+        variant="primary"
       >
-        <DownloadSimple size={16} weight="bold" />
         Download template.csv
-      </button>
+      </Button>
       <div className="mt-[18px] overflow-hidden rounded-[11px] border border-border">
         <div className="flex items-center justify-between bg-code-bg px-[13px] py-2 font-mono text-[10.5px] text-code-faint">
           <span>template.csv</span>
-          <span className="text-green">UTF-8</span>
+          <span className="text-green-text">UTF-8</span>
         </div>
         <pre className="m-0 overflow-x-auto bg-code-bg px-[15px] py-[13px] font-mono text-[11.5px] leading-[1.75] text-code-fg">{`keyword,target_url,tags,country,device
 edge function logs,/docs/logs,docs;infra,US,desktop
@@ -93,7 +96,7 @@ llms.txt,/blog/llms-txt,content,GB,desktop`}</pre>
         {["keyword*", "target_url", "tags", "country", "device", "language", "refresh"].map(
           (item) => (
             <span
-              className="rounded-[7px] bg-bg-sunken px-[9px] py-[3px] font-mono text-[11px] text-fg-muted first:bg-accent-soft first:font-semibold first:text-accent"
+              className="rounded-[7px] bg-bg-sunken px-[9px] py-[3px] font-mono text-[11px] text-fg-muted first:bg-accent-soft first:font-semibold first:text-accent-text"
               key={item}
             >
               {item}
@@ -101,7 +104,7 @@ llms.txt,/blog/llms-txt,content,GB,desktop`}</pre>
           ),
         )}
       </div>
-      <div className="mt-3 flex items-center gap-[7px] text-[12px] text-fg-faint">
+      <div className="mt-3 flex items-center gap-[7px] text-[12px] text-fg-muted">
         <Info size={14} />
         Blank columns are ignored. Tags are semicolon-separated.
       </div>
@@ -117,30 +120,26 @@ export function UploadStep() {
         CSV or XLSX. CSV must be UTF-8 and cannot contain replacement characters (�).
       </p>
       <div className="mt-4 flex flex-col items-center gap-2.5 rounded-[13px] border border-dashed border-border-strong bg-bg px-6 py-[38px] text-center">
-        <span className="grid h-[46px] w-[46px] place-items-center rounded-xl bg-accent-soft text-accent">
+        <span className="grid h-[46px] w-[46px] place-items-center rounded-xl bg-accent-soft text-accent-text">
           <CloudArrowUp size={24} weight="bold" />
         </span>
         <div className="text-[13.5px] font-semibold">Drag and drop your CSV here</div>
-        <div className="text-[12px] text-fg-faint">or</div>
-        <button
-          className="inline-flex items-center gap-[7px] rounded-[9px] border border-border-strong bg-bg-elev px-[15px] py-[9px] text-[12.5px] font-semibold text-fg"
-          type="button"
-        >
-          <FolderOpen size={15} />
+        <div className="text-[12px] text-fg-muted">or</div>
+        <Button startIcon={<FolderOpen size={15} />} type="button" variant="secondary">
           Browse files
-        </button>
+        </Button>
       </div>
       <div className="mt-3.5 flex items-center gap-3 rounded-[11px] border border-border bg-bg-elev px-[15px] py-[13px]">
-        <span className="grid h-9 w-9 place-items-center rounded-[9px] text-green [background:color-mix(in_srgb,var(--green)_12%,transparent)]">
+        <span className="grid h-9 w-9 place-items-center rounded-[9px] text-green-text [background:color-mix(in_srgb,var(--green)_12%,transparent)]">
           <FileCsv size={19} weight="fill" />
         </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-[13px] font-semibold">acme-keywords-q2.csv</span>
-          <span className="block font-mono text-[11px] text-fg-faint">
+          <span className="block font-mono text-[11px] text-fg-muted">
             248 rows · 5 columns · 18 KB
           </span>
         </span>
-        <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-green">
+        <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-green-text">
           <CheckCircle size={14} weight="fill" />
           Parsed
         </span>
@@ -166,18 +165,18 @@ export function MapStep() {
             key={csv}
           >
             <span className="inline-flex min-w-0 items-center gap-[7px] font-mono text-[12.5px]">
-              <Table className="shrink-0 text-fg-faint" size={14} />
+              <Table className="shrink-0 text-fg-muted" size={14} />
               <span className="truncate">{csv}</span>
             </span>
-            <ArrowRight className="text-fg-faint" size={13} weight="bold" />
+            <ArrowRight className="text-fg-muted" size={13} weight="bold" />
             <span className="inline-flex items-center justify-between gap-2 rounded-lg border border-border-strong bg-bg-elev px-[11px] py-[7px] text-[12.5px] font-medium">
               {field}
-              {req ? <span className="font-mono text-[10px] text-accent">{req}</span> : null}
+              {req ? <span className="font-mono text-[10px] text-accent-text">{req}</span> : null}
             </span>
           </div>
         ))}
       </div>
-      <div className="mt-3.5 flex items-center gap-2 text-[12px] font-semibold text-green">
+      <div className="mt-3.5 flex items-center gap-2 text-[12px] font-semibold text-green-text">
         <CheckCircle size={14} weight="fill" />
         All required fields mapped
       </div>
@@ -207,10 +206,10 @@ export function ReviewStep({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h3 className="m-0 text-[15px] font-semibold">Review and confirm</h3>
         <div className="flex gap-2 font-mono text-[11px]">
-          <span className="rounded-full px-[9px] py-[3px] font-semibold text-green [background:color-mix(in_srgb,var(--green)_12%,transparent)]">
+          <span className="rounded-full px-[9px] py-[3px] font-semibold text-green-text [background:color-mix(in_srgb,var(--green)_12%,transparent)]">
             245 new
           </span>
-          <span className="rounded-full px-[9px] py-[3px] font-semibold text-yellow [background:color-mix(in_srgb,var(--yellow)_14%,transparent)]">
+          <span className="rounded-full px-[9px] py-[3px] font-semibold text-yellow-text [background:color-mix(in_srgb,var(--yellow)_14%,transparent)]">
             3 duplicates
           </span>
         </div>
@@ -248,19 +247,19 @@ export function ReviewStep({
           >
             <span className="truncate font-medium">{keyword}</span>
             <span className="truncate font-mono text-[11.5px] text-fg-muted">{url}</span>
-            <span className="font-mono text-[11px] text-fg-faint">{country}</span>
+            <span className="font-mono text-[11px] text-fg-muted">{country}</span>
             {dup ? (
-              <span className="rounded-md px-[7px] py-0.5 font-mono text-[9.5px] font-semibold text-yellow [background:color-mix(in_srgb,var(--yellow)_14%,transparent)]">
+              <span className="rounded-md px-[7px] py-0.5 font-mono text-[9.5px] font-semibold text-yellow-text [background:color-mix(in_srgb,var(--yellow)_14%,transparent)]">
                 {dup}
               </span>
             ) : null}
           </div>
         ))}
-        <div className="border-t border-border-soft px-3.5 py-[9px] text-center font-mono text-[11px] text-fg-faint">
+        <div className="border-t border-border-soft px-3.5 py-[9px] text-center font-mono text-[11px] text-fg-muted">
           + 244 more rows
         </div>
       </div>
-      <div className="mt-3.5 flex items-center gap-2 text-[12px] text-fg-faint">
+      <div className="mt-3.5 flex items-center gap-2 text-[12px] text-fg-muted">
         <Info size={14} />
         History is not back-filled.
       </div>
@@ -271,7 +270,7 @@ export function ReviewStep({
 export function DoneStep() {
   return (
     <div className="flex flex-col items-center px-4 py-[30px] text-center">
-      <span className="grid h-14 w-14 place-items-center rounded-[15px] text-green [background:color-mix(in_srgb,var(--green)_12%,transparent)]">
+      <span className="grid h-14 w-14 place-items-center rounded-[15px] text-green-text [background:color-mix(in_srgb,var(--green)_12%,transparent)]">
         <CheckCircle size={30} weight="fill" />
       </span>
       <h3 className="m-0 mt-[18px] text-[18px] font-semibold tracking-[-0.4px]">Import complete</h3>
@@ -282,7 +281,7 @@ export function DoneStep() {
         {["245 Added", "3 Skipped", "0 Failed"].map((item) => (
           <span className="text-center" key={item}>
             <span className="block text-[22px] font-semibold">{item.split(" ")[0]}</span>
-            <span className="font-mono text-[10px] uppercase tracking-[0.4px] text-fg-faint">
+            <span className="font-mono text-[10px] uppercase tracking-[0.4px] text-fg-muted">
               {item.split(" ")[1]}
             </span>
           </span>

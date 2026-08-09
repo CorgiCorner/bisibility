@@ -65,7 +65,7 @@ export function InviteModal({
 
   async function onSubmit(values: InviteForm) {
     if (!inviteMember || !projectId) {
-      setSubmitError("Invites are unavailable for this workspace.");
+      setSubmitError("Invites are unavailable for this project.");
       return;
     }
 
@@ -110,21 +110,21 @@ export function InviteModal({
         <span className="block">
           <span className="block">Invite teammate</span>
           <span className="mt-[3px] block text-[12.5px] font-normal leading-normal tracking-normal text-fg-muted">
-            They&apos;ll get access to {domain || "this workspace"}.
+            They&apos;ll get access to {domain || "this project"}.
           </span>
         </span>
       }
     >
       {sent ? (
         <div className="flex flex-col items-center px-2 pb-1.5 pt-3.5 text-center">
-          <span className="grid h-12 w-12 place-items-center rounded-[13px] bg-green/10 text-green">
+          <span className="grid h-12 w-12 place-items-center rounded-[13px] bg-green/10 text-green-text">
             <PaperPlaneTilt aria-hidden size={24} weight="fill" />
           </span>
           <div className="mt-3.5 text-[15px] font-semibold text-fg">Invitation sent</div>
           <p className="m-0 mt-1.5 max-w-[300px] text-[13px] text-fg-muted">
             We emailed an invite to {sentEmail}. You can also share this link directly.
           </p>
-          <div className="mt-4 flex w-full items-center gap-2 rounded-[9px] border border-border-strong bg-bg-sunken px-3 py-[9px]">
+          <div className="mt-4 flex w-full items-center gap-2 rounded-[9px] border border-border-strong bg-transparent px-3 py-[9px]">
             <span className="min-w-0 flex-1 truncate font-mono text-[11.5px] text-fg-muted">
               {inviteLink}
             </span>
@@ -134,7 +134,7 @@ export function InviteModal({
       ) : (
         <form id="invite-teammate-form" onSubmit={form.handleSubmit(onSubmit)}>
           <label
-            className="block font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint"
+            className="block font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted"
             htmlFor="invite-email"
           >
             Email address
@@ -142,7 +142,7 @@ export function InviteModal({
           <input
             aria-describedby={form.formState.errors.email ? "invite-email-error" : undefined}
             aria-invalid={Boolean(form.formState.errors.email)}
-            className="mt-[7px] min-h-11 w-full rounded-[9px] border border-border-strong bg-bg-sunken px-[13px] font-mono text-[13.5px] font-medium text-fg outline-none focus:border-accent"
+            className="mt-[7px] min-h-11 w-full rounded-[9px] border border-border-strong bg-transparent px-[13px] font-mono text-[13.5px] font-medium text-fg outline-none focus:border-accent"
             id="invite-email"
             inputMode="email"
             placeholder="teammate@acme.dev"
@@ -150,11 +150,11 @@ export function InviteModal({
             {...form.register("email")}
           />
           {form.formState.errors.email ? (
-            <div className="mt-1.5 text-[11.5px] font-medium text-red" id="invite-email-error">
+            <div className="mt-1.5 text-[11.5px] font-medium text-red-text" id="invite-email-error">
               {form.formState.errors.email.message}
             </div>
           ) : null}
-          <div className="mt-4 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint">
+          <div className="mt-4 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
             Role
           </div>
           <div className="mt-[9px] flex flex-col gap-[7px]">
@@ -196,7 +196,7 @@ export function InviteModal({
             })}
           </div>
           {submitError ? (
-            <div className="mt-3 text-[12px] font-medium text-red">{submitError}</div>
+            <div className="mt-3 text-[12px] font-medium text-red-text">{submitError}</div>
           ) : null}
         </form>
       )}

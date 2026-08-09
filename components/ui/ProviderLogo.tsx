@@ -1,6 +1,5 @@
 "use client";
 
-import { buildLogoDevUrl } from "@/components/ui";
 import type { ProviderIconName } from "@/lib/integrations/types";
 import {
   ChartBarIcon as ChartBar,
@@ -12,6 +11,7 @@ import {
   TrendUpIcon as TrendUp,
 } from "@phosphor-icons/react";
 import { useState } from "react";
+import { buildLogoDevUrl } from "./provider-logo-url";
 
 export type ProviderLogoProps = {
   alt: string;

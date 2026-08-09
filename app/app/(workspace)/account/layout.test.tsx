@@ -37,6 +37,7 @@ describe("account layout", () => {
     mocks.listWorkspaces.mockResolvedValue([
       {
         id: "project_1",
+        onboardingCompletedAt: new Date("2026-08-01T07:30:00.000Z"),
         publicId: "prj_example",
       },
     ]);
@@ -54,6 +55,21 @@ describe("account layout", () => {
 
   it("sends project-less accounts through onboarding", async () => {
     mocks.listWorkspaces.mockResolvedValueOnce([]);
+    mocks.redirect.mockImplementationOnce(() => {
+      throw new Error("NEXT_REDIRECT:/onboarding");
+    });
+
+    await expect(AccountLayout({ children: <div>Hidden</div> })).rejects.toThrow(
+      "NEXT_REDIRECT:/onboarding",
+    );
+
+    expect(mocks.redirect).toHaveBeenCalledWith("/onboarding");
+  });
+
+  it("sends accounts with only incomplete projects through onboarding", async () => {
+    mocks.listWorkspaces.mockResolvedValueOnce([
+      { id: "project_1", onboardingCompletedAt: null, publicId: "prj_example" },
+    ]);
     mocks.redirect.mockImplementationOnce(() => {
       throw new Error("NEXT_REDIRECT:/onboarding");
     });

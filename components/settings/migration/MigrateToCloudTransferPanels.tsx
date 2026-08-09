@@ -4,7 +4,7 @@ import { PackageTransferPanel } from "@/components/cloud/PackageTransferPanel";
 import { Checkbox, SegmentedControl, type SegmentedControlOption } from "@/components/ui";
 import type { MigrationImportCompletion } from "@/lib/migration/result";
 import { appRootPath } from "@/lib/routing/app-path";
-import { ArrowRightIcon as ArrowRight } from "@phosphor-icons/react";
+import { CaretRightIcon as CaretRight } from "@phosphor-icons/react";
 import { ExportPackageCard, exportActiveCloudImportPackage } from "./MigrateToCloudExportPackage";
 import { HandoffPanel } from "./MigrateToCloudHandoff";
 import { InfoBox, StepHeading, StepLabel, TokenSourceStep } from "./MigrateToCloudTransferParts";
@@ -56,7 +56,7 @@ export function TransferStep({
   setMode,
   targetOrigin,
 }: Readonly<TransferStepProps>) {
-  const targetLabel = direction === "to-cloud" ? "Cloud" : "self-host";
+  const targetLabel = direction === "to-cloud" ? "hosted instance" : "self-host";
 
   function handleModeChange(nextMode: MigrationMode) {
     setMode(nextMode);
@@ -66,7 +66,7 @@ export function TransferStep({
   return (
     <>
       <StepHeading
-        body={`Choose a direct push or move the workspace package manually through the ${targetLabel} import page.`}
+        body={`Choose a direct push or move the project package manually through the ${targetLabel} import page.`}
         title={`Transfer to ${targetLabel}`}
       />
       <SegmentedControl
@@ -134,10 +134,10 @@ function PushTransferPanel({
 >) {
   const rawToken = form.watch("token")?.trim() || null;
   const transfer = useChunkedTransfer();
-  const targetLabel = direction === "to-cloud" ? "Cloud" : "self-host";
+  const targetLabel = direction === "to-cloud" ? "hosted instance" : "self-host";
 
   if (!projectId) {
-    return <InfoBox>A workspace is required before a package can be transferred.</InfoBox>;
+    return <InfoBox>A project is required before a package can be transferred.</InfoBox>;
   }
 
   return (
@@ -153,16 +153,16 @@ function PushTransferPanel({
       </TokenSourceStep>
       <StepLabel index={2} title="Paste the migration token here" />
       <form className="mt-2 flex flex-col gap-3">
-        <label className="flex flex-col gap-[7px] font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint">
+        <label className="flex flex-col gap-[7px] font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
           {"Migration token "}
           <input
-            className="min-h-11 rounded-[9px] border border-accent bg-bg-sunken px-[13px] font-mono text-[13px] font-medium text-fg outline-none"
+            className="min-h-11 rounded-[9px] border border-accent bg-transparent px-[13px] font-mono text-[13px] font-medium text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid"
             placeholder="mig_************"
             {...form.register("token")}
           />
         </label>
         {form.formState.errors.token ? (
-          <div className="text-[11.5px] font-medium text-red">
+          <div className="text-[11.5px] font-medium text-red-text">
             {form.formState.errors.token.message}
           </div>
         ) : null}
@@ -210,7 +210,7 @@ function DownloadTransferPanel({
   targetOrigin?: string;
 }) {
   const canConfirm = exported;
-  const targetLabel = direction === "to-cloud" ? "Cloud" : "self-host";
+  const targetLabel = direction === "to-cloud" ? "hosted instance" : "self-host";
   const importUrl = targetOrigin
     ? new URL(appRootPath(), targetOrigin).toString()
     : "https://bisibility.com/cloud/import?ctx=onboard";
@@ -226,7 +226,7 @@ function DownloadTransferPanel({
           targetOrigin={targetOrigin}
         />
       </TokenSourceStep>
-      <StepLabel index={2} title="Export the workspace package" />
+      <StepLabel index={2} title="Export the project package" />
       {projectId ? (
         <ExportPackageCard
           onExportSuccess={onExportSuccess}
@@ -234,22 +234,22 @@ function DownloadTransferPanel({
           successMessage="Package exported and downloaded. Upload it on the destination instance."
         />
       ) : (
-        <InfoBox>A workspace is required before a package can be exported.</InfoBox>
+        <InfoBox>A project is required before a package can be exported.</InfoBox>
       )}
       <StepLabel index={3} title="Upload it on the destination" />
       <div className="mt-2 rounded-[11px] border border-border bg-bg-sunken px-3.5 py-3">
         <a
-          className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-accent"
+          className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-accent-text"
           href={handoff?.cloudImportUrl ?? importUrl}
           rel="noreferrer"
           target="_blank"
         >
           Open destination import page
-          <ArrowRight aria-hidden size={13} weight="bold" />
+          <CaretRight aria-hidden size={13} weight="bold" />
         </a>
         <p className="m-0 mt-2 text-xs leading-5 text-fg-muted">
-          Upload the downloaded workspace package there and paste the migration token from step 1
-          when asked. The destination validates the token, schema, package counts and target
+          Upload the downloaded project package there and paste the migration token from step 1 when
+          asked. The destination validates the token, schema, package counts and target
           compatibility before import.
         </p>
       </div>
@@ -259,7 +259,7 @@ function DownloadTransferPanel({
         description={
           canConfirm
             ? "Confirm only after the destination import page accepts the uploaded package."
-            : "Export the workspace package before confirming the manual upload."
+            : "Export the project package before confirming the manual upload."
         }
         disabled={!canConfirm}
         label="I uploaded the package; await confirmation on the destination"

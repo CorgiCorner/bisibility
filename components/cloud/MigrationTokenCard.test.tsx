@@ -49,7 +49,7 @@ function renderCard(
       errorMessage={null}
       issuedToken={null}
       status={status}
-      workspaceName="SEO Workspace"
+      workspaceName="SEO Project"
       {...handlers}
       {...overrides}
     />,
@@ -109,7 +109,7 @@ describe("MigrationTokenCard", () => {
         onRevoke={vi.fn()}
         pendingAction="revoke"
         status="active"
-        workspaceName="SEO Workspace"
+        workspaceName="SEO Project"
       />,
     );
     expect(screen.getByRole("button", { name: "Revoking" })).toBeInTheDocument();
@@ -126,7 +126,7 @@ describe("MigrationTokenCard", () => {
         onRevoke={vi.fn()}
         pendingAction="regenerate"
         status="active"
-        workspaceName="SEO Workspace"
+        workspaceName="SEO Project"
       />,
     );
     expect(screen.getByRole("button", { name: "Regenerating" })).toBeInTheDocument();

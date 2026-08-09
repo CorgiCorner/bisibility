@@ -3,6 +3,7 @@ import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import { isPublicIdOfType, type PublicIdPrefix } from "@/lib/db/public-id";
 import type { Prisma } from "@/lib/generated/prisma/client";
+import { trackedProjectDomain } from "@/lib/schemas/project";
 import { enqueueAlertDigestJob } from "@/lib/temporal/alert-delivery-client";
 import { recordSuppressed, reserveDeliveryBudgetOnce, utcDay } from "./daily-cap";
 import type { TriggeredAlertDeliveryPayload } from "./delivery";
@@ -87,7 +88,7 @@ function deliveryPayload(alert: PendingAlertDigestRecord): TriggeredAlertDeliver
     headline: String(stored.headline ?? alert.rule.name),
     keyword: alert.keyword.text,
     keywordId: requireDigestPublicId(alert.keyword.publicId, "kw"),
-    projectDomain: alert.rule.project.domain,
+    projectDomain: trackedProjectDomain(alert.rule.project.domain) ?? "",
     projectId: requireDigestPublicId(alert.rule.project.publicId, "prj"),
     ruleId: requireDigestPublicId(alert.rule.publicId, "alr"),
     ruleName: alert.rule.name,
@@ -120,7 +121,7 @@ export function buildAlertDigestGroups(
       alerts,
       conditionType: first.rule.conditionType,
       createdAt: context.createdAt,
-      projectDomain: first.rule.project.domain,
+      projectDomain: trackedProjectDomain(first.rule.project.domain) ?? "",
       projectId: requireDigestPublicId(first.rule.project.publicId, "prj"),
       projectName: first.rule.project.name,
       ruleId: requireDigestPublicId(first.rule.publicId, "alr"),
@@ -135,7 +136,7 @@ export function buildAlertDigestGroups(
       createdAt: context.createdAt.toISOString(),
       deliveryClaimToken: context.deliveryClaimToken,
       email: rendered.email,
-      projectDomain: first.rule.project.domain,
+      projectDomain: trackedProjectDomain(first.rule.project.domain) ?? "",
       projectId: first.rule.project.id,
       projectName: first.rule.project.name,
       recipients: resolveAlertRuleRecipients(first.rule),

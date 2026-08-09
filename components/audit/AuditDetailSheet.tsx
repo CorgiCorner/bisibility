@@ -18,7 +18,7 @@ function formatDiffValue(value: AuditDiff["before"]) {
 
 function FieldLabel({ children }: Readonly<{ children: string }>) {
   return (
-    <div className="font-mono text-[9.5px] uppercase tracking-[0.5px] text-fg-faint">
+    <div className="font-mono text-[9.5px] uppercase tracking-[0.5px] text-fg-muted">
       {children}
     </div>
   );
@@ -40,7 +40,7 @@ function DiffRows({ diff }: Readonly<{ diff: readonly AuditDiff[] }>) {
         <div className="border-border-soft border-b last:border-b-0" key={item.field}>
           {item.before !== null ? (
             <div className="flex gap-2 border-border-soft border-b px-[13px] py-2.5 [background:color-mix(in_srgb,var(--red)_7%,transparent)] last:border-b-0">
-              <span className="shrink-0 text-red">-</span>
+              <span className="shrink-0 text-red-text">-</span>
               <span className="min-w-0 whitespace-pre-wrap break-words text-fg-muted">
                 {item.field}: {formatDiffValue(item.before)}
               </span>
@@ -48,7 +48,7 @@ function DiffRows({ diff }: Readonly<{ diff: readonly AuditDiff[] }>) {
           ) : null}
           {item.after !== null ? (
             <div className="flex gap-2 px-[13px] py-2.5 [background:color-mix(in_srgb,var(--green)_7%,transparent)]">
-              <span className="shrink-0 text-green">+</span>
+              <span className="shrink-0 text-green-text">+</span>
               <span className="min-w-0 whitespace-pre-wrap break-words text-fg">
                 {item.field}: {formatDiffValue(item.after)}
               </span>
@@ -65,7 +65,7 @@ function UserAgentRow({ value }: Readonly<{ value: string }>) {
   return (
     <div className="min-w-0 border-border-soft border-t pt-2.5">
       <div className="flex items-center justify-between gap-3">
-        <span className="text-fg-faint">user_agent</span>
+        <span className="text-fg-muted">user_agent</span>
         {recorded ? <CopyButton label="Copy user agent" size="sm" text={value} /> : null}
       </div>
       <div className="mt-1.5 break-all whitespace-pre-wrap text-fg-muted">{value}</div>
@@ -84,7 +84,7 @@ function MetadataRow({
 }>) {
   return (
     <div className="flex min-w-0 items-center justify-between gap-3">
-      <span className="shrink-0 text-fg-faint">{label}</span>
+      <span className="shrink-0 text-fg-muted">{label}</span>
       {copyable ? (
         <IdChip className="min-w-0 max-w-full" size="sm" value={value} />
       ) : (
@@ -104,14 +104,14 @@ export function AuditDetailSheet({ entry, onClose }: Readonly<AuditDetailSheetPr
       footer={
         <div className="flex items-center gap-2.5">
           <button
-            className="min-h-10 shrink-0 rounded-[9px] px-3 text-[13px] font-semibold text-fg-muted outline-none transition-colors hover:bg-bg-sunken hover:text-fg"
+            className="min-h-10 shrink-0 rounded-[9px] px-3 text-[13px] font-semibold text-fg-muted transition-colors hover:bg-bg-sunken hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid"
             onClick={onClose}
             type="button"
           >
             Close
           </button>
           <button
-            className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-[9px] bg-accent px-4 text-[13px] font-semibold text-code-fg hover:bg-accent-hover"
+            className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-[9px] bg-accent-solid px-4 text-[13px] font-semibold text-primary-contrast hover:bg-accent-solid-hover"
             onClick={() => downloadAuditEntries([entry], "json", entry.metadata.event_id)}
             type="button"
           >
@@ -153,7 +153,7 @@ export function AuditDetailSheet({ entry, onClose }: Readonly<AuditDetailSheetPr
           <DetailField label="Source">
             <div className="flex min-w-0 items-center gap-1.5 font-mono text-xs text-fg">
               <span>{entry.source.channel.toUpperCase()}</span>
-              <span className="text-fg-faint">·</span>
+              <span className="text-fg-muted">·</span>
               <span className="truncate">{entry.source.ip}</span>
               {entry.source.ip !== "Not recorded" ? (
                 <CopyButton label="Copy IP" size="sm" text={entry.source.ip} />
@@ -162,7 +162,7 @@ export function AuditDetailSheet({ entry, onClose }: Readonly<AuditDetailSheetPr
           </DetailField>
         </div>
         {entry.statusReason ? (
-          <div className="rounded-[11px] border border-red px-[15px] py-3 text-[12.5px] text-red">
+          <div className="rounded-[11px] border border-red px-[15px] py-3 text-[12.5px] text-red-text">
             {entry.statusReason}
           </div>
         ) : null}

@@ -7,7 +7,7 @@ export function OAuthConsentExpired({ client }: Readonly<{ client: OAuthConsentC
   const copy = getOAuthConsentCopy(client);
   return (
     <Card className="w-full max-w-[520px] p-6 sm:p-8" size="lg">
-      <span className="grid h-11 w-11 place-items-center rounded-xl bg-yellow/15 text-yellow">
+      <span className="grid h-11 w-11 place-items-center rounded-xl bg-yellow/15 text-yellow-text">
         <HourglassLow aria-hidden size={24} weight="fill" />
       </span>
       <h2 className="mt-5 mb-0 text-[20px] font-semibold tracking-[-0.5px]">Request expired</h2>
@@ -25,7 +25,7 @@ export function OAuthConsentExpired({ client }: Readonly<{ client: OAuthConsentC
           {copy.retryCommand}
         </div>
       ) : null}
-      <p className="mt-4 mb-0 text-[12.5px] text-fg-faint">This tab can be closed.</p>
+      <p className="mt-4 mb-0 text-[12.5px] text-fg-muted">This tab can be closed.</p>
     </Card>
   );
 }

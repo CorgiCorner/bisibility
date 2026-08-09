@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui";
+import { Button, inputClassName } from "@/components/ui";
 import { normalizeGa4PropertyId } from "@/lib/providers/analytics/property-id";
 
 type Ga4PropertyManualEntryProps = {
@@ -17,10 +17,9 @@ type Ga4PropertyManualEntryProps = {
 };
 
 const labelClass =
-  "flex flex-col gap-[7px] font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint";
+  "flex flex-col gap-[7px] font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted";
 
-const inputClass =
-  "rounded-[9px] border border-border-strong bg-bg-sunken px-[13px] py-[11px] font-mono text-[13px] font-medium text-fg outline-none placeholder:text-fg-faint focus-visible:border-accent";
+const inputClass = `${inputClassName} rounded-[9px] px-[13px] py-[11px] font-mono text-[13px] font-medium`;
 
 export function Ga4PropertyManualEntry({
   hasOptions,
@@ -55,7 +54,7 @@ export function Ga4PropertyManualEntry({
   return (
     <div className="flex flex-col gap-3">
       <label className={labelClass}>
-        GA4 property id
+        Google Analytics 4 property id
         <input
           autoComplete="off"
           aria-invalid={Boolean(propertyError)}
@@ -75,11 +74,11 @@ export function Ga4PropertyManualEntry({
         />
       </label>
       <p className="m-0 text-[11.5px] leading-5 text-fg-muted">
-        In GA4, open Admin (gear, bottom-left) → Property settings → Property details and copy the
-        digits-only Property ID. You can also search for “Property ID” in Analytics. Do not paste a
-        G- Measurement ID or UA- tracking ID. See Google&apos;s{" "}
+        In Google Analytics 4, open Admin (gear, bottom-left) → Property settings → Property details
+        and copy the digits-only Property ID. You can also search for “Property ID” in Analytics. Do
+        not paste a G- Measurement ID or UA- tracking ID. See Google&apos;s{" "}
         <a
-          className="text-accent underline"
+          className="text-accent-text underline"
           href="https://developers.google.com/analytics/devguides/reporting/data/v1/property-id"
           rel="noreferrer"
           target="_blank"
@@ -88,7 +87,7 @@ export function Ga4PropertyManualEntry({
         </a>{" "}
         and{" "}
         <a
-          className="text-accent underline"
+          className="text-accent-text underline"
           href="https://support.google.com/analytics/answer/12270356?hl=en"
           rel="noreferrer"
           target="_blank"
@@ -98,7 +97,7 @@ export function Ga4PropertyManualEntry({
         .
       </p>
       {propertyError ? (
-        <p className="m-0 text-[12.5px] leading-5 text-red" role="alert">
+        <p className="m-0 text-[12.5px] leading-5 text-red-text" role="alert">
           {propertyError}
         </p>
       ) : null}

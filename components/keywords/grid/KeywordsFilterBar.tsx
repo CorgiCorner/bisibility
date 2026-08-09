@@ -73,7 +73,7 @@ export function KeywordsFilterBar({
               )}
               htmlFor="keywords-filter"
             >
-              <MagnifyingGlass className="shrink-0 text-fg-faint" size={15} />
+              <MagnifyingGlass className="shrink-0 text-fg-muted" size={15} />
               <InputBase
                 aria-label="Filter keywords"
                 fullWidth
@@ -108,7 +108,7 @@ export function KeywordsFilterBar({
           className={`mt-3 flex min-w-0 flex-wrap items-center gap-2 ${scopeChipOnly ? "sm:hidden" : ""}`}
         >
           {hasFilters ? (
-            <span className="mr-1 font-mono text-[10px] font-semibold uppercase tracking-[0.6px] text-fg-faint">
+            <span className="mr-1 font-mono text-[10px] font-semibold uppercase tracking-[0.6px] text-fg-muted">
               Active filters
             </span>
           ) : null}
@@ -128,7 +128,7 @@ export function KeywordsFilterBar({
           {hasFilters ? (
             <button
               aria-label="Clear all search and filters"
-              className="min-h-7 rounded-full px-2.5 text-[12px] font-semibold text-fg-muted transition-colors hover:bg-bg-sunken hover:text-accent"
+              className="min-h-7 rounded-full px-2.5 text-[12px] font-semibold text-fg-muted transition-colors hover:bg-bg-sunken hover:text-accent-text"
               onClick={onClearFilters}
               type="button"
             >

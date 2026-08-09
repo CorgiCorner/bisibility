@@ -14,12 +14,12 @@ const emptyUsage = {
 };
 
 describe("ProviderUsage", () => {
-  it("renders the segmented meter, workspace KPIs and the docs link", () => {
+  it("renders the segmented meter, project KPIs and the docs link", () => {
     render(<ProviderUsage usage={settingsFixtures.usage} />);
 
     expect(screen.getByText("$12.40 / $50.00")).toBeInTheDocument();
     expect(screen.getByText("DataForSEO $9.40")).toBeInTheDocument();
-    expect(screen.getByText("SerpAPI $3.00")).toBeInTheDocument();
+    expect(screen.getByText("SerpApi $3.00")).toBeInTheDocument();
     expect(screen.getByText("7,442")).toBeInTheDocument();
     expect(screen.getByText("$12.40")).toBeInTheDocument();
     expect(screen.getByText("~$17.50/mo")).toBeInTheDocument();
@@ -54,7 +54,7 @@ describe("ProviderUsage", () => {
     render(<ProviderUsage usage={settingsFixtures.usage} />);
 
     const notSupported = screen.getByText("not supported");
-    expect(notSupported).toHaveClass("italic", "text-fg-faint");
+    expect(notSupported).toHaveClass("italic", "text-fg-muted");
   });
 
   it("hides legend squares next to provider names for a single provider", () => {
@@ -121,7 +121,7 @@ describe("ProviderUsage", () => {
   it("surfaces the server-provided message when saving the budget fails", async () => {
     const user = userEvent.setup();
     const submit = vi.fn(async () => {
-      throw new Error("Only workspace owners can change the budget.");
+      throw new Error("Only project owners can change the budget.");
     });
     render(
       <ProviderUsage
@@ -134,7 +134,7 @@ describe("ProviderUsage", () => {
     await user.click(screen.getByRole("button", { name: "Save budget" }));
 
     expect(
-      await screen.findByText("Only workspace owners can change the budget."),
+      await screen.findByText("Only project owners can change the budget."),
     ).toBeInTheDocument();
     // The dialog stays open so the user can retry.
     expect(screen.getByRole("textbox", { name: "Monthly budget in dollars" })).toBeInTheDocument();

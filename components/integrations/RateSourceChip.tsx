@@ -4,9 +4,9 @@ import { cn } from "@/lib/ui/cn";
 type RateSourceChipProps = Pick<ProviderRateData, "checkedAt" | "sampleSize" | "source" | "unit">;
 
 const sourceClass = {
-  list: "text-fg-faint",
-  manual: "text-accent",
-  measured: "text-green",
+  list: "text-fg-muted",
+  manual: "text-accent-text",
+  measured: "text-green-text",
   unknown: "text-yellow-text",
 } as const;
 

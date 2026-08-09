@@ -30,6 +30,8 @@ export type {
   UrlPresenceView,
 } from "./keyword-row";
 
+import { trackedProjectDomain } from "@/lib/schemas/project";
+
 export const KEYWORD_LIST_MAX = 1000;
 const LIST_CHECK_HISTORY = 12;
 // Counts newest attempts, including failed checks.
@@ -162,7 +164,7 @@ export async function getKeywordRows(projectId: string): Promise<KeywordRow[]> {
     fetchProjectKeywordMetrics(project.id, KEYWORD_LIST_MAX),
     fetchProjectKeywordTraffic(project.id),
   ]);
-  const meta = { defaults, domain: project.domain };
+  const meta = { defaults, domain: trackedProjectDomain(project.domain) ?? "" };
   return keywords.map((keyword) =>
     mapKeyword(
       keyword,
@@ -252,7 +254,7 @@ export async function getKeywordDetail(projectId: string, keywordId: string) {
     { ...record, urlPresence },
     {
       defaults: record.project.defaults,
-      domain: record.project.domain,
+      domain: trackedProjectDomain(record.project.domain) ?? "",
     },
     metrics,
     traffic.query ?? undefined,

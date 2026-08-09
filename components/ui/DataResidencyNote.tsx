@@ -17,7 +17,12 @@ export function DataResidencyNote({ className, message }: Readonly<DataResidency
         className,
       )}
     >
-      <ShieldCheck aria-hidden className="mt-0.5 shrink-0 text-green" size={15} weight="fill" />
+      <ShieldCheck
+        aria-hidden
+        className="mt-0.5 shrink-0 text-green-text"
+        size={15}
+        weight="fill"
+      />
       <span>{message}</span>
     </p>
   );

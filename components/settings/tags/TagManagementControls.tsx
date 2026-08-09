@@ -1,5 +1,6 @@
 "use client";
 
+import { inputClassName } from "@/components/ui";
 import { type ActionResult, unwrapActionResult } from "@/lib/actions/action-result";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { actionErrorMessage } from "@/lib/ui/action-error";
@@ -45,9 +46,8 @@ export type TagManagementControlsProps = {
 };
 
 const iconButtonClass =
-  "grid h-8 w-8 place-items-center rounded-lg border border-border-strong bg-bg-elev text-fg-muted outline-none transition-colors hover:border-accent hover:text-accent focus-visible:border-accent focus-visible:text-accent disabled:cursor-not-allowed disabled:opacity-50";
-const inputClass =
-  "h-8 min-w-0 flex-1 rounded-lg border border-border-strong bg-bg-sunken px-2.5 text-[12.5px] font-medium text-fg outline-none focus:border-accent";
+  "grid h-8 w-8 place-items-center rounded-lg border border-border-strong bg-bg-elev text-fg-muted outline-none transition-colors hover:border-accent hover:text-accent-text focus-visible:border-accent focus-visible:text-accent-text disabled:cursor-not-allowed disabled:opacity-50";
+const inputClass = `${inputClassName} h-8 min-w-0 flex-1 rounded-lg px-2.5 text-[12.5px] font-medium`;
 
 function errorMessage(error: unknown, fallback: string) {
   return actionErrorMessage(error, fallback);
@@ -148,7 +148,7 @@ export function TagManagementControls({
             <X aria-hidden size={14} weight="bold" />
           </button>
         </span>
-        <span className="font-mono text-[10.5px] text-red">
+        <span className="font-mono text-[10.5px] text-red-text">
           {errors.toName?.message ?? message}
         </span>
       </form>

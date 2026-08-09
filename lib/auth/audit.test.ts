@@ -33,7 +33,7 @@ const publicId = (prefix: string) => `${prefix}_abcdefghijklmnopqrstuvwx`;
 const addressableTargets = [
   ["alert_rule", "alr", "Alert rule"],
   ["api_key", "key", "API key"],
-  ["cloud_import_job", "imp", "Cloud import job"],
+  ["cloud_import_job", "imp", "Instance import job"],
   ["competitor", "cmp", "Competitor"],
   ["ingest_hook", "dwh", "Ingest hook"],
   ["invite", "inv", "Invite"],

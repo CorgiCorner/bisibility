@@ -38,6 +38,7 @@ function project(overrides: Record<string, unknown> = {}) {
     ],
     isSample: false,
     name: "Example",
+    onboardingCompletedAt: new Date("2026-06-01T12:00:00.000Z"),
     providerConnections: [],
     publicId: "prj_abcdefghijklmnopqrstuvwx",
     ...overrides,
@@ -81,6 +82,7 @@ describe("listWorkspaces", () => {
               }),
             }),
           }),
+          onboardingCompletedAt: true,
         }),
       }),
     );
@@ -88,6 +90,7 @@ describe("listWorkspaces", () => {
       id: "prj_abcdefghijklmnopqrstuvwx",
       isSample: false,
       latestCompletedRankCheckAt: new Date("2026-06-30T12:00:00.000Z"),
+      onboardingCompletedAt: new Date("2026-06-01T12:00:00.000Z"),
       state: "populated",
     });
   });

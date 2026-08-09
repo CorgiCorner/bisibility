@@ -65,7 +65,7 @@ export const ruleSeverityMeta = {
   },
   warning: {
     background: "color-mix(in srgb, var(--yellow) 14%, transparent)",
-    color: "var(--yellow)",
+    color: "var(--yellow-text)",
     label: "Warning",
   },
 } satisfies Record<RuleSeverity, { background: string; color: string; label: string }>;

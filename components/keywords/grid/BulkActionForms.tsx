@@ -7,7 +7,7 @@ import {
   keywordCountLabel,
   splitTagInput,
 } from "@/components/keywords/action-utils";
-import { Button, FieldLabel, MenuSelect, useToast } from "@/components/ui";
+import { Button, FieldLabel, inputClassName, MenuSelect, useToast } from "@/components/ui";
 import {
   type CostRateInfo,
   formatEstimateCents,
@@ -38,9 +38,8 @@ type BulkFormProps<TInput> = {
 };
 
 const labelClass =
-  "flex flex-col gap-1.5 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint";
-const inputClass =
-  "min-h-10 rounded-lg border border-border-strong bg-bg-sunken px-3 font-sans text-[13px] normal-case tracking-normal text-fg outline-none transition-colors focus:border-accent";
+  "flex flex-col gap-1.5 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted";
+const inputClass = `${inputClassName} min-h-10 rounded-lg px-3 font-sans text-[13px] normal-case tracking-normal`;
 const frequencyOptions = [
   { label: "Daily", value: "daily" },
   { label: "Weekly", value: "weekly" },
@@ -50,7 +49,7 @@ const frequencyOptions = [
   { label: "Custom cron", value: "custom_cron" },
 ] as const;
 const frequencyTriggerClass =
-  "min-h-10 w-full justify-between rounded-lg border-border-strong bg-bg-sunken px-3 font-sans text-[13px] font-normal normal-case tracking-normal";
+  "min-h-10 w-full justify-between rounded-lg border-border-strong bg-transparent px-3 font-sans text-[13px] font-normal normal-case tracking-normal";
 
 const noopUndo = () => undefined;
 
@@ -105,7 +104,7 @@ export function BulkTagForm({
           placeholder="Product, High intent"
           value={tagsText}
         />
-        {tagMessage ? <span className="text-red">{tagMessage}</span> : null}
+        {tagMessage ? <span className="text-red-text">{tagMessage}</span> : null}
       </label>
       <Button disabled={isSubmitting} size="sm" sx={{ minHeight: 40 }} type="submit">
         {isSubmitting ? "Adding..." : "Apply tag"}
@@ -227,7 +226,7 @@ export function BulkFrequencyForm({
             {...register("schedule.cronExpression")}
           />
           {errors.schedule?.cronExpression ? (
-            <span className="text-red">{errors.schedule.cronExpression.message}</span>
+            <span className="text-red-text">{errors.schedule.cronExpression.message}</span>
           ) : null}
         </div>
       ) : null}
@@ -246,7 +245,7 @@ export function BulkFrequencyForm({
           value={timezone}
         />
         {errors.schedule?.timezone ? (
-          <span className="text-red">{errors.schedule.timezone.message}</span>
+          <span className="text-red-text">{errors.schedule.timezone.message}</span>
         ) : null}
       </div>
       <div className={labelClass}>

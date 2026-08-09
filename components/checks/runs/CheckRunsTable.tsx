@@ -53,7 +53,7 @@ function PositionDelta({ run }: Readonly<{ run: CheckRunRow }>) {
   return (
     <span
       className={`inline-flex shrink-0 items-center gap-0.5 rounded px-1.5 py-0.5 font-mono text-[9.5px] font-semibold ${
-        delta > 0 ? "bg-green/10 text-green" : "bg-red/10 text-red"
+        delta > 0 ? "bg-green/10 text-green-text" : "bg-red/10 text-red-text"
       }`}
     >
       <Icon aria-hidden size={9} weight="bold" />
@@ -71,7 +71,7 @@ function ProviderCell({ run }: Readonly<{ run: CheckRunRow }>) {
     <div className="flex min-w-0 flex-wrap items-center gap-1">
       <span className="truncate">{label}</span>
       {run.viaFallback ? (
-        <span className="rounded-full bg-yellow/10 px-1.5 py-0.5 font-mono text-[9.5px] font-semibold text-yellow-strong">
+        <span className="rounded-full bg-yellow/10 px-1.5 py-0.5 font-mono text-[9.5px] font-semibold text-yellow-text">
           fallback
         </span>
       ) : null}
@@ -85,7 +85,7 @@ function ResultCell({ now, run }: Readonly<{ now: Date; run: CheckRunRow }>) {
   return (
     <div className="flex min-w-0 items-center gap-1.5">
       <span
-        className={`min-w-0 truncate ${run.status === "failed" ? "text-red" : "text-fg"}`}
+        className={`min-w-0 truncate ${run.status === "failed" ? "text-red-text" : "text-fg"}`}
         title={value}
       >
         {value}
@@ -124,7 +124,7 @@ function RunCells({
       </td>
       <td className="min-w-0 px-3 py-3">
         <Link
-          className="block truncate font-semibold text-fg outline-none hover:text-accent focus-visible:text-accent"
+          className="block truncate font-semibold text-fg outline-none hover:text-accent-text focus-visible:text-accent-text"
           href={keywordHref(run.keywordPublicId)}
         >
           {run.keyword}
@@ -182,7 +182,7 @@ function RunTableBody({
                   <button
                     aria-expanded={expanded}
                     aria-label={`${expanded ? "Collapse" : "Expand"} ${run.keyword} run`}
-                    className="inline-grid h-7 w-7 place-items-center rounded-lg text-fg-muted outline-none hover:bg-bg-inset hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+                    className="inline-grid h-7 w-7 place-items-center rounded-lg text-fg-muted hover:bg-bg-inset hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-solid"
                     onClick={() => onToggleRun(run.id)}
                     type="button"
                   >

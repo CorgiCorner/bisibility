@@ -14,9 +14,9 @@ export type SummaryStripProps = {
 };
 
 const iconToneClass = {
-  dropped: "text-red",
-  improved: "text-green",
-  steady: "text-fg-faint",
+  dropped: "text-red-text",
+  improved: "text-green-text",
+  steady: "text-fg-muted",
 } satisfies Record<SummaryStripTone, string>;
 
 function SummaryIcon({ tone }: Readonly<{ tone: SummaryStripTone }>) {

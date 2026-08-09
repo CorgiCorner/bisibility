@@ -26,15 +26,15 @@ const severityIcons: Record<AlertSeverity, Icon> = {
 };
 
 const deliveryStateMeta = {
-  dead_letter: { className: "text-red", label: "Failed / dead letter" },
-  delivered: { className: "text-green", label: "Delivered" },
-  delivering: { className: "text-yellow", label: "Delivering / retrying" },
-  digest_pending: { className: "text-yellow", label: "Digest pending" },
-  digested: { className: "text-green", label: "Delivered in digest" },
-  digesting: { className: "text-yellow", label: "Digesting" },
-  pending: { className: "text-yellow", label: "Pending" },
-  skipped: { className: "text-fg-faint", label: "Skipped" },
-  suppressed: { className: "text-fg-faint", label: "Suppressed by daily delivery-batch limit" },
+  dead_letter: { className: "text-red-text", label: "Failed / dead letter" },
+  delivered: { className: "text-green-text", label: "Delivered" },
+  delivering: { className: "text-yellow-text", label: "Delivering / retrying" },
+  digest_pending: { className: "text-yellow-text", label: "Digest pending" },
+  digested: { className: "text-green-text", label: "Delivered in digest" },
+  digesting: { className: "text-yellow-text", label: "Digesting" },
+  pending: { className: "text-yellow-text", label: "Pending" },
+  skipped: { className: "text-fg-muted", label: "Skipped" },
+  suppressed: { className: "text-fg-muted", label: "Suppressed by daily delivery-batch limit" },
 } satisfies Record<AlertDeliveryStateView, { className: string; label: string }>;
 
 function DeliveryStatus({ alert }: Readonly<{ alert: TriggeredAlertView }>) {
@@ -85,12 +85,12 @@ export function UnreadSummary({
                 <Icon aria-hidden size={14} weight="fill" />
               </span>
               <span className="text-[15px] font-semibold">{count}</span>
-              <span className="font-mono text-[11px] text-fg-faint">{meta.label}</span>
+              <span className="font-mono text-[11px] text-fg-muted">{meta.label}</span>
             </span>
           );
         })}
       </div>
-      <span className="font-mono text-[11px] text-fg-faint sm:ml-auto">last 48h</span>
+      <span className="font-mono text-[11px] text-fg-muted sm:ml-auto">last 48h</span>
     </Card>
   );
 }
@@ -133,16 +133,16 @@ export function AlertFeedRow({
           </span>
         </div>
         <p className="m-0 mt-2 flex items-center gap-1.5 text-[12.5px] text-fg-muted">
-          <Lightbulb aria-hidden className="shrink-0 text-accent" size={13} />
+          <Lightbulb aria-hidden className="shrink-0 text-accent-text" size={13} />
           {alert.action}
         </p>
         {alert.targetUrl && alert.rankingUrl ? (
-          <div className="mt-2 grid gap-1 font-mono text-[10.5px] text-fg-faint">
+          <div className="mt-2 grid gap-1 font-mono text-[10.5px] text-fg-muted">
             <span className="truncate">Target URL: {alert.targetUrl}</span>
             <span className="truncate">Ranking URL: {alert.rankingUrl}</span>
           </div>
         ) : null}
-        <p className="m-0 mt-2 font-mono text-[10.5px] text-fg-faint">
+        <p className="m-0 mt-2 font-mono text-[10.5px] text-fg-muted">
           {meta.label} / {alert.rule} / Google / US / Desktop / {alert.when}
         </p>
         <DeliveryStatus alert={alert} />

@@ -4,7 +4,6 @@ import { installSampleData } from "@/lib/actions/sample-data";
 import { appRootPath } from "@/lib/routing/app-path";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import Button, { type ButtonProps } from "@mui/material/Button";
-import { DatabaseIcon as Database } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
@@ -48,19 +47,21 @@ export function SampleDataButton({
   return (
     <span className={className}>
       <Button
+        aria-busy={pending}
         disabled={pending}
         fullWidth={fullWidth}
         onClick={handleClick}
         size={size}
-        startIcon={<Database size={15} weight="bold" />}
         sx={sx}
         type="button"
         variant={variant}
       >
-        {pending ? "Loading..." : label}
+        {/* The label keeps its words while the action runs: swapping it for "Loading..."
+            changed the width of a link inside a sentence, so the line reflowed on click. */}
+        <span aria-live="polite">{pending ? `${label}\u2026` : label}</span>
       </Button>
       {error ? (
-        <span className="mt-2 block text-xs text-red" role="alert">
+        <span className="mt-2 block text-xs text-red-text" role="alert">
           {error}
         </span>
       ) : null}

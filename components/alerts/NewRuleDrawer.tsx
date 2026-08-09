@@ -13,7 +13,7 @@ import {
   ProjectReadOnlyTooltip,
   useProjectWriteMode,
 } from "@/components/shell/ProjectWriteModeProvider";
-import { Button, MenuSelect, Sheet } from "@/components/ui";
+import { Button, inputClassName, MenuSelect, Sheet } from "@/components/ui";
 import type {
   AlertActionHandlers,
   AlertRuleView,
@@ -57,11 +57,10 @@ type NewRuleDrawerProps = {
 };
 
 const labelClass =
-  "flex flex-col gap-[7px] font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint";
-const fieldClass =
-  "rounded-[9px] border border-border-strong bg-bg-sunken px-3 py-2.5 text-[13px] font-medium text-fg outline-none focus:border-accent";
+  "flex flex-col gap-[7px] font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted";
+const fieldClass = `${inputClassName} rounded-[9px] px-3 py-2.5 text-[13px] font-medium`;
 const selectTriggerClass =
-  "mb-3 min-h-10 w-full justify-between rounded-[9px] border-border-strong bg-bg-sunken px-3 text-[13px] font-medium";
+  "mb-3 min-h-10 w-full justify-between rounded-[9px] border-border-strong bg-transparent px-3 text-[13px] font-medium";
 
 export function NewRuleDrawer({
   actions,
@@ -212,7 +211,7 @@ export function NewRuleDrawer({
         <label className={labelClass}>
           {"Rule name "}
           <input className={fieldClass} {...register("name")} />
-          {errors.name ? <span className="text-red">{errors.name.message}</span> : null}
+          {errors.name ? <span className="text-red-text">{errors.name.message}</span> : null}
         </label>
         <AlertSeveritySelect
           onChange={(value) =>
@@ -229,7 +228,7 @@ export function NewRuleDrawer({
           targetType={watch("targetType")}
         />
         <section>
-          <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint">
+          <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
             Condition
           </div>
           <input type="hidden" {...register("conditionType")} />
@@ -273,7 +272,7 @@ export function NewRuleDrawer({
         />
         {actionError ? (
           <p
-            className="m-0 flex items-center gap-1.5 font-mono text-[11.5px] text-red"
+            className="m-0 flex items-center gap-1.5 font-mono text-[11.5px] text-red-text"
             role="alert"
           >
             <X aria-hidden size={12} weight="bold" />
@@ -281,13 +280,13 @@ export function NewRuleDrawer({
           </p>
         ) : null}
         {actionWarning ? (
-          <p className="m-0 flex items-start gap-1.5 font-mono text-[11.5px] text-yellow">
+          <p className="m-0 flex items-start gap-1.5 font-mono text-[11.5px] text-yellow-text">
             <WarningCircle aria-hidden className="mt-0.5 shrink-0" size={12} weight="bold" />
             {actionWarning}
           </p>
         ) : null}
         <section>
-          <div className="mb-[9px] font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint">
+          <div className="mb-[9px] font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
             Preview
           </div>
           <div className="rounded-[11px] border border-border bg-bg-sunken px-[15px] py-3.5 text-[13.5px] leading-[1.55]">

@@ -82,9 +82,9 @@ describe("AdminAuditTable", () => {
       screen.queryByRole("button", { name: "Copy audit target instance_ops:unavailable" }),
     ).not.toBeInTheDocument();
     expect(screen.getByText("-")).toBeInTheDocument();
-    expect(screen.getByText("ok")).toHaveClass("text-green");
-    expect(screen.getByText("blocked")).toHaveClass("text-yellow");
-    expect(screen.getByText("failed")).toHaveClass("text-red");
+    expect(screen.getByText("ok")).toHaveClass("text-green-text");
+    expect(screen.getByText("blocked")).toHaveClass("text-yellow-text");
+    expect(screen.getByText("failed")).toHaveClass("text-red-text");
   });
 
   it("links to the next cursor while preserving the active filter", () => {

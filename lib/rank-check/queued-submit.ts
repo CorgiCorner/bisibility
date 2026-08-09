@@ -9,6 +9,7 @@ import {
   submitDataForSeoQueuedTasks,
 } from "@/lib/providers/serp/dataforseo-queued";
 import type { SerpDevice } from "@/lib/providers/types";
+import { trackedProjectDomain } from "@/lib/schemas/project";
 import { serpRankLocation } from "@/lib/serp/location";
 import { resolveSerpDepth, resolveSerpStopOnMatch } from "@/lib/serp/markets";
 import { queuedRankCheckConfig } from "./queued-config";
@@ -75,7 +76,7 @@ function providerTasks(batch: Awaited<ReturnType<typeof claimSubmission>>["batch
     correlationId: task.id,
     depth: resolveSerpDepth(task.rankCheck.requestedDepth ?? undefined),
     device: task.keyword.device as SerpDevice,
-    domain: batch.project.domain,
+    domain: trackedProjectDomain(batch.project.domain) ?? "",
     keyword: task.keyword.text,
     location: serpRankLocation(task.keyword.locationRef),
     stopOnMatch: resolveSerpStopOnMatch(batch.project.defaults?.serpStopOnMatch),

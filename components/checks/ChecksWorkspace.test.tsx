@@ -39,7 +39,7 @@ function renderWorkspace() {
       projectRef="prj_1"
       providerOptions={[
         { label: "DataForSEO", value: "dataforseo" },
-        { label: "SerpAPI", value: "serpapi" },
+        { label: "SerpApi", value: "serpapi" },
       ]}
       upcoming={upcomingViewFixture}
     />,
@@ -149,7 +149,7 @@ describe("ChecksWorkspace", () => {
     renderWorkspace();
 
     fireEvent.click(screen.getByRole("button", { name: "Filter by provider" }));
-    fireEvent.click(await screen.findByRole("menuitem", { name: "SerpAPI" }));
+    fireEvent.click(await screen.findByRole("menuitem", { name: "SerpApi" }));
     await waitFor(() => {
       expect(mocks.loadCheckRuns).toHaveBeenLastCalledWith({
         cursor: undefined,

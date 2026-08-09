@@ -15,7 +15,7 @@ export function AccountPageHeader({ active }: Readonly<AccountPageHeaderProps>) 
   return (
     <header>
       <nav
-        className="flex w-max max-w-full items-center gap-0.5 overflow-x-auto rounded-[10px] border border-border-strong bg-bg-sunken p-[3px]"
+        className="flex w-max max-w-full items-center gap-0.5 overflow-x-auto rounded-[10px] border border-border-strong bg-transparent p-[3px]"
         aria-label="Account settings"
       >
         {tabs.map((tab) => {
@@ -25,7 +25,7 @@ export function AccountPageHeader({ active }: Readonly<AccountPageHeaderProps>) 
               aria-current={isActive ? "page" : undefined}
               className={cn(
                 "rounded-lg px-4 py-[7px] text-[13px] font-semibold leading-normal text-fg-muted transition-colors hover:text-fg",
-                isActive && "bg-accent text-white hover:text-white",
+                isActive && "bg-accent-solid text-primary-contrast hover:text-primary-contrast",
               )}
               href={tab.href}
               key={tab.href}

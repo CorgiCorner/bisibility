@@ -74,7 +74,7 @@ const requiredGuides = {
   "guides/analytics.mdx": ["TRAFFIC_SYNC_ENABLED", "TRAFFIC_SNAPSHOT_RETENTION_DAYS", "28-day"],
   "guides/competitors.mdx": ["keyword cap", "share of voice", "CSV"],
   "guides/email.mdx": ["EMAIL_PROVIDER", "RESEND_API_KEY", "SES_REGION", "SMTP_URL", "sandbox"],
-  "guides/migration.mdx": ["single-use", "mig_", "Cloud import"],
+  "guides/migration.mdx": ["single-use", "mig_", "Instance import"],
   "guides/operations.mdx": [
     "PostgreSQL",
     "BISIBILITY_SECRETS_KEY",

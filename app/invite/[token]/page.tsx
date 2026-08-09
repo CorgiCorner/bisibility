@@ -1,14 +1,14 @@
 import { createHash } from "node:crypto";
 import { InviteSignInForm } from "@/components/invite/InviteSignInForm";
 import { InviteSignOutButton } from "@/components/invite/InviteSignOutButton";
+import { BrandLockup } from "@/components/ui";
 import { acceptInvite } from "@/lib/actions/team";
 import { getSession } from "@/lib/auth/session";
 import { getInviteByTokenHash } from "@/lib/queries/invite";
 import { appPath } from "@/lib/routing/app-path";
 import { createNoindexMetadata } from "@/lib/seo/noindex";
 import {
-  ArrowRightIcon as ArrowRight,
-  ChartLineUpIcon as ChartLineUp,
+  CaretRightIcon as CaretRight,
   CheckCircleIcon as CheckCircle,
   ClockCountdownIcon as ClockCountdown,
   WarningCircleIcon as WarningCircle,
@@ -41,7 +41,7 @@ const roleLabels = {
 
 const invalidInviteCopy = {
   expired: {
-    body: "Ask a workspace admin to send a fresh invite.",
+    body: "Ask a project admin to send a fresh invite.",
     title: "This invite has expired",
   },
   invalid: {
@@ -56,7 +56,7 @@ const invalidInviteCopy = {
 
 export const metadata: Metadata = createNoindexMetadata({
   title: "Team invite | bisibility",
-  description: "Accept a bisibility workspace invitation.",
+  description: "Accept a bisibility project invitation.",
 });
 
 export const dynamic = "force-dynamic";
@@ -100,11 +100,8 @@ function Shell({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <main className="flex min-h-dvh items-center justify-center bg-bg px-5 py-10 text-fg">
       <div className="w-full max-w-[470px] rounded-[16px] border border-border bg-bg-elev p-6">
-        <Link className="inline-flex items-center gap-2 text-fg no-underline" href="/">
-          <span className="grid h-[30px] w-[30px] place-items-center rounded-lg bg-accent text-white">
-            <ChartLineUp aria-hidden size={17} weight="bold" />
-          </span>
-          <span className="text-[18px] font-bold">bisibility</span>
+        <Link className="inline-flex w-fit no-underline" href="/">
+          <BrandLockup />
         </Link>
         {children}
       </div>
@@ -117,13 +114,13 @@ function InvalidInvite({ status }: Readonly<{ status: InviteStatus }>) {
   return (
     <Shell>
       <div className="mt-8">
-        <span className="grid h-12 w-12 place-items-center rounded-[13px] bg-red/10 text-red">
+        <span className="grid h-12 w-12 place-items-center rounded-[13px] bg-red/10 text-red-text">
           <WarningCircle aria-hidden size={24} weight="fill" />
         </span>
         <h1 className="mt-4 mb-0 text-[24px] font-semibold leading-tight">{copy.title}</h1>
         <p className="mt-2 mb-0 text-[14px] leading-relaxed text-fg-muted">{copy.body}</p>
         <Link
-          className="mt-5 inline-flex min-h-10 items-center gap-2 rounded-[9px] border border-border-strong bg-bg-elev px-4 text-[13px] font-semibold text-fg hover:border-accent hover:text-accent"
+          className="mt-5 inline-flex min-h-10 items-center gap-2 rounded-[9px] border border-border-strong bg-bg-elev px-4 text-[13px] font-semibold text-fg hover:border-accent hover:text-accent-text"
           href="/login"
         >
           Go to sign in
@@ -155,10 +152,10 @@ export default async function InvitePage({ params }: Readonly<InvitePageProps>) 
     inviteAction = (
       <form action={acceptInviteAction} className="mt-5">
         <button
-          className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[9px] bg-accent px-4 text-[13px] font-semibold text-white hover:opacity-90"
+          className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[9px] bg-accent-solid px-4 text-[13px] font-semibold text-primary-contrast hover:opacity-90"
           type="submit"
         >
-          Accept invite <ArrowRight aria-hidden size={15} weight="bold" />
+          Accept invite <CaretRight aria-hidden size={15} weight="bold" />
         </button>
       </form>
     );
@@ -179,10 +176,10 @@ export default async function InvitePage({ params }: Readonly<InvitePageProps>) 
   return (
     <Shell>
       <div className="mt-8">
-        <span className="grid h-12 w-12 place-items-center rounded-[13px] bg-accent-soft text-accent">
+        <span className="grid h-12 w-12 place-items-center rounded-[13px] bg-accent-soft text-accent-text">
           <CheckCircle aria-hidden size={24} weight="fill" />
         </span>
-        <p className="mt-5 mb-0 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint">
+        <p className="mt-5 mb-0 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
           Team invite
         </p>
         <h1 className="mt-2 mb-0 text-[25px] font-semibold leading-tight">

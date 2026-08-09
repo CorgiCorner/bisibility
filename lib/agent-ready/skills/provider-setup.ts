@@ -23,7 +23,7 @@ provider's settings, or triage a provider whose checks are failing.
 ## Prerequisites
 
 - A bisibility **origin / base URL**. Resolve it before calling anything:
-  EU Cloud is \`https://eu.bisibility.com/api/v1\`; self-hosted is
+  EU hosted region is \`https://eu.bisibility.com/api/v1\`; self-hosted is
   \`https://your-host.example/api/v1\`. Use whichever the user/instance gives you.
 - A **bearer API key with \`write\` scope** in \`$BISIBILITY_API_KEY\`. Send it as
   \`Authorization: Bearer $BISIBILITY_API_KEY\`. Never print, log, or echo the key.

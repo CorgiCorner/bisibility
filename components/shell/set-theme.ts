@@ -1,3 +1,8 @@
 "use client";
 
-export { applyTheme, readTheme, type ThemeMode } from "@/lib/theme/browser-theme";
+export {
+  applyTheme,
+  readTheme,
+  type ThemeMode,
+  type ThemePreference,
+} from "@/lib/theme/browser-theme";

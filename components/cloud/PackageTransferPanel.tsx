@@ -1,9 +1,10 @@
 "use client";
 
+import { Button } from "@/components/ui";
 import type { MigrationImportCompletion } from "@/lib/migration/result";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import {
-  ArrowRightIcon as ArrowRight,
+  CaretRightIcon as CaretRight,
   CheckCircleIcon as CheckCircle,
   CloudArrowUpIcon as CloudArrowUp,
   DownloadSimpleIcon as DownloadSimple,
@@ -78,11 +79,11 @@ function TransferStatus({
     <>
       {file ? (
         <div className="mx-5 mb-4 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-[11px] border border-border bg-bg-sunken px-3.5 py-3">
-          <CheckCircle aria-hidden className="text-green" size={15} weight="fill" />
+          <CheckCircle aria-hidden className="text-green-text" size={15} weight="fill" />
           <span className="min-w-0 flex-1 truncate font-mono text-[11.5px] text-fg-muted">
             {displayedFilename ?? file.filename}
           </span>
-          <span className="font-mono text-[11px] text-fg-faint">{packageCountSummary(file)}</span>
+          <span className="font-mono text-[11px] text-fg-muted">{packageCountSummary(file)}</span>
         </div>
       ) : null}
       {progress ? (
@@ -90,7 +91,7 @@ function TransferStatus({
           <div className="flex items-center justify-between gap-3 text-[12px]">
             <span className="font-medium text-fg-muted">{progress.message}</span>
             {progress.totalChunks > 0 ? (
-              <span className="font-mono text-[11px] text-fg-faint">
+              <span className="font-mono text-[11px] text-fg-muted">
                 {progress.sentChunks} of {progress.totalChunks}
               </span>
             ) : null}
@@ -99,7 +100,7 @@ function TransferStatus({
       ) : null}
       {!hasToken ? (
         <div className="mx-5 mb-4 flex items-start gap-2.5 rounded-[11px] border border-border bg-bg px-3.5 py-3 text-[12.5px] leading-5 text-fg-muted">
-          <WarningCircle aria-hidden className="mt-px flex-none text-accent" size={15} />
+          <WarningCircle aria-hidden className="mt-px flex-none text-accent-text" size={15} />
           {missingTokenMessage}
         </div>
       ) : null}
@@ -231,7 +232,7 @@ export function PackageTransferPanel({
   return (
     <div className="mt-[18px] overflow-hidden rounded-[14px] border border-border bg-bg-elev">
       <div className="flex items-center gap-[13px] border-border-soft border-b p-[16px_20px]">
-        <span className="grid h-[38px] w-[38px] flex-none place-items-center rounded-[10px] bg-blue/15 text-blue">
+        <span className="grid h-[38px] w-[38px] flex-none place-items-center rounded-[10px] bg-blue/15 text-blue-text">
           <FileJs aria-hidden size={20} weight="fill" />
         </span>
         <div className="min-w-0 flex-1">
@@ -249,18 +250,21 @@ export function PackageTransferPanel({
       >
         {serverExport ? null : (
           <>
-            <button
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[10px] border border-border-strong bg-bg px-3.5 font-semibold text-[13px] disabled:cursor-not-allowed disabled:opacity-55"
+            <Button
               disabled={isBusy}
+              loading={busy === "export"}
+              loadingLabel="Exporting..."
               onClick={handleExport}
+              size="lg"
+              startIcon={<DownloadSimple aria-hidden size={15} />}
               type="button"
+              variant="secondary"
             >
-              <DownloadSimple aria-hidden size={15} />
-              {busy === "export" ? "Exporting..." : "Export package"}
-            </button>
+              Export package
+            </Button>
             <label
-              className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-[10px] border border-border-strong bg-bg px-3.5 font-semibold text-[13px] ${
-                isBusy ? "cursor-not-allowed opacity-55" : "cursor-pointer"
+              className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-[10px] border border-border-strong bg-bg-elev px-3.5 font-medium text-[13px] text-fg-muted transition-colors hover:bg-bg-sunken hover:text-fg focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent-solid ${
+                isBusy ? "cursor-not-allowed text-fg-muted" : "cursor-pointer"
               }`}
             >
               <FileArrowUp aria-hidden size={15} />
@@ -275,16 +279,19 @@ export function PackageTransferPanel({
             </label>
           </>
         )}
-        <button
-          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[10px] bg-accent px-4 font-semibold text-[13px] text-white disabled:cursor-not-allowed disabled:opacity-55"
+        <Button
           disabled={isBusy || !hasToken || (!serverExport && !file)}
+          endIcon={<CaretRight aria-hidden size={12} weight="bold" />}
+          loading={busy === "transfer"}
+          loadingLabel="Transferring..."
           onClick={handleTransfer}
+          size="lg"
+          startIcon={<CloudArrowUp aria-hidden size={15} weight="fill" />}
           type="button"
+          variant="primary"
         >
-          <CloudArrowUp aria-hidden size={15} weight="fill" />
-          {busy === "transfer" ? "Transferring..." : "Transfer"}
-          <ArrowRight aria-hidden size={12} weight="bold" />
-        </button>
+          Transfer
+        </Button>
       </div>
 
       <TransferStatus

@@ -44,7 +44,7 @@ export function CapacityMeter({
           style={{ background: meterColor(meter), width: `${percentage}%` }}
         />
       </span>
-      <span className="inline-flex items-center whitespace-nowrap font-mono text-[11px] text-fg-faint">
+      <span className="inline-flex items-center whitespace-nowrap font-mono text-[11px] text-fg-muted">
         {label}
         <span className="ml-[5px] inline-flex">
           <InfoTooltip text={tooltip} />
@@ -58,7 +58,7 @@ export function GoogleCapacityNote({ justMissed }: Readonly<{ justMissed: boolea
   return (
     <p
       className={`mt-1.5 mb-0 px-0.5 text-center text-xs leading-[1.55] ${
-        justMissed ? "text-red" : "text-fg-faint"
+        justMissed ? "text-red-text" : "text-fg-muted"
       }`}
     >
       {justMissed ? (
@@ -85,8 +85,13 @@ export function EmailCapacityPanel({
     <>
       {justMissed ? (
         <div className="mb-2.5 flex items-start gap-2.5 rounded-[11px] border border-red/25 bg-accent-soft px-3.5 py-3">
-          <HourglassLow aria-hidden className="mt-px shrink-0 text-red" size={16} weight="fill" />
-          <p className="m-0 text-[12.5px] leading-[1.55] text-red">
+          <HourglassLow
+            aria-hidden
+            className="mt-px shrink-0 text-red-text"
+            size={16}
+            weight="fill"
+          />
+          <p className="m-0 text-[12.5px] leading-[1.55] text-red-text">
             <strong className="font-semibold">Just missed it.</strong> The last login codes went out
             while you were on this page - nothing was sent to your address.
           </p>
@@ -94,7 +99,12 @@ export function EmailCapacityPanel({
       ) : null}
       <div className="flex flex-col gap-3.5 rounded-xl border border-border bg-bg-sunken px-4 py-[18px]">
         <div className="flex items-start gap-[11px]">
-          <MoonStars aria-hidden className="mt-px shrink-0 text-yellow" size={18} weight="fill" />
+          <MoonStars
+            aria-hidden
+            className="mt-px shrink-0 text-yellow-text"
+            size={18}
+            weight="fill"
+          />
           <p className="m-0 text-[13px] leading-[1.6] text-fg-muted">
             <strong className="font-semibold text-fg">
               {monthly
@@ -107,7 +117,7 @@ export function EmailCapacityPanel({
           </p>
         </div>
         <a
-          className="flex items-center justify-center gap-2 rounded-[10px] border border-border-strong bg-bg-elev p-[11px] text-[13.5px] font-semibold text-fg no-underline hover:border-fg-faint"
+          className="flex items-center justify-center gap-2 rounded-[10px] border border-border-strong bg-bg-elev p-[11px] text-[13.5px] font-semibold text-fg no-underline hover:border-fg-muted"
           href={SELF_HOSTING_URL}
           rel="noreferrer noopener"
           target="_blank"
@@ -126,7 +136,7 @@ export function FullCapacityCard({
   const monthly = emailBinding === "monthly";
   return (
     <div className="flex flex-col items-center gap-4 text-center">
-      <span className="grid h-[54px] w-[54px] place-items-center rounded-full bg-accent-soft text-yellow">
+      <span className="grid h-[54px] w-[54px] place-items-center rounded-full bg-accent-soft text-yellow-text">
         <MoonStars aria-hidden size={28} weight="fill" />
       </span>
       <div>
@@ -141,7 +151,7 @@ export function FullCapacityCard({
       </div>
       <div className="mt-1 flex w-full flex-col gap-[9px]">
         <a
-          className="flex items-center justify-center gap-2 rounded-[10px] bg-accent p-3 text-[14px] font-semibold text-white no-underline hover:bg-accent-hover"
+          className="flex items-center justify-center gap-2 rounded-[10px] bg-accent-solid p-3 text-[14px] font-semibold text-primary-contrast no-underline hover:bg-accent-solid-hover"
           href={SELF_HOSTING_URL}
           rel="noreferrer noopener"
           target="_blank"
@@ -166,7 +176,7 @@ export function JoinedToday({ count }: Readonly<{ count: number }>) {
     return null;
   }
   return (
-    <p className="mt-3.5 mb-0 text-center font-mono text-[11.5px] text-fg-faint">
+    <p className="mt-3.5 mb-0 text-center font-mono text-[11.5px] text-fg-muted">
       {count === 1 ? "1 person joined today" : `${count} people joined today`}
     </p>
   );

@@ -5,7 +5,6 @@ import { formatEstimateCents } from "@/lib/cost-estimate/project-estimate";
 import { appPath } from "@/lib/routing/app-path";
 import type { SavedKeywordRow } from "@/lib/saved-keywords/model";
 import {
-  ArrowRightIcon as ArrowRight,
   CaretLeftIcon as CaretLeft,
   CaretRightIcon as CaretRight,
   DownloadSimpleIcon as DownloadSimple,
@@ -28,12 +27,12 @@ export function SavedKeywordsToolbar({
 }>) {
   return (
     <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-3">
-      <label className="flex h-[34px] min-w-[220px] items-center gap-2 rounded-[9px] border border-border bg-bg-sidebar px-3">
-        <MagnifyingGlass className="shrink-0 text-fg-faint" size={15} />
+      <label className="flex h-[34px] min-w-[220px] items-center gap-2 rounded-[9px] border border-border-strong bg-transparent px-3 focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent-solid">
+        <MagnifyingGlass className="shrink-0 text-fg-muted" size={15} />
         <span className="sr-only">Filter saved keywords</span>
         <input
           aria-label="Filter saved keywords"
-          className="min-w-0 flex-1 border-0 bg-transparent p-0 font-mono text-[12.5px] text-fg outline-none placeholder:text-fg-faint"
+          className="min-w-0 flex-1 border-0 bg-transparent p-0 font-mono text-[12.5px] text-fg outline-none placeholder:text-fg-muted"
           onChange={(event) => onSearchChange(event.target.value)}
           placeholder="Filter saved keywords..."
           type="search"
@@ -51,7 +50,7 @@ export function SavedKeywordsToolbar({
       </Button>
       <Button
         component={Link}
-        endIcon={<ArrowRight className="text-fg-faint" size={12} />}
+        endIcon={<CaretRight className="text-fg-muted" size={12} />}
         href={appPath(projectRef, "research")}
         size="sm"
         startIcon={<MagnifyingGlass size={13} />}
@@ -85,7 +84,7 @@ export function SavedKeywordsBulkBar({
   const estimate = costCents == null ? null : formatEstimateCents(costCents);
   return (
     <div className="flex flex-wrap items-center gap-3 border-b border-[#e8d5c9] bg-accent-soft px-4 py-[9px]">
-      <strong className="whitespace-nowrap text-[13px] text-accent-hover">{count} selected</strong>
+      <strong className="whitespace-nowrap text-[13px] text-accent-text">{count} selected</strong>
       <span className="font-mono text-[11px] text-[#a85c22]">
         {trackDisabledReason ??
           `tracking all ${count} adds ${
@@ -150,7 +149,7 @@ export function SavedKeywordsFooter({
   const hasNext = end < total;
   return (
     <div className="flex flex-wrap items-center justify-between gap-5 border-t border-border-strong px-4 py-3">
-      <span className="font-mono text-[11px] text-fg-faint">
+      <span className="font-mono text-[11px] text-fg-muted">
         Metrics are a snapshot from the research run / saving is free, nothing is checked until you
         track
       </span>
@@ -168,7 +167,7 @@ export function SavedKeywordsFooter({
         <div className="flex gap-1">
           <button
             aria-label="Previous page"
-            className="grid h-[30px] w-[30px] place-items-center rounded-full border border-border-strong bg-transparent text-fg disabled:cursor-not-allowed disabled:text-fg-faint"
+            className="grid h-[30px] w-[30px] place-items-center rounded-full border border-border-strong bg-transparent text-fg disabled:cursor-not-allowed disabled:text-fg-muted"
             disabled={!hasPrevious}
             onClick={() => onPageChange(page - 1)}
             type="button"
@@ -177,7 +176,7 @@ export function SavedKeywordsFooter({
           </button>
           <button
             aria-label="Next page"
-            className="grid h-[30px] w-[30px] place-items-center rounded-full border border-border-strong bg-transparent text-fg disabled:cursor-not-allowed disabled:text-fg-faint"
+            className="grid h-[30px] w-[30px] place-items-center rounded-full border border-border-strong bg-transparent text-fg disabled:cursor-not-allowed disabled:text-fg-muted"
             disabled={!hasNext}
             onClick={() => onPageChange(page + 1)}
             type="button"

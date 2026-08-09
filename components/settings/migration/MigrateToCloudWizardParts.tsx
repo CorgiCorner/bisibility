@@ -1,4 +1,4 @@
-import { Modal } from "@/components/ui";
+import { Button, Modal } from "@/components/ui";
 import { cn } from "@/lib/ui/cn";
 import { LockSimpleIcon as LockSimple } from "@phosphor-icons/react";
 
@@ -11,8 +11,8 @@ export function MigrateStepper({ step }: Readonly<{ step: number }>) {
         const number = index + 1;
         const active = step >= number;
         const current = step === number;
-        let labelClass = "text-fg-faint";
-        if (current) labelClass = "text-accent";
+        let labelClass = "text-fg-muted";
+        if (current) labelClass = "text-accent-text";
         else if (active) labelClass = "text-fg";
         return (
           <div className="flex min-w-0 flex-1 items-center" key={label}>
@@ -21,8 +21,8 @@ export function MigrateStepper({ step }: Readonly<{ step: number }>) {
                 className={cn(
                   "grid h-[26px] w-[26px] place-items-center rounded-full border-[1.5px] font-mono text-[11px] font-semibold",
                   active
-                    ? "border-accent bg-accent text-white"
-                    : "border-border-strong text-fg-faint",
+                    ? "border-accent bg-accent-solid text-primary-contrast"
+                    : "border-border-strong text-fg-muted",
                 )}
               >
                 {number}
@@ -52,7 +52,7 @@ export function ReadOnlyBanner({
   pending?: boolean;
 }>) {
   return (
-    <div className="mt-3.5 flex items-center gap-2 rounded-[9px] border border-yellow bg-yellow/10 px-[13px] py-[9px] text-xs font-medium text-yellow">
+    <div className="mt-3.5 flex items-center gap-2 rounded-[9px] border border-yellow bg-yellow/10 px-[13px] py-[9px] text-xs font-medium text-yellow-text">
       <LockSimple aria-hidden className="flex-none" size={15} weight="fill" />
       <span className="min-w-0 flex-1">
         Read-only mode is on. Writes and rank checks stay paused while this migration is in
@@ -61,7 +61,7 @@ export function ReadOnlyBanner({
       </span>
       {onCancelMigration ? (
         <button
-          className="flex-none rounded-md border border-yellow/40 bg-bg-elev px-2 py-1 font-semibold text-yellow disabled:cursor-not-allowed disabled:opacity-60"
+          className="flex-none rounded-md border border-yellow/40 bg-bg-elev px-2 py-1 font-semibold text-yellow-text disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted"
           disabled={pending}
           onClick={onCancelMigration}
           type="button"
@@ -91,21 +91,23 @@ export function EnableReadOnlyConfirmModal({
       footer={
         <>
           <button
-            className="p-0 text-[13px] font-semibold text-fg-muted hover:text-fg disabled:opacity-60"
+            className="p-0 text-[13px] font-semibold text-fg-muted hover:text-fg disabled:bg-bg-sunken disabled:text-fg-muted"
             disabled={busy}
             onClick={onClose}
             type="button"
           >
             Keep writes active
           </button>
-          <button
-            className="inline-flex min-h-10 items-center rounded-[9px] bg-accent px-4 text-[13px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-55"
-            disabled={busy}
+          <Button
+            loading={busy}
+            loadingLabel="Enabling read-only..."
             onClick={onConfirm}
+            sx={{ minHeight: 40 }}
             type="button"
+            variant="primary"
           >
-            {busy ? "Enabling read-only..." : "Pause writes and continue"}
-          </button>
+            Pause writes and continue
+          </Button>
         </>
       }
       onClose={onClose}
@@ -120,7 +122,7 @@ export function EnableReadOnlyConfirmModal({
         Read-only mode stays on until you cancel the migration - it cannot be switched off from the
         next steps. If nothing happens for 24 hours it releases automatically.
       </p>
-      {error ? <p className="m-0 mt-3 font-mono text-[11.5px] text-red">{error}</p> : null}
+      {error ? <p className="m-0 mt-3 font-mono text-[11.5px] text-red-text">{error}</p> : null}
     </Modal>
   );
 }
@@ -143,21 +145,23 @@ export function MarkMigratedConfirmModal({
       footer={
         <>
           <button
-            className="p-0 text-[13px] font-semibold text-fg-muted hover:text-fg disabled:opacity-60"
+            className="p-0 text-[13px] font-semibold text-fg-muted hover:text-fg disabled:bg-bg-sunken disabled:text-fg-muted"
             disabled={busy}
             onClick={onClose}
             type="button"
           >
             Not yet
           </button>
-          <button
-            className="inline-flex min-h-10 items-center rounded-[9px] bg-accent px-4 text-[13px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-55"
-            disabled={busy}
+          <Button
+            loading={busy}
+            loadingLabel="Marking..."
             onClick={onConfirm}
+            sx={{ minHeight: 40 }}
             type="button"
+            variant="primary"
           >
-            {busy ? "Marking..." : "Mark as migrated"}
-          </button>
+            Mark as migrated
+          </Button>
         </>
       }
       onClose={onClose}
@@ -166,12 +170,12 @@ export function MarkMigratedConfirmModal({
     >
       <p className="m-0 text-[13.5px] leading-[1.55] text-fg-muted">
         This disables the source project for good: writes and rank checks stay off and the state
-        does not auto-release. Do this once you've verified the destination workspace.
+        does not auto-release. Do this once you've verified the destination project.
       </p>
       <p className="m-0 mt-2 text-xs leading-5 text-fg-muted">
         You can reactivate the project later from Settings if you ever need it again.
       </p>
-      {error ? <p className="m-0 mt-3 font-mono text-[11.5px] text-red">{error}</p> : null}
+      {error ? <p className="m-0 mt-3 font-mono text-[11.5px] text-red-text">{error}</p> : null}
     </Modal>
   );
 }
@@ -200,40 +204,43 @@ export function CancelMigrationConfirmModal({
         closeMode ? (
           <>
             <button
-              className="p-0 text-[13px] font-semibold text-red hover:opacity-80 disabled:opacity-60"
+              className="p-0 text-[13px] font-semibold text-red-text hover:opacity-80 disabled:bg-bg-sunken disabled:text-fg-muted"
               disabled={busy}
               onClick={onConfirm}
               type="button"
             >
               {busy ? "Cancelling..." : "Cancel migration and resume writes"}
             </button>
-            <button
-              className="inline-flex min-h-10 items-center rounded-[9px] bg-accent px-4 text-[13px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-55"
+            <Button
               disabled={busy}
               onClick={onKeepReadOnly ?? onClose}
+              sx={{ minHeight: 40 }}
               type="button"
+              variant="primary"
             >
               Keep read-only and close
-            </button>
+            </Button>
           </>
         ) : (
           <>
             <button
-              className="p-0 text-[13px] font-semibold text-fg-muted hover:text-fg disabled:opacity-60"
+              className="p-0 text-[13px] font-semibold text-fg-muted hover:text-fg disabled:bg-bg-sunken disabled:text-fg-muted"
               disabled={busy}
               onClick={onClose}
               type="button"
             >
               Keep migrating
             </button>
-            <button
-              className="inline-flex min-h-10 items-center rounded-[9px] bg-red px-4 text-[13px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-55"
-              disabled={busy}
+            <Button
+              loading={busy}
+              loadingLabel="Cancelling..."
               onClick={onConfirm}
+              sx={{ minHeight: 40 }}
               type="button"
+              variant="destructive"
             >
-              {busy ? "Cancelling..." : "Cancel migration"}
-            </button>
+              Cancel migration
+            </Button>
           </>
         )
       }
@@ -249,7 +256,7 @@ export function CancelMigrationConfirmModal({
       <p className="m-0 mt-2 text-xs leading-5 text-fg-muted">
         Migration holds also auto-release after 24 hours of inactivity.
       </p>
-      {error ? <p className="m-0 mt-3 font-mono text-[11.5px] text-red">{error}</p> : null}
+      {error ? <p className="m-0 mt-3 font-mono text-[11.5px] text-red-text">{error}</p> : null}
     </Modal>
   );
 }

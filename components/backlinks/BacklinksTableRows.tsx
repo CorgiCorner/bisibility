@@ -53,12 +53,12 @@ function Flags({ row }: Readonly<{ row: Pick<BacklinksRow, "flags" | "lostAt" | 
   return (
     <span className="flex min-w-0 flex-wrap items-center gap-1">
       {row.status === "new" ? (
-        <span className="rounded-full bg-green/10 px-2 py-0.5 text-[10.5px] font-semibold text-green">
+        <span className="rounded-full bg-green/10 px-2 py-0.5 text-[10.5px] font-semibold text-green-text">
           new
         </span>
       ) : null}
       {row.status === "lost" ? (
-        <span className="rounded-full bg-red/10 px-2 py-0.5 text-[10.5px] font-semibold text-red">
+        <span className="rounded-full bg-red/10 px-2 py-0.5 text-[10.5px] font-semibold text-red-text">
           {lostDate(row.lostAt)}
         </span>
       ) : null}
@@ -66,7 +66,7 @@ function Flags({ row }: Readonly<{ row: Pick<BacklinksRow, "flags" | "lostAt" | 
         <span
           className={`rounded-[5px] border px-1.5 py-px font-mono text-[10px] ${
             flag === "sitewide"
-              ? "border-yellow/60 text-yellow-strong"
+              ? "border-yellow/60 text-yellow-text"
               : "border-border-strong text-fg-muted"
           }`}
           key={flag}
@@ -104,13 +104,13 @@ function DataCells({
       <span className={`truncate ${status.status === "lost" ? "line-through" : ""}`}>{source}</span>
       <span className="grid min-w-0">
         <span className="truncate text-[13px]">{anchor ? `“${anchor}”` : "(image link)"}</span>
-        <span className="truncate font-mono text-[10.5px] text-fg-faint">→ {target}</span>
+        <span className="truncate font-mono text-[10.5px] text-fg-muted">→ {target}</span>
       </span>
       <Flags row={{ ...status, flags }} />
       <span className="text-right font-mono text-[12.5px]">{domainAuthority ?? ""}</span>
       <span
         className={`text-right font-mono text-[12.5px] ${
-          spam != null && spam >= 5 ? "text-yellow-strong" : ""
+          spam != null && spam >= 5 ? "text-yellow-text" : ""
         }`}
       >
         {spam?.toFixed(1) ?? ""}
@@ -125,7 +125,7 @@ function LinkRow({ row, summary = false }: Readonly<{ row: BacklinksRow; summary
   return (
     <div
       className={`grid ${columns} items-center gap-2 border-t border-border/70 bg-bg-sunken/40 px-4 py-2 ${
-        row.status === "lost" ? "opacity-55" : ""
+        row.status === "lost" ? "bg-bg-inset text-fg-muted" : ""
       }`}
       data-status={row.status}
     >
@@ -164,9 +164,9 @@ function DomainRow({
       <button
         aria-expanded={expandable ? expanded : undefined}
         aria-label={`${expanded ? "Collapse" : "Expand"} ${group.sourceDomain}`}
-        className={`grid w-full ${columns} items-center gap-2 border-0 border-t border-border/70 bg-transparent px-4 py-2.5 text-left text-fg hover:bg-bg-sunken/55 focus-visible:bg-bg-sunken/55 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ${
+        className={`grid w-full ${columns} items-center gap-2 border-0 border-t border-border/70 bg-transparent px-4 py-2.5 text-left text-fg hover:bg-bg-sunken/55 focus-visible:bg-bg-sunken/55 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-solid ${
           expandable ? "cursor-pointer" : "cursor-default"
-        } ${group.status === "lost" ? "opacity-55" : ""}`}
+        } ${group.status === "lost" ? "bg-bg-inset text-fg-muted" : ""}`}
         data-status={group.status}
         onClick={expandable ? onToggle : undefined}
         type="button"
@@ -174,7 +174,7 @@ function DomainRow({
         <span className="grid h-[22px] w-[22px] place-items-center">
           {expandable ? (
             <CaretRight
-              className={`text-fg-faint transition-transform ${expanded ? "rotate-90" : ""}`}
+              className={`text-fg-muted transition-transform ${expanded ? "rotate-90" : ""}`}
               size={11}
               weight="bold"
             />
@@ -204,12 +204,12 @@ function DomainRow({
                 className="flex items-center gap-2.5 border-t border-border/70 bg-bg-sunken/40 py-2 pl-[54px] pr-4"
                 key={item.signature}
               >
-                <StackSimple aria-hidden className="text-fg-faint" size={14} />
+                <StackSimple aria-hidden className="text-fg-muted" size={14} />
                 <span className="text-[12.5px] text-fg-muted">
                   {item.count} more pages carry the same footer link
                 </span>
                 <button
-                  className="cursor-pointer border-0 bg-transparent p-0 text-[12.5px] font-medium text-accent-hover hover:text-accent focus-visible:rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+                  className="cursor-pointer border-0 bg-transparent p-0 text-[12.5px] font-medium text-accent-text hover:text-accent-text focus-visible:rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-solid"
                   onClick={() => onRunExpand(item.signature)}
                   type="button"
                 >
@@ -266,7 +266,7 @@ export function BacklinksColumnHeaders() {
       <span>Source</span>
       <span>Anchor - target</span>
       <span>Flags</span>
-      <span className="flex items-center justify-end gap-1 font-semibold text-accent-hover">
+      <span className="flex items-center justify-end gap-1 font-semibold text-accent-text">
         DA <span aria-label="sorted descending">⌄</span>
       </span>
       <span className="text-right">Spam</span>

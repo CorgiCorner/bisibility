@@ -4210,7 +4210,7 @@
             "MigrationToken": []
           }
         ],
-        "summary": "Import a cloud export",
+        "summary": "Run an instance import",
         "tags": ["migration"]
       }
     },
@@ -4261,7 +4261,7 @@
             "description": "Rate limited"
           }
         },
-        "summary": "Check cloud import schema compatibility",
+        "summary": "Check instance import schema compatibility",
         "tags": ["migration"]
       }
     },
@@ -4392,7 +4392,7 @@
             "MigrationToken": []
           }
         ],
-        "summary": "Create a chunked cloud import session",
+        "summary": "Create a chunked instance import session",
         "tags": ["migration"]
       }
     },
@@ -4561,7 +4561,7 @@
             "MigrationToken": []
           }
         ],
-        "summary": "Upload a cloud import chunk",
+        "summary": "Upload an instance import chunk",
         "tags": ["migration"]
       }
     },
@@ -4713,7 +4713,7 @@
             "MigrationToken": []
           }
         ],
-        "summary": "Finalize a chunked cloud import session",
+        "summary": "Finalize a chunked instance import session",
         "tags": ["migration"]
       }
     },
@@ -14332,7 +14332,7 @@
       "x-group": "Team"
     },
     {
-      "description": "Manage migration tokens and cloud import sessions.",
+      "description": "Manage migration tokens and instance import sessions.",
       "name": "migration",
       "x-group": "Migration"
     }

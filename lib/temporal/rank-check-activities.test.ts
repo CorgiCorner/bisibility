@@ -195,7 +195,7 @@ describe("rank-check activities", () => {
     [{ project: { defaults: { serpDepth: 100 } }, schedule: { serpDepth: 10 } }, undefined, 1],
     [{ project: { defaults: { serpDepth: 100 } }, schedule: null }, undefined, 10],
     [{ project: { defaults: { serpDepth: 100 } }, schedule: { serpDepth: 10 } }, 20, 2],
-  ] as const)("reserves the depth-aware SerpAPI estimate", async (keyword, depth, expected) => {
+  ] as const)("reserves the depth-aware SerpApi estimate", async (keyword, depth, expected) => {
     mocks.prisma.rankCheck.create.mockResolvedValue({
       id: "rank_running_1",
       publicId: "check_a00000000000000000000000",

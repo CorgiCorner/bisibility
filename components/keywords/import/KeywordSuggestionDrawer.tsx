@@ -1,6 +1,6 @@
 "use client";
 
-import { AppDrawer } from "@/components/ui";
+import { AppDrawer, Button } from "@/components/ui";
 import {
   formatEstimateCents,
   monthlyChecksFor,
@@ -47,7 +47,7 @@ type KeywordSuggestionDrawerProps = {
 const FILTER_THRESHOLD = 25;
 const metricCell = "w-16 shrink-0 text-right font-mono text-[11.5px] tabular-nums text-fg-muted";
 const bulkButton =
-  "rounded-md border border-border-strong bg-bg-elev px-2.5 py-1 text-[11.5px] font-medium text-fg-muted transition-colors hover:border-accent hover:text-accent";
+  "rounded-md border border-border-strong bg-bg-elev px-2.5 py-1 text-[11.5px] font-medium text-fg-muted transition-colors hover:border-accent hover:text-accent-text";
 
 function metric(value: number | undefined) {
   return value == null ? "-" : value.toLocaleString();
@@ -87,7 +87,7 @@ function SuggestionRow({
   return (
     <label
       className={`flex items-center gap-3 border-b border-border px-1 py-2 text-[13px] ${
-        disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"
+        disabled ? "cursor-not-allowed text-fg-muted" : "cursor-pointer"
       }`}
     >
       <input
@@ -100,7 +100,7 @@ function SuggestionRow({
       />
       <span className="min-w-0 flex-1 truncate text-fg">{suggestion.query}</span>
       {disabled ? (
-        <span className="shrink-0 rounded-full border border-border bg-bg-sunken px-2 py-0.5 font-mono text-[9.5px] uppercase tracking-[0.3px] text-fg-faint">
+        <span className="shrink-0 rounded-full border border-border bg-bg-sunken px-2 py-0.5 font-mono text-[9.5px] uppercase tracking-[0.3px] text-fg-muted">
           Tracked
         </span>
       ) : null}
@@ -154,21 +154,22 @@ export function KeywordSuggestionDrawer({
             {costLine(confirmed.length, costContext)}
           </span>
           <div className="flex items-center justify-end gap-2.5">
-            <button
-              className="rounded-[9px] border border-border-strong bg-bg-elev px-4 py-2 text-[13px] font-semibold text-fg-muted"
+            <Button
               onClick={onClose}
+              sx={{ color: "var(--fg-muted)" }}
               type="button"
+              variant="secondary"
             >
               Cancel
-            </button>
-            <button
-              className="rounded-[9px] border-0 bg-accent px-4 py-2 text-[13px] font-semibold text-white hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
+            </Button>
+            <Button
               disabled={confirmed.length === 0}
               onClick={() => onConfirm(confirmed)}
               type="button"
+              variant="primary"
             >
               Add {confirmed.length} {confirmed.length === 1 ? "keyword" : "keywords"}
-            </button>
+            </Button>
           </div>
         </div>
       }
@@ -201,8 +202,8 @@ export function KeywordSuggestionDrawer({
       </div>
 
       {decorated.length > FILTER_THRESHOLD ? (
-        <label className="mt-3 flex items-center gap-2 rounded-[9px] border border-border-strong bg-bg-sunken px-2.5 py-1.5">
-          <MagnifyingGlass aria-hidden className="shrink-0 text-fg-faint" size={14} />
+        <label className="mt-3 flex items-center gap-2 rounded-[9px] border border-border-strong bg-transparent px-2.5 py-1.5 focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent-solid">
+          <MagnifyingGlass aria-hidden className="shrink-0 text-fg-muted" size={14} />
           <input
             aria-label="Filter suggestions"
             className="min-w-0 flex-1 bg-transparent text-[13px] text-fg outline-none"
@@ -213,7 +214,7 @@ export function KeywordSuggestionDrawer({
         </label>
       ) : null}
 
-      <div className="mt-3 flex items-center gap-3 border-b border-border-strong px-1 pb-1.5 font-mono text-[9.5px] uppercase tracking-[0.3px] text-fg-faint">
+      <div className="mt-3 flex items-center gap-3 border-b border-border-strong px-1 pb-1.5 font-mono text-[9.5px] uppercase tracking-[0.3px] text-fg-muted">
         <span className="w-4 shrink-0" />
         <span className="min-w-0 flex-1">Query</span>
         <span className="w-16 shrink-0 text-right">Clicks</span>
@@ -242,7 +243,7 @@ export function KeywordSuggestionDrawer({
         <p className="m-0 mt-3 text-[12px] text-fg-muted">
           {hidden.length} low-quality {hidden.length === 1 ? "query" : "queries"} hidden.{" "}
           <button
-            className="font-semibold text-accent hover:underline"
+            className="font-semibold text-accent-text hover:underline"
             onClick={() => setShowHidden((value) => !value)}
             type="button"
           >

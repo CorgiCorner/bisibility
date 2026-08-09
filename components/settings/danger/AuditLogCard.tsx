@@ -1,7 +1,7 @@
 "use client";
 
 import { appPath } from "@/lib/routing/app-path";
-import { ArrowRightIcon as ArrowRight, ScrollIcon as Scroll } from "@phosphor-icons/react";
+import { CaretRightIcon as CaretRight, ScrollIcon as Scroll } from "@phosphor-icons/react";
 import Link from "next/link";
 
 export function AuditLogCard({ projectRef }: Readonly<{ projectRef: string }>) {
@@ -28,9 +28,9 @@ export function AuditLogCard({ projectRef }: Readonly<{ projectRef: string }>) {
         </span>
         <span className="hidden min-h-9 shrink-0 items-center gap-1.5 rounded-[9px] border border-border-strong bg-bg-elev px-3 text-[12.5px] font-semibold text-fg-muted sm:inline-flex">
           Open audit log
-          <ArrowRight aria-hidden size={13} weight="bold" />
+          <CaretRight aria-hidden size={13} weight="bold" />
         </span>
-        <ArrowRight
+        <CaretRight
           aria-hidden
           className="shrink-0 text-fg-muted sm:hidden"
           size={16}

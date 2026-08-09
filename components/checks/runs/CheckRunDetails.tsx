@@ -24,7 +24,7 @@ export function CountryLevelBadge() {
     <Tooltip title={countryLevelTooltip}>
       <button
         aria-label={`country-level: ${countryLevelTooltip}`}
-        className="inline-flex cursor-help rounded-full border border-dashed border-yellow/55 bg-yellow/10 px-1.5 py-0.5 font-mono text-[9.5px] font-semibold text-yellow-strong"
+        className="inline-flex cursor-help rounded-full border border-dashed border-yellow/55 bg-yellow/10 px-1.5 py-0.5 font-mono text-[9.5px] font-semibold text-yellow-text"
         type="button"
       >
         country-level
@@ -35,12 +35,12 @@ export function CountryLevelBadge() {
 
 function AttemptTone({ attempt }: Readonly<{ attempt: CheckAttempt }>) {
   if (attempt.outcome === "ok") {
-    return <CheckCircle aria-hidden className="text-green" size={15} weight="fill" />;
+    return <CheckCircle aria-hidden className="text-green-text" size={15} weight="fill" />;
   }
   if (attempt.outcome === "rate_limited") {
-    return <WarningCircle aria-hidden className="text-yellow-strong" size={15} weight="fill" />;
+    return <WarningCircle aria-hidden className="text-yellow-text" size={15} weight="fill" />;
   }
-  return <XCircle aria-hidden className="text-red" size={15} weight="fill" />;
+  return <XCircle aria-hidden className="text-red-text" size={15} weight="fill" />;
 }
 
 function AttemptRow({ attempt, run }: Readonly<{ attempt: CheckAttempt; run: CheckRunRow }>) {

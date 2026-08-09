@@ -60,7 +60,7 @@ export const migrationPaths = {
         "200": response(ref("CloudImportCompatibility"), "Compatibility preflight"),
         "429": response(ref("Problem"), "Rate limited"),
       },
-      summary: "Check cloud import schema compatibility",
+      summary: "Check instance import schema compatibility",
     },
   },
   "/cloud/import/sessions": {
@@ -72,7 +72,7 @@ export const migrationPaths = {
         ...migrationProblemResponses,
       },
       security: migrationSecurity,
-      summary: "Create a chunked cloud import session",
+      summary: "Create a chunked instance import session",
     },
   },
   "/cloud/import/sessions/{sessionId}/chunks/{index}": {
@@ -95,7 +95,7 @@ export const migrationPaths = {
         ...sessionProblemResponses,
       },
       security: migrationSecurity,
-      summary: "Upload one chunk to a cloud import session",
+      summary: "Upload one chunk to an instance import session",
     },
   },
   "/cloud/import/sessions/{sessionId}/finalize": {
@@ -111,7 +111,7 @@ export const migrationPaths = {
         ...sessionProblemResponses,
       },
       security: migrationSecurity,
-      summary: "Finalize a chunked cloud import session",
+      summary: "Finalize a chunked instance import session",
     },
   },
 };

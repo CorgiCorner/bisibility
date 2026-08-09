@@ -19,13 +19,13 @@ export function SetupStepper({ current }: Readonly<{ current: SetupStep }>) {
               aria-current={state === "current" ? "step" : undefined}
               className={
                 state === "current"
-                  ? "grid h-6 w-6 place-items-center rounded-full bg-accent font-mono text-[11px] font-semibold text-white"
+                  ? "grid h-6 w-6 place-items-center rounded-full bg-accent-solid font-mono text-[11px] font-semibold text-primary-contrast"
                   : "grid h-6 w-6 place-items-center rounded-full bg-bg-sunken font-mono text-[11px] font-semibold text-fg-muted"
               }
               data-step-state={state}
             >
               {state === "complete" ? (
-                <Check aria-hidden className="text-fg-faint" size={12} weight="bold" />
+                <Check aria-hidden className="text-fg-muted" size={12} weight="bold" />
               ) : (
                 index + 1
               )}

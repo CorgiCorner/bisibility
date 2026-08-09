@@ -10,7 +10,7 @@ export type CheckStatusChipProps = {
 const statusMeta = {
   completed: { color: "var(--green)", label: "Completed", pulse: false },
   failed: { color: "var(--red)", label: "Failed", pulse: false },
-  pending: { color: "var(--yellow-strong)", label: "Pending", pulse: false },
+  pending: { color: "var(--yellow)", label: "Pending", pulse: false },
   running: { color: "var(--blue)", label: "Running", pulse: true },
 } satisfies Record<CheckStatusKind, { color: string; label: string; pulse: boolean }>;
 
@@ -22,7 +22,7 @@ export function CheckStatusChip({ kind, label }: Readonly<CheckStatusChipProps>)
       className="inline-flex items-center gap-1.5 rounded-full px-2 py-[4px] font-mono text-[10.5px] font-semibold leading-none"
       style={{
         backgroundColor: `color-mix(in srgb, ${meta.color} 12%, transparent)`,
-        color: meta.color,
+        color: "var(--fg)",
       }}
     >
       <span

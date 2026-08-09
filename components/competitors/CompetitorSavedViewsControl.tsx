@@ -90,7 +90,7 @@ export function CompetitorSavedViewsControl({
           <CaretDown aria-hidden size={11} />
         </Button>
         {modified ? (
-          <span className="rounded-full bg-accent-soft px-2.5 py-1 font-mono text-[10px] font-semibold text-accent">
+          <span className="rounded-full bg-accent-soft px-2.5 py-1 font-mono text-[10px] font-semibold text-accent-text">
             Unsaved changes
           </span>
         ) : null}
@@ -119,7 +119,7 @@ export function CompetitorSavedViewsControl({
             {deleteSavedViewAction && deletableSavedViewIdSet.has(view.id) ? (
               <button
                 aria-label={`Delete ${view.name}`}
-                className="ml-3 text-fg-faint hover:text-red"
+                className="ml-3 text-fg-muted hover:text-red-text"
                 onClick={(event) => {
                   event.stopPropagation();
                   remove(view);

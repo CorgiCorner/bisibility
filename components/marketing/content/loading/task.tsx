@@ -1,14 +1,11 @@
-import { ChartLineUpIcon as ChartLineUp } from "@phosphor-icons/react/dist/ssr";
+import { BrandLockup } from "@/components/ui";
 import Link from "next/link";
 import { FeatureCardSkeleton, SkeletonBlock, skeletonKeys, TextStack } from "./primitives";
 
-function BrandMark() {
+function BrandLink() {
   return (
-    <Link className="flex items-center gap-[9px] text-fg no-underline" href="/">
-      <span className="grid h-[30px] w-[30px] place-items-center rounded-lg bg-accent text-white">
-        <ChartLineUp aria-hidden size={17} weight="bold" />
-      </span>
-      <span className="text-[18px] font-bold tracking-[-0.5px]">bisibility</span>
+    <Link className="inline-flex w-fit no-underline" href="/">
+      <BrandLockup />
     </Link>
   );
 }
@@ -17,7 +14,7 @@ export function LoginLoadingPage() {
   return (
     <main className="grid min-h-dvh bg-bg text-fg md:grid-cols-[1.05fr_1fr]">
       <section className="relative hidden flex-col justify-between overflow-hidden border-border border-r bg-bg-sidebar p-8 md:flex lg:p-11">
-        <BrandMark />
+        <BrandLink />
         <div className="max-w-[420px]">
           <SkeletonBlock className="h-[12px] w-[178px]" tone="accent" />
           <SkeletonBlock className="mt-[14px] h-[38px] w-[86%] rounded-[9px]" />
@@ -67,7 +64,7 @@ export function InviteLoadingPage() {
   return (
     <main className="flex min-h-dvh items-center justify-center bg-bg px-5 py-10 text-fg">
       <div className="w-full max-w-[470px] rounded-[16px] border border-border bg-bg-elev p-6">
-        <BrandMark />
+        <BrandLink />
         <div className="mt-8">
           <SkeletonBlock className="h-12 w-12 rounded-[13px]" tone="accent" />
           <SkeletonBlock className="mt-5 h-[11px] w-[92px]" />
@@ -132,7 +129,7 @@ export function OnboardingLoadingPage() {
 function CloudTopBarSkeleton() {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
-      <BrandMark />
+      <BrandLink />
       <div className="flex flex-none items-center gap-3">
         <SkeletonBlock className="h-10 w-10 rounded-[9px]" />
         <SkeletonBlock className="h-[30px] w-[168px] rounded-full" />

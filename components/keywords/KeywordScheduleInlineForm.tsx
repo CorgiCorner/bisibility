@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, FieldLabel, MenuSelect, useToast } from "@/components/ui";
+import { Button, FieldLabel, inputClassName, MenuSelect, useToast } from "@/components/ui";
 import {
   type CostRateInfo,
   formatEstimateCents,
@@ -37,11 +37,10 @@ type KeywordScheduleInlineFormProps = {
 };
 
 const labelClass =
-  "flex flex-col gap-1.5 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint";
-const inputClass =
-  "min-h-10 rounded-lg border border-border-strong bg-bg-sunken px-3 font-sans text-[13px] font-medium normal-case tracking-normal text-fg outline-none";
+  "flex flex-col gap-1.5 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted";
+const inputClass = `${inputClassName} min-h-10 rounded-lg px-3 font-sans text-[13px] font-medium normal-case tracking-normal`;
 const triggerClass =
-  "min-h-10 w-full justify-between rounded-lg border-border-strong bg-bg-sunken px-3 text-[13px] font-medium normal-case tracking-normal";
+  "min-h-10 w-full justify-between rounded-lg border-border-strong bg-transparent px-3 text-[13px] font-medium normal-case tracking-normal";
 const depthOptions = (projectDepth: SerpDepth) => [
   { label: `Inherit (Top ${projectDepth})`, value: "inherit" },
   ...serpDepthValues.map((depth) => ({
@@ -187,7 +186,7 @@ export function KeywordScheduleInlineForm({
             {...register("cronExpression")}
           />
           {errors.cronExpression ? (
-            <span className="text-red">{errors.cronExpression.message}</span>
+            <span className="text-red-text">{errors.cronExpression.message}</span>
           ) : null}
         </div>
       ) : null}
@@ -226,7 +225,7 @@ export function KeywordScheduleInlineForm({
           {...register("jitterMinutes")}
         />
         {errors.jitterMinutes ? (
-          <span className="text-red">{errors.jitterMinutes.message}</span>
+          <span className="text-red-text">{errors.jitterMinutes.message}</span>
         ) : null}
       </div>
       {providerRate ? (
@@ -252,13 +251,13 @@ export function KeywordScheduleInlineForm({
       {showStatus ? (
         <div className={layout === "inline" ? "md:col-span-2 xl:col-span-full" : undefined}>
           {scheduleSource === "project" ? (
-            <span className="font-mono text-[11px] text-fg-faint">Inherits project default</span>
+            <span className="font-mono text-[11px] text-fg-muted">Inherits project default</span>
           ) : null}
           {message ? (
             <span className="ml-3 font-mono text-[11px] text-fg-muted">{message}</span>
           ) : null}
           {depthWarning && serpDepth !== null ? (
-            <span className="ml-3 font-mono text-[11px] text-yellow">
+            <span className="ml-3 font-mono text-[11px] text-yellow-text">
               {serpDepthDecreaseWarning(serpDepth)}
             </span>
           ) : null}

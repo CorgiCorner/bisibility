@@ -6,7 +6,7 @@ import { InviteModal } from "./InviteModal";
 function renderInviteModal(inviteMember = vi.fn()) {
   render(
     <InviteModal
-      domain="Acme workspace"
+      domain="Acme project"
       inviteMember={inviteMember}
       onClose={vi.fn()}
       open

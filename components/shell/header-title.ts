@@ -31,7 +31,7 @@ export function headerMetaFor(pathname: string, context: HeaderContext = {}): He
   if (matches(sectionPath, "/account")) {
     return sectionMeta(
       "Account settings",
-      "Manage your bisibility user, separate from workspace settings.",
+      "Manage your bisibility user, separate from project settings.",
     );
   }
 
@@ -50,9 +50,10 @@ export function headerMetaFor(pathname: string, context: HeaderContext = {}): He
     return sectionMeta("Instance administration", "Worker health and operator diagnostics.");
   }
 
-  // A single keyword detail reads as the singular "Keyword".
+  // The detail page for one keyword. "Keyword" alone sat one letter away from the list it
+  // was opened from, so the header read as a truncation rather than a different screen.
   if (matches(sectionPath, "/keywords") && sectionPath !== "/keywords") {
-    return sectionMeta("Keyword", "Position history, ranking URL and schedule.");
+    return sectionMeta("Keyword details", "Position history, ranking URL and schedule.");
   }
 
   if (matches(sectionPath, "/overview")) {
@@ -105,18 +106,18 @@ export function headerMetaFor(pathname: string, context: HeaderContext = {}): He
   }
 
   if (matches(sectionPath, "/settings/audit")) {
-    return sectionMeta("Audit log", "Review workspace changes and security events.");
+    return sectionMeta("Audit log", "Review project changes and security events.");
   }
 
   if (matches(sectionPath, "/settings/import")) {
     return sectionMeta(
       "Import from another instance",
-      "Move data into this workspace with a one-time migration token.",
+      "Move data into this project with a one-time migration token.",
     );
   }
 
   if (matches(sectionPath, "/settings")) {
-    return sectionMeta("Settings", "Workspace, providers, team and preferences.");
+    return sectionMeta("Settings", "Project, providers, team and preferences.");
   }
 
   if (matches(sectionPath, "/docs")) {

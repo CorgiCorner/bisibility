@@ -15,7 +15,7 @@ export type PositionTrendCardProps = {
 };
 
 const axisTextStyle = {
-  fill: "var(--fg-faint)",
+  fill: "var(--fg-muted)",
   fontFamily: "var(--font-mono), monospace",
   fontSize: 11,
 };

@@ -1,59 +1,46 @@
 "use client";
 
-import { WorkspaceRow } from "@/components/shell/WorkspaceRow";
-import { workspaceSublabel, workspaceVisual } from "@/components/shell/workspace-visuals";
+import { MENU_ROW_SX, WorkspaceRow } from "@/components/shell/WorkspaceRow";
+import {
+  WorkspaceSwitcherTrigger,
+  type WorkspaceTriggerVariant,
+} from "@/components/shell/WorkspaceSwitcherTrigger";
+import { workspaceSublabel } from "@/components/shell/workspace-labels";
+import {
+  estimateWorkspaceMenuHeight,
+  resolveWorkspaceMenuPlacement,
+  WORKSPACE_MENU_WIDTH,
+  type WorkspaceMenuPlacement,
+  workspaceMenuOrigins,
+} from "@/components/shell/workspace-menu-placement";
 import type { WorkspaceSummary } from "@/lib/queries/workspaces";
-import { appPath } from "@/lib/routing/app-path";
 import Divider from "@mui/material/Divider";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
-import Tooltip from "@mui/material/Tooltip";
-import {
-  CaretUpDownIcon as CaretUpDown,
-  GearSixIcon as GearSix,
-  GlobeSimpleIcon as GlobeSimple,
-  PlusIcon as Plus,
-} from "@phosphor-icons/react";
+import { PlusIcon as Plus } from "@phosphor-icons/react";
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
+
+const MENU_ID = "workspace-switcher-menu";
 
 const PAPER_SX = {
   backgroundColor: "var(--bg-elev)",
   border: "1px solid var(--border)",
   borderRadius: "12px",
-  boxShadow: "none",
+  boxShadow: "0 14px 38px rgba(20, 16, 8, 0.16)",
   color: "var(--fg)",
-  marginTop: "6px",
   padding: "6px",
+  width: WORKSPACE_MENU_WIDTH,
 } as const;
 
-const ROW_SX = {
-  borderRadius: "9px",
-  color: "var(--fg-muted)",
-  fontSize: "13px",
-  gap: "10px",
-  minHeight: 0,
-  paddingX: "9px",
-  paddingY: "8px",
-  "&:hover": { backgroundColor: "var(--nav-active)" },
-  "&.Mui-focusVisible": { backgroundColor: "var(--nav-active)" },
-} as const;
-
-const DIVIDER_SX = { borderColor: "var(--border)", marginX: "4px", marginY: "6px" } as const;
-
-function paperSx(collapsed: boolean, anchorEl: HTMLElement | null) {
-  return {
-    ...PAPER_SX,
-    marginLeft: collapsed ? "10px" : 0,
-    marginTop: collapsed ? 0 : PAPER_SX.marginTop,
-    width: collapsed ? 248 : (anchorEl?.offsetWidth ?? 248),
-  };
-}
+const DIVIDER_SX = { borderColor: "var(--border)", marginX: "2px", marginY: "4px" } as const;
 
 export type WorkspaceSwitcherProps = {
   activeProjectId: string;
   canCreateWorkspace: boolean;
   collapsed?: boolean;
+  /** `ghost` (default) is transparent until hover; `boxed` sits on its own elevated card. */
+  variant?: WorkspaceTriggerVariant;
   workspaces: WorkspaceSummary[];
 };
 
@@ -61,9 +48,17 @@ export function WorkspaceSwitcher({
   activeProjectId,
   canCreateWorkspace,
   collapsed = false,
+  variant = "ghost",
   workspaces,
 }: Readonly<WorkspaceSwitcherProps>) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [placement, setPlacement] = useState<WorkspaceMenuPlacement>("up");
+  // Last rendered menu height. A plain ref written from a callback ref, so the flip needs no
+  // effect: the open handler reads a real measurement from the previous render.
+  const menuHeightRef = useRef(0);
+  // Collapsed, the menu hangs off the rail column, not off the 36px button inside it, so
+  // "beside the rail" clears the whole 80px strip instead of the button's own right edge.
+  const railRef = useRef<HTMLDivElement>(null);
   const open = Boolean(anchorEl);
 
   const activeIndex = Math.max(
@@ -71,98 +66,80 @@ export function WorkspaceSwitcher({
     workspaces.findIndex((w) => w.id === activeProjectId),
   );
   const active = workspaces[activeIndex];
-  const TriggerIcon = active ? workspaceVisual(activeIndex).Icon : GlobeSimple;
+  const actionCount = canCreateWorkspace ? 2 : 1;
+
+  function openMenu(event: React.MouseEvent<HTMLButtonElement>) {
+    const trigger = event.currentTarget;
+    const menuHeight =
+      menuHeightRef.current || estimateWorkspaceMenuHeight(workspaces.length, actionCount);
+    setPlacement(resolveWorkspaceMenuPlacement(trigger.getBoundingClientRect().top, menuHeight));
+    setAnchorEl((collapsed ? railRef.current : null) ?? trigger);
+  }
 
   function close() {
     setAnchorEl(null);
   }
 
+  function measureMenu(node: HTMLElement | null) {
+    if (node) {
+      menuHeightRef.current = node.offsetHeight;
+    }
+  }
+
+  const { anchorOrigin, offset, transformOrigin } = workspaceMenuOrigins(collapsed, placement);
+  const sublabel = active ? workspaceSublabel(active) : null;
+
   return (
-    <div className="relative mb-[14px]">
-      <Tooltip placement="right" title={collapsed ? "Switch workspace" : ""}>
-        <button
-          aria-controls={open ? "workspace-switcher-menu" : undefined}
-          aria-expanded={open}
-          aria-haspopup="menu"
-          aria-label="Switch workspace"
-          className={[
-            "group flex w-full items-center rounded-[10px] text-left text-fg outline-none transition-colors",
-            collapsed
-              ? "justify-center border border-transparent bg-transparent px-0 py-2.5"
-              : "gap-2.5 border border-border-strong bg-bg-elev px-[11px] py-2.5 hover:bg-bg-sunken focus-visible:border-accent",
-          ].join(" ")}
-          onClick={(event) => setAnchorEl(event.currentTarget)}
-          type="button"
-        >
-          <span className="grid h-[30px] w-[30px] flex-none place-items-center rounded-lg bg-accent-soft text-accent">
-            <TriggerIcon aria-hidden size={14} weight="bold" />
-          </span>
-          {collapsed ? null : (
-            <>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-[13px] font-semibold leading-tight">
-                  {active?.name ?? "Workspace"}
-                </span>
-                <span className="block font-mono text-[10px] text-fg-faint">
-                  {active ? workspaceSublabel(active) : "New workspace"}
-                </span>
-              </span>
-              <CaretUpDown aria-hidden className="text-fg-faint" size={13} weight="bold" />
-            </>
-          )}
-        </button>
-      </Tooltip>
+    // The switcher now sits at the foot of the rail, so its 18px of breathing room moved from
+    // below it to above it.
+    <div className="relative mt-[18px] flex-none" ref={railRef}>
+      <WorkspaceSwitcherTrigger
+        collapsed={collapsed}
+        domain={active?.domain ?? ""}
+        menuId={MENU_ID}
+        name={active?.name ?? "Project"}
+        onOpen={openMenu}
+        open={open}
+        sublabel={sublabel}
+        variant={variant}
+      />
       <Menu
         anchorEl={anchorEl}
-        anchorOrigin={
-          collapsed
-            ? { horizontal: "right", vertical: "top" }
-            : { horizontal: "left", vertical: "bottom" }
-        }
+        anchorOrigin={anchorOrigin}
         // Don't restore focus to the trigger on close: a mouse-opened menu otherwise
         // leaves a lingering focus-visible ring on the switcher after it closes.
         disableRestoreFocus
-        id="workspace-switcher-menu"
+        id={MENU_ID}
         onClose={close}
         open={open}
         slotProps={{
-          list: { "aria-label": "Workspaces", dense: true, sx: { padding: 0 } },
-          paper: { sx: paperSx(collapsed, anchorEl) },
+          list: { "aria-label": "Projects", dense: true, sx: { padding: 0 } },
+          paper: { ref: measureMenu, sx: { ...PAPER_SX, ...offset } },
         }}
-        transformOrigin={{ horizontal: "left", vertical: "top" }}
+        transformOrigin={transformOrigin}
       >
-        <div className="px-[9px] pb-[5px] pt-[7px] font-mono text-[9.5px] uppercase tracking-[0.6px] text-fg-faint">
-          Workspaces
+        <div className="px-[9px] pb-[7px] pt-[10px] font-mono text-[9.5px] uppercase tracking-[0.6px] text-fg-muted">
+          Projects
         </div>
-        {workspaces.map((workspace, index) => (
+        {workspaces.map((workspace) => (
           <WorkspaceRow
             active={workspace.id === activeProjectId}
-            index={index}
             key={workspace.id}
             onSelect={close}
             workspace={workspace}
           />
         ))}
-        <Divider sx={DIVIDER_SX} />
+        {/* No settings row: the rail already has Settings, and it points at the same screen.
+            The switcher is for changing workspace, not a second way into the same page. */}
+        {canCreateWorkspace ? <Divider sx={DIVIDER_SX} /> : null}
         {canCreateWorkspace ? (
-          <MenuItem component={Link} href="/onboarding?new=1" onClick={close} sx={ROW_SX}>
-            <span className="grid h-7 w-7 flex-none place-items-center rounded-lg border border-dashed border-border-strong text-fg-muted">
+          <MenuItem component={Link} href="/onboarding?new=1" onClick={close} sx={MENU_ROW_SX}>
+            <span className="grid h-[30px] w-[30px] flex-none place-items-center rounded-lg border border-dashed border-border-strong text-fg-muted">
               <Plus aria-hidden size={14} weight="bold" />
             </span>
-            <span className="text-[13px] font-semibold text-fg">Create workspace</span>
+            <span className="text-fg">Create project</span>
           </MenuItem>
         ) : null}
-        <MenuItem
-          component={Link}
-          href={active ? appPath(active.publicId, "settings") : "/onboarding"}
-          onClick={close}
-          sx={ROW_SX}
-        >
-          <span className="grid h-7 w-7 flex-none place-items-center text-fg-faint">
-            <GearSix aria-hidden size={15} weight="bold" />
-          </span>
-          <span className="text-[13px] font-medium text-fg">Settings</span>
-        </MenuItem>
       </Menu>
     </div>
   );

@@ -17,7 +17,7 @@ export const SERP_INTEGRATION_CATEGORY_COPY = {
 
 export const ANALYTICS_INTEGRATION_CATEGORY_COPY = {
   description:
-    "Connect owned-data sources such as Google Search Console or GA4 to add traffic and query performance context. Analytics sources are not used to determine rank positions.",
+    "Connect owned-data sources such as Google Search Console or Google Analytics 4 to add traffic and query performance context. Analytics sources are not used to determine rank positions.",
   eyebrow: "Owned-data performance context",
   title: "Analytics sources",
 } satisfies IntegrationCategoryCopy;

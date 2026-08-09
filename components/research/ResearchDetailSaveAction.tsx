@@ -18,7 +18,7 @@ export function ResearchDetailSaveAction({
   if (row.alreadySaved) {
     return (
       <Link
-        className="mt-3 flex items-center justify-center gap-2 rounded-[9px] border border-border bg-bg-sunken px-3 py-2.5 text-[12.5px] font-semibold text-accent-hover hover:border-border-strong"
+        className="mt-3 flex items-center justify-center gap-2 rounded-[9px] border border-border bg-bg-sunken px-3 py-2.5 text-[12.5px] font-semibold text-accent-text hover:border-border-strong"
         href={`${appPath(projectRef, "keywords")}?tab=saved`}
       >
         <BookmarkSimple aria-hidden size={14} weight="fill" />
@@ -46,7 +46,7 @@ export function ResearchDetailSaveAction({
       >
         Save for later
       </Button>
-      <p className="m-0 text-center text-[12px] text-fg-faint">
+      <p className="m-0 text-center text-[12px] text-fg-muted">
         Free. No checks run until you track it.
       </p>
     </div>

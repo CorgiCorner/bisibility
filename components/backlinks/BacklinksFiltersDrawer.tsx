@@ -9,6 +9,7 @@ import Slider from "@mui/material/Slider";
 import {
   ArrowRightIcon as ArrowRight,
   CalendarBlankIcon as CalendarBlank,
+  CaretRightIcon as CaretRight,
   ChartBarIcon as ChartBar,
   LinkIcon as Link,
   ProhibitIcon as Prohibit,
@@ -56,7 +57,7 @@ function RangeFilter({
     <>
       <div className="mb-2 mt-3 flex items-center justify-between text-[12px] text-fg-muted">
         <span>{title}</span>
-        <span className="font-mono text-[11px] font-semibold text-accent">
+        <span className="font-mono text-[11px] font-semibold text-accent-text">
           {value[0]} - {value[1]}
         </span>
       </div>
@@ -69,7 +70,7 @@ function RangeFilter({
         sx={{ color: "var(--accent)", display: "block", mx: 0.5, width: "calc(100% - 8px)" }}
         value={value}
       />
-      <div className="flex justify-between font-mono text-[10px] text-fg-faint">
+      <div className="flex justify-between font-mono text-[10px] text-fg-muted">
         <span>0</span>
         <span>{max}</span>
       </div>
@@ -93,12 +94,12 @@ function TextFilter({
   return (
     <label className="mt-3 block text-[12px] text-fg-muted">
       {label}
-      <span className="mt-2 flex items-center gap-2 rounded-[9px] border border-border-strong bg-bg-sunken px-[11px] py-2">
-        <span aria-hidden className="text-fg-faint">
+      <span className="mt-2 flex items-center gap-2 rounded-[9px] border border-border-strong bg-transparent px-[11px] py-2 focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent-solid">
+        <span aria-hidden className="text-fg-muted">
           {icon}
         </span>
         <input
-          className="min-w-0 flex-1 border-0 bg-transparent p-0 font-mono text-[12.5px] text-fg outline-none placeholder:text-fg-faint"
+          className="min-w-0 flex-1 border-0 bg-transparent p-0 font-mono text-[12.5px] text-fg outline-none placeholder:text-fg-muted"
           onChange={(event) => onChange(event.target.value)}
           placeholder={placeholder}
           type="text"
@@ -125,7 +126,7 @@ export function BacklinksFiltersDrawer({
     <Sheet
       footer={
         <div className="grid gap-3">
-          <p className="m-0 text-[12px] leading-[1.5] text-fg-faint">
+          <p className="m-0 text-[12px] leading-[1.5] text-fg-muted">
             Filters run on the cached snapshot - applying them is free.
           </p>
           <div className="flex items-center gap-2.5">
@@ -137,7 +138,7 @@ export function BacklinksFiltersDrawer({
               Reset
             </Button>
             <Button
-              endIcon={<ArrowRight size={14} weight="bold" />}
+              endIcon={<CaretRight size={14} weight="bold" />}
               onClick={onApply}
               sx={{ flex: 1 }}
             >
@@ -148,7 +149,7 @@ export function BacklinksFiltersDrawer({
       }
       headerAction={
         <button
-          className="rounded-md border-0 bg-transparent px-2.5 py-1.5 text-[12.5px] font-semibold text-fg-muted outline-none hover:text-accent focus-visible:text-accent"
+          className="rounded-md border-0 bg-transparent px-2.5 py-1.5 text-[12.5px] font-semibold text-fg-muted outline-none hover:text-accent-text focus-visible:text-accent-text"
           onClick={() => onChange({ ...emptyBacklinksFilters })}
           type="button"
         >
@@ -161,7 +162,7 @@ export function BacklinksFiltersDrawer({
       title={
         <span className="inline-flex items-center gap-2">
           Filters
-          <span className="grid h-[19px] min-w-[19px] place-items-center rounded-full bg-accent-soft px-1.5 font-mono text-[10.5px] font-semibold text-accent-hover">
+          <span className="grid h-[19px] min-w-[19px] place-items-center rounded-full bg-accent-soft px-1.5 font-mono text-[10.5px] font-semibold text-accent-text">
             {activeCount}
           </span>
         </span>
@@ -185,7 +186,7 @@ export function BacklinksFiltersDrawer({
               <span className="min-w-0 flex-1 truncate text-[12.5px] font-medium text-fg">
                 {option.label}
               </span>
-              <span className="font-mono text-[11px] text-fg-faint">
+              <span className="font-mono text-[11px] text-fg-muted">
                 {linkTypeCounts[option.id]}
               </span>
             </label>
@@ -214,7 +215,7 @@ export function BacklinksFiltersDrawer({
           {firstSeenOptions.map((option) => (
             <button
               aria-pressed={draft.firstSeen === option.id}
-              className="flex-1 rounded-[6px] px-2 py-1.5 text-[12px] font-semibold outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+              className="flex-1 rounded-[6px] px-2 py-1.5 text-[12px] font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-solid"
               key={option.id}
               onClick={() => patch({ firstSeen: option.id })}
               style={{

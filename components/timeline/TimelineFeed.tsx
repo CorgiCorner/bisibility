@@ -103,7 +103,7 @@ function TimelineGroupCard({
 }: Readonly<{ canDelete: boolean; group: TimelineGroup; projectId: string }>) {
   return (
     <section>
-      <div className="mb-[9px] font-mono text-[10px] uppercase tracking-[0.6px] text-fg-faint">
+      <div className="mb-[9px] font-mono text-[10px] uppercase tracking-[0.6px] text-fg-muted">
         {group.day}
       </div>
       <Card className="overflow-hidden p-0" size="lg">
@@ -125,7 +125,7 @@ function TimelineEmpty({
       <EmptyState
         action={
           <Link
-            className="inline-flex min-h-9 items-center rounded-lg border border-accent bg-accent px-3 text-[12px] font-semibold text-white"
+            className="inline-flex min-h-9 items-center rounded-lg border border-accent bg-accent-solid px-3 text-[12px] font-semibold text-primary-contrast"
             href={appPath(projectRef, "timeline")}
           >
             Back to page 1
@@ -158,7 +158,7 @@ function Pagination({ projectRef, view }: Readonly<{ projectRef: string; view: T
     <nav className="flex items-center justify-between gap-3" aria-label="Timeline pages">
       {view.hasPreviousPage ? (
         <Link
-          className="inline-flex min-h-8 items-center rounded-lg border border-border-strong bg-bg-elev px-3 text-[12px] font-semibold text-fg-muted hover:border-accent hover:text-accent"
+          className="inline-flex min-h-8 items-center rounded-lg border border-border-strong bg-bg-elev px-3 text-[12px] font-semibold text-fg-muted hover:border-accent hover:text-accent-text"
           href={timelineHref({
             filter: view.filter,
             page: view.page - 1,
@@ -172,10 +172,10 @@ function Pagination({ projectRef, view }: Readonly<{ projectRef: string; view: T
       ) : (
         <span />
       )}
-      <span className="font-mono text-[11px] text-fg-faint">Page {view.page}</span>
+      <span className="font-mono text-[11px] text-fg-muted">Page {view.page}</span>
       {view.hasNextPage ? (
         <Link
-          className="inline-flex min-h-8 items-center rounded-lg border border-border-strong bg-bg-elev px-3 text-[12px] font-semibold text-fg-muted hover:border-accent hover:text-accent"
+          className="inline-flex min-h-8 items-center rounded-lg border border-border-strong bg-bg-elev px-3 text-[12px] font-semibold text-fg-muted hover:border-accent hover:text-accent-text"
           href={timelineHref({
             filter: view.filter,
             page: view.page + 1,
@@ -212,7 +212,7 @@ export function TimelineFeed({
             <SectionTitle>Timeline</SectionTitle>
             <button
               aria-label={TOOLTIP}
-              className="bv-tip inline-grid h-4 w-4 cursor-help place-items-center border-0 bg-transparent p-0 text-fg-faint"
+              className="bv-tip inline-grid h-4 w-4 cursor-help place-items-center border-0 bg-transparent p-0 text-fg-muted"
               data-tip={TOOLTIP}
               type="button"
             >
@@ -230,10 +230,10 @@ export function TimelineFeed({
         method="get"
       >
         {view.filter !== "all" ? <input name="filter" type="hidden" value={view.filter} /> : null}
-        <label className="flex min-h-10 min-w-0 flex-1 items-center gap-2 rounded-[10px] border border-border-strong bg-bg-sunken px-3 transition-colors focus-within:border-accent">
-          <MagnifyingGlass aria-hidden className="shrink-0 text-fg-faint" size={15} />
+        <label className="flex min-h-10 min-w-0 flex-1 items-center gap-2 rounded-[10px] border border-border-strong bg-transparent px-3 transition-colors focus-within:border-accent">
+          <MagnifyingGlass aria-hidden className="shrink-0 text-fg-muted" size={15} />
           <input
-            className="min-w-0 flex-1 bg-transparent font-mono text-[12.5px] text-fg outline-none focus-visible:outline-none placeholder:text-fg-faint"
+            className="min-w-0 flex-1 bg-transparent font-mono text-[12.5px] text-fg outline-none focus-visible:outline-none placeholder:text-fg-muted"
             defaultValue={view.search}
             name="q"
             placeholder="Search timeline (type, URL, note)..."
@@ -241,7 +241,7 @@ export function TimelineFeed({
           />
         </label>
         <button
-          className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-lg border border-border-strong bg-bg-elev px-3 text-[12px] font-semibold text-fg-muted outline-none transition-colors hover:border-accent hover:text-accent focus-visible:border-accent focus-visible:text-accent"
+          className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-lg border border-border-strong bg-bg-elev px-3 text-[12px] font-semibold text-fg-muted outline-none transition-colors hover:border-accent hover:text-accent-text focus-visible:border-accent focus-visible:text-accent-text"
           type="submit"
         >
           Search

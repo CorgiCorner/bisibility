@@ -12,6 +12,7 @@ import { listAlertRuleViews, listTriggeredAlertViews } from "@/lib/api/alert-lis
 import { listWebhookEndpointsWithHistory } from "@/lib/api/webhook-service";
 import { prisma } from "@/lib/db/prisma";
 import { type PublicIdPrefix, parsePublicId } from "@/lib/db/public-id";
+import { trackedProjectDomain } from "@/lib/schemas/project";
 import { requireReadableProject } from "./_auth";
 
 function requiredPublicId(value: string | null, prefix: PublicIdPrefix, resource: string) {
@@ -101,6 +102,6 @@ export async function getAlertsView(projectId: string) {
       ...rule,
       depthConflict: alertDepthConflict(rule, minimumTargetedDepth(rule, targets.depthKeywords)),
     })),
-    targets: { ...targets.options, projectDomain: project.domain },
+    targets: { ...targets.options, projectDomain: trackedProjectDomain(project.domain) ?? "" },
   };
 }

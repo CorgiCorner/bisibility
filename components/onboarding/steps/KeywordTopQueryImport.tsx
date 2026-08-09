@@ -9,6 +9,7 @@ import {
   feedbackClass,
   keywordLines,
 } from "@/components/onboarding/onboarding-form-utils";
+import { Button } from "@/components/ui";
 import type { TopQuerySuggestion } from "@/lib/keyword-suggest/sanitize-top-queries";
 import { appPath } from "@/lib/routing/app-path";
 import { ArrowLineDownIcon as ArrowLineDown } from "@phosphor-icons/react";
@@ -121,22 +122,31 @@ export function KeywordTopQueryImport({
 
   return (
     <div className="mt-[18px] flex flex-wrap items-center gap-2">
-      <button
-        className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-border-strong bg-bg-elev px-3 text-[12.5px] font-semibold text-fg-muted transition-colors hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-60"
-        disabled={isPending || !importTopQueriesAction}
+      <Button
+        disabled={!importTopQueriesAction}
+        loading={isPending}
+        loadingLabel="Importing top queries..."
         onClick={handleImport}
+        startIcon={<ArrowLineDown aria-hidden size={14} weight="bold" />}
+        sx={{
+          color: "var(--fg-muted)",
+          "&:hover": { borderColor: "var(--accent)", color: "var(--accent-text)" },
+        }}
         type="button"
+        variant="secondary"
       >
-        <ArrowLineDown aria-hidden size={14} weight="bold" />
-        {isPending ? "Importing top queries..." : "Import top queries from Search Console"}
-      </button>
+        Import top queries from Search Console
+      </Button>
       {feedback ? (
         <span className={`${feedbackClass} text-fg-muted`}>
           {feedback}
           {needsReauth ? (
             <>
               {" "}
-              <Link className="font-semibold text-accent" href={appPath(projectId, "integrations")}>
+              <Link
+                className="font-semibold text-accent-text"
+                href={appPath(projectId, "integrations")}
+              >
                 Reconnect your Google account
               </Link>
             </>

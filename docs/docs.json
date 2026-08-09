@@ -4,6 +4,9 @@
   "description": "Self-hostable, open-source keyword rank tracker. Bring your own SERP and analytics providers, track positions over time, and get alerts.",
   "favicon": "/favicon.svg",
   "theme": "mint",
+  "fonts": {
+    "family": "Geist"
+  },
   "colors": {
     "primary": "#D97757",
     "light": "#E08A6A",

@@ -2,7 +2,7 @@ import "server-only";
 
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
-import { createProjectSchema } from "@/lib/schemas/project";
+import { createProjectSchema, domainSchema } from "@/lib/schemas/project";
 import { projectAuditResource } from "./audit-resources";
 import type { ApiContext, PersonalApiContext } from "./context";
 import { forbidden, projectMatches } from "./context";
@@ -25,8 +25,11 @@ const projectSelect = {
   writeMode: true,
 } as const;
 
+const apiCreateProjectSchema = createProjectSchema.extend({ domain: domainSchema });
+
 const projectPatchSchema = createProjectSchema
   .pick({ domain: true, name: true })
+  .extend({ domain: domainSchema })
   .partial()
   .refine((value) => value.domain !== undefined || value.name !== undefined, {
     message: "domain or name is required.",
@@ -74,7 +77,7 @@ export async function listProjectsForUser(ctx: PersonalApiContext) {
 // the token's write tier. Project keys keep the 403 in createProject below.
 export async function createProjectForUser(ctx: PersonalApiContext) {
   const body = await readJsonBody(ctx);
-  const data = parseApiInput(createProjectSchema, objectBody(body));
+  const data = parseApiInput(apiCreateProjectSchema, objectBody(body));
   try {
     const project = await createProjectRecord(data, ctx.auth.user.id);
     return resourceResponse(projectResource(project), { headers: ctx.headers, status: 201 });

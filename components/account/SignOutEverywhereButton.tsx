@@ -44,7 +44,7 @@ export function SignOutEverywhereButton({
     <div className="mt-3 flex flex-wrap items-center gap-3">
       {message ? <span className={cn(feedbackClass, "text-fg-muted")}>{message}</span> : null}
       <button
-        className={cn(ghostButtonClass, "text-red hover:text-red")}
+        className={cn(ghostButtonClass, "text-red-text hover:text-red-text")}
         disabled={isPending || otherSessionCount === 0}
         onClick={onClick}
         type="button"

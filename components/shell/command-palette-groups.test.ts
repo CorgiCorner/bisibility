@@ -28,7 +28,7 @@ describe("commandGroups", () => {
       (group) => group.title === "Navigate",
     );
 
-    navigate?.items.find((item) => item.label === "Research")?.run();
+    navigate?.items.find((item) => item.label === "Keyword research")?.run();
 
     expect(push).toHaveBeenCalledWith("/app/prj_1/research");
   });

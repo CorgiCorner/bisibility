@@ -77,7 +77,7 @@ export function WebhookSecretField({
           </Button>
         ) : null}
       </div>
-      <p className="m-0 text-[10.5px] leading-relaxed text-fg-faint">
+      <p className="m-0 text-[10.5px] leading-relaxed text-fg-muted">
         Generated secrets use 32 random bytes. Copy it now; it cannot be read back after saving.
       </p>
     </div>

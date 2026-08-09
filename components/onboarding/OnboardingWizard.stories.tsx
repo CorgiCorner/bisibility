@@ -13,10 +13,8 @@ import {
 import { StepDeveloperAccess } from "@/components/onboarding/steps/StepDeveloperAccess";
 import { StepFirstCheck } from "@/components/onboarding/steps/StepFirstCheck";
 import { StepSchedule } from "@/components/onboarding/steps/StepSchedule";
-import {
-  ChartLineUpIcon as ChartLineUp,
-  SignOutIcon as SignOut,
-} from "@phosphor-icons/react/dist/ssr";
+import { BrandLockup } from "@/components/ui";
+import { SignOutIcon as SignOut } from "@phosphor-icons/react/dist/ssr";
 import type { Meta, StoryObj } from "@storybook/react";
 import type { ReactNode } from "react";
 
@@ -167,23 +165,18 @@ function OnboardingStory({
     <main className="min-h-dvh bg-bg px-4 py-[46px] pb-24 text-fg sm:px-6">
       <div className="mx-auto w-full max-w-[940px]">
         <header className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-[9px]">
-            <span className="grid h-[30px] w-[30px] place-items-center rounded-lg bg-accent text-white">
-              <ChartLineUp aria-hidden size={17} weight="bold" />
-            </span>
-            <span className="text-lg font-bold tracking-[-0.5px]">bisibility</span>
-          </div>
+          <BrandLockup />
           <div className="inline-flex items-center gap-2 text-[12.5px] text-fg-muted">
             <span className="inline-flex items-center gap-1.5">
-              <span className="grid h-[22px] w-[22px] place-items-center rounded-md bg-accent font-mono text-[9px] font-semibold text-white">
+              <span className="grid h-[22px] w-[22px] place-items-center rounded-md bg-accent-solid font-mono text-[9px] font-semibold text-white">
                 AK
               </span>
               demo@acme.dev
             </span>
-            <span className="text-fg-faint">&middot;</span>
-            <span className="text-fg-faint">Not you?</span>
+            <span className="text-fg-muted">&middot;</span>
+            <span className="text-fg-muted">Not you?</span>
             <button
-              className="inline-flex items-center gap-1 font-semibold text-accent"
+              className="inline-flex items-center gap-1 font-semibold text-accent-text"
               type="button"
             >
               <SignOut aria-hidden size={13} weight="bold" />

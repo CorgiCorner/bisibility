@@ -319,7 +319,7 @@ describe("POST /api/cloud/import", () => {
 
     expect(response.status).toBe(423);
     await expect(response.json()).resolves.toMatchObject({
-      detail: "Destination workspace is in migration hold - release it before importing.",
+      detail: "Destination project is in migration hold - release it before importing.",
       status: 423,
       title: "Project read-only",
       type: expect.stringContaining("project_read_only"),

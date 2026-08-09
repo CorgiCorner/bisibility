@@ -76,7 +76,7 @@ async function notifyOwner(input: StoredWaitlist) {
   const details = [
     `Email: ${input.email}`,
     `Source: ${input.source}`,
-    input.cloudPrice ? `Cloud price: ${input.cloudPrice}` : null,
+    input.cloudPrice ? `Hosted price: ${input.cloudPrice}` : null,
     `Submissions: ${input.submissions}`,
   ].filter(Boolean);
 

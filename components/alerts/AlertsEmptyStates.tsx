@@ -21,7 +21,7 @@ export function AlertsSetupEmpty({
         canCreateKeyword
           ? (action ?? (
               <Link
-                className="inline-flex min-h-10 items-center gap-[7px] rounded-[10px] bg-accent px-[18px] text-[13.5px] font-semibold text-white outline-none transition-colors hover:bg-accent-hover focus-visible:bg-accent-hover"
+                className="inline-flex min-h-10 items-center gap-[7px] rounded-[10px] bg-accent-solid px-[18px] text-[13.5px] font-semibold text-primary-contrast outline-none transition-colors hover:bg-accent-solid-hover focus-visible:bg-accent-solid-hover"
                 href={appPath(projectRef, "keywords")}
               >
                 <Plus aria-hidden size={14} weight="bold" />
@@ -57,7 +57,7 @@ export function AlertsAllClear({
       footnote={
         <span className="flex flex-wrap items-center justify-center gap-3">
           <span className="inline-flex items-center gap-1.5">
-            <CheckCircle aria-hidden className="text-green" size={13} weight="fill" />
+            <CheckCircle aria-hidden className="text-green-text" size={13} weight="fill" />
             {pluralize(activeRuleCount, "active rule")}
           </span>
           <span className="h-[11px] w-px bg-border-strong" />

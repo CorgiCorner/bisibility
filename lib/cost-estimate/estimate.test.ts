@@ -163,7 +163,7 @@ describe("provider plan selection", () => {
       { depth: 100, keywordCount: 100, locationCount: 1, deviceCount: 1, frequency: "daily" },
       {
         providerId: "serpapi",
-        label: "SerpAPI",
+        label: "SerpApi",
         sourceUrl: "https://serpapi.com/pricing",
         checkedAt: "2026-07-03",
         pricingModel: "plan",
@@ -185,7 +185,7 @@ describe("provider plan selection", () => {
       { depth: 100, keywordCount: 50, locationCount: 1, deviceCount: 1, frequency: "daily" },
       {
         providerId: "serpapi",
-        label: "SerpAPI",
+        label: "SerpApi",
         sourceUrl: "https://serpapi.com/pricing",
         checkedAt: "2026-07-04",
         pricingModel: "plan",
@@ -206,7 +206,7 @@ describe("provider plan selection", () => {
       { depth: 10, keywordCount: 50, locationCount: 1, deviceCount: 1, frequency: "daily" },
       {
         providerId: "serpapi",
-        label: "SerpAPI",
+        label: "SerpApi",
         sourceUrl: "https://serpapi.com/pricing",
         checkedAt: "2026-07-04",
         pricingModel: "plan",
@@ -226,7 +226,7 @@ describe("provider plan selection", () => {
       { depth: 100, keywordCount: 50, locationCount: 1, deviceCount: 1, frequency: "daily" },
       {
         providerId: "serpapi",
-        label: "SerpAPI",
+        label: "SerpApi",
         sourceUrl: "https://serpapi.com/pricing",
         checkedAt: "2026-07-04",
         pricingModel: "plan",
@@ -311,7 +311,7 @@ describe("depth-aware flat pricing", () => {
 describe("plan selection by searches", () => {
   const serpapi = PROVIDER_RATES.find((rate) => rate.providerId === "serpapi");
   if (serpapi?.pricingModel !== "plan") {
-    throw new Error("SerpAPI plans are required for cost estimate tests");
+    throw new Error("SerpApi plans are required for cost estimate tests");
   }
 
   it("selects the plan covering checks times searches per check", () => {

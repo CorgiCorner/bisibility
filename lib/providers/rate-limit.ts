@@ -21,7 +21,7 @@ const COOLDOWN_REPEAT_WINDOW_MS = 10 * 60_000;
 export type ProviderPolicy = { perMinute: number; windowSeconds: number };
 
 // Defaults stay below DataForSEO's 2,000/min and 30-concurrent quotas plus GSC's
-// 1,200 QPM and 2,000/day inspection quotas; SerpAPI and GA4 use minute approximations.
+// 1,200 QPM and 2,000/day inspection quotas; SerpApi and GA4 use minute approximations.
 const DEFAULT_POLICIES: Record<string, ProviderPolicy> = {
   dataforseo: { perMinute: 1800, windowSeconds: 60 },
   ga4: { perMinute: 60, windowSeconds: 60 },

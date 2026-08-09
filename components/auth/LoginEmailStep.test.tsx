@@ -94,8 +94,6 @@ describe("LoginEmailStep", () => {
       googleSpots: { cap: 100, left: 14 },
       signupsToday: 1,
     });
-
-    expect(screen.getByText("1 person joined today")).toBeInTheDocument();
   });
 
   it("renders both configured social providers", () => {
@@ -117,6 +115,7 @@ describe("LoginEmailStep", () => {
     const terms = screen.getByRole("link", { name: "Terms" });
     const privacy = screen.getByRole("link", { name: "Privacy Policy" });
     const consent = container.querySelector("p.mt-\\[22px\\]");
+    // No capacity means no hosted beta, so the beta-email clause is deliberately absent here.
     expect(consent).toHaveTextContent("By continuing you agree to the Terms and Privacy Policy.");
     expect(terms).toHaveAttribute("href", "/terms");
     expect(terms).not.toHaveAttribute("target");
@@ -195,12 +194,6 @@ describe("LoginEmailStep", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("14 of 100 Google sign-up spots left")).toBeInTheDocument();
     expect(screen.getByText("143 of 200 login codes left today")).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        "By joining the Cloud beta, you agree to receive emails about beta updates, incidents, pricing, and general availability.",
-      ),
-    ).toBeInTheDocument();
-    expect(screen.getByText("26 people joined today")).toBeInTheDocument();
   });
 
   it("omits the email meter and gate when capacity is unknown", () => {

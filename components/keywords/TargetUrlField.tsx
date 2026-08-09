@@ -1,4 +1,4 @@
-import { FieldLabel } from "@/components/ui";
+import { FieldLabel, Input } from "@/components/ui";
 import { FIELD_HELP } from "@/lib/settings/field-help";
 import { cn } from "@/lib/ui/cn";
 import { forwardRef, type InputHTMLAttributes, useId } from "react";
@@ -21,19 +21,19 @@ export const TargetUrlField = forwardRef<HTMLInputElement, TargetUrlFieldProps>(
     return (
       <div
         className={cn(
-          "flex min-w-0 flex-col gap-1.5 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint",
+          "flex min-w-0 flex-col gap-1.5 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted",
           className,
         )}
       >
         <FieldLabel help={help} htmlFor={inputId} label={label} />
-        <input
+        <Input
           aria-label={label}
-          className="min-h-10 w-full rounded-lg border border-border-strong bg-bg-sunken px-3 font-mono text-[13px] font-medium normal-case tracking-normal text-fg outline-none transition-colors focus:border-accent"
+          className="min-h-10 w-full rounded-lg px-3 font-mono text-[13px] font-medium normal-case tracking-normal"
           {...inputProps}
           id={inputId}
           ref={ref}
         />
-        {error ? <span className="normal-case tracking-normal text-red">{error}</span> : null}
+        {error ? <span className="normal-case tracking-normal text-red-text">{error}</span> : null}
       </div>
     );
   },

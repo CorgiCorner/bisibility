@@ -11,7 +11,10 @@ export type ButtonProps = Omit<MuiButtonProps, "color" | "size" | "variant"> & {
   download?: string;
   loading?: boolean;
   loadingLabel?: string;
+  /** Anchor attributes, valid whenever `href` is set - external links need both. */
+  rel?: string;
   size?: ButtonSize;
+  target?: string;
   variant?: ButtonVariant;
 };
 
@@ -26,7 +29,7 @@ const variantSx = {
   destructive: {
     backgroundColor: "var(--red)",
     border: "1px solid var(--red)",
-    color: "#fff",
+    color: "var(--mui-palette-error-contrastText)",
     "&:hover": { backgroundColor: "var(--red)", opacity: 0.9 },
   },
   ghost: {
@@ -35,19 +38,30 @@ const variantSx = {
     color: "var(--fg-muted)",
     "&:hover": { backgroundColor: "var(--bg-sunken)", color: "var(--fg)" },
   },
+  // The solid pair, not --accent. --accent is the light brand hue and cannot carry a light
+  // label: --accent-on-solid over --accent lands at 2.9:1, over --accent-solid at 4.7:1. See the
+  // note on the pair in globals.css and the surface assertions in lib/theme/contrast.test.ts.
   primary: {
-    backgroundColor: "var(--accent)",
-    border: "1px solid var(--accent)",
-    color: "#fff",
-    "&:hover": { backgroundColor: "var(--accent-hover)" },
+    backgroundColor: "var(--accent-solid)",
+    border: "1px solid var(--accent-solid)",
+    color: "var(--mui-palette-primary-contrastText)",
+    "&:hover": {
+      backgroundColor: "var(--accent-solid-hover)",
+      border: "1px solid var(--accent-solid-hover)",
+    },
   },
+  // Deliberately quieter than primary: the outline already carries the shape, so a
+  // full-weight full-contrast label made secondary read as the louder of the two.
+  // Muted still clears 4.5:1 on both surfaces, and hover restores full contrast.
   secondary: {
     backgroundColor: "var(--bg-elev)",
     border: "1px solid var(--border-strong)",
-    color: "var(--fg)",
+    color: "var(--fg-muted)",
+    fontWeight: 500,
     "&:hover": {
       backgroundColor: "var(--bg-sunken)",
       border: "1px solid var(--border-strong)",
+      color: "var(--fg)",
     },
   },
 } as const;
@@ -88,12 +102,12 @@ export function Button({
         {
           fontWeight: 600,
           textTransform: "none",
-          transition: "background-color .16s ease, border-color .16s ease, opacity .16s ease",
+          transition: "background-color .16s ease, border-color .16s ease",
           "&.Mui-disabled": {
-            backgroundColor: variantSx[variant].backgroundColor,
-            border: variantSx[variant].border,
-            color: variantSx[variant].color,
-            opacity: 0.55,
+            backgroundColor: "var(--bg-sunken)",
+            border: "1px solid var(--border-strong)",
+            color: "var(--fg-muted)",
+            opacity: 1,
           },
         },
         sizeSx[size],

@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, MenuMultiSelect, MenuSelect } from "@/components/ui";
+import { Button, inputClassName, MenuMultiSelect, MenuSelect } from "@/components/ui";
 import type { AlertTargetOptions } from "@/lib/alerts/alert-data";
 import type { NewRuleForm, RuleTemplateId } from "@/lib/alerts/new-rule-data";
 import { ruleSeverityMeta, ruleTemplates } from "@/lib/alerts/new-rule-data";
@@ -12,11 +12,10 @@ import type {
 } from "react-hook-form";
 
 const labelClass =
-  "flex flex-col gap-[7px] font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint";
-const fieldClass =
-  "rounded-[9px] border border-border-strong bg-bg-sunken px-3 py-2.5 text-[13px] font-medium text-fg outline-none focus:border-accent";
+  "flex flex-col gap-[7px] font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted";
+const fieldClass = `${inputClassName} rounded-[9px] px-3 py-2.5 text-[13px] font-medium`;
 const selectTriggerClass =
-  "min-h-10 w-full justify-between rounded-[9px] border-border-strong bg-bg-sunken px-3 text-[13px] font-medium normal-case tracking-normal";
+  "min-h-10 w-full justify-between rounded-[9px] border-border-strong bg-transparent px-3 text-[13px] font-medium normal-case tracking-normal";
 const scopeOptions = [
   { label: "All keywords", value: "all" },
   { label: "Keyword", value: "keyword" },
@@ -43,7 +42,7 @@ export function TemplatePicker({
 }>) {
   return (
     <section>
-      <div className="mb-[9px] font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint">
+      <div className="mb-[9px] font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
         Template
       </div>
       <div className="flex flex-wrap gap-2">
@@ -63,7 +62,7 @@ export function TemplatePicker({
                   ? {
                       backgroundColor: "var(--accent-soft)",
                       borderColor: "var(--accent)",
-                      color: "var(--accent)",
+                      color: "var(--accent-text)",
                     }
                   : undefined
               }
@@ -137,7 +136,9 @@ export function ScopeFields({
             triggerClassName={selectTriggerClass}
             value={targetId}
           />
-          {errors.targetIds ? <span className="text-red">{errors.targetIds.message}</span> : null}
+          {errors.targetIds ? (
+            <span className="text-red-text">{errors.targetIds.message}</span>
+          ) : null}
         </div>
       ) : null}
     </div>
@@ -155,7 +156,7 @@ export function RecipientFields({
 }>) {
   return (
     <div className="mt-3 flex flex-col gap-[7px]">
-      <span className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint">
+      <span className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
         Recipients
       </span>
       <MenuMultiSelect
@@ -253,7 +254,7 @@ function NumberField({
     <label className={labelClass}>
       {label}
       <input className={fieldClass} max={max} min={1} step={step} type="number" {...register} />
-      {error ? <span className="text-red">{error}</span> : null}
+      {error ? <span className="text-red-text">{error}</span> : null}
     </label>
   );
 }
@@ -271,7 +272,7 @@ function TextField({
     <label className={labelClass}>
       {label}
       <input className={fieldClass} {...register} />
-      {error ? <span className="text-red">{error}</span> : null}
+      {error ? <span className="text-red-text">{error}</span> : null}
     </label>
   );
 }

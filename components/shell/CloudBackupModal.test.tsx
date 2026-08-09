@@ -68,19 +68,19 @@ describe("CloudBackupModal", () => {
       /\b\d[\d,]*\s+(?:keywords?|rows?|records?|items?|sections?)\b/i,
     );
     expect(exportChip.closest("h2")).toBe(
-      screen.getByRole("heading", { name: /Export workspace data/i }),
+      screen.getByRole("heading", { name: /Export project data/i }),
     );
-    expect(screen.getByRole("radio", { name: /Workspace package/i })).toBeChecked();
+    expect(screen.getByRole("radio", { name: /Project package/i })).toBeChecked();
     expect(includedRow("Keywords & tags")).toHaveTextContent("248");
     expect(includedRow("Rank history")).toHaveTextContent("412,000");
     expect(includedRow("Competitors")).toHaveTextContent("3");
     expect(includedRow("Alert rules")).toHaveTextContent("2");
     expect(includedRow("Saved views")).toHaveTextContent("4");
     expect(includedRow("Notification preferences")).toHaveTextContent("1");
-    expect(includedRow("Workspace details")?.children).toHaveLength(2);
+    expect(includedRow("Project details")?.children).toHaveLength(2);
   });
 
-  it("renders a sensible state when the workspace has never exported", () => {
+  it("renders a sensible state when the project has never exported", () => {
     render(<CloudBackupModal {...defaultProps} lastExport={null} />);
 
     expect(screen.getByTestId("cloud-backup-export-status")).toHaveTextContent("Never exported");
@@ -131,12 +131,12 @@ describe("CloudBackupModal", () => {
   });
 
   it("surfaces package export failures through the shared action error", async () => {
-    mocks.exportPackage.mockRejectedValueOnce(new Error("Workspace export is unavailable."));
+    mocks.exportPackage.mockRejectedValueOnce(new Error("Project export is unavailable."));
     render(<CloudBackupModal {...defaultProps} />);
 
     fireEvent.click(screen.getByRole("button", { name: "Export package" }));
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("Workspace export is unavailable.");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Project export is unavailable.");
     expect(mocks.downloadWorkspacePackage).not.toHaveBeenCalled();
   });
 

@@ -25,7 +25,7 @@ export function SpendMeterDocsInfo({
     <>
       <button
         aria-label="About provider spend"
-        className="inline-flex h-3.5 w-3.5 shrink-0 cursor-help appearance-none items-center justify-center rounded-full border-0 bg-transparent p-0 text-fg-faint transition-colors hover:text-fg-muted focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent"
+        className="inline-flex h-3.5 w-3.5 shrink-0 cursor-help appearance-none items-center justify-center rounded-full border-0 bg-transparent p-0 text-fg-muted transition-colors hover:text-fg-muted focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent-solid"
         onClick={(event) => setAnchor(event.currentTarget)}
         type="button"
       >
@@ -59,7 +59,7 @@ export function SpendMeterDocsInfo({
           )}
           <div className="mt-2 flex items-center gap-3">
             <a
-              className="inline-flex text-[12px] font-medium text-accent hover:text-accent-hover hover:underline"
+              className="inline-flex text-[12px] font-medium text-accent-text hover:text-accent-text hover:underline"
               href={docsHref}
               {...docsLinkProps(docsHref)}
             >
@@ -67,7 +67,7 @@ export function SpendMeterDocsInfo({
             </a>
             {editBudgetHref ? (
               <Link
-                className="inline-flex text-[12px] font-medium text-accent hover:text-accent-hover hover:underline"
+                className="inline-flex text-[12px] font-medium text-accent-text hover:text-accent-text hover:underline"
                 href={editBudgetHref}
               >
                 Edit budget

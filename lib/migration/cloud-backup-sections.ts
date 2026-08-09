@@ -38,14 +38,14 @@ export const CLOUD_BACKUP_SECTIONS = [
   {
     countable: true,
     countKey: "savedViews",
-    description: "Names and workspace filter configurations",
+    description: "Names and project filter configurations",
     label: "Saved views",
     payloadKey: "saved_views",
   },
   {
     countable: true,
     countKey: "notificationPreferences",
-    description: "Workspace notification choices",
+    description: "Project notification choices",
     label: "Notification preferences",
     payloadKey: "notification_preferences",
   },
@@ -53,7 +53,7 @@ export const CLOUD_BACKUP_SECTIONS = [
     countable: false,
     countKey: null,
     description: "Name, domain and import metadata",
-    label: "Workspace details",
+    label: "Project details",
     payloadKey: "projects",
   },
 ] as const satisfies readonly CloudBackupSectionContract[];

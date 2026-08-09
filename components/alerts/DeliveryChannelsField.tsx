@@ -55,7 +55,7 @@ export function DeliveryChannelsField({
           tabIndex={-1}
         />
         <span className="flex-1 text-[13px] font-semibold">In-app feed</span>
-        <span className="font-mono text-[10px] text-accent">always on</span>
+        <span className="font-mono text-[10px] text-accent-text">always on</span>
       </label>
       {deliveryChannels.map(({ Icon, label, name }) => {
         const checked = channels.includes(name);
@@ -65,7 +65,7 @@ export function DeliveryChannelsField({
           <label
             className={`flex items-center gap-[11px] rounded-[10px] border px-[13px] py-[11px] transition-colors ${
               unavailable
-                ? "cursor-not-allowed border-border-strong bg-bg-sunken text-fg-muted opacity-60"
+                ? "cursor-not-allowed border-border-strong bg-transparent text-fg-muted"
                 : checked
                   ? "border-accent bg-accent-soft"
                   : "cursor-pointer border-border-strong bg-bg-elev hover:border-accent"
@@ -93,7 +93,9 @@ export function DeliveryChannelsField({
             )}
             <Icon
               aria-hidden
-              className={unavailable ? "text-fg-faint" : checked ? "text-accent" : "text-fg-muted"}
+              className={
+                unavailable ? "text-fg-muted" : checked ? "text-accent-text" : "text-fg-muted"
+              }
               size={15}
             />
             <span className="flex-1 text-[13px] font-semibold">{label}</span>
@@ -101,14 +103,14 @@ export function DeliveryChannelsField({
               <Tooltip title={PLANNED_ALERT_CHANNEL_LABEL}>
                 <span
                   aria-label={`${label} ${PLANNED_ALERT_CHANNEL_LABEL}`}
-                  className="inline-flex text-fg-faint"
+                  className="inline-flex text-fg-muted"
                 >
                   <LockSimple aria-hidden size={13} weight="bold" />
                 </span>
               </Tooltip>
             ) : (
               <span
-                className={`font-mono text-[10px] ${checked ? "text-accent" : "text-fg-faint"}`}
+                className={`font-mono text-[10px] ${checked ? "text-accent-text" : "text-fg-muted"}`}
               >
                 {checked ? "selected" : "optional"}
               </span>

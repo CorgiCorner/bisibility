@@ -2,8 +2,8 @@
 
 import { docsLinkProps } from "@/lib/site/site";
 import {
-  ArrowRightIcon as ArrowRight,
   ArrowsClockwiseIcon as ArrowsClockwise,
+  CaretRightIcon as CaretRight,
   WarningCircleIcon as WarningCircle,
   XIcon as X,
 } from "@phosphor-icons/react";
@@ -33,7 +33,7 @@ const tintStyles = {
   },
   yellow: {
     background: "color-mix(in srgb, var(--yellow) 10%, transparent)",
-    color: "var(--yellow-strong)",
+    color: "var(--yellow-text)",
     hover: "color-mix(in srgb, var(--yellow) 14%, transparent)",
   },
 } satisfies Record<
@@ -46,7 +46,7 @@ function ActionIcon({ icon }: Readonly<{ icon?: NonNullable<AlertBannerAction["i
     return <ArrowsClockwise aria-hidden size={14} />;
   }
   if (icon === "arrow") {
-    return <ArrowRight aria-hidden size={14} weight="bold" />;
+    return <CaretRight aria-hidden size={14} weight="bold" />;
   }
   return null;
 }
@@ -61,7 +61,7 @@ export function AlertBanner({
   const style = tintStyles[tint];
   const actionClass =
     "inline-flex items-center gap-1.5 rounded-lg border bg-bg-elev px-3 py-1.5 text-[12px] font-semibold";
-  const actionStyle = { borderColor: style.color, color: style.color };
+  const actionStyle = { borderColor: style.color, color: "var(--fg)" };
   const actionContent = action ? (
     <>
       <ActionIcon icon={action.icon} />
@@ -82,7 +82,7 @@ export function AlertBanner({
         {detail ? (
           <>
             {" "}
-            <span className="text-fg-muted">{detail}</span>
+            <span>{detail}</span>
           </>
         ) : null}
       </span>

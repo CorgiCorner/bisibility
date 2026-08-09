@@ -15,6 +15,7 @@ import { normalizeCompetitorDomain } from "@/lib/competitors/types";
 import { prisma } from "@/lib/db/prisma";
 import { isPublicIdOfType } from "@/lib/db/public-id";
 import { storedOrganicDomainRanks } from "@/lib/rank-check/organic-ranks";
+import { trackedProjectDomain } from "@/lib/schemas/project";
 import { requireReadableProject } from "./_auth";
 import { legacyOrganicRanks } from "./competitor-legacy-ranks";
 import type { QueryKeywordDetail } from "./competitor-query-model";
@@ -33,7 +34,8 @@ async function queryCompetitors(
   includeAllMarkets: boolean,
 ) {
   const { project } = await requireReadableProject(projectId);
-  const ownDomain = normalizeCompetitorDomain(project.domain) ?? project.domain;
+  const projectDomain = trackedProjectDomain(project.domain) ?? "";
+  const ownDomain = normalizeCompetitorDomain(projectDomain) ?? projectDomain;
   const [competitorRows, keywordSummaries] = await Promise.all([
     prisma.competitor.findMany({
       orderBy: [{ label: "asc" }, { domain: "asc" }],

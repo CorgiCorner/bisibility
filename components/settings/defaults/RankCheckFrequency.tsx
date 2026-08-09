@@ -38,8 +38,8 @@ import { ScheduleMetrics } from "./ScheduleMetrics";
 
 type DefaultsForm = z.infer<typeof projectDefaultsSchema>;
 const timezoneTriggerClass =
-  "min-h-10 w-full justify-between rounded-lg border-border-strong bg-bg-sunken px-3 text-[13px] font-medium normal-case tracking-normal";
-const fieldLabelClass = "font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint";
+  "min-h-10 w-full justify-between rounded-lg border-border-strong bg-transparent px-3 text-[13px] font-medium normal-case tracking-normal";
+const fieldLabelClass = "font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted";
 
 export type RankCheckFrequencyProps = {
   defaults: DefaultsData;
@@ -175,10 +175,10 @@ export function RankCheckFrequency({
             <button
               aria-pressed={frequency === option.value}
               className={cn(
-                "min-h-10 rounded-lg border px-[11px] text-[13px] font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-55",
+                "min-h-10 rounded-lg border px-[11px] text-[13px] font-medium transition-colors disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted",
                 frequency === option.value
-                  ? "border-accent bg-accent text-white"
-                  : "border-border-strong bg-bg-sunken text-fg-muted hover:border-accent hover:text-accent",
+                  ? "border-accent bg-accent-solid text-primary-contrast"
+                  : "border-border-strong bg-transparent text-fg-muted hover:border-accent hover:text-accent-text",
               )}
               disabled={readOnly}
               key={option.value}
@@ -218,14 +218,14 @@ export function RankCheckFrequency({
       {frequency === "custom_cron" ? (
         <div className="rounded-[14px] border border-border bg-bg-elev p-4">
           <div className="flex items-center gap-2 text-[13.5px] font-semibold">
-            <ClockCountdown className="text-accent" size={16} weight="fill" />
+            <ClockCountdown className="text-accent-text" size={16} weight="fill" />
             Custom schedule
           </div>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <div className={cn("flex flex-col gap-1.5", fieldLabelClass)}>
               <FieldLabel help={FIELD_HELP.cron} htmlFor={cronInputId} label="Cron expression" />
               <input
-                className="min-h-10 rounded-lg border border-border-strong bg-bg-sunken px-3 font-mono text-[13px] text-fg outline-none focus:border-accent"
+                className="min-h-10 rounded-lg border border-border-strong bg-transparent px-3 font-mono text-[13px] text-fg outline-none focus:border-accent"
                 id={cronInputId}
                 {...register("cronExpression")}
               />
@@ -250,7 +250,7 @@ export function RankCheckFrequency({
           <div className="mt-3 flex items-center gap-2 text-[12.5px] text-fg">
             <CheckCircle
               aria-hidden
-              className={preview.parsedCron.ok ? "text-green" : "text-yellow"}
+              className={preview.parsedCron.ok ? "text-green-text" : "text-yellow-text"}
               size={15}
             />
             {formState.errors.cronExpression?.message ?? preview.humanPreview}

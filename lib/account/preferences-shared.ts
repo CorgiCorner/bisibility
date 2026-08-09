@@ -5,7 +5,7 @@
 
 import { z } from "zod";
 
-export const themeValues = ["light", "dark"] as const;
+export const themeValues = ["light", "dark", "system"] as const;
 export const densityValues = ["compact", "standard", "comfortable"] as const;
 export const landingValues = ["overview", "keywords"] as const;
 export const dateFormatValues = ["iso", "eu", "long"] as const;
@@ -21,7 +21,7 @@ export const preferencesSchema = z.object({
   density: z.enum(densityValues).default("standard"),
   landing: z.enum(landingValues).default("overview"),
   language: z.enum(languageValues).default("en"),
-  theme: z.enum(themeValues).default("light"),
+  theme: z.enum(themeValues).default("system"),
   timezone: z.enum(timezoneValues).default("Europe/Warsaw"),
 });
 
@@ -32,7 +32,7 @@ export const PREFERENCE_COOKIES = {
   density: "pref_density",
   landing: "pref_landing",
   language: "pref_language",
-  // theme reuses the existing cookie set by ThemeToggle / read in app/app/layout.tsx.
+  // theme reuses the existing cookie set by ThemeSegments and read before paint.
   theme: "theme",
   timezone: "pref_timezone",
 } as const;
@@ -61,6 +61,7 @@ function pick<T extends readonly string[]>(allowed: T, value: unknown): T[number
 export const themeOptions = [
   { label: "Light", value: "light" },
   { label: "Dark", value: "dark" },
+  { label: "System", value: "system" },
 ] as const satisfies readonly { label: string; value: UserPreferences["theme"] }[];
 
 export const densityOptions = [

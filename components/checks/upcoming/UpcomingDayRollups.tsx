@@ -1,7 +1,7 @@
 "use client";
 
 import type { UpcomingDayGroup } from "@/lib/checks/contract";
-import { CaretDownIcon as CaretDown } from "@phosphor-icons/react";
+import { CaretDownIcon as CaretDown, CaretRightIcon as CaretRight } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useState } from "react";
 import { formatCheckCount, formatEstimatedCost, fuzzySampleTime } from "./upcoming-format";
@@ -16,14 +16,14 @@ export type UpcomingDayRollupsProps = {
 };
 
 const manageLinkClassName =
-  "text-xs font-semibold text-accent outline-none hover:underline focus-visible:underline";
+  "inline-flex items-center gap-1 text-xs font-semibold text-accent-text outline-none hover:underline focus-visible:underline";
 
 function DaySummary({ day }: Readonly<{ day: UpcomingDayGroup }>) {
   return (
     <>
       <span className="min-w-0 flex-1 text-left">
         <span className="block text-[13px] font-semibold text-fg">{day.label}</span>
-        <span className="mt-0.5 block font-mono text-[10.5px] text-fg-faint">
+        <span className="mt-0.5 block font-mono text-[10.5px] text-fg-muted">
           {formatCheckCount(day.count)}
         </span>
       </span>
@@ -47,7 +47,7 @@ function SampleRows({
           key={`${sample.keywordId}-${sample.nextCheckAt}`}
         >
           <span className="truncate text-fg-muted">{sample.keyword}</span>
-          <span className="shrink-0 font-mono text-[10.5px] text-fg-faint">
+          <span className="shrink-0 font-mono text-[10.5px] text-fg-muted">
             {fuzzySampleTime(sample.nextCheckAt, day.label, now, timeZone)}
           </span>
         </li>
@@ -79,8 +79,9 @@ export function UpcomingDayRollups({
             </article>
           ))}
         </div>
-        <Link className={`${manageLinkClassName} mt-3 inline-block`} href={schedulesHref}>
-          Manage schedules in Keywords →
+        <Link className={`${manageLinkClassName} mt-3`} href={schedulesHref}>
+          Manage schedules in Keywords
+          <CaretRight aria-hidden size={12} weight="bold" />
         </Link>
       </section>
     );
@@ -106,7 +107,7 @@ export function UpcomingDayRollups({
               <DaySummary day={day} />
               <CaretDown
                 aria-hidden
-                className={`shrink-0 text-fg-faint transition-transform ${
+                className={`shrink-0 text-fg-muted transition-transform ${
                   expanded ? "rotate-180" : ""
                 }`}
                 size={14}
@@ -118,7 +119,8 @@ export function UpcomingDayRollups({
                 <SampleRows day={day} now={now} timeZone={timeZone} />
                 <div className="border-border-soft border-t px-3.5 py-2.5">
                   <Link className={manageLinkClassName} href={schedulesHref}>
-                    Manage schedules in Keywords →
+                    Manage schedules in Keywords
+                    <CaretRight aria-hidden size={12} weight="bold" />
                   </Link>
                 </div>
               </div>

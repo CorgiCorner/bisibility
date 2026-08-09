@@ -32,14 +32,14 @@ export function RemoveNoteAction({ projectId, signalId }: Readonly<RemoveNoteAct
     <span className="flex flex-col items-end gap-1 md:pt-0.5">
       <button
         aria-label="Delete timeline note"
-        className="grid h-8 w-8 place-items-center rounded-lg border border-border-strong bg-bg-elev text-red outline-none hover:border-red disabled:cursor-not-allowed disabled:opacity-55"
+        className="grid h-8 w-8 place-items-center rounded-lg border border-border-strong bg-bg-elev text-red-text hover:border-red focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted"
         disabled={isPending}
         onClick={remove}
         type="button"
       >
         <Trash aria-hidden size={13} />
       </button>
-      {message ? <span className="font-mono text-[10px] text-red">{message}</span> : null}
+      {message ? <span className="font-mono text-[10px] text-red-text">{message}</span> : null}
     </span>
   );
 }

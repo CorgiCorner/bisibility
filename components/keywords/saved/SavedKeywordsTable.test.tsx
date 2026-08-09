@@ -189,7 +189,7 @@ describe("SavedKeywordsTable", () => {
     });
 
     expect(screen.getByLabelText("Saved snapshot is getting stale")).toHaveClass(
-      "text-yellow-strong",
+      "text-yellow-text",
     );
     const freshRow = screen.getByRole("row", { name: /small standing desk/i });
     expect(within(freshRow).queryByLabelText("Saved snapshot is getting stale")).toBeNull();

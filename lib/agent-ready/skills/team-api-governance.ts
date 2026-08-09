@@ -26,7 +26,7 @@ For SEO/keyword/provider work, use the task skill for that area instead.
 
 ## Prerequisites
 
-1. **Origin / base URL.** EU Cloud is \`https://eu.bisibility.com/api/v1\`; self-hosted
+1. **Origin / base URL.** EU hosted region is \`https://eu.bisibility.com/api/v1\`; self-hosted
    is \`https://your-host.example/api/v1\`. Resolve the correct one before any call
    (ask the user, or read \`BISIBILITY_BASE_URL\`).
 2. **Admin API key.** Every operation here needs the \`admin\` scope. Export it as

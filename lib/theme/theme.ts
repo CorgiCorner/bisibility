@@ -1,5 +1,10 @@
 import { createTheme, type PaletteOptions, type Shadows } from "@mui/material/styles";
-import { type ColorSchemeName, colorSchemes } from "./tokens";
+import {
+  type ColorSchemeName,
+  colorSchemes,
+  errorButtonForegroundTokens,
+  primaryButtonForegroundTokens,
+} from "./tokens";
 
 const flatShadows = Array.from({ length: 25 }, () => "none") as Shadows;
 
@@ -9,17 +14,20 @@ function paletteFor(scheme: ColorSchemeName): PaletteOptions {
   return {
     mode: scheme,
     primary: {
-      main: token.accent,
-      dark: token["accent-hover"],
+      main: token["accent-solid"],
+      dark: token["accent-solid-hover"],
       light: token["accent-soft"],
-      contrastText: scheme === "light" ? token["bg-sidebar"] : token["bg-inset"],
+      contrastText: token[primaryButtonForegroundTokens[scheme]],
     },
     secondary: {
       main: token.purple,
       contrastText: token["bg-sidebar"],
     },
     success: { main: token.green },
-    error: { main: token.red },
+    error: {
+      main: token.red,
+      contrastText: token[errorButtonForegroundTokens[scheme]],
+    },
     warning: { main: token.yellow },
     info: { main: token.blue },
     background: {
@@ -29,7 +37,7 @@ function paletteFor(scheme: ColorSchemeName): PaletteOptions {
     text: {
       primary: token.fg,
       secondary: token["fg-muted"],
-      disabled: token["fg-faint"],
+      disabled: token["fg-muted"],
     },
     divider: token.border,
   };
@@ -80,6 +88,12 @@ export const theme = createTheme({
           padding: "8px 16px",
           textTransform: "none",
           "&:hover": { boxShadow: "none" },
+          "&.Mui-disabled": {
+            backgroundColor: "var(--bg-sunken)",
+            borderColor: "var(--border-strong)",
+            color: "var(--fg-muted)",
+            opacity: 1,
+          },
         },
         sizeLarge: {
           borderRadius: 10,
@@ -114,7 +128,7 @@ export const theme = createTheme({
           props: { color: "primary", variant: "contained" },
           style: {
             "& > .MuiButtonGroup-firstButton, & > .MuiButtonGroup-middleButton": {
-              borderColor: "var(--accent-hover)",
+              borderColor: "var(--accent-solid-hover)",
             },
             "& > .Mui-disabled.MuiButtonGroup-firstButton, & > .Mui-disabled.MuiButtonGroup-middleButton":
               {

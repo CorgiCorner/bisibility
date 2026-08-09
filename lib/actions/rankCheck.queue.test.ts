@@ -48,6 +48,7 @@ function resetMocks() {
 
 function defaultProject() {
   return {
+    domain: "example.com",
     id: "project_1",
     ownerId: "user_1",
     publicId: "prj_a00000000000000000000000",
@@ -110,6 +111,16 @@ describe("queueFirstChecks", () => {
     );
     expect(mocks.startRankCheckWorkflow).not.toHaveBeenCalled();
     expect(mocks.runKeywordCheckWithFallback).not.toHaveBeenCalled();
+  });
+
+  it("refuses to queue the first checks until the workspace has a domain", async () => {
+    mocks.prisma.project.findFirst.mockResolvedValue({ ...defaultProject(), domain: null });
+
+    await expect(queueFirstChecks({ projectId: "prj_a00000000000000000000000" })).rejects.toThrow(
+      /Settings > Project details/,
+    );
+    expect(mocks.prisma.keywordSchedule.updateMany).not.toHaveBeenCalled();
+    expect(mocks.prisma.keywordSchedule.createMany).not.toHaveBeenCalled();
   });
 
   it("skips paused and manual effective schedules", async () => {

@@ -18,7 +18,7 @@ type KeywordsTabsProps = {
 function countChip(active: boolean) {
   return cn(
     "rounded-md bg-bg-sunken px-[7px] py-0.5 font-mono text-[11px]",
-    active ? "text-fg-muted" : "text-fg-faint",
+    active ? "text-fg-muted" : "text-fg-muted",
   );
 }
 
@@ -59,7 +59,7 @@ export function KeywordsTabs({
         href={`${appPath(projectRef, "keywords")}?tab=saved`}
       >
         <BookmarkSimple
-          className={savedActive ? "text-accent" : undefined}
+          className={savedActive ? "text-accent-text" : undefined}
           data-testid="saved-tab-icon"
           data-weight={savedActive ? "fill" : "regular"}
           size={14}

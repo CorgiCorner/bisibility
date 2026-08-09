@@ -17,7 +17,7 @@ const mocks = vi.hoisted(() => {
     fetchKeywordMetrics: vi.fn(),
     fetchRank: vi.fn(),
     id: "serpapi",
-    label: "SerpAPI",
+    label: "SerpApi",
     testConnection: vi.fn(),
   };
   const analyticsProvider = {
@@ -80,7 +80,7 @@ vi.mock("@/lib/providers/registry", () => ({
       defaultStatus: "ready",
       id: "serpapi",
       kind: "serp",
-      label: "SerpAPI",
+      label: "SerpApi",
       requiredCredentials: ["apiKey"],
     },
     { defaultStatus: "optional", id: "gsc", kind: "analytics", label: "Google Search Console" },

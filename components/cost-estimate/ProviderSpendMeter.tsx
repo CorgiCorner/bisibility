@@ -93,7 +93,7 @@ function DocsLink({ className, href }: Readonly<{ className?: string; href: stri
   return (
     <a
       className={cn(
-        "text-[11px] font-medium text-accent hover:text-accent-hover hover:underline",
+        "text-[11px] font-medium text-accent-text hover:text-accent-text hover:underline",
         className,
       )}
       href={href}
@@ -116,8 +116,11 @@ function MeterBar({
   tone: Tone;
 }>) {
   const segmented = segments != null && tone === "normal";
+  // --meter-track, not a recessed fill: in dark mode --bg-sunken sits below --bg, so a
+  // track drawn with it disappears on the header background (and at $0 spend the track
+  // is the only thing there is to see).
   return (
-    <div className={cn("w-full overflow-hidden rounded-full bg-bg-sunken", heightClass)}>
+    <div className={cn("w-full overflow-hidden rounded-full bg-meter-track", heightClass)}>
       {segmented ? (
         <div className="flex h-full">
           {segments.map((segment) => (
@@ -169,7 +172,7 @@ function Legend({ segments, tone }: Readonly<{ segments: SpendSegment[]; tone: T
 
 function MeterEyebrow() {
   return (
-    <span className="font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-fg-faint">
+    <span className="font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-fg-muted">
       PROVIDER SPEND
     </span>
   );
@@ -201,7 +204,7 @@ export function ProviderSpendMeter({
   const amounts = amountsText(spentCents, capCents);
   const meta = metaText(tone, percent);
   const amountToneClass = tone === "normal" ? null : toneTextClass[tone];
-  const metaToneClass = tone === "normal" ? "text-fg-faint" : toneTextClass[tone];
+  const metaToneClass = tone === "normal" ? "text-fg-muted" : toneTextClass[tone];
 
   if (variant === "card") {
     const paceCents =

@@ -6,15 +6,13 @@ import {
   EmailCapacityPanel,
   FullCapacityCard,
   GoogleCapacityNote,
-  JoinedToday,
 } from "@/components/auth/SignInCapacity";
 import { DataResidencyNote } from "@/components/ui";
 import type { SignInCapacity, SignInCapacityMiss } from "@/lib/auth/signin-capacity-types";
 import type { LegalConsentLinks } from "@/lib/deployment/legal";
-import { CLOUD_BETA_EMAIL_NOTICE } from "@/lib/site/site";
 import Button from "@mui/material/Button";
 import {
-  ArrowRightIcon as ArrowRight,
+  CaretRightIcon as CaretRight,
   GithubLogoIcon as GithubLogo,
   GoogleLogoIcon as GoogleLogo,
 } from "@phosphor-icons/react";
@@ -64,28 +62,41 @@ function ConsentLink({ href, label }: Readonly<{ href: string; label: string }>)
   );
 }
 
-function LegalConsent({ links }: Readonly<{ links: LegalConsentLinks | null }>) {
+/**
+ * One consent sentence, not several. The beta-email clause is folded in here because
+ * "By continuing" and "By joining" were the same agreement stated twice, competing for
+ * attention directly under the call to action.
+ */
+function LegalConsent({
+  links,
+  includeBetaEmails = false,
+}: Readonly<{ links: LegalConsentLinks | null; includeBetaEmails?: boolean }>) {
   if (!links || (!links.termsHref && !links.privacyHref)) {
     return null;
   }
 
+  const betaEmails = includeBetaEmails ? ", and to beta emails (updates, incidents, pricing)" : "";
+
   return (
-    <p className="mt-[22px] mb-0 text-center text-xs leading-[1.6] text-fg-faint">
+    <p className="mt-[22px] mb-0 text-center text-xs leading-[1.6] text-fg-muted">
       {links.termsHref && links.privacyHref ? (
         <>
           By continuing you agree to the <ConsentLink href={links.termsHref} label="Terms" /> and{" "}
-          <ConsentLink href={links.privacyHref} label="Privacy Policy" />.
+          <ConsentLink href={links.privacyHref} label="Privacy Policy" />
+          {betaEmails}.
         </>
       ) : null}
       {links.termsHref && !links.privacyHref ? (
         <>
-          By continuing you agree to the <ConsentLink href={links.termsHref} label="Terms" />.
+          By continuing you agree to the <ConsentLink href={links.termsHref} label="Terms" />
+          {betaEmails}.
         </>
       ) : null}
       {!links.termsHref && links.privacyHref ? (
         <>
           By continuing you agree to the{" "}
-          <ConsentLink href={links.privacyHref} label="Privacy Policy" />.
+          <ConsentLink href={links.privacyHref} label="Privacy Policy" />
+          {betaEmails}.
         </>
       ) : null}
     </p>
@@ -123,14 +134,13 @@ export function LoginEmailStep({
   const allFull = googleFull && emailFull;
   const emailBinding = capacity?.emailCodes?.binding ?? "daily";
 
-  const consent = <LegalConsent links={legalConsentLinks} />;
+  const consent = <LegalConsent includeBetaEmails={Boolean(capacity)} links={legalConsentLinks} />;
 
   if (allFull) {
     return (
       <div className="w-full max-w-[380px]">
         <FullCapacityCard emailBinding={emailBinding} />
         {consent}
-        {capacity ? <JoinedToday count={capacity.signupsToday} /> : null}
       </div>
     );
   }
@@ -165,7 +175,7 @@ export function LoginEmailStep({
                     fontSize: "14px",
                     fontWeight: 600,
                     padding: "11px",
-                    "&:hover": { borderColor: "var(--fg-faint)" },
+                    "&:hover": { borderColor: "var(--fg-muted)" },
                   }}
                   type="button"
                   variant="outlined"
@@ -197,7 +207,7 @@ export function LoginEmailStep({
             })}
           </div>
 
-          <div className="my-5 flex items-center gap-3 font-mono text-[11px] text-fg-faint">
+          <div className="my-5 flex items-center gap-3 font-mono text-[11px] text-fg-muted">
             <span className="h-px flex-1 bg-border" />
             {"OR "}
             <span className="h-px flex-1 bg-border" />
@@ -212,14 +222,14 @@ export function LoginEmailStep({
         ) : (
           <form onSubmit={onSubmit}>
             <label
-              className="block font-mono text-[10.5px] uppercase tracking-[0.5px] text-fg-faint"
+              className="block font-mono text-[10.5px] uppercase tracking-[0.5px] text-fg-muted"
               htmlFor="login-email"
             >
               Email
             </label>
             <input
               autoComplete="email"
-              className="mt-[7px] box-border w-full rounded-[10px] border border-border-strong bg-bg-elev px-[13px] py-3 font-mono text-[14.5px] font-medium text-fg outline-none focus:border-accent"
+              className="mt-[7px] box-border w-full rounded-[10px] border border-border-strong bg-transparent px-[13px] py-3 font-mono text-[14.5px] font-medium text-fg outline-none focus:border-accent"
               disabled={isSubmitting}
               id="login-email"
               inputMode="email"
@@ -228,13 +238,13 @@ export function LoginEmailStep({
               {...register("email")}
             />
             {errors.email ? (
-              <p className="mt-2 mb-0 text-[13px] text-red">{errors.email.message}</p>
+              <p className="mt-2 mb-0 text-[13px] text-red-text">{errors.email.message}</p>
             ) : null}
-            {formError ? <p className="mt-2 mb-0 text-[13px] text-red">{formError}</p> : null}
+            {formError ? <p className="mt-2 mb-0 text-[13px] text-red-text">{formError}</p> : null}
 
             <Button
               disabled={isSubmitting}
-              endIcon={<ArrowRight size={16} weight="bold" />}
+              endIcon={<CaretRight size={16} weight="bold" />}
               fullWidth
               sx={{
                 borderRadius: "10px",
@@ -266,19 +276,13 @@ export function LoginEmailStep({
       </div>
 
       {demoEmail ? (
-        <p className="mt-3.5 mb-0 text-center font-mono text-[11.5px] text-fg-faint">
-          Demo account &middot; <span className="font-semibold text-accent">{demoEmail}</span>{" "}
+        <p className="mt-3.5 mb-0 text-center font-mono text-[11.5px] text-fg-muted">
+          <span className="font-semibold text-accent-text">Try the demo</span> &middot; {demoEmail}{" "}
           &middot; code 000000
         </p>
       ) : null}
 
       {consent}
-      {capacity ? (
-        <p className="mt-3.5 mb-0 text-center text-xs leading-[1.6] text-fg-faint">
-          {CLOUD_BETA_EMAIL_NOTICE}
-        </p>
-      ) : null}
-      {capacity ? <JoinedToday count={capacity.signupsToday} /> : null}
     </div>
   );
 }

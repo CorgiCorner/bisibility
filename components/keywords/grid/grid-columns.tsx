@@ -21,7 +21,7 @@ import { LastCheckedCell } from "./LastCheckedCell";
 import { rowActionsColumn } from "./RowActionsCell";
 import { TargetRankingCell } from "./TargetRankingCell";
 
-const noDataClassName = "font-mono text-xs font-semibold text-fg-faint";
+const noDataClassName = "font-mono text-xs font-semibold text-fg-muted";
 
 function formatVolume(volume: number) {
   if (volume >= 10000) {
@@ -71,7 +71,7 @@ export function KeywordCell({
           size="small"
           sx={{
             color: "var(--fg-muted)",
-            "&:hover": { backgroundColor: "var(--accent-soft)", color: "var(--accent)" },
+            "&:hover": { backgroundColor: "var(--accent-soft)", color: "var(--accent-text)" },
           }}
         >
           <Eye size={14} />
@@ -100,7 +100,7 @@ function PositionCell({ row }: Readonly<GridRenderCellParams<KeywordRow>>) {
 function DeviceCell({ row }: Readonly<GridRenderCellParams<KeywordRow>>) {
   return (
     <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-border bg-bg-sunken px-2.5 py-1 font-mono text-[11px] leading-none text-fg-muted">
-      <Monitor className="text-fg-faint" size={13} />
+      <Monitor className="text-fg-muted" size={13} />
       {row.device}
     </span>
   );
@@ -132,7 +132,7 @@ export function LocationCell({ row }: Readonly<Pick<GridRenderCellParams<Keyword
   return (
     <span className="inline-flex min-w-0 items-center gap-1.5">
       <MapPin
-        className={isCity ? "flex-none text-accent" : "flex-none text-fg-faint"}
+        className={isCity ? "flex-none text-accent-text" : "flex-none text-fg-muted"}
         size={13}
         weight={isCity ? "fill" : "regular"}
       />

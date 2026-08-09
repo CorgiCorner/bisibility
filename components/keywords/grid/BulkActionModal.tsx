@@ -86,7 +86,9 @@ export function BulkActionModal({
             selectedRows={selectedRows}
           />
         ) : null}
-        {actionError ? <p className="m-0 font-mono text-[11.5px] text-red">{actionError}</p> : null}
+        {actionError ? (
+          <p className="m-0 font-mono text-[11.5px] text-red-text">{actionError}</p>
+        ) : null}
       </div>
     </Modal>
   );

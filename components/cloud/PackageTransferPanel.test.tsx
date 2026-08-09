@@ -157,6 +157,10 @@ describe("PackageTransferPanel", () => {
 
     const input = screen.getByLabelText("Upload JSON or ZIP");
     expect(input).toHaveAttribute("accept", "application/json,application/zip,.json,.zip");
+    expect(input.closest("label")).toHaveClass(
+      "focus-within:outline-2",
+      "focus-within:outline-accent-solid",
+    );
     fireEvent.change(input, { target: { files: [file] } });
 
     expect(await screen.findByText(/Package loaded/)).toBeInTheDocument();

@@ -161,7 +161,7 @@ export function BacklinksWorkspace({
   }
 
   return (
-    <section aria-label="Backlinks workspace" className="grid min-w-0 gap-4">
+    <section aria-label="Backlinks" className="grid min-w-0 gap-4">
       <AnalyzeCard
         estimate={estimate}
         includeSubdomains={includeSubdomains}
@@ -191,7 +191,7 @@ export function BacklinksWorkspace({
         targets={recentTargets}
       />
       {failure ? (
-        <p className="m-0 text-center text-[13px] text-red" role="status">
+        <p className="m-0 text-center text-[13px] text-red-text" role="status">
           Backlinks could not be loaded. Check the target, provider connection, and budget.
         </p>
       ) : null}

@@ -1,3 +1,4 @@
+import { OpenGraphBrandLockup } from "@/lib/seo/og-brand-lockup";
 import { LICENSE } from "@/lib/site/site";
 import { ImageResponse } from "next/og";
 
@@ -36,28 +37,7 @@ export default function Image() {
           width: "100%",
         }}
       >
-        <div style={{ alignItems: "center", display: "flex", gap: "18px" }}>
-          <div
-            style={{
-              alignItems: "center",
-              background: "#d97757",
-              borderRadius: "18px",
-              color: "#ffffff",
-              display: "flex",
-              fontSize: 34,
-              fontWeight: 800,
-              height: 72,
-              justifyContent: "center",
-              width: 72,
-            }}
-          >
-            B
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-            <div style={{ fontSize: 56, fontWeight: 800, letterSpacing: 0 }}>bisibility</div>
-            <div style={{ color: "#6b6657", fontSize: 24 }}>SEO observability for developers</div>
-          </div>
-        </div>
+        <OpenGraphBrandLockup />
 
         <div
           style={{

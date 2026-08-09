@@ -91,16 +91,16 @@ export function KeywordImportDropzone({
 
   return (
     <label
-      className="flex cursor-pointer flex-col items-center gap-2 rounded-[12px] border border-dashed border-border-strong bg-bg-sunken px-4 py-8 text-center outline-none hover:border-accent"
+      className="flex cursor-pointer flex-col items-center gap-2 rounded-[12px] border border-dashed border-border-strong bg-transparent px-4 py-8 text-center hover:border-accent focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent-solid"
       onDragOver={handleDragOver}
       onDrop={(event) => void handleDrop(event)}
     >
-      <span className="grid h-10 w-10 place-items-center rounded-[11px] bg-accent-soft text-accent">
+      <span className="grid h-10 w-10 place-items-center rounded-[11px] bg-accent-soft text-accent-text">
         {selectedFileName ? <Icon size={22} weight="bold" /> : <UploadSimple size={23} />}
       </span>
       <span className="text-[13.5px] font-semibold text-fg">Drop CSV or XLSX here</span>
-      <span className="text-[11.5px] text-fg-faint">{status}</span>
-      <span className="max-w-[360px] text-[11.5px] leading-[1.5] text-fg-faint">
+      <span className="text-[11.5px] text-fg-muted">{status}</span>
+      <span className="max-w-[360px] text-[11.5px] leading-[1.5] text-fg-muted">
         Files are parsed in memory for import and never stored.
       </span>
       <input

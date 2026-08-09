@@ -25,6 +25,7 @@ function renderWizard({ actions: actionOverrides, ...props }: RenderWizardProps 
   const actions: OnboardingWizardProps["actions"] = {
     addKeywordsAction: vi.fn(async () => ({ created: 0, keywords: [], skippedDuplicates: 0 })),
     completeGooglePropertySelectionAction: vi.fn(async (input) => ({ property: input.property })),
+    completeOnboardingAction: vi.fn(async () => ({ completed: true })),
     connectProviderAction: vi.fn(async () => undefined),
     createProjectAction: vi.fn(async () => project),
     getObservedPositionsAction: vi.fn(async () => []),
@@ -82,7 +83,7 @@ describe("OnboardingWizard", () => {
     renderWizard();
 
     expect(
-      screen.getByText("Name the workspace and define what counts as your site."),
+      screen.getByText("Name the project and define what counts as your site."),
     ).toBeInTheDocument();
 
     const rail = screen.getByLabelText("Onboarding steps");
@@ -92,7 +93,7 @@ describe("OnboardingWizard", () => {
     fireEvent.click(lockedStep);
 
     expect(
-      screen.getByText("Name the workspace and define what counts as your site."),
+      screen.getByText("Name the project and define what counts as your site."),
     ).toBeInTheDocument();
     expect(screen.queryByText("Run your first check")).not.toBeInTheDocument();
   });
@@ -213,6 +214,24 @@ describe("OnboardingWizard", () => {
     // Connected providers must submit through their form; the analytics-only skip
     // path would clear provider state.
     expect(continueButton).toHaveAttribute("type", "submit");
+  });
+
+  it("completes onboarding only when the final dashboard action is submitted", async () => {
+    const completeOnboardingAction = vi.fn(async () => ({ completed: true }));
+    renderWizard({
+      actions: { completeOnboardingAction },
+      initialFlowState: { projectId: "prj_1", providerId: "dataforseo" },
+      initialKeywordCount: 1,
+      initialProject: project,
+      initialStep: 6,
+      providerConnected: true,
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /open dashboard/i }));
+
+    await waitFor(() => expect(completeOnboardingAction).toHaveBeenCalledTimes(1));
+    expect(completeOnboardingAction).toHaveBeenCalledWith({ projectId: "prj_1" });
+    expect(push).toHaveBeenCalledWith("/app/prj_1/overview");
   });
 
   it("surfaces a non-blocking warning when Search Console sync fails", async () => {

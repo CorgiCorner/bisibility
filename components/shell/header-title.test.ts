@@ -54,7 +54,7 @@ const routeCases = [
   {
     path: appPath("prj_1", "keywords", "kw_test"),
     pattern: appPath("[project]", "keywords", "[id]"),
-    title: "Keyword",
+    title: "Keyword details",
   },
   {
     path: appPath("prj_1", "keywords"),

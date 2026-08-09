@@ -67,14 +67,14 @@ function NoProviderState({ projectRef }: Readonly<{ projectRef: string }>) {
           >
             Connect DataForSEO
           </Button>
-          <span className="text-fg-faint">
-            SerpApi does not offer research endpoints, so it cannot power this page.
+          <span className="text-fg-muted">
+            Other providers do not offer research endpoints, so they cannot power this page.
           </span>
         </div>
       }
       description="Lookups run on your own key and are billed by DataForSEO to your own account. Connect it in this project's integrations."
       icon={<PlugsConnected size={28} />}
-      title="Keyword research needs a connected DataForSEO account"
+      title="Keyword research needs a provider"
     />
   );
 }
@@ -99,10 +99,10 @@ function LookupFailedState({
               {retryLabel}
             </Button>
           ) : null}
-          <span className="text-fg-faint">
+          <span className="text-fg-muted">
             If this keeps happening, check the provider status in{" "}
             <Link
-              className="font-semibold text-accent hover:underline"
+              className="font-semibold text-accent-text hover:underline"
               href={appPath(projectRef, "integrations")}
             >
               Integrations
@@ -115,7 +115,7 @@ function LookupFailedState({
         <span className="grid justify-items-center gap-1.5">
           <span>The request failed before any results came back.</span>
           {charged === false ? (
-            <span className="inline-flex items-center gap-1 font-semibold text-green">
+            <span className="inline-flex items-center gap-1 font-semibold text-green-text">
               <CheckCircle size={14} weight="fill" />
               {"You weren't charged for the failed attempt."}
             </span>
@@ -160,7 +160,7 @@ function EmptyResultsState({
             </Button>
           ) : null}
           {cached == null ? null : (
-            <span className="text-fg-faint">
+            <span className="text-fg-muted">
               {cached
                 ? "Served from the 12-hour cache, this repeat was free."
                 : "This lookup was charged once. Repeats within 12 hours are free."}
@@ -210,7 +210,7 @@ export function ResearchStatePanel({
       <MessageState
         action={
           <Link
-            className="font-semibold text-accent hover:underline"
+            className="font-semibold text-accent-text hover:underline"
             href={appPath(projectRef, "settings#provider-usage")}
           >
             Raise the budget
@@ -221,7 +221,7 @@ export function ResearchStatePanel({
             Fresh provider lookups resume {resumeLabel}. Cached recent searches remain free and
             available.{" "}
             <Link
-              className="font-semibold text-accent hover:underline"
+              className="font-semibold text-accent-text hover:underline"
               href="/docs/integrations#budget-cap"
               {...docsLinkProps("/docs/integrations#budget-cap")}
             >

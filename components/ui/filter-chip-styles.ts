@@ -4,6 +4,6 @@
  */
 export function filterChipStateClassName(selected: boolean) {
   return selected
-    ? "border-border-strong bg-accent-soft text-accent hover:border-accent focus-visible:border-accent"
-    : "border-border-strong bg-bg-elev text-fg-muted hover:border-accent hover:text-accent focus-visible:border-accent focus-visible:text-accent";
+    ? "border-border-strong bg-accent-soft text-accent-text hover:border-accent focus-visible:border-accent"
+    : "border-border-strong bg-bg-elev text-fg-muted hover:border-accent hover:text-accent-text focus-visible:border-accent focus-visible:text-accent-text";
 }

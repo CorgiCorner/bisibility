@@ -1,10 +1,10 @@
-import type { ThemeMode } from "@/components/shell/set-theme";
+import type { ThemePreference } from "@/components/shell/set-theme";
 
 export type ShellUser = {
   email?: string | null;
   name?: string | null;
-  /** Current per-user theme, read server-side from the cookie. */
-  theme?: ThemeMode;
+  /** Stored theme preference, read server-side from the cookie. `system` follows the OS. */
+  theme?: ThemePreference;
   /** Personal role line in the user menu header, e.g. "Owner in Acme". */
   roleLine?: string;
 };

@@ -35,7 +35,7 @@ export function BacklinksIdleState({
       aria-label="Backlinks introduction"
       className="flex min-h-[420px] flex-col items-center justify-center gap-[18px] px-4 py-12 text-center"
     >
-      <div className="grid size-16 place-items-center rounded-full bg-bg-sunken text-fg-faint">
+      <div className="grid size-16 place-items-center rounded-full bg-bg-sunken text-fg-muted">
         <Link aria-hidden size={28} />
       </div>
       <h2 className="m-0 text-[19px] font-semibold tracking-[-0.01em]">Point it at any domain</h2>
@@ -55,19 +55,19 @@ export function BacklinksIdleState({
           <div className="flex flex-wrap justify-center gap-2">
             {suggestions.map((suggestion) => (
               <button
-                className="inline-flex items-center gap-2 rounded-full border border-border-strong bg-bg-elev px-3.5 py-1.5 text-[13px] font-medium transition-colors hover:border-accent hover:text-accent focus-visible:border-accent focus-visible:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                className="inline-flex items-center gap-2 rounded-full border border-border-strong bg-bg-elev px-3.5 py-1.5 text-[13px] font-medium transition-colors hover:border-accent hover:text-accent-text focus-visible:border-accent focus-visible:text-accent-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid"
                 key={`${suggestion.kind}:${suggestion.target}`}
                 onClick={() => onSelectTarget(suggestion.target)}
                 type="button"
               >
                 {suggestion.target}
-                <span className="text-[11px] font-normal text-fg-faint">
+                <span className="text-[11px] font-normal text-fg-muted">
                   {suggestion.kind === "project" ? "this project" : "competitor"}
                 </span>
               </button>
             ))}
           </div>
-          <p className="m-0 text-[12px] text-fg-faint">{estimateFootnote(estimateCents)}</p>
+          <p className="m-0 text-[12px] text-fg-muted">{estimateFootnote(estimateCents)}</p>
         </div>
       ) : null}
     </section>

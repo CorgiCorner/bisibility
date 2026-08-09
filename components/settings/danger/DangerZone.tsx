@@ -7,12 +7,12 @@ import type {
 import { MigrateToCloudWizard } from "@/components/settings/migration/MigrateToCloudWizard";
 import type { MigrationDirection } from "@/components/settings/migration/MigrateToCloudWizard.types";
 import { SettingsSection } from "@/components/settings/SettingsSection";
-import { ConfirmModal } from "@/components/ui";
+import { Button, ConfirmModal } from "@/components/ui";
 import { appPath } from "@/lib/routing/app-path";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import {
-  ArrowRightIcon as ArrowRight,
   ArrowsClockwiseIcon as ArrowsClockwise,
+  CaretRightIcon as CaretRight,
   CloudArrowUpIcon as CloudArrowUp,
   LifebuoyIcon as Lifebuoy,
   TrashIcon as Trash,
@@ -65,10 +65,10 @@ export function DangerZone({
   const [migrateOpen, setMigrateOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const migrated = writeMode === "migrated";
-  const confirmWord = domain || projectId || "workspace";
+  const confirmWord = domain || projectId || "project";
   const migrateTitle = "Transfer project";
   const migrateDescription =
-    "Move this project to another bisibility instance - Cloud or self-hosted. Keeps keywords, history, tags, alerts and views. Provider keys are re-entered for security.";
+    "Move this project to another bisibility instance - hosted or self-hosted. Keeps keywords, history, tags, alerts and views. Provider keys are re-entered for security.";
 
   function handleDelete() {
     if (!deleteWorkspace || !projectId) {
@@ -116,7 +116,7 @@ export function DangerZone({
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-[14.5px] font-semibold">{migrateTitle}</span>
                 {migrationHold ? (
-                  <span className="inline-flex items-center gap-1 rounded-full border border-yellow/40 bg-yellow/10 px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.4px] text-yellow">
+                  <span className="inline-flex items-center gap-1 rounded-full border border-yellow/40 bg-yellow/10 px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.4px] text-yellow-text">
                     Migration in progress
                   </span>
                 ) : null}
@@ -125,7 +125,7 @@ export function DangerZone({
             </div>
             <span className="inline-flex min-h-9 flex-none items-center gap-1.5 rounded-[9px] border border-border-strong bg-bg-elev px-3 text-[12.5px] font-semibold text-fg-muted">
               {migrationHold ? "Continue migration" : "Transfer"}
-              <ArrowRight aria-hidden size={13} weight="bold" />
+              <CaretRight aria-hidden size={13} weight="bold" />
             </span>
           </button>
         </section>
@@ -137,9 +137,9 @@ export function DangerZone({
           tone="danger"
         >
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="text-[14.5px] font-semibold text-red">Delete project</div>
+            <div className="text-[14.5px] font-semibold text-red-text">Delete project</div>
             <button
-              className="inline-flex min-h-9 items-center gap-2 rounded-[9px] border border-red bg-bg-elev px-3.5 text-[13px] font-semibold text-red hover:bg-red hover:text-white"
+              className="inline-flex min-h-9 items-center gap-2 rounded-[9px] border border-red bg-bg-elev px-3.5 text-[13px] font-semibold text-red-text hover:bg-red hover:text-error-contrast"
               onClick={() => setConfirmOpen(true)}
               type="button"
             >
@@ -149,7 +149,7 @@ export function DangerZone({
           </div>
           {deleteFailure ? (
             <div className="mt-4 flex items-start gap-3 border-t border-red/25 pt-4">
-              <span className="grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[9px] bg-red/10 text-red">
+              <span className="grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[9px] bg-red/10 text-red-text">
                 <WarningOctagon aria-hidden size={18} weight="fill" />
               </span>
               <div className="min-w-0 flex-1">
@@ -160,16 +160,16 @@ export function DangerZone({
                   {deleteFailure}
                 </p>
                 <div className="mt-3 flex flex-wrap items-center gap-2.5">
-                  <button
-                    className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-red px-3.5 text-[12.5px] font-semibold text-white hover:opacity-90"
+                  <Button
                     onClick={() => setConfirmOpen(true)}
+                    startIcon={<ArrowsClockwise aria-hidden size={14} />}
                     type="button"
+                    variant="destructive"
                   >
-                    <ArrowsClockwise aria-hidden size={14} />
                     Try again
-                  </button>
+                  </Button>
                   <a
-                    className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-border-strong bg-bg-elev px-3.5 text-[12.5px] font-semibold text-fg hover:border-accent hover:text-accent"
+                    className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-border-strong bg-bg-elev px-3.5 text-[12.5px] font-semibold text-fg hover:border-accent hover:text-accent-text"
                     href="mailto:support@bisibility.com?subject=Delete%20project%20failed"
                   >
                     <Lifebuoy aria-hidden size={14} />
@@ -191,7 +191,7 @@ export function DangerZone({
       {canDeleteProject ? (
         <ConfirmModal
           busy={isPending}
-          kind="deleteWorkspace"
+          kind="deleteProject"
           onClose={() => setConfirmOpen(false)}
           onConfirm={handleDelete}
           open={confirmOpen}
@@ -250,7 +250,7 @@ function ReactivateProjectCard({
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-[14.5px] font-semibold">Project migrated</span>
-          <span className="inline-flex items-center gap-1 rounded-full border border-yellow/40 bg-yellow/10 px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.4px] text-yellow">
+          <span className="inline-flex items-center gap-1 rounded-full border border-yellow/40 bg-yellow/10 px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.4px] text-yellow-text">
             Disabled
           </span>
         </div>
@@ -258,16 +258,23 @@ function ReactivateProjectCard({
           This project moved to another bisibility instance. Writes and rank checks stay off until
           you reactivate it.
         </div>
-        {message ? <div className="mt-1 text-[12px] text-red">{message}</div> : null}
+        {message ? <div className="mt-1 text-[12px] text-red-text">{message}</div> : null}
       </div>
-      <button
-        className="inline-flex min-h-9 flex-none items-center gap-1.5 rounded-[9px] border border-border-strong bg-bg-elev px-3 text-[12.5px] font-semibold text-fg-muted hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-60"
-        disabled={busy || !projectId || !reactivateProject}
+      <Button
+        disabled={!projectId || !reactivateProject}
+        loading={busy}
+        loadingLabel="Reactivating..."
         onClick={handleReactivate}
+        sx={{
+          color: "var(--fg-muted)",
+          flex: "none",
+          "&:hover": { borderColor: "var(--accent)", color: "var(--accent-text)" },
+        }}
         type="button"
+        variant="secondary"
       >
-        {busy ? "Reactivating..." : "Reactivate project"}
-      </button>
+        Reactivate project
+      </Button>
     </div>
   );
 }

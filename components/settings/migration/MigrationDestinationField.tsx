@@ -21,14 +21,14 @@ export function MigrationDestinationField({
   return (
     <div className="mt-4 flex flex-col gap-[7px]">
       <label
-        className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint"
+        className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted"
         htmlFor={inputId}
       >
         {direction === "to-cloud" ? "Destination URL" : "Self-host URL"}
       </label>
       <input
         aria-describedby={describedBy || undefined}
-        className="min-h-11 rounded-[9px] border border-border-strong bg-bg-sunken px-[13px] font-sans text-[13px] font-medium text-fg outline-none focus:border-accent"
+        className="min-h-11 rounded-[9px] border border-border-strong bg-transparent px-[13px] font-sans text-[13px] font-medium text-fg outline-none focus:border-accent"
         id={inputId}
         placeholder="https://rank.example.com"
         {...form.register("targetOrigin")}
@@ -43,7 +43,10 @@ export function MigrationDestinationField({
         </span>
       ) : null}
       {error ? (
-        <span className="font-sans text-[11.5px] normal-case tracking-normal text-red" id={errorId}>
+        <span
+          className="font-sans text-[11.5px] normal-case tracking-normal text-red-text"
+          id={errorId}
+        >
           {error.message}
         </span>
       ) : null}

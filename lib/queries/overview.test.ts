@@ -298,7 +298,7 @@ describe("overview query", () => {
       ["#51-100", 0],
     ]);
     expect(metric(result, "Primary provider")).toBe("DataForSEO");
-    expect(metric(result, "Last check via")).toBe("SerpAPI");
+    expect(metric(result, "Last check via")).toBe("SerpApi");
     expect(metric(result, "Last check")).toBe("2h ago");
     expect(metric(result, "Next check")).toBe("in 3d");
     expect(metric(result, "Checks this month")).toBe("2");
@@ -586,7 +586,7 @@ describe("overview query", () => {
 
     expect(result.providerConnected).toBe(true);
     expect(result.serpProviderState).toBe("ready");
-    expect(metric(result, "Primary provider")).toBe("SerpAPI");
+    expect(metric(result, "Primary provider")).toBe("SerpApi");
   });
 
   it("distinguishes a configured SERP provider that needs attention", async () => {

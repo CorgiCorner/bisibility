@@ -23,7 +23,7 @@ asked to "look at the alerts" and decide which ones are real and what to change.
 
 ## Prerequisites
 
-- A bisibility **origin / base URL**. EU Cloud is \`https://eu.bisibility.com/api/v1\`;
+- A bisibility **origin / base URL**. EU hosted region is \`https://eu.bisibility.com/api/v1\`;
   self-hosted is \`https://your-host.example/api/v1\`. Resolve which one applies
   before making calls and reuse it everywhere below.
 - A **bearer API key**. Reading triggered alerts and rank checks needs \`read\`;

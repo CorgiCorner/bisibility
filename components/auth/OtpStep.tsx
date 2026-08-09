@@ -5,7 +5,7 @@ import { DataResidencyNote } from "@/components/ui";
 import Button from "@mui/material/Button";
 import {
   ArrowLeftIcon as ArrowLeft,
-  ArrowRightIcon as ArrowRight,
+  CaretRightIcon as CaretRight,
   CircleNotchIcon as CircleNotch,
   EnvelopeSimpleOpenIcon as EnvelopeSimpleOpen,
   WarningCircleIcon as WarningCircle,
@@ -83,7 +83,7 @@ export function OtpStep({
         Back
       </Button>
 
-      <span className="mt-[18px] grid h-[46px] w-[46px] place-items-center rounded-xl bg-accent-soft text-accent">
+      <span className="mt-[18px] grid h-[46px] w-[46px] place-items-center rounded-xl bg-accent-soft text-accent-text">
         <EnvelopeSimpleOpen aria-hidden size={23} weight="fill" />
       </span>
 
@@ -122,17 +122,17 @@ export function OtpStep({
           )}
         />
 
-        {otpError ? <p className="mt-2 mb-0 text-[13px] text-red">{otpError}</p> : null}
+        {otpError ? <p className="mt-2 mb-0 text-[13px] text-red-text">{otpError}</p> : null}
         {showOtpError ? (
           <div
             aria-live="polite"
-            className="mt-[13px] flex items-center gap-2 rounded-[10px] border border-red bg-[color-mix(in_srgb,var(--red)_7%,transparent)] px-3 py-2.5 text-[12.5px] font-medium text-red"
+            className="mt-[13px] flex items-center gap-2 rounded-[10px] border border-red bg-[color-mix(in_srgb,var(--red)_7%,transparent)] px-3 py-2.5 text-[12.5px] font-medium text-red-text"
           >
             <WarningCircle aria-hidden className="shrink-0" size={16} weight="fill" />
             <span>{authErrorMessage}</span>
           </div>
         ) : null}
-        {formError ? <p className="mt-2 mb-0 text-[13px] text-red">{formError}</p> : null}
+        {formError ? <p className="mt-2 mb-0 text-[13px] text-red-text">{formError}</p> : null}
 
         <Button
           disabled={submitting || !otpComplete}
@@ -141,7 +141,7 @@ export function OtpStep({
             submitting ? (
               <CircleNotch aria-hidden className="bv-spin" size={16} weight="bold" />
             ) : (
-              <ArrowRight aria-hidden size={16} weight="bold" />
+              <CaretRight aria-hidden size={16} weight="bold" />
             )
           }
           sx={{
@@ -151,9 +151,10 @@ export function OtpStep({
             marginTop: "16px",
             padding: "12px",
             "&.Mui-disabled": {
-              backgroundColor: "var(--accent)",
-              color: "white",
-              opacity: 0.55,
+              backgroundColor: "var(--bg-sunken)",
+              borderColor: "var(--border-strong)",
+              color: "var(--fg-muted)",
+              opacity: 1,
             },
           }}
           type="submit"
@@ -168,7 +169,7 @@ export function OtpStep({
         // the only way to learn the code, so it cannot be the least visible line on the page.
         <p className="mt-[14px] text-center font-mono text-[12.5px] text-fg-muted">
           Demo mode &middot; use code{" "}
-          <span className="font-semibold text-accent">{devOtpCode}</span> to sign in
+          <span className="font-semibold text-accent-text">{devOtpCode}</span> to sign in
         </p>
       ) : null}
 
@@ -183,7 +184,7 @@ export function OtpStep({
             onClick={() => {
               void onResend();
             }}
-            sx={{ ...linkButtonSx, color: "var(--accent)" }}
+            sx={{ ...linkButtonSx, color: "var(--accent-text)" }}
             type="button"
           >
             {cooldownRemaining > 0

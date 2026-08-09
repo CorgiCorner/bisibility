@@ -140,7 +140,7 @@ export async function getPendingGoogleOAuthSetup(
     return {
       error:
         context.pending.provider === "ga4"
-          ? "We couldn't load GA4 properties from this Google account. You can enter the numeric Property ID manually."
+          ? "We couldn't load Google Analytics 4 properties from this Google account. You can enter the numeric Property ID manually."
           : "We couldn't load verified properties from this Google account. Reconnect and try again.",
       properties: [],
       ...(context.pending.property ? { preferredProperty: context.pending.property } : {}),

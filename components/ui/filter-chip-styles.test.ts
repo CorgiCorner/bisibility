@@ -6,7 +6,7 @@ describe("filterChipStateClassName", () => {
     const className = filterChipStateClassName(true);
 
     expect(className).toContain("bg-accent-soft");
-    expect(className).toContain("text-accent");
+    expect(className).toContain("text-accent-text");
     expect(className).not.toContain("bg-accent ");
     expect(className).not.toContain("text-white");
   });

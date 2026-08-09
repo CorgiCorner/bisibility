@@ -170,7 +170,7 @@ export function Calendar({
       </div>
       <div
         aria-hidden
-        className="mb-1 grid grid-cols-7 gap-1 font-mono text-[10px] font-semibold uppercase tracking-[.04em] text-fg-faint"
+        className="mb-1 grid grid-cols-7 gap-1 font-mono text-[10px] font-semibold uppercase tracking-[.04em] text-fg-muted"
       >
         {WEEKDAY_LABELS.map((label) => (
           <span className="grid h-6 place-items-center" key={label}>
@@ -189,9 +189,11 @@ export function Calendar({
               aria-label={dayFormat.format(parseISO(iso))}
               aria-pressed={selected}
               className={cn(
-                "grid h-8 w-full place-items-center rounded-lg text-[12.5px] outline-none transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent",
-                selected ? "bg-accent font-semibold text-white" : "hover:bg-bg-sunken text-fg",
-                !inMonth && !selected && "text-fg-faint",
+                "grid h-8 w-full place-items-center rounded-lg text-[12.5px] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-solid",
+                selected
+                  ? "bg-accent-solid font-semibold text-primary-contrast"
+                  : "hover:bg-bg-sunken text-fg",
+                !inMonth && !selected && "text-fg-muted",
                 iso === today && !selected && "ring-1 ring-border-strong",
                 disabled && "pointer-events-none opacity-35",
               )}

@@ -18,6 +18,7 @@ import { cn } from "@/lib/ui/cn";
 import {
   ListIcon as List,
   ListDashesIcon as ListDashes,
+  MonitorIcon as Monitor,
   MoonStarsIcon as MoonStars,
   RowsIcon as Rows,
   SunIcon as Sun,
@@ -34,10 +35,13 @@ export type PreferencesFormProps = {
 };
 
 const selectTriggerClass =
-  "min-h-10 w-full justify-between rounded-lg border-border-strong bg-bg-sunken px-3 text-[13px] font-medium normal-case tracking-normal";
+  "min-h-10 w-full justify-between rounded-lg border-border-strong bg-transparent px-3 text-[13px] font-medium normal-case tracking-normal";
 
 function themeIcon(value: UserPreferences["theme"]) {
-  return value === "light" ? <Sun aria-hidden size={15} /> : <MoonStars aria-hidden size={15} />;
+  if (value === "light") {
+    return <Sun aria-hidden size={15} />;
+  }
+  return value === "dark" ? <MoonStars aria-hidden size={15} /> : <Monitor aria-hidden size={15} />;
 }
 
 function densityIcon(value: UserPreferences["density"]) {
@@ -145,7 +149,7 @@ export function PreferencesForm({ defaults, updatePreferences }: Readonly<Prefer
           <div className="flex flex-wrap items-center justify-between gap-[14px]">
             <div className="min-w-0">
               <div className="text-[13.5px] font-semibold text-fg">Theme</div>
-              <div className="mt-px text-xs text-fg-faint">Light or dark across the app</div>
+              <div className="mt-px text-xs text-fg-muted">Light, dark, or follow your system</div>
             </div>
             <SegmentedControl
               ariaLabel="Theme"
@@ -205,7 +209,7 @@ export function PreferencesForm({ defaults, updatePreferences }: Readonly<Prefer
           <div className="flex flex-wrap items-center justify-between gap-[14px] border-t border-border-soft pt-4">
             <div className="min-w-0">
               <div className="text-[13.5px] font-semibold text-fg">Default table density</div>
-              <div className="mt-px text-xs text-fg-faint">Row height in the keyword grid</div>
+              <div className="mt-px text-xs text-fg-muted">Row height in the keyword grid</div>
             </div>
             <SegmentedControl
               ariaLabel="Default table density"
@@ -218,7 +222,7 @@ export function PreferencesForm({ defaults, updatePreferences }: Readonly<Prefer
           </div>
         </div>
         {message ? (
-          <span className={cn(feedbackClass, "mt-3 block text-red")}>{message}</span>
+          <span className={cn(feedbackClass, "mt-3 block text-red-text")}>{message}</span>
         ) : null}
       </AccountSection>
     </form>

@@ -44,7 +44,7 @@ export function SampleProjectBanner({ projectId, projectRef }: Readonly<SamplePr
 
   return (
     <section className="rounded-[14px] border border-border bg-bg-elev px-4 py-3.5 sm:flex sm:items-center sm:gap-4">
-      <span className="mb-3 grid h-9 w-9 place-items-center rounded-[10px] bg-accent-soft text-accent sm:mb-0">
+      <span className="mb-3 grid h-9 w-9 place-items-center rounded-[10px] bg-accent-soft text-accent-text sm:mb-0">
         <Database aria-hidden size={19} weight="bold" />
       </span>
       <div className="min-w-0 flex-1">
@@ -53,7 +53,7 @@ export function SampleProjectBanner({ projectId, projectRef }: Readonly<SamplePr
           The rankings, traffic, and timeline events here are generated demo data.
         </p>
         {error ? (
-          <p className="m-0 mt-2 text-xs text-red" role="alert">
+          <p className="m-0 mt-2 text-xs text-red-text" role="alert">
             {error}
           </p>
         ) : null}

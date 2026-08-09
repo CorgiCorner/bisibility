@@ -1,8 +1,7 @@
-import { Card } from "@/components/ui";
+import { Button, Card } from "@/components/ui";
 import { appPath } from "@/lib/routing/app-path";
-import Button from "@mui/material/Button";
 import {
-  ArrowRightIcon as ArrowRight,
+  CaretRightIcon as CaretRight,
   InfoIcon as Info,
   PlusCircleIcon as PlusCircle,
 } from "@phosphor-icons/react/dist/ssr";
@@ -21,7 +20,7 @@ export function DataSourceNoDataPanel({ health }: Readonly<{ health: DataSourceH
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="text-[14.5px] font-semibold leading-normal text-fg">Data source</div>
-          <div className="mt-0.5 font-mono text-[11px] leading-normal text-fg-faint">
+          <div className="mt-0.5 font-mono text-[11px] leading-normal text-fg-muted">
             {health.description}
           </div>
         </div>
@@ -43,12 +42,12 @@ export function DataSourceNoDataPanel({ health }: Readonly<{ health: DataSourceH
       <div className="mt-[18px] grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-x-[18px] gap-y-3.5">
         {health.metrics.map((metric) => (
           <div className="min-w-0" key={metric.label}>
-            <div className="font-mono text-[10px] uppercase tracking-[0.6px] text-fg-faint">
+            <div className="font-mono text-[10px] uppercase tracking-[0.6px] text-fg-muted">
               {metric.label}
             </div>
             <div
               className={`mt-[5px] truncate text-sm font-semibold leading-normal ${
-                mutedValue.test(metric.value) ? "text-fg-faint" : "text-fg"
+                mutedValue.test(metric.value) ? "text-fg-muted" : "text-fg"
               }`}
             >
               {metric.value}
@@ -57,7 +56,7 @@ export function DataSourceNoDataPanel({ health }: Readonly<{ health: DataSourceH
         ))}
       </div>
       <div className="mt-4 flex items-center gap-[9px] border-t border-border-soft pt-3.5 text-[12.5px] leading-normal text-fg-muted">
-        <Info aria-hidden className="flex-none text-accent" size={15} />
+        <Info aria-hidden className="flex-none text-accent-text" size={15} />
         <span>{health.note}</span>
       </div>
     </Card>
@@ -72,10 +71,10 @@ export function RecentlyAddedCard({
     <Card className="overflow-hidden" size="md" style={{ borderRadius: 14, padding: 0 }}>
       <div className="px-[18px] pb-3 pt-[15px]">
         <div className="flex items-center gap-2 text-sm font-semibold leading-normal text-fg">
-          <PlusCircle aria-hidden className="text-blue" size={16} weight="fill" />
+          <PlusCircle aria-hidden className="text-blue-text" size={16} weight="fill" />
           Recently added
         </div>
-        <div className="mt-[3px] font-mono text-[10.5px] leading-normal text-fg-faint">
+        <div className="mt-[3px] font-mono text-[10.5px] leading-normal text-fg-muted">
           Waiting for first check
         </div>
       </div>
@@ -89,11 +88,11 @@ export function RecentlyAddedCard({
             <span className="block truncate text-[13px] font-medium leading-normal text-fg">
               {row.keyword}
             </span>
-            <span className="mt-px block truncate font-mono text-[10.5px] leading-normal text-fg-faint">
+            <span className="mt-px block truncate font-mono text-[10.5px] leading-normal text-fg-muted">
               {row.note}
             </span>
           </span>
-          <span className="flex-none font-mono text-[11.5px] leading-normal text-fg-faint">
+          <span className="flex-none font-mono text-[11.5px] leading-normal text-fg-muted">
             {row.positionText}
           </span>
         </Link>
@@ -105,23 +104,15 @@ export function RecentlyAddedCard({
 export function ViewAllKeywordsButton({ projectRef }: Readonly<{ projectRef: string }>) {
   return (
     <Button
-      color="inherit"
       component={Link}
-      endIcon={<ArrowRight size={15} weight="bold" />}
+      endIcon={<CaretRight size={15} weight="bold" />}
       href={appPath(projectRef, "keywords")}
       sx={{
         alignSelf: "flex-start",
-        borderColor: "var(--border-strong)",
-        borderRadius: "9px",
-        color: "var(--fg)",
-        fontSize: "13px",
-        fontWeight: 600,
-        minHeight: 0,
-        p: "9px 15px",
-        "&:hover": { borderColor: "var(--accent)", color: "var(--accent)" },
+        "&:hover": { borderColor: "var(--accent)", color: "var(--accent-text)" },
         "& .MuiButton-endIcon": { ml: "7px", mr: 0 },
       }}
-      variant="outlined"
+      variant="secondary"
     >
       View all keywords
     </Button>

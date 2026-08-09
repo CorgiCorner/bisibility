@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Modal } from "@/components/ui";
+import { Button, inputClassName, Modal } from "@/components/ui";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { createIngestHookSchema } from "@/lib/schemas/ingestHook";
 import { CheckCircleIcon as CheckCircle, PlusIcon as Plus } from "@phosphor-icons/react";
@@ -21,9 +21,8 @@ export type DeployHookCreateModalProps = {
   projectId?: string;
 };
 
-const inputClass =
-  "mt-[7px] min-h-11 w-full rounded-[9px] border border-border-strong bg-bg-sunken px-[13px] font-mono text-[13.5px] font-medium text-fg outline-none focus:border-accent";
-const labelClass = "font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint";
+const inputClass = `${inputClassName} mt-[7px] min-h-11 w-full rounded-[9px] px-[13px] font-mono text-[13.5px] font-medium`;
+const labelClass = "font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted";
 
 export function DeployHookCreateModal({
   createHook,
@@ -51,7 +50,7 @@ export function DeployHookCreateModal({
 
   async function onSubmit(values: CreateHookForm) {
     if (!createHook || !projectId) {
-      setSubmitError("Deploy webhook creation is unavailable for this workspace.");
+      setSubmitError("Deploy webhook creation is unavailable for this project.");
       return;
     }
 
@@ -133,13 +132,13 @@ export function DeployHookCreateModal({
               {...form.register("label")}
             />
             {form.formState.errors.label ? (
-              <div className="mt-1.5 text-[11.5px] font-medium text-red">
+              <div className="mt-1.5 text-[11.5px] font-medium text-red-text">
                 {form.formState.errors.label.message}
               </div>
             ) : null}
           </div>
           {submitError ? (
-            <div className="text-[12px] font-medium text-red">{submitError}</div>
+            <div className="text-[12px] font-medium text-red-text">{submitError}</div>
           ) : null}
         </form>
       )}

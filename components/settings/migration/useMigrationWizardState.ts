@@ -205,7 +205,7 @@ export function useMigrationWizardState({
     }
     if (step === 2 && mode === "download") {
       if (!exported) {
-        setGateMessage("Export the workspace package before continuing.");
+        setGateMessage("Export the project package before continuing.");
         return;
       }
       if (!downloadConfirmed) {

@@ -38,13 +38,13 @@ class SerpApiError extends Error {
 
 function requireApiKey(creds: ProviderCredentials) {
   if (!creds.apiKey) {
-    throw new SerpApiError("SerpAPI requires an API key credential.");
+    throw new SerpApiError("SerpApi requires an API key credential.");
   }
 
   return creds.apiKey;
 }
 
-// SerpAPI uses `secondaryGeoName` plus gl/hl; never combine `location` with
+// SerpApi uses `secondaryGeoName` plus gl/hl; never combine `location` with
 // mutually exclusive uule/lat/lon parameters.
 function serpApiGoogleParams(input: {
   depth?: number;
@@ -101,7 +101,7 @@ async function readResponse(response: Response, creds: ProviderCredentials) {
 
   if (!response.ok) {
     const retryable = response.status === 429 || response.status >= 500;
-    const message = safeErrorMessage(data, `SerpAPI request failed with HTTP ${response.status}.`);
+    const message = safeErrorMessage(data, `SerpApi request failed with HTTP ${response.status}.`);
 
     throw new SerpApiError(redactedMessage(message, creds), retryable);
   }
@@ -121,8 +121,8 @@ function providerError(error: unknown, creds: ProviderCredentials) {
 
   const message =
     error instanceof Error && error.name === "AbortError"
-      ? "SerpAPI request timed out."
-      : "SerpAPI request failed.";
+      ? "SerpApi request timed out."
+      : "SerpApi request failed.";
 
   return new SerpApiError(redactedMessage(message, creds), error instanceof TypeError);
 }
@@ -146,7 +146,7 @@ async function requestJson(
     }
   }
 
-  throw lastError ?? new SerpApiError("SerpAPI request failed.");
+  throw lastError ?? new SerpApiError("SerpApi request failed.");
 }
 
 function searchPageStarts(depth: SerpDepth) {
@@ -197,7 +197,7 @@ async function fetchGoogleOrganicResults(input: SerpRankInput, apiKey: string) {
       if (start > 0) {
         break;
       }
-      throw new SerpApiError("SerpAPI response did not include organic results.");
+      throw new SerpApiError("SerpApi response did not include organic results.");
     }
 
     pages.push(data);
@@ -218,7 +218,7 @@ async function fetchGoogleOrganicResults(input: SerpRankInput, apiKey: string) {
 
 export const serpApiProvider: SerpProvider = {
   id: "serpapi",
-  label: "SerpAPI",
+  label: "SerpApi",
 
   async testConnection(creds: ProviderCredentials): Promise<ProviderTestResult> {
     try {
@@ -234,7 +234,7 @@ export const serpApiProvider: SerpProvider = {
     } catch (error) {
       return {
         ok: false,
-        message: error instanceof Error ? error.message : "SerpAPI connection test failed.",
+        message: error instanceof Error ? error.message : "SerpApi connection test failed.",
       };
     }
   },
@@ -246,7 +246,7 @@ export const serpApiProvider: SerpProvider = {
       requireApiKey(credentials),
     );
     const decision = requireDeterminateOrganicResult(
-      "SerpAPI",
+      "SerpApi",
       decideOrganicResult({ candidates, depth, domain: input.domain }),
     );
 

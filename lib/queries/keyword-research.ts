@@ -7,6 +7,7 @@ import {
   keywordResearchPageProject,
 } from "@/lib/keyword-research/context";
 import { keywordResearchDefaultMarket } from "@/lib/keyword-research/default-market";
+import { trackedProjectDomain } from "@/lib/schemas/project";
 import { countrySeed } from "@/lib/serp/location";
 import { requireReadableProject } from "./_auth";
 
@@ -54,7 +55,7 @@ export async function getKeywordResearchPageContext(projectId: string) {
           regionName: null,
         },
     project: {
-      domain: project.domain,
+      domain: trackedProjectDomain(project.domain) ?? "",
       id: project.publicId,
       name: project.name,
     },

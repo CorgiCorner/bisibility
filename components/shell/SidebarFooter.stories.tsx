@@ -6,7 +6,7 @@ const meta = {
   component: SidebarFooter,
   decorators: [
     (Story) => (
-      <div className="flex h-[220px] w-[248px] flex-col bg-bg-sidebar p-[14px] text-fg">
+      <div className="flex h-[220px] w-[248px] flex-col bg-bg-elev p-[14px] text-fg">
         <Story />
       </div>
     ),
@@ -23,7 +23,7 @@ export const Collapsed: Story = {
   args: { collapsed: true },
   decorators: [
     (Story) => (
-      <div className="flex h-[220px] w-[72px] flex-col bg-bg-sidebar p-3 text-fg">
+      <div className="flex h-[220px] w-[72px] flex-col bg-bg-elev p-3 text-fg">
         <Story />
       </div>
     ),

@@ -150,7 +150,7 @@ export function ExportModal({ onClose, open, projectId, target }: Readonly<Expor
         <input type="hidden" {...register("range")} />
         <input type="hidden" {...register("granularity")} />
         <div>
-          <div className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint">
+          <div className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
             Format
           </div>
           <div className="mt-[9px] grid gap-[7px]">
@@ -175,7 +175,7 @@ export function ExportModal({ onClose, open, projectId, target }: Readonly<Expor
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-[7px]">
                       <span className="text-[13.5px] font-semibold text-fg">{option.name}</span>
-                      <span className="rounded-[5px] bg-bg-sunken px-1.5 py-px font-mono text-[10px] text-fg-faint">
+                      <span className="rounded-[5px] bg-bg-sunken px-1.5 py-px font-mono text-[10px] text-fg-muted">
                         {option.ext}
                       </span>
                     </span>
@@ -188,7 +188,7 @@ export function ExportModal({ onClose, open, projectId, target }: Readonly<Expor
         </div>
 
         <div>
-          <div className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint">Data</div>
+          <div className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">Data</div>
           <div className="mt-[9px] grid gap-[7px]">
             {scopeOptions.map((option) => {
               const Icon = option.icon;
@@ -200,7 +200,7 @@ export function ExportModal({ onClose, open, projectId, target }: Readonly<Expor
                   onClick={() => setValue("scope", option.id)}
                 >
                   <Icon
-                    className={active ? "text-accent" : "text-fg-muted"}
+                    className={active ? "text-accent-text" : "text-fg-muted"}
                     size={18}
                     weight="bold"
                   />
@@ -243,16 +243,16 @@ export function ExportModal({ onClose, open, projectId, target }: Readonly<Expor
         </div>
 
         <div>
-          <div className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint">
+          <div className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
             Columns
           </div>
           <div className="mt-[9px] grid grid-cols-2 gap-[7px]">
             <div className="inline-flex items-center gap-[9px] rounded-[9px] border border-border bg-bg px-2.5 py-2">
-              <span className="grid h-[17px] w-[17px] place-items-center rounded-[5px] bg-accent text-white">
+              <span className="grid h-[17px] w-[17px] place-items-center rounded-[5px] bg-accent-solid text-primary-contrast">
                 <LockSimple size={10} weight="bold" />
               </span>
               <span className="flex-1 text-[12.5px] text-fg">Keyword + Pos</span>
-              <span className="font-mono text-[9px] uppercase tracking-[0.4px] text-fg-faint">
+              <span className="font-mono text-[9px] uppercase tracking-[0.4px] text-fg-muted">
                 Always
               </span>
             </div>
@@ -281,14 +281,16 @@ export function ExportModal({ onClose, open, projectId, target }: Readonly<Expor
           </div>
         </div>
 
-        <div className="flex items-center gap-[9px] rounded-[10px] border border-dashed border-border-strong bg-bg-sunken px-[13px] py-[11px]">
-          <ArrowsClockwise className="shrink-0 text-accent" size={15} />
+        <div className="flex items-center gap-[9px] rounded-[10px] border border-dashed border-border-strong bg-transparent px-[13px] py-[11px]">
+          <ArrowsClockwise className="shrink-0 text-accent-text" size={15} />
           <span className="text-[11.5px] leading-[1.45] text-fg-muted">
             CSV and XLSX keep import-friendly columns. JSON includes ranking history for each
             exported keyword.
           </span>
         </div>
-        {actionError ? <p className="m-0 font-mono text-[11.5px] text-red">{actionError}</p> : null}
+        {actionError ? (
+          <p className="m-0 font-mono text-[11.5px] text-red-text">{actionError}</p>
+        ) : null}
       </form>
     </Modal>
   );

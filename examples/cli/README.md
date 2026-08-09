@@ -1,6 +1,6 @@
 # CLI quickstart
 
-This walkthrough uses the published Bisibility CLI against Bisibility Cloud.
+This walkthrough uses the published Bisibility CLI against the hosted service.
 For a self-hosted instance, replace the base URL with your instance's `/api/v1`
 URL.
 
@@ -13,7 +13,7 @@ bisibility --version
 
 ## 2. Connect your account
 
-Create an API key in Bisibility, then save it in the CLI config. Set the EU Cloud
+Create an API key in Bisibility, then save it in the CLI config. Set the EU hosted region
 API URL explicitly so the active regional target is clear.
 
 ```console

@@ -1,4 +1,4 @@
-import { FieldLabel } from "@/components/ui";
+import { FieldLabel, Input } from "@/components/ui";
 import { cn } from "@/lib/ui/cn";
 import { type InputHTMLAttributes, useId } from "react";
 
@@ -24,21 +24,21 @@ export function KeywordInlineEditTextField({
   return (
     <div
       className={cn(
-        "flex flex-col gap-1.5 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint",
+        "flex flex-col gap-1.5 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted",
         wide && "md:col-span-3",
       )}
     >
       <FieldLabel help={help} htmlFor={inputId} label={label} />
-      <input
+      <Input
         aria-label={label}
         className={cn(
-          "min-h-10 rounded-lg border border-border-strong bg-bg-sunken px-3 text-[13px] font-medium normal-case tracking-normal text-fg outline-none",
+          "min-h-10 rounded-lg px-3 text-[13px] font-medium normal-case tracking-normal",
           mono ? "font-mono" : "font-sans",
         )}
         {...inputProps}
         id={inputId}
       />
-      {error ? <span className="text-red">{error}</span> : null}
+      {error ? <span className="text-red-text">{error}</span> : null}
     </div>
   );
 }

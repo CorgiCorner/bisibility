@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db/prisma";
 import { assertProjectWritable } from "@/lib/deployment/project-write-mode";
+import { requireTrackedDomain } from "@/lib/projects/tracked-domain";
 import {
   loadProviderRateContexts,
   providerRateContextKey,
@@ -235,6 +236,7 @@ export async function runKeywordCheckWithFallback(input: RunKeywordCheckWithFall
     throw new RankCheckRunnerError("keyword_not_found", "Keyword not found.");
   }
   assertProjectWritable(keyword.project);
+  const projectDomain = requireTrackedDomain(keyword.project);
   const depth = resolveEffectiveSerpDepth({
     projectDepth: keyword.project.defaults?.serpDepth,
     requestedDepth: input.depth,
@@ -267,7 +269,7 @@ export async function runKeywordCheckWithFallback(input: RunKeywordCheckWithFall
     stopOnMatch,
     keyword: {
       device: keyword.device,
-      domain: keyword.project.domain,
+      domain: projectDomain,
       id: keyword.id,
       location: handles,
       text: keyword.text,

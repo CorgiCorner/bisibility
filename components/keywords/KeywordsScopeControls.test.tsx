@@ -40,7 +40,7 @@ describe("KeywordsDeviceScope", () => {
     expect(selected.parentElement?.parentElement).toHaveClass(
       "inline-flex",
       "min-h-[34px]",
-      "bg-bg-elev",
+      "bg-transparent",
       "text-[12.5px]",
     );
     expect(selected.parentElement).toHaveClass("flex-none");

@@ -57,7 +57,7 @@ export function AsOfDatePopover({
           onChange={selectDate}
           value={selectedDate}
         />
-        <p className="mb-0 mt-4 border-border-soft border-t pt-3 font-mono text-[10.5px] leading-relaxed text-fg-faint">
+        <p className="mb-0 mt-4 border-border-soft border-t pt-3 font-mono text-[10.5px] leading-relaxed text-fg-muted">
           Dates use the project timezone ({timeZone}).
         </p>
       </div>

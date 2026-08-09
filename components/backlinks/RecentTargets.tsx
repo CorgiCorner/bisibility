@@ -26,7 +26,7 @@ export function RecentTargets({ onOpen, onRemove, targets }: Readonly<RecentTarg
 
   return (
     <section aria-label="Recent targets">
-      <div className="mb-2 flex items-center gap-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.5px] text-fg-faint">
+      <div className="mb-2 flex items-center gap-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.5px] text-fg-muted">
         <Recent aria-hidden size={13} />
         Recent targets
       </div>
@@ -44,16 +44,16 @@ export function RecentTargets({ onOpen, onRemove, targets }: Readonly<RecentTarg
               <strong className="max-w-[180px] truncate text-[12px] font-semibold">
                 {target.target}
               </strong>
-              <span className="font-mono text-[10px] text-fg-faint">
+              <span className="font-mono text-[10px] text-fg-muted">
                 {scopeLabel(target.targetScope)} - {relativePast(new Date(target.fetchedAt), now)}
               </span>
-              <span className="rounded-full bg-accent-soft px-2 py-0.5 font-mono text-[9.5px] text-accent">
+              <span className="rounded-full bg-accent-soft px-2 py-0.5 font-mono text-[9.5px] text-accent-text">
                 {freeFor(target.cachedUntil, now)}
               </span>
             </button>
             <button
               aria-label={`Remove ${target.target} from recent targets`}
-              className="grid h-5 w-5 shrink-0 place-items-center rounded-full text-fg-faint transition-colors hover:text-fg"
+              className="grid h-5 w-5 shrink-0 place-items-center rounded-full text-fg-muted transition-colors hover:text-fg"
               onClick={() => onRemove(target)}
               type="button"
             >

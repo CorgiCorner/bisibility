@@ -33,7 +33,7 @@ const previewFeed = {
       type: "check_failed",
     },
     {
-      body: "Anna joined the project workspace.",
+      body: "Anna joined the project.",
       createdAt: "2026-06-29T16:30:00.000Z",
       href: appPath("prj_story", "settings", "team"),
       id: "notif_team",

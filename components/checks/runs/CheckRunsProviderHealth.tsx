@@ -7,7 +7,7 @@ import type {
   ProviderHealthEntry,
 } from "@/lib/checks/contract";
 import {
-  ArrowRightIcon as ArrowRight,
+  CaretRightIcon as CaretRight,
   WarningCircleIcon as WarningCircle,
 } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
@@ -46,7 +46,7 @@ export function RateLimitBanner({ onFilterChange, range, view }: Readonly<Banner
     <div className="mx-4 mt-3 flex items-start gap-2.5 rounded-xl border border-yellow/35 bg-yellow/10 px-3.5 py-3 text-[12.5px] text-fg">
       <WarningCircle
         aria-hidden
-        className="mt-0.5 shrink-0 text-yellow-strong"
+        className="mt-0.5 shrink-0 text-yellow-text"
         size={17}
         weight="fill"
       />
@@ -57,7 +57,7 @@ export function RateLimitBanner({ onFilterChange, range, view }: Readonly<Banner
         {skipped.toLocaleString("en-US")} skipped; they retry on schedule.
       </p>
       <button
-        className="shrink-0 font-semibold text-accent outline-none hover:text-accent-hover focus-visible:underline"
+        className="shrink-0 font-semibold text-accent-text outline-none hover:text-accent-text focus-visible:underline"
         onClick={() => onFilterChange("deferred")}
         type="button"
       >
@@ -87,7 +87,7 @@ function ProviderRow({
           {directRate}% direct · {provider.rateLimited.toLocaleString("en-US")} rate-limited
         </p>
         {provider.coveredAsFallback > 0 ? (
-          <p className="m-0 mt-0.5 font-mono text-[10.5px] text-yellow-strong">
+          <p className="m-0 mt-0.5 font-mono text-[10.5px] text-yellow-text">
             covered {provider.coveredAsFallback.toLocaleString("en-US")} as fallback
           </p>
         ) : null}
@@ -107,7 +107,7 @@ export function ProviderHealth({ range, reorderProvidersHref, view }: Readonly<H
   if (issueCount === 0 && skippedForRateLimits === 0 && primary) {
     return (
       <div className="mx-4 mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-bg-sunken px-3.5 py-2.5 text-[12.5px]">
-        <span className="font-semibold text-green">
+        <span className="font-semibold text-green-text">
           Providers healthy · {primary.providerLabel} 100% direct
         </span>
         <HealthLink href={reorderProvidersHref} />
@@ -138,11 +138,11 @@ export function ProviderHealth({ range, reorderProvidersHref, view }: Readonly<H
 function HealthLink({ href }: Readonly<{ href: string }>) {
   return (
     <Link
-      className="inline-flex items-center gap-1 text-[11.5px] font-semibold text-accent outline-none hover:text-accent-hover focus-visible:underline"
+      className="inline-flex items-center gap-1 text-[11.5px] font-semibold text-accent-text outline-none hover:text-accent-text focus-visible:underline"
       href={href}
     >
       Reorder chain
-      <ArrowRight aria-hidden size={12} weight="bold" />
+      <CaretRight aria-hidden size={12} weight="bold" />
     </Link>
   );
 }

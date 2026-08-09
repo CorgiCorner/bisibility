@@ -2,6 +2,7 @@
 
 import { actionWarningMessage } from "@/components/keywords/action-utils";
 import { LocationActionWarning } from "@/components/keywords/LocationActionWarning";
+import { Button } from "@/components/ui";
 import type { KeywordImportCsvRow } from "@/lib/keywords/import-csv-parser";
 import { downloadTextFile } from "@/lib/ui/download";
 import {
@@ -50,16 +51,18 @@ export function TemplateStep() {
       <h3 className="m-0 text-[15px] font-semibold">Start from the template</h3>
       <p className="m-0 mt-1.5 text-[13px] leading-[1.55] text-fg-muted">
         Fill in your keywords, then upload the CSV on the next step. Only{" "}
-        <code className="font-mono text-[12px] text-accent">keyword</code> is required.
+        <code className="font-mono text-[12px] text-accent-text">keyword</code> is required.
       </p>
-      <button
-        className="mt-4 inline-flex items-center gap-2 rounded-[10px] bg-accent px-4 py-2.5 text-[13.5px] font-semibold text-white"
+      <Button
         onClick={downloadTemplate}
+        size="lg"
+        startIcon={<DownloadSimple size={16} weight="bold" />}
+        sx={{ marginTop: "16px" }}
         type="button"
+        variant="primary"
       >
-        <DownloadSimple size={16} weight="bold" />
         Download template.csv
-      </button>
+      </Button>
       <pre className="m-0 mt-[18px] overflow-x-auto rounded-[11px] bg-code-bg px-[15px] py-[13px] font-mono text-[11.5px] leading-[1.75] text-code-fg">
         {templateCsv}
       </pre>
@@ -92,19 +95,19 @@ export function UploadStep({
           <label className="text-[12.5px] font-semibold text-fg" htmlFor="import-csv-input">
             Paste CSV
           </label>
-          <span className="font-mono text-[11px] text-fg-faint">
+          <span className="font-mono text-[11px] text-fg-muted">
             {parsedCount} {parsedCount === 1 ? "keyword" : "keywords"} parsed
           </span>
         </div>
         <textarea
-          className="mt-2 min-h-[122px] w-full resize-y rounded-[10px] border border-border-strong bg-bg-sunken px-[13px] py-3 font-mono text-[12px] leading-[1.7] text-fg outline-none focus:border-accent"
+          className="mt-2 min-h-[122px] w-full resize-y rounded-[10px] border border-border-strong bg-transparent px-[13px] py-3 font-mono text-[12px] leading-[1.7] text-fg outline-none focus:border-accent"
           id="import-csv-input"
           onChange={(event) => onCsvTextChange(event.target.value)}
           placeholder={csvExample}
           value={csvText}
         />
         {errorMessage ? (
-          <p className="mt-2 font-mono text-[11.5px] text-red">{errorMessage}</p>
+          <p className="mt-2 font-mono text-[11.5px] text-red-text">{errorMessage}</p>
         ) : null}
       </div>
     </div>
@@ -140,11 +143,11 @@ export function MapStep({
             key={csv}
           >
             <span className="inline-flex min-w-0 items-center gap-[7px] font-mono text-[12.5px]">
-              <Table className="shrink-0 text-fg-faint" size={14} />
+              <Table className="shrink-0 text-fg-muted" size={14} />
               <span className="truncate">{csv}</span>
             </span>
             <span className="truncate text-[12.5px] font-semibold text-fg">{field}</span>
-            <span className="font-mono text-[10px] uppercase tracking-[0.4px] text-fg-faint">
+            <span className="font-mono text-[10px] uppercase tracking-[0.4px] text-fg-muted">
               {state}
             </span>
           </div>
@@ -164,7 +167,7 @@ function ParsedRowsPreview({ rows }: Readonly<{ rows: KeywordImportCsvRow[] | nu
   return (
     <div className="mt-4 overflow-x-auto rounded-xl border border-border">
       <table className="w-full min-w-[640px] border-collapse text-left text-[12px]">
-        <thead className="bg-bg-sunken font-mono text-[10px] uppercase tracking-[0.4px] text-fg-faint">
+        <thead className="bg-bg-sunken font-mono text-[10px] uppercase tracking-[0.4px] text-fg-muted">
           <tr>
             {["Keyword", "Target URL", "Tags", "Location", "Device"].map((label) => (
               <th className="px-3 py-2 font-medium" key={label}>
@@ -202,15 +205,15 @@ export function ReviewStep({
     <div>
       <h3 className="m-0 text-[15px] font-semibold">Review and confirm</h3>
       <div className="mt-3.5 rounded-[11px] border border-border bg-bg px-3.5 py-3">
-        <div className="font-mono text-[11px] uppercase tracking-[0.5px] text-fg-faint">
+        <div className="font-mono text-[11px] uppercase tracking-[0.5px] text-fg-muted">
           Duplicate handling
         </div>
-        <div className="mt-2 inline-flex rounded-[9px] bg-accent px-[13px] py-1.5 text-[12px] font-semibold text-white">
+        <div className="mt-2 inline-flex rounded-[9px] bg-accent-solid px-[13px] py-1.5 text-[12px] font-semibold text-primary-contrast">
           Skip existing keywords
         </div>
       </div>
       <p className="m-0 mt-3.5 text-[13px] leading-[1.55] text-fg-muted">
-        Import will validate every row, skip duplicates in the file and workspace, and create the
+        Import will validate every row, skip duplicates in the file and project, and create the
         remaining keywords with their target URLs, tags, country, and device.
       </p>
       <ParsedRowsPreview rows={parsedRows} />
@@ -225,7 +228,7 @@ export function DoneStep({ result }: Readonly<{ result: ImportResultSummary }>) 
   const warning = actionWarningMessage(result);
   return (
     <div className="flex flex-col items-center px-4 py-[30px] text-center">
-      <span className="grid h-14 w-14 place-items-center rounded-[15px] text-green [background:color-mix(in_srgb,var(--green)_12%,transparent)]">
+      <span className="grid h-14 w-14 place-items-center rounded-[15px] text-green-text [background:color-mix(in_srgb,var(--green)_12%,transparent)]">
         <CheckCircle size={30} weight="fill" />
       </span>
       <h3 className="m-0 mt-[18px] text-[18px] font-semibold tracking-[-0.4px]">Import complete</h3>
@@ -234,7 +237,7 @@ export function DoneStep({ result }: Readonly<{ result: ImportResultSummary }>) 
       </p>
       <LocationActionWarning message={warning} />
       {result.errors.length ? (
-        <div className="mt-4 max-h-32 w-full overflow-auto rounded-[10px] bg-bg-sunken p-3 text-left font-mono text-[11px] text-red">
+        <div className="mt-4 max-h-32 w-full overflow-auto rounded-[10px] bg-bg-sunken p-3 text-left font-mono text-[11px] text-red-text">
           {result.errors.slice(0, 6).map((error) => (
             <div key={`${error.row}-${error.message}`}>
               Row {error.row}: {error.message}

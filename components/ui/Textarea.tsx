@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/ui/cn";
 import { forwardRef, type TextareaHTMLAttributes } from "react";
+import { inputClassName } from "./Input";
 
 export type TextareaProps = Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, "size"> & {
   invalid?: boolean;
@@ -22,7 +23,8 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function 
   return (
     <textarea
       className={cn(
-        "min-h-[122px] w-full rounded-[10px] border border-border-strong bg-bg-sunken px-[13px] py-3 text-[13px] leading-[1.7] text-fg outline-none transition-colors placeholder:text-fg-faint focus:border-accent disabled:cursor-not-allowed disabled:opacity-60",
+        inputClassName,
+        "min-h-[122px] w-full rounded-[10px] px-[13px] py-3 text-[13px] leading-[1.7]",
         monospace && "font-mono",
         resizeClass[resize],
         invalid && "border-red focus:border-red",

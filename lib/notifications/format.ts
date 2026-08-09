@@ -10,7 +10,7 @@ export type NotificationPayload =
   | { [key: string]: NotificationPayload };
 
 export type NotificationProject = {
-  domain: string;
+  domain: string | null;
   name: string;
   publicId: string;
 } | null;

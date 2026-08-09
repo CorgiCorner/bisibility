@@ -37,7 +37,7 @@ const colorClass = {
 const roleClass =
   "inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-border-strong px-3 font-mono text-[11.5px]";
 const iconButtonClass =
-  "grid h-[30px] w-[30px] place-items-center rounded-lg border border-border-strong bg-bg-elev text-red hover:border-red disabled:cursor-not-allowed disabled:opacity-45";
+  "grid h-[30px] w-[30px] place-items-center rounded-lg border border-border-strong bg-bg-elev text-red-text hover:border-red disabled:cursor-not-allowed disabled:opacity-45";
 const roleMenuOptions = [
   { label: "Admin", value: "admin" },
   { label: "Editor", value: "member" },
@@ -102,11 +102,11 @@ export function TeamMembersList({
                       }
                     }}
                     options={roleMenuOptions}
-                    triggerClassName={cn(roleClass, "bg-bg-elev pr-3 text-fg")}
+                    triggerClassName={cn(roleClass, "bg-transparent pr-3 text-fg")}
                     value={value}
                   />
                 ) : (
-                  <span className={cn(roleClass, "text-fg-muted", pending && "opacity-55")}>
+                  <span className={cn(roleClass, "text-fg-muted", pending && "text-fg-muted")}>
                     {member.role}
                   </span>
                 )}
@@ -115,7 +115,7 @@ export function TeamMembersList({
                     <span className="inline-grid">
                       <button
                         aria-label={`Transfer ownership to ${member.name}`}
-                        className="grid h-[30px] w-[30px] place-items-center rounded-lg border border-border-strong bg-bg-elev text-fg-muted hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-45"
+                        className="grid h-[30px] w-[30px] place-items-center rounded-lg border border-border-strong bg-bg-elev text-fg-muted hover:border-accent hover:text-accent-text disabled:cursor-not-allowed disabled:opacity-45"
                         disabled={Boolean(pending)}
                         onClick={() => onTransferOwnership(member.id)}
                         type="button"

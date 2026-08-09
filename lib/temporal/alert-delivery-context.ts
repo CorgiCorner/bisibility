@@ -1,5 +1,6 @@
 import "server-only";
 
+import { trackedProjectDomain } from "@/lib/schemas/project";
 import { recordSuppressed, reserveDeliveryBudgetOnce } from "../alerts/daily-cap";
 import type { AlertDeliveryChannel, AlertExternalDeliveryPayload } from "../alerts/delivery";
 import { sendAlertOverflowNotice } from "../alerts/overflow-notice";
@@ -171,7 +172,7 @@ export async function loadAlertDeliveryContextActivity(
       firedAt: alert.firedAt.toISOString(),
       keyword: alert.keyword.text,
       keywordId: requireDeliveryPublicId(alert.keyword.publicId, "kw"),
-      projectDomain: project.domain,
+      projectDomain: trackedProjectDomain(project.domain) ?? "",
       projectId: requireDeliveryPublicId(project.publicId, "prj"),
       ruleId: requireDeliveryPublicId(alert.rule.publicId, "alr"),
       ruleName: alert.rule.name,

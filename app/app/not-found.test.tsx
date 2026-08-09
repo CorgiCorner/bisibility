@@ -33,7 +33,7 @@ describe("app not found", () => {
     expect(await render()).toContain("member@example.com");
   });
 
-  it("offers a way back to the workspace", async () => {
+  it("offers a way back to the project", async () => {
     expect(await render()).toContain('href="/app"');
   });
 

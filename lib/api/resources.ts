@@ -37,7 +37,7 @@ export const RANK_CHECK_RUNNING_STATUS = "running";
 
 export type ProjectLike = {
   createdAt: Date;
-  domain: string;
+  domain: string | null;
   id: string;
   name: string;
   publicId: string;
@@ -97,7 +97,7 @@ function rankCheckAttempts(value: Prisma.JsonValue | null) {
 export function projectResource(project: ProjectLike) {
   return {
     created_at: project.createdAt.toISOString(),
-    domain: project.domain,
+    domain: project.domain ?? "",
     id: requireApiPublicId(project.publicId, "prj"),
     name: project.name,
     updated_at: project.updatedAt.toISOString(),

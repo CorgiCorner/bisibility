@@ -20,24 +20,21 @@ import {
 import { DataResidencyNote } from "@/components/ui";
 import { createCloudImportWorkspace } from "@/lib/actions/cloud";
 import { zodResolver } from "@/lib/forms/zod-resolver";
-import { type CreateProjectInput, createProjectSchema } from "@/lib/schemas/project";
+import { type CreateProjectInput, createProjectSchema, domainSchema } from "@/lib/schemas/project";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { useFormStatus } from "react-dom";
+import { type FormEvent, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 
 const createProjectFormSchema = createProjectSchema
-  .pick({
-    domain: true,
-    name: true,
-  })
+  .pick({ name: true })
+  .extend({ domain: domainSchema })
   .extend(matchingScopeValuesSchema.shape);
 
 export type CreateProjectFormValues = z.infer<typeof createProjectFormSchema>;
 
 type CreatedProject = {
-  domain: string;
+  domain: string | null;
   id: string;
   isSample?: boolean;
   name: string;
@@ -60,23 +57,50 @@ type StepCreateProjectProps = {
 };
 
 function CloudImportWorkspaceButton() {
-  const { pending } = useFormStatus();
+  const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
+    startTransition(async () => {
+      try {
+        const destination = await createCloudImportWorkspace();
+        router.push(destination, { scroll: true });
+      } catch (error_) {
+        setError(actionErrorMessage(error_, "Import project could not be opened."));
+      }
+    });
+  }
 
   return (
-    <button
-      className="inline-flex min-h-10 items-center rounded-lg px-1 text-[13px] font-semibold text-fg-muted transition-colors hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-60"
-      disabled={pending}
-      type="submit"
+    <form
+      className="mt-6 rounded-xl border border-border-strong bg-transparent p-4"
+      onSubmit={handleSubmit}
     >
-      {pending ? (
-        "Opening import..."
-      ) : (
-        <>
-          Migrating from a self-hosted instance?{" "}
-          <span className="underline decoration-current underline-offset-2">Import it instead</span>
-        </>
-      )}
-    </button>
+      <button
+        className="inline-flex min-h-9 items-center rounded-lg text-[13px] font-semibold text-fg-muted transition-colors hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid disabled:cursor-not-allowed disabled:opacity-60"
+        disabled={pending}
+        type="submit"
+      >
+        {pending ? (
+          "Opening import..."
+        ) : (
+          <>
+            Migrating from a self-hosted instance?{" "}
+            <span className="underline decoration-current underline-offset-2">
+              Import it instead
+            </span>
+          </>
+        )}
+      </button>
+      {error ? (
+        <p className={`m-0 mt-3 ${feedbackClass} text-red-text`} role="alert">
+          {error}
+        </p>
+      ) : null}
+    </form>
   );
 }
 
@@ -172,7 +196,7 @@ export function StepCreateProject({
       <form id={onboardingFormId} onSubmit={handleSubmit(onSubmit)}>
         <div className="text-lg font-semibold tracking-[-0.4px]">Create project</div>
         <div className="mt-1 text-[13px] text-fg-muted">
-          Name the workspace and define what counts as your site.
+          Name the project and define what counts as your site.
         </div>
         {dataResidencyMessage ? (
           <DataResidencyNote className="mt-4 max-w-[440px]" message={dataResidencyMessage} />
@@ -187,7 +211,7 @@ export function StepCreateProject({
               {...register("name")}
             />
             {errors.name ? (
-              <span className={`${feedbackClass} text-red`}>{errors.name.message}</span>
+              <span className={`${feedbackClass} text-red-text`}>{errors.name.message}</span>
             ) : null}
           </label>
           <label className={labelClass}>
@@ -198,13 +222,13 @@ export function StepCreateProject({
               {...register("domain")}
             />
             {errors.domain ? (
-              <span className={`${feedbackClass} text-red`}>{errors.domain.message}</span>
+              <span className={`${feedbackClass} text-red-text`}>{errors.domain.message}</span>
             ) : null}
           </label>
         </div>
 
         <div className="mt-6">
-          <div className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint">
+          <div className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
             Ownership matching
           </div>
           <div className="mt-1 text-[13px] text-fg-muted">
@@ -213,16 +237,14 @@ export function StepCreateProject({
           <MatchingScopeFields domain={domain} register={register} values={matchingScopeValues} />
         </div>
 
-        {actionError ? <p className={`m-0 mt-3 ${feedbackClass} text-red`}>{actionError}</p> : null}
+        {actionError ? (
+          <p className={`m-0 mt-3 ${feedbackClass} text-red-text`}>{actionError}</p>
+        ) : null}
         {isSubmitting ? (
           <p className={`m-0 mt-3 ${feedbackClass} text-fg-muted`}>Saving project...</p>
         ) : null}
       </form>
-      {isCloud ? (
-        <form action={createCloudImportWorkspace} className="mt-4">
-          <CloudImportWorkspaceButton />
-        </form>
-      ) : null}
+      {isCloud ? <CloudImportWorkspaceButton /> : null}
     </>
   );
 }

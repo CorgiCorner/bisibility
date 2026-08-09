@@ -21,9 +21,9 @@ export type NotificationsSectionProps = {
 };
 
 const labelClass =
-  "flex flex-col gap-1.5 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint";
+  "flex flex-col gap-1.5 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted";
 const valueClass =
-  "flex min-h-10 items-center rounded-lg border border-border-strong bg-bg-sunken px-3 text-[13px] font-medium text-fg";
+  "flex min-h-10 items-center rounded-lg border border-border-strong bg-transparent px-3 text-[13px] font-medium text-fg";
 
 export function NotificationsSection({
   notifications,
@@ -33,7 +33,7 @@ export function NotificationsSection({
     <SettingsSection
       action={
         <a
-          className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-border-strong bg-bg-elev px-3 text-[12.5px] font-semibold text-fg-muted hover:border-accent hover:text-accent"
+          className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-border-strong bg-bg-elev px-3 text-[12.5px] font-semibold text-fg-muted hover:border-accent hover:text-accent-text"
           href={appPath(projectRef, "alerts")}
         >
           Alert rules
@@ -55,13 +55,13 @@ export function NotificationsSection({
         <div className={cn(labelClass, "sm:col-span-1")}>
           <span className="flex flex-wrap items-center gap-2">
             {"Notification email "}
-            <span className="inline-flex items-center gap-1 rounded-full bg-green/10 px-2 py-0.5 text-[9px] font-semibold text-green">
+            <span className="inline-flex items-center gap-1 rounded-full bg-green/10 px-2 py-0.5 text-[9px] font-semibold text-green-text">
               <CheckCircle size={11} weight="fill" />
               Verified
             </span>
           </span>
           <span className={cn(valueClass, "font-mono")}>{notifications.email}</span>
-          <span className="normal-case tracking-normal text-fg-faint">
+          <span className="normal-case tracking-normal text-fg-muted">
             Verified when you signed in with a login code. Change it to send a new code to the new
             address.
           </span>

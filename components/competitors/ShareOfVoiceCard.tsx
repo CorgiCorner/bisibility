@@ -15,7 +15,7 @@ type ShareOfVoiceCardProps = {
 };
 
 const kindStyles = {
-  You: { color: "var(--accent)", background: "var(--accent-soft)" },
+  You: { color: "var(--accent-text)", background: "var(--accent-soft)" },
   Managed: {
     color: "var(--blue)",
     background: "color-mix(in srgb, var(--blue) 12%, transparent)",
@@ -60,7 +60,7 @@ export function ShareOfVoiceCard({
       </div>
 
       {emptyCopy ? (
-        <div className="mt-[18px] rounded-[11px] border border-dashed border-border-strong bg-bg-sunken px-3.5 py-3 text-[12.5px] leading-5 text-fg-muted">
+        <div className="mt-[18px] rounded-[11px] border border-dashed border-border-strong bg-transparent px-3.5 py-3 text-[12.5px] leading-5 text-fg-muted">
           {emptyCopy}
         </div>
       ) : null}
@@ -95,7 +95,7 @@ export function ShareOfVoiceCard({
                     </span>
                     {competitor.kind === "Managed" ? (
                       <a
-                        className="block truncate font-mono text-[10px] text-fg-faint outline-none transition-colors hover:text-accent focus-visible:text-accent"
+                        className="block truncate font-mono text-[10px] text-fg-muted outline-none transition-colors hover:text-accent-text focus-visible:text-accent-text"
                         href={`https://${competitor.domain}`}
                         rel="noopener noreferrer"
                         target="_blank"
@@ -103,7 +103,7 @@ export function ShareOfVoiceCard({
                         {competitor.domain}
                       </a>
                     ) : competitor.label !== competitor.domain ? (
-                      <span className="block truncate font-mono text-[10px] text-fg-faint">
+                      <span className="block truncate font-mono text-[10px] text-fg-muted">
                         {competitor.domain}
                       </span>
                     ) : null}
@@ -141,8 +141,8 @@ export function ShareOfVoiceCard({
         </div>
       ) : null}
 
-      <p className="m-0 mt-4 flex items-center gap-2 border-border-soft border-t pt-3.5 text-[11.5px] text-fg-faint">
-        <Info aria-hidden className="shrink-0 text-accent" size={14} />
+      <p className="m-0 mt-4 flex items-center gap-2 border-border-soft border-t pt-3.5 text-[11.5px] text-fg-muted">
+        <Info aria-hidden className="shrink-0 text-accent-text" size={14} />
         SOV = share of rank-weighted top-10 visibility from completed checks in this market.
       </p>
     </Card>

@@ -1,8 +1,7 @@
 "use client";
 
 import { useCommandPalette } from "@/components/shell/CommandPalette";
-import type { ThemeMode } from "@/components/shell/set-theme";
-import { ThemeSegments } from "@/components/shell/ThemeSegments";
+import type { ThemePreference } from "@/components/shell/set-theme";
 import { UserMenuRow } from "@/components/shell/UserMenuRow";
 import {
   accountLinks,
@@ -10,7 +9,7 @@ import {
   resourceLinksForDeployment,
   signOutLink,
 } from "@/components/shell/user-menu-items";
-import { useToast } from "@/components/ui";
+import { ThemeSegmentsRow, useToast } from "@/components/ui";
 import { authClient } from "@/lib/auth/client";
 import Divider from "@mui/material/Divider";
 import Menu from "@mui/material/Menu";
@@ -22,7 +21,7 @@ const PAPER_SX = {
   borderRadius: "13px",
   boxShadow: "none",
   color: "var(--fg)",
-  marginTop: "-6px",
+  marginTop: "6px",
   minWidth: 248,
   padding: "6px",
   width: 248,
@@ -32,7 +31,7 @@ const DIVIDER_SX = { borderColor: "var(--border)", marginX: "4px", marginY: "6px
 
 export type UserMenuProps = {
   anchorEl: HTMLElement | null;
-  defaultTheme?: ThemeMode;
+  defaultTheme?: ThemePreference;
   email: string;
   initials: string;
   name: string;
@@ -45,7 +44,7 @@ export type UserMenuProps = {
 
 export function UserMenu({
   anchorEl,
-  defaultTheme = "light",
+  defaultTheme = "system",
   email,
   initials,
   name,
@@ -86,7 +85,7 @@ export function UserMenu({
   return (
     <Menu
       anchorEl={anchorEl}
-      anchorOrigin={{ horizontal: "left", vertical: "top" }}
+      anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
       id="sidebar-user-menu"
       onClose={onClose}
       open={Boolean(anchorEl)}
@@ -94,22 +93,22 @@ export function UserMenu({
         list: { "aria-label": "Account menu", dense: true, sx: { padding: 0 } },
         paper: { sx: PAPER_SX },
       }}
-      transformOrigin={{ horizontal: "left", vertical: "bottom" }}
+      transformOrigin={{ horizontal: "right", vertical: "top" }}
     >
       <div className="flex items-center gap-2.5 px-[9px] pb-[11px] pt-[9px]">
-        <span className="grid h-[34px] w-[34px] flex-none place-items-center rounded-[9px] bg-accent font-mono text-xs font-semibold text-white">
+        <span className="grid h-[34px] w-[34px] flex-none place-items-center rounded-[9px] bg-accent-solid font-mono text-xs font-semibold text-primary-contrast">
           {initials}
         </span>
         <span className="min-w-0 flex-1">
           <span className="block text-[13px] font-semibold leading-tight">{name}</span>
-          <span className="block truncate font-mono text-[10.5px] text-fg-faint">{email}</span>
-          <span className="mt-1 block font-mono text-[9px] uppercase tracking-[0.4px] text-accent">
+          <span className="block truncate font-mono text-[10.5px] text-fg-muted">{email}</span>
+          <span className="mt-1 block font-mono text-[9px] uppercase tracking-[0.4px] text-accent-text">
             {roleLine}
           </span>
         </span>
       </div>
       <Divider sx={{ ...DIVIDER_SX, marginTop: "2px" }} />
-      <ThemeSegments defaultTheme={defaultTheme} />
+      <ThemeSegmentsRow defaultPreference={defaultTheme} />
       <Divider sx={DIVIDER_SX} />
       {accountLinks.map((item) => (
         <UserMenuRow

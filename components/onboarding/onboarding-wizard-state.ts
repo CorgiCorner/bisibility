@@ -13,7 +13,7 @@ import { countryNameForLocationValue, locationValuesForKeys } from "./onboarding
 import { DEFAULT_ONBOARDING_LOCATION_KEY } from "./onboarding-locations";
 
 export type OnboardingProject = {
-  domain: string;
+  domain: string | null;
   id: string;
   isSample?: boolean;
   name: string;

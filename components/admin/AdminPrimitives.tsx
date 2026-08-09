@@ -24,12 +24,12 @@ export function duration(value: number | null) {
 
 function statusTone(status: string) {
   if (["ok", "completed", "succeeded_empty", "succeeded_with_data", "delivered"].includes(status)) {
-    return "bg-green/10 text-green";
+    return "bg-green/10 text-green-text";
   }
   if (["stale", "deferred", "deferred_rate_limit", "warning"].includes(status)) {
-    return "bg-yellow/10 text-yellow";
+    return "bg-yellow/10 text-yellow-text";
   }
-  if (["failed", "error", "undelivered"].includes(status)) return "bg-red/10 text-red";
+  if (["failed", "error", "undelivered"].includes(status)) return "bg-red/10 text-red-text";
   return "bg-bg-sunken text-fg-muted";
 }
 

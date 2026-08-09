@@ -39,6 +39,21 @@ function Harness({ initial = country() }: { initial?: LocationFieldValue }) {
 }
 
 describe("LocationField", () => {
+  it("keeps form and toolbar fields transparent with a visible border", () => {
+    const { rerender } = render(<LocationField onChange={vi.fn()} value={country()} />);
+
+    expect(screen.getByRole("combobox", { name: /location/i })).toHaveClass(
+      "bg-transparent",
+      "border-border-strong",
+    );
+
+    rerender(<LocationField onChange={vi.fn()} value={country()} variant="toolbar" />);
+    expect(screen.getByRole("combobox", { name: /location/i })).toHaveClass(
+      "bg-transparent",
+      "border-border-strong",
+    );
+  });
+
   it("queries mixed suggestions and preserves the selected city key", async () => {
     mockLocations([
       {

@@ -28,7 +28,7 @@ export type PendingInvitesProps = {
 };
 
 const iconButtonClass =
-  "grid h-[30px] w-[30px] place-items-center rounded-lg border border-border-strong bg-bg-elev text-red hover:border-red disabled:cursor-not-allowed disabled:opacity-45";
+  "grid h-[30px] w-[30px] place-items-center rounded-lg border border-border-strong bg-bg-elev text-red-text hover:border-red disabled:cursor-not-allowed disabled:opacity-45";
 
 export function PendingInvites({
   canManageTeam,
@@ -42,7 +42,7 @@ export function PendingInvites({
       <div className="flex items-center justify-between gap-3 border-b border-border-soft px-4 py-3">
         <div className="flex items-center gap-2">
           <span className="text-[13.5px] font-semibold">Pending invites</span>
-          <span className="inline-grid min-w-[18px] place-items-center rounded-full bg-accent-soft px-1.5 py-0.5 font-mono text-[10px] font-semibold text-accent">
+          <span className="inline-grid min-w-[18px] place-items-center rounded-full bg-accent-soft px-1.5 py-0.5 font-mono text-[10px] font-semibold text-accent-text">
             {invites.length}
           </span>
         </div>
@@ -57,7 +57,7 @@ export function PendingInvites({
             data-expired={Boolean(invite.expired)}
             key={invite.id}
           >
-            <span className="grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[9px] border border-dashed border-border-strong text-fg-faint">
+            <span className="grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[9px] border border-dashed border-border-strong text-fg-muted">
               <EnvelopeSimple aria-hidden size={16} />
             </span>
             <span className="min-w-0 flex-1">
@@ -102,7 +102,7 @@ export function PendingInvites({
         ))
       ) : (
         <div className="flex items-center gap-3 p-3 text-[12.5px] text-fg-muted">
-          <span className="grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[9px] border border-dashed border-border-strong text-fg-faint">
+          <span className="grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[9px] border border-dashed border-border-strong text-fg-muted">
             <EnvelopeSimple aria-hidden size={16} />
           </span>
           No pending invites. Use Invite member to add a teammate.

@@ -193,13 +193,13 @@ function StepRailItem({
         <span
           className={cn(
             "block text-[13px] leading-tight",
-            active ? "font-semibold text-fg" : "font-medium text-fg-faint",
+            active ? "font-semibold text-fg" : "font-medium text-fg-muted",
             done && !active && "text-fg-muted",
           )}
         >
           {step.title}
         </span>
-        <span className="mt-0.5 block font-mono text-[10px] text-fg-faint">{step.desc}</span>
+        <span className="mt-0.5 block font-mono text-[10px] text-fg-muted">{step.desc}</span>
       </span>
     </>
   );

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import type { ProjectWriteMode } from "@/lib/deployment/project-write-mode";
 import { ProviderStatus, type Role } from "@/lib/generated/prisma/client";
 import { asProjectRef, type ProjectRef } from "@/lib/routing/app-path";
+import { trackedProjectDomain } from "@/lib/schemas/project";
 import { cache } from "react";
 import { getQueryActor } from "./_auth";
 import { deriveWorkspaceState, type WorkspaceDataState } from "./workspace-state";
@@ -22,6 +23,7 @@ export type WorkspaceSummary = {
   isSample: boolean;
   latestCompletedRankCheckAt: Date | null;
   state?: WorkspaceDataState;
+  onboardingCompletedAt: Date | null;
   role: Role;
   plan: WorkspacePlan;
 };
@@ -56,6 +58,7 @@ export const listWorkspaces = perRequestCache(async (): Promise<WorkspaceSummary
         where: { rankChecks: { some: { status: "completed" } } },
       },
       name: true,
+      onboardingCompletedAt: true,
       providerConnections: {
         select: { id: true },
         where: { status: ProviderStatus.connected },
@@ -73,12 +76,13 @@ export const listWorkspaces = perRequestCache(async (): Promise<WorkspaceSummary
         .sort((a, b) => b.getTime() - a.getTime())[0] ?? null;
 
     return {
-      domain: project.domain,
+      domain: trackedProjectDomain(project.domain) ?? "",
       id: asProjectRef(project.publicId),
       isSample: project.isSample,
       keywordCount: project._count.keywords,
       latestCompletedRankCheckAt,
       name: project.name,
+      onboardingCompletedAt: project.onboardingCompletedAt,
       plan: project.providerConnections.length > 0 ? "pro" : "free",
       publicId: asProjectRef(project.publicId),
       role: roleByProject.get(project.id) ?? "viewer",

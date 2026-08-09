@@ -3,6 +3,7 @@ import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import { normalizeDomain } from "@/lib/domains/normalize";
 import type { AlertRule } from "@/lib/generated/prisma/client";
+import { trackedProjectDomain } from "@/lib/schemas/project";
 import { type CtrDropMetrics, hasCtrDrop, loadGscCtrMetrics } from "./ctr-drop";
 import { alertDepthConflict } from "./depth-conflict";
 import { emitDepthConflictSignal } from "./depth-conflict-signal";
@@ -182,9 +183,10 @@ export async function evaluateKeywordAlerts(
   }
 
   const tagIds = new Set(keyword.tags.map((tag) => tag.tagId));
-  const beforeSnapshot = hydrateSnapshot(before, keyword.project.domain);
+  const projectDomain = trackedProjectDomain(keyword.project.domain) ?? "";
+  const beforeSnapshot = hydrateSnapshot(before, projectDomain);
   const afterSnapshot = {
-    ...hydrateSnapshot(after, keyword.project.domain),
+    ...hydrateSnapshot(after, projectDomain),
     targetUrl: keyword.targetUrl,
   };
   const rules = await prisma.alertRule.findMany({

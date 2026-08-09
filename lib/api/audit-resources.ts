@@ -42,14 +42,14 @@ export function personalTokenAuditResource(value: {
 }
 
 export function projectAuditResource(value: {
-  domain: string;
+  domain: string | null;
   name: string;
   publicId: string | null;
   trackingScope?: string;
   writeMode?: string;
 }) {
   return {
-    domain: value.domain,
+    domain: value.domain ?? null,
     id: requireApiPublicId(value.publicId ?? "", "prj"),
     name: value.name,
     trackingScope: value.trackingScope,

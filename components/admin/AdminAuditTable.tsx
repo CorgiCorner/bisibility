@@ -18,9 +18,9 @@ const filters = [
 ] as const satisfies readonly { key: InstanceAdminAuditFilter; label: string }[];
 
 const resultClasses = {
-  blocked: "bg-yellow/10 text-yellow",
-  failed: "bg-red/10 text-red",
-  ok: "bg-green/10 text-green",
+  blocked: "bg-yellow/10 text-yellow-text",
+  failed: "bg-red/10 text-red-text",
+  ok: "bg-green/10 text-green-text",
 } satisfies Record<AuditEntry["result"], string>;
 
 function auditHref(filter: InstanceAdminAuditFilter, cursor?: string | null) {

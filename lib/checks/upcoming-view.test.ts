@@ -24,7 +24,7 @@ describe("upcoming checks view", () => {
       projectTimezone: "Europe/Warsaw",
       providers: [
         { provider: "dataforseo", providerLabel: "DataForSEO" },
-        { provider: "serpapi", providerLabel: "SerpAPI" },
+        { provider: "serpapi", providerLabel: "SerpApi" },
       ],
       schedules: [
         schedule("1", "2026-07-24T23:00:00.000Z"),

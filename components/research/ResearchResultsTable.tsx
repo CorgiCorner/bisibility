@@ -233,7 +233,7 @@ export function ResearchResultsTable({
         >
           Filters
           {filterCount > 0 ? (
-            <span className="ml-1 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-accent-soft px-1 font-mono text-[9.5px] text-accent">
+            <span className="ml-1 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-accent-soft px-1 font-mono text-[9.5px] text-accent-text">
               {filterCount}
             </span>
           ) : null}
@@ -287,7 +287,7 @@ export function ResearchResultsTable({
         <p className="m-0 border-t border-border px-4 py-3 text-[12px] text-fg-muted">
           Showing all {fetchedCount} fetched -{" "}
           <button
-            className="cursor-pointer p-0 text-[12px] font-semibold text-accent outline-none hover:underline focus-visible:underline"
+            className="cursor-pointer p-0 text-[12px] font-semibold text-accent-text outline-none hover:underline focus-visible:underline"
             onClick={onDeeper}
             type="button"
           >

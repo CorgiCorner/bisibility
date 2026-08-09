@@ -102,7 +102,7 @@ export function AlertTemplateButtons({
             </ProjectReadOnlyTooltip>
             {requiresGsc && item.requirement ? (
               <a
-                className="rounded-full bg-bg-sunken px-1.5 py-0.5 font-mono text-[8.5px] uppercase text-fg-faint outline-none transition-colors hover:text-accent focus-visible:text-accent"
+                className="rounded-full bg-bg-sunken px-1.5 py-0.5 font-mono text-[8.5px] uppercase text-fg-muted outline-none transition-colors hover:text-accent-text focus-visible:text-accent-text"
                 href={gscInstallHref}
               >
                 {item.requirement}

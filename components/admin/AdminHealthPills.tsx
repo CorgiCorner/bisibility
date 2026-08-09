@@ -5,9 +5,9 @@ import {
 } from "@/lib/ops/instance-admin-health";
 
 const toneClasses: Record<HealthTone, string> = {
-  failed: "bg-red/10 text-red",
-  ok: "bg-green/10 text-green",
-  stale: "bg-yellow/10 text-yellow",
+  failed: "bg-red/10 text-red-text",
+  ok: "bg-green/10 text-green-text",
+  stale: "bg-yellow/10 text-yellow-text",
   unknown: "bg-bg-sunken text-fg-muted",
 };
 
@@ -15,7 +15,7 @@ const dotClasses: Record<HealthTone, string> = {
   failed: "bg-red",
   ok: "bg-green",
   stale: "bg-yellow",
-  unknown: "bg-fg-faint",
+  unknown: "bg-fg-muted",
 };
 
 function percentLabel(value: number | null): string {

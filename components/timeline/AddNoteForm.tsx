@@ -23,9 +23,9 @@ const severityOptions = [
   { label: "Critical", value: "critical" },
 ];
 
-const labelClass = "font-mono text-[10.5px] font-semibold uppercase tracking-[0.5px] text-fg-faint";
+const labelClass = "font-mono text-[10.5px] font-semibold uppercase tracking-[0.5px] text-fg-muted";
 const severityTriggerClass =
-  "min-h-9 w-full justify-between rounded-lg border-border-strong bg-bg-sunken px-3 font-sans text-[12px] font-semibold normal-case tracking-normal";
+  "min-h-9 w-full justify-between rounded-lg border-border-strong bg-transparent px-3 font-sans text-[12px] font-semibold normal-case tracking-normal";
 
 const defaultValues = (projectId: string): CreateSignalNoteInput => ({
   note: "",
@@ -82,7 +82,7 @@ function AddNoteFormControls({ projectId }: Readonly<{ projectId: string }>) {
   return (
     <>
       <button
-        className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-accent bg-accent px-3 text-[12px] font-semibold text-white outline-none transition-opacity hover:opacity-90 focus-visible:opacity-90"
+        className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-accent bg-accent-solid px-3 text-[12px] font-semibold text-primary-contrast outline-none transition-opacity hover:opacity-90 focus-visible:opacity-90"
         onClick={() => setOpen(true)}
         type="button"
       >
@@ -94,7 +94,7 @@ function AddNoteFormControls({ projectId }: Readonly<{ projectId: string }>) {
         footer={
           <div className="flex items-center justify-end gap-1.5">
             <button
-              className="inline-flex h-9 items-center gap-1 rounded-lg border border-border-strong bg-bg-elev px-3 text-[12px] font-semibold text-fg-muted outline-none hover:border-accent hover:text-accent"
+              className="inline-flex h-9 items-center gap-1 rounded-lg border border-border-strong bg-bg-elev px-3 text-[12px] font-semibold text-fg-muted hover:border-accent hover:text-accent-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid"
               onClick={close}
               type="button"
             >
@@ -102,7 +102,7 @@ function AddNoteFormControls({ projectId }: Readonly<{ projectId: string }>) {
               Cancel
             </button>
             <button
-              className="inline-flex h-9 items-center gap-1 rounded-lg border border-accent bg-accent px-3 text-[12px] font-semibold text-white outline-none hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex h-9 items-center gap-1 rounded-lg border border-accent bg-accent-solid px-3 text-[12px] font-semibold text-primary-contrast hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted"
               disabled={isPending}
               form={FORM_ID}
               type="submit"
@@ -133,7 +133,7 @@ function AddNoteFormControls({ projectId }: Readonly<{ projectId: string }>) {
             <label className="grid gap-1.5">
               <span className={labelClass}>URL</span>
               <input
-                className="h-9 min-w-0 rounded-lg border border-border-strong bg-bg-sunken px-3 font-mono text-[12px] text-fg outline-none focus:border-accent"
+                className="h-9 min-w-0 rounded-lg border border-border-strong bg-transparent px-3 font-mono text-[12px] text-fg outline-none focus:border-accent"
                 placeholder="https://example.com/page"
                 type="url"
                 {...register("url")}
@@ -156,7 +156,7 @@ function AddNoteFormControls({ projectId }: Readonly<{ projectId: string }>) {
               />
             </label>
           </div>
-          <div className="min-h-4 font-mono text-[10.5px] text-red">
+          <div className="min-h-4 font-mono text-[10.5px] text-red-text">
             {errors.note?.message ?? errors.url?.message ?? message}
           </div>
         </form>

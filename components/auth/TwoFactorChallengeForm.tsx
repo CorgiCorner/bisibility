@@ -7,7 +7,7 @@ import { zodResolver } from "@/lib/forms/zod-resolver";
 import { cn } from "@/lib/ui/cn";
 import Button from "@mui/material/Button";
 import {
-  ArrowRightIcon as ArrowRight,
+  CaretRightIcon as CaretRight,
   CircleNotchIcon as CircleNotch,
   KeyIcon as Key,
   ShieldCheckIcon as ShieldCheck,
@@ -44,7 +44,7 @@ const methodButtonSx = {
   "&[aria-pressed='true']": {
     backgroundColor: "var(--accent-soft)",
     borderColor: "var(--accent)",
-    color: "var(--accent)",
+    color: "var(--accent-text)",
   },
 } as const;
 
@@ -102,7 +102,7 @@ export function TwoFactorChallengeForm({
 
   return (
     <div className="w-full max-w-[380px]">
-      <span className="grid h-[46px] w-[46px] place-items-center rounded-xl bg-accent-soft text-accent">
+      <span className="grid h-[46px] w-[46px] place-items-center rounded-xl bg-accent-soft text-accent-text">
         <ShieldCheck aria-hidden size={23} weight="fill" />
       </span>
       <h1 className="mt-[18px] mb-0 text-[25px] font-semibold tracking-[-0.7px] text-fg">
@@ -140,7 +140,7 @@ export function TwoFactorChallengeForm({
 
       <div className="mt-5">
         <label
-          className="block font-mono text-[10.5px] uppercase tracking-[0.5px] text-fg-faint"
+          className="block font-mono text-[10.5px] uppercase tracking-[0.5px] text-fg-muted"
           htmlFor="two-factor-code"
         >
           {method === "totp" ? "Authenticator code" : "Backup code"}
@@ -148,7 +148,7 @@ export function TwoFactorChallengeForm({
         <input
           autoComplete={method === "totp" ? "one-time-code" : "off"}
           className={cn(
-            "mt-[7px] box-border w-full rounded-[10px] border border-border-strong bg-bg-elev px-[13px] py-3 font-mono text-[14.5px] font-medium text-fg outline-none focus:border-accent",
+            "mt-[7px] box-border w-full rounded-[10px] border border-border-strong bg-transparent px-[13px] py-3 font-mono text-[14.5px] font-medium text-fg outline-none focus:border-accent",
             form.formState.errors.code && "border-red focus:border-red",
           )}
           id="two-factor-code"
@@ -160,10 +160,12 @@ export function TwoFactorChallengeForm({
           {...form.register("code")}
         />
         {form.formState.errors.code ? (
-          <p className="mt-2 mb-0 text-[13px] text-red">{form.formState.errors.code.message}</p>
+          <p className="mt-2 mb-0 text-[13px] text-red-text">
+            {form.formState.errors.code.message}
+          </p>
         ) : null}
         {message ? (
-          <p aria-live="polite" className="mt-2 mb-0 text-[13px] text-red">
+          <p aria-live="polite" className="mt-2 mb-0 text-[13px] text-red-text">
             {message}
           </p>
         ) : null}
@@ -174,7 +176,7 @@ export function TwoFactorChallengeForm({
             submitting ? (
               <CircleNotch aria-hidden className="bv-spin" size={16} weight="bold" />
             ) : (
-              <ArrowRight aria-hidden size={16} weight="bold" />
+              <CaretRight aria-hidden size={16} weight="bold" />
             )
           }
           fullWidth

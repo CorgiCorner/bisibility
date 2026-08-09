@@ -3,7 +3,7 @@ import type { KeywordRow } from "@/lib/queries/keywords";
 import Tooltip from "@mui/material/Tooltip";
 import type { GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 
-const noDataClassName = "font-mono text-xs font-semibold text-fg-faint";
+const noDataClassName = "font-mono text-xs font-semibold text-fg-muted";
 const trafficTooltip = "Connect Search Console to see traffic";
 
 function TrafficNoDataValue() {

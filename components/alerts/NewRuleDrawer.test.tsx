@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({ refresh: vi.fn() }));
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: mocks.refresh }) }));
 vi.mock("@/components/ui", () => ({
+  inputClassName: "border border-border-strong bg-transparent",
   Button: ({
     children,
     startIcon: _startIcon,

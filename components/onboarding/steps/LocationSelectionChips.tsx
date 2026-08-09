@@ -71,7 +71,7 @@ export function LocationSelectionChips({
 
   return (
     <div className="grid gap-2">
-      <div className="font-mono text-[10px] uppercase tracking-[0.4px] text-fg-faint">
+      <div className="font-mono text-[10px] uppercase tracking-[0.4px] text-fg-muted">
         Locations
       </div>
       <div className="flex flex-wrap gap-2">
@@ -80,7 +80,7 @@ export function LocationSelectionChips({
             <span className="min-w-0 truncate">{value.displayName}</span>
             <button
               aria-label={`Remove ${value.displayName}`}
-              className="grid h-5 w-5 flex-none place-items-center rounded-full text-fg-faint hover:text-red disabled:opacity-40"
+              className="grid h-5 w-5 flex-none place-items-center rounded-full text-fg-muted hover:text-red-text disabled:opacity-40"
               disabled={values.length <= 1}
               onClick={() => removeLocation(value.canonicalKey)}
               type="button"
@@ -91,7 +91,7 @@ export function LocationSelectionChips({
         ))}
         {canAdd && !adding ? (
           <button
-            className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-dashed border-border-strong px-2.5 text-[12.5px] font-semibold text-accent hover:border-accent"
+            className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-dashed border-border-strong px-2.5 text-[12.5px] font-semibold text-accent-text hover:border-accent"
             onClick={() => setAdding(true)}
             type="button"
           >
@@ -119,7 +119,7 @@ export function LocationSelectionChips({
           {values.length > 0 ? (
             <button
               aria-label="Cancel adding location"
-              className="mt-[22px] inline-flex min-h-8 items-center gap-1.5 rounded-full border border-border-strong px-2.5 text-[12.5px] font-semibold text-fg-muted hover:border-red hover:text-red"
+              className="mt-[22px] inline-flex min-h-8 items-center gap-1.5 rounded-full border border-border-strong px-2.5 text-[12.5px] font-semibold text-fg-muted hover:border-red hover:text-red-text"
               onClick={cancelAdd}
               type="button"
             >
@@ -130,7 +130,7 @@ export function LocationSelectionChips({
         </fieldset>
       ) : null}
       {!canAdd ? (
-        <p className="m-0 text-[11.5px] font-medium text-fg-faint">Maximum 5 locations selected.</p>
+        <p className="m-0 text-[11.5px] font-medium text-fg-muted">Maximum 5 locations selected.</p>
       ) : null}
     </div>
   );
