@@ -7,6 +7,7 @@ import {
   totalOnboardingSteps,
 } from "@/components/onboarding/onboarding-fixtures";
 import { onboardingFormId } from "@/components/onboarding/onboarding-form-utils";
+import { Button } from "@/components/ui";
 import { ArrowLeftIcon as ArrowLeft, ArrowRightIcon as ArrowRight } from "@phosphor-icons/react";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -40,13 +41,15 @@ export function OnboardingNav({
   let backAction: ReactNode = leadingAction ?? <span />;
   if (currentStep > 1 && onBack) {
     backAction = (
-      <button
-        className="inline-flex items-center gap-[7px] rounded-[9px] border border-border-strong bg-bg-elev px-4 py-2.5 text-[13px] font-semibold text-fg-muted"
+      <Button
         onClick={onBack}
+        startIcon={<ArrowLeft aria-hidden size={15} weight="bold" />}
+        sx={{ color: "var(--fg-muted)" }}
         type="button"
+        variant="secondary"
       >
-        <ArrowLeft aria-hidden size={15} weight="bold" /> Back
-      </button>
+        Back
+      </Button>
     );
   } else if (currentStep > 1) {
     backAction = (
@@ -64,16 +67,17 @@ export function OnboardingNav({
       {backAction}
       <div className="flex items-center gap-3">
         {secondaryAction}
-        <button
-          className="inline-flex items-center gap-2 rounded-[9px] border-0 bg-accent px-5 py-[11px] text-[13.5px] font-semibold text-white hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
+        <Button
           disabled={continueDisabled}
+          endIcon={<ArrowRight aria-hidden size={15} weight="bold" />}
           form={onContinue ? undefined : onboardingFormId}
           onClick={onContinue}
+          size="lg"
           type={onContinue ? "button" : "submit"}
+          variant="primary"
         >
           {label}
-          <ArrowRight aria-hidden size={15} weight="bold" />
-        </button>
+        </Button>
       </div>
     </footer>
   );

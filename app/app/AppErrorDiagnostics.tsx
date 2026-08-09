@@ -65,7 +65,7 @@ export function AppErrorDiagnostics({ details }: Readonly<AppErrorDiagnosticsPro
         <CaretRight
           aria-hidden
           className={cn(
-            "flex-none text-fg-faint transition-transform duration-150",
+            "flex-none text-fg-muted transition-transform duration-150",
             open && "rotate-90",
           )}
           size={13}

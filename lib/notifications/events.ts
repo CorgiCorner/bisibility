@@ -59,7 +59,7 @@ function positionLabel(position: number | null) {
 
 function countsBody(counts: Prisma.JsonValue | null | undefined) {
   const countsSummary = migrationImportCountSummary(counts);
-  let summary = "Cloud import finished.";
+  let summary = "Instance import finished.";
   if (countsSummary.imported.length) summary = `Imported ${countsSummary.imported.join(", ")}.`;
   else if (countsSummary.keywordsReceived > 0) {
     const noun = countsSummary.keywordsReceived === 1 ? "keyword" : "keywords";
@@ -239,13 +239,13 @@ export async function notifyCloudImportDone(input: CloudImportDoneInput) {
       meta: body,
     },
     projectId: input.projectId,
-    title: "Cloud import complete",
+    title: "Instance import complete",
     type: NotificationType.import_done,
   });
 }
 
 export async function notifyCloudImportFailed(input: CloudImportFailedInput) {
-  const body = input.error?.trim() || "Cloud import failed.";
+  const body = input.error?.trim() || "Instance import failed.";
 
   await notifyProjectMembers({
     body,
@@ -258,7 +258,7 @@ export async function notifyCloudImportFailed(input: CloudImportFailedInput) {
       meta: body,
     },
     projectId: input.projectId,
-    title: "Cloud import failed",
+    title: "Instance import failed",
     type: NotificationType.import_failed,
   });
 }

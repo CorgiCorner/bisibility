@@ -80,7 +80,7 @@ export function KeywordGridHealthNotices({
                 budget.capCents / 100,
               )} this month.`}{" "}
               <Link
-                className="font-semibold text-accent hover:underline"
+                className="font-semibold text-accent-text hover:underline"
                 href={`${appPath(projectRef, "settings")}#provider-usage`}
               >
                 Raise the budget

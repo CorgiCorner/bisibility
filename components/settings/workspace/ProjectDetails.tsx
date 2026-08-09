@@ -5,10 +5,10 @@ import {
   ProjectReadOnlyTooltip,
   useProjectWriteMode,
 } from "@/components/shell/ProjectWriteModeProvider";
-import { CopyButton } from "@/components/ui";
+import { Button, CopyButton, inputClassName } from "@/components/ui";
 import { updateProjectDetails } from "@/lib/actions/settings";
 import { zodResolver } from "@/lib/forms/zod-resolver";
-import { createProjectSchema } from "@/lib/schemas/project";
+import { createProjectSchema, trackedProjectDomain } from "@/lib/schemas/project";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { cn } from "@/lib/ui/cn";
 import { useRouter } from "next/navigation";
@@ -24,7 +24,7 @@ type ProjectDetailsUpdateForm = z.infer<typeof projectDetailsSchema>;
 type ProjectDetailsForm = z.infer<typeof projectDetailsSchema>;
 
 type ProjectDetailsData = {
-  domain: string;
+  domain: string | null;
   name: string;
   projectId: string;
 };
@@ -36,9 +36,8 @@ export type ProjectDetailsProps = {
 };
 
 const labelClass =
-  "flex flex-col gap-1.5 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint";
-const inputClass =
-  "min-h-10 rounded-lg border border-border-strong bg-bg-sunken px-3 text-[13px] font-medium text-fg outline-none focus:border-accent";
+  "flex flex-col gap-1.5 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted";
+const inputClass = `${inputClassName} min-h-10 rounded-lg px-3 text-[13px] font-medium`;
 const feedbackClass = "text-[11.5px] font-medium normal-case tracking-normal";
 
 export function ProjectDetails({
@@ -49,6 +48,9 @@ export function ProjectDetails({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
+  // Historical rows may still hold a generated instance host. Nothing is served at
+  // that name and the user never typed it, so the field renders as if unset.
+  const enteredDomain = trackedProjectDomain(project.domain) ?? "";
   const {
     formState: { errors, isDirty },
     handleSubmit,
@@ -56,7 +58,7 @@ export function ProjectDetails({
     reset,
   } = useForm<ProjectDetailsForm>({
     resolver: zodResolver(projectDetailsSchema),
-    defaultValues: project,
+    defaultValues: { ...project, domain: enteredDomain },
     mode: "onChange",
   });
   const { readOnly } = useProjectWriteMode();
@@ -92,14 +94,17 @@ export function ProjectDetails({
     <SettingsSection
       action={
         <ProjectReadOnlyTooltip>
-          <button
-            className="inline-flex min-h-8 items-center rounded-lg bg-accent px-3 text-[12.5px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-55"
-            disabled={!canEdit || readOnly || isPending || !isDirty}
+          <Button
+            disabled={!canEdit || readOnly || !isDirty}
             form="project-details-form"
+            loading={isPending}
+            loadingLabel="Saving"
+            size="xs"
             type="submit"
+            variant="primary"
           >
-            {isPending ? "Saving" : "Save"}
-          </button>
+            Save
+          </Button>
         </ProjectReadOnlyTooltip>
       }
       description="Rarely changed. Defines what bisibility tracks."
@@ -114,23 +119,24 @@ export function ProjectDetails({
           {"Project name "}
           <input className={inputClass} disabled={!canEdit} {...register("name")} />
           {errors.name ? (
-            <span className={cn(feedbackClass, "text-red")}>{errors.name.message}</span>
+            <span className={cn(feedbackClass, "text-red-text")}>{errors.name.message}</span>
           ) : null}
         </label>
         <label className={labelClass}>
           {"Domain "}
           <input
-            className={cn(inputClass, "font-mono")}
+            className={cn(inputClass, "font-mono", enteredDomain.length === 0 && "border-accent")}
             disabled={!canEdit}
+            placeholder="yourdomain.com"
             {...register("domain")}
           />
           {errors.domain ? (
-            <span className={cn(feedbackClass, "text-red")}>{errors.domain.message}</span>
+            <span className={cn(feedbackClass, "text-red-text")}>{errors.domain.message}</span>
           ) : null}
         </label>
         <label className={labelClass}>
           {"Project ID "}
-          <span className="flex min-h-10 items-center gap-2 rounded-lg border border-border-strong bg-bg-sunken px-3">
+          <span className="flex min-h-10 items-center gap-2 rounded-lg border border-border-strong bg-transparent px-3">
             <span className="min-w-0 flex-1 truncate font-mono text-[13px] font-medium normal-case tracking-normal text-fg">
               {project.projectId}
             </span>

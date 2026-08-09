@@ -49,7 +49,6 @@ const mocks = vi.hoisted(() => {
       user: { findUnique: vi.fn() },
     },
     requireSession: vi.fn(),
-    redirect: vi.fn(),
     revalidatePath: vi.fn(),
     requiredPublicAuditId: vi.fn((id: string) => id),
     writeAudit: vi.fn(),
@@ -58,7 +57,6 @@ const mocks = vi.hoisted(() => {
 });
 
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
-vi.mock("next/navigation", () => ({ redirect: mocks.redirect }));
 vi.mock("./project", () => ({ createProject: mocks.createProject }));
 vi.mock("@/lib/queries/cloud", () => ({ getCloudImportJobStatus: mocks.getCloudImportJobStatus }));
 vi.mock("@/lib/api/ratelimit", () => ({ consume: mocks.consume }));
@@ -279,7 +277,7 @@ describe("cloud migration actions", () => {
 
     await expect(
       advanceCloudImportJob({ jobId: ids.job, projectId: ids.project, state: "done" }),
-    ).rejects.toThrow("Cannot advance cloud import from idle to done.");
+    ).rejects.toThrow("Cannot advance instance import from idle to done.");
 
     expect(mocks.prisma.cloudImportJob.update).not.toHaveBeenCalled();
   });
@@ -298,9 +296,13 @@ describe("cloud migration actions", () => {
       state: "failed",
     });
 
-    expect(result).toMatchObject({ error: "Cloud import failed.", progress: 40, state: "failed" });
+    expect(result).toMatchObject({
+      error: "Instance import failed.",
+      progress: 40,
+      state: "failed",
+    });
     expect(mocks.notifyCloudImportFailed).toHaveBeenCalledWith({
-      error: "Cloud import failed.",
+      error: "Instance import failed.",
       jobId: "job_1",
       projectId: "project_1",
     });
@@ -310,7 +312,7 @@ describe("cloud migration actions", () => {
     mocks.prisma.cloudImportJob.findFirst.mockResolvedValue(null);
     await expect(
       advanceCloudImportJob({ jobId: ids.job, projectId: ids.project, state: "importing" }),
-    ).rejects.toThrow("Cloud import job not found.");
+    ).rejects.toThrow("Instance import job not found.");
   });
 
   it("regenerates tokens and revokes a selected active token", async () => {
@@ -440,33 +442,27 @@ describe("cloud migration actions", () => {
     },
   );
 
-  it("creates a dedicated import workspace and redirects to its onboarding import", async () => {
+  it("returns a fragment-free import destination for client navigation", async () => {
     mocks.createProject.mockResolvedValue({
       id: "project_new",
       publicId: "prj_bbcdefghijklmnopqrstuvwx",
     });
 
-    await createCloudImportWorkspace();
-
-    expect(mocks.createProject).toHaveBeenCalledTimes(1);
-    expect(mocks.redirect).toHaveBeenCalledTimes(1);
-    expect(mocks.createProject).toHaveBeenCalledWith({
-      domain: expect.stringMatching(/^workspace-[a-f0-9]{8}\.bisibility\.cloud$/),
-      name: "New workspace",
-    });
-    expect(mocks.redirect).toHaveBeenCalledWith(
+    await expect(createCloudImportWorkspace()).resolves.toBe(
       "/cloud/import?ctx=onboard&project=prj_bbcdefghijklmnopqrstuvwx",
     );
+
+    expect(mocks.createProject).toHaveBeenCalledTimes(1);
+    expect(mocks.createProject).toHaveBeenCalledWith({ name: "New project" });
   });
 
-  it("rejects import workspace creation on self-hosted deployments", async () => {
+  it("rejects import project creation on self-hosted deployments", async () => {
     mocks.isCloud = false;
 
     await expect(createCloudImportWorkspace()).rejects.toThrow(
-      "Cloud import workspaces are available only on Cloud deployments.",
+      "Instance import projects are available only on hosted deployments.",
     );
 
     expect(mocks.createProject).not.toHaveBeenCalled();
-    expect(mocks.redirect).not.toHaveBeenCalled();
   });
 });

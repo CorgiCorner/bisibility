@@ -47,7 +47,7 @@ describe("settings actions", () => {
     mocks.joinWaitlist.mockResolvedValue({ email: "owner@example.com", ok: true });
   });
 
-  it("returns the first remaining workspace after deletion", async () => {
+  it("returns the first remaining project after deletion", async () => {
     mocks.readActorProjects.mockResolvedValue([
       { id: "project_internal_2", publicId: "prj_b00000000000000000000000" },
     ]);
@@ -69,7 +69,7 @@ describe("settings actions", () => {
     );
   });
 
-  it("returns onboarding state when no workspace remains", async () => {
+  it("returns onboarding state when no project remains", async () => {
     await expect(
       deleteWorkspace({
         confirmText: "example.com",

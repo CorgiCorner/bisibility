@@ -36,7 +36,7 @@ const copyByVariant: Record<UsageBillingVariant, VariantCopy> = {
   "cloud-beta": {
     body: "Free while the beta lasts. Pricing will be announced before the beta ends, and nothing is charged without your explicit confirmation. If you opt out, you can export everything and move to self-host.",
     description:
-      "You are on an invited beta of Managed Cloud. Provider usage stays on your own keys, with no markup.",
+      "You are on an invited hosted plan (beta). Provider usage stays on your own keys, with no markup.",
     source: "settings_feedback",
     submitLabel: "Send feedback",
     success: "Thanks, your answer helps us set the price.",
@@ -44,7 +44,7 @@ const copyByVariant: Record<UsageBillingVariant, VariantCopy> = {
   "self-host": {
     body: "Hosting, backups and one bill for the whole team, fully managed. Unlimited keywords and projects. You still bring your own provider keys: we add no markup and take no cut of provider usage. We're still setting the price, so help us land it.",
     description:
-      "Self-hosted is free forever and you pay your SERP provider directly. Managed Cloud billing is on the way.",
+      "Self-hosted is free forever and you pay your SERP provider directly. Billing for the hosted service is on the way.",
     source: "settings_notify",
     submitLabel: "Notify me",
     success: "You are on the list - we'll reach out shortly about early access.",
@@ -68,7 +68,7 @@ function VariantChip({
       className={cn(
         "inline-flex h-7 items-center gap-1.5 rounded-full border px-2.5 font-mono text-[10px] font-semibold uppercase tracking-[0.5px] transition-colors",
         active
-          ? "border-accent bg-accent-soft text-accent"
+          ? "border-accent bg-accent-soft text-accent-text"
           : "border-border bg-bg-sunken text-fg-muted hover:border-accent hover:text-fg",
       )}
       onClick={onClick}
@@ -85,7 +85,7 @@ function PlanChip({ children, tone }: Readonly<{ children: ReactNode; tone: "acc
     <span
       className={cn(
         "inline-flex items-center rounded-full px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[0.5px]",
-        tone === "green" ? "bg-green/10 text-green" : "bg-accent-soft text-accent",
+        tone === "green" ? "bg-green/10 text-green-text" : "bg-accent-soft text-accent-text",
       )}
     >
       {children}
@@ -161,7 +161,7 @@ export function UsageBillingSection({
           <VariantChip
             active={!selfHost}
             icon={<Cloud aria-hidden size={13} weight="bold" />}
-            label="Cloud beta"
+            label="Hosted plan (beta)"
             onClick={() => switchView("cloud-beta")}
           />
         </div>
@@ -169,7 +169,7 @@ export function UsageBillingSection({
       contentClassName="space-y-4"
       description={
         previewingCloud
-          ? "A preview of the invited Managed Cloud beta. Provider usage stays on your own keys, with no markup."
+          ? "A preview of the invited hosted plan (beta). Provider usage stays on your own keys, with no markup."
           : copy.description
       }
       id={USAGE_BILLING_TARGET.id}
@@ -189,7 +189,7 @@ export function UsageBillingSection({
           </div>
           <div className="border-t border-border-soft pt-4">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-[15px] font-bold">Managed Cloud</span>
+              <span className="text-[15px] font-bold">Hosted plan</span>
               <PlanChip tone="accent">Coming soon</PlanChip>
             </div>
             <p className={cn(bodyClass, "mt-2")}>{copy.body}</p>
@@ -203,7 +203,7 @@ export function UsageBillingSection({
                 Plan
               </MonoText>
               <div className="mt-1 flex flex-wrap items-center gap-2">
-                <span className={planNameClass}>Managed Cloud</span>
+                <span className={planNameClass}>Hosted plan</span>
                 <PlanChip tone="accent">Free beta</PlanChip>
               </div>
             </div>
@@ -221,14 +221,14 @@ export function UsageBillingSection({
       )}
       <form className="space-y-1.5" onSubmit={onSubmit}>
         <label
-          className="block font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint"
+          className="block font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted"
           htmlFor="usage-billing-price"
         >
           What would you pay per month?
         </label>
         <div className="flex flex-col gap-2 sm:flex-row">
-          <span className="flex min-h-10 w-full items-center gap-2 rounded-lg border border-border-strong bg-bg-sunken px-3 transition-colors focus-within:border-accent sm:max-w-[220px]">
-            <span className="font-mono text-[13px] text-fg-faint">$</span>
+          <span className="flex min-h-10 w-full items-center gap-2 rounded-lg border border-border-strong bg-transparent px-3 transition-colors focus-within:border-accent sm:max-w-[220px]">
+            <span className="font-mono text-[13px] text-fg-muted">$</span>
             <input
               className="min-w-0 flex-1 bg-transparent text-[13px] font-medium text-fg outline-none"
               id="usage-billing-price"
@@ -256,7 +256,9 @@ export function UsageBillingSection({
           </Button>
         </div>
         {message ? (
-          <p className={cn(feedbackClass, message.tone === "ok" ? "text-fg-muted" : "text-red")}>
+          <p
+            className={cn(feedbackClass, message.tone === "ok" ? "text-fg-muted" : "text-red-text")}
+          >
             {message.text}
           </p>
         ) : null}

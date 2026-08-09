@@ -113,7 +113,7 @@ export function ApiKeyRollModal({
               Integrations using it will fail until you replace the secret with the new key.
             </p>
           </div>
-          {error ? <div className="mt-4 text-[12px] font-medium text-red">{error}</div> : null}
+          {error ? <div className="mt-4 text-[12px] font-medium text-red-text">{error}</div> : null}
         </div>
       )}
     </Modal>

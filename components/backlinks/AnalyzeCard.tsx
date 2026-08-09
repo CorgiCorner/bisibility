@@ -82,14 +82,14 @@ export function AnalyzeCard({
     <Card className="overflow-visible p-4 sm:p-5" size="md">
       <form className="grid gap-3" onSubmit={handleSubmit(onSubmit)}>
         <div className="flex flex-col gap-3 md:flex-row md:items-start">
-          <div className="flex min-h-[34px] flex-1 items-center gap-2 rounded-[9px] border border-border-strong bg-bg-elev px-2.5 text-[13px] focus-within:border-accent md:min-w-[240px]">
-            <GlobeSimple aria-hidden className="shrink-0 text-fg-faint" size={15} />
+          <div className="flex min-h-[34px] flex-1 items-center gap-2 rounded-[9px] border border-border-strong bg-transparent px-2.5 text-[13px] focus-within:border-accent md:min-w-[240px]">
+            <GlobeSimple aria-hidden className="shrink-0 text-fg-muted" size={15} />
             {targetIsSet ? (
               <span className="inline-flex min-w-0 items-center gap-1.5 rounded-[6px] bg-bg-sunken px-2 py-1 font-medium">
                 <span className="truncate">{target}</span>
                 <button
                   aria-label={`Remove ${target}`}
-                  className="shrink-0 rounded-full text-fg-faint transition-colors hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+                  className="shrink-0 rounded-full text-fg-muted transition-colors hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-solid"
                   onClick={clearTarget}
                   type="button"
                 >
@@ -105,7 +105,7 @@ export function AnalyzeCard({
                   {...targetField}
                   autoCapitalize="none"
                   autoCorrect="off"
-                  className="min-w-0 flex-1 bg-transparent py-2 text-[13px] text-fg outline-none placeholder:text-fg-faint"
+                  className="min-w-0 flex-1 bg-transparent py-2 text-[13px] text-fg outline-none placeholder:text-fg-muted"
                   id="backlinks-target"
                   onChange={(event) => {
                     targetField.onChange(event);

@@ -27,7 +27,7 @@ stop and hand off to the relevant write/admin skill - this skill is read-only.
 
 ## Prerequisites
 
-1. **Resolve the base URL.** Use the EU Cloud origin
+1. **Resolve the base URL.** Use the EU hosted region origin
    \`https://eu.bisibility.com/api/v1\` or a self-hosted origin
    \`https://your-host.example/api/v1\`. Confirm the exact host with the user;
    do not assume.

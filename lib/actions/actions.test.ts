@@ -124,7 +124,7 @@ vi.mock("@/lib/providers/registry", () => ({
   getSerpProvider: vi.fn(() => mocks.provider),
   PROVIDER_CATALOG: [
     { defaultStatus: "ready", id: "dataforseo", kind: "serp", label: "DataForSEO" },
-    { defaultStatus: "ready", id: "serpapi", kind: "serp", label: "SerpAPI" },
+    { defaultStatus: "ready", id: "serpapi", kind: "serp", label: "SerpApi" },
     { defaultStatus: "optional", id: "gsc", kind: "analytics", label: "Google Search Console" },
     { defaultStatus: "optional", id: "ga4", kind: "analytics", label: "Google Analytics 4" },
   ],

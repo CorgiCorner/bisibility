@@ -208,7 +208,7 @@ export function KeywordDataTable({
         rows={rows}
       />
       {rowActionError ? (
-        <p className="m-0 border-b border-border px-4 py-2 font-mono text-[11.5px] text-red">
+        <p className="m-0 border-b border-border px-4 py-2 font-mono text-[11.5px] text-red-text">
           {rowActionError}
         </p>
       ) : null}

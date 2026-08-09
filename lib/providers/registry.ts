@@ -30,7 +30,7 @@ const BASE_PROVIDER_CATALOG = [
   },
   {
     id: "serpapi",
-    label: "SerpAPI",
+    label: "SerpApi",
     kind: "serp",
     defaultStatus: "ready",
     requiredCredentials: ["apiKey"],

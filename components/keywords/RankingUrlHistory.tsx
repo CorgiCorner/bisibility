@@ -48,7 +48,7 @@ function dotStyle(event: TimelineEvent, isLatest: boolean) {
       boxShadow: "0 0 0 3px color-mix(in srgb, var(--yellow) 22%, transparent)",
     };
   }
-  return { background: "var(--fg-faint)", boxShadow: "0 0 0 3px var(--bg-sunken)" };
+  return { background: "var(--fg-muted)", boxShadow: "0 0 0 3px var(--bg-sunken)" };
 }
 
 export function RankingUrlHistory({ keyword }: Readonly<RankingUrlHistoryProps>) {
@@ -63,7 +63,7 @@ export function RankingUrlHistory({ keyword }: Readonly<RankingUrlHistoryProps>)
             <SectionTitle>Ranking URL history</SectionTitle>
             <button
               aria-label={TOOLTIP}
-              className="bv-tip inline-grid h-4 w-4 cursor-help place-items-center border-0 bg-transparent p-0 text-fg-faint"
+              className="bv-tip inline-grid h-4 w-4 cursor-help place-items-center border-0 bg-transparent p-0 text-fg-muted"
               data-tip={TOOLTIP}
               type="button"
             >
@@ -77,7 +77,7 @@ export function RankingUrlHistory({ keyword }: Readonly<RankingUrlHistoryProps>)
             className="inline-flex flex-none items-center gap-[5px] rounded-full px-[9px] py-[3px] font-mono text-[10px] font-semibold tracking-[0.3px]"
             style={{
               backgroundColor: "color-mix(in srgb, var(--yellow) 16%, transparent)",
-              color: "var(--yellow-strong)",
+              color: "var(--yellow-text)",
             }}
           >
             <Warning size={11} weight="fill" />
@@ -102,7 +102,7 @@ export function RankingUrlHistory({ keyword }: Readonly<RankingUrlHistoryProps>)
                 {event.date}
               </MonoText>
               <a
-                className="min-w-0 flex-1 truncate font-mono text-[12.5px] text-fg hover:text-accent hover:underline"
+                className="min-w-0 flex-1 truncate font-mono text-[12.5px] text-fg hover:text-accent-text hover:underline"
                 href={event.url}
                 rel="noreferrer noopener"
                 target="_blank"
@@ -118,7 +118,7 @@ export function RankingUrlHistory({ keyword }: Readonly<RankingUrlHistoryProps>)
                 {event.changed ? (
                   <span
                     className="inline-flex items-center gap-1 font-mono text-[10px]"
-                    style={{ color: "var(--yellow-strong)" }}
+                    style={{ color: "var(--yellow-text)" }}
                   >
                     <ArrowsLeftRight size={11} weight="bold" />
                     switched

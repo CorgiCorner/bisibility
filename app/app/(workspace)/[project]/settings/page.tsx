@@ -2,7 +2,6 @@ import { ApiKeysSection } from "@/components/settings/api-keys/ApiKeysSection";
 import { UsageBillingSection } from "@/components/settings/billing/UsageBillingSection";
 import { DangerZone } from "@/components/settings/danger/DangerZone";
 import { DefaultsSection } from "@/components/settings/defaults/DefaultsSection";
-import { NewWorkspaceSettings } from "@/components/settings/NewWorkspaceSettings";
 import { NotificationPreferences } from "@/components/settings/notifications/NotificationPreferences";
 import { PresenceInspectionBudget } from "@/components/settings/providers/PresenceInspectionBudget";
 import { ProviderUsage } from "@/components/settings/providers/ProviderUsage";
@@ -45,12 +44,14 @@ import { isCloud, isSelfHost } from "@/lib/deployment/deployment";
 import { configuredMigrationTargetOrigin } from "@/lib/migration/target-origin";
 import { getQueryActor, resolveProjectAccess } from "@/lib/queries/_auth";
 import { getPreferences } from "@/lib/queries/account";
-import { getCloudImportJobStatus, isNonterminalCloudImportJob } from "@/lib/queries/cloud";
 import { getIngestHooks } from "@/lib/queries/ingest-hooks";
 import { getNotificationPreferences } from "@/lib/queries/notification-prefs";
-import { getNewWorkspaceSettings, getSettings } from "@/lib/queries/settings";
+import { getSettings } from "@/lib/queries/settings";
 import { getTeamAccess } from "@/lib/queries/team";
+import { appPath } from "@/lib/routing/app-path";
+import { trackedProjectDomain } from "@/lib/schemas/project";
 import { headers } from "next/headers";
+import Link from "next/link";
 import { deleteWorkspace, submitBillingInterest, updateProject } from "./actions";
 
 type SettingsPageProps = {
@@ -80,77 +81,6 @@ export default async function SettingsPage({ params }: Readonly<SettingsPageProp
   const projectReadOnly = settings.project.writeMode !== "active";
   const defaultMigrationTargetOrigin = isCloud ? "" : configuredMigrationTargetOrigin();
 
-  if (isNewWorkspace) {
-    const [newWorkspace, session, teamAccess, importJob] = await Promise.all([
-      getNewWorkspaceSettings(publicId, { preferences }),
-      requireSession(),
-      getTeamAccess(publicId),
-      getCloudImportJobStatus(publicId),
-    ]);
-    const showMigrationRecovery =
-      settings.project.writeMode === "migration_hold" || isNonterminalCloudImportJob(importJob);
-    return (
-      <NewWorkspaceSettings
-        apiKeys={settings.apiKeys}
-        billingSection={
-          canManageBilling ? (
-            <UsageBillingSection
-              email={session.user.email}
-              projectId={settings.project.projectId}
-              submitInterest={submitBillingInterest}
-              variant={isCloud ? "cloud-beta" : "self-host"}
-            />
-          ) : null
-        }
-        canDeleteWorkspace={canDeleteWorkspace}
-        canManageWorkspace={canManageWorkspace}
-        canReadAudit={canReadAudit}
-        data={newWorkspace}
-        deleteWorkspace={deleteWorkspace}
-        issueKey={issueApiKey}
-        migrationSection={
-          showMigrationRecovery ? (
-            <DangerZone
-              cancelMigration={cancelMigration}
-              canDeleteProject={false}
-              canManageMigration={canManageWorkspace}
-              defaultMigrationTargetOrigin={defaultMigrationTargetOrigin}
-              direction={isCloud ? "to-self-host" : "to-cloud"}
-              domain={settings.project.domain}
-              enableMigrationHold={enableMigrationHold}
-              migrationHold={settings.project.writeMode === "migration_hold"}
-              projectId={settings.project.projectId}
-              releaseMigrationHold={releaseMigrationHold}
-              showInstanceMigration
-              writeMode={settings.project.writeMode}
-            />
-          ) : null
-        }
-        regenerateKey={regenerateApiKey}
-        revokeKey={revokeApiKey}
-        teamSection={
-          <TeamRoles
-            canManageTeam={canManageWorkspace && teamAccess.canManageTeam}
-            canTransferOwnership={
-              canProjectAction(role, "manage", "ownership") && teamAccess.canTransferOwnership
-            }
-            changeMemberRole={changeMemberRole}
-            domain={settings.project.domain}
-            inviteMember={inviteMember}
-            members={teamAccess.members}
-            pendingInvites={teamAccess.pendingInvites}
-            projectId={settings.project.projectId}
-            removeMember={removeMember}
-            resendInvite={resendInvite}
-            revokeInvite={revokeInvite}
-            transferOwnership={transferOwnership}
-          />
-        }
-        updateProject={canUpdateProject ? updateProject : undefined}
-      />
-    );
-  }
-
   const headerStore = await headers();
   const endpointUrl = absoluteUrl(getOriginFromHeaders(headerStore), "/api/ingest/deploy");
   const session = await requireSession();
@@ -169,6 +99,12 @@ export default async function SettingsPage({ params }: Readonly<SettingsPageProp
 
   return (
     <PageContent className="flex flex-col gap-[30px]" variant="form">
+      {isNewWorkspace ? (
+        <EmptyWorkspaceNotice
+          domainMissing={!trackedProjectDomain(settings.project.domain)}
+          keywordsHref={appPath(publicId, "keywords")}
+        />
+      ) : null}
       <ProjectDetails
         canEdit={canUpdateProject}
         project={settings.project}
@@ -264,5 +200,30 @@ export default async function SettingsPage({ params }: Readonly<SettingsPageProp
         writeMode={settings.project.writeMode}
       />
     </PageContent>
+  );
+}
+
+/** Onboarding guidance carried over from the removed empty-project screen. */
+function EmptyWorkspaceNotice({
+  domainMissing,
+  keywordsHref,
+}: Readonly<{ domainMissing: boolean; keywordsHref: string }>) {
+  return (
+    <section>
+      <div className="rounded-[14px] border border-accent bg-bg-elev px-5 py-[18px]">
+        <div className="text-[14.5px] font-semibold">This project is empty</div>
+        <p className="m-0 mt-[3px] text-[12.5px] leading-normal text-fg-muted">
+          {domainMissing
+            ? "Set the domain below - it defines what bisibility tracks - then add keywords."
+            : "Add keywords to start tracking this domain."}
+        </p>
+        <Link
+          className="mt-3 inline-flex min-h-9 items-center rounded-[9px] border border-border-strong bg-bg-elev px-3.5 text-[12.5px] font-semibold text-fg hover:border-accent hover:text-accent-text"
+          href={keywordsHref}
+        >
+          Add keywords
+        </Link>
+      </div>
+    </section>
   );
 }

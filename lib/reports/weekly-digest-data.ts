@@ -1,6 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
+import { trackedProjectDomain } from "@/lib/schemas/project";
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 const completedStatus = "completed";
@@ -161,7 +162,7 @@ export async function collectWeeklyDigestData(
     avgPositionDelta: average(movers.map((mover) => mover.delta)),
     checkedKeywords: latest.size,
     failedChecksCount,
-    projectDomain: project.domain,
+    projectDomain: trackedProjectDomain(project.domain) ?? "",
     projectName: project.name,
     rangeEnd,
     rangeStart,

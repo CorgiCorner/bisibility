@@ -235,7 +235,7 @@ export function StepSchedule({
         </MenuField>
       </div>
 
-      <div className="mt-3.5 text-[11.5px] text-fg-faint">
+      <div className="mt-3.5 text-[11.5px] text-fg-muted">
         More locations or devices create more provider checks.
       </div>
       <StepScheduleEstimate
@@ -247,12 +247,14 @@ export function StepSchedule({
         providerId={flowState?.providerId}
       />
       {errors.devices ? (
-        <p className={`m-0 mt-3 ${feedbackClass} text-red`}>{errors.devices.message}</p>
+        <p className={`m-0 mt-3 ${feedbackClass} text-red-text`}>{errors.devices.message}</p>
       ) : null}
       {errors.frequency ? (
-        <p className={`m-0 mt-3 ${feedbackClass} text-red`}>{errors.frequency.message}</p>
+        <p className={`m-0 mt-3 ${feedbackClass} text-red-text`}>{errors.frequency.message}</p>
       ) : null}
-      {actionError ? <p className={`m-0 mt-3 ${feedbackClass} text-red`}>{actionError}</p> : null}
+      {actionError ? (
+        <p className={`m-0 mt-3 ${feedbackClass} text-red-text`}>{actionError}</p>
+      ) : null}
       {isSubmitting ? (
         <p className={`m-0 mt-3 ${feedbackClass} text-fg-muted`}>Saving defaults...</p>
       ) : null}

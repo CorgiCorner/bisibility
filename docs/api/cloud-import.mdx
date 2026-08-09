@@ -1,9 +1,9 @@
 ---
-title: "Cloud import"
+title: "Instance import"
 description: "Import keywords and rank history with a migration token."
 ---
 
-Cloud import accepts an export package and restores keywords plus optional rank
+Instance import accepts an export package and restores keywords plus optional rank
 history into the project associated with a migration token. Use the single
 request endpoint for small packages and the session protocol for large packages.
 
@@ -27,7 +27,7 @@ POST /api/v1/cloud/import/sessions/{sessionId}/finalize
 
 ## Authentication
 
-Cloud import uses a migration token, not a `bsb_key_live_...` API key. Every import
+Instance import uses a migration token, not a `bsb_key_live_...` API key. Every import
 endpoint requires Bearer authentication:
 
 ```text
@@ -383,7 +383,7 @@ after 30 minutes, after which a new migration token and session are required.
 
 ## Existing App Surfaces
 
-The app also implements cloud-import state with server actions:
+The app also implements instance-import state with server actions:
 
 | Function | Purpose |
 | - | - |

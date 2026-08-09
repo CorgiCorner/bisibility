@@ -6,7 +6,7 @@ import type {
   PendingAction,
 } from "@/components/integrations/ConnectDrawerSchema";
 import { providerCredentialFields } from "@/components/integrations/provider-auth";
-import { Button, MonoText, PasswordInput } from "@/components/ui";
+import { Button, inputClassName, MonoText, PasswordInput } from "@/components/ui";
 import { COST_ESTIMATE_PER_CHECK_LABEL } from "@/lib/integrations/settings-copy";
 import type { IntegrationProviderData } from "@/lib/integrations/types";
 import {
@@ -21,17 +21,16 @@ type FormProps = {
 };
 
 const labelClass =
-  "flex flex-col gap-[7px] font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint";
+  "flex flex-col gap-[7px] font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted";
 
-const inputClass =
-  "rounded-[9px] border border-border-strong bg-bg-sunken px-[13px] py-[11px] font-mono text-[13px] font-medium text-fg outline-none placeholder:text-fg-faint focus-visible:border-accent";
+const inputClass = `${inputClassName} rounded-[9px] px-[13px] py-[11px] font-mono text-[13px] font-medium`;
 
 function FieldError({ error }: { error?: unknown }) {
   let message: string | null = null;
   if (error instanceof Error) message = error.message;
   if (typeof error === "string") message = error;
   return error ? (
-    <span className="font-mono text-[10px] normal-case tracking-normal text-red">
+    <span className="font-mono text-[10px] normal-case tracking-normal text-red-text">
       {message ?? "Invalid value"}
     </span>
   ) : null;
@@ -69,7 +68,7 @@ export function CredentialFields({
               />
             )}
             {field.description ? (
-              <span className="font-sans text-[11.5px] normal-case leading-5 tracking-normal text-fg-faint">
+              <span className="font-sans text-[11.5px] normal-case leading-5 tracking-normal text-fg-muted">
                 {field.description}
               </span>
             ) : null}
@@ -103,7 +102,7 @@ export function CostField({
         type="number"
         {...form.register("costPerCheck", { valueAsNumber: true })}
       />
-      <span className="font-mono text-[10px] normal-case tracking-normal text-fg-faint">
+      <span className="font-mono text-[10px] normal-case tracking-normal text-fg-muted">
         {errors.costPerCheck?.message
           ? String(errors.costPerCheck.message)
           : provider.drawer.costHelp}
@@ -124,7 +123,7 @@ export function ActivityList({ provider }: Readonly<Pick<FormProps, "provider">>
       </MonoText>
       {provider.drawer.activities.map((row) => (
         <div
-          className="flex items-center justify-between gap-3 border-border-soft border-t px-3.5 py-[11px] font-mono text-xs"
+          className="flex items-center justify-between gap-3 border-border-soft border-t px-3.5 py-[11px] font-mono text-[11px]"
           key={row.label}
         >
           <span className="text-fg-muted">{row.label}</span>
@@ -141,7 +140,7 @@ export function EnvHint({ provider }: Readonly<Pick<FormProps, "provider">>) {
   return (
     <div className="flex items-start gap-[9px] rounded-[11px] border border-border-strong border-dashed bg-bg-sunken px-3.5 py-3">
       <span className="flex h-5 shrink-0 items-center">
-        <TerminalWindow aria-hidden className="text-accent" size={15} />
+        <TerminalWindow aria-hidden className="text-accent-text" size={15} />
       </span>
       <p className="m-0 text-[12px] leading-5 text-fg-muted">{provider.drawer.envHint}</p>
     </div>
@@ -154,7 +153,7 @@ export function ActionNotice({ notice }: Readonly<{ notice: Notice }>) {
 
   return (
     <div
-      className="rounded-[11px] border border-border-strong bg-bg-sunken px-3 py-3"
+      className="rounded-[11px] border border-border-strong bg-transparent px-3 py-3"
       role={notice.ok === false ? "alert" : "status"}
     >
       <p className="m-0 text-[13px] font-semibold" style={{ color: tone }}>
@@ -183,7 +182,7 @@ export function ActionNotice({ notice }: Readonly<{ notice: Notice }>) {
 
 export function ConnectionOkBanner({ message }: Readonly<{ message: string }>) {
   return (
-    <div className="flex items-center gap-2.5 rounded-[10px] border border-green bg-bg-sunken px-3.5 py-[11px] text-[12.5px] font-medium text-green [background:color-mix(in_srgb,var(--green)_8%,transparent)]">
+    <div className="flex items-center gap-2.5 rounded-[10px] border border-green bg-bg-sunken px-3.5 py-[11px] text-[12.5px] font-medium text-green-text [background:color-mix(in_srgb,var(--green)_8%,transparent)]">
       <CheckCircle aria-hidden size={16} weight="fill" />
       {message}
     </div>

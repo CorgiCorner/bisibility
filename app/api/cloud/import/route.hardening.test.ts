@@ -196,7 +196,7 @@ describe("POST /api/cloud/import hardening", () => {
     const body = await response.json();
 
     expect(response.status).toBe(500);
-    expect(body).toMatchObject({ detail: "Cloud import failed.", status: 500 });
+    expect(body).toMatchObject({ detail: "Instance import failed.", status: 500 });
     expect(body.detail).not.toContain("Migration token is invalid or expired.");
   });
 

@@ -1,11 +1,12 @@
 "use client";
 
+import { Button } from "@/components/ui";
 import { unwrapActionFailureResult } from "@/lib/actions/action-result";
 import { getCloudMigrationCompatibility, preflightMigrationTarget } from "@/lib/actions/cloud";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import {
-  ArrowSquareOutIcon as ArrowSquareOut,
   ArrowsClockwiseIcon as ArrowsClockwise,
+  ArrowUpRightIcon as ArrowUpRight,
   CaretDownIcon as CaretDown,
   CheckCircleIcon as CheckCircle,
   ClockIcon as Clock,
@@ -132,17 +133,17 @@ export function CheckStep({
         ))}
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-3">
-        <button
-          className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-accent px-3.5 text-[12.5px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-55"
+        <Button
           disabled={busy}
           onClick={runCheck}
+          startIcon={<ArrowsClockwise aria-hidden size={14} />}
           type="button"
+          variant="primary"
         >
-          <ArrowsClockwise aria-hidden size={14} />
           {checkLabel}
-        </button>
+        </Button>
         <a
-          className="inline-flex items-center gap-1 text-[12.5px] font-semibold text-accent"
+          className="inline-flex items-center gap-1 text-[12.5px] font-semibold text-accent-text"
           href={
             compatibility?.compatible === false ? MIGRATION_ERROR_CODES_URL : MIGRATION_GUIDE_URL
           }
@@ -150,7 +151,7 @@ export function CheckStep({
           target="_blank"
         >
           Migration guide
-          <ArrowSquareOut aria-hidden size={13} weight="bold" />
+          <ArrowUpRight aria-hidden size={13} weight="bold" />
         </a>
       </div>
       {compatibility ? (
@@ -171,7 +172,7 @@ export function CheckStep({
       <div className="mt-4 flex items-start gap-2.5 rounded-[11px] border border-border bg-bg-sunken px-3.5 py-3">
         <LockSimple
           aria-hidden
-          className={migrationHold ? "mt-1 text-green" : "mt-1 text-yellow"}
+          className={migrationHold ? "mt-1 text-green-text" : "mt-1 text-yellow-text"}
           size={16}
           weight="fill"
         />
@@ -182,7 +183,7 @@ export function CheckStep({
             : "After all gates pass, Continue asks you to confirm pausing writes and rank checks before the transfer starts."}
         </span>
       </div>
-      {holdMessage ? <p className="m-0 mt-2.5 text-[12px] text-red">{holdMessage}</p> : null}
+      {holdMessage ? <p className="m-0 mt-2.5 text-[12px] text-red-text">{holdMessage}</p> : null}
       <InfoBox>
         Transfer runs the destination preflight again, so a target changed after this check is still
         rejected before import.
@@ -202,10 +203,10 @@ function StepHeading({ body, title }: Readonly<{ body: string; title: string }>)
 
 function StatusRow({ data }: Readonly<{ data: StatusRowData }>) {
   const tone = {
-    fail: { icon: WarningCircle, status: "text-red", symbol: "text-red" },
-    info: { icon: Info, status: "text-blue", symbol: "text-blue" },
-    ok: { icon: CheckCircle, status: "text-green", symbol: "text-green" },
-    pending: { icon: Clock, status: "text-blue", symbol: "text-blue" },
+    fail: { icon: WarningCircle, status: "text-red-text", symbol: "text-red-text" },
+    info: { icon: Info, status: "text-blue-text", symbol: "text-blue-text" },
+    ok: { icon: CheckCircle, status: "text-green-text", symbol: "text-green-text" },
+    pending: { icon: Clock, status: "text-blue-text", symbol: "text-blue-text" },
   }[data.tone];
   const Icon = tone.icon;
   return (
@@ -226,8 +227,8 @@ function StatusRow({ data }: Readonly<{ data: StatusRowData }>) {
 
 function InfoBox({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <div className="mt-4 flex items-start gap-[9px] rounded-[11px] border border-dashed border-border-strong bg-bg-sunken px-3.5 py-3 text-xs leading-5 text-fg-muted">
-      <Info aria-hidden className="mt-0.5 text-accent" size={15} />
+    <div className="mt-4 flex items-start gap-[9px] rounded-[11px] border border-dashed border-border-strong bg-transparent px-3.5 py-3 text-xs leading-5 text-fg-muted">
+      <Info aria-hidden className="mt-0.5 text-accent-text" size={15} />
       <span>{children}</span>
     </div>
   );

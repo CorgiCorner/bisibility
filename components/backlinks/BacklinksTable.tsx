@@ -45,7 +45,7 @@ export type BacklinksTableProps = {
 function BrokenEmptyState() {
   return (
     <div className="flex flex-col items-center gap-2.5 px-5 py-12 text-center">
-      <span className="grid h-11 w-11 place-items-center rounded-full bg-green/10 text-green">
+      <span className="grid h-11 w-11 place-items-center rounded-full bg-green/10 text-green-text">
         <Check aria-hidden size={20} weight="bold" />
       </span>
       <strong className="text-[14.5px]">No broken backlinks</strong>
@@ -216,7 +216,7 @@ export function BacklinksTable({
           </span>
           {hasLoadMore ? (
             <button
-              className="cursor-pointer border-0 bg-transparent p-0 text-[12.5px] font-medium text-accent-hover hover:text-accent focus-visible:rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent disabled:cursor-wait disabled:opacity-60"
+              className="cursor-pointer border-0 bg-transparent p-0 text-[12.5px] font-medium text-accent-text hover:text-accent-text focus-visible:rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-solid disabled:cursor-wait disabled:bg-bg-sunken disabled:text-fg-muted"
               disabled={loadingMore}
               onClick={() => void loadMore()}
               type="button"
@@ -226,12 +226,12 @@ export function BacklinksTable({
             </button>
           ) : null}
           {loadMoreError ? (
-            <span className="text-[12px] text-red" role="status">
+            <span className="text-[12px] text-red-text" role="status">
               More backlinks could not be loaded. Try again.
             </span>
           ) : null}
           <span className="flex-1" />
-          <span className="text-[12px] text-fg-faint">
+          <span className="text-[12px] text-fg-muted">
             Sorting and filtering the fetched rows is free
           </span>
         </footer>

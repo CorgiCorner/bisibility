@@ -8,7 +8,9 @@ type AccountLayoutProps = {
 };
 
 export default async function AccountLayout({ children }: Readonly<AccountLayoutProps>) {
-  const [activeWorkspace] = await listWorkspaces();
+  const activeWorkspace = (await listWorkspaces()).find(
+    (workspace) => workspace.onboardingCompletedAt !== null,
+  );
   if (!activeWorkspace) {
     redirect("/onboarding");
   }

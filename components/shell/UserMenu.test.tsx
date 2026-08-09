@@ -11,13 +11,15 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@/components/shell/CommandPalette", () => ({
   useCommandPalette: () => ({ openPalette: mocks.openPalette }),
 }));
-vi.mock("@/components/ui", () => ({ useToast: () => ({ showToast: mocks.showToast }) }));
+vi.mock("@/components/ui", () => ({
+  ThemeSegmentsRow: () => null,
+  useToast: () => ({ showToast: mocks.showToast }),
+}));
 vi.mock("@/lib/auth/client", () => ({ authClient: { signOut: mocks.signOut } }));
 vi.mock("@mui/material/Divider", () => ({ default: () => null }));
 vi.mock("@mui/material/Menu", () => ({
   default: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
-vi.mock("./ThemeSegments", () => ({ ThemeSegments: () => null }));
 vi.mock("./UserMenuRow", () => ({
   UserMenuRow: ({
     disabled,

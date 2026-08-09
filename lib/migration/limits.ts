@@ -46,14 +46,14 @@ export function assertCloudImportPackageLimits(keywords: readonly ExportKeyword[
   const limits = downloadExportLimits();
   if (keywords.length > limits.maxKeywords) {
     throw new Error(
-      `Cloud import package downloads currently support up to ${limits.maxKeywords} keywords.`,
+      `Instance import package downloads currently support up to ${limits.maxKeywords} keywords.`,
     );
   }
   if (
     keywords.some((keyword) => keyword.rankChecks.length > DOWNLOAD_MAX_HISTORY_ROWS_PER_KEYWORD)
   ) {
     throw new Error(
-      `Cloud import package downloads currently support up to ${DOWNLOAD_MAX_HISTORY_ROWS_PER_KEYWORD} checks per keyword.`,
+      `Instance import package downloads currently support up to ${DOWNLOAD_MAX_HISTORY_ROWS_PER_KEYWORD} checks per keyword.`,
     );
   }
 }

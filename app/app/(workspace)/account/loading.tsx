@@ -16,7 +16,7 @@ const accountKeys = ["github", "google"] as const;
 export default function AccountLoading() {
   return (
     <PageContent aria-hidden className="flex flex-col gap-[22px]" variant="form">
-      <div className="flex w-max items-center gap-0.5 rounded-[10px] border border-border-strong bg-bg-sunken p-[3px]">
+      <div className="flex w-max items-center gap-0.5 rounded-[10px] border border-border-strong bg-transparent p-[3px]">
         {tabKeys.map((key) => (
           <Bar className="h-8 w-[92px] rounded-lg" key={key} />
         ))}

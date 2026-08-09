@@ -1,6 +1,12 @@
 # Changelog
 
-## Unreleased
+## [0.6.0] - 2026-08-09
+
+- Text, links and status colours meet WCAG AA in both themes.
+
+- Onboarding walks setup one step at a time, and unfinished setup returns to the wizard instead of being skipped.
+
+- The interface calls the tracked entity a project everywhere.
 
 ## [0.5.1] - 2026-08-08
 

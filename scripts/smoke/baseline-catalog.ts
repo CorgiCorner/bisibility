@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readdir } from "node:fs/promises";
 import { databaseConnectionConfig } from "../../lib/db/pool-config.ts";
 import {
   makePublicId,
@@ -84,15 +85,30 @@ try {
   );
   assert.equal(baseline.rows[0]?.count, 1, "The current baseline marker must be applied once.");
 
-  if (process.env.EXPECT_SINGLE_BASELINE === "1") {
+  if (process.env.EXPECT_FRESH_LEDGER === "1") {
+    // A fresh database holds exactly what prisma/migrations holds: the squashed baseline plus
+    // whatever shipped after it. The literal 1 this used to assert was only true until the first
+    // migration after the squash, so it failed for the wrong reason the moment one arrived.
+    const migrationsDir = new URL("../../prisma/migrations/", import.meta.url);
+    const local = (await readdir(migrationsDir, { withFileTypes: true })).filter((entry) =>
+      entry.isDirectory(),
+    ).length;
     const ledger = await db.query<{ count: number }>(
       `SELECT COUNT(*)::int AS "count" FROM "_prisma_migrations"`,
     );
-    assert.equal(ledger.rows[0]?.count, 1, "A fresh database must contain one migration row.");
+    assert.equal(
+      ledger.rows[0]?.count,
+      local,
+      "A fresh database must contain one row per local migration.",
+    );
   }
 
-  const expectedHistoricalRows = Number(process.env.EXPECT_HISTORICAL_MIGRATION_ROWS ?? "");
-  if (Number.isInteger(expectedHistoricalRows) && expectedHistoricalRows >= 0) {
+  // Read the raw value first: Number(undefined ?? "") is 0, not NaN, so the old guard treated an
+  // unset variable as "expect zero historical rows" and ran this production-rehearsal assertion in
+  // every scenario. It passed only while the baseline was the sole migration in the ledger.
+  const historicalRowsSetting = process.env.EXPECT_HISTORICAL_MIGRATION_ROWS?.trim();
+  const expectedHistoricalRows = Number(historicalRowsSetting);
+  if (historicalRowsSetting && Number.isInteger(expectedHistoricalRows) && expectedHistoricalRows >= 0) {
     const ledger = await db.query<{ historical: number; total: number }>(
       `SELECT COUNT(*)::int AS "total",
               COUNT(*) FILTER (WHERE "migration_name" <> $1)::int AS "historical"

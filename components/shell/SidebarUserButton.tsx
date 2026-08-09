@@ -8,7 +8,6 @@ import {
   shellUserRoleLine,
 } from "@/components/shell/types";
 import { UserMenu } from "@/components/shell/UserMenu";
-import Tooltip from "@mui/material/Tooltip";
 import { DotsThreeVerticalIcon as DotsThreeVertical } from "@phosphor-icons/react";
 import { useState } from "react";
 
@@ -39,43 +38,52 @@ export function SidebarUserButton({
 
   return (
     <>
-      <Tooltip placement="right" title={collapsed ? "Account menu" : ""}>
-        <button
-          aria-controls={open ? "sidebar-user-menu" : undefined}
-          aria-expanded={open}
-          aria-haspopup="menu"
-          aria-label="Account menu"
+      <button
+        aria-controls={open ? "sidebar-user-menu" : undefined}
+        aria-expanded={open}
+        aria-haspopup="menu"
+        aria-label="Account menu"
+        className={[
+          "group flex items-center rounded-[9px] text-left text-fg transition-colors",
+          collapsed ? "" : "hover:bg-bg-sunken",
+          // Expanded reads as a card; collapsed is a 32px icon button matching the search and
+          // bell beside it, so its hover box is not the largest thing in the cluster.
+          collapsed
+            ? "h-8 w-8 flex-none justify-center gap-0 border-0 bg-transparent p-0"
+            : "w-full gap-2.5 border border-border bg-bg-elev p-2",
+          open ? "bg-bg-sunken" : "",
+        ].join(" ")}
+        onClick={(event) => setAnchorEl(event.currentTarget)}
+        type="button"
+      >
+        {/* Same tile spec as the search and bell buttons beside it (bg-bg-elev on
+            border-border-strong, hover to bg-bg-sunken); the accent initials alone carry
+            the identity signal, so the cluster reads as one family of controls. */}
+        <span
           className={[
-            "flex w-full items-center rounded-[10px] text-left text-fg transition-colors hover:bg-bg-sunken",
-            // Expanded reads as a card; collapsed drops to a bare icon (parity with the switcher).
-            collapsed
-              ? "justify-center gap-0 border-0 bg-transparent p-2"
-              : "gap-2.5 border border-border bg-bg-elev p-2",
-            open ? "bg-bg-sunken" : "",
+            "grid flex-none place-items-center rounded-[9px] border border-border-strong bg-bg-elev font-mono font-semibold text-accent-text transition-colors",
+            collapsed ? "h-8 w-8 text-[10.5px] group-hover:bg-bg-sunken" : "h-8 w-8 text-xs",
+            collapsed && open ? "bg-bg-sunken" : "",
           ].join(" ")}
-          onClick={(event) => setAnchorEl(event.currentTarget)}
-          type="button"
         >
-          <span className="grid h-8 w-8 flex-none place-items-center rounded-[9px] bg-accent font-mono text-xs font-semibold text-white">
-            {initials}
-          </span>
-          {collapsed ? null : (
-            <>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-[12.5px] font-semibold leading-tight">
-                  {name}
-                </span>
-                {showEmail ? (
-                  <span className="block truncate text-[11px] text-fg-faint">{email}</span>
-                ) : null}
+          {initials}
+        </span>
+        {collapsed ? null : (
+          <>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[12.5px] font-semibold leading-tight">
+                {name}
               </span>
-              <span className="grid h-[30px] w-[30px] flex-none place-items-center rounded-lg text-fg-muted">
-                <DotsThreeVertical aria-hidden size={19} weight="bold" />
-              </span>
-            </>
-          )}
-        </button>
-      </Tooltip>
+              {showEmail ? (
+                <span className="block truncate text-[11px] text-fg-muted">{email}</span>
+              ) : null}
+            </span>
+            <span className="grid h-[30px] w-[30px] flex-none place-items-center rounded-lg text-fg-muted">
+              <DotsThreeVertical aria-hidden size={19} weight="bold" />
+            </span>
+          </>
+        )}
+      </button>
       <UserMenu
         anchorEl={anchorEl}
         defaultTheme={user?.theme}

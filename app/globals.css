@@ -6,23 +6,32 @@
 :root,
 [data-theme="light"] {
   --bg: #f2eee4;
-  --bg-elev: #f9f6ef;
+  --bg-elev: #fbf9f4;
   --bg-sidebar: #ffffff;
   --bg-sunken: #ece7db;
   --bg-inset: #e2ddd0;
   --fg: #1a1813;
-  --fg-muted: #6b6657;
-  --fg-faint: #9a9588;
-  --border: #e8e4d9;
+  --fg-muted: #615b4d;
+  --border: #bfb7a4;
   --border-soft: #f0eee6;
-  --border-strong: #d9d4c7;
+  --border-strong: #867b68;
   --nav-active: #edeae1;
+  --meter-track: #e2ddd0;
   --accent: #d97757;
   --accent-hover: #c8643f;
+  --accent-text: #9f4528;
   --accent-soft: #f7e8e0;
+  /* Primary button pair. --accent is too light to carry a light label, so the solid
+     surface holds the brand hue/saturation at a darker lightness. Kept in sync with
+     lib/theme/tokens.ts and asserted in globals.test.ts. */
+  --accent-solid: #b74c29;
+  --accent-solid-hover: #af4927;
+  --accent-on-solid: #fff3ee;
   --blue: #4f86e8;
+  --blue-text: #315eac;
   --purple: #8e6fe0;
   --green: #3c9a63;
+  --green-text: #1f6c40;
   --red: #c8463a;
   --yellow: #e0a93b;
   --rank-bucket-green: #3c9a63;
@@ -30,13 +39,11 @@
   --rank-bucket-yellow: #e0a93b;
   --rank-bucket-orange: #e08a4e;
   --rank-bucket-red: #c8463a;
-  /* Darker amber for amber TEXT on light/amber-tinted backgrounds (the mockup's #B07d10);
-     --yellow stays the lighter shade for dots/fills/borders. */
-  --yellow-strong: #b07d10;
-  /* HANDOFF-35 threshold TEXT tones: darker than --yellow/--red so the spend-meter
-     amounts stay readable on light backgrounds; fills keep using --yellow/--red. */
-  --yellow-text: #8a6516;
+  --yellow-text: #77580f;
   --red-text: #b03a2e;
+  /* Embedded SVGs cannot inherit CSS custom properties, so this is kept in sync
+     with --fg-muted and asserted in globals.test.ts. */
+  --select-arrow-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 256 256' fill='%23615B4D'%3E%3Cpath d='M213.66 101.66l-80 80a8 8 0 0 1-11.32 0l-80-80A8 8 8 0 0 1 53.66 90.34L128 164.69l74.34-74.35a8 8 0 0 1 11.32 11.32Z'/%3E%3C/svg%3E");
   --code-bg: #1c1a16;
   --code-fg: #edeae0;
   --code-faint: #8c887c;
@@ -54,17 +61,23 @@
   --bg-inset: #080704;
   --fg: #ece7db;
   --fg-muted: #9f998a;
-  --fg-faint: #6e685a;
-  --border: #2e281d;
+  --border: #463d2e;
   --border-soft: #221d15;
-  --border-strong: #423b2e;
+  --border-strong: #716653;
   --nav-active: #231f17;
+  --meter-track: #443c29;
   --accent: #e08a6a;
   --accent-hover: #ec9a7c;
+  --accent-text: #f0a18a;
   --accent-soft: #2a2018;
+  --accent-solid: #ba4f27;
+  --accent-solid-hover: #b14b25;
+  --accent-on-solid: #fff3ee;
   --blue: #6a9bf0;
+  --blue-text: #6a9bf0;
   --purple: #9e82e6;
   --green: #57a77e;
+  --green-text: #79c998;
   --red: #e0705c;
   --yellow: #e6b452;
   --rank-bucket-green: #57a77e;
@@ -72,12 +85,9 @@
   --rank-bucket-yellow: #e6b452;
   --rank-bucket-orange: #ec9a63;
   --rank-bucket-red: #e0705c;
-  /* On dark, "strong" amber text reads brighter than --yellow for contrast on dark bg. */
-  --yellow-strong: #eec069;
-  /* On dark, threshold text reuses the existing bright tones (--yellow-strong amber,
-     --red) instead of the darkened light-theme values. */
   --yellow-text: #eec069;
   --red-text: #e0705c;
+  --select-arrow-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 256 256' fill='%239F998A'%3E%3Cpath d='M213.66 101.66l-80 80a8 8 0 0 1-11.32 0l-80-80A8 8 0 0 1 53.66 90.34L128 164.69l74.34-74.35a8 8 0 0 1 11.32 11.32Z'/%3E%3C/svg%3E");
   --code-bg: #0e0d0a;
   --code-fg: #ece7db;
   --code-faint: #7e7a6e;
@@ -147,12 +157,12 @@
   input::placeholder,
   textarea::placeholder {
     font-weight: 400;
-    color: var(--fg-faint);
+    color: var(--fg-muted);
   }
 
   select {
     appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 256 256' fill='%239A9588'%3E%3Cpath d='M213.66 101.66l-80 80a8 8 0 0 1-11.32 0l-80-80A8 8 0 0 1 53.66 90.34L128 164.69l74.34-74.35a8 8 0 0 1 11.32 11.32Z'/%3E%3C/svg%3E");
+    background-image: var(--select-arrow-image);
     background-repeat: no-repeat;
     background-position: right 11px center;
     padding-right: 30px;
@@ -176,14 +186,17 @@
     box-sizing: border-box;
   }
 
-  /* HANDOFF-12: global keyboard focus ring (components that opt out set outline:none). */
+  /* HANDOFF-12: global keyboard focus ring (components that opt out set outline:none).
+     --accent (#D97757) measures 2.69:1 against --bg and fails the 3:1 that WCAG 2.1
+     SC 1.4.11 / 2.4.11 require of a focus indicator. --accent-solid is the same hue at
+     4.44:1 light and 3.94:1 dark. */
   a:focus-visible,
   button:focus-visible,
   input:focus-visible,
   select:focus-visible,
   textarea:focus-visible,
   [tabindex]:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-solid);
     outline-offset: 2px;
   }
 }
@@ -234,44 +247,6 @@ h3 {
   animation: bvcountup 0.5s ease-out both;
 }
 
-@keyframes bvhero-audience-primary {
-  0%,
-  42% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  50% {
-    opacity: 0;
-    transform: translateY(-115%);
-  }
-  51%,
-  92% {
-    opacity: 0;
-    transform: translateY(115%);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes bvhero-audience-secondary {
-  0%,
-  42% {
-    opacity: 0;
-    transform: translateY(115%);
-  }
-  50%,
-  92% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(-115%);
-  }
-}
-
 .bv-hero-audience {
   display: inline-flex;
   align-items: baseline;
@@ -291,19 +266,34 @@ h3 {
 .bv-hero-audience-phrase {
   grid-area: 1 / 1;
   width: max-content;
-  animation-duration: 8s;
+  /* One shared cycle; each phrase enters via a negative delay of index * (duration / count). */
+  animation-name: bvhero-audience-cycle;
+  animation-duration: 16s;
   animation-iteration-count: infinite;
   animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
   color: currentColor;
   will-change: opacity, transform;
 }
 
-.bv-hero-audience-primary {
-  animation-name: bvhero-audience-primary;
-}
-
-.bv-hero-audience-secondary {
-  animation-name: bvhero-audience-secondary;
+@keyframes bvhero-audience-cycle {
+  0%,
+  19% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  25% {
+    opacity: 0;
+    transform: translateY(-115%);
+  }
+  26%,
+  93% {
+    opacity: 0;
+    transform: translateY(115%);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ---- RankWindowCard (bv-rw-*): animated hero product window ---- */
@@ -556,11 +546,6 @@ html:not([data-authed="true"]) .bv-authed-only {
   color: color-mix(in srgb, var(--bg-elev) 93%, var(--fg));
 }
 
-[data-theme="dark"] .MuiButtonBase-root.bv-landing-cta.MuiButton-contained,
-[data-theme="dark"] button.bv-landing-cta.bg-accent {
-  color: #000;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .bv-ping,
   .bv-countup,
@@ -570,12 +555,12 @@ html:not([data-authed="true"]) .bv-authed-only {
     transform: none;
   }
 
-  .bv-hero-audience-primary {
-    opacity: 1;
+  .bv-hero-audience-phrase {
+    opacity: 0;
   }
 
-  .bv-hero-audience-secondary {
-    display: none;
+  .bv-hero-audience-phrase:first-child {
+    opacity: 1;
   }
 }
 
@@ -609,8 +594,8 @@ body {
 }
 
 ::selection {
-  background: var(--accent);
-  color: #fff;
+  background: var(--accent-solid);
+  color: var(--accent-on-solid);
 }
 
 @keyframes bvpulse {

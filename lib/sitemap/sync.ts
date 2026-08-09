@@ -2,6 +2,7 @@ import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
+import { trackedProjectDomain } from "@/lib/schemas/project";
 import { emitSignal } from "@/lib/signals/emit";
 import { SIGNAL_TYPES } from "@/lib/signals/types";
 import { diffSitemapEntries } from "./diff";
@@ -188,10 +189,10 @@ export async function syncSitemapForProject(
   if (!project) return { projectId, reason: "project_not_found", status: "skipped" };
   if (project.sitemapMonitoringEnabled === false)
     return { projectId: project.id, reason: "monitor_disabled", status: "skipped" };
-  if (!project.domain.trim())
-    return { projectId: project.id, reason: "missing_domain", status: "skipped" };
+  const projectDomain = trackedProjectDomain(project.domain);
+  if (!projectDomain) return { projectId: project.id, reason: "missing_domain", status: "skipped" };
 
-  const sitemap = await resolveSitemap(sitemapUrlForDomain(project.domain));
+  const sitemap = await resolveSitemap(sitemapUrlForDomain(projectDomain));
   warnIfTruncated(project.id, sitemap);
 
   const latest = await prisma.sitemapSnapshot.findFirst({

@@ -8,7 +8,7 @@ import {
   ProjectReadOnlyTooltip,
   useProjectWriteMode,
 } from "@/components/shell/ProjectWriteModeProvider";
-import { ConfirmModal } from "@/components/ui";
+import { Button, ConfirmModal } from "@/components/ui";
 import {
   type CostRateInfo,
   formatEstimateCents,
@@ -16,7 +16,7 @@ import {
 } from "@/lib/cost-estimate/project-estimate";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import type { SerpDepth } from "@/lib/serp/markets";
-import Button from "@mui/material/Button";
+import MuiButton from "@mui/material/Button";
 import {
   ClockCountdownIcon as ClockCountdown,
   LinkSimpleIcon as LinkSimple,
@@ -27,7 +27,6 @@ import {
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { BulkActionModal, type BulkMode } from "./BulkActionModal";
-import { neutralActionSx } from "./bulk-action-styles";
 import { bulkTargetView } from "./bulk-target-model";
 import { RunChecksSplitButton } from "./RunChecksSplitButton";
 import { effectiveRowDepth } from "./run-check-depth";
@@ -120,7 +119,7 @@ export function BulkActionBar({
   return (
     <div className="grid gap-2 border-b border-border bg-accent-soft px-4 py-[11px]">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="mr-1 font-mono text-[12.5px] font-semibold text-accent">
+        <span className="mr-1 font-mono text-[12.5px] font-semibold text-accent-text">
           {selectedRows.length} selected
         </span>
         {onRunChecks && canUpdateKeyword ? (
@@ -134,13 +133,11 @@ export function BulkActionBar({
         {canUpdateKeyword ? (
           <ProjectReadOnlyTooltip>
             <Button
-              color="inherit"
               disabled={readOnly}
               onClick={() => setMode(mode === "tag" ? null : "tag")}
-              size="small"
+              size="xs"
               startIcon={<Tag size={15} />}
-              sx={neutralActionSx}
-              variant="outlined"
+              variant="secondary"
             >
               Add tag
             </Button>
@@ -149,13 +146,11 @@ export function BulkActionBar({
         {canUpdateKeyword ? (
           <ProjectReadOnlyTooltip>
             <Button
-              color="inherit"
               disabled={readOnly}
               onClick={() => setMode(mode === "target" ? null : "target")}
-              size="small"
+              size="xs"
               startIcon={<LinkSimple size={15} />}
-              sx={neutralActionSx}
-              variant="outlined"
+              variant="secondary"
             >
               {targetView.actionLabel}
             </Button>
@@ -164,13 +159,11 @@ export function BulkActionBar({
         {canUpdateKeyword ? (
           <ProjectReadOnlyTooltip>
             <Button
-              color="inherit"
               disabled={readOnly}
               onClick={() => setMode(mode === "frequency" ? null : "frequency")}
-              size="small"
+              size="xs"
               startIcon={<ClockCountdown size={15} />}
-              sx={neutralActionSx}
-              variant="outlined"
+              variant="secondary"
             >
               Set frequency
             </Button>
@@ -178,7 +171,8 @@ export function BulkActionBar({
         ) : null}
         {canDeleteKeyword ? (
           <ProjectReadOnlyTooltip>
-            <Button
+            {/* Outlined destructive has no shared-Button variant yet ("destructive" is filled). */}
+            <MuiButton
               color="error"
               disabled={readOnly || deleting}
               onClick={() => setConfirmOpen(true)}
@@ -188,15 +182,15 @@ export function BulkActionBar({
               variant="outlined"
             >
               {deleting ? "Deleting..." : "Delete"}
-            </Button>
+            </MuiButton>
           </ProjectReadOnlyTooltip>
         ) : null}
         <Button
-          color="inherit"
           onClick={onClear}
-          size="small"
+          size="xs"
           startIcon={<X size={14} />}
-          sx={{ color: "var(--fg-muted)", marginLeft: "auto", padding: "3px 9px" }}
+          sx={{ marginLeft: "auto" }}
+          variant="ghost"
         >
           Clear
         </Button>
@@ -249,7 +243,7 @@ export function BulkActionBar({
         />
       ) : null}
       {actionError && mode === null ? (
-        <p className="m-0 font-mono text-[11.5px] text-red">{actionError}</p>
+        <p className="m-0 font-mono text-[11.5px] text-red-text">{actionError}</p>
       ) : null}
     </div>
   );

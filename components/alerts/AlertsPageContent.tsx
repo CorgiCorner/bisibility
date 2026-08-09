@@ -179,7 +179,7 @@ export function AlertsPageContent({
                 <span className="rounded-full bg-bg-sunken px-2 py-0.5 font-mono text-[10.5px] font-semibold text-fg-muted">
                   {liveAlerts.length} loaded
                 </span>
-                <span className="font-mono text-[11px] text-fg-faint">last 48h</span>
+                <span className="font-mono text-[11px] text-fg-muted">last 48h</span>
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <SegmentedControl
@@ -191,7 +191,7 @@ export function AlertsPageContent({
                     label: (
                       <>
                         {item.label}
-                        <span className="font-mono text-[10px] text-fg-faint">{item.count}</span>
+                        <span className="font-mono text-[10px] text-fg-muted">{item.count}</span>
                       </>
                     ),
                     value: item.id,
@@ -227,13 +227,13 @@ export function AlertsPageContent({
               </div>
             )}
             <div className="flex flex-wrap items-center justify-between gap-3 bg-bg-sunken px-[18px] py-3">
-              <span className="font-mono text-[11px] text-fg-faint">
+              <span className="font-mono text-[11px] text-fg-muted">
                 Showing {shownCount} of {pluralize(filteredAlerts.length, "loaded alert")}
               </span>
               <div className="flex flex-wrap items-center gap-2.5">
                 {canReadAudit ? (
                   <Link
-                    className="inline-flex min-h-8 items-center gap-1.5 rounded-lg bg-transparent px-3 text-xs font-semibold text-fg-muted outline-none transition-colors hover:text-accent focus-visible:text-accent"
+                    className="inline-flex min-h-8 items-center gap-1.5 rounded-lg bg-transparent px-3 text-xs font-semibold text-fg-muted outline-none transition-colors hover:text-accent-text focus-visible:text-accent-text"
                     href={appPath(projectRef, "settings", "audit")}
                   >
                     <ListMagnifyingGlass aria-hidden size={13} />
@@ -257,7 +257,7 @@ export function AlertsPageContent({
       )}
       {canCreate ? (
         <section>
-          <div className="mb-2.5 font-mono text-[10.5px] uppercase text-fg-faint">
+          <div className="mb-2.5 font-mono text-[10.5px] uppercase text-fg-muted">
             Create from template
           </div>
           <div className="flex flex-wrap gap-2">

@@ -18,6 +18,7 @@ import {
   publicProjectDefaults,
 } from "@/lib/settings/project-defaults-config";
 import { projectDefaultsUpsertArgs } from "@/lib/settings/project-defaults-write";
+import { z } from "zod";
 import { normalizeSchedule } from "./_schedule";
 import {
   getActionActor,
@@ -25,6 +26,10 @@ import {
   requireProjectScope,
   revalidateSettingsViews,
 } from "./_shared";
+
+const completeProjectOnboardingSchema = z.object({
+  projectId: z.string().trim().min(1).max(120),
+});
 
 export async function createProject(input: unknown) {
   const data = parseActionInput(createProjectSchema, input);
@@ -40,6 +45,18 @@ export async function createProject(input: unknown) {
     publicId: project.publicId,
     trackingScope: project.trackingScope,
   };
+}
+
+export async function completeProjectOnboarding(input: unknown) {
+  const data = parseActionInput(completeProjectOnboardingSchema, input);
+  const actor = await getActionActor();
+  const project = await requireProjectScope(actor, "update", data.projectId, { type: "project" });
+  const result = await prisma.project.updateMany({
+    data: { onboardingCompletedAt: new Date() },
+    where: { id: project.id, onboardingCompletedAt: null },
+  });
+
+  return { completed: result.count === 1 };
 }
 
 export async function updateProjectDefaults(input: unknown) {
@@ -116,7 +133,7 @@ export async function readProjectSettingsSnapshot(projectId: string) {
 
 export async function updateProjectSettingsSnapshot(
   projectId: string,
-  data: { domain: string; name: string },
+  data: { domain: string | null; name: string },
 ) {
   return prisma.project.update({
     data: { domain: data.domain, name: data.name },

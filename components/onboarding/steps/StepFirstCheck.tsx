@@ -27,13 +27,14 @@ import type { OnboardingTrackingDefaultsInput } from "./StepSchedule";
 import { type FirstCheckRunActions, useFirstCheckRun } from "./use-first-check-run";
 
 type FirstCheckProject = {
-  domain: string;
+  domain: string | null;
   isSample?: boolean;
   name: string;
   publicId?: string;
 };
 
 type StepFirstCheckProps = FirstCheckRunActions & {
+  completeOnboardingAction?: (input: { projectId: string }) => Promise<unknown>;
   defaults?: ProjectDefaultsInput | OnboardingTrackingDefaultsInput;
   flowState?: OnboardingFlowState;
   hasAnalyticsSource?: boolean;
@@ -185,6 +186,7 @@ function previewButtonLabel(
 }
 
 export function StepFirstCheck({
+  completeOnboardingAction,
   defaults,
   flowState,
   getObservedPositionsAction,
@@ -235,8 +237,11 @@ export function StepFirstCheck({
     sampleProject,
   });
 
-  function onSubmit(event: SyntheticEvent<HTMLFormElement>) {
+  async function onSubmit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (navigationProjectId && completeOnboardingAction) {
+      await completeOnboardingAction({ projectId: navigationProjectId });
+    }
     router.push(navigationProjectId ? appPath(navigationProjectId, "overview") : appRootPath());
   }
 
@@ -258,7 +263,7 @@ export function StepFirstCheck({
               <span className="text-[13px] text-fg-muted">{row.label}</span>
               <span
                 className={`text-right font-mono text-[13px] font-semibold ${
-                  row.accent ? "text-accent" : "text-fg"
+                  row.accent ? "text-accent-text" : "text-fg"
                 }`}
               >
                 {row.value}
@@ -284,7 +289,7 @@ export function StepFirstCheck({
           </Button>
         ) : null}
         {queueMessage ? (
-          <div className="flex min-w-[220px] flex-1 items-center gap-2 text-[12.5px] text-green">
+          <div className="flex min-w-[220px] flex-1 items-center gap-2 text-[12.5px] text-green-text">
             <CheckCircle aria-hidden size={16} weight="fill" />
             {queueMessage}
           </div>

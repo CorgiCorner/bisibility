@@ -204,12 +204,12 @@ export const featureStatus = {
     docs: "/roadmap",
   },
   analyticsConnections: {
-    label: "Opt-in Google Search Console and GA4 connections",
+    label: "Opt-in Google Search Console and Google Analytics 4 connections",
     status: "shipped",
     docs: "/docs/integrations",
     scope: "self-host",
   },
-  hostedCloud: { label: "hosted bisibility Cloud", status: "open-beta", docs: "/roadmap" },
+  hostedCloud: { label: "the hosted service", status: "open-beta", docs: "/roadmap" },
 } as const satisfies Record<string, FeatureStatusEntry>;
 
 export type FeatureKey = keyof typeof featureStatus;
@@ -238,7 +238,7 @@ export function featureClaim(key: FeatureKey) {
     case "building":
       return `${feature.label} is in development`;
     case "cloud-only":
-      return `${feature.label} is available only in bisibility Cloud`;
+      return `${feature.label} is available only on the hosted service`;
     case "not-planned":
       return `${feature.label} is not planned`;
     case "planned":
@@ -263,7 +263,7 @@ export function featureAvailabilitySentence(key: FeatureKey, verb: "are" | "is" 
         : status === "open-beta"
           ? "available in open beta"
           : status === "cloud-only"
-            ? "available only in bisibility Cloud"
+            ? "available only on the hosted service"
             : status === "not-planned"
               ? "not planned"
               : status === "exploring"

@@ -49,13 +49,13 @@ export function AddKeywordCsvPanel({
   return (
     <div className="flex flex-col gap-3.5">
       <label
-        className="flex cursor-pointer flex-col items-center gap-2 rounded-[12px] border border-dashed border-border-strong bg-bg-sunken px-4 py-8 text-center outline-none hover:border-accent"
+        className="flex cursor-pointer flex-col items-center gap-2 rounded-[12px] border border-dashed border-border-strong bg-transparent px-4 py-8 text-center hover:border-accent focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent-solid"
         onDragOver={handleDragOver}
         onDrop={(event) => void handleDrop(event)}
       >
-        <UploadSimple className="text-accent" size={26} />
+        <UploadSimple className="text-accent-text" size={26} />
         <span className="text-[13.5px] font-semibold text-fg">Drop a CSV or click to upload</span>
-        <span className="text-[11.5px] text-fg-faint">
+        <span className="text-[11.5px] text-fg-muted">
           keyword, target_url, tags, country, device
         </span>
         <input
@@ -71,7 +71,7 @@ export function AddKeywordCsvPanel({
           <label className="text-[12.5px] font-semibold text-fg" htmlFor="add-csv-input">
             Paste CSV
           </label>
-          <span className="font-mono text-[11px] text-fg-faint">
+          <span className="font-mono text-[11px] text-fg-muted">
             {parsedCount} {parsedCount === 1 ? "keyword" : "keywords"} parsed
           </span>
         </div>
@@ -83,7 +83,7 @@ export function AddKeywordCsvPanel({
           value={csvText}
         />
         {errorMessage ? (
-          <p className="mt-2 font-mono text-[11.5px] text-red">{errorMessage}</p>
+          <p className="mt-2 font-mono text-[11.5px] text-red-text">{errorMessage}</p>
         ) : null}
       </div>
 

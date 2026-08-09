@@ -50,7 +50,7 @@ export function SessionsSection({
                       {sessionLabel(session.device)}
                     </span>
                     {session.current ? (
-                      <span className="inline-flex items-center rounded-full bg-green/10 px-[7px] py-px font-mono text-[9px] text-green">
+                      <span className="inline-flex items-center rounded-full bg-green/10 px-[7px] py-px font-mono text-[9px] text-green-text">
                         This device
                       </span>
                     ) : null}

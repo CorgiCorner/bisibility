@@ -57,7 +57,7 @@ export async function runPostgresMigrationContract() {
     DATABASE_URL: databaseUrl,
     DIRECT_URL: directUrl,
     DEPLOYMENT_ENV: process.env.DEPLOYMENT_ENV ?? "test",
-    EXPECT_SINGLE_BASELINE: "1",
+    EXPECT_FRESH_LEDGER: "1",
   };
   const sentinelEnv = {
     ...configuredEnv,

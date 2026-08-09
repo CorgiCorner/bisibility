@@ -22,8 +22,8 @@ export function FilterSection({
 }>) {
   return (
     <section className="border-b border-border-soft py-[18px] last:border-b-0 last:pb-1">
-      <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.6px] text-fg-faint">
-        <Icon className="text-accent" size={14} weight="bold" />
+      <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.6px] text-fg-muted">
+        <Icon className="text-accent-text" size={14} weight="bold" />
         {title}
       </div>
       {children}
@@ -66,7 +66,7 @@ export function FilterCheckTile({
       {Icon ? <Icon className="shrink-0 text-fg-muted" size={14} /> : null}
       <span className="min-w-0 flex-1 truncate text-[12.5px] font-medium text-fg">{label}</span>
       {typeof count === "number" ? (
-        <span className="font-mono text-[11px] text-fg-faint">{count}</span>
+        <span className="font-mono text-[11px] text-fg-muted">{count}</span>
       ) : null}
     </button>
   );
@@ -82,12 +82,12 @@ export function FilterSegment<T extends string>({
   value: T;
 }>) {
   return (
-    <div className="flex flex-wrap items-center gap-0.5 rounded-[9px] border border-border-strong bg-bg-sunken p-[3px]">
+    <div className="flex flex-wrap items-center gap-0.5 rounded-[9px] border border-border-strong bg-transparent p-[3px]">
       {options.map((option) => {
         const active = option.id === value;
         return (
           <button
-            className="flex-1 rounded-[7px] px-2 py-1.5 text-[12px] font-semibold outline-none transition-colors focus-visible:bg-accent focus-visible:text-white"
+            className="flex-1 rounded-[7px] px-2 py-1.5 text-[12px] font-semibold outline-none transition-colors focus-visible:bg-accent-solid focus-visible:text-primary-contrast"
             key={option.id}
             onClick={() => onChange(option.id)}
             style={{

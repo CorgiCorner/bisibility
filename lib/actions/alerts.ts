@@ -20,6 +20,7 @@ import {
 } from "@/lib/api/webhook-service";
 import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
+import { trackedProjectDomain } from "@/lib/schemas/project";
 import { ZodError } from "zod";
 import {
   getActionActor,
@@ -204,7 +205,7 @@ export async function testWebhookEndpoint(input: unknown) {
 
   try {
     const result = await postSignedWebhookTest(endpoint, {
-      projectDomain: project.domain,
+      projectDomain: trackedProjectDomain(project.domain) ?? "",
       projectId: project.publicId,
       webhookId: endpoint.publicId,
     });

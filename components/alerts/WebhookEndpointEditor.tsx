@@ -2,7 +2,7 @@
 
 import { WebhookEndpointRow } from "@/components/alerts/WebhookEndpointRow";
 import { WebhookSecretField } from "@/components/alerts/WebhookSecretField";
-import { Button } from "@/components/ui";
+import { Button, inputClassName } from "@/components/ui";
 import type { WebhookEndpointView } from "@/lib/alerts/alert-data";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -16,10 +16,9 @@ type WebhookEndpointEditorProps = {
   testAction?: (input: unknown) => Promise<unknown>;
 };
 
-const fieldClass =
-  "min-h-10 w-full rounded-[9px] border border-border-strong bg-bg-elev px-3 py-2 text-[13px] text-fg outline-none focus:border-accent";
+const fieldClass = `${inputClassName} min-h-10 w-full rounded-[9px] px-3 py-2 text-[13px]`;
 const labelClass =
-  "flex flex-col gap-1.5 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint";
+  "flex flex-col gap-1.5 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted";
 
 export function WebhookEndpointEditor({
   action,
@@ -68,7 +67,7 @@ export function WebhookEndpointEditor({
   }
 
   return (
-    <div className="mt-3 rounded-[10px] border border-border-strong bg-bg-sunken p-3">
+    <div className="mt-3 rounded-[10px] border border-border-strong bg-transparent p-3">
       <p className="m-0 text-[12px] leading-relaxed text-fg-muted">
         Events: alert.fired, alert.digest, and alert.daily_cap_reached. Every enabled endpoint in
         this project receives every webhook-channel alert. The HMAC secret is encrypted at rest,
@@ -91,7 +90,7 @@ export function WebhookEndpointEditor({
           ))}
         </ul>
       ) : (
-        <p className="my-2 font-mono text-[10.5px] text-yellow">No endpoint configured yet.</p>
+        <p className="my-2 font-mono text-[10.5px] text-yellow-text">No endpoint configured yet.</p>
       )}
       <div className="mt-3 grid gap-2.5">
         <label className={labelClass}>
@@ -121,12 +120,12 @@ export function WebhookEndpointEditor({
           value={hmacSecret}
         />
         {error ? (
-          <p className="m-0 text-[11.5px] text-red" role="alert">
+          <p className="m-0 text-[11.5px] text-red-text" role="alert">
             {error}
           </p>
         ) : null}
         {saved ? (
-          <p className="m-0 text-[11.5px] text-green" role="status">
+          <p className="m-0 text-[11.5px] text-green-text" role="status">
             {saved}
           </p>
         ) : null}

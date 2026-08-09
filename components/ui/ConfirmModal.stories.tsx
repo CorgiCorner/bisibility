@@ -27,7 +27,7 @@ export const DeleteKeyword: Story = {
 
 export const DeleteWorkspaceTypeToConfirm: Story = {
   args: {
-    kind: "deleteWorkspace",
+    kind: "deleteProject",
     onClose: () => undefined,
     onConfirm: () => undefined,
     open: true,

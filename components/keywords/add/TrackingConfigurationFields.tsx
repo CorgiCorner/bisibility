@@ -76,7 +76,7 @@ export function TrackingConfigurationFields({
           value={device}
         />
         {showSchedule && onScheduleChange ? (
-          <div className="flex flex-col gap-1.5 font-mono text-[10px] uppercase tracking-[0.4px] text-fg-faint">
+          <div className="flex flex-col gap-1.5 font-mono text-[10px] uppercase tracking-[0.4px] text-fg-muted">
             <span className={labelsHidden ? "sr-only" : undefined}>Schedule</span>
             <MenuSelect
               ariaLabel="Schedule"

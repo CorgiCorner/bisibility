@@ -14,6 +14,7 @@ import { runKeywordCheckWithFallback } from "../rank-check/fallback";
 import { RankCheckClosedBeforePersistenceError } from "../rank-check/persistence-errors";
 import { serpProviderChainOrderBy } from "../rank-check/provider-chain-order";
 import { persistFailedRankCheck } from "../rank-check/runner";
+import { trackedProjectDomain } from "../schemas/project";
 import { resolveEffectiveSerpDepth } from "../serp/markets";
 import {
   AUTOMATIC_EXECUTION_DISABLED_FAILURE,
@@ -215,7 +216,7 @@ export async function failRankCheckActivity(
     keywordPublicId: keyword.publicId,
     keywordText: keyword.text,
     previousPosition: keyword.rankChecks[0]?.position ?? null,
-    projectDomain: keyword.project.domain,
+    projectDomain: trackedProjectDomain(keyword.project.domain) ?? "",
     projectId: keyword.projectId,
     provider: input.providerId ?? "primary",
     requestedDepth: resolveEffectiveSerpDepth({

@@ -119,7 +119,7 @@ export const severityMeta = {
   },
   warning: {
     background: "color-mix(in srgb, var(--yellow) 14%, transparent)",
-    color: "var(--yellow)",
+    color: "var(--yellow-text)",
     label: "Warning",
   },
   info: {
@@ -132,12 +132,12 @@ export const severityMeta = {
 export const ruleStatusMeta = {
   active: {
     background: "color-mix(in srgb, var(--green) 12%, transparent)",
-    color: "var(--green)",
+    color: "var(--green-text)",
     label: "Active",
   },
   paused: {
     background: "var(--bg-sunken)",
-    color: "var(--fg-faint)",
+    color: "var(--fg-muted)",
     label: "Paused",
   },
   learning: {
@@ -147,7 +147,7 @@ export const ruleStatusMeta = {
   },
   setup: {
     background: "color-mix(in srgb, var(--yellow) 14%, transparent)",
-    color: "var(--yellow)",
+    color: "var(--yellow-text)",
     label: "Needs setup",
   },
 } satisfies Record<AlertRuleStatus, { background: string; color: string; label: string }>;

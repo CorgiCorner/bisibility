@@ -46,7 +46,7 @@ export function KeywordPendingDeleteButton({
     <span className="grid gap-2">
       <button
         aria-label={`Delete ${keywordLabel}`}
-        className="inline-flex flex-none items-center justify-center gap-[7px] rounded-[10px] border border-red px-4 py-2.5 text-[13px] font-semibold text-red outline-none hover:bg-bg-sunken focus-visible:bg-bg-sunken disabled:cursor-not-allowed disabled:opacity-60"
+        className="inline-flex flex-none items-center justify-center gap-[7px] rounded-[10px] border border-red px-4 py-2.5 text-[13px] font-semibold text-red-text outline-none hover:bg-bg-sunken focus-visible:bg-bg-sunken disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted"
         disabled={deleting}
         onClick={() => setConfirmOpen(true)}
         type="button"
@@ -61,7 +61,9 @@ export function KeywordPendingDeleteButton({
         onConfirm={() => void handleDelete()}
         open={confirmOpen}
       />
-      {actionError ? <span className="font-mono text-[11px] text-red">{actionError}</span> : null}
+      {actionError ? (
+        <span className="font-mono text-[11px] text-red-text">{actionError}</span>
+      ) : null}
     </span>
   );
 }

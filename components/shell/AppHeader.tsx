@@ -3,6 +3,7 @@ import { CommandPaletteTrigger } from "@/components/shell/CommandPalette";
 import { MobileNav } from "@/components/shell/MobileNav";
 import { NotificationBell } from "@/components/shell/NotificationBell";
 import type { ShellUser } from "@/components/shell/SidebarFooter";
+import { SidebarUserButton } from "@/components/shell/SidebarUserButton";
 import type { WorkspaceSummary } from "@/lib/queries/workspaces";
 import type { ReactNode } from "react";
 
@@ -40,12 +41,15 @@ export function AppHeader({
         />
         <AppHeaderTitle keywordCount={activeWorkspace?.keywordCount} />
       </div>
-      {/* Right cluster order: [spend meter] [search][bell]. */}
+      {/* Right cluster order: [spend meter] [search][bell][account]. */}
       <div className="flex flex-none items-center gap-6">
         {actions}
         <div className="flex items-center gap-2">
           <CommandPaletteTrigger />
           <NotificationBell projectId={activeProjectId} projectRef={projectRef} />
+          {user ? (
+            <SidebarUserButton collapsed showHostedLinks={showHostedLinks} user={user} />
+          ) : null}
         </div>
       </div>
     </header>

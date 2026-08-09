@@ -24,7 +24,7 @@ function ActorEventCell({ row }: Readonly<GridRenderCellParams<AuditEntry>>) {
         <span className="block truncate text-[12.5px] font-medium leading-[1.25] text-fg">
           {row.eventName}
         </span>
-        <span className="mt-0.5 block truncate font-mono text-[10px] leading-[1.2] text-fg-faint">
+        <span className="mt-0.5 block truncate font-mono text-[10px] leading-[1.2] text-fg-muted">
           {row.actor.email} / {row.source.channel.toUpperCase()}
         </span>
       </span>
@@ -65,7 +65,7 @@ function StatusCell({ status }: Readonly<{ status: AuditStatus }>) {
   return (
     <span className="flex w-full items-center justify-between gap-2">
       <StatusChip status={status} />
-      <CaretRight aria-hidden className="shrink-0 text-fg-faint" size={12} />
+      <CaretRight aria-hidden className="shrink-0 text-fg-muted" size={12} />
     </span>
   );
 }

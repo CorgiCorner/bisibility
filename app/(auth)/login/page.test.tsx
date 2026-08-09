@@ -34,9 +34,6 @@ vi.mock("@/components/auth/LoginForm", () => ({
     return null;
   },
 }));
-vi.mock("@/components/ui", () => ({
-  ThemeToggle: () => <span data-testid="theme-toggle" />,
-}));
 
 type LoginFormProps = {
   capacity: {
@@ -140,10 +137,11 @@ describe("login page runtime rendering", () => {
     expect(html).not.toContain("db-migrations-1");
   }, 15_000);
 
-  it("renders the shared theme toggle on the sign-in surface", async () => {
+  it("leaves the sign-in surface without a theme control", async () => {
     const { html } = await renderLoginPage({});
 
-    expect(html).toContain('data-testid="theme-toggle"');
+    expect(html).not.toContain("Switch to dark theme");
+    expect(html).not.toContain("Switch to light theme");
   });
 
   it("renders the current GitHub star count", async () => {

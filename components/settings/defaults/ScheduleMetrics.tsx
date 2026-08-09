@@ -67,9 +67,9 @@ export function ScheduleMetrics({
           {deltaCents != null ? <div>~ {deltaLabel(deltaCents)}/mo vs current</div> : null}
         </Metric>
       </div>
-      <div className="mt-4 flex items-start gap-2 border-t border-border-soft pt-3 text-[11.5px] leading-5 text-fg-faint">
+      <div className="mt-4 flex items-start gap-2 border-t border-border-soft pt-3 text-[11.5px] leading-5 text-fg-muted">
         <span className="flex h-5 shrink-0 items-center">
-          <Info aria-hidden className="text-accent" size={14} />
+          <Info aria-hidden className="text-accent-text" size={14} />
         </span>
         Daily and weekly use a stable per-keyword phase across their interval. Timezone anchors
         monthly and custom cron schedules only. Jitter adds 0 to {jitterMinutes} minutes of random

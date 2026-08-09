@@ -50,18 +50,18 @@ export function TargetRankingCell({ row }: Readonly<TargetRankingCellProps>) {
     <div className="flex w-full min-w-0 items-center gap-1.5 py-1 text-[11.5px] leading-tight">
       <div className="grid min-w-0 flex-1 gap-1">
         <div className="flex min-w-0 items-center gap-1.5">
-          <span className="w-[48px] shrink-0 font-mono text-[9.5px] uppercase text-fg-faint">
+          <span className="w-[48px] shrink-0 font-mono text-[9.5px] uppercase text-fg-muted">
             Target
           </span>
           {row.targetUrl ? <UrlPath value={row.targetUrl} /> : null}
         </div>
         <div className="flex min-w-0 items-center gap-1.5">
-          <span className="w-[48px] shrink-0 font-mono text-[9.5px] uppercase text-fg-faint">
+          <span className="w-[48px] shrink-0 font-mono text-[9.5px] uppercase text-fg-muted">
             Ranking
           </span>
           {row.rankingUrl ? (
             <a
-              className="min-w-0 truncate font-mono text-[11.5px] text-fg-muted hover:text-accent hover:underline"
+              className="min-w-0 truncate font-mono text-[11.5px] text-fg-muted hover:text-accent-text hover:underline"
               href={row.rankingUrl}
               onClick={(event) => event.stopPropagation()}
               rel="noreferrer noopener"
@@ -70,7 +70,7 @@ export function TargetRankingCell({ row }: Readonly<TargetRankingCellProps>) {
               {rankingLabel}
             </a>
           ) : (
-            <span className="font-mono text-[11px] text-fg-faint">{rankingLabel}</span>
+            <span className="font-mono text-[11px] text-fg-muted">{rankingLabel}</span>
           )}
         </div>
       </div>

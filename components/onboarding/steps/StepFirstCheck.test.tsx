@@ -239,6 +239,20 @@ describe("StepFirstCheck", () => {
     await waitFor(() => expect(push).toHaveBeenCalledWith(appPath("prj_1", "overview")));
   });
 
+  it("marks onboarding complete once before opening the dashboard", async () => {
+    const completeOnboardingAction = vi.fn(async () => undefined);
+    const { container } = renderReadyStep({ completeOnboardingAction });
+
+    fireEvent.submit(container.querySelector("form") as HTMLFormElement);
+
+    await waitFor(() => expect(completeOnboardingAction).toHaveBeenCalledTimes(1));
+    expect(completeOnboardingAction).toHaveBeenCalledWith({ projectId: "prj_1" });
+    expect(completeOnboardingAction.mock.invocationCallOrder[0]).toBeLessThan(
+      push.mock.invocationCallOrder[0] ?? 0,
+    );
+    expect(push).toHaveBeenCalledWith(appPath("prj_1", "overview"));
+  });
+
   it("allows manual preview while automatic checks are paused", () => {
     renderReadyStep({
       defaults: {

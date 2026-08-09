@@ -66,7 +66,7 @@ describe("BacklinksTable", () => {
     const source = screen.getByText("designweekly.co");
     const lostRow = source.closest("button");
     expect(lostRow).toHaveAttribute("data-status", "lost");
-    expect(lostRow).toHaveClass("opacity-55");
+    expect(lostRow).toHaveClass("text-fg-muted");
     expect(source).toHaveClass("line-through");
     expect(within(lostRow as HTMLElement).getByText("lost 12 Jul")).toBeInTheDocument();
   });
@@ -74,8 +74,8 @@ describe("BacklinksTable", () => {
   it("turns spam values amber at the 5 point threshold", () => {
     renderTable();
 
-    expect(screen.getByText("6.0")).toHaveClass("text-yellow-strong");
-    expect(screen.getByText("4.0")).not.toHaveClass("text-yellow-strong");
+    expect(screen.getByText("6.0")).toHaveClass("text-yellow-text");
+    expect(screen.getByText("4.0")).not.toHaveClass("text-yellow-text");
   });
 
   it.each([

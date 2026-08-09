@@ -196,7 +196,7 @@ describe("public API app surface routes", () => {
       pendingInvites: [{ email: "new@example.com", id: ids.invite, roleValue: "viewer" }],
     });
     mocks.providerList.listProviderCategories.mockResolvedValue([
-      { id: "serp", providers: [{ id: "serpapi", name: "SerpAPI" }], title: "SERP" },
+      { id: "serp", providers: [{ id: "serpapi", name: "SerpApi" }], title: "SERP" },
     ]);
     mocks.queries.listSavedViews.mockResolvedValue([
       { createdAt: "2026-01-01", id: ids.savedView, name: "All" },

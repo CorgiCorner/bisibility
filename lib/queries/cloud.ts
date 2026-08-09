@@ -9,6 +9,7 @@ import type {
   ProjectWriteMode,
 } from "@/lib/generated/prisma/client";
 import { markStaleImportJobs } from "@/lib/migration/stale-jobs";
+import { trackedProjectDomain } from "@/lib/schemas/project";
 import { requireReadableProject } from "./_auth";
 
 export type CloudTokenView = {
@@ -157,7 +158,7 @@ export async function getCloudImportView(projectId: string): Promise<CloudImport
       : null,
     importJob: importJob ? serializeJob(importJob) : idleCloudImportJob(),
     project: {
-      domain: project.domain,
+      domain: trackedProjectDomain(project.domain) ?? "",
       id: publicProjectId,
       name: project.name,
       publicId: publicProjectId,

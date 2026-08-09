@@ -15,7 +15,7 @@ import type {
 } from "@/lib/settings/options";
 import { DOCS_URL } from "@/lib/site/site";
 import {
-  ArrowRightIcon as ArrowRight,
+  CaretRightIcon as CaretRight,
   PencilSimpleIcon as PencilSimple,
 } from "@phosphor-icons/react";
 import Link from "next/link";
@@ -54,7 +54,7 @@ function StatCell({
         {label}
       </MonoText>
       {value == null ? (
-        <div className="mt-[5px] text-xs font-normal italic text-fg-faint">not supported</div>
+        <div className="mt-[5px] text-xs font-normal italic text-fg-muted">not supported</div>
       ) : (
         <div className="mt-[5px] text-[13.5px] font-semibold text-fg tabular-nums">
           {typeof value === "string" ? (
@@ -95,7 +95,7 @@ function ConnectionUsageBlock({
         ) : null}
         <span className="text-[13.5px] font-semibold text-fg">{connection.provider}</span>
         {connection.primary ? (
-          <span className="rounded-full bg-accent-soft px-[7px] py-[2px] font-mono text-[9px] font-bold uppercase tracking-[0.4px] text-accent-hover">
+          <span className="rounded-full bg-accent-soft px-[7px] py-[2px] font-mono text-[9px] font-bold uppercase tracking-[0.4px] text-accent-text">
             PRIMARY
           </span>
         ) : null}
@@ -155,7 +155,7 @@ export function ProviderUsage({
         action={
           editBudget?.canEdit ? (
             <button
-              className="flex items-center gap-[5px] rounded-[7px] border border-border-strong bg-transparent px-2.5 py-1 text-[11.5px] font-medium text-fg transition-colors hover:border-accent-hover hover:text-accent-hover"
+              className="flex items-center gap-[5px] rounded-[7px] border border-border-strong bg-transparent px-2.5 py-1 text-[11.5px] font-medium text-fg transition-colors hover:border-accent-hover hover:text-accent-text"
               onClick={() => setEditOpen(true)}
               type="button"
             >
@@ -202,10 +202,10 @@ export function ProviderUsage({
       {showCostCalculatorLink ? (
         <div className="mt-4 border-t border-bg-sunken pt-4">
           <Link
-            className="inline-flex items-center gap-1.5 text-[13px] font-medium text-accent outline-none transition-colors hover:text-accent-hover focus-visible:text-accent-hover"
+            className="inline-flex items-center gap-1.5 text-[13px] font-medium text-accent-text outline-none transition-colors hover:text-accent-text focus-visible:text-accent-text"
             href="/rank-tracking-cost-calculator"
           >
-            Estimate future cost <ArrowRight aria-hidden size={14} weight="bold" />
+            Estimate future cost <CaretRight aria-hidden size={14} weight="bold" />
           </Link>
         </div>
       ) : null}

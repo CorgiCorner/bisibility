@@ -37,7 +37,7 @@ export function CommandPaletteTrigger() {
     <Tooltip title="Search (⌘K)">
       <button
         aria-label="Search"
-        className="grid h-[38px] w-[38px] flex-none place-items-center rounded-[10px] border border-border-strong bg-bg-elev text-fg-muted outline-none transition-colors hover:border-accent focus-visible:border-accent"
+        className="grid h-8 w-8 flex-none place-items-center rounded-[9px] border border-border-strong bg-bg-elev text-fg-muted transition-colors hover:bg-bg-sunken hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid"
         onClick={openPalette}
         type="button"
       >
@@ -162,10 +162,10 @@ function CommandPalette({
         open
       >
         <div className="border-b border-border p-3">
-          <div className="flex min-h-[46px] items-center gap-[11px] rounded-[11px] border border-border-strong bg-bg-sunken px-3 transition-colors focus-within:border-accent">
+          <div className="flex min-h-[46px] items-center gap-[11px] rounded-[11px] border border-border-strong bg-transparent px-3 transition-colors focus-within:border-accent">
             <MagnifyingGlass
               aria-hidden
-              className="flex-none text-accent"
+              className="flex-none text-accent-text"
               size={18}
               weight="bold"
             />
@@ -177,7 +177,7 @@ function CommandPalette({
               ref={(node) => node?.focus()}
               value={query}
             />
-            <span className="hidden flex-none rounded-md border border-border bg-bg-elev px-[7px] py-0.5 font-mono text-[10.5px] uppercase text-fg-faint sm:inline-flex">
+            <span className="hidden flex-none rounded-md border border-border bg-bg-elev px-[7px] py-0.5 font-mono text-[10.5px] uppercase text-fg-muted sm:inline-flex">
               esc
             </span>
           </div>
@@ -185,7 +185,7 @@ function CommandPalette({
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-2">
           {groups.map((group) => (
             <div key={group.title}>
-              <div className="px-2.5 pb-1 pt-2 font-mono text-[9.5px] uppercase tracking-[0.6px] text-fg-faint">
+              <div className="px-2.5 pb-1 pt-2 font-mono text-[9.5px] uppercase tracking-[0.6px] text-fg-muted">
                 {group.title}
               </div>
               {group.items.map((item) => {
@@ -201,7 +201,7 @@ function CommandPalette({
                     <span className="min-w-0 flex-1 truncate text-[13.5px] font-medium">
                       {item.label}
                     </span>
-                    <span className="flex-none font-mono text-[10.5px] text-fg-faint">
+                    <span className="flex-none font-mono text-[10.5px] text-fg-muted">
                       {item.hint}
                     </span>
                   </button>
@@ -210,13 +210,13 @@ function CommandPalette({
             </div>
           ))}
           {hasResults ? null : (
-            <div className="flex flex-col items-center gap-[7px] px-4 py-[34px] text-fg-faint">
+            <div className="flex flex-col items-center gap-[7px] px-4 py-[34px] text-fg-muted">
               <MagnifyingGlass aria-hidden size={20} />
               <span className="text-[13px]">No matches</span>
             </div>
           )}
         </div>
-        <div className="flex items-center gap-3.5 border-t border-border px-4 py-[9px] font-mono text-[10.5px] text-fg-faint">
+        <div className="flex items-center gap-3.5 border-t border-border px-4 py-[9px] font-mono text-[10.5px] text-fg-muted">
           <span className="inline-flex items-center gap-1.5">
             <span className="rounded-[5px] bg-bg-sunken px-[5px] py-px">↵</span>open
           </span>

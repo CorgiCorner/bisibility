@@ -102,7 +102,7 @@ export function KeywordPendingEmptyState({
       <span
         className="grid h-[54px] w-[54px] place-items-center rounded-[14px] bg-bg-sunken"
         style={{
-          color: state === "failed" ? "var(--red)" : "var(--yellow-strong)",
+          color: state === "failed" ? "var(--red)" : "var(--yellow-text)",
         }}
       >
         <StatusIcon size={27} weight="fill" />
@@ -117,7 +117,7 @@ export function KeywordPendingEmptyState({
             className="flex flex-col gap-[7px] rounded-xl border border-border bg-bg p-3.5"
             key={title}
           >
-            <TeaserIcon className="text-fg-faint" size={18} />
+            <TeaserIcon className="text-fg-muted" size={18} />
             <span className="text-[12.5px] font-semibold text-fg">{title}</span>
             <span className="text-[11.5px] leading-[1.45] text-fg-muted">{teaserCopy}</span>
           </div>

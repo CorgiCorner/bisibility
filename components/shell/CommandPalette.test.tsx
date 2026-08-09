@@ -65,7 +65,7 @@ describe("CommandPalette", () => {
     );
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     const trigger = screen.getByRole("button", { name: "Search" });
-    expect(trigger).toHaveClass("h-[38px]", "w-[38px]", "place-items-center");
+    expect(trigger).toHaveClass("h-8", "w-8", "place-items-center");
     expect(trigger.parentElement).toHaveAttribute("data-tooltip", "Search (⌘K)");
     expect(screen.queryByText("Search…")).not.toBeInTheDocument();
     expect(screen.queryByText("⌘K")).not.toBeInTheDocument();

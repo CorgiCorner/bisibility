@@ -58,19 +58,19 @@ export default function AppErrorBoundary({ error, reset }: Readonly<AppErrorBoun
     <div className="py-8">
       <div className="mx-auto w-full max-w-[720px] overflow-hidden rounded-2xl border border-border bg-bg">
         <div className="flex h-[46px] items-center justify-between gap-3 border-b border-border bg-bg-elev px-[18px]">
-          <div className="flex min-w-0 items-center gap-[9px] font-mono text-[11px] text-fg-faint">
+          <div className="flex min-w-0 items-center gap-[9px] font-mono text-[11px] text-fg-muted">
             <span aria-hidden className="h-[7px] w-[7px] flex-none rounded-full bg-red" />
             <span className="truncate text-fg-muted">{viewPath}</span>
           </div>
           {/* The mock says "Sidebar still works", but this boundary sits above
               the workspace layout, so the sidebar is unmounted here. */}
-          <span className="hidden flex-none font-mono text-[10.5px] uppercase tracking-[1px] text-fg-faint sm:inline">
+          <span className="hidden flex-none font-mono text-[10.5px] uppercase tracking-[1px] text-fg-muted sm:inline">
             App still running
           </span>
         </div>
 
         <div className="flex flex-col items-center px-10 pb-10 pt-11 text-center">
-          <span className="grid h-[52px] w-[52px] place-items-center rounded-2xl bg-[color-mix(in_srgb,var(--red)_10%,transparent)] text-red">
+          <span className="grid h-[52px] w-[52px] place-items-center rounded-2xl bg-[color-mix(in_srgb,var(--red)_10%,transparent)] text-red-text">
             <WarningCircle aria-hidden size={26} weight="bold" />
           </span>
           <MonoText

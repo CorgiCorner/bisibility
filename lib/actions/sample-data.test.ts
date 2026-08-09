@@ -177,6 +177,9 @@ describe("sample-data actions", () => {
     expect(mocks.tx.project.create.mock.calls[0][0].data.defaults.create).toMatchObject({
       frequency: "manual",
     });
+    expect(mocks.tx.project.create.mock.calls[0][0].data.onboardingCompletedAt).toBeInstanceOf(
+      Date,
+    );
     for (const call of mocks.tx.keyword.create.mock.calls) {
       expect(call[0].data.schedule.create).toMatchObject({
         frequency: "manual",

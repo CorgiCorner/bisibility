@@ -79,12 +79,12 @@ export async function deleteWorkspace(input: unknown) {
   const before = await readProjectDeleteSnapshot(project.id);
 
   if (!before) {
-    throw new Error("Workspace not found.");
+    throw new Error("Project not found.");
   }
 
   const expected = before.domain || before.publicId;
   if (data.confirmText !== expected) {
-    throw new Error("Confirmation text does not match this workspace.");
+    throw new Error("Confirmation text does not match this project.");
   }
 
   await writeAudit({

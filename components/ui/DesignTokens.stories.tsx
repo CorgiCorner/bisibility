@@ -6,7 +6,7 @@ function DesignTokens() {
     <main className="min-h-dvh bg-bg p-6 text-fg">
       <div className="mx-auto max-w-5xl space-y-8">
         <header className="space-y-2">
-          <p className="font-mono text-[11px] uppercase tracking-[0.5px] text-fg-faint">
+          <p className="font-mono text-[11px] uppercase tracking-[0.5px] text-fg-muted">
             Design tokens
           </p>
           <h1 className="text-[21px] font-semibold">Foundation palette</h1>
@@ -26,7 +26,7 @@ function DesignTokens() {
                   />
                   <div className="flex items-center justify-between gap-3 p-3">
                     <span className="font-mono text-[11px] text-fg-muted">--{name}</span>
-                    <span className="font-mono text-[11px] text-fg-faint">{tokens[name]}</span>
+                    <span className="font-mono text-[11px] text-fg-muted">{tokens[name]}</span>
                   </div>
                 </article>
               ))}

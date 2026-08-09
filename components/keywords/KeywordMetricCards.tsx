@@ -50,11 +50,16 @@ function formatVolume(volume: number) {
 
 function positionDelta(keyword: KeywordRow) {
   if (keyword.positionBaseline === null) {
-    return { color: "var(--accent)", icon: null, label: "New", title: "First observation" };
+    return { color: "var(--accent-text)", icon: null, label: "New", title: "First observation" };
   }
   const change = keyword.positionBaseline - keyword.position;
   if (change > 0) {
-    return { color: "var(--green)", icon: ArrowUp, label: String(change), title: `Up ${change}` };
+    return {
+      color: "var(--green-text)",
+      icon: ArrowUp,
+      label: String(change),
+      title: `Up ${change}`,
+    };
   }
   if (change < 0) {
     return {
@@ -64,7 +69,7 @@ function positionDelta(keyword: KeywordRow) {
       title: `Down ${Math.abs(change)}`,
     };
   }
-  return { color: "var(--fg-faint)", icon: Circle, label: "0", title: "No change" };
+  return { color: "var(--fg-muted)", icon: Circle, label: "0", title: "No change" };
 }
 
 function difficultyColor(score: number) {
@@ -95,7 +100,7 @@ export function KeywordMetricCards({ keyword }: Readonly<KeywordMetricCardsProps
   const hasVolume = keyword.volumeKnown !== false;
   const notFound = keyword.hasRankData && isPositionOutsideTrackedDepth(keyword.position);
   const trackedPosition = hasTrackedPosition(keyword);
-  const kdColor = hasDifficulty ? difficultyColor(keyword.difficulty) : "var(--fg-faint)";
+  const kdColor = hasDifficulty ? difficultyColor(keyword.difficulty) : "var(--fg-muted)";
   const kdLabel = hasDifficulty ? difficultyLabel(keyword.difficulty) : null;
 
   return (
@@ -129,7 +134,7 @@ export function KeywordMetricCards({ keyword }: Readonly<KeywordMetricCardsProps
             ) : (
               <span
                 aria-label={delta.title}
-                className="rounded-full bg-accent-soft px-2 py-0.5 font-mono text-[10px] font-semibold text-accent"
+                className="rounded-full bg-accent-soft px-2 py-0.5 font-mono text-[10px] font-semibold text-accent-text"
               >
                 {delta.label}
               </span>
@@ -147,7 +152,7 @@ export function KeywordMetricCards({ keyword }: Readonly<KeywordMetricCardsProps
           {hasVolume ? (
             <>
               {formatVolume(keyword.volume)}
-              <span className="text-xs font-medium text-fg-faint">/mo</span>
+              <span className="text-xs font-medium text-fg-muted">/mo</span>
             </>
           ) : (
             <span className="text-[15px] font-semibold text-fg-muted">No data</span>
@@ -192,7 +197,7 @@ export function KeywordMetricCards({ keyword }: Readonly<KeywordMetricCardsProps
               <span className="text-2xl font-bold tracking-[-0.6px]" style={{ color: kdColor }}>
                 {keyword.difficulty}
               </span>
-              <span className="font-mono text-xs text-fg-faint">/100</span>
+              <span className="font-mono text-xs text-fg-muted">/100</span>
             </>
           ) : (
             <span className="text-[15px] font-semibold text-fg-muted">No data</span>
@@ -202,7 +207,7 @@ export function KeywordMetricCards({ keyword }: Readonly<KeywordMetricCardsProps
       <MetricCard
         footer={
           keyword.rankingPages > 1 ? (
-            <div className="inline-flex items-center gap-1 font-mono text-[9.5px] font-semibold text-yellow">
+            <div className="inline-flex items-center gap-1 font-mono text-[9.5px] font-semibold text-yellow-text">
               <Warning size={12} weight="fill" />
               Cannibalization
             </div>

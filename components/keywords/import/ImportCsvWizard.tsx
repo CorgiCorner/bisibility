@@ -79,7 +79,9 @@ function WizardBody({
       {step === 3 ? <MapStep parsedCount={parsedCount} parsedRows={parsedRows} /> : null}
       {step === 4 ? <ReviewStep parsedCount={parsedCount} parsedRows={parsedRows} /> : null}
       {step === 5 && result ? <DoneStep result={result} /> : null}
-      {actionError ? <p className="mt-3 font-mono text-[11.5px] text-red">{actionError}</p> : null}
+      {actionError ? (
+        <p className="mt-3 font-mono text-[11.5px] text-red-text">{actionError}</p>
+      ) : null}
     </>
   );
 }

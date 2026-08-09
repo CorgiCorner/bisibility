@@ -9,12 +9,12 @@ idempotency, and realtime notification fan-out. The Compose service name
 `redis` and the `REDIS_URL` variable intentionally keep the protocol name for
 compatibility. Rank checks use your own connected SERP provider credentials.
 
-Read the [FAQ](https://bisibility.com/faq) for a concise comparison of Cloud
+Read the [FAQ](https://bisibility.com/faq) for a concise comparison of the hosted
 beta and self-hosting, provider coverage, costs, and data boundaries.
 
-Cloud users do not own or operate the managed database. The ownership promise
-on Cloud is exit rights: [full-history export](/api/rank-history) and the
-[migration path](/guides/migration) to a self-hosted instance keep workspace
+Hosted-service users do not own or operate the managed database. The ownership promise
+on the hosted service is exit rights: [full-history export](/api/rank-history) and the
+[migration path](/guides/migration) to a self-hosted instance keep project
 data portable.
 
 **Read the deployment overview:** The options below describe the supported
@@ -860,7 +860,7 @@ hand.
 | `DATAFORSEO_QUEUE_PRIORITY` | `high` (default for an enabled queued path) or `normal`. High uses provider priority `2`. Invalid values fail the queued gate closed. |
 | `DATAFORSEO_QUEUE_POLL_INTERVAL_SECONDS`, `DATAFORSEO_QUEUE_MAX_AGE_SECONDS` | Optional bounded queue polling and timeout overrides. High defaults to 15-second polling and a 15-minute maximum age. Normal defaults to 60-second polling and a 60-minute maximum age. Invalid or out-of-range values fail the queued gate closed. |
 | `SCHEDULED_MAINTENANCE_ENABLED` | Explicit worker switch for audit/session purges, rank-check raw payload and queued-ledger retention, stale checks/import jobs, migration-hold release, and the weekly digest. Set it to `1` to enable these schedules or `0` to disable them. This switch does not control alert delivery. |
-| `RANK_CHECK_RAW_RETENTION_DAYS` | Retain `rank_checks.raw` for 1-3650 days, or set `unlimited`. The self-host default is `unlimited`; Cloud defaults to 90 days. This never changes `organicRanks` or deletes rank history rows. |
+| `RANK_CHECK_RAW_RETENTION_DAYS` | Retain `rank_checks.raw` for 1-3650 days, or set `unlimited`. The self-host default is `unlimited`; the hosted service defaults to 90 days. This never changes `organicRanks` or deletes rank history rows. |
 | `RANK_CHECK_RAW_PROGRESS_FENCE_RETENTION_DAYS` | Keep completed raw-purge retry fences for 2-3650 days. Defaults to 7 days. Set it longer than the Temporal namespace's closed-workflow retention so a reset or late retry cannot reopen completed work. |
 | `ALERT_DIGEST_FLUSH_ENABLED`, `ALERT_DIGEST_FLUSH_INTERVAL` | Alert digest delivery switch and interval. Digest flushing is enabled by default and is independent of scheduled maintenance. |
 | `AUDIT_PURGE_CRON`, `RANK_CHECK_RAW_PURGE_CRON`, `QUEUED_RANK_CHECK_RETENTION_CRON`, `SESSION_PURGE_CRON`, `WEEKLY_DIGEST_CRON` | Optional cron overrides for maintenance schedules controlled by `SCHEDULED_MAINTENANCE_ENABLED`. |
@@ -869,8 +869,8 @@ hand.
 | `BISIBILITY_API_KEY_RATE_LIMIT_PER_MINUTE` | Per-key API limit. Defaults to `600`. |
 | `BISIBILITY_PAT_RATE_LIMIT_PER_MINUTE` | Per-personal-token API limit. Defaults to `120`. |
 | `BISIBILITY_API_ANON_RATE_LIMIT_PER_MINUTE` | Anonymous discovery limit. Defaults to `60`. |
-| `BISIBILITY_MAX_KEYWORDS_PER_PROJECT` | Optional per-project keyword cap. Unset or `0` means unlimited for self-hosted deployments. Hosted Cloud beta uses `1000`. |
-| `BISIBILITY_MAX_PROJECTS_PER_USER` | Optional cap on projects one user may own through the app or API. Unset or `0` means unlimited for self-hosted deployments. Hosted Cloud beta uses `3`. |
+| `BISIBILITY_MAX_KEYWORDS_PER_PROJECT` | Optional per-project keyword cap. Unset or `0` means unlimited for self-hosted deployments. The hosted beta uses `1000`. |
+| `BISIBILITY_MAX_PROJECTS_PER_USER` | Optional cap on projects one user may own through the app or API. Unset or `0` means unlimited for self-hosted deployments. The hosted beta uses `3`. |
 | `BISIBILITY_CLIENT_IP_HEADER` | Header your proxy sets with the real client address. Unset means no header is trusted and the anonymous API limit uses one shared bucket. See [Client IP behind a proxy](#client-ip-behind-a-proxy). |
 | `BISIBILITY_CLIENT_IP_XFF_DEPTH` | Only for `x-forwarded-for`: how many trailing entries your own proxies append. Defaults to `1`. |
 | `BISIBILITY_PROVIDER_RATE_LIMIT_*` | Per-provider outbound rate limit overrides. See `.env.example` for provider-specific names. |
@@ -902,7 +902,7 @@ The command validates the key and value and prints the previous and current
 values for the operator record. App reads refresh within about 60 seconds.
 
 > **Upgrade note:** The former `RANK_CHECK_MONTHLY_COST_CAP_CENTS` variable has
-> been removed. The monthly provider budget is now a per-workspace setting, and
+> been removed. The monthly provider budget is now a per-project setting, and
 > the old variable is ignored after upgrade. Re-set your budget in
 > **Settings > Provider usage** after upgrading. See
 > [Budget cap](/integrations#budget-cap).
@@ -1123,7 +1123,7 @@ removes expired verification rows; the retired HTTP-only
 `verifications=false` option had no repository caller and is not reproduced by
 the worker schedule.
 
-Rank checks are bounded by the workspace's monthly provider budget, set in
+Rank checks are bounded by the project's monthly provider budget, set in
 **Settings > Provider usage**. See [Budget cap](/integrations#budget-cap).
 
 ### Database growth
@@ -1132,7 +1132,7 @@ Maintenance keeps every `rank_checks` row and its `organicRanks` history, but it
 can null the larger `raw` provider response after a configurable window. Set
 `RANK_CHECK_RAW_RETENTION_DAYS` to 1-3650 days or `unlimited`. Self-hosted
 deployments default to `unlimited`, so upgrading does not remove existing raw
-payloads unless you opt in. Cloud defaults to 90 days.
+payloads unless you opt in. The hosted service defaults to 90 days.
 
 The worker runs this purge daily at 03:29 UTC; override it with
 `RANK_CHECK_RAW_PURGE_CRON`. Each run updates at most 1,000 eligible rows per

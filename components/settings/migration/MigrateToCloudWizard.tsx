@@ -1,6 +1,6 @@
 "use client";
 
-import { Sheet } from "@/components/ui";
+import { Button, Sheet } from "@/components/ui";
 import { ArrowLeftIcon as ArrowLeft, ArrowRightIcon as ArrowRight } from "@phosphor-icons/react";
 import { CheckStep } from "./MigrateToCloudCheck";
 import { DoneStep } from "./MigrateToCloudHandoff";
@@ -59,7 +59,7 @@ export function MigrateToCloudWizard({
     ? wizard.form.watch("targetOrigin")?.trim() || undefined
     : undefined;
   const title = "Transfer project";
-  const targetLabel = direction === "to-cloud" ? "bisibility Cloud" : "a self-hosted instance";
+  const targetLabel = direction === "to-cloud" ? "hosted instance" : "a self-hosted instance";
   const description = `Move ${domain} to another bisibility instance (${targetLabel} by default). The source project stays read-only while export and import finish.`;
   let continueLabel = "Continue";
   if (wizard.step === 3) continueLabel = "Done";
@@ -75,25 +75,34 @@ export function MigrateToCloudWizard({
           ) : null}
           <div className="flex items-center gap-2.5">
             {wizard.step > 1 ? (
-              <button
-                className="inline-flex min-h-11 items-center gap-1.5 rounded-[9px] border border-border-strong bg-bg-elev px-4 text-[13px] font-semibold text-fg-muted hover:border-accent hover:text-accent"
+              <Button
                 disabled={wizard.holdBusy}
                 onClick={wizard.handleBack}
+                size="lg"
+                startIcon={<ArrowLeft aria-hidden size={15} weight="bold" />}
+                sx={{
+                  color: "var(--fg-muted)",
+                  "&:hover": { borderColor: "var(--accent)", color: "var(--accent-text)" },
+                }}
                 type="button"
+                variant="secondary"
               >
-                <ArrowLeft aria-hidden size={15} weight="bold" />
                 Back
-              </button>
+              </Button>
             ) : null}
-            <button
-              className="inline-flex min-h-11 flex-1 items-center justify-center gap-[7px] rounded-[9px] bg-accent px-4 text-[13.5px] font-semibold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-55"
+            <Button
               disabled={wizard.continueDisabled}
+              endIcon={
+                wizard.step === 3 ? null : <ArrowRight aria-hidden size={15} weight="bold" />
+              }
               onClick={wizard.handleNext}
+              size="lg"
+              sx={{ flex: 1 }}
               type="button"
+              variant="primary"
             >
               {continueLabel}
-              {wizard.step === 3 ? null : <ArrowRight aria-hidden size={15} weight="bold" />}
-            </button>
+            </Button>
           </div>
         </div>
       }
@@ -164,7 +173,7 @@ export function MigrateToCloudWizard({
         ) : null}
       </div>
       {wizard.gateMessage ? (
-        <p className="m-0 mt-3 text-[12px] text-red">{wizard.gateMessage}</p>
+        <p className="m-0 mt-3 text-[12px] text-red-text">{wizard.gateMessage}</p>
       ) : null}
       <EnableReadOnlyConfirmModal
         busy={wizard.holdBusy}

@@ -28,7 +28,7 @@ export function NewRuleDeliveryFields({
 }: Readonly<NewRuleDeliveryFieldsProps>) {
   return (
     <section>
-      <div className="mb-[9px] font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint">
+      <div className="mb-[9px] font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
         Delivery
       </div>
       <DeliveryChannelsField register={register} setValue={setValue} watch={watch} />

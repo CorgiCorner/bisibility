@@ -299,7 +299,7 @@ describe("runCheck", () => {
     [10, 1],
     [100, 10],
   ] as const)(
-    "estimates SerpAPI top-%i cost when neither provider nor connection reports a cost",
+    "estimates SerpApi top-%i cost when neither provider nor connection reports a cost",
     async (depth, expectedCostCents) => {
       const serp = provider(
         vi.fn().mockResolvedValue({

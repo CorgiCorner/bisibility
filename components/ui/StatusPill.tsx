@@ -17,7 +17,7 @@ const statusMeta = {
   needs_reauth: { label: "Reconnect required", color: "var(--red)", healthy: false },
   ready: { label: "Ready", color: "var(--blue)", healthy: false },
   planned: { label: "Planned", color: "var(--yellow)", healthy: false },
-  optional: { label: "Optional", color: "var(--fg-faint)", healthy: false },
+  optional: { label: "Optional", color: "var(--fg-muted)", healthy: false },
 } satisfies Record<StatusKind, { label: string; color: string; healthy: boolean }>;
 
 const chipVariants = cva(

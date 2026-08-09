@@ -41,7 +41,7 @@ export function SetupRecoveryAction() {
         </Button>
       </form>
       {error ? (
-        <p aria-live="polite" className="m-0 text-[12.5px] leading-[1.45] text-red">
+        <p aria-live="polite" className="m-0 text-[12.5px] leading-[1.45] text-red-text">
           {error}
         </p>
       ) : null}

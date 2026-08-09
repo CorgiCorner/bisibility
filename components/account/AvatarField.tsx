@@ -99,7 +99,7 @@ export function AvatarField({ email, image, name }: Readonly<AvatarFieldProps>) 
             src={image}
           />
         ) : (
-          <span className="grid h-[54px] w-[54px] flex-none place-items-center rounded-[14px] bg-accent font-mono text-lg font-semibold text-white">
+          <span className="grid h-[54px] w-[54px] flex-none place-items-center rounded-[14px] bg-accent-solid font-mono text-lg font-semibold text-primary-contrast">
             {avatarInitials(name, email)}
           </span>
         )}
@@ -132,7 +132,7 @@ export function AvatarField({ email, image, name }: Readonly<AvatarFieldProps>) 
               {...register("image")}
             />
             {errors.image ? (
-              <span className={cn(feedbackClass, "text-red")}>{errors.image.message}</span>
+              <span className={cn(feedbackClass, "text-red-text")}>{errors.image.message}</span>
             ) : null}
           </label>
           <div className="flex items-center gap-2">

@@ -97,7 +97,7 @@ export function ProfileSection({
           {"Display name "}
           <input className={fieldInputClass} {...register("name")} />
           {errors.name ? (
-            <span className={cn(feedbackClass, "text-red")}>{errors.name.message}</span>
+            <span className={cn(feedbackClass, "text-red-text")}>{errors.name.message}</span>
           ) : null}
         </label>
         <div className={fieldLabelClass}>
@@ -106,7 +106,7 @@ export function ProfileSection({
             <span
               className={cn(
                 "inline-flex items-center gap-1 rounded-full px-[7px] py-px text-[9px] font-semibold tracking-[0.3px]",
-                emailVerified ? "bg-green/10 text-green" : "bg-yellow/15 text-yellow",
+                emailVerified ? "bg-green/10 text-green-text" : "bg-yellow/15 text-yellow-text",
               )}
             >
               <CheckCircle size={11} weight="fill" />
@@ -117,7 +117,7 @@ export function ProfileSection({
         </div>
         <div className={cn(fieldLabelClass, "sm:col-span-2 sm:max-w-[50%]")}>
           {"User ID "}
-          <span className="flex min-h-10 items-center gap-2 rounded-lg border border-border-strong bg-bg-sunken px-3 normal-case tracking-normal text-fg">
+          <span className="flex min-h-10 items-center gap-2 rounded-lg border border-border-strong bg-transparent px-3 normal-case tracking-normal text-fg">
             <MonoText
               className="min-w-0 flex-1 truncate text-fg"
               size="lg"

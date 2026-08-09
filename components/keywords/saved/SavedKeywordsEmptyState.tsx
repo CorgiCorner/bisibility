@@ -17,7 +17,7 @@ const headers = [
 export function SavedKeywordsEmptyState({ projectRef }: Readonly<{ projectRef: string }>) {
   return (
     <Card className="overflow-hidden p-0" size="md">
-      <div className="grid grid-cols-[minmax(0,1.4fr)_90px_60px_70px_80px] items-center gap-2 border-b border-border px-[18px] py-2.5 opacity-55">
+      <div className="grid grid-cols-[minmax(0,1.4fr)_90px_60px_70px_80px] items-center gap-2 border-b border-border px-[18px] py-2.5">
         {headers.map((header) => (
           <span
             className={`font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-fg-muted ${header.className}`}
@@ -28,7 +28,7 @@ export function SavedKeywordsEmptyState({ projectRef }: Readonly<{ projectRef: s
         ))}
       </div>
       <div className="flex flex-col items-center px-8 pb-14 pt-[52px] text-center">
-        <span className="grid h-[54px] w-[54px] place-items-center rounded-[14px] bg-accent-soft text-accent">
+        <span className="grid h-[54px] w-[54px] place-items-center rounded-[14px] bg-accent-soft text-accent-text">
           <BookmarkSimple size={26} weight="fill" />
         </span>
         <h2 className="mb-0 mt-[18px] text-[18px] font-semibold tracking-[-0.4px] text-fg">
@@ -47,7 +47,7 @@ export function SavedKeywordsEmptyState({ projectRef }: Readonly<{ projectRef: s
         >
           Find keywords in Research
         </Button>
-        <p className="mb-0 mt-4 text-[12.5px] text-fg-faint">
+        <p className="mb-0 mt-4 text-[12.5px] text-fg-muted">
           Tracked keywords cost provider budget every month. Save first, track when you are ready.
         </p>
       </div>

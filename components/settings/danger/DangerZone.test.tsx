@@ -38,7 +38,7 @@ describe("DangerZone", () => {
     fireEvent.change(screen.getByLabelText(/type example\.com to confirm/i), {
       target: { value: "example.com" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Delete workspace" }));
+    fireEvent.click(screen.getByRole("button", { name: "Delete project" }));
   }
 
   it.each(["viewer", "auditor", "member", "admin", "owner"] satisfies Role[])(
@@ -63,7 +63,7 @@ describe("DangerZone", () => {
 
   it("shows the server delete error instead of a fabricated queue failure", async () => {
     const deleteWorkspace = vi.fn(async () => {
-      throw new Error("Confirmation text does not match this workspace.");
+      throw new Error("Confirmation text does not match this project.");
     });
     render(
       <DangerZone
@@ -81,17 +81,17 @@ describe("DangerZone", () => {
     fireEvent.change(screen.getByLabelText(/type example\.com to confirm/i), {
       target: { value: "example.com" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Delete workspace" }));
+    fireEvent.click(screen.getByRole("button", { name: "Delete project" }));
 
     await waitFor(() =>
-      expect(screen.getByText("Confirmation text does not match this workspace.")).toBeVisible(),
+      expect(screen.getByText("Confirmation text does not match this project.")).toBeVisible(),
     );
     expect(
       screen.queryByText(/resource_busy|rank-check queue|checks queued/i),
     ).not.toBeInTheDocument();
   });
 
-  it("opens a remaining workspace after deletion", async () => {
+  it("opens a remaining project after deletion", async () => {
     await deleteProject(async () => ({
       hasRemainingWorkspace: true,
       id: "prj_1",
@@ -102,7 +102,7 @@ describe("DangerZone", () => {
     expect(mocks.refresh).toHaveBeenCalledOnce();
   });
 
-  it("opens onboarding after deleting the last workspace", async () => {
+  it("opens onboarding after deleting the last project", async () => {
     await deleteProject(async () => ({
       hasRemainingWorkspace: false,
       id: "prj_1",
@@ -111,5 +111,22 @@ describe("DangerZone", () => {
 
     await waitFor(() => expect(mocks.push).toHaveBeenCalledWith("/onboarding"));
     expect(mocks.refresh).toHaveBeenCalledOnce();
+  });
+
+  it("describes the hosted migration destination without a product name", () => {
+    render(
+      <DangerZone
+        canDeleteProject={false}
+        canManageMigration
+        direction="to-cloud"
+        showInstanceMigration
+      />,
+    );
+
+    expect(
+      screen.getByText(
+        /Move this project to another bisibility instance - hosted or self-hosted\./,
+      ),
+    ).toBeInTheDocument();
   });
 });

@@ -70,7 +70,7 @@ export function ResearchFiltersDrawer({
       title={
         <span className="inline-flex items-center gap-2">
           Filters
-          <span className="grid h-[19px] min-w-[19px] place-items-center rounded-full bg-accent-soft px-1.5 font-mono text-[10.5px] font-semibold text-accent">
+          <span className="grid h-[19px] min-w-[19px] place-items-center rounded-full bg-accent-soft px-1.5 font-mono text-[10.5px] font-semibold text-accent-text">
             {activeCount}
           </span>
         </span>
@@ -93,7 +93,7 @@ export function ResearchFiltersDrawer({
       <FilterSection icon={ChartBar} title="Metrics">
         <div className="mb-2 mt-3 flex items-center justify-between text-[12px] text-fg-muted">
           <span>Search volume / mo, minimum</span>
-          <span className="font-mono font-semibold text-accent">
+          <span className="font-mono font-semibold text-accent-text">
             {filters.minVolume.toLocaleString("en-US")}
           </span>
         </div>

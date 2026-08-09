@@ -34,7 +34,7 @@ export function ConnectedAccounts({ accounts }: Readonly<ConnectedAccountsProps>
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block text-[13.5px] font-semibold text-fg">{label}</span>
-                <span className="block truncate text-[11.5px] text-fg-faint">{detail}</span>
+                <span className="block truncate text-[11.5px] text-fg-muted">{detail}</span>
               </span>
               <ConnectAccountButton
                 configured={ENABLED_SOCIAL_PROVIDERS[provider]}

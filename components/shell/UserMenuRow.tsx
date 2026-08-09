@@ -33,8 +33,8 @@ export function UserMenuRow({ item, disabled, onClose, onSelect }: Readonly<User
     <>
       <Icon aria-hidden className="text-fg-muted" size={16} />
       <span className="flex-1 truncate">{item.label}</span>
-      {item.hint ? <span className="font-mono text-[11px] text-fg-faint">{item.hint}</span> : null}
-      {item.external ? <ExternalIcon aria-hidden className="text-fg-faint" size={13} /> : null}
+      {item.hint ? <span className="font-mono text-[11px] text-fg-muted">{item.hint}</span> : null}
+      {item.external ? <ExternalIcon aria-hidden className="text-fg-muted" size={13} /> : null}
     </>
   );
 

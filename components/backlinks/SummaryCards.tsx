@@ -23,7 +23,7 @@ function DeltaBadge({ value }: Readonly<{ value: number }>) {
   return (
     <span
       className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-mono text-[10.5px] font-semibold ${
-        positive ? "bg-green/10 text-green" : "bg-red/10 text-red"
+        positive ? "bg-green/10 text-green-text" : "bg-red/10 text-red-text"
       }`}
     >
       <ArrowUpRight aria-hidden className={positive ? "" : "rotate-90"} size={10} weight="bold" />
@@ -109,7 +109,7 @@ function NewLostCard({ history }: Readonly<{ history: BacklinksHistoryMonth[] }>
         </span>
       </div>
       <MonthlyBars history={history} />
-      <div className="grid grid-cols-12 text-center font-mono text-[9px] text-fg-faint">
+      <div className="grid grid-cols-12 text-center font-mono text-[9px] text-fg-muted">
         {history.map((month) => (
           <span key={month.month}>
             {new Date(`${month.month}-01T00:00:00Z`).toLocaleDateString("en", {
@@ -120,8 +120,8 @@ function NewLostCard({ history }: Readonly<{ history: BacklinksHistoryMonth[] }>
         ))}
       </div>
       <p className="m-0 border-t border-border pt-2 text-[12px] text-fg-muted">
-        Net <strong className="font-mono text-green">{signedNumber(footer.net)}</strong> links in 12
-        months - biggest loss: {footer.biggestLoss} in {footer.biggestLossMonth}
+        Net <strong className="font-mono text-green-text">{signedNumber(footer.net)}</strong> links
+        in 12 months - biggest loss: {footer.biggestLoss} in {footer.biggestLossMonth}
       </p>
     </section>
   );
@@ -155,7 +155,7 @@ function ProfileHealth({ summary }: Readonly<{ summary: BacklinksSummary }>) {
           </strong>
         </div>
       ))}
-      <p className="mb-0 mt-auto pt-2 text-[12px] leading-5 text-fg-faint">
+      <p className="mb-0 mt-auto pt-2 text-[12px] leading-5 text-fg-muted">
         Spam and rank come with the summary call - no extra cost.
       </p>
     </section>

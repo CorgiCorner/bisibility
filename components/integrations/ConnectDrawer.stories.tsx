@@ -83,7 +83,7 @@ const enteringGa4Property = {
   drawer: {
     ...analyticsProviders[1].drawer,
     googleOAuth: {
-      error: "We couldn't load GA4 properties from this Google account.",
+      error: "We couldn't load Google Analytics 4 properties from this Google account.",
       properties: [],
       provider: "ga4" as const,
     },

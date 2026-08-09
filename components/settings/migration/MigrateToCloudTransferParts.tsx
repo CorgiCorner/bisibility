@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 
 export function StepLabel({ index, title }: Readonly<{ index: number; title: string }>) {
   return (
-    <div className="mt-5 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint">
+    <div className="mt-5 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
       Step {index} · {title}
     </div>
   );
@@ -48,9 +48,9 @@ export function InfoBox({
 }: Readonly<{ children: ReactNode; icon?: "info" | "terminal" }>) {
   const Icon = icon === "terminal" ? TerminalWindow : Info;
   return (
-    <div className="mt-4 flex items-start gap-[9px] rounded-[11px] border border-dashed border-border-strong bg-bg-sunken px-3.5 py-3 text-xs leading-5 text-fg-muted">
+    <div className="mt-4 flex items-start gap-[9px] rounded-[11px] border border-dashed border-border-strong bg-transparent px-3.5 py-3 text-xs leading-5 text-fg-muted">
       <span className="flex h-5 shrink-0 items-center">
-        <Icon aria-hidden className="text-accent" size={15} />
+        <Icon aria-hidden className="text-accent-text" size={15} />
       </span>
       <span>{children}</span>
     </div>

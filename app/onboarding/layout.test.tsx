@@ -10,7 +10,10 @@ vi.mock("@/components/onboarding/OnboardingLogoutButton", () => ({
   OnboardingLogoutButton: () => <span data-testid="logout-button">Log out</span>,
 }));
 vi.mock("@/components/ui", () => ({
-  ThemeToggle: () => <span data-testid="theme-toggle" />,
+  BrandLockup: () => <span data-testid="brand-lockup">bisibility</span>,
+  ThemeSegments: ({ size }: { size?: "sm" | "md" }) => (
+    <span data-size={size} data-testid="theme-segments" />
+  ),
 }));
 vi.mock("@/components/shell/types", () => ({
   shellUserEmail: (user: { email: string }) => user.email,
@@ -38,12 +41,14 @@ describe("onboarding setup-first gate", () => {
     expect(mocks.firstRunGate).toHaveBeenCalledOnce();
   });
 
-  it("keeps the theme toggle ahead of the signed-in identity and logout pair", async () => {
+  it("places the theme switch in a content-column footer after the signed-in header", async () => {
     const result = await OnboardingLayout({ children: <div>Onboarding content</div> });
     const markup = renderToStaticMarkup(result);
 
+    expect(markup).toContain("w-full max-w-[940px] flex-1 flex-col");
+    expect(markup).toMatch(/admin@example\.com[\s\S]*Not you\?[\s\S]*data-testid="logout-button"/);
     expect(markup).toMatch(
-      /data-testid="theme-toggle"[\s\S]*admin@example\.com[\s\S]*Not you\?[\s\S]*data-testid="logout-button"/,
+      /<footer[^>]*>[\s\S]*© 2026 bisibility[\s\S]*data-size="sm"[\s\S]*data-testid="theme-segments"[\s\S]*<\/footer>/,
     );
   });
 

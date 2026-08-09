@@ -4,6 +4,7 @@ import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { parsePublicId } from "@/lib/db/public-id";
 import type { RankCheckFrequency } from "@/lib/generated/prisma/client";
+import { requireTrackedDomain } from "@/lib/projects/tracked-domain";
 import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
 import { assertBudgetAvailable, isBudgetExhaustedError } from "@/lib/rank-check/budget";
 import {
@@ -89,6 +90,7 @@ export async function queueFirstChecks(input: unknown): Promise<QueueFirstChecks
   const data = parseActionInput(queueFirstChecksSchema, input);
   const actor = await getActionActor();
   const project = await requireProjectScope(actor, "update", data.projectId, { type: "keyword" });
+  requireTrackedDomain(project);
   const providerCount = await prisma.providerConnection.count({
     where: { enabled: true, kind: "serp", projectId: project.id, status: "connected" },
   });

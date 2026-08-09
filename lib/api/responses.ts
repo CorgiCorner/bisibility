@@ -12,6 +12,7 @@ export type ApiErrorCode =
   | "lookup_in_progress"
   | "method_not_allowed"
   | "not_found"
+  | "project_domain_required"
   | "project_read_only"
   | "provider_unavailable"
   | "rate_limited"
@@ -63,6 +64,7 @@ const errorTitles = {
   lookup_in_progress: "Lookup in progress",
   method_not_allowed: "Method not allowed",
   not_found: "Not found",
+  project_domain_required: "Project domain required",
   project_read_only: "Project read-only",
   provider_unavailable: "Provider unavailable",
   rate_limited: "Rate limit exceeded",

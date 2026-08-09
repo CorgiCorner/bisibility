@@ -59,7 +59,7 @@ export function AdminFailureBreakdown({
                 ))}
               </span>
             ) : null}
-            <span className="ml-auto whitespace-nowrap font-mono text-[10px] text-fg-faint">
+            <span className="ml-auto whitespace-nowrap font-mono text-[10px] text-fg-muted">
               first seen {relativeTime(group.firstSeen, now)}
               <span
                 aria-hidden="true"
@@ -71,7 +71,7 @@ export function AdminFailureBreakdown({
         );
       })}
       {breakdown.remainderCount > 0 ? (
-        <p className="px-0.5 py-2 text-xs text-fg-faint">
+        <p className="px-0.5 py-2 text-xs text-fg-muted">
           and {countFormat.format(breakdown.remainderCount)} more classes
         </p>
       ) : null}

@@ -5,7 +5,7 @@ import { type ResearchState, ResearchStatePanel } from "./ResearchStatePanel";
 const expected: Array<[ResearchState, RegExp]> = [
   ["idle", /research starts with a seed/i],
   ["loading", /research loading/i],
-  ["no_provider", /needs a connected dataforseo account/i],
+  ["no_provider", /keyword research needs a provider/i],
   ["budget_exhausted", /monthly provider budget reached/i],
   ["needs_reauth", /needs to be reconnected/i],
   ["lookup_failed", /lookup did not go through/i],

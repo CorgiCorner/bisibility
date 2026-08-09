@@ -19,6 +19,7 @@ import type { ConnectedProviderMap } from "@/components/onboarding/steps/StepCon
 import { issueApiKey } from "@/lib/actions/apiKey";
 import { addKeywordsMatrix } from "@/lib/actions/keyword";
 import { importTopQueries } from "@/lib/actions/keyword-suggest";
+import { completeProjectOnboarding } from "@/lib/actions/project";
 import {
   completeGooglePropertySelection,
   connectProvider,
@@ -176,8 +177,8 @@ export default async function OnboardingPage({ searchParams }: Readonly<Onboardi
   const workspaces = await listWorkspaces();
   const requestedProjectId = paramValue(params?.projectId) ?? null;
   const gscJustConnected = gscCallbackSucceeded(params);
-  // "Create workspace" passes ?new=1 to force a fresh project from step 1, instead of
-  // resuming the actor's existing workspace at the provider step.
+  // "Create project" passes ?new=1 to force a fresh project from step 1, instead of
+  // resuming the actor's existing project at the provider step.
   const isNewWorkspace = paramValue(params?.new) === "1";
   const activeProjectRef = isNewWorkspace
     ? null
@@ -237,6 +238,7 @@ export default async function OnboardingPage({ searchParams }: Readonly<Onboardi
   const actions = {
     addKeywordsAction: addKeywordsMatrix,
     completeGooglePropertySelectionAction: completeGooglePropertySelection,
+    completeOnboardingAction: completeProjectOnboarding,
     connectProviderAction: connectProvider,
     createProjectAction: createOnboardingProject,
     getObservedPositionsAction: getObservedPositions,

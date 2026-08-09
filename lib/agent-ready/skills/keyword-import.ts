@@ -30,7 +30,7 @@ here.
 
 ## Prerequisites
 
-1. **Origin / base URL.** EU Cloud: \`https://eu.bisibility.com/api/v1\`. Self-hosted:
+1. **Origin / base URL.** EU hosted region: \`https://eu.bisibility.com/api/v1\`. Self-hosted:
    \`https://your-host.example/api/v1\`. Resolve the correct base URL before any
    call (ask the user or read it from config).
 2. **API key with \`write\` scope.** Put it in an env var and send it as

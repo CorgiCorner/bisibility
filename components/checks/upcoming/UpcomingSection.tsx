@@ -5,6 +5,7 @@ import type { UpcomingView } from "@/lib/checks/contract";
 import {
   CalendarBlankIcon as CalendarBlank,
   CalendarCheckIcon as CalendarCheck,
+  CaretRightIcon as CaretRight,
 } from "@phosphor-icons/react";
 import Link from "next/link";
 import { BudgetForecastNote } from "./BudgetForecastNote";
@@ -34,11 +35,11 @@ function EmptyUpcoming({
     return (
       <div className="flex min-h-12 items-center justify-between gap-3 rounded-xl border border-dashed border-border-strong bg-bg-elev px-3.5 py-2.5">
         <span className="flex min-w-0 items-center gap-2 text-xs text-fg-muted">
-          <CalendarBlank aria-hidden className="shrink-0 text-fg-faint" size={16} />
+          <CalendarBlank aria-hidden className="shrink-0 text-fg-muted" size={16} />
           No scheduled keywords
         </span>
         <Link
-          className="shrink-0 text-xs font-semibold text-accent outline-none hover:underline focus-visible:underline"
+          className="shrink-0 text-xs font-semibold text-accent-text outline-none hover:underline focus-visible:underline"
           href={schedulesHref}
         >
           Manage
@@ -51,10 +52,11 @@ function EmptyUpcoming({
     <EmptyState
       action={
         <Link
-          className="text-xs font-semibold text-accent outline-none hover:underline focus-visible:underline"
+          className="inline-flex items-center gap-1 text-xs font-semibold text-accent-text outline-none hover:underline focus-visible:underline"
           href={schedulesHref}
         >
-          Manage schedules in Keywords →
+          Manage schedules in Keywords
+          <CaretRight aria-hidden size={12} weight="bold" />
         </Link>
       }
       compact
@@ -68,7 +70,7 @@ function EmptyUpcoming({
 function UpcomingHeader() {
   return (
     <div className="flex items-start gap-3 border-border border-b px-4 py-3.5">
-      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[10px] bg-bg-sunken text-accent">
+      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[10px] bg-bg-sunken text-accent-text">
         <CalendarCheck aria-hidden size={17} weight="fill" />
       </span>
       <div className="min-w-0">

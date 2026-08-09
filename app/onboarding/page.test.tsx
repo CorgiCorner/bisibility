@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   getProjectCostContext: vi.fn(),
   isCloud: true,
   listWorkspaces: vi.fn(),
+  completeProjectOnboarding: vi.fn(),
   prisma: {
     apiKey: { findFirst: vi.fn() },
     location: { findMany: vi.fn() },
@@ -29,6 +30,9 @@ vi.mock("@/lib/actions/competitors", () => ({ addManagedCompetitor: vi.fn() }));
 vi.mock("@/lib/actions/apiKey", () => ({ issueApiKey: vi.fn() }));
 vi.mock("@/lib/actions/keyword", () => ({ addKeywordsMatrix: vi.fn() }));
 vi.mock("@/lib/actions/keyword-suggest", () => ({ importTopQueries: vi.fn() }));
+vi.mock("@/lib/actions/project", () => ({
+  completeProjectOnboarding: mocks.completeProjectOnboarding,
+}));
 vi.mock("@/lib/actions/providers", () => ({
   completeGooglePropertySelection: vi.fn(),
   connectProvider: vi.fn(),
@@ -92,7 +96,7 @@ describe("OnboardingPage", () => {
     mocks.listEligibleRankedKeywordConnections.mockResolvedValue([]);
   });
 
-  it("resolves the actor's first workspace by public id when the URL has no project", async () => {
+  it("resolves the actor's first project by public id when the URL has no project", async () => {
     mocks.getKeywordCount.mockResolvedValue(2);
 
     await expect(
@@ -104,7 +108,7 @@ describe("OnboardingPage", () => {
     expect(mocks.requireReadableProject).toHaveBeenCalledWith("prj_1");
   });
 
-  it("starts at step 1 for a fresh workspace even when the actor already has one", async () => {
+  it("starts at step 1 for a fresh project even when the actor already has one", async () => {
     const page = await OnboardingPage({
       searchParams: Promise.resolve({ new: "1" }),
     });

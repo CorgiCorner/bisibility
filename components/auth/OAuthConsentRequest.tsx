@@ -6,8 +6,8 @@ import {
   OAUTH_REFRESH_TOKEN_TTL_LABEL,
 } from "@/lib/auth/oauth-policy";
 import {
-  ArrowRightIcon as ArrowRight,
   ArrowUDownLeftIcon as ArrowUDownLeft,
+  CaretRightIcon as CaretRight,
   ClockIcon as Clock,
   HourglassIcon as Hourglass,
   KeyIcon as Key,
@@ -32,7 +32,7 @@ function ClientBox({ client }: Readonly<{ client: OAuthConsentClient }>) {
   return (
     <div className="mt-4 rounded-[11px] bg-bg-inset px-[13px] py-[11px]">
       <div className="flex items-center gap-2">
-        <span className="font-mono text-[10.5px] uppercase tracking-[0.5px] text-fg-faint">
+        <span className="font-mono text-[10.5px] uppercase tracking-[0.5px] text-fg-muted">
           Client
         </span>
         {client.dynamic ? (
@@ -47,7 +47,7 @@ function ClientBox({ client }: Readonly<{ client: OAuthConsentClient }>) {
         {client.id || "Unknown client"}
       </p>
       {client.redirectUri ? (
-        <p className="mt-1.5 mb-0 flex items-start gap-2 break-all font-mono text-[10.5px] text-fg-faint">
+        <p className="mt-1.5 mb-0 flex items-start gap-2 break-all font-mono text-[10.5px] text-fg-muted">
           <ArrowUDownLeft aria-hidden className="mt-0.5 shrink-0" size={13} />
           {client.redirectUri}
         </p>
@@ -63,7 +63,7 @@ function TokenLifetime({
   return (
     <dl className="mt-4 mb-0 border-border border-t pt-3">
       <div className="flex items-center gap-2 text-[12.5px]">
-        <Clock aria-hidden className="text-fg-faint" size={14} />
+        <Clock aria-hidden className="text-fg-muted" size={14} />
         <dt className="flex items-center gap-1.5 text-fg-muted">
           Access token
           <InfoTooltip text="The short-lived credential this client uses to call bisibility. It expires after 1 hour." />
@@ -72,7 +72,7 @@ function TokenLifetime({
       </div>
       {refresh ? (
         <div className="mt-2 flex items-center gap-2 text-[12.5px]">
-          <Hourglass aria-hidden className="text-fg-faint" size={14} />
+          <Hourglass aria-hidden className="text-fg-muted" size={14} />
           <dt className="flex items-center gap-1.5 text-fg-muted">
             Refresh access
             <InfoTooltip text="Allows this client to obtain new access tokens for up to 30 days without asking you to approve every hour." />
@@ -85,11 +85,11 @@ function TokenLifetime({
       {canCreateApiTokens ? (
         <div className="mt-2">
           <div className="flex items-center gap-2 text-[12.5px]">
-            <Key aria-hidden className="text-fg-faint" size={14} />
+            <Key aria-hidden className="text-fg-muted" size={14} />
             <dt className="text-fg-muted">API token</dt>
             <dd className="ml-auto font-mono font-semibold text-fg">{API_TOKEN_EXPIRY_LABEL}</dd>
           </div>
-          <p className="mt-2 mb-0 text-[12px] leading-[1.5] text-fg-faint">
+          <p className="mt-2 mb-0 text-[12px] leading-[1.5] text-fg-muted">
             Approval lets this client create a personal API token for your account. The client
             chooses its expiry.
           </p>
@@ -117,11 +117,11 @@ export function OAuthConsentRequest({
   return (
     <Card className="w-full max-w-[520px] p-5 sm:p-6" size="lg">
       <div className="flex flex-wrap items-start gap-3">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[10px] bg-accent-soft text-accent">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[10px] bg-accent-soft text-accent-text">
           <ShieldCheck aria-hidden size={21} weight="fill" />
         </span>
         <div>
-          <p className="m-0 font-mono text-[10.5px] uppercase tracking-[0.5px] text-fg-faint">
+          <p className="m-0 font-mono text-[10.5px] uppercase tracking-[0.5px] text-fg-muted">
             Authorization request
           </p>
           <h2 className="mt-1 mb-0 text-[19px] font-semibold tracking-[-0.6px] text-fg">
@@ -130,7 +130,7 @@ export function OAuthConsentRequest({
         </div>
         <span
           className={`ml-auto inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-[11px] font-semibold ${
-            expiring ? "border-red/40 text-red" : "border-border-strong text-fg-faint"
+            expiring ? "border-red/40 text-red-text" : "border-border-strong text-fg-muted"
           }`}
         >
           <Clock aria-hidden size={13} />
@@ -146,12 +146,12 @@ export function OAuthConsentRequest({
       />
 
       {redirectHost ? (
-        <p className="mt-4 mb-0 text-[12.5px] leading-[1.5] text-fg-faint">
+        <p className="mt-4 mb-0 text-[12.5px] leading-[1.5] text-fg-muted">
           After approving you will be redirected to {redirectHost}; you can close the tab.
         </p>
       ) : null}
 
-      {error ? <p className="mt-4 mb-0 text-[13px] text-red">{error}</p> : null}
+      {error ? <p className="mt-4 mb-0 text-[13px] text-red-text">{error}</p> : null}
 
       <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
         <Button
@@ -169,7 +169,7 @@ export function OAuthConsentRequest({
         <Button
           className="w-full"
           disabled={disabled}
-          endIcon={<ArrowRight aria-hidden size={16} weight="bold" />}
+          endIcon={<CaretRight aria-hidden size={16} weight="bold" />}
           loading={pendingChoice === "accept"}
           loadingLabel="Approving"
           onClick={() => onChoose(true)}

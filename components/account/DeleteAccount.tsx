@@ -17,7 +17,7 @@ export type DeleteAccountProps = {
 };
 
 const dangerButtonClass =
-  "inline-flex min-h-9 items-center gap-2 rounded-[9px] border border-red bg-bg-elev px-3.5 text-[13px] font-semibold text-red hover:bg-red hover:text-white disabled:cursor-not-allowed disabled:opacity-55";
+  "inline-flex min-h-9 items-center gap-2 rounded-[9px] border border-red bg-bg-elev px-3.5 text-[13px] font-semibold text-red-text hover:bg-red hover:text-error-contrast disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted";
 
 export function DeleteAccount({ deleteAccount, email }: Readonly<DeleteAccountProps>) {
   const [open, setOpen] = useState(false);
@@ -42,9 +42,9 @@ export function DeleteAccount({ deleteAccount, email }: Readonly<DeleteAccountPr
       <div className="rounded-[14px] border border-red bg-bg-elev px-5 py-[18px]">
         <div className="flex flex-wrap items-center justify-between gap-[14px]">
           <div className="min-w-0">
-            <div className="text-[14.5px] font-semibold text-red">Danger zone</div>
+            <div className="text-[14.5px] font-semibold text-red-text">Danger zone</div>
             <p className="m-0 mt-[3px] max-w-[560px] text-[12.5px] leading-normal text-fg-muted">
-              Permanently delete your account, owned workspaces and all tracked data. This cannot be
+              Permanently delete your account, owned projects and all tracked data. This cannot be
               undone.
             </p>
           </div>
@@ -54,12 +54,12 @@ export function DeleteAccount({ deleteAccount, email }: Readonly<DeleteAccountPr
           </button>
         </div>
         {message ? (
-          <span className={cn(feedbackClass, "mt-3 block text-red")}>{message}</span>
+          <span className={cn(feedbackClass, "mt-3 block text-red-text")}>{message}</span>
         ) : null}
       </div>
       <ConfirmModal
         busy={isPending}
-        kind="deleteWorkspace"
+        kind="deleteAccount"
         onClose={() => setOpen(false)}
         onConfirm={onConfirm}
         open={open}

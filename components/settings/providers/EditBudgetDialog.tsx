@@ -74,14 +74,14 @@ export function EditBudgetDialog({
       width={380}
     >
       <p className="text-[12.5px] leading-[1.55] text-fg-muted">
-        Monthly cap for all provider spend in this workspace. Checks and research pause when it is
+        Monthly cap for all provider spend in this project. Checks and research pause when it is
         reached; nothing is charged beyond it.
       </p>
       <div className="mt-4">
-        <span className="font-mono text-[10px] font-medium uppercase tracking-[0.06em] text-fg-faint">
+        <span className="font-mono text-[10px] font-medium uppercase tracking-[0.06em] text-fg-muted">
           MONTHLY BUDGET
         </span>
-        <label className="mt-1.5 flex items-center gap-2 rounded-[9px] border border-border-strong bg-white px-3 py-2.5 dark:bg-bg-elev">
+        <label className="mt-1.5 flex items-center gap-2 rounded-[9px] border border-border-strong bg-transparent px-3 py-2.5 focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent-solid">
           <span aria-hidden className="font-mono text-sm text-fg-muted">
             $
           </span>
@@ -94,10 +94,10 @@ export function EditBudgetDialog({
             onChange={(event) => setValue(event.target.value)}
             value={value}
           />
-          <span className="whitespace-nowrap font-mono text-[11px] text-fg-faint">/ month</span>
+          <span className="whitespace-nowrap font-mono text-[11px] text-fg-muted">/ month</span>
         </label>
       </div>
-      <div className="mt-3 flex items-center gap-1.5 text-[11.5px] text-fg-faint">
+      <div className="mt-3 flex items-center gap-1.5 text-[11.5px] text-fg-muted">
         <ClockCounterClockwise aria-hidden size={13} />
         Changes are recorded in the audit log.
       </div>

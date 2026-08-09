@@ -5,6 +5,7 @@ import type { Actor } from "@/lib/auth/authorize";
 import { authorize } from "@/lib/auth/authorize";
 import { prisma } from "@/lib/db/prisma";
 import { assertProjectWritable } from "@/lib/deployment/project-write-mode";
+import { trackedProjectDomain } from "@/lib/schemas/project";
 import { sitemapUrlForDomain } from "./sync";
 
 type MonitorContext = {
@@ -41,7 +42,9 @@ async function monitorView(project: Awaited<ReturnType<typeof projectForMonitor>
     id: project.publicId,
     latestSnapshot: latest,
     projectId: project.publicId,
-    sitemapUrl: project.domain.trim() ? sitemapUrlForDomain(project.domain) : null,
+    sitemapUrl: trackedProjectDomain(project.domain)
+      ? sitemapUrlForDomain(trackedProjectDomain(project.domain) ?? "")
+      : null,
     status: !project.sitemapMonitoringEnabled ? "disabled" : latest ? "active" : "pending",
   } as const;
 }

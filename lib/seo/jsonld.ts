@@ -42,7 +42,7 @@ export const rootMetadata: Metadata = {
     "Google rank tracking",
     "self-hosted SEO",
     "DataForSEO",
-    "SerpAPI",
+    "SerpApi",
     "keyword tracking API",
   ],
   robots: {

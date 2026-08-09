@@ -37,7 +37,7 @@ const data = {
     checks: 1_000 - index,
     projectId: `project_${index + 1}`,
     provider: index % 2 === 0 ? "serpapi" : "dataforseo",
-    providerLabel: index % 2 === 0 ? "SerpAPI" : "DataForSEO",
+    providerLabel: index % 2 === 0 ? "SerpApi" : "DataForSEO",
     rateBasis: index % 2 === 0 ? "Production plan equivalent" : "Live depth pricing",
     referenceCostCents: 12_345 - index,
     referenceCostKnown: true,
@@ -77,7 +77,7 @@ describe("AdminAdministration", () => {
     expect(within(table).queryByText("project_11")).not.toBeInTheDocument();
     expect(within(table).getByText("1,000")).toBeInTheDocument();
     expect(within(table).getByText("2,000")).toBeInTheDocument();
-    expect(within(table).getAllByText("SerpAPI").length).toBeGreaterThan(0);
+    expect(within(table).getAllByText("SerpApi").length).toBeGreaterThan(0);
     expect(within(table).getAllByText("Production plan equivalent").length).toBeGreaterThan(0);
     expect(within(table).getByText("$123.45")).toBeInTheDocument();
     expect(within(table).getByText("37.5%")).toBeInTheDocument();

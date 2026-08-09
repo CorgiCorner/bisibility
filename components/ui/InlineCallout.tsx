@@ -29,12 +29,12 @@ const tintStyles = {
   red: {
     border: "border-red",
     background: "bg-[color-mix(in_srgb,var(--red)_7%,transparent)]",
-    icon: "text-red",
+    icon: "text-red-text",
   },
   yellow: {
     border: "border-yellow",
     background: "bg-[color-mix(in_srgb,var(--yellow)_8%,transparent)]",
-    icon: "text-yellow",
+    icon: "text-yellow-text",
   },
 } satisfies Record<InlineCalloutTint, { background: string; border: string; icon: string }>;
 

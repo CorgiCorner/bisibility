@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui";
 import {
   ArrowBendDownRightIcon as ArrowBendDownRight,
   ArrowsClockwiseIcon as ArrowsClockwise,
@@ -13,7 +14,7 @@ import {
   WarningOctagonIcon as WarningOctagon,
 } from "@phosphor-icons/react";
 import type { ActiveMigrationToken, IssuedMigrationToken } from "./cloud-token";
-import { expiresInLabel } from "./cloud-token";
+import { TokenMeta } from "./MigrationTokenMeta";
 
 export type MigrationTokenStatus = "none" | "active" | "created" | "error";
 export type MigrationTokenPendingAction = "create" | "regenerate" | "revoke";
@@ -37,44 +38,7 @@ type MigrationTokenCardProps = {
 };
 
 const primaryButton =
-  "inline-flex items-center gap-2 rounded-[10px] bg-accent px-[18px] py-[11px] font-semibold text-[14px] text-white transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-55";
-const secondaryButton =
-  "inline-flex items-center gap-1.5 rounded-[9px] border border-border-strong bg-bg-elev px-3.5 py-[9px] font-semibold text-[12.5px] disabled:cursor-not-allowed disabled:opacity-55";
-
-function metaFor(
-  token: ActiveMigrationToken | IssuedMigrationToken,
-  workspaceName: string,
-): string[] {
-  const createdBy = "createdBy" in token ? token.createdBy.email : "you";
-
-  return [
-    expiresInLabel(token.expiresAt),
-    token.singleUse ? "Single-use" : "Reusable",
-    `Scope ${token.scope}`,
-    workspaceName,
-    `Created by ${createdBy}`,
-  ];
-}
-
-function TokenMeta({
-  token,
-  workspaceName,
-}: Readonly<{
-  token: ActiveMigrationToken | IssuedMigrationToken;
-  workspaceName: string;
-}>) {
-  return (
-    <div className="mt-4 flex flex-wrap items-center gap-x-[11px] gap-y-2 font-mono text-[11px] text-fg-faint">
-      {metaFor(token, workspaceName).map((item, index) => (
-        <span className="inline-flex items-center gap-x-[11px]" key={item}>
-          {index > 0 ? <span className="h-2.5 w-px bg-border-strong" /> : null}
-          {item}
-        </span>
-      ))}
-    </div>
-  );
-}
-
+  "inline-flex items-center gap-2 rounded-[10px] bg-accent-solid px-[18px] py-[11px] font-semibold text-[14px] text-primary-contrast transition-colors hover:bg-accent-solid-hover disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted";
 function TokenActions({
   disabled,
   onRegenerate,
@@ -91,32 +55,39 @@ function TokenActions({
 
   return (
     <div className="mt-[18px] flex items-center gap-2.5 border-border-soft border-t pt-4">
-      <button
-        className={`${secondaryButton} text-red`}
+      <Button
         disabled={disabled}
         onClick={onRevoke}
+        size="sm"
+        startIcon={
+          revoking ? (
+            <ArrowsClockwise aria-hidden className="animate-spin" size={13} />
+          ) : (
+            <Prohibit aria-hidden size={13} />
+          )
+        }
+        sx={{ color: "var(--red-text)" }}
         type="button"
+        variant="secondary"
       >
-        {revoking ? (
-          <ArrowsClockwise aria-hidden className="animate-spin" size={13} />
-        ) : (
-          <Prohibit aria-hidden size={13} />
-        )}
         {revoking ? "Revoking" : "Revoke token"}
-      </button>
-      <button
-        className="inline-flex items-center gap-1.5 rounded-[9px] bg-transparent px-3.5 py-[9px] font-semibold text-[12.5px] text-fg-muted hover:text-fg disabled:cursor-not-allowed disabled:opacity-55"
+      </Button>
+      <Button
         disabled={disabled}
         onClick={onRegenerate}
+        size="sm"
+        startIcon={
+          <ArrowsClockwise
+            aria-hidden
+            className={regenerating ? "animate-spin" : undefined}
+            size={13}
+          />
+        }
         type="button"
+        variant="ghost"
       >
-        <ArrowsClockwise
-          aria-hidden
-          className={regenerating ? "animate-spin" : undefined}
-          size={13}
-        />
         {regenerating ? "Regenerating" : "Regenerate"}
-      </button>
+      </Button>
     </div>
   );
 }
@@ -163,7 +134,7 @@ export function MigrationTokenCard({
   pendingAction,
   sourceLabel = "self-hosted instance",
   status,
-  transferInstruction = "Open Migrate to Cloud / Transfer, choose Push to Cloud, and paste this token to start the import.",
+  transferInstruction = "Open Migrate to hosted instance / Transfer, choose Push to hosted instance, and paste this token to start the import.",
   workspaceName,
 }: Readonly<MigrationTokenCardProps>) {
   const visibleToken = issuedToken ?? activeToken;
@@ -172,7 +143,7 @@ export function MigrationTokenCard({
   return (
     <div className="mt-7 overflow-hidden rounded-2xl border border-border bg-bg-elev">
       <div className="flex items-center gap-[13px] border-border-soft border-b p-[20px_22px]">
-        <span className="grid h-[42px] w-[42px] flex-none place-items-center rounded-[11px] bg-accent-soft text-accent">
+        <span className="grid h-[42px] w-[42px] flex-none place-items-center rounded-[11px] bg-accent-soft text-accent-text">
           <Key aria-hidden size={21} weight="fill" />
         </span>
         <div className="min-w-0 flex-1">
@@ -187,7 +158,7 @@ export function MigrationTokenCard({
       <div className="p-[22px]">
         {status === "error" ? (
           <div className="flex flex-col items-center px-4 pt-3.5 pb-1.5 text-center">
-            <span className="grid h-[50px] w-[50px] place-items-center rounded-[14px] bg-red/10 text-red">
+            <span className="grid h-[50px] w-[50px] place-items-center rounded-[14px] bg-red/10 text-red-text">
               <WarningOctagon aria-hidden size={26} weight="fill" />
             </span>
             <div className="mt-3.5 text-[14.5px] font-semibold">{errorTitle}</div>
@@ -195,7 +166,7 @@ export function MigrationTokenCard({
               {errorMessage ?? "No token was issued. Nothing was exposed."}
             </p>
             <div className="mt-3.5 inline-flex items-center gap-[7px] rounded-lg bg-bg-sunken px-[11px] py-[5px] font-mono text-[11px] text-fg-muted">
-              <WarningCircle aria-hidden className="text-red" size={13} />
+              <WarningCircle aria-hidden className="text-red-text" size={13} />
               token_action_failed
             </div>
             <TokenGenerateButton
@@ -209,7 +180,7 @@ export function MigrationTokenCard({
         ) : null}
         {status !== "error" && (status === "none" || !visibleToken) ? (
           <div className="flex flex-col items-center px-4 pt-3.5 pb-1.5 text-center">
-            <span className="grid h-[50px] w-[50px] place-items-center rounded-[14px] bg-bg-sunken text-fg-faint">
+            <span className="grid h-[50px] w-[50px] place-items-center rounded-[14px] bg-bg-sunken text-fg-muted">
               <Key aria-hidden size={26} />
             </span>
             <div className="mt-3.5 text-[14.5px] font-semibold">No active token</div>
@@ -227,19 +198,19 @@ export function MigrationTokenCard({
         ) : null}
         {status === "active" && visibleToken ? (
           <div>
-            <div className="mb-[9px] font-mono text-[10px] uppercase tracking-[0.6px] text-fg-faint">
+            <div className="mb-[9px] font-mono text-[10px] uppercase tracking-[0.6px] text-fg-muted">
               Active migration token
             </div>
             <div className="rounded-xl border border-border bg-bg-sunken p-[15px_16px]">
               <div className="flex items-start gap-2.5">
                 <CheckCircle
                   aria-hidden
-                  className="mt-px flex-none text-green"
+                  className="mt-px flex-none text-green-text"
                   size={16}
                   weight="fill"
                 />
                 <div className="min-w-0 flex-1 text-[13px] leading-[1.55] text-fg">
-                  A token is active for this workspace. For security, the raw token was shown only
+                  A token is active for this project. For security, the raw token was shown only
                   when it was created. Regenerate it if you need to copy a new value.
                 </div>
               </div>
@@ -255,29 +226,32 @@ export function MigrationTokenCard({
         ) : null}
         {status === "created" && visibleToken ? (
           <div>
-            <div className="mb-[9px] font-mono text-[10px] uppercase tracking-[0.6px] text-fg-faint">
+            <div className="mb-[9px] font-mono text-[10px] uppercase tracking-[0.6px] text-fg-muted">
               Step 1: your migration token
             </div>
             <div className="flex items-center gap-3 rounded-xl border-[1.5px] border-accent bg-bg p-[15px_15px_15px_18px]">
-              <Key aria-hidden className="flex-none text-accent" size={19} />
+              <Key aria-hidden className="flex-none text-accent-text" size={19} />
               <span className="min-w-0 flex-1 truncate font-mono text-[15px] font-semibold text-fg">
                 {issuedToken?.token}
               </span>
-              <button
-                className="inline-flex flex-none items-center gap-1.5 rounded-[9px] bg-accent px-[17px] py-[9px] font-semibold text-[13px] text-white"
+              <Button
                 disabled={disabled}
                 onClick={onCopy}
+                startIcon={
+                  copied ? (
+                    <Check aria-hidden size={14} weight="bold" />
+                  ) : (
+                    <Copy aria-hidden size={14} />
+                  )
+                }
+                sx={{ flex: "none" }}
                 type="button"
+                variant="primary"
               >
-                {copied ? (
-                  <Check aria-hidden size={14} weight="bold" />
-                ) : (
-                  <Copy aria-hidden size={14} />
-                )}
                 Copy
-              </button>
+              </Button>
             </div>
-            <div className="mt-[9px] flex items-center gap-[7px] font-mono text-[11px] font-semibold text-green">
+            <div className="mt-[9px] flex items-center gap-[7px] font-mono text-[11px] font-semibold text-green-text">
               <CheckCircle aria-hidden size={13} weight="fill" />
               Shown once. Copy it before you leave this page.
             </div>
@@ -285,7 +259,7 @@ export function MigrationTokenCard({
             <div className="mt-[18px] flex items-start gap-[11px] rounded-xl border border-border bg-bg-elev p-[15px_16px]">
               <ArrowBendDownRight
                 aria-hidden
-                className="mt-px flex-none text-accent"
+                className="mt-px flex-none text-accent-text"
                 size={16}
                 weight="bold"
               />

@@ -13,6 +13,14 @@ function boxes() {
 }
 
 describe("OtpInput", () => {
+  it("keeps empty cells transparent and only highlights populated cells", () => {
+    render(<Harness initial={["1"]} />);
+
+    const [filled, empty] = boxes();
+    expect(filled).toHaveClass("bg-accent-soft", "border-accent");
+    expect(empty).toHaveClass("bg-transparent", "border-border-strong");
+  });
+
   it("does not swallow Cmd/Ctrl+V so keyboard paste can fire", () => {
     // Keyboard shortcut keydown must not be prevented before the paste event fires.
     render(<Harness />);

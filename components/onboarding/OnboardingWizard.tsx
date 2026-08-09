@@ -220,7 +220,7 @@ export function OnboardingWizard({
     >
       <section className="rounded-2xl border border-border bg-bg-elev p-6 sm:px-7 sm:py-[26px]">
         {inlineWarning ? (
-          <p className={`m-0 mb-4 ${feedbackClass} text-yellow`}>{inlineWarning}</p>
+          <p className={`m-0 mb-4 ${feedbackClass} text-yellow-text`}>{inlineWarning}</p>
         ) : null}
         <OnboardingWizardSteps
           actions={actions}
@@ -268,7 +268,7 @@ export function OnboardingWizard({
                   fontWeight: 400,
                   paddingX: 0,
                   textTransform: "none",
-                  "&:hover": { backgroundColor: "transparent", color: "var(--accent)" },
+                  "&:hover": { backgroundColor: "transparent", color: "var(--accent-text)" },
                 }}
                 variant="text"
               />
@@ -281,7 +281,7 @@ export function OnboardingWizard({
           secondaryAction={
             currentStep === 3 ? (
               <button
-                className="cursor-pointer border-0 bg-transparent px-3 py-2.5 text-[13px] font-semibold text-fg-muted hover:text-accent"
+                className="cursor-pointer border-0 bg-transparent px-3 py-2.5 text-[13px] font-semibold text-fg-muted hover:text-accent-text"
                 onClick={continueWithConnectedDataSource}
                 type="button"
               >

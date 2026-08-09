@@ -94,7 +94,7 @@ export function DimensionSwitcher({
 
   const caret = (
     <CaretDown
-      className={`text-fg-faint transition-transform ${open ? "rotate-180" : ""}`}
+      className={`text-fg-muted transition-transform ${open ? "rotate-180" : ""}`}
       size={11}
       weight="bold"
     />
@@ -105,7 +105,7 @@ export function DimensionSwitcher({
       aria-controls={open ? menuId : undefined}
       aria-expanded={open}
       aria-haspopup={canTrack ? "menu" : undefined}
-      className="inline-flex items-center gap-1.5 rounded-full bg-bg-sunken py-1 pl-2.5 pr-2 font-mono text-[11px] text-fg-muted outline-none transition-colors hover:text-fg focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60"
+      className="inline-flex items-center gap-1.5 rounded-full bg-bg-sunken py-1 pl-2.5 pr-2 font-mono text-[11px] text-fg-muted outline-none transition-colors hover:text-fg focus-visible:outline-none disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted"
       disabled={!canTrack || readOnly}
       onClick={(event) => {
         if (canTrack && !readOnly) setAnchorEl(event.currentTarget);
@@ -127,7 +127,7 @@ export function DimensionSwitcher({
           {guardedChip}
           <a
             aria-label={`Open live Google results for ${value}`}
-            className="inline-flex items-center rounded-full bg-bg-sunken p-1.5 text-fg-faint outline-none transition-colors hover:text-accent focus-visible:text-accent focus-visible:outline-none"
+            className="inline-flex items-center rounded-full bg-bg-sunken p-1.5 text-fg-muted outline-none transition-colors hover:text-accent-text focus-visible:text-accent-text focus-visible:outline-none"
             href={serpHref}
             rel="noreferrer noopener"
             target="_blank"
@@ -146,7 +146,7 @@ export function DimensionSwitcher({
           open={open}
           slotProps={{ paper: { sx: { border: "1px solid var(--border)", maxWidth: 288 } } }}
         >
-          <div className="px-4 pb-1 pt-2 font-mono text-[10px] uppercase tracking-[0.6px] text-fg-faint">
+          <div className="px-4 pb-1 pt-2 font-mono text-[10px] uppercase tracking-[0.6px] text-fg-muted">
             {meta.name}
           </div>
           <div className="px-4 pt-1 text-[11px] font-semibold text-fg">
@@ -160,7 +160,7 @@ export function DimensionSwitcher({
               sx={{ gap: 2, justifyContent: "space-between" }}
             >
               <span className="text-[13px] text-fg">{item}</span>
-              <span className="inline-flex items-center gap-0.5 rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-semibold text-accent">
+              <span className="inline-flex items-center gap-0.5 rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-semibold text-accent-text">
                 + Track
               </span>
             </MenuItem>

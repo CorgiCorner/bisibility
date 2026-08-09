@@ -47,7 +47,7 @@ function guardNotices(plan: FirstCheckRunPlan, projectRef: ProjectRef) {
         <>
           Monthly rank-check budget reached.{" "}
           <Link
-            className="font-semibold text-accent"
+            className="font-semibold text-accent-text"
             href={`${appPath(projectRef, "settings")}#provider-usage`}
           >
             Raise the budget
@@ -129,7 +129,7 @@ function FirstCheckRunPlanBody({
 
       <section className="grid gap-2" aria-labelledby="provider-order-heading">
         <h3
-          className="m-0 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint"
+          className="m-0 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted"
           id="provider-order-heading"
         >
           Provider fallback order
@@ -140,7 +140,7 @@ function FirstCheckRunPlanBody({
               className="flex items-center gap-3 rounded-[10px] border border-border px-3.5 py-2.5"
               key={provider}
             >
-              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent-soft font-mono text-[10px] font-semibold text-accent">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent-soft font-mono text-[10px] font-semibold text-accent-text">
                 {index + 1}
               </span>
               <span className="text-[13px] font-semibold text-fg">{displayProvider(provider)}</span>
@@ -151,7 +151,7 @@ function FirstCheckRunPlanBody({
 
       <section className="grid gap-2" aria-labelledby="check-scope-heading">
         <h3
-          className="m-0 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint"
+          className="m-0 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted"
           id="check-scope-heading"
         >
           Check scope
@@ -161,7 +161,7 @@ function FirstCheckRunPlanBody({
 
       <SegmentedControl
         label={`Run scope - ${plan.readyCount} keyword${plan.readyCount === 1 ? "" : "s"} ready`}
-        labelClassName="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint"
+        labelClassName="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted"
         name="first-check-run-scope"
         onChange={onRunScopeChange}
         options={options}
@@ -178,7 +178,7 @@ function FirstCheckRunPlanBody({
       {notices.length > 0 ? (
         <div className="grid gap-1.5" role="alert">
           {notices.map((notice) => (
-            <p className="m-0 text-[12px] leading-5 text-red" key={notice.id}>
+            <p className="m-0 text-[12px] leading-5 text-red-text" key={notice.id}>
               {notice.content}
             </p>
           ))}
@@ -214,7 +214,7 @@ export function FirstCheckRunModal({
   const footer = (
     <div className="flex w-full flex-wrap items-center justify-end gap-2">
       {confirmError ? (
-        <p className="m-0 mb-1 w-full text-[12px] leading-5 text-red" role="alert">
+        <p className="m-0 mb-1 w-full text-[12px] leading-5 text-red-text" role="alert">
           {confirmError}
         </p>
       ) : null}
@@ -242,7 +242,7 @@ export function FirstCheckRunModal({
       ) : null}
       {!loading && error ? (
         <div className="grid gap-3">
-          <p className="m-0 text-[13px] text-red" role="alert">
+          <p className="m-0 text-[13px] text-red-text" role="alert">
             {error}
           </p>
           <Button onClick={onRetry} type="button" variant="secondary">

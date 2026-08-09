@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { createProject, updateProjectDefaults } from "./project";
+import { completeProjectOnboarding, createProject, updateProjectDefaults } from "./project";
 
 const PROJECT_PUBLIC_ID = "prj_abcdefghijklmnopqrstuvwx";
 const createdAt = new Date("2026-07-27T10:00:00.000Z");
@@ -10,7 +10,7 @@ const mocks = vi.hoisted(() => {
     $executeRaw: vi.fn(),
     $transaction: vi.fn(),
     keyword: { findMany: vi.fn(), updateMany: vi.fn() },
-    project: { count: vi.fn(), create: vi.fn(), findFirst: vi.fn() },
+    project: { count: vi.fn(), create: vi.fn(), findFirst: vi.fn(), updateMany: vi.fn() },
     projectDefaults: { findUnique: vi.fn(), upsert: vi.fn() },
     user: { findUnique: vi.fn() },
   };
@@ -65,6 +65,7 @@ describe("project actions", () => {
       }),
     );
     mocks.prisma.project.count.mockResolvedValue(0);
+    mocks.prisma.project.updateMany.mockResolvedValue({ count: 1 });
     mocks.writeAudit.mockResolvedValue({});
     mocks.getProjectDepthDecreaseWarning.mockResolvedValue(null);
     mocks.prisma.$transaction.mockImplementation(
@@ -187,6 +188,25 @@ describe("project actions", () => {
 
     expect(mocks.prisma.project.count).not.toHaveBeenCalled();
     expect(mocks.prisma.project.create).toHaveBeenCalledOnce();
+  });
+
+  it("sets the completion timestamp once without overwriting an existing value", async () => {
+    await expect(completeProjectOnboarding({ projectId: PROJECT_PUBLIC_ID })).resolves.toEqual({
+      completed: true,
+    });
+
+    expect(mocks.prisma.project.updateMany).toHaveBeenCalledWith({
+      data: { onboardingCompletedAt: expect.any(Date) },
+      where: { id: "project_1", onboardingCompletedAt: null },
+    });
+
+    mocks.prisma.project.updateMany.mockResolvedValueOnce({ count: 0 });
+
+    await expect(completeProjectOnboarding({ projectId: PROJECT_PUBLIC_ID })).resolves.toEqual({
+      completed: false,
+    });
+
+    expect(mocks.prisma.project.updateMany).toHaveBeenCalledTimes(2);
   });
 
   it("updates project defaults and moves the current default keyword market", async () => {

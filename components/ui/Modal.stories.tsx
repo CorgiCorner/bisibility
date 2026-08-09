@@ -17,7 +17,7 @@ const footer = (
       Cancel
     </button>
     <button
-      className="rounded-[9px] bg-accent px-[18px] py-[11px] text-[13.5px] font-semibold text-white"
+      className="rounded-[9px] bg-accent-solid px-[18px] py-[11px] text-[13.5px] font-semibold text-white"
       type="button"
     >
       Export CSV
@@ -30,7 +30,7 @@ export const Open: Story = {
     children: (
       <div className="flex flex-col gap-[18px]">
         <div>
-          <div className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint">
+          <div className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
             Format
           </div>
           <div className="mt-[9px] flex flex-col gap-[7px]">

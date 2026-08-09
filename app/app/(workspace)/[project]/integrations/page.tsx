@@ -75,7 +75,7 @@ export default async function IntegrationsPage({
   return (
     <PageContent className="flex flex-col gap-5">
       <Card className="flex items-start gap-[11px] rounded-xl px-4 py-[14px]" size="md">
-        <span className="flex h-5 shrink-0 items-center text-accent">
+        <span className="flex h-5 shrink-0 items-center text-accent-text">
           <Key aria-hidden size={17} weight="fill" />
         </span>
         <p className="m-0 text-[13px] leading-[1.5] text-fg-muted">

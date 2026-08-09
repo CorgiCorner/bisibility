@@ -41,7 +41,7 @@ type BacklinksTableToolbarProps = {
 };
 
 const focusClass =
-  "focus-visible:rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
+  "focus-visible:rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid";
 
 export function BacklinksTableToolbar({
   counts,
@@ -113,13 +113,13 @@ export function BacklinksTableToolbar({
       <div className="flex flex-wrap items-center gap-2.5 border-b border-border px-4 py-2.5">
         <button
           aria-label={`Filters ${filterCount}`}
-          className={`inline-flex h-[30px] cursor-pointer items-center gap-1.5 rounded-[7px] border border-border-strong bg-transparent px-3 text-[13px] font-medium text-fg hover:border-fg-faint ${focusClass}`}
+          className={`inline-flex h-[30px] cursor-pointer items-center gap-1.5 rounded-[7px] border border-border-strong bg-transparent px-3 text-[13px] font-medium text-fg hover:border-fg-muted ${focusClass}`}
           onClick={onOpenFilters}
           type="button"
         >
           <FunnelSimple aria-hidden size={13} weight="bold" />
           Filters
-          <span className="grid h-[17px] min-w-[17px] place-items-center rounded-full bg-accent-soft px-1 font-mono text-[10px] font-semibold text-accent-hover">
+          <span className="grid h-[17px] min-w-[17px] place-items-center rounded-full bg-accent-soft px-1 font-mono text-[10px] font-semibold text-accent-text">
             {filterCount}
           </span>
         </button>
@@ -129,9 +129,9 @@ export function BacklinksTableToolbar({
               item.id === "broken" ? "" : ` ${counts[item.id] === 1 ? "domain" : "domains"}`
             }`}
             aria-pressed={filter === item.id}
-            className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1 text-[12.5px] hover:border-fg-faint ${focusClass} ${
+            className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1 text-[12.5px] hover:border-fg-muted ${focusClass} ${
               filter === item.id
-                ? "border-border-strong bg-bg-sunken font-semibold text-fg"
+                ? "border-border-strong bg-transparent font-semibold text-fg"
                 : "border-border bg-transparent text-fg-muted"
             }`}
             key={item.id}
@@ -139,9 +139,9 @@ export function BacklinksTableToolbar({
             type="button"
           >
             {item.label}
-            <span className="font-mono text-[11px] text-fg-faint">{counts[item.id]}</span>
+            <span className="font-mono text-[11px] text-fg-muted">{counts[item.id]}</span>
             {item.id !== "broken" ? (
-              <span className="text-[10px] text-fg-faint">
+              <span className="text-[10px] text-fg-muted">
                 {counts[item.id] === 1 ? "domain" : "domains"}
               </span>
             ) : null}

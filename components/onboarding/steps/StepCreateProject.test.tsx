@@ -47,7 +47,9 @@ describe("StepCreateProject", () => {
   beforeEach(() => {
     push.mockClear();
     mocks.createCloudImportWorkspace.mockReset();
-    mocks.createCloudImportWorkspace.mockResolvedValue(undefined);
+    mocks.createCloudImportWorkspace.mockResolvedValue(
+      "/cloud/import?ctx=onboard&project=prj_bbcdefghijklmnopqrstuvwx",
+    );
   });
 
   it("starts blank with placeholder examples instead of fixture values", () => {
@@ -88,6 +90,14 @@ describe("StepCreateProject", () => {
     const importButton = screen.getByRole("button", {
       name: "Migrating from a self-hosted instance? Import it instead",
     });
+    expect(importButton.closest("form")).toHaveClass(
+      "mt-6",
+      "rounded-xl",
+      "border",
+      "border-border-strong",
+      "bg-transparent",
+      "p-4",
+    );
     fireEvent.click(importButton);
 
     await waitFor(() => expect(mocks.createCloudImportWorkspace).toHaveBeenCalledOnce());
@@ -107,11 +117,25 @@ describe("StepCreateProject", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("disables the import action while its workspace is being created", async () => {
-    let resolveImport: (() => void) | undefined;
+  it("uses router scroll management after creating an import project", async () => {
+    const destination = "/cloud/import?ctx=onboard&project=prj_bbcdefghijklmnopqrstuvwx";
+    mocks.createCloudImportWorkspace.mockResolvedValue(destination);
+    renderCreateProjectStep({ isCloud: true });
+
+    const importButton = screen.getByRole("button", {
+      name: "Migrating from a self-hosted instance? Import it instead",
+    });
+    fireEvent.submit(importButton.closest("form") as HTMLFormElement);
+
+    await waitFor(() => expect(mocks.createCloudImportWorkspace).toHaveBeenCalledOnce());
+    expect(push).toHaveBeenCalledWith(destination, { scroll: true });
+  });
+
+  it("disables the import action while its project is being created", async () => {
+    let resolveImport: ((destination: string) => void) | undefined;
     mocks.createCloudImportWorkspace.mockImplementation(
       () =>
-        new Promise<void>((resolve) => {
+        new Promise<string>((resolve) => {
           resolveImport = resolve;
         }),
     );
@@ -127,7 +151,7 @@ describe("StepCreateProject", () => {
     fireEvent.click(importButton);
     expect(mocks.createCloudImportWorkspace).toHaveBeenCalledOnce();
 
-    resolveImport?.();
+    resolveImport?.("/cloud/import?ctx=onboard&project=prj_bbcdefghijklmnopqrstuvwx");
     await waitFor(() => expect(importButton).not.toBeDisabled());
   });
 

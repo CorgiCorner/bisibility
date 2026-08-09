@@ -1,13 +1,13 @@
 "use client";
 
-import { useToast } from "@/components/ui";
+import { Button, useToast } from "@/components/ui";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { isBudgetExhaustedResult } from "@/lib/rank-check/budget-contract";
 import { appPath, type ProjectRef } from "@/lib/routing/app-path";
 import type { Icon } from "@phosphor-icons/react";
 import {
-  ArrowRightIcon as ArrowRight,
+  CaretRightIcon as CaretRight,
   FlagIcon as Flag,
   GlobeSimpleIcon as GlobeSimple,
   MonitorIcon as Monitor,
@@ -44,7 +44,7 @@ type KeywordPendingDetailProps = {
 
 const AMBER_TINT = {
   background: "color-mix(in srgb, var(--yellow) 14%, transparent)",
-  color: "var(--yellow-strong)",
+  color: "var(--yellow-text)",
 } as const;
 
 const RED_TINT = {
@@ -165,37 +165,40 @@ export function KeywordPendingDetail({
               />
             ) : null}
             {canUpdateKeyword ? (
-              <button
-                className="inline-flex flex-none items-center justify-center gap-[7px] rounded-[10px] border border-border-strong px-4 py-2.5 text-[13px] font-semibold text-fg-muted outline-none hover:bg-bg-sunken focus-visible:bg-bg-sunken"
+              <Button
                 onClick={() => setEditing((value) => !value)}
+                startIcon={<PencilSimple size={14} weight="bold" />}
+                sx={{ backgroundColor: "transparent", color: "var(--fg-muted)", flex: "none" }}
                 type="button"
+                variant="secondary"
               >
-                <PencilSimple size={14} weight="bold" />
                 Edit
-              </button>
+              </Button>
             ) : null}
             {canUpdateKeyword && canRunFirstCheck ? (
-              <button
-                className="inline-flex flex-none items-center gap-[7px] rounded-[10px] bg-accent px-4 py-2.5 text-[13px] font-semibold text-white hover:opacity-90 disabled:opacity-55"
-                disabled={runPending}
+              <Button
+                endIcon={<CaretRight size={14} weight="bold" />}
+                loading={runPending}
+                loadingLabel="Starting..."
                 onClick={() => void runFirstCheck()}
+                sx={{ flex: "none" }}
                 type="button"
+                variant="primary"
               >
-                {runPending ? "Starting..." : "Run first check"}
-                <ArrowRight size={14} weight="bold" />
-              </button>
+                Run first check
+              </Button>
             ) : copy.href !== appPath(projectRef, "integrations") || canManageProviders ? (
               <Link
-                className="inline-flex flex-none items-center gap-[7px] rounded-[10px] bg-accent px-4 py-2.5 text-[13px] font-semibold text-white hover:opacity-90"
+                className="inline-flex flex-none items-center gap-[7px] rounded-[10px] bg-accent-solid px-4 py-2.5 text-[13px] font-semibold text-primary-contrast hover:opacity-90"
                 href={copy.href}
               >
                 {copy.link}
-                <ArrowRight size={14} weight="bold" />
+                <CaretRight size={14} weight="bold" />
               </Link>
             ) : null}
           </div>
         </div>
-        <div className="mt-[18px] flex flex-wrap items-center gap-x-7 gap-y-2 border-t border-border-soft pt-4 font-mono text-[11px] text-fg-faint">
+        <div className="mt-[18px] flex flex-wrap items-center gap-x-7 gap-y-2 border-t border-border-soft pt-4 font-mono text-[11px] text-fg-muted">
           <MetaItem label="Search volume">{volumeLabel}</MetaItem>
           <MetaDivider />
           <MetaItem label="Tag">{tagLabel}</MetaItem>

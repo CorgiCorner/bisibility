@@ -63,7 +63,7 @@ export function AddKeywordApiPanel({ projectId }: Readonly<AddKeywordApiPanelPro
           {snippet}
         </pre>
       </div>
-      <p className="m-0 text-[11.5px] text-fg-faint">
+      <p className="m-0 text-[11.5px] text-fg-muted">
         Full API reference at{" "}
         <code className="font-mono text-fg-muted">{apiBaseUrl}/openapi.json</code>.
       </p>

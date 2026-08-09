@@ -3,6 +3,7 @@ import { KpiCard } from "@/components/overview/KpiCard";
 import { overviewFixture } from "@/components/overview/overview-fixtures";
 import { PositionDistributionCard } from "@/components/overview/PositionDistributionCard";
 import { PositionTrendCard } from "@/components/overview/PositionTrendCard";
+import { BrandLockup } from "@/components/ui";
 import { navItems } from "@/lib/nav/nav-items";
 import { appPath } from "@/lib/routing/app-path";
 import {
@@ -16,22 +17,19 @@ const screenshotHighlights = overviewFixture.highlights.slice(0, 2);
 function ScreenshotSidebar() {
   const items = navItems("prj_7Kd2Qf9m");
   return (
-    <aside className="flex min-h-full flex-col border-border border-r bg-bg-sidebar px-[14px] py-4">
-      <div className="flex items-center gap-[9px] px-2 pb-4 pt-1.5 text-fg">
-        <span className="grid h-7 w-7 place-items-center rounded-[7px] bg-accent text-white">
-          <ChartLineUp aria-hidden size={16} weight="bold" />
-        </span>
-        <span className="text-[17px] font-bold tracking-[-0.5px]">bisibility</span>
+    <aside className="flex min-h-full flex-col border-border border-r bg-bg-elev px-[14px] py-4">
+      <div className="flex items-center px-2 pb-4 pt-1.5">
+        <BrandLockup />
       </div>
 
       <div className="mb-[14px] rounded-[10px] border border-border-strong bg-bg-elev px-[11px] py-2.5">
         <div className="flex items-center gap-2.5">
-          <span className="grid h-[30px] w-[30px] place-items-center rounded-lg bg-accent-soft text-accent">
+          <span className="grid h-[30px] w-[30px] place-items-center rounded-lg bg-accent-soft text-accent-text">
             <ChartLineUp aria-hidden size={14} weight="bold" />
           </span>
           <span className="min-w-0">
             <span className="block truncate text-[13px] font-semibold leading-tight">acme.dev</span>
-            <span className="block font-mono text-[10px] text-fg-faint">248 keywords</span>
+            <span className="block font-mono text-[10px] text-fg-muted">248 keywords</span>
           </span>
         </div>
       </div>
@@ -42,19 +40,30 @@ function ScreenshotSidebar() {
           const Icon = item.icon;
 
           return (
+            // Same current-page vocabulary as the rail this depicts: a dot in the gutter, a
+            // filled glyph and a 600 label. No fill - the row surface belongs to hover, and a
+            // screenshot showing a treatment the app dropped teaches the wrong screen.
             <div
               className={[
-                "flex h-10 items-center gap-[11px] rounded-[9px] px-[11px] text-[13.5px] font-medium",
-                active ? "bg-nav-active font-semibold text-fg" : "text-fg-muted",
+                "relative ml-2.5 flex h-9 items-center gap-2.5 rounded-[9px] pr-[11px] pl-[1px] text-[13.5px] font-medium",
+                active ? "font-semibold text-fg" : "text-fg-muted",
               ].join(" ")}
               key={item.href}
             >
-              <Icon
-                aria-hidden
-                className={active ? "text-accent" : "text-current"}
-                size={17}
-                weight={active ? "fill" : "regular"}
-              />
+              {active ? (
+                <span
+                  aria-hidden
+                  className="-left-2.5 -translate-y-1/2 absolute top-1/2 h-1.5 w-1.5 rounded-full bg-accent-solid"
+                />
+              ) : null}
+              <span className="grid h-[30px] w-[30px] flex-none place-items-center">
+                <Icon
+                  aria-hidden
+                  className="text-current"
+                  size={18}
+                  weight={active ? "fill" : "regular"}
+                />
+              </span>
               <span className="min-w-0 flex-1 truncate">{item.label}</span>
             </div>
           );
@@ -62,7 +71,7 @@ function ScreenshotSidebar() {
       </nav>
 
       <div className="mt-auto rounded-[12px] border border-border bg-bg-elev px-3 py-3">
-        <div className="font-mono text-[10px] uppercase tracking-[0.6px] text-fg-faint">Owner</div>
+        <div className="font-mono text-[10px] uppercase tracking-[0.6px] text-fg-muted">Owner</div>
         <div className="mt-1 truncate text-[13px] font-semibold text-fg">founder@acme.dev</div>
       </div>
     </aside>
@@ -83,7 +92,7 @@ function ScreenshotHeader() {
         </div>
       </div>
       <div className="flex flex-none items-center gap-2.5">
-        <div className="flex h-[38px] items-center gap-2.5 rounded-[10px] border border-border-strong bg-bg-elev px-3 text-[13px] font-medium text-fg-faint">
+        <div className="flex h-[38px] items-center gap-2.5 rounded-[10px] border border-border-strong bg-bg-elev px-3 text-[13px] font-medium text-fg-muted">
           <MagnifyingGlass aria-hidden size={15} />
           <span>Search...</span>
           <span className="rounded-md bg-bg-sunken px-1.5 py-0.5 font-mono text-[11px] text-fg-muted">

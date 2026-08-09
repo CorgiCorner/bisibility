@@ -15,7 +15,8 @@ import { useToast } from "./Toast";
 
 export type ConfirmKind =
   | "deactivateAccount"
-  | "deleteWorkspace"
+  | "deleteAccount"
+  | "deleteProject"
   | "deleteWebhookEndpoint"
   | "deleteBulk"
   | "deleteKeyword"
@@ -64,13 +65,24 @@ export const CONFIRM: Record<ConfirmKind, ConfirmConfig> = {
     toastMessage: "Keyword deleted",
     title: "Delete keyword",
   },
-  deleteWorkspace: {
-    body: "This permanently deletes this workspace and all tracked keywords, history and API keys. This cannot be undone.",
-    dangerLabel: "Delete workspace",
+  // Account deletion used to borrow the project copy, so the last thing a user read before
+  // confirming described a different object than the one being destroyed.
+  deleteAccount: {
+    body: "This permanently deletes your account, your projects, and everything tracked in them. This cannot be undone.",
+    dangerLabel: "Delete account",
     icon: Warning,
     requireType: true,
-    toastMessage: "Workspace deleted",
-    title: "Delete workspace",
+    toastMessage: "Account deleted",
+    title: "Delete account",
+    typeWord: "you@example.com",
+  },
+  deleteProject: {
+    body: "This permanently deletes this project and all tracked keywords, history and API keys. This cannot be undone.",
+    dangerLabel: "Delete project",
+    icon: Warning,
+    requireType: true,
+    toastMessage: "Project deleted",
+    title: "Delete project",
     typeWord: "acme.dev",
   },
   deleteWebhookEndpoint: {
@@ -162,7 +174,7 @@ export function ConfirmModal({
     <Modal contentClassName="p-0" onClose={handleClose} open={open} showClose={false} size="sm">
       <div className="px-[22px] pb-[18px] pt-[22px]">
         <div className="flex items-center gap-3">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[11px] text-red [background:color-mix(in_srgb,var(--red)_12%,transparent)]">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[11px] text-red-text [background:color-mix(in_srgb,var(--red)_12%,transparent)]">
             <Icon aria-hidden size={21} weight="bold" />
           </span>
           <h2 className="m-0 text-[16.5px] font-semibold leading-tight tracking-[-0.3px] text-fg">
@@ -177,7 +189,7 @@ export function ConfirmModal({
               confirm
             </label>
             <input
-              className="w-full rounded-[9px] border border-border-strong bg-bg-sunken px-3 py-2.5 font-mono text-[13px] font-medium text-fg outline-none transition-colors focus:border-red"
+              className="w-full rounded-[9px] border border-border-strong bg-transparent px-3 py-2.5 font-mono text-[13px] font-medium text-fg outline-none transition-colors focus:border-red"
               id="confirm-type-word"
               onChange={(event) => setTyped(event.target.value)}
               placeholder={expectedWord}
@@ -196,7 +208,7 @@ export function ConfirmModal({
           Cancel
         </button>
         <button
-          className="inline-flex items-center gap-[7px] rounded-[9px] bg-red px-4 py-2.5 text-[13px] font-semibold text-white outline-none transition-opacity hover:opacity-90 focus-visible:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex items-center gap-[7px] rounded-[9px] bg-red px-4 py-2.5 text-[13px] font-semibold text-error-contrast outline-none transition-opacity hover:opacity-90 focus-visible:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
           disabled={disabled}
           onClick={handleConfirm}
           type="button"

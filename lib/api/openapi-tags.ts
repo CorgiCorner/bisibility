@@ -95,7 +95,7 @@ export const openApiTags = [
   },
   {
     name: "migration",
-    description: "Manage migration tokens and cloud import sessions.",
+    description: "Manage migration tokens and instance import sessions.",
     "x-group": "Migration",
   },
 ] as const;

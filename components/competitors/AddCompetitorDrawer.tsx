@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Sheet } from "@/components/ui";
+import { Button, inputClassName, Sheet } from "@/components/ui";
 import { addManagedCompetitor } from "@/lib/actions/competitors";
 import {
   type AddManagedCompetitorInput,
@@ -23,9 +23,8 @@ type AddCompetitorDrawerProps = {
 };
 
 const labelClass =
-  "flex flex-col gap-[7px] font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint";
-const fieldClass =
-  "rounded-[9px] border border-border-strong bg-bg-sunken px-[13px] py-[11px] text-[14px] font-medium text-fg outline-none focus:border-accent";
+  "flex flex-col gap-[7px] font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted";
+const fieldClass = `${inputClassName} rounded-[9px] px-[13px] py-[11px] text-[14px] font-medium`;
 
 function labelFromDomain(domain: string) {
   return domain.split(".")[0] ?? domain;
@@ -132,7 +131,7 @@ export function AddCompetitorDrawer({
             placeholder="competitor.example"
             {...register("domain")}
           />
-          <span className="font-mono text-[10px] normal-case tracking-normal text-fg-faint">
+          <span className="font-mono text-[10px] normal-case tracking-normal text-fg-muted">
             {errors.domain?.message ?? "Bare domains work best. We normalize https:// and www."}
           </span>
         </label>
@@ -145,13 +144,13 @@ export function AddCompetitorDrawer({
             placeholder="Example competitor"
             {...register("label")}
           />
-          <span className="font-mono text-[10px] normal-case tracking-normal text-fg-faint">
+          <span className="font-mono text-[10px] normal-case tracking-normal text-fg-muted">
             {errors.label?.message ?? "Optional. Used in the charts and head-to-head table."}
           </span>
         </label>
 
         <section className="overflow-hidden rounded-xl border border-border">
-          <div className="bg-bg-sunken px-[15px] py-3 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint">
+          <div className="bg-bg-sunken px-[15px] py-3 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
             Observed in your SERPs
           </div>
           {suggestions.length > 0 ? (
@@ -165,12 +164,12 @@ export function AddCompetitorDrawer({
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block text-[13px] font-semibold">{suggestion.domain}</span>
-                  <span className="block font-mono text-[10.5px] text-fg-faint">
+                  <span className="block font-mono text-[10.5px] text-fg-muted">
                     {suggestion.overlap} observed keywords
                   </span>
                 </span>
                 <button
-                  className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-border-strong bg-bg-elev px-3 py-1.5 text-xs font-semibold text-fg outline-none transition-colors hover:border-accent hover:text-accent focus-visible:border-accent focus-visible:text-accent"
+                  className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-border-strong bg-bg-elev px-3 py-1.5 text-xs font-semibold text-fg outline-none transition-colors hover:border-accent hover:text-accent-text focus-visible:border-accent focus-visible:text-accent-text"
                   disabled={isSubmitting}
                   onClick={() => pickSuggestion(suggestion.domain)}
                   type="button"
@@ -187,16 +186,18 @@ export function AddCompetitorDrawer({
           )}
         </section>
 
-        <div className="flex items-start gap-[9px] rounded-[11px] border border-dashed border-border-strong bg-bg-sunken px-3.5 py-3 text-xs leading-5 text-fg-muted">
+        <div className="flex items-start gap-[9px] rounded-[11px] border border-dashed border-border-strong bg-transparent px-3.5 py-3 text-xs leading-5 text-fg-muted">
           <span className="flex h-5 shrink-0 items-center">
-            <Info aria-hidden className="text-accent" size={15} />
+            <Info aria-hidden className="text-accent-text" size={15} />
           </span>
           <span>
             Share of voice and head-to-head ranks update from completed rank checks for keywords you
             already track.
           </span>
         </div>
-        {actionError ? <span className="font-mono text-[11px] text-red">{actionError}</span> : null}
+        {actionError ? (
+          <span className="font-mono text-[11px] text-red-text">{actionError}</span>
+        ) : null}
       </form>
     </Sheet>
   );

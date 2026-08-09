@@ -32,12 +32,12 @@ function observedLabel(row: Extract<FirstCheckResultRow, { status: "observed" }>
 
 function ResultIcon({ row }: Readonly<{ row: FirstCheckResultRow }>) {
   if (row.status === "pending") {
-    return <CircleNotch aria-hidden className="bv-spin text-accent" size={16} weight="bold" />;
+    return <CircleNotch aria-hidden className="bv-spin text-accent-text" size={16} weight="bold" />;
   }
   if (row.status === "failed") {
-    return <WarningCircle aria-hidden className="text-yellow" size={16} weight="bold" />;
+    return <WarningCircle aria-hidden className="text-yellow-text" size={16} weight="bold" />;
   }
-  return <CheckCircle aria-hidden className="text-green" size={16} weight="fill" />;
+  return <CheckCircle aria-hidden className="text-green-text" size={16} weight="fill" />;
 }
 
 function resultText(row: FirstCheckResultRow) {
@@ -66,7 +66,7 @@ export function FirstCheckResults({ state }: Readonly<FirstCheckResultsProps>) {
                 <span className="truncate text-[13px] font-medium text-fg">{row.text}</span>
                 <span
                   className={`inline-flex min-w-0 items-center justify-end gap-2 text-right ${feedbackClass} ${
-                    row.status === "failed" ? "text-yellow" : "text-fg-muted"
+                    row.status === "failed" ? "text-yellow-text" : "text-fg-muted"
                   }`}
                 >
                   <ResultIcon row={row} />
@@ -80,7 +80,7 @@ export function FirstCheckResults({ state }: Readonly<FirstCheckResultsProps>) {
       {state.message ? (
         <p
           className={`m-0 mt-3 ${feedbackClass} ${
-            state.status === "failed" ? "text-red" : "text-fg-muted"
+            state.status === "failed" ? "text-red-text" : "text-fg-muted"
           }`}
         >
           {state.message}

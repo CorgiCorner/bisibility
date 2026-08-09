@@ -149,7 +149,7 @@ export function SavedKeywordsTable({
           />
         ) : null}
         {actionError ? (
-          <p className="m-0 border-b border-red/30 bg-red/10 px-4 py-2 text-[12px] text-red">
+          <p className="m-0 border-b border-red/30 bg-red/10 px-4 py-2 text-[12px] text-red-text">
             {actionError}
           </p>
         ) : null}

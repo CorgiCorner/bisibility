@@ -16,7 +16,7 @@ export function OnboardingLogoutButton() {
 
   return (
     <button
-      className="inline-flex items-center gap-1 font-semibold text-accent disabled:opacity-60"
+      className="inline-flex items-center gap-1 font-semibold text-accent-text disabled:bg-bg-sunken disabled:text-fg-muted"
       disabled={pending}
       onClick={() => void handleSignOut()}
       type="button"

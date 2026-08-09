@@ -26,7 +26,7 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 const MIGRATION_HOLD_DETAIL =
-  "Destination workspace is in migration hold - release it before importing.";
+  "Destination project is in migration hold - release it before importing.";
 
 function instance(req: Request) {
   return `urn:bisibility:api:cloud-import:${new URL(req.url).pathname}`;
@@ -149,7 +149,7 @@ export async function POST(req: NextRequest) {
       return authError(419, req, "Migration token is invalid or expired.", anonymousLimit.headers);
     }
 
-    return errorResponse("internal_server_error", "Cloud import failed.", 500, {
+    return errorResponse("internal_server_error", "Instance import failed.", 500, {
       headers: anonymousLimit.headers,
       instance: instance(req),
     });

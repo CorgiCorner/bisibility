@@ -3,7 +3,7 @@ import type { StatusKind } from "@/components/ui";
 const statusMeta = {
   connected: {
     background: "color-mix(in srgb, var(--green) 12%, transparent)",
-    color: "var(--green)",
+    color: "var(--green-text)",
     label: "Connected",
   },
   needs_reauth: {
@@ -11,7 +11,7 @@ const statusMeta = {
     color: "var(--red)",
     label: "Reconnect required",
   },
-  optional: { background: "var(--bg-sunken)", color: "var(--fg-faint)", label: "Optional" },
+  optional: { background: "var(--bg-sunken)", color: "var(--fg-muted)", label: "Optional" },
   planned: {
     background: "color-mix(in srgb, var(--purple) 12%, transparent)",
     color: "var(--purple)",

@@ -2,14 +2,13 @@
 
 import { ConnectDrawer } from "@/components/integrations/ConnectDrawer";
 import { ProviderCredentialWarning } from "@/components/integrations/ProviderCredentialWarning";
-import { ProviderLogo } from "@/components/integrations/ProviderLogo";
 import { ProviderStatusBadge } from "@/components/integrations/ProviderStatusBadge";
 import { ProviderSyncFailureAlert } from "@/components/integrations/ProviderSyncFailureAlert";
 import {
   ProjectReadOnlyTooltip,
   useProjectWriteMode,
 } from "@/components/shell/ProjectWriteModeProvider";
-import { Card, SectionTitle } from "@/components/ui";
+import { Button, Card, ProviderLogo, SectionTitle } from "@/components/ui";
 import { testConnection as testConnectionAction } from "@/lib/actions/providers";
 import type {
   IntegrationProviderData,
@@ -39,11 +38,17 @@ const actionLabels = {
   ready: "Connect",
 } as const;
 
-const outlineButtonClass =
-  "w-full rounded-lg border border-border-strong bg-bg-elev px-3 py-[7px] text-[12.5px] font-semibold text-fg-muted outline-none transition-colors hover:border-accent hover:text-accent focus-visible:border-accent focus-visible:text-accent disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto";
+const responsiveActionSx = {
+  width: "100%",
+  "@media (min-width:640px)": { width: "auto" },
+} as const;
 
-const primaryButtonClass =
-  "w-full rounded-lg bg-accent px-3.5 py-[7px] text-[12.5px] font-semibold text-white outline-none transition-colors hover:bg-accent-hover focus-visible:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto";
+const outlineActionSx = {
+  ...responsiveActionSx,
+  color: "var(--fg-muted)",
+  "&:hover": { borderColor: "var(--accent)", color: "var(--accent-text)" },
+  "&.Mui-focusVisible": { borderColor: "var(--accent)", color: "var(--accent-text)" },
+} as const;
 
 const actionWrapperClass = "flex flex-1 sm:inline-flex sm:flex-initial";
 type ProviderId = Parameters<ProviderActionHandlers["testProviderConnection"]>[0]["providerId"];
@@ -78,7 +83,8 @@ export function ProviderCard({
   const [syncResult, setSyncResult] = useState<ProviderTestResult | null>(null);
   const { readOnly } = useProjectWriteMode();
   const primaryAction = provider.status !== "connected";
-  const actionClassName = primaryAction ? primaryButtonClass : outlineButtonClass;
+  const actionVariant = primaryAction ? "primary" : "secondary";
+  const actionSx = primaryAction ? responsiveActionSx : outlineActionSx;
   const actionDisabled = readOnly && primaryAction;
   const canSync =
     provider.kind === "analytics" && provider.status === "connected" && provider.enabled !== false;
@@ -163,12 +169,12 @@ export function ProviderCard({
               </SectionTitle>
               <ProviderStatusBadge status={provider.status} />
               {provider.primary ? (
-                <span className="inline-flex items-center rounded-full bg-accent-soft px-2 py-0.5 font-mono text-[10px] font-semibold text-accent">
+                <span className="inline-flex items-center rounded-full bg-accent-soft px-2 py-0.5 font-mono text-[10px] font-semibold text-accent-text">
                   Primary
                 </span>
               ) : null}
               {provider.status === "connected" && provider.enabled === false ? (
-                <span className="inline-flex items-center rounded-full bg-bg-sunken px-2 py-0.5 font-mono text-[10px] font-semibold text-fg-faint">
+                <span className="inline-flex items-center rounded-full bg-bg-sunken px-2 py-0.5 font-mono text-[10px] font-semibold text-fg-muted">
                   Disabled
                 </span>
               ) : null}
@@ -182,7 +188,7 @@ export function ProviderCard({
         <dl className="m-0 mt-3.5 flex flex-wrap gap-x-9 gap-y-3 border-border-soft border-t pt-3.5 sm:col-span-2 sm:row-start-2">
           {provider.meta.map((row) => (
             <div key={row.label}>
-              <dt className="font-mono text-[9.5px] uppercase tracking-[0.5px] text-fg-faint">
+              <dt className="font-mono text-[9.5px] uppercase tracking-[0.5px] text-fg-muted">
                 {row.label}
               </dt>
               <dd className="m-0 mt-[3px] font-mono text-[12.5px] text-fg-muted">{row.value}</dd>
@@ -191,7 +197,7 @@ export function ProviderCard({
         </dl>
         {provider.status === "needs_reauth" ? (
           <p
-            className="m-0 mt-3 rounded-lg border border-red bg-red/5 px-3 py-2 text-[12.5px] leading-[1.45] text-red sm:col-span-2"
+            className="m-0 mt-3 rounded-lg border border-red bg-red/5 px-3 py-2 text-[12.5px] leading-[1.45] text-red-text sm:col-span-2"
             role="alert"
           >
             Google authorization is no longer valid. Reconnect to resume traffic
@@ -203,52 +209,61 @@ export function ProviderCard({
         <div className="mt-3.5 flex shrink-0 items-center gap-[7px] border-border-soft border-t pt-3.5 sm:col-start-2 sm:row-start-1 sm:mt-0 sm:flex-wrap sm:justify-end sm:border-t-0 sm:pt-0">
           {provider.secondaryAction && canManageProviders ? (
             <ProjectReadOnlyTooltip className={actionWrapperClass}>
-              <button
-                className={outlineButtonClass}
+              <Button
                 disabled={readOnly || testPending}
                 onClick={() => {
                   void handleSecondaryAction();
                 }}
+                size="xs"
+                sx={outlineActionSx}
                 type="button"
+                variant="secondary"
               >
                 {testPending ? "Testing..." : provider.secondaryAction}
-              </button>
+              </Button>
             </ProjectReadOnlyTooltip>
           ) : null}
           {canSync && canUpdateProject ? (
             <ProjectReadOnlyTooltip className={actionWrapperClass}>
-              <button
-                className={outlineButtonClass}
+              <Button
                 disabled={readOnly || syncPending}
                 onClick={() => {
                   void handleTrafficSync();
                 }}
+                size="xs"
+                sx={outlineActionSx}
                 type="button"
+                variant="secondary"
               >
                 {syncPending ? "Syncing..." : "Sync now"}
-              </button>
+              </Button>
             </ProjectReadOnlyTooltip>
           ) : null}
           {canManageProviders && actionDisabled ? (
             <ProjectReadOnlyTooltip className={actionWrapperClass}>
-              <button className={actionClassName} disabled type="button">
+              <Button disabled size="xs" sx={actionSx} type="button" variant={actionVariant}>
                 {actionLabels[provider.status]}
-              </button>
+              </Button>
             </ProjectReadOnlyTooltip>
           ) : canManageProviders ? (
-            <button
-              className={`${actionClassName} flex-1 sm:flex-initial`}
+            <Button
               onClick={() => setDrawerOpen(true)}
+              size="xs"
+              sx={[
+                actionSx,
+                { flex: 1, "@media (min-width:640px)": { flex: "0 1 auto", width: "auto" } },
+              ]}
               type="button"
+              variant={actionVariant}
             >
               {actionLabels[provider.status]}
-            </button>
+            </Button>
           ) : null}
         </div>
         {testResult ? (
           <p
             className={`m-0 mt-3 text-[12.5px] leading-[1.45] sm:col-span-2 ${
-              testResult.ok ? "text-green" : "text-red"
+              testResult.ok ? "text-green-text" : "text-red-text"
             }`}
             role={testResult.ok ? "status" : "alert"}
           >
@@ -267,7 +282,7 @@ export function ProviderCard({
         {syncResult ? (
           <p
             className={`m-0 mt-3 text-[12.5px] leading-[1.45] sm:col-span-2 ${
-              syncResult.ok ? "text-green" : "text-red"
+              syncResult.ok ? "text-green-text" : "text-red-text"
             }`}
             role={syncResult.ok ? "status" : "alert"}
           >

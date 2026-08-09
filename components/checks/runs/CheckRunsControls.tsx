@@ -130,13 +130,13 @@ export function CheckRunsHeader({
 // fallback reads in the warn tone, completed stays default foreground.
 const statTiles = [
   { count: "completed", filter: "completed", label: "Completed", valueClassName: "text-fg" },
-  { count: "failed", filter: "failed", label: "Failed", valueClassName: "text-red" },
-  { count: "deferred", filter: "deferred", label: "Skipped", valueClassName: "text-yellow-strong" },
+  { count: "failed", filter: "failed", label: "Failed", valueClassName: "text-red-text" },
+  { count: "deferred", filter: "deferred", label: "Skipped", valueClassName: "text-yellow-text" },
   {
     count: "viaFallback",
     filter: "fallback",
     label: "Fallback",
-    valueClassName: "text-yellow-strong",
+    valueClassName: "text-yellow-text",
   },
 ] as const satisfies readonly {
   count: keyof CheckRunsCounts;
@@ -160,7 +160,7 @@ export function CheckRunStats({ counts, filter, onFilterChange }: Readonly<Filte
           <button
             aria-label={`Filter by ${tile.label} - ${counts[tile.count].toLocaleString("en-US")}`}
             aria-pressed={active}
-            className={`min-w-0 rounded-xl border px-3 py-3 text-left outline-none transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${
+            className={`min-w-0 rounded-xl border px-3 py-3 text-left transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-solid ${
               active
                 ? "border-accent bg-accent-soft"
                 : "border-border bg-bg-elev hover:border-border-strong hover:bg-bg-sunken"
@@ -224,7 +224,7 @@ export function CheckRunFilters({ counts, filter, onFilterChange }: Readonly<Fil
             aria-pressed={selected}
             className={`inline-flex min-h-8 items-center gap-1.5 rounded-lg border px-2.5 text-[11.5px] font-semibold outline-none transition-colors ${filterChipStateClassName(
               selected,
-            )} ${outlined ? "border-dashed text-fg-faint" : ""}`}
+            )} ${outlined ? "border-dashed text-fg-muted" : ""}`}
             key={item.id}
             onClick={() => onFilterChange(item.id)}
             title={item.tooltip}

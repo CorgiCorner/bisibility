@@ -1,12 +1,12 @@
+import { inputClassName } from "@/components/ui";
 import { DEFAULT_SERP_DEPTH, languageForSerpMarket, SERP_ENGINE } from "@/lib/serp/markets";
 
 export const onboardingFormId = "onboarding-step-form";
 
-export const inputClass =
-  "rounded-[9px] border border-border-strong bg-bg-sunken px-[13px] py-[11px] font-medium text-fg outline-none focus:border-accent";
+export const inputClass = `${inputClassName} rounded-[9px] px-[13px] py-[11px] font-medium`;
 
 export const labelClass =
-  "flex flex-col gap-[7px] font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint";
+  "flex flex-col gap-[7px] font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted";
 
 export const feedbackClass = "text-[11.5px] font-medium normal-case tracking-normal";
 
@@ -42,7 +42,7 @@ export function displayProvider(providerId?: string | null) {
   }
 
   if (providerId === "serpapi") {
-    return "SerpAPI";
+    return "SerpApi";
   }
 
   return "Skipped";

@@ -69,7 +69,7 @@ export function ContentHeroSkeleton({
   titleWidths?: string[];
 }>) {
   return (
-    <section className="mx-auto max-w-[1080px] px-5 pb-9 pt-[42px] sm:px-8 sm:pb-10">
+    <section className="mx-auto max-w-[1200px] px-5 pb-9 pt-[42px] sm:px-8 sm:pb-10">
       <EyebrowSkeleton />
       <div className="mt-[18px] flex max-w-[760px] flex-col gap-3">
         {titleWidths.map((width) => (
@@ -90,7 +90,7 @@ export function ContentHeroSkeleton({
 
 export function CtaBandSkeleton() {
   return (
-    <section className="mx-auto max-w-[1080px] px-5 pb-16 pt-4 sm:px-8">
+    <section className="mx-auto max-w-[1200px] px-5 pb-16 pt-4 sm:px-8">
       <div className="flex flex-col items-start gap-4 rounded-2xl border border-border bg-bg-elev p-6 sm:p-8">
         <div className="w-full max-w-[720px]">
           <SkeletonBlock className="h-[31px] w-[72%] rounded-[8px]" />

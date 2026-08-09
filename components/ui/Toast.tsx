@@ -48,7 +48,7 @@ const UNDO_TOAST_DURATION = 6000;
 const tintStyles = {
   accent: {
     border: "color-mix(in srgb, var(--accent) 28%, var(--border))",
-    color: "var(--accent)",
+    color: "var(--accent-text)",
     soft: "var(--accent-soft)",
   },
   blue: {
@@ -58,7 +58,7 @@ const tintStyles = {
   },
   green: {
     border: "color-mix(in srgb, var(--green) 28%, var(--border))",
-    color: "var(--green)",
+    color: "var(--green-text)",
     soft: "color-mix(in srgb, var(--green) 12%, transparent)",
   },
   neutral: {
@@ -78,7 +78,7 @@ const tintStyles = {
   },
   yellow: {
     border: "color-mix(in srgb, var(--yellow) 32%, var(--border))",
-    color: "var(--yellow-strong)",
+    color: "var(--yellow-text)",
     soft: "color-mix(in srgb, var(--yellow) 14%, transparent)",
   },
 } satisfies Record<ToastTint, TintStyle>;

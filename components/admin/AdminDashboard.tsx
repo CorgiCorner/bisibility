@@ -162,7 +162,7 @@ export function AdminDashboard({ data }: Readonly<{ data: InstanceAdminDashboard
           />
         </div>
         {data.temporal.status === "unavailable" ? (
-          <p className="mt-3 rounded-xl bg-yellow/10 p-3 text-xs text-yellow">
+          <p className="mt-3 rounded-xl bg-yellow/10 p-3 text-xs text-yellow-text">
             Snapshot unavailable {"-"} worker has not published Temporal data. Values above are
             unknown, not zero.
           </p>

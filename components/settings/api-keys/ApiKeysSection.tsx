@@ -32,7 +32,7 @@ export type ApiKeysSectionProps = {
 };
 
 const iconButtonClass =
-  "grid h-[30px] w-[30px] place-items-center rounded-lg border border-border-strong bg-bg-elev text-fg-muted hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-55";
+  "grid h-[30px] w-[30px] place-items-center rounded-lg border border-border-strong bg-bg-elev text-fg-muted hover:border-accent hover:text-accent-text disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted";
 const feedbackClass = "text-[11.5px] font-medium text-fg-muted";
 
 export function ApiKeysSection({
@@ -96,7 +96,7 @@ export function ApiKeysSection({
               <span className="min-w-0 flex-1">
                 <span className="block text-[13px] font-semibold">{apiKey.name}</span>
                 {apiKey.isExpired ? (
-                  <span className="mt-1 inline-flex rounded-full border border-red px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.5px] text-red">
+                  <span className="mt-1 inline-flex rounded-full border border-red px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.5px] text-red-text">
                     Expired
                   </span>
                 ) : null}
@@ -126,7 +126,7 @@ export function ApiKeysSection({
                   {revokeKey ? (
                     <button
                       aria-label={`Revoke ${apiKey.name} key`}
-                      className="grid h-[30px] w-[30px] place-items-center rounded-lg border border-border-strong bg-bg-elev text-red hover:border-red disabled:cursor-not-allowed disabled:opacity-55"
+                      className="grid h-[30px] w-[30px] place-items-center rounded-lg border border-border-strong bg-bg-elev text-red-text hover:border-red disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted"
                       disabled={isPending || !projectId}
                       onClick={() => setRevokeTarget(apiKey)}
                       type="button"
@@ -141,7 +141,7 @@ export function ApiKeysSection({
         </div>
       ) : (
         <div className="flex flex-col items-center rounded-[14px] border border-border bg-bg-elev px-6 py-8 text-center">
-          <span className="grid h-12 w-12 place-items-center rounded-[13px] bg-bg-sunken text-fg-faint">
+          <span className="grid h-12 w-12 place-items-center rounded-[13px] bg-bg-sunken text-fg-muted">
             <Key aria-hidden size={23} />
           </span>
           <div className="mt-3 text-[14.5px] font-semibold">No API keys yet</div>

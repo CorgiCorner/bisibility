@@ -27,7 +27,7 @@ function blockerHint(code: string, target: MigrationCompatibilityResult["target"
   }
   const deploymentHint =
     target.sourceDeploymentMode === "self-host"
-      ? " If this is meant to be a Cloud deployment, it likely needs DEPLOYMENT_MODE set to cloud."
+      ? " If this is meant to be a hosted deployment, it likely needs DEPLOYMENT_MODE set to cloud."
       : "";
   return `Pick a different destination. The resolved address is ${target.origin}.${deploymentHint}`;
 }

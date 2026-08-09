@@ -4,10 +4,10 @@ import { describe, expect, it } from "vitest";
 import { SetupSuccess } from "./SetupSuccess";
 
 describe("SetupSuccess", () => {
-  it("makes the workspace primary while retaining the admin link", () => {
+  it("makes the project primary while retaining the admin link", () => {
     render(<SetupSuccess mailerConfigured />);
 
-    const workspaceLink = screen.getByRole("link", { name: "Go to your workspace" });
+    const workspaceLink = screen.getByRole("link", { name: "Go to your project" });
     const adminLink = screen.getByRole("link", { name: "Open the admin panel" });
 
     expect(workspaceLink).toHaveAttribute("href", appRootPath());

@@ -146,7 +146,7 @@ async function putChunk(
       timeoutMs: 30_000,
     },
   );
-  return destinationResult(response, "Cloud import chunk transfer failed.", (body) =>
+  return destinationResult(response, "Instance import chunk transfer failed.", (body) =>
     chunkResponseSchema.parse(body),
   );
 }
@@ -195,7 +195,7 @@ export async function createRemoteImportSession(input: unknown): Promise<CreateS
     method: "POST",
     timeoutMs: 30_000,
   });
-  return destinationResult(response, "Cloud import session failed.", (body) => {
+  return destinationResult(response, "Instance import session failed.", (body) => {
     const parsed = createSessionResponseSchema.parse(body);
     return {
       chunkLimits: {
@@ -284,7 +284,7 @@ export async function finalizeRemoteImportSession(input: unknown): Promise<Final
       timeoutMs: 120_000,
     },
   );
-  return destinationResult(response, "Cloud import finalize failed.", (body) => {
+  return destinationResult(response, "Instance import finalize failed.", (body) => {
     const parsed = finalizeResponseSchema.parse(body);
     return { counts: parsed.counts, jobId: parsed.job_id, state: parsed.state };
   });

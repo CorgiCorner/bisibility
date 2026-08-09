@@ -149,7 +149,7 @@ export function ResearchSearchCard({
     <Card className="overflow-visible p-4 sm:p-5" size="md">
       <form className="grid gap-3" onSubmit={handleSubmit(submit)}>
         <div className="flex flex-col gap-3 md:flex-row md:items-start">
-          <div className="flex min-h-[34px] flex-1 flex-wrap items-center gap-1.5 rounded-[9px] border border-border-strong bg-bg-elev px-2.5 py-0.5 focus-within:border-accent md:min-w-[240px]">
+          <div className="flex min-h-[34px] flex-1 flex-wrap items-center gap-1.5 rounded-[9px] border border-border-strong bg-transparent px-2.5 py-0.5 focus-within:border-accent md:min-w-[240px]">
             {seeds.map((seed) => (
               <span
                 className="inline-flex items-center gap-1 rounded-full border border-border bg-bg-elev px-2.5 py-1 text-[12px] font-medium"
@@ -158,7 +158,7 @@ export function ResearchSearchCard({
                 {seed}
                 <button
                   aria-label={`Remove ${seed}`}
-                  className="text-fg-faint hover:text-fg"
+                  className="text-fg-muted hover:text-fg"
                   onClick={() => onSeedsChange(seeds.filter((item) => item !== seed))}
                   type="button"
                 >
@@ -169,7 +169,7 @@ export function ResearchSearchCard({
             <input
               {...register("seed")}
               aria-label="Seed keyword"
-              className="min-w-[160px] flex-1 bg-transparent px-1 py-1 text-[12.5px] font-medium text-fg outline-none placeholder:text-fg-faint"
+              className="min-w-[160px] flex-1 bg-transparent px-1 py-1 text-[12.5px] font-medium text-fg outline-none placeholder:text-fg-muted"
               disabled={disabled || researching || seeds.length >= 5}
               id="research-seed"
               onKeyDown={handleSeedKeyDown}
@@ -277,7 +277,7 @@ export function ResearchSearchCard({
               </div>
             ))}
           </div>
-          <p className="mb-0 mt-3 text-[11.5px] leading-5 text-fg-faint">
+          <p className="mb-0 mt-3 text-[11.5px] leading-5 text-fg-muted">
             Cache hits are free for 12 hours. Actual provider cost may differ slightly.
           </p>
         </div>

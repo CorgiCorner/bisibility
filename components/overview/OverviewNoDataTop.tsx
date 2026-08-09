@@ -42,7 +42,7 @@ function bannerText(state: Exclude<NoDataBannerState, "ready">, keywordCount: nu
   }
   if (state === "missing") {
     return {
-      detail: `${keywords} ready. Connect DataForSEO or SerpAPI to start rank tracking.`,
+      detail: `${keywords} ready. Connect DataForSEO or SerpApi to start rank tracking.`,
       title: "SERP provider required.",
     };
   }
@@ -116,7 +116,7 @@ export function NoDataBanner({
   // Same "toast" variant as the roadmap-preview SoonBanner: accent border + soft fill.
   return (
     <section className="flex flex-col gap-3 rounded-xl border border-accent bg-accent-soft px-4 py-[13px] text-fg sm:flex-row sm:items-center sm:gap-3">
-      <ClockCountdown aria-hidden className="shrink-0 text-accent" size={17} weight="fill" />
+      <ClockCountdown aria-hidden className="shrink-0 text-accent-text" size={17} weight="fill" />
       <p className="m-0 min-w-0 flex-1 text-[13px] leading-[1.5]">
         <strong className="font-semibold">{copy.title}</strong>{" "}
         <span className="text-fg-muted">{copy.detail}</span>
@@ -160,12 +160,12 @@ export function NoDataKpiRow(props: Readonly<NoDataKpiRowProps>) {
       {kpis.map((kpi) => {
         const value = kpi.value === "count" ? String(keywordCount) : kpi.value;
         const subline = kpi.subline === "status" ? keywordSubline : kpi.subline;
-        const valueClassName = kpi.muted ? "text-fg-faint" : "text-fg";
-        const sublineClassName = kpi.value === "count" ? "text-accent" : "text-fg-faint";
+        const valueClassName = kpi.muted ? "text-fg-muted" : "text-fg";
+        const sublineClassName = kpi.value === "count" ? "text-accent-text" : "text-fg-muted";
 
         return (
           <Card key={kpi.label} size="md" style={{ borderRadius: 14, padding: "16px 18px" }}>
-            <div className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint">
+            <div className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
               {kpi.label}
             </div>
             <div

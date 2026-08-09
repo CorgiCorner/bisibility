@@ -239,13 +239,13 @@ describe("cloud migration handoff actions", () => {
   it("still throws malformed inputs and unexpected remote failures", async () => {
     const base = { filename: "dump.json", projectId, token: "mig_valid_token_value_12345" };
     await expect(transferCloudImportPackage({ ...base, content: "{x" })).rejects.toThrow(
-      "Cloud import package must be valid JSON.",
+      "Instance import package must be valid JSON.",
     );
 
     mocks.migrationFetch.mockResolvedValueOnce(new Response("not-json", { status: 502 }));
     await expect(
       transferCloudImportPackage({ ...base, content: packageContent() }),
-    ).rejects.toThrow("Cloud import failed.");
+    ).rejects.toThrow("Instance import failed.");
 
     mocks.migrationFetch.mockResolvedValueOnce(
       new Response(JSON.stringify({ detail: "Unexpected destination failure." }), { status: 502 }),

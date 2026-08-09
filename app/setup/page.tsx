@@ -1,11 +1,10 @@
-import { Card } from "@/components/ui";
+import { BrandLockup, Card } from "@/components/ui";
 import { isFirstRun, isFirstRunAdministratorPending } from "@/lib/auth/first-run";
 import { getInstanceAdminSession } from "@/lib/auth/instance-admin";
 import { requireSession } from "@/lib/auth/session";
 import { isEmailConfigured } from "@/lib/email/registry";
 import { createNoindexMetadata } from "@/lib/seo/noindex";
 import packageJson from "@/package.json";
-import { ChartLineUpIcon as ChartLineUp } from "@phosphor-icons/react/dist/ssr";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { signOutAndSwitchAccountAction } from "./actions";
@@ -26,17 +25,11 @@ function SetupFrame({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <main className="flex min-h-dvh items-center justify-center bg-bg px-5 py-10 text-fg">
       <div className="flex w-full max-w-[480px] flex-col gap-[18px]">
-        <Link
-          className="inline-flex items-center justify-center gap-2.5 text-fg no-underline"
-          href="/"
-        >
-          <span className="grid h-[34px] w-[34px] place-items-center rounded-[9px] bg-accent text-white">
-            <ChartLineUp aria-hidden size={18} weight="bold" />
-          </span>
-          <span className="text-[20px] font-bold tracking-[-0.01em]">bisibility</span>
+        <Link className="inline-flex justify-center no-underline" href="/">
+          <BrandLockup />
         </Link>
         {children}
-        <p className="m-0 text-center font-mono text-[10.5px] text-fg-faint">
+        <p className="m-0 text-center font-mono text-[10.5px] text-fg-muted">
           self-hosted · v{packageJson.version}
         </p>
       </div>

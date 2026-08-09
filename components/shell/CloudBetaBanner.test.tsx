@@ -64,6 +64,12 @@ describe("CloudBetaBanner", () => {
     });
   });
 
+  it("stays hidden while the project has nothing to export", () => {
+    render(<CloudBetaBanner {...defaultProps} hasExportableData={false} />);
+
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+  });
+
   it("renders the professional warning only for Cloud deployments", () => {
     const { rerender } = render(<CloudBetaBanner {...defaultProps} isCloud={false} />);
 
@@ -72,7 +78,7 @@ describe("CloudBetaBanner", () => {
 
     rerender(<CloudBetaBanner {...defaultProps} />);
 
-    expect(screen.getByRole("status")).toHaveTextContent("Managed Cloud is in beta");
+    expect(screen.getByRole("status")).toHaveTextContent("You're on the hosted beta");
     expect(screen.getByRole("status")).toHaveTextContent("Tracking and history match self-hosted.");
     expect(screen.getByRole("status")).toHaveTextContent("Managed restores are not guaranteed yet");
   });
@@ -110,7 +116,7 @@ describe("CloudBetaBanner", () => {
     expect(warningIcon.getAttribute("class") ?? "").not.toMatch(
       /(?:^|\s)(?:mt-|top-|translate-y-)[^\s]*/,
     );
-    expect(screen.getByTestId("cloud-beta-content")).toHaveTextContent("Managed Cloud is in beta");
+    expect(screen.getByTestId("cloud-beta-content")).toHaveTextContent("You're on the hosted beta");
 
     const actions = within(screen.getByTestId("cloud-beta-actions"));
     expect(actions.getByRole("button", { name: "What beta covers" })).toBeInTheDocument();
@@ -127,20 +133,20 @@ describe("CloudBetaBanner", () => {
     render(<CloudBetaBanner {...defaultProps} />);
 
     fireEvent.click(screen.getByRole("button", { name: "What beta covers" }));
-    expect(screen.getByRole("dialog", { name: /What the Cloud beta covers/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("dialog", { name: /What the hosted beta covers/i }),
+    ).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Close" }));
     fireEvent.click(screen.getByRole("button", { name: "Export data" }));
-    expect(
-      await screen.findByRole("dialog", { name: /Export workspace data/i }),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: /Export project data/i })).toBeInTheDocument();
     expect(mocks.loadCounts).toHaveBeenCalledWith({ projectId: "project_1" });
     expect(screen.getByText("Competitors").parentElement?.parentElement).toHaveTextContent("3");
 
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
     await waitFor(() =>
       expect(
-        screen.queryByRole("dialog", { name: /Export workspace data/i }),
+        screen.queryByRole("dialog", { name: /Export project data/i }),
       ).not.toBeInTheDocument(),
     );
     mocks.loadCounts.mockResolvedValueOnce({
@@ -171,7 +177,7 @@ describe("CloudBetaBanner", () => {
     const cookieSetter = vi.spyOn(document, "cookie", "set");
     const { unmount } = render(<CloudBetaBanner {...defaultProps} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Dismiss Cloud beta banner" }));
+    fireEvent.click(screen.getByRole("button", { name: "Dismiss hosted beta banner" }));
 
     expect(cookieSetter).toHaveBeenCalledWith(
       expect.stringContaining(`${CLOUD_BETA_DISMISSAL_COOKIE}=${CLOUD_BETA_DISMISSAL_VALUE}`),

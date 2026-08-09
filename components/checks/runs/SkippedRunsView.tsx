@@ -1,6 +1,6 @@
 import type { CheckRange, DeferredGroup, DeferredReason } from "@/lib/checks/contract";
 import {
-  ArrowRightIcon as ArrowRight,
+  CaretRightIcon as CaretRight,
   GaugeIcon as Gauge,
   PauseIcon as Pause,
   PlugsConnectedIcon as PlugsConnected,
@@ -72,7 +72,7 @@ function GroupCard({
       : `${group.count.toLocaleString("en-US")} checks · ${deferredWindow(group, now, timeZone)}`;
   return (
     <article className="flex min-w-0 gap-3 rounded-xl border border-border bg-bg-elev p-4">
-      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[10px] bg-bg-sunken text-yellow-strong">
+      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[10px] bg-bg-sunken text-yellow-text">
         <Icon aria-hidden size={17} weight="fill" />
       </span>
       <div className="min-w-0 flex-1">
@@ -80,11 +80,11 @@ function GroupCard({
         <p className="m-0 mt-0.5 font-mono text-[10.5px] text-fg-muted">{quantity}</p>
         <p className="m-0 mt-2 text-[12px] leading-relaxed text-fg-muted">{meta.description}</p>
         <Link
-          className="mt-2.5 inline-flex items-center gap-1 text-[11.5px] font-semibold text-accent outline-none hover:text-accent-hover focus-visible:underline"
+          className="mt-2.5 inline-flex items-center gap-1 text-[11.5px] font-semibold text-accent-text outline-none hover:text-accent-text focus-visible:underline"
           href={links[meta.link]}
         >
           {meta.cta}
-          <ArrowRight aria-hidden size={12} weight="bold" />
+          <CaretRight aria-hidden size={12} weight="bold" />
         </Link>
       </div>
     </article>

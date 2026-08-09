@@ -120,7 +120,7 @@ describe("form primitives", () => {
     const daily = screen.getByRole("radio", { name: "Daily" });
     expect(daily.parentElement?.parentElement).toHaveClass(
       "min-h-[34px]",
-      "bg-bg-elev",
+      "bg-transparent",
       "text-[12.5px]",
     );
     expect(daily.nextElementSibling).toHaveClass(
@@ -132,7 +132,7 @@ describe("form primitives", () => {
 
     rerender(<SegmentedHarness activeVariant="accent" size="toolbar" />);
     const accented = screen.getByRole("radio", { name: "Daily" }).nextElementSibling;
-    expect(accented).toHaveClass("bg-accent", "border-accent", "text-white");
+    expect(accented).toHaveClass("bg-accent-solid", "border-accent", "text-primary-contrast");
     expect(accented?.className).not.toContain("shadow-");
   });
 
@@ -172,11 +172,11 @@ describe("form primitives", () => {
     expect(button).toBeDisabled();
   });
 
-  it("keeps primary links white at the default 36px height", () => {
+  it("uses the theme contrast foreground for primary links at the default 36px height", () => {
     render(<Button href="/connect">Connect free</Button>);
 
     expect(screen.getByRole("link", { name: "Connect free" })).toHaveStyle({
-      color: "#fff",
+      color: "var(--mui-palette-primary-contrasttext)",
       minHeight: "36px",
     });
   });

@@ -13,6 +13,7 @@ vi.mock("@/lib/actions/competitors", () => ({
   addManagedCompetitor: mocks.addManagedCompetitor,
 }));
 vi.mock("@/components/ui", () => ({
+  inputClassName: "border border-border-strong bg-transparent",
   Button: ({
     children,
     loading,

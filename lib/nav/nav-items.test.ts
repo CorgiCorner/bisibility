@@ -5,13 +5,32 @@ describe("navItems", () => {
   it("keeps the primary discovery flow first and preserves the remaining order", () => {
     expect(navItems("prj_example").map((item) => item.label)).toEqual([
       "Overview",
-      "Research",
+      "Keyword research",
       "Keywords",
       "Backlinks",
       "Checks",
-      "Integrations",
       "Competitors",
       "Timeline",
+      "Integrations",
+      "Alerts",
+      "Settings",
+    ]);
+  });
+
+  it("groups the day-to-day flow as primary and the set-up-once surfaces as utility", () => {
+    const items = navItems("prj_example");
+
+    expect(items.filter((item) => item.group !== "utility").map((item) => item.label)).toEqual([
+      "Overview",
+      "Keyword research",
+      "Keywords",
+      "Backlinks",
+      "Checks",
+      "Competitors",
+      "Timeline",
+    ]);
+    expect(items.filter((item) => item.group === "utility").map((item) => item.label)).toEqual([
+      "Integrations",
       "Alerts",
       "Settings",
     ]);

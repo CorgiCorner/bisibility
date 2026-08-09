@@ -1,6 +1,6 @@
 ---
 title: "Migrate an instance"
-description: "Transfer keywords and optional history between self-hosted and cloud workspaces."
+description: "Transfer keywords and optional history between self-hosted and hosted projects."
 ---
 
 Migration uses a JSON export package and a destination-issued `mig_...` token.
@@ -9,10 +9,10 @@ of the package.
 
 ## Transfer from the app
 
-1. On the destination workspace, open **Settings → Import** and mint a migration
+1. On the destination project, open **Settings → Import** and mint a migration
    token with `full` or `keywords` scope.
 2. Copy the raw token immediately. It is shown once, is single-use, and expires.
-3. On the source workspace, open **Settings → Transfer project**, run the
+3. On the source project, open **Settings → Transfer project**, run the
    compatibility check, and confirm read-only mode. The destination URL is
    prefilled from the source instance configuration and can be changed before
    the check. The checked URL is also used for the transfer. Then push directly
@@ -54,7 +54,7 @@ packages are application transfer artifacts, not full database backups.
 
 ## After the transfer: mark the source as migrated
 
-Once you have verified the destination workspace, mark the source project as
+Once you have verified the destination project, mark the source project as
 migrated from the wizard's final step. This puts it into the terminal
 `migrated` write mode: writes and rank checks stay off, the state never
 auto-releases, and a banner points users at the new location. A migrated
@@ -72,7 +72,7 @@ codes:
 | `MIG-102` | The destination is too old to accept a project of this size (chunked sessions unsupported). | Update the destination to the latest version. |
 | `MIG-103` | The destination did not declare supported import protocol versions. | Update the destination to the latest version. |
 | `MIG-104` | The destination does not support the required import protocol version. | Update the destination to the latest version. |
-| `MIG-105` | The destination address points at this same instance. The check shows the resolved address. | Pick a different destination. If this is meant to be a Cloud deployment and the source reports self-host mode, it likely needs `DEPLOYMENT_MODE=cloud`. |
+| `MIG-105` | The destination address points at this same instance. The check shows the resolved address. | Pick a different destination. If this is meant to be a hosted deployment and the source reports self-host mode, it likely needs `DEPLOYMENT_MODE=cloud`. |
 
 Protocol details, limits, compatibility checks, and status codes are documented
-in [Cloud import](/api/cloud-import).
+in [Instance import](/api/cloud-import).

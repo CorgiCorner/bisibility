@@ -60,7 +60,7 @@ export const GscOAuth: Story = {
         <InlineCode>GOOGLE_CLIENT_ID</InlineCode> and <InlineCode>GOOGLE_CLIENT_SECRET</InlineCode>.
         See the{" "}
         <a
-          className="inline-flex items-center gap-0.5 font-medium text-accent hover:underline"
+          className="inline-flex items-center gap-0.5 font-medium text-accent-text hover:underline"
           href="/docs/integrations#analytics-sources"
           {...docsLinkProps("/docs/integrations#analytics-sources")}
         >

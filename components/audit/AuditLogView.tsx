@@ -147,9 +147,9 @@ export function AuditLogView({
           </div>
         </div>
       </Card>
-      <div className="flex flex-wrap items-center justify-between gap-2 px-1 font-mono text-[11px] text-fg-faint">
+      <div className="flex flex-wrap items-center justify-between gap-2 px-1 font-mono text-[11px] text-fg-muted">
         <span className="inline-flex items-center gap-2">
-          <LockSimple aria-hidden className="text-green" size={14} />
+          <LockSimple aria-hidden className="text-green-text" size={14} />
           Append-only / retained {retentionDays} days
         </span>
         <span>

@@ -2,6 +2,7 @@
 
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
+import { requireTrackedDomain } from "@/lib/projects/tracked-domain";
 import { type AddKeywordsMatrixInput, addKeywordsMatrixSchema } from "@/lib/schemas/keyword";
 import { countryCodeForMarketName, parseCanonicalKey } from "@/lib/serp/location";
 import { resolveKeywordLocation } from "@/lib/serp/location-service";
@@ -53,6 +54,7 @@ export async function addKeywordsMatrix(input: unknown) {
   const data = parseActionInput(addKeywordsMatrixSchema, input);
   const actor = await getActionActor();
   const project = await requireProjectScope(actor, "create", data.projectId, { type: "keyword" });
+  requireTrackedDomain(project);
   const schedule = data.schedule ? normalizeSchedule(data.schedule) : null;
   const keywords = uniqueKeywordTexts(data.keywords);
   const devices = [...new Set(data.devices)];

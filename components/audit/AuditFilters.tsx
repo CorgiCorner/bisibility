@@ -97,10 +97,10 @@ export function AuditFilters({
             )}
             htmlFor="audit-filter-search"
           >
-            <MagnifyingGlass aria-hidden className="shrink-0 text-fg-faint" size={14} />
+            <MagnifyingGlass aria-hidden className="shrink-0 text-fg-muted" size={14} />
             <input
               aria-label="Search audit events"
-              className="min-w-0 flex-1 bg-transparent font-mono text-[12px] text-fg outline-none placeholder:text-fg-faint focus-visible:outline-none"
+              className="min-w-0 flex-1 bg-transparent font-mono text-[12px] text-fg outline-none placeholder:text-fg-muted focus-visible:outline-none"
               id="audit-filter-search"
               onChange={(event) => setFilter("search", event.target.value)}
               placeholder="Search actor, event, resource ID…"
@@ -137,7 +137,7 @@ export function AuditFilters({
           />
         </div>
         <div className="flex flex-wrap items-center gap-2 xl:justify-end">
-          <span className="font-mono text-[11px] text-fg-faint">
+          <span className="font-mono text-[11px] text-fg-muted">
             {formatCount(visibleCount, totalCount, truncated)}
           </span>
           <button
@@ -163,24 +163,24 @@ export function AuditFilters({
               paper: { sx: { ...menuSelectPaperSx, minWidth: 232 } },
             }}
           >
-            <div className="px-3 pb-1 pt-2 font-mono text-[9.5px] uppercase tracking-[0.6px] text-fg-faint">
+            <div className="px-3 pb-1 pt-2 font-mono text-[9.5px] uppercase tracking-[0.6px] text-fg-muted">
               Export {pluralize(visibleCount, "event")}
             </div>
             <MenuItem onClick={() => runExport("csv")} sx={{ gap: "10px" }}>
-              <FileCsv aria-hidden className="text-green" size={16} weight="fill" />
+              <FileCsv aria-hidden className="text-green-text" size={16} weight="fill" />
               <span className="flex flex-col">
                 <span className="text-[13px] text-fg">CSV</span>
-                <span className="text-[11px] text-fg-faint">Spreadsheet-ready table</span>
+                <span className="text-[11px] text-fg-muted">Spreadsheet-ready table</span>
               </span>
             </MenuItem>
             <MenuItem onClick={() => runExport("json")} sx={{ gap: "10px" }}>
-              <BracketsCurly aria-hidden className="text-blue" size={16} />
+              <BracketsCurly aria-hidden className="text-blue-text" size={16} />
               <span className="flex flex-col">
                 <span className="text-[13px] text-fg">JSON</span>
-                <span className="text-[11px] text-fg-faint">Full event payloads</span>
+                <span className="text-[11px] text-fg-muted">Full event payloads</span>
               </span>
             </MenuItem>
-            <div className="flex items-start gap-2 border-t border-border px-3 pb-2 pt-2 text-[10px] leading-[1.35] text-fg-faint">
+            <div className="flex items-start gap-2 border-t border-border px-3 pb-2 pt-2 text-[10px] leading-[1.35] text-fg-muted">
               <Funnel aria-hidden className="mt-px shrink-0" size={12} />
               Respects the current date and filter selection.
             </div>

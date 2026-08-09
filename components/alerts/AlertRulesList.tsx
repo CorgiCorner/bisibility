@@ -74,7 +74,7 @@ export function AlertRulesList({
       <Card className="overflow-hidden p-0" size="md">
         <div className="border-border border-b px-[18px] py-3.5">
           <SectionTitle>Alert rules</SectionTitle>
-          <p className="m-0 mt-1 font-mono text-[11px] leading-normal text-fg-faint">
+          <p className="m-0 mt-1 font-mono text-[11px] leading-normal text-fg-muted">
             Rules are evaluated after rank checks. Each rule allows{" "}
             {MAX_ALERT_DELIVERIES_PER_RULE_PER_DAY} delivery batches per UTC day, and one batch can
             fan out across every selected destination.
@@ -111,12 +111,12 @@ export function AlertRulesList({
                     {status.label}
                   </span>
                   {rule.depthConflict ? (
-                    <span className="rounded-full bg-yellow/15 px-2 py-0.5 font-mono text-[10px] font-semibold text-yellow">
+                    <span className="rounded-full bg-yellow/15 px-2 py-0.5 font-mono text-[10px] font-semibold text-yellow-text">
                       won't fire below top {rule.depthConflict.trackedDepth}
                     </span>
                   ) : null}
                 </div>
-                <div className="mt-1.5 flex flex-wrap gap-x-3.5 gap-y-1.5 font-mono text-[11.5px] text-fg-faint">
+                <div className="mt-1.5 flex flex-wrap gap-x-3.5 gap-y-1.5 font-mono text-[11.5px] text-fg-muted">
                   <span className="text-fg-muted">{rule.condition}</span>
                   <span className="inline-flex items-center gap-1">
                     <FunnelSimple aria-hidden size={12} />
@@ -193,8 +193,8 @@ export function AlertRulesList({
             </article>
           );
         })}
-        <p className="m-0 flex items-center gap-2 px-[18px] py-3 text-xs text-fg-faint">
-          <Info aria-hidden className="shrink-0 text-accent" size={14} />
+        <p className="m-0 flex items-center gap-2 px-[18px] py-3 text-xs text-fg-muted">
+          <Info aria-hidden className="shrink-0 text-accent-text" size={14} />
           Trend-style rules start after enough completed checks to compare changes.
         </p>
       </Card>

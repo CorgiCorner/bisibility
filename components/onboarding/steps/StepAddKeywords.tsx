@@ -227,21 +227,21 @@ export function StepAddKeywords({
         projectId={projectId}
       />
       <textarea
-        className="mt-3 min-h-[150px] w-full resize-y rounded-[11px] border border-border-strong bg-bg-sunken px-3.5 py-3 font-mono text-[13px] leading-[1.7] text-fg outline-none focus:border-accent"
+        className="mt-3 min-h-[150px] w-full resize-y rounded-[11px] border border-border-strong bg-transparent px-3.5 py-3 font-mono text-[13px] leading-[1.7] text-fg outline-none focus:border-accent"
         placeholder="One keyword per line"
         {...register("keywords", {
           onChange: (event) => onKeywordsChange?.(event.target.value),
         })}
       />
       {errors.keywords && errors.keywords.message !== longKeywordWarning ? (
-        <p className={`m-0 mt-2 ${feedbackClass} text-red`}>{errors.keywords.message}</p>
+        <p className={`m-0 mt-2 ${feedbackClass} text-red-text`}>{errors.keywords.message}</p>
       ) : null}
       <p className={`m-0 mt-2 ${feedbackClass} text-fg-muted`}>{keywordDraftMessage(preview)}</p>
       {longKeywordWarning ? (
-        <p className={`m-0 mt-2 ${feedbackClass} text-red`}>{longKeywordWarning}</p>
+        <p className={`m-0 mt-2 ${feedbackClass} text-red-text`}>{longKeywordWarning}</p>
       ) : null}
       {keywordCount >= 450 && keywordCount <= KEYWORD_IMPORT_MAX ? (
-        <p className={`m-0 mt-2 ${feedbackClass} text-yellow`}>
+        <p className={`m-0 mt-2 ${feedbackClass} text-yellow-text`}>
           approaching the 500-keyword import limit
         </p>
       ) : null}
@@ -255,12 +255,14 @@ export function StepAddKeywords({
         monthlyCapCents={monthlyCapCents}
         serpDepth={flowState?.serpDepth ?? DEFAULT_SERP_DEPTH}
       />
-      {actionError ? <p className={`m-0 mt-3 ${feedbackClass} text-red`}>{actionError}</p> : null}
+      {actionError ? (
+        <p className={`m-0 mt-3 ${feedbackClass} text-red-text`}>{actionError}</p>
+      ) : null}
       {actionSuccess ? (
-        <p className={`m-0 mt-3 ${feedbackClass} text-green`}>{actionSuccess}</p>
+        <p className={`m-0 mt-3 ${feedbackClass} text-green-text`}>{actionSuccess}</p>
       ) : null}
       {actionWarning ? (
-        <p className={`m-0 mt-3 ${feedbackClass} text-yellow`}>{actionWarning}</p>
+        <p className={`m-0 mt-3 ${feedbackClass} text-yellow-text`}>{actionWarning}</p>
       ) : null}
       {isSubmitting ? (
         <p className={`m-0 mt-3 ${feedbackClass} text-fg-muted`}>

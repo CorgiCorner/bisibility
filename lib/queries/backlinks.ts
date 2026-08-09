@@ -1,6 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
+import { trackedProjectDomain } from "@/lib/schemas/project";
 import { requireReadableProject } from "./_auth";
 import { getProjectCostContext } from "./cost-calculator";
 
@@ -33,7 +34,7 @@ export async function getBacklinksPageContext(projectId: string) {
 
   return {
     costContext,
-    defaultTarget: project.domain,
+    defaultTarget: trackedProjectDomain(project.domain) ?? "",
     recentTargets: recentSnapshots.map((snapshot) => ({
       cachedUntil: snapshot.expiresAt.toISOString(),
       fetchedAt: snapshot.fetchedAt.toISOString(),

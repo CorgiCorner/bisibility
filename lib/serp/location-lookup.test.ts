@@ -78,7 +78,7 @@ function dataForSeoAmbiguousLocations() {
   };
 }
 
-// SerpAPI /locations.json array: canonical_name string, target_type, country_code, reach.
+// SerpApi /locations.json array: canonical_name string, target_type, country_code, reach.
 function serpApiLocations() {
   return [
     {
@@ -144,7 +144,7 @@ describe("createCityLocationLookup", () => {
     });
   });
 
-  it("maps SerpAPI to secondaryGeoName (canonical string, highest reach)", async () => {
+  it("maps SerpApi to secondaryGeoName (canonical string, highest reach)", async () => {
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse(serpApiLocations()));
     vi.stubGlobal("fetch", fetchMock);
 
@@ -237,7 +237,7 @@ describe("lookupConfigFromConnections", () => {
     vi.unstubAllEnvs();
   });
 
-  it("enables DataForSEO from env creds and SerpAPI from connection presence", () => {
+  it("enables DataForSEO from env creds and SerpApi from connection presence", () => {
     vi.stubEnv("DATAFORSEO_LOGIN", "env-login");
     vi.stubEnv("DATAFORSEO_PASSWORD", "env-pass");
 

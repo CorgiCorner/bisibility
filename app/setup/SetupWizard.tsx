@@ -12,7 +12,7 @@ import {
 import { signInRedirectUrl } from "@/lib/auth/sign-in-redirect";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import {
-  ArrowRightIcon as ArrowRight,
+  CaretRightIcon as CaretRight,
   ShieldCheckIcon as ShieldCheck,
   TerminalWindowIcon as TerminalWindow,
 } from "@phosphor-icons/react";
@@ -150,31 +150,31 @@ export function SetupWizard({ mailerConfigured }: Readonly<{ mailerConfigured: b
               <input
                 aria-invalid={Boolean(errors.name)}
                 autoComplete="name"
-                className="min-h-11 rounded-[10px] border border-border-strong bg-bg-elev px-3.5 font-sans text-[14.5px] font-normal normal-case tracking-normal text-fg outline-none focus:border-accent"
+                className="min-h-11 rounded-[10px] border border-border-strong bg-transparent px-3.5 font-sans text-[14.5px] font-normal normal-case tracking-normal text-fg outline-none focus:border-accent"
                 {...form.register("name")}
               />
             </label>
             {errors.name ? (
-              <p className="-mt-2 m-0 text-[13px] text-red">{errors.name.message}</p>
+              <p className="-mt-2 m-0 text-[13px] text-red-text">{errors.name.message}</p>
             ) : null}
             <label className="flex flex-col gap-[7px] font-mono text-[10.5px] font-semibold uppercase tracking-[0.06em] text-fg-muted">
               Email address
               <input
                 aria-invalid={Boolean(errors.email)}
                 autoComplete="email"
-                className="min-h-11 rounded-[10px] border border-border-strong bg-bg-elev px-3.5 font-sans text-[14.5px] font-normal normal-case tracking-normal text-fg outline-none focus:border-accent"
+                className="min-h-11 rounded-[10px] border border-border-strong bg-transparent px-3.5 font-sans text-[14.5px] font-normal normal-case tracking-normal text-fg outline-none focus:border-accent"
                 inputMode="email"
                 type="email"
                 {...form.register("email")}
               />
             </label>
             {errors.email ? (
-              <p className="-mt-2 m-0 text-[13px] text-red">{errors.email.message}</p>
+              <p className="-mt-2 m-0 text-[13px] text-red-text">{errors.email.message}</p>
             ) : null}
-            {formError ? <p className="m-0 text-[13px] text-red">{formError}</p> : null}
+            {formError ? <p className="m-0 text-[13px] text-red-text">{formError}</p> : null}
             <Button
               className="w-full"
-              endIcon={<ArrowRight size={15} weight="bold" />}
+              endIcon={<CaretRight size={15} weight="bold" />}
               loading={isSubmitting}
               loadingLabel="Sending code..."
               size="lg"
@@ -184,7 +184,7 @@ export function SetupWizard({ mailerConfigured }: Readonly<{ mailerConfigured: b
             </Button>
           </form>
           <p className="m-0 flex items-start gap-2 text-[12.5px] leading-[1.55] text-fg-muted">
-            <ShieldCheck aria-hidden className="mt-px shrink-0 text-accent-hover" size={15} />
+            <ShieldCheck aria-hidden className="mt-px shrink-0 text-accent-text" size={15} />
             The first account becomes the instance administrator. Everyone else signs in normally
             after setup.
           </p>
@@ -241,8 +241,10 @@ export function SetupWizard({ mailerConfigured }: Readonly<{ mailerConfigured: b
                 )}
               />
             </div>
-            {errors.otp ? <p className="m-0 text-[13px] text-red">{errors.otp.message}</p> : null}
-            {formError ? <p className="m-0 text-[13px] text-red">{formError}</p> : null}
+            {errors.otp ? (
+              <p className="m-0 text-[13px] text-red-text">{errors.otp.message}</p>
+            ) : null}
+            {formError ? <p className="m-0 text-[13px] text-red-text">{formError}</p> : null}
             <Button
               className="w-full"
               disabled={!otpComplete}
@@ -256,7 +258,7 @@ export function SetupWizard({ mailerConfigured }: Readonly<{ mailerConfigured: b
           </form>
           <div className="flex justify-between text-[12.5px]">
             <button
-              className="cursor-pointer border-0 bg-transparent p-0 font-semibold text-accent-hover hover:underline"
+              className="cursor-pointer border-0 bg-transparent p-0 font-semibold text-accent-text hover:underline"
               disabled={isSubmitting}
               onClick={resendCode}
               type="button"

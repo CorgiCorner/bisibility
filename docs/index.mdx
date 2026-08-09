@@ -15,7 +15,7 @@ when you want automation or generated client code.
     Docker, required services, environment variables, workers, and migrations.
   </Card>
   <Card title="Integrations" icon="plug" href="/integrations">
-    Connect DataForSEO or SerpAPI and configure fallback, estimates, and caps.
+    Connect DataForSEO or SerpApi and configure fallback, estimates, and caps.
   </Card>
   <Card title="Authentication" icon="key" href="/authentication">
     Personal access tokens, project API keys, permission levels, and rate limits.
@@ -39,7 +39,7 @@ when you want automation or generated client code.
 
 ## Base URLs
 
-Use the regional API root shown by your workspace. EU Cloud currently uses:
+Use the regional API root shown by your project. The EU hosted region currently uses:
 
 ```text
 https://eu.bisibility.com/api/v1
@@ -64,5 +64,5 @@ Browser code running inside the app can use a relative base URL:
 
 The API reference documents routes handled by `app/api/v1/[[...path]]`,
 `app/api/cloud/import`, `app/api/v1/cloud/import`, and `lib/api/*`. OpenAPI is
-generated from `lib/api/openapi.ts` and includes the cloud-import compatibility,
+generated from `lib/api/openapi.ts` and includes the instance-import compatibility,
 single-request, and chunked-session flows.

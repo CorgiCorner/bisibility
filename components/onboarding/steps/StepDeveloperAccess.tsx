@@ -74,7 +74,7 @@ export function StepDeveloperAccess({
     >
       <div className="mb-6">
         <div className="flex items-center gap-2">
-          <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.7px] text-accent">
+          <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.7px] text-accent-text">
             Developer access
           </span>
           <span className="rounded-full border border-border bg-bg-elev px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.5px] text-fg-muted">
@@ -93,10 +93,10 @@ export function StepDeveloperAccess({
       <div className="flex min-w-0 flex-col gap-4">
         <section className="min-w-0 rounded-[14px] border border-accent bg-accent-soft p-5">
           <div className="flex items-start justify-between gap-3">
-            <span className="grid h-10 w-10 place-items-center rounded-[11px] bg-accent text-white">
+            <span className="grid h-10 w-10 place-items-center rounded-[11px] bg-accent-solid text-primary-contrast">
               <TerminalWindow aria-hidden size={21} weight="bold" />
             </span>
-            <span className="rounded-full bg-accent px-2.5 py-1 font-mono text-[9px] font-bold uppercase tracking-[0.6px] text-white">
+            <span className="rounded-full bg-accent-solid px-2.5 py-1 font-mono text-[9px] font-bold uppercase tracking-[0.6px] text-primary-contrast">
               Recommended
             </span>
           </div>
@@ -117,7 +117,7 @@ export function StepDeveloperAccess({
               <Key aria-hidden size={21} weight="bold" />
             </span>
             {keyReady ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-green-soft px-2.5 py-1 font-mono text-[9px] font-bold uppercase tracking-[0.6px] text-green">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-green-soft px-2.5 py-1 font-mono text-[9px] font-bold uppercase tracking-[0.6px] text-green-text">
                 <CheckCircle aria-hidden size={12} weight="fill" /> Key ready
               </span>
             ) : null}
@@ -139,7 +139,7 @@ export function StepDeveloperAccess({
               {keyReady ? "Create another key" : "Create API key"}
             </Button>
             <Link
-              className="text-[12px] font-semibold text-accent hover:text-accent-hover"
+              className="text-[12px] font-semibold text-accent-text hover:text-accent-text"
               href={`${DOCS_URL}/api`}
               rel="noreferrer noopener"
               target="_blank"

@@ -14,9 +14,9 @@ export type CheckboxProps = Omit<InputHTMLAttributes<HTMLInputElement>, "size" |
 
 const inputClass =
   "peer col-start-1 row-start-1 m-0 size-full cursor-pointer appearance-none rounded-[5px] " +
-  "border-[1.5px] border-border-strong bg-bg-sunken outline-none transition-colors " +
-  "hover:border-accent checked:border-accent checked:bg-accent focus-visible:outline focus-visible:outline-2 " +
-  "focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed " +
+  "border-[1.5px] border-border-strong bg-transparent transition-colors " +
+  "hover:border-accent checked:border-accent-solid checked:bg-accent-solid focus-visible:outline focus-visible:outline-2 " +
+  "focus-visible:outline-offset-2 focus-visible:outline-accent-solid disabled:cursor-not-allowed " +
   "disabled:hover:border-border-strong";
 
 export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Checkbox(
@@ -78,7 +78,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
     <label
       className={cn(
         "flex cursor-pointer items-start gap-3 text-fg",
-        disabled && "cursor-not-allowed opacity-60",
+        disabled && "cursor-not-allowed text-fg-muted",
         containerClassName,
         className,
       )}

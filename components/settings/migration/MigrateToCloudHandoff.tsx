@@ -1,11 +1,11 @@
 "use client";
 
-import { CopyButton } from "@/components/ui";
+import { Button, CopyButton } from "@/components/ui";
 import { unwrapActionFailureResult } from "@/lib/actions/action-result";
 import { createCloudMigrationHandoff } from "@/lib/actions/cloud";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import {
-  ArrowRightIcon as ArrowRight,
+  CaretRightIcon as CaretRight,
   CheckCircleIcon as CheckCircle,
   CloudArrowUpIcon as CloudArrowUp,
   CloudCheckIcon as CloudCheck,
@@ -42,7 +42,7 @@ export function HandoffPanel({
 }: Readonly<HandoffProps>) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const targetLabel = direction === "to-cloud" ? "Cloud" : "self-host";
+  const targetLabel = direction === "to-cloud" ? "hosted instance" : "self-host";
   let generateLabel = "Generate";
   if (busy) generateLabel = "Generating...";
   else if (handoff) generateLabel = "Refresh";
@@ -70,7 +70,7 @@ export function HandoffPanel({
   return (
     <div className="mt-4 overflow-hidden rounded-[14px] border border-border bg-bg-elev">
       <div className="flex items-center gap-[13px] border-border-soft border-b p-[16px_18px]">
-        <span className="grid h-[38px] w-[38px] flex-none place-items-center rounded-[10px] bg-accent-soft text-accent">
+        <span className="grid h-[38px] w-[38px] flex-none place-items-center rounded-[10px] bg-accent-soft text-accent-text">
           <CloudArrowUp aria-hidden size={20} weight="fill" />
         </span>
         <div className="min-w-0 flex-1">
@@ -79,22 +79,23 @@ export function HandoffPanel({
             Opens the destination import flow where the migration token is created.
           </div>
         </div>
-        <button
-          className="inline-flex min-h-9 flex-none items-center gap-1.5 rounded-lg bg-accent px-3 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-55"
+        <Button
           disabled={busy}
           onClick={handleGenerate}
+          startIcon={<LinkIcon aria-hidden size={14} />}
+          sx={{ flex: "none" }}
           type="button"
+          variant="primary"
         >
-          <LinkIcon aria-hidden size={14} />
           {generateLabel}
-        </button>
+        </Button>
       </div>
       {handoff ? (
         <div className="flex flex-col gap-3 p-[16px_18px]">
           <HandoffRow label="Import page" value={handoff.cloudImportUrl} />
           <HandoffRow label="Import API" value={handoff.apiImportUrl} />
           <div className="rounded-[11px] border border-border bg-bg-sunken px-3.5 py-3">
-            <div className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint">
+            <div className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
               REST handoff
             </div>
             <div className="mt-1.5 flex items-center gap-2">
@@ -105,22 +106,22 @@ export function HandoffPanel({
             </div>
           </div>
           <a
-            className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-accent"
+            className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-accent-text"
             href={handoff.cloudImportUrl}
             rel="noreferrer"
             target="_blank"
           >
             Open {targetLabel} import page
-            <ArrowRight aria-hidden size={13} weight="bold" />
+            <CaretRight aria-hidden size={13} weight="bold" />
           </a>
         </div>
       ) : null}
       {message ? (
         <div className="flex items-center gap-2 border-border-soft border-t px-[18px] py-3 text-[12px] text-fg-muted">
           {handoff ? (
-            <CheckCircle aria-hidden className="text-green" size={14} weight="fill" />
+            <CheckCircle aria-hidden className="text-green-text" size={14} weight="fill" />
           ) : (
-            <WarningCircle aria-hidden className="text-yellow" size={14} weight="fill" />
+            <WarningCircle aria-hidden className="text-yellow-text" size={14} weight="fill" />
           )}
           {message}
         </div>
@@ -135,7 +136,7 @@ function ImportCompletionSummary({
   const countEntries = Object.entries(completion.counts ?? {}).filter(([, value]) => value > 0);
   return (
     <div className="mt-4 w-full max-w-[420px] rounded-[11px] border border-border bg-bg-sunken px-3.5 py-3 text-left">
-      <div className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint">
+      <div className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
         Import job {completion.jobId}
       </div>
       <div className="mt-2 flex flex-wrap gap-2">
@@ -173,7 +174,7 @@ export function DoneStep({
 }: DoneStepProps) {
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const targetLabel = direction === "to-cloud" ? "Cloud" : "self-host";
+  const targetLabel = direction === "to-cloud" ? "hosted instance" : "self-host";
   const targetUrl = handoff?.cloudWorkspaceUrl ?? handoff?.cloudImportUrl ?? null;
   const completed = outcome?.kind === "completed" ? outcome.completion : null;
 
@@ -189,7 +190,7 @@ export function DoneStep({
       );
       onHandoff(next);
       await copyText(next.cloudWorkspaceUrl).catch(() => undefined);
-      setMessage(`${targetLabel} workspace URL generated and copied.`);
+      setMessage(`${targetLabel} project URL generated and copied.`);
     } catch (error) {
       setMessage(errorMessage(error));
     } finally {
@@ -200,7 +201,7 @@ export function DoneStep({
   return (
     <div className="flex flex-col items-center px-4 py-6 text-center">
       <span
-        className={`grid h-14 w-14 place-items-center rounded-[15px] ${completed ? "bg-green/10 text-green" : "bg-yellow/10 text-yellow"}`}
+        className={`grid h-14 w-14 place-items-center rounded-[15px] ${completed ? "bg-green/10 text-green-text" : "bg-yellow/10 text-yellow-text"}`}
       >
         {completed ? (
           <CloudCheck aria-hidden size={30} weight="fill" />
@@ -213,60 +214,63 @@ export function DoneStep({
       </h3>
       <p className="m-0 mt-[7px] max-w-[390px] text-[13.5px] leading-[1.55] text-fg-muted">
         {completed
-          ? `${domain} was accepted and committed by the destination. Keep this source project as rollback until you verify the migrated workspace.`
+          ? `${domain} was accepted and committed by the destination. Keep this source project as rollback until you verify the migrated project.`
           : `The package left this source flow, but ${targetLabel} has not reported a completed import here. Verify the destination before releasing read-only mode.`}
       </p>
       {completed ? <ImportCompletionSummary completion={completed} /> : null}
-      <div className="mt-[22px] flex w-full max-w-[420px] items-center gap-2 rounded-[10px] border border-border-strong bg-bg-sunken px-3.5 py-[11px]">
+      <div className="mt-[22px] flex w-full max-w-[420px] items-center gap-2 rounded-[10px] border border-border-strong bg-transparent px-3.5 py-[11px]">
         <span className="min-w-0 flex-1 truncate font-mono text-[11.5px] text-fg-muted">
           {targetUrl ?? `Generate the ${targetLabel} handoff to copy a real URL`}
         </span>
         {targetUrl ? (
           <CopyButton label={`Copy ${targetLabel} URL`} size="md" text={targetUrl} />
         ) : (
-          <button
-            className="inline-flex min-h-8 items-center rounded-lg bg-accent px-3 text-[12px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-55"
+          <Button
             disabled={busy}
             onClick={handleGenerate}
+            size="xs"
             type="button"
+            variant="primary"
           >
             Generate
-          </button>
+          </Button>
         )}
       </div>
       {message ? <p className="m-0 mt-2 text-[12px] text-fg-muted">{message}</p> : null}
-      <p className="m-0 mt-3 font-mono text-[11px] text-fg-faint">
+      <p className="m-0 mt-3 font-mono text-[11px] text-fg-muted">
         Re-connect SERP and analytics providers on the destination before resuming scheduled checks.
       </p>
       <div className="mt-5 w-full max-w-[420px] rounded-[12px] border border-border bg-bg px-3.5 py-3 text-left">
         <div className="text-[13px] font-semibold text-fg">Source project</div>
         <p className="m-0 mt-1 text-xs leading-5 text-fg-muted">
           {migrationHold
-            ? `Keep it read-only while you verify the ${targetLabel} workspace, then mark it as migrated to disable it for good. Cancelling resumes writes here and the instances may drift apart.`
+            ? `Keep it read-only while you verify the ${targetLabel} project, then mark it as migrated to disable it for good. Cancelling resumes writes here and the instances may drift apart.`
             : "Writes are active on this source project."}
         </p>
         {migrationHold ? (
           <>
             <div className="mt-3 grid gap-2 sm:grid-cols-2">
-              <button
-                className="inline-flex min-h-10 items-center justify-center rounded-[9px] border border-border-strong bg-bg-elev px-3 text-[12.5px] font-semibold text-fg-muted disabled:opacity-60"
+              <Button
                 disabled={busy || holdPending}
                 onClick={onKeepReadOnly}
+                sx={{ color: "var(--fg-muted)", minHeight: 40 }}
                 type="button"
+                variant="secondary"
               >
                 Keep read-only
-              </button>
-              <button
-                className="inline-flex min-h-10 items-center justify-center rounded-[9px] bg-accent px-3 text-[12.5px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-55"
+              </Button>
+              <Button
                 disabled={busy || holdPending}
                 onClick={onMarkMigrated}
+                sx={{ minHeight: 40 }}
                 type="button"
+                variant="primary"
               >
                 Mark as migrated
-              </button>
+              </Button>
             </div>
             <button
-              className="mt-2.5 p-0 text-[12px] font-semibold text-red hover:opacity-80 disabled:opacity-60"
+              className="mt-2.5 p-0 text-[12px] font-semibold text-red-text hover:opacity-80 disabled:bg-bg-sunken disabled:text-fg-muted"
               disabled={busy || holdPending}
               onClick={onCancelMigration}
               type="button"
@@ -276,7 +280,7 @@ export function DoneStep({
           </>
         ) : null}
         {holdMessage ? (
-          <p className="m-0 mt-3 font-mono text-[11.5px] text-red">{holdMessage}</p>
+          <p className="m-0 mt-3 font-mono text-[11.5px] text-red-text">{holdMessage}</p>
         ) : null}
       </div>
     </div>
@@ -287,7 +291,7 @@ function HandoffRow({ label, value }: Readonly<{ label: string; value: string }>
   return (
     <div className="flex items-center gap-2 rounded-[11px] border border-border bg-bg-sunken px-3.5 py-3">
       <span className="min-w-0 flex-1">
-        <span className="block font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint">
+        <span className="block font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
           {label}
         </span>
         <span className="mt-1 block truncate font-mono text-[11.5px] text-fg-muted">{value}</span>

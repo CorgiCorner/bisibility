@@ -172,7 +172,7 @@ describe("instance admin queries", () => {
           billableUnits: 12,
           checks: 3,
           provider: "serpapi",
-          providerLabel: "SerpAPI",
+          providerLabel: "SerpApi",
           rateBasis: "Production plan equivalent",
           referenceCostCents: 12,
           referenceCostKnown: true,

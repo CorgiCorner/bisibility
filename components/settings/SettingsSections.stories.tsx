@@ -2,7 +2,6 @@ import { ApiKeysSection } from "@/components/settings/api-keys/ApiKeysSection";
 import { UsageBillingSection } from "@/components/settings/billing/UsageBillingSection";
 import { DangerZone } from "@/components/settings/danger/DangerZone";
 import { DefaultsSection } from "@/components/settings/defaults/DefaultsSection";
-import { NewWorkspaceSettings } from "@/components/settings/NewWorkspaceSettings";
 import { NotificationsSection } from "@/components/settings/notifications/NotificationsSection";
 import { ProviderUsage } from "@/components/settings/providers/ProviderUsage";
 import { SettingsSection } from "@/components/settings/SettingsSection";
@@ -137,45 +136,28 @@ export const Danger: Story = {
   ),
 };
 
-export const NewWorkspace: Story = {
+/** An empty workspace has no domain yet; the field must invite input, not look filled. */
+export const ProjectWithoutDomain: Story = {
+  render: () => <ProjectDetails canEdit project={{ ...settingsFixtures.project, domain: "" }} />,
+};
+
+/** A hosted instance-import workspace stores a generated host - shown as context only. */
+export const ProjectWithGeneratedHost: Story = {
   render: () => (
-    <NewWorkspaceSettings
-      apiKeys={[
-        {
-          createdLabel: "created just now",
-          expiresLabel: "expires Oct 24",
-          id: "key_dev_1",
-          isExpired: false,
-          lastUsedLabel: "never used",
-          maskedValue: "bsb_key_test_vega_******",
-          name: "Development",
-        },
-      ]}
-      canDeleteWorkspace
-      canManageWorkspace
-      canReadAudit
-      data={{
-        devKey: {
-          createdLabel: "created just now · never used",
-          id: "key_dev_1",
-          isNew: true,
-          maskedValue: "bsb_key_test_vega_8f2c91a4d7e0",
-          name: "Development",
-        },
-        memberCount: 1,
-        owner: { email: "demo@acme.dev", initials: "AK", name: "Alex Kim" },
-        workspace: { domain: "", name: "Vega Labs", projectId: "prj_7Kd2Qf9m" },
-      }}
-      issueKey={issueStoryKey}
-      billingSection={
-        <UsageBillingSection
-          email="demo@acme.dev"
-          projectId="prj_7Kd2Qf9m"
-          submitInterest={async (input) => ({ email: input.email, ok: true })}
-          variant="self-host"
-        />
-      }
-      teamSection={<TeamRoles {...manageableTeamProps} members={settingsFixtures.team} />}
+    <ProjectDetails
+      canEdit
+      project={{ ...settingsFixtures.project, domain: "workspace-8abefb1f.bisibility.cloud" }}
+    />
+  ),
+};
+
+export const Billing: Story = {
+  render: () => (
+    <UsageBillingSection
+      email="demo@acme.dev"
+      projectId="prj_7Kd2Qf9m"
+      submitInterest={async (input) => ({ email: input.email, ok: true })}
+      variant="self-host"
     />
   ),
 };

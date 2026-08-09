@@ -272,7 +272,7 @@ describe("instance migration actions", () => {
 
     await expect(
       finalizeRemoteImportSession({ projectId, sessionId: jobId, token }),
-    ).rejects.toThrow("Cloud import finalize failed.");
+    ).rejects.toThrow("Instance import finalize failed.");
   });
 
   it("uses a validated target origin for remote sessions", async () => {

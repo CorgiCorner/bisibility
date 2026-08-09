@@ -39,7 +39,7 @@ export const PROVIDER_RATES: ProviderRate[] = [
   },
   {
     providerId: "serpapi",
-    label: "SerpAPI",
+    label: "SerpApi",
     pricingModel: "plan",
     sourceUrl: "https://serpapi.com/pricing",
     checkedAt: "2026-07-15",

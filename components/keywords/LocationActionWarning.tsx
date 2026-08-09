@@ -10,7 +10,7 @@ export function LocationActionWarning({ message }: Readonly<LocationActionWarnin
   }
 
   return (
-    <p className="m-0 flex items-center gap-1.5 font-mono text-[11.5px] text-yellow">
+    <p className="m-0 flex items-center gap-1.5 font-mono text-[11.5px] text-yellow-text">
       <WarningCircle size={12} weight="bold" />
       {message}
     </p>

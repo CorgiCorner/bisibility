@@ -14,6 +14,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/components/ui", () => ({
+  BrandLockup: () => <span data-testid="brand-lockup">bisibility</span>,
   Button: ({ children }: { children: ReactNode }) => <button type="submit">{children}</button>,
   Card: ({ children }: { children: ReactNode }) => <section>{children}</section>,
 }));

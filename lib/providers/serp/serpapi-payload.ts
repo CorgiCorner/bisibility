@@ -48,7 +48,7 @@ export function serpApiOrganicCandidates(
   });
 }
 
-// biome-ignore format: compact list mirrors the SerpAPI response feature names.
+// biome-ignore format: compact list mirrors the SerpApi response feature names.
 function responseFeatures(data: SerpApiResponse) { return ["answer_box", "knowledge_graph", "local_results", "inline_images", "images_results", "related_questions", "top_stories", "shopping_results", "video_results", "inline_videos", "news_results", "recipes_results", "events_results", "discussions_and_forums", "perspectives", "places_results", "top_ads", "bottom_ads", "ads"].filter((key) => hasFeature((data as Record<string, unknown>)[key])).map(featureLabel); }
 
 export function rawPayload(

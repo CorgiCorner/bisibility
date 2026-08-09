@@ -39,7 +39,7 @@ export const openApiOperationPresentation: Record<string, OperationPresentation>
   getReadiness: { summary: "Check web traffic readiness" },
   importCloudExport: {
     description: "Requires a migration token.",
-    summary: "Import a cloud export",
+    summary: "Run an instance import",
   },
   listSearchPerformanceQueryStats: { summary: "List search query statistics" },
   listSitemapMonitors: {
@@ -64,5 +64,5 @@ export const openApiOperationPresentation: Record<string, OperationPresentation>
   },
   syncProjectTraffic: { summary: "Sync analytics traffic" },
   updateSitemapMonitor: { summary: "Update sitemap monitor" },
-  uploadCloudImportChunk: { summary: "Upload a cloud import chunk" },
+  uploadCloudImportChunk: { summary: "Upload an instance import chunk" },
 };

@@ -11,7 +11,12 @@ function deltaFor(row: KeywordRow) {
   if (row.positionBaseline === null) return null;
   const change = row.positionBaseline - row.position;
   if (change > 0) {
-    return { color: "var(--green)", icon: ArrowUp, label: String(change), title: `Up ${change}` };
+    return {
+      color: "var(--green-text)",
+      icon: ArrowUp,
+      label: String(change),
+      title: `Up ${change}`,
+    };
   }
   if (change < 0) {
     return {
@@ -21,7 +26,7 @@ function deltaFor(row: KeywordRow) {
       title: `Down ${Math.abs(change)}`,
     };
   }
-  return { color: "var(--fg-faint)", icon: Circle, label: "0", title: "No change" };
+  return { color: "var(--fg-muted)", icon: Circle, label: "0", title: "No change" };
 }
 
 export function KeywordChangeCell({ row }: Readonly<{ row: KeywordRow }>) {
@@ -30,7 +35,7 @@ export function KeywordChangeCell({ row }: Readonly<{ row: KeywordRow }>) {
     return (
       <span
         aria-label="First observation"
-        className="inline-flex h-auto shrink-0 self-center items-center whitespace-nowrap rounded-full border border-border bg-accent-soft px-2.5 py-1 font-mono text-[11px] font-semibold leading-none text-accent"
+        className="inline-flex h-auto shrink-0 self-center items-center whitespace-nowrap rounded-full border border-border bg-accent-soft px-2.5 py-1 font-mono text-[11px] font-semibold leading-none text-accent-text"
       >
         New
       </span>

@@ -1,9 +1,8 @@
 import type { WorkspaceDataState } from "@/lib/queries/workspace-state";
 
-// Phosphor-free workspace text/status helpers. Kept separate from `workspace-visuals.ts`
-// (which imports runtime icon components) so SERVER components like AppHeader can import
-// these without pulling @phosphor-icons/react into the RSC bundle (it calls createContext
-// at module eval, which is unavailable in Server Components).
+// Phosphor-free workspace text/status helpers, so SERVER components can import these
+// without pulling @phosphor-icons/react into the RSC bundle (it calls createContext at
+// module eval, which is unavailable in Server Components).
 
 const KEYWORD_FORMAT = new Intl.NumberFormat("en-US");
 
@@ -29,7 +28,7 @@ function keywordLabel(keywordCount: number): string {
 export function workspaceSublabel(workspace: WorkspaceDisplayFacts): string {
   const state = workspaceState(workspace);
   if (state === "empty") {
-    return "New workspace";
+    return "New project";
   }
   if (state === "no-data") {
     return `${KEYWORD_FORMAT.format(workspace.keywordCount)} queued · no data`;

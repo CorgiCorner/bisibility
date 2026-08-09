@@ -104,7 +104,7 @@ export const settingsFixtures = {
         costPerCheck: "$0.0200",
         lookups: null,
         primary: false,
-        provider: "SerpAPI",
+        provider: "SerpApi",
         rankChecks: { costCents: 300, count: 150 },
       },
     ],
@@ -144,5 +144,5 @@ export const settingsFixtures = {
 /** Pinned visual-review totals must match the usage connection fixture above. */
 export const usageProviderSpend = [
   { label: "DataForSEO", spentCents: 940 },
-  { label: "SerpAPI", spentCents: 300 },
+  { label: "SerpApi", spentCents: 300 },
 ] as const;

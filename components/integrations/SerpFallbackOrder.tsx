@@ -148,7 +148,7 @@ export function SerpFallbackOrder({
       >
         <span
           className={`flex h-7 w-7 items-center justify-center rounded-full font-mono text-[11px] font-semibold ${
-            isEnabled ? "bg-accent-soft text-accent" : "bg-bg-sunken text-fg-faint"
+            isEnabled ? "bg-accent-soft text-accent-text" : "bg-bg-sunken text-fg-muted"
           }`}
         >
           {position ?? "-"}
@@ -157,16 +157,21 @@ export function SerpFallbackOrder({
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-[13px] font-semibold text-fg">{provider.name}</span>
             {isEnabled ? (
-              <CheckCircle aria-label="Active" className="text-green" size={15} weight="fill" />
+              <CheckCircle
+                aria-label="Active"
+                className="text-green-text"
+                size={15}
+                weight="fill"
+              />
             ) : (
               <MinusCircle
                 aria-label={isConnected ? "Paused" : "Not connected"}
-                className="text-fg-faint"
+                className="text-fg-muted"
                 size={15}
               />
             )}
           </div>
-          <p className="m-0 mt-0.5 text-[11.5px] leading-5 text-fg-faint">
+          <p className="m-0 mt-0.5 text-[11.5px] leading-5 text-fg-muted">
             {statusCopy(provider, activeIndex)}
           </p>
         </div>
@@ -179,7 +184,7 @@ export function SerpFallbackOrder({
               >
                 <button
                   aria-label={`Move ${provider.name} up`}
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border-strong text-fg-muted transition-colors hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-35"
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border-strong text-fg-muted transition-colors hover:border-accent hover:text-accent-text disabled:cursor-not-allowed disabled:opacity-35"
                   disabled={!canManage || activeIndex === 0}
                   onClick={() => move(provider.id, -1)}
                   type="button"
@@ -188,7 +193,7 @@ export function SerpFallbackOrder({
                 </button>
                 <button
                   aria-label={`Move ${provider.name} down`}
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border-strong text-fg-muted transition-colors hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-35"
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border-strong text-fg-muted transition-colors hover:border-accent hover:text-accent-text disabled:cursor-not-allowed disabled:opacity-35"
                   disabled={!canManage || activeIndex === active.length - 1}
                   onClick={() => move(provider.id, 1)}
                   type="button"
@@ -208,7 +213,7 @@ export function SerpFallbackOrder({
             </ProjectReadOnlyTooltip>
           </div>
         ) : canManageProviders ? (
-          <span className="font-mono text-[10px] uppercase text-fg-faint">Connect below</span>
+          <span className="font-mono text-[10px] uppercase text-fg-muted">Connect below</span>
         ) : null}
       </li>
     );
@@ -235,7 +240,7 @@ export function SerpFallbackOrder({
       </ol>
       {error ? (
         <p
-          className="m-0 border-border-soft border-t px-4 py-2.5 text-[12px] text-red"
+          className="m-0 border-border-soft border-t px-4 py-2.5 text-[12px] text-red-text"
           role="alert"
         >
           {error}

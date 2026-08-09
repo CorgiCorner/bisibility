@@ -1,4 +1,4 @@
-import { ThemeToggle } from "@/components/ui";
+import { ThemeSegments } from "@/components/ui";
 import {
   initializeThemeFromCookie,
   readTheme,
@@ -49,7 +49,7 @@ const withMuiTheme: Decorator = (Story, context) => {
   return (
     <StyledEngineProvider injectFirst>
       <ThemeProvider
-        defaultMode="light"
+        defaultMode="system"
         modeStorageKey="theme"
         storageManager={themeCookieStorageManager}
         theme={theme}
@@ -63,7 +63,7 @@ const withMuiTheme: Decorator = (Story, context) => {
           <Story />
           {context.viewMode === "story" ? (
             <div className="fixed right-4 bottom-4 z-[1400]">
-              <ThemeToggle />
+              <ThemeSegments size="sm" />
             </div>
           ) : null}
         </div>

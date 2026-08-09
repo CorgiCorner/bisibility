@@ -15,7 +15,7 @@ export function InviteSignOutButton({ returnTo }: Readonly<{ returnTo: string }>
 
   return (
     <button
-      className="inline-flex min-h-9 items-center gap-1.5 rounded-[9px] border border-border-strong bg-bg-elev px-3 text-[12.5px] font-semibold text-fg hover:border-accent hover:text-accent disabled:opacity-55"
+      className="inline-flex min-h-9 items-center gap-1.5 rounded-[9px] border border-border-strong bg-bg-elev px-3 text-[12.5px] font-semibold text-fg hover:border-accent hover:text-accent-text disabled:bg-bg-sunken disabled:text-fg-muted"
       disabled={pending}
       onClick={() => void handleSignOut()}
       type="button"

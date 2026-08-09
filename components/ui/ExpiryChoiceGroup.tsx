@@ -16,7 +16,7 @@ export type ExpiryChoiceGroupProps<TDays extends number | null> = {
   value: TDays;
 };
 
-const labelClass = "font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint";
+const labelClass = "font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted";
 
 /**
  * The expiry picker shared by the project API key and personal access token dialogs. The two

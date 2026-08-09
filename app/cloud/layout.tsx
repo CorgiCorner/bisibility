@@ -5,8 +5,8 @@ import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 
 export const metadata: Metadata = createNoindexMetadata({
-  title: "Cloud | bisibility",
-  description: "bisibility Cloud: focused setup and import tasks for your workspace.",
+  title: "Hosted beta | bisibility",
+  description: "The hosted beta: focused setup and import tasks for your project.",
 });
 
 type CloudLayoutProps = {

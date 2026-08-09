@@ -33,7 +33,7 @@ export function indexStatusDisplay(
 }
 
 function pillClassName(tone: StatusTone) {
-  return tone === "green" ? "bg-green/10 text-green" : "bg-yellow/15 text-(--yellow-strong)";
+  return tone === "green" ? "bg-green/10 text-green-text" : "bg-yellow/15 text-(--yellow-text)";
 }
 
 export function KeywordIndexStatus({
@@ -46,7 +46,7 @@ export function KeywordIndexStatus({
 
   return (
     <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border-soft pt-3 font-mono text-[11px] text-fg-muted">
-      <span className="uppercase tracking-[0.5px] text-fg-faint">Index status</span>
+      <span className="uppercase tracking-[0.5px] text-fg-muted">Index status</span>
       <span
         className={`inline-flex rounded-full px-2 py-[3px] font-semibold ${pillClassName(
           display.tone,
@@ -56,7 +56,7 @@ export function KeywordIndexStatus({
       </span>
       <span>{display.detail}</span>
       {display.canonicalHint ? (
-        <span className="text-(--yellow-strong)">{display.canonicalHint}</span>
+        <span className="text-(--yellow-text)">{display.canonicalHint}</span>
       ) : null}
     </div>
   );

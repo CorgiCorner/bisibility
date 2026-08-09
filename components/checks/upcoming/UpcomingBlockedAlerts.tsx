@@ -14,7 +14,7 @@ export type UpcomingBlockedAlertsProps = {
 };
 
 const actionClassName =
-  "shrink-0 text-xs font-semibold text-accent outline-none hover:underline focus-visible:underline";
+  "shrink-0 text-xs font-semibold text-accent-text outline-none hover:underline focus-visible:underline";
 
 export function UpcomingBlockedAlerts({
   blocked,
@@ -34,12 +34,12 @@ export function UpcomingBlockedAlerts({
           <div className="flex items-start gap-2.5">
             <WarningCircle
               aria-hidden
-              className="mt-0.5 shrink-0 text-red"
+              className="mt-0.5 shrink-0 text-red-text"
               size={17}
               weight="fill"
             />
             <div className="min-w-0 flex-1">
-              <p className="m-0 text-[13px] font-semibold text-red">
+              <p className="m-0 text-[13px] font-semibold text-red-text">
                 {formatCheckCount(noProvider.keywordCount)} will never run
               </p>
               <p className="mb-0 mt-1 text-xs text-fg-muted">
@@ -55,7 +55,7 @@ export function UpcomingBlockedAlerts({
 
       {migrationHold ? (
         <div className="flex items-center gap-2.5 rounded-xl border border-border bg-bg-sunken/65 px-3.5 py-3">
-          <Pause aria-hidden className="shrink-0 text-fg-faint" size={15} weight="fill" />
+          <Pause aria-hidden className="shrink-0 text-fg-muted" size={15} weight="fill" />
           <p className="m-0 min-w-0 flex-1 text-xs text-fg-muted">
             Paused during import · {formatKeywordCount(migrationHold.keywordCount)}
           </p>
@@ -67,7 +67,7 @@ export function UpcomingBlockedAlerts({
 
       {budgetExhausted ? (
         <div className="flex items-center gap-2.5 rounded-xl border border-yellow/35 bg-yellow/10 px-3.5 py-3">
-          <Gauge aria-hidden className="shrink-0 text-yellow" size={16} weight="fill" />
+          <Gauge aria-hidden className="shrink-0 text-yellow-text" size={16} weight="fill" />
           <p className="m-0 min-w-0 flex-1 text-xs text-fg-muted">
             Monthly budget reached · {formatKeywordCount(budgetExhausted.keywordCount)}
           </p>

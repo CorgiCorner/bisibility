@@ -71,7 +71,7 @@ export const SegmentedThresholdOverride: Story = {
   args: {
     providers: [
       { label: "DataForSEO", spentCents: 3400 },
-      { label: "SerpAPI", spentCents: 900 },
+      { label: "SerpApi", spentCents: 900 },
     ],
     spentCents: 4300,
     variant: "segmented",

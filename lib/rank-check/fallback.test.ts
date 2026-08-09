@@ -810,7 +810,7 @@ describe("runKeywordCheckWithFallback", () => {
     expect(primary.fetchRank).not.toHaveBeenCalled();
   });
 
-  it("keeps five plan-priced SerpAPI zero reports on the list-rate budget gate", async () => {
+  it("keeps five plan-priced SerpApi zero reports on the list-rate budget gate", async () => {
     mocks.prisma.keyword.findUnique.mockResolvedValue({
       device: "desktop",
       id: "keyword_1",

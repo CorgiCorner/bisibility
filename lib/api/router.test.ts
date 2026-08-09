@@ -142,7 +142,7 @@ vi.mock("@/lib/providers/registry", () => ({
   PROVIDER_CATALOG: [
     { id: "google-search-console", kind: "analytics", label: "Google Search Console" },
     { id: "dataforseo", kind: "serp", label: "DataForSEO" },
-    { id: "serpapi", kind: "serp", label: "SerpAPI" },
+    { id: "serpapi", kind: "serp", label: "SerpApi" },
   ],
 }));
 

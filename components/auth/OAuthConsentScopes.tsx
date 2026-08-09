@@ -85,7 +85,7 @@ function ScopeChip({ scope }: Readonly<{ scope: ScopeItem }>) {
       className={cn(
         "inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 font-mono text-[11px] leading-none",
         scope.broad
-          ? "border-red/30 bg-red/10 text-red"
+          ? "border-red/30 bg-red/10 text-red-text"
           : "border-border-strong bg-bg-elev text-fg-muted",
       )}
     >
@@ -103,7 +103,7 @@ export function OAuthConsentScopes({
   return (
     <section className="mt-4" aria-labelledby="requested-scopes-title">
       <p
-        className="m-0 font-mono text-[10.5px] uppercase tracking-[0.5px] text-fg-faint"
+        className="m-0 font-mono text-[10.5px] uppercase tracking-[0.5px] text-fg-muted"
         id="requested-scopes-title"
       >
         Requested scopes
@@ -117,16 +117,16 @@ export function OAuthConsentScopes({
                 <GroupIcon
                   aria-hidden
                   className={cn(
-                    group.id === "identity" && "text-blue",
-                    group.id === "access" && "text-accent",
-                    group.id === "credentials" && "text-yellow",
-                    group.id === "other" && "text-fg-faint",
+                    group.id === "identity" && "text-blue-text",
+                    group.id === "access" && "text-accent-text",
+                    group.id === "credentials" && "text-yellow-text",
+                    group.id === "other" && "text-fg-muted",
                   )}
                   size={14}
                   weight="fill"
                 />
                 <span className="text-[12.5px] font-semibold text-fg">{group.title}</span>
-                <span className="text-[12px] text-fg-faint">{group.note}</span>
+                <span className="text-[12px] text-fg-muted">{group.note}</span>
               </div>
               <div className="mt-1.5 flex flex-wrap gap-1.5 pl-[22px]">
                 {group.scopes.map((scope) => (

@@ -23,7 +23,7 @@ describe("KeywordsFilterBar", () => {
 
     expect(screen.getByRole("textbox", { name: "Filter keywords" }).closest("label")).toHaveClass(
       "min-h-[34px]",
-      "bg-bg-elev",
+      "bg-transparent",
       "text-[12.5px]",
       "font-medium",
     );

@@ -26,7 +26,7 @@ function SegmentedDemo({
   return (
     <SegmentedControl
       activeVariant={activeVariant}
-      className="max-w-md font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint"
+      className="max-w-md font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted"
       label="Density"
       name="density"
       onChange={setValue}

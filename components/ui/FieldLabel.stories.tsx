@@ -20,7 +20,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    className: "font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint",
+    className: "font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted",
     help: FIELD_HELP.frequency,
     label: "Frequency",
   },

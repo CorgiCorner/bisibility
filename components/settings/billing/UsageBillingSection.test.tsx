@@ -15,7 +15,7 @@ afterEach(() => {
 });
 
 describe("UsageBillingSection", () => {
-  it("renders the self-host plan with the Managed Cloud teaser", () => {
+  it("renders the self-host plan with the hosted plan teaser", () => {
     render(
       <UsageBillingSection
         email="owner@example.com"
@@ -29,11 +29,12 @@ describe("UsageBillingSection", () => {
     expect(screen.getByText(/Self-hosted is free forever/)).toBeInTheDocument();
     expect(screen.getByText("Self-hosted")).toBeInTheDocument();
     expect(screen.getByText("Free")).toBeInTheDocument();
-    expect(screen.getByText("Managed Cloud")).toBeInTheDocument();
+    expect(screen.getByText("Hosted plan")).toBeInTheDocument();
     expect(screen.getByText("Coming soon")).toBeInTheDocument();
     expect(screen.getByText(/help us land it/)).toBeInTheDocument();
+    expect(screen.getByText(/Billing for the hosted service is on the way/)).toBeInTheDocument();
     expect(screen.getByText("Self-host")).toBeInTheDocument();
-    expect(screen.getByText("Cloud beta")).toBeInTheDocument();
+    expect(screen.getByText("Hosted plan (beta)")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /notify me/i })).toBeInTheDocument();
     expect(screen.queryByText("Invited by")).not.toBeInTheDocument();
     expect(screen.getByRole("region", { name: "Usage & billing" })).toHaveAttribute(
@@ -46,7 +47,7 @@ describe("UsageBillingSection", () => {
     );
   });
 
-  it("renders the cloud beta plan with the inviter", () => {
+  it("renders the hosted plan beta with the inviter", () => {
     render(
       <UsageBillingSection
         email="owner@example.com"
@@ -56,8 +57,8 @@ describe("UsageBillingSection", () => {
       />,
     );
 
-    expect(screen.getByText(/invited beta of Managed Cloud/)).toBeInTheDocument();
-    expect(screen.getByText("Managed Cloud")).toBeInTheDocument();
+    expect(screen.getByText(/invited hosted plan \(beta\)/)).toBeInTheDocument();
+    expect(screen.getByText("Hosted plan")).toBeInTheDocument();
     expect(screen.getByText("Free beta")).toBeInTheDocument();
     expect(screen.getByText("Invited by")).toBeInTheDocument();
     expect(screen.getByText("bisibility team")).toBeInTheDocument();
@@ -92,7 +93,7 @@ describe("UsageBillingSection", () => {
     expect(target).toHaveFocus();
   });
 
-  it("lets a self-host user preview the cloud plan with honest copy", () => {
+  it("lets a self-host user preview the hosted plan with honest copy", () => {
     render(
       <UsageBillingSection
         email="owner@example.com"
@@ -102,12 +103,12 @@ describe("UsageBillingSection", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /cloud beta/i }));
+    fireEvent.click(screen.getByRole("button", { name: /hosted plan \(beta\)/i }));
 
-    expect(screen.getByText(/A preview of the invited Managed Cloud beta/)).toBeInTheDocument();
+    expect(screen.getByText(/A preview of the invited hosted plan \(beta\)/)).toBeInTheDocument();
     expect(screen.getByText("Free beta")).toBeInTheDocument();
     expect(screen.queryByText("Invited by")).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /cloud beta/i })).toHaveAttribute(
+    expect(screen.getByRole("button", { name: /hosted plan \(beta\)/i })).toHaveAttribute(
       "aria-pressed",
       "true",
     );

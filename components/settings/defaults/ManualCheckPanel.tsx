@@ -4,7 +4,7 @@ import {
   ProjectReadOnlyTooltip,
   useProjectWriteMode,
 } from "@/components/shell/ProjectWriteModeProvider";
-import { MonoText } from "@/components/ui";
+import { Button, MonoText } from "@/components/ui";
 import { runManualProjectCheck } from "@/lib/actions/settings";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import {
@@ -55,7 +55,7 @@ function checkMessage(result: ManualCheckResult): PanelMessage {
 }
 
 function messageClass(tone: PanelMessage["tone"]) {
-  return `mt-3 text-[11.5px] font-medium ${tone === "error" ? "text-red" : "text-fg-muted"}`;
+  return `mt-3 text-[11.5px] font-medium ${tone === "error" ? "text-red-text" : "text-fg-muted"}`;
 }
 
 function messageRole(tone: PanelMessage["tone"]) {
@@ -92,7 +92,7 @@ export function ManualCheckPanel({ projectId, runCheck }: Readonly<ManualCheckPa
   return (
     <div className="rounded-[14px] border border-border bg-bg-elev p-4">
       <div className="flex items-center gap-2 text-[13.5px] font-semibold">
-        <HandPointing className="text-accent" size={16} weight="fill" />
+        <HandPointing className="text-accent-text" size={16} weight="fill" />
         Manual checks only
       </div>
       <p className="mt-1.5 text-[12.5px] leading-5 text-fg-muted">
@@ -103,15 +103,18 @@ export function ManualCheckPanel({ projectId, runCheck }: Readonly<ManualCheckPa
         <Metric label="Next check" value={readOnly ? "Paused - migration hold" : "Not scheduled"} />
         <Metric label="Scheduled usage" value="0 checks / day" />
         <ProjectReadOnlyTooltip>
-          <button
-            className="ml-auto inline-flex min-h-9 items-center gap-2 rounded-[9px] bg-accent px-3.5 text-[13px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-55"
-            disabled={readOnly || isPending || !projectId}
+          <Button
+            disabled={readOnly || !projectId}
+            loading={isPending}
+            loadingLabel="Running"
             onClick={onRunCheck}
+            startIcon={<ArrowClockwise size={15} weight="bold" />}
+            sx={{ marginLeft: "auto" }}
             type="button"
+            variant="primary"
           >
-            <ArrowClockwise size={15} weight="bold" />
-            {isPending ? "Running" : "Run check now"}
-          </button>
+            Run check now
+          </Button>
         </ProjectReadOnlyTooltip>
       </div>
       {message ? (

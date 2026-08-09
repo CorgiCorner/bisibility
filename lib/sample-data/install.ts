@@ -31,7 +31,7 @@ type SampleTransactionClient = Pick<
   | "signal"
   | "tag"
 >;
-type SampleProject = { domain: string; id: string; name: string; publicId: string };
+type SampleProject = { domain: string | null; id: string; name: string; publicId: string };
 
 function manualSchedule(lastCheckedAt: Date | null = null) {
   return {
@@ -86,6 +86,7 @@ async function installSampleDatasetInTransaction(
       domain: "acme.dev",
       members: { create: { publicId: makePublicId("mbr"), role: Role.owner, userId: ownerId } },
       name: "Sample project - acme.dev",
+      onboardingCompletedAt: new Date(),
       ownerId,
       isSample: true,
       publicId: makeSamplePublicId(),

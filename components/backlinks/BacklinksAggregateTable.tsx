@@ -52,7 +52,7 @@ export function BacklinksAggregateTable({
           <span className="text-right font-mono text-[12.5px]">{row.domainAuthority}</span>
           <span
             className={`text-right font-mono text-[12.5px] ${
-              row.spamScore >= 5 ? "text-yellow-strong" : ""
+              row.spamScore >= 5 ? "text-yellow-text" : ""
             }`}
           >
             {row.spamScore.toFixed(1)}

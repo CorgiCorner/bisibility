@@ -39,7 +39,7 @@ export function difficultyColor(value: number | null) {
   if (bucket === "easy") return "var(--rank-bucket-green)";
   if (bucket === "medium") return "var(--rank-bucket-yellow)";
   if (bucket === "hard") return "var(--rank-bucket-red)";
-  return "var(--fg-faint)";
+  return "var(--fg-muted)";
 }
 
 export function difficultyPillStyle(value: number | null) {
@@ -47,12 +47,12 @@ export function difficultyPillStyle(value: number | null) {
   return { borderColor: color, color };
 }
 
-// --yellow is the border/fill shade; --yellow-strong keeps amber text readable.
+// --yellow is the border/fill shade; --yellow-text keeps amber text readable.
 const INTENT_CHIPS: Record<string, { border: string; color: string; label: string }> = {
-  commercial: { border: "var(--yellow)", color: "var(--yellow-strong)", label: "Comm" },
+  commercial: { border: "var(--yellow)", color: "var(--yellow-text)", label: "Comm" },
   informational: { border: "var(--blue)", color: "var(--blue)", label: "Info" },
   navigational: { border: "var(--purple)", color: "var(--purple)", label: "Nav" },
-  transactional: { border: "var(--green)", color: "var(--green)", label: "Trans" },
+  transactional: { border: "var(--green)", color: "var(--green-text)", label: "Trans" },
 };
 
 export function intentChipMeta(intent: string | null) {
@@ -61,7 +61,7 @@ export function intentChipMeta(intent: string | null) {
 
 export function IntentChip({ intent }: Readonly<{ intent: string | null }>) {
   const meta = intentChipMeta(intent);
-  if (!meta) return <span className="font-mono text-[11px] text-fg-faint">-</span>;
+  if (!meta) return <span className="font-mono text-[11px] text-fg-muted">-</span>;
   return (
     <span
       className="rounded-full border px-2 py-0.5 text-[10.5px] font-semibold"

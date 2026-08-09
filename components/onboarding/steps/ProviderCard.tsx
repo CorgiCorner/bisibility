@@ -25,7 +25,7 @@ function stateClass(state: ProviderCardState, selected: boolean) {
   if (state === "tested") return "border-green bg-bg-elev";
   if (state === "failed") return "border-red bg-bg-elev";
   if (selected || state === "testing") return "border-accent bg-accent-soft";
-  return "border-border-strong bg-bg-sunken";
+  return "border-border-strong bg-transparent";
 }
 
 function stateText(state: ProviderCardState, primary?: boolean) {
@@ -39,13 +39,13 @@ function stateText(state: ProviderCardState, primary?: boolean) {
 
 function StateIcon({ state }: Readonly<{ state: ProviderCardState }>) {
   if (state === "connected" || state === "tested") {
-    return <CheckCircle aria-hidden className="text-green" size={17} weight="fill" />;
+    return <CheckCircle aria-hidden className="text-green-text" size={17} weight="fill" />;
   }
   if (state === "failed") {
-    return <WarningCircle aria-hidden className="text-red" size={17} weight="fill" />;
+    return <WarningCircle aria-hidden className="text-red-text" size={17} weight="fill" />;
   }
   if (state === "testing") {
-    return <CircleNotch aria-hidden className="bv-spin text-accent" size={17} weight="bold" />;
+    return <CircleNotch aria-hidden className="bv-spin text-accent-text" size={17} weight="bold" />;
   }
   return null;
 }
@@ -82,7 +82,7 @@ export function ProviderCard({
         <InfoTooltip text={provider.costDetail} />
       </span>
       {state === "connected" && balance !== undefined ? (
-        <span className="mt-3 block font-mono text-xs text-green">Balance: {balance}</span>
+        <span className="mt-3 block font-mono text-xs text-green-text">Balance: {balance}</span>
       ) : null}
       {backupPrompt ? (
         <p className="m-0 mt-3 rounded-[10px] border border-border bg-bg-elev p-3 text-[12.5px] leading-[1.45] text-fg-muted">
@@ -93,7 +93,7 @@ export function ProviderCard({
       ) : null}
       <span className="mt-auto flex items-center justify-between gap-2 pt-3">
         <a
-          className="inline-flex whitespace-nowrap text-[12.5px] font-semibold text-accent hover:underline"
+          className="inline-flex whitespace-nowrap text-[12.5px] font-semibold text-accent-text hover:underline"
           href={provider.docsHref}
           rel={provider.affiliate ? "sponsored noopener noreferrer" : "noreferrer"}
           target="_blank"
@@ -102,7 +102,7 @@ export function ProviderCard({
           Get API credentials ↗
         </a>
         {provider.affiliate ? (
-          <span className="shrink-0 whitespace-nowrap font-mono text-[9.5px] uppercase tracking-[0.4px] text-fg-faint">
+          <span className="shrink-0 whitespace-nowrap font-mono text-[9.5px] uppercase tracking-[0.4px] text-fg-muted">
             Affiliate link
           </span>
         ) : null}

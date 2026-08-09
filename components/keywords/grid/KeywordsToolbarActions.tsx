@@ -4,8 +4,8 @@ import {
   ProjectReadOnlyTooltip,
   useProjectWriteMode,
 } from "@/components/shell/ProjectWriteModeProvider";
+import { Button, type ButtonProps } from "@/components/ui";
 import { sxArray } from "@/lib/ui/mui-sx";
-import Button, { type ButtonProps } from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
 import IconButton from "@mui/material/IconButton";
 import Menu from "@mui/material/Menu";
@@ -73,11 +73,11 @@ type ToolbarButtonProps = Omit<ButtonProps, "sx"> & {
   sx?: SxProps<Theme>;
 };
 
-function ToolbarButton({ children, label, sx, ...props }: ToolbarButtonProps) {
+function ToolbarButton({ children, label, size = "sm", sx, ...props }: ToolbarButtonProps) {
   const buttonSx = sxArray(sx);
   const button = (
     <span className="inline-flex">
-      <Button aria-label={label} sx={[mobileIconOnlyButtonSx, ...buttonSx]} {...props}>
+      <Button aria-label={label} size={size} sx={[mobileIconOnlyButtonSx, ...buttonSx]} {...props}>
         <span className="max-[1536px]:hidden">{label}</span>
         {children}
       </Button>
@@ -116,13 +116,11 @@ export function KeywordsToolbarActions({
           aria-controls={anchorEl ? "keyword-columns-menu" : undefined}
           aria-expanded={anchorEl ? "true" : undefined}
           aria-haspopup="menu"
-          color="inherit"
           label="Columns"
           onClick={(event) => setAnchorEl(event.currentTarget)}
-          size="small"
           startIcon={<Eye size={15} />}
-          sx={{ border: "1px solid var(--border-strong)", color: "var(--fg-muted)", minHeight: 34 }}
-          variant="outlined"
+          sx={{ color: "var(--fg-muted)" }}
+          variant="secondary"
         />
       </span>
       <Menu
@@ -132,7 +130,7 @@ export function KeywordsToolbarActions({
         open={Boolean(anchorEl)}
         slotProps={{ paper: { sx: { border: "1px solid var(--border)" } } }}
       >
-        <div className="px-4 pb-1 pt-2 font-mono text-[10px] uppercase tracking-[0.6px] text-fg-faint">
+        <div className="px-4 pb-1 pt-2 font-mono text-[10px] uppercase tracking-[0.6px] text-fg-muted">
           Toggle columns
         </div>
         <MenuItem disabled sx={menuRowSx}>
@@ -155,18 +153,15 @@ export function KeywordsToolbarActions({
       <ToolbarButton
         label="Filters"
         onClick={onOpenFilters}
-        size="small"
         startIcon={<Funnel size={15} />}
         sx={{
           backgroundColor: hasFilters ? "var(--accent-soft)" : "var(--bg-elev)",
-          border: "1px solid var(--border-strong)",
           color: hasFilters ? "var(--accent)" : "var(--fg-muted)",
-          minHeight: 34,
         }}
-        variant="outlined"
+        variant="secondary"
       >
         {hasFilters ? (
-          <span className="ml-1 grid h-[17px] min-w-[17px] place-items-center rounded-full bg-accent px-1 font-mono text-[10px] text-white">
+          <span className="ml-1 grid h-[17px] min-w-[17px] place-items-center rounded-full bg-accent-solid px-1 font-mono text-[10px] text-primary-contrast">
             {filterCount}
           </span>
         ) : null}
@@ -203,31 +198,23 @@ export function KeywordsToolbarActions({
       </div>
       <span className="hidden sm:inline-flex">
         <ToolbarButton
-          color="inherit"
           label="Export"
           onClick={onOpenExport}
-          size="small"
           startIcon={<Export size={15} />}
-          sx={{ border: "1px solid var(--border-strong)", color: "var(--fg-muted)", minHeight: 34 }}
-          variant="outlined"
+          sx={{ color: "var(--fg-muted)" }}
+          variant="secondary"
         />
       </span>
       {onImportCsv ? (
         <span className="hidden sm:inline-flex">
           <ProjectReadOnlyTooltip>
             <ToolbarButton
-              color="inherit"
               disabled={readOnly}
               label="Import"
               onClick={onImportCsv}
-              size="small"
               startIcon={<UploadSimple size={15} />}
-              sx={{
-                border: "1px solid var(--border-strong)",
-                color: "var(--fg-muted)",
-                minHeight: 34,
-              }}
-              variant="outlined"
+              sx={{ color: "var(--fg-muted)" }}
+              variant="secondary"
             />
           </ProjectReadOnlyTooltip>
         </span>
@@ -238,10 +225,8 @@ export function KeywordsToolbarActions({
             disabled={readOnly}
             label="Add keyword"
             onClick={onAddKeyword}
-            size="small"
             startIcon={<Plus size={15} weight="bold" />}
-            sx={{ backgroundColor: "var(--accent)", color: "#fff", minHeight: 34 }}
-            variant="contained"
+            variant="primary"
           />
         </ProjectReadOnlyTooltip>
       ) : null}

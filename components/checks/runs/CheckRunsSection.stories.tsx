@@ -46,7 +46,7 @@ const meta = {
     provider: "all",
     providerOptions: [
       { label: "DataForSEO", value: "dataforseo" },
-      { label: "SerpAPI", value: "serpapi" },
+      { label: "SerpApi", value: "serpapi" },
     ],
     range: "24h",
     timeZone: "UTC",

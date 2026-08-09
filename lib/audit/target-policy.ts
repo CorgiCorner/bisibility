@@ -17,7 +17,7 @@ export const AUDIT_TARGET_POLICIES = {
   api_key: { mode: "public", prefix: "key", resource: "API key" },
   authentication: { mode: "opaque" },
   authorization: { mode: "opaque" },
-  cloud_import_job: { mode: "public", prefix: "imp", resource: "Cloud import job" },
+  cloud_import_job: { mode: "public", prefix: "imp", resource: "Instance import job" },
   competitor: { mode: "public", prefix: "cmp", resource: "Competitor" },
   ingest_hook: { mode: "public", prefix: "dwh", resource: "Ingest hook" },
   instance_ops: { mode: "opaque" },

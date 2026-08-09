@@ -71,7 +71,7 @@ function emptyRankNotice({
         <>
           No new rank checks can start until the monthly budget resets or is increased.{" "}
           <Link
-            className="font-semibold text-accent hover:underline"
+            className="font-semibold text-accent-text hover:underline"
             href={`${appPath(projectRef, "settings")}#provider-usage`}
           >
             Raise the budget

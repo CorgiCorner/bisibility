@@ -351,7 +351,7 @@ describe("MigrateToCloudWizard", () => {
     await waitFor(() => expect(screen.getByRole("button", { name: /continue/i })).toBeEnabled());
     fireEvent.click(screen.getByRole("button", { name: /continue/i }));
 
-    expect(await screen.findByText("Cloud import complete")).toBeInTheDocument();
+    expect(await screen.findByText("hosted instance import complete")).toBeInTheDocument();
     expect(screen.getByText(`Import job ${publicJobId}`)).toBeInTheDocument();
     expect(screen.getByText("keywords: 1")).toBeInTheDocument();
     expect(screen.getByText("history: 2")).toBeInTheDocument();
@@ -363,23 +363,23 @@ describe("MigrateToCloudWizard", () => {
     await continueToTransfer();
     expect(
       screen.getByText(
-        "Choose a direct push or move the workspace package manually through the Cloud import page.",
+        "Choose a direct push or move the project package manually through the hosted instance import page.",
       ),
     ).toBeInTheDocument();
     const downloadMode = screen.getByRole("radio", { name: /Download/ });
     fireEvent.click(downloadMode);
     expect(downloadMode).toBeChecked();
 
-    expect(await screen.findByText("Step 2 · Export the workspace package")).toBeInTheDocument();
+    expect(await screen.findByText("Step 2 · Export the project package")).toBeInTheDocument();
     expect(
       screen.getByText(
-        "Upload the downloaded workspace package there and paste the migration token from step 1 when asked. The destination validates the token, schema, package counts and target compatibility before import.",
+        "Upload the downloaded project package there and paste the migration token from step 1 when asked. The destination validates the token, schema, package counts and target compatibility before import.",
       ),
     ).toBeInTheDocument();
     const confirmation = screen.getByRole("checkbox", { name: /await confirmation/i });
     expect(confirmation).toBeDisabled();
     expect(
-      screen.getByText("Export the workspace package before confirming the manual upload."),
+      screen.getByText("Export the project package before confirming the manual upload."),
     ).toBeInTheDocument();
     expect(screen.queryByText(/JSON package/i)).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /continue/i })).toBeDisabled();

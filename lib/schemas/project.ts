@@ -52,6 +52,21 @@ export const domainSchema = z
     message: "Enter a domain such as example.com.",
   });
 
+// Historical only. Hosted instance-import workspaces used to be created with a
+// generated host; nothing is served at that name and the user never typed it, so it
+// is recognised solely to be treated as "no domain set".
+const generatedWorkspaceDomainPattern = /^workspace-[0-9a-f]{4,32}\.bisibility\.cloud$/;
+
+export function isGeneratedWorkspaceDomain(value: string | null | undefined) {
+  return generatedWorkspaceDomainPattern.test((value ?? "").trim().toLowerCase());
+}
+
+/** The domain the product should track, or null when the workspace has none yet. */
+export function trackedProjectDomain(value: string | null | undefined) {
+  const domain = (value ?? "").trim();
+  return domain.length > 0 && !isGeneratedWorkspaceDomain(domain) ? domain : null;
+}
+
 export const projectDefaultsSchema = keywordScheduleBaseSchema
   .extend({
     city: serpCitySchema,
@@ -84,9 +99,17 @@ const projectScheduleSchema = keywordScheduleBaseSchema
     }
   });
 
+// The domain is optional at creation: a workspace can exist before the user says
+// what to track. It is enforced where the product cannot proceed without it - see
+// lib/projects/tracked-domain.
+export const optionalDomainSchema = z
+  .union([z.string().trim().length(0), domainSchema])
+  .nullish()
+  .transform((value) => value || null);
+
 export const createProjectSchema = z.object({
   defaults: projectScheduleSchema.optional(),
-  domain: domainSchema,
+  domain: optionalDomainSchema,
   name: z.string().trim().min(1).max(120),
   trackingScope: trackingScopeSchema,
 });

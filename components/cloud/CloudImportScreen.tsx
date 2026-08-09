@@ -30,15 +30,15 @@ type ScreenCopy = {
 const cloudCopy: CloudImportCopy = {
   sourceLabel: "self-hosted instance",
   tokenSecurityNote:
-    "The token grants import access to this workspace only, never your providers or billing. It expires automatically and can be revoked any time before use.",
+    "The token grants import access to this project only, never your providers or billing. It expires automatically and can be revoked any time before use.",
   transferInstruction:
-    "Open Migrate to Cloud / Transfer, choose Push to Cloud, and paste this token to start the import.",
+    "Open Migrate to hosted instance / Transfer, choose Push to hosted instance, and paste this token to start the import.",
 };
 
 const instanceCopy: CloudImportCopy = {
   sourceLabel: "source instance",
   tokenSecurityNote:
-    "The token grants import access to this workspace only, never provider credentials. It expires automatically and can be revoked any time before use.",
+    "The token grants import access to this project only, never provider credentials. It expires automatically and can be revoked any time before use.",
   transferInstruction:
     "Open the migration wizard on the source instance, choose Push, and paste this token to start the import.",
 };
@@ -48,7 +48,7 @@ function screenCopy(context: CloudImportScreenContext, projectRef: string): Scre
     return {
       back: { href: "/onboarding?new=1", label: "Back to setup" },
       copy: cloudCopy,
-      subtitle: "This becomes your new Cloud workspace.",
+      subtitle: "This becomes your new hosted project.",
       title: "Import your self-hosted data",
       topBar: "onboard",
     };
@@ -58,7 +58,7 @@ function screenCopy(context: CloudImportScreenContext, projectRef: string): Scre
       back: { href: appPath(projectRef, "settings"), label: "Settings" },
       copy: cloudCopy,
       subtitle:
-        "Create a one-time token that lets a self-hosted instance push its data into this workspace.",
+        "Create a one-time token that lets a self-hosted instance push its data into this project.",
       title: "Import from self-host",
       topBar: context === "cloud-settings" ? "settings" : undefined,
     };
@@ -66,8 +66,7 @@ function screenCopy(context: CloudImportScreenContext, projectRef: string): Scre
   return {
     back: { href: appPath(projectRef, "settings"), label: "Settings" },
     copy: instanceCopy,
-    subtitle:
-      "Create a one-time token that lets another instance push its data into this workspace.",
+    subtitle: "Create a one-time token that lets another instance push its data into this project.",
     title: "Import from another instance",
   };
 }

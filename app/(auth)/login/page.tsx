@@ -1,5 +1,5 @@
 import { LoginForm } from "@/components/auth/LoginForm";
-import { ThemeToggle } from "@/components/ui";
+import { BrandLockup } from "@/components/ui";
 import { returnToOrDefault } from "@/lib/auth/return-to";
 import {
   DEV_DEMO_EMAIL,
@@ -17,7 +17,6 @@ import { legalConsentLinks } from "@/lib/deployment/legal";
 import { getGitHubStars } from "@/lib/site/github-stars";
 import { LICENSE } from "@/lib/site/site";
 import {
-  ChartLineUpIcon as ChartLineUp,
   GithubLogoIcon as GithubLogo,
   LockKeyIcon as LockKey,
   ShieldCheckIcon as ShieldCheck,
@@ -62,22 +61,19 @@ export default async function LoginPage({ searchParams }: Readonly<LoginPageProp
   ]);
   const brandStats: { icon: typeof GithubLogo; label: string; tone?: string }[] = [
     ...(githubStars ? [{ icon: GithubLogo, label: `${githubStars} stars` }] : []),
-    { icon: ShieldCheck, label: LICENSE, tone: "text-green" },
+    { icon: ShieldCheck, label: LICENSE, tone: "text-green-text" },
     { icon: LockKey, label: "Self-hosted" },
   ];
 
   return (
     <main className="grid min-h-dvh bg-bg text-fg md:grid-cols-[1.05fr_1fr]">
       <section className="relative hidden flex-col justify-between overflow-hidden border-border border-r bg-bg-sidebar p-8 md:flex lg:p-11">
-        <Link className="flex items-center gap-[9px] text-fg no-underline" href="/">
-          <span className="grid h-[30px] w-[30px] place-items-center rounded-lg bg-accent text-white">
-            <ChartLineUp aria-hidden size={17} weight="bold" />
-          </span>
-          <span className="text-[18px] font-bold tracking-[-0.5px]">bisibility</span>
+        <Link className="inline-flex w-fit no-underline" href="/">
+          <BrandLockup />
         </Link>
 
         <div className="max-w-[420px]">
-          <div className="font-mono text-[11px] uppercase tracking-[0.6px] text-accent">
+          <div className="font-mono text-[11px] uppercase tracking-[0.6px] text-accent-text">
             Open-source SEO platform
           </div>
           <h2 className="mt-[14px] mb-0 text-[32px] font-semibold leading-[1.2] tracking-[-1.1px]">
@@ -85,7 +81,7 @@ export default async function LoginPage({ searchParams }: Readonly<LoginPageProp
           </h2>
           <p className="mt-[14px] mb-0 text-[15px] leading-[1.6] text-fg-muted">
             Daily Google positions for every keyword that matters, in a dashboard your whole team
-            can read. Bring your own SERP provider.
+            can read.
           </p>
 
           <div className="mt-[26px] overflow-hidden rounded-[13px] border border-border">
@@ -98,22 +94,23 @@ export default async function LoginPage({ searchParams }: Readonly<LoginPageProp
             <pre className="m-0 overflow-x-auto bg-code-bg px-4 py-[15px] font-mono text-[12.5px] leading-[1.7] text-code-fg">
               <span className="text-code-faint"># self-host in one command</span>
               {"\n"}
-              <span className="text-accent">$</span> docker compose -f compose.yaml -f
+              <span className="text-accent-text">$</span> docker compose -f compose.yaml -f
               compose.worker.yaml -f compose.temporal.yaml up -d
               {"\n"}
               <span className="block">
-                <span className="text-blue">✓</span> app <span className="text-green">started</span>
+                <span className="text-blue-text">✓</span> app{" "}
+                <span className="text-green-text">started</span>
               </span>
               <span className="block">
-                <span className="text-blue">✓</span> scheduled worker{" "}
-                <span className="text-green">started</span>
+                <span className="text-blue-text">✓</span> scheduled worker{" "}
+                <span className="text-green-text">started</span>
               </span>
               <span className="block text-code-faint">{"  + 6 supporting services"}</span>
             </pre>
           </div>
         </div>
 
-        <div className="flex items-center gap-[18px] font-mono text-[11.5px] text-fg-faint">
+        <div className="flex items-center gap-[18px] font-mono text-[11.5px] text-fg-muted">
           {brandStats.map(({ icon: Icon, label, tone }) => (
             <span className="inline-flex items-center gap-1.5" key={label}>
               <Icon aria-hidden className={tone} size={14} weight="fill" />
@@ -124,9 +121,6 @@ export default async function LoginPage({ searchParams }: Readonly<LoginPageProp
       </section>
 
       <section className="relative flex items-center justify-center px-6 py-11">
-        <div className="absolute top-4 right-4 sm:top-6 sm:right-6">
-          <ThemeToggle />
-        </div>
         <LoginForm
           capacity={capacity}
           capacityMiss={capacityMiss}

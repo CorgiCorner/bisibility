@@ -78,6 +78,7 @@ describe("addKeywordsMatrix", () => {
       role: "admin",
     });
     mocks.prisma.project.findFirst.mockResolvedValue({
+      domain: "example.com",
       id: "project_1",
       ownerId: "user_1",
       publicId: "prj_a00000000000000000000000",
@@ -204,6 +205,27 @@ describe("addKeywordsMatrix", () => {
       mocks.prisma,
     );
     expect(mocks.prisma.keywordSchedule.createMany).toHaveBeenCalledTimes(1);
+  });
+
+  it("refuses to add keywords until the workspace has a domain", async () => {
+    mocks.prisma.project.findFirst.mockResolvedValue({
+      domain: null,
+      id: "project_1",
+      ownerId: "user_1",
+      publicId: "prj_a00000000000000000000000",
+    });
+
+    await expect(
+      addKeywordsMatrix({
+        devices: ["desktop"],
+        keywords: ["alpha"],
+        locations: [{ locationKey: "US" }],
+        projectId: "prj_a00000000000000000000000",
+        tags: [],
+        targetUrl: null,
+      }),
+    ).rejects.toThrow(/Settings > Project details/);
+    expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
   });
 
   it("does not audit when the set-based matrix insert fails", async () => {

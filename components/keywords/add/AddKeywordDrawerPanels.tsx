@@ -88,11 +88,11 @@ export function AddKeywordDrawerPanels({
 
   return (
     <>
-      <div className="flex w-max items-center gap-0.5 rounded-[10px] border border-border-strong bg-bg-sunken p-[3px]">
+      <div className="flex w-max items-center gap-0.5 rounded-[10px] border border-border-strong bg-transparent p-[3px]">
         {ADD_KEYWORD_TABS.map((tab) => (
           <button
             className={`rounded-[7px] px-4 py-1.5 text-[12.5px] font-semibold ${
-              activeTab === tab.id ? "bg-bg-elev text-fg" : "text-fg-muted"
+              activeTab === tab.id ? "bg-bg-sunken text-fg" : "text-fg-muted hover:text-fg"
             }`}
             key={tab.id}
             onClick={() => onTabChange(tab.id)}

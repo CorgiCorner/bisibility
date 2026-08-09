@@ -7,11 +7,17 @@ import { SidebarCollapsedProvider, useSidebarCollapsed } from "./SidebarCollapse
 
 type AppThemeRootProps = ComponentPropsWithoutRef<"div"> & {
   "data-collapsed"?: string;
-  defaultTheme: ThemeMode;
+  /** Undefined for the `system` preference: only the browser can resolve it, so the
+   * pre-paint script owns the first paint and the shell inherits it from <html>. */
+  defaultTheme: ThemeMode | undefined;
 };
 
 function AppThemeRootContent({ defaultTheme, ...props }: Readonly<AppThemeRootProps>) {
-  const theme = useSyncExternalStore(subscribeTheme, readTheme, () => defaultTheme);
+  const theme = useSyncExternalStore<ThemeMode | undefined>(
+    subscribeTheme,
+    readTheme,
+    () => defaultTheme,
+  );
   const { collapsed } = useSidebarCollapsed();
 
   return (

@@ -49,7 +49,7 @@ export function CredentialFieldInput({
           {...registration}
         />
       )}
-      {error ? <span className={`${feedbackClass} text-red`}>{error}</span> : null}
+      {error ? <span className={`${feedbackClass} text-red-text`}>{error}</span> : null}
     </label>
   );
 }

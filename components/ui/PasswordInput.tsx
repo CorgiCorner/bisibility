@@ -3,6 +3,7 @@
 import { cn } from "@/lib/ui/cn";
 import { EyeIcon as Eye, EyeSlashIcon as EyeSlash } from "@phosphor-icons/react";
 import { forwardRef, type InputHTMLAttributes, useState } from "react";
+import { inputClassName } from "./Input";
 
 export type PasswordInputProps = Omit<InputHTMLAttributes<HTMLInputElement>, "type"> & {
   wrapperClassName?: string;
@@ -16,7 +17,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
       <span className={cn("relative block", wrapperClassName)}>
         <input
           autoComplete="off"
-          className={cn(className, "w-full pr-12")}
+          className={cn(inputClassName, "w-full pr-12", className)}
           disabled={disabled}
           ref={ref}
           type={showValue ? "text" : "password"}
@@ -25,7 +26,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
         <button
           aria-label={showValue ? "Hide password" : "Show password"}
           aria-pressed={showValue}
-          className="absolute right-2 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-md border-0 bg-transparent text-fg-muted hover:bg-bg-elev hover:text-fg focus:outline-none focus:ring-2 focus:ring-accent/40 disabled:cursor-not-allowed disabled:opacity-60"
+          className="absolute right-2 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-md border-0 bg-transparent text-fg-muted hover:bg-bg-elev hover:text-fg focus:outline-none focus:ring-2 focus:ring-accent/40 disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted"
           disabled={disabled}
           onClick={() => setShowValue((visible) => !visible)}
           type="button"

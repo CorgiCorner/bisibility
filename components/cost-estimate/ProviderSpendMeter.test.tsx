@@ -121,7 +121,7 @@ describe("ProviderSpendMeter segmented variant", () => {
     );
 
     expect(screen.getByText("DataForSEO $9.40")).toBeInTheDocument();
-    expect(screen.getByText("SerpAPI $3.00")).toBeInTheDocument();
+    expect(screen.getByText("SerpApi $3.00")).toBeInTheDocument();
     const squares = container.querySelectorAll('span[aria-hidden="true"]');
     expect(squares[0]).toHaveStyle({ backgroundColor: "var(--accent)" });
     expect(squares[1]).toHaveStyle({ backgroundColor: "var(--yellow)" });
@@ -134,7 +134,7 @@ describe("ProviderSpendMeter segmented variant", () => {
         docsHref={docsHref}
         providers={[
           { label: "DataForSEO", spentCents: 1210 },
-          { label: "SerpAPI", spentCents: 30 },
+          { label: "SerpApi", spentCents: 30 },
         ]}
         spentCents={1240}
         variant="segmented"
@@ -142,7 +142,7 @@ describe("ProviderSpendMeter segmented variant", () => {
     );
 
     expect(screen.getByText("Other $0.30")).toBeInTheDocument();
-    expect(screen.queryByText("SerpAPI $0.30")).not.toBeInTheDocument();
+    expect(screen.queryByText("SerpApi $0.30")).not.toBeInTheDocument();
   });
 
   it("overrides segmentation with the warning color while keeping the legend", () => {
@@ -152,7 +152,7 @@ describe("ProviderSpendMeter segmented variant", () => {
         docsHref={docsHref}
         providers={[
           { label: "DataForSEO", spentCents: 3400 },
-          { label: "SerpAPI", spentCents: 900 },
+          { label: "SerpApi", spentCents: 900 },
         ]}
         spentCents={4300}
         variant="segmented"

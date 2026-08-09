@@ -41,9 +41,9 @@ export type DefaultsSectionProps = {
 };
 
 const labelClass =
-  "flex flex-col gap-1.5 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint";
+  "flex flex-col gap-1.5 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted";
 const selectTriggerClass =
-  "min-h-10 w-full justify-between rounded-lg border-border-strong bg-bg-sunken px-3 text-[13px] font-medium normal-case tracking-normal";
+  "min-h-10 w-full justify-between rounded-lg border-border-strong bg-transparent px-3 text-[13px] font-medium normal-case tracking-normal";
 const feedbackClass = "text-[11.5px] font-medium normal-case tracking-normal";
 const depthSelectOptions = serpDepthValues.map((depth) => ({
   label: `Top ${depth}`,
@@ -211,7 +211,7 @@ export function DefaultsSection({
                 />
               </label>
               {serpDepth < initialSerpDepth ? (
-                <p className={cn("m-0 mt-2", feedbackClass, "text-yellow")}>
+                <p className={cn("m-0 mt-2", feedbackClass, "text-yellow-text")}>
                   {serpDepthDecreaseWarning(serpDepth)}
                 </p>
               ) : null}
@@ -239,7 +239,7 @@ export function DefaultsSection({
           </div>
           <div className="border-t border-border-soft pt-4">
             <div>
-              <div className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint">
+              <div className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
                 Default market
               </div>
               <p className="mt-1 text-[12.5px] text-fg-muted">
@@ -257,7 +257,9 @@ export function DefaultsSection({
                   value={locationValue}
                 />
                 {errors.country ? (
-                  <span className={cn(feedbackClass, "text-red")}>{errors.country.message}</span>
+                  <span className={cn(feedbackClass, "text-red-text")}>
+                    {errors.country.message}
+                  </span>
                 ) : null}
               </div>
               <div className={labelClass}>
@@ -271,7 +273,9 @@ export function DefaultsSection({
                   value={device}
                 />
                 {errors.device ? (
-                  <span className={cn(feedbackClass, "text-red")}>{errors.device.message}</span>
+                  <span className={cn(feedbackClass, "text-red-text")}>
+                    {errors.device.message}
+                  </span>
                 ) : null}
               </div>
             </div>

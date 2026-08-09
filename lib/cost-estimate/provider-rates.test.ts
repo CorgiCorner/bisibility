@@ -118,7 +118,7 @@ describe("provider rates", () => {
     }
   });
 
-  it("includes the verified SerpAPI public plan ladder", () => {
+  it("includes the verified SerpApi public plan ladder", () => {
     const serpapi = rateForProvider("serpapi");
 
     expect(serpapi?.pricingModel).toBe("plan");

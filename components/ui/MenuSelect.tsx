@@ -93,7 +93,7 @@ function MenuSearchField({ onChange, placeholder, value }: Readonly<MenuSearchFi
     <div className="px-1 pb-1">
       <input
         aria-label={placeholder}
-        className="min-h-8 w-full rounded-[8px] border border-border-strong bg-bg-sunken px-2.5 text-[12.5px] text-fg outline-none placeholder:text-fg-faint focus:border-accent"
+        className="min-h-8 w-full rounded-[8px] border border-border-strong bg-transparent px-2.5 text-[12.5px] text-fg outline-none placeholder:text-fg-muted focus:border-accent"
         onChange={(event) => onChange(event.target.value)}
         onKeyDown={(event) => {
           if (!["ArrowDown", "ArrowUp", "Escape", "Tab"].includes(event.key)) {
@@ -149,7 +149,7 @@ export function MenuSelect({
       >
         {leadingIcon ? <span className="flex shrink-0 text-fg-muted">{leadingIcon}</span> : null}
         <span className="min-w-0 truncate">{selected?.label ?? ariaLabel}</span>
-        <CaretDown aria-hidden className="shrink-0 text-fg-faint" size={11} weight="bold" />
+        <CaretDown aria-hidden className="shrink-0 text-fg-muted" size={11} weight="bold" />
       </button>
       <Menu
         anchorEl={anchorEl}
@@ -167,7 +167,7 @@ export function MenuSelect({
           <MenuSearchField onChange={setSearch} placeholder={searchPlaceholder} value={search} />
         ) : null}
         {filteredOptions.length === 0 ? (
-          <div className="px-2 py-2 text-[12px] text-fg-faint">No matches</div>
+          <div className="px-2 py-2 text-[12px] text-fg-muted">No matches</div>
         ) : null}
         {filteredOptions.map((option) => (
           <MenuSelectOptionItem
@@ -242,7 +242,7 @@ export function MenuMultiSelect({
       >
         {leadingIcon ? <span className="flex shrink-0 text-fg-muted">{leadingIcon}</span> : null}
         <span className="min-w-0 truncate">{selectedSummary(selected, placeholder, summary)}</span>
-        <CaretDown aria-hidden className="shrink-0 text-fg-faint" size={11} weight="bold" />
+        <CaretDown aria-hidden className="shrink-0 text-fg-muted" size={11} weight="bold" />
       </button>
       <Menu
         anchorEl={anchorEl}
@@ -260,7 +260,7 @@ export function MenuMultiSelect({
           <MenuSearchField onChange={setSearch} placeholder={searchPlaceholder} value={search} />
         ) : null}
         {filteredOptions.length === 0 ? (
-          <div className="px-2 py-2 text-[12px] text-fg-faint">No matches</div>
+          <div className="px-2 py-2 text-[12px] text-fg-muted">No matches</div>
         ) : null}
         {filteredOptions.map((option) => {
           const current = selectedValues.has(option.value);
@@ -276,7 +276,7 @@ export function MenuMultiSelect({
             >
               <span className={current ? "font-semibold text-fg" : undefined}>{option.label}</span>
               {current ? (
-                <Check aria-hidden className="text-accent" size={15} weight="bold" />
+                <Check aria-hidden className="text-accent-text" size={15} weight="bold" />
               ) : null}
             </MenuItem>
           );

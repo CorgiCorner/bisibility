@@ -1,9 +1,8 @@
 "use client";
 
 import { Toolbar } from "@/components/shell/Toolbar";
-import { Pill } from "@/components/ui";
+import { Button, Pill } from "@/components/ui";
 import { appPath } from "@/lib/routing/app-path";
-import Button from "@mui/material/Button";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import {
@@ -145,11 +144,11 @@ export function OverviewToolbar({
       <Toolbar
         action={
           <Button
-            startIcon={<Plus size={15} weight="bold" />}
-            sx={{ minHeight: 40, whiteSpace: "nowrap" }}
-            variant="contained"
             component={Link}
             href={appPath(projectRef, "keywords?add=1")}
+            startIcon={<Plus size={15} weight="bold" />}
+            sx={{ minHeight: 40, whiteSpace: "nowrap" }}
+            variant="primary"
           >
             <span className="hidden sm:inline">Add keyword</span>
             <span className="sm:hidden">Add</span>
@@ -157,7 +156,7 @@ export function OverviewToolbar({
         }
       >
         <Pill active aria-label={`Refresh cadence ${selected.refresh}`}>
-          <ArrowsClockwise aria-hidden className="text-accent" size={15} />
+          <ArrowsClockwise aria-hidden className="text-accent-text" size={15} />
           {`Refresh: ${selected.refresh}`}
         </Pill>
         {menus.map((menu) => {
@@ -173,7 +172,7 @@ export function OverviewToolbar({
             >
               {menu.icon}
               {`${menu.prefix}${selected[menu.key]}`}
-              <CaretDown aria-hidden className="text-fg-faint" size={11} weight="bold" />
+              <CaretDown aria-hidden className="text-fg-muted" size={11} weight="bold" />
             </Pill>
           );
         })}
@@ -205,7 +204,7 @@ export function OverviewToolbar({
                   {option.label}
                 </span>
                 {current ? (
-                  <Check aria-hidden className="text-accent" size={15} weight="bold" />
+                  <Check aria-hidden className="text-accent-text" size={15} weight="bold" />
                 ) : null}
               </MenuItem>
             );

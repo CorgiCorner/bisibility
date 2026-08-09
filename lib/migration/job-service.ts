@@ -18,7 +18,7 @@ export async function recordCreatedCloudImportJob(
     actorId: null,
     after: { jobId: view.id, state: job.state },
     projectId: token.projectId,
-    targetId: requiredPublicAuditId(view.id, "imp", "Cloud import job"),
+    targetId: requiredPublicAuditId(view.id, "imp", "Instance import job"),
     targetType: "cloud_import_job",
   });
   return view;
@@ -38,15 +38,15 @@ export async function advanceCloudImportJobForProject(input: {
     where: { projectId: input.projectId, publicId: publicJobId },
   });
   if (!before) {
-    throw new Error("Cloud import job not found.");
+    throw new Error("Instance import job not found.");
   }
   if (!canTransition(before.state, input.state)) {
-    throw new Error(`Cannot advance cloud import from ${before.state} to ${input.state}.`);
+    throw new Error(`Cannot advance instance import from ${before.state} to ${input.state}.`);
   }
   const job = await prisma.cloudImportJob.update({
     data: {
       counts: input.counts as Prisma.InputJsonValue | undefined,
-      error: input.state === "failed" ? (input.error ?? "Cloud import failed.") : null,
+      error: input.state === "failed" ? (input.error ?? "Instance import failed.") : null,
       finishedAt: input.state === "done" || input.state === "failed" ? new Date() : null,
       progress: input.state === "done" ? 100 : (input.progress ?? before.progress),
       state: input.state,
@@ -61,7 +61,7 @@ export async function advanceCloudImportJobForProject(input: {
     after: { id: afterView.id, progress: afterView.progress, state: afterView.state },
     before: { id: beforeView.id, progress: beforeView.progress, state: beforeView.state },
     projectId: input.projectId,
-    targetId: requiredPublicAuditId(afterView.id, "imp", "Cloud import job"),
+    targetId: requiredPublicAuditId(afterView.id, "imp", "Instance import job"),
     targetType: "cloud_import_job",
   });
   return { job, view: afterView };

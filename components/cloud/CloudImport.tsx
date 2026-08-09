@@ -56,9 +56,9 @@ export type CloudImportCopy = {
 const defaultCopy: CloudImportCopy = {
   sourceLabel: "self-hosted instance",
   tokenSecurityNote:
-    "The token grants import access to this workspace only, never your providers or billing. It expires automatically and can be revoked any time before use.",
+    "The token grants import access to this project only, never your providers or billing. It expires automatically and can be revoked any time before use.",
   transferInstruction:
-    "Open Migrate to Cloud / Transfer, choose Push to Cloud, and paste this token to start the import.",
+    "Open Migrate to hosted instance / Transfer, choose Push to hosted instance, and paste this token to start the import.",
 };
 
 function migrationTokenStatus(
@@ -131,7 +131,7 @@ export function CloudImport({
     return (
       <section className="mt-5 rounded-[14px] border border-border bg-bg-elev px-5 py-4">
         <p className="m-0 text-[13px] text-fg-muted">
-          Migration controls are available to workspace admins and owners.
+          Migration controls are available to project admins and owners.
         </p>
       </section>
     );
@@ -159,7 +159,7 @@ export function CloudImport({
         setIsTransferring(false);
       } catch (error) {
         setFailedAction(actionType);
-        setMessage(actionErrorMessage(error, "Cloud migration action failed."));
+        setMessage(actionErrorMessage(error, "Migration action failed."));
       } finally {
         setPendingAction(null);
       }
@@ -193,7 +193,7 @@ export function CloudImport({
         router.refresh();
       } catch (error) {
         setFailedAction("revoke");
-        setMessage(actionErrorMessage(error, "Cloud migration action failed."));
+        setMessage(actionErrorMessage(error, "Migration action failed."));
       } finally {
         setPendingAction(null);
       }
@@ -220,7 +220,7 @@ export function CloudImport({
         workspaceName={workspaceName}
       />
       {projectReadOnly ? (
-        <p className="m-0 mt-3 text-[12px] leading-normal text-yellow" role="status">
+        <p className="m-0 mt-3 text-[12px] leading-normal text-yellow-text" role="status">
           Migration token controls are unavailable while this project is read-only. Return to
           Migration settings to finish or cancel the migration first.
         </p>
@@ -269,8 +269,8 @@ export function CloudImport({
         projectRef={projectId}
         sourceLabel={copy.sourceLabel}
       />
-      <div className="mt-[18px] flex items-start gap-[9px] text-[12px] leading-[1.5] text-fg-faint">
-        <LockSimple aria-hidden className="mt-px flex-none text-green" size={14} />
+      <div className="mt-[18px] flex items-start gap-[9px] text-[12px] leading-[1.5] text-fg-muted">
+        <LockSimple aria-hidden className="mt-px flex-none text-green-text" size={14} />
         <span>{copy.tokenSecurityNote}</span>
       </div>
     </section>

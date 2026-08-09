@@ -4,8 +4,8 @@ import { AlertTargetUrlDialog } from "@/components/alerts/AlertTargetUrlDialog";
 import { Button } from "@/components/ui";
 import { getAlertCtaTargets, muteTriggeredAlert } from "@/lib/actions/alert-feed";
 import {
-  ArrowRightIcon as ArrowRight,
   BellSlashIcon as BellSlash,
+  CaretRightIcon as CaretRight,
   ColumnsIcon as Columns,
   ListMagnifyingGlassIcon as ListMagnifyingGlass,
   TargetIcon as Target,
@@ -16,7 +16,7 @@ import { useState } from "react";
 
 const ctaIcons: Record<string, Icon> = {
   "Compare SERP": Columns,
-  "Open keyword": ArrowRight,
+  "Open keyword": CaretRight,
   "Set target URL": Target,
   "Set winner URL": Target,
   "View SERP": ListMagnifyingGlass,
@@ -83,7 +83,7 @@ export function AlertRowActions({
   return (
     <div className="mt-2.5 flex flex-wrap items-center gap-2">
       {ctas.map((cta) => {
-        const CtaIcon = ctaIcons[cta] ?? ArrowRight;
+        const CtaIcon = ctaIcons[cta] ?? CaretRight;
 
         return (
           <Button

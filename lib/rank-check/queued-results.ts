@@ -12,6 +12,7 @@ import {
 } from "@/lib/providers/serp/dataforseo-payload";
 import { fetchDataForSeoQueuedResult } from "@/lib/providers/serp/dataforseo-queued";
 import { requireDeterminateOrganicResult } from "@/lib/providers/serp/payload-contract-error";
+import { trackedProjectDomain } from "@/lib/schemas/project";
 import { resolveSerpDepth } from "@/lib/serp/markets";
 import { findCurrentComparablePredecessor } from "./comparable-history";
 import { rankCheckCostCents } from "./cost";
@@ -102,7 +103,7 @@ async function persistProviderFailure(
     previousPosition: previous?.position ?? null,
     persistenceFinalize: terminalizeLease(lease, "failed"),
     persistenceGuard: (tx) => assertQueuedPersistenceLease(tx, lease),
-    projectDomain: task.keyword.project.domain,
+    projectDomain: trackedProjectDomain(task.keyword.project.domain) ?? "",
     projectId: task.keyword.projectId,
     provider: "dataforseo",
     providerCostCents: costCents,
@@ -150,10 +151,8 @@ async function persistProviderResult(
   const items = Array.isArray(providerTask.result) ? providerTask.result.flatMap((result) => result.items ?? []) : [null];
   const checkedAt = new Date();
   const requestedDepth = resolveSerpDepth(task.rankCheck.requestedDepth ?? undefined);
-  const decision = requireDeterminateOrganicResult(
-    "DataForSEO",
-    dataForSeoOrganicDecision(items, task.keyword.project.domain, requestedDepth),
-  );
+  // biome-ignore format: keep the queue persistence module under its enforced line cap.
+  const decision = requireDeterminateOrganicResult("DataForSEO", dataForSeoOrganicDecision(items, trackedProjectDomain(task.keyword.project.domain) ?? "", requestedDepth));
   const reportedCost = terminalCostCents || Number(task.costCents ?? 0);
   const costCents = rankCheckCostCents(reportedCost, task.batch.connection.costPerCheckCents);
   const previous = await loadComparablePrevious(task);

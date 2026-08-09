@@ -20,7 +20,7 @@ const footer = (
       Cancel
     </button>
     <button
-      className="flex-1 rounded-[9px] bg-accent px-4 py-2.5 text-[13px] font-semibold text-white"
+      className="flex-1 rounded-[9px] bg-accent-solid px-4 py-2.5 text-[13px] font-semibold text-white"
       type="button"
     >
       Save changes
@@ -35,11 +35,11 @@ const formContent = (
         Keywords
       </label>
       <textarea
-        className="mt-2 min-h-32 w-full resize-y rounded-[10px] border border-border-strong bg-bg-sunken px-[13px] py-3 font-mono text-[13px] leading-[1.7] text-fg outline-none"
+        className="mt-2 min-h-32 w-full resize-y rounded-[10px] border border-border-strong bg-transparent px-[13px] py-3 font-mono text-[13px] leading-[1.7] text-fg outline-none"
         defaultValue={"open source analytics\nself hosted seo tool"}
         id="keyword-input"
       />
-      <p className="m-0 mt-[7px] text-[11.5px] text-fg-faint">
+      <p className="m-0 mt-[7px] text-[11.5px] text-fg-muted">
         Paste from a spreadsheet, one keyword per line.
       </p>
     </div>
@@ -49,7 +49,7 @@ const formContent = (
           className="flex items-center justify-between gap-2 rounded-[9px] border border-border-strong bg-bg-sunken px-3 py-[9px]"
           key={label}
         >
-          <span className="font-mono text-[10px] uppercase tracking-[0.4px] text-fg-faint">
+          <span className="font-mono text-[10px] uppercase tracking-[0.4px] text-fg-muted">
             {label}
           </span>
           <span className="text-[13px] font-medium text-fg">Google</span>
@@ -80,7 +80,7 @@ export const FiltersOpen: Story = {
       <div className="flex flex-col gap-4">
         {["Ranking data", "Keyword attributes", "SERP features", "Tags"].map((label) => (
           <section className="border-b border-border-soft pb-4" key={label}>
-            <h3 className="m-0 font-mono text-[11px] uppercase tracking-[0.6px] text-fg-faint">
+            <h3 className="m-0 font-mono text-[11px] uppercase tracking-[0.6px] text-fg-muted">
               {label}
             </h3>
             <div className="mt-3 grid grid-cols-2 gap-[7px]">

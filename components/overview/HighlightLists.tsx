@@ -33,18 +33,18 @@ const colorByKind = {
 } satisfies Record<HighlightList["kind"], string>;
 
 const positionToneClassName = {
-  danger: "text-red",
+  danger: "text-red-text",
   default: "text-fg",
-  muted: "text-fg-faint",
+  muted: "text-fg-muted",
 } satisfies Record<NonNullable<HighlightRow["positionTone"]>, string>;
 
 const emptyCopy = {
   wins: {
-    description: "Complete another check to compare position gains.",
+    description: "Complete another check to compare positions.",
     title: "Needs another check",
   },
   attention: {
-    description: "Complete another check to compare position drops.",
+    description: "Complete another check to compare positions.",
     title: "Needs another check",
   },
   newTop10: {
@@ -63,7 +63,7 @@ function Delta({ row }: Readonly<{ row: HighlightRow }>) {
   }
 
   const Icon = row.delta.direction === "up" ? ArrowUp : ArrowDown;
-  const colorClassName = row.delta.direction === "up" ? "text-green" : "text-red";
+  const colorClassName = row.delta.direction === "up" ? "text-green-text" : "text-red-text";
 
   return (
     <Tooltip title={row.delta.title}>
@@ -84,19 +84,19 @@ export function HighlightLists({ lists, projectRef, rowHref }: Readonly<Highligh
         const Icon = iconByKind[list.kind];
 
         return (
-          <Card className="min-w-0 overflow-hidden p-0" key={list.title} size="md">
-            <div className="px-[18px] pb-3 pt-[15px]">
+          <Card className="flex min-w-0 flex-col overflow-hidden p-0" key={list.title} size="md">
+            <div className="flex-none px-[18px] pb-3 pt-[15px]">
               <div className="flex items-center gap-2 text-sm font-semibold text-fg">
                 <Icon aria-hidden color={colorByKind[list.kind]} size={16} weight="fill" />
                 {list.title}
               </div>
-              <MonoText className="mt-[3px]" muted size="sm">
+              <MonoText className="mt-[3px] block min-h-[2lh]" muted size="sm">
                 {list.subtitle}
               </MonoText>
             </div>
-            <div>
+            <div className="flex flex-1 flex-col">
               {list.rows.length === 0 ? (
-                <div className="border-t border-border-soft p-3">
+                <div className="grid flex-1 place-items-center border-t border-border-soft p-3">
                   <EmptyState compact {...emptyCopy[list.kind]} />
                 </div>
               ) : (
@@ -110,7 +110,7 @@ export function HighlightLists({ lists, projectRef, rowHref }: Readonly<Highligh
                       <span className="block truncate text-[13px] font-medium text-fg">
                         {row.keyword}
                       </span>
-                      <span className="mt-px block truncate font-mono text-[10.5px] text-fg-faint">
+                      <span className="mt-px block truncate font-mono text-[10.5px] text-fg-muted">
                         {row.note}
                       </span>
                     </span>

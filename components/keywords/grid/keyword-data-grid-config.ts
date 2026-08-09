@@ -45,7 +45,7 @@ export const keywordGridSx = {
   "& .MuiDataGrid-row": { cursor: "pointer" },
   "& .MuiDataGrid-row:hover": { backgroundColor: "var(--bg-sunken)" },
   "& .MuiDataGrid-row:hover .bv-keyword-title": {
-    color: "var(--accent)",
+    color: "var(--accent-text)",
     textDecoration: "underline",
   },
 };

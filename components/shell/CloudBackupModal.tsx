@@ -87,7 +87,7 @@ export function CloudBackupModal({
       setFeedback({ message: "Package exported and downloaded.", tone: "success" });
     } catch (error) {
       setFeedback({
-        message: actionErrorMessage(error, "Cloud import package export failed."),
+        message: actionErrorMessage(error, "Instance import package export failed."),
         tone: "error",
       });
     }
@@ -102,7 +102,7 @@ export function CloudBackupModal({
       contentClassName="py-4"
       footer={
         <>
-          <span className="min-w-0 flex-1 truncate text-[11px] text-fg-faint">
+          <span className="min-w-0 flex-1 truncate text-[11px] text-fg-muted">
             Usually under a minute
           </span>
           <Button
@@ -131,7 +131,7 @@ export function CloudBackupModal({
       open={open}
       title={
         <span className="block">
-          <span className="block">Export workspace data</span>
+          <span className="block">Export project data</span>
           <span className="mt-1 flex flex-wrap items-center gap-2 text-[12.5px] font-normal tracking-normal text-fg-muted">
             <span>A full copy of {projectName} you can restore into self-host</span>
             <span
@@ -147,25 +147,25 @@ export function CloudBackupModal({
     >
       <form className="grid gap-[18px]" id="cloud-workspace-backup" onSubmit={handleSubmit(submit)}>
         <section>
-          <div className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint">
+          <div className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
             Format
           </div>
           <div aria-label="Export format" className="mt-2 grid gap-2" role="radiogroup">
             <label
-              className={`flex cursor-pointer items-center gap-3 rounded-[11px] border px-3 py-2.5 text-left outline-none transition-colors focus-within:outline focus-within:outline-2 focus-within:outline-accent ${
+              className={`flex cursor-pointer items-center gap-3 rounded-[11px] border px-3 py-2.5 text-left transition-colors focus-within:outline focus-within:outline-2 focus-within:outline-accent-solid ${
                 format === "package"
                   ? "border-accent bg-accent-soft"
                   : "border-border bg-bg-elev hover:border-border-strong"
               }`}
             >
               <input className="sr-only" type="radio" value="package" {...register("format")} />
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[9px] bg-accent-soft text-accent">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[9px] bg-accent-soft text-accent-text">
                 <FileZip aria-hidden size={19} weight="fill" />
               </span>
               <span className="min-w-0 flex-1">
                 <span className="flex items-center gap-2">
-                  <strong className="text-[13.5px]">Workspace package</strong>
-                  <span className="rounded bg-bg-sunken px-1.5 font-mono text-[10px] text-fg-faint">
+                  <strong className="text-[13.5px]">Project package</strong>
+                  <span className="rounded bg-bg-sunken px-1.5 font-mono text-[10px] text-fg-muted">
                     .zip
                   </span>
                 </span>
@@ -175,7 +175,7 @@ export function CloudBackupModal({
               </span>
             </label>
             <label
-              className={`flex cursor-pointer items-center gap-3 rounded-[11px] border px-3 py-2.5 text-left outline-none transition-colors focus-within:outline focus-within:outline-2 focus-within:outline-accent ${
+              className={`flex cursor-pointer items-center gap-3 rounded-[11px] border px-3 py-2.5 text-left transition-colors focus-within:outline focus-within:outline-2 focus-within:outline-accent-solid ${
                 format === "csv"
                   ? "border-accent bg-accent-soft"
                   : "border-border bg-bg-elev hover:border-border-strong"
@@ -188,7 +188,7 @@ export function CloudBackupModal({
               <span className="min-w-0 flex-1">
                 <span className="flex items-center gap-2">
                   <strong className="text-[13.5px]">Keyword table</strong>
-                  <span className="rounded bg-bg-sunken px-1.5 font-mono text-[10px] text-fg-faint">
+                  <span className="rounded bg-bg-sunken px-1.5 font-mono text-[10px] text-fg-muted">
                     .csv
                   </span>
                 </span>
@@ -201,7 +201,7 @@ export function CloudBackupModal({
         </section>
 
         <section>
-          <div className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint">
+          <div className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
             Included
           </div>
           <div className="mt-2 grid gap-1.5">
@@ -210,13 +210,18 @@ export function CloudBackupModal({
                 className="flex items-center gap-2.5 rounded-[9px] border border-border px-2.5 py-2"
                 key={section.label}
               >
-                <CheckSquare aria-hidden className="shrink-0 text-accent" size={17} weight="fill" />
+                <CheckSquare
+                  aria-hidden
+                  className="shrink-0 text-accent-text"
+                  size={17}
+                  weight="fill"
+                />
                 <span className="min-w-0 flex-1">
                   <span className="block text-[12.5px] font-medium">{section.label}</span>
                   <span className="block text-[10.5px] text-fg-muted">{section.description}</span>
                 </span>
                 {section.countable ? (
-                  <span className="font-mono text-[10px] text-fg-faint">
+                  <span className="font-mono text-[10px] text-fg-muted">
                     {counts[section.countKey].toLocaleString("en-US")}
                   </span>
                 ) : null}
@@ -227,7 +232,7 @@ export function CloudBackupModal({
 
         {feedback ? (
           <p
-            className={`m-0 text-[12px] ${feedback.tone === "error" ? "text-red" : "text-green"}`}
+            className={`m-0 text-[12px] ${feedback.tone === "error" ? "text-red-text" : "text-green-text"}`}
             role={feedback.tone === "error" ? "alert" : "status"}
           >
             {feedback.message}

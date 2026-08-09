@@ -9,8 +9,8 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import type { GridColDef } from "@mui/x-data-grid";
 import {
-  ArrowSquareOutIcon as ArrowSquareOut,
   ArrowsClockwiseIcon as ArrowsClockwise,
+  ArrowUpRightIcon as ArrowUpRight,
   CopyIcon as Copy,
   DotsThreeVerticalIcon as DotsThreeVertical,
   PencilSimpleIcon as PencilSimple,
@@ -144,7 +144,7 @@ export function RowActionsCell({
           </MenuItem>
         ) : null}
         <MenuItem onClick={open} sx={{ gap: "10px", minHeight: 36 }}>
-          <ArrowSquareOut size={15} />
+          <ArrowUpRight size={15} />
           View details
         </MenuItem>
         <MenuItem onClick={copyId} sx={{ gap: "10px", minHeight: 36 }}>

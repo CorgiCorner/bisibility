@@ -15,19 +15,24 @@ export type SwitchProps = Omit<InputHTMLAttributes<HTMLInputElement>, "role" | "
   inputClassName?: string;
   label?: ReactNode;
   labelClassName?: string;
+  thumbClassName?: string;
+  thumbContent?: ReactNode;
+  trackClassName?: string;
+  trackContent?: ReactNode;
+  visualClassName?: string;
 };
 
 const visualClass = "relative h-5 w-9 shrink-0";
 
 const trackClass =
-  "absolute inset-0 rounded-full border border-border-strong bg-bg-sunken transition-colors " +
+  "absolute inset-0 rounded-full border border-border-strong bg-transparent transition-colors " +
   "peer-checked:border-accent peer-checked:bg-accent-soft " +
-  "peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 " +
-  "peer-focus-visible:outline-accent peer-disabled:opacity-55";
+  "peer-focus-visible:ring-2 peer-focus-visible:ring-accent/40 " +
+  "peer-disabled:bg-bg-sunken disabled:text-fg-muted";
 
 const thumbClass =
-  "absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-fg-faint transition-transform " +
-  "peer-checked:translate-x-4 peer-checked:bg-accent peer-disabled:opacity-55";
+  "absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-fg-muted transition-transform " +
+  "peer-checked:translate-x-4 peer-checked:bg-accent peer-disabled:bg-bg-sunken disabled:text-fg-muted";
 
 export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
   {
@@ -41,6 +46,11 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
     label,
     labelClassName,
     onChange,
+    thumbClassName,
+    thumbContent,
+    trackClassName,
+    trackContent,
+    visualClassName,
     ...props
   },
   ref,
@@ -62,12 +72,12 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
       className={cn(
         "inline-flex items-center gap-2 rounded-[9px] border border-border-strong bg-bg-elev px-3 py-2 text-[12.5px] font-semibold text-fg-muted",
         description && "items-start",
-        disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer",
+        disabled ? "cursor-not-allowed text-fg-muted" : "cursor-pointer",
         className,
       )}
       htmlFor={inputId}
     >
-      <span className={visualClass}>
+      <span className={cn(visualClass, visualClassName)}>
         <input
           aria-checked={isChecked}
           className={cn("peer sr-only", inputClassName)}
@@ -81,14 +91,18 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
           type="checkbox"
           {...props}
         />
-        <span aria-hidden className={trackClass} />
-        <span aria-hidden className={thumbClass} />
+        <span aria-hidden className={cn(trackClass, trackClassName)}>
+          {trackContent}
+        </span>
+        <span aria-hidden className={cn(thumbClass, thumbClassName)}>
+          {thumbContent}
+        </span>
       </span>
       {label || description ? (
         <span className={cn("min-w-0", labelClassName)}>
           {label ? <span className="block">{label}</span> : null}
           {description ? (
-            <span className="mt-0.5 block text-[11.5px] font-medium leading-5 text-fg-faint">
+            <span className="mt-0.5 block text-[11.5px] font-medium leading-5 text-fg-muted">
               {description}
             </span>
           ) : null}

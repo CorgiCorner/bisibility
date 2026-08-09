@@ -18,7 +18,7 @@ export function FrequencyCell({ row }: Readonly<Pick<GridRenderCellParams<Keywor
       <span className="text-[12.5px] font-medium text-fg">
         {frequencyLabel(row.schedule.frequency)}
       </span>
-      <span className="inline-flex h-5 shrink-0 self-center items-center whitespace-nowrap rounded-full border border-border bg-bg-sunken px-2 font-mono text-[9.5px] font-semibold uppercase leading-none tracking-[0.4px] text-fg-faint">
+      <span className="inline-flex h-5 shrink-0 self-center items-center whitespace-nowrap rounded-full border border-border bg-bg-sunken px-2 font-mono text-[9.5px] font-semibold uppercase leading-none tracking-[0.4px] text-fg-muted">
         {scheduleSourceLabel(row.scheduleSource)}
       </span>
     </span>

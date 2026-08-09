@@ -108,6 +108,11 @@ describe("joinWaitlist", () => {
       "https://api.resend.com/emails",
       expect.objectContaining({ method: "POST" }),
     );
+    const emailCall = vi
+      .mocked(fetch)
+      .mock.calls.find(([url]) => url === "https://api.resend.com/emails");
+    const payload = JSON.parse(String(emailCall?.[1]?.body));
+    expect(payload.text).toContain("Hosted price: $19/mo");
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/");
   });
 

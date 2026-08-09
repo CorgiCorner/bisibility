@@ -71,7 +71,7 @@ export function KeywordImportSummary({
       {aboveCap ? (
         <>
           <br />
-          <span className="text-yellow">
+          <span className="text-yellow-text">
             Above the monthly cost cap ({formatEstimateCents(monthlyCapCents)}) {"-"} checks pause
             once the cap is reached.{" "}
             <a

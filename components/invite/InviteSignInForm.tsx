@@ -5,7 +5,7 @@ import { mergeReturnToHash } from "@/lib/auth/return-to";
 import { signInRedirectUrl } from "@/lib/auth/sign-in-redirect";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import {
-  ArrowRightIcon as ArrowRight,
+  CaretRightIcon as CaretRight,
   CircleNotchIcon as CircleNotch,
   EnvelopeSimpleOpenIcon as EnvelopeSimpleOpen,
 } from "@phosphor-icons/react";
@@ -104,17 +104,22 @@ export function InviteSignInForm({ email }: Readonly<{ email: string }>) {
     return (
       <form className="mt-5 space-y-3" onSubmit={otpForm.handleSubmit(verifyCode)}>
         <div className="flex items-start gap-3 rounded-[12px] border border-border bg-bg-sunken p-3">
-          <EnvelopeSimpleOpen aria-hidden className="mt-0.5 text-accent" size={18} weight="fill" />
+          <EnvelopeSimpleOpen
+            aria-hidden
+            className="mt-0.5 text-accent-text"
+            size={18}
+            weight="fill"
+          />
           <p className="m-0 text-[13px] leading-relaxed text-fg-muted">
             We sent a one-time code to{" "}
             <span className="font-mono font-semibold text-fg">{emailForm.getValues("email")}</span>.
           </p>
         </div>
-        <label className="block font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint">
+        <label className="block font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
           {"Sign-in code "}
           <input
             autoComplete="one-time-code"
-            className="mt-2 block min-h-11 w-full rounded-[9px] border border-border-strong bg-bg-elev px-3 font-mono text-[15px] font-semibold tracking-[0.4px] text-fg outline-none focus:border-accent"
+            className="mt-2 block min-h-11 w-full rounded-[9px] border border-border-strong bg-transparent px-3 font-mono text-[15px] font-semibold tracking-[0.4px] text-fg outline-none focus:border-accent"
             disabled={pending}
             inputMode="numeric"
             maxLength={6}
@@ -123,13 +128,15 @@ export function InviteSignInForm({ email }: Readonly<{ email: string }>) {
           />
         </label>
         {otpForm.formState.errors.otp ? (
-          <p className="m-0 text-[12px] font-medium text-red">
+          <p className="m-0 text-[12px] font-medium text-red-text">
             {otpForm.formState.errors.otp.message}
           </p>
         ) : null}
-        {formError ? <p className="m-0 text-[12px] font-medium text-red">{formError}</p> : null}
+        {formError ? (
+          <p className="m-0 text-[12px] font-medium text-red-text">{formError}</p>
+        ) : null}
         <button
-          className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[9px] bg-accent px-4 text-[13px] font-semibold text-white hover:opacity-90 disabled:opacity-55"
+          className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[9px] bg-accent-solid px-4 text-[13px] font-semibold text-primary-contrast hover:opacity-90 disabled:bg-bg-sunken disabled:text-fg-muted"
           disabled={pending}
           type="submit"
         >
@@ -142,11 +149,11 @@ export function InviteSignInForm({ email }: Readonly<{ email: string }>) {
 
   return (
     <form className="mt-5 space-y-3" onSubmit={emailForm.handleSubmit(requestCode)}>
-      <label className="block font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint">
+      <label className="block font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
         {"Invited email "}
         <input
           autoComplete="email"
-          className="mt-2 block min-h-11 w-full rounded-[9px] border border-border-strong bg-bg-elev px-3 font-mono text-[13.5px] font-medium text-fg outline-none focus:border-accent"
+          className="mt-2 block min-h-11 w-full rounded-[9px] border border-border-strong bg-transparent px-3 font-mono text-[13.5px] font-medium text-fg outline-none focus:border-accent"
           inputMode="email"
           readOnly
           type="email"
@@ -154,20 +161,20 @@ export function InviteSignInForm({ email }: Readonly<{ email: string }>) {
         />
       </label>
       {emailForm.formState.errors.email ? (
-        <p className="m-0 text-[12px] font-medium text-red">
+        <p className="m-0 text-[12px] font-medium text-red-text">
           {emailForm.formState.errors.email.message}
         </p>
       ) : null}
-      {formError ? <p className="m-0 text-[12px] font-medium text-red">{formError}</p> : null}
+      {formError ? <p className="m-0 text-[12px] font-medium text-red-text">{formError}</p> : null}
       <button
-        className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[9px] bg-accent px-4 text-[13px] font-semibold text-white hover:opacity-90 disabled:opacity-55"
+        className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[9px] bg-accent-solid px-4 text-[13px] font-semibold text-primary-contrast hover:opacity-90 disabled:bg-bg-sunken disabled:text-fg-muted"
         disabled={pending}
         type="submit"
       >
         {pending ? (
           <CircleNotch aria-hidden className="bv-spin" size={15} weight="bold" />
         ) : (
-          <ArrowRight aria-hidden size={15} weight="bold" />
+          <CaretRight aria-hidden size={15} weight="bold" />
         )}
         Send sign-in code
       </button>

@@ -88,9 +88,9 @@ The adapters reduce provider responses to normalized organic results and SERP
 feature labels before storage. That snapshot is separate from the rank-history
 fields that remain on the row.
 
-| Data | Self-hosted | Cloud |
+| Data | Self-hosted | Hosted |
 | - | - | - |
-| Rank-check row, `position`, and `organicRanks` | Kept for the lifetime of the workspace. | Kept for the lifetime of the workspace, with no plan-based retention tier. |
+| Rank-check row, `position`, and `organicRanks` | Kept for the lifetime of the project. | Kept for the lifetime of the project, with no plan-based retention tier. |
 | Normalized SERP snapshot (`rank_checks.raw`) | Kept indefinitely by default. The operator can set `RANK_CHECK_RAW_RETENTION_DAYS` to 1-3650 days or `unlimited`. | Kept for 90 days. |
 
 Snapshot access is a self-hosted feature through direct PostgreSQL access to

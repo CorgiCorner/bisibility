@@ -1,10 +1,8 @@
 import { AdminRefresh } from "@/components/admin/AdminRefresh";
 import { AdminTabs } from "@/components/admin/AdminTabs";
+import { BrandLockup } from "@/components/ui";
 import { appRootPath } from "@/lib/routing/app-path";
-import {
-  ArrowRightIcon as ArrowRight,
-  ChartLineUpIcon as ChartLineUp,
-} from "@phosphor-icons/react/dist/ssr";
+import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -14,12 +12,10 @@ export function AdminShell({ children }: Readonly<{ children: ReactNode }>) {
       <header className="sticky top-0 z-[80] border-b border-border bg-bg-elev/85 backdrop-blur-md">
         <div className="flex min-h-[60px] items-center justify-between gap-3 px-4 sm:px-[26px]">
           <div className="flex min-w-0 items-center gap-2.5">
-            <span className="grid h-7 w-7 flex-none place-items-center rounded-lg bg-accent text-white">
-              <ChartLineUp aria-hidden size={16} weight="bold" />
-            </span>
-            <span className="hidden text-base font-bold tracking-[-0.4px] sm:inline">
-              bisibility
-            </span>
+            {/* The wordmark does not fit next to the admin chrome on narrow screens, so the
+                rail falls back to the mark alone. */}
+            <BrandLockup className="sm:hidden" markOnly />
+            <BrandLockup className="hidden sm:inline-flex" />
             <span aria-hidden className="hidden h-4 w-px bg-border-strong md:block" />
             <span className="hidden font-mono text-[11px] uppercase tracking-[0.5px] text-fg-muted md:inline">
               Instance admin
@@ -32,7 +28,7 @@ export function AdminShell({ children }: Readonly<{ children: ReactNode }>) {
               href={appRootPath()}
             >
               Back to app
-              <ArrowRight aria-hidden size={12} weight="bold" />
+              <CaretRight aria-hidden size={12} weight="bold" />
             </Link>
           </div>
         </div>

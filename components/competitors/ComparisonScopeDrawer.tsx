@@ -41,7 +41,7 @@ export function ComparisonScopeDrawer({
       description="Choose the exact keyword set used by share of voice, head-to-head ranks, and CSV exports."
       footer={
         <div className="flex items-center justify-between gap-3">
-          <span className="font-mono text-[11px] text-fg-faint">
+          <span className="font-mono text-[11px] text-fg-muted">
             {included.length} included · {excluded.size} excluded
           </span>
           <Button onClick={onClose}>Done</Button>
@@ -60,7 +60,7 @@ export function ComparisonScopeDrawer({
             ["Pending", included.length - completed],
           ].map(([label, value]) => (
             <span className="rounded-[10px] border border-border bg-bg-sunken p-3" key={label}>
-              <span className="block font-mono text-[9px] uppercase text-fg-faint">{label}</span>
+              <span className="block font-mono text-[9px] uppercase text-fg-muted">{label}</span>
               <span className="mt-1 block font-mono text-lg font-semibold">{value}</span>
             </span>
           ))}
@@ -70,12 +70,12 @@ export function ComparisonScopeDrawer({
           <label className="relative min-w-[220px] flex-1">
             <MagnifyingGlass
               aria-hidden
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-fg-faint"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-fg-muted"
               size={14}
             />
             <input
               aria-label="Search comparison keywords"
-              className="min-h-9 w-full rounded-[9px] border border-border-strong bg-bg-sunken pl-9 pr-3 text-[13px] outline-none focus:border-accent"
+              className="min-h-9 w-full rounded-[9px] border border-border-strong bg-transparent pl-9 pr-3 text-[13px] outline-none focus:border-accent"
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search keywords or tags"
               value={search}
@@ -116,7 +116,7 @@ export function ComparisonScopeDrawer({
                   <span className="block truncate text-[13px] font-medium">
                     {observation.keyword}
                   </span>
-                  <span className="mt-1 flex flex-wrap items-center gap-1.5 font-mono text-[10px] text-fg-faint">
+                  <span className="mt-1 flex flex-wrap items-center gap-1.5 font-mono text-[10px] text-fg-muted">
                     <span>{observation.completed ? "Check completed" : "Check pending"}</span>
                     {observation.tags.map((tag) => (
                       <span className="rounded bg-bg-sunken px-1.5 py-0.5" key={tag}>

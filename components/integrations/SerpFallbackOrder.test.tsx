@@ -61,7 +61,7 @@ describe("SerpFallbackOrder", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Move SerpAPI up" }));
+    fireEvent.click(screen.getByRole("button", { name: "Move SerpApi up" }));
 
     await waitFor(() => expect(actions.setPrimaryProvider).toHaveBeenCalledTimes(2));
     expect(actions.setPrimaryProvider).toHaveBeenNthCalledWith(

@@ -59,7 +59,7 @@ function PermissionMark({ allowed }: Readonly<{ allowed: boolean }>) {
   return (
     <span
       aria-label={allowed ? "Allowed" : "Not allowed"}
-      className={cn("grid place-items-center", allowed ? "text-green" : "text-fg-faint")}
+      className={cn("grid place-items-center", allowed ? "text-green-text" : "text-fg-muted")}
     >
       <Icon aria-hidden size={15} weight={allowed ? "fill" : "regular"} />
     </span>
@@ -72,7 +72,7 @@ function RolesMatrix() {
       <div className="min-w-[560px]">
         <div className="grid grid-cols-[minmax(170px,1.4fr)_repeat(4,1fr)] gap-x-2 border-b border-border bg-bg-sunken px-4 py-3 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
           <span>Capability</span>
-          <span className="text-center text-accent">Owner</span>
+          <span className="text-center text-accent-text">Owner</span>
           <span className="text-center">Admin</span>
           <span className="text-center">Editor</span>
           <span className="text-center">Viewer</span>
@@ -89,8 +89,8 @@ function RolesMatrix() {
             <PermissionMark allowed={row.viewer} />
           </div>
         ))}
-        <div className="flex items-center gap-2 border-t border-border-soft px-4 py-3 text-[11.5px] text-fg-faint">
-          <ShieldCheck aria-hidden className="shrink-0 text-accent" size={14} />
+        <div className="flex items-center gap-2 border-t border-border-soft px-4 py-3 text-[11.5px] text-fg-muted">
+          <ShieldCheck aria-hidden className="shrink-0 text-accent-text" size={14} />
           Owner is unique and transferable. Every role change is written to the audit log.
         </div>
       </div>
@@ -177,7 +177,7 @@ export function TeamRoles({
           pendingAction={pendingAction}
         />
         {actionError ? (
-          <p className="m-0 text-[12px] font-medium text-red" role="alert">
+          <p className="m-0 text-[12px] font-medium text-red-text" role="alert">
             {actionError}
           </p>
         ) : null}
@@ -218,7 +218,11 @@ export function TeamRoles({
           pendingAction={pendingAction}
         />
         {actionSuccess ? (
-          <p aria-live="polite" className="m-0 text-[12px] font-medium text-green" role="status">
+          <p
+            aria-live="polite"
+            className="m-0 text-[12px] font-medium text-green-text"
+            role="status"
+          >
             {actionSuccess}
           </p>
         ) : null}
@@ -226,7 +230,7 @@ export function TeamRoles({
       </SettingsSection>
       {canManageTeam ? (
         <InviteModal
-          domain={`${domain}'s workspace`}
+          domain={`${domain}'s project`}
           inviteMember={inviteMember}
           onClose={() => setInviteOpen(false)}
           onInviteSent={() => router.refresh()}

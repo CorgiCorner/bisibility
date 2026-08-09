@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui";
 import { type ActionResult, unwrapActionResult } from "@/lib/actions/action-result";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { actionErrorMessage } from "@/lib/ui/action-error";
@@ -65,19 +66,19 @@ export function TagAddForm({ createTag, projectId }: Readonly<TagAddFormProps>) 
           New tag name
         </label>
         <input
-          className="h-9 min-w-0 flex-1 rounded-lg border border-border-strong bg-bg-sunken px-3 text-[12.5px] font-medium text-fg outline-none focus:border-accent"
+          className="h-9 min-w-0 flex-1 rounded-lg border border-border-strong bg-transparent px-3 text-[12.5px] font-medium text-fg outline-none focus:border-accent"
           id="new-tag-name"
           placeholder="New tag"
           {...register("name")}
         />
-        <button
-          className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-accent bg-accent px-3 text-[12.5px] font-semibold text-white outline-none hover:opacity-90 focus-visible:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-          disabled={isPending}
+        <Button
+          loading={isPending}
+          startIcon={<Plus aria-hidden size={14} weight="bold" />}
           type="submit"
+          variant="primary"
         >
-          <Plus aria-hidden size={14} weight="bold" />
           Add tag
-        </button>
+        </Button>
       </span>
       <span className="font-mono text-[10.5px] text-fg-muted">
         {errors.name?.message ?? message}

@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui";
 import { appRootPath } from "@/lib/routing/app-path";
 import {
-  ArrowRightIcon as ArrowRight,
+  CaretRightIcon as CaretRight,
   CheckCircleIcon as CheckCircle,
   EnvelopeSimpleIcon as EnvelopeSimple,
 } from "@phosphor-icons/react/dist/ssr";
@@ -27,11 +27,11 @@ export function SetupSuccess({ mailerConfigured }: Readonly<{ mailerConfigured: 
       <Button
         className="w-full"
         component={Link}
-        endIcon={<ArrowRight size={15} weight="bold" />}
+        endIcon={<CaretRight size={15} weight="bold" />}
         href={appRootPath()}
         size="lg"
       >
-        Go to your workspace
+        Go to your project
       </Button>
       <Link
         className="text-center text-[12.5px] font-medium text-fg-muted underline-offset-4 transition-colors hover:text-fg hover:underline"

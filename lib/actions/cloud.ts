@@ -1,6 +1,5 @@
 "use server";
 
-import { randomBytes } from "node:crypto";
 import { cloudImportPackageSchema } from "@/lib/api/instance-import/schemas";
 import { whereCompletedChecks } from "@/lib/checks/status";
 import { appliedMigrationSummary } from "@/lib/db/migration-state";
@@ -101,7 +100,7 @@ async function requireMigrationProject(actor: Awaited<ReturnType<typeof getActio
 function packageVersion() { const envVersion = process.env.APP_VERSION?.trim(); return { source: envVersion ? "APP_VERSION" : "package.json", value: envVersion || packageJson.version }; }
 
 // biome-ignore format: compact helpers keep this action module under the file line cap.
-function parsePackageJson(content: string) { try { return JSON.parse(content) as unknown; } catch { throw new Error("Cloud import package must be valid JSON."); } }
+function parsePackageJson(content: string) { try { return JSON.parse(content) as unknown; } catch { throw new Error("Instance import package must be valid JSON."); } }
 
 // biome-ignore format: compact helpers keep this action module under the file line cap.
 function responseDetail(body: unknown) { if (!body || typeof body !== "object" || Array.isArray(body)) { return null; } return "detail" in body && typeof body.detail === "string" ? body.detail : null; }
@@ -123,7 +122,7 @@ export async function getCloudMigrationCompatibility(input: unknown) { const dat
 export async function createCloudMigrationHandoff(input: unknown) { const data = parseActionInput(targetInputSchema, input); const actor = await getActionActor(); const project = await requireMigrationProject(actor, data.projectId); const target = resolveMigrationTargetActionResult(data.targetOrigin); if (!target.ok) return target; const origin = target.value; const apiImportUrl = absoluteSiteUrl("/api/cloud/import", origin); const cloudImportUrl = absoluteSiteUrl("/app", origin); return { apiImportUrl, apiRequest: `POST ${apiImportUrl}\nAuthorization: Bearer mig_...\nContent-Type: application/json`, cloudImportUrl, cloudOnboardingUrl: cloudImportUrl, cloudOrigin: origin, cloudWorkspaceUrl: cloudImportUrl, sourceProjectId: requirePublicId(project.publicId, "prj") }; }
 
 // biome-ignore format: compact action keeps this module under the file line cap.
-export async function transferCloudImportPackage(input: unknown) { const data = parseActionInput(transferPackageSchema, input); const actor = await getActionActor(); await requireMigrationProject(actor, data.projectId); const target = resolveMigrationTargetActionResult(data.targetOrigin); if (!target.ok) return target; const parsed = parsePackageJson(data.content); cloudImportPackageSchema.parse(parsed); const origin = target.value; /* Single-shot POST is not idempotent, so retries stay disabled. */ const response = await migrationFetch(absoluteSiteUrl("/api/cloud/import", origin), { body: JSON.stringify(parsed), cache: "no-store", headers: { Authorization: `Bearer ${data.token}`, "Content-Type": "application/json" }, method: "POST", timeoutMs: 30_000 }); const body = (await response.json().catch(() => null)) as unknown; if (!response.ok) { const detail = responseDetail(body); const failure = destinationRejectionFailure(response.status, detail); if (failure) { return actionFailureResult(failure); } throw new Error(detail ?? "Cloud import failed."); } const completion = migrationCompletionResponseSchema.parse(body); return { ok: true, value: { counts: completion.counts, jobId: completion.job_id, state: completion.state } } as const; }
+export async function transferCloudImportPackage(input: unknown) { const data = parseActionInput(transferPackageSchema, input); const actor = await getActionActor(); await requireMigrationProject(actor, data.projectId); const target = resolveMigrationTargetActionResult(data.targetOrigin); if (!target.ok) return target; const parsed = parsePackageJson(data.content); cloudImportPackageSchema.parse(parsed); const origin = target.value; /* Single-shot POST is not idempotent, so retries stay disabled. */ const response = await migrationFetch(absoluteSiteUrl("/api/cloud/import", origin), { body: JSON.stringify(parsed), cache: "no-store", headers: { Authorization: `Bearer ${data.token}`, "Content-Type": "application/json" }, method: "POST", timeoutMs: 30_000 }); const body = (await response.json().catch(() => null)) as unknown; if (!response.ok) { const detail = responseDetail(body); const failure = destinationRejectionFailure(response.status, detail); if (failure) { return actionFailureResult(failure); } throw new Error(detail ?? "Instance import failed."); } const completion = migrationCompletionResponseSchema.parse(body); return { ok: true, value: { counts: completion.counts, jobId: completion.job_id, state: completion.state } } as const; }
 
 function preflightNetworkReason(error: unknown) {
   return error instanceof Error && error.name === "TimeoutError"
@@ -154,19 +153,18 @@ export async function pollCloudImportJob(input: unknown) {
 }
 
 async function createCloudImportWorkspaceDestination() {
-  const suffix = randomBytes(4).toString("hex");
   const { createProject } = await import("./project");
-  // biome-ignore format: compact action body keeps this module under the file line cap.
-  const project = await createProject({ domain: `workspace-${suffix}.bisibility.cloud`, name: "New workspace" });
+  // No domain: the workspace is addressed by public ID, and the tracked domain is
+  // whatever the user later enters in settings.
+  const project = await createProject({ name: "New project" });
   return `/cloud/import?ctx=onboard&project=${encodeURIComponent(project.publicId)}`;
 }
 
 export async function createCloudImportWorkspace() {
   if (!isCloud) {
-    throw new Error("Cloud import workspaces are available only on Cloud deployments.");
+    throw new Error("Instance import projects are available only on hosted deployments.");
   }
-  const { redirect } = await import("next/navigation");
-  return redirect(await createCloudImportWorkspaceDestination());
+  return createCloudImportWorkspaceDestination();
 }
 
 // biome-ignore format: compact action keeps this action module under the file line cap.

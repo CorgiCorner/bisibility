@@ -70,7 +70,7 @@ export function SaveCompetitorViewModal({
             Cancel
           </button>
           <button
-            className="inline-flex items-center gap-2 rounded-[9px] bg-accent px-4 py-2.5 text-[13px] font-semibold text-white disabled:opacity-60"
+            className="inline-flex items-center gap-2 rounded-[9px] bg-accent-solid px-4 py-2.5 text-[13px] font-semibold text-primary-contrast disabled:bg-bg-sunken disabled:text-fg-muted"
             disabled={isSubmitting || !createSavedViewAction}
             form="save-competitor-view"
             type="submit"
@@ -90,16 +90,20 @@ export function SaveCompetitorViewModal({
         id="save-competitor-view"
         onSubmit={handleSubmit((values) => void submit(values))}
       >
-        <label className="grid gap-2 font-mono text-[10px] uppercase text-fg-faint">
+        <label className="grid gap-2 font-mono text-[10px] uppercase text-fg-muted">
           View name
           <input
-            className="rounded-[9px] border border-border-strong bg-bg-sunken px-3 py-2.5 font-sans text-[13.5px] normal-case text-fg outline-none focus:border-accent"
+            className="rounded-[9px] border border-border-strong bg-transparent px-3 py-2.5 font-sans text-[13.5px] normal-case text-fg outline-none focus:border-accent"
             placeholder="e.g. US mobile core set"
             {...register("name")}
           />
         </label>
-        {errors.name ? <p className="m-0 text-[12px] text-red">{errors.name.message}</p> : null}
-        {errors.root ? <p className="m-0 text-[12px] text-red">{errors.root.message}</p> : null}
+        {errors.name ? (
+          <p className="m-0 text-[12px] text-red-text">{errors.name.message}</p>
+        ) : null}
+        {errors.root ? (
+          <p className="m-0 text-[12px] text-red-text">{errors.root.message}</p>
+        ) : null}
         <p className="m-0 text-[12.5px] leading-5 text-fg-muted">
           Saves this location, device, Google engine, filters, and excluded keywords.
         </p>

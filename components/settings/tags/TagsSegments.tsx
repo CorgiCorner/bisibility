@@ -36,7 +36,7 @@ export function TagsSegments({
   let addForm = null;
   if (readOnly) {
     addForm = (
-      <span className="max-w-[280px] text-right text-[11.5px] leading-normal text-yellow">
+      <span className="max-w-[280px] text-right text-[11.5px] leading-normal text-yellow-text">
         Read-only during migration. Cancel or finish the migration to manage tags.
       </span>
     );

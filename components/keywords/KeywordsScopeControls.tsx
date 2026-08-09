@@ -79,7 +79,7 @@ export function KeywordsScopeLocationSelect({
   return (
     <MenuSelect
       ariaLabel="Location scope"
-      leadingIcon={<MapPin className="text-fg-faint" size={13} />}
+      leadingIcon={<MapPin className="text-fg-muted" size={13} />}
       onChange={(value) => go({ ...lens, locationId: value === ALL_LOCATIONS ? null : value })}
       options={locationMenuOptions(locationOptions)}
       triggerClassName={triggerClassName}

@@ -99,14 +99,14 @@ export function PresenceInspectionBudget({
         <input type="hidden" {...form.register("projectId")} />
         <div className="max-w-[240px]">
           <FieldLabel
-            className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint"
+            className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted"
             help={FIELD_HELP.inspectionDailyLimit}
             htmlFor="inspection-daily-limit"
             label="Daily inspection limit"
           />
           <input
             aria-invalid={Boolean(form.formState.errors.inspectionDailyLimit)}
-            className="mt-1.5 min-h-10 w-full rounded-lg border border-border-strong bg-bg-sunken px-3 text-[13px] font-medium text-fg outline-none focus:border-accent"
+            className="mt-1.5 min-h-10 w-full rounded-lg border border-border-strong bg-transparent px-3 text-[13px] font-medium text-fg outline-none focus:border-accent"
             id="inspection-daily-limit"
             max={1000}
             min={0}
@@ -114,7 +114,7 @@ export function PresenceInspectionBudget({
             {...form.register("inspectionDailyLimit", { valueAsNumber: true })}
           />
           {form.formState.errors.inspectionDailyLimit ? (
-            <p className="mt-1 text-[11.5px] text-red">
+            <p className="mt-1 text-[11.5px] text-red-text">
               {form.formState.errors.inspectionDailyLimit.message}
             </p>
           ) : null}

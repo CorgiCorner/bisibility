@@ -61,7 +61,7 @@ export function ConnectAccountButton({
           </button>
         </span>
       </Tooltip>
-      {error ? <span className="text-[10.5px] text-red">{error}</span> : null}
+      {error ? <span className="text-[10.5px] text-red-text">{error}</span> : null}
     </span>
   );
 }

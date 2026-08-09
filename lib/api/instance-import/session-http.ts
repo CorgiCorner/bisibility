@@ -13,7 +13,7 @@ import { verifyMigrationTokenInternal } from "./token-verifier";
 
 const DEFAULT_MAX_BODY_BYTES = 8_388_608;
 const MIGRATION_HOLD_DETAIL =
-  "Destination workspace is in migration hold - release it before importing.";
+  "Destination project is in migration hold - release it before importing.";
 
 type BodyOptions = {
   allowEmpty?: boolean;
@@ -179,7 +179,7 @@ export function mapImportSessionError(req: Request, error: unknown, headers?: He
     else if (error.status === 409) code = "conflict";
     return errorResponse(code, error.detail, error.status, { headers, instance: instance(req) });
   }
-  return errorResponse("internal_server_error", "Cloud import failed.", 500, {
+  return errorResponse("internal_server_error", "Instance import failed.", 500, {
     headers,
     instance: instance(req),
   });

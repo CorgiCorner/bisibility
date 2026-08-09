@@ -212,8 +212,8 @@ export function NotificationPreferences({
               className={cn(
                 "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold",
                 preferences.emailVerification === "verified"
-                  ? "bg-green/10 text-green"
-                  : "bg-yellow/10 text-yellow",
+                  ? "bg-green/10 text-green-text"
+                  : "bg-yellow/10 text-yellow-text",
               )}
             >
               {preferences.emailVerification === "verified" ? (
@@ -226,7 +226,7 @@ export function NotificationPreferences({
           </div>
           <div className="overflow-x-auto">
             <div className="min-w-[620px] overflow-hidden rounded-lg border border-border-strong">
-              <div className="grid grid-cols-[1.5fr_repeat(4,minmax(86px,1fr))] bg-bg-sunken text-center font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint">
+              <div className="grid grid-cols-[1.5fr_repeat(4,minmax(86px,1fr))] bg-bg-sunken text-center font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
                 <div className="px-3 py-2 text-left">Event</div>
                 {channels.map((channel) => (
                   <div className="px-3 py-2" key={channel.key}>
@@ -236,7 +236,7 @@ export function NotificationPreferences({
                         <Tooltip title={PLANNED_ALERT_CHANNEL_LABEL}>
                           <span
                             aria-label={`${channel.label} ${PLANNED_ALERT_CHANNEL_LABEL}`}
-                            className="inline-flex text-fg-faint"
+                            className="inline-flex text-fg-muted"
                           >
                             <LockSimple aria-hidden size={12} weight="bold" />
                           </span>

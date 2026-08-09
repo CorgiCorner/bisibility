@@ -6,7 +6,7 @@ export type Ga4PropertyErrorCode = "measurement-id" | "universal-analytics" | "i
 export type GscPropertyErrorCode = "invalid";
 
 const GA4_PROPERTY_LOCATION =
-  "GA4: Admin (gear, bottom-left) -> Property settings -> Property details -> Property ID";
+  "Google Analytics 4: Admin (gear, bottom-left) -> Property settings -> Property details -> Property ID";
 
 function ga4PropertyError(
   code: Ga4PropertyErrorCode,
@@ -14,14 +14,14 @@ function ga4PropertyError(
 ): PropertyNormalizationResult<Ga4PropertyErrorCode> {
   const pasted = JSON.stringify(input);
   const requirement =
-    "Enter the digits-only GA4 Property ID (for example, 123456789). " +
+    "Enter the digits-only Google Analytics 4 Property ID (for example, 123456789). " +
     `Find it in ${GA4_PROPERTY_LOCATION}.`;
 
   if (code === "measurement-id") {
     return {
       error: {
         code,
-        message: `${pasted} is a Measurement ID for a web data stream, not a GA4 Property ID. ${requirement}`,
+        message: `${pasted} is a Measurement ID for a web data stream, not a Google Analytics 4 Property ID. ${requirement}`,
       },
       ok: false,
     };
@@ -30,7 +30,7 @@ function ga4PropertyError(
     return {
       error: {
         code,
-        message: `${pasted} is a Universal Analytics tracking ID, not a GA4 Property ID. ${requirement}`,
+        message: `${pasted} is a Universal Analytics tracking ID, not a Google Analytics 4 Property ID. ${requirement}`,
       },
       ok: false,
     };

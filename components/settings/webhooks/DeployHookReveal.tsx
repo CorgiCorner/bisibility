@@ -33,7 +33,7 @@ export function DeployHookRevealContent({
     <div className="space-y-4">
       <div className="rounded-[12px] border border-yellow bg-yellow/10 px-3.5 py-3">
         <div className="flex items-start gap-2.5">
-          <Key aria-hidden className="mt-0.5 flex-none text-yellow" size={17} weight="fill" />
+          <Key aria-hidden className="mt-0.5 flex-none text-yellow-text" size={17} weight="fill" />
           <div className="min-w-0">
             <div className="text-[13px] font-semibold text-fg">
               Copy this token now - it will not be shown again.
@@ -45,10 +45,10 @@ export function DeployHookRevealContent({
         </div>
       </div>
       <div>
-        <div className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint">
+        <div className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
           Webhook URL (contains the secret token)
         </div>
-        <div className="mt-[7px] flex items-center gap-2 rounded-[10px] border border-border-strong bg-bg-sunken px-3 py-2.5">
+        <div className="mt-[7px] flex items-center gap-2 rounded-[10px] border border-border-strong bg-transparent px-3 py-2.5">
           <MonoText className="min-w-0 flex-1 truncate" size="lg">
             {webhookUrl}
           </MonoText>
@@ -62,10 +62,10 @@ export function DeployHookRevealContent({
         </p>
       </div>
       <div>
-        <div className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint">
+        <div className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
           Bearer token (preferred)
         </div>
-        <div className="mt-[7px] flex items-center gap-2 rounded-[10px] border border-border-strong bg-bg-sunken px-3 py-2.5">
+        <div className="mt-[7px] flex items-center gap-2 rounded-[10px] border border-border-strong bg-transparent px-3 py-2.5">
           <MonoText className="min-w-0 flex-1 truncate" size="lg">
             {issuedHook.raw}
           </MonoText>
@@ -77,7 +77,7 @@ export function DeployHookRevealContent({
         </p>
       </div>
       <div>
-        <div className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-faint">
+        <div className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
           Test with curl
         </div>
         <div className="mt-[7px] flex items-start gap-2 rounded-[10px] border border-border-strong bg-code-bg px-3 py-2.5">

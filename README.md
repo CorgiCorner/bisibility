@@ -4,7 +4,7 @@
 
 bisibility is an open-source SEO platform for researching keywords, inspecting
 backlinks, and tracking Google rankings - in a PostgreSQL database you own.
-Self-host it or start with the Cloud beta.
+Self-host it or start with the hosted beta.
 
 [![CI](https://github.com/CorgiCorner/bisibility/actions/workflows/ci.yml/badge.svg)](https://github.com/CorgiCorner/bisibility/actions/workflows/ci.yml)
 [![License: AGPL-3.0-only](https://img.shields.io/badge/license-AGPL--3.0--only-blue.svg)](LICENSE)
@@ -45,7 +45,7 @@ bisibility stays focused on search visibility workflows. It is not a general-pur
 technical site-audit, content-writing, or on-page optimization suite.
 
 For rank checks, connect your own DataForSEO or SerpAPI account. Self-hosted
-deployments keep provider credentials in your instance; Cloud beta stores them
+deployments keep provider credentials in your instance; the hosted beta stores them
 encrypted in the managed service. Billing remains directly between you and the provider.
 
 ## Try the local demo
@@ -115,9 +115,9 @@ a stable 1.0 contract.
 | REST API and OpenAPI | Available |
 | MCP endpoint | Available |
 | TypeScript, Python, and Go SDKs | Available |
-| CLI | Developer preview |
+| CLI | Available |
 | Self-hosting with Docker | Available |
-| Managed Cloud | Open beta |
+| Hosted | Open beta |
 | Domain overview | Planned |
 
 ### Included workflows
@@ -142,8 +142,8 @@ a stable 1.0 contract.
 ## Not yet
 
 Tracked on the [roadmap](https://bisibility.com/roadmap): Slack alert delivery,
-AI Overview and LLM visibility tracking, domain overview, Cloud general availability,
-Cloud usage limits and billing controls, and Cloud uptime SLA and backup restore targets.
+AI Overview and LLM visibility tracking, domain overview, hosted general availability,
+hosted usage limits and billing controls, and hosted uptime SLA and backup restore targets.
 
 ## AI agents and MCP
 
@@ -233,18 +233,18 @@ before enabling a large schedule.
   runner and persistence model.
 - SERP and analytics providers are pluggable adapters.
 
-## Managed Cloud
+## Hosted
 
-bisibility Cloud is available in open beta and is not generally available yet. It runs
+The hosted beta is available in open beta and is not generally available yet. It runs
 the same core application without requiring you to operate PostgreSQL, Valkey,
 or the Temporal worker.
 
-bisibility Cloud itself is free during the open beta and does not require a payment
+The hosted service is free during the open beta and does not require a payment
 method. Provider usage is not included: DataForSEO or SerpAPI requests are billed
-directly to your connected provider account. Cloud pricing will be announced before
+directly to your connected provider account. Hosted pricing will be announced before
 the beta ends, and nothing will be charged without explicit confirmation. Self-hosting
 remains available without an application subscription.
-[Start the Cloud beta](https://bisibility.com/).
+[Start the hosted beta](https://bisibility.com/).
 
 ## Documentation
 

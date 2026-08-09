@@ -2,7 +2,11 @@
 
 import type { UpcomingBlockedGroup, UpcomingDayGroup } from "@/lib/checks/contract";
 import Drawer from "@mui/material/Drawer";
-import { WarningCircleIcon as WarningCircle, XIcon as X } from "@phosphor-icons/react";
+import {
+  CaretRightIcon as CaretRight,
+  WarningCircleIcon as WarningCircle,
+  XIcon as X,
+} from "@phosphor-icons/react";
 import Link from "next/link";
 import { useId, useState } from "react";
 import {
@@ -43,13 +47,13 @@ export function UpcomingStrip({
           <span
             className={`inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-full border px-3 text-xs font-semibold ${
               hasNeverRun
-                ? "border-red/30 bg-red/8 text-red"
+                ? "border-red/30 bg-red/8 text-red-text"
                 : "border-border-strong bg-bg-elev text-fg-muted"
             }`}
           >
             <WarningCircle
               aria-hidden
-              className={hasNeverRun ? "text-red" : "text-fg-faint"}
+              className={hasNeverRun ? "text-red-text" : "text-fg-muted"}
               size={14}
               weight="fill"
             />
@@ -61,7 +65,7 @@ export function UpcomingStrip({
             aria-label={`${day.label}, ${formatCheckCount(day.count)}, about ${formatEstimatedCost(
               day.estimatedCostCents,
             )}`}
-            className="inline-flex min-h-10 shrink-0 items-center rounded-full border border-border-strong bg-bg-elev px-3 text-xs font-semibold text-fg outline-none transition-colors hover:border-accent hover:text-accent focus-visible:border-accent focus-visible:text-accent"
+            className="inline-flex min-h-10 shrink-0 items-center rounded-full border border-border-strong bg-bg-elev px-3 text-xs font-semibold text-fg outline-none transition-colors hover:border-accent hover:text-accent-text focus-visible:border-accent focus-visible:text-accent-text"
             key={day.key}
             onClick={() => setOpenDayKey(day.key)}
             type="button"
@@ -108,7 +112,7 @@ export function UpcomingStrip({
                 <h2 className="m-0 text-[17px] font-semibold leading-tight text-fg" id={titleId}>
                   {openDay.label}
                 </h2>
-                <p className="mb-0 mt-1 font-mono text-[11px] text-fg-faint">
+                <p className="mb-0 mt-1 font-mono text-[11px] text-fg-muted">
                   {formatCheckCount(openDay.count)} ·{" "}
                   {formatEstimatedCost(openDay.estimatedCostCents)} est.
                 </p>
@@ -130,7 +134,7 @@ export function UpcomingStrip({
                     key={`${sample.keywordId}-${sample.nextCheckAt}`}
                   >
                     <span className="truncate text-fg">{sample.keyword}</span>
-                    <span className="shrink-0 font-mono text-[11px] text-fg-faint">
+                    <span className="shrink-0 font-mono text-[11px] text-fg-muted">
                       {fuzzySampleTime(sample.nextCheckAt, openDay.label, now, timeZone)}
                     </span>
                   </li>
@@ -139,10 +143,11 @@ export function UpcomingStrip({
             </div>
             <footer className="border-border border-t px-5 py-4">
               <Link
-                className="text-xs font-semibold text-accent outline-none hover:underline focus-visible:underline"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-accent-text outline-none hover:underline focus-visible:underline"
                 href={schedulesHref}
               >
-                Manage schedules in Keywords →
+                Manage schedules in Keywords
+                <CaretRight aria-hidden size={12} weight="bold" />
               </Link>
             </footer>
           </div>
