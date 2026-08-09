@@ -24,6 +24,8 @@ describe("PositionDistributionCard", () => {
 
     const chartProps = barChartMock.mock.calls.at(-1)?.[0] as
       | {
+          height: number;
+          margin: { bottom: number; left: number; right: number; top: number };
           series: Array<{
             barLabel: ({ value }: { value: number }) => string | null;
             barLabelPlacement: string;
@@ -32,6 +34,10 @@ describe("PositionDistributionCard", () => {
         }
       | undefined;
     const series = chartProps?.series[0];
+    expect(chartProps).toMatchObject({
+      height: 244,
+      margin: { top: 22, right: 8, bottom: 28, left: 8 },
+    });
     expect(series?.barLabelPlacement).toBe("outside");
     expect(series?.barLabel({ value: 1 })).toBe("1");
     expect(series?.barLabel({ value: 0 })).toBe("0");

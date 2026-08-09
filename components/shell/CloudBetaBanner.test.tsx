@@ -79,8 +79,11 @@ describe("CloudBetaBanner", () => {
     rerender(<CloudBetaBanner {...defaultProps} />);
 
     expect(screen.getByRole("status")).toHaveTextContent("You're on the hosted beta");
-    expect(screen.getByRole("status")).toHaveTextContent("Tracking and history match self-hosted.");
-    expect(screen.getByRole("status")).toHaveTextContent("Managed restores are not guaranteed yet");
+    expect(screen.getByRole("status")).toHaveTextContent("Restores aren't guaranteed yet");
+    expect(screen.getByRole("status")).toHaveTextContent("keep an export");
+    // The banner states one risk. A reassurance about parity with self-hosting belongs in the
+    // coverage modal, not in the strip a reader sees on every page.
+    expect(screen.getByRole("status")).not.toHaveTextContent("match self-hosted");
   });
 
   it("keeps the latest export status out of the Cloud beta banner", () => {
@@ -92,20 +95,14 @@ describe("CloudBetaBanner", () => {
     expect(screen.queryByText("Never exported")).not.toBeInTheDocument();
   });
 
-  it("groups banner content and actions into a container-responsive grid", () => {
+  it("keeps the banner content and quiet actions on one wrapping row", () => {
     render(<CloudBetaBanner {...defaultProps} />);
 
     const banner = screen.getByRole("status");
     expect(banner.parentElement).toHaveClass("@container");
-    expect(banner).toHaveClass(
-      "grid",
-      "items-start",
-      "@4xl:grid-cols-[auto_minmax(0,1fr)_auto_auto]",
-      "@4xl:items-center",
-    );
+    expect(banner).toHaveClass("flex", "flex-wrap", "items-center");
     const warningIcon = screen.getByTestId("cloud-beta-warning-icon");
     expect(screen.getByTestId("cloud-beta-warning-line")).toHaveClass(
-      "self-start",
       "flex",
       "h-lh",
       "items-center",
@@ -122,11 +119,53 @@ describe("CloudBetaBanner", () => {
     expect(actions.getByRole("button", { name: "What beta covers" })).toBeInTheDocument();
     expect(actions.getByRole("button", { name: "Export data" })).toBeInTheDocument();
     expect(screen.getByTestId("cloud-beta-actions")).toHaveClass(
-      "grid",
-      "@lg:grid-cols-2",
-      "@4xl:flex",
-      "@4xl:col-start-3",
+      "flex",
+      "shrink-0",
+      "items-center",
     );
+  });
+
+  it("aligns the glyph with the first line and leaves the actions unadorned", () => {
+    render(<CloudBetaBanner {...defaultProps} />);
+
+    // Glyph and message are one row item: the banner centres the pair against the taller
+    // actions, while inside the pair they align to the top. Centring the glyph against the
+    // message instead would drop it beside line two as soon as the sentence wraps.
+    const message = screen.getByTestId("cloud-beta-content");
+    const pair = message.parentElement;
+    expect(pair).toHaveClass("flex", "items-start");
+    expect(pair).toContainElement(screen.getByTestId("cloud-beta-warning-line"));
+
+    // The 1px lift belongs to the wrapper and is not decoration: box-centring puts a 17px glyph
+    // 1px below the cap band of 12px/1.45 text, because the font's ascent and descent are
+    // asymmetric. Removing it makes the glyph sit visibly low. The glyph element itself stays
+    // free of layout offsets so the correction has exactly one home.
+    expect(screen.getByTestId("cloud-beta-warning-line")).toHaveClass("-translate-y-px");
+
+    // Two quiet text actions. An icon would give one of them the weight of a primary control.
+    const actions = within(screen.getByTestId("cloud-beta-actions"));
+    expect(actions.getByRole("button", { name: "Export data" }).querySelector("svg")).toBeNull();
+    expect(
+      actions.getByRole("button", { name: "What beta covers" }).querySelector("svg"),
+    ).toBeNull();
+  });
+
+  it("gives the actions their own row on a narrow banner", () => {
+    render(<CloudBetaBanner {...defaultProps} />);
+
+    // Narrow: the message owns row one and the actions take a full row beneath it, indented to
+    // the message's text edge. One row again once the container reaches xl.
+    const actions = screen.getByTestId("cloud-beta-actions");
+    expect(actions).toHaveClass("basis-full", "@xl:basis-auto", "pl-[25px]", "@xl:pl-0");
+
+    // Dismiss precedes the actions in the markup so it stays on row one while they wrap, and
+    // only moves past them when everything fits on a single row.
+    const dismiss = screen.getByRole("button", { name: "Dismiss hosted beta banner" });
+    expect(dismiss).toHaveClass("@xl:order-3");
+    expect(actions).toHaveClass("@xl:order-2");
+    expect(
+      dismiss.compareDocumentPosition(actions) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 
   it("loads fresh project counts whenever the backup modal opens", async () => {

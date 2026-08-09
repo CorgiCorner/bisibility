@@ -12,7 +12,6 @@ vi.mock("@/components/shell/CommandPalette", () => ({
   useCommandPalette: () => ({ openPalette: mocks.openPalette }),
 }));
 vi.mock("@/components/ui", () => ({
-  ThemeSegmentsRow: () => null,
   useToast: () => ({ showToast: mocks.showToast }),
 }));
 vi.mock("@/lib/auth/client", () => ({ authClient: { signOut: mocks.signOut } }));

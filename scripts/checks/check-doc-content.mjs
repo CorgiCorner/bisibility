@@ -150,7 +150,7 @@ for (const term of ["personal access token", "project API key"]) {
 
 const selfHostingDocs = readFileSync(join(docsRoot, "self-hosting.mdx"), "utf8");
 for (const term of [
-  "https://railway.com/deploy/bisibility",
+  "https://bisibility.com/deploy/railway",
   "### What the template creates",
   "Eight resources are expected.",
   "A completed bootstrap job is not a crashed service.",
@@ -163,6 +163,9 @@ for (const term of [
 }
 if (selfHostingDocs.includes("https://railway.com/new/template?template=")) {
   failures.push("self-hosting.mdx uses the repository importer instead of the certified Railway template.");
+}
+if (selfHostingDocs.includes("https://railway.com/deploy/")) {
+  failures.push("self-hosting.mdx bypasses the stable Bisibility deployment redirect.");
 }
 
 const apiOverviewDocs = readFileSync(join(docsRoot, "api/overview.mdx"), "utf8");

@@ -29,7 +29,6 @@ export {
   type DisclosureHeadingLevel,
   type DisclosureProps,
 } from "./Disclosure";
-export { dashboardOverviewScreenshot } from "./dashboard-screenshot-meta";
 export { EmptyState, type EmptyStateProps } from "./EmptyState";
 export {
   ExpiryChoiceGroup,

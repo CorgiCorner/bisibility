@@ -86,9 +86,9 @@ export function PositionTrendCard({
             grid={{ horizontal: true }}
             height={250}
             hideLegend
-            // Keep the scale in the same left gutter as the card copy instead of
-            // spending a second, oversized margin before the plotted data.
-            margin={{ top: 12, right: 16, bottom: 28, left: 0 }}
+            // Reserve only enough inset for the centered first date label while the
+            // compact y-axis still shares the card's left gutter.
+            margin={{ top: 12, right: 16, bottom: 28, left: 16 }}
             series={[
               {
                 area: true,

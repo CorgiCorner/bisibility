@@ -1,7 +1,6 @@
 "use client";
 
 import { useCommandPalette } from "@/components/shell/CommandPalette";
-import type { ThemePreference } from "@/components/shell/set-theme";
 import { UserMenuRow } from "@/components/shell/UserMenuRow";
 import {
   accountLinks,
@@ -9,7 +8,7 @@ import {
   resourceLinksForDeployment,
   signOutLink,
 } from "@/components/shell/user-menu-items";
-import { ThemeSegmentsRow, useToast } from "@/components/ui";
+import { useToast } from "@/components/ui";
 import { authClient } from "@/lib/auth/client";
 import Divider from "@mui/material/Divider";
 import Menu from "@mui/material/Menu";
@@ -31,7 +30,6 @@ const DIVIDER_SX = { borderColor: "var(--border)", marginX: "4px", marginY: "6px
 
 export type UserMenuProps = {
   anchorEl: HTMLElement | null;
-  defaultTheme?: ThemePreference;
   email: string;
   initials: string;
   name: string;
@@ -44,7 +42,6 @@ export type UserMenuProps = {
 
 export function UserMenu({
   anchorEl,
-  defaultTheme = "system",
   email,
   initials,
   name,
@@ -108,8 +105,6 @@ export function UserMenu({
         </span>
       </div>
       <Divider sx={{ ...DIVIDER_SX, marginTop: "2px" }} />
-      <ThemeSegmentsRow defaultPreference={defaultTheme} />
-      <Divider sx={DIVIDER_SX} />
       {accountLinks.map((item) => (
         <UserMenuRow
           item={item}

@@ -62,8 +62,9 @@ const mocks = vi.hoisted(() => {
         upsert: vi.fn(() => Promise.resolve({ id: "provider_connection_1" })),
       },
       rankCheck: {
-        createMany: vi.fn((input: { data: Array<{ keywordId: string }> }) =>
-          Promise.resolve({ count: input.data.length }),
+        createMany: vi.fn(
+          (input: { data: Array<{ keywordId: string; requestedDepth?: number }> }) =>
+            Promise.resolve({ count: input.data.length }),
         ),
         deleteMany: vi.fn(() => Promise.resolve({ count: 0 })),
       },
@@ -196,7 +197,8 @@ describe("database seed", () => {
     expect(
       mocks.prisma.rankCheck.createMany.mock.calls.every(
         ([input]) =>
-          input.data.length === DENSE_CHECK_COUNT && input.data.every((row) => row.keywordId),
+          input.data.length === DENSE_CHECK_COUNT &&
+          input.data.every((row) => row.keywordId && row.requestedDepth === 100),
       ),
     ).toBe(true);
   });

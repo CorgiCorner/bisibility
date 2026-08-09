@@ -155,10 +155,12 @@ export function OverviewToolbar({
           </Button>
         }
       >
-        <Pill active aria-label={`Refresh cadence ${selected.refresh}`}>
-          <ArrowsClockwise aria-hidden className="text-accent-text" size={15} />
-          {`Refresh: ${selected.refresh}`}
-        </Pill>
+        {selected.refresh === "Mixed schedules" ? null : (
+          <Pill active aria-label={`Refresh cadence ${selected.refresh}`}>
+            <ArrowsClockwise aria-hidden className="text-accent-text" size={15} />
+            {`Refresh: ${selected.refresh}`}
+          </Pill>
+        )}
         {menus.map((menu) => {
           const open = openKey === menu.key;
           return (

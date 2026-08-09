@@ -33,7 +33,7 @@ describe("PositionTrendCard", () => {
 
     expect(lineChart).toHaveBeenLastCalledWith(
       expect.objectContaining({
-        margin: { top: 12, right: 16, bottom: 28, left: 0 },
+        margin: { top: 12, right: 16, bottom: 28, left: 16 },
         yAxis: [expect.objectContaining({ width: 20 })],
       }),
     );

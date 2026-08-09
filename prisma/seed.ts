@@ -340,6 +340,7 @@ export async function seed() {
         publicId: seededPublicId("check", `seed:check:${item.publicId}:${index}`),
         rankingUrl: item.targetUrl,
         raw: { source: "seed", topDepth: 100 },
+        requestedDepth: 100,
         viaFallback: false,
       })),
     });

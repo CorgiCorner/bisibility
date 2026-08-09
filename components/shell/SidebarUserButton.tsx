@@ -86,7 +86,6 @@ export function SidebarUserButton({
       </button>
       <UserMenu
         anchorEl={anchorEl}
-        defaultTheme={user?.theme}
         email={email}
         initials={initials}
         name={name}
