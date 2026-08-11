@@ -14,7 +14,7 @@ import {
 } from "@/lib/api/provider-service";
 import { completePendingGooglePropertySelection } from "@/lib/providers/analytics/google-oauth-pending";
 import {
-  setPrimaryProviderSchema,
+  providerConnectionRefSchema,
   testProviderConnectionSchema,
   updateProviderCostSchema,
   updateProviderRateSchema,
@@ -75,7 +75,7 @@ export async function testConnection(input: unknown) {
   return testProviderConnection(data, await providerScope(data.projectId));
 }
 
-export async function setPrimaryProvider(input: unknown) {
+export async function updateProviderSettings(input: unknown) {
   const data = parseActionInput(providerSettingsSchema, input);
   await setProviderSettings(data, await providerScope(data.projectId));
   revalidateProviderViews();
@@ -100,7 +100,7 @@ export async function updateProviderRate(input: unknown) {
 }
 
 export async function disconnectProvider(input: unknown) {
-  const data = parseActionInput(setPrimaryProviderSchema, input);
+  const data = parseActionInput(providerConnectionRefSchema, input);
   const result = await disconnectProviderConnection(data, await providerScope(data.projectId));
   revalidateProviderViews();
 

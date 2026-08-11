@@ -1,12 +1,12 @@
 "use client";
 
+import { MenuSelectOptionItem, menuSelectRowSx } from "@/components/ui/MenuSelectOptionItem";
+import { toolbarControlClassName } from "@/components/ui/toolbar-control-styles";
 import { cn } from "@/lib/ui/cn";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import { CaretDownIcon as CaretDown, CheckIcon as Check } from "@phosphor-icons/react";
-import { type ReactNode, useEffect, useRef, useState } from "react";
-import { MenuSelectOptionItem, menuSelectRowSx } from "./MenuSelectOptionItem";
-import { toolbarControlClassName } from "./toolbar-control-styles";
+import { type ReactNode, useCallback, useState } from "react";
 
 export type MenuSelectOption = {
   disabled?: boolean;
@@ -83,11 +83,7 @@ type MenuSearchFieldProps = {
 };
 
 function MenuSearchField({ onChange, placeholder, value }: Readonly<MenuSearchFieldProps>) {
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
+  const focusInput = useCallback((input: HTMLInputElement | null) => input?.focus(), []);
 
   return (
     <div className="px-1 pb-1">
@@ -101,7 +97,7 @@ function MenuSearchField({ onChange, placeholder, value }: Readonly<MenuSearchFi
           }
         }}
         placeholder={placeholder}
-        ref={inputRef}
+        ref={focusInput}
         value={value}
       />
     </div>
@@ -155,7 +151,6 @@ export function MenuSelect({
         anchorEl={anchorEl}
         autoFocus={!searchable}
         disableAutoFocusItem={searchable}
-        disableRestoreFocus
         onClose={closeMenu}
         open={open}
         slotProps={{
@@ -167,7 +162,7 @@ export function MenuSelect({
           <MenuSearchField onChange={setSearch} placeholder={searchPlaceholder} value={search} />
         ) : null}
         {filteredOptions.length === 0 ? (
-          <div className="px-2 py-2 text-[12px] text-fg-muted">No matches</div>
+          <div className="px-2 py-2 text-[12px] text-fg-muted">No results</div>
         ) : null}
         {filteredOptions.map((option) => (
           <MenuSelectOptionItem
@@ -248,7 +243,6 @@ export function MenuMultiSelect({
         anchorEl={anchorEl}
         autoFocus={!searchable}
         disableAutoFocusItem={searchable}
-        disableRestoreFocus
         onClose={closeMenu}
         open={open}
         slotProps={{
@@ -260,7 +254,7 @@ export function MenuMultiSelect({
           <MenuSearchField onChange={setSearch} placeholder={searchPlaceholder} value={search} />
         ) : null}
         {filteredOptions.length === 0 ? (
-          <div className="px-2 py-2 text-[12px] text-fg-muted">No matches</div>
+          <div className="px-2 py-2 text-[12px] text-fg-muted">No results</div>
         ) : null}
         {filteredOptions.map((option) => {
           const current = selectedValues.has(option.value);

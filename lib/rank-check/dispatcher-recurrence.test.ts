@@ -1,10 +1,11 @@
-import { describe, expect, it, vi } from "vitest";
 import {
   computeDispatcherNextCheckAt,
   deterministicJitterSeconds,
   dispatcherNextCheckAtMatchesRecurrence,
   intervalPhaseSeconds,
-} from "./dispatcher-recurrence";
+  nextThreeCronRuns,
+} from "@/lib/rank-check/dispatcher-recurrence";
+import { describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
@@ -71,6 +72,35 @@ describe("dispatcher recurrence", () => {
         new Date("2026-07-27T04:16:00.000Z"),
       ).toISOString(),
     ).toBe("2026-08-03T04:15:00.000Z");
+  });
+
+  it("returns the next three custom cron runs in the dispatcher's timezone", () => {
+    const runs = nextThreeCronRuns({
+      cronExpression: "15 6 * * 1",
+      from: new Date("2026-07-27T04:16:00.000Z"),
+      timezone: "Europe/Warsaw",
+    });
+
+    expect(runs.map((run) => run.toISOString())).toEqual([
+      "2026-08-03T04:15:00.000Z",
+      "2026-08-10T04:15:00.000Z",
+      "2026-08-17T04:15:00.000Z",
+    ]);
+  });
+
+  it("returns deterministic next-three cron previews", () => {
+    const input = {
+      cronExpression: "0 */4 * * *",
+      from: new Date("2026-01-01T01:15:00.000Z"),
+      timezone: "UTC",
+    };
+
+    expect(nextThreeCronRuns(input)).toEqual(nextThreeCronRuns(input));
+    expect(nextThreeCronRuns(input).map((run) => run.toISOString())).toEqual([
+      "2026-01-01T04:00:00.000Z",
+      "2026-01-01T08:00:00.000Z",
+      "2026-01-01T12:00:00.000Z",
+    ]);
   });
 
   it("rejects a persisted nextCheckAt after recurrence inputs change", () => {

@@ -25,6 +25,7 @@ vi.mock("@mui/x-charts/LineChart", () => ({
     children?: ReactNode;
     series: { data: number[] }[];
     xAxis: { data: string[] }[];
+    yAxis: { tickInterval?: number[]; valueFormatter?: (value: number) => string }[];
   }) => {
     lineChart(props);
     return (
@@ -53,8 +54,10 @@ describe("PositionHistoryCard", () => {
     expect(
       screen.getByText("Comparison restarted after a ranking normalization change."),
     ).toBeInTheDocument();
+    expect(screen.getByText("Google rank over time, closer to #1 is better")).toBeInTheDocument();
+    expect(screen.getByText(/^Latest #3/)).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "7d" }));
+    fireEvent.click(screen.getByRole("tab", { name: "7d" }));
     expect(
       screen.queryByText("Comparison restarted after a ranking normalization change."),
     ).not.toBeInTheDocument();
@@ -82,7 +85,12 @@ describe("PositionHistoryCard", () => {
       />,
     );
 
-    expect(screen.getByText("Current #3 / Paused")).toBeInTheDocument();
+    expect(screen.getByText("Current #3 | Next check Paused")).toBeInTheDocument();
+    expect(screen.getByLabelText("Single rank check point")).toHaveClass("top-[36.8%]");
+    expect(screen.getByTestId("line-chart")).toHaveAttribute("data-positions", "[]");
+    expect(screen.getByLabelText("Single rank check point").nextElementSibling).toHaveClass(
+      "left-[12.33%]",
+    );
   });
 
   it("filters by elapsed days and keeps only the latest check from each day", () => {
@@ -110,7 +118,7 @@ describe("PositionHistoryCard", () => {
       JSON.stringify([9, 6, 5]),
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "7d" }));
+    fireEvent.click(screen.getByRole("tab", { name: "7d" }));
 
     expect(screen.getByTestId("line-chart")).toHaveAttribute(
       "data-labels",
@@ -137,9 +145,9 @@ describe("PositionHistoryCard", () => {
     );
 
     expect(screen.getByTestId("line-chart")).toHaveAttribute("data-positions", "[]");
-    expect(screen.getByText("No checks in this range")).toBeInTheDocument();
+    expect(screen.queryByText("No checks in this range")).not.toBeInTheDocument();
     expect(screen.getByText("No checks in the last 30 days.")).toBeInTheDocument();
-    expect(screen.getByText("Latest #6 / Paused")).toBeInTheDocument();
+    expect(screen.getByText("Latest #6 | Next check Paused")).toBeInTheDocument();
     expect(screen.queryByText("One check so far.", { exact: false })).not.toBeInTheDocument();
   });
 
@@ -220,6 +228,16 @@ describe("PositionHistoryCard", () => {
         yAxis: [expect.objectContaining({ max: 50, min: 1, reverse: true })],
       }),
     );
+  });
+
+  it("uses the reference rank labels on the position axis", () => {
+    render(<PositionHistoryCard keyword={keywordRows[0]} />);
+
+    const yAxis = lineChart.mock.calls.at(-1)?.[0].yAxis[0];
+    expect(yAxis.tickInterval).toEqual([1, 10, 20]);
+    expect(yAxis.valueFormatter?.(1)).toBe("#1");
+    expect(yAxis.valueFormatter?.(10)).toBe("#10");
+    expect(yAxis.valueFormatter?.(20)).toBe("#20");
   });
 
   it("moves the annotation 12 pixels farther when it would cross the target line", () => {

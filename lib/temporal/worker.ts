@@ -7,6 +7,7 @@ import {
   bundledMigrationSummary,
   compareMigrationState,
 } from "../db/migration-state";
+import { warnDeprecatedInspectionDailyBudget } from "../deployment/deprecated-inspection-budget";
 import { collectTemporalHeartbeat } from "../ops/heartbeat-temporal";
 import { refreshWorkerLiveness, WORKER_LIVENESS_REFRESH_MS } from "../ops/liveness";
 import { notifyOps } from "../ops/notify";
@@ -50,14 +51,10 @@ import { maxConcurrentActivities } from "./worker-config";
 import { decideWorkerSchemaGuard, workerSchemaGuardMode } from "./worker-schema-guard";
 import { runWorkerStartupStage } from "./worker-startup-retry";
 
-// Worker entry point. Run with Node's TS runtime plus the resolve hook that lets
-// Node load the app's extensionless lib imports. We use --experimental-transform
-// -types (not --experimental-strip-types) because the lib uses TS parameter
-// properties, which strip-only mode rejects:
+// Worker uses the TS transform and resolve hook because parameter properties reject strip-only mode:
 //
 //   node --experimental-transform-types \
 //     --import ./lib/temporal/register-loader.mjs lib/temporal/worker.ts
-//
 // `npm run temporal:worker` wires this up. Load env first, e.g.
 //   set -a; . ./.env.local; set +a; npm run temporal:worker
 
@@ -162,6 +159,7 @@ async function reportWorkerStartup(schedules: WorkerScheduleResult[]) {
 }
 
 async function run() {
+  warnDeprecatedInspectionDailyBudget();
   assertTemporalSchedulerEnabled();
   console.error("[temporal] worker startup config", {
     address,

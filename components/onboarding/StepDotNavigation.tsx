@@ -5,28 +5,33 @@ import type {
   OnboardingStepNumber,
 } from "@/components/onboarding/onboarding-fixtures";
 import { buildOnboardingStepHref } from "@/components/onboarding/onboarding-fixtures";
+import { Button, type StepDotState } from "@/components/ui";
 import Tooltip from "@mui/material/Tooltip";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
 type StepDotNavigationProps = {
+  accessibleName: string;
   active: boolean;
   className: string;
   flowState?: OnboardingFlowState;
   icon: ReactNode;
   locked: boolean;
   onStepChange?: (step: OnboardingStepNumber) => void;
+  state: StepDotState;
   step: OnboardingStepNumber;
   title: string;
 };
 
 export function StepDotNavigation({
+  accessibleName,
   active,
   className,
   flowState,
   icon,
   locked,
   onStepChange,
+  state,
   step,
   title,
 }: Readonly<StepDotNavigationProps>) {
@@ -34,17 +39,27 @@ export function StepDotNavigation({
     return (
       <Tooltip title={title}>
         <span className="inline-grid">
-          <button
+          <Button
             aria-current={active ? "step" : undefined}
             aria-disabled={locked ? "true" : undefined}
-            aria-label={title}
+            aria-label={accessibleName}
             className={className}
+            data-step-dot-state={state}
             disabled={locked}
             onClick={locked ? undefined : () => onStepChange(step)}
+            size="xs"
+            sx={{
+              height: 34,
+              minHeight: 34,
+              minWidth: 34,
+              padding: 0,
+              "&.Mui-disabled": { border: 0 },
+            }}
             type="button"
+            variant="ghost"
           >
             {icon}
-          </button>
+          </Button>
         </span>
       </Tooltip>
     );
@@ -55,8 +70,9 @@ export function StepDotNavigation({
         <span
           aria-current={active ? "step" : undefined}
           aria-disabled="true"
-          aria-label={title}
+          aria-label={accessibleName}
           className={className}
+          data-step-dot-state={state}
         >
           {icon}
         </span>
@@ -66,8 +82,9 @@ export function StepDotNavigation({
     <Tooltip title={title}>
       <Link
         aria-current={active ? "step" : undefined}
-        aria-label={title}
+        aria-label={accessibleName}
         className={className}
+        data-step-dot-state={state}
         href={buildOnboardingStepHref(step, flowState)}
       >
         {icon}

@@ -13,7 +13,7 @@ const mocks = vi.hoisted(() => ({
     removeManagedCompetitor: vi.fn(),
     revokeInvite: vi.fn(),
     revokeMigrationToken: vi.fn(),
-    setPrimaryProvider: vi.fn(),
+    updateProviderSettings: vi.fn(),
     testConnection: vi.fn(),
     updateNotificationPreferences: vi.fn(),
   },
@@ -60,7 +60,7 @@ vi.mock("@/lib/queries/team", () => ({ getTeamAccess: mocks.queries.getTeamAcces
 vi.mock("@/lib/actions/providers", () => ({
   connectProvider: mocks.actions.connectProvider,
   disconnectProvider: mocks.actions.disconnectProvider,
-  setPrimaryProvider: mocks.actions.setPrimaryProvider,
+  updateProviderSettings: mocks.actions.updateProviderSettings,
   testConnection: mocks.actions.testConnection,
 }));
 vi.mock("@/lib/queries/integrations", () => ({

@@ -1,6 +1,6 @@
 import "server-only";
 
-import { setPrimaryProviderSchema, testProviderConnectionSchema } from "@/lib/schemas/provider";
+import { providerConnectionRefSchema, testProviderConnectionSchema } from "@/lib/schemas/provider";
 import type { ApiContext } from "./context";
 import { paginateArray } from "./pagination";
 import { listProviderCategories } from "./provider-list";
@@ -145,7 +145,7 @@ export async function disconnectProviderForProject(
   const scoped = scopedProject(ctx, projectId);
   if (scoped) return scoped;
 
-  const input = parseApiInput(setPrimaryProviderSchema, {
+  const input = parseApiInput(providerConnectionRefSchema, {
     project_id: projectId,
     provider_id: providerId,
   });

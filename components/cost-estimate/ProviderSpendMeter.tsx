@@ -1,30 +1,27 @@
+import {
+  buildSpendSegments,
+  type ProviderSpendInput,
+  type SpendSegment,
+} from "@/components/cost-estimate/provider-spend-segments";
+import { SpendMeterDocsInfo } from "@/components/cost-estimate/SpendMeterDocsInfo";
 import { projectedMonthlySpendCents } from "@/lib/cost-estimate/spend-pace";
 import { formatMoneyCents } from "@/lib/format/money";
 import { docsLinkProps } from "@/lib/site/site";
 import { cn } from "@/lib/ui/cn";
 import type { ReactNode } from "react";
-import {
-  buildSpendSegments,
-  type ProviderSpendInput,
-  type SpendSegment,
-} from "./provider-spend-segments";
-import { SpendMeterDocsInfo } from "./SpendMeterDocsInfo";
 
-export type { ProviderSpendInput } from "./provider-spend-segments";
+export type { ProviderSpendInput } from "@/components/cost-estimate/provider-spend-segments";
 
 export type ProviderSpendMeterProps = {
-  /** Segmented only: extra row-1 control between the amounts and the docs link. */
   action?: ReactNode;
   /** null = no cap set: bar hidden, amounts read "{spent} this month". */
   capCents: number | null;
   docsHref: string;
-  /** Header only: workspace settings target shown in the spend tooltip. */
   editBudgetHref?: string;
   /** Reference date for the card on-pace projection; stories/tests pin it. */
   now?: Date;
   /** Card only: explicit month-end projection; when omitted it is computed from `now`. */
   onPaceCents?: number | null;
-  /** Per-provider spend powering segments and the legend (segmented and card contexts). */
   providers?: readonly ProviderSpendInput[];
   sessionCents?: number;
   spentCents: number;
@@ -105,22 +102,24 @@ function DocsLink({ className, href }: Readonly<{ className?: string; href: stri
 }
 
 function MeterBar({
+  aria,
   heightClass,
   percent,
   segments,
   tone,
 }: Readonly<{
+  aria?: ReturnType<typeof meterAria>;
   heightClass: string;
   percent: number;
   segments: SpendSegment[] | null;
   tone: Tone;
 }>) {
   const segmented = segments != null && tone === "normal";
-  // --meter-track, not a recessed fill: in dark mode --bg-sunken sits below --bg, so a
-  // track drawn with it disappears on the header background (and at $0 spend the track
-  // is the only thing there is to see).
   return (
-    <div className={cn("w-full overflow-hidden rounded-full bg-meter-track", heightClass)}>
+    <div
+      className={cn("w-full overflow-hidden rounded-full bg-meter-track", heightClass)}
+      {...aria}
+    >
       {segmented ? (
         <div className="flex h-full">
           {segments.map((segment) => (
@@ -194,23 +193,24 @@ export function ProviderSpendMeter({
   const percent = spendPercent(spentCents, capCents);
   const tone = spendTone(percent, capCents);
   const hasCap = cap > 0;
-  // The cap is per workspace: always one aggregate bar. Segments and legend render
+  // The cap is per project: always one aggregate bar. Segments and legend render
   // only outside the compact header, and only with more than one provider.
   const segments =
     variant !== "header" && providers != null && providers.length > 1
       ? buildSpendSegments(providers, cap)
       : null;
-  const aria = hasCap ? meterAria(spentCents, cap, sessionCents) : {};
+  const aria = hasCap ? meterAria(spentCents, cap, sessionCents) : undefined;
   const amounts = amountsText(spentCents, capCents);
   const meta = metaText(tone, percent);
   const amountToneClass = tone === "normal" ? null : toneTextClass[tone];
   const metaToneClass = tone === "normal" ? "text-fg-muted" : toneTextClass[tone];
+  const meterProps = { aria, percent, tone };
 
   if (variant === "card") {
     const paceCents =
       onPaceCents !== undefined ? onPaceCents : projectedMonthlySpendCents(spentCents, now);
     return (
-      <div className="rounded-xl border border-border bg-bg-elev px-5 py-[18px]" {...aria}>
+      <div className="rounded-xl border border-border bg-bg-elev px-5 py-[18px]">
         <MeterEyebrow />
         <div className="mt-2 flex flex-wrap items-baseline gap-2 whitespace-nowrap">
           <span
@@ -227,7 +227,7 @@ export function ProviderSpendMeter({
         </div>
         {hasCap ? (
           <div className="mt-2.5">
-            <MeterBar heightClass="h-1.5" percent={percent} segments={segments} tone={tone} />
+            <MeterBar {...meterProps} heightClass="h-1.5" segments={segments} />
           </div>
         ) : null}
         {segments == null ? null : (
@@ -253,10 +253,9 @@ export function ProviderSpendMeter({
 
   if (variant === "segmented") {
     return (
-      <div className="flex flex-col gap-[5px]" {...aria}>
+      <div className="flex flex-col gap-[5px]">
         <div className="flex flex-wrap items-center justify-between gap-x-2.5 gap-y-1">
           <MeterEyebrow />
-          {/* Row-1 order per HANDOFF-35 4a: amounts, optional action, docs link, 12px gaps. */}
           <span className="flex items-center gap-3 whitespace-nowrap">
             <span className={cn("font-mono text-xs tabular-nums", amountToneClass ?? "text-fg")}>
               {amounts}
@@ -265,16 +264,14 @@ export function ProviderSpendMeter({
             <DocsLink href={docsHref} />
           </span>
         </div>
-        {hasCap ? (
-          <MeterBar heightClass="h-1" percent={percent} segments={segments} tone={tone} />
-        ) : null}
+        {hasCap ? <MeterBar {...meterProps} heightClass="h-1" segments={segments} /> : null}
         {segments == null ? null : <Legend segments={segments} tone={tone} />}
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-[5px]" {...aria}>
+    <div className="flex flex-col gap-[5px]">
       <div className="flex items-baseline justify-between gap-2.5 whitespace-nowrap">
         <span className="inline-flex items-center gap-1">
           <MeterEyebrow />
@@ -293,7 +290,7 @@ export function ProviderSpendMeter({
           {amounts}
         </span>
       </div>
-      {hasCap ? <MeterBar heightClass="h-1" percent={percent} segments={null} tone={tone} /> : null}
+      {hasCap ? <MeterBar {...meterProps} heightClass="h-1" segments={null} /> : null}
       {meta == null ? null : (
         <span className={cn("font-mono text-[11px] tabular-nums", metaToneClass)}>{meta}</span>
       )}

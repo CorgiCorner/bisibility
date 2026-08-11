@@ -12,12 +12,13 @@ import { useToast } from "./Toast";
 export type CopyButtonProps = Omit<IconButtonProps, "children" | "onClick" | "size"> & {
   text: string;
   label?: string;
-  size?: "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg";
 };
 
 const copyButtonVariants = cva("", {
   variants: {
     size: {
+      xs: "min-h-3 min-w-3 p-0",
       sm: "min-h-6 min-w-6",
       md: "min-h-[30px] min-w-[30px]",
       lg: "min-h-9 min-w-9",
@@ -29,12 +30,14 @@ const copyButtonVariants = cva("", {
 });
 
 const iconButtonMuiSizeBySize = {
+  xs: "small",
   sm: "small",
   md: "medium",
   lg: "large",
 } as const;
 
 const copyIconSizeBySize = {
+  xs: 12,
   sm: 12,
   md: 14,
   lg: 16,
@@ -74,6 +77,7 @@ export function CopyButton({
         sx={[
           {
             color: copied ? "var(--green)" : "var(--fg-muted)",
+            ...(size === "xs" ? { minHeight: 12, minWidth: 12, padding: 0 } : {}),
             "&:hover": {
               backgroundColor: copied ? "var(--green-soft)" : "var(--accent-soft)",
               color: copied ? "var(--green)" : "var(--accent)",

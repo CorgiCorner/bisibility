@@ -1,6 +1,8 @@
 import type { UrlPresenceView } from "@/lib/queries/keywords";
+import { render, screen } from "@testing-library/react";
+import { createElement } from "react";
 import { describe, expect, it } from "vitest";
-import { indexStatusDisplay } from "./KeywordIndexStatus";
+import { indexStatusDisplay, KeywordIndexStatus } from "./KeywordIndexStatus";
 
 function presence(overrides: Partial<UrlPresenceView> = {}): UrlPresenceView {
   return {
@@ -16,13 +18,26 @@ function presence(overrides: Partial<UrlPresenceView> = {}): UrlPresenceView {
 }
 
 describe("indexStatusDisplay", () => {
-  it("maps indexed presence to a green indexed label with crawl date", () => {
+  it("maps supported presence fields to the reference's unified chips", () => {
     expect(indexStatusDisplay(presence())).toEqual({
-      canonicalHint: null,
+      chips: [{ label: "Indexed" }, { label: "Canonical self" }, { label: "In sitemap" }],
       detail: "last crawled Jul 1, 2026",
-      label: "Indexed",
-      tone: "green",
     });
+
+    render(createElement(KeywordIndexStatus, { presence: presence() }));
+    expect(screen.getByText("Indexed")).toBeInTheDocument();
+    expect(screen.getByText("Canonical self")).toBeInTheDocument();
+    expect(screen.getByText("In sitemap")).toBeInTheDocument();
+  });
+
+  it("uses the neutral unified chip treatment for every supported label", () => {
+    render(createElement(KeywordIndexStatus, { presence: presence() }));
+
+    for (const label of ["Indexed", "Canonical self", "In sitemap"]) {
+      const chip = screen.getByText(label);
+      expect(chip).toHaveClass("border", "border-border", "bg-bg-sunken", "text-fg");
+      expect(chip).not.toHaveClass("bg-green/10", "bg-yellow/15", "text-green-text");
+    }
   });
 
   it("maps non-indexed presence and shows canonical mismatches", () => {
@@ -36,10 +51,8 @@ describe("indexStatusDisplay", () => {
         }),
       ),
     ).toEqual({
-      canonicalHint: "Canonical mismatch",
+      chips: [{ label: "Not indexed" }, { label: "Canonical mismatch" }, { label: "In sitemap" }],
       detail: "checked Jul 4, 2026",
-      label: "Not indexed",
-      tone: "amber",
     });
   });
 

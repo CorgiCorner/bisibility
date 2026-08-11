@@ -1,9 +1,21 @@
 import "server-only";
 
+import {
+  DAILY_INTERVAL_MS,
+  stableIntervalPhaseMs,
+  WEEKLY_INTERVAL_MS,
+} from "@/lib/rank-check/interval-phase";
+import type { RankCheckScheduleInput } from "@/lib/rank-check/schedule";
+import { sha256Bytes } from "@/lib/rank-check/sha256";
 import { CronExpressionParser } from "cron-parser";
-import { DAILY_INTERVAL_MS, stableIntervalPhaseMs, WEEKLY_INTERVAL_MS } from "./interval-phase";
-import type { RankCheckScheduleInput } from "./schedule";
-import { sha256Bytes } from "./sha256";
+
+export type NextThreeCronRunsInput = Readonly<{
+  cronExpression: string;
+  from: Date;
+  timezone: string;
+}>;
+
+type NextThreeCronRuns = readonly [Date, Date, Date];
 
 export function intervalPhaseSeconds(keywordId: string, intervalSeconds: number) {
   return stableIntervalPhaseMs(keywordId, intervalSeconds * 1_000) / 1_000;
@@ -48,11 +60,27 @@ function zonedAnchorCron(schedule: RankCheckScheduleInput) {
   return `${value("minute")} ${value("hour")} ${Math.min(value("day"), 28)} * *`;
 }
 
+function parseCronExpression({ cronExpression, from, timezone }: NextThreeCronRunsInput) {
+  return CronExpressionParser.parse(cronExpression, { currentDate: from, tz: timezone });
+}
+
+/** Keeps cron validation and previews aligned with the dispatcher's timezone and DST semantics. */
+export function nextThreeCronRuns(input: NextThreeCronRunsInput): NextThreeCronRuns {
+  const interval = parseCronExpression(input);
+
+  return [
+    new Date(interval.next().getTime()),
+    new Date(interval.next().getTime()),
+    new Date(interval.next().getTime()),
+  ];
+}
+
 function nextCron(expression: string, timezone: string, from: Date, jitterSeconds: number) {
   const jitterMs = jitterSeconds * 1_000;
-  const interval = CronExpressionParser.parse(expression, {
-    currentDate: new Date(from.getTime() - jitterMs),
-    tz: timezone,
+  const interval = parseCronExpression({
+    cronExpression: expression,
+    from: new Date(from.getTime() - jitterMs),
+    timezone,
   });
   let next = new Date(interval.next().getTime() + jitterMs);
   if (next <= from) {

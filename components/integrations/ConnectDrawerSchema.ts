@@ -5,7 +5,7 @@ import {
   type TestProviderConnectionInput,
 } from "@/lib/schemas/provider";
 import { actionErrorMessage, isStaleDeploymentError } from "@/lib/ui/action-error";
-import { z } from "zod";
+import type { z } from "zod";
 
 export type PendingAction = "cost" | "disconnect" | "save" | "test";
 export type Notice = {
@@ -18,9 +18,7 @@ export type Notice = {
 };
 
 export const drawerFormSchema = connectProviderSchema.extend({
-  enabled: z.coerce.boolean().default(true),
   endpoint: providerCredentialsSchema.shape.endpoint,
-  priority: z.coerce.number().int().min(0).max(1000).default(100),
 });
 
 export type ConnectFormValues = z.infer<typeof drawerFormSchema>;
@@ -54,9 +52,6 @@ export function connectInput(values: ConnectFormValues): ConnectProviderActionIn
   const base = {
     // Drawer rate edits are persisted per feature, outside the credential form.
     costPerCheck: undefined,
-    enabled: values.enabled,
-    primary: values.primary,
-    priority: values.primary ? 0 : values.priority,
     projectId: values.projectId,
     providerId: values.providerId,
   };

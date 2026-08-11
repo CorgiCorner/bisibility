@@ -44,6 +44,7 @@ const coloredSurfaceClasses: Readonly<Record<string, ColorTokenName>> = {
   "bg-accent-solid-hover": "accent-solid-hover",
   "bg-blue": "blue",
   "bg-green": "green",
+  "bg-green-text": "green-text",
   "bg-red": "red",
   "bg-yellow": "yellow",
 } as const satisfies Record<string, ColorTokenName>;
@@ -115,9 +116,24 @@ function foregroundFor(scheme: ColorSchemeName, className: string) {
     : undefined;
 }
 
-function classesForState(classes: readonly ParsedClass[], state: string) {
-  const exact = classes.filter((className) => className.modifiers === state);
-  return exact.length > 0 ? exact : classes.filter((className) => className.modifiers === "");
+function modifierParts(className: ParsedClass) {
+  return className.modifiers.split(":").filter(Boolean);
+}
+
+function interactionState(className: ParsedClass) {
+  return modifierParts(className)
+    .filter((modifier) => modifier !== "dark")
+    .join(":");
+}
+
+function classesForState(classes: readonly ParsedClass[], state: string, scheme: ColorSchemeName) {
+  const exact = classes.filter((className) => interactionState(className) === state);
+  const candidates =
+    exact.length > 0 ? exact : classes.filter((className) => interactionState(className) === "");
+  const darkSpecific = candidates.filter((className) => modifierParts(className).includes("dark"));
+
+  if (scheme === "dark" && darkSpecific.length > 0) return darkSpecific;
+  return candidates.filter((className) => !modifierParts(className).includes("dark"));
 }
 
 function staticClassTexts(node: ts.Node) {
@@ -142,17 +158,15 @@ function sourcePairFailures(filename: string, sourceText: string) {
       const classes = classText.split(/\s+/).filter(Boolean).map(parseClass);
       const backgrounds = classes.filter((className) => className.base.startsWith("bg-"));
       const foregrounds = classes.filter((className) => foregroundFor("light", className.base));
-      const states = new Set(
-        [...backgrounds, ...foregrounds].map((className) => className.modifiers),
-      );
+      const states = new Set([...backgrounds, ...foregrounds].map(interactionState));
       const { line } = source.getLineAndCharacterOfPosition(node.getStart(source));
 
       for (const state of states) {
-        for (const background of classesForState(backgrounds, state)) {
-          const backgroundToken = coloredSurfaceClasses[background.base];
-          if (!backgroundToken) continue;
-          for (const foreground of classesForState(foregrounds, state)) {
-            for (const scheme of ["light", "dark"] as const) {
+        for (const scheme of ["light", "dark"] as const) {
+          for (const background of classesForState(backgrounds, state, scheme)) {
+            const backgroundToken = coloredSurfaceClasses[background.base];
+            if (!backgroundToken) continue;
+            for (const foreground of classesForState(foregrounds, state, scheme)) {
               const foregroundColor = foregroundFor(scheme, foreground.base);
               if (!foregroundColor) continue;
               const ratio = contrast(foregroundColor, token(scheme, backgroundToken));
@@ -314,6 +328,19 @@ describe("theme contrast contract", () => {
     });
     expect(ratioFor("dark", "accent-solid")).toBe(4.56);
     expect(ratioFor("dark", "accent-solid-hover")).toBe(4.95);
+  });
+
+  it("keeps onboarding done and active glyphs distinct in both themes", () => {
+    const ratioFor = (
+      scheme: ColorSchemeName,
+      foreground: ColorTokenName,
+      background: ColorTokenName,
+    ) => Number(contrast(token(scheme, foreground), token(scheme, background)).toFixed(2));
+
+    expect(ratioFor("light", "accent-on-solid", "green-text")).toBe(5.89);
+    expect(ratioFor("dark", "bg", "green-text")).toBe(9.87);
+    expect(ratioFor("light", "accent-on-solid", "accent-solid")).toBe(4.73);
+    expect(ratioFor("dark", "accent-on-solid", "accent-solid")).toBe(4.56);
   });
 
   it("keeps muted as the only named foreground tier", () => {

@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
 }));
 type DimensionMockProps = {
   kind: "device" | "engine" | "location";
+  label: string;
   onTrack: (kind: "device" | "engine" | "location", value: string) => void;
 };
 type HeaderActionsMockProps = {
@@ -78,10 +79,16 @@ vi.mock("@/components/keywords/filters/DimensionSwitcher", async () => {
   >("@/components/keywords/filters/DimensionSwitcher");
   return {
     ...actual,
-    DimensionSwitcher: ({ kind, onTrack }: DimensionMockProps) => (
-      <button onClick={() => onTrack(kind, kind === "device" ? "Mobile" : "Poland")} type="button">
-        Track {kind}
-      </button>
+    DimensionSwitcher: ({ kind, label, onTrack }: DimensionMockProps) => (
+      <>
+        <span data-testid={`dimension-${kind}`}>{label}</span>
+        <button
+          onClick={() => onTrack(kind, kind === "device" ? "Mobile" : "Poland")}
+          type="button"
+        >
+          Track {kind}
+        </button>
+      </>
     ),
   };
 });
@@ -187,6 +194,32 @@ describe("KeywordHeaderCard", () => {
     await waitFor(() =>
       expect(actions.runCheckNowAction).toHaveBeenCalledWith({ depth: 20, keywordId: "keyword_1" }),
     );
+  });
+
+  it("renders target, ranking, timing, and provider metadata below the dimension chips", () => {
+    renderCard({
+      costContext: { providerId: "dataforseo" },
+      keyword: {
+        ...keyword,
+        lastCheckAt: "2026-08-10T10:00:00.000Z",
+        schedule: { next_check_at: "2026-08-11T06:00:00.000Z" },
+        targetUrl: "https://example.com/rank-tracker",
+      },
+    });
+
+    const metadata = screen.getByLabelText("Keyword check metadata");
+    expect(metadata).toHaveTextContent("Target /rank-tracker");
+    expect(metadata).toHaveTextContent("Ranking /rank-tracker Matches target");
+    expect(metadata).toHaveTextContent("Last check");
+    expect(metadata).toHaveTextContent("Next check");
+    expect(metadata).toHaveTextContent("DataForSEO");
+  });
+
+  it("keeps the engine chip label to the engine while the external link retains its locale", () => {
+    renderCard();
+
+    expect(screen.getByTestId("dimension-engine")).toHaveTextContent("Google");
+    expect(screen.getByTestId("dimension-engine")).not.toHaveTextContent("/");
   });
 
   it("opens tracking drawers with device and location prefills", () => {

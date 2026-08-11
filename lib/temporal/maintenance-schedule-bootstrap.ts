@@ -8,7 +8,7 @@ import {
   envValue,
   isFalseyFlag,
   isTruthyFlag,
-} from "./bootstrap";
+} from "@/lib/temporal/bootstrap";
 
 // Maintenance schedule ids deliberately use a `maintenance-` prefix (NOT
 // `rank-check-`) so the reconciler's `rank-check-*` prune pass never touches them.
@@ -40,6 +40,7 @@ export const ALERT_HEALTH_WORKFLOW_TYPE = "alertHealthWorkflow";
 
 const DEFAULT_STALE_CHECKS_INTERVAL = "10 minutes";
 const DEFAULT_STALE_IMPORT_JOBS_INTERVAL = "10 minutes";
+const DEFAULT_MIGRATION_HOLD_RELEASE_INTERVAL = "1 hour";
 const DEFAULT_ALERT_DIGEST_FLUSH_INTERVAL = "5 minutes";
 const DEFAULT_ALERT_HEALTH_INTERVAL = "1 hour";
 
@@ -49,7 +50,6 @@ const DEFAULT_AUDIT_PURGE = { hour: 3, minute: 17 };
 const DEFAULT_RANK_CHECK_RAW_PURGE = { hour: 3, minute: 29 };
 const DEFAULT_QUEUED_RANK_CHECK_RETENTION = { hour: 3, minute: 41 };
 const DEFAULT_SESSION_PURGE = { hour: 4, minute: 33 };
-const DEFAULT_MIGRATION_HOLD_RELEASE = { hour: 4, minute: 51 };
 const DEFAULT_WEEKLY_DIGEST = { dayOfWeek: "MONDAY" as const, hour: 6, minute: 15 };
 const DEFAULT_SITEMAP_SYNC = { hour: 4, minute: 45 };
 const DEFAULT_PRESENCE_SYNC = { hour: 3, minute: 45 };
@@ -226,11 +226,12 @@ export async function ensureMigrationHoldReleaseSchedule(
 ): Promise<EnsureScheduleResult> {
   return ensureSingletonSchedule(
     {
+      convergeSpec: true,
       enabled: isScheduledMaintenanceEnabled(),
       memo: { kind: "maintenance-migration-hold-release" },
       note: "Expired migration hold release",
       scheduleId: MIGRATION_HOLD_RELEASE_SCHEDULE_ID,
-      spec: calendarSpec(DEFAULT_MIGRATION_HOLD_RELEASE, "MIGRATION_HOLD_RELEASE_CRON"),
+      spec: { intervals: [{ every: DEFAULT_MIGRATION_HOLD_RELEASE_INTERVAL }] },
       workflowType: MIGRATION_HOLD_RELEASE_WORKFLOW_TYPE,
     },
     client,

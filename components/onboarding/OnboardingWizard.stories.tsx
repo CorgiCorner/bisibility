@@ -13,7 +13,7 @@ import {
 import { StepDeveloperAccess } from "@/components/onboarding/steps/StepDeveloperAccess";
 import { StepFirstCheck } from "@/components/onboarding/steps/StepFirstCheck";
 import { StepSchedule } from "@/components/onboarding/steps/StepSchedule";
-import { BrandLockup } from "@/components/ui";
+import { BrandLockup, Button } from "@/components/ui";
 import { SignOutIcon as SignOut } from "@phosphor-icons/react/dist/ssr";
 import type { Meta, StoryObj } from "@storybook/react";
 import type { ReactNode } from "react";
@@ -28,10 +28,7 @@ type StoryProps = {
 
 const dataResidencyMessage = "Your data is stored and processed in the EU.";
 const providerBaseDefaults = {
-  enabled: true,
   login: "",
-  primary: true,
-  priority: 0,
   projectId: onboardingDefaults.projectId,
   providerId: "dataforseo" as const,
   secret: "",
@@ -175,13 +172,15 @@ function OnboardingStory({
             </span>
             <span className="text-fg-muted">&middot;</span>
             <span className="text-fg-muted">Not you?</span>
-            <button
-              className="inline-flex items-center gap-1 font-semibold text-accent-text"
+            <Button
+              size="xs"
+              startIcon={<SignOut aria-hidden size={13} weight="bold" />}
+              sx={{ color: "var(--accent-text)", minHeight: 0, minWidth: 0, padding: 0 }}
               type="button"
+              variant="ghost"
             >
-              <SignOut aria-hidden size={13} weight="bold" />
               Log out
-            </button>
+            </Button>
           </div>
         </header>
         <section className="mt-6 max-w-xl">

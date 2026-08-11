@@ -399,7 +399,7 @@ describe("MCP tool dispatch", () => {
       "bsb_key_live_test",
     );
     expect(primary.payload).toMatchObject({
-      body: { primary: true },
+      body: { priority: 0 },
       method: "PATCH",
       path: ["projects", projectId, "providers", "dataforseo"],
     });

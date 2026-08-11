@@ -10,10 +10,20 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@/components/ui", () => ({
   ToastProvider: ({ children }: { children: ReactNode }) => <div data-toast-root>{children}</div>,
 }));
+vi.mock("@/components/shell/DeploymentModeProvider", () => ({
+  DeploymentModeProvider: ({
+    children,
+    deploymentMode,
+  }: {
+    children: ReactNode;
+    deploymentMode: string;
+  }) => <div data-deployment-mode={deploymentMode}>{children}</div>,
+}));
 vi.mock("@/lib/auth/first-run", () => ({
   redirectToSetupIfFirstRun: mocks.firstRunGate,
 }));
 vi.mock("@/lib/auth/session", () => ({ requireSession: mocks.requireSession }));
+vi.mock("@/lib/deployment/deployment", () => ({ isCloud: true }));
 vi.mock("@/lib/seo/noindex", () => ({ createNoindexMetadata: () => ({}) }));
 
 import AppLayout from "./layout";
@@ -49,6 +59,7 @@ describe("shared app layout", () => {
     const markup = renderToStaticMarkup(result);
 
     expect(markup).toContain("data-toast-root");
+    expect(markup).toContain('data-deployment-mode="cloud"');
     expect(markup).toContain("Nested route layout");
     expect(markup).not.toContain("data-shell-root");
   });

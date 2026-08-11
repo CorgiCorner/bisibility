@@ -1,20 +1,24 @@
 "use client";
 
-import { FieldLabel, Input, inputClassName } from "@/components/ui";
 import {
-  GlobeHemisphereWestIcon as GlobeHemisphereWest,
-  MapPinIcon as MapPin,
-  XIcon as X,
-} from "@phosphor-icons/react";
-import { type FocusEvent, Fragment, useId, useState } from "react";
-import { locationKeyHandler } from "./location-key-handler";
+  LocationClearButton,
+  locationFieldClassByVariant,
+  locationFieldLabelClass,
+} from "@/components/keywords/location-field-parts";
+import { locationKeyHandler } from "@/components/keywords/location-key-handler";
 import {
   countryNameForCode,
   EMPTY_PROVIDER_HINT_LENGTH,
   type LocationFieldValue,
   type LocationSuggestion,
   useLocationSearch,
-} from "./location-picker-data";
+} from "@/components/keywords/location-picker-data";
+import { FieldLabel, Input } from "@/components/ui";
+import {
+  GlobeHemisphereWestIcon as GlobeHemisphereWest,
+  MapPinIcon as MapPin,
+} from "@phosphor-icons/react";
+import { type FocusEvent, Fragment, useId, useState } from "react";
 
 export type { LocationFieldValue };
 
@@ -34,13 +38,6 @@ type LocationFieldProps = {
   variant?: "form" | "toolbar";
 };
 
-const fieldClassByVariant = {
-  form: `${inputClassName} min-h-10 w-full rounded-[9px] px-9 text-[13px] font-medium`,
-  toolbar: `${inputClassName} min-h-[34px] w-full rounded-[9px] px-9 text-[12.5px] font-medium`,
-} as const;
-const labelClass =
-  "m-0 flex min-w-0 flex-col gap-1.5 border-0 p-0 font-mono text-[10px] uppercase tracking-[0.4px] text-fg-muted";
-
 function cityCaption(option: LocationSuggestion) {
   return [option.regionName, countryNameForCode(option.countryCode) ?? option.countryCode]
     .filter(Boolean)
@@ -50,7 +47,6 @@ function cityCaption(option: LocationSuggestion) {
 function activeId(listId: string, option: LocationSuggestion | undefined) {
   return option ? `${listId}-${option.id.replace(/[^a-zA-Z0-9_-]/g, "-")}` : undefined;
 }
-
 export function LocationField({
   value,
   onChange,
@@ -64,7 +60,7 @@ export function LocationField({
   placeholder = "Search country or city",
   variant = "form",
 }: Readonly<LocationFieldProps>) {
-  const fieldClass = fieldClassByVariant[variant];
+  const fieldClass = locationFieldClassByVariant[variant];
   const reactId = useId();
   const prefix = idPrefix ?? reactId;
   const [draft, setDraft] = useState<string | null>(null);
@@ -139,7 +135,7 @@ export function LocationField({
   }
 
   return (
-    <fieldset className={labelClass} onBlur={handleBlur}>
+    <fieldset className={locationFieldLabelClass} onBlur={handleBlur}>
       <FieldLabel
         className={labelHidden ? "sr-only" : undefined}
         help={help}
@@ -170,16 +166,7 @@ export function LocationField({
             role="combobox"
             value={currentInput}
           />
-          {draft !== null ? (
-            <button
-              aria-label="Clear location search"
-              className="absolute right-2 grid h-5 w-5 place-items-center rounded-full text-fg-muted hover:text-fg"
-              onClick={clearDraft}
-              type="button"
-            >
-              <X size={12} weight="bold" />
-            </button>
-          ) : null}
+          {draft !== null ? <LocationClearButton onClick={clearDraft} /> : null}
         </span>
         <LocationResults
           activeOption={activeOption}
@@ -250,7 +237,7 @@ function LocationResults({
       ) : null}
       {showEmpty ? (
         <span className="block px-3 py-2 normal-case text-fg-muted">
-          No matches yet. City suggestions are powered by your connected providers.
+          No results yet. City suggestions are powered by your connected providers.
         </span>
       ) : null}
     </div>

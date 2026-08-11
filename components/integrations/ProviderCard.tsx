@@ -37,41 +37,34 @@ const actionLabels = {
   planned: "Connect",
   ready: "Connect",
 } as const;
-
 const responsiveActionSx = {
   width: "100%",
   "@media (min-width:640px)": { width: "auto" },
 } as const;
-
 const outlineActionSx = {
   ...responsiveActionSx,
   color: "var(--fg-muted)",
   "&:hover": { borderColor: "var(--accent)", color: "var(--accent-text)" },
   "&.Mui-focusVisible": { borderColor: "var(--accent)", color: "var(--accent-text)" },
 } as const;
-
 const actionWrapperClass = "flex flex-1 sm:inline-flex sm:flex-initial";
 type ProviderId = Parameters<ProviderActionHandlers["testProviderConnection"]>[0]["providerId"];
-
 const demoTestConnection = async (): Promise<ProviderTestResult> => ({
   balance: 41_200,
   message: "Connection OK",
   ok: true,
 });
-
 const demoTrafficSync = async (): Promise<ProviderTrafficSyncResult> => ({
   connections: 1,
   keywordSnapshots: 12,
   pageSnapshots: 4,
   runs: [{ status: "succeeded_with_data" }],
 });
-
 export function ProviderCard({
   actions,
   canManageProviders,
   canUpdateProject,
   initialOpen = false,
-  noProvidersYet = false,
   projectId,
   projectRef,
   provider,
@@ -88,11 +81,9 @@ export function ProviderCard({
   const actionDisabled = readOnly && primaryAction;
   const canSync =
     provider.kind === "analytics" && provider.status === "connected" && provider.enabled !== false;
-
   const testProviderConnection =
     actions?.testProviderConnection ?? (projectId ? testConnectionAction : demoTestConnection);
   const syncProjectTraffic = actions?.syncProjectTraffic ?? demoTrafficSync;
-
   async function handleTrafficSync() {
     if (readOnly) {
       return;
@@ -297,7 +288,6 @@ export function ProviderCard({
       {canManageProviders ? (
         <ConnectDrawer
           actions={actions}
-          defaultPrimary={noProvidersYet}
           onClose={() => setDrawerOpen(false)}
           open={drawerOpen}
           projectId={projectId}

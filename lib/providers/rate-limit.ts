@@ -9,8 +9,6 @@ import type { ProviderCredentials } from "./types";
 export { ProviderRateLimitedError } from "./rate-limit-error";
 
 const PROVIDER_PREFIX = "bisibility:provider";
-const INSPECTION_DAILY_WINDOW_SECONDS = 86_400;
-const INSPECTION_DAILY_DEFAULT = 1_600;
 
 // Provider 429 cooldowns back off exponentially and are globally consistent only
 // with a Redis or Valkey limiter store.
@@ -160,79 +158,6 @@ function limiterInput(providerId: string, accountKey: string): LimiterInput {
     prefix: PROVIDER_PREFIX,
     windowSeconds: policy.windowSeconds,
   };
-}
-
-export function inspectionDailyBudgetLimit() {
-  return envInt("BISIBILITY_GSC_INSPECTION_DAILY_BUDGET", INSPECTION_DAILY_DEFAULT);
-}
-
-function inspectionUtcDay(now: Date) {
-  const year = now.getUTCFullYear();
-  const month = String(now.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(now.getUTCDate()).padStart(2, "0");
-  return `${year}${month}${day}`;
-}
-
-function nextUtcMidnight(now: Date) {
-  return Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1);
-}
-
-function inspectionBudgetInput(accountKey: string, now: Date): LimiterInput {
-  return {
-    bucketKey: `inspection:${accountKey}:${inspectionUtcDay(now)}`,
-    limit: inspectionDailyBudgetLimit(),
-    prefix: PROVIDER_PREFIX,
-    windowSeconds: INSPECTION_DAILY_WINDOW_SECONDS,
-  };
-}
-
-function inspectionDrainInput(accountKey: string, now: Date): LimiterInput {
-  return {
-    bucketKey: `inspection-drained:${accountKey}:${inspectionUtcDay(now)}`,
-    limit: 1,
-    prefix: PROVIDER_PREFIX,
-    windowSeconds: INSPECTION_DAILY_WINDOW_SECONDS,
-  };
-}
-
-// Daily limits are global only with Redis or Valkey; in-memory state resets on restart.
-// UTC resets precede Google's Pacific reset, so provider 429s backstop the gap; 24h is retention.
-export async function consumeInspectionDailyBudget(
-  creds: ProviderCredentials,
-  options?: { now?: Date; projectId?: string },
-): Promise<ConsumeProviderResult> {
-  const accountKey = providerAccountKey("gsc", creds, options);
-  const now = options?.now ?? new Date();
-  const resetAt = nextUtcMidnight(now);
-  if (isProviderRateLimitDisabled()) {
-    return {
-      accountKey,
-      cooling: false,
-      remaining: Number.POSITIVE_INFINITY,
-      resetAt,
-      success: true,
-    };
-  }
-  const drained = await peek(inspectionDrainInput(accountKey, now));
-  if (drained.remaining === 0) {
-    return { accountKey, cooling: false, remaining: 0, resetAt, success: false };
-  }
-  const result = await consume(inspectionBudgetInput(accountKey, now));
-  return { accountKey, cooling: false, ...result, resetAt };
-}
-
-export async function drainInspectionDailyBudget(
-  creds: ProviderCredentials,
-  options?: { now?: Date; projectId?: string },
-) {
-  const accountKey = providerAccountKey("gsc", creds, options);
-  const now = options?.now ?? new Date();
-  const resetAt = nextUtcMidnight(now);
-  if (isProviderRateLimitDisabled()) {
-    return { accountKey, resetAt, success: true };
-  }
-  const result = await consume(inspectionDrainInput(accountKey, now));
-  return { accountKey, resetAt, success: result.success };
 }
 
 function resolveAccountKey(

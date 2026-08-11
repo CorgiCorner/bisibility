@@ -128,6 +128,8 @@ describe("OnboardingWizard", () => {
 
     const skipButton = screen.getByRole("button", { name: "Skip" });
     const footer = skipButton.closest("footer");
+    expect(skipButton).toHaveAccessibleName("Skip");
+    expect(skipButton).toHaveClass("MuiButton-root");
     expect(skipButton).toBeEnabled();
     expect(footer).not.toBeNull();
     expect(

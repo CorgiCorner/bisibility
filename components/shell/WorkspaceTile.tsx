@@ -1,6 +1,6 @@
 "use client";
 
-import { buildLogoDevUrl } from "@/components/ui";
+import { buildDomainIconUrl, DomainIconLayer } from "@/components/ui";
 
 /** Fallback glyph: the brand's first letter, with the host prefix dropped so
  * `www.acme.dev` and `acme.dev` resolve to the same tile. */
@@ -18,7 +18,7 @@ export type WorkspaceTileProps = {
 };
 
 /**
- * A workspace is a domain, so the tile shows that domain's favicon and the SAME object
+ * A project is identified by its domain, so the tile shows its real favicon and the SAME object
  * appears in the trigger and in every menu row. It never encodes selected/active state.
  */
 export function WorkspaceTile({
@@ -26,7 +26,7 @@ export function WorkspaceTile({
   domain,
   radius = 8,
 }: Readonly<WorkspaceTileProps>) {
-  const src = buildLogoDevUrl({ domain, size: 64, token: process.env.NEXT_PUBLIC_LOGODEV_TOKEN });
+  const src = buildDomainIconUrl({ domain, size: 64 });
 
   return (
     <span
@@ -35,20 +35,10 @@ export function WorkspaceTile({
       style={{ borderRadius: `${radius}px` }}
     >
       {workspaceTileLetter(domain)}
-      {/* The favicon is a background layer, not an <img>. An <img> with a missing or dead URL
-          renders a broken-image glyph; an unresolved background-image simply does not paint,
-          so the letter underneath stays correct. */}
-      {src ? (
-        <span
-          className="absolute inset-0"
-          data-testid="workspace-tile-favicon"
-          style={{
-            backgroundImage: `url("${src}")`,
-            backgroundPosition: "center",
-            backgroundSize: "cover",
-          }}
-        />
-      ) : null}
+      {/* The painted favicon is a background layer, not a visible <img>. An unresolved background
+          does not paint, avoids a broken-image glyph, and leaves the letter for missing or
+          corporate-blocked icon networks. */}
+      <DomainIconLayer size={64} src={src} testId="workspace-tile-favicon" />
     </span>
   );
 }

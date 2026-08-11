@@ -1,11 +1,7 @@
-import { resetRateLimitStateForTests } from "@/lib/api/ratelimit";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import {
   clearProviderRateLimitState,
-  consumeInspectionDailyBudget,
   consumeProviderLimit,
-  drainInspectionDailyBudget,
-  inspectionDailyBudgetLimit,
   isProviderRateLimitDisabled,
   ProviderRateLimitedError,
   peekProviderLimit,
@@ -21,12 +17,10 @@ const OVERRIDE_ENVS = [
   "BISIBILITY_PROVIDER_RATE_LIMIT_PLAUSIBLE_PER_MINUTE",
   "BISIBILITY_PROVIDER_RATE_LIMIT_SERPAPI_PER_MINUTE",
   "BISIBILITY_PROVIDER_RATE_LIMIT_DISABLED",
-  "BISIBILITY_GSC_INSPECTION_DAILY_BUDGET",
 ];
 
 describe("provider rate limit", () => {
   beforeEach(() => {
-    resetRateLimitStateForTests();
     clearProviderRateLimitState();
     process.env.REDIS_URL = "";
     for (const name of OVERRIDE_ENVS) {
@@ -104,67 +98,6 @@ describe("provider rate limit", () => {
     expect(afterConsume.remaining).toBe(1);
   });
 
-  it("shares the URL inspection daily budget across projects on one property", async () => {
-    process.env.BISIBILITY_GSC_INSPECTION_DAILY_BUDGET = "2";
-    const creds = { apiKey: "refresh", login: "sc-domain:example.com" };
-
-    const first = await consumeInspectionDailyBudget(creds, { projectId: "project_1" });
-    const second = await consumeInspectionDailyBudget(creds, { projectId: "project_2" });
-    const exhausted = await consumeInspectionDailyBudget(creds, { projectId: "project_2" });
-
-    expect(inspectionDailyBudgetLimit()).toBe(2);
-    expect(first.success).toBe(true);
-    expect(second.success).toBe(true);
-    expect(exhausted).toMatchObject({ remaining: 0, success: false });
-    expect(first.accountKey).toBe(second.accountKey);
-  });
-
-  it("drains URL inspection calls for the rest of the daily window", async () => {
-    const creds = { apiKey: "refresh-drain", login: "sc-domain:example.com" };
-
-    await drainInspectionDailyBudget(creds);
-
-    await expect(consumeInspectionDailyBudget(creds)).resolves.toMatchObject({
-      remaining: 0,
-      success: false,
-    });
-  });
-
-  it("resets URL inspection budgets at midnight UTC instead of after a rolling 24 hours", async () => {
-    vi.useFakeTimers();
-    process.env.BISIBILITY_GSC_INSPECTION_DAILY_BUDGET = "1";
-    const creds = { apiKey: "refresh-midnight", login: "sc-domain:example.com" };
-    const beforeMidnight = new Date("2026-07-18T23:59:00.000Z");
-    const afterMidnight = new Date("2026-07-19T00:00:00.000Z");
-    vi.setSystemTime(beforeMidnight);
-
-    const consumed = await consumeInspectionDailyBudget(creds);
-    const exhausted = await consumeInspectionDailyBudget(creds);
-    vi.setSystemTime(afterMidnight);
-    const nextDay = await consumeInspectionDailyBudget(creds);
-
-    expect(consumed.resetAt).toBe(afterMidnight.getTime());
-    expect(exhausted).toMatchObject({ resetAt: afterMidnight.getTime(), success: false });
-    expect(nextDay.success).toBe(true);
-    expect(nextDay.resetAt).toBe(new Date("2026-07-20T00:00:00.000Z").getTime());
-    vi.useRealTimers();
-  });
-
-  it("does not carry a drained inspection budget into the next UTC day", async () => {
-    const creds = { apiKey: "refresh-drain-midnight", login: "sc-domain:example.com" };
-    const dayN = new Date("2026-07-18T03:46:00.000Z");
-    const dayNPlusOne = new Date("2026-07-19T03:45:00.000Z");
-
-    await drainInspectionDailyBudget(creds, { now: dayN });
-
-    await expect(consumeInspectionDailyBudget(creds, { now: dayN })).resolves.toMatchObject({
-      success: false,
-    });
-    await expect(consumeInspectionDailyBudget(creds, { now: dayNPlusOne })).resolves.toMatchObject({
-      success: true,
-    });
-  });
-
   it("backs off a cooling account: cooldown blocks consume and peek", async () => {
     const creds = { apiKey: "k3" };
     const accountKey = providerAccountKey("serpapi", creds);
@@ -198,12 +131,6 @@ describe("provider rate limit", () => {
     expect(first.success).toBe(true);
     expect(second.success).toBe(true);
     expect(second.remaining).toBe(Number.POSITIVE_INFINITY);
-
-    const inspectionCreds = { apiKey: "inspection-kill-switch" };
-    await drainInspectionDailyBudget(inspectionCreds);
-    const inspection = await consumeInspectionDailyBudget(inspectionCreds);
-    expect(inspection.success).toBe(true);
-    expect(inspection.remaining).toBe(Number.POSITIVE_INFINITY);
   });
 
   it("ProviderRateLimitedError reports a retry-after derived from resetAt", () => {

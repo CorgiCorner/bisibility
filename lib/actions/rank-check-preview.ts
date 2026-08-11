@@ -3,15 +3,8 @@
 import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
 import { unitCostCentsFor } from "@/lib/cost-estimate/project-estimate";
 import { prisma } from "@/lib/db/prisma";
-import { isProjectReadOnly, ProjectReadOnlyError } from "@/lib/deployment/project-write-mode";
-import { ProviderRateLimitedError } from "@/lib/providers/rate-limit";
-import {
-  isBudgetExhaustedError,
-  monthlySpendCents,
-  projectBudgetCapCents,
-} from "@/lib/rank-check/budget";
+import { monthlySpendCents, projectBudgetCapCents } from "@/lib/rank-check/budget";
 import { loadSerpProviderChain, runKeywordCheckWithFallback } from "@/lib/rank-check/fallback";
-import { RankCheckRunnerError } from "@/lib/rank-check/runner";
 import { isSampleProject } from "@/lib/sample-data/marker";
 import {
   getFirstCheckRunPlanSchema,
@@ -33,59 +26,25 @@ import {
   requireProjectScope,
   revalidateRankCheckViews,
 } from "./_shared";
+import {
+  expectedPreviewFailure,
+  type FirstCheckRunPlan,
+  isProjectReadOnlyError,
+  type ListFirstCheckCandidatesResult,
+  type ObservedPosition,
+  previewFailure,
+  type RunFirstCheckPreviewResult,
+  unexpectedPreviewFailure,
+} from "./rank-check-preview-result";
 
-export type FirstCheckCandidate = {
-  id: string;
-  publicId: string;
-  text: string;
-};
-
-export type ListFirstCheckCandidatesResult = {
-  candidates: FirstCheckCandidate[];
-  hasAnalyticsSource: boolean;
-  isSampleProject: boolean;
-  providerReady: boolean;
-};
-
-export type FirstCheckRunPlan = {
-  budget: { capCents: number; spentCents: number };
-  estimatedCostPerCheckCents: number | null;
-  readyCount: number;
-  providers: string[];
-  scope: { depth: string; device: string; engine: string; frequency: string; location: string };
-  providerReady: boolean;
-  isSampleProject: boolean;
-  budgetExhausted: boolean;
-};
-
-export type ObservedPosition = {
-  clicks: number;
-  impressions: number;
-  keywordId: string;
-  position: number;
-  text: string;
-};
-
-export type FirstCheckPreviewFailureCode =
-  | "budget_exhausted"
-  | "failed"
-  | "no_provider"
-  | "project_read_only"
-  | "rate_limited"
-  | "sample_project";
-
-export type RunFirstCheckPreviewResult =
-  | {
-      position: number | null;
-      provider: string;
-      rankingUrl: string | null;
-      status: "completed";
-    }
-  | {
-      code: FirstCheckPreviewFailureCode;
-      message: string;
-      status: "failed";
-    };
+export type {
+  FirstCheckCandidate,
+  FirstCheckPreviewFailureCode,
+  FirstCheckRunPlan,
+  ListFirstCheckCandidatesResult,
+  ObservedPosition,
+  RunFirstCheckPreviewResult,
+} from "./rank-check-preview-result";
 
 function connectionCount(projectId: string, kind: "analytics" | "serp") {
   return prisma.providerConnection.count({
@@ -213,43 +172,6 @@ export async function getFirstCheckRunPlan(input: unknown): Promise<FirstCheckRu
   };
 }
 
-function previewFailure(
-  code: FirstCheckPreviewFailureCode,
-  message: string,
-): RunFirstCheckPreviewResult {
-  return { code, message, status: "failed" };
-}
-
-function isProjectReadOnlyError(error: unknown) {
-  const value = error as { code?: unknown; name?: unknown; project?: { writeMode?: unknown } };
-  return (
-    error instanceof ProjectReadOnlyError ||
-    value.code === "project_read_only" ||
-    value.name === "ProjectReadOnlyError" ||
-    isProjectReadOnly(value.project?.writeMode)
-  );
-}
-
-function mapPreviewError(error: unknown): RunFirstCheckPreviewResult {
-  if (isProjectReadOnlyError(error)) {
-    return previewFailure("project_read_only", "This project is read-only right now.");
-  }
-  if (isBudgetExhaustedError(error)) {
-    return previewFailure("budget_exhausted", "Monthly rank-check budget reached.");
-  }
-  if (
-    error instanceof ProviderRateLimitedError ||
-    (error instanceof RankCheckRunnerError && error.code === "provider_rate_limited")
-  ) {
-    return previewFailure("rate_limited", "Provider rate limit reached. Try again shortly.");
-  }
-  if (error instanceof RankCheckRunnerError && error.code === "no_provider_connected") {
-    return previewFailure("no_provider", "Connect a SERP provider before running checks.");
-  }
-
-  return previewFailure("failed", "We couldn't run this check. Try again from the dashboard.");
-}
-
 export async function runFirstCheckPreview(input: unknown): Promise<RunFirstCheckPreviewResult> {
   const data = parseActionInput(runFirstCheckPreviewSchema, input);
   const actor = await getActionActor();
@@ -258,7 +180,8 @@ export async function runFirstCheckPreview(input: unknown): Promise<RunFirstChec
   try {
     keywordScope = await requireKeywordScope(actor, "update", data.keywordId);
   } catch (error) {
-    if (isProjectReadOnlyError(error)) return mapPreviewError(error);
+    const expected = expectedPreviewFailure(error);
+    if (isProjectReadOnlyError(error) && expected) return expected;
     throw error;
   }
 
@@ -266,34 +189,43 @@ export async function runFirstCheckPreview(input: unknown): Promise<RunFirstChec
     return previewFailure("sample_project", "Sample projects don't run real checks.");
   }
 
-  let result: RunFirstCheckPreviewResult;
-  let auditTargetId = keywordScope.publicId;
-  let auditTargetType = "keyword";
   try {
-    const preview = await runKeywordCheckWithFallback({ keywordId: keywordScope.id });
-    auditTargetId = requiredPublicAuditId(preview.rankCheck.publicId, "check", "Rank-check");
-    auditTargetType = "rank_check";
-    result = {
-      position: preview.rankCheck.position,
-      provider: preview.provider,
-      rankingUrl: preview.rankCheck.rankingUrl ?? null,
-      status: "completed",
-    };
+    let result: RunFirstCheckPreviewResult;
+    let auditTargetId = keywordScope.publicId;
+    let auditTargetType = "keyword";
+    try {
+      const preview = await runKeywordCheckWithFallback({ keywordId: keywordScope.id });
+      auditTargetId = requiredPublicAuditId(preview.rankCheck.publicId, "check", "Rank-check");
+      auditTargetType = "rank_check";
+      result = {
+        position: preview.rankCheck.position,
+        provider: preview.provider,
+        rankingUrl: preview.rankCheck.rankingUrl ?? null,
+        status: "completed",
+      };
+    } catch (error) {
+      const expected = expectedPreviewFailure(error);
+      if (!expected) throw error;
+      result = expected;
+    }
+
+    await writeAudit({
+      action: "rank_check.run_now",
+      actorId: actor.id,
+      after: { keywordId: keywordScope.publicId, preview: true, ...result },
+      projectId: keywordScope.projectId,
+      targetId: auditTargetId,
+      targetType: auditTargetType,
+    });
+    revalidateRankCheckViews(keywordScope.publicId);
+
+    return result;
   } catch (error) {
-    result = mapPreviewError(error);
+    return unexpectedPreviewFailure(error, {
+      keywordId: keywordScope.publicId,
+      projectId: keywordScope.projectPublicId,
+    });
   }
-
-  await writeAudit({
-    action: "rank_check.run_now",
-    actorId: actor.id,
-    after: { keywordId: keywordScope.publicId, preview: true, ...result },
-    projectId: keywordScope.projectId,
-    targetId: auditTargetId,
-    targetType: auditTargetType,
-  });
-  revalidateRankCheckViews(keywordScope.publicId);
-
-  return result;
 }
 
 export async function getObservedPositions(input: unknown): Promise<ObservedPosition[]> {

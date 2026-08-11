@@ -3,12 +3,14 @@ import { appSectionPath } from "@/lib/routing/app-path";
 
 export type HeaderMeta = {
   subtitle?: string;
+  subtitleVariant?: "project-domain";
   /** Heading shown in the app header. */
   title: string;
 };
 
 type HeaderContext = {
   keywordCount?: number;
+  projectDomain?: string | null;
 };
 
 function matches(pathname: string, base: string): boolean {
@@ -117,7 +119,11 @@ export function headerMetaFor(pathname: string, context: HeaderContext = {}): He
   }
 
   if (matches(sectionPath, "/settings")) {
-    return sectionMeta("Settings", "Project, providers, team and preferences.");
+    return {
+      subtitle: context.projectDomain?.trim() || "No domain set",
+      subtitleVariant: "project-domain",
+      title: "Settings",
+    };
   }
 
   if (matches(sectionPath, "/docs")) {

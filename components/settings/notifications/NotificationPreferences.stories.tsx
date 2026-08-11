@@ -1,6 +1,24 @@
+import type {
+  ConfirmAccountEmailChangeInput,
+  ConfirmAccountEmailChangeResult,
+  ConfirmCurrentAccountEmailVerification,
+  RequestAccountEmailChangeInput,
+  RequestAccountEmailChangeResult,
+  RequestCurrentAccountEmailVerification,
+} from "@/components/settings/notifications/NotificationEmailCard";
+import {
+  NotificationPreferences,
+  type NotificationPreferencesProps,
+} from "@/components/settings/notifications/NotificationPreferences";
+import {
+  NotificationsLoading,
+  NotificationsRouteLoading,
+} from "@/components/settings/notifications/NotificationsLoading";
+import { SettingsShell } from "@/components/settings/shell/SettingsShell";
 import type { NotificationPreferencesView } from "@/lib/queries/notification-prefs";
 import type { Meta, StoryObj } from "@storybook/react";
-import { NotificationPreferences } from "./NotificationPreferences";
+
+const projectRef = "prj_story";
 
 const preferences: NotificationPreferencesView = {
   alertEmail: true,
@@ -15,21 +33,77 @@ const preferences: NotificationPreferencesView = {
   importInApp: true,
   inviteEmail: true,
   inviteInApp: true,
-  projectId: "prj_story",
+  projectId: projectRef,
   reportEmail: true,
   slackAvailable: false,
   webhookAvailable: false,
 };
 
+function NotificationPreferencesStory({
+  canEdit,
+  preferences: storyPreferences,
+}: Readonly<NotificationPreferencesProps>) {
+  async function requestAccountEmailChange(
+    input: RequestAccountEmailChangeInput,
+  ): Promise<RequestAccountEmailChangeResult> {
+    return {
+      currentEmail: storyPreferences.email,
+      pendingEmail: input.newEmail,
+      status: "verification_required",
+    };
+  }
+
+  async function confirmAccountEmailChange(
+    input: ConfirmAccountEmailChangeInput,
+  ): Promise<ConfirmAccountEmailChangeResult> {
+    return {
+      email: input.newEmail,
+      emailVerification: "verified",
+      status: "changed",
+    };
+  }
+
+  const requestCurrentAccountEmailVerification: RequestCurrentAccountEmailVerification = async (
+    input,
+  ) => ({
+    email: input.email,
+    status: "verification_required",
+  });
+
+  const confirmCurrentAccountEmailVerification: ConfirmCurrentAccountEmailVerification = async (
+    input,
+  ) => ({
+    email: input.email,
+    emailVerification: "verified",
+    status: "verified",
+  });
+
+  return (
+    <div data-notifications-story="settled">
+      <SettingsShell activeSection="notifications" projectRef={projectRef}>
+        <NotificationPreferences
+          canEdit={canEdit}
+          confirmAccountEmailChange={confirmAccountEmailChange}
+          confirmCurrentAccountEmailVerification={confirmCurrentAccountEmailVerification}
+          preferences={storyPreferences}
+          requestAccountEmailChange={requestAccountEmailChange}
+          requestCurrentAccountEmailVerification={requestCurrentAccountEmailVerification}
+        />
+      </SettingsShell>
+    </div>
+  );
+}
+
 const meta = {
   component: NotificationPreferences,
   decorators: [
     (Story) => (
-      <div className="mx-auto max-w-[780px] bg-bg p-6 text-fg">
+      <main className="min-h-screen bg-bg p-4 text-fg sm:p-6">
         <Story />
-      </div>
+      </main>
     ),
   ],
+  parameters: { nextjs: { appDirectory: true } },
   title: "Settings/Notification preferences",
 } satisfies Meta<typeof NotificationPreferences>;
 
@@ -37,6 +111,41 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+export const Settled: Story = {
+  args: { canEdit: true, preferences },
+  render: (args) => <NotificationPreferencesStory {...args} />,
+};
+
 export const VerifiedEmail: Story = {
   args: { canEdit: true, preferences },
+  render: (args) => <NotificationPreferencesStory {...args} />,
+};
+
+export const UnverifiedEmail: Story = {
+  args: {
+    canEdit: true,
+    preferences: {
+      ...preferences,
+      email: "unverified@example.com",
+      emailVerification: "unverified",
+    },
+  },
+  render: (args) => <NotificationPreferencesStory {...args} />,
+};
+
+export const Loading: Story = {
+  args: { canEdit: true, preferences },
+  render: () => (
+    <div data-notifications-story="loading">
+      <SettingsShell activeSection="notifications" projectRef={projectRef}>
+        <NotificationsLoading />
+      </SettingsShell>
+    </div>
+  ),
+};
+
+export const RouteLoading: Story = {
+  args: { canEdit: true, preferences },
+  name: "Route loading",
+  render: () => <NotificationsRouteLoading />,
 };

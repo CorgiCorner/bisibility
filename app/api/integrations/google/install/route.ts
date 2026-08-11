@@ -7,8 +7,10 @@ import {
   createGoogleInstallUrl,
   GOOGLE_OAUTH_STATE_COOKIE,
   GOOGLE_OAUTH_STATE_TTL_MS,
+  reusableGoogleInstallUrl,
 } from "@/lib/providers/analytics/google-oauth";
 import { appPath, appRootPath } from "@/lib/routing/app-path";
+import { cookies } from "next/headers";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -54,15 +56,28 @@ export async function GET(request: NextRequest) {
       type: "provider_connection",
     });
 
-    const installUrl = createGoogleInstallUrl({
+    const install = {
       actorId: actor.id,
       origin: oauthRequestOrigin(request.url),
       projectId: project.id,
       property: query.property,
       provider: query.provider,
       returnPath: query.returnPath ?? appPath(project.publicId, "integrations"),
-    });
+    };
 
+    // A prefetch or a second click during consent must not invalidate the flow already in
+    // flight, so an identical install with a live state cookie reuses that state and leaves
+    // the cookie (and its original expiry) untouched.
+    const cookieStore = await cookies();
+    const reusedUrl = reusableGoogleInstallUrl({
+      ...install,
+      state: cookieStore.get(GOOGLE_OAUTH_STATE_COOKIE)?.value ?? null,
+    });
+    if (reusedUrl) {
+      return NextResponse.redirect(reusedUrl);
+    }
+
+    const installUrl = createGoogleInstallUrl(install);
     const response = NextResponse.redirect(installUrl);
     // Bind the OAuth state to this browser so the callback can verify the flow (CSRF).
     response.cookies.set(

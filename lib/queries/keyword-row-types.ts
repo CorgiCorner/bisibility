@@ -1,5 +1,5 @@
+import type { KeywordLocation } from "@/lib/queries/keyword-location";
 import type { SerpDepth } from "@/lib/serp/markets";
-import type { KeywordLocation } from "./keyword-location";
 
 export type KeywordSchedule = {
   cron_expression: string | null;
@@ -11,7 +11,20 @@ export type KeywordSchedule = {
   timezone: string;
 };
 export type PositionPoint = { checkedAt: string; label: string; position: number };
-export type RankingUrlEvent = { date: string; note: string; position: number; url: string };
+export type CompletedComparableCheck = {
+  checkedAt: string;
+  position: number | null;
+  rankingUrl: string | null;
+};
+export type RankingUrlEvent = {
+  endAt: string;
+  isCurrent: boolean;
+  note: "Current" | "First seen ranking" | "URL switched" | null;
+  position: number | null;
+  requestedDepth: number | null;
+  startAt: string;
+  url: string;
+};
 export type LastCheckStatus = "completed" | "failed" | "running" | null;
 export type KeywordCheckState = "failed" | "never_checked" | "not_ranked" | "ranked" | "running";
 type ScheduleOrigin = "fallback" | "keyword" | "project";
@@ -43,7 +56,9 @@ export type KeywordRow = {
   difficultyKnown?: boolean;
   engine: string;
   checkState?: KeywordCheckState;
+  completedComparableChecks?: CompletedComparableCheck[];
   hasRankData: boolean;
+  hasTag?: boolean;
   id: string;
   impressions: number | null;
   keyword: string;

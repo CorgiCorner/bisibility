@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+## [0.8.0] - 2026-08-11
+
+- Improved overview accessibility, project favicons, security disclosures, self-hosting documentation and Temporal Compose bootstrapping, and error-report privacy.
+
+- Improved onboarding and provider setup with clearer fallbacks, stored credentials, progress feedback, and actionable OAuth errors.
+
+- Redesigned Settings and keyword detail with clearer navigation, reliable server-rendered loading states, project-scoped inspection limits, SERP pricing, and ranking URL history.
+
+- **Breaking:** Provider connect requests no longer accept `primary` or `priority`; connect first, then PATCH `{"priority":0}` to promote.
+
 ## [0.6.1] - 2026-08-09
 
 - Routed Railway deployment links through a stable Bisibility URL so template slug changes no longer break docs or launch buttons.

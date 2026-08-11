@@ -3,7 +3,9 @@ import { describe, expect, it, vi } from "vitest";
 import { AppHeader } from "./AppHeader";
 
 vi.mock("./AppHeaderTitle", () => ({
-  AppHeaderTitle: () => <div>Header title</div>,
+  AppHeaderTitle: ({ projectDomain }: { projectDomain?: string | null }) => (
+    <div data-project-domain={projectDomain}>Header title</div>
+  ),
 }));
 vi.mock("./CommandPalette", () => ({
   CommandPaletteTrigger: () => <button type="button">Search</button>,
@@ -29,5 +31,19 @@ describe("AppHeader", () => {
 
     expect(screen.getByTestId("provider-spend").parentElement).toHaveClass("gap-6");
     expect(screen.getByTestId("provider-spend").parentElement).not.toHaveClass("gap-5");
+  });
+
+  it("forwards the active project domain only as header metadata", () => {
+    render(
+      <AppHeader
+        activeProjectId="proj_example"
+        canCreateWorkspace={false}
+        projectDomain="example.com"
+        projectRef="project-example"
+        workspaces={[]}
+      />,
+    );
+
+    expect(screen.getByText("Header title")).toHaveAttribute("data-project-domain", "example.com");
   });
 });

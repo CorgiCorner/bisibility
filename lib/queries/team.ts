@@ -4,16 +4,22 @@ import { getProjectRole } from "@/lib/auth/authorize";
 import { prisma } from "@/lib/db/prisma";
 import { isPublicIdOfType } from "@/lib/db/public-id";
 import type { Role } from "@/lib/generated/prisma/client";
-import { requireReadableProject } from "./_auth";
+import { requireReadableProject } from "@/lib/queries/_auth";
 
 export type TeamRoleLabel = "Admin" | "Editor" | "Owner" | "Viewer";
 export type TeamRoleValue = "admin" | "member" | "owner" | "viewer";
 
 export type TeamMemberData = {
+  accessLabel: string;
+  canChangeRole: boolean;
+  canRemove: boolean;
+  canTransferOwnership: boolean;
   color: "accent" | "blue" | "purple";
   email: string;
+  hasAuditAccess: boolean;
   id: string;
   initials: string;
+  isCurrentUser: boolean;
   name: string;
   role: TeamRoleLabel;
   roleValue: TeamRoleValue;
@@ -31,6 +37,7 @@ export type PendingInviteData = {
 };
 
 export type TeamAccessView = {
+  canAssignAdmin: boolean;
   canManageTeam: boolean;
   canTransferOwnership: boolean;
   members: TeamMemberData[];
@@ -83,6 +90,25 @@ function inviterLabel(inviter: { email: string; name: string }) {
   return name && name !== inviter.email ? `${name} (${inviter.email})` : inviter.email;
 }
 
+function memberAccessLabel(createdAt: Date) {
+  const date = new Intl.DateTimeFormat("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(createdAt);
+  return `Project access since ${date}`;
+}
+
+function canManageMember(actorRole: Role | null, memberRole: Role) {
+  if (memberRole === "owner") {
+    return false;
+  }
+  if (actorRole === "owner") {
+    return true;
+  }
+  return actorRole === "admin" && !["admin", "owner"].includes(memberRole);
+}
+
 function relativeDateLabel(prefix: "expires" | "invited", date: Date, now: Date) {
   const diffMs = date.getTime() - now.getTime();
   const past = diffMs < 0;
@@ -130,17 +156,28 @@ export async function getTeamAccess(projectId: string): Promise<TeamAccessView> 
   const actorRole = getProjectRole(actor, project.id);
 
   return {
+    canAssignAdmin: actorRole === "owner",
     canManageTeam: Boolean(actorRole && roleRank[actorRole] >= roleRank.admin),
     canTransferOwnership: actorRole === "owner",
-    members: members.map((member, index) => ({
-      color: memberColor(index),
-      email: member.user.email,
-      id: requiredPublicId(member.publicId, "mbr", "Membership"),
-      initials: initials(member.user.name, member.user.email),
-      name: member.user.name,
-      role: roleLabel(member.role),
-      roleValue: roleValue(member.role),
-    })),
+    members: members.map((member, index) => {
+      const manageable = canManageMember(actorRole, member.role);
+      return {
+        accessLabel: memberAccessLabel(member.createdAt),
+        canChangeRole: manageable,
+        canRemove: manageable,
+        canTransferOwnership:
+          actorRole === "owner" && member.role !== "owner" && member.userId !== actor.id,
+        color: memberColor(index),
+        email: member.user.email,
+        hasAuditAccess: member.role === "auditor",
+        id: requiredPublicId(member.publicId, "mbr", "Membership"),
+        initials: initials(member.user.name, member.user.email),
+        isCurrentUser: member.userId === actor.id,
+        name: member.user.name,
+        role: roleLabel(member.role),
+        roleValue: roleValue(member.role),
+      };
+    }),
     pendingInvites: pendingInvites.map((invite) => ({
       email: invite.email,
       expiresLabel: relativeDateLabel("expires", invite.expiresAt, now),

@@ -3,13 +3,14 @@ import { describe, expect, it } from "vitest";
 import { ConclusionSubtitle } from "./ConclusionSubtitle";
 
 describe("ConclusionSubtitle", () => {
-  it("renders a single-line conclusion with the shared spacing and type treatment", () => {
+  it("reserves two lines and lets generated conclusions wrap", () => {
     render(<ConclusionSubtitle text="Avg position held steady over the last 30 days" />);
 
     expect(screen.getByText("Avg position held steady over the last 30 days")).toHaveClass(
-      "mb-3",
+      "line-clamp-2",
+      "min-h-[39px]",
       "mt-2",
-      "whitespace-nowrap",
+      "whitespace-normal",
       "text-[13px]",
       "text-fg-muted",
     );

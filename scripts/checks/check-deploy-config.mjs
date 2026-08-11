@@ -23,8 +23,11 @@ const health = readFileSync("lib/api/discovery.ts", "utf8");
 const temporalWorker = readFileSync("lib/temporal/worker.ts", "utf8");
 const deployMigration = readFileSync("scripts/deploy/migrate.ts", "utf8");
 const packageJson = JSON.parse(readFileSync("package.json", "utf8"));
+// The RUN may carry BuildKit flags such as a --mount cache; the guard is about what the
+// closure installs, not how the layer is built.
 const seedCliInstall =
-  dockerfile.match(/RUN npm install --prefix \/seed-cli[\s\S]*?(?=\nFROM )/)?.[0] ?? "";
+  dockerfile.match(/RUN (?:--mount=\S+ )*npm install --prefix \/seed-cli[\s\S]*?(?=\nFROM )/)?.[0] ??
+  "";
 const migrationRunner = "npm run db:migrate";
 const migrationScript =
   "node --experimental-transform-types --import ./lib/temporal/register-loader.mjs scripts/deploy/migrate.ts";

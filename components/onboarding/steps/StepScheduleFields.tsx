@@ -7,7 +7,7 @@ import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
 
 const boxClass =
-  "flex items-center justify-between gap-2 rounded-[9px] border border-border-strong bg-transparent px-[13px] py-[11px] transition-colors focus-within:border-accent";
+  "flex items-center justify-between gap-2 rounded-[9px] border border-border-strong bg-transparent px-[13px] py-[11px] transition-colors";
 const labelClass = "font-mono text-[10px] uppercase tracking-[0.4px] text-fg-muted";
 const depthOptions = serpDepthValues.map((depth) => ({
   label: `Top ${depth}`,
@@ -98,7 +98,7 @@ export function MenuField({
   label,
 }: Readonly<{ children: ReactNode; help?: string; label: string }>) {
   return (
-    <div className={boxClass}>
+    <div className={`${boxClass} focus-within:border-accent`}>
       <FieldLabel className={labelClass} help={help} label={label} />
       {children}
     </div>

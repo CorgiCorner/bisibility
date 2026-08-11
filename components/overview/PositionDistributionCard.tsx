@@ -1,16 +1,16 @@
 "use client";
 
-import { Card, ChartRegion, InfoTooltip, SectionTitle } from "@/components/ui";
+import { Card, ChartRegion } from "@/components/ui";
 import { chartColors, rankBucketColors, rankBucketCssVars } from "@/lib/theme/chart-colors";
 import { BarChart } from "@mui/x-charts/BarChart";
 import { useState } from "react";
 import { ChartNoDataOverlay } from "./ChartNoDataOverlay";
+import { OverviewChartHeader } from "./OverviewChartHeader";
 import type { DistributionBucket } from "./types";
 
 export type PositionDistributionCardProps = {
   buckets: DistributionBucket[];
   empty?: boolean;
-  totalLabel?: string;
 };
 
 const axisTextStyle = {
@@ -23,6 +23,8 @@ const countFormatter = new Intl.NumberFormat("en-US");
 const percentFormatter = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 1,
 });
+const positionDistributionDefinition =
+  "Ranked keywords grouped by current position. Keywords outside the top 100 are not shown.";
 
 function bucketColor(index: number) {
   return rankBucketColors[index % rankBucketColors.length];
@@ -47,11 +49,6 @@ function bucketPercentLabel(count: number, total: number) {
   }
 
   return `${percentFormatter.format((count / total) * 100)}% of total`;
-}
-
-function defaultTotalLabel(buckets: DistributionBucket[]) {
-  const total = buckets.reduce((sum, bucket) => sum + bucket.count, 0);
-  return `${countFormatter.format(total)} ${total === 1 ? "keyword" : "keywords"} by rank bucket`;
 }
 
 function bucketMax(buckets: DistributionBucket[]) {
@@ -109,7 +106,6 @@ function BarInteractionLayer({
 export function PositionDistributionCard({
   buckets,
   empty = false,
-  totalLabel = defaultTotalLabel(buckets),
 }: Readonly<PositionDistributionCardProps>) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const max = bucketMax(buckets);
@@ -122,12 +118,10 @@ export function PositionDistributionCard({
       size="md"
       sx={{ containerType: "inline-size" }}
     >
-      <div className="flex min-h-[26px] items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-1.5">
-          <SectionTitle className="flex-none">Position distribution</SectionTitle>
-          <InfoTooltip text={totalLabel} />
-        </div>
-      </div>
+      <OverviewChartHeader
+        definition={positionDistributionDefinition}
+        title="Position distribution"
+      />
       {empty ? (
         <div className="relative mt-3 min-w-0 flex-1 pt-1.5">
           <div aria-hidden className="h-[244px]" />

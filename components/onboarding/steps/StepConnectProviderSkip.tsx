@@ -4,7 +4,7 @@ import {
   buildOnboardingStepHref,
   type OnboardingFlowState,
 } from "@/components/onboarding/onboarding-fixtures";
-import Link from "next/link";
+import { OnboardingStepSkip } from "./OnboardingStepSkip";
 import type { OnboardingConnectProviderInput } from "./StepConnectProvider.fields";
 
 type StepConnectProviderSkipProps = {
@@ -28,17 +28,11 @@ export function StepConnectProviderSkip({
       <div className="mt-4 text-xs text-fg-muted">
         No provider yet?{" "}
         {onSkip ? (
-          <button
-            className="cursor-pointer border-0 bg-transparent p-0 font-semibold text-accent-text hover:underline"
-            onClick={() => onSkip(getValues())}
-            type="button"
-          >
+          <OnboardingStepSkip onClick={() => onSkip(getValues())}>
             Skip, add keywords as paused
-          </button>
+          </OnboardingStepSkip>
         ) : (
-          <Link className="font-semibold text-accent-text hover:underline" href={skipHref}>
-            Skip, add keywords as paused
-          </Link>
+          <OnboardingStepSkip href={skipHref}>Skip, add keywords as paused</OnboardingStepSkip>
         )}
         .
       </div>

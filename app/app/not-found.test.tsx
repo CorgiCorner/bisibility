@@ -1,3 +1,4 @@
+import AppNotFound from "@/app/app/not-found";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -7,12 +8,10 @@ vi.mock("server-only", () => ({}));
 vi.mock("@/lib/auth/session", () => ({ getSession: mocks.getSession }));
 
 async function render() {
-  const { default: AppNotFound } = await import("./not-found");
   return renderToStaticMarkup(await AppNotFound());
 }
 
 beforeEach(() => {
-  vi.resetModules();
   mocks.getSession.mockResolvedValue({ user: { email: "member@example.com", id: "usr_1" } });
 });
 

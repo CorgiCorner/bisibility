@@ -46,7 +46,6 @@ import { useForm } from "react-hook-form";
 
 export type ConnectDrawerProps = {
   actions?: ProviderActionHandlers;
-  defaultPrimary?: boolean;
   open: boolean;
   onClose: () => void;
   projectId?: string;
@@ -56,7 +55,6 @@ export type ConnectDrawerProps = {
 
 export function ConnectDrawer({
   actions,
-  defaultPrimary = false,
   open,
   onClose,
   projectId = "prj_storybook",
@@ -75,12 +73,11 @@ export function ConnectDrawer({
   const authMode = providerAuthMode(provider);
   const activeActions = actions ?? (projectId === "prj_storybook" ? demoActions : serverActions);
   const formDefaults = {
+    endpoint: provider.drawer.defaults.endpoint,
+    login: provider.drawer.defaults.login,
     projectId,
     providerId: provider.id as ConnectFormValues["providerId"],
-    ...provider.drawer.defaults,
-    enabled: provider.drawer.defaults.enabled ?? provider.enabled ?? true,
-    primary: defaultPrimary || provider.drawer.defaults.primary,
-    priority: defaultPrimary ? 0 : (provider.drawer.defaults.priority ?? provider.priority ?? 100),
+    secret: provider.drawer.defaults.secret,
   };
   const form = useForm<ConnectFormValues>({
     defaultValues: formDefaults,

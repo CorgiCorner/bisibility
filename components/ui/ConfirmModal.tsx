@@ -1,7 +1,9 @@
 "use client";
 
 import { Modal } from "@/components/ui/Modal";
+import { useToast } from "@/components/ui/Toast";
 import {
+  CrownSimpleIcon as CrownSimple,
   GaugeIcon as Gauge,
   KeyIcon as Key,
   PlugsIcon as Plugs,
@@ -10,8 +12,7 @@ import {
   UserPlusIcon as UserPlus,
   WarningIcon as Warning,
 } from "@phosphor-icons/react";
-import { useState } from "react";
-import { useToast } from "./Toast";
+import { useId, useState } from "react";
 
 export type ConfirmKind =
   | "deactivateAccount"
@@ -24,7 +25,9 @@ export type ConfirmKind =
   | "reactivateAccount"
   | "resetAccountLimits"
   | "revokeKey"
-  | "removeIntegration";
+  | "removeIntegration"
+  | "removeTeamMember"
+  | "transferProjectOwnership";
 
 type ConfirmConfig = {
   title: string;
@@ -99,6 +102,13 @@ export const CONFIRM: Record<ConfirmKind, ConfirmConfig> = {
     toastMessage: "Provider disconnected",
     title: "Disconnect provider",
   },
+  removeTeamMember: {
+    body: "Remove this member from the project. Their account and access to other projects are not affected.",
+    dangerLabel: "Remove member",
+    icon: UserMinus,
+    toastMessage: "Project member removed",
+    title: "Remove project member",
+  },
   reactivateAccount: {
     body: "Allow sign-in again. Scheduled checks will reconverge through the schedule reconciler.",
     dangerLabel: "Reactivate account",
@@ -119,6 +129,13 @@ export const CONFIRM: Record<ConfirmKind, ConfirmConfig> = {
     icon: Key,
     toastMessage: "API key revoked",
     title: "Revoke API key",
+  },
+  transferProjectOwnership: {
+    body: "Make this member the project owner. Your project role changes to admin, and only the new owner can transfer ownership again.",
+    dangerLabel: "Transfer ownership",
+    icon: CrownSimple,
+    toastMessage: "Project ownership transferred",
+    title: "Transfer project ownership",
   },
 };
 
@@ -143,6 +160,7 @@ export function ConfirmModal({
   showConfirmationToast = true,
   typeWord,
 }: Readonly<ConfirmModalProps>) {
+  const titleId = useId();
   const [typed, setTyped] = useState("");
   const { showToast } = useToast();
   const config = CONFIRM[kind];
@@ -171,13 +189,23 @@ export function ConfirmModal({
   }
 
   return (
-    <Modal contentClassName="p-0" onClose={handleClose} open={open} showClose={false} size="sm">
+    <Modal
+      ariaLabelledBy={titleId}
+      contentClassName="p-0"
+      onClose={handleClose}
+      open={open}
+      showClose={false}
+      size="sm"
+    >
       <div className="px-[22px] pb-[18px] pt-[22px]">
         <div className="flex items-center gap-3">
           <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[11px] text-red-text [background:color-mix(in_srgb,var(--red)_12%,transparent)]">
             <Icon aria-hidden size={21} weight="bold" />
           </span>
-          <h2 className="m-0 text-[16.5px] font-semibold leading-tight tracking-[-0.3px] text-fg">
+          <h2
+            className="m-0 text-[16.5px] font-semibold leading-tight tracking-[-0.3px] text-fg"
+            id={titleId}
+          >
             {config.title}
           </h2>
         </div>

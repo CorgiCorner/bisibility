@@ -6,6 +6,40 @@ import {
 } from "./action-error";
 
 describe("actionErrorMessage", () => {
+  it("maps production server-component digest errors to a friendly reference", () => {
+    const error = Object.assign(
+      new Error(
+        "An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.",
+      ),
+      { digest: "4186352953", internalDetail: "must stay private" },
+    );
+
+    expect(actionErrorMessage(error)).toBe(
+      "Check failed on our side (ref 4186352953). Retry in a moment.",
+    );
+  });
+
+  it("maps message-less server-component digest errors to a friendly reference", () => {
+    const error = Object.assign(
+      new Error("An error occurred in the Server Components render but no message was provided"),
+      { digest: "4186352953" },
+    );
+
+    expect(actionErrorMessage(error)).toBe(
+      "Check failed on our side (ref 4186352953). Retry in a moment.",
+    );
+  });
+
+  it("maps unexpected server-action response digest errors to a friendly reference", () => {
+    const error = Object.assign(new Error("An unexpected response was received from the server."), {
+      digest: "4186352953",
+    });
+
+    expect(actionErrorMessage(error)).toBe(
+      "Check failed on our side (ref 4186352953). Retry in a moment.",
+    );
+  });
+
   it("maps stale server-action errors to the refresh message", () => {
     expect(
       actionErrorMessage(
@@ -33,8 +67,11 @@ describe("actionErrorMessage", () => {
     expect(isStaleDeploymentError(new Error("Provider request failed."))).toBe(false);
   });
 
-  it("passes through regular error messages", () => {
+  it("passes through regular error messages, including errors with a digest", () => {
     expect(actionErrorMessage(new Error("Keyword limit reached."))).toBe("Keyword limit reached.");
+    expect(
+      actionErrorMessage(Object.assign(new Error("Provider request failed."), { digest: "123" })),
+    ).toBe("Provider request failed.");
   });
 
   it("returns the fallback for non-Error values and empty messages", () => {

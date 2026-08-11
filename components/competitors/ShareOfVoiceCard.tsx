@@ -3,6 +3,7 @@ import type { CompetitorFilter, CompetitorKind, CompetitorMarket } from "@/lib/c
 import { countLabel } from "@/lib/format/pluralize";
 import { InfoIcon as Info } from "@phosphor-icons/react";
 import { CompetitorFilterControls } from "./CompetitorFilterControls";
+import { CompetitorTile } from "./CompetitorTile";
 import { ManagedCompetitorControls } from "./ManagedCompetitorControls";
 
 type ShareOfVoiceCardProps = {
@@ -85,9 +86,7 @@ export function ShareOfVoiceCard({
                 className="flex flex-wrap items-center gap-x-3 gap-y-2 sm:flex-nowrap"
                 key={competitor.id ?? competitor.domain}
               >
-                <span className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-lg bg-bg-sunken font-mono text-[11px] font-semibold text-fg-muted">
-                  {competitor.initials}
-                </span>
+                <CompetitorTile domain={competitor.domain} initials={competitor.initials} />
                 <span className="flex min-w-0 flex-1 items-center gap-[7px] sm:w-[190px] sm:flex-none">
                   <span className="min-w-0">
                     <span className="block truncate text-[13px] font-semibold">

@@ -195,7 +195,12 @@ describe("overview builders", () => {
     ];
 
     expect(buildKpis(snapshots, 2, 0)).toEqual([
-      { delta: "up 10.0", deltaTone: "positive", label: "Avg. position", value: "2.5" },
+      {
+        delta: "up 10.0 vs previous ranked check",
+        deltaTone: "positive",
+        label: "Avg. position",
+        value: "2.5",
+      },
       { delta: "no new this month", deltaTone: "neutral", label: "Tracked keywords", value: "2" },
       { delta: "+1", deltaTone: "positive", label: "In top 10", value: "2" },
       { delta: "+29.0pp", deltaTone: "positive", label: "Visibility", value: "47%" },

@@ -20,21 +20,16 @@ type StepConnectProviderCardsProps = {
 function providerState({
   connections,
   providerId,
-  selectedProviderId,
-  testingProviderId,
   testResults,
 }: {
   connections: ConnectedProviderMap;
   providerId: OnboardingSerpProviderId;
-  selectedProviderId: OnboardingSerpProviderId;
-  testingProviderId: OnboardingSerpProviderId | null;
   testResults: Partial<Record<OnboardingSerpProviderId, ProviderTestResult | null>>;
 }): ProviderCardState {
-  if (testingProviderId === providerId) return "testing";
   if (connections[providerId]) return "connected";
   if (testResults[providerId]?.ok) return "tested";
   if (testResults[providerId] && !testResults[providerId]?.ok) return "failed";
-  return selectedProviderId === providerId ? "selected" : "idle";
+  return "idle";
 }
 
 export function StepConnectProviderCards({
@@ -47,10 +42,10 @@ export function StepConnectProviderCards({
 }: Readonly<StepConnectProviderCardsProps>) {
   return (
     <div className="mt-[22px]">
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div aria-label="SERP provider" className="grid gap-3 sm:grid-cols-2" role="radiogroup">
         {providerOptions.map((provider) => (
           <ProviderCard
-            backupPrompt={
+            fallbackPrompt={
               Boolean(primaryProviderId) &&
               primaryProviderId !== provider.value &&
               !connections[provider.value]
@@ -64,10 +59,9 @@ export function StepConnectProviderCards({
             state={providerState({
               connections,
               providerId: provider.value,
-              selectedProviderId,
-              testingProviderId,
               testResults,
             })}
+            testing={testingProviderId === provider.value}
           />
         ))}
       </div>

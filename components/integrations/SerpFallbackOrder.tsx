@@ -14,7 +14,7 @@ import {
   MinusCircleIcon as MinusCircle,
 } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 type SerpFallbackOrderProps = {
   actions?: ProviderActionHandlers;
@@ -49,11 +49,11 @@ function normalizedSettings(providers: readonly IntegrationProviderData[]) {
     .map((provider) => {
       const activeIndex = active.findIndex((candidate) => candidate.id === provider.id);
       if (activeIndex >= 0) {
-        return { enabled: true, primary: activeIndex === 0, priority: activeIndex, provider };
+        return { enabled: true, priority: activeIndex, provider };
       }
       const priority = pausedPriority;
       pausedPriority += 1;
-      return { enabled: false, primary: false, priority, provider };
+      return { enabled: false, priority, provider };
     });
 }
 
@@ -72,10 +72,14 @@ export function SerpFallbackOrder({
   const router = useRouter();
   const { readOnly } = useProjectWriteMode();
   const [items, setItems] = useState(() => orderedProviders(providers));
+  const [itemsProviders, setItemsProviders] = useState(providers);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => setItems(orderedProviders(providers)), [providers]);
+  if (itemsProviders !== providers) {
+    setItemsProviders(providers);
+    setItems(orderedProviders(providers));
+  }
 
   const active = useMemo(
     () => items.filter((provider) => provider.status === "connected" && provider.enabled !== false),
@@ -99,13 +103,12 @@ export function SerpFallbackOrder({
     setError(null);
     try {
       for (const setting of normalizedSettings(next)) {
-        await actions.setPrimaryProvider({
+        await actions.updateProviderSettings({
           enabled: setting.enabled,
-          primary: setting.primary,
           priority: setting.priority,
           projectId,
           providerId: setting.provider.id as Parameters<
-            ProviderActionHandlers["setPrimaryProvider"]
+            ProviderActionHandlers["updateProviderSettings"]
           >[0]["providerId"],
         });
       }

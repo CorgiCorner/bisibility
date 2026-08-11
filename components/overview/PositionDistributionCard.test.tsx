@@ -54,7 +54,19 @@ describe("PositionDistributionCard", () => {
     });
     expect(screen.getByRole("button", { name: "Positions 1 to 3: 1 keywords" })).toBeVisible();
     expect(screen.getByRole("button", { name: "Positions 4 to 10: 0 keywords" })).toBeVisible();
-    expect(screen.getByRole("button", { name: "1 keyword by rank bucket" })).toBeVisible();
+    expect(
+      screen.getByRole("button", {
+        name: "Ranked keywords grouped by current position. Keywords outside the top 100 are not shown.",
+      }),
+    ).toBeVisible();
+    expect(
+      screen.queryByRole("button", { name: /1 keyword by rank bucket/ }),
+    ).not.toBeInTheDocument();
     expect(screen.getByRole("region", { name: /Position distribution chart/ })).toBeInTheDocument();
+    expect(
+      screen
+        .getByRole("heading", { name: "Position distribution" })
+        .closest("[data-overview-chart-header]"),
+    ).toHaveClass("min-h-[69px]");
   });
 });

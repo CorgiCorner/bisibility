@@ -1,7 +1,7 @@
 import { buildCompetitorMarket } from "@/lib/competitors/competitor-market-model";
 import type { CompetitorFilter, CompetitorMarketData } from "@/lib/competitors/types";
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { ShareOfVoiceCard } from "./ShareOfVoiceCard";
 
 vi.mock("./ManagedCompetitorControls", () => ({
@@ -40,6 +40,10 @@ const data = {
 } satisfies CompetitorMarketData;
 
 describe("ShareOfVoiceCard no-data semantics", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   it("labels completed unranked checks honestly without rendering zero shares", () => {
     const filter: CompetitorFilter = { excludedKeywordIds: [], position: "all", tag: null };
     const market = buildCompetitorMarket(data, filter);
@@ -127,5 +131,52 @@ describe("ShareOfVoiceCard no-data semantics", () => {
       "noopener noreferrer",
     );
     expect(screen.getByRole("link", { name: "rankzly.io" })).toHaveAttribute("target", "_blank");
+  });
+
+  it("keeps the application competitor initials behind a domain favicon layer", () => {
+    const rankedData = {
+      ...data,
+      allColumns: [
+        { domain: "example.com", kind: "You" as const, label: "example.com" },
+        {
+          domain: "example.org",
+          id: "competitor_1",
+          kind: "Managed" as const,
+          label: "Example",
+        },
+      ],
+      observations: [
+        {
+          ...data.observations[0],
+          ranked: true,
+          ranks: { "example.com": 8, "example.org": 4 },
+        },
+      ],
+    } satisfies CompetitorMarketData;
+    const filter: CompetitorFilter = { excludedKeywordIds: [], position: "all", tag: null };
+    const market = buildCompetitorMarket(rankedData, filter);
+    const { container } = render(
+      <ShareOfVoiceCard
+        canDelete
+        canUpdate
+        filter={filter}
+        market={market}
+        onFilterChange={vi.fn()}
+        projectId="project_1"
+      />,
+    );
+
+    expect(screen.getByText("EO")).toBeInTheDocument();
+    const probe = screen.getAllByTestId("competitor-tile-favicon-probe")[1];
+    Object.defineProperties(probe, {
+      naturalHeight: { configurable: true, value: 64 },
+      naturalWidth: { configurable: true, value: 64 },
+    });
+    fireEvent.load(probe);
+    expect(screen.getByTestId("competitor-tile-favicon")).toHaveStyle({
+      backgroundImage: 'url("https://www.google.com/s2/favicons?domain=example.org&sz=64")',
+      backgroundSize: "cover",
+    });
+    expect(container.innerHTML).not.toContain("logo.dev");
   });
 });

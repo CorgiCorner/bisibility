@@ -107,13 +107,10 @@ function integrationProvider(
         costPerCheck: cost == null ? undefined : centsToDollars(Number(cost)),
         depth: `Top ${DEFAULT_SERP_DEPTH}`,
         device: "Desktop",
-        enabled: connection?.enabled ?? true,
         endpoint: credentials.endpoint ?? "",
         language: "English",
         location: DEFAULT_SERP_MARKET,
         login: displayedLogin ?? "",
-        primary,
-        priority: connection?.priority ?? (primary ? 0 : 100),
         secret: "",
       },
       envHint:

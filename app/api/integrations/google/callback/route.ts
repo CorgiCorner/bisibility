@@ -1,5 +1,11 @@
 import "server-only";
 
+import {
+  type GoogleOAuthFailure,
+  googleDeniedFailure,
+  googleOAuthFailureFrom,
+  logGoogleOAuthFailure,
+} from "@/lib/integrations/google-oauth-failure";
 import { oauthResultUrl } from "@/lib/integrations/oauth-url";
 import {
   completeGoogleOAuthInstall,
@@ -26,20 +32,39 @@ function returnContextFromState(url: URL) {
   return googleOAuthReturnContextFromState(url.searchParams.get("state"));
 }
 
-function errorResultUrl(request: NextRequest, url: URL) {
+/**
+ * Every failed install leaves one server-side line and one classified redirect. The failure
+ * carries its own context when the state was readable (an expired state still knows where the
+ * user came from); otherwise we fall back to whatever the state param can still tell us.
+ */
+function errorResultUrl(request: NextRequest, url: URL, failure: GoogleOAuthFailure) {
   const context = returnContextFromState(url);
-  const redirectUrl = resultUrl(request, context?.returnPath ?? appRootPath(), "error");
-  if (context) {
-    redirectUrl.searchParams.set("connect", context.provider);
-    redirectUrl.searchParams.set("provider", context.provider);
+  const projectId = failure.projectId ?? context?.projectId ?? null;
+  const provider = failure.provider ?? context?.provider ?? null;
+  logGoogleOAuthFailure({
+    googleError: failure.googleError,
+    projectId,
+    provider,
+    reason: failure.reason,
+  });
+
+  const returnPath = failure.returnPath ?? context?.returnPath ?? appRootPath();
+  const redirectUrl = resultUrl(request, returnPath, "error");
+  if (provider) {
+    redirectUrl.searchParams.set("connect", provider);
+    redirectUrl.searchParams.set("provider", provider);
+  }
+  if (failure.reason) {
+    redirectUrl.searchParams.set("reason", failure.reason);
   }
   return redirectUrl;
 }
 
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
-  if (url.searchParams.get("error")) {
-    return NextResponse.redirect(errorResultUrl(request, url));
+  const googleError = url.searchParams.get("error");
+  if (googleError) {
+    return NextResponse.redirect(errorResultUrl(request, url, googleDeniedFailure(googleError)));
   }
 
   try {
@@ -51,7 +76,7 @@ export async function GET(request: NextRequest) {
     redirectUrl.searchParams.set("connect", result.provider);
     redirectUrl.searchParams.set("provider", result.provider);
     return NextResponse.redirect(redirectUrl);
-  } catch {
-    return NextResponse.redirect(errorResultUrl(request, url));
+  } catch (error) {
+    return NextResponse.redirect(errorResultUrl(request, url, googleOAuthFailureFrom(error)));
   }
 }

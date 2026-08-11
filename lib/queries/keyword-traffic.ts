@@ -25,6 +25,7 @@ export type PageTrafficSnapshotLike = {
 
 export type KeywordTrafficDetail = {
   hasAnalyticsConnection: boolean;
+  hasSearchConsoleConnection?: boolean;
   pages: PageTrafficSnapshotLike[];
   query: (KeywordTrafficSummary & { position: number; windowDays: number }) | null;
 };
@@ -65,6 +66,7 @@ async function loadProviderContext(projectId: string) {
   });
   return {
     hasAnalyticsConnection: rows.length > 0,
+    hasSearchConsoleConnection: rows.some((row) => row.provider === "gsc"),
     providerRanks: providerRankMap(rows),
   };
 }
@@ -188,6 +190,7 @@ export async function getKeywordTraffic(
 
   return {
     hasAnalyticsConnection: providerContext.hasAnalyticsConnection,
+    hasSearchConsoleConnection: providerContext.hasSearchConsoleConnection,
     pages: selectNewestPagesByProvider(pages, candidates),
     query,
   };

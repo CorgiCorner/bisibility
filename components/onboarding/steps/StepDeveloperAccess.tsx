@@ -14,6 +14,7 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { OnboardingStepSkip } from "./OnboardingStepSkip";
 
 const installCommand = "npm install -g @bisibility/cli";
 const loginCommand = 'bisibility auth login --name "mbp16-cli" --scope admin --expires 90';
@@ -73,13 +74,22 @@ export function StepDeveloperAccess({
       }}
     >
       <div className="mb-6">
-        <div className="flex items-center gap-2">
-          <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.7px] text-accent-text">
-            Developer access
-          </span>
-          <span className="rounded-full border border-border bg-bg-elev px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.5px] text-fg-muted">
-            Optional
-          </span>
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.7px] text-accent-text">
+              Developer access
+            </span>
+            <span className="rounded-full border border-border bg-bg-elev px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.5px] text-fg-muted">
+              Optional
+            </span>
+          </div>
+          <OnboardingStepSkip
+            ariaLabel="Skip developer access"
+            className="-my-2 inline-flex min-h-10 shrink-0 items-center px-2 text-[13px]"
+            onClick={continueOnboarding}
+          >
+            Skip
+          </OnboardingStepSkip>
         </div>
         <h2 className="m-0 mt-2 text-[22px] font-semibold tracking-[-0.6px] text-fg">
           Connect from your terminal or API

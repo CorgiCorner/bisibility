@@ -26,3 +26,12 @@ export const Default: Story = {
     </>
   ),
 };
+
+export const Small: Story = {
+  render: () => (
+    <>
+      <Switch checked label="Enabled" readOnly />
+      <Switch label="Disabled" readOnly />
+    </>
+  ),
+};

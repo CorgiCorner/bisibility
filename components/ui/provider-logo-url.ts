@@ -21,6 +21,7 @@ export function buildLogoDevUrl({
   }
 
   const params = new URLSearchParams({
+    fallback: "404",
     token: safeToken,
     size: String(size),
     format,

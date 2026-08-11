@@ -9,6 +9,7 @@ import { type ReactNode, useId } from "react";
 export type ModalSize = "sm" | "md" | "lg";
 
 export type ModalProps = {
+  ariaLabelledBy?: string;
   open: boolean;
   onClose: () => void;
   title?: ReactNode;
@@ -33,6 +34,7 @@ const modalWidth = {
 const contentVariants = cva("min-h-0 flex-1 overflow-y-auto px-[22px] py-[18px]");
 
 export function Modal({
+  ariaLabelledBy,
   children,
   contentClassName,
   footer,
@@ -51,7 +53,7 @@ export function Modal({
 
   return (
     <Dialog
-      aria-labelledby={title ? titleId : undefined}
+      aria-labelledby={title ? titleId : ariaLabelledBy}
       onClose={onClose}
       open={open}
       slotProps={{

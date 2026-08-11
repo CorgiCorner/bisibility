@@ -1,6 +1,6 @@
+import { updateProjectBudgetAction } from "@/lib/actions/budget";
 import { appPath } from "@/lib/routing/app-path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { updateWorkspaceBudgetAction } from "./budget";
 
 const mocks = vi.hoisted(() => {
   class AuthorizationError extends Error {
@@ -64,7 +64,7 @@ function mockActor(role: "admin" | "member" | "owner" | "viewer") {
   });
 }
 
-describe("updateWorkspaceBudgetAction", () => {
+describe("updateProjectBudgetAction", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.prisma.project.findFirst.mockResolvedValue({
@@ -83,7 +83,7 @@ describe("updateWorkspaceBudgetAction", () => {
     mockActor("admin");
 
     await expect(
-      updateWorkspaceBudgetAction({ capCents: 7_500, projectId: "prj_a00000000000000000000000" }),
+      updateProjectBudgetAction({ capCents: 7_500, projectId: "prj_a00000000000000000000000" }),
     ).resolves.toEqual({ capCents: 7_500 });
 
     expect(mocks.prisma.project.update).toHaveBeenCalledWith({
@@ -99,7 +99,7 @@ describe("updateWorkspaceBudgetAction", () => {
   it("writes an audit entry with the old and new cap", async () => {
     mockActor("owner");
 
-    await updateWorkspaceBudgetAction({
+    await updateProjectBudgetAction({
       capCents: 7_500,
       projectId: "prj_a00000000000000000000000",
     });
@@ -119,7 +119,7 @@ describe("updateWorkspaceBudgetAction", () => {
     mockActor("member");
 
     await expect(
-      updateWorkspaceBudgetAction({ capCents: 7_500, projectId: "prj_a00000000000000000000000" }),
+      updateProjectBudgetAction({ capCents: 7_500, projectId: "prj_a00000000000000000000000" }),
     ).rejects.toBeInstanceOf(mocks.AuthorizationError);
 
     expect(mocks.prisma.project.update).not.toHaveBeenCalled();
@@ -130,7 +130,7 @@ describe("updateWorkspaceBudgetAction", () => {
     mockActor("viewer");
 
     await expect(
-      updateWorkspaceBudgetAction({ capCents: 7_500, projectId: "prj_a00000000000000000000000" }),
+      updateProjectBudgetAction({ capCents: 7_500, projectId: "prj_a00000000000000000000000" }),
     ).rejects.toBeInstanceOf(mocks.AuthorizationError);
 
     expect(mocks.prisma.project.update).not.toHaveBeenCalled();
@@ -140,13 +140,13 @@ describe("updateWorkspaceBudgetAction", () => {
     mockActor("owner");
 
     await expect(
-      updateWorkspaceBudgetAction({ capCents: 0, projectId: "prj_a00000000000000000000000" }),
+      updateProjectBudgetAction({ capCents: 0, projectId: "prj_a00000000000000000000000" }),
     ).rejects.toThrow();
     await expect(
-      updateWorkspaceBudgetAction({ capCents: 12.5, projectId: "prj_a00000000000000000000000" }),
+      updateProjectBudgetAction({ capCents: 12.5, projectId: "prj_a00000000000000000000000" }),
     ).rejects.toThrow();
     await expect(
-      updateWorkspaceBudgetAction({
+      updateProjectBudgetAction({
         capCents: 100_000_001,
         projectId: "prj_a00000000000000000000000",
       }),

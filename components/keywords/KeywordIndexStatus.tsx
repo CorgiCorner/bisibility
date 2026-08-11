@@ -1,12 +1,8 @@
 import type { UrlPresenceView } from "@/lib/queries/keywords";
 
-type StatusTone = "amber" | "green";
-
 export type IndexStatusDisplay = {
-  canonicalHint: string | null;
+  chips: { label: string }[];
   detail: string;
-  label: string;
-  tone: StatusTone;
 };
 
 function dateLabel(value: string) {
@@ -22,18 +18,24 @@ export function indexStatusDisplay(
   presence: UrlPresenceView | null | undefined,
 ): IndexStatusDisplay | null {
   if (!presence) return null;
+  const coverage = presence.coverageState?.toLocaleLowerCase() ?? "";
+  const inSitemap = coverage.includes("submitted") && !coverage.includes("not submitted");
   return {
-    canonicalHint: presence.canonicalOk === false ? "Canonical mismatch" : null,
+    chips: [
+      {
+        label: presence.indexed ? "Indexed" : "Not indexed",
+      },
+      ...(presence.canonicalOk === true
+        ? [{ label: "Canonical self" }]
+        : presence.canonicalOk === false
+          ? [{ label: "Canonical mismatch" }]
+          : []),
+      ...(inSitemap ? [{ label: "In sitemap" }] : []),
+    ],
     detail: presence.lastCrawlAt
       ? `last crawled ${dateLabel(presence.lastCrawlAt)}`
       : `checked ${dateLabel(presence.checkedAt)}`,
-    label: presence.indexed ? "Indexed" : "Not indexed",
-    tone: presence.indexed ? "green" : "amber",
   };
-}
-
-function pillClassName(tone: StatusTone) {
-  return tone === "green" ? "bg-green/10 text-green-text" : "bg-yellow/15 text-(--yellow-text)";
 }
 
 export function KeywordIndexStatus({
@@ -47,17 +49,15 @@ export function KeywordIndexStatus({
   return (
     <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border-soft pt-3 font-mono text-[11px] text-fg-muted">
       <span className="uppercase tracking-[0.5px] text-fg-muted">Index status</span>
-      <span
-        className={`inline-flex rounded-full px-2 py-[3px] font-semibold ${pillClassName(
-          display.tone,
-        )}`}
-      >
-        {display.label}
-      </span>
+      {display.chips.map((chip) => (
+        <span
+          className="inline-flex rounded-full border border-border bg-bg-sunken px-2 py-[3px] font-semibold text-fg"
+          key={chip.label}
+        >
+          {chip.label}
+        </span>
+      ))}
       <span>{display.detail}</span>
-      {display.canonicalHint ? (
-        <span className="text-(--yellow-text)">{display.canonicalHint}</span>
-      ) : null}
     </div>
   );
 }

@@ -83,6 +83,27 @@ describe("form primitives", () => {
     expect(toggle).toBeChecked();
   });
 
+  it("keeps the small switch thumb inside the 32 by 18 track in both states", () => {
+    render(<Switch label="Small switch" name="smallSwitch" />);
+
+    const toggle = screen.getByRole("switch", { name: "Small switch" });
+    const visual = toggle.parentElement;
+    const thumb = visual?.lastElementChild;
+    const track = { height: 18, width: 32 };
+    const thumbGeometry = { diameter: 12, offX: 3, onX: 17, y: 3 };
+
+    expect(visual).toHaveClass("h-[18px]", "w-8");
+    expect(thumb).toHaveClass("left-[3px]", "top-[3px]", "h-3", "w-3");
+    expect(thumb?.className).toContain("peer-checked:translate-x-[14px]");
+
+    for (const x of [thumbGeometry.offX, thumbGeometry.onX]) {
+      expect(x).toBeGreaterThanOrEqual(0);
+      expect(thumbGeometry.y).toBeGreaterThanOrEqual(0);
+      expect(x + thumbGeometry.diameter).toBeLessThanOrEqual(track.width);
+      expect(thumbGeometry.y + thumbGeometry.diameter).toBeLessThanOrEqual(track.height);
+    }
+  });
+
   it("keeps disabled switches unchanged", () => {
     render(<Switch disabled label="Locked" />);
 
@@ -161,15 +182,20 @@ describe("form primitives", () => {
     expect(screen.getByRole("radio", { name: "Daily" })).toBeChecked();
   });
 
-  it("disables buttons while loading", () => {
+  it("disables and dims buttons without repainting their variant while loading", () => {
     render(
-      <Button loading loadingLabel="Saving">
+      <Button loading loadingLabel="Saving" variant="secondary">
         Save
       </Button>,
     );
 
     const button = screen.getByRole("button", { name: "Saving" });
     expect(button).toBeDisabled();
+    expect(button).toHaveAttribute("aria-busy", "true");
+    expect(button).toHaveStyle({
+      color: "var(--fg-muted)",
+      opacity: "0.65",
+    });
   });
 
   it("uses the theme contrast foreground for primary links at the default 36px height", () => {

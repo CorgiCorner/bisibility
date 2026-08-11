@@ -1,12 +1,12 @@
 import { cn } from "@/lib/ui/cn";
 import { cva } from "class-variance-authority";
 import { CopyButton } from "./CopyButton";
-import { MonoText } from "./MonoText";
+import { MonoText, type MonoTextProps } from "./MonoText";
 
 export type IdChipProps = {
   value: string;
   copyLabel?: string;
-  size?: "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg";
   className?: string;
   copyClassName?: string;
 };
@@ -14,6 +14,7 @@ export type IdChipProps = {
 const idChipVariants = cva("inline-flex items-center", {
   variants: {
     size: {
+      xs: "h-[22px] gap-[5px] rounded-[7px] px-2 py-[3px]",
       sm: "h-7 gap-1 rounded-md px-1.5",
       md: "h-8 gap-1 rounded-[7px] px-2",
       lg: "h-9 gap-1.5 rounded-lg px-2.5",
@@ -23,6 +24,16 @@ const idChipVariants = cva("inline-flex items-center", {
     size: "sm",
   },
 });
+
+type IdChipSize = NonNullable<IdChipProps["size"]>;
+type MonoTextSize = NonNullable<MonoTextProps["size"]>;
+
+const monoTextSizeByIdChipSize = {
+  xs: "lg",
+  sm: "sm",
+  md: "md",
+  lg: "lg",
+} satisfies Record<IdChipSize, MonoTextSize>;
 
 export function IdChip({
   value,
@@ -39,7 +50,7 @@ export function IdChip({
         className,
       )}
     >
-      <MonoText component="span" size={size} sx={{ color: "inherit" }}>
+      <MonoText component="span" size={monoTextSizeByIdChipSize[size]} sx={{ color: "inherit" }}>
         {value}
       </MonoText>
       <CopyButton

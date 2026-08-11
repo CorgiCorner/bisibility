@@ -1,5 +1,5 @@
 # GENERATED - do not edit directly.
-# Source hash: 29d04f3a1be900d110348956d475e21dca6492bbb0384d17cdf89c5697abe759
+# Source hash: c529e9a0dbe1d719c3cafa658058dc8efadbbd5c8a4c23a7a72ee6d212d9d6cb
 name: CI
 
 on:
@@ -11,8 +11,14 @@ on:
 
 # Cancel superseded runs on the same PR. Non-PR runs (pushes to main) get a
 # unique group per run so they neither cancel nor queue behind each other.
+#
+# Draft and ready runs are kept in separate groups on purpose. Every heavy job below
+# is gated on `draft == false`, so a run created while the PR was still a draft skips
+# them and finishes in seconds. Sharing one group let that cheap run cancel the
+# ready-for-review run that followed it, leaving a green fifteen-second result that
+# proved nothing. Observed on pull requests 841 and 843.
 concurrency:
-  group: ci-${{ github.event.pull_request.number || github.run_id }}
+  group: ci-${{ github.event.pull_request.number || github.run_id }}-${{ github.event.pull_request.draft && 'draft' || 'ready' }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:

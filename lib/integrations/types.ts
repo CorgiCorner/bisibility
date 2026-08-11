@@ -2,7 +2,7 @@ import type { ActiveIntegrationKind } from "@/lib/integrations/category-copy";
 import type { ProviderRateFeature, ProviderRateSource } from "@/lib/provider-rates/resolver";
 import type {
   ConnectProviderInput,
-  SetPrimaryProviderInput,
+  ProviderConnectionRefInput,
   TestProviderConnectionInput,
   UpdateProviderCostInput,
   UpdateProviderRateInput,
@@ -59,17 +59,20 @@ export type DrawerDefaults = {
   costPerCheck?: number;
   depth: `Top ${SerpDepth}`;
   device: Capitalize<SerpDevice>;
-  enabled?: boolean;
   endpoint: string;
   language: string;
   location: SerpMarketName;
   login: string;
-  primary: boolean;
-  priority?: number;
   secret: string;
 };
 
-export type IntegrationProviderData = {
+export type ProviderConnectionReadState = {
+  readonly enabled?: boolean;
+  readonly primary?: boolean;
+  readonly priority?: number;
+};
+
+export type IntegrationProviderData = ProviderConnectionReadState & {
   credentialIssue?: "unreadable";
   description: string;
   drawer: {
@@ -81,7 +84,6 @@ export type IntegrationProviderData = {
     googleOAuth?: GoogleOAuthSetup;
     rates?: readonly ProviderRateData[];
   };
-  enabled?: boolean;
   icon: ProviderIconName;
   id: string;
   kind: ActiveIntegrationKind;
@@ -94,8 +96,6 @@ export type IntegrationProviderData = {
     errorClass: string;
     since: string;
   };
-  primary?: boolean;
-  priority?: number;
   secondaryAction?: string;
   status: StatusKind;
   tint: string;
@@ -124,21 +124,14 @@ export type ProviderTrafficSyncResult = {
 
 export type ConnectProviderActionInput = ConnectProviderInput & {
   enabled?: boolean;
-  priority?: number;
 };
 
-export type ProviderConnectionSettingsInput = {
+export type ProviderConnectionSettingsInput = ProviderConnectionRefInput & {
   enabled?: boolean;
-  primary?: boolean;
   priority?: number;
-  projectId: string;
-  providerId: ConnectProviderInput["providerId"];
 };
 
-export type DisconnectProviderInput = {
-  projectId: string;
-  providerId: ConnectProviderInput["providerId"];
-};
+export type DisconnectProviderInput = ProviderConnectionRefInput;
 
 export type ProviderActionHandlers = {
   completeGooglePropertySelection?(input: {
@@ -147,9 +140,7 @@ export type ProviderActionHandlers = {
   }): Promise<{ property: string }>;
   connectProvider(input: ConnectProviderActionInput): Promise<unknown>;
   disconnectProvider?(input: DisconnectProviderInput): Promise<unknown>;
-  setPrimaryProvider(
-    input: ProviderConnectionSettingsInput | SetPrimaryProviderInput,
-  ): Promise<unknown>;
+  updateProviderSettings(input: ProviderConnectionSettingsInput): Promise<unknown>;
   syncProjectTraffic?(input: { projectId: string }): Promise<ProviderTrafficSyncResult>;
   testProviderConnection(input: TestProviderConnectionInput): Promise<ProviderTestResult>;
   updateProviderCost(input: UpdateProviderCostInput): Promise<unknown>;

@@ -35,12 +35,12 @@ export function StepScheduleEstimate({
 
   return (
     <OnboardingCostSummary>
-      <p className="m-0 font-mono text-fg">
+      <p className="m-0 text-fg">
         {keywordChecks == null || basketChecks == null
           ? "This estimate excludes the custom cron schedule until the expression is valid."
           : keywordCost == null || basketCost == null
-            ? `Each keyword at this setup creates ~${keywordChecks.toLocaleString()} checks/mo - ${BASKET_KEYWORDS} keywords create ~${basketChecks.toLocaleString()} checks/mo.`
-            : `Each keyword at this setup ~ ${formatEstimateCents(keywordCost)}/mo - ${BASKET_KEYWORDS} keywords would be ~ ${formatEstimateCents(basketCost)}/mo.`}
+            ? `Each keyword at this setup creates ~${keywordChecks.toLocaleString()} checks/mo - e.g. ${BASKET_KEYWORDS} keywords create ~${basketChecks.toLocaleString()} checks/mo.`
+            : `Each keyword at this setup ~ ${formatEstimateCents(keywordCost)}/mo - e.g. ${BASKET_KEYWORDS} keywords ~ ${formatEstimateCents(basketCost)}/mo.`}
       </p>
     </OnboardingCostSummary>
   );

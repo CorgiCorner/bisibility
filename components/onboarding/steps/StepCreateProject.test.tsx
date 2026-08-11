@@ -98,6 +98,15 @@ describe("StepCreateProject", () => {
       "bg-transparent",
       "p-4",
     );
+    expect(importButton).toHaveAccessibleName(
+      "Migrating from a self-hosted instance? Import it instead",
+    );
+    expect(importButton).toHaveClass("MuiButton-root");
+    // The sentence and the underlined link are separate flex items, and a whitespace-only
+    // anonymous item collapses to zero width - the JSX space between them renders as nothing.
+    // The column gap restores it, in em so it tracks the font size. Asserted as a class because
+    // jsdom does not apply Tailwind, so the computed value is unavailable here.
+    expect(importButton).toHaveClass("gap-x-[0.25em]");
     fireEvent.click(importButton);
 
     await waitFor(() => expect(mocks.createCloudImportWorkspace).toHaveBeenCalledOnce());

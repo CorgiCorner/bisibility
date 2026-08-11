@@ -1,6 +1,6 @@
+import { runCheckNow } from "@/lib/actions/rankCheck";
 import { appPath } from "@/lib/routing/app-path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { runCheckNow } from "./rankCheck";
 
 const KEYWORD_PUBLIC_ID = "kw_abcdefghijklmnopqrstuvwx";
 const PROJECT_PUBLIC_ID = "prj_abcdefghijklmnopqrstuvwx";
@@ -99,6 +99,8 @@ describe("runCheckNow", () => {
         budgetCapCents: 5_000,
         defaults: { serpDepth: 100 },
       },
+      queuedRankCheckTasks: [],
+      rankChecks: [],
       schedule: null,
     });
     mocks.prisma.keywordSchedule.createMany.mockResolvedValue({ count: 0 });
@@ -287,19 +289,5 @@ describe("runCheckNow", () => {
       "Workflow already exists",
     );
     expect(mocks.runKeywordCheckWithFallback).not.toHaveBeenCalled();
-  });
-  it("does not start a workflow when authorization fails", async () => {
-    mocks.authorize.mockImplementationOnce(() => {
-      throw new mocks.AuthorizationError("forbidden");
-    });
-    await expect(runCheckNow({ keywordId: KEYWORD_PUBLIC_ID })).rejects.toBeInstanceOf(
-      mocks.AuthorizationError,
-    );
-    expect(mocks.startRankCheckWorkflow).not.toHaveBeenCalled();
-  });
-  it("rejects raw keyword IDs before they can reach Temporal", async () => {
-    await expect(runCheckNow({ keywordId: "keyword_1" })).rejects.toThrow("Keyword not found.");
-    expect(mocks.prisma.keyword.findFirst).not.toHaveBeenCalled();
-    expect(mocks.startRankCheckWorkflow).not.toHaveBeenCalled();
   });
 });

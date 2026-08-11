@@ -178,7 +178,7 @@ export function StepSchedule({
         Applied to every new keyword. Override per keyword later.
       </div>
 
-      <div className="mt-[22px] grid max-w-[480px] gap-3 sm:grid-cols-[repeat(2,minmax(0,1fr))]">
+      <div className="mt-[22px] grid max-w-[480px] items-start gap-3 sm:grid-cols-[repeat(2,minmax(0,1fr))]">
         <ReadonlyField
           label="Provider"
           name="provider"

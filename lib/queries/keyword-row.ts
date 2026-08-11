@@ -1,11 +1,11 @@
 import { alertPositionThreshold } from "@/lib/alerts/depth-conflict";
 import { comparableCompletedWindow } from "@/lib/checks/status";
+import { deriveRankingUrlPeriods } from "@/lib/keyword-detail/ranking-url-history";
 import { resolveEffectiveSchedule } from "@/lib/keywords/effective-schedule";
 import { earlierDayPosition, positionDateLabel } from "@/lib/keywords/position-history";
-import { resolveSerpDepth } from "@/lib/serp/markets";
-import { type KeywordLocation, locationView } from "./keyword-location";
-import type { Metrics } from "./keyword-metrics";
-import { deviceLabel, pathFromUrl } from "./keyword-row-format";
+import { type KeywordLocation, locationView } from "@/lib/queries/keyword-location";
+import type { Metrics } from "@/lib/queries/keyword-metrics";
+import { deviceLabel, pathFromUrl } from "@/lib/queries/keyword-row-format";
 import type {
   KeywordCheckState,
   KeywordRow,
@@ -13,9 +13,12 @@ import type {
   KeywordTrafficSummary,
   LastCheckStatus,
   UrlPresenceView,
-} from "./keyword-row-types";
+} from "@/lib/queries/keyword-row-types";
+import { ACTIVE_QUEUED_TASK_STATES } from "@/lib/rank-check/queued-state";
+import { resolveSerpDepth } from "@/lib/serp/markets";
 
 export type {
+  CompletedComparableCheck,
   KeywordCheckState,
   KeywordRow,
   KeywordSchedule,
@@ -24,7 +27,7 @@ export type {
   PositionPoint,
   RankingUrlEvent,
   UrlPresenceView,
-} from "./keyword-row-types";
+} from "@/lib/queries/keyword-row-types";
 
 type ScheduleSource = {
   cronExpression: string | null;
@@ -72,6 +75,7 @@ type KeywordRowInput = {
     kind: KeywordLocation["kind"];
   } | null;
   publicId: string;
+  queuedRankCheckTasks?: { state: string }[];
   rankChecks: {
     checkedAt: Date;
     id: string;
@@ -147,11 +151,13 @@ export function latestStatus(check: { status?: string } | null): LastCheckStatus
 
 export function keywordCheckState(
   check: { position: number | null; status?: string } | null,
+  queuedTasks: ReadonlyArray<{ state: string }>,
 ): KeywordCheckState {
+  if (check?.status === "running") return "running";
+  if (check?.status === "failed") return "failed";
+  if (check?.status && check.status !== "completed") return "never_checked";
+  if (queuedTasks.some((task) => ACTIVE_QUEUED_TASK_STATES.includes(task.state))) return "running";
   if (!check) return "never_checked";
-  if (check.status === "running") return "running";
-  if (check.status === "failed") return "failed";
-  if (check.status && check.status !== "completed") return "never_checked";
   return check.position === null ? "not_ranked" : "ranked";
 }
 
@@ -164,6 +170,7 @@ export function mapKeyword(
   const visibleChecks = row.rankChecks.filter((check) => check.status !== "deferred");
   const comparableWindow = comparableCompletedWindow(visibleChecks);
   const completedChecks = comparableWindow.checks;
+  const completedUrlHistory = visibleChecks.filter(isCompletedCheck);
   const checks = completedChecks.slice().reverse();
   const latest = completedChecks[0];
   const latestAttempt = visibleChecks[0] ?? null;
@@ -204,8 +211,14 @@ export function mapKeyword(
     difficulty: metrics.difficulty ?? 0,
     difficultyKnown: metrics.difficulty !== null,
     engine: "Google",
-    checkState: keywordCheckState(latestAttempt),
+    checkState: keywordCheckState(latestAttempt, row.queuedRankCheckTasks ?? []),
+    completedComparableChecks: checks.slice(-2).map((check) => ({
+      checkedAt: check.checkedAt.toISOString(),
+      position: check.position,
+      rankingUrl: check.rankingUrl,
+    })),
     hasRankData: Boolean(latest),
+    hasTag: metrics.difficulty !== null,
     id: row.publicId,
     impressions: traffic?.impressions ?? null,
     keyword: row.text,
@@ -232,14 +245,11 @@ export function mapKeyword(
     rankingPages: new Set(rankingUrls).size,
     rankingPath: rankingUrl ? pathFromUrl(rankingUrl) : null,
     rankingUrl,
-    rankingUrlHistory: checks
-      .filter((check) => check.rankingUrl)
-      .map((check) => ({
-        date: positionDateLabel(check.checkedAt),
-        note: check.id === latest?.id ? "Current ranking URL" : "Observed ranking URL",
-        position: check.position ?? 0,
-        url: check.rankingUrl ?? "",
-      })),
+    rankingUrlHistory: deriveRankingUrlPeriods(completedUrlHistory).map((period) => ({
+      ...period,
+      endAt: period.endAt.toISOString(),
+      startAt: period.startAt.toISOString(),
+    })),
     schedule,
     scheduleSource,
     trackedDepth,

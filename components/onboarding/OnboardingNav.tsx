@@ -43,6 +43,7 @@ export function OnboardingNav({
     backAction = (
       <Button
         onClick={onBack}
+        size="lg"
         startIcon={<ArrowLeft aria-hidden size={15} weight="bold" />}
         sx={{ color: "var(--fg-muted)" }}
         type="button"
@@ -54,7 +55,7 @@ export function OnboardingNav({
   } else if (currentStep > 1) {
     backAction = (
       <Link
-        className="inline-flex items-center gap-[7px] rounded-[9px] border border-border-strong bg-bg-elev px-4 py-2.5 text-[13px] font-semibold text-fg-muted"
+        className="inline-flex min-h-11 items-center gap-[7px] rounded-[10px] border border-border-strong bg-bg-elev px-[18px] py-2.5 text-[14.5px] font-semibold text-fg-muted"
         href={buildOnboardingStepHref(previousStep, flowState)}
       >
         <ArrowLeft aria-hidden size={15} weight="bold" /> Back

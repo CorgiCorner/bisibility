@@ -23,11 +23,22 @@
               "index",
               "quickstart",
               "cli",
-              "self-hosting",
               "architecture",
               "integrations",
               "authentication",
               "audit-log"
+            ]
+          },
+          {
+            "group": "Self-hosting",
+            "pages": [
+              "self-hosting",
+              "self-hosting/docker",
+              "self-hosting/upgrades",
+              "self-hosting/railway",
+              "self-hosting/temporal",
+              "self-hosting/configuration",
+              "self-hosting/operations"
             ]
           },
           {

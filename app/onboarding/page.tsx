@@ -37,6 +37,7 @@ import { updateDefaultRankCheckSettings } from "@/lib/actions/settings";
 import { syncProjectTraffic } from "@/lib/actions/traffic-sync";
 import { requireApiPublicId } from "@/lib/api/public-id";
 import { dataResidencyMessage, isCloud } from "@/lib/deployment/deployment";
+import { googleOAuthErrorCopy } from "@/lib/integrations/google-oauth-copy";
 import { isGoogleOAuthConfigured } from "@/lib/providers/analytics/google-client";
 import { getPendingGoogleOAuthSetup } from "@/lib/providers/analytics/google-oauth-pending";
 import { requireReadableProject } from "@/lib/queries/_auth";
@@ -199,8 +200,10 @@ export default async function OnboardingPage({ searchParams }: Readonly<Onboardi
           ? getPendingGoogleOAuthSetup(projectId)
           : googleStatus === "error" && googleProvider === "gsc"
             ? {
-                error:
+                error: googleOAuthErrorCopy(
+                  paramValue(params?.reason),
                   "Google connection wasn't completed. Try again with the account that owns the property.",
+                ),
                 properties: [],
               }
             : null,

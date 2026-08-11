@@ -17,7 +17,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const sizes = ["sm", "md", "lg"] as const;
+const sizes = ["xs", "sm", "md", "lg"] as const;
 
 export const Project: Story = {
   args: { value: "prj_8fK2Qf9m" },

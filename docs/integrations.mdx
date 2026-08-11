@@ -254,18 +254,10 @@ Search Analytics has no daily per-property cap. Google does not expose an API
 for remaining Search Console quota. Inspect usage in the Google Cloud Console
 quotas tab; an HTTP `429` response is the runtime backstop.
 
-bisibility applies two URL Inspection controls before making a request:
-
-1. The project limit controls how many target URLs that project may inspect per
-   day.
-2. The instance applies a shared `1,600`-inspection daily safety cap to every
-   project connected to the same Google account and property. Self-hosters can
-   change it with `BISIBILITY_GSC_INSPECTION_DAILY_BUDGET`.
-
-The property cap leaves headroom below Google's 2,000-per-day limit for retries
-and other tools. It is globally consistent when the instance uses its required
-Valkey or another Redis-compatible store. The in-process development fallback resets on restart,
-so Google's own `429` remains the final backstop.
+The project limit controls how many target URLs that project may inspect per
+day. It accepts up to 1,000 inspections, leaving room below Google's
+2,000-per-day property quota for other tools and retries. Google's own `429`
+response remains the runtime backstop and applies the existing account cooldown.
 
 For `N` tracked target URLs and a project limit `L` greater than zero, each URL
 is re-inspected about every `ceil(N / L)` days. For example, 120 URLs at a limit
@@ -273,8 +265,8 @@ of 50 rotate through all URLs in three days.
 
 | Condition | What bisibility does | Who acts |
 | - | - | - |
-| Minute rate limit | Stops only the current batch, leaves unchecked URLs untouched, and retries oldest URLs on the next run. It does not drain the daily safety budget. | Nobody; it recovers automatically. |
-| Daily safety budget or Google daily quota | Stops locally and defers the remaining URLs. The local safety budget resets at midnight UTC; Google's own daily quota resets around midnight Pacific. | Nobody. If it recurs, lower project limits or reduce the number of projects using the property. |
+| Minute rate limit | Stops only the current batch, leaves unchecked URLs untouched, and retries oldest URLs on the next run. | Nobody; it recovers automatically. |
+| Google daily quota | Stops the current batch and defers the remaining URLs. Google's daily quota resets around midnight Pacific. | Nobody. If it recurs, lower project limits or reduce the number of projects using the property. |
 | Google authorization is broken | Changes the connection to **Reconnect required** and stops all traffic and presence calls for it. | Reconnect the Google account from **Integrations**. |
 
 Quota exhaustion never requires manual unpausing. Only broken Google

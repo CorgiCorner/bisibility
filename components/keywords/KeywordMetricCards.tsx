@@ -1,222 +1,223 @@
-import { Card, MonoText } from "@/components/ui";
+import { Card } from "@/components/ui";
+import {
+  deriveKeywordDetailChangeDimensions,
+  deriveKeywordDetailWhatChanged,
+  describeKeywordDetailPositionChange,
+  type KeywordDetailChartState,
+  type KeywordDetailKeywordContext,
+  type KeywordDetailWhatChanged,
+} from "@/lib/keyword-detail/state-model";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { hasTrackedPosition, isPositionOutsideTrackedDepth } from "@/lib/serp/rank-depth";
-import Tooltip from "@mui/material/Tooltip";
 import {
   ArrowDownIcon as ArrowDown,
   ArrowUpIcon as ArrowUp,
-  CircleIcon as Circle,
-  WarningIcon as Warning,
+  ArrowUpRightIcon as ArrowUpRight,
+  MinusIcon as Minus,
 } from "@phosphor-icons/react/ssr";
 import type { ReactNode } from "react";
+import { inferredKeywordContext, KeywordContextRow } from "./KeywordContextRow";
 
 type KeywordMetricCardsProps = {
+  chartState?: KeywordDetailChartState;
+  keywordContext?: KeywordDetailKeywordContext;
   keyword: KeywordRow;
+  whatChanged?: KeywordDetailWhatChanged;
 };
 
-const METRIC_CARD_SX = { padding: "14px 16px" } as const;
-
-type MetricCardProps = {
+type SummaryCardProps = {
   children: ReactNode;
-  footer?: ReactNode;
   label: string;
-  labelHint?: ReactNode;
 };
 
-function MetricCard({ children, footer, label, labelHint }: Readonly<MetricCardProps>) {
+const shortDate = new Intl.DateTimeFormat("en-US", { day: "numeric", month: "short" });
+
+function SummaryCard({ children, label }: Readonly<SummaryCardProps>) {
   return (
-    <Card className="flex flex-col" size="sm" sx={METRIC_CARD_SX}>
-      <div className="flex items-center justify-between gap-2">
-        <MonoText className="uppercase tracking-[0.7px]" muted size="sm">
-          {label}
-        </MonoText>
-        {labelHint}
-      </div>
-      <div className="mt-auto flex min-h-7 items-end pt-3">{children}</div>
-      <div className="mt-1.5 flex h-[5px] items-center">{footer}</div>
+    <Card className="min-h-[148px] rounded-[14px]" size="sm" sx={{ padding: "15px 16px" }}>
+      <p className="m-0 font-mono text-[10px] uppercase tracking-[0.65px] text-fg-muted">{label}</p>
+      <div className="mt-2.5">{children}</div>
     </Card>
   );
 }
 
-function formatVolume(volume: number) {
-  if (volume >= 10000) {
-    return `${(volume / 1000).toFixed(0)}k`;
+function compactPath(url: string | null) {
+  if (!url) return "No ranking URL";
+  if (url.startsWith("/")) return url;
+  try {
+    const parsed = new URL(url);
+    return `${parsed.pathname}${parsed.search}` || "/";
+  } catch {
+    return url;
   }
-  if (volume >= 1000) {
-    return `${(volume / 1000).toFixed(1)}k`;
-  }
-  return String(volume);
 }
 
-function positionDelta(keyword: KeywordRow) {
-  if (keyword.positionBaseline === null) {
-    return { color: "var(--accent-text)", icon: null, label: "New", title: "First observation" };
-  }
-  const change = keyword.positionBaseline - keyword.position;
-  if (change > 0) {
-    return {
-      color: "var(--green-text)",
-      icon: ArrowUp,
-      label: String(change),
-      title: `Up ${change}`,
-    };
-  }
-  if (change < 0) {
-    return {
-      color: "var(--red)",
-      icon: ArrowDown,
-      label: String(Math.abs(change)),
-      title: `Down ${Math.abs(change)}`,
-    };
-  }
-  return { color: "var(--fg-muted)", icon: Circle, label: "0", title: "No change" };
+function dateLabel(value: string | null | undefined) {
+  if (!value) return "Not available";
+  return shortDate.format(new Date(value));
 }
 
-function difficultyColor(score: number) {
-  if (score < 35) {
-    return "var(--green)";
-  }
-  if (score < 65) {
-    return "var(--yellow)";
-  }
-  return "var(--red)";
-}
-
-function difficultyLabel(score: number) {
-  if (score < 35) {
-    return "Easy";
-  }
-  if (score < 65) {
-    return "Medium";
-  }
-  return "Hard";
-}
-
-export function KeywordMetricCards({ keyword }: Readonly<KeywordMetricCardsProps>) {
-  const delta = positionDelta(keyword);
-  const DeltaIcon = delta.icon;
-  const hasCpc = keyword.cpcKnown !== false;
-  const hasDifficulty = keyword.difficultyKnown !== false;
-  const hasVolume = keyword.volumeKnown !== false;
-  const notFound = keyword.hasRankData && isPositionOutsideTrackedDepth(keyword.position);
-  const trackedPosition = hasTrackedPosition(keyword);
-  const kdColor = hasDifficulty ? difficultyColor(keyword.difficulty) : "var(--fg-muted)";
-  const kdLabel = hasDifficulty ? difficultyLabel(keyword.difficulty) : null;
+function PositionSummary({
+  chartState,
+  keyword,
+}: Readonly<{ chartState?: KeywordDetailChartState; keyword: KeywordRow }>) {
+  const tracked = hasTrackedPosition(keyword);
+  const notRanked = keyword.hasRankData && isPositionOutsideTrackedDepth(keyword.position);
+  const delta =
+    keyword.positionBaseline === null ? null : keyword.positionBaseline - keyword.position;
+  const DeltaIcon = delta === null || delta === 0 ? Minus : delta > 0 ? ArrowUp : ArrowDown;
+  const deltaColor =
+    delta === null || delta === 0
+      ? "text-fg-muted"
+      : delta > 0
+        ? "text-green-text"
+        : "text-red-text";
 
   return (
-    <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-3">
-      <MetricCard label="Position">
-        <div className="flex items-baseline gap-[7px]">
-          {!keyword.hasRankData ? (
-            <span className="text-[15px] font-semibold text-fg-muted">No data</span>
-          ) : notFound ? (
-            <span className="text-[15px] font-semibold text-fg-muted">
-              {`Not found in top ${keyword.trackedDepth ?? 100}`}
-            </span>
-          ) : (
-            <span className="text-2xl font-bold tracking-[-0.6px]">#{keyword.position}</span>
-          )}
-          {trackedPosition ? (
-            DeltaIcon ? (
-              <Tooltip title={delta.title}>
-                <span
-                  aria-label={delta.title}
-                  className="inline-flex items-center gap-[3px] font-mono text-[11px] font-semibold"
-                  style={{ color: delta.color }}
-                >
-                  <DeltaIcon
-                    size={delta.label === "0" ? 7 : 11}
-                    weight={delta.label === "0" ? "fill" : "bold"}
-                  />
-                  {delta.label}
-                </span>
-              </Tooltip>
-            ) : (
-              <span
-                aria-label={delta.title}
-                className="rounded-full bg-accent-soft px-2 py-0.5 font-mono text-[10px] font-semibold text-accent-text"
-              >
-                {delta.label}
-              </span>
-            )
+    <SummaryCard label="Position">
+      {tracked ? (
+        <div className="flex items-baseline gap-2">
+          <span className="text-[27px] font-bold leading-none tracking-[-0.8px]">
+            #{keyword.position}
+          </span>
+          <span
+            className={`inline-flex items-center gap-1 font-mono text-[11px] font-semibold ${deltaColor}`}
+          >
+            <DeltaIcon size={12} weight="bold" />
+            {delta === null ? "New" : Math.abs(delta)}
+          </span>
+        </div>
+      ) : (
+        <p className="m-0 text-[15px] font-semibold text-fg-muted">
+          {notRanked ? `Not in top ${keyword.trackedDepth ?? 100}` : "No data"}
+        </p>
+      )}
+      {tracked ? (
+        <div className="mt-2.5 grid gap-1 font-mono text-[11px] text-fg-muted">
+          {keyword.positionBaseline !== null ? (
+            <span>Previous #{keyword.positionBaseline}</span>
           ) : null}
+          {chartState !== "one_check" && keyword.bestPosition !== null ? (
+            <span>Best #{keyword.bestPosition} · 30d</span>
+          ) : null}
+          <span className="pt-1">Tracked since {dateLabel(keyword.createdAt)}</span>
         </div>
-      </MetricCard>
-      <MetricCard label="Best">
-        <div className="text-2xl font-bold tracking-[-0.6px]">
-          {keyword.bestPosition === null ? "-" : `#${keyword.bestPosition}`}
-        </div>
-      </MetricCard>
-      <MetricCard label="Volume">
-        <div className="text-2xl font-bold tracking-[-0.6px]">
-          {hasVolume ? (
-            <>
-              {formatVolume(keyword.volume)}
-              <span className="text-xs font-medium text-fg-muted">/mo</span>
-            </>
-          ) : (
-            <span className="text-[15px] font-semibold text-fg-muted">No data</span>
-          )}
-        </div>
-      </MetricCard>
-      <MetricCard label="CPC">
-        <div className="text-2xl font-bold tracking-[-0.6px]">
-          {hasCpc ? (
-            `$${keyword.cpc}`
-          ) : (
-            <span className="text-[15px] font-semibold text-fg-muted">No data</span>
-          )}
-        </div>
-      </MetricCard>
-      <MetricCard
-        footer={
-          hasDifficulty ? (
-            <div className="h-[5px] w-full overflow-hidden rounded-[3px] bg-bg-sunken">
-              <div
-                className="h-full"
-                style={{ backgroundColor: kdColor, width: `${keyword.difficulty}%` }}
-              />
-            </div>
-          ) : null
-        }
-        label="Difficulty"
-        labelHint={
-          kdLabel ? (
-            <span
-              className="font-mono text-[10px] font-semibold uppercase tracking-[0.4px]"
-              style={{ color: kdColor }}
-            >
-              {kdLabel}
-            </span>
-          ) : null
-        }
-      >
-        <div className="flex items-baseline gap-[3px]">
-          {hasDifficulty ? (
-            <>
-              <span className="text-2xl font-bold tracking-[-0.6px]" style={{ color: kdColor }}>
-                {keyword.difficulty}
+      ) : null}
+    </SummaryCard>
+  );
+}
+
+function RankingUrlSummary({ keyword }: Readonly<{ keyword: KeywordRow }>) {
+  const firstSeen = keyword.rankingUrlHistory.at(0)?.startAt;
+  const matchesTarget = Boolean(keyword.rankingUrl && keyword.rankingUrl === keyword.targetUrl);
+
+  return (
+    <SummaryCard label="Ranking URL">
+      {keyword.rankingUrl ? (
+        <a
+          className="flex items-center gap-1.5 font-mono text-[15px] font-semibold text-fg hover:text-accent-text hover:underline"
+          href={keyword.rankingUrl}
+          rel="noreferrer noopener"
+          target="_blank"
+          title="Open ranking URL in a new tab"
+        >
+          <span className="truncate">{compactPath(keyword.rankingUrl)}</span>
+          <ArrowUpRight aria-hidden size={13} weight="bold" />
+        </a>
+      ) : (
+        <span className="font-mono text-[15px] font-semibold text-fg-muted">No ranking URL</span>
+      )}
+      <div className="mt-2.5 grid gap-1 font-mono text-[11px] text-fg-muted">
+        {keyword.rankingUrl ? (
+          <>
+            <span>{matchesTarget ? "Matches target" : "Ranking page differs from target"}</span>
+            <span>First seen {dateLabel(firstSeen)}</span>
+            <span className="pt-1">1 URL ranking</span>
+          </>
+        ) : (
+          <span className="pt-1">No URL ranking yet</span>
+        )}
+      </div>
+    </SummaryCard>
+  );
+}
+
+function WhatChangedSummary({
+  keyword,
+  state,
+}: Readonly<{ keyword: KeywordRow; state: KeywordDetailWhatChanged }>) {
+  const dimensions = deriveKeywordDetailChangeDimensions(keyword);
+  const positionChange = describeKeywordDetailPositionChange(dimensions);
+  const comparison =
+    keyword.completedComparableChecks?.at(-2)?.checkedAt ??
+    keyword.positionHistory.at(-2)?.checkedAt ??
+    keyword.lastCheckAt;
+
+  return (
+    <SummaryCard label="What changed">
+      {state === "no_change" ? (
+        <span className="flex items-center gap-2 text-[12px] text-fg">
+          <Minus className="text-fg-muted" size={13} weight="bold" />
+          No changes since the previous check
+        </span>
+      ) : null}
+      {state === "diff" ? (
+        <>
+          <div className="grid gap-2 text-[12px] text-fg">
+            {positionChange ? (
+              <span className="flex items-center gap-2">
+                {positionChange.direction === "improved" ||
+                positionChange.direction === "entered" ? (
+                  <ArrowUp className="text-green-text" size={13} weight="bold" />
+                ) : (
+                  <ArrowDown className="text-red-text" size={13} weight="bold" />
+                )}
+                {positionChange.text}
               </span>
-              <span className="font-mono text-xs text-fg-muted">/100</span>
-            </>
-          ) : (
-            <span className="text-[15px] font-semibold text-fg-muted">No data</span>
-          )}
-        </div>
-      </MetricCard>
-      <MetricCard
-        footer={
-          keyword.rankingPages > 1 ? (
-            <div className="inline-flex items-center gap-1 font-mono text-[9.5px] font-semibold text-yellow-text">
-              <Warning size={12} weight="fill" />
-              Cannibalization
-            </div>
-          ) : null
-        }
-        label="Ranking pages"
-      >
-        <div className="text-2xl font-bold tracking-[-0.6px]">{keyword.rankingPages}</div>
-      </MetricCard>
+            ) : (
+              <span className="flex items-center gap-2">
+                <Minus className="text-fg-muted" size={13} weight="bold" />
+                No position change
+              </span>
+            )}
+            <span className="flex items-center gap-2">
+              {dimensions.rankingUrlChanged ? (
+                <ArrowUpRight className="text-yellow-text" size={13} weight="bold" />
+              ) : (
+                <Minus className="text-fg-muted" size={13} weight="bold" />
+              )}
+              {dimensions.rankingUrlChanged ? "Ranking URL changed" : "Ranking URL unchanged"}
+            </span>
+          </div>
+          <p className="m-0 mt-7 font-mono text-[10.5px] text-fg-muted">
+            Compared with the check from {dateLabel(comparison)}
+          </p>
+        </>
+      ) : null}
+    </SummaryCard>
+  );
+}
+
+export function KeywordMetricCards({
+  chartState,
+  keyword,
+  keywordContext,
+  whatChanged,
+}: Readonly<KeywordMetricCardsProps>) {
+  return (
+    <div className="grid gap-4">
+      <div className="grid gap-3 lg:grid-cols-3">
+        <PositionSummary chartState={chartState} keyword={keyword} />
+        <RankingUrlSummary keyword={keyword} />
+        <WhatChangedSummary
+          keyword={keyword}
+          state={whatChanged ?? deriveKeywordDetailWhatChanged(keyword)}
+        />
+      </div>
+      <KeywordContextRow
+        keyword={keyword}
+        state={keywordContext ?? inferredKeywordContext(keyword)}
+      />
     </div>
   );
 }

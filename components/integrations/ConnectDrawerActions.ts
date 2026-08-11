@@ -2,10 +2,10 @@ import {
   completeGooglePropertySelection as completeGooglePropertySelectionAction,
   connectProvider as connectProviderAction,
   disconnectProvider as disconnectProviderAction,
-  setPrimaryProvider as setPrimaryProviderAction,
   testConnection as testConnectionAction,
   updateProviderCost as updateProviderCostAction,
   updateProviderRate as updateProviderRateAction,
+  updateProviderSettings as updateProviderSettingsAction,
 } from "@/lib/actions/providers";
 import { syncProjectTraffic as syncProjectTrafficAction } from "@/lib/actions/traffic-sync";
 import type { ProviderActionHandlers } from "@/lib/integrations/types";
@@ -14,7 +14,7 @@ export const demoActions: ProviderActionHandlers = {
   completeGooglePropertySelection: async (input) => ({ property: input.property }),
   connectProvider: async () => undefined,
   disconnectProvider: async () => undefined,
-  setPrimaryProvider: async () => undefined,
+  updateProviderSettings: async () => undefined,
   syncProjectTraffic: async () => ({
     connections: 1,
     keywordSnapshots: 12,
@@ -37,7 +37,7 @@ export const serverActions = {
   completeGooglePropertySelection: completeGooglePropertySelectionAction,
   connectProvider: connectProviderAction,
   disconnectProvider: disconnectProviderAction,
-  setPrimaryProvider: setPrimaryProviderAction,
+  updateProviderSettings: updateProviderSettingsAction,
   syncProjectTraffic: syncProjectTrafficAction,
   testProviderConnection: testConnectionAction,
   updateProviderCost: updateProviderCostAction,

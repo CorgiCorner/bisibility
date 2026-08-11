@@ -5,7 +5,11 @@ export async function register() {
     const { assertCanonicalHostedMcpOrigin } = await import(
       "./lib/deployment/canonical-mcp-origin"
     );
+    const { warnDeprecatedInspectionDailyBudget } = await import(
+      "./lib/deployment/deprecated-inspection-budget"
+    );
     assertCanonicalHostedMcpOrigin();
+    warnDeprecatedInspectionDailyBudget();
     await import("./sentry.server.config");
     const { enforceMigrationsAtStartup } = await import("./lib/data-migrations/startup");
     await enforceMigrationsAtStartup();

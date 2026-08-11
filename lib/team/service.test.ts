@@ -1,5 +1,5 @@
+import { changeTeamMemberRole, removeTeamMember, revokeTeamInvite } from "@/lib/team/service";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { removeTeamMember, revokeTeamInvite } from "./service";
 
 const invitePublicId = "inv_aaaaaaaaaaaaaaaaaaaaaaaa";
 
@@ -24,7 +24,7 @@ vi.mock("@/lib/actions/team-rbac", () => ({
 }));
 vi.mock("@/lib/auth/audit", () => ({ writeAudit: mocks.writeAudit }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
-vi.mock("./invite-rate-limit", () => ({
+vi.mock("@/lib/team/invite-rate-limit", () => ({
   assertInviteCreateAllowed: vi.fn(),
   assertInviteResendAllowed: vi.fn(),
 }));
@@ -71,6 +71,40 @@ describe("team service public identifiers", () => {
     expect(mocks.prisma.invite.delete).toHaveBeenCalledWith({ where: { id: "invite_db_1" } });
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({ targetId: invitePublicId }),
+    );
+  });
+
+  it("replaces an auditor grant with the selected role and audits the loss", async () => {
+    const memberPublicId = "mbr_aaaaaaaaaaaaaaaaaaaaaaaa";
+    mocks.prisma.membership.findFirst.mockResolvedValue({
+      id: "membership_db_1",
+      publicId: memberPublicId,
+      role: "auditor",
+      userId: "auditor_1",
+    });
+    mocks.prisma.membership.update.mockResolvedValue({
+      id: "membership_db_1",
+      publicId: memberPublicId,
+      role: "member",
+      userId: "auditor_1",
+    });
+
+    await expect(
+      changeTeamMemberRole(
+        { memberId: memberPublicId, projectId: "prj_1", role: "member" },
+        context,
+      ),
+    ).resolves.toEqual({ id: memberPublicId, role: "member" });
+
+    expect(mocks.prisma.membership.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { role: "member" } }),
+    );
+    expect(mocks.writeAudit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: "team.member.role_change",
+        after: { role: "member" },
+        before: { role: "auditor" },
+      }),
     );
   });
 });

@@ -5,12 +5,7 @@ import { type GscUrlInspectionSession, gscAnalyticsProvider } from "@/lib/provid
 import { ProviderAuthError } from "@/lib/providers/auth-error";
 import { markProviderNeedsReauth } from "@/lib/providers/auth-state";
 import { decryptProviderCredentials } from "@/lib/providers/crypto";
-import {
-  consumeInspectionDailyBudget,
-  drainInspectionDailyBudget,
-  ProviderRateLimitedError,
-  providerAccountKey,
-} from "@/lib/providers/rate-limit";
+import { ProviderRateLimitedError, providerAccountKey } from "@/lib/providers/rate-limit";
 import type { ProviderCredentials } from "@/lib/providers/types";
 import { providerChainOrderBy, providerChainWhere } from "@/lib/rank-check/provider-chain-order";
 import { DEFAULT_INSPECTION_DAILY_LIMIT } from "./constants";
@@ -131,15 +126,6 @@ export async function syncPresenceForProject(
   let inspectionSession: GscUrlInspectionSession | null = null;
 
   for (const url of selected) {
-    const budget = await consumeInspectionDailyBudget(connection.credentials, {
-      now,
-      projectId: project.id,
-    });
-    if (!budget.success) {
-      deferred = selected.length - checked - failed;
-      deferredReason = "daily_budget";
-      break;
-    }
     try {
       inspectionSession ??= await provider.createUrlInspectionSession(connection.credentials);
       const inspection = await inspectionSession.inspectUrl({
@@ -170,12 +156,10 @@ export async function syncPresenceForProject(
       }
       if (error instanceof ProviderRateLimitedError) {
         deferred = selected.length - checked - failed;
-        if (error.source === "provider" && error.scope !== "minute") {
-          await drainInspectionDailyBudget(connection.credentials, { now, projectId: project.id });
-          deferredReason = "daily_budget";
-        } else {
-          deferredReason = "minute_rate_limit";
-        }
+        deferredReason =
+          error.source === "provider" && error.scope !== "minute"
+            ? "daily_budget"
+            : "minute_rate_limit";
         break;
       }
       failed += 1;

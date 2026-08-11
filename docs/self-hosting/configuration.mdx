@@ -1,0 +1,157 @@
+---
+title: "Self-hosting configuration"
+description: "Configure required and optional environment variables and instance-wide settings."
+---
+
+[Production checklist](/self-hosting#production-checklist)
+
+## Required environment variables
+
+| Variable | Required | Description |
+| - | :-: | - |
+| `DATABASE_URL` | Yes | Runtime PostgreSQL connection used by the app. |
+| `DIRECT_URL` | Yes | Direct PostgreSQL connection used by Prisma migrations. |
+| `REDIS_URL` | Yes | Valkey or another Redis-compatible connection URL for rate limiting, idempotency, and realtime notifications. |
+| `SITE_URL` | Yes | Primary public app URL used for metadata, generated images, OAuth redirects, and auth callbacks. |
+| `BETTER_AUTH_URL` | Yes | Public app URL used by authentication callbacks and cookies. |
+| `BETTER_AUTH_SECRET` | Yes | Secret used to sign auth state. |
+| `BISIBILITY_SECRETS_KEY` | Yes | Base64-encoded 32-byte key for encrypting provider credentials. |
+| `DEPLOYMENT_MODE` | No | Use `self-host` for self-hosted deployments. |
+| `LEGAL_TERMS_URL` | No | Your terms URL, linked from the sign-in consent line. |
+| `LEGAL_PRIVACY_URL` | No | Your privacy policy URL, linked from the sign-in consent line. |
+
+Both legal variables are optional and empty by default. Your instance runs under
+your own terms and privacy policy, so the sign-in screen shows no consent line
+while both are unset. Setting either one alone is enough to show the line, which
+then links only to the document you provided.
+
+Generate `BETTER_AUTH_SECRET`, `BISIBILITY_SECRETS_KEY`, and the optional
+`INTERNAL_PROBE_TOKEN` with separate invocations of:
+
+```bash
+openssl rand -base64 32
+```
+
+<Warning>
+Keep both values for the lifetime of the instance and back them up with your
+other secrets. Replacing `BETTER_AUTH_SECRET` signs every user out. Replacing
+`BISIBILITY_SECRETS_KEY` leaves the provider credentials already stored in the
+database undecryptable, and every connected provider has to be reconnected by
+hand.
+</Warning>
+
+
+## Optional environment variables
+
+### Core and authentication
+
+| Variable | Purpose |
+| - | - |
+| `DEMO_FIXED_OTP` | Set to `1` to enable the throwaway [demo login](/quickstart#demo-login) on local installs. |
+| `DEMO_INSTANCE_INSECURE_AUTH_ACK` | Required acknowledgement when `DEMO_FIXED_OTP=1` runs in the production Docker image. Never set it for real users or data. |
+| `INTERNAL_PROBE_TOKEN` | Optional Bearer token for detailed `/api/v1/health` diagnostics before database-backed credentials exist. Generate at least 32 random bytes and share it only with deployment health checks. |
+| `SELF_HOSTED_ALLOW_INDEXING` | Self-hosted instances serve restrictive `robots.txt` and no `sitemap.xml` or `llms.txt` by default. Set to `true` to serve `Allow: /` and omit `X-Robots-Tag: noindex`; `false` keeps the restrictive policy. Values are case-insensitive, and missing or malformed values fail closed to the restrictive policy. |
+
+### Email
+
+| Variable | Purpose |
+| - | - |
+| `EMAIL_PROVIDER` | Transactional email provider: `resend`, `ses`, or `smtp`. Required for any email delivery. Setup guide: [Email delivery](/guides/email). |
+| `EMAIL_FROM` | Verified sender for account sign-in and notification email. |
+| `EMAIL_ALERTS_FROM` | Optional dedicated sender for ranking alerts. Falls back to `EMAIL_FROM`. |
+| `EMAIL_DAILY_BUDGET_TRANSACTIONAL` | Per-recipient UTC-day budget for sign-in codes, team invites, and waitlist notifications. Defaults to `1000`. |
+| `EMAIL_DAILY_BUDGET_BULK` | Independent per-recipient UTC-day budget for alert email and weekly reports. Defaults to `1000`. |
+| `RESEND_API_KEY` | Resend API key; required when `EMAIL_PROVIDER=resend`. |
+| `SES_REGION`, `SES_CONFIGURATION_SET` | Amazon SES region (falls back to `AWS_REGION`) and optional SESv2 configuration set; used when `EMAIL_PROVIDER=ses`. Credentials come from the standard AWS SDK chain. |
+| `SMTP_URL` | SMTP connection URL (`smtp://user:pass@host:port` or `smtps://...`); required when `EMAIL_PROVIDER=smtp`. |
+
+### Temporal
+
+| Variable | Purpose |
+| - | - |
+| `SCHEDULER_DRIVER` | Execution backend: `none` for the core topology or `temporal` when the worker overlay is present. `external-cron` is reserved but not supported. New Compose files set this value; an absent value preserves legacy installs. This is independent from `RANK_CHECK_SCHEDULER_MODE`. |
+| `BISIBILITY_DEPLOYMENT_SUFFIX` | One generated suffix used to derive a dedicated namespace and both task queues for a new deployment. Existing installs without it retain their old defaults. |
+| `TEMPORAL_POSTGRES_PASSWORD` | Separate generated password used only by the bundled Temporal PostgreSQL service. The environment generator creates it automatically. Existing installations without it temporarily fall back to `POSTGRES_PASSWORD`. |
+| `TEMPORAL_ADDRESS`, `TEMPORAL_NAMESPACE`, `TEMPORAL_TASK_QUEUE`, `TEMPORAL_ALERT_DELIVERY_TASK_QUEUE` | Temporal connection and deployment-isolation settings shared by the web app and worker. External deployments must use a dedicated namespace or explicitly unique queue names. |
+| `TEMPORAL_API_KEY` | Temporal Cloud API key. When set, TLS is enabled automatically. |
+| `WORKER_SCHEMA_GUARD` | Worker/database migration guard: `enforce` (default) blocks a worker whose bundled schema is older than the database, `warn` reports drift without blocking, and `off` skips the check. |
+| `TEMPORAL_TLS` | `auto` preserves compatibility: an API key enables TLS and an address alone does not. Set `true` or `false` to override it explicitly. Legacy boolean spellings remain accepted. |
+| `TEMPORAL_NAMESPACE_RETENTION` | Retention managed by the bundled namespace job, default `24h`. External Temporal namespaces are validated but never created or mutated by the app or worker. |
+
+### Rank checks and maintenance
+
+| Variable | Purpose |
+| - | - |
+| `RANK_CHECK_SCHEDULER_MODE` | Exclusive automatic scheduler owner: `legacy` (default) runs the reconciler and per-keyword Schedules, `cutover` pauses both owners while allowing state healing, and `dispatcher` runs only the due-work dispatcher. Empty means `legacy`; any other non-empty value fails closed. Set the same value on the app and worker. |
+| `RANK_CHECK_RECONCILER_ENABLED`, `RANK_CHECK_DISPATCHER_ENABLED` | Deprecated D1 compatibility fallback used only when `RANK_CHECK_SCHEDULER_MODE` is absent. Both active is rejected. Both false selects `cutover`; dispatcher true plus reconciler false selects `dispatcher`; other default/false combinations select `legacy`. |
+| `RANK_CHECK_RECONCILER_INTERVAL`, `RANK_CHECK_DISPATCHER_INTERVAL`, `STALE_CHECKS_INTERVAL` | Worker-owned legacy reconciliation, dispatcher polling, and stale-check tuning. |
+| `RANK_CHECK_DISPATCHER_MAX_KEYWORDS_PER_PROJECT_PER_PASS` | Maximum due keywords one project may claim in one dispatcher pass. Defaults to `25`; valid values are integers from `1` through `100`. Invalid values fail the claim before database work. |
+| `DATAFORSEO_QUEUED_RANK_CHECKS_ENABLED` | Independent DataForSEO Standard queue route. It is OFF by default and can submit only in `dispatcher` mode. In `cutover`, already-submitted work may finish result retrieval, but no new paid submission is allowed. Manual checks remain available in every mode. |
+| `DATAFORSEO_QUEUE_PRIORITY` | `high` (default for an enabled queued path) or `normal`. High uses provider priority `2`. Invalid values fail the queued gate closed. |
+| `DATAFORSEO_QUEUE_POLL_INTERVAL_SECONDS`, `DATAFORSEO_QUEUE_MAX_AGE_SECONDS` | Optional bounded queue polling and timeout overrides. High defaults to 15-second polling and a 15-minute maximum age. Normal defaults to 60-second polling and a 60-minute maximum age. Invalid or out-of-range values fail the queued gate closed. |
+| `SCHEDULED_MAINTENANCE_ENABLED` | Explicit worker switch for audit/session purges, rank-check raw payload and queued-ledger retention, stale checks/import jobs, migration-hold release, and the weekly digest. Set it to `1` to enable these schedules or `0` to disable them. This switch does not control alert delivery. |
+| `RANK_CHECK_RAW_RETENTION_DAYS` | Retain `rank_checks.raw` for 1-3650 days, or set `unlimited`. The self-host default is `unlimited`; the hosted service defaults to 90 days. This never changes `organicRanks` or deletes rank history rows. |
+| `RANK_CHECK_RAW_PROGRESS_FENCE_RETENTION_DAYS` | Keep completed raw-purge retry fences for 2-3650 days. Defaults to 7 days. Set it longer than the Temporal namespace's closed-workflow retention so a reset or late retry cannot reopen completed work. |
+| `ALERT_DIGEST_FLUSH_ENABLED`, `ALERT_DIGEST_FLUSH_INTERVAL` | Alert digest delivery switch and interval. Digest flushing is enabled by default and is independent of scheduled maintenance. |
+| `AUDIT_PURGE_CRON`, `RANK_CHECK_RAW_PURGE_CRON`, `QUEUED_RANK_CHECK_RETENTION_CRON`, `SESSION_PURGE_CRON`, `WEEKLY_DIGEST_CRON` | Optional cron overrides for maintenance schedules controlled by `SCHEDULED_MAINTENANCE_ENABLED`. |
+| `SITEMAP_SYNC_ENABLED`, `SITEMAP_SYNC_CRON` | Opt in to worker-owned sitemap sync and optionally override its cron expression. See [Sitemap monitoring](/guides/sitemap-monitoring). |
+| `PRESENCE_SYNC_ENABLED`, `PRESENCE_SYNC_CRON` | Opt in to worker-owned presence sync and optionally override its cron expression. |
+
+### Limits and networking
+
+| Variable | Purpose |
+| - | - |
+| `BISIBILITY_API_KEY_RATE_LIMIT_PER_MINUTE` | Per-key API limit. Defaults to `600`. |
+| `BISIBILITY_PAT_RATE_LIMIT_PER_MINUTE` | Per-personal-token API limit. Defaults to `120`. |
+| `BISIBILITY_API_ANON_RATE_LIMIT_PER_MINUTE` | Anonymous discovery limit. Defaults to `60`. |
+| `BISIBILITY_MAX_KEYWORDS_PER_PROJECT` | Optional per-project keyword cap. Unset or `0` means unlimited for self-hosted deployments. The hosted beta uses `1000`. |
+| `BISIBILITY_MAX_PROJECTS_PER_USER` | Optional cap on projects one user may own through the app or API. Unset or `0` means unlimited for self-hosted deployments. The hosted beta uses `3`. |
+| `BISIBILITY_CLIENT_IP_HEADER` | Header your proxy sets with the real client address. Unset means no header is trusted and the anonymous API limit uses one shared bucket. See [Client IP behind a proxy](/self-hosting/operations#client-ip-behind-a-proxy). |
+| `BISIBILITY_CLIENT_IP_XFF_DEPTH` | Only for `x-forwarded-for`: how many trailing entries your own proxies append. Defaults to `1`. |
+| `BISIBILITY_PROVIDER_RATE_LIMIT_*` | Per-provider outbound rate limit overrides. See `.env.example` for provider-specific names. |
+| `WEBHOOK_ALLOW_PRIVATE_NETWORK` | Security-sensitive webhook SSRF override. Set to `1` only when a self-hosted instance must deliver webhooks to trusted private, LAN, or loopback services. |
+| `REDIS_TLS_CA_B64` | Base64-encoded PEM CA for TLS Redis endpoints using a private CA. |
+
+### Observability and integrations
+
+| Variable | Purpose |
+| - | - |
+| `NEXT_PUBLIC_DOMAIN_ICONS` | Optional domain-icon opt-out. Domain favicons are on by default; set this to `off` to suppress third-party domain icon requests for project and competitor tiles. |
+| `NEXT_PUBLIC_LOGODEV_TOKEN` | Optional logo.dev token for provider and marketing brand logos only. Project and competitor tiles do not use it. |
+| `SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `NEXT_PUBLIC_SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`, `NEXT_PUBLIC_SENTRY_RELEASE`, `SENTRY_TRACES_SAMPLE_RATE`, `NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE`, `SENTRY_AUTH_TOKEN`, `SENTRY_ORG` | Optional Sentry error monitoring. The auth token and org are build-time only and enable source map uploads to the configured project slug (`bisibility` by default; change `next.config.ts` if you use a different slug). |
+| `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | GitHub social sign-in. |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google social sign-in and Google Search Console / GA4 connections. |
+| `SLACK_CLIENT_ID`, `SLACK_CLIENT_SECRET` | Slack alert channel installation (planned feature - not yet exposed in the app UI). |
+| SERP provider fallback credentials | Optional environment fallbacks for provider credentials normally connected in the app. Variable names are listed per provider in [Integrations](/integrations). |
+| `AUDIT_RETENTION_DAYS`, `AUDIT_IP_HMAC_SECRET`, `APP_VERSION` | Audit retention, optional source-IP HMAC hashing, and an audit version label. |
+| `DATA_REGION` | Optional data-residency label shown in auth and onboarding surfaces. |
+
+## Instance settings
+
+The `instance_settings` database table holds small instance-wide limits that the
+app and worker share. Missing or invalid values use these code defaults:
+
+| Key | Default | Purpose |
+| - | -: | - |
+| `google_signup_cap` | `100` | Maximum number of accounts created through Google sign-in. |
+| `email_daily_send_cap` | `100` | UTC-day email send limit used by sign-in capacity. |
+| `email_monthly_send_cap` | `3000` | UTC-month email send limit used by sign-in capacity. |
+
+Set a value from an operator environment with `DATABASE_URL` configured:
+
+```bash
+node --experimental-transform-types scripts/admin/set-instance-setting.ts \
+  --key email_daily_send_cap \
+  --value 250
+```
+
+The command validates the key and value and prints the previous and current
+values for the operator record. App reads refresh within about 60 seconds.
+
+> **Upgrade note:** The former `RANK_CHECK_MONTHLY_COST_CAP_CENTS` variable has
+> been removed. The monthly provider budget is now a per-project setting, and
+> the old variable is ignored after upgrade. Re-set your budget in
+> **Settings > Provider usage** after upgrading. See
+> [Budget cap](/integrations#budget-cap).
+>
+> **Upgrade note:** After upgrading, move any `BISIBILITY_GSC_INSPECTION_DAILY_BUDGET` value to each project's **Settings > URL inspection** panel, up to its 1,000 limit.
