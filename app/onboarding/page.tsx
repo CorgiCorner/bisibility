@@ -53,7 +53,10 @@ import { listWorkspaces } from "@/lib/queries/workspaces";
 import { DEFAULT_MONTHLY_COST_CAP_CENTS } from "@/lib/rank-check/budget";
 import { listEligibleRankedKeywordConnections } from "@/lib/ranked-keywords/service";
 import { redirect } from "next/navigation";
-import { createOnboardingProject, saveMatchingScope } from "./actions";
+import { createOnboardingProject } from "./actions";
+
+// Restore ownership matching with issue #863:
+// import { saveMatchingScope } from "./actions";
 
 type OnboardingPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -252,7 +255,7 @@ export default async function OnboardingPage({ searchParams }: Readonly<Onboardi
     listFirstCheckCandidatesAction: listFirstCheckCandidates,
     queueFirstChecksAction: queueFirstChecks,
     runFirstCheckPreviewAction: runFirstCheckPreview,
-    saveMatchingScopeAction: saveMatchingScope,
+    // saveMatchingScopeAction: saveMatchingScope, // Restore with issue #863.
     syncProjectTrafficAction: syncProjectTraffic,
     testProviderConnectionAction: testConnection,
     updateProjectDefaultsAction: updateDefaultRankCheckSettings,

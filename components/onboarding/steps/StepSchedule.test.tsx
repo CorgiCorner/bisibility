@@ -51,7 +51,6 @@ describe("StepSchedule", () => {
             country_code: "PL",
             display_name: "Poland",
             hl: "pl",
-            id: "country:PL",
             kind: "country",
             language_label: "Polish",
             region_name: null,

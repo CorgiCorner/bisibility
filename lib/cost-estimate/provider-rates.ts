@@ -9,7 +9,7 @@ export const PROVIDER_RATES: ProviderRate[] = [
     label: "DataForSEO",
     pricingModel: "flat",
     sourceUrl: "https://dataforseo.com/apis/serp-api/pricing",
-    checkedAt: "2026-07-15",
+    checkedAt: "2026-08-10",
     notes:
       "Pay-as-you-go; the first SERP page (top 10) is billed at the base rate and each additional page at 75% of it. The app records the provider-reported actual cost per check. $50 minimum account top-up.",
     options: [
@@ -44,7 +44,7 @@ export const PROVIDER_RATES: ProviderRate[] = [
     label: "SerpApi",
     pricingModel: "plan",
     sourceUrl: "https://serpapi.com/pricing",
-    checkedAt: "2026-07-15",
+    checkedAt: "2026-08-10",
     notes:
       "Subscription plans; only successful searches count; unused searches do not roll over. Enterprise tier not modeled.",
     plans: [
@@ -248,4 +248,4 @@ export function estimatedFeatureCostCents(
   return amountCents * (clickstream ? 2 : 1);
 }
 
-export const SERP_RATES_CHECKED_AT = "2026-07-15";
+export const SERP_RATES_CHECKED_AT = "2026-08-10";

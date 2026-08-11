@@ -8,7 +8,8 @@ import type { OnboardingConnectProviderInput } from "@/components/onboarding/ste
 import type { CreateProjectFormValues } from "@/components/onboarding/steps/StepCreateProject";
 import type { OnboardingTrackingDefaultsInput } from "@/components/onboarding/steps/StepSchedule";
 import { DEFAULT_SERP_DEVICE, DEFAULT_SERP_MARKET } from "@/lib/serp/markets";
-import { defaultMatchingScopeValues } from "./MatchingScopeFields";
+// Restore ownership matching with issue #863:
+// import { defaultMatchingScopeValues } from "./MatchingScopeFields";
 import { countryNameForLocationValue, locationValuesForKeys } from "./onboarding-location-field";
 import { DEFAULT_ONBOARDING_LOCATION_KEY } from "./onboarding-locations";
 
@@ -65,7 +66,7 @@ export function initialOnboardingDraft(
       secret: "",
     },
     createProject: {
-      ...defaultMatchingScopeValues,
+      // ...defaultMatchingScopeValues, // Restore ownership matching with issue #863.
       domain: project?.domain ?? "",
       name: project?.name ?? "",
     },

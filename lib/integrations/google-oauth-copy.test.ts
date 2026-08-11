@@ -40,6 +40,16 @@ describe("googleOAuthErrorCopy", () => {
     expect(copy).not.toBe(FALLBACK);
   });
 
+  it("keeps the remove-access remedy for a credentials_decrypt failure", () => {
+    const copy = googleOAuthErrorCopy("credentials_decrypt", FALLBACK);
+
+    expect(copy).not.toBe(FALLBACK);
+    expect(copy.length).toBeGreaterThan(0);
+    expect(copy).not.toContain("API_KEY");
+    expect(copy).not.toContain("token");
+    expect(copy).not.toContain("decrypt");
+  });
+
   it.each([undefined, null, "", "not_a_reason", "../etc/passwd"])(
     "falls back to the caller's generic copy for %s",
     (reason) => {

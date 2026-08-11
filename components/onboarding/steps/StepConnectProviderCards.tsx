@@ -13,7 +13,6 @@ type StepConnectProviderCardsProps = {
   onSelect: (providerId: OnboardingSerpProviderId) => void;
   primaryProviderId?: OnboardingSerpProviderId;
   selectedProviderId: OnboardingSerpProviderId;
-  testingProviderId: OnboardingSerpProviderId | null;
   testResults: Partial<Record<OnboardingSerpProviderId, ProviderTestResult | null>>;
 };
 
@@ -37,7 +36,6 @@ export function StepConnectProviderCards({
   onSelect,
   primaryProviderId,
   selectedProviderId,
-  testingProviderId,
   testResults,
 }: Readonly<StepConnectProviderCardsProps>) {
   return (
@@ -61,7 +59,6 @@ export function StepConnectProviderCards({
               providerId: provider.value,
               testResults,
             })}
-            testing={testingProviderId === provider.value}
           />
         ))}
       </div>

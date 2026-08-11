@@ -251,10 +251,20 @@ export async function completeGoogleOAuthInstall(input: {
       failureContext,
     );
   }
-  const refreshToken =
-    exchanged.refreshToken ??
-    decryptProviderCredentials(before?.credentialsEncrypted).apiKey ??
-    null;
+  // A refresh token already stored for this project/provider is the fallback when Google does
+  // not send a new one; a decryption failure of that stored blob is its own classified reason.
+  let refreshToken = exchanged.refreshToken;
+  if (refreshToken == null) {
+    try {
+      refreshToken = decryptProviderCredentials(before?.credentialsEncrypted).apiKey ?? null;
+    } catch (error) {
+      throw new GoogleOAuthInstallError(
+        "credentials_decrypt",
+        error instanceof Error ? error.message : "Stored Google credentials could not be read.",
+        failureContext,
+      );
+    }
+  }
   if (!refreshToken) {
     throw new GoogleOAuthInstallError(
       "no_refresh_token",

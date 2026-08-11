@@ -161,6 +161,17 @@ export function decryptSecret(encrypted: string) {
   return decrypted.toString("utf8");
 }
 
+/**
+ * Thrown when stored provider credentials cannot be decrypted. The public message is fixed and
+ * safe; the original decryption error is kept as `cause` for classification, never for display.
+ */
+export class ProviderCredentialsDecryptError extends Error {
+  constructor(cause: unknown) {
+    super("Provider credentials could not be decrypted.", { cause });
+    this.name = "ProviderCredentialsDecryptError";
+  }
+}
+
 export function decryptProviderCredentials(encrypted: string | null | undefined) {
   if (!encrypted) {
     return {};
@@ -174,8 +185,8 @@ export function decryptProviderCredentials(encrypted: string | null | undefined)
       ...(typeof parsed.login === "string" ? { login: parsed.login } : {}),
       ...(typeof parsed.password === "string" ? { password: parsed.password } : {}),
     };
-  } catch {
-    throw new Error("Provider credentials could not be decrypted.");
+  } catch (error) {
+    throw new ProviderCredentialsDecryptError(error);
   }
 }
 

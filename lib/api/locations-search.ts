@@ -13,6 +13,7 @@ const MIN_PROVIDER_QUERY_LENGTH = 3;
 const MIN_CACHE_CITY_HITS = 3;
 
 export type LocationCandidate = {
+  id: string;
   kind: Location["kind"];
   display_name: string;
   country_code: string;
@@ -23,6 +24,10 @@ export type LocationCandidate = {
   hl: string;
   language_label: string;
 };
+
+function candidateId(kind: LocationCandidate["kind"], canonicalKey: string) {
+  return `${kind === "country" ? "country" : "location"}:${canonicalKey}`;
+}
 
 function normalizeSearch(value: string) {
   return value.trim().replace(/\s+/g, " ").toLowerCase();
@@ -43,6 +48,7 @@ function toCacheCandidate(row: Location): LocationCandidate {
     country_code: row.countryCode,
     display_name: row.displayName,
     hl: row.hl,
+    id: candidateId(row.kind, row.canonicalKey),
     kind: row.kind,
     language_label: row.languageLabel,
     region_code: row.regionCode,
@@ -58,6 +64,7 @@ function toSuggestionCandidate(candidate: LocationSuggestion): LocationCandidate
     country_code: candidate.countryCode,
     display_name: candidate.displayName,
     hl: seed?.hl ?? "en",
+    id: candidateId("city", candidate.canonicalKey),
     kind: "city",
     language_label: seed?.languageLabel ?? "English",
     region_code: candidate.regionCode,
@@ -95,6 +102,7 @@ function countryCandidates(query: string): LocationCandidate[] {
           country_code: countryCode,
           display_name: market.name,
           hl: market.language.code,
+          id: candidateId("country", countryCode),
           kind: "country" as const,
           language_label: market.language.label,
           rank,

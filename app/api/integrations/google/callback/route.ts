@@ -2,6 +2,7 @@ import "server-only";
 
 import {
   type GoogleOAuthFailure,
+  type GoogleOAuthFailureCause,
   googleDeniedFailure,
   googleOAuthFailureFrom,
   logGoogleOAuthFailure,
@@ -37,11 +38,17 @@ function returnContextFromState(url: URL) {
  * carries its own context when the state was readable (an expired state still knows where the
  * user came from); otherwise we fall back to whatever the state param can still tell us.
  */
-function errorResultUrl(request: NextRequest, url: URL, failure: GoogleOAuthFailure) {
+function errorResultUrl(
+  request: NextRequest,
+  url: URL,
+  failure: GoogleOAuthFailure,
+  cause: GoogleOAuthFailureCause = {},
+) {
   const context = returnContextFromState(url);
   const projectId = failure.projectId ?? context?.projectId ?? null;
   const provider = failure.provider ?? context?.provider ?? null;
   logGoogleOAuthFailure({
+    ...cause,
     googleError: failure.googleError,
     projectId,
     provider,
@@ -77,6 +84,15 @@ export async function GET(request: NextRequest) {
     redirectUrl.searchParams.set("provider", result.provider);
     return NextResponse.redirect(redirectUrl);
   } catch (error) {
-    return NextResponse.redirect(errorResultUrl(request, url, googleOAuthFailureFrom(error)));
+    const failure = googleOAuthFailureFrom(error);
+    // Classified failures log only their reason; the cause fields belong to the unclassified
+    // throw path, where the operator has nothing but the raw error to go on.
+    const cause = failure.reason
+      ? {}
+      : {
+          ...(failure.causeClass ? { causeClass: failure.causeClass } : {}),
+          ...(failure.causeMessage ? { causeMessage: failure.causeMessage } : {}),
+        };
+    return NextResponse.redirect(errorResultUrl(request, url, failure, cause));
   }
 }

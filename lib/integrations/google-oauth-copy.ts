@@ -11,6 +11,10 @@ const REASON_COPY: Partial<Record<GoogleOAuthFailureReason, string>> = {
   // so falling through would send the user after a property permission they already have.
   actor_mismatch:
     "You finished the Google sign-in while signed in to a different bisibility account. Sign back in to the account that started the connection, then try again.",
+  // A stored credential we can no longer read needs the same remedy as a missing refresh:
+  // remove app access in the Google account and reconnect - without naming keys or ciphers.
+  credentials_decrypt:
+    "Google sign-in worked but we could not finish the saved connection. Remove app access in your Google account and reconnect.",
   google_denied: "Google reported the connection was declined.",
   no_refresh_token: "Google did not return a refresh token. Remove app access and reconnect.",
   state_cookie_mismatch:

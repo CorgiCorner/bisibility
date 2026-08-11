@@ -1,10 +1,12 @@
 import { createCipheriv, createHash } from "node:crypto";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  decryptProviderCredentials,
   decryptSecret,
   encryptSecret,
   hashApiKey,
   isEncryptedSecret,
+  ProviderCredentialsDecryptError,
   verifyApiKey,
 } from "./crypto";
 
@@ -124,5 +126,27 @@ describe("provider crypto", () => {
     expect(hash).not.toContain(raw);
     expect(verifyApiKey(raw, hash)).toBe(true);
     expect(verifyApiKey("wrong", hash)).toBe(false);
+  });
+
+  it("throws a typed error with the original cause when credentials cannot be decrypted", () => {
+    // Envelope sealed under the retired key: without that keyring entry the blob cannot be read.
+    vi.stubEnv("BISIBILITY_SECRETS_KEY", primaryKey.toString("base64"));
+    const encrypted = encryptedFixture(retiredKey, JSON.stringify({ apiKey: "api-key-1" }));
+
+    let thrown: unknown;
+    try {
+      decryptProviderCredentials(encrypted);
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown).toBeInstanceOf(ProviderCredentialsDecryptError);
+    const decryptError = thrown as ProviderCredentialsDecryptError;
+    expect(decryptError.cause).toBeInstanceOf(Error);
+    // The public message is fixed and safe; redaction of secret-bearing messages is covered at
+    // the logger boundary (redactOpsText), not on the typed error.
+    expect(decryptError.message).toBe("Provider credentials could not be decrypted.");
+    expect(decryptError.message).not.toContain("api-key-1");
+    expect(decryptError.message).not.toContain(encrypted);
   });
 });

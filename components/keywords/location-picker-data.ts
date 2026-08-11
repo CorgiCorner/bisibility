@@ -33,7 +33,7 @@ export type LocationFieldValue = {
 };
 
 export type LocationSuggestion = LocationFieldValue & {
-  id: string;
+  id?: string;
 };
 
 // Offline country catalog (sorted by name) keyed on ISO code.
@@ -79,7 +79,7 @@ export function countryValueForName(name: string): LocationFieldValue | null {
 
 // Shape returned by GET /api/locations/search (snake_case envelope items).
 type LocationSearchItem = {
-  id: string;
+  id?: string;
   display_name: string;
   country_code: string;
   region_name: string | null;

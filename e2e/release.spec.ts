@@ -89,8 +89,7 @@ async function completeOnboarding(page: Page, suffix: string) {
 
   await page.goto("/onboarding");
 
-  // Step 1 - Create project (matching scope lives here now, recommended preselected).
-  // exact: true - the matching-scope card labels also contain the word "domain".
+  // Step 1 - Create project. Matching includes the root domain, www, and all subdomains.
   await page.getByLabel("Domain", { exact: true }).fill(domain);
   await page.getByLabel("Project name").fill(`E2E ${suffix}`);
   await clickWizardPrimary(page, "Continue", /[?&]step=2(?:&|$)/);

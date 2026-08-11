@@ -41,9 +41,10 @@ export type OnboardingWizardActions = {
   runFirstCheckPreviewAction: NonNullable<
     Parameters<typeof StepFirstCheck>[0]["runFirstCheckPreviewAction"]
   >;
-  saveMatchingScopeAction: NonNullable<
-    Parameters<typeof StepCreateProject>[0]["saveMatchingScopeAction"]
-  >;
+  // Restore ownership matching with issue #863:
+  // saveMatchingScopeAction: NonNullable<
+  //   Parameters<typeof StepCreateProject>[0]["saveMatchingScopeAction"]
+  // >;
   syncProjectTrafficAction: (input: SyncProjectTrafficInput) => Promise<unknown>;
   testProviderConnectionAction: NonNullable<
     Parameters<typeof StepConnectProvider>[0]["testProviderConnectionAction"]

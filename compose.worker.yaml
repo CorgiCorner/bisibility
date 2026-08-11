@@ -15,7 +15,7 @@ services:
       <<: *temporal-env
 
   worker:
-    image: ${BISIBILITY_WORKER_IMAGE:-docker.io/corgicorner/bisibility-worker:0.8.0}
+    image: ${BISIBILITY_WORKER_IMAGE:-docker.io/corgicorner/bisibility-worker:0.8.1}
     pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     restart: unless-stopped
     environment:

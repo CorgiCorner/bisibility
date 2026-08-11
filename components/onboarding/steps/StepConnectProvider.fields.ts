@@ -16,6 +16,7 @@ import {
 } from "@/lib/integrations/credential-fields";
 import { connectProviderSchema, type TestProviderConnectionInput } from "@/lib/schemas/provider";
 import { z } from "zod";
+import { serpApiCostCaption } from "./StepConnectProvider.provider-pricing";
 
 export type OnboardingSerpProviderId = "dataforseo" | "serpapi";
 export type CredentialField = {
@@ -45,7 +46,7 @@ export const providerOptions = [
   },
   {
     affiliate: false,
-    costCaption: "Plan-based - monthly search quota",
+    costCaption: serpApiCostCaption(),
     costDetail:
       "Plans include monthly searches; one Top-N check uses up to ceil(N/10) searches, usually fewer with stop-on-match.",
     docsHref: "https://serpapi.com",

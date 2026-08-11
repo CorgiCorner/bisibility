@@ -18,7 +18,7 @@ import {
   GlobeHemisphereWestIcon as GlobeHemisphereWest,
   MapPinIcon as MapPin,
 } from "@phosphor-icons/react";
-import { type FocusEvent, Fragment, useId, useState } from "react";
+import { type FocusEvent, useId, useState } from "react";
 
 export type { LocationFieldValue };
 
@@ -44,9 +44,8 @@ function cityCaption(option: LocationSuggestion) {
     .join(", ");
 }
 
-function activeId(listId: string, option: LocationSuggestion | undefined) {
-  return option ? `${listId}-${option.id.replace(/[^a-zA-Z0-9_-]/g, "-")}` : undefined;
-}
+const optionId = (option: LocationSuggestion) => option.id || option.canonicalKey;
+const optionDomId = (listId: string, index: number) => `${listId}-opt-${index}`;
 export function LocationField({
   value,
   onChange,
@@ -150,7 +149,9 @@ export function LocationField({
             weight="bold"
           />
           <Input
-            aria-activedescendant={activeId(listId, activeOption)}
+            aria-activedescendant={
+              normalizedActiveIndex >= 0 ? optionDomId(listId, normalizedActiveIndex) : undefined
+            }
             aria-autocomplete="list"
             aria-controls={visible ? listId : undefined}
             aria-expanded={visible}
@@ -221,6 +222,7 @@ function LocationResults({
           listId={listId}
           options={countries}
           onPick={onPick}
+          startIndex={0}
         />
       ) : null}
       {cities.length > 0 ? (
@@ -230,6 +232,7 @@ function LocationResults({
           listId={listId}
           options={cities}
           onPick={onPick}
+          startIndex={countries.length}
         />
       ) : null}
       {loading && !hasOptions ? (
@@ -250,6 +253,7 @@ type LocationGroupProps = {
   listId: string;
   options: LocationSuggestion[];
   onPick: (option: LocationSuggestion) => void;
+  startIndex: number;
 };
 
 function LocationGroup({
@@ -258,41 +262,41 @@ function LocationGroup({
   listId,
   options,
   onPick,
+  startIndex,
 }: Readonly<LocationGroupProps>) {
   return (
     <span className="block">
       <span className="block px-3 pb-1 pt-2 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
         {label}
       </span>
-      {options.map((option) => {
-        const selected = activeOption?.id === option.id;
+      {options.map((option, index) => {
+        const selected = activeOption ? optionId(activeOption) === optionId(option) : false;
         const Icon = option.kind === "country" ? GlobeHemisphereWest : MapPin;
         return (
-          <Fragment key={option.id}>
-            <button
-              aria-selected={selected}
-              className={`flex w-full items-start gap-2 px-3 py-2 text-left normal-case tracking-normal ${
-                selected ? "bg-bg-sunken text-fg" : "text-fg hover:bg-bg-sunken"
-              }`}
-              id={activeId(listId, option)}
-              onClick={() => onPick(option)}
-              onMouseDown={(event) => event.preventDefault()}
-              role="option"
-              type="button"
-            >
-              <Icon className="mt-0.5 flex-none text-accent-text" size={14} weight="bold" />
-              <span className="min-w-0">
-                <span className="block truncate text-[12.5px] font-semibold">
-                  {option.kind === "city" ? option.cityName : option.displayName}
-                </span>
-                {option.kind === "city" ? (
-                  <span className="block truncate text-[11.5px] text-fg-muted">
-                    {cityCaption(option)}
-                  </span>
-                ) : null}
+          <button
+            aria-selected={selected}
+            className={`flex w-full items-start gap-2 px-3 py-2 text-left normal-case tracking-normal ${
+              selected ? "bg-bg-sunken text-fg" : "text-fg hover:bg-bg-sunken"
+            }`}
+            id={optionDomId(listId, startIndex + index)}
+            key={optionId(option)}
+            onClick={() => onPick(option)}
+            onMouseDown={(event) => event.preventDefault()}
+            role="option"
+            type="button"
+          >
+            <Icon className="mt-0.5 flex-none text-accent-text" size={14} weight="bold" />
+            <span className="min-w-0">
+              <span className="block truncate text-[12.5px] font-semibold">
+                {option.kind === "city" ? option.cityName : option.displayName}
               </span>
-            </button>
-          </Fragment>
+              {option.kind === "city" ? (
+                <span className="block truncate text-[11.5px] text-fg-muted">
+                  {cityCaption(option)}
+                </span>
+              ) : null}
+            </span>
+          </button>
         );
       })}
     </span>

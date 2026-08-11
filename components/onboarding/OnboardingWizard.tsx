@@ -2,6 +2,7 @@
 
 import { OnboardingNav } from "@/components/onboarding/OnboardingNav";
 import { OnboardingStepper } from "@/components/onboarding/OnboardingStepper";
+import type { OnboardingWizardProps } from "@/components/onboarding/OnboardingWizard.types";
 import {
   OnboardingWizardSteps,
   type OnboardingWizardStepsProps,
@@ -12,44 +13,19 @@ import {
   type OnboardingStepNumber,
 } from "@/components/onboarding/onboarding-fixtures";
 import { feedbackClass } from "@/components/onboarding/onboarding-form-utils";
-import type { OnboardingWizardActions } from "@/components/onboarding/onboarding-wizard-actions";
 import {
   initialOnboardingDraft,
   initialReachableOnboardingStep,
-  type OnboardingProject,
   projectIdFor,
 } from "@/components/onboarding/onboarding-wizard-state";
 import { SampleDataButton } from "@/components/sample-data/SampleDataButton";
 import { Button } from "@/components/ui";
-import type { GoogleOAuthSetup } from "@/lib/integrations/types";
-import type { RankedKeywordConnection } from "@/lib/ranked-keywords/service";
 import { useState } from "react";
 import { readCurrentProviderValues } from "./onboarding-provider-values";
 import {
   type ConnectedProviderMap,
   costPerCheckCentsFromUsd,
 } from "./steps/StepConnectProvider.fields";
-
-type OnboardingWizardProps = {
-  actions: OnboardingWizardActions;
-  costPerCheckCents: number | null;
-  dataResidencyMessage: string;
-  gscJustConnected: boolean;
-  gscGoogleOAuth?: GoogleOAuthSetup | null;
-  gscOAuthConfigured: boolean;
-  gscPropertyLabel?: string | null;
-  hasAnalyticsSource: boolean;
-  initialHasApiKey: boolean;
-  initialFlowState: OnboardingFlowState;
-  initialKeywordCount: number;
-  initialProject: OnboardingProject | null;
-  initialSerpConnections?: ConnectedProviderMap;
-  initialStep: OnboardingStepNumber;
-  isCloud?: boolean;
-  monthlyCapCents: number;
-  providerConnected: boolean;
-  rankedKeywordConnections?: RankedKeywordConnection[];
-};
 
 export function OnboardingWizard({
   actions,
@@ -84,6 +60,9 @@ export function OnboardingWizard({
   const [keywordCount, setKeywordCount] = useState(initialKeywordCount);
   const [hasApiKey, setHasApiKey] = useState(initialHasApiKey);
   const [hasConnectedProvider, setHasConnectedProvider] = useState(providerConnected);
+  const [serpConnections, setSerpConnections] = useState<ConnectedProviderMap>(
+    initialSerpConnections ?? {},
+  );
   const [maxReachableStep, setMaxReachableStep] = useState(() =>
     initialReachableOnboardingStep(initialStep, initialFlowState),
   );
@@ -141,9 +120,13 @@ export function OnboardingWizard({
     setInlineWarning(completion?.warning ?? null);
   };
   const handleDeveloperAccessComplete = () => updateFlowAndStep(3, flowState);
-  const handleProviderComplete: OnboardingWizardStepsProps["onProviderComplete"] = (values) => {
+  const handleProviderComplete: OnboardingWizardStepsProps["onProviderComplete"] = (
+    values,
+    nextConnections,
+  ) => {
     setDraft((current) => ({ ...current, connectProvider: values }));
     setHasConnectedProvider(true);
+    setSerpConnections(nextConnections);
     setProjectedCostPerCheckCents(costPerCheckCentsFromUsd(values.costPerCheck));
     updateFlowAndStep(4, { ...flowState, providerId: values.providerId });
   };
@@ -237,7 +220,7 @@ export function OnboardingWizard({
           hasApiKey={hasApiKey}
           hasConnectedProvider={hasConnectedProvider}
           isCloud={isCloud}
-          initialSerpConnections={initialSerpConnections}
+          initialSerpConnections={serpConnections}
           keywordCount={keywordCount}
           monthlyCapCents={monthlyCapCents}
           onCreateProjectComplete={handleCreateProjectComplete}

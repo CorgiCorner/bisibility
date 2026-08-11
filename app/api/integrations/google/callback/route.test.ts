@@ -143,6 +143,8 @@ describe("GET /api/integrations/google/callback", () => {
       "https://bisibility.com/app/prj_1/integrations?google=error&connect=gsc&provider=gsc",
     );
     expect(logged[0]?.[1]).toEqual({
+      causeClass: "Error",
+      causeMessage: "Google OAuth code is missing.",
       projectId: "prj_1",
       provider: "gsc",
       reason: "unclassified",
@@ -160,5 +162,35 @@ describe("GET /api/integrations/google/callback", () => {
     await GET(callbackRequest("code=code_1&state=state_1"));
 
     expect(logged).toHaveLength(0);
+  });
+
+  it("logs cause class and redacted message for unclassified crashes without leaking secrets into the redirect", async () => {
+    mocks.completeGoogleOAuthInstall.mockRejectedValue(
+      new Error(
+        "Provider credentials could not be decrypted. refresh token: 1//oauth_refresh_fixture",
+      ),
+    );
+
+    const response = await GET(callbackRequest("code=code_1&state=state_1"));
+    const location = response.headers.get("location") ?? "";
+
+    expect(logged[0]?.[0]).toBe("[google-oauth] install failed");
+    expect(logged[0]?.[1]).toMatchObject({
+      causeClass: "Error",
+      projectId: "prj_1",
+      provider: "gsc",
+      reason: "unclassified",
+    });
+    expect(logged[0]?.[1]).toHaveProperty("causeMessage");
+    const loggedEntry = logged[0]?.[1] as { causeMessage?: unknown };
+    expect(typeof loggedEntry.causeMessage).toBe("string");
+    const causeMessage = loggedEntry.causeMessage as string;
+    expect(causeMessage).toContain("[REDACTED]");
+    expect(causeMessage).not.toContain("1//oauth_refresh_fixture");
+    expect(location).not.toContain("causeMessage");
+    expect(location).not.toContain("1//oauth_refresh_fixture");
+    expect(location).not.toContain("reason=credentials_decrypt");
+    expect(location).not.toContain("reason=token_exchange");
+    expect(location).not.toContain("reason=store_failed");
   });
 });
