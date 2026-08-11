@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui";
 import { authClient } from "@/lib/auth/client";
 import { SignOutIcon as SignOut } from "@phosphor-icons/react";
 import { useState } from "react";
@@ -15,14 +16,17 @@ export function OnboardingLogoutButton() {
   }
 
   return (
-    <button
+    <Button
       className="inline-flex items-center gap-1 font-semibold text-accent-text disabled:bg-bg-sunken disabled:text-fg-muted"
       disabled={pending}
       onClick={() => void handleSignOut()}
+      size="xs"
+      startIcon={<SignOut aria-hidden size={13} weight="bold" />}
+      sx={{ color: "var(--accent-text)", minHeight: 0, minWidth: 0, padding: 0 }}
       type="button"
+      variant="ghost"
     >
-      <SignOut aria-hidden size={13} weight="bold" />
       Log out
-    </button>
+    </Button>
   );
 }

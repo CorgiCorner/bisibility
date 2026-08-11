@@ -11,9 +11,9 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 const actions = {
   connectProvider: vi.fn(async () => undefined),
   disconnectProvider: vi.fn(async () => undefined),
-  setPrimaryProvider: vi.fn(async () => undefined),
   testProviderConnection: vi.fn(async () => ({ message: "ok", ok: true })),
   updateProviderCost: vi.fn(async () => undefined),
+  updateProviderSettings: vi.fn(async () => undefined),
 } satisfies ProviderActionHandlers;
 
 function connectableDataForSeo(): IntegrationProviderData {
@@ -24,7 +24,7 @@ function connectableDataForSeo(): IntegrationProviderData {
     drawer: {
       ...provider.drawer,
       credentialFields: providerCredentialFieldsFor("dataforseo", { connected: false }),
-      defaults: { ...provider.drawer.defaults, login: "", primary: false, secret: "" },
+      defaults: { ...provider.drawer.defaults, login: "", secret: "" },
     },
     primary: false,
     status: "ready",
@@ -38,7 +38,7 @@ function connectedDataForSeo(): IntegrationProviderData {
     ...provider,
     drawer: {
       ...provider.drawer,
-      defaults: { ...provider.drawer.defaults, primary: false, secret: "" },
+      defaults: { ...provider.drawer.defaults, secret: "" },
     },
     primary: false,
     status: "connected",
@@ -72,7 +72,6 @@ function connectablePlausible(): IntegrationProviderData {
         ...provider.drawer.defaults,
         endpoint: "",
         login: "",
-        primary: false,
         secret: "",
       },
     },
@@ -235,6 +234,12 @@ describe("ConnectDrawer", () => {
     expect(actions.connectProvider).toHaveBeenCalledWith(
       expect.objectContaining({ login: "login", secret: "password" }),
     );
+    const [input] = actions.connectProvider.mock.calls.at(0) as unknown as [
+      Record<string, unknown>,
+    ];
+    expect(input).not.toHaveProperty("enabled");
+    expect(input).not.toHaveProperty("primary");
+    expect(input).not.toHaveProperty("priority");
     await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
     expect(screen.getByLabelText("API password")).toHaveValue("");
   });

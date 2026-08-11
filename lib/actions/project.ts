@@ -1,5 +1,12 @@
 "use server";
 
+import { normalizeSchedule } from "@/lib/actions/_schedule";
+import {
+  getActionActor,
+  parseActionInput,
+  requireProjectScope,
+  revalidateSettingsViews,
+} from "@/lib/actions/_shared";
 import { getProjectDepthDecreaseWarning } from "@/lib/alerts/depth-conflict.server";
 import { createProjectRecord } from "@/lib/api/project-service";
 import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
@@ -19,13 +26,6 @@ import {
 } from "@/lib/settings/project-defaults-config";
 import { projectDefaultsUpsertArgs } from "@/lib/settings/project-defaults-write";
 import { z } from "zod";
-import { normalizeSchedule } from "./_schedule";
-import {
-  getActionActor,
-  parseActionInput,
-  requireProjectScope,
-  revalidateSettingsViews,
-} from "./_shared";
 
 const completeProjectOnboardingSchema = z.object({
   projectId: z.string().trim().min(1).max(120),
@@ -131,12 +131,9 @@ export async function readProjectSettingsSnapshot(projectId: string) {
   });
 }
 
-export async function updateProjectSettingsSnapshot(
-  projectId: string,
-  data: { domain: string | null; name: string },
-) {
+export async function updateProjectSettingsSnapshot(projectId: string, data: { name: string }) {
   return prisma.project.update({
-    data: { domain: data.domain, name: data.name },
+    data: { name: data.name },
     select: { domain: true, name: true, publicId: true, trackingScope: true },
     where: { id: projectId },
   });

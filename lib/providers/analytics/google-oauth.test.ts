@@ -1,5 +1,14 @@
+import {
+  type GoogleOAuthFailureReason,
+  GoogleOAuthInstallError,
+} from "@/lib/integrations/google-oauth-failure";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { completeGoogleOAuthInstall, createGoogleInstallState } from "./google-oauth";
+import {
+  completeGoogleOAuthInstall,
+  createGoogleInstallState,
+  googleOAuthReturnContextFromState,
+  reusableGoogleInstallUrl,
+} from "./google-oauth";
 
 const mocks = vi.hoisted(() => ({
   cookieStore: { delete: vi.fn(), get: vi.fn(), set: vi.fn() },
@@ -132,6 +141,185 @@ describe("completeGoogleOAuthInstall", () => {
       refreshToken: "refresh_token",
     });
     expect(mocks.prisma.providerConnection.upsert).not.toHaveBeenCalled();
+  });
+});
+
+describe("completeGoogleOAuthInstall failure classification", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.decryptSecret.mockReturnValue(JSON.stringify(state));
+    mocks.cookieStore.get.mockReturnValue({ value: "encrypted_state" });
+    mocks.getActionActor.mockResolvedValue({ id: "user_1", memberships: [], role: "owner" });
+    mocks.requireProjectScope.mockResolvedValue({ id: "project_1", publicId: "prj_1" });
+    mocks.prisma.providerConnection.findUnique.mockResolvedValue(null);
+    mocks.decryptProviderCredentials.mockReturnValue({});
+    mocks.exchangeGoogleCode.mockResolvedValue({ refreshToken: "refresh_token" });
+    mocks.storePendingGoogleOAuth.mockResolvedValue(undefined);
+  });
+
+  async function reasonOf(): Promise<GoogleOAuthFailureReason | "none"> {
+    try {
+      await completeGoogleOAuthInstall({ code: "code_1", state: "encrypted_state" });
+      return "none";
+    } catch (error) {
+      if (error instanceof GoogleOAuthInstallError) return error.reason;
+      throw error;
+    }
+  }
+
+  it("reports state_expired once the TTL has passed", async () => {
+    mocks.decryptSecret.mockReturnValue(
+      JSON.stringify({ ...state, issuedAt: Date.now() - 11 * 60 * 1000 }),
+    );
+
+    await expect(reasonOf()).resolves.toBe("state_expired");
+  });
+
+  it.each([undefined, { value: "other_state" }])(
+    "reports state_cookie_mismatch for cookie %o",
+    async (cookie) => {
+      mocks.cookieStore.get.mockReturnValue(cookie);
+
+      await expect(reasonOf()).resolves.toBe("state_cookie_mismatch");
+    },
+  );
+
+  it("reports actor_mismatch when another session finishes the flow", async () => {
+    mocks.getActionActor.mockResolvedValue({ id: "user_2", memberships: [], role: "owner" });
+
+    await expect(reasonOf()).resolves.toBe("actor_mismatch");
+  });
+
+  it("reports token_exchange when Google refuses the code", async () => {
+    mocks.exchangeGoogleCode.mockRejectedValue(new Error("invalid_grant"));
+
+    await expect(reasonOf()).resolves.toBe("token_exchange");
+  });
+
+  it("reports no_refresh_token when no stored token can stand in", async () => {
+    mocks.exchangeGoogleCode.mockResolvedValue({ refreshToken: null });
+
+    await expect(reasonOf()).resolves.toBe("no_refresh_token");
+  });
+
+  it("reports store_failed when persisting the pending install throws", async () => {
+    mocks.storePendingGoogleOAuth.mockRejectedValue(new Error("db is down"));
+
+    await expect(reasonOf()).resolves.toBe("store_failed");
+  });
+
+  it("carries the project, provider and return target so the redirect keeps its context", async () => {
+    mocks.exchangeGoogleCode.mockRejectedValue(new Error("invalid_grant"));
+
+    await expect(
+      completeGoogleOAuthInstall({ code: "code_1", state: "encrypted_state" }),
+    ).rejects.toMatchObject({
+      projectId: "project_1",
+      provider: "gsc",
+      returnPath: "/app/integrations?connect=gsc",
+    });
+  });
+
+  it("keeps a successful install unclassified", async () => {
+    await expect(reasonOf()).resolves.toBe("none");
+  });
+});
+
+describe("googleOAuthReturnContextFromState", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("still names the originating surface for an expired state", () => {
+    mocks.decryptSecret.mockReturnValue(
+      JSON.stringify({ ...state, issuedAt: Date.now() - 24 * 60 * 60 * 1000 }),
+    );
+
+    expect(googleOAuthReturnContextFromState("encrypted_state")).toEqual({
+      projectId: "project_1",
+      provider: "gsc",
+      returnPath: "/app/integrations?connect=gsc",
+    });
+  });
+
+  it.each([null, "garbage"])("returns no context for state %s", (raw) => {
+    mocks.decryptSecret.mockImplementation(() => {
+      throw new Error("bad payload");
+    });
+
+    expect(googleOAuthReturnContextFromState(raw)).toBeNull();
+  });
+});
+
+describe("reusableGoogleInstallUrl", () => {
+  const install = {
+    actorId: "user_1",
+    origin: "https://example.test",
+    projectId: "project_1",
+    property: undefined,
+    provider: "gsc" as const,
+    returnPath: "/app/integrations?connect=gsc",
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.decryptSecret.mockReturnValue(JSON.stringify(state));
+  });
+
+  it("sends the user back to Google with the state the cookie already holds", () => {
+    const url = reusableGoogleInstallUrl({ ...install, state: "encrypted_state" });
+
+    expect(url).not.toBeNull();
+    expect(new URL(url ?? "").searchParams.get("state")).toBe("encrypted_state");
+    expect(mocks.encryptSecret).not.toHaveBeenCalled();
+  });
+
+  it("mints a new state when the browser carries none", () => {
+    expect(reusableGoogleInstallUrl({ ...install, state: null })).toBeNull();
+  });
+
+  it("mints a new state once too little of the TTL is left to finish consent", () => {
+    mocks.decryptSecret.mockReturnValue(
+      JSON.stringify({ ...state, issuedAt: Date.now() - 9 * 60 * 1000 }),
+    );
+
+    expect(reusableGoogleInstallUrl({ ...install, state: "encrypted_state" })).toBeNull();
+  });
+
+  it("still reuses a state with most of its TTL left", () => {
+    mocks.decryptSecret.mockReturnValue(
+      JSON.stringify({ ...state, issuedAt: Date.now() - 60 * 1000 }),
+    );
+
+    expect(reusableGoogleInstallUrl({ ...install, state: "encrypted_state" })).not.toBeNull();
+  });
+
+  it("mints a new state once the cookie's state has expired", () => {
+    mocks.decryptSecret.mockReturnValue(
+      JSON.stringify({ ...state, issuedAt: Date.now() - 11 * 60 * 1000 }),
+    );
+
+    expect(reusableGoogleInstallUrl({ ...install, state: "encrypted_state" })).toBeNull();
+  });
+
+  it("mints a new state when the cookie cannot be decrypted", () => {
+    mocks.decryptSecret.mockImplementation(() => {
+      throw new Error("bad payload");
+    });
+
+    expect(reusableGoogleInstallUrl({ ...install, state: "encrypted_state" })).toBeNull();
+  });
+
+  it.each([
+    ["actor", { actorId: "user_2" }],
+    ["project", { projectId: "project_2" }],
+    ["provider", { provider: "ga4" as const }],
+    ["property", { property: "sc-domain:example.com" }],
+    ["return target", { returnPath: "/onboarding?step=3" }],
+  ])("mints a new state when the %s differs", (_label, override) => {
+    expect(
+      reusableGoogleInstallUrl({ ...install, ...override, state: "encrypted_state" }),
+    ).toBeNull();
   });
 });
 

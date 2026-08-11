@@ -298,7 +298,7 @@ describe("KeywordsGrid pending state", () => {
     expect(screen.getByText("1 selected")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Run check (Top 100)" }));
 
-    await waitFor(() => expect(runCheckNowAction).toHaveBeenCalledTimes(1));
+    expect(runCheckNowAction).toHaveBeenCalledTimes(1);
     expect([rows[0].id, rows[1].id]).toContain(runCheckNowAction.mock.calls[0][0].keywordId);
     expect(runCheckNowAction.mock.calls[0][0]).not.toHaveProperty("depth");
     expect(screen.getByText(rows[0].keyword)).toBeInTheDocument();
@@ -331,9 +331,10 @@ describe("KeywordsGrid pending state", () => {
     fireEvent.change(screen.getByRole("textbox", { name: "Filter keywords" }), {
       target: { value: rows[0].keyword },
     });
+    await screen.findByRole("button", { name: /clear all search and filters/i });
     fireEvent.click(screen.getByRole("button", { name: /^export$/i }));
 
-    expect(screen.getByText("Export 1 filtered keyword")).toBeInTheDocument();
+    expect(await screen.findByText("Export 1 filtered keyword")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /export csv/i }));
 
     await waitFor(() =>

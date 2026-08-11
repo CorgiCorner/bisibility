@@ -8,13 +8,13 @@ COPY scripts/generate/generate-client-if-schema.mjs ./scripts/generate/generate-
 COPY scripts/generate/root-postinstall.mjs ./scripts/generate/root-postinstall.mjs
 # Pin npm to the version that generated package-lock.json so `npm ci` resolves the
 # identical dependency tree (the base image's bundled npm can differ and reject the lockfile).
-RUN npm install -g npm@10.9.3 && npm ci
+RUN --mount=type=cache,target=/root/.npm npm install -g npm@10.9.3 && npm ci
 # Self-contained prisma CLI tree for the runner image: platform deploy hooks (Railway
 # preDeployCommand, Fly release_command) execute in the final image, where copying only
 # node_modules/prisma and node_modules/@prisma is not enough - the CLI's transitive
 # dependencies (effect, c12, ...) live at the node_modules root. Versions mirror the
 # lockfile-resolved ones so the bundle cannot drift from the app.
-RUN npm install --prefix /migrate-cli --no-save --no-audit --no-fund \
+RUN --mount=type=cache,target=/root/.npm npm install --prefix /migrate-cli --no-save --no-audit --no-fund \
   prisma@"$(node -p "require('./node_modules/prisma/package.json').version")" \
   @prisma/config@"$(node -p "require('./node_modules/@prisma/config/package.json').version")"
 # Postgres driver closure for the seed scripts (prisma/seed.ts, scripts/admin/
@@ -23,7 +23,7 @@ RUN npm install --prefix /migrate-cli --no-save --no-audit --no-fund \
 # them in the runner image. Same lockfile-pinned-prefix pattern as migrate-cli above; the
 # closure is merged into the runner's node_modules, where ESM resolution from
 # /workspace/prisma/seed.ts finds it.
-RUN npm install --prefix /seed-cli --no-save --no-audit --no-fund \
+RUN --mount=type=cache,target=/root/.npm npm install --prefix /seed-cli --no-save --no-audit --no-fund \
   pg@"$(node -p "require('./node_modules/pg/package.json').version")" \
   @prisma/adapter-pg@"$(node -p "require('./node_modules/@prisma/adapter-pg/package.json').version")" \
   @paralleldrive/cuid2@"$(node -p "require('./node_modules/@paralleldrive/cuid2/package.json').version")"

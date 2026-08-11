@@ -1,5 +1,14 @@
 "use server";
 
+import { normalizeSchedule } from "@/lib/actions/_schedule";
+import {
+  getActionActor,
+  parseActionInput,
+  requireProjectScope,
+  revalidateRankCheckViews,
+  revalidateSettingsPage,
+  revalidateSettingsViews,
+} from "@/lib/actions/_shared";
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { isBudgetExhaustedResult } from "@/lib/rank-check/budget-contract";
@@ -22,19 +31,10 @@ import {
 } from "@/lib/settings/project-defaults-config";
 import { projectDefaultsUpsertArgs } from "@/lib/settings/project-defaults-write";
 import { z } from "zod";
-import { normalizeSchedule } from "./_schedule";
-import {
-  getActionActor,
-  parseActionInput,
-  requireProjectScope,
-  revalidateRankCheckViews,
-  revalidateSettingsPage,
-  revalidateSettingsViews,
-} from "./_shared";
 
 const idSchema = z.string().trim().min(1).max(120);
 
-const projectDetailsSchema = createProjectSchema.pick({ domain: true, name: true }).extend({
+const projectDetailsSchema = createProjectSchema.pick({ name: true }).extend({
   projectId: idSchema,
 });
 
@@ -53,6 +53,11 @@ type ManualCheckResult = {
 };
 
 const MANUAL_CHECK_CONCURRENCY = 4;
+
+function manualCheckStarted(result: unknown) {
+  if (!result || typeof result !== "object" || !("status" in result)) return false;
+  return result.status === "running" || result.status === "completed";
+}
 
 async function runManualChecks(
   keywords: ManualCheckKeyword[],
@@ -74,6 +79,10 @@ async function runManualChecks(
           const result = await runCheck({ keywordId: keyword.publicId });
           if (isBudgetExhaustedResult(result)) {
             budgetExhausted = true;
+            continue;
+          }
+          if (!manualCheckStarted(result)) {
+            failed += 1;
             continue;
           }
           queued += 1;
@@ -108,7 +117,7 @@ export async function updateProjectDetails(input: unknown) {
   }
 
   const updated = await prisma.project.update({
-    data: { domain: data.domain, name: data.name },
+    data: { name: data.name },
     select: { domain: true, name: true, publicId: true, trackingScope: true },
     where: { id: project.id },
   });
@@ -271,7 +280,7 @@ export async function runManualProjectCheck(input: unknown) {
 
   // Defer the rank-check action so its server-only Temporal client stays out of
   // the module graph until a check is actually requested.
-  const { runCheckNow } = await import("./rankCheck");
+  const { runCheckNow } = await import("@/lib/actions/rankCheck");
   const result = await runManualChecks(keywords, runCheckNow);
 
   await writeAudit({

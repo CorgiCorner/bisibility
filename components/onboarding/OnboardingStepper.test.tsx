@@ -27,6 +27,7 @@ describe("OnboardingStepper", () => {
       "/onboarding?step=2&projectId=prj_1",
       "/onboarding?step=3&projectId=prj_1",
     ]);
+    expect(screen.getAllByRole("link", { name: "Create project, completed" })).toHaveLength(2);
 
     expect(rail.querySelector('[aria-label="Add keywords"]')).toHaveAttribute(
       "aria-disabled",
@@ -47,10 +48,14 @@ describe("OnboardingStepper", () => {
     );
 
     const rail = screen.getByLabelText("Onboarding steps");
-    fireEvent.click(within(rail).getByRole("button", { name: "Create project" }));
+    const doneStep = within(rail).getByRole("button", { name: "Create project, completed" });
+    expect(doneStep).not.toHaveAttribute("aria-current");
+    fireEvent.click(doneStep);
     fireEvent.click(within(rail).getByRole("button", { name: "Connect data" }));
 
     const futureRailButton = within(rail).getByRole("button", { name: "Add keywords" });
+    expect(futureRailButton).toHaveAccessibleName("Add keywords");
+    expect(futureRailButton).toHaveClass("MuiButton-root");
     expect(futureRailButton).toBeDisabled();
     expect(futureRailButton).toHaveAttribute("aria-disabled", "true");
     fireEvent.click(futureRailButton);

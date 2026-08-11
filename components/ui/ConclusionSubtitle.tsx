@@ -28,7 +28,7 @@ export function ConclusionSubtitle({
   return (
     <p
       className={cn(
-        "m-0 mb-3 mt-2 truncate whitespace-nowrap text-[13px] font-normal leading-[1.5] text-fg-muted",
+        "m-0 mt-2 line-clamp-2 min-h-[39px] whitespace-normal text-[13px] font-normal leading-[1.5] text-fg-muted",
         className,
       )}
     >

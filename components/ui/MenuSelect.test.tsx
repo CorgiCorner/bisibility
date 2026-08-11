@@ -1,8 +1,8 @@
+import { MenuMultiSelect, MenuSelect } from "@/components/ui/MenuSelect";
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { MenuMultiSelect, MenuSelect } from "./MenuSelect";
 
 const rect = {
   bottom: 34,
@@ -76,9 +76,13 @@ describe("MenuMultiSelect", () => {
 
     await user.type(search, "pol");
     expect(screen.getByRole("menuitemcheckbox", { name: "Poland" })).toBeInTheDocument();
+    await user.clear(search);
+    await user.type(search, "missing");
+    expect(screen.getByText("No results")).toBeInTheDocument();
 
     await user.keyboard("{Escape}");
     expect(screen.queryByRole("textbox", { name: "Search markets..." })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Markets" })).toHaveFocus();
   });
 });
 
@@ -124,9 +128,13 @@ describe("MenuSelect", () => {
 
     expect(screen.getByRole("menuitem", { name: /Europe\/Warsaw/ })).toBeInTheDocument();
     expect(screen.queryByRole("menuitem", { name: /UTC/ })).not.toBeInTheDocument();
+    await user.clear(search);
+    await user.type(search, "missing");
+    expect(screen.getByText("No results")).toBeInTheDocument();
 
     await user.keyboard("{Escape}");
     expect(screen.queryByRole("textbox", { name: "Search time zones..." })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Time zone" })).toHaveFocus();
   });
 
   it("moves from search to the filtered options with ArrowDown", async () => {

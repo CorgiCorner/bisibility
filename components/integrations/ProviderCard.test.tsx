@@ -16,7 +16,6 @@ describe("ProviderCard", () => {
     const actions = {
       connectProvider: vi.fn(async () => undefined),
       disconnectProvider: vi.fn(async () => undefined),
-      setPrimaryProvider: vi.fn(async () => undefined),
       testProviderConnection: vi.fn(
         () =>
           new Promise<{ message: string; ok: boolean }>((resolve) => {
@@ -24,6 +23,7 @@ describe("ProviderCard", () => {
           }),
       ),
       updateProviderCost: vi.fn(async () => undefined),
+      updateProviderSettings: vi.fn(async () => undefined),
     } satisfies ProviderActionHandlers;
     const provider = integrationCategories[0].providers[0];
 
@@ -63,7 +63,6 @@ describe("ProviderCard", () => {
     const actions = {
       connectProvider: vi.fn(async () => undefined),
       disconnectProvider: vi.fn(async () => undefined),
-      setPrimaryProvider: vi.fn(async () => undefined),
       syncProjectTraffic: vi.fn(
         () =>
           new Promise<{
@@ -77,6 +76,7 @@ describe("ProviderCard", () => {
       ),
       testProviderConnection: vi.fn(async () => ({ message: "ok", ok: true })),
       updateProviderCost: vi.fn(async () => undefined),
+      updateProviderSettings: vi.fn(async () => undefined),
     } satisfies ProviderActionHandlers;
     const analyticsProvider = {
       ...integrationCategories[1].providers[0],
@@ -262,6 +262,7 @@ describe("ProviderCard", () => {
     );
 
     expect(screen.getByText("Connected")).toBeInTheDocument();
+    expect(screen.getByText("Primary")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Manage" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Test" })).not.toBeInTheDocument();
     expect(screen.queryByTestId("connect-drawer")).not.toBeInTheDocument();

@@ -1,7 +1,7 @@
+import { InviteModal } from "@/components/settings/team/InviteModal";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { InviteModal } from "./InviteModal";
 
 function renderInviteModal(inviteMember = vi.fn()) {
   render(
@@ -38,7 +38,7 @@ describe("InviteModal", () => {
 
   it("names the invited address in the success confirmation", async () => {
     const inviteMember = renderInviteModal(
-      vi.fn().mockResolvedValue({ inviteLink: "https://app.example/invite/token" }),
+      vi.fn().mockResolvedValue({ inviteLink: "https://app.example.com/invite/token" }),
     );
     const email = screen.getByLabelText("Email address");
 
@@ -52,5 +52,22 @@ describe("InviteModal", () => {
       projectId: "project_1",
       role: "member",
     });
+  });
+
+  it("hides the owner-only Admin tier when the manager cannot assign it", () => {
+    render(
+      <InviteModal
+        canAssignAdmin={false}
+        domain="Example project"
+        inviteMember={vi.fn()}
+        onClose={vi.fn()}
+        open
+        projectId="project_1"
+      />,
+    );
+
+    expect(screen.queryByText("Admin")).not.toBeInTheDocument();
+    expect(screen.getByText("Editor")).toBeVisible();
+    expect(screen.getByText("Viewer")).toBeVisible();
   });
 });

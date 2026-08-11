@@ -1,7 +1,8 @@
+import type { Metrics } from "@/lib/queries/keyword-metrics";
+import { type KeywordTrafficSummary, mapKeyword } from "@/lib/queries/keyword-row";
+import { pathFromUrl } from "@/lib/queries/keyword-row-format";
+import { dateFromFrozenNow } from "@/tests/clock";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { Metrics } from "./keyword-metrics";
-import { type KeywordTrafficSummary, mapKeyword } from "./keyword-row";
-import { pathFromUrl } from "./keyword-row-format";
 
 const metrics: Metrics = { cpc: null, difficulty: null, serpFeatures: [], volume: null };
 const project = { defaults: null, domain: "example.com" };
@@ -20,6 +21,27 @@ function keywordRow() {
     targetUrl: "https://example.com/target",
     text: "rank tracker",
     topic: null,
+  };
+}
+
+type RankCheck = Parameters<typeof mapKeyword>[0]["rankChecks"][number];
+
+function rankCheck(
+  checkedAt: string,
+  id: string,
+  position: number | null,
+  overrides: Partial<RankCheck> = {},
+): RankCheck {
+  return {
+    checkedAt: new Date(checkedAt),
+    id,
+    normalizationVersion: "v2",
+    position,
+    previousPosition: null,
+    rankingUrl: "https://example.com/rank",
+    requestedDepth: 100,
+    status: "completed",
+    ...overrides,
   };
 }
 
@@ -90,24 +112,24 @@ describe("mapKeyword traffic fields", () => {
     const row = mapKeyword(
       {
         ...keywordRow(),
-        rankChecks: [
-          {
-            checkedAt: new Date("2026-07-01T10:00:00.000Z"),
-            id: "check_first",
-            normalizationVersion: "v2",
-            position: 1,
-            previousPosition: null,
-            rankingUrl: "https://example.com/rank",
-            requestedDepth: 100,
-            status: "completed",
-          },
-        ],
+        rankChecks: [rankCheck("2026-07-01T10:00:00.000Z", "check_first", 1)],
       },
       project,
       metrics,
     );
 
     expect(row).toMatchObject({ position: 1, positionBaseline: null, previousPosition: null });
+    expect(row.rankingUrlHistory).toEqual([
+      {
+        endAt: "2026-07-01T10:00:00.000Z",
+        isCurrent: true,
+        note: "First seen ranking",
+        position: 1,
+        requestedDepth: 100,
+        startAt: "2026-07-01T10:00:00.000Z",
+        url: "https://example.com/rank",
+      },
+    ]);
   });
 
   it("uses the latest positive check from an earlier day as the position baseline", () => {
@@ -115,36 +137,9 @@ describe("mapKeyword traffic fields", () => {
       {
         ...keywordRow(),
         rankChecks: [
-          {
-            checkedAt: new Date("2026-07-03T12:00:00.000Z"),
-            id: "check_latest",
-            normalizationVersion: "v2",
-            position: 6,
-            previousPosition: 6,
-            rankingUrl: "https://example.com/rank",
-            requestedDepth: 100,
-            status: "completed",
-          },
-          {
-            checkedAt: new Date("2026-07-03T09:00:00.000Z"),
-            id: "check_same_day",
-            normalizationVersion: "v2",
-            position: 6,
-            previousPosition: 4,
-            rankingUrl: "https://example.com/rank",
-            requestedDepth: 100,
-            status: "completed",
-          },
-          {
-            checkedAt: new Date("2026-07-01T10:00:00.000Z"),
-            id: "check_earlier_day",
-            normalizationVersion: "v2",
-            position: 4,
-            previousPosition: null,
-            rankingUrl: "https://example.com/rank",
-            requestedDepth: 100,
-            status: "completed",
-          },
+          rankCheck("2026-07-03T12:00:00.000Z", "check_latest", 6, { previousPosition: 6 }),
+          rankCheck("2026-07-03T09:00:00.000Z", "check_same_day", 6, { previousPosition: 4 }),
+          rankCheck("2026-07-01T10:00:00.000Z", "check_earlier_day", 4),
         ],
       },
       project,
@@ -201,54 +196,51 @@ describe("mapKeyword traffic fields", () => {
     expect(first.schedule.next_check_at).not.toBe(second.schedule.next_check_at);
   });
 
-  it("never treats deferred attempts as rank history or latest completed state", () => {
+  it("maps only the latest two completed checks from the current comparable window", () => {
     const input = {
       ...keywordRow(),
       rankChecks: [
-        {
-          checkedAt: new Date("2026-07-02T10:00:00.000Z"),
-          id: "check_deferred",
-          normalizationVersion: null,
-          position: null,
-          previousPosition: null,
+        rankCheck("2026-07-13T10:00:00.000Z", "check_deferred", null, { status: "deferred" }),
+        rankCheck("2026-07-12T10:00:00.000Z", "check_running", 1, { status: "running" }),
+        rankCheck(dateFromFrozenNow({ hours: 11 }).toISOString(), "check_failed", 2, {
+          status: "failed",
+        }),
+        rankCheck(dateFromFrozenNow({ hours: -13 }).toISOString(), "check_latest", null, {
           rankingUrl: null,
-          requestedDepth: 100,
-          status: "deferred",
-        },
-        {
-          checkedAt: new Date("2026-07-01T10:00:00.000Z"),
-          id: "check_completed",
-          normalizationVersion: "v2",
-          position: 7,
-          previousPosition: 9,
-          rankingUrl: "https://example.com/rank",
-          requestedDepth: 100,
-          status: "completed",
-        },
+        }),
+        rankCheck("2026-07-09T10:00:00.000Z", "check_previous", 7, {
+          rankingUrl: "https://example.com/previous",
+        }),
+        rankCheck("2026-07-08T10:00:00.000Z", "check_older", 9, {
+          rankingUrl: "https://example.com/older",
+        }),
+        rankCheck("2026-07-07T10:00:00.000Z", "check_non_comparable", 3, {
+          normalizationVersion: "v1",
+          rankingUrl: "https://example.com/legacy",
+        }),
       ],
     };
 
     const row = mapKeyword(input, project, metrics);
 
-    expect(row.lastCheckAt).toBe("2026-07-01T10:00:00.000Z");
-    expect(row.lastCheckStatus).toBe("completed");
-    expect(row.position).toBe(7);
-    expect(row.positionHistory).toEqual([
-      { checkedAt: "2026-07-01T10:00:00.000Z", label: "Jul 1", position: 7 },
+    expect(row.completedComparableChecks).toEqual([
+      {
+        checkedAt: "2026-07-09T10:00:00.000Z",
+        position: 7,
+        rankingUrl: "https://example.com/previous",
+      },
+      {
+        checkedAt: dateFromFrozenNow({ hours: -13 }).toISOString(),
+        position: null,
+        rankingUrl: null,
+      },
     ]);
   });
 
-  it("segments history and marks only a boundary inside the visible window", () => {
-    const current = {
-      checkedAt: new Date("2026-07-03T10:00:00.000Z"),
-      id: "check_v2",
-      normalizationVersion: "v2",
-      position: 5,
-      previousPosition: null,
+  it("keeps URL history across a comparison boundary while segmenting position history", () => {
+    const current = rankCheck("2026-07-03T10:00:00.000Z", "check_v2", 5, {
       rankingUrl: "https://example.com/current",
-      requestedDepth: 100,
-      status: "completed",
-    };
+    });
     const legacy = {
       ...current,
       checkedAt: new Date("2026-07-01T10:00:00.000Z"),
@@ -271,6 +263,20 @@ describe("mapKeyword traffic fields", () => {
       positionHistoryBoundaryAt: "2026-07-01T10:00:00.000Z",
     });
     expect(segmented.positionHistory).toHaveLength(1);
+    expect(segmented.rankingUrlHistory).toMatchObject([
+      {
+        isCurrent: false,
+        note: "First seen ranking",
+        requestedDepth: 100,
+        url: "https://example.com/legacy",
+      },
+      {
+        isCurrent: true,
+        note: "Current",
+        requestedDepth: 100,
+        url: "https://example.com/current",
+      },
+    ]);
     expect(legacyOnly.positionHistoryBoundaryAt).toBeNull();
   });
 });

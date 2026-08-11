@@ -6,10 +6,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   connectProvider,
   disconnectProvider,
-  setPrimaryProvider,
   testConnection,
   updateProviderCost,
   updateProviderRate,
+  updateProviderSettings,
 } from "./providers";
 
 const mocks = vi.hoisted(() => {
@@ -33,6 +33,7 @@ const mocks = vi.hoisted(() => {
     getActionActor: vi.fn(),
     provider,
     prisma: {
+      $queryRaw: vi.fn(),
       $transaction: vi.fn(),
       project: { findUnique: vi.fn() },
       providerConnection: {
@@ -158,6 +159,7 @@ describe("provider actions", () => {
     mocks.provider.testConnection.mockResolvedValue({ message: "ok", ok: true });
     mocks.analyticsProvider.testConnection.mockResolvedValue({ message: "ok", ok: true });
     mocks.requireProjectScope.mockResolvedValue(mocks.project);
+    mocks.prisma.$queryRaw.mockResolvedValue([{ id: mocks.project.id }]);
     mocks.prisma.$transaction.mockImplementation((callback) => callback(mocks.prisma));
     mocks.prisma.project.findUnique.mockResolvedValue({ publicId: mocks.project.publicId });
     mocks.prisma.providerConnection.findMany.mockResolvedValue([]);
@@ -176,7 +178,7 @@ describe("provider actions", () => {
     expect(mocks.getActionActor).not.toHaveBeenCalled();
   });
 
-  it("connects a primary provider with encrypted credentials and priority zero", async () => {
+  it("connects the first provider with encrypted credentials and priority zero", async () => {
     mocks.prisma.providerConnection.findUnique.mockResolvedValue(null);
     mocks.prisma.providerConnection.upsert.mockImplementation(({ create }) =>
       Promise.resolve(nonPlainConnection({ ...create, id: "conn_1" })),
@@ -186,8 +188,6 @@ describe("provider actions", () => {
       costPerCheck: 0.0123,
       enabled: false,
       login: "login",
-      primary: true,
-      priority: 20,
       projectId: "prj_a00000000000000000000000",
       providerId: "dataforseo",
       secret: "password",
@@ -198,13 +198,12 @@ describe("provider actions", () => {
     expect(stored).not.toContain("password");
     expect(JSON.parse(decryptSecret(stored))).toEqual({ login: "login", password: "password" });
     expect(mocks.prisma.providerConnection.findMany).toHaveBeenCalledWith({
-      orderBy: [{ priority: "asc" }, { provider: "asc" }],
-      select: { id: true, provider: true },
+      select: { priority: true },
       where: { kind: "serp", projectId: "project_1" },
     });
     expect(mocks.prisma.providerConnection.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
-        create: expect.objectContaining({ costPerCheckCents: 1.23 }),
+        create: expect.objectContaining({ costPerCheckCents: 1.23, enabled: true, priority: 0 }),
         update: expect.objectContaining({ costPerCheckCents: 1.23 }),
       }),
     );
@@ -226,7 +225,6 @@ describe("provider actions", () => {
 
     await connectProvider({
       login: "login",
-      primary: true,
       projectId: "prj_a00000000000000000000000",
       providerId: "dataforseo",
       secret: "password",
@@ -298,10 +296,12 @@ describe("provider actions", () => {
     expect(mocks.revalidatePath).not.toHaveBeenCalledWith("/app/keywords");
   });
 
-  it("promotes a connected primary provider inside one transaction", async () => {
+  it("connects a provider and writes its audit inside one transaction", async () => {
     const tx = {
+      $queryRaw: vi.fn(() => Promise.resolve([{ id: "project_1" }])),
       providerConnection: {
         findMany: vi.fn(() => Promise.resolve([])),
+        findUnique: vi.fn(() => Promise.resolve(null)),
         update: vi.fn(),
         upsert: vi.fn(({ create }) => Promise.resolve(connection({ ...create, id: "conn_tx" }))),
       },
@@ -310,13 +310,13 @@ describe("provider actions", () => {
     mocks.prisma.providerConnection.findUnique.mockResolvedValue(null);
 
     await connectProvider({
-      primary: true,
       projectId: "prj_a00000000000000000000000",
       providerId: "serpapi",
       secret: "api-key",
     });
 
     expect(mocks.prisma.$transaction).toHaveBeenCalledOnce();
+    expect(tx.$queryRaw).toHaveBeenCalledOnce();
     expect(tx.providerConnection.findMany).toHaveBeenCalledOnce();
     expect(tx.providerConnection.upsert).toHaveBeenCalledOnce();
     expect(mocks.writeAudit).toHaveBeenCalledWith(
@@ -326,6 +326,178 @@ describe("provider actions", () => {
       }),
       tx,
     );
+  });
+
+  it("promotes a provider through priority zero in one settings transaction", async () => {
+    const rows = new Map<string, ReturnType<typeof connection>>();
+    mocks.prisma.providerConnection.findUnique.mockImplementation(({ where }) => {
+      const providerId = where.projectId_provider?.provider;
+      return Promise.resolve(providerId ? (rows.get(providerId) ?? null) : null);
+    });
+    mocks.prisma.providerConnection.findMany.mockImplementation(({ where }) =>
+      Promise.resolve(
+        [...rows.values()]
+          .filter((row) => row.kind === where.kind)
+          .sort((left, right) => left.priority - right.priority),
+      ),
+    );
+    mocks.prisma.providerConnection.update.mockImplementation(({ data, where }) => {
+      const current = [...rows.values()].find((row) => row.id === where.id);
+      if (!current) throw new Error("Missing provider connection in test state.");
+      const updated = connection({ ...current, ...data });
+      rows.set(updated.provider, updated);
+      return Promise.resolve(updated);
+    });
+    mocks.prisma.providerConnection.upsert.mockImplementation(({ create, update, where }) => {
+      const current = rows.get(where.projectId_provider.provider);
+      const updated = connection({
+        ...(current ?? create),
+        ...(current ? update : {}),
+        id: current?.id ?? `conn_${rows.size + 1}`,
+      });
+      rows.set(updated.provider, updated);
+      return Promise.resolve(updated);
+    });
+
+    await connectProvider({
+      login: "login",
+      projectId: "prj_a00000000000000000000000",
+      providerId: "dataforseo",
+      secret: "password",
+    });
+    await connectProvider({
+      projectId: "prj_a00000000000000000000000",
+      providerId: "serpapi",
+      secret: "api-key",
+    });
+    expect([...rows.values()].map(({ priority, provider }) => ({ priority, provider }))).toEqual([
+      { priority: 0, provider: "dataforseo" },
+      { priority: 1, provider: "serpapi" },
+    ]);
+    const settingsTransaction = {
+      providerConnection: {
+        findMany: mocks.prisma.providerConnection.findMany,
+        update: mocks.prisma.providerConnection.update,
+      },
+    };
+    mocks.prisma.$transaction.mockImplementationOnce((callback) => callback(settingsTransaction));
+    await updateProviderSettings({
+      priority: 0,
+      projectId: "prj_a00000000000000000000000",
+      providerId: "serpapi",
+    });
+
+    expect([...rows.values()].map(({ priority, provider }) => ({ priority, provider }))).toEqual([
+      { priority: 1, provider: "dataforseo" },
+      { priority: 0, provider: "serpapi" },
+    ]);
+    expect(mocks.prisma.providerConnection.update).toHaveBeenNthCalledWith(1, {
+      data: { priority: 0 },
+      where: { id: "conn_2" },
+    });
+    expect(mocks.prisma.providerConnection.update).toHaveBeenNthCalledWith(3, {
+      data: { priority: 1 },
+      where: { id: "conn_1" },
+    });
+    expect(mocks.prisma.$transaction).toHaveBeenCalledTimes(3);
+    expect(mocks.prisma.$queryRaw).toHaveBeenCalledTimes(2);
+    expect(mocks.writeAudit).toHaveBeenLastCalledWith(
+      expect.objectContaining({ action: "provider.set_settings" }),
+      settingsTransaction,
+    );
+  });
+
+  it("serializes parallel connects before deriving provider priority", async () => {
+    const rows = new Map<string, ReturnType<typeof connection>>();
+    let blockedLockAttempts = 0;
+    let lockHeld = false;
+    let readCount = 0;
+    let rawLockCalls = 0;
+    let resolveConcurrentReads = () => {};
+    let resolveSecondLockAttempt = () => {};
+    const concurrentReads = new Promise<void>((resolve) => {
+      resolveConcurrentReads = resolve;
+    });
+    const secondLockAttempt = new Promise<void>((resolve) => {
+      resolveSecondLockAttempt = resolve;
+    });
+    const lockWaiters: Array<() => void> = [];
+
+    async function acquireProjectLock() {
+      if (lockHeld) {
+        blockedLockAttempts += 1;
+        resolveSecondLockAttempt();
+        await new Promise<void>((resolve) => lockWaiters.push(resolve));
+      }
+      lockHeld = true;
+      return () => {
+        lockHeld = false;
+        lockWaiters.shift()?.();
+      };
+    }
+
+    const findUnique = vi.fn(({ where }) => {
+      const providerId = where.projectId_provider?.provider;
+      return Promise.resolve(providerId ? (rows.get(providerId) ?? null) : null);
+    });
+    const findMany = vi.fn(async ({ where }) => {
+      readCount += 1;
+      if (lockHeld && readCount === 1) {
+        await secondLockAttempt;
+      } else if (!lockHeld) {
+        if (readCount === 2) resolveConcurrentReads();
+        await concurrentReads;
+      }
+      return [...rows.values()].filter((row) => row.kind === where.kind);
+    });
+    const upsert = vi.fn(({ create, update, where }) => {
+      const current = rows.get(where.projectId_provider.provider);
+      const saved = connection({
+        ...(current ?? create),
+        ...(current ? update : {}),
+        id: current?.id ?? `conn_${rows.size + 1}`,
+      });
+      rows.set(saved.provider, saved);
+      return Promise.resolve(saved);
+    });
+
+    mocks.prisma.providerConnection.findUnique.mockImplementation(findUnique);
+    mocks.prisma.$transaction.mockImplementation(async (callback) => {
+      let releaseLock: (() => void) | undefined;
+      const tx = {
+        $queryRaw: vi.fn(async () => {
+          rawLockCalls += 1;
+          releaseLock = await acquireProjectLock();
+          return [{ id: mocks.project.id }];
+        }),
+        providerConnection: { findMany, findUnique, update: vi.fn(), upsert },
+      };
+      try {
+        return await callback(tx);
+      } finally {
+        releaseLock?.();
+      }
+    });
+
+    await Promise.all([
+      connectProvider({
+        login: "login",
+        projectId: "prj_a00000000000000000000000",
+        providerId: "dataforseo",
+        secret: "password",
+      }),
+      connectProvider({
+        projectId: "prj_a00000000000000000000000",
+        providerId: "serpapi",
+        secret: "api-key",
+      }),
+    ]);
+
+    expect(blockedLockAttempts).toBe(1);
+    expect(rawLockCalls).toBe(2);
+    expect(
+      [...rows.values()].map((row) => row.priority).sort((left, right) => left - right),
+    ).toEqual([0, 1]);
   });
 
   it("tests a connection with stored encrypted credentials", async () => {
@@ -379,32 +551,25 @@ describe("provider actions", () => {
     expect(mocks.provider.testConnection).not.toHaveBeenCalled();
   });
 
-  it("enables a promoted connection and assigns it priority zero", async () => {
+  it("updates settings without promoting a nonzero priority", async () => {
     mocks.prisma.providerConnection.findUnique.mockResolvedValue(connection({ id: "conn_2" }));
-    mocks.prisma.providerConnection.findMany.mockResolvedValue([
-      connection({ id: "conn_2", provider: "serpapi" }),
-    ]);
     mocks.prisma.providerConnection.update.mockResolvedValue(
-      nonPlainConnection({ enabled: true, id: "conn_2", priority: 0 }),
+      nonPlainConnection({ enabled: false, id: "conn_2", priority: 42 }),
     );
 
-    const result = await setPrimaryProvider({
+    const result = await updateProviderSettings({
       enabled: false,
-      primary: true,
       priority: 42,
       projectId: "prj_a00000000000000000000000",
       providerId: "serpapi",
     });
 
     expect(result).toEqual({ ok: true });
-    expect(mocks.prisma.providerConnection.update).toHaveBeenNthCalledWith(1, {
-      data: { priority: 0 },
+    expect(mocks.prisma.providerConnection.update).toHaveBeenCalledWith({
+      data: { enabled: false, priority: 42 },
       where: { id: "conn_2" },
     });
-    expect(mocks.prisma.providerConnection.update).toHaveBeenNthCalledWith(2, {
-      data: { enabled: true },
-      where: { id: "conn_2" },
-    });
+    expect(mocks.prisma.providerConnection.findMany).not.toHaveBeenCalled();
     expect(mocks.prisma.$transaction).toHaveBeenCalledOnce();
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({ action: "provider.set_settings" }),
@@ -412,7 +577,7 @@ describe("provider actions", () => {
     );
   });
 
-  it("promotes the third connection without changing the others' relative order", async () => {
+  it("renumbers the third connection without changing the others' relative order", async () => {
     mocks.prisma.providerConnection.findUnique.mockResolvedValue(
       connection({ id: "conn_3", priority: 2 }),
     );
@@ -425,8 +590,8 @@ describe("provider actions", () => {
       Promise.resolve(nonPlainConnection({ ...data, id: where.id })),
     );
 
-    await setPrimaryProvider({
-      primary: true,
+    await updateProviderSettings({
+      priority: 0,
       projectId: "prj_a00000000000000000000000",
       providerId: "serpapi",
     });
@@ -437,6 +602,7 @@ describe("provider actions", () => {
         : [],
     );
     expect(priorities).toEqual([
+      { id: "conn_3", priority: 0 },
       { id: "conn_3", priority: 0 },
       { id: "conn_1", priority: 1 },
       { id: "conn_2", priority: 2 },

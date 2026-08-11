@@ -17,7 +17,7 @@ import {
   labelClass,
   onboardingFormId,
 } from "@/components/onboarding/onboarding-form-utils";
-import { DataResidencyNote } from "@/components/ui";
+import { Button, DataResidencyNote } from "@/components/ui";
 import { createCloudImportWorkspace } from "@/lib/actions/cloud";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { type CreateProjectInput, createProjectSchema, domainSchema } from "@/lib/schemas/project";
@@ -79,22 +79,29 @@ function CloudImportWorkspaceButton() {
       className="mt-6 rounded-xl border border-border-strong bg-transparent p-4"
       onSubmit={handleSubmit}
     >
-      <button
-        className="inline-flex min-h-9 items-center rounded-lg text-[13px] font-semibold text-fg-muted transition-colors hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid disabled:cursor-not-allowed disabled:opacity-60"
+      <Button
+        aria-label="Migrating from a self-hosted instance? Import it instead"
+        className="gap-x-[0.25em]"
         disabled={pending}
+        sx={{
+          minHeight: 40,
+          padding: 0,
+          "&:hover": { backgroundColor: "transparent", color: "var(--accent-text)" },
+        }}
         type="submit"
+        variant="ghost"
       >
         {pending ? (
           "Opening import..."
         ) : (
           <>
-            Migrating from a self-hosted instance?{" "}
+            Migrating from a self-hosted instance?
             <span className="underline decoration-current underline-offset-2">
               Import it instead
             </span>
           </>
         )}
-      </button>
+      </Button>
       {error ? (
         <p className={`m-0 mt-3 ${feedbackClass} text-red-text`} role="alert">
           {error}

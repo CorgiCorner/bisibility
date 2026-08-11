@@ -243,7 +243,11 @@ export function buildKpis(snapshots: Snapshot[], keywordCount: number, addedThis
   const hasComparison = metrics.averagePositionDelta !== null;
   const averageDelta = metrics.averagePositionDelta ?? 0;
   const countDelta = (value: number) => (value > 0 ? `+${value}` : String(value));
-  const averageCopy = hasData && !hasComparison ? "new" : averageDeltaCopy(hasData, averageDelta);
+  const averageCopy = !hasData
+    ? averageDeltaCopy(false, averageDelta)
+    : hasComparison
+      ? `${averageDeltaCopy(true, averageDelta)} vs previous ranked check`
+      : "new";
   const topDeltaCopy = hasComparison ? countDelta(metrics.top10Delta ?? 0) : "new";
   const visibilityDelta = metrics.visibilityDelta ?? 0;
   return [

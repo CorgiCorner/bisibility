@@ -6,6 +6,7 @@ import {
   DEFAULT_ONBOARDING_LOCATION_KEY,
   MAX_ONBOARDING_LOCATIONS,
 } from "@/components/onboarding/onboarding-locations";
+import { Button } from "@/components/ui";
 import { PlusIcon as Plus, XIcon as X } from "@phosphor-icons/react";
 import { type FocusEvent, type KeyboardEvent, useState } from "react";
 
@@ -78,26 +79,38 @@ export function LocationSelectionChips({
         {values.map((value) => (
           <span className={chipClass} key={value.canonicalKey}>
             <span className="min-w-0 truncate">{value.displayName}</span>
-            <button
+            <Button
               aria-label={`Remove ${value.displayName}`}
-              className="grid h-5 w-5 flex-none place-items-center rounded-full text-fg-muted hover:text-red-text disabled:opacity-40"
               disabled={values.length <= 1}
               onClick={() => removeLocation(value.canonicalKey)}
+              size="xs"
+              sx={{
+                borderRadius: "999px",
+                height: 20,
+                minHeight: 20,
+                minWidth: 20,
+                padding: 0,
+                "&:hover": { color: "var(--red-text)" },
+                "&.Mui-disabled": { backgroundColor: "transparent", border: 0, opacity: 0.4 },
+              }}
               type="button"
+              variant="ghost"
             >
               <X aria-hidden size={11} weight="bold" />
-            </button>
+            </Button>
           </span>
         ))}
         {canAdd && !adding ? (
-          <button
-            className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-dashed border-border-strong px-2.5 text-[12.5px] font-semibold text-accent-text hover:border-accent"
+          <Button
             onClick={() => setAdding(true)}
+            size="xs"
+            startIcon={<Plus aria-hidden size={13} weight="bold" />}
+            sx={{ borderRadius: "999px", borderStyle: "dashed" }}
             type="button"
+            variant="secondary"
           >
-            <Plus aria-hidden size={13} weight="bold" />
             Add location
-          </button>
+          </Button>
         ) : null}
       </div>
       {adding && canAdd ? (
@@ -117,15 +130,21 @@ export function LocationSelectionChips({
             />
           </div>
           {values.length > 0 ? (
-            <button
+            <Button
               aria-label="Cancel adding location"
-              className="mt-[22px] inline-flex min-h-8 items-center gap-1.5 rounded-full border border-border-strong px-2.5 text-[12.5px] font-semibold text-fg-muted hover:border-red hover:text-red-text"
+              className="mt-[22px]"
               onClick={cancelAdd}
+              size="xs"
+              startIcon={<X aria-hidden size={12} weight="bold" />}
+              sx={{
+                borderRadius: "999px",
+                "&:hover": { borderColor: "var(--red)", color: "var(--red-text)" },
+              }}
               type="button"
+              variant="secondary"
             >
-              <X aria-hidden size={12} weight="bold" />
               Cancel
-            </button>
+            </Button>
           ) : null}
         </fieldset>
       ) : null}

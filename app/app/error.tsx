@@ -1,6 +1,8 @@
 "use client";
 
+import { useDeploymentMode } from "@/components/shell/DeploymentModeProvider";
 import { Button, MonoText, SectionTitle } from "@/components/ui";
+import { FEEDBACK_URL, GITHUB_ISSUES_URL } from "@/lib/site/site";
 import {
   ArrowClockwiseIcon as ArrowClockwise,
   LifebuoyIcon as Lifebuoy,
@@ -44,6 +46,7 @@ function formatOccurredAt(date: Date) {
 }
 
 export default function AppErrorBoundary({ error, reset }: Readonly<AppErrorBoundaryProps>) {
+  const deploymentMode = useDeploymentMode();
   const pathname = usePathname();
   const viewPath = pathname || "/app";
   const [isRetrying, startRetry] = useTransition();
@@ -88,8 +91,28 @@ export default function AppErrorBoundary({ error, reset }: Readonly<AppErrorBoun
             This view stopped rendering
           </SectionTitle>
           <p className="mt-2.5 max-w-[44ch] text-[14px] leading-[1.6] text-fg-muted">
-            The app kept running, so your data is safe. Try the view again - if it keeps failing,
-            copy the details and open an issue.
+            {deploymentMode === "cloud" ? (
+              <>
+                The app kept running, so your data is safe. Try the view again - if it keeps
+                failing, share the error reference with{" "}
+                <a className="font-semibold text-accent-text hover:underline" href={FEEDBACK_URL}>
+                  support
+                </a>
+                .
+              </>
+            ) : (
+              <>
+                The app kept running, so your data is safe. Try the view again - if it keeps
+                failing, copy the details and{" "}
+                <a
+                  className="font-semibold text-accent-text hover:underline"
+                  href={GITHUB_ISSUES_URL}
+                >
+                  open an issue
+                </a>
+                .
+              </>
+            )}
           </p>
 
           <div className="mt-[22px] flex flex-wrap items-center justify-center gap-[9px]">
@@ -115,6 +138,7 @@ export default function AppErrorBoundary({ error, reset }: Readonly<AppErrorBoun
           </div>
 
           <AppErrorDiagnostics
+            deploymentMode={deploymentMode}
             details={{
               digest: error.digest,
               message: error.message,

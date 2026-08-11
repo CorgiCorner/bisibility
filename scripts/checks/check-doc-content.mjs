@@ -148,7 +148,33 @@ for (const term of ["personal access token", "project API key"]) {
   }
 }
 
-const selfHostingDocs = readFileSync(join(docsRoot, "self-hosting.mdx"), "utf8");
+const selfHostingPagePaths = [
+  "self-hosting.mdx",
+  "self-hosting/docker.mdx",
+  "self-hosting/upgrades.mdx",
+  "self-hosting/railway.mdx",
+  "self-hosting/temporal.mdx",
+  "self-hosting/configuration.mdx",
+  "self-hosting/operations.mdx",
+];
+const selfHostingPages = new Map();
+for (const page of selfHostingPagePaths) {
+  const pagePath = join(docsRoot, page);
+  if (!existsSync(pagePath)) {
+    failures.push(`Self-hosting page is missing: docs/${page}`);
+    continue;
+  }
+  const content = readFileSync(pagePath, "utf8");
+  selfHostingPages.set(page, content);
+  if (page !== "self-hosting.mdx") {
+    const opening = content.slice(0, 600);
+    if (!opening.includes("[Production checklist](/self-hosting#production-checklist)")) {
+      failures.push(`docs/${page} must link to the production checklist at the top.`);
+    }
+  }
+}
+
+const selfHostingDocs = [...selfHostingPages.values()].join("\n");
 for (const term of [
   "https://bisibility.com/deploy/railway",
   "### What the template creates",
@@ -166,6 +192,114 @@ if (selfHostingDocs.includes("https://railway.com/new/template?template=")) {
 }
 if (selfHostingDocs.includes("https://railway.com/deploy/")) {
   failures.push("self-hosting.mdx bypasses the stable Bisibility deployment redirect.");
+}
+
+const selfHostingHub = selfHostingPages.get("self-hosting.mdx") ?? "";
+for (const term of [
+  "## Production topology",
+  "| Web/API | Repository `Dockerfile` | Yes |",
+  "[Production topology](/self-hosting#production-topology)",
+]) {
+  if (!selfHostingHub.includes(term)) {
+    failures.push(`self-hosting.mdx does not expose the production service contract: ${term}`);
+  }
+}
+
+const selfHostingUpgrades = selfHostingPages.get("self-hosting/upgrades.mdx") ?? "";
+const legacyUpgradeAnchors = [
+  "1-back-up-postgresql",
+  "2-check-the-port-change",
+  "3-fetch-v020",
+  "4-keep-deliberate-host-local-database-access",
+  "5-build-and-start-the-release",
+  "6-verify-the-upgrade",
+  "7-roll-back",
+];
+if (
+  !selfHostingUpgrades.includes(
+    '<span id="upgrade-from-v010-to-v020"></span>\n\n## Upgrade from v0.1.0 to v0.2.0',
+  )
+) {
+  failures.push("self-hosting/upgrades.mdx is missing #upgrade-from-v010-to-v020.");
+}
+for (const anchor of legacyUpgradeAnchors) {
+  if (!selfHostingUpgrades.includes(`id="${anchor}"`)) {
+    failures.push(`self-hosting/upgrades.mdx is missing the restored legacy anchor #${anchor}.`);
+  }
+}
+for (const term of [
+  "<AccordionGroup>",
+  "bisibility-v0.1.0-before-v0.2.0.dump",
+  "docker compose -f docker-compose.yml -f docker-compose.debug.yml up -d --build",
+  "docker compose exec -T postgres pg_restore",
+]) {
+  if (!selfHostingUpgrades.includes(term)) {
+    failures.push(`self-hosting/upgrades.mdx is missing legacy upgrade guidance: ${term}`);
+  }
+}
+
+const selfHostingOperations = selfHostingPages.get("self-hosting/operations.mdx") ?? "";
+if (selfHostingOperations.includes("\nWarning: a depth larger than your real chain")) {
+  failures.push("The XFF depth warning must be inside the adjacent Warning component.");
+}
+if (
+  !selfHostingOperations.includes(
+    "<Warning>\nA depth larger than your real chain reads a client-supplied entry.",
+  )
+) {
+  failures.push("The XFF Warning component is missing the depth-mismatch risk.");
+}
+
+const selfHostingConfiguration = selfHostingPages.get("self-hosting/configuration.mdx") ?? "";
+if (
+  !selfHostingConfiguration.includes(
+    "| `SELF_HOSTED_ALLOW_INDEXING` | Self-hosted instances serve restrictive `robots.txt` and no `sitemap.xml` or `llms.txt` by default.",
+  )
+) {
+  failures.push("SELF_HOSTED_ALLOW_INDEXING must own the robots and sitemap behavior in its row.");
+}
+
+const movedSelfHostingAnchors = new Map([
+  ["client-ip-behind-a-proxy", "/self-hosting/operations#client-ip-behind-a-proxy"],
+  ["docker", "/self-hosting/docker"],
+  ["compose-topology-commands", "/self-hosting/docker#compose-topology-commands"],
+  ["how-the-stack-starts", "/self-hosting/docker#how-the-stack-starts"],
+  ["local-demo", "/self-hosting/docker#local-demo"],
+  ["production-compose", "/self-hosting/docker#production-compose"],
+  ["upgrade-with-a-distribution-manifest", "/self-hosting/upgrades#upgrade-with-a-distribution-manifest"],
+  ["upgrade-from-v010-to-v020", "/self-hosting/upgrades#upgrade-from-v010-to-v020"],
+  ["1-back-up-postgresql", "/self-hosting/upgrades#1-back-up-postgresql"],
+  ["2-check-the-port-change", "/self-hosting/upgrades#2-check-the-port-change"],
+  ["3-fetch-v020", "/self-hosting/upgrades#3-fetch-v020"],
+  ["4-keep-deliberate-host-local-database-access", "/self-hosting/upgrades#4-keep-deliberate-host-local-database-access"],
+  ["5-build-and-start-the-release", "/self-hosting/upgrades#5-build-and-start-the-release"],
+  ["6-verify-the-upgrade", "/self-hosting/upgrades#6-verify-the-upgrade"],
+  ["7-roll-back", "/self-hosting/upgrades#7-roll-back"],
+  ["use-the-cli-with-this-instance", "/self-hosting/docker#use-the-cli-with-this-instance"],
+  ["access-services-from-the-host", "/self-hosting/docker#access-services-from-the-host"],
+  ["stop-or-reset-the-stack", "/self-hosting/docker#stop-or-reset-the-stack"],
+  ["examples", "/self-hosting/docker#examples"],
+  ["railway", "/self-hosting/railway"],
+  ["what-the-template-creates", "/self-hosting/railway#what-the-template-creates"],
+  ["first-deployment", "/self-hosting/railway#first-deployment"],
+  ["upgrade-a-railway-template-deployment", "/self-hosting/railway#upgrade-a-railway-template-deployment"],
+  ["temporal-server-or-temporal-cloud", "/self-hosting/temporal#temporal-server-or-temporal-cloud"],
+  ["worker-startup-troubleshooting", "/self-hosting/temporal#worker-startup-troubleshooting"],
+  ["required-environment-variables", "/self-hosting/configuration#required-environment-variables"],
+  ["optional-environment-variables", "/self-hosting/configuration#optional-environment-variables"],
+  ["instance-settings", "/self-hosting/configuration#instance-settings"],
+  ["operator-observability-optional", "/self-hosting/operations#operator-observability-optional"],
+  ["instance-admin", "/self-hosting/operations#instance-admin"],
+  ["scheduled-rank-checks", "/self-hosting/temporal#scheduled-rank-checks"],
+  ["database-growth", "/self-hosting/operations#database-growth"],
+]);
+for (const [anchor, destination] of movedSelfHostingAnchors) {
+  if (!selfHostingHub.includes(`<span id="${anchor}"></span>`)) {
+    failures.push(`self-hosting.mdx is missing the compatibility anchor #${anchor}.`);
+  }
+  if (!selfHostingHub.includes(`href="${destination}"`)) {
+    failures.push(`self-hosting.mdx does not map #${anchor} to ${destination}.`);
+  }
 }
 
 const apiOverviewDocs = readFileSync(join(docsRoot, "api/overview.mdx"), "utf8");

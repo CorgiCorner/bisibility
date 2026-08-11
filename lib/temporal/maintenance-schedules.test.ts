@@ -1,22 +1,24 @@
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
-import { ScheduleAlreadyRunning } from "@temporalio/client";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   AUDIT_PURGE_SCHEDULE_ID,
   ensureAuditPurgeSchedule,
+  ensureMigrationHoldReleaseSchedule,
   ensureQueuedRankCheckRetentionSchedule,
   ensureRankCheckRawPurgeSchedule,
   ensureSessionPurgeSchedule,
   ensureStaleChecksSchedule,
   ensureWeeklyDigestSchedule,
   isScheduledMaintenanceEnabled,
+  MIGRATION_HOLD_RELEASE_SCHEDULE_ID,
   QUEUED_RANK_CHECK_RETENTION_SCHEDULE_ID,
   RANK_CHECK_RAW_PURGE_SCHEDULE_ID,
   SESSION_PURGE_SCHEDULE_ID,
   STALE_CHECKS_SCHEDULE_ID,
   WEEKLY_DIGEST_SCHEDULE_ID,
-} from "./maintenance-schedule-bootstrap";
+} from "@/lib/temporal/maintenance-schedule-bootstrap";
+import { ScheduleAlreadyRunning } from "@temporalio/client";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 function clientMock() {
   return { create: vi.fn() };
@@ -168,6 +170,20 @@ describe("maintenance schedule bootstrap", () => {
         action: expect.objectContaining({ workflowType: "markStaleRunningChecksWorkflow" }),
         scheduleId: STALE_CHECKS_SCHEDULE_ID,
         spec: { intervals: [{ every: "10 minutes" }] },
+      }),
+    );
+  });
+
+  it("sweeps expired migration holds hourly", async () => {
+    const client = clientMock();
+
+    await ensureMigrationHoldReleaseSchedule(client);
+
+    expect(client.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: expect.objectContaining({ workflowType: "releaseExpiredMigrationHoldsWorkflow" }),
+        scheduleId: MIGRATION_HOLD_RELEASE_SCHEDULE_ID,
+        spec: { intervals: [{ every: "1 hour" }] },
       }),
     );
   });

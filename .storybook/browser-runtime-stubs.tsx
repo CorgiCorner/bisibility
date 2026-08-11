@@ -34,6 +34,26 @@ export async function loadCloudBackupCounts() {
   };
 }
 
+export async function updatePresenceInspectionBudget(input: {
+  inspectionDailyLimit: number;
+  projectId: string;
+}) {
+  return {
+    city: null,
+    country: "Poland",
+    cronExpression: null,
+    device: "desktop",
+    frequency: "daily",
+    inspectionDailyLimit: input.inspectionDailyLimit,
+    jitterMinutes: 60,
+    locationKey: "PL",
+    projectId: input.projectId,
+    serpDepth: 100,
+    serpStopOnMatch: true,
+    timezone: "Europe/Warsaw",
+  };
+}
+
 export default function Link({ children, href = "#", ...props }: LinkProps) {
   return React.createElement("a", { ...props, href }, children);
 }
@@ -563,4 +583,5 @@ export const updateProjectSchedule = asyncNoop;
 export const updateProjectTrackingScope = asyncNoop;
 export const updateProviderCost = asyncNoop;
 export const updateProviderRate = asyncNoop;
+export const updateProviderSettings = asyncNoop;
 export const updateRankCheckFrequency = asyncNoop;

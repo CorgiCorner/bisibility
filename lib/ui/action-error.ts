@@ -7,8 +7,19 @@ const stalePatterns = [
   /older or newer deployment/i,
 ];
 
+const nextDigestMessagePatterns = [
+  /Server Components render/i,
+  /An unexpected response was received from the server/i,
+];
+
 export function isStaleDeploymentError(error: unknown) {
   return error instanceof Error && stalePatterns.some((pattern) => pattern.test(error.message));
+}
+
+function serverComponentDigest(error: Error) {
+  if (!nextDigestMessagePatterns.some((pattern) => pattern.test(error.message))) return null;
+  const digest = (error as Error & { digest?: unknown }).digest;
+  return typeof digest === "string" && digest.length > 0 ? digest : null;
 }
 
 export function actionErrorMessage(
@@ -20,6 +31,10 @@ export function actionErrorMessage(
   }
   if (isStaleDeploymentError(error)) {
     return STALE_DEPLOYMENT_MESSAGE;
+  }
+  const digest = serverComponentDigest(error);
+  if (digest) {
+    return `Check failed on our side (ref ${digest}). Retry in a moment.`;
   }
   return error.message || fallback;
 }

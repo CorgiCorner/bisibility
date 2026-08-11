@@ -13,9 +13,9 @@ vi.mock("next/navigation", () => ({
 const actions = {
   connectProvider: vi.fn(async () => undefined),
   disconnectProvider: vi.fn(async () => undefined),
-  setPrimaryProvider: vi.fn(async () => undefined),
   testProviderConnection: vi.fn(async () => ({ message: "ok", ok: true })),
   updateProviderCost: vi.fn(async () => undefined),
+  updateProviderSettings: vi.fn(async () => undefined),
 } satisfies ProviderActionHandlers;
 
 function connectedProviders(): IntegrationProviderData[] {
@@ -63,16 +63,54 @@ describe("SerpFallbackOrder", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Move SerpApi up" }));
 
-    await waitFor(() => expect(actions.setPrimaryProvider).toHaveBeenCalledTimes(2));
-    expect(actions.setPrimaryProvider).toHaveBeenNthCalledWith(
-      1,
-      expect.objectContaining({ primary: true, priority: 0, providerId: "serpapi" }),
-    );
-    expect(actions.setPrimaryProvider).toHaveBeenNthCalledWith(
-      2,
-      expect.objectContaining({ primary: false, priority: 1, providerId: "dataforseo" }),
-    );
+    await waitFor(() => expect(actions.updateProviderSettings).toHaveBeenCalledTimes(2));
+    expect(actions.updateProviderSettings).toHaveBeenNthCalledWith(1, {
+      enabled: true,
+      priority: 0,
+      projectId: "prj_1",
+      providerId: "serpapi",
+    });
+    expect(actions.updateProviderSettings).toHaveBeenNthCalledWith(2, {
+      enabled: true,
+      priority: 1,
+      projectId: "prj_1",
+      providerId: "dataforseo",
+    });
     expect(refresh).toHaveBeenCalledOnce();
+  });
+
+  it("renumbers active providers before paused providers in every update", async () => {
+    const [dataForSeo, serpApi] = connectedProviders();
+    render(
+      <SerpFallbackOrder
+        actions={actions}
+        canManageProviders
+        projectId="prj_1"
+        providers={[dataForSeo, serpApi, { ...serpApi, enabled: false, id: "local-sequence" }]}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("switch", { name: "Pause DataForSEO" }));
+
+    await waitFor(() => expect(actions.updateProviderSettings).toHaveBeenCalledTimes(3));
+    expect(actions.updateProviderSettings).toHaveBeenNthCalledWith(1, {
+      enabled: true,
+      priority: 0,
+      projectId: "prj_1",
+      providerId: "serpapi",
+    });
+    expect(actions.updateProviderSettings).toHaveBeenNthCalledWith(2, {
+      enabled: false,
+      priority: 100,
+      projectId: "prj_1",
+      providerId: "dataforseo",
+    });
+    expect(actions.updateProviderSettings).toHaveBeenNthCalledWith(3, {
+      enabled: false,
+      priority: 101,
+      projectId: "prj_1",
+      providerId: "local-sequence",
+    });
   });
 
   it("renders provider order without management controls below admin", () => {

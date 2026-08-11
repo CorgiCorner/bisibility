@@ -1,21 +1,11 @@
-import { ProviderUsage } from "@/components/settings/providers/ProviderUsage";
-import { settingsFixtures, usageProviderSpend } from "@/components/settings/settings-fixtures";
-import type { ProviderUsageData } from "@/lib/settings/options";
+import { ProviderSpendMeter } from "@/components/cost-estimate/ProviderSpendMeter";
 import type { Meta, StoryObj } from "@storybook/react";
-import { ProviderSpendMeter } from "./ProviderSpendMeter";
 
 const docsHref = "/docs/integrations#budget-cap";
-
-// Canonical artboard 1E fixture (two providers, $12.40 of a $50.00 cap) lives in
-// settings-fixtures alongside the other settings usage fixtures.
-const usageTwoProviders: ProviderUsageData = settingsFixtures.usage;
-const twoProviders = usageProviderSpend;
-
-const usageSingleProvider: ProviderUsageData = {
-  ...usageTwoProviders,
-  connections: [usageTwoProviders.connections[0]],
-  serpChecksMonth: "7,440",
-};
+const twoProviders = [
+  { label: "DataForSEO", spentCents: 940 },
+  { label: "SerpApi", spentCents: 300 },
+] as const;
 
 const meta = {
   args: { capCents: 5000, docsHref, spentCents: 1240, variant: "header" },
@@ -88,37 +78,4 @@ export const CardDefault: Story = {
 export const CardFirstDaysNoPace: Story = {
   args: { now: new Date("2026-07-01T12:00:00.000Z"), sessionCents: 9, variant: "card" },
   name: "Card/FirstDaysNoPace",
-};
-
-const ownerEditBudget = {
-  canEdit: true,
-  submit: async (capCents: number) => ({ capCents }),
-};
-
-export const SettingsSectionDefault: Story = {
-  name: "SettingsSection/Default",
-  render: () => <ProviderUsage editBudget={ownerEditBudget} usage={usageTwoProviders} />,
-};
-
-export const SettingsSectionSingleProvider: Story = {
-  name: "SettingsSection/SingleProvider",
-  render: () => <ProviderUsage editBudget={ownerEditBudget} usage={usageSingleProvider} />,
-};
-
-// Viewer role: the Edit budget button is hidden entirely; meter and stats unchanged.
-export const SettingsSectionViewerRole: Story = {
-  name: "SettingsSection/ViewerRole",
-  render: () => (
-    <ProviderUsage
-      editBudget={{ canEdit: false, submit: ownerEditBudget.submit }}
-      usage={usageTwoProviders}
-    />
-  ),
-};
-
-export const SettingsSectionEditBudgetDialog: Story = {
-  name: "SettingsSection/EditBudgetDialog",
-  render: () => (
-    <ProviderUsage editBudget={ownerEditBudget} initialEditOpen usage={usageTwoProviders} />
-  ),
 };

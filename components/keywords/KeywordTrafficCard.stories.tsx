@@ -1,3 +1,4 @@
+import { KeywordDetailStoryThemes } from "@/components/keyword-detail/shared/story-theme-preview";
 import { KeywordTrafficCard } from "@/components/keywords/KeywordTrafficCard";
 import type { KeywordTrafficDetail, PageTrafficSnapshotLike } from "@/lib/queries/keyword-traffic";
 import type { Meta, StoryObj } from "@storybook/react";
@@ -46,39 +47,58 @@ const meta = {
   component: KeywordTrafficCard,
   decorators: [
     (Story) => (
-      <div className="min-h-[520px] bg-bg p-6 text-fg">
-        <Story />
-      </div>
+      <KeywordDetailStoryThemes>
+        <div className="min-h-[520px] text-fg">
+          <Story />
+        </div>
+      </KeywordDetailStoryThemes>
     ),
   ],
+  parameters: { chromatic: { viewports: [390, 768, 1440] } },
 } satisfies Meta<typeof KeywordTrafficCard>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const FullData: Story = {
-  args: { projectRef: "prj_1", traffic: { hasAnalyticsConnection: true, pages, query } },
+export const Both: Story = {
+  args: {
+    projectRef: "prj_1",
+    traffic: { hasAnalyticsConnection: true, hasSearchConsoleConnection: true, pages, query },
+    trafficState: "both",
+  },
 };
 
-export const QueryOnly: Story = {
-  args: { projectRef: "prj_1", traffic: { hasAnalyticsConnection: true, pages: [], query } },
-};
-
-export const PagesOnly: Story = {
-  args: { projectRef: "prj_1", traffic: { hasAnalyticsConnection: true, pages, query: null } },
+export const GscOnly: Story = {
+  args: {
+    projectRef: "prj_1",
+    traffic: { hasAnalyticsConnection: true, hasSearchConsoleConnection: true, pages: [], query },
+    trafficState: "gsc_only",
+  },
 };
 
 export const NotConnected: Story = {
   args: {
     projectRef: "prj_1",
-    traffic: { hasAnalyticsConnection: false, pages: [], query: null },
+    traffic: {
+      hasAnalyticsConnection: true,
+      hasSearchConsoleConnection: false,
+      pages: [],
+      query: null,
+    },
+    trafficState: "not_connected",
   },
 };
 
 export const AwaitingFirstSync: Story = {
   args: {
     projectRef: "prj_1",
-    traffic: { hasAnalyticsConnection: true, pages: [], query: null },
+    traffic: {
+      hasAnalyticsConnection: true,
+      hasSearchConsoleConnection: true,
+      pages: [],
+      query: null,
+    },
+    trafficState: "awaiting_sync",
   },
 };

@@ -19,10 +19,9 @@ export type SwitchProps = Omit<InputHTMLAttributes<HTMLInputElement>, "role" | "
   thumbContent?: ReactNode;
   trackClassName?: string;
   trackContent?: ReactNode;
-  visualClassName?: string;
 };
 
-const visualClass = "relative h-5 w-9 shrink-0";
+const visualClass = "relative h-[18px] w-8 shrink-0";
 
 const trackClass =
   "absolute inset-0 rounded-full border border-border-strong bg-transparent transition-colors " +
@@ -31,8 +30,8 @@ const trackClass =
   "peer-disabled:bg-bg-sunken disabled:text-fg-muted";
 
 const thumbClass =
-  "absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-fg-muted transition-transform " +
-  "peer-checked:translate-x-4 peer-checked:bg-accent peer-disabled:bg-bg-sunken disabled:text-fg-muted";
+  "absolute left-[3px] top-[3px] h-3 w-3 rounded-full bg-fg-muted transition-transform " +
+  "peer-checked:translate-x-[14px] peer-checked:bg-accent peer-disabled:bg-bg-sunken disabled:text-fg-muted";
 
 export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
   {
@@ -50,7 +49,6 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
     thumbContent,
     trackClassName,
     trackContent,
-    visualClassName,
     ...props
   },
   ref,
@@ -77,7 +75,7 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
       )}
       htmlFor={inputId}
     >
-      <span className={cn(visualClass, visualClassName)}>
+      <span className={visualClass}>
         <input
           aria-checked={isChecked}
           className={cn("peer sr-only", inputClassName)}

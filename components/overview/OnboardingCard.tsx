@@ -5,7 +5,19 @@ import {
   type SuggestionCostContext,
 } from "@/components/keywords/import/KeywordSuggestionDrawer";
 import type { ImportTopQueriesAction } from "@/components/onboarding/steps/KeywordTopQueryImport";
+import {
+  type GettingStartedCapabilities,
+  type GettingStartedProgress,
+  gettingStartedActiveIndex,
+} from "@/components/overview/getting-started";
+import {
+  ConnectStage,
+  KeywordsStage,
+  OptionsFooter,
+  StagePanel,
+} from "@/components/overview/OnboardingStages";
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
+import { StepDots } from "@/components/ui";
 import type { TopQuerySuggestion } from "@/lib/keyword-suggest/sanitize-top-queries";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import { asProjectRef } from "@/lib/routing/app-path";
@@ -13,18 +25,6 @@ import { DEFAULT_SERP_DEPTH } from "@/lib/serp/markets";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import {
-  type GettingStartedCapabilities,
-  type GettingStartedProgress,
-  gettingStartedActiveIndex,
-} from "./getting-started";
-import {
-  ConnectStage,
-  KeywordsStage,
-  OptionsFooter,
-  StagePanel,
-  StepDots,
-} from "./OnboardingStages";
 
 export type AddKeywordsAction = (input: {
   projectId: string;
@@ -70,6 +70,7 @@ export function OnboardingCard({
 
   const projectRef = progress.projectRef ?? asProjectRef(progress.projectId);
   const stage = gettingStartedActiveIndex(progress);
+  const displayedStage = stage === 0 ? 3 : stage;
   const canImportQueries =
     progress.hasAnalyticsSource &&
     Boolean(importTopQueriesAction) &&
@@ -122,7 +123,16 @@ export function OnboardingCard({
 
   return (
     <div className="mt-6">
-      <StepDots stage={stage === 0 ? 3 : stage} />
+      <StepDots
+        className="flex items-center gap-2.5"
+        currentIndex={displayedStage - 1}
+        items={[1, 2, 3]}
+        label={
+          <span className="font-mono text-[10px] uppercase tracking-[0.6px] text-fg-muted">
+            Step {displayedStage} of 3
+          </span>
+        }
+      />
       {stage === 1 ? (
         <ConnectStage
           capabilities={capabilities}

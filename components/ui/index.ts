@@ -29,6 +29,8 @@ export {
   type DisclosureHeadingLevel,
   type DisclosureProps,
 } from "./Disclosure";
+export { DomainIconLayer, type DomainIconLayerProps } from "./DomainIconLayer";
+export { buildDomainIconUrl, type DomainIconUrlInput } from "./domain-icon-url";
 export { EmptyState, type EmptyStateProps } from "./EmptyState";
 export {
   ExpiryChoiceGroup,
@@ -73,6 +75,14 @@ export {
 } from "./SegmentedControl";
 export { Sheet, type SheetHeightVariant, type SheetProps, type SheetWidthVariant } from "./Sheet";
 export { type StatusKind, StatusPill, type StatusPillProps } from "./StatusPill";
+export {
+  type StepDotState,
+  StepDots,
+  type StepDotsProps,
+  type StepDotsRenderContext,
+  type StepDotsVariant,
+  stepDotStateClass,
+} from "./StepDots";
 export {
   SummaryStrip,
   type SummaryStripProps,

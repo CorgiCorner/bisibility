@@ -31,6 +31,7 @@ describe("keyword traffic query", () => {
       getKeywordTraffic("project_1", "keyword_1", { rankingUrl: null, targetUrl: null }),
     ).resolves.toEqual({
       hasAnalyticsConnection: true,
+      hasSearchConsoleConnection: true,
       pages: [],
       query: null,
     });
@@ -46,9 +47,14 @@ describe("keyword traffic query", () => {
     });
   });
 
-  it("keeps the connection flag false without a connected analytics provider", async () => {
+  it("distinguishes a non-Search-Console analytics connection", async () => {
+    mocks.prisma.providerConnection.findMany.mockResolvedValue([{ priority: 0, provider: "ga4" }]);
+
     await expect(
       getKeywordTraffic("project_1", "keyword_1", { rankingUrl: null, targetUrl: null }),
-    ).resolves.toMatchObject({ hasAnalyticsConnection: false });
+    ).resolves.toMatchObject({
+      hasAnalyticsConnection: true,
+      hasSearchConsoleConnection: false,
+    });
   });
 });

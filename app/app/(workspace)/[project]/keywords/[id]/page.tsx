@@ -7,11 +7,11 @@ import { RankingUrlHistory } from "@/components/keywords/RankingUrlHistory";
 import { PageContent } from "@/components/shell/PageContent";
 import { createKeywordAlertRule } from "@/lib/actions/alerts";
 import { addKeywords, updateKeyword } from "@/lib/actions/keyword";
-import { bulkDeleteKeywords } from "@/lib/actions/keyword-bulk";
 import { updateKeywordSchedule } from "@/lib/actions/keyword-schedule";
 import { runCheckNow } from "@/lib/actions/rankCheck";
 import { getProjectRole } from "@/lib/auth/authorize";
 import { canProjectAction } from "@/lib/auth/capabilities";
+import { deriveKeywordDetailState } from "@/lib/keyword-detail/state-model";
 import { requireReadableProject, resolveProjectAccess } from "@/lib/queries/_auth";
 import { getProjectCostContext } from "@/lib/queries/cost-calculator";
 import { getKeywordDetail, getKeywordTagSuggestions } from "@/lib/queries/keywords";
@@ -40,9 +40,8 @@ export default async function KeywordDetailPage({ params }: Readonly<KeywordDeta
   }
   const role = getProjectRole(readable.actor, readable.project.id);
   const canCreateKeyword = canProjectAction(role, "create", "keyword");
-  const canDeleteKeyword = canProjectAction(role, "delete", "keyword");
-  const canManageProviders = canProjectAction(role, "manage", "provider_connection");
   const canUpdateKeyword = canProjectAction(role, "update", "keyword");
+  const detailState = deriveKeywordDetailState(keyword, keyword.traffic);
 
   const backLink = (
     <Link
@@ -56,25 +55,30 @@ export default async function KeywordDetailPage({ params }: Readonly<KeywordDeta
 
   // A keyword without a positive rank has no chart or ranking URL history to plot. The status
   // detail distinguishes an unattempted check from running, failed, and unranked attempts.
-  if (!keyword.hasRankData && keyword.checkState !== "ranked") {
+  if (detailState.rankState !== "normal") {
     return (
       <PageContent className="grid gap-4">
         {backLink}
         <KeywordPendingDetail
-          bulkDeleteAction={bulkDeleteKeywords}
-          canDeleteKeyword={canDeleteKeyword}
-          canManageProviders={canManageProviders}
           canUpdateKeyword={canUpdateKeyword}
           costContext={costContext}
+          createKeywordAlertAction={createKeywordAlertRule}
           keyword={keyword}
+          keywordContext={detailState.keywordContext}
           providerConnected={keyword.providerConnected}
           projectId={publicId}
           projectRef={publicId}
+          rankState={detailState.rankState}
           runCheckNowAction={runCheckNow}
           updateKeywordAction={updateKeyword}
           updateKeywordScheduleAction={updateKeywordSchedule}
+          whatChanged={detailState.whatChanged}
         />
-        <KeywordTrafficCard projectRef={publicId} traffic={keyword.traffic} />
+        <KeywordTrafficCard
+          projectRef={publicId}
+          traffic={keyword.traffic}
+          trafficState={detailState.trafficState}
+        />
       </PageContent>
     );
   }
@@ -95,9 +99,18 @@ export default async function KeywordDetailPage({ params }: Readonly<KeywordDeta
         updateKeywordAction={updateKeyword}
         updateKeywordScheduleAction={updateKeywordSchedule}
       />
-      <KeywordMetricCards keyword={keyword} />
-      <KeywordTrafficCard projectRef={publicId} traffic={keyword.traffic} />
-      <PositionHistoryCard keyword={keyword} />
+      <KeywordMetricCards
+        chartState={detailState.chartState}
+        keyword={keyword}
+        keywordContext={detailState.keywordContext}
+        whatChanged={detailState.whatChanged}
+      />
+      <PositionHistoryCard chartState={detailState.chartState} keyword={keyword} />
+      <KeywordTrafficCard
+        projectRef={publicId}
+        traffic={keyword.traffic}
+        trafficState={detailState.trafficState}
+      />
       <RankingUrlHistory keyword={keyword} />
     </PageContent>
   );

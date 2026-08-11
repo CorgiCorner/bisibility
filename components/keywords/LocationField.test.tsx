@@ -1,8 +1,8 @@
+import { LocationField, type LocationFieldValue } from "@/components/keywords/LocationField";
+import { countryValueForName } from "@/components/keywords/location-picker-data";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { LocationField, type LocationFieldValue } from "./LocationField";
-import { countryValueForName } from "./location-picker-data";
 
 const fetchMock = vi.fn();
 vi.stubGlobal("fetch", fetchMock);
@@ -127,6 +127,19 @@ describe("LocationField", () => {
       target: { value: "a" },
     });
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("keeps the clear search target at the WCAG 2.2 AA minimum without moving its center", () => {
+    render(<Harness />);
+    fireEvent.change(screen.getByRole("combobox", { name: /location/i }), {
+      target: { value: "pol" },
+    });
+
+    expect(screen.getByRole("button", { name: "Clear location search" })).toHaveClass(
+      "h-6",
+      "w-6",
+      "right-[6px]",
+    );
   });
 
   it("does not commit free text", async () => {

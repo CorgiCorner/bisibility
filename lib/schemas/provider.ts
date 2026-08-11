@@ -37,7 +37,6 @@ export const connectProviderSchema = z.object({
   costPerCheck: optionalCostSchema,
   credentials: providerCredentialsSchema.optional(),
   login: credentialSchema,
-  primary: z.coerce.boolean().default(false),
   projectId: idSchema,
   providerId: providerIdSchema,
   secret: credentialSchema,
@@ -77,15 +76,14 @@ export const PROVIDER_RATE_COST_BOUNDS = {
   minimum: providerRateCostSchema.minValue ?? Number.NEGATIVE_INFINITY,
 };
 
-export const setPrimaryProviderSchema = z.object({
-  primary: z.coerce.boolean().default(true),
+export const providerConnectionRefSchema = z.object({
   projectId: idSchema,
   providerId: providerIdSchema,
 });
 
 export type ConnectProviderInput = z.infer<typeof connectProviderSchema>;
 export type ProviderCredentialsInput = z.infer<typeof providerCredentialsSchema>;
-export type SetPrimaryProviderInput = z.infer<typeof setPrimaryProviderSchema>;
+export type ProviderConnectionRefInput = z.infer<typeof providerConnectionRefSchema>;
 export type TestProviderConnectionInput = z.infer<typeof testProviderConnectionSchema>;
 export type UpdateProviderCostInput = z.infer<typeof updateProviderCostSchema>;
 export type UpdateProviderRateInput = z.infer<typeof updateProviderRateSchema>;

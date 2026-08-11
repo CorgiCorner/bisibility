@@ -1,9 +1,9 @@
-import { registerAdditionalAuditDeclarations } from "./audit-field-declarations-extra";
+import { registerAdditionalAuditDeclarations } from "@/lib/auth/audit-field-declarations-extra";
 import {
   type AuditFieldPolicy,
   type AuditPayloadPolicy,
   auditFields as f,
-} from "./audit-payload-policy";
+} from "@/lib/auth/audit-payload-policy";
 
 // This published registry is the audit payload contract. Missing actions retain row metadata only.
 const declarations = new Map<string, AuditPayloadPolicy>();
@@ -92,10 +92,18 @@ declare(["project.create", "sample_data.install"], { after: project });
 declare(["project.delete"], {
   before: { ...project, _count: projectCounts, counts: projectCounts },
 });
-declare(["project.update", "settings.project_details.update"], {
-  after: project,
-  before: project,
-});
+declare(
+  [
+    "project.update",
+    "settings.project_details.update",
+    "settings.project_domain.set",
+    "settings.project_domain.update",
+  ],
+  {
+    after: project,
+    before: project,
+  },
+);
 declare(["settings.project_tracking_scope.update"], { after: project, before: project });
 declare(["onboarding.matching_scope.set"], {
   after: { ...f.booleans("includeSubdomains", "rootAndWww"), ...f.urls("urlPrefix") },
@@ -108,6 +116,17 @@ declare(["account.profile_updated"], {
 declare(["account.avatar_updated"], {
   after: f.urls("image"),
   before: f.urls("image"),
+});
+declare(["account.email_change_requested", "account.email_changed"], {
+  after: strings("email"),
+  before: strings("email"),
+});
+declare(["account.email_verification_requested"], {
+  after: strings("email"),
+});
+declare(["account.email_verified"], {
+  after: { ...strings("email"), ...f.booleans("emailVerified") },
+  before: { ...strings("email"), ...f.booleans("emailVerified") },
 });
 declare(["account.deleted"], {
   before: { ...strings("email", "name"), counts: projectCounts },

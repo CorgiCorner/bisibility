@@ -79,4 +79,18 @@ describe("defaultCostPerCheckCents", () => {
       }),
     ).toBe(3);
   });
+
+  it("preserves existing measured estimates without an explicit depth baseline", () => {
+    const createdAt = new Date("2026-07-27T00:00:00.000Z");
+    const entries = [1, 2, 3, 4, 100].map((costCents) => ({
+      cached: false,
+      costCents,
+      createdAt,
+      failed: false,
+    }));
+    const context = { entries, manualAmountCents: null };
+
+    expect(estimatedRankCheckCostCents("dataforseo", 10, null, context)).toBe(3);
+    expect(estimatedRankCheckCostCents("dataforseo", 100, null, context)).toBe(3);
+  });
 });

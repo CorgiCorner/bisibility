@@ -1,15 +1,12 @@
-import type { StatusKind } from "@/components/ui";
 import { INTEGRATION_CATEGORY_COPY } from "@/lib/integrations/category-copy";
 import { providerCredentialFieldsFor } from "@/lib/integrations/credential-fields";
 import { COST_ESTIMATE_PER_CHECK_HELP } from "@/lib/integrations/settings-copy";
-import type { ProviderRateData } from "@/lib/integrations/types";
-import {
-  DEFAULT_SERP_DEPTH,
-  DEFAULT_SERP_MARKET,
-  type SerpDepth,
-  type SerpDevice,
-  type SerpMarketName,
-} from "@/lib/serp/markets";
+import type {
+  DrawerDefaults,
+  IntegrationCategoryData,
+  IntegrationProviderData,
+} from "@/lib/integrations/types";
+import { DEFAULT_SERP_DEPTH, DEFAULT_SERP_MARKET } from "@/lib/serp/markets";
 
 const iconNames = ["chart", "database", "globe", "link", "magnifier", "table", "trend"] as const;
 export type ProviderIconName = (typeof iconNames)[number];
@@ -27,46 +24,8 @@ export type CredentialField = {
 
 export type ProviderMetaRow = { label: string; value: string };
 
-export type DrawerDefaults = {
-  costPerCheck?: number;
-  depth: `Top ${SerpDepth}`;
-  device: Capitalize<SerpDevice>;
-  endpoint: string;
-  language: string;
-  location: SerpMarketName;
-  login: string;
-  primary: boolean;
-  secret: string;
-};
-
-export type IntegrationProvider = {
-  id: string;
-  kind: "analytics" | "serp";
-  name: string;
-  icon: ProviderIconName;
-  tint: string;
-  description: string;
-  status: StatusKind;
-  primary?: boolean;
-  secondaryAction?: string;
-  meta: readonly ProviderMetaRow[];
-  drawer: {
-    activities: readonly ProviderMetaRow[];
-    costHelp: string;
-    credentialFields: readonly CredentialField[];
-    defaults: DrawerDefaults;
-    envHint: string;
-    rates?: readonly ProviderRateData[];
-  };
-};
-
-export type IntegrationCategoryFixture = {
-  description: string;
-  eyebrow: string;
-  id: string;
-  providers: readonly IntegrationProvider[];
-  title: string;
-};
+export type IntegrationProvider = IntegrationProviderData;
+export type IntegrationCategoryFixture = IntegrationCategoryData;
 
 const baseDrawerDefaults: DrawerDefaults = {
   depth: `Top ${DEFAULT_SERP_DEPTH}`,
@@ -75,7 +34,6 @@ const baseDrawerDefaults: DrawerDefaults = {
   language: "English",
   location: DEFAULT_SERP_MARKET,
   login: "",
-  primary: false,
   secret: "",
 };
 
@@ -105,7 +63,10 @@ function makeDrawer(input: DrawerInput): IntegrationProvider["drawer"] {
     activities: input.activities,
     costHelp: input.costHelp ?? COST_ESTIMATE_PER_CHECK_HELP,
     credentialFields: input.credentialFields,
-    defaults: { ...baseDrawerDefaults, ...input.defaults },
+    defaults: {
+      ...baseDrawerDefaults,
+      ...input.defaults,
+    },
     envHint: input.envHint ?? "Credentials can also be configured through environment variables.",
     rates: input.rates,
   };
@@ -134,7 +95,7 @@ export const integrationCategories = [
           activities: activities("Last rank check", "12 min ago", "Checks completed", "248"),
           costHelp: COST_ESTIMATE_PER_CHECK_HELP,
           credentialFields: providerCredentialFieldsFor("dataforseo", { connected: true }),
-          defaults: { costPerCheck: 0.0155, login: "team@example.com", primary: true },
+          defaults: { costPerCheck: 0.0155, login: "team@example.com" },
           rates: [
             {
               amountCents: 1.55,

@@ -115,7 +115,7 @@ export function ProjectWriteModeBanner() {
         icon: "arrow",
         label: "Migration settings",
       }}
-      detail="Reads still work. Writes, imports, provider changes, and rank-check starts are paused. Cancel the migration in settings to resume writes; unattended holds release after 24 hours."
+      detail="Reads still work. Writes, imports, provider changes, and rank-check starts are paused. Cancel the migration in settings to resume writes. Advanced shows when the hold becomes eligible for automatic release; the hourly worker releases it shortly afterward."
       tint="yellow"
       title="Project is read-only - migration in progress."
     />

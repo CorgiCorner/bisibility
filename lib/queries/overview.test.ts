@@ -279,7 +279,12 @@ describe("overview query", () => {
       trackedKeywordCount: 5,
     });
     expect(result.kpis).toEqual([
-      { delta: "0", deltaTone: "neutral", label: "Avg. position", value: "8.7" },
+      {
+        delta: "0 vs previous ranked check",
+        deltaTone: "neutral",
+        label: "Avg. position",
+        value: "8.7",
+      },
       { delta: "+5 this month", deltaTone: "neutral", label: "Tracked keywords", value: "5" },
       { delta: "0", deltaTone: "neutral", label: "In top 10", value: "2" },
       { delta: "+5.0pp", deltaTone: "positive", label: "Visibility", value: "11%" },

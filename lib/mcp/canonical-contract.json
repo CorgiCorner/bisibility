@@ -3381,7 +3381,7 @@
   {
     "name": "connect_provider",
     "title": "Connect provider",
-    "description": "Connect or update credentials for a project provider. SERP providers are dataforseo and serpapi; analytics providers are ga4, gsc, and plausible. Self-hosted providers such as Plausible accept an optional credentials.endpoint base URL.",
+    "description": "Connect or update credentials for a project provider. SERP providers are dataforseo and serpapi; analytics providers are ga4, gsc, and plausible. Self-hosted providers such as Plausible accept an optional credentials.endpoint base URL. Use priority for ordering; the deprecated primary=true alias promotes priority 0 and primary=false is a no-op.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -3431,6 +3431,7 @@
           "maxLength": 4096
         },
         "primary": {
+          "description": "Deprecated compatibility alias: true promotes priority 0; false is a no-op.",
           "type": "boolean"
         },
         "priority": {
@@ -3537,7 +3538,7 @@
   {
     "name": "update_provider_settings",
     "title": "Update provider settings",
-    "description": "Update provider settings such as enabled state, priority, or primary status.",
+    "description": "Update provider settings such as enabled state or priority. primary is a deprecated compatibility alias: true promotes priority 0 and false is a no-op.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -3551,6 +3552,7 @@
           "type": "boolean"
         },
         "primary": {
+          "description": "Deprecated compatibility alias: true promotes priority 0; false is a no-op.",
           "type": "boolean"
         },
         "priority": {
@@ -3666,7 +3668,7 @@
   {
     "name": "set_primary_provider",
     "title": "Set primary provider",
-    "description": "Set or clear a provider as the primary project provider.",
+    "description": "Deprecated compatibility tool. true promotes priority 0; false is a legacy no-op. Use set_provider_priority for new calls.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -3677,6 +3679,7 @@
           "maxLength": 160
         },
         "primary": {
+          "description": "Deprecated compatibility alias: true promotes priority 0; false is a no-op.",
           "type": "boolean"
         },
         "project_id": {

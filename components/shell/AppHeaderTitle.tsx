@@ -6,18 +6,37 @@ import { usePathname } from "next/navigation";
 
 export type AppHeaderTitleProps = {
   keywordCount?: number;
+  projectDomain?: string | null;
 };
 
-export function AppHeaderTitle({ keywordCount }: Readonly<AppHeaderTitleProps>) {
-  const { subtitle, title } = headerMetaFor(usePathname() ?? appRootPath(), { keywordCount });
+export function AppHeaderTitle({ keywordCount, projectDomain }: Readonly<AppHeaderTitleProps>) {
+  const { subtitle, subtitleVariant, title } = headerMetaFor(usePathname() ?? appRootPath(), {
+    keywordCount,
+    projectDomain,
+  });
+  const settingsHeader = subtitleVariant === "project-domain";
 
   return (
     <div className="min-w-0 overflow-hidden">
-      <h1 className="m-0 truncate text-lg font-semibold leading-tight tracking-[-0.4px] sm:text-[21px]">
+      <h1
+        className={
+          settingsHeader
+            ? "m-0 truncate text-[21px] font-semibold leading-tight tracking-[-0.4px]"
+            : "m-0 truncate text-lg font-semibold leading-tight tracking-[-0.4px] sm:text-[21px]"
+        }
+      >
         {title}
       </h1>
       {subtitle ? (
-        <div className="mt-1 hidden truncate text-[12.5px] text-fg-muted sm:block">{subtitle}</div>
+        <div
+          className={
+            settingsHeader
+              ? "mt-1 hidden truncate font-mono text-[12.5px] text-fg-muted sm:block"
+              : "mt-1 hidden truncate text-[12.5px] text-fg-muted sm:block"
+          }
+        >
+          {subtitle}
+        </div>
       ) : null}
     </div>
   );

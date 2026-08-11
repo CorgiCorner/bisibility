@@ -1137,7 +1137,6 @@ describe("public API router", () => {
       authedRequest("POST", "/projects/prj_a00000000000000000000000/providers/serpapi/connect", {
         cost_per_check: 0.01,
         credentials: { api_key: "secret" },
-        primary: true,
       }),
       "/projects/prj_a00000000000000000000000/providers/serpapi/connect",
     );
@@ -1148,13 +1147,13 @@ describe("public API router", () => {
       connection_id: expect.stringMatching(/^conn_[a-z][a-z0-9]{23}$/),
       cost_per_check_cents: 1,
       id: "serpapi",
+      priority: 0,
       provider: "serpapi",
     });
     expect(body).not.toHaveProperty("credentials_encrypted");
     expect(body).not.toHaveProperty("project_id");
     expect(mocks.prisma.providerConnection.findMany).toHaveBeenCalledWith({
-      orderBy: [{ priority: "asc" }, { provider: "asc" }],
-      select: { id: true, provider: true },
+      select: { priority: true },
       where: { kind: "serp", projectId: "project_1" },
     });
     expect(mocks.prisma.auditLog.create).toHaveBeenCalledWith({

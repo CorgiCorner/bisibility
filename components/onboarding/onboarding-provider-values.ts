@@ -21,17 +21,13 @@ export function readCurrentProviderValues(
   const values = new FormData(form);
   const costValue = stringValue(values.get("costPerCheck"));
   const costPerCheck = costValue?.trim() ? Number(costValue) : undefined;
-  const priority = Number(stringValue(values.get("priority")) ?? draftValues.priority);
   const providerId: OnboardingConnectProviderInput["providerId"] =
     stringValue(values.get("providerId")) === "serpapi" ? "serpapi" : "dataforseo";
 
   return {
     ...draftValues,
     costPerCheck: Number.isFinite(costPerCheck) ? costPerCheck : undefined,
-    enabled: stringValue(values.get("enabled")) !== "false",
     login: stringValue(values.get("login")) ?? "",
-    primary: stringValue(values.get("primary")) !== "false",
-    priority: Number.isFinite(priority) ? priority : draftValues.priority,
     projectId: stringValue(values.get("projectId")) ?? flowProjectId ?? draftValues.projectId,
     providerId,
     secret: stringValue(values.get("secret")) ?? "",

@@ -118,7 +118,7 @@ export function dispatchExtendedToolRoute(name: string, input: JsonObject): Rest
     case "setProviderPriority":
       return call(input, provider(input), "PATCH", { priority: input.priority });
     case "setPrimaryProvider":
-      return call(input, provider(input), "PATCH", { primary: input.primary ?? true });
+      return call(input, provider(input), "PATCH", { priority: 0 });
     default:
       return null;
   }

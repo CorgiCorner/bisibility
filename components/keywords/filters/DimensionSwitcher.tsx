@@ -99,13 +99,14 @@ export function DimensionSwitcher({
       weight="bold"
     />
   );
+  const chipShape = serpHref ? "rounded-l-full border-0" : "rounded-full border border-border";
 
   const chip = (
     <button
       aria-controls={open ? menuId : undefined}
       aria-expanded={open}
       aria-haspopup={canTrack ? "menu" : undefined}
-      className="inline-flex items-center gap-1.5 rounded-full bg-bg-sunken py-1 pl-2.5 pr-2 font-mono text-[11px] text-fg-muted outline-none transition-colors hover:text-fg focus-visible:outline-none disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted"
+      className={`inline-flex items-center gap-1.5 ${chipShape} bg-bg-sunken py-1 pl-2.5 pr-2 font-mono text-[11px] text-fg-muted outline-none transition-colors hover:text-fg focus-visible:outline-none disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted`}
       disabled={!canTrack || readOnly}
       onClick={(event) => {
         if (canTrack && !readOnly) setAnchorEl(event.currentTarget);
@@ -123,14 +124,15 @@ export function DimensionSwitcher({
   return (
     <>
       {serpHref ? (
-        <span className="inline-flex items-center gap-1">
+        <span className="inline-flex items-center overflow-hidden rounded-full border border-border bg-bg-sunken">
           {guardedChip}
           <a
             aria-label={`Open live Google results for ${value}`}
-            className="inline-flex items-center rounded-full bg-bg-sunken p-1.5 text-fg-muted outline-none transition-colors hover:text-accent-text focus-visible:text-accent-text focus-visible:outline-none"
+            className="inline-flex items-center border-l border-border bg-bg-sunken p-1.5 text-fg-muted outline-none transition-colors hover:text-accent-text focus-visible:text-accent-text focus-visible:outline-none"
             href={serpHref}
             rel="noreferrer noopener"
             target="_blank"
+            title="Open live search results in a new tab"
           >
             <ArrowUpRight size={12} weight="bold" />
           </a>
@@ -160,7 +162,7 @@ export function DimensionSwitcher({
               sx={{ gap: 2, justifyContent: "space-between" }}
             >
               <span className="text-[13px] text-fg">{item}</span>
-              <span className="inline-flex items-center gap-0.5 rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-semibold text-accent-text">
+              <span className="inline-flex items-center gap-0.5 rounded-full border border-border bg-bg-sunken px-2 py-0.5 text-[11px] font-semibold text-fg">
                 + Track
               </span>
             </MenuItem>

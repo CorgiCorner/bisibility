@@ -9,17 +9,21 @@ import { prisma } from "@/lib/db/prisma";
 import { parsePublicId } from "@/lib/db/public-id";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { presenceUrl } from "@/lib/presence/url";
+import { requireReadableProject } from "@/lib/queries/_auth";
+import { ACTIVE_QUEUED_TASK_STATES } from "@/lib/rank-check/queued-state";
 import type { KeywordDefaultMarketRow } from "@/lib/serp/default-market";
 import { projectDefaultSerpMarket } from "@/lib/serp/default-market";
-import { requireReadableProject } from "./_auth";
 
-export type { KeywordLocation } from "./keyword-location";
+export type { KeywordLocation } from "@/lib/queries/keyword-location";
 
-import type { Metrics } from "./keyword-metrics";
-import { fetchKeywordMetrics, fetchProjectKeywordMetrics } from "./keyword-metrics-query";
-import { type KeywordRow, mapKeyword } from "./keyword-row";
-import { fetchProjectKeywordTraffic, getKeywordTraffic } from "./keyword-traffic";
-import { getRequestProjectDefaults } from "./workspace-request-data";
+import type { Metrics } from "@/lib/queries/keyword-metrics";
+import {
+  fetchKeywordMetrics,
+  fetchProjectKeywordMetrics,
+} from "@/lib/queries/keyword-metrics-query";
+import { type KeywordRow, mapKeyword } from "@/lib/queries/keyword-row";
+import { fetchProjectKeywordTraffic, getKeywordTraffic } from "@/lib/queries/keyword-traffic";
+import { getRequestProjectDefaults } from "@/lib/queries/workspace-request-data";
 
 export type {
   KeywordRow,
@@ -28,7 +32,7 @@ export type {
   PositionPoint,
   RankingUrlEvent,
   UrlPresenceView,
-} from "./keyword-row";
+} from "@/lib/queries/keyword-row";
 
 import { trackedProjectDomain } from "@/lib/schemas/project";
 
@@ -53,6 +57,11 @@ const rankCheckSelect = {
   requestedDepth: true,
   rankingUrl: true,
   status: true,
+} as const;
+const pendingQueuedRankCheckTaskSelect = {
+  select: { state: true },
+  take: 1,
+  where: { state: { in: ACTIVE_QUEUED_TASK_STATES } },
 } as const;
 const scheduleSelect = {
   cronExpression: true,
@@ -93,6 +102,7 @@ async function loadKeywords(projectId: string) {
       location: true,
       locationRef: { select: locationRefSelect },
       publicId: true,
+      queuedRankCheckTasks: pendingQueuedRankCheckTaskSelect,
       rankChecks: {
         orderBy: { checkedAt: "desc" },
         select: rankCheckSelect,
@@ -140,6 +150,7 @@ async function loadKeywordDetail(projectId: string, keywordId: string) {
         },
       },
     },
+    queuedRankCheckTasks: pendingQueuedRankCheckTaskSelect,
     rankChecks: {
       orderBy: { checkedAt: "desc" as const },
       select: rankCheckSelect,

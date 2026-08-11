@@ -6,8 +6,9 @@ services:
     environment:
       POSTGRES_USER: temporal
       POSTGRES_PASSWORD: temporal
+      POSTGRES_DB: postgres
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U temporal -d temporal"]
+      test: ["CMD-SHELL", "pg_isready -U temporal -d postgres"]
       interval: 5s
       timeout: 5s
       retries: 10

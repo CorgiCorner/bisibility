@@ -1,5 +1,6 @@
 "use client";
 
+import type { GettingStartedCapabilities } from "@/components/overview/getting-started";
 import { SampleDataButton } from "@/components/sample-data/SampleDataButton";
 import { Button } from "@/components/ui";
 import { appPath, type ProjectRef } from "@/lib/routing/app-path";
@@ -11,7 +12,6 @@ import {
 } from "@phosphor-icons/react";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import type { GettingStartedCapabilities } from "./getting-started";
 
 const googleOauthConsoleUrl = "https://console.cloud.google.com/apis/credentials";
 
@@ -21,32 +21,6 @@ const googleOauthConsoleUrl = "https://console.cloud.google.com/apis/credentials
 // quiet by default - a hairline in --border-strong - and only wakes up under the pointer.
 const quietLinkClass =
   "font-semibold text-fg-muted underline decoration-border-strong underline-offset-2 transition-colors hover:text-fg hover:decoration-accent-text";
-
-export function StepDots({ stage }: Readonly<{ stage: number }>) {
-  return (
-    <div className="flex items-center gap-2.5">
-      {/* fg-muted, not the retired fg-faint: that token was removed in the tier cleanup,
-          so the class resolved to nothing and the label inherited full-contrast fg. */}
-      <span className="font-mono text-[10px] uppercase tracking-[0.6px] text-fg-muted">
-        Step {stage} of 3
-      </span>
-      <span aria-hidden className="flex items-center gap-1.5">
-        {[1, 2, 3].map((index) => (
-          <span
-            className={`h-1.5 w-1.5 rounded-full ${
-              index < stage
-                ? "bg-green"
-                : index === stage
-                  ? "bg-accent-solid"
-                  : "border border-border-strong"
-            }`}
-            key={index}
-          />
-        ))}
-      </span>
-    </div>
-  );
-}
 
 export function StagePanel({
   action,

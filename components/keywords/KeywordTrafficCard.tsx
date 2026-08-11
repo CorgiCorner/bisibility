@@ -1,4 +1,5 @@
-import { Card, MonoText, SectionTitle } from "@/components/ui";
+import { Card, SectionTitle } from "@/components/ui";
+import type { KeywordDetailTrafficState } from "@/lib/keyword-detail/state-model";
 import type { KeywordTrafficDetail, PageTrafficSnapshotLike } from "@/lib/queries/keyword-traffic";
 import { appPath } from "@/lib/routing/app-path";
 import { QUERY_STATS_LAG_DAYS } from "@/lib/traffic/constants";
@@ -10,6 +11,7 @@ type Stat = { label: string; value: string | null };
 type KeywordTrafficCardProps = {
   projectRef: string;
   traffic: KeywordTrafficDetail;
+  trafficState?: KeywordDetailTrafficState;
 };
 
 const providerLabels: Record<string, string> = {
@@ -19,22 +21,7 @@ const providerLabels: Record<string, string> = {
 };
 
 function providerLabel(provider: string) {
-  return (
-    providerLabels[provider] ??
-    provider
-      .split(/[-_]/)
-      .filter(Boolean)
-      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-      .join(" ")
-  );
-}
-
-function formatDate(date: Date | string) {
-  return new Intl.DateTimeFormat("en-US", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  }).format(new Date(date));
+  return providerLabels[provider] ?? provider.replace(/[-_]/g, " ");
 }
 
 function formatCount(value: number) {
@@ -46,31 +33,41 @@ function formatRate(value: number) {
   return `${percent.toFixed(1)}%`;
 }
 
-function formatNumber(value: number) {
-  return Number.isInteger(value) ? formatCount(value) : value.toFixed(1);
-}
-
 function formatDuration(seconds: number) {
-  const total = Math.max(0, Math.round(seconds));
-  const minutes = Math.floor(total / 60);
-  const remainder = String(total % 60).padStart(2, "0");
-  return `${minutes}:${remainder}`;
+  const minutes = Math.floor(Math.max(0, seconds) / 60);
+  const remainder = Math.round(Math.max(0, seconds) % 60);
+  return minutes ? `${minutes}m ${remainder}s` : `${remainder}s`;
 }
 
-function StatCell({ label, value }: Readonly<Stat>) {
+function SourceChip({ provider }: Readonly<{ provider: string }>) {
   return (
-    <div className="min-w-0 rounded-[9px] border border-border bg-bg-sunken px-3 py-2.5">
-      <MonoText className="uppercase tracking-[0.7px]" muted size="sm">
-        {label}
-      </MonoText>
-      <div className="mt-1 truncate text-[18px] font-semibold text-fg">
-        {value ?? <span className="text-fg-muted">-</span>}
-      </div>
+    <span className="inline-flex h-6 items-center rounded-full border border-border bg-bg-sunken px-2.5 font-mono text-[10.5px] text-fg-muted">
+      {providerLabel(provider)}
+    </span>
+  );
+}
+
+function StatGrid({ stats }: Readonly<{ stats: Stat[] }>) {
+  return (
+    <div className="mt-3 grid grid-cols-[repeat(auto-fit,minmax(130px,1fr))] gap-2.5">
+      {stats.map((stat) => (
+        <div
+          className="rounded-[9px] border border-border bg-bg-sunken px-3 py-2.5"
+          key={stat.label}
+        >
+          <p className="m-0 font-mono text-[10px] uppercase tracking-[0.65px] text-fg-muted">
+            {stat.label}
+          </p>
+          <p className="m-0 mt-1 text-[18px] font-semibold leading-none text-fg">
+            {stat.value ?? "No data"}
+          </p>
+        </div>
+      ))}
     </div>
   );
 }
 
-function QuerySection({ query }: Readonly<{ query: QueryTraffic }>) {
+function SearchPerformanceCard({ query }: Readonly<{ query: QueryTraffic }>) {
   const stats: Stat[] = [
     { label: "Clicks", value: formatCount(query.clicks) },
     { label: "Impressions", value: formatCount(query.impressions) },
@@ -79,127 +76,132 @@ function QuerySection({ query }: Readonly<{ query: QueryTraffic }>) {
   ];
 
   return (
-    <section>
-      <div className="flex flex-wrap items-end justify-between gap-2">
-        <div>
-          <SectionTitle>Search stats</SectionTitle>
-          <MonoText muted>
-            Trailing {query.windowDays} days / {providerLabel(query.provider)}
-          </MonoText>
-        </div>
-        <MonoText muted>{formatDate(query.date)}</MonoText>
+    <Card className="rounded-[14px]" size="lg">
+      <div className="flex flex-wrap items-center gap-2">
+        <SectionTitle>Search performance</SectionTitle>
+        <SourceChip provider={query.provider} />
       </div>
-      <div className="mt-3 grid grid-cols-[repeat(auto-fit,minmax(130px,1fr))] gap-2.5">
-        {stats.map((stat) => (
-          <StatCell key={stat.label} {...stat} />
-        ))}
+      <p className="m-0 mt-1 text-[12px] text-fg-muted">Trailing {query.windowDays} days</p>
+      <StatGrid stats={stats} />
+      <p className="m-0 mt-3 text-[11.5px] leading-[1.45] text-fg-muted">
+        GSC position is an average across real impressions and may differ from the latest rank
+        check.
+      </p>
+    </Card>
+  );
+}
+
+function SearchPerformanceEmpty({
+  connected,
+  projectRef,
+}: Readonly<{ connected: boolean; projectRef: string }>) {
+  return (
+    <Card className="rounded-[14px]" size="lg">
+      <div className="flex flex-wrap items-center gap-2">
+        <SectionTitle>Search performance</SectionTitle>
+        <SourceChip provider="gsc" />
       </div>
-    </section>
+      <p className="m-0 mt-1 text-[12px] text-fg-muted">Trailing 28 days</p>
+      <div className="mt-3 rounded-[11px] border border-dashed border-border-strong bg-transparent px-4 py-5">
+        {connected ? (
+          <>
+            <p className="m-0 text-[13.5px] font-medium text-fg">Awaiting first traffic sync.</p>
+            <p className="m-0 mt-1 text-[12px] text-fg-muted">
+              Search Console data arrives with an approximately {QUERY_STATS_LAG_DAYS}-day reporting
+              lag.
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="m-0 text-[13.5px] text-fg-muted">
+              Connect Search Console to see clicks, impressions and CTR for this keyword.
+            </p>
+            <Link
+              className="mt-3 inline-flex text-[13px] font-semibold text-accent-text"
+              href={appPath(projectRef, "integrations")}
+            >
+              Connect Search Console
+            </Link>
+          </>
+        )}
+      </div>
+    </Card>
   );
 }
 
 function optionalPageStats(page: PageTrafficSnapshotLike): Stat[] {
   const stats: (Stat | null)[] = [
     page.visitors === null ? null : { label: "Visitors", value: formatCount(page.visitors) },
+    {
+      label: page.provider === "plausible" ? "Pageviews" : "Sessions",
+      value: formatCount(page.sessions),
+    },
     page.bounceRate === null ? null : { label: "Bounce", value: formatRate(page.bounceRate) },
     page.visitDurationSeconds === null
       ? null
       : { label: "Duration", value: formatDuration(page.visitDurationSeconds) },
-    page.scrollDepth === null ? null : { label: "Scroll", value: formatRate(page.scrollDepth) },
+    page.scrollDepth === null
+      ? null
+      : { label: "Scroll depth", value: formatRate(page.scrollDepth) },
   ];
   return stats.filter((stat): stat is Stat => stat !== null);
 }
 
-function PageBlock({ page }: Readonly<{ page: PageTrafficSnapshotLike }>) {
-  const stats: Stat[] = [
-    { label: "Sessions", value: formatCount(page.sessions) },
-    {
-      label: "Engagement",
-      value: page.engagementRate === null ? null : formatRate(page.engagementRate),
-    },
-    { label: "Key events", value: page.keyEvents === null ? null : formatNumber(page.keyEvents) },
-    ...optionalPageStats(page),
-  ];
+function LandingPagePerformanceCard({ pages }: Readonly<{ pages: PageTrafficSnapshotLike[] }>) {
+  const firstPath = pages[0]?.path ?? "the ranking page";
 
   return (
-    <div className="rounded-[11px] border border-border bg-bg-elev p-3">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="min-w-0">
-          <div className="truncate text-[13.5px] font-semibold text-fg">
-            {providerLabel(page.provider)}
-          </div>
-          <MonoText className="truncate" muted>
-            {page.path}
-          </MonoText>
-        </div>
-        <MonoText muted>
-          {page.windowDays}d / {formatDate(page.date)}
-        </MonoText>
-      </div>
-      <div className="mt-3 grid grid-cols-[repeat(auto-fit,minmax(118px,1fr))] gap-2">
-        {stats.map((stat) => (
-          <StatCell key={stat.label} {...stat} />
+    <Card className="rounded-[14px]" size="lg">
+      <SectionTitle>Landing page performance</SectionTitle>
+      <p className="m-0 mt-1 text-[12px] text-fg-muted">
+        All traffic to {firstPath}, not attributed to this keyword.
+      </p>
+      <div className="mt-3 grid gap-3">
+        {pages.map((page) => (
+          <section
+            className="rounded-[11px] border border-border bg-bg-elev p-3"
+            key={`${page.provider}:${page.path}`}
+          >
+            <div className="flex flex-wrap items-center gap-2">
+              <SourceChip provider={page.provider} />
+              <span className="font-mono text-[11.5px] text-fg">{page.path}</span>
+              <span className="font-mono text-[10.5px] text-fg-muted">
+                last {page.windowDays} days
+              </span>
+            </div>
+            <StatGrid stats={optionalPageStats(page)} />
+          </section>
         ))}
       </div>
-    </div>
+    </Card>
   );
 }
 
-function TrafficEmptyState({
-  connected,
+function inferredTrafficState(traffic: KeywordTrafficDetail): KeywordDetailTrafficState {
+  if (traffic.query && traffic.pages.length) return "both";
+  if (traffic.query) return "gsc_only";
+  return traffic.hasSearchConsoleConnection ? "awaiting_sync" : "not_connected";
+}
+
+export function KeywordTrafficCard({
   projectRef,
-}: Readonly<{ connected: boolean; projectRef: string }>) {
-  return (
-    <Card className="rounded-[14px]" size="lg">
-      <SectionTitle>Search &amp; page stats</SectionTitle>
-      {connected ? (
-        <div className="mt-3 rounded-[11px] border border-dashed border-border-strong bg-transparent px-4 py-5">
-          <p className="m-0 text-[13.5px] font-medium text-fg">Awaiting first traffic sync.</p>
-          <MonoText className="mt-1 block" muted>
-            Search Console data arrives with an approximately {QUERY_STATS_LAG_DAYS}-day reporting
-            lag.
-          </MonoText>
-        </div>
-      ) : (
-        <div className="mt-3 rounded-[11px] border border-dashed border-border-strong bg-transparent px-4 py-5">
-          <p className="m-0 text-[13.5px] text-fg-muted">
-            Connect Search Console to see clicks, impressions and CTR for this keyword.
-          </p>
-          <Link
-            className="mt-3 inline-flex text-[13px] font-semibold text-accent-text hover:text-accent-text"
-            href={appPath(projectRef, "integrations")}
-          >
-            Connect Search Console
-          </Link>
-        </div>
-      )}
-    </Card>
-  );
-}
-
-export function KeywordTrafficCard({ projectRef, traffic }: Readonly<KeywordTrafficCardProps>) {
-  if (!traffic.query && traffic.pages.length === 0) {
-    return <TrafficEmptyState connected={traffic.hasAnalyticsConnection} projectRef={projectRef} />;
-  }
+  traffic,
+  trafficState,
+}: Readonly<KeywordTrafficCardProps>) {
+  const state = trafficState ?? inferredTrafficState(traffic);
+  const search =
+    state === "awaiting_sync" || state === "not_connected" ? (
+      <SearchPerformanceEmpty connected={state === "awaiting_sync"} projectRef={projectRef} />
+    ) : traffic.query ? (
+      <SearchPerformanceCard query={traffic.query} />
+    ) : null;
 
   return (
-    <Card className="rounded-[14px]" size="lg">
-      <div className="grid gap-5">
-        {traffic.query ? <QuerySection query={traffic.query} /> : null}
-        {traffic.pages.length > 0 ? (
-          <section>
-            <div>
-              <SectionTitle>Page stats</SectionTitle>
-              <MonoText muted>Traffic for the matched target or ranking page</MonoText>
-            </div>
-            <div className="mt-3 grid gap-3">
-              {traffic.pages.map((page) => (
-                <PageBlock key={`${page.provider}:${page.path}`} page={page} />
-              ))}
-            </div>
-          </section>
-        ) : null}
-      </div>
-    </Card>
+    <div className="grid gap-4">
+      {search}
+      {state === "both" && traffic.pages.length ? (
+        <LandingPagePerformanceCard pages={traffic.pages} />
+      ) : null}
+    </div>
   );
 }

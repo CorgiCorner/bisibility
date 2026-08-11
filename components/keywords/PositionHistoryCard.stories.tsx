@@ -1,3 +1,4 @@
+import { KeywordDetailStoryThemes } from "@/components/keyword-detail/shared/story-theme-preview";
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
 import { PositionHistoryCard } from "@/components/keywords/PositionHistoryCard";
 import type { Meta, StoryObj } from "@storybook/react";
@@ -7,11 +8,14 @@ const meta = {
   component: PositionHistoryCard,
   decorators: [
     (Story) => (
-      <div className="min-h-[400px] bg-bg p-6 text-fg">
-        <Story />
-      </div>
+      <KeywordDetailStoryThemes>
+        <div className="min-h-[400px] text-fg">
+          <Story />
+        </div>
+      </KeywordDetailStoryThemes>
     ),
   ],
+  parameters: { chromatic: { viewports: [390, 768, 1440] } },
 } satisfies Meta<typeof PositionHistoryCard>;
 
 export default meta;
@@ -19,7 +23,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: { keyword: { ...keywordRows[2], targetPosition: 3 } },
+  args: { chartState: "normal", keyword: { ...keywordRows[2], targetPosition: 3 } },
 };
 
 export const TargetReached: Story = {
@@ -77,6 +81,22 @@ export const NoChecksInRange: Story = {
         },
       ],
       schedule: { ...keywordRows[1].schedule, frequency: "paused", next_check_at: null },
+    },
+  },
+};
+
+export const OneCheck: Story = {
+  args: {
+    chartState: "one_check",
+    keyword: {
+      ...keywordRows[1],
+      positionHistory: [
+        {
+          checkedAt: "2026-08-10T10:00:00.000Z",
+          label: "Today",
+          position: 3,
+        },
+      ],
     },
   },
 };

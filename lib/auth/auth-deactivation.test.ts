@@ -2,6 +2,7 @@ import type { BetterAuthOptions } from "better-auth";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
+  emailOtpOptions: null as null | { changeEmail?: unknown },
   findUnique: vi.fn(),
 }));
 
@@ -10,11 +11,21 @@ vi.mock("@/lib/deployment/runtime-env.generated", () => ({}));
 vi.mock("@/lib/db/prisma", () => ({
   prisma: { user: { findUnique: mocks.findUnique } },
 }));
+vi.mock("better-auth/plugins", async (importOriginal) => {
+  const original = await importOriginal<typeof import("better-auth/plugins")>();
+  return {
+    ...original,
+    emailOTP(options: Parameters<typeof original.emailOTP>[0]) {
+      mocks.emailOtpOptions = options;
+      return original.emailOTP(options);
+    },
+  };
+});
 
-import { auth, preventDeactivatedSessionCreation } from "./auth";
-import { emailOtpTwoFactorPlugin } from "./email-otp-two-factor";
-import { recordPendingFirstRunUser, withFirstRunCreation } from "./first-run-context";
-import { enforceGoogleSignupCapacity } from "./signin-capacity";
+import { auth, preventDeactivatedSessionCreation } from "@/lib/auth/auth";
+import { emailOtpTwoFactorPlugin } from "@/lib/auth/email-otp-two-factor";
+import { recordPendingFirstRunUser, withFirstRunCreation } from "@/lib/auth/first-run-context";
+import { enforceGoogleSignupCapacity } from "@/lib/auth/signin-capacity";
 
 const session = {
   createdAt: new Date("2026-07-18T00:30:00.000Z"),
@@ -51,6 +62,13 @@ describe("deactivated account session creation", () => {
     expect(pluginIds).toContain(emailOtpTwoFactorPlugin.id);
     expect(pluginIds).toContain("two-factor-route-guard");
     expect(pluginIds?.at(-1)).toBe("next-cookies");
+  });
+
+  it("enables only the email OTP change-email flow", () => {
+    const options = auth.options as BetterAuthOptions;
+
+    expect(mocks.emailOtpOptions?.changeEmail).toEqual({ enabled: true });
+    expect(options.user?.changeEmail).toBeUndefined();
   });
 
   it("allows an active user to create a session", async () => {

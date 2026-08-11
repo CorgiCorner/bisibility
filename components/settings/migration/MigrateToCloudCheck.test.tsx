@@ -1,5 +1,5 @@
 import { isoFromFrozenNow } from "@/tests/clock";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CheckStep } from "./MigrateToCloudCheck";
 
@@ -62,7 +62,9 @@ describe("migration compatibility check", () => {
     });
     const changed = renderStep();
     fireEvent.click(screen.getByRole("button", { name: "Run compatibility check" }));
-    await waitFor(() => expect(changed).toHaveBeenCalledTimes(2));
+    await act(async () => {
+      await vi.waitFor(() => expect(changed).toHaveBeenCalledTimes(2));
+    });
     expect(changed.mock.calls[1]?.[0]).toMatchObject({
       blockers: [{ code: "MIG-101", message: "We couldn't reach the destination instance." }],
       compatible: false,
@@ -110,7 +112,9 @@ describe("migration compatibility check", () => {
     });
     const changed = renderStep();
     fireEvent.click(screen.getByRole("button", { name: "Run compatibility check" }));
-    await waitFor(() => expect(changed).toHaveBeenCalledTimes(2));
+    await act(async () => {
+      await vi.waitFor(() => expect(changed).toHaveBeenCalledTimes(2));
+    });
     expect(changed.mock.calls[1]?.[0]).toMatchObject({
       blockers: [
         { code: "MIG-105", message: "The destination address points at this same instance." },

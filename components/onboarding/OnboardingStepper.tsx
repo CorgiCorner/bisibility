@@ -8,6 +8,8 @@ import {
   onboardingSteps,
   totalOnboardingSteps,
 } from "@/components/onboarding/onboarding-fixtures";
+import { StepDotNavigation } from "@/components/onboarding/StepDotNavigation";
+import { Button, type StepDotState, StepDots, stepDotStateClass } from "@/components/ui";
 import { cn } from "@/lib/ui/cn";
 import {
   CheckIcon as Check,
@@ -20,8 +22,6 @@ import {
 } from "@phosphor-icons/react";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { StepDotNavigation } from "./StepDotNavigation";
-import { stepStateClass } from "./step-state-class";
 
 type OnboardingStepperProps = {
   children: ReactNode;
@@ -39,6 +39,10 @@ const stepIcons = {
   search: MagnifyingGlass,
   sliders: SlidersHorizontal,
 } satisfies Record<OnboardingIconKey, typeof FolderSimple>;
+
+function stepAccessibleName(title: string, done: boolean) {
+  return done ? `${title}, completed` : title;
+}
 
 export function OnboardingStepper({
   children,
@@ -67,10 +71,18 @@ export function OnboardingStepper({
       <div className="mt-7 grid items-start gap-6 lg:grid-cols-[248px_minmax(0,1fr)]">
         <div className="lg:hidden">
           <StepDots
-            currentStep={currentStep}
-            flowState={flowState}
-            maxReachableStep={maxReachableStep}
-            onStepChange={onStepChange}
+            className="flex items-center justify-between gap-1.5"
+            currentIndex={currentStep - 1}
+            items={onboardingSteps}
+            renderItem={({ item: step, state }) => (
+              <StepDotItem
+                flowState={flowState}
+                maxReachableStep={maxReachableStep}
+                onStepChange={onStepChange}
+                state={state}
+                step={step}
+              />
+            )}
           />
           <h2 className="m-0 mt-3.5 text-lg font-semibold tracking-[-0.4px]">{activeStep.title}</h2>
         </div>
@@ -92,64 +104,39 @@ export function OnboardingStepper({
   );
 }
 
-function StepDots({
-  currentStep,
-  flowState,
-  maxReachableStep,
-  onStepChange,
-}: Readonly<{
-  currentStep: OnboardingStepNumber;
-  flowState?: OnboardingFlowState;
-  maxReachableStep: OnboardingStepNumber;
-  onStepChange?: (step: OnboardingStepNumber) => void;
-}>) {
-  return (
-    <div className="flex items-center justify-between gap-1.5">
-      {onboardingSteps.map((step) => (
-        <StepDotItem
-          currentStep={currentStep}
-          flowState={flowState}
-          key={step.n}
-          maxReachableStep={maxReachableStep}
-          onStepChange={onStepChange}
-          step={step}
-        />
-      ))}
-    </div>
-  );
-}
-
 function StepDotItem({
-  currentStep,
   flowState,
   maxReachableStep,
   onStepChange,
+  state,
   step,
 }: Readonly<{
-  currentStep: OnboardingStepNumber;
   flowState?: OnboardingFlowState;
   maxReachableStep: OnboardingStepNumber;
   onStepChange?: (step: OnboardingStepNumber) => void;
+  state: StepDotState;
   step: (typeof onboardingSteps)[number];
 }>) {
   const locked = step.n > maxReachableStep;
-  const done = !locked && currentStep > step.n;
-  const active = currentStep === step.n;
+  const done = !locked && state === "past";
+  const active = state === "current";
   const Icon = done ? Check : stepIcons[step.icon];
   const className = cn(
-    "grid h-[34px] w-[34px] place-items-center rounded-full border-0 p-0 text-sm",
+    "grid h-[34px] w-[34px] place-items-center rounded-full p-0 text-sm",
     locked ? "cursor-default" : "cursor-pointer",
-    stepStateClass(done, active),
+    stepDotStateClass(state),
   );
   const icon = <Icon aria-hidden size={15} weight={done ? "bold" : "fill"} />;
   return (
     <StepDotNavigation
+      accessibleName={stepAccessibleName(step.title, done)}
       active={active}
       className={className}
       flowState={flowState}
       icon={icon}
       locked={locked}
       onStepChange={onStepChange}
+      state={state}
       step={step.n}
       title={step.title}
     />
@@ -172,6 +159,7 @@ function StepRailItem({
   const locked = step.n > maxReachableStep;
   const done = !locked && currentStep > step.n;
   const active = currentStep === step.n;
+  const state: StepDotState = done ? "past" : active ? "current" : "upcoming";
   const Icon = done ? Check : stepIcons[step.icon];
 
   const className = cn(
@@ -184,8 +172,9 @@ function StepRailItem({
       <span
         className={cn(
           "grid h-[30px] w-[30px] shrink-0 place-items-center rounded-[9px] text-[15px]",
-          stepStateClass(done, active),
+          stepDotStateClass(state),
         )}
+        data-step-dot-state={state}
       >
         <Icon aria-hidden size={15} weight={done ? "bold" : "fill"} />
       </span>
@@ -206,6 +195,7 @@ function StepRailItem({
 
   return (
     <StepRailNavigation
+      accessibleName={stepAccessibleName(step.title, done)}
       active={active}
       className={className}
       content={content}
@@ -218,6 +208,7 @@ function StepRailItem({
 }
 
 function StepRailNavigation({
+  accessibleName,
   active,
   className,
   content,
@@ -226,6 +217,7 @@ function StepRailNavigation({
   onStepChange,
   step,
 }: Readonly<{
+  accessibleName: string;
   active: boolean;
   className: string;
   content: ReactNode;
@@ -236,17 +228,26 @@ function StepRailNavigation({
 }>) {
   if (onStepChange) {
     return (
-      <button
+      <Button
         aria-current={active ? "step" : undefined}
         aria-disabled={locked ? "true" : undefined}
-        aria-label={step.title}
+        aria-label={accessibleName}
         className={className}
         disabled={locked}
         onClick={locked ? undefined : () => onStepChange(step.n)}
+        size="xs"
+        sx={{
+          justifyContent: "flex-start",
+          minHeight: 0,
+          padding: "11px 12px",
+          textAlign: "left",
+          "&.Mui-disabled": { border: 0 },
+        }}
         type="button"
+        variant="ghost"
       >
         {content}
-      </button>
+      </Button>
     );
   }
   if (locked)
@@ -254,7 +255,7 @@ function StepRailNavigation({
       <span
         aria-current={active ? "step" : undefined}
         aria-disabled="true"
-        aria-label={step.title}
+        aria-label={accessibleName}
         className={className}
       >
         {content}
@@ -263,7 +264,7 @@ function StepRailNavigation({
   return (
     <Link
       aria-current={active ? "step" : undefined}
-      aria-label={step.title}
+      aria-label={accessibleName}
       className={className}
       href={buildOnboardingStepHref(step.n, flowState)}
     >

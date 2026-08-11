@@ -1,0 +1,136 @@
+---
+title: "Temporal and scheduled checks"
+description: "Connect the bisibility worker to Temporal and configure scheduled rank checks."
+---
+
+[Production checklist](/self-hosting#production-checklist)
+
+Use Temporal Cloud or run Temporal Server yourself. Temporal Cloud leaves the
+app, worker, PostgreSQL, and Valkey on your platform. Self-management adds
+Temporal persistence, upgrades, backups, and monitoring.
+
+## Temporal Server or Temporal Cloud
+
+The Temporal worker executes bisibility workflow code. It needs a server to
+poll; see
+[the worker is not the Temporal server](/architecture#the-worker-is-not-the-temporal-server)
+for how the two relate.
+
+Choose one server option. The worker stays identical; only its connection
+settings change.
+
+| Option | How you get it | Suited to |
+| - | - | - |
+| Bundled with Compose | The worker and Temporal overlays start a pinned server, its database, schema and namespace jobs, and the worker. Temporal UI is an opt-in profile. | Evaluation and small self-hosted instances |
+| Self-managed cluster | You run Temporal yourself and point `TEMPORAL_ADDRESS` at it. | Instances that outgrow the bundled server |
+| Temporal Cloud | Managed by Temporal. Set `TEMPORAL_ADDRESS` and `TEMPORAL_API_KEY`. | Installations already standardized on managed Temporal |
+
+The Railway template bundles this complete Temporal topology instead of
+requiring a Temporal Cloud account.
+
+Set the same address, namespace, rank-check task queue, and alert-delivery task
+queue on the web app and worker. A generated `BISIBILITY_DEPLOYMENT_SUFFIX`
+derives all three deployment-scoped identifiers unless you override every one.
+
+For a self-hosted plaintext Temporal Server on a private network:
+
+```dotenv
+TEMPORAL_ADDRESS=temporal.internal:7233
+BISIBILITY_DEPLOYMENT_SUFFIX=a1b2c3d4
+TEMPORAL_NAMESPACE=bisibility-a1b2c3d4
+TEMPORAL_TASK_QUEUE=bisibility-rank-checks-a1b2c3d4
+TEMPORAL_ALERT_DELIVERY_TASK_QUEUE=bisibility-alert-deliveries-a1b2c3d4
+```
+
+For Temporal Cloud:
+
+```dotenv
+TEMPORAL_ADDRESS=your-namespace.your-account.tmprl.cloud:7233
+TEMPORAL_NAMESPACE=your-namespace.your-account
+TEMPORAL_TASK_QUEUE=bisibility-rank-checks-a1b2c3d4
+TEMPORAL_ALERT_DELIVERY_TASK_QUEUE=bisibility-alert-deliveries-a1b2c3d4
+TEMPORAL_API_KEY=your-api-key
+```
+
+Choose the TLS setting from the endpoint you operate:
+
+| Endpoint | TLS setting |
+| - | - |
+| Temporal Cloud with `TEMPORAL_API_KEY` | `TEMPORAL_TLS=auto` enables TLS from the API key. |
+| Self-managed TLS without an API key | Set `TEMPORAL_TLS=true`. |
+| Plaintext Temporal on a private network | Set `TEMPORAL_TLS=false`. |
+
+Keep the API key out of every `NEXT_PUBLIC_` variable. Give independent
+installations separate namespaces and task queues. Shared values can make one
+worker pick up another installation's work.
+
+### Worker startup troubleshooting
+
+Configure an `on-failure` or equivalent worker restart policy. The worker retries
+transient startup stages within a bounded budget. It then exits nonzero so
+persistent errors stay visible. Compose, the Railway worker config, and the Fly
+worker manifest already set this policy. Custom platforms must set it explicitly.
+
+If the worker restarts in a loop, verify `TEMPORAL_ADDRESS`, `TEMPORAL_TLS`, and
+`TEMPORAL_NAMESPACE` first. The worker image contains only the bisibility
+Temporal worker; it does not contain or start a Temporal server.
+
+## Scheduled rank checks
+
+Run manual checks without Temporal in the app or through
+`POST /api/v1/keywords/{id}/checks`. If Temporal is unavailable, interactive
+manual checks run inline.
+
+Scheduled checks are executed by the Temporal worker. With Docker, add the
+worker and bundled Temporal overlays:
+
+```bash
+docker compose -f compose.yaml -f compose.worker.yaml -f compose.temporal.yaml up -d
+```
+
+For non-Docker local development, run a Temporal server and the worker alongside
+the web app:
+
+```bash
+npm run temporal:dev
+npm run temporal:worker
+```
+
+`SCHEDULER_DRIVER` selects the execution backend.
+`RANK_CHECK_SCHEDULER_MODE` selects the automatic scheduler owner. The settings
+are independent. `legacy` is the D1 default and creates per-keyword Temporal
+Schedules from stored intent. `cutover` pauses both owners and dispatcher
+claims. It blocks late automatic work before lifecycle or provider cost, while
+allowing bounded state repair. `dispatcher` retires legacy scheduling and owns
+all automatic work. Manual checks remain available in every mode.
+
+Deploy the same explicit mode to app and worker. App-first `cutover` stops new
+legacy intent before worker synchronization. App-first `dispatcher` leaves the
+worker in `cutover`, preventing claims during version skew. The deprecated
+boolean fallback is D1-only until the production cutover is proven.
+
+The worker owns Temporal maintenance schedules. Set
+`SCHEDULED_MAINTENANCE_ENABLED` explicitly instead of relying on reconciler
+defaults. It controls eight schedules: audit and raw-payload purges, queued
+ledger retention, session and verification purge, stale-check and stale-import
+cleanup, migration-hold release, and weekly digest. Sitemap and presence sync
+remain separate opt-ins. Their complete worker configuration is
+`SCHEDULED_MAINTENANCE_ENABLED`,
+`RANK_CHECK_RAW_RETENTION_DAYS`,
+`RANK_CHECK_RAW_PROGRESS_FENCE_RETENTION_DAYS`, `AUDIT_PURGE_CRON`,
+`RANK_CHECK_RAW_PURGE_CRON`, `QUEUED_RANK_CHECK_RETENTION_CRON`,
+`SESSION_PURGE_CRON`, `WEEKLY_DIGEST_CRON`,
+`SITEMAP_SYNC_ENABLED`, `SITEMAP_SYNC_CRON`, `PRESENCE_SYNC_ENABLED`, and
+`PRESENCE_SYNC_CRON`.
+Alert digest delivery is independent of this maintenance gate. It is enabled by
+default and controlled by `ALERT_DIGEST_FLUSH_ENABLED` and
+`ALERT_DIGEST_FLUSH_INTERVAL`.
+
+Temporal worker schedules are the only scheduled maintenance path. You do not
+need an external HTTP scheduler or a shared bearer secret. Session cleanup also
+removes expired verification rows; the retired HTTP-only
+`verifications=false` option had no repository caller and is not reproduced by
+the worker schedule.
+
+Rank checks are bounded by the project's monthly provider budget, set in
+**Settings > Provider usage**. See [Budget cap](/integrations#budget-cap).

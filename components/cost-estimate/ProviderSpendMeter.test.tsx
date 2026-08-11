@@ -1,10 +1,15 @@
-import { usageProviderSpend as twoProviders } from "@/components/settings/settings-fixtures";
+import { ProviderSpendMeter } from "@/components/cost-estimate/ProviderSpendMeter";
+import { DOCS_URL } from "@/lib/site/site";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { ProviderSpendMeter } from "./ProviderSpendMeter";
 
-const docsHref = "https://bisibility.com/docs/integrations#budget-cap";
+const docsHref = "/docs/integrations#budget-cap";
+const resolvedDocsHref = `${DOCS_URL}/integrations#budget-cap`;
 const editBudgetHref = "/app/prj_example/settings#provider-usage";
+const twoProviders = [
+  { label: "DataForSEO", spentCents: 940 },
+  { label: "SerpApi", spentCents: 300 },
+] as const;
 
 describe("ProviderSpendMeter header variant", () => {
   it("renders label, amounts, session meta and the docs link with meter semantics", async () => {
@@ -33,7 +38,7 @@ describe("ProviderSpendMeter header variant", () => {
     fireEvent.click(screen.getByRole("button", { name: "About provider spend" }));
     expect(await screen.findByText("$0.09 this session")).toBeInTheDocument();
     const docsLink = await screen.findByRole("link", { name: "How budgets work" });
-    expect(docsLink).toHaveAttribute("href", docsHref);
+    expect(docsLink).toHaveAttribute("href", resolvedDocsHref);
     expect(docsLink).toHaveAttribute("target", "_blank");
     expect(docsLink).toHaveAttribute("rel", "noreferrer noopener");
     expect(screen.getByRole("link", { name: "Edit budget" })).toHaveAttribute(
@@ -192,6 +197,7 @@ describe("ProviderSpendMeter segmented variant", () => {
     );
 
     expect(screen.getByRole("button", { name: "Edit budget" })).toBeInTheDocument();
+    expect(screen.getByRole("meter").querySelector("button, a")).toBeNull();
   });
 });
 

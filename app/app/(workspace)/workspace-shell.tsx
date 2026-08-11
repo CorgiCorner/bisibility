@@ -100,6 +100,7 @@ export async function WorkspaceShell({
                 }
                 activeProjectId={active.publicId}
                 canCreateWorkspace={canCreateWorkspace}
+                projectDomain={active.domain}
                 projectRef={projectRef}
                 showHostedLinks={isCloud}
                 user={user}

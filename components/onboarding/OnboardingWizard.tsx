@@ -20,6 +20,7 @@ import {
   projectIdFor,
 } from "@/components/onboarding/onboarding-wizard-state";
 import { SampleDataButton } from "@/components/sample-data/SampleDataButton";
+import { Button } from "@/components/ui";
 import type { GoogleOAuthSetup } from "@/lib/integrations/types";
 import type { RankedKeywordConnection } from "@/lib/ranked-keywords/service";
 import { useState } from "react";
@@ -280,13 +281,14 @@ export function OnboardingWizard({
           }
           secondaryAction={
             currentStep === 3 ? (
-              <button
-                className="cursor-pointer border-0 bg-transparent px-3 py-2.5 text-[13px] font-semibold text-fg-muted hover:text-accent-text"
+              <Button
                 onClick={continueWithConnectedDataSource}
+                size="lg"
                 type="button"
+                variant="ghost"
               >
                 Skip
-              </button>
+              </Button>
             ) : undefined
           }
         />

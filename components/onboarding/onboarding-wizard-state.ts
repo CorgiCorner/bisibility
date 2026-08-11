@@ -59,10 +59,7 @@ export function initialOnboardingDraft(
     },
     connectProvider: {
       costPerCheck: 0,
-      enabled: true,
       login: onboardingDefaults.apiLogin,
-      primary: true,
-      priority: 0,
       projectId,
       providerId: flowState.providerId === "serpapi" ? "serpapi" : "dataforseo",
       secret: "",

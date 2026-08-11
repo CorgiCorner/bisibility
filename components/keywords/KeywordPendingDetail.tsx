@@ -1,94 +1,63 @@
 "use client";
 
-import { Button, useToast } from "@/components/ui";
+import { KeywordDetailFreeActionButton } from "@/components/keyword-detail/shared";
+import { useToast } from "@/components/ui";
+import type {
+  KeywordDetailKeywordContext,
+  KeywordDetailRankState,
+  KeywordDetailWhatChanged,
+} from "@/lib/keyword-detail/state-model";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { isBudgetExhaustedResult } from "@/lib/rank-check/budget-contract";
-import { appPath, type ProjectRef } from "@/lib/routing/app-path";
-import type { Icon } from "@phosphor-icons/react";
-import {
-  CaretRightIcon as CaretRight,
-  FlagIcon as Flag,
-  GlobeSimpleIcon as GlobeSimple,
-  MonitorIcon as Monitor,
-  PencilSimpleIcon as PencilSimple,
-} from "@phosphor-icons/react";
+import type { ProjectRef } from "@/lib/routing/app-path";
+import type { SerpDepth } from "@/lib/serp/markets";
+import { CaretRightIcon as CaretRight, SpinnerGapIcon as SpinnerGap } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
   actionErrorMessage,
+  type CreateKeywordAlertInput,
   type KeywordDetailActions,
-  type KeywordWorkspaceActions,
 } from "./action-utils";
+import { KeywordDetailHeaderChrome } from "./KeywordDetailHeaderChrome";
 import { KeywordEditDrawer } from "./KeywordEditDrawer";
-import { KeywordIndexStatus } from "./KeywordIndexStatus";
-import { KeywordPendingDeleteButton } from "./KeywordPendingDeleteButton";
-import { emptyRankCopy, KeywordPendingEmptyState } from "./KeywordPendingEmptyState";
-import { addedLabel, formatVolume } from "./keyword-pending-format";
+import { KeywordHeaderActions } from "./KeywordHeaderActions";
+import { emptyRankCopy } from "./KeywordPendingEmptyState";
+import { KeywordPendingModules } from "./KeywordPendingModules";
+import { exportHistoryCsv } from "./keyword-history-export";
 
-type KeywordPendingDetailProps = {
-  bulkDeleteAction: KeywordWorkspaceActions["bulkDeleteAction"];
-  canDeleteKeyword: boolean;
-  canManageProviders: boolean;
+type KeywordPendingDetailProps = KeywordDetailActions & {
   canUpdateKeyword: boolean;
   costContext?: ProjectCostContext;
   keyword: KeywordRow;
+  keywordContext?: KeywordDetailKeywordContext;
   providerConnected: boolean;
   projectId: string;
   projectRef: ProjectRef;
-  runCheckNowAction: KeywordDetailActions["runCheckNowAction"];
-  updateKeywordAction: KeywordDetailActions["updateKeywordAction"];
-  updateKeywordScheduleAction?: NonNullable<KeywordDetailActions["updateKeywordScheduleAction"]>;
+  rankState?: Exclude<KeywordDetailRankState, "normal">;
+  whatChanged?: KeywordDetailWhatChanged;
 };
 
-const AMBER_TINT = {
-  background: "color-mix(in srgb, var(--yellow) 14%, transparent)",
-  color: "var(--yellow-text)",
-} as const;
-
-const RED_TINT = {
-  background: "color-mix(in srgb, var(--red) 12%, transparent)",
-  color: "var(--red)",
-} as const;
-
-function ContextChip({ children, icon: ChipIcon }: Readonly<{ children: string; icon: Icon }>) {
-  return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-bg-sunken px-2.5 py-1 font-mono text-[11px] text-fg-muted">
-      <ChipIcon size={13} />
-      {children}
-    </span>
-  );
-}
-
-function MetaItem({ children, label }: Readonly<{ children: string; label: string }>) {
-  return (
-    <span>
-      {label} <strong className="font-semibold text-fg-muted">{children}</strong>
-    </span>
-  );
-}
-
-function MetaDivider() {
-  return <span className="h-[11px] w-px bg-border-strong" />;
-}
-
 export function KeywordPendingDetail({
-  bulkDeleteAction,
-  canDeleteKeyword,
-  canManageProviders,
   canUpdateKeyword,
   costContext,
+  createKeywordAlertAction,
   keyword,
-  providerConnected,
+  keywordContext,
   projectId,
   projectRef,
+  providerConnected,
+  rankState,
   runCheckNowAction,
   updateKeywordAction,
   updateKeywordScheduleAction,
+  whatChanged,
 }: Readonly<KeywordPendingDetailProps>) {
   const router = useRouter();
   const { showToast } = useToast();
+  const [alertStatus, setAlertStatus] = useState<"created" | "creating" | "idle">("idle");
   const [editing, setEditing] = useState(false);
   const [runPending, setRunPending] = useState(false);
   const checkState =
@@ -100,22 +69,38 @@ export function KeywordPendingDetail({
         : keyword.lastCheckStatus === "completed"
           ? "not_ranked"
           : "never_checked");
-  const state = checkState === "ranked" ? "not_ranked" : checkState;
+  const state = rankState ?? (checkState === "ranked" ? "not_ranked" : checkState);
   const copy = emptyRankCopy(state, projectRef, keyword.trackedDepth, providerConnected);
-  const tagLabel = keyword.tags.length ? keyword.tags.join(", ") : "None";
-  const volumeLabel = keyword.volumeKnown === false ? "No data" : formatVolume(keyword.volume);
-  const canRunFirstCheck = state === "never_checked" && providerConnected;
+  const defaultDepth: SerpDepth =
+    state === "not_ranked" ? 100 : keyword.trackedDepth === 100 ? 100 : 20;
+  const alertCreated = alertStatus === "created";
+  const alertCreating = alertStatus === "creating";
+  const canRunCheck = state !== "running" && providerConnected;
   const providerRate = costContext
-    ? {
-        overrideCents: costContext.costPerCheckCents,
-        providerId: costContext.providerId,
-      }
+    ? { overrideCents: costContext.costPerCheckCents, providerId: costContext.providerId }
     : undefined;
 
-  async function runFirstCheck() {
+  async function createAlert() {
+    if (!createKeywordAlertAction || alertCreated || alertCreating) return;
+    setAlertStatus("creating");
+    try {
+      await createKeywordAlertAction({
+        keywordId: keyword.id,
+        projectId,
+      } satisfies CreateKeywordAlertInput);
+      setAlertStatus("created");
+      showToast("Alert created", { tint: "green" });
+      router.refresh();
+    } catch (error) {
+      setAlertStatus("idle");
+      showToast(actionErrorMessage(error), { tint: "red" });
+    }
+  }
+
+  async function runCheck(depth: SerpDepth) {
     setRunPending(true);
     try {
-      const result = await runCheckNowAction({ keywordId: keyword.id });
+      const result = await runCheckNowAction({ depth, keywordId: keyword.id });
       if (isBudgetExhaustedResult(result)) {
         showToast(result.message, { tint: "red" });
         return;
@@ -129,99 +114,68 @@ export function KeywordPendingDetail({
     }
   }
 
+  const sharedActions = {
+    alertCreated,
+    alertCreating,
+    canCreateAlert: Boolean(createKeywordAlertAction),
+    canUpdateKeyword,
+    editing,
+    effectiveDepth: defaultDepth,
+    onCreateAlert: () => void createAlert(),
+    onExport: () => exportHistoryCsv(keyword),
+    onRunCheck: (depth: SerpDepth) => void runCheck(depth),
+    onToggleEdit: () => setEditing((value) => !value),
+    providerRate,
+    runPending,
+  };
+  const actions = canRunCheck ? (
+    <KeywordHeaderActions {...sharedActions} primaryLabel={copy.link} />
+  ) : (
+    <div className="flex flex-wrap justify-end gap-2">
+      {state === "running" ? (
+        <KeywordDetailFreeActionButton onClick={() => router.refresh()}>
+          <SpinnerGap aria-hidden className="bv-spin" size={15} weight="bold" />
+          Refresh
+        </KeywordDetailFreeActionButton>
+      ) : (
+        <Link
+          className="inline-flex items-center gap-[7px] rounded-[10px] bg-accent-solid px-4 py-2.5 text-[13px] font-semibold text-[color:var(--accent-on-solid)] hover:bg-accent-solid-hover"
+          href={copy.href}
+        >
+          {copy.link}
+          <CaretRight size={14} weight="bold" />
+        </Link>
+      )}
+      <KeywordHeaderActions {...sharedActions} showCheck={false} />
+    </div>
+  );
+
   return (
     <>
-      <div className="rounded-[14px] border border-border bg-bg-elev p-[20px_22px]">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2.5">
-              <h2 className="m-0 min-w-0 text-[23px] font-semibold leading-tight tracking-[-0.6px]">
-                {keyword.keyword}
-              </h2>
-              <span
-                className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-[3px] font-mono text-[10.5px] font-semibold"
-                style={state === "failed" ? RED_TINT : AMBER_TINT}
-              >
-                <span
-                  className={`h-[6px] w-[6px] rounded-full ${state === "failed" ? "bg-red" : "bg-yellow"}`}
-                />
-                {copy.badge}
-              </span>
-            </div>
-            <div className="mt-3 flex flex-wrap items-center gap-[7px]">
-              <ContextChip icon={Flag}>{keyword.location.displayName}</ContextChip>
-              <ContextChip icon={Monitor}>{keyword.device}</ContextChip>
-              <ContextChip icon={GlobeSimple}>{keyword.engine}</ContextChip>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center justify-end gap-2">
-            {canDeleteKeyword ? (
-              <KeywordPendingDeleteButton
-                bulkDeleteAction={bulkDeleteAction}
-                keywordId={keyword.id}
-                keywordLabel={keyword.keyword}
-                projectId={projectId}
-                projectRef={projectRef}
-              />
-            ) : null}
-            {canUpdateKeyword ? (
-              <Button
-                onClick={() => setEditing((value) => !value)}
-                startIcon={<PencilSimple size={14} weight="bold" />}
-                sx={{ backgroundColor: "transparent", color: "var(--fg-muted)", flex: "none" }}
-                type="button"
-                variant="secondary"
-              >
-                Edit
-              </Button>
-            ) : null}
-            {canUpdateKeyword && canRunFirstCheck ? (
-              <Button
-                endIcon={<CaretRight size={14} weight="bold" />}
-                loading={runPending}
-                loadingLabel="Starting..."
-                onClick={() => void runFirstCheck()}
-                sx={{ flex: "none" }}
-                type="button"
-                variant="primary"
-              >
-                Run first check
-              </Button>
-            ) : copy.href !== appPath(projectRef, "integrations") || canManageProviders ? (
-              <Link
-                className="inline-flex flex-none items-center gap-[7px] rounded-[10px] bg-accent-solid px-4 py-2.5 text-[13px] font-semibold text-primary-contrast hover:opacity-90"
-                href={copy.href}
-              >
-                {copy.link}
-                <CaretRight size={14} weight="bold" />
-              </Link>
-            ) : null}
-          </div>
-        </div>
-        <div className="mt-[18px] flex flex-wrap items-center gap-x-7 gap-y-2 border-t border-border-soft pt-4 font-mono text-[11px] text-fg-muted">
-          <MetaItem label="Search volume">{volumeLabel}</MetaItem>
-          <MetaDivider />
-          <MetaItem label="Tag">{tagLabel}</MetaItem>
-          <MetaDivider />
-          <MetaItem label="Added">{addedLabel(keyword.createdAt)}</MetaItem>
-          <MetaDivider />
-          <MetaItem label="Position">{copy.position}</MetaItem>
-        </div>
-        <KeywordIndexStatus presence={keyword.urlPresence} />
-        {canUpdateKeyword ? (
-          <KeywordEditDrawer
-            keyword={keyword}
-            onClose={() => setEditing(false)}
-            open={editing}
-            projectId={projectId}
-            providerRate={providerRate}
-            updateKeywordAction={updateKeywordAction}
-            updateKeywordScheduleAction={updateKeywordScheduleAction}
-          />
-        ) : null}
-      </div>
-
-      <KeywordPendingEmptyState copy={copy} state={state} />
+      <KeywordDetailHeaderChrome
+        actions={actions}
+        keyword={keyword}
+        providerId={costContext?.providerId}
+        rankState={state}
+      />
+      {canUpdateKeyword ? (
+        <KeywordEditDrawer
+          keyword={keyword}
+          onClose={() => setEditing(false)}
+          open={editing}
+          projectId={projectId}
+          providerRate={providerRate}
+          updateKeywordAction={updateKeywordAction}
+          updateKeywordScheduleAction={updateKeywordScheduleAction}
+        />
+      ) : null}
+      <KeywordPendingModules
+        copy={copy}
+        keyword={keyword}
+        keywordContext={keywordContext}
+        state={state}
+        whatChanged={whatChanged}
+      />
     </>
   );
 }

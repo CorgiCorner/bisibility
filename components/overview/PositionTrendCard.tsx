@@ -1,9 +1,10 @@
 "use client";
 
-import { Card, ChartRegion, InfoTooltip, SectionTitle } from "@/components/ui";
+import { Card, ChartRegion } from "@/components/ui";
 import { chartColors } from "@/lib/theme/chart-colors";
 import { LineChart } from "@mui/x-charts/LineChart";
 import { ChartNoDataOverlay } from "./ChartNoDataOverlay";
+import { OverviewChartHeader } from "./OverviewChartHeader";
 import type { TrendPoint } from "./types";
 
 export type PositionTrendCardProps = {
@@ -19,6 +20,9 @@ const axisTextStyle = {
   fontFamily: "var(--font-mono), monospace",
   fontSize: 11,
 };
+
+const positionTrendDefinition =
+  "Daily average position of ranked keywords. Lower is better - #1 is the top.";
 
 function positionMax(data: TrendPoint[]) {
   const max = Math.max(20, ...data.map((point) => Math.ceil(point.value)));
@@ -40,32 +44,28 @@ export function PositionTrendCard({
   const maxPosition = positionMax(data);
   const yAxisWidth = positionAxisWidth(maxPosition);
   const insufficient = !empty && data.length < 2;
-  const renderedTakeaway = empty ? null : takeaway;
+  const renderedTakeaway = empty || insufficient ? null : takeaway;
+  const renderedTakeawayLoading = !empty && !insufficient && takeawayLoading;
 
   return (
     <Card className="flex h-full min-w-0 flex-col px-5 py-[18px]" size="md">
-      <div className="flex min-h-[26px] items-center justify-between gap-3">
-        <div className="flex flex-none items-center gap-1.5">
-          <SectionTitle className="flex-none">Position trend</SectionTitle>
-          {takeawayLoading ? (
-            <span
-              aria-hidden
-              className="h-3 w-3 shrink-0 animate-pulse rounded-full bg-bg-sunken"
-            />
-          ) : renderedTakeaway ? (
-            <InfoTooltip text={renderedTakeaway} />
-          ) : null}
-        </div>
-        <span
-          aria-hidden={empty || insufficient ? true : undefined}
-          className={`inline-flex flex-none items-center gap-1.5 font-mono text-[11px] text-fg-muted ${
-            empty || insufficient ? "invisible" : ""
-          }`}
-        >
-          <span className="h-[9px] w-[9px] rounded-sm bg-accent" aria-hidden />
-          {seriesLabel}
-        </span>
-      </div>
+      <OverviewChartHeader
+        caption={renderedTakeaway}
+        captionLoading={renderedTakeawayLoading}
+        definition={positionTrendDefinition}
+        title="Position trend"
+        trailing={
+          <span
+            aria-hidden={empty || insufficient ? true : undefined}
+            className={`inline-flex flex-none items-center gap-1.5 font-mono text-[11px] text-fg-muted ${
+              empty || insufficient ? "invisible" : ""
+            }`}
+          >
+            <span className="h-[9px] w-[9px] rounded-sm bg-accent" aria-hidden />
+            {seriesLabel}
+          </span>
+        }
+      />
       {empty || insufficient ? (
         <div className="relative mt-3 min-w-0 flex-1">
           <div aria-hidden className="h-[250px]" />

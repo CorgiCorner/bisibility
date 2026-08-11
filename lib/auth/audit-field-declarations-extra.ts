@@ -2,7 +2,7 @@ import {
   type AuditFieldPolicy,
   type AuditPayloadPolicy,
   auditFields as f,
-} from "./audit-payload-policy";
+} from "@/lib/auth/audit-payload-policy";
 
 type Declare = (actions: readonly string[], policy?: AuditPayloadPolicy) => void;
 type SharedPolicies = Record<
@@ -33,6 +33,9 @@ export function registerAdditionalAuditDeclarations(
   declare(["settings.presence_inspection_budget.update", "settings.rank_check_frequency.update"], {
     after: projectDefaults,
     before: projectDefaults,
+  });
+  declare(["settings.hosted_pricing_feedback.submit"], {
+    after: { ...f.booleans("answered"), ...strings("category") },
   });
   declare(["project_defaults.update", "settings.defaults.update"], {
     after: {
@@ -238,6 +241,18 @@ export function registerAdditionalAuditDeclarations(
   declare(["account.two_factor_step_up_failed"], { after: strings("operation") });
 
   declare(["cloud_import.export_package"], { after: f.numbers("count") });
+  declare(["project.self_host_migration.start"], {
+    after: {
+      ...f.booleans("canRollback"),
+      ...f.dates("autoReleasesAt", "startedAt"),
+      ...strings("id", "writeMode"),
+    },
+    before: { ...f.dates("writeModeChangedAt"), ...strings("id", "writeMode") },
+  });
+  declare(["project.self_host_migration.rollback"], {
+    after: strings("id", "writeMode"),
+    before: { ...f.dates("writeModeChangedAt"), ...strings("id", "writeMode") },
+  });
   declare(["keyword.csv_export", "keyword.json_export", "keyword.xlsx_export"], {
     after: { ...f.numbers("count"), ...strings("format", "scope") },
   });

@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import { expect, type Page, test } from "@playwright/test";
 
 const otpFile = process.env.BISIBILITY_E2E_OTP_FILE;
+const authResponseTimeout = 30_000;
 
 async function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -30,6 +31,16 @@ async function latestOtpFor(email: string) {
   throw new Error(`OTP for ${email} was not captured.`);
 }
 
+async function expectSuccessfulAuthPost(page: Page, path: string, action: () => Promise<void>) {
+  const response = page.waitForResponse(
+    (candidate) =>
+      candidate.request().method() === "POST" && new URL(candidate.url()).pathname === path,
+    { timeout: authResponseTimeout },
+  );
+  await action();
+  expect((await response).ok()).toBe(true);
+}
+
 async function signIn(page: Page, email: string) {
   await page.goto("/login");
   await page.getByLabel("Email").fill(email);
@@ -40,7 +51,12 @@ async function signIn(page: Page, email: string) {
   // letting focus move box-to-box as a real user would.
   await firstBox.focus();
   await page.keyboard.type(await latestOtpFor(email));
-  await page.getByRole("button", { name: "Verify & continue" }).click();
+  await expectSuccessfulAuthPost(page, "/api/auth/sign-in/email-otp", () =>
+    page.getByRole("button", { name: "Verify & continue" }).click(),
+  );
+  await page.waitForURL((url) => url.pathname === "/app" || url.pathname === "/onboarding", {
+    timeout: authResponseTimeout,
+  });
   await expect(page).toHaveURL(/\/onboarding(\?|$)/);
 }
 
@@ -139,7 +155,7 @@ async function clickThroughAppPages(page: Page, keyword: string, projectRef: str
       page.getByRole("heading", { name: "Integrations", exact: true }).first(),
     ).toBeVisible();
   });
-  await expectAppPage(page, `/app/${projectRef}/settings`, async () => {
+  await expectAppPage(page, `/app/${projectRef}/settings/general`, async () => {
     await expect(page.getByText("Project details")).toBeVisible();
   });
   // /app/docs hands off to the hosted docs site via a streamed redirect (HTTP 200 +
@@ -189,14 +205,19 @@ async function verifyWorkspaceWidths(page: Page, keywordDetailPath: string, proj
     }
   }
 
-  for (const path of [`/app/${projectRef}/settings`, "/app/account"]) {
-    await page.goto(path);
-    const width = await page
-      .locator("main > div")
-      .first()
-      .evaluate((node) => node.getBoundingClientRect().width);
-    expect(width).toBeLessThanOrEqual(781);
-  }
+  await page.goto(`/app/${projectRef}/settings/general`);
+  const settingsWidth = await page
+    .locator("main > div")
+    .first()
+    .evaluate((node) => node.getBoundingClientRect().width);
+  expect(settingsWidth).toBeCloseTo(1040, 0);
+
+  await page.goto("/app/account");
+  const accountWidth = await page
+    .locator("main > div")
+    .first()
+    .evaluate((node) => node.getBoundingClientRect().width);
+  expect(accountWidth).toBeLessThanOrEqual(781);
 }
 
 test("release flow: auth, onboarding, app pages, keyword detail, logout", async ({ page }) => {
@@ -212,8 +233,10 @@ test("release flow: auth, onboarding, app pages, keyword detail, logout", async 
   // Sign out now lives inside the sidebar user (Account) menu.
   await page.getByRole("button", { name: "Account menu" }).focus();
   await page.keyboard.press("Enter");
-  await page.getByRole("menuitem", { name: "Sign out" }).click();
-  await expect(page).toHaveURL((url) => url.pathname === "/login", { timeout: 30_000 });
+  await expectSuccessfulAuthPost(page, "/api/auth/sign-out", () =>
+    page.getByRole("menuitem", { name: "Sign out" }).click(),
+  );
+  await expect(page).toHaveURL((url) => url.pathname === "/login");
 
   await page.goto(`/app/${projectRef}/overview`);
   await expect(page).toHaveURL((url) => url.pathname === "/login");

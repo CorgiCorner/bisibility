@@ -235,6 +235,7 @@ export const auth = betterAuth({
   },
   plugins: [
     emailOTP({
+      changeEmail: { enabled: true },
       otpLength: 6,
       // Match the "expires in 5 minutes" copy in sendOtpEmail (and don't depend on
       // the better-auth default, which is longer).

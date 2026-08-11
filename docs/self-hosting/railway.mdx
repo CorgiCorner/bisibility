@@ -1,0 +1,103 @@
+---
+title: "Railway self-hosting"
+description: "Deploy and operate the complete bisibility stack from the certified Railway template."
+---
+
+[Production checklist](/self-hosting#production-checklist)
+
+## Railway
+
+[Deploy bisibility on Railway](https://bisibility.com/deploy/railway).
+
+The bundled template runs web, worker, PostgreSQL, Valkey, Temporal Server, and
+Temporal persistence in one project. It requires no Temporal Cloud account.
+The listing pins a tested bisibility release and uses private networking.
+
+### Before you deploy
+
+The template asks for two values:
+
+| Variable | What to enter |
+| - | - |
+| `EMAIL_FROM` | A sender address that is already verified in Resend. Sign-in codes are sent from this address. |
+| `RESEND_API_KEY` | A Resend API key allowed to send from that verified sender. Treat it as a secret. |
+
+Railway generates database passwords, the auth secret, the credential encryption
+key, the internal probe token, and the deployment suffix. Reference variables
+share values across required services. Do not replace them with separate values.
+Web and worker must share `BISIBILITY_SECRETS_KEY`, the Temporal namespace, and
+both task queues.
+
+Connect a SERP provider from **Integrations** after startup. The template includes
+no provider subscription, usage, or credits.
+
+<Warning>
+Six services run continuously - set a Railway
+[usage alert or hard limit](https://docs.railway.com/pricing/cost-control) before
+deploying. The template review screen does not show a cost estimate.
+</Warning>
+
+### What the template creates
+
+Eight resources are expected. Six persistent roles stay `Running`.
+The two one-shot jobs finish as `Completed`.
+A completed bootstrap job is not a crashed service.
+
+| Resource | Purpose | Expected steady state |
+| - | - | - |
+| `web` | Public Next.js application and REST API. Its pre-deploy step applies application database migrations before traffic is admitted. | Running, with the only public domain in the project |
+| `worker` | Executes scheduled rank checks, alert delivery, and configured maintenance through Temporal. | Running, private only |
+| `app-postgres` | Stores accounts, projects, keywords, rank history, provider configuration, and application migration state. | Running with a persistent volume |
+| `redis` | Backs rate limits, idempotency, realtime notifications, and worker liveness. | Running, private only, with a persistent volume |
+| `temporal` | Coordinates scheduled workflows for this bisibility deployment. It is the Temporal Server, not the bisibility worker. | Running, private only |
+| `temporal-postgres` | Stores Temporal workflow history and Temporal persistence schemas independently from application data. | Running with a persistent volume |
+| `temporal-schema` | Creates or upgrades the Temporal persistence and visibility schemas before Temporal starts using them. It is safe to rerun. | Completed |
+| `temporal-namespace` | Creates the deployment-specific Temporal namespace, retention policy, and required search attributes after the server is reachable. It is safe to rerun. | Completed |
+
+Deleting or redeploying a completed job does not reduce the cost of the six
+persistent services. See [Railway pricing](https://docs.railway.com/pricing).
+
+Only `web` should receive a public domain. Do not add public domains or TCP
+proxies to either PostgreSQL service, Redis, Temporal Server, the worker, or the
+bootstrap jobs. They communicate through Railway private networking.
+
+### First deployment
+
+1. Open the [public Railway template](https://bisibility.com/deploy/railway)
+   and review all eight resources. Check current Railway pricing and set the
+   workspace usage controls appropriate for this six-service deployment.
+2. Enter `EMAIL_FROM` and `RESEND_API_KEY`, then deploy the template.
+3. Wait for the six persistent services to report healthy and both one-shot
+   jobs to report `Completed`.
+4. Open the generated domain on `web`. An empty installation redirects to
+   `/setup`, where you verify the first administrator by email.
+5. Connect a SERP provider from **Integrations** and set its monthly budget before
+   running a real rank check.
+6. Check `/api/v1/readiness` for traffic admission and `/api/v1/health` for the
+   full database, Temporal, worker, migration, and release report.
+7. Create a scheduled check and confirm that the worker heartbeat becomes fresh.
+
+Back up `app-postgres` and `temporal-postgres` independently. Application data
+and Temporal workflow history have different restore paths, and a backup of one
+does not protect the other. Work through the
+[production checklist](/self-hosting#production-checklist) before inviting users.
+
+### Upgrade a Railway template deployment
+
+Railway templates do not update existing projects. Subscribe to
+[Bisibility releases](https://github.com/CorgiCorner/bisibility/releases), read
+the release notes, and update pinned images manually. Keep Temporal Server at
+its existing version unless the notes specify a separately tested upgrade.
+
+1. Back up the `app-postgres` and `temporal-postgres` Railway databases independently.
+2. In the `web` service settings, change the image to
+   `corgicorner/bisibility:X.Y.Z`. Deploy it and wait for its pre-deploy migrations and
+   `/api/v1/readiness` check to succeed.
+3. Set `worker` to `corgicorner/bisibility-worker:X.Y.Z`, deploy it, then require
+   `/api/v1/health` to report a fresh worker heartbeat and matching exact app and worker source
+   revisions.
+4. Leave `temporal`, `temporal-schema`, and `temporal-namespace` pinned at 1.31.2 unless the release
+   notes explicitly say otherwise.
+
+Stop on the first failed step. Do not advance another service or change Temporal
+as a fix. Restore both backups when the release requires database rollback.

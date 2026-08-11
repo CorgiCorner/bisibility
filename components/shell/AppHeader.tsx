@@ -11,6 +11,7 @@ export type AppHeaderProps = {
   actions?: ReactNode;
   activeProjectId: string;
   canCreateWorkspace: boolean;
+  projectDomain?: string | null;
   projectRef: string;
   showHostedLinks?: boolean;
   user?: ShellUser;
@@ -21,6 +22,7 @@ export function AppHeader({
   actions,
   activeProjectId,
   canCreateWorkspace,
+  projectDomain,
   projectRef,
   showHostedLinks = false,
   user,
@@ -39,7 +41,10 @@ export function AppHeader({
           user={user}
           workspaces={workspaces}
         />
-        <AppHeaderTitle keywordCount={activeWorkspace?.keywordCount} />
+        <AppHeaderTitle
+          keywordCount={activeWorkspace?.keywordCount}
+          projectDomain={projectDomain}
+        />
       </div>
       {/* Right cluster order: [spend meter] [search][bell][account]. */}
       <div className="flex flex-none items-center gap-6">

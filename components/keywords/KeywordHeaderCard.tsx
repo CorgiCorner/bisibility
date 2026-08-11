@@ -1,24 +1,14 @@
 "use client";
 
 import { AddKeywordDrawer } from "@/components/keywords/add/AddKeywordDrawer";
-import {
-  buildGoogleSerpUrl,
-  type DimensionKind,
-  DimensionSwitcher,
-  localeForLocation,
-} from "@/components/keywords/filters/DimensionSwitcher";
-import { Card, IdChip, useToast } from "@/components/ui";
+import type { DimensionKind } from "@/components/keywords/filters/DimensionSwitcher";
+import { useToast } from "@/components/ui";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { isBudgetExhaustedResult } from "@/lib/rank-check/budget-contract";
 import { type RunCheckNowInput, runCheckNowSchema } from "@/lib/schemas/keyword";
 import { DEFAULT_SERP_DEPTH, type SerpDepth } from "@/lib/serp/markets";
-import {
-  FlagIcon as Flag,
-  GlobeSimpleIcon as GlobeSimple,
-  MonitorIcon as Monitor,
-} from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -30,10 +20,10 @@ import {
   type KeywordAction,
   type KeywordDetailActions,
 } from "./action-utils";
+import { KeywordDetailHeaderChrome } from "./KeywordDetailHeaderChrome";
 import { KeywordEditDrawer } from "./KeywordEditDrawer";
 import { KeywordHeaderActions } from "./KeywordHeaderActions";
-import { KeywordIndexStatus } from "./KeywordIndexStatus";
-import { deriveDomain, deviceValue, metadataChipClassName } from "./keyword-header-model";
+import { deriveDomain, deviceValue } from "./keyword-header-model";
 import { exportHistoryCsv } from "./keyword-history-export";
 import { locationFieldValueFromKeywordLocation } from "./location-field-value";
 
@@ -79,9 +69,6 @@ export function KeywordHeaderCard({
   });
   const alertCreated = alertStatus === "created";
   const alertCreating = alertStatus === "creating";
-  const locale = localeForLocation(keyword.location);
-  const serpHref = buildGoogleSerpUrl(keyword.keyword, keyword.location);
-  const engineLabel = `${keyword.engine} / ${locale.code}`;
   const domain = deriveDomain(keyword.rankingUrl ?? keyword.targetUrl ?? "");
   const effectiveDepth =
     keyword.schedule?.serp_depth ?? keyword.projectSerpDepth ?? DEFAULT_SERP_DEPTH;
@@ -139,68 +126,29 @@ export function KeywordHeaderCard({
     handleSubmit((values) => handleRunCheckNow({ ...values, depth }))();
 
   return (
-    <Card className="rounded-[14px]" size="lg">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="min-w-0">
-          <div className="flex min-w-0 flex-wrap items-center gap-2.5">
-            <h2 className="m-0 min-w-0 text-[23px] font-semibold leading-tight tracking-[-0.6px]">
-              {keyword.keyword}
-            </h2>
-            <IdChip size="sm" value={keyword.id} />
-          </div>
-          <div className="mt-3 flex flex-wrap items-center gap-[7px]">
-            <DimensionSwitcher
-              icon={<Flag size={13} />}
-              kind="location"
-              label={keyword.location.displayName}
-              onTrack={canCreateKeyword ? handleTrackDimension : undefined}
-              value={keyword.locationName}
-            />
-            <DimensionSwitcher
-              icon={<Monitor size={13} />}
-              kind="device"
-              label={keyword.device}
-              onTrack={canCreateKeyword ? handleTrackDimension : undefined}
-              value={keyword.device}
-            />
-            <DimensionSwitcher
-              icon={<GlobeSimple size={13} />}
-              kind="engine"
-              label={engineLabel}
-              onTrack={canCreateKeyword ? handleTrackDimension : undefined}
-              serpHref={serpHref}
-              value={keyword.engine}
-            />
-            {keyword.topic ? (
-              <span className={metadataChipClassName}>Topic: {keyword.topic}</span>
-            ) : null}
-            {keyword.intent ? (
-              <span className={metadataChipClassName}>Intent: {keyword.intent}</span>
-            ) : null}
-            {keyword.tags.map((tag) => (
-              <span className={metadataChipClassName} key={tag}>
-                {tag}
-              </span>
-            ))}
-          </div>
-        </div>
-        <KeywordHeaderActions
-          alertCreated={alertCreated}
-          alertCreating={alertCreating}
-          canCreateAlert={Boolean(createKeywordAlertAction)}
-          canUpdateKeyword={canUpdateKeyword}
-          editing={editing}
-          effectiveDepth={effectiveDepth}
-          onCreateAlert={() => handleCreateKeywordAlert().catch(() => undefined)}
-          onExport={() => exportHistoryCsv(keyword)}
-          onRunCheck={(depth) => submitRunCheck(depth).catch(() => undefined)}
-          onToggleEdit={() => setEditing((value) => !value)}
-          providerRate={providerRate}
-          runPending={isSubmitting}
-        />
-      </div>
+    <>
+      <KeywordDetailHeaderChrome
+        actions={
+          <KeywordHeaderActions
+            alertCreated={alertCreated}
+            alertCreating={alertCreating}
+            canCreateAlert={Boolean(createKeywordAlertAction)}
+            canUpdateKeyword={canUpdateKeyword}
+            editing={editing}
+            effectiveDepth={effectiveDepth}
+            onCreateAlert={() => handleCreateKeywordAlert().catch(() => undefined)}
+            onExport={() => exportHistoryCsv(keyword)}
+            onRunCheck={(depth) => submitRunCheck(depth).catch(() => undefined)}
+            onToggleEdit={() => setEditing((value) => !value)}
+            providerRate={providerRate}
+            runPending={isSubmitting}
+          />
+        }
+        keyword={keyword}
+        onTrack={canCreateKeyword ? handleTrackDimension : undefined}
+        providerId={costContext?.providerId}
+      />
       <input type="hidden" {...register("keywordId")} />
-      <KeywordIndexStatus presence={keyword.urlPresence} />
       {canUpdateKeyword ? (
         <KeywordEditDrawer
           keyword={keyword}
@@ -232,6 +180,6 @@ export function KeywordHeaderCard({
           tagSuggestions={tagSuggestions}
         />
       ) : null}
-    </Card>
+    </>
   );
 }

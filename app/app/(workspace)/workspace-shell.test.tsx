@@ -24,8 +24,18 @@ vi.mock("@/components/shell/AppFooter", () => ({
   ),
 }));
 vi.mock("@/components/shell/AppHeader", () => ({
-  AppHeader: ({ actions, showHostedLinks }: { actions: ReactNode; showHostedLinks: boolean }) => (
-    <header data-hosted-links={showHostedLinks}>{actions}</header>
+  AppHeader: ({
+    actions,
+    projectDomain,
+    showHostedLinks,
+  }: {
+    actions: ReactNode;
+    projectDomain?: string;
+    showHostedLinks: boolean;
+  }) => (
+    <header data-hosted-links={showHostedLinks} data-project-domain={projectDomain}>
+      {actions}
+    </header>
   ),
 }));
 vi.mock("@/components/shell/CloudBetaBanner", () => ({
@@ -122,6 +132,7 @@ describe("workspace layout", () => {
     expect(markup).toContain("Workspace content");
     expect(markup).not.toContain("max-w-[1400px]");
     expect(markup).not.toContain("max-w-[780px]");
+    expect(markup).toContain('data-project-domain="example.com"');
     expect(mocks.querySession).toHaveBeenCalledOnce();
     expect(mocks.listWorkspaces).toHaveBeenCalledOnce();
   });

@@ -21,8 +21,7 @@ import {
   BellIcon as Bell,
   BellRingingIcon as BellRinging,
   CaretDownIcon as CaretDown,
-  DownloadSimpleIcon as DownloadSimple,
-  PencilSimpleIcon as PencilSimple,
+  DotsThreeIcon as DotsThree,
 } from "@phosphor-icons/react";
 import { useState } from "react";
 
@@ -37,9 +36,21 @@ type KeywordHeaderActionsProps = {
   onExport: () => void;
   onRunCheck: (depth: SerpDepth) => void;
   onToggleEdit: () => void;
+  primaryLabel?: string;
   providerRate?: CostRateInfo;
   runPending: boolean;
+  showCheck?: boolean;
 };
+
+const checkActionSx = {
+  backgroundColor: "var(--accent-solid)",
+  borderColor: "var(--accent-solid)",
+  color: "var(--accent-on-solid)",
+  "&:hover": {
+    backgroundColor: "var(--accent-solid-hover)",
+    borderColor: "var(--accent-solid-hover)",
+  },
+} as const;
 
 function checkCost(depth: SerpDepth, providerRate?: CostRateInfo) {
   if (!providerRate) return null;
@@ -47,7 +58,7 @@ function checkCost(depth: SerpDepth, providerRate?: CostRateInfo) {
   return costCents == null ? null : formatEstimateCents(costCents);
 }
 
-function checkLabel(depth: SerpDepth, providerRate?: CostRateInfo) {
+function depthOptionLabel(depth: SerpDepth, providerRate?: CostRateInfo) {
   const cost = checkCost(depth, providerRate);
   return `Top ${depth}${cost ? ` · ${cost}` : ""}`;
 }
@@ -63,10 +74,13 @@ export function KeywordHeaderActions({
   onExport,
   onRunCheck,
   onToggleEdit,
+  primaryLabel = "Run check",
   providerRate,
   runPending,
+  showCheck = true,
 }: Readonly<KeywordHeaderActionsProps>) {
   const [depthMenuAnchor, setDepthMenuAnchor] = useState<HTMLElement | null>(null);
+  const [actionsMenuAnchor, setActionsMenuAnchor] = useState<HTMLElement | null>(null);
   const [depthSelection, setDepthSelection] = useState(() => ({
     effectiveDepth,
     selectedDepth: effectiveDepth,
@@ -83,6 +97,34 @@ export function KeywordHeaderActions({
 
   return (
     <div className="flex flex-wrap justify-end gap-2">
+      {canUpdateKeyword && showCheck ? (
+        <ProjectReadOnlyTooltip>
+          <ButtonGroup size="small" variant="contained">
+            <MuiButton
+              disabled={readOnly || runPending}
+              onClick={() => onRunCheck(selectedDepth)}
+              startIcon={<ArrowsClockwise size={15} weight="bold" />}
+              sx={{ ...checkActionSx, minHeight: 40 }}
+            >
+              {runPending ? "Starting..." : primaryLabel}
+            </MuiButton>
+            <MuiButton
+              aria-label="Choose check depth"
+              disabled={readOnly || runPending}
+              onClick={(event) => setDepthMenuAnchor(event.currentTarget)}
+              sx={{
+                ...checkActionSx,
+                borderLeft: "1px solid color-mix(in srgb, var(--accent-on-solid) 32%, transparent)",
+                minHeight: 40,
+                minWidth: 34,
+                paddingX: 0.75,
+              }}
+            >
+              <CaretDown aria-hidden size={13} weight="bold" />
+            </MuiButton>
+          </ButtonGroup>
+        </ProjectReadOnlyTooltip>
+      ) : null}
       {canUpdateKeyword ? (
         <ProjectReadOnlyTooltip>
           <Button
@@ -91,7 +133,7 @@ export function KeywordHeaderActions({
             startIcon={<AlertIcon size={15} weight={alertCreated ? "fill" : "bold"} />}
             sx={
               alertCreated
-                ? { border: "1px solid var(--accent)", color: "var(--accent)" }
+                ? { border: "1px solid var(--accent-solid)", color: "var(--accent-text)" }
                 : { color: "var(--fg-muted)" }
             }
             variant="secondary"
@@ -101,51 +143,16 @@ export function KeywordHeaderActions({
         </ProjectReadOnlyTooltip>
       ) : null}
       <Button
-        onClick={onExport}
-        startIcon={<DownloadSimple size={15} />}
-        sx={{ color: "var(--fg-muted)" }}
+        aria-expanded={Boolean(actionsMenuAnchor)}
+        aria-haspopup="menu"
+        aria-label="More keyword actions"
+        onClick={(event) => setActionsMenuAnchor(event.currentTarget)}
+        sx={{ minWidth: 40, paddingX: 0.75 }}
         variant="secondary"
       >
-        Export CSV
+        <DotsThree aria-hidden size={17} weight="bold" />
       </Button>
-      {canUpdateKeyword ? (
-        <ProjectReadOnlyTooltip>
-          <Button
-            disabled={readOnly}
-            onClick={onToggleEdit}
-            startIcon={<PencilSimple size={15} weight="bold" />}
-            sx={{ color: "var(--fg-muted)" }}
-            variant="secondary"
-          >
-            {editing ? "Close edit" : "Edit"}
-          </Button>
-        </ProjectReadOnlyTooltip>
-      ) : null}
-      {canUpdateKeyword ? (
-        <ProjectReadOnlyTooltip>
-          <ButtonGroup size="small" variant="contained">
-            <MuiButton
-              disabled={readOnly || runPending}
-              onClick={() => onRunCheck(selectedDepth)}
-              startIcon={<ArrowsClockwise size={15} weight="bold" />}
-              sx={{ minHeight: 36 }}
-            >
-              {runPending
-                ? "Starting..."
-                : `Check now (${checkLabel(selectedDepth, providerRate)})`}
-            </MuiButton>
-            <MuiButton
-              aria-label="Choose check depth"
-              disabled={readOnly || runPending}
-              onClick={(event) => setDepthMenuAnchor(event.currentTarget)}
-              sx={{ minHeight: 36, minWidth: 34, paddingX: 0.75 }}
-            >
-              <CaretDown aria-hidden size={13} weight="bold" />
-            </MuiButton>
-          </ButtonGroup>
-        </ProjectReadOnlyTooltip>
-      ) : null}
-      {canUpdateKeyword ? (
+      {canUpdateKeyword && showCheck ? (
         <Menu
           anchorEl={depthMenuAnchor}
           onClose={() => setDepthMenuAnchor(null)}
@@ -163,11 +170,39 @@ export function KeywordHeaderActions({
                 setDepthSelection({ effectiveDepth, selectedDepth: depth });
                 setDepthMenuAnchor(null);
               }}
-              option={{ label: checkLabel(depth, providerRate), value: String(depth) }}
+              option={{ label: depthOptionLabel(depth, providerRate), value: String(depth) }}
             />
           ))}
         </Menu>
       ) : null}
+      <Menu
+        anchorEl={actionsMenuAnchor}
+        onClose={() => setActionsMenuAnchor(null)}
+        open={Boolean(actionsMenuAnchor)}
+        slotProps={{
+          list: { "aria-label": "More keyword actions", dense: true, sx: { padding: 0 } },
+          paper: { sx: menuSelectPaperSx },
+        }}
+      >
+        {canUpdateKeyword ? (
+          <MenuSelectOptionItem
+            current={false}
+            onSelect={() => {
+              setActionsMenuAnchor(null);
+              onToggleEdit();
+            }}
+            option={{ label: editing ? "Close edit" : "Edit", value: "edit" }}
+          />
+        ) : null}
+        <MenuSelectOptionItem
+          current={false}
+          onSelect={() => {
+            setActionsMenuAnchor(null);
+            onExport();
+          }}
+          option={{ label: "Export CSV", value: "export" }}
+        />
+      </Menu>
     </div>
   );
 }

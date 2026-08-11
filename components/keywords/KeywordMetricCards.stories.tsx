@@ -1,3 +1,4 @@
+import { KeywordDetailStoryThemes } from "@/components/keyword-detail/shared/story-theme-preview";
 import { KeywordMetricCards } from "@/components/keywords/KeywordMetricCards";
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
 import type { Meta, StoryObj } from "@storybook/react";
@@ -7,22 +8,32 @@ const meta = {
   component: KeywordMetricCards,
   decorators: [
     (Story) => (
-      <div className="min-h-[220px] bg-bg p-6 text-fg">
-        <Story />
-      </div>
+      <KeywordDetailStoryThemes>
+        <div className="min-h-[220px] text-fg">
+          <Story />
+        </div>
+      </KeywordDetailStoryThemes>
     ),
   ],
+  parameters: { chromatic: { viewports: [390, 768, 1440] } },
 } satisfies Meta<typeof KeywordMetricCards>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  args: { keyword: keywordRows[1] },
+export const FullContext: Story = {
+  args: { keyword: keywordRows[1], keywordContext: "full" },
 };
 
-export const MissingEnrichmentData: Story = {
+export const PartialContext: Story = {
+  args: {
+    keyword: { ...keywordRows[1], cpcKnown: false },
+    keywordContext: "partial",
+  },
+};
+
+export const UnavailableContext: Story = {
   args: {
     keyword: {
       ...keywordRows[1],
@@ -31,6 +42,7 @@ export const MissingEnrichmentData: Story = {
       positionBaseline: null,
       volumeKnown: false,
     },
+    keywordContext: "unavailable",
   },
 };
 
@@ -42,5 +54,18 @@ export const SameDayRerun: Story = {
       positionBaseline: 4,
       previousPosition: 6,
     },
+    keywordContext: "full",
+  },
+};
+
+export const NoChange: Story = {
+  args: { keyword: keywordRows[1], keywordContext: "full", whatChanged: "no_change" },
+};
+
+export const FirstCheck: Story = {
+  args: {
+    keyword: { ...keywordRows[1], rankingUrlHistory: keywordRows[1].rankingUrlHistory.slice(0, 1) },
+    keywordContext: "full",
+    whatChanged: "first_check",
   },
 };

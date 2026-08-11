@@ -114,11 +114,13 @@ describe("integration queries", () => {
 
     expect(provider.drawer.defaults).toMatchObject({
       costPerCheck: 0.0001,
-      enabled: true,
       login: "dfs-user@example.com",
-      priority: 7,
       secret: "",
     });
+    expect(provider.drawer.defaults).not.toHaveProperty("enabled");
+    expect(provider.drawer.defaults).not.toHaveProperty("primary");
+    expect(provider.drawer.defaults).not.toHaveProperty("priority");
+    expect(provider).toMatchObject({ enabled: true, primary: true, priority: 7 });
     expect(provider.meta).toContainEqual({ label: "Account", value: "dfs-user@example.com" });
     expect(provider.meta.map((row) => row.label)).not.toContain("Fallback priority");
     expect(provider.meta.map((row) => row.label)).not.toContain("Est. provider cost");

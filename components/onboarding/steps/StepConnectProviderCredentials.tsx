@@ -11,9 +11,9 @@ import {
 
 type StepConnectProviderCredentialsProps = {
   busy: boolean;
-  connectBackupDisabled: boolean;
+  connectDisabled: boolean;
   errors: FieldErrors<OnboardingConnectProviderInput>;
-  onBackupConnect?: () => void;
+  onFallbackConnect?: () => void;
   onCredentialChange: () => void;
   onTest: () => void;
   providerId: OnboardingSerpProviderId;
@@ -27,9 +27,9 @@ type StepConnectProviderCredentialsProps = {
 
 export function StepConnectProviderCredentials({
   busy,
-  connectBackupDisabled,
+  connectDisabled,
   errors,
-  onBackupConnect,
+  onFallbackConnect,
   onCredentialChange,
   onTest,
   providerId,
@@ -43,13 +43,13 @@ export function StepConnectProviderCredentials({
   return (
     <ProviderCredentialForm
       busy={busy}
-      connectBackupDisabled={connectBackupDisabled}
+      connectDisabled={connectDisabled}
       errors={{
         login: errors.login?.message,
         secret: errors.secret?.message,
       }}
       fields={credentialFields[providerId]}
-      onConnectBackup={onBackupConnect}
+      onConnect={onFallbackConnect}
       onTest={onTest}
       providerId={providerId}
       providerLabel={providerLabel}

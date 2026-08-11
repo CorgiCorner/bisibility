@@ -819,6 +819,7 @@ model QueuedRankCheckTask {
 
   @@unique([batchId, keywordId])
   @@index([batchId, state])
+  @@index([keywordId, state])
   @@map("queued_rank_check_tasks")
 }
 

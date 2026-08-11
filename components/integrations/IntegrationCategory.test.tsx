@@ -17,9 +17,9 @@ vi.mock("@/components/integrations/SerpFallbackOrder", () => ({
 const actions = {
   connectProvider: vi.fn(async () => undefined),
   disconnectProvider: vi.fn(async () => undefined),
-  setPrimaryProvider: vi.fn(async () => undefined),
   testProviderConnection: vi.fn(async () => ({ message: "ok", ok: true })),
   updateProviderCost: vi.fn(async () => undefined),
+  updateProviderSettings: vi.fn(async () => undefined),
 } satisfies ProviderActionHandlers;
 
 describe("IntegrationCategory", () => {

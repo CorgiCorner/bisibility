@@ -11,7 +11,7 @@ COPY scripts/deploy/bake-runtime-env.mjs ./scripts/deploy/bake-runtime-env.mjs
 COPY scripts/deploy/download-rds-ca.mjs ./scripts/deploy/download-rds-ca.mjs
 COPY scripts/generate/generate-client-if-schema.mjs ./scripts/generate/generate-client-if-schema.mjs
 COPY scripts/generate/root-postinstall.mjs ./scripts/generate/root-postinstall.mjs
-RUN apt-get update \
+RUN --mount=type=cache,target=/root/.npm apt-get update \
   && apt-get install -y --no-install-recommends ca-certificates openssl \
   && rm -rf /var/lib/apt/lists/* \
   && npm install -g npm@10.9.3 \

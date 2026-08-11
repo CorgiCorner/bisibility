@@ -1,8 +1,8 @@
 import { readdirSync } from "node:fs";
 import { resolve } from "node:path";
+import { headerMetaFor } from "@/components/shell/header-title";
 import { appPath, appRootPath } from "@/lib/routing/app-path";
 import { describe, expect, it } from "vitest";
-import { headerMetaFor } from "./header-title";
 
 const routeCases = [
   { path: appRootPath(), pattern: `${appRootPath()}/`, title: "Overview" },
@@ -87,6 +87,41 @@ const routeCases = [
     title: "Settings",
   },
   {
+    path: appPath("prj_1", "settings", "advanced"),
+    pattern: appPath("[project]", "settings", "advanced"),
+    title: "Settings",
+  },
+  {
+    path: appPath("prj_1", "settings", "developers"),
+    pattern: appPath("[project]", "settings", "developers"),
+    title: "Settings",
+  },
+  {
+    path: appPath("prj_1", "settings", "general"),
+    pattern: appPath("[project]", "settings", "general"),
+    title: "Settings",
+  },
+  {
+    path: appPath("prj_1", "settings", "notifications"),
+    pattern: appPath("[project]", "settings", "notifications"),
+    title: "Settings",
+  },
+  {
+    path: appPath("prj_1", "settings", "team"),
+    pattern: appPath("[project]", "settings", "team"),
+    title: "Settings",
+  },
+  {
+    path: appPath("prj_1", "settings", "tracking"),
+    pattern: appPath("[project]", "settings", "tracking"),
+    title: "Settings",
+  },
+  {
+    path: appPath("prj_1", "settings", "usage"),
+    pattern: appPath("[project]", "settings", "usage"),
+    title: "Settings",
+  },
+  {
     path: appPath("prj_1", "timeline"),
     pattern: appPath("[project]", "timeline"),
     title: "Timeline",
@@ -133,6 +168,16 @@ describe("dashboard header titles", () => {
     expect(headerMetaFor(appPath("prj_1", "checks"))).toMatchObject({
       subtitle: "Operational log of rank-check runs. Keyword details live in Keywords.",
       title: "Checks",
+    });
+  });
+
+  it("uses the current project domain for Settings without changing other route metadata", () => {
+    expect(
+      headerMetaFor(appPath("prj_1", "settings", "general"), { projectDomain: "example.com" }),
+    ).toMatchObject({ subtitle: "example.com", title: "Settings" });
+    expect(headerMetaFor(appPath("prj_1", "integrations"))).toMatchObject({
+      subtitle: "Connect data providers and analytics sources.",
+      title: "Integrations",
     });
   });
 });

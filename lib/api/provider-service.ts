@@ -9,8 +9,8 @@ import { PROVIDER_CATALOG } from "@/lib/providers/registry";
 import type { ProviderCredentials } from "@/lib/providers/types";
 import {
   connectProviderSchema,
-  type SetPrimaryProviderInput,
-  setPrimaryProviderSchema,
+  type ProviderConnectionRefInput,
+  providerConnectionRefSchema,
   type TestProviderConnectionInput,
 } from "@/lib/schemas/provider";
 import { z } from "zod";
@@ -26,12 +26,10 @@ const prioritySchema = z.coerce.number().int().min(0).max(1000);
 
 export const connectProviderActionSchema = connectProviderSchema.extend({
   enabled: z.coerce.boolean().default(true),
-  priority: prioritySchema.default(100),
 });
 
-export const providerSettingsSchema = setPrimaryProviderSchema.extend({
+export const providerSettingsSchema = providerConnectionRefSchema.extend({
   enabled: z.coerce.boolean().optional(),
-  primary: z.coerce.boolean().optional(),
   priority: prioritySchema.optional(),
 });
 
@@ -42,14 +40,11 @@ type ProviderMutationContext = {
   projectId: string;
   projectPublicId?: string;
 };
-type ProviderMutationClient = ProviderClient & Pick<typeof prisma, "providerConnectionRate">;
-
+type ProviderMutationClient = ProviderClient &
+  Pick<typeof prisma, "$queryRaw" | "providerConnectionRate">;
 function providerCatalogItem(providerId: string) {
   const item = PROVIDER_CATALOG.find((provider) => provider.id === providerId);
-  if (!item) {
-    throw new Error(`Unknown provider: ${providerId}`);
-  }
-
+  if (!item) throw new Error(`Unknown provider: ${providerId}`);
   return item;
 }
 
@@ -71,8 +66,12 @@ function credentialsFromInput(input: {
   };
 }
 
-function findConnection(projectId: string, providerId: string) {
-  return prisma.providerConnection.findUnique({
+function findConnection(
+  projectId: string,
+  providerId: string,
+  client: Pick<typeof prisma, "providerConnection"> = prisma,
+) {
+  return client.providerConnection.findUnique({
     where: { projectId_provider: { projectId, provider: providerId } },
   });
 }
@@ -98,45 +97,49 @@ async function credentialsForTest(
     where: { projectId_provider: { projectId, provider: providerId } },
   });
 
-  return resolveProviderCredentialsWithOverrides(
-    providerId,
-    connection?.credentialsEncrypted,
-    inputCredentials,
-  );
+  const storedCredentials = connection?.credentialsEncrypted;
+  return resolveProviderCredentialsWithOverrides(providerId, storedCredentials, inputCredentials);
 }
-
 export async function connectProviderConnection(
   input: ConnectProviderInput,
   context: ProviderMutationContext,
 ) {
   const item = providerCatalogItem(input.providerId);
-  const before = await findConnection(context.projectId, item.id);
+  const stored = await findConnection(context.projectId, item.id);
   const credentials = {
-    ...decryptProviderCredentials(before?.credentialsEncrypted),
+    ...decryptProviderCredentials(stored?.credentialsEncrypted),
     ...credentialsFromInput(input),
   };
   await verifyProviderConnectionBeforeSave({
     credentials,
-    hasStoredCredentials: Boolean(before?.credentialsEncrypted),
+    hasStoredCredentials: Boolean(stored?.credentialsEncrypted),
     projectId: context.projectId,
     provider: item,
   });
   const secret =
     Object.keys(credentials).length > 0 ? encryptSecret(JSON.stringify(credentials)) : undefined;
-  const priority = input.primary ? 0 : input.priority;
-  // An omitted cost per check means "unknown", not "free": storing zero would pin every
-  // estimate for this project at $0.00 instead of falling back to the provider rate table.
   const cost = input.costPerCheck === undefined ? null : dollarsToCents(input.costPerCheck);
 
   const writeConnection = async (client: ProviderMutationClient) => {
-    if (input.primary) {
-      await renumberProviderChain(context.projectId, item.kind, item.id, client);
-    }
+    await client.$queryRaw`
+      SELECT "id" FROM "projects" WHERE "id" = ${context.projectId} FOR UPDATE
+    `;
+    const before = await findConnection(context.projectId, item.id, client);
+    const connections = await client.providerConnection.findMany({
+      select: { priority: true },
+      where: { kind: item.kind, projectId: context.projectId },
+    });
+    const priority =
+      before?.priority ??
+      (connections.length === 0
+        ? 0
+        : Math.max(...connections.map((connection) => connection.priority)) + 1);
+    const enabled = priority === 0 || input.enabled;
     const connection = await client.providerConnection.upsert({
       create: {
         costPerCheckCents: cost,
         credentialsEncrypted: secret ?? null,
-        enabled: input.primary ? true : input.enabled,
+        enabled,
         kind: item.kind,
         publicId: makePublicId("conn"),
         priority,
@@ -146,7 +149,7 @@ export async function connectProviderConnection(
       },
       update: {
         ...(cost === null ? {} : { costPerCheckCents: cost }),
-        enabled: input.primary ? true : input.enabled,
+        enabled,
         ...(secret ? { credentialsEncrypted: secret } : {}),
         ...(before?.publicId ? {} : { publicId: makePublicId("conn") }),
         priority,
@@ -184,7 +187,7 @@ export async function connectProviderConnection(
     return connection;
   };
 
-  return input.primary ? prisma.$transaction(writeConnection) : writeConnection(prisma);
+  return prisma.$transaction(writeConnection);
 }
 
 export async function testProviderConnection(
@@ -242,20 +245,16 @@ export async function setProviderSettings(
   }
 
   return prisma.$transaction(async (tx) => {
-    if (input.primary) {
-      await renumberProviderChain(context.projectId, item.kind, item.id, tx);
-    }
     const updated = await tx.providerConnection.update({
       data: {
-        ...(typeof input.enabled === "boolean"
-          ? { enabled: input.primary ? true : input.enabled }
-          : {}),
-        ...(typeof input.priority === "number" && !input.primary
-          ? { priority: input.priority }
-          : {}),
+        ...(typeof input.enabled === "boolean" ? { enabled: input.enabled } : {}),
+        ...(typeof input.priority === "number" ? { priority: input.priority } : {}),
       },
       where: { id: before.id },
     });
+    if (input.priority === 0) {
+      await renumberProviderChain(context.projectId, item.kind, item.id, tx);
+    }
     await auditProviderMutation(
       {
         action: "provider.set_settings",
@@ -272,7 +271,7 @@ export async function setProviderSettings(
 }
 
 export async function disconnectProviderConnection(
-  input: SetPrimaryProviderInput,
+  input: ProviderConnectionRefInput,
   context: ProviderMutationContext,
 ) {
   const item = providerCatalogItem(input.providerId);

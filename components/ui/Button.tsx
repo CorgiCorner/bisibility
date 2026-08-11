@@ -85,9 +85,24 @@ export function Button({
 }: ButtonProps) {
   const busy = loading || disabled;
   const additionalSx = sxArray(sx);
+  const disabledStyle = loading
+    ? {
+        backgroundColor: variantSx[variant].backgroundColor,
+        border: variantSx[variant].border,
+        color: variantSx[variant].color,
+        opacity: 0.65,
+      }
+    : {
+        backgroundColor: "var(--bg-sunken)",
+        border: "1px solid var(--border-strong)",
+        color: "var(--fg-muted)",
+        opacity: 1,
+      };
 
   return (
     <MuiButton
+      {...props}
+      aria-busy={loading ? true : props["aria-busy"]}
       color="inherit"
       disabled={busy}
       disableElevation
@@ -103,19 +118,13 @@ export function Button({
           fontWeight: 600,
           textTransform: "none",
           transition: "background-color .16s ease, border-color .16s ease",
-          "&.Mui-disabled": {
-            backgroundColor: "var(--bg-sunken)",
-            border: "1px solid var(--border-strong)",
-            color: "var(--fg-muted)",
-            opacity: 1,
-          },
+          "&.Mui-disabled": disabledStyle,
         },
         sizeSx[size],
         variantSx[variant],
         ...additionalSx,
       ]}
       variant={muiVariantFor(variant)}
-      {...props}
     >
       {loading && loadingLabel ? loadingLabel : children}
     </MuiButton>

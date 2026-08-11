@@ -1,7 +1,12 @@
-import { buildPositionHistory } from "./keyword-history-fixtures";
-import { fixtureLocation, type KeywordLocation } from "./keywords-fixtures-locations";
+import { buildPositionHistory } from "@/components/keywords/keyword-history-fixtures";
+import { buildUrlHistory } from "@/components/keywords/keywords-fixture-url-history";
+import {
+  fixtureLocation,
+  type KeywordLocation,
+} from "@/components/keywords/keywords-fixtures-locations";
+import type { RankingUrlEvent } from "@/lib/queries/keyword-row-types";
 
-export type { KeywordLocation };
+export type { KeywordLocation, RankingUrlEvent };
 export type RankCheckFrequency =
   | "paused"
   | "manual"
@@ -21,7 +26,6 @@ export type KeywordSchedule = {
   next_check_at: string | null;
 };
 export type PositionPoint = { checkedAt: string; label: string; position: number };
-export type RankingUrlEvent = { date: string; note: string; position: number; url: string };
 type RawKeyword = {
   idNumber: number;
   keyword: string;
@@ -227,17 +231,6 @@ function shortKeywordId(idNumber: number) {
   return `kw_${((idNumber * 2654435761) >>> 0).toString(36).padStart(7, "0").slice(0, 7)}`;
 }
 
-function buildUrlHistory(row: RawKeyword): RankingUrlEvent[] {
-  const alternate = row.rankingPath === "/" ? "/features/rank-tracking" : row.rankingPath;
-  // biome-ignore format: compact fixture history keeps this file under the line cap.
-  return [
-    { date: "Today", url: `https://acme.dev${row.rankingPath}`, position: row.position, note: "Current ranking URL" },
-    { date: "W-1", url: `https://acme.dev${row.rankingPath}`, position: row.sparkline[10], note: "Stable URL" },
-    { date: "W-4", url: `https://acme.dev${alternate}`, position: row.sparkline[7], note: "Same target cluster" },
-    { date: "W-8", url: `https://acme.dev${row.rankingPath}`, position: row.sparkline[3], note: "Recovered target URL" },
-  ];
-}
-
 function buildSchedule(idNumber: number): KeywordSchedule {
   const weekly = idNumber % 5 === 0;
   return {
@@ -302,7 +295,6 @@ function decorateKeyword(row: RawKeyword): KeywordRow {
 }
 
 export const keywordRows = rawKeywords.map(decorateKeyword);
-
 export function getKeywordById(id: string) {
   return keywordRows.find((keyword) => keyword.id === id || String(keyword.idNumber) === id);
 }

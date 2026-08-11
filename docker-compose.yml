@@ -106,7 +106,7 @@ x-app-env: &app-env
 
 services:
   db-migrations:
-    image: ${BISIBILITY_IMAGE:-docker.io/corgicorner/bisibility:0.6.1}
+    image: ${BISIBILITY_IMAGE:-docker.io/corgicorner/bisibility:0.8.0}
     pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     build:
       <<: *app-build
@@ -120,7 +120,7 @@ services:
         condition: service_healthy
 
   app:
-    image: ${BISIBILITY_IMAGE:-docker.io/corgicorner/bisibility:0.6.1}
+    image: ${BISIBILITY_IMAGE:-docker.io/corgicorner/bisibility:0.8.0}
     pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     build: *app-build
     restart: unless-stopped
@@ -159,8 +159,9 @@ services:
     environment:
       POSTGRES_USER: temporal
       POSTGRES_PASSWORD: "${TEMPORAL_POSTGRES_PASSWORD:-${POSTGRES_PASSWORD:?Set TEMPORAL_POSTGRES_PASSWORD or POSTGRES_PASSWORD in .env}}"
+      POSTGRES_DB: postgres
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U temporal -d temporal"]
+      test: ["CMD-SHELL", "pg_isready -U temporal -d postgres"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -307,7 +308,7 @@ services:
       - "127.0.0.1:${TEMPORAL_UI_HOST_PORT:-8233}:8080"
 
   worker:
-    image: ${BISIBILITY_WORKER_IMAGE:-docker.io/corgicorner/bisibility-worker:0.6.1}
+    image: ${BISIBILITY_WORKER_IMAGE:-docker.io/corgicorner/bisibility-worker:0.8.0}
     pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     build:
       context: .

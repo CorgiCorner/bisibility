@@ -26,6 +26,7 @@ export type InviteAction = (
 ) => Promise<{ inviteLink: string }>;
 
 export type InviteModalProps = {
+  canAssignAdmin?: boolean;
   domain: string;
   open: boolean;
   onClose: () => void;
@@ -35,6 +36,7 @@ export type InviteModalProps = {
 };
 
 export function InviteModal({
+  canAssignAdmin = true,
   domain,
   inviteMember,
   onClose,
@@ -53,6 +55,9 @@ export function InviteModal({
     resolver: zodResolver(inviteSchema),
   });
   const selectedRole = form.watch("role");
+  const availableRoles = canAssignAdmin
+    ? roleOptions
+    : roleOptions.filter((role) => role.value !== "admin");
 
   function handleClose() {
     setInviteLink("");
@@ -158,7 +163,7 @@ export function InviteModal({
             Role
           </div>
           <div className="mt-[9px] flex flex-col gap-[7px]">
-            {roleOptions.map((role) => {
+            {availableRoles.map((role) => {
               const active = selectedRole === role.value;
               return (
                 <label

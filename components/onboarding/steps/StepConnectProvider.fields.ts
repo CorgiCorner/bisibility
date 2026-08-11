@@ -1,9 +1,11 @@
 import {
   credentialFieldIssueMessage,
   credentialFieldsSignature,
+  hasRequiredCredentialFields,
   missingCredentialFields,
 } from "@/components/integrations/provider-credentials";
 import {
+  buildOnboardingStepHref,
   type OnboardingFlowState,
   onboardingDefaults,
 } from "@/components/onboarding/onboarding-fixtures";
@@ -16,14 +18,12 @@ import { connectProviderSchema, type TestProviderConnectionInput } from "@/lib/s
 import { z } from "zod";
 
 export type OnboardingSerpProviderId = "dataforseo" | "serpapi";
-
 export type CredentialField = {
   label: string;
   name: "login" | "secret";
   placeholder: string;
   type?: "password" | "text";
 };
-
 type ProviderOption = {
   /** Marks the credentials link as a paid affiliate destination (rel + disclosure). */
   affiliate?: boolean;
@@ -33,7 +33,6 @@ type ProviderOption = {
   label: string;
   value: OnboardingSerpProviderId;
 };
-
 export const providerOptions = [
   {
     affiliate: true,
@@ -54,15 +53,12 @@ export const providerOptions = [
     value: "serpapi",
   },
 ] as const satisfies readonly ProviderOption[];
-
 export const credentialFields = {
   dataforseo: DATAFORSEO_CREDENTIAL_FIELDS,
   serpapi: SERPAPI_CREDENTIAL_FIELDS,
 } satisfies Record<OnboardingSerpProviderId, readonly CredentialField[]>;
-
 export const connectionTestFailedMessage =
   "Connection test failed - fix the credentials, or skip and add keywords as paused.";
-
 const serpProviderIdSchema = z.enum(["dataforseo", "serpapi"]);
 const costPerCheckSchema = z.preprocess(
   (value) =>
@@ -74,15 +70,13 @@ const costPerCheckSchema = z.preprocess(
     .refine((value) => Number.isInteger(value * 10000), "Use up to 4 decimals.")
     .optional(),
 );
-
-export const onboardingConnectProviderSchema = connectProviderSchema
-  .extend({
-    costPerCheck: costPerCheckSchema,
-    enabled: z.coerce.boolean().default(true),
-    providerId: serpProviderIdSchema,
-    priority: z.coerce.number().int().min(0).max(1000).default(100),
-  })
-  .superRefine((value, ctx) => {
+const onboardingConnectProviderBaseSchema = connectProviderSchema.extend({
+  costPerCheck: costPerCheckSchema,
+  providerId: serpProviderIdSchema,
+});
+export function onboardingConnectProviderSchemaForConnections(connections: ConnectedProviderMap) {
+  return onboardingConnectProviderBaseSchema.superRefine((value, ctx) => {
+    if (connections[value.providerId]) return;
     for (const field of missingCredentialFields(credentialFields[value.providerId], value)) {
       ctx.addIssue({
         code: "custom",
@@ -91,7 +85,8 @@ export const onboardingConnectProviderSchema = connectProviderSchema
       });
     }
   });
-
+}
+export const onboardingConnectProviderSchema = onboardingConnectProviderSchemaForConnections({});
 export type OnboardingConnectProviderInput = z.infer<typeof onboardingConnectProviderSchema>;
 export type ProviderTestResult = {
   balance?: number;
@@ -100,12 +95,15 @@ export type ProviderTestResult = {
 };
 export type ConnectedProvider = { balance?: number; primary: boolean };
 export type ConnectedProviderMap = Partial<Record<OnboardingSerpProviderId, ConnectedProvider>>;
+export type ProviderTestResultMap = Partial<
+  Record<OnboardingSerpProviderId, ProviderTestResult | null>
+>;
 export type ProviderDraft = Pick<
   OnboardingConnectProviderInput,
   "costPerCheck" | "login" | "secret"
 >;
 export type ProviderDraftMap = Record<OnboardingSerpProviderId, ProviderDraft>;
-
+export type TestedCredentialKeyMap = Partial<Record<OnboardingSerpProviderId, string>>;
 export function providerTestInput(
   values: OnboardingConnectProviderInput,
 ): TestProviderConnectionInput {
@@ -123,26 +121,36 @@ export function providerTestInput(
     secret: values.secret,
   };
 }
-
+export function providerCredentialKey(
+  providerId: OnboardingSerpProviderId,
+  values: Pick<OnboardingConnectProviderInput, "credentials" | "login" | "secret">,
+) {
+  return credentialFieldsSignature(credentialFields[providerId], values);
+}
+export function currentProviderState(
+  providerId: OnboardingSerpProviderId,
+  values: Pick<OnboardingConnectProviderInput, "credentials" | "login" | "secret">,
+  testResults: ProviderTestResultMap,
+  testedCredentialKeys: TestedCredentialKeyMap,
+) {
+  const credentialKey = providerCredentialKey(providerId, values);
+  return {
+    testDisabled: !hasRequiredCredentialFields(credentialFields[providerId], values),
+    testResult: testedCredentialKeys[providerId] === credentialKey ? testResults[providerId] : null,
+  };
+}
 export function providerConnectInput(
   values: OnboardingConnectProviderInput,
-  primary: boolean,
 ): OnboardingConnectProviderInput {
-  const base = {
-    ...values,
-    enabled: true,
-    primary,
-    priority: primary ? 0 : 1,
-  };
   if (values.providerId === "serpapi") {
     return {
-      ...base,
+      ...values,
       credentials: { apiKey: values.credentials?.apiKey ?? values.secret },
       login: undefined,
       secret: undefined,
     };
   }
-  return { ...base, credentials: undefined };
+  return { ...values, credentials: undefined };
 }
 
 export function costOrEmpty(value: number | undefined) {
@@ -165,10 +173,7 @@ export function formDefaults(
       : (defaultValues?.secret ?? "");
   return {
     costPerCheck: costOrEmpty(defaultValues?.costPerCheck),
-    enabled: defaultValues?.enabled ?? true,
     login: providerId === "dataforseo" ? (defaultValues?.login ?? onboardingDefaults.apiLogin) : "",
-    primary: true,
-    priority: 0,
     projectId: defaultValues?.projectId ?? flowState?.projectId ?? "",
     providerId,
     secret,
@@ -181,6 +186,42 @@ export function pickDraft(values: OnboardingConnectProviderInput): ProviderDraft
     login: values.login,
     secret: values.secret ?? values.credentials?.apiKey,
   };
+}
+
+export function providerValuesFromDraft(
+  providerId: OnboardingSerpProviderId,
+  currentValues: OnboardingConnectProviderInput,
+  drafts: ProviderDraftMap,
+): OnboardingConnectProviderInput {
+  const draft =
+    providerId === currentValues.providerId ? pickDraft(currentValues) : drafts[providerId];
+  return {
+    ...currentValues,
+    ...draft,
+    credentials: providerId === "serpapi" ? { apiKey: draft.secret } : undefined,
+    providerId,
+  };
+}
+
+export function providerSelectionState(
+  values: OnboardingConnectProviderInput,
+  providerId: OnboardingSerpProviderId,
+  drafts: ProviderDraftMap,
+) {
+  const draft = values.providerId === providerId ? pickDraft(values) : drafts[providerId];
+  return {
+    drafts: { ...drafts, [values.providerId]: pickDraft(values) },
+    values: { ...values, ...draft, providerId },
+  };
+}
+
+export function withConnectedProvider(
+  connections: ConnectedProviderMap,
+  providerId: OnboardingSerpProviderId,
+  balance: number | undefined,
+  primary: boolean,
+): ConnectedProviderMap {
+  return { ...connections, [providerId]: { balance, primary } };
 }
 
 export function initialDrafts(defaultValues: OnboardingConnectProviderInput): ProviderDraftMap {
@@ -199,6 +240,18 @@ export function primaryProvider(connections: ConnectedProviderMap) {
   return providerOptions.find((provider) => connections[provider.value]?.primary)?.value;
 }
 
+export function replaceSelectedProviderInUrl(
+  flowState: OnboardingFlowState | undefined,
+  projectId: string,
+  providerId: OnboardingSerpProviderId,
+) {
+  window.history.replaceState(
+    null,
+    "",
+    buildOnboardingStepHref(3, { ...flowState, projectId, providerId }),
+  );
+}
+
 /** Preserves verified state only when restored credentials match the stored successful test. */
 export function draftMatchesStoredTest(
   providerId: OnboardingSerpProviderId,
@@ -214,4 +267,33 @@ export function draftMatchesStoredTest(
       secret: draft.secret,
     }) === testedKey
   );
+}
+
+export function anyProviderVerified(
+  connections: ConnectedProviderMap,
+  drafts: ProviderDraftMap,
+  testResults: ProviderTestResultMap,
+  testedCredentialKeys: TestedCredentialKeyMap,
+  currentValues: OnboardingConnectProviderInput,
+) {
+  return (
+    providerOptions.some(({ value: providerId }) => Boolean(connections[providerId])) ||
+    verifiedProviderId(drafts, testResults, testedCredentialKeys, currentValues) !== undefined
+  );
+}
+
+export function verifiedProviderId(
+  drafts: ProviderDraftMap,
+  testResults: ProviderTestResultMap,
+  testedCredentialKeys: TestedCredentialKeyMap,
+  currentValues: OnboardingConnectProviderInput,
+) {
+  return providerOptions.find(({ value: providerId }) =>
+    draftMatchesStoredTest(
+      providerId,
+      providerValuesFromDraft(providerId, currentValues, drafts),
+      testResults[providerId],
+      testedCredentialKeys[providerId],
+    ),
+  )?.value;
 }

@@ -4,29 +4,15 @@ import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { requirePublicId } from "@/lib/db/public-id";
 import {
+  migrationHoldTtlHours,
   PROJECT_WRITE_MODE_ACTIVE,
   PROJECT_WRITE_MODE_MIGRATION_HOLD,
 } from "@/lib/deployment/project-write-mode";
 import type { Prisma } from "@/lib/generated/prisma/client";
 
-const DEFAULT_HOLD_TTL_HOURS = 24;
-
 export type ReleaseExpiredMigrationHoldsOptions = {
   ttlHours?: number;
 };
-
-function configuredTtlHours() {
-  const parsed = Number.parseInt(process.env.BISIBILITY_MIGRATION_HOLD_TTL_HOURS ?? "", 10);
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : DEFAULT_HOLD_TTL_HOURS;
-}
-
-function holdTtlHours(input?: number) {
-  const ttlHours = input ?? configuredTtlHours();
-  if (!Number.isFinite(ttlHours) || ttlHours <= 0) {
-    throw new Error("ttlHours must be a positive finite number.");
-  }
-  return ttlHours;
-}
 
 type HeldProject = {
   id: string;
@@ -80,7 +66,10 @@ export async function releaseMigrationHoldsForProjects(
 export async function releaseExpiredMigrationHolds(
   options: ReleaseExpiredMigrationHoldsOptions = {},
 ): Promise<number> {
-  const ttlHours = holdTtlHours(options.ttlHours);
+  const ttlHours = migrationHoldTtlHours(
+    options.ttlHours,
+    process.env.BISIBILITY_MIGRATION_HOLD_TTL_HOURS,
+  );
   const now = new Date();
   const cutoff = new Date(now.getTime() - ttlHours * 60 * 60_000);
 

@@ -44,6 +44,18 @@ describe("StepDeveloperAccess", () => {
     expect(onComplete).toHaveBeenCalledTimes(1);
   });
 
+  it("offers the optional-step skip beside the heading", () => {
+    const onComplete = vi.fn();
+    render(<StepDeveloperAccess onComplete={onComplete} projectId="prj_1" />);
+
+    const skip = screen.getByRole("button", { name: "Skip developer access" });
+    expect(skip.parentElement).toHaveClass("justify-between");
+
+    fireEvent.click(skip);
+
+    expect(onComplete).toHaveBeenCalledTimes(1);
+  });
+
   it("recognizes an existing project key when onboarding is revisited", () => {
     render(<StepDeveloperAccess hasApiKey projectId="prj_1" />);
 

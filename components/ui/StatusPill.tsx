@@ -1,6 +1,7 @@
 import { cn } from "@/lib/ui/cn";
 import type { StatusKind } from "@/lib/ui/status-kind";
 import { cva } from "class-variance-authority";
+import type { ReactNode } from "react";
 
 export type { StatusKind } from "@/lib/ui/status-kind";
 
@@ -8,6 +9,9 @@ export type StatusPillProps = {
   status: StatusKind;
   primary?: boolean;
   size?: "sm" | "md" | "lg";
+  label?: string;
+  icon?: ReactNode;
+  showDot?: boolean;
 };
 
 // HANDOFF-12 §5: one quiet pattern everywhere a live status shows - a neutral chip
@@ -44,17 +48,26 @@ function StatusDot({ color, healthy }: Readonly<{ color: string; healthy: boolea
   );
 }
 
-export function StatusPill({ status, primary = false, size = "md" }: Readonly<StatusPillProps>) {
+export function StatusPill({
+  status,
+  primary = false,
+  size = "md",
+  label,
+  icon,
+  showDot,
+}: Readonly<StatusPillProps>) {
   const meta = statusMeta[status];
+  const shouldShowDot = showDot ?? status !== "planned";
   return (
     <span className={cn("inline-flex items-center", size === "lg" ? "gap-2" : "gap-1.5")}>
       <span className={cn(chipVariants({ size }))}>
-        <StatusDot color={meta.color} healthy={meta.healthy} />
-        {meta.label}
+        {icon}
+        {shouldShowDot ? <StatusDot color={meta.color} healthy={meta.healthy} /> : null}
+        {label ?? meta.label}
       </span>
       {primary ? (
         <span className={cn(chipVariants({ size }))}>
-          <StatusDot color="var(--accent)" healthy={false} />
+          {shouldShowDot ? <StatusDot color="var(--accent)" healthy={false} /> : null}
           Primary
         </span>
       ) : null}

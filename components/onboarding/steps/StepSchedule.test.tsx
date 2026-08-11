@@ -32,6 +32,12 @@ afterEach(() => {
 });
 
 describe("StepSchedule", () => {
+  it("aligns schedule grid cells at the start", () => {
+    const { container } = render(<StepSchedule defaultValues={defaultValues()} />);
+
+    expect(container.querySelector(".grid.max-w-\\[480px\\]")).toHaveClass("items-start");
+  });
+
   it("saves selected tracking defaults from concrete location selections", async () => {
     const onComplete = vi.fn();
     const updateProjectDefaultsAction = vi.fn(async () => undefined);
@@ -137,14 +143,14 @@ describe("StepSchedule", () => {
     );
 
     expect(
-      screen.getByText("Each keyword at this setup ~ $3.00/mo - 20 keywords would be ~ $60.00/mo."),
-    ).toBeInTheDocument();
+      screen.getByText("Each keyword at this setup ~ $3.00/mo - e.g. 20 keywords ~ $60.00/mo."),
+    ).not.toHaveClass("font-mono");
 
     fireEvent.click(screen.getByLabelText("Refresh"));
     fireEvent.click(screen.getByText("Weekly"));
 
     expect(
-      screen.getByText("Each keyword at this setup ~ $0.40/mo - 20 keywords would be ~ $8.00/mo."),
+      screen.getByText("Each keyword at this setup ~ $0.40/mo - e.g. 20 keywords ~ $8.00/mo."),
     ).toBeInTheDocument();
   });
 
@@ -157,7 +163,7 @@ describe("StepSchedule", () => {
     );
 
     expect(
-      screen.getByText("Each keyword at this setup ~ $0.47/mo - 20 keywords would be ~ $9.30/mo."),
+      screen.getByText("Each keyword at this setup ~ $0.47/mo - e.g. 20 keywords ~ $9.30/mo."),
     ).toBeInTheDocument();
   });
 
@@ -171,7 +177,7 @@ describe("StepSchedule", () => {
     );
 
     expect(
-      screen.getByText("Each keyword at this setup ~ $0.00/mo - 20 keywords would be ~ $0.00/mo."),
+      screen.getByText("Each keyword at this setup ~ $0.00/mo - e.g. 20 keywords ~ $0.00/mo."),
     ).toBeInTheDocument();
   });
 });

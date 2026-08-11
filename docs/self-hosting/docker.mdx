@@ -1,0 +1,282 @@
+---
+title: "Docker self-hosting"
+description: "Run a local demo or production Compose stack, inspect its topology, and manage host access."
+---
+
+[Production checklist](/self-hosting#production-checklist)
+
+Review the platform-neutral [production topology](/self-hosting#production-topology)
+before choosing a Compose path.
+
+## Docker
+
+Use a repository checkout for the local demo. Production Compose downloads
+immutable assets and published images, so the server needs no checkout.
+
+| Path | Sign-in | Starting data | Use it for |
+| - | - | - | - |
+| [Local demo](#local-demo) | Fixed code `000000`, no email provider needed | Seeded sample projects and rank history | Evaluating the app on a throwaway install |
+| [Production Compose](#production-compose) | One-time codes delivered by email | Empty until you connect a SERP provider | A production instance installed from release assets |
+
+The Compose service name `redis` and the `REDIS_URL` variable keep the protocol
+name for compatibility.
+
+<Warning>
+Start production with a fresh `.env.example` and database. Editing a demo
+`.env` leaves its public fixed sign-in code and sample data in place.
+</Warning>
+
+### Compose topology commands
+
+Topology is selected by files, not by an environment switch:
+
+```bash
+# Core: web, migrations, PostgreSQL, and Valkey. Manual checks only.
+docker compose -f compose.yaml up -d
+
+# Worker with an external Temporal endpoint from .env.
+docker compose -f compose.yaml -f compose.worker.yaml up -d
+
+# Worker with the bundled Temporal Server 1.31.2.
+docker compose -f compose.yaml -f compose.worker.yaml -f compose.temporal.yaml up -d
+```
+
+The core file sets `SCHEDULER_DRIVER=none`; both worker topologies set
+`SCHEDULER_DRIVER=temporal`. An environment value never adds or removes a
+service. The bundled topology owns its namespace retention. The external
+topology validates its namespace but never creates it or changes its policy.
+
+### How the stack starts
+
+The deployment overlays contain no `build:` entries. Add `compose.build.yaml`
+to build web and worker from source. The migration job uses the same web image.
+
+The default stack starts PostgreSQL, Valkey, `db-migrations`, and the web app.
+The one-shot migration service runs `npm run db:migrate`. It applies the Prisma
+tree, then active deploy-blocking data migrations. No operator migration job is
+required. The server, worker, and `/api/v1/health` require finished rows with
+exact manifest checksums. With `DEMO_FIXED_OTP=1`, migrations also seed local
+demo data.
+
+Compose uses the version-pinned Docker Hub web image for migrations and the app.
+For source testing, override complete references with `BISIBILITY_IMAGE` and
+`BISIBILITY_WORKER_IMAGE`.
+
+If a migration fails partway, run `npm run db:migrate` again. Completed steps
+are skipped; only the failed step retries. Docker Compose keeps the app and
+worker stopped until the one-shot migration service exits successfully.
+
+`services.migrations: "ready"` requires all bundled Prisma migrations, finished
+active data migrations with expected checksums, and the public ID database
+contract. Run `npx prisma migrate status` in the deployed environment for
+detailed Prisma status.
+
+This default mode supports manual rank checks. For scheduled checks, choose a
+worker topology from [Compose topology commands](#compose-topology-commands).
+
+The bundled topology adds Temporal Server 1.31.2 and the pinned Docker Hub
+worker image. Add `--profile temporal-ui` to expose Temporal Web UI at
+`http://localhost:8233`. An idempotent Admin Tools job creates or upgrades both schemas and
+the namespace before worker startup. For source testing, add
+`-f compose.build.yaml --build`; it builds both images and runs migrations from
+the web image.
+
+Use `/api/v1/liveness` for restarts and `/api/v1/readiness` for traffic.
+Anonymous probes expose aggregate status only. An API credential or
+`INTERNAL_PROBE_TOKEN` unlocks full `/api/v1/health` diagnostics. Worker or
+Temporal failures can return `503` while web reads continue. The source-build
+argument `APP_REVISION` identifies the public commit in app and worker reports.
+Omitting it reports `"unknown"`.
+
+### Local demo
+
+```bash
+git clone https://github.com/CorgiCorner/bisibility.git bisibility
+cd bisibility
+./scripts/dev/bootstrap-local.sh
+docker compose up -d
+```
+
+`bootstrap-local.sh` writes generated secrets to a new `.env`. It sets
+`DEMO_FIXED_OTP=1` and `DEMO_INSTANCE_INSECURE_AUTH_ACK=1`. Sign-in then accepts
+and displays a fixed code. Migrations seed demo data.
+
+Open `http://localhost:3000` and sign in with `demo@acme.dev` and code `000000`,
+also described under [demo login](/quickstart#demo-login).
+
+The script refuses to run when `.env` already exists, so it cannot overwrite a
+configured install.
+
+<Warning>
+Demo mode is insecure by design: anyone who can reach the app can sign in. Keep
+it on a throwaway local install and never expose it on a public address.
+</Warning>
+
+Seeded rank history is synthetic. Connect a SERP provider from **Integrations**
+before running a live check.
+
+### Production Compose
+
+Download the immutable assets for one exact release into an empty directory.
+Do not run `bootstrap-local.sh` - it exists to enable demo mode in a repository
+checkout.
+
+```bash
+mkdir bisibility && cd bisibility
+VERSION=vX.Y.Z
+BASE_URL="https://github.com/CorgiCorner/bisibility/releases/download/${VERSION}"
+curl -fLO "${BASE_URL}/compose.yaml"
+curl -fLO "${BASE_URL}/compose.worker.yaml"
+curl -fLO "${BASE_URL}/compose.temporal.yaml"
+curl -fLO "${BASE_URL}/docker-compose.self-host.yml"
+curl -fLO "${BASE_URL}/bisibility.env.example"
+curl -fLO "${BASE_URL}/generate-self-host-env.mjs"
+curl -fLO "${BASE_URL}/distribution-manifest.json"
+node generate-self-host-env.mjs --site-url https://rank.example.com
+chmod 600 .env
+```
+
+The generator refuses to overwrite `.env`. It creates independent secrets, sets
+both public origins, and sets `DEPLOYMENT_ENV=production`. Replace
+`https://rank.example.com` with the final origin, then review `.env`:
+
+1. **Secrets.** Back up `BETTER_AUTH_SECRET` and `BISIBILITY_SECRETS_KEY` before
+   starting. Replacing either later has destructive consequences; see
+   [Required environment variables](/self-hosting/configuration#required-environment-variables).
+2. **Public URL.** Confirm `SITE_URL` and `BETTER_AUTH_URL` are the final public
+   origin. The template leaves both blank and Compose fails before starting if
+   the generator has not filled them.
+3. **Deployment stage.** Keep `DEPLOYMENT_ENV=production`; see
+   [Operations](/guides/operations).
+4. **Email.** Set `EMAIL_PROVIDER` and `EMAIL_FROM` so sign-in
+   codes can be delivered. See [Email delivery](/guides/email).
+5. **Demo variables stay unset.** Leave `DEMO_FIXED_OTP` and
+   `DEMO_INSTANCE_INSECURE_AUTH_ACK` commented out. The production image
+   deliberately refuses a fixed OTP without the acknowledgement.
+6. **Client IP.** Add `BISIBILITY_CLIENT_IP_HEADER` if a proxy or CDN sits in
+   front of the app. See [Client IP behind a proxy](/self-hosting/operations#client-ip-behind-a-proxy).
+
+Start the stack:
+
+```bash
+docker compose --env-file .env -f compose.yaml up -d
+```
+
+The empty database redirects the first visit to `/setup`. Create the
+[instance admin](/self-hosting/operations#instance-admin), then connect a SERP
+provider from **Integrations**.
+
+Work through the [production checklist](/self-hosting#production-checklist) before pointing
+real users at the instance.
+
+For scheduled checks with the bundled server, add both scheduling overlays:
+
+```bash
+docker compose --env-file .env \
+  -f compose.yaml -f compose.worker.yaml -f compose.temporal.yaml up -d
+```
+
+The release manifest records SHA-256 hashes for every overlay, the environment
+template, and the generator. Publication verifies those bytes.
+`docker-compose.self-host.yml` remains a one-minor compatibility asset for the
+former `--profile scheduled` command.
+
+### Use the CLI with this instance
+
+Install the CLI on the workstation where you use bisibility:
+
+```bash
+npm install -g @bisibility/cli
+```
+
+Configure both URLs before browser sign-in. `baseUrl` is the REST API root.
+`cloudUrl` is the app origin for OAuth discovery and consent.
+
+```bash
+bisibility config set baseUrl https://rank.example.com/api/v1
+bisibility config set cloudUrl https://rank.example.com
+bisibility auth login --name "workstation-cli" --scope admin --expires 90
+```
+
+The CLI opens and prints the instance consent URL. Approval returns to a
+temporary workstation loopback listener. The CLI stores the reveal-once
+personal access token.
+
+Verify the instance, identity, and available projects:
+
+```bash
+bisibility auth status
+bisibility projects list
+bisibility projects use example.com
+```
+
+The public origin must match `SITE_URL` and `BETTER_AUTH_URL`. Route
+`/api/auth/*` and `/api/v1/*` through the proxy. Run login on a workstation with
+a browser. On a headless host, provide a project API key or personal access
+token through the environment:
+
+```bash
+export BISIBILITY_BASE_URL=https://rank.example.com/api/v1
+export BISIBILITY_CLOUD_URL=https://rank.example.com
+export BISIBILITY_API_KEY=bsb_key_live_...
+bisibility auth status
+```
+
+Environment variables take precedence over the CLI config file. See
+[Authentication](/authentication) for choosing between project API keys and
+personal access tokens.
+
+### Access services from the host
+
+The default stack publishes only the app on `3000`. PostgreSQL and Valkey are
+reachable only as `postgres` and `redis` inside the Compose network.
+
+Core does not start the Temporal or worker overlays. The Temporal server stays
+inside the Compose network. Its optional `temporal-ui` profile exposes only the
+Web UI at `127.0.0.1:8233`.
+
+For deliberate PostgreSQL or Valkey access from the Docker host, apply the
+opt-in debug override:
+
+```bash
+docker compose -f compose.yaml -f docker-compose.debug.yml up -d
+```
+
+The override binds PostgreSQL to `127.0.0.1:5432` and Valkey to
+`127.0.0.1:6379`. Change those loopback ports, or the app port, in `.env` when a
+port is already taken:
+
+```bash
+APP_HOST_PORT=3100
+POSTGRES_HOST_PORT=5433
+REDIS_HOST_PORT=6381
+```
+
+For permanent mappings, add the same loopback-bound ports to
+`docker-compose.override.yml`.
+
+Set a new app port in `SITE_URL` and `BETTER_AUTH_URL`, such as
+`http://localhost:3100`. A mismatch breaks auth callbacks and absolute links.
+Google sign-in and Search Console redirect URIs must use the same port.
+
+Give each local instance unique ports and a Compose project name, such as
+`docker compose -p bisibility-staging up --build`. Project names namespace
+volumes and keep databases separate.
+
+### Stop or reset the stack
+
+```bash
+docker compose down      # stop the containers, keep the data
+docker compose down -v   # stop and delete the volumes, including the database
+```
+
+`down` preserves the PostgreSQL volume, so the next `up` continues with the same
+data and applies only new migrations. `down -v` cannot be undone; use it when
+you want a clean install.
+
+## Examples
+
+Runnable API, SDK, CLI, and MCP examples live in
+[examples/README.md](https://github.com/CorgiCorner/bisibility/blob/main/examples/README.md).
+Deploy webhook examples live in
+[examples/deploy-webhooks](https://github.com/CorgiCorner/bisibility/tree/main/examples/deploy-webhooks).

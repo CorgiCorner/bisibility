@@ -4,14 +4,15 @@ import { Card } from "@/components/ui";
 import {
   connectProvider,
   disconnectProvider,
-  setPrimaryProvider,
   testConnection,
   updateProviderCost,
   updateProviderRate,
+  updateProviderSettings,
 } from "@/lib/actions/providers";
 import { syncProjectTraffic } from "@/lib/actions/traffic-sync";
 import { getProjectRole } from "@/lib/auth/authorize";
 import { canProjectAction } from "@/lib/auth/capabilities";
+import { googleOAuthErrorCopy } from "@/lib/integrations/google-oauth-copy";
 import type { GoogleOAuthSetup, ProviderActionHandlers } from "@/lib/integrations/types";
 import { getPendingGoogleOAuthSetup } from "@/lib/providers/analytics/google-oauth-pending";
 import { requireReadableProject, resolveProjectAccess } from "@/lib/queries/_auth";
@@ -21,9 +22,9 @@ import { KeyIcon as Key } from "@phosphor-icons/react/dist/ssr";
 const providerActions = {
   connectProvider,
   disconnectProvider,
-  setPrimaryProvider,
   syncProjectTraffic,
   testProviderConnection: testConnection,
+  updateProviderSettings,
   updateProviderCost,
   updateProviderRate,
 } satisfies ProviderActionHandlers;
@@ -54,8 +55,10 @@ export default async function IntegrationsPage({
     googleOAuth = await getPendingGoogleOAuthSetup(publicId);
   } else if (googleStatus === "error" && (googleProvider === "gsc" || googleProvider === "ga4")) {
     googleOAuth = {
-      error:
+      error: googleOAuthErrorCopy(
+        readParam(params, "reason"),
         "Google connection wasn't completed. Try again and choose the account that has access to the property.",
+      ),
       properties: [],
       provider: googleProvider,
     };

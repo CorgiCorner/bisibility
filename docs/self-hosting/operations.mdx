@@ -1,0 +1,193 @@
+---
+title: "Self-hosting operations"
+description: "Operate instance administration, observability, proxy client IPs, and database retention."
+---
+
+[Production checklist](/self-hosting#production-checklist)
+
+## Client IP behind a proxy
+
+Point `BISIBILITY_CLIENT_IP_HEADER` at a header your proxy controls. The app
+never trusts a client-controlled header by default.
+
+With nginx or Caddy in front of the app, have the proxy overwrite a dedicated
+header:
+
+```nginx
+proxy_set_header X-Real-IP $remote_addr;
+```
+
+Then set `BISIBILITY_CLIENT_IP_HEADER=x-real-ip`. Any proxy-overwritten header
+works, including a CDN header such as `cf-connecting-ip`.
+
+Behind a CDN that appends to `x-forwarded-for`:
+
+1. Set `BISIBILITY_CLIENT_IP_HEADER=x-forwarded-for`.
+2. Set `BISIBILITY_CLIENT_IP_XFF_DEPTH` to the number of entries your own
+   infrastructure appends (`1` for a single edge).
+
+The address is read from the right, so clients cannot spoof their way in.
+
+<Warning>
+A depth larger than your real chain reads a client-supplied entry.
+
+Trust `x-forwarded-for` only behind your own appending proxy. Without one,
+Next.js preserves client-supplied values. Callers could then select their own
+rate-limit bucket. Appending with `$proxy_add_x_forwarded_for` or overwriting
+`X-Real-IP` removes that control.
+</Warning>
+
+Without a trusted header, anonymous API callers share one bucket. Sign-in limits
+also share one bucket per path, and audits record no source IP. Enforce anonymous
+limits at the edge with a CDN, WAF, or nginx `limit_req`. The edge knows the peer
+address directly.
+
+## Operator observability (optional)
+
+Set `OPS_SLACK_WEBHOOK_URL` to enable instance-level worker and schedule
+observability. It stays off when unset. This channel is separate from tenant
+Slack alerts. It uses no `SlackConnection`, project OAuth token, or alert rule.
+
+Payloads carry identifiers and counts only. Names are excluded by design, not
+best-effort redaction (GDPR data minimization). Set `OPS_SLACK_INCLUDE_NAMES=1`
+only when the operator explicitly chooses to include keyword text, project
+names, and Search Console property names for a self-hosted instance.
+
+Create a Slack app, enable Incoming Webhooks, and add an operator-channel
+webhook. Configure matching `OPS_*` values on web and worker. Web health uses
+the same feature gate. Both services must share Redis for worker liveness. Give
+the worker `SITE_URL` for digest links and footers. Set worker-only
+`TEMPORAL_UI_URL` to link the digest to Temporal UI. On managed platforms, attach
+one shared environment group to both services.
+
+| Variable | Default | Purpose |
+| - | - | - |
+| `OPS_SLACK_WEBHOOK_URL` | Unset | Slack incoming webhook for instance-level operator events. Its presence enables the feature by default. Treat the URL as a secret. |
+| `OPS_SLACK_INCLUDE_NAMES` | `0` | Keep Slack payloads limited to identifiers and counts. Set to `1` to include keyword text, project names, and Search Console property names. |
+| `OPS_EVENTS_ENABLED` | On when the webhook URL is set | Master switch. Set to `0` to keep the configured webhook disabled. |
+| `OPS_NOTIFY_MODE` | `failures` | `failures` posts failures, warnings, worker startup, and the digest. `all` also posts successful run summaries. |
+| `OPS_HEARTBEAT_CRON` | `0 8 * * *` | Cron expression for the daily digest. |
+| `OPS_HEARTBEAT_TZ` | `Europe/Warsaw` | IANA timezone used to interpret the heartbeat cron. |
+| `OPS_THROTTLE_MINUTES` | `60` | Redis-backed duplicate suppression window for repeated events. |
+
+Failure events cover rank checks, deferrals, traffic syncs, and schedule
+bootstrap. URL Inspection exhaustion uses a stable property hash and affected
+project IDs. The raw property name requires `OPS_SLACK_INCLUDE_NAMES=1`.
+Startup events count ensured schedules. Events first enter an outbox. The next
+heartbeat retries Slack failures. Payloads redact credentials, tokens, and URL
+queries. Repeats inside the throttle window become one counted summary.
+
+The daily digest covers the previous 24 hours. It includes rank-check outcomes
+and lag, top failures, Temporal missed-catchup and skipped-overlap signals,
+GSC/GA4/Plausible freshness and rows per project, undelivered and suppressed
+events, worker uptime, release, and environment. Set `TEMPORAL_UI_URL` to add
+Temporal UI beside the checks link. Records remain for 30 days.
+
+Each Google Cloud project owns its Google API quota. Bisibility projects sharing
+one Search Console property also share its 2,000-per-day URL Inspection pool.
+Other connected tools consume the same pool.
+
+After configuring the webhook, send a direct formatting and delivery test from
+the worker environment:
+
+```bash
+node --experimental-transform-types scripts/ops/send-test-notification.ts
+```
+
+Authenticated `GET /api/v1/health` reports `services.worker` as `ok`, `stale`,
+or `unknown`. Request details with an API credential or `INTERNAL_PROBE_TOKEN`.
+A marker older than 26 hours is stale and returns HTTP 503.
+
+Slack cannot report its own missing heartbeat. For process or host outages, also
+ping an external dead-man monitor such as healthchecks.io.
+
+## Instance admin
+
+An empty installation redirects marketing, sign-in, onboarding, and application
+pages to `/setup`. Enter a name and email, then verify the code. Account creation,
+administrator assignment, and the audit commit together. Only one setup
+submission can complete.
+
+`/setup` stays open only while no account exists. Without email delivery, the
+first code appears in server logs. Production codes never use logs afterward.
+Setup never offers another account, and non-admins receive not-found at
+`/app/admin`.
+
+> **Upgrade note:** Existing installations with user accounts do not enter the
+> setup flow, even if no administrator is assigned. Use the seed command below
+> to choose an administrator after upgrading.
+
+`/app/admin` provides cross-instance operations without extending project
+permissions. It shows worker identity and liveness, check totals and lag, recent
+failures, analytics freshness, Temporal signals, the event outbox, instance
+counts, and monthly rank-check cost. Rate-limited actions test Slack and retry
+undelivered events. Existing deployments can grant the role by email after
+migrations:
+
+```bash
+node --experimental-transform-types scripts/admin/seed-instance-admin.ts --email operator@example.com
+```
+
+Run it inside the deployed app container, such as
+`docker compose exec app node --experimental-transform-types scripts/admin/seed-instance-admin.ts --email operator@example.com`.
+Equivalent platform shells include `fly ssh console` and `railway ssh`. A
+checkout also works when `DATABASE_URL` targets the instance. Hosted databases
+need the public connection string, not an internal hostname.
+
+The seed is idempotent for an existing instance admin. It refuses another grant
+while an admin exists. Pass `--force` to add the named admin without revoking
+others. `INSTANCE_ADMIN_EMAIL` can provide the email.
+
+If an account has lost its authenticator and all backup codes, verify the account
+owner's identity outside bisibility and use the audited emergency reset:
+
+```bash
+docker compose exec app node --experimental-transform-types scripts/admin/reset-two-factor.ts \
+  --operator-email operator@example.com \
+  --email locked-account@example.com \
+  --confirm-reset-2fa
+```
+
+The operator must already be an instance admin. The command removes the target
+2FA factor. It revokes sessions, trusted devices, pending enrollment, and step-up
+grants. The same transaction appends
+`instance_admin.account_two_factor_reset` to the audit log. An audit failure
+rolls back the reset. The owner receives no replacement secret. They must enroll
+again and save new backup codes.
+
+Cross-tenant lists contain only identifiers, counts, statuses, durations, and
+categorized errors. They exclude keyword text, project names, email addresses,
+tenant domains, and account data. Instance administration grants no tenant
+project access. Normal authorization still protects every project link.
+
+Without operator Slack, Redis still supplies worker liveness and instance stats
+remain available. Slack-specific controls report that Slack is not configured.
+
+For local development without SERP credentials, set `BISIBILITY_FAKE_PROVIDER=1`
+to exercise rank-check flows without calling a real SERP provider.
+
+## Database growth
+
+Maintenance preserves every `rank_checks` row and `organicRanks` history. It can
+null the larger `raw` response after a configured window. Set
+`RANK_CHECK_RAW_RETENTION_DAYS` to 1-3650 days or `unlimited`. Self-host defaults
+to `unlimited`, so upgrades remove no raw payloads without opt-in. Hosted defaults
+to 90 days.
+
+The worker purges daily at 03:29 UTC. Override it with
+`RANK_CHECK_RAW_PURGE_CRON`. Each statement updates at most 1,000 eligible rows,
+bounding locks and dead-tuple bursts. Runs continue until no eligible rows
+remain. Rows, `organicRanks`, attempts, and other columns stay unchanged. Vacuum
+reclaims reusable space without necessarily shrinking the physical table.
+
+Terminal queued-task evidence remains for 30 days. The worker deletes it at
+03:41 UTC, even with submissions disabled. Override the schedule with
+`QUEUED_RANK_CHECK_RETENTION_CRON`. Each activity deletes at most 100 batches.
+More expired pages continue in a new workflow run.
+
+Each completed purge keeps a content-free retry fence. Results are scrubbed
+promptly; daily maintenance catches missed completed rows. Fences stay closed
+for `RANK_CHECK_RAW_PROGRESS_FENCE_RETENTION_DAYS`. An indexed sweeper then
+deletes at most four 500-row pages per phase and invocation. Daily runs converge
+without one large transaction. Fences store no raw provider content, URL, domain,
+or keyword text.

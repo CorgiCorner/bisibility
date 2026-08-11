@@ -67,7 +67,7 @@ manual checks inline and disables scheduled execution in the core topology.
 The Temporal server is replaceable. Docker can add the bundled Temporal overlay,
 but the same worker image runs unchanged against a self-managed cluster or
 Temporal Cloud. See
-[Temporal Server or Temporal Cloud](/self-hosting#temporal-server-or-temporal-cloud).
+[Temporal Server or Temporal Cloud](/self-hosting/temporal#temporal-server-or-temporal-cloud).
 
 ## Data model
 
@@ -97,7 +97,7 @@ Snapshot access is a self-hosted feature through direct PostgreSQL access to
 `rank_checks.raw`; the REST API rank-check resource does not expose this field.
 Once a configured window expires, an older check can therefore have a null
 `raw` value while its row, `position`, and `organicRanks` remain available. See
-[Database growth](/self-hosting#database-growth) for worker configuration and
+[Database growth](/self-hosting/operations#database-growth) for worker configuration and
 purge behavior.
 
 ## Rank-check lifecycle

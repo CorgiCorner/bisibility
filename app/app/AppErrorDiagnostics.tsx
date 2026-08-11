@@ -1,6 +1,8 @@
 "use client";
 
+import type { ClientDeploymentMode } from "@/components/shell/DeploymentModeProvider";
 import { Button, MonoText } from "@/components/ui";
+import { sanitizeErrorReport } from "@/lib/errors/sanitize-error-report";
 import { cn } from "@/lib/ui/cn";
 import {
   CaretRightIcon as CaretRight,
@@ -20,32 +22,51 @@ export type AppErrorDetails = {
 
 const COPY_RESET_MS = 1600;
 
-/** Everything a support issue needs, as one clipboard block. */
-export function formatAppErrorReport(details: AppErrorDetails) {
+/** Everything a support report needs, as one clipboard block. */
+export function formatAppErrorReport(
+  details: AppErrorDetails,
+  deploymentMode: ClientDeploymentMode,
+) {
+  const sanitized = sanitizeErrorReport(details);
+  const sharedFields = [
+    `reference: ${details.digest ?? "none"}`,
+    `view: ${sanitized.pathname}`,
+    `time: ${details.occurredAt}`,
+  ];
+  if (deploymentMode === "cloud") {
+    return sharedFields.join("\n");
+  }
+
   return [
     `reference: ${details.digest ?? "none"}`,
-    `error: ${details.name}: ${details.message}`,
-    `view: ${details.pathname}`,
+    `error: ${details.name}: ${sanitized.message}`,
+    `view: ${sanitized.pathname}`,
     `time: ${details.occurredAt}`,
     "",
-    details.stack ?? "(no stack trace captured)",
+    sanitized.stack ?? "(no stack trace captured)",
   ].join("\n");
 }
 
 export type AppErrorDiagnosticsProps = {
+  deploymentMode: ClientDeploymentMode;
   details: AppErrorDetails;
 };
 
-/** Collapsible reference row with the raw trace on demand. */
-export function AppErrorDiagnostics({ details }: Readonly<AppErrorDiagnosticsProps>) {
+/** Collapsible reference row with the deployment-appropriate trace on demand. */
+export function AppErrorDiagnostics({
+  deploymentMode,
+  details,
+}: Readonly<AppErrorDiagnosticsProps>) {
   const [open, setOpen] = useState(true);
   const [copied, setCopied] = useState(false);
   // Keep the copied-state reset timer deduped across rapid clicks.
   const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const panelId = useId();
+  const visibleDetails = deploymentMode === "cloud" ? sanitizeErrorReport(details) : details;
+  const visibleTrace = visibleDetails.stack ?? `${visibleDetails.name}: ${visibleDetails.message}`;
 
   function handleCopy() {
-    void navigator.clipboard?.writeText(formatAppErrorReport(details));
+    void navigator.clipboard?.writeText(formatAppErrorReport(details, deploymentMode));
     setCopied(true);
     if (resetTimerRef.current) {
       clearTimeout(resetTimerRef.current);
@@ -125,8 +146,11 @@ export function AppErrorDiagnostics({ details }: Readonly<AppErrorDiagnosticsPro
             {copied ? "Copied" : "Copy details"}
           </Button>
         </div>
+        <p className="m-0 border-b border-code-border px-3.5 py-2 text-[11px] leading-[1.5] text-code-faint">
+          These details can include your project path. Review them before posting publicly.
+        </p>
         <pre className="m-0 whitespace-pre-wrap break-words px-3.5 pb-3.5 pt-3 font-mono text-[11px] leading-[1.7] text-code-fg">
-          {details.stack ?? `${details.name}: ${details.message}`}
+          {visibleTrace}
         </pre>
       </div>
     </div>

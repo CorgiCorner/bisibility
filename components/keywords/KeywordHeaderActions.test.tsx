@@ -32,12 +32,16 @@ function renderActions(
 }
 
 describe("KeywordHeaderActions", () => {
-  it("runs every available action", () => {
+  it("keeps only the check, alert, and overflow controls on the visible action row", () => {
     const handlers = renderActions();
+    fireEvent.click(screen.getByRole("button", { name: "Run check" }));
     fireEvent.click(screen.getByRole("button", { name: "Add alert" }));
-    fireEvent.click(screen.getByRole("button", { name: "Export CSV" }));
-    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
-    fireEvent.click(screen.getByRole("button", { name: "Check now (Top 50)" }));
+    expect(screen.queryByRole("button", { name: "Export CSV" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Edit" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "More keyword actions" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Export CSV" }));
+    fireEvent.click(screen.getByRole("button", { name: "More keyword actions" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Edit" }));
     expect(handlers.onCreateAlert).toHaveBeenCalledOnce();
     expect(handlers.onExport).toHaveBeenCalledOnce();
     expect(handlers.onToggleEdit).toHaveBeenCalledOnce();
@@ -51,17 +55,18 @@ describe("KeywordHeaderActions", () => {
     fireEvent.click(screen.getByRole("menuitem", { name: "Top 20" }));
 
     expect(handlers.onRunCheck).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole("button", { name: "Check now (Top 20)" }));
+    fireEvent.click(screen.getByRole("button", { name: "Run check" }));
     expect(handlers.onRunCheck).toHaveBeenCalledWith(20);
   });
 
-  it("shows exact zero-cost estimates on the action and every depth option", () => {
+  it("keeps cost and depth in the split menu, never in the primary action", () => {
     renderActions({
       effectiveDepth: 100,
       providerRate: { overrideCents: 0, providerId: "local-sequence" },
     });
 
-    expect(screen.getByRole("button", { name: "Check now (Top 100 · $0.00)" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Run check" })).toBeInTheDocument();
+    expect(screen.queryByText("Top 100 · $0.00")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Choose check depth" }));
     for (const depth of [10, 20, 50, 100]) {
       expect(screen.getByRole("menuitem", { name: `Top ${depth} · $0.00` })).toBeInTheDocument();
@@ -102,7 +107,7 @@ describe("KeywordHeaderActions", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Choose check depth" }));
     fireEvent.click(screen.getByRole("menuitem", { name: "Top 20" }));
-    expect(screen.getByRole("button", { name: "Check now (Top 20)" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Run check" })).toBeInTheDocument();
 
     rerender(
       <ProjectWriteModeProvider projectRef="prj_1" writeMode="active">
@@ -110,14 +115,13 @@ describe("KeywordHeaderActions", () => {
       </ProjectWriteModeProvider>,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Check now (Top 100)" }));
+    fireEvent.click(screen.getByRole("button", { name: "Run check" }));
     expect(handlers.onRunCheck).toHaveBeenCalledWith(100);
   });
 
   it("renders created, creating, editing, and pending states", () => {
     const view = renderActions({ alertCreated: true, editing: true, runPending: true });
     expect(screen.getByRole("button", { name: "Alert on" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Close edit" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Starting..." })).toBeDisabled();
     expect(view.onCreateAlert).not.toHaveBeenCalled();
   });
@@ -164,9 +168,9 @@ describe("KeywordHeaderActions", () => {
   it("blocks writes in migration hold but keeps exports available", () => {
     renderActions({}, "migration_hold");
     expect(screen.getByRole("button", { name: "Add alert" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Edit" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Check now (Top 50)" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Run check" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Choose check depth" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Export CSV" })).toBeEnabled();
+    fireEvent.click(screen.getByRole("button", { name: "More keyword actions" }));
+    expect(screen.getByRole("menuitem", { name: "Export CSV" })).toBeEnabled();
   });
 });

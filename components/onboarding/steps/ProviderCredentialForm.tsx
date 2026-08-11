@@ -3,7 +3,6 @@
 import { Button } from "@/components/ui";
 import {
   CheckCircleIcon as CheckCircle,
-  CircleNotchIcon as CircleNotch,
   PlugIcon as Plug,
   PlusCircleIcon as PlusCircle,
   WarningCircleIcon as WarningCircle,
@@ -22,10 +21,10 @@ type CredentialErrors = Partial<Record<"login" | "secret", string>>;
 
 type ProviderCredentialFormProps = {
   busy: boolean;
-  connectBackupDisabled?: boolean;
+  connectDisabled?: boolean;
   errors: CredentialErrors;
   fields: readonly CredentialField[];
-  onConnectBackup?: () => void;
+  onConnect?: () => void;
   onTest: () => void;
   providerId: OnboardingSerpProviderId;
   providerLabel: string;
@@ -50,16 +49,11 @@ function TestStatus({
   testing: boolean;
 }>) {
   if (testing) {
-    return (
-      <span className={`${statusChip} text-fg-muted`}>
-        <CircleNotch aria-hidden className="bv-spin" size={14} weight="bold" />
-        Testing...
-      </span>
-    );
+    return <span className={statusChip} role="status" />;
   }
   if (savedConnection || testResult?.ok) {
     return (
-      <span className={`${statusChip} text-green-text`}>
+      <span className={`${statusChip} text-green-text`} role="status">
         <CheckCircle aria-hidden size={14} weight="fill" />
         {providerLabel} connected
       </span>
@@ -67,21 +61,21 @@ function TestStatus({
   }
   if (testResult) {
     return (
-      <span className={`${statusChip} text-red-text`} role="alert">
+      <span className={`${statusChip} text-red-text`} role="status">
         <WarningCircle aria-hidden size={14} weight="fill" />
         {testResult.message}
       </span>
     );
   }
-  return <span className="text-[12px] text-fg-muted">Not tested yet</span>;
+  return <span className={statusChip} role="status" />;
 }
 
 export function ProviderCredentialForm({
   busy,
-  connectBackupDisabled = false,
+  connectDisabled = false,
   errors,
   fields,
-  onConnectBackup,
+  onConnect,
   onTest,
   providerId,
   providerLabel,
@@ -91,8 +85,8 @@ export function ProviderCredentialForm({
   testResult,
   testing,
 }: Readonly<ProviderCredentialFormProps>) {
-  const saveHint = onConnectBackup
-    ? "Test validates the key - use Connect backup to save it."
+  const saveHint = onConnect
+    ? "Test validates the key - use Connect to save it."
     : "Test validates the key - it is saved when you continue.";
   return (
     <section className="mt-4 rounded-[14px] border border-border bg-bg-elev p-4">
@@ -113,29 +107,24 @@ export function ProviderCredentialForm({
       <div className="mt-4 flex flex-wrap items-center gap-2.5">
         <Button
           disabled={busy || testDisabled}
+          loading={testing}
           onClick={onTest}
-          startIcon={
-            testing ? (
-              <CircleNotch aria-hidden className="bv-spin" size={15} weight="bold" />
-            ) : (
-              <Plug aria-hidden size={15} />
-            )
-          }
+          startIcon={<Plug aria-hidden size={15} />}
           type="button"
           variant="secondary"
         >
           Test connection
         </Button>
-        {onConnectBackup ? (
-          <button
-            className="inline-flex cursor-pointer items-center gap-[7px] rounded-[9px] border border-border-strong bg-fg px-3.5 py-[9px] text-[13px] font-semibold text-bg-elev disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted"
-            disabled={busy || connectBackupDisabled}
-            onClick={onConnectBackup}
+        {onConnect ? (
+          <Button
+            disabled={busy || connectDisabled}
+            onClick={onConnect}
+            startIcon={<PlusCircle aria-hidden size={15} weight="bold" />}
             type="button"
+            variant="primary"
           >
-            <PlusCircle aria-hidden size={15} weight="bold" />
-            Connect backup
-          </button>
+            Connect
+          </Button>
         ) : null}
         <TestStatus
           providerLabel={providerLabel}
@@ -144,9 +133,9 @@ export function ProviderCredentialForm({
           testing={testing}
         />
       </div>
-      {savedConnection ? null : (
-        <p className="m-0 mt-2.5 text-[11.5px] leading-[1.5] text-fg-muted">{saveHint}</p>
-      )}
+      <p className="m-0 mt-2.5 text-[11.5px] leading-[1.5] text-fg-muted">
+        {savedConnection ? "Leave credentials blank to keep the stored connection." : saveHint}
+      </p>
     </section>
   );
 }

@@ -12,12 +12,14 @@ path. See [Authentication](/authentication) for scopes.
 | `GET` | `/projects/{project_id}/providers` | List the provider catalog and connection state. |
 | `POST` | `/projects/{project_id}/providers/{provider_id}/connect` | Encrypt and save provider credentials or settings. |
 | `POST` | `/projects/{project_id}/providers/{provider_id}/test` | Test credentials without saving a new connection. |
-| `PATCH` | `/projects/{project_id}/providers/{provider_id}` | Change enabled, primary, priority, or cost settings. |
+| `PATCH` | `/projects/{project_id}/providers/{provider_id}` | Change enabled, priority, or cost settings. |
 | `DELETE` | `/projects/{project_id}/providers/{provider_id}` | Disconnect the provider and delete stored credentials. |
 
 Provider-specific credential fields and fallback behavior are described in
 [Integrations](/integrations). Secret values are accepted on writes but are
 never returned by list responses.
+
+Connections use a priority-only fallback contract. On connect, the server derives priority: reconnecting preserves its place and new connections append to the fallback chain. PATCH a priority of `0` to promote and renumber the chain; other priority values reorder it.
 
 The generated
 [OpenAPI JSON](https://bisibility.com/api/v1/openapi.json) remains the

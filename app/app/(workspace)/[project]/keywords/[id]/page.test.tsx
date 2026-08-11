@@ -10,16 +10,24 @@ const mocks = vi.hoisted(() => ({
   resolveProjectAccess: vi.fn(),
 }));
 
-vi.mock("@/components/keywords/KeywordHeaderCard", () => ({ KeywordHeaderCard: () => null }));
-vi.mock("@/components/keywords/KeywordMetricCards", () => ({ KeywordMetricCards: () => null }));
+vi.mock("@/components/keywords/KeywordHeaderCard", () => ({
+  KeywordHeaderCard: () => <div data-testid="header-card" />,
+}));
+vi.mock("@/components/keywords/KeywordMetricCards", () => ({
+  KeywordMetricCards: () => <div data-testid="summary-row" />,
+}));
 vi.mock("@/components/keywords/KeywordPendingDetail", () => ({
   KeywordPendingDetail: () => <div data-testid="pending-detail" />,
 }));
 vi.mock("@/components/keywords/KeywordTrafficCard", () => ({
   KeywordTrafficCard: () => <div data-testid="traffic-card" />,
 }));
-vi.mock("@/components/keywords/PositionHistoryCard", () => ({ PositionHistoryCard: () => null }));
-vi.mock("@/components/keywords/RankingUrlHistory", () => ({ RankingUrlHistory: () => null }));
+vi.mock("@/components/keywords/PositionHistoryCard", () => ({
+  PositionHistoryCard: () => <div data-testid="position-history" />,
+}));
+vi.mock("@/components/keywords/RankingUrlHistory", () => ({
+  RankingUrlHistory: () => <div data-testid="ranking-history" />,
+}));
 vi.mock("@/lib/actions/alerts", () => ({ createKeywordAlertRule: vi.fn() }));
 vi.mock("@/lib/actions/keyword", () => ({
   addKeywords: vi.fn(),
@@ -80,5 +88,41 @@ describe("KeywordDetailPage", () => {
     expect(mocks.getKeywordDetail).toHaveBeenCalledWith("prj_1", "kw_pending");
     expect(mocks.getProjectCostContext).toHaveBeenCalledWith("prj_1");
     expect(mocks.requireReadableProject).toHaveBeenCalledWith("prj_1");
+  });
+
+  it("uses the normal-detail composition order from the reference", async () => {
+    mocks.getKeywordDetail.mockResolvedValue({
+      checkState: "ranked",
+      cpcKnown: true,
+      difficultyKnown: true,
+      hasRankData: true,
+      positionHistory: [
+        { checkedAt: "2026-08-09T10:00:00.000Z", label: "Yesterday", position: 4 },
+        { checkedAt: "2026-08-10T10:00:00.000Z", label: "Today", position: 3 },
+      ],
+      rankingUrlHistory: [{ url: "/old" }, { url: "/new" }],
+      traffic: {
+        hasAnalyticsConnection: true,
+        pages: [{ path: "/headless-cms" }],
+        query: { provider: "gsc" },
+      },
+      volumeKnown: true,
+    });
+
+    render(
+      await KeywordDetailPage({
+        params: Promise.resolve({ id: "kw_ranked", project: "prj_1" }),
+      }),
+    );
+
+    const header = screen.getByTestId("header-card");
+    const summary = screen.getByTestId("summary-row");
+    const chart = screen.getByTestId("position-history");
+    const traffic = screen.getByTestId("traffic-card");
+    const history = screen.getByTestId("ranking-history");
+    expect(header.nextElementSibling).toBe(summary);
+    expect(summary.nextElementSibling).toBe(chart);
+    expect(chart.nextElementSibling).toBe(traffic);
+    expect(traffic.nextElementSibling).toBe(history);
   });
 });

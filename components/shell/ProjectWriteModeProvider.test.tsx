@@ -1,11 +1,11 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
 import {
   ProjectReadOnlyTooltip,
   ProjectWriteModeBanner,
   ProjectWriteModeProvider,
   useProjectWriteMode,
-} from "./ProjectWriteModeProvider";
+} from "@/components/shell/ProjectWriteModeProvider";
+import { render, screen } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
 
 function Probe() {
   const { readOnly, writeMode } = useProjectWriteMode();
@@ -85,6 +85,10 @@ describe("ProjectWriteModeBanner", () => {
       "href",
       "/app/prj_1/settings#migration",
     );
+    expect(screen.getByText(/Advanced shows when the hold becomes eligible/)).toHaveTextContent(
+      "the hourly worker releases it shortly afterward",
+    );
+    expect(screen.queryByText(/after 24 hours/i)).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /dismiss/i })).not.toBeInTheDocument();
   });
 

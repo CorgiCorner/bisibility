@@ -1,6 +1,8 @@
 import { type ResolveProviderRateInput, resolveProviderRate } from "@/lib/provider-rates/resolver";
 import type { ProviderRate } from "./estimate";
 
+export const DATAFORSEO_LIVE_RANK_CHECK_COST_CENTS = 0.2;
+
 export const PROVIDER_RATES: ProviderRate[] = [
   {
     providerId: "dataforseo",
@@ -33,7 +35,7 @@ export const PROVIDER_RATES: ProviderRate[] = [
         label: "Live",
         shortLabel: "Live",
         turnaround: "~6 s",
-        unitCostCents: 0.2,
+        unitCostCents: DATAFORSEO_LIVE_RANK_CHECK_COST_CENTS,
       },
     ],
   },
