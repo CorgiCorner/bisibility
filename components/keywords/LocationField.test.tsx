@@ -1,6 +1,6 @@
 import { LocationField, type LocationFieldValue } from "@/components/keywords/LocationField";
 import { countryValueForName } from "@/components/keywords/location-picker-data";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -119,6 +119,79 @@ describe("LocationField", () => {
     fireEvent.keyDown(input, { key: "Enter" });
     expect(screen.getByTestId("display")).toHaveTextContent("Germany");
     expect(screen.getByTestId("key")).toHaveTextContent("DE");
+  });
+
+  it("renders and selects a country from a legacy response without id", async () => {
+    mockLocations([
+      {
+        canonical_key: "ES",
+        city_name: null,
+        country_code: "ES",
+        display_name: "Spain",
+        hl: "es",
+        kind: "country",
+        language_label: "Spanish",
+        region_code: null,
+        region_name: null,
+      },
+    ]);
+
+    render(<Harness />);
+    const input = screen.getByRole("combobox", { name: /location/i });
+    fireEvent.change(input, { target: { value: "spain" } });
+
+    const option = await screen.findByRole("option", { name: "Spain" });
+    expect(option).toHaveAttribute("aria-selected", "false");
+
+    fireEvent.keyDown(input, { key: "ArrowDown" });
+    expect(option).toHaveAttribute("aria-selected", "true");
+    expect(input).toHaveAttribute("aria-activedescendant", option.id);
+
+    fireEvent.keyDown(input, { key: "Enter" });
+    expect(screen.getByTestId("display")).toHaveTextContent("Spain");
+    expect(screen.getByTestId("key")).toHaveTextContent("ES");
+  });
+
+  it("assigns unique positional DOM ids when canonical keys sanitize identically", async () => {
+    mockLocations([
+      {
+        canonical_key: "a b-c",
+        city_name: null,
+        country_code: "US",
+        display_name: "Collision Country",
+        kind: "country",
+        region_name: null,
+      },
+      {
+        canonical_key: "a-b c",
+        city_name: "Collision City",
+        country_code: "US",
+        display_name: "Collision City, Test Region, United States",
+        kind: "city",
+        region_name: "Test Region",
+      },
+    ]);
+
+    render(<Harness />);
+    const input = screen.getByRole("combobox", { name: /location/i });
+    fireEvent.change(input, { target: { value: "collision" } });
+
+    const listbox = await screen.findByRole("listbox");
+    const options = await within(listbox).findAllByRole("option");
+    const optionIds = options.map((option) => option.id);
+    const allIds = [
+      listbox.id,
+      ...Array.from(listbox.querySelectorAll<HTMLElement>("[id]"), (element) => element.id),
+    ];
+
+    expect(optionIds).toEqual([`${listbox.id}-opt-0`, `${listbox.id}-opt-1`]);
+    expect(new Set(allIds).size).toBe(allIds.length);
+
+    fireEvent.keyDown(input, { key: "ArrowDown" });
+    expect(input).toHaveAttribute("aria-activedescendant", optionIds[0]);
+
+    fireEvent.keyDown(input, { key: "ArrowDown" });
+    expect(input).toHaveAttribute("aria-activedescendant", optionIds[1]);
   });
 
   it("does not query for terms below the minimum length", () => {

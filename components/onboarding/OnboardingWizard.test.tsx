@@ -1,82 +1,12 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import type { ComponentProps } from "react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { OnboardingWizard } from "./OnboardingWizard";
+import { project, renderWizard } from "./OnboardingWizard.test-utils";
 
 const push = vi.hoisted(() => vi.fn());
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push, refresh: vi.fn() }),
 }));
-
-const project = {
-  domain: "example.com",
-  id: "project_1",
-  name: "Example",
-  publicId: "prj_1",
-};
-
-type OnboardingWizardProps = ComponentProps<typeof OnboardingWizard>;
-type RenderWizardProps = Omit<Partial<OnboardingWizardProps>, "actions"> & {
-  actions?: Partial<OnboardingWizardProps["actions"]>;
-};
-
-function renderWizard({ actions: actionOverrides, ...props }: RenderWizardProps = {}) {
-  const actions: OnboardingWizardProps["actions"] = {
-    addKeywordsAction: vi.fn(async () => ({ created: 0, keywords: [], skippedDuplicates: 0 })),
-    completeGooglePropertySelectionAction: vi.fn(async (input) => ({ property: input.property })),
-    completeOnboardingAction: vi.fn(async () => ({ completed: true })),
-    connectProviderAction: vi.fn(async () => undefined),
-    createProjectAction: vi.fn(async () => project),
-    getObservedPositionsAction: vi.fn(async () => []),
-    fetchRankedKeywordSuggestionsAction: vi.fn(async () => ({ reason: "no_source" as const })),
-    importTopQueriesAction: vi.fn(async () => ({ queries: [] })),
-    installSampleDataAction: vi.fn(async () => undefined),
-    issueApiKeyAction: vi.fn(async () => ({
-      maskedValue: "bsb_key_live_******",
-      name: "Development",
-      raw: "bsb_key_live_secret",
-    })),
-    listFirstCheckCandidatesAction: vi.fn(async () => ({
-      candidates: [],
-      hasAnalyticsSource: false,
-      isSampleProject: false,
-      providerReady: false,
-    })),
-    queueFirstChecksAction: vi.fn(async () => undefined),
-    runFirstCheckPreviewAction: vi.fn(async () => ({
-      position: null,
-      provider: "dataforseo",
-      rankingUrl: null,
-      status: "completed" as const,
-    })),
-    saveMatchingScopeAction: vi.fn(async () => undefined),
-    syncProjectTrafficAction: vi.fn(async () => undefined),
-    testProviderConnectionAction: vi.fn(async () => ({ message: "Connected", ok: true })),
-    updateProjectDefaultsAction: vi.fn(async () => undefined),
-    ...actionOverrides,
-  };
-
-  return render(
-    <OnboardingWizard
-      actions={actions}
-      costPerCheckCents={null}
-      dataResidencyMessage=""
-      gscJustConnected={false}
-      gscOAuthConfigured
-      gscPropertyLabel={null}
-      hasAnalyticsSource={false}
-      initialHasApiKey={false}
-      initialFlowState={{ projectId: null, providerId: null }}
-      initialKeywordCount={0}
-      initialProject={null}
-      initialStep={1}
-      monthlyCapCents={500}
-      providerConnected={false}
-      {...props}
-    />,
-  );
-}
 
 describe("OnboardingWizard", () => {
   it("ignores clicks on locked future steps", () => {
@@ -96,6 +26,24 @@ describe("OnboardingWizard", () => {
       screen.getByText("Name the project and define what counts as your site."),
     ).toBeInTheDocument();
     expect(screen.queryByText("Run your first check")).not.toBeInTheDocument();
+  });
+
+  it("submits step 1 without includeSubdomains, rootAndWww, or urlPrefix", async () => {
+    const createProjectAction = vi.fn(async (_input: unknown) => project);
+    renderWizard({ actions: { createProjectAction } });
+
+    fireEvent.change(screen.getByLabelText("Project name"), { target: { value: "Example" } });
+    fireEvent.change(screen.getByLabelText("Domain"), { target: { value: "example.com" } });
+    fireEvent.click(screen.getByRole("button", { name: /continue/i }));
+
+    await waitFor(() => expect(createProjectAction).toHaveBeenCalledTimes(1));
+    expect(createProjectAction.mock.calls[0][0]).toEqual({
+      domain: "example.com",
+      name: "Example",
+    });
+    expect(createProjectAction.mock.calls[0][0]).not.toHaveProperty("includeSubdomains");
+    expect(createProjectAction.mock.calls[0][0]).not.toHaveProperty("rootAndWww");
+    expect(createProjectAction.mock.calls[0][0]).not.toHaveProperty("urlPrefix");
   });
 
   it("opens developer access after project creation and allows dashboard-only continuation", () => {
@@ -202,20 +150,43 @@ describe("OnboardingWizard", () => {
     expect(screen.queryByText(/\$7\.50\/month/)).not.toBeInTheDocument();
   });
 
-  it("keeps the form submit on step 2 when a provider is already connected", () => {
+  it("advances after primary connect and exposes backup only after returning", async () => {
+    window.history.replaceState(null, "", "/onboarding?step=3&projectId=prj_1");
+    const connectProviderAction = vi.fn(async () => undefined);
     renderWizard({
-      hasAnalyticsSource: true,
-      initialFlowState: { projectId: "prj_1", providerId: "dataforseo" },
+      actions: { connectProviderAction },
+      initialFlowState: { projectId: "prj_1", providerId: null },
       initialProject: project,
       initialStep: 3,
-      providerConnected: true,
     });
 
+    fireEvent.change(screen.getByLabelText("API login"), { target: { value: "login" } });
+    fireEvent.change(screen.getByLabelText("API password"), { target: { value: "password" } });
+    fireEvent.click(screen.getByRole("button", { name: "Test connection" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: /continue/i })).toBeEnabled());
+    fireEvent.click(screen.getByRole("button", { name: /continue/i }));
+
+    await waitFor(() => expect(connectProviderAction).toHaveBeenCalledTimes(1));
+    expect(screen.getByRole("heading", { name: "Tracking defaults" })).toBeInTheDocument();
+    expect(window.location.search).toBe("?step=4&projectId=prj_1&providerId=dataforseo");
+
+    const rail = screen.getByLabelText("Onboarding steps");
+    fireEvent.click(within(rail).getByRole("button", { name: "Connect data, completed" }));
+
+    expect(screen.getByText("Connected (primary)")).toBeInTheDocument();
+    expect(screen.getByText(/Add as fallback \(optional\)/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("radio", { name: /SerpApi/ }));
+    const connectBackupButton = screen.getByRole("button", { name: "Connect backup" });
+    expect(connectBackupButton).toHaveAccessibleName("Connect backup");
+    expect(connectBackupButton).toBeDisabled();
+    expect(
+      screen.getByText("Test validates the key - use Connect backup to save it."),
+    ).toBeInTheDocument();
     const continueButton = screen.getByRole("button", { name: /continue/i });
     expect(continueButton).toBeEnabled();
-    // Connected providers must submit through their form; the analytics-only skip
-    // path would clear provider state.
     expect(continueButton).toHaveAttribute("type", "submit");
+    fireEvent.click(continueButton);
+    expect(screen.getByRole("heading", { name: "Tracking defaults" })).toBeInTheDocument();
   });
 
   it("completes onboarding only when the final dashboard action is submitted", async () => {

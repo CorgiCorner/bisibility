@@ -56,6 +56,7 @@ describe("searchLocations", () => {
           city_name: "Austin",
           country_code: "US",
           display_name: "Austin,Texas,United States",
+          id: "location:US/Texas/Austin",
           kind: "city",
           region_code: null,
           region_name: "Texas",
@@ -84,6 +85,18 @@ describe("searchLocations", () => {
       "US",
     ]);
     expect(mocks.suggestKeywordLocations).not.toHaveBeenCalled();
+  });
+
+  it("assigns a stable id to catalog country matches", async () => {
+    const result = await searchLocations({ country: null, query: "Spain" });
+
+    expect(result.candidates).toEqual([
+      expect.objectContaining({
+        canonical_key: "ES",
+        id: "country:ES",
+        kind: "country",
+      }),
+    ]);
   });
 
   it("adds provider city suggestions when authorized, query is long enough, and cache is thin", async () => {

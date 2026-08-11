@@ -25,22 +25,13 @@ const project = {
 function defaultValues(values: Partial<CreateProjectFormValues> = {}): CreateProjectFormValues {
   return {
     domain: "example.com",
-    includeSubdomains: false,
     name: "Example",
-    rootAndWww: true,
-    urlPrefix: false,
     ...values,
   };
 }
 
 function renderCreateProjectStep(props: Partial<ComponentProps<typeof StepCreateProject>> = {}) {
-  return render(
-    <StepCreateProject
-      defaultValues={defaultValues()}
-      saveMatchingScopeAction={vi.fn(async () => undefined)}
-      {...props}
-    />,
-  );
+  return render(<StepCreateProject defaultValues={defaultValues()} {...props} />);
 }
 
 describe("StepCreateProject", () => {
@@ -59,29 +50,20 @@ describe("StepCreateProject", () => {
     expect(screen.getByLabelText("Project name")).toHaveAttribute("placeholder", "e.g. Acme");
     expect(screen.getByLabelText("Domain")).toHaveValue("");
     expect(screen.getByLabelText("Domain")).toHaveAttribute("placeholder", "example.com");
+    expect(
+      screen.getByText(
+        "www and every subdomain of your domain count as yours - matching is fixed today, per-scope control is on the roadmap.",
+      ),
+    ).toBeInTheDocument();
     expect(screen.queryByText("Rank granularity")).not.toBeInTheDocument();
   });
 
-  it("uses product-style scope labels with the current project domain", () => {
+  it("does not render inactive matching-scope controls", () => {
     renderCreateProjectStep();
 
-    expect(screen.getByText("Primary domain + www")).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        "Counts example.com and www.example.com across HTTP and HTTPS. Other subdomains stay separate.",
-      ),
-    ).toBeInTheDocument();
-    expect(screen.getByText("All subdomains")).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        "Also counts docs.example.com, app.example.com, blog.example.com, and any other subdomain.",
-      ),
-    ).toBeInTheDocument();
-    expect(screen.getByText("URL prefix only")).toBeInTheDocument();
-    expect(
-      screen.getByText("Only counts pages under a specific path, for example example.com/docs/."),
-    ).toBeInTheDocument();
-    expect(screen.queryByText(/Track acme\.dev/)).not.toBeInTheDocument();
+    expect(screen.queryByText("Primary domain + www")).not.toBeInTheDocument();
+    expect(screen.queryByText("All subdomains")).not.toBeInTheDocument();
+    expect(screen.queryByText("URL prefix only")).not.toBeInTheDocument();
   });
 
   it("offers a self-hosted import action only on cloud deployments", async () => {
@@ -111,13 +93,7 @@ describe("StepCreateProject", () => {
 
     await waitFor(() => expect(mocks.createCloudImportWorkspace).toHaveBeenCalledOnce());
 
-    rerender(
-      <StepCreateProject
-        defaultValues={defaultValues()}
-        isCloud={false}
-        saveMatchingScopeAction={vi.fn(async () => undefined)}
-      />,
-    );
+    rerender(<StepCreateProject defaultValues={defaultValues()} isCloud={false} />);
 
     expect(
       screen.queryByRole("button", {
@@ -164,33 +140,27 @@ describe("StepCreateProject", () => {
     await waitFor(() => expect(importButton).not.toBeDisabled());
   });
 
-  it("creates the project, saves matching scope, and advances after both actions succeed", async () => {
-    const createProjectAction = vi.fn(async () => project);
+  it("creates the project without includeSubdomains, rootAndWww, or urlPrefix", async () => {
+    const createProjectAction = vi.fn(async (_input: unknown) => project);
     const saveMatchingScopeAction = vi.fn(async () => undefined);
     const onComplete = vi.fn();
     const { container } = renderCreateProjectStep({
       createProjectAction,
-      defaultValues: defaultValues({ includeSubdomains: true, urlPrefix: true }),
       onComplete,
-      saveMatchingScopeAction,
+      ...({ saveMatchingScopeAction } as Partial<ComponentProps<typeof StepCreateProject>>),
     });
 
     fireEvent.submit(container.querySelector("form") as HTMLFormElement);
 
-    await waitFor(() => expect(saveMatchingScopeAction).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(createProjectAction).toHaveBeenCalledTimes(1));
     expect(createProjectAction).toHaveBeenCalledWith({
       domain: "example.com",
       name: "Example",
     });
-    expect(saveMatchingScopeAction).toHaveBeenCalledWith({
-      includeSubdomains: true,
-      projectId: "prj_1",
-      rootAndWww: true,
-      urlPrefix: true,
-    });
-    expect(createProjectAction.mock.invocationCallOrder[0]).toBeLessThan(
-      saveMatchingScopeAction.mock.invocationCallOrder[0],
-    );
+    expect(createProjectAction.mock.calls[0][0]).not.toHaveProperty("includeSubdomains");
+    expect(createProjectAction.mock.calls[0][0]).not.toHaveProperty("rootAndWww");
+    expect(createProjectAction.mock.calls[0][0]).not.toHaveProperty("urlPrefix");
+    expect(saveMatchingScopeAction).not.toHaveBeenCalled();
     expect(onComplete).toHaveBeenCalledWith(
       expect.objectContaining({ domain: "example.com", name: "Example" }),
       project,
@@ -207,7 +177,7 @@ describe("StepCreateProject", () => {
     const { container } = renderCreateProjectStep({
       createProjectAction,
       onComplete,
-      saveMatchingScopeAction,
+      ...({ saveMatchingScopeAction } as Partial<ComponentProps<typeof StepCreateProject>>),
     });
 
     fireEvent.submit(container.querySelector("form") as HTMLFormElement);
@@ -218,7 +188,7 @@ describe("StepCreateProject", () => {
     expect(push).not.toHaveBeenCalled();
   });
 
-  it("surfaces matching-scope failures without advancing", async () => {
+  it("ignores the legacy matching-scope action", async () => {
     const createProjectAction = vi.fn(async () => project);
     const saveMatchingScopeAction = vi.fn(async () => {
       throw new Error("Scope failed");
@@ -227,14 +197,16 @@ describe("StepCreateProject", () => {
     const { container } = renderCreateProjectStep({
       createProjectAction,
       onComplete,
-      saveMatchingScopeAction,
+      ...({ saveMatchingScopeAction } as Partial<ComponentProps<typeof StepCreateProject>>),
     });
 
     fireEvent.submit(container.querySelector("form") as HTMLFormElement);
 
-    expect(await screen.findByText("Scope failed")).toBeInTheDocument();
-    expect(createProjectAction).toHaveBeenCalledTimes(1);
-    expect(onComplete).not.toHaveBeenCalled();
-    expect(push).not.toHaveBeenCalled();
+    await waitFor(() => expect(createProjectAction).toHaveBeenCalledTimes(1));
+    expect(saveMatchingScopeAction).not.toHaveBeenCalled();
+    expect(onComplete).toHaveBeenCalledWith(
+      expect.objectContaining({ domain: "example.com", name: "Example" }),
+      project,
+    );
   });
 });

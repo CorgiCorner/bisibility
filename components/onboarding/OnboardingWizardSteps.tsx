@@ -87,16 +87,20 @@ export function OnboardingWizardSteps({
   return (
     <>
       {currentStep === 1 ? (
-        <StepCreateProject
-          createProjectAction={actions.createProjectAction}
-          dataResidencyMessage={dataResidencyMessage}
-          defaultValues={draft.createProject}
-          flowState={flowState}
-          initialProject={project}
-          isCloud={isCloud}
-          onComplete={onCreateProjectComplete}
+        <>
+          {/* Restore ownership matching with issue #863:
           saveMatchingScopeAction={actions.saveMatchingScopeAction}
-        />
+          */}
+          <StepCreateProject
+            createProjectAction={actions.createProjectAction}
+            dataResidencyMessage={dataResidencyMessage}
+            defaultValues={draft.createProject}
+            flowState={flowState}
+            initialProject={project}
+            isCloud={isCloud}
+            onComplete={onCreateProjectComplete}
+          />
+        </>
       ) : null}
       {currentStep === 2 ? (
         <StepDeveloperAccess

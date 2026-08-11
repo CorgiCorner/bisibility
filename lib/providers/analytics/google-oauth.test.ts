@@ -1,7 +1,11 @@
+import { Prisma } from "@/lib/generated/prisma/client";
 import {
   type GoogleOAuthFailureReason,
   GoogleOAuthInstallError,
 } from "@/lib/integrations/google-oauth-failure";
+import { ProviderAuthError } from "@/lib/providers/auth-error";
+import { ProviderCredentialsDecryptError } from "@/lib/providers/crypto";
+import { ProviderHttpError } from "@/lib/providers/failure-class";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   completeGoogleOAuthInstall,
@@ -30,7 +34,8 @@ vi.mock("@/lib/actions/_shared", () => ({
 }));
 vi.mock("@/lib/auth/audit", () => ({ writeAudit: vi.fn() }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
-vi.mock("@/lib/providers/crypto", () => ({
+vi.mock("@/lib/providers/crypto", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/providers/crypto")>()),
   decryptProviderCredentials: mocks.decryptProviderCredentials,
   decryptSecret: mocks.decryptSecret,
   encryptSecret: mocks.encryptSecret,
@@ -222,6 +227,68 @@ describe("completeGoogleOAuthInstall failure classification", () => {
 
   it("keeps a successful install unclassified", async () => {
     await expect(reasonOf()).resolves.toBe("none");
+  });
+
+  it("reports credentials_decrypt when stored provider credentials cannot be decrypted", async () => {
+    mocks.exchangeGoogleCode.mockResolvedValue({ refreshToken: null });
+    mocks.prisma.providerConnection.findUnique.mockResolvedValue({
+      credentialsEncrypted: "encrypted_blob",
+    });
+    mocks.decryptProviderCredentials.mockImplementation(() => {
+      throw new Error("Provider credentials could not be decrypted.");
+    });
+
+    await expect(reasonOf()).resolves.toBe("credentials_decrypt");
+  });
+
+  it("does not decrypt stored credentials when the exchange returns a fresh token", async () => {
+    mocks.prisma.providerConnection.findUnique.mockResolvedValue({
+      credentialsEncrypted: "encrypted_blob",
+    });
+    mocks.exchangeGoogleCode.mockResolvedValue({ refreshToken: "fresh_refresh_token" });
+    mocks.decryptProviderCredentials.mockImplementation(() => {
+      throw new ProviderCredentialsDecryptError(new Error("unsupported format"));
+    });
+
+    await expect(
+      completeGoogleOAuthInstall({ code: "code_1", state: "encrypted_state" }),
+    ).resolves.toMatchObject({ status: "select" });
+    expect(mocks.decryptProviderCredentials).not.toHaveBeenCalled();
+  });
+
+  it("reports credentials_decrypt when the typed decrypt error is thrown", async () => {
+    mocks.exchangeGoogleCode.mockResolvedValue({ refreshToken: null });
+    mocks.prisma.providerConnection.findUnique.mockResolvedValue({
+      credentialsEncrypted: "encrypted_blob",
+    });
+    mocks.decryptProviderCredentials.mockImplementation(() => {
+      throw new ProviderCredentialsDecryptError(new Error("unsupported format"));
+    });
+
+    await expect(reasonOf()).resolves.toBe("credentials_decrypt");
+  });
+
+  it("reports token_exchange when the exchange throws a ProviderHttpError", async () => {
+    mocks.exchangeGoogleCode.mockRejectedValue(new ProviderHttpError(400, "bad request"));
+
+    await expect(reasonOf()).resolves.toBe("token_exchange");
+  });
+
+  it("reports token_exchange when the exchange throws a ProviderAuthError", async () => {
+    mocks.exchangeGoogleCode.mockRejectedValue(new ProviderAuthError("google"));
+
+    await expect(reasonOf()).resolves.toBe("token_exchange");
+  });
+
+  it("reports store_failed when a Prisma persistence error is thrown", async () => {
+    mocks.storePendingGoogleOAuth.mockRejectedValue(
+      new Prisma.PrismaClientKnownRequestError("Unique constraint failed", {
+        clientVersion: "7.8.0",
+        code: "P2002",
+      }),
+    );
+
+    await expect(reasonOf()).resolves.toBe("store_failed");
   });
 });
 

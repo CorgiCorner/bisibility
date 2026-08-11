@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## [0.8.1] - 2026-08-11
+
+- Improved onboarding with the SerpApi free allowance, provider selection/status and API password reveal, primary/backup setup, and owned-domain matching.
+
+- Fixed first-run location suggestions and unique accessibility IDs for country and city options (thanks @zft9xgy).
+
+- Added redacted server-side diagnostics and stable failure classification for Google OAuth connection errors.
+
+- Hardened first-run account creation against missing runtime user IDs.
+
 ## [0.8.0] - 2026-08-11
 
 - Improved overview accessibility, project favicons, security disclosures, self-hosting documentation and Temporal Compose bootstrapping, and error-report privacy.

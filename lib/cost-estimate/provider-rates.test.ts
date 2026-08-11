@@ -129,7 +129,7 @@ describe("provider rates", () => {
       "production",
       "bigdata",
     ]);
-    expect(serpapi?.checkedAt).toBe("2026-07-15");
+    expect(serpapi?.checkedAt).toBe("2026-08-10");
   });
 
   it("pins the verified DataForSEO base and additional-page rates", () => {
@@ -142,8 +142,8 @@ describe("provider rates", () => {
       { key: "live", unitCostCents: 0.2, additionalPageCostCents: 0.15 },
     ]);
     expect(dataforseo?.notes).toContain("each additional page at 75%");
-    expect(dataforseo?.checkedAt).toBe("2026-07-15");
-    expect(SERP_RATES_CHECKED_AT).toBe("2026-07-15");
+    expect(dataforseo?.checkedAt).toBe("2026-08-10");
+    expect(SERP_RATES_CHECKED_AT).toBe("2026-08-10");
   });
 
   it("keeps ranked-keyword page pricing in the provider rate table", () => {

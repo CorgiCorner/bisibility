@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  buildOnboardingStepHref,
-  type OnboardingFlowState,
-} from "@/components/onboarding/onboarding-fixtures";
+import { buildOnboardingStepHref } from "@/components/onboarding/onboarding-fixtures";
 import {
   actionErrorMessage,
   feedbackClass,
@@ -11,7 +8,6 @@ import {
 } from "@/components/onboarding/onboarding-form-utils";
 import { OWN_PROVIDER_KEY_COST_EXPLANATION } from "@/lib/cost-estimate/provider-cost-copy";
 import { zodResolver } from "@/lib/forms/zod-resolver";
-import type { TestProviderConnectionInput } from "@/lib/schemas/provider";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -25,7 +21,6 @@ import {
   type OnboardingSerpProviderId,
   onboardingConnectProviderSchemaForConnections,
   type ProviderDraftMap,
-  type ProviderTestResult,
   type ProviderTestResultMap,
   primaryProvider,
   providerConnectInput,
@@ -39,24 +34,13 @@ import {
   verifiedProviderId,
   withConnectedProvider,
 } from "./StepConnectProvider.fields";
+import type { StepConnectProviderProps } from "./StepConnectProvider.types";
 import { StepConnectProviderCards } from "./StepConnectProviderCards";
 import { StepConnectProviderCredentials } from "./StepConnectProviderCredentials";
 import { StepConnectProviderSkip } from "./StepConnectProviderSkip";
 
 export type { OnboardingConnectProviderInput } from "./StepConnectProvider.fields";
 
-type StepConnectProviderProps = {
-  connectProviderAction?: (input: OnboardingConnectProviderInput) => Promise<unknown>;
-  defaultValues?: OnboardingConnectProviderInput;
-  flowState?: OnboardingFlowState;
-  initialConnections?: ConnectedProviderMap;
-  onComplete?: (values: OnboardingConnectProviderInput) => void;
-  onContinueDisabledChange?: (disabled: boolean) => void;
-  onSkip?: (values: OnboardingConnectProviderInput) => void;
-  testProviderConnectionAction?: (
-    input: TestProviderConnectionInput,
-  ) => Promise<ProviderTestResult>;
-};
 export function StepConnectProvider({
   connectProviderAction,
   defaultValues,
@@ -156,9 +140,13 @@ export function StepConnectProvider({
       setTestingProviderId(null);
     }
   }
-  function continueToNext(providerId: OnboardingSerpProviderId, values = getValues()) {
+  function continueToNext(
+    providerId: OnboardingSerpProviderId,
+    values = getValues(),
+    nextConnections = connections,
+  ) {
     const nextValues = { ...values, providerId };
-    if (onComplete) return onComplete(nextValues);
+    if (onComplete) return onComplete(nextValues, nextConnections);
     router.push(
       buildOnboardingStepHref(4, { ...flowState, providerId, projectId: nextValues.projectId }),
     );
@@ -240,7 +228,7 @@ export function StepConnectProvider({
       );
       setConnections(nextConnections);
       updateContinueDisabled(verifiedValues, testResults, testedCredentialKeys, nextConnections);
-      if (verifiedProvider !== values.providerId) continueToNext(verifiedProvider, verifiedValues);
+      continueToNext(verifiedProvider, verifiedValues, nextConnections);
     } catch (error) {
       updateContinueDisabled(values);
       setActionError(actionErrorMessage(error));
@@ -264,7 +252,6 @@ export function StepConnectProvider({
         onSelect={selectProvider}
         primaryProviderId={primaryProviderId}
         selectedProviderId={selectedProviderId}
-        testingProviderId={testingProviderId}
         testResults={testResults}
       />
       {errors.providerId ? (

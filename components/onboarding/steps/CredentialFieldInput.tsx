@@ -32,7 +32,7 @@ export function CredentialFieldInput({
       {label}
       {password ? (
         <PasswordInput
-          className={`${inputClass} font-mono text-sm`}
+          className={`${inputClass} truncate pr-12 font-mono text-sm`}
           disabled={disabled}
           id={id}
           placeholder={placeholder}

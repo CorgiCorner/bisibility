@@ -1,9 +1,11 @@
+import { rateForProvider } from "@/lib/cost-estimate/provider-rates";
 import { describe, expect, it } from "vitest";
 import {
   anyProviderVerified,
   costPerCheckCentsFromUsd,
   initialDrafts,
   onboardingConnectProviderSchemaForConnections,
+  providerOptions,
 } from "./StepConnectProvider.fields";
 
 const emptyCredentials = {
@@ -12,6 +14,25 @@ const emptyCredentials = {
   providerId: "dataforseo" as const,
   secret: "",
 };
+
+describe("provider options", () => {
+  it("derives the SerpApi free allowance from the canonical rate table", () => {
+    const serpApiRate = rateForProvider("serpapi");
+    const freePlan =
+      serpApiRate?.pricingModel === "plan"
+        ? serpApiRate.plans.find((plan) => plan.planKey === "free")
+        : undefined;
+
+    expect(freePlan).toBeDefined();
+    expect(providerOptions.map(({ costCaption, value }) => ({ costCaption, value }))).toEqual([
+      { costCaption: "Pay per check - from ~$0.002", value: "dataforseo" },
+      {
+        costCaption: `Plan-based - monthly search quota, ${freePlan?.includedChecks} searches/mo free`,
+        value: "serpapi",
+      },
+    ]);
+  });
+});
 
 describe("costPerCheckCentsFromUsd", () => {
   it("converts a USD form value to cents", () => {

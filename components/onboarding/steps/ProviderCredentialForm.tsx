@@ -51,11 +51,19 @@ function TestStatus({
   if (testing) {
     return <span className={statusChip} role="status" />;
   }
-  if (savedConnection || testResult?.ok) {
+  if (savedConnection) {
     return (
       <span className={`${statusChip} text-green-text`} role="status">
         <CheckCircle aria-hidden size={14} weight="fill" />
         {providerLabel} connected
+      </span>
+    );
+  }
+  if (testResult?.ok) {
+    return (
+      <span className={`${statusChip} text-green-text`} role="status">
+        <CheckCircle aria-hidden size={14} weight="fill" />
+        {providerLabel} verified
       </span>
     );
   }
@@ -86,7 +94,7 @@ export function ProviderCredentialForm({
   testing,
 }: Readonly<ProviderCredentialFormProps>) {
   const saveHint = onConnect
-    ? "Test validates the key - use Connect to save it."
+    ? "Test validates the key - use Connect backup to save it."
     : "Test validates the key - it is saved when you continue.";
   return (
     <section className="mt-4 rounded-[14px] border border-border bg-bg-elev p-4">
@@ -123,7 +131,7 @@ export function ProviderCredentialForm({
             type="button"
             variant="primary"
           >
-            Connect
+            Connect backup
           </Button>
         ) : null}
         <TestStatus

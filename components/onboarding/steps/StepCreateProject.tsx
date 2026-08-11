@@ -1,11 +1,12 @@
 "use client";
 
-import {
-  defaultMatchingScopeValues,
-  MatchingScopeFields,
-  type MatchingScopeForm,
-  matchingScopeValuesSchema,
-} from "@/components/onboarding/MatchingScopeFields";
+// Restore ownership matching with issue #863.
+// import {
+//   defaultMatchingScopeValues,
+//   MatchingScopeFields,
+//   type MatchingScopeForm,
+//   matchingScopeValuesSchema,
+// } from "@/components/onboarding/MatchingScopeFields";
 import {
   buildOnboardingStepHref,
   type OnboardingFlowState,
@@ -28,8 +29,12 @@ import type { z } from "zod";
 
 const createProjectFormSchema = createProjectSchema
   .pick({ name: true })
-  .extend({ domain: domainSchema })
-  .extend(matchingScopeValuesSchema.shape);
+  .extend({ domain: domainSchema });
+// Restore ownership matching with issue #863:
+// const createProjectFormSchema = createProjectSchema
+//   .pick({ name: true })
+//   .extend({ domain: domainSchema })
+//   .extend(matchingScopeValuesSchema.shape);
 
 export type CreateProjectFormValues = z.infer<typeof createProjectFormSchema>;
 
@@ -53,7 +58,8 @@ type StepCreateProjectProps = {
     project: CreatedProject,
     completion?: { warning?: string | null },
   ) => void;
-  saveMatchingScopeAction?: (input: MatchingScopeForm) => Promise<unknown>;
+  // Restore ownership matching with issue #863:
+  // saveMatchingScopeAction?: (input: MatchingScopeForm) => Promise<unknown>;
 };
 
 function CloudImportWorkspaceButton() {
@@ -119,7 +125,7 @@ export function StepCreateProject({
   initialProject,
   isCloud = false,
   onComplete,
-  saveMatchingScopeAction,
+  // saveMatchingScopeAction, // Restore ownership matching with issue #863.
 }: Readonly<StepCreateProjectProps>) {
   const router = useRouter();
   const [actionError, setActionError] = useState<string | null>(null);
@@ -127,33 +133,31 @@ export function StepCreateProject({
     formState: { errors, isSubmitting },
     handleSubmit,
     register,
-    watch,
+    // watch, // Restore ownership matching with issue #863.
   } = useForm<CreateProjectFormValues>({
     defaultValues: defaultValues ?? {
-      ...defaultMatchingScopeValues,
+      // ...defaultMatchingScopeValues, // Restore ownership matching with issue #863.
       domain: initialProject?.domain ?? "",
       name: initialProject?.name ?? "",
     },
     resolver: zodResolver(createProjectFormSchema),
   });
-  const domain = watch("domain");
-  const matchingScopeValues = {
-    includeSubdomains: watch("includeSubdomains"),
-    rootAndWww: watch("rootAndWww"),
-    urlPrefix: watch("urlPrefix"),
-  };
-
-  async function saveMatchingScope(projectId: string, values: CreateProjectFormValues) {
-    if (!saveMatchingScopeAction) {
-      return;
-    }
-    await saveMatchingScopeAction({
-      includeSubdomains: values.includeSubdomains,
-      projectId,
-      rootAndWww: values.rootAndWww,
-      urlPrefix: values.urlPrefix,
-    });
-  }
+  // const domain = watch("domain"); // Restore ownership matching with issue #863.
+  // Restore ownership matching with issue #863:
+  // const matchingScopeValues = {
+  //   includeSubdomains: watch("includeSubdomains"),
+  //   rootAndWww: watch("rootAndWww"),
+  //   urlPrefix: watch("urlPrefix"),
+  // };
+  // async function saveMatchingScope(projectId: string, values: CreateProjectFormValues) {
+  //   if (!saveMatchingScopeAction) return;
+  //   await saveMatchingScopeAction({
+  //     includeSubdomains: values.includeSubdomains,
+  //     projectId,
+  //     rootAndWww: values.rootAndWww,
+  //     urlPrefix: values.urlPrefix,
+  //   });
+  // }
 
   function advance(
     values: CreateProjectFormValues,
@@ -176,7 +180,7 @@ export function StepCreateProject({
 
     try {
       if (initialProject) {
-        await saveMatchingScope(initialProject.publicId, values);
+        // await saveMatchingScope(initialProject.publicId, values); // Restore with issue #863.
         advance(values, initialProject);
         return;
       }
@@ -191,7 +195,7 @@ export function StepCreateProject({
       };
 
       const project = await createProjectAction(input);
-      await saveMatchingScope(project.publicId, values);
+      // await saveMatchingScope(project.publicId, values); // Restore with issue #863.
       advance(values, project);
     } catch (error) {
       setActionError(actionErrorMessage(error));
@@ -232,8 +236,13 @@ export function StepCreateProject({
               <span className={`${feedbackClass} text-red-text`}>{errors.domain.message}</span>
             ) : null}
           </label>
+          <p className="m-0 text-[12.5px] leading-[1.5] text-fg-muted">
+            www and every subdomain of your domain count as yours - matching is fixed today,
+            per-scope control is on the roadmap.
+          </p>
         </div>
 
+        {/* Restore ownership matching with issue #863:
         <div className="mt-6">
           <div className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
             Ownership matching
@@ -243,6 +252,7 @@ export function StepCreateProject({
           </div>
           <MatchingScopeFields domain={domain} register={register} values={matchingScopeValues} />
         </div>
+        */}
 
         {actionError ? (
           <p className={`m-0 mt-3 ${feedbackClass} text-red-text`}>{actionError}</p>

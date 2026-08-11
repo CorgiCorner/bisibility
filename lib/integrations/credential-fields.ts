@@ -13,7 +13,7 @@ export const DATAFORSEO_CREDENTIAL_FIELDS = [
   {
     label: "API password",
     name: "secret",
-    placeholder: "API password from your dashboard",
+    placeholder: "API password",
     type: "password",
   },
 ] as const satisfies readonly SerpCredentialField[];

@@ -1,10 +1,6 @@
 "use client";
 
-import { InfoTooltip } from "@/components/ui";
-import {
-  CheckCircleIcon as CheckCircle,
-  WarningCircleIcon as WarningCircle,
-} from "@phosphor-icons/react";
+import { InfoTooltip, type StatusKind, StatusPill } from "@/components/ui";
 import type { OnboardingSerpProviderId, providerOptions } from "./StepConnectProvider.fields";
 
 export type ProviderCardState = "connected" | "failed" | "idle" | "tested";
@@ -15,17 +11,12 @@ type ProviderCardProps = {
   provider: (typeof providerOptions)[number];
   selected: boolean;
   state: ProviderCardState;
-  testing: boolean;
   primary?: boolean;
   onSelect: (providerId: OnboardingSerpProviderId) => void;
 };
 
-function stateClass(state: ProviderCardState, selected: boolean, testing: boolean) {
-  if (testing) return "border-accent bg-accent-soft";
-  if (state === "connected") return "border-green bg-bg-elev";
-  if (state === "tested") return "border-green bg-bg-elev";
-  if (state === "failed") return "border-red bg-bg-elev";
-  if (selected) return "border-accent bg-accent-soft";
+function stateClass(selected: boolean) {
+  if (selected) return "border-accent bg-accent-soft ring-1 ring-inset ring-accent";
   return "border-border-strong bg-transparent";
 }
 
@@ -36,14 +27,10 @@ function stateText(state: ProviderCardState, primary?: boolean) {
   return "Ready to connect";
 }
 
-function StateIcon({ state }: Readonly<{ state: ProviderCardState }>) {
-  if (state === "connected" || state === "tested") {
-    return <CheckCircle aria-hidden className="text-green-text" size={17} weight="fill" />;
-  }
-  if (state === "failed") {
-    return <WarningCircle aria-hidden className="text-red-text" size={17} weight="fill" />;
-  }
-  return null;
+function statusKind(state: ProviderCardState): StatusKind {
+  if (state === "connected" || state === "tested") return "connected";
+  if (state === "failed") return "needs_reauth";
+  return "ready";
 }
 
 export function ProviderCard({
@@ -52,13 +39,12 @@ export function ProviderCard({
   provider,
   selected,
   state,
-  testing,
   primary = false,
   onSelect,
 }: Readonly<ProviderCardProps>) {
   return (
     <section
-      className={`relative flex h-full flex-col rounded-[14px] border p-4 transition-colors ${stateClass(state, selected, testing)}`}
+      className={`relative flex h-full flex-col rounded-[14px] border p-4 transition-colors ${stateClass(selected)}`}
     >
       <input
         aria-checked={selected}
@@ -72,10 +58,7 @@ export function ProviderCard({
       />
       <span className="pointer-events-none relative z-[1] flex items-center justify-between gap-3">
         <span className="text-sm font-semibold text-fg">{provider.label}</span>
-        <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-border bg-bg-elev px-2 py-1 font-mono text-[10px] text-fg-muted">
-          <StateIcon state={state} />
-          {stateText(state, primary)}
-        </span>
+        <StatusPill label={stateText(state, primary)} size="sm" status={statusKind(state)} />
       </span>
       <span className="pointer-events-none relative z-[1] mt-1 flex items-start gap-1 text-[12.5px] leading-[1.4] text-fg-muted">
         <span>{provider.costCaption}</span>

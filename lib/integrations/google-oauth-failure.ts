@@ -1,3 +1,11 @@
+import "server-only";
+
+import { Prisma } from "@/lib/generated/prisma/client";
+import { redactOpsText } from "@/lib/ops/slack";
+import { ProviderAuthError } from "@/lib/providers/auth-error";
+import { ProviderCredentialsDecryptError } from "@/lib/providers/crypto";
+import { ProviderHttpError } from "@/lib/providers/failure-class";
+
 /**
  * Google OAuth install failures, reduced to a closed set of non-sensitive reason codes.
  *
@@ -8,6 +16,7 @@
 
 export const GOOGLE_OAUTH_FAILURE_REASONS = [
   "actor_mismatch",
+  "credentials_decrypt",
   "google_denied",
   "no_refresh_token",
   "state_cookie_mismatch",
@@ -26,6 +35,10 @@ export function isGoogleOAuthFailureReason(value: unknown): value is GoogleOAuth
 
 /** Everything the error surface needs; `null` means "the state never got that far". */
 export type GoogleOAuthFailure = {
+  /** Class name of an unclassified throw, for the server log only. */
+  causeClass?: string;
+  /** Redacted message of an unclassified throw, for the server log only. */
+  causeMessage?: string;
   /** Google's own `?error=` code, kept for the log only - see `googleDeniedFailure`. */
   googleError?: string | null;
   projectId: string | null;
@@ -56,8 +69,40 @@ export class GoogleOAuthInstallError extends Error {
   }
 }
 
+const EMPTY_FAILURE = {
+  projectId: null,
+  provider: null,
+  reason: null,
+  returnPath: null,
+} satisfies Omit<GoogleOAuthFailure, "causeClass" | "causeMessage">;
+
+function unclassifiedFailure(error: unknown): GoogleOAuthFailure {
+  if (error instanceof Error) {
+    return {
+      ...EMPTY_FAILURE,
+      causeClass: error.constructor.name,
+      causeMessage: redactOpsText(error),
+    };
+  }
+  return {
+    ...EMPTY_FAILURE,
+    causeMessage: redactOpsText(error),
+  };
+}
+
+/**
+ * Reduces any thrown value to a safe, loggable failure. Recognized shapes classify by type, never
+ * by message: our own install errors, the typed credential decryption error, the provider HTTP
+ * and auth errors (which only escape the token exchange), and Prisma known-request persistence
+ * errors. Recognized errors carry authored copy, so only an unclassified throw contributes a
+ * cause class and a redacted cause message - the one case where the operator has nothing else.
+ */
 export function googleOAuthFailureFrom(error: unknown): GoogleOAuthFailure {
   if (error instanceof GoogleOAuthInstallError) {
+    if (!isGoogleOAuthFailureReason(error.reason)) {
+      // A forged or corrupted reason must never be reflected into a log or URL.
+      return unclassifiedFailure(error);
+    }
     return {
       projectId: error.projectId,
       provider: error.provider,
@@ -65,7 +110,16 @@ export function googleOAuthFailureFrom(error: unknown): GoogleOAuthFailure {
       returnPath: error.returnPath,
     };
   }
-  return { projectId: null, provider: null, reason: null, returnPath: null };
+  if (error instanceof ProviderCredentialsDecryptError) {
+    return { ...EMPTY_FAILURE, reason: "credentials_decrypt" };
+  }
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    return { ...EMPTY_FAILURE, reason: "store_failed" };
+  }
+  if (error instanceof ProviderHttpError || error instanceof ProviderAuthError) {
+    return { ...EMPTY_FAILURE, reason: "token_exchange" };
+  }
+  return unclassifiedFailure(error);
 }
 
 /**
@@ -91,11 +145,24 @@ export function googleDeniedFailure(
 }
 
 /**
- * One server-side line per failed install. Reason, project and provider only - the OAuth code,
- * the state payload and the tokens must never reach a log sink.
+ * One server-side line per failed install. Reason, project and provider, plus - for unclassified
+ * throws only - the cause class and the redacted cause message. The OAuth code, the state payload,
+ * the tokens and any provider payload must never reach a log sink.
  */
+export type GoogleOAuthFailureCause = {
+  causeClass?: string;
+  causeMessage?: string;
+};
+
 export function logGoogleOAuthFailure(failure: Omit<GoogleOAuthFailure, "returnPath">) {
+  const causeFields = failure.reason
+    ? {}
+    : {
+        ...(failure.causeClass ? { causeClass: failure.causeClass } : {}),
+        ...(failure.causeMessage ? { causeMessage: redactOpsText(failure.causeMessage) } : {}),
+      };
   console.error("[google-oauth] install failed", {
+    ...causeFields,
     ...(failure.googleError ? { googleError: failure.googleError } : {}),
     projectId: failure.projectId ?? "unknown",
     provider: failure.provider ?? "unknown",

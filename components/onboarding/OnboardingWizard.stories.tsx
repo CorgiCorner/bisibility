@@ -72,10 +72,7 @@ const issueApiKeyAction = async () => ({
 });
 const createProjectWithCompetitors: CreateProjectFormValues = {
   domain: "acme.dev",
-  includeSubdomains: false,
   name: "Acme",
-  rootAndWww: true,
-  urlPrefix: false,
 };
 
 function providerPanel(mode: StoryProps["providerMode"] = "none") {
@@ -129,7 +126,15 @@ function panelForStep(
       />
     ),
     3: providerPanel(providerMode),
-    4: <StepSchedule flowState={storyFlowState} />,
+    4: (
+      <StepSchedule
+        flowState={
+          providerMode === "primary"
+            ? { ...storyFlowState, providerId: "dataforseo" }
+            : storyFlowState
+        }
+      />
+    ),
     5: (
       <StepAddKeywords
         costPerCheckCents={1.55}
@@ -230,6 +235,7 @@ const meta = {
   },
   parameters: {
     layout: "fullscreen",
+    nextjs: { appDirectory: true },
   },
 } satisfies Meta<typeof OnboardingStory>;
 
@@ -248,7 +254,7 @@ export const LockedAfterProject: Story = {
 };
 export const ConnectProviderBackup: Story = { args: { providerMode: "primary", step: 3 } };
 export const ConnectProviderBothConnected: Story = { args: { providerMode: "both", step: 3 } };
-export const TrackingDefaults: Story = { args: { step: 4 } };
+export const TrackingDefaults: Story = { args: { providerMode: "primary", step: 4 } };
 export const AddKeywords: Story = { args: { step: 5 } };
 export const AddKeywordsWithAnalytics: Story = {
   args: { analyticsMode: "connected", step: 5 },

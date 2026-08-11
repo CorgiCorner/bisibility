@@ -1,6 +1,6 @@
 {
   "name": "bisibility",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "private": true,
   "description": "Self-hostable open-source keyword rank tracker with keyword and backlink research, MCP, and bring-your-own providers.",
   "license": "AGPL-3.0-only",

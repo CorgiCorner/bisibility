@@ -24,12 +24,14 @@ const LOCATION_FIXTURE = [
     region_name: "Massachusetts",
   },
   {
-    canonical_key: "DE",
+    canonical_key: "ES",
     city_name: null,
-    country_code: "DE",
-    display_name: "Germany",
-    id: "country:DE",
+    country_code: "ES",
+    display_name: "Spain",
+    hl: "es",
     kind: "country",
+    language_label: "Spanish",
+    region_code: null,
     region_name: null,
   },
 ];

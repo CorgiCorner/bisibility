@@ -27,6 +27,7 @@ export function firstRunCreationState() {
 }
 
 export function isPendingFirstRunUser(userId: string) {
+  if (!userId) return false;
   return firstRunCreationState()?.pendingUser?.id === userId;
 }
 
