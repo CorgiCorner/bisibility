@@ -19,8 +19,8 @@ const mocks = vi.hoisted(() => {
   return {
     cancelMigration: vi.fn(async () => ({})),
     createCloudMigrationHandoff: vi.fn(async () => ({
-      apiImportUrl: "https://bisibility.com/api/cloud/import",
-      apiRequest: "POST https://bisibility.com/api/cloud/import",
+      apiImportUrl: "https://bisibility.com/api/v1/cloud/import",
+      apiRequest: "POST https://bisibility.com/api/v1/cloud/import",
       cloudImportUrl: "https://bisibility.com/app",
       cloudOnboardingUrl: "https://bisibility.com/cloud/onboarding",
       cloudOrigin: "https://bisibility.com",

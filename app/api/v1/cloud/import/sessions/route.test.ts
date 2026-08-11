@@ -30,7 +30,7 @@ const rawToken = "mig_valid_token_value_12345";
 const jobId = "imp_abcdefghijklmnopqrstuvwx";
 const projectId = "prj_abcdefghijklmnopqrstuvwx";
 const sourceProjectId = "prj_bbcdefghijklmnopqrstuvwx";
-const url = "https://example.com/api/cloud/import/sessions";
+const url = "https://example.com/api/v1/cloud/import/sessions";
 
 function job(overrides: Record<string, unknown> = {}) {
   return {
@@ -66,7 +66,7 @@ async function post(body: unknown, headers?: HeadersInit) {
   return (await POST(request(body, headers))) as Response;
 }
 
-describe("POST /api/cloud/import/sessions", () => {
+describe("POST /api/v1/cloud/import/sessions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.verifyMigrationToken.mockResolvedValue({

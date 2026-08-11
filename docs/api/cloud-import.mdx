@@ -7,21 +7,15 @@ Instance import accepts an export package and restores keywords plus optional ra
 history into the project associated with a migration token. Use the single
 request endpoint for small packages and the session protocol for large packages.
 
-The versioned paths are included in `/api/v1/openapi.json`. The unversioned
-paths are kept for CLI compatibility.
+These versioned paths are included in `/api/v1/openapi.json`.
 
 ## Endpoints
 
 ```http
-POST /api/cloud/import
 POST /api/v1/cloud/import
-GET  /api/cloud/import/compatibility
 GET  /api/v1/cloud/import/compatibility
-POST /api/cloud/import/sessions
 POST /api/v1/cloud/import/sessions
-PUT  /api/cloud/import/sessions/{sessionId}/chunks/{index}
 PUT  /api/v1/cloud/import/sessions/{sessionId}/chunks/{index}
-POST /api/cloud/import/sessions/{sessionId}/finalize
 POST /api/v1/cloud/import/sessions/{sessionId}/finalize
 ```
 

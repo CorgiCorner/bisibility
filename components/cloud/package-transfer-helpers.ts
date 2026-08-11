@@ -1,7 +1,7 @@
 import { migrationCompletionFromResponse } from "@/lib/migration/result";
 
 export async function postImportPackage(rawToken: string, parsed: unknown) {
-  const response = await fetch("/api/cloud/import", {
+  const response = await fetch("/api/v1/cloud/import", {
     body: JSON.stringify(parsed),
     headers: {
       Authorization: `Bearer ${rawToken}`,

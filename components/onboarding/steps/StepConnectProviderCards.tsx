@@ -10,31 +10,34 @@ import {
 
 type StepConnectProviderCardsProps = {
   connections: ConnectedProviderMap;
+  dirtyProviders: Partial<Record<OnboardingSerpProviderId, boolean>>;
   onSelect: (providerId: OnboardingSerpProviderId) => void;
-  primaryProviderId?: OnboardingSerpProviderId;
   selectedProviderId: OnboardingSerpProviderId;
   testResults: Partial<Record<OnboardingSerpProviderId, ProviderTestResult | null>>;
 };
 
 function providerState({
   connections,
+  dirty,
   providerId,
   testResults,
 }: {
   connections: ConnectedProviderMap;
+  dirty: boolean;
   providerId: OnboardingSerpProviderId;
   testResults: Partial<Record<OnboardingSerpProviderId, ProviderTestResult | null>>;
 }): ProviderCardState {
-  if (connections[providerId]) return "connected";
+  if (connections[providerId] && !dirty) return "connected";
   if (testResults[providerId]?.ok) return "tested";
   if (testResults[providerId] && !testResults[providerId]?.ok) return "failed";
+  if (dirty) return "dirty";
   return "idle";
 }
 
 export function StepConnectProviderCards({
   connections,
+  dirtyProviders,
   onSelect,
-  primaryProviderId,
   selectedProviderId,
   testResults,
 }: Readonly<StepConnectProviderCardsProps>) {
@@ -43,19 +46,14 @@ export function StepConnectProviderCards({
       <div aria-label="SERP provider" className="grid gap-3 sm:grid-cols-2" role="radiogroup">
         {providerOptions.map((provider) => (
           <ProviderCard
-            fallbackPrompt={
-              Boolean(primaryProviderId) &&
-              primaryProviderId !== provider.value &&
-              !connections[provider.value]
-            }
             balance={connections[provider.value]?.balance}
             key={provider.value}
             onSelect={onSelect}
-            primary={connections[provider.value]?.primary}
             provider={provider}
             selected={selectedProviderId === provider.value}
             state={providerState({
               connections,
+              dirty: Boolean(dirtyProviders[provider.value]),
               providerId: provider.value,
               testResults,
             })}

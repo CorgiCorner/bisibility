@@ -21,22 +21,30 @@ Errors use `application/problem+json`.
 
 | Code | HTTP status | Meaning |
 | - | -: | - |
-| `bad_request` | 400 | Request body, query, or JSON could not be parsed. |
-| `validation_failed` | 400 | Zod validation failed. |
-| `unauthorized` | 401 | Missing or invalid bearer API key. |
+| <span id="bad_request"></span>`bad_request` | 400, 413, or 422 | Request body, query, or JSON could not be parsed, payload is too large, or a required project input is unavailable. |
+| <span id="validation_failed"></span>`validation_failed` | 400 | Zod validation failed. |
+| <span id="invalid_cursor"></span>`invalid_cursor` | 400 | Pagination cursor is malformed or not a supported v3 cursor. |
+| <span id="invalid_public_id"></span>`invalid_public_id` | 400 | A path or payload ID is malformed, has the wrong resource prefix, or is not a public ID. |
+| <span id="unauthorized"></span>`unauthorized` | 401 | Missing or invalid bearer API key. |
 | `unauthorized` | 419 | Instance import migration token is invalid, expired, or already used. |
-| `forbidden` | 403 | API key scope or project scope does not allow the operation. |
-| `not_found` | 404 | Route or resource was not found. |
-| `conflict` | 409 | Reserved for conflict responses. |
-| `self_import` | 409 | Instance import package was exported from the destination project itself. |
-| `unsupported_api_version` | 409 | `Bisibility-API-Version` declares a version the server does not advertise. |
-| `project_read_only` | 423 | Project writes are blocked by migration hold. |
-| `budget_exhausted` | 429 | Monthly rank-check budget is exhausted. |
-| `rate_limited` | 429 | Request exceeded a rate limit. |
-| `provider_unavailable` | 400, 404, or 502 | Rank-check provider path failed. |
-| `method_not_allowed` | 405 | HTTP method is not handled by the router. |
-| `scheduler_unavailable` | 503 | Async rank-check scheduler is unavailable. |
-| `internal_server_error` | 500 | Unexpected API error. |
+| <span id="forbidden"></span>`forbidden` | 403 | API key scope or project scope does not allow the operation. |
+| <span id="not_found"></span>`not_found` | 404 | Route or resource was not found. |
+| <span id="method_not_allowed"></span>`method_not_allowed` | 405 | HTTP method is not handled by the router. |
+| <span id="conflict"></span>`conflict` | 409 | Request conflicts with the current resource state. |
+| <span id="self_import"></span>`self_import` | 409 | Instance import package was exported from the destination project itself. |
+| <span id="unsupported_api_version"></span>`unsupported_api_version` | 409 | `Bisibility-API-Version` declares a version the server does not advertise. |
+| <span id="snapshot_expired"></span>`snapshot_expired` | 409 | No unexpired backlinks snapshot is available for the requested continuation. |
+| <span id="project_domain_required"></span>`project_domain_required` | 422 | The operation requires a configured project domain. |
+| <span id="cost_limit_exceeded"></span>`cost_limit_exceeded` | 422 | Estimated provider cost exceeds the request's `max_cost_cents`. |
+| <span id="unsupported_target"></span>`unsupported_target` | 422 | Backlinks target is not a supported site, subdomain, or page target. |
+| <span id="unsupported_location"></span>`unsupported_location` | 422 | The provider cannot perform the requested lookup for that location. |
+| <span id="project_read_only"></span>`project_read_only` | 423 | Project writes are blocked by migration hold. |
+| <span id="budget_exhausted"></span>`budget_exhausted` | 429 | Monthly rank-check or provider budget is exhausted. |
+| <span id="lookup_in_progress"></span>`lookup_in_progress` | 429 | An identical cached provider lookup is still running. |
+| <span id="rate_limited"></span>`rate_limited` | 429 | Request or upstream provider exceeded a rate limit. |
+| <span id="internal_server_error"></span>`internal_server_error` | 500 | Unexpected API error. |
+| <span id="provider_unavailable"></span>`provider_unavailable` | 400, 404, 422, or 502 | Provider is not connected, needs authorization, rejects the request, or fails the lookup. |
+| <span id="scheduler_unavailable"></span>`scheduler_unavailable` | 503 | Async rank-check scheduler is unavailable. |
 
 ## Validation details
 

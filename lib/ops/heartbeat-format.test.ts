@@ -84,7 +84,7 @@ describe("heartbeat Slack digest", () => {
           "Healthy": "worker up 9.6 h · ops outbox clear · rank checks: no failures · no bootstrap errors",
           "Rank checks (24h)": "Scheduled 1 · succeeded 1 · failed 0 · deferred 0 · stuck 0",
           "Schedules": "8 inspected · 8 actions in 24 h · next in 22.0 h",
-          "Traffic": "GSC ok 1 · stale 0 · failed 0 · not run 0",
+          "Traffic": "GSC ok 1 · needs reauth 0 · stale 0 · failed 0 · not run 0",
         },
         "kind": "heartbeat",
         "severity": "info",
@@ -158,7 +158,7 @@ describe("heartbeat Slack digest", () => {
     ]);
   });
 
-  it("scopes the no-failure health copy to rank checks when traffic failed", () => {
+  it("keeps a single provider 5xx below threshold at warning severity", () => {
     const input = healthyInput();
     const traffic = input.database.traffic[0];
     expect(traffic).toBeDefined();
@@ -170,7 +170,44 @@ describe("heartbeat Slack digest", () => {
     expect(event.fields?.Healthy).toContain("rank checks: no failures");
     expect(event.fields?.Healthy).not.toMatch(/(?:^| · )no failures(?: · |$)/);
     expect(event.fields?.Traffic).toContain("class provider_5xx");
+    expect(event.severity).toBe("warning");
+  });
+
+  it("escalates a provider 5xx after the failure threshold is crossed", () => {
+    const input = healthyInput();
+    const traffic = input.database.traffic[0];
+    expect(traffic).toBeDefined();
+    if (!traffic) return;
+    input.database.traffic[0] = {
+      ...traffic,
+      errorClass: "provider_5xx",
+      failureEscalated: true,
+      status: "failed",
+    };
+
+    const event = buildHeartbeatEvent(input);
+
     expect(event.severity).toBe("error");
+  });
+
+  it("reports needs_reauth separately from failed traffic connections", () => {
+    const input = healthyInput();
+    const traffic = input.database.traffic[0];
+    expect(traffic).toBeDefined();
+    if (!traffic) return;
+    input.database.traffic[0] = {
+      ...traffic,
+      errorClass: "auth",
+      provider: "plausible",
+      status: "needs_reauth",
+    };
+
+    const event = buildHeartbeatEvent(input);
+
+    expect(event.fields?.Traffic).toContain(
+      "PLAUSIBLE ok 0 · needs reauth 1 · stale 0 · failed 0 · not run 0",
+    );
+    expect(event.severity).toBe("warning");
   });
 
   it("identifies a never-successful config_invalid GA4 connection without escalating", () => {

@@ -19,7 +19,6 @@ import {
   projectIdFor,
 } from "@/components/onboarding/onboarding-wizard-state";
 import { SampleDataButton } from "@/components/sample-data/SampleDataButton";
-import { Button } from "@/components/ui";
 import { useState } from "react";
 import { readCurrentProviderValues } from "./onboarding-provider-values";
 import {
@@ -252,7 +251,10 @@ export function OnboardingWizard({
                   fontWeight: 400,
                   paddingX: 0,
                   textTransform: "none",
-                  "&:hover": { backgroundColor: "transparent", color: "var(--accent-text)" },
+                  "&:hover": {
+                    backgroundColor: "transparent",
+                    color: "var(--accent-text)",
+                  },
                 }}
                 variant="text"
               />
@@ -261,18 +263,6 @@ export function OnboardingWizard({
           onBack={currentStep === 1 ? undefined : () => goToStep(previousStep)}
           onContinue={
             canContinueWithConnectedDataSource ? continueWithConnectedDataSource : undefined
-          }
-          secondaryAction={
-            currentStep === 3 ? (
-              <Button
-                onClick={continueWithConnectedDataSource}
-                size="lg"
-                type="button"
-                variant="ghost"
-              >
-                Skip
-              </Button>
-            ) : undefined
           }
         />
       </section>

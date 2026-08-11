@@ -110,6 +110,11 @@ describe("Google OAuth install state across repeated hits", () => {
     expect(response.headers.get("location")).toBe(
       `${origin}/app/${projectId}/integrations?google=select&connect=gsc&provider=gsc`,
     );
+    expect(mocks.requireProjectScope.mock.calls.map((call) => call[2])).toEqual([
+      projectId,
+      projectId,
+      projectId,
+    ]);
     expect(mocks.storePendingGoogleOAuth).toHaveBeenCalledTimes(1);
   });
 

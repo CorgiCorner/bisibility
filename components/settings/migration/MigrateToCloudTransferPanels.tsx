@@ -184,7 +184,7 @@ function PushTransferPanel({
       />
       <InfoBox icon="terminal">
         Destination preflight runs during transfer before import starts. REST import endpoint:{" "}
-        <code className="font-mono text-fg">{handoff?.apiImportUrl ?? "/api/cloud/import"}</code>
+        <code className="font-mono text-fg">{handoff?.apiImportUrl ?? "/api/v1/cloud/import"}</code>
       </InfoBox>
     </>
   );

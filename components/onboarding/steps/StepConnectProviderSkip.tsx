@@ -24,22 +24,12 @@ export function StepConnectProviderSkip({
   });
 
   return (
-    <>
-      <div className="mt-4 text-xs text-fg-muted">
-        No provider yet?{" "}
-        {onSkip ? (
-          <OnboardingStepSkip onClick={() => onSkip(getValues())}>
-            Skip, add keywords as paused
-          </OnboardingStepSkip>
-        ) : (
-          <OnboardingStepSkip href={skipHref}>Skip, add keywords as paused</OnboardingStepSkip>
-        )}
-        .
-      </div>
-      <div className="mt-3 text-xs text-fg-muted">
-        Search Console can be connected on the Add keywords step for a free owned-data path; GA4
-        later under Integrations.
-      </div>
-    </>
+    <OnboardingStepSkip
+      ariaLabel="Skip provider connection and add keywords as paused"
+      className="-my-2 inline-flex min-h-10 shrink-0 items-center px-2 text-[13px]"
+      {...(onSkip ? { onClick: () => onSkip(getValues()) } : { href: skipHref })}
+    >
+      Skip
+    </OnboardingStepSkip>
   );
 }

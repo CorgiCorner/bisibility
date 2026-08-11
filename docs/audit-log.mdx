@@ -24,6 +24,70 @@ Each entry records:
 Secrets are not stored raw in audit payloads. Values whose keys look like
 credentials, tokens, API keys, or passwords are redacted before insertion.
 
+## Example event
+
+The JSON export uses the same presentation-safe shape as the audit detail view.
+Stored `target`, `before`, and `after` values are mapped to the export's
+`resource` and `diff` fields after public-ID filtering and redaction.
+
+Opening the audit log emits `audit_log.view`. A mapped export row for that real
+application event has this shape:
+
+```json
+{
+  "id": "audit_abcdefghijklmnopqrstuvwx",
+  "timestamp": "2026-07-16T14:32:00.000Z",
+  "timestampLabel": "2026-07-16 14:32:00 UTC",
+  "eventName": "Audit log view",
+  "eventType": "system",
+  "actor": {
+    "id": "usr_abcdefghijklmnopqrstuvwx",
+    "name": "Auditor",
+    "email": "auditor@example.com",
+    "initials": "AU"
+  },
+  "resource": {
+    "id": "prj_abcdefghijklmnopqrstuvwx",
+    "type": "project",
+    "name": "prj_abcdefghijklmnopqrstuvwx"
+  },
+  "operation": "UPDATE",
+  "status": "success",
+  "source": {
+    "channel": "ui",
+    "ip": "203.0.113.0"
+  },
+  "diff": [],
+  "metadata": {
+    "event_id": "audit_abcdefghijklmnopqrstuvwx",
+    "correlation_id": "[redacted]",
+    "user_agent": "Mozilla/5.0 Example Browser/123.0",
+    "app_version": "1.2.3"
+  }
+}
+```
+
+Source IPs are masked before display. Missing source, user-agent, version, and
+correlation evidence is exported as `Not recorded`; the UI does not invent a
+value.
+
+## Filter and export
+
+Open a project's audit log from project settings. Admin and Auditor roles can
+select a 7, 30, or 90 day window, or all retained rows, then filter the loaded
+events by search text, event type, actor, and status.
+
+The server loads the newest 200 matching rows for the selected date window.
+CSV and JSON downloads contain only the rows visible after the in-page filters
+are applied. When more than 200 rows match, the UI reports that the result is
+truncated. An export is therefore a filtered working set, not a complete
+database archive.
+
+CSV contains timestamp, actor email, event, resource type and id, operation,
+status, event id, correlation id, masked source IP, user agent, app version,
+and failure reason. JSON also retains the actor, source channel, resource,
+diff, and metadata objects shown in the detail view.
+
 ## Retention
 
 Audit rows are kept for `AUDIT_RETENTION_DAYS`, defaulting to 365 days when the

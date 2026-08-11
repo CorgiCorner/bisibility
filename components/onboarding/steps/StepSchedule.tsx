@@ -30,6 +30,7 @@ import { useForm } from "react-hook-form";
 import { LocationSelectionChips } from "./LocationSelectionChips";
 import { StepScheduleEstimate } from "./StepScheduleEstimate";
 import {
+  DerivedValue,
   deviceSummary,
   languagesForLocations,
   MenuField,
@@ -106,7 +107,10 @@ export function StepSchedule({
   }
 
   function setDevices(next: string[]) {
-    setValue("devices", next as SerpDevice[], { shouldDirty: true, shouldValidate: true });
+    setValue("devices", next as SerpDevice[], {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
   }
 
   async function onSubmit(values: TrackingDefaultsForm) {
@@ -198,7 +202,7 @@ export function StepSchedule({
             values={selectedLocations}
           />
         </div>
-        <ReadonlyField label="Language" name="language" value={language} />
+        <DerivedValue label="Language" value={language} />
         <MenuField help={FIELD_HELP.device} label="Devices">
           <MenuMultiSelect
             ariaLabel="Devices"
@@ -213,7 +217,10 @@ export function StepSchedule({
           <SerpDepthField
             depth={serpDepth}
             onChange={(depth) =>
-              setValue("serpDepth", depth, { shouldDirty: true, shouldValidate: true })
+              setValue("serpDepth", depth, {
+                shouldDirty: true,
+                shouldValidate: true,
+              })
             }
             triggerClassName={selectTriggerClass}
           />

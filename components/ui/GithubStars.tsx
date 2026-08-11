@@ -7,7 +7,7 @@ export type GithubStarsSize = "lg" | "md" | "sm";
 export type GithubStarsVariant = "chip" | "nav";
 
 export type GithubStarsProps = {
-  /** Server-fetched count. Null or undefined renders nothing rather than a zero or a spinner. */
+  /** Server-fetched count. Null or undefined keeps the repository link without showing a count. */
   count?: string | null;
   href?: string;
   size?: GithubStarsSize;
@@ -65,36 +65,36 @@ export function GithubStars({
   size = "md",
   variant = "chip",
 }: Readonly<GithubStarsProps>) {
-  // A missing count is the normal state during a GitHub outage: the helper fails soft, and a
-  // chip reading "0 stars" would be a lie, so the control disappears instead.
-  if (!count) {
-    return null;
-  }
+  const formattedCount = count ? formatStars(count) : null;
 
   return (
     <a
-      aria-label={`${formatStars(count)} stars on GitHub`}
+      aria-label={formattedCount ? `${formattedCount} stars on GitHub` : "GitHub repository"}
       className={starsVariants({ size, variant })}
       href={href}
       rel="noreferrer noopener"
       target="_blank"
     >
       <GithubLogo aria-hidden size={glyphSize[size]} />
-      <span aria-hidden>{formatStars(count)}</span>
-      {/* Phosphor draws each weight as its own path, so the two cannot be tweened. Both sit in
-          one grid cell and cross-fade instead, which also lets the filled one arrive slightly
-          larger without nudging the row. */}
-      <span aria-hidden className="grid text-yellow-text">
-        <Star
-          className="col-start-1 row-start-1 transition-opacity duration-200 group-hover:opacity-0 group-focus-visible:opacity-0"
-          size={glyphSize[size] - 3}
-        />
-        <Star
-          className="col-start-1 row-start-1 scale-90 opacity-0 transition-[opacity,transform] duration-200 group-hover:scale-110 group-hover:opacity-100 group-focus-visible:scale-110 group-focus-visible:opacity-100"
-          size={glyphSize[size] - 3}
-          weight="fill"
-        />
-      </span>
+      {formattedCount ? (
+        <>
+          <span aria-hidden>{formattedCount}</span>
+          {/* Phosphor draws each weight as its own path, so the two cannot be tweened. Both sit in
+              one grid cell and cross-fade instead, which also lets the filled one arrive slightly
+              larger without nudging the row. */}
+          <span aria-hidden className="grid text-yellow-text">
+            <Star
+              className="col-start-1 row-start-1 transition-opacity duration-200 group-hover:opacity-0 group-focus-visible:opacity-0"
+              size={glyphSize[size] - 3}
+            />
+            <Star
+              className="col-start-1 row-start-1 scale-90 opacity-0 transition-[opacity,transform] duration-200 group-hover:scale-110 group-hover:opacity-100 group-focus-visible:scale-110 group-focus-visible:opacity-100"
+              size={glyphSize[size] - 3}
+              weight="fill"
+            />
+          </span>
+        </>
+      ) : null}
     </a>
   );
 }

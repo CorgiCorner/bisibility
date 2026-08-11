@@ -51,6 +51,7 @@ describe("database heartbeat aggregation", () => {
         id: "connection_1",
         project: { domain: "docs.example", id: "project_1", name: "Docs" },
         provider: "gsc",
+        status: "connected",
       },
     ]);
     mocks.projectFindMany.mockResolvedValue([]);
@@ -124,6 +125,7 @@ describe("database heartbeat aggregation", () => {
     ]);
     mocks.operationalFindMany.mockResolvedValue([
       {
+        connectionId: "connection_1",
         errorClass: "provider_5xx",
         meta: { rowsFetched: 0, rowsMatched: 0, rowsUpserted: 0 },
         projectId: "project_1",
@@ -132,6 +134,7 @@ describe("database heartbeat aggregation", () => {
         status: "failed",
       },
       {
+        connectionId: "connection_1",
         meta: { rowsFetched: 10, rowsMatched: 8, rowsUpserted: 8 },
         projectId: "project_1",
         provider: "gsc",
@@ -165,6 +168,7 @@ describe("database heartbeat aggregation", () => {
       {
         connectionId: "connection_1",
         errorClass: "provider_5xx",
+        failureEscalated: true,
         latestSuccessAt: "2026-07-16T08:00:00.000Z",
         project: "project_1",
         projectId: "project_1",
@@ -180,6 +184,104 @@ describe("database heartbeat aggregation", () => {
       schedule: { active: 0, dueWithoutRun: 0, tracked: 0 },
       undeliveredEvents: 2,
     });
+  });
+
+  it("keeps a needs_reauth connection out of the failed traffic count", async () => {
+    mocks.rankFindMany.mockResolvedValue([]);
+    mocks.operationalFindMany.mockResolvedValue([]);
+    mocks.providerFindMany.mockResolvedValue([
+      {
+        id: "connection_1",
+        project: { domain: "docs.example", id: "project_1", name: "Docs" },
+        provider: "plausible",
+        status: "needs_reauth",
+      },
+    ]);
+
+    await expect(collectDatabaseHeartbeat(now)).resolves.toMatchObject({
+      traffic: [
+        {
+          connectionId: "connection_1",
+          provider: "plausible",
+          status: "needs_reauth",
+        },
+      ],
+    });
+  });
+
+  it("does not escalate an active provider from disabled or recovered historical failures", async () => {
+    mocks.rankFindMany.mockResolvedValue([]);
+    mocks.providerFindMany.mockResolvedValue(
+      Array.from({ length: 5 }, (_, index) => ({
+        id: `connection_${index + 1}`,
+        project: {
+          domain: `project-${index + 1}.example.com`,
+          id: `project_${index + 1}`,
+          name: `Project ${index + 1}`,
+        },
+        provider: "plausible",
+        status: "connected",
+      })),
+    );
+    mocks.projectFindMany.mockResolvedValue([
+      {
+        domain: "retired.example.com",
+        id: "project_retired",
+        name: "Retired project",
+      },
+    ]);
+    mocks.operationalFindMany.mockResolvedValue([
+      {
+        connectionId: "connection_1",
+        errorClass: null,
+        finishedAt: now,
+        meta: null,
+        projectId: "project_1",
+        provider: "plausible",
+        startedAt: now,
+        status: "succeeded_empty",
+      },
+      {
+        connectionId: "connection_2",
+        errorClass: "network",
+        finishedAt: new Date("2026-07-16T11:50:00.000Z"),
+        meta: null,
+        projectId: "project_2",
+        provider: "plausible",
+        startedAt: new Date("2026-07-16T11:50:00.000Z"),
+        status: "failed",
+      },
+      {
+        connectionId: "connection_1",
+        errorClass: "network",
+        finishedAt: new Date("2026-07-16T11:40:00.000Z"),
+        meta: null,
+        projectId: "project_1",
+        provider: "plausible",
+        startedAt: new Date("2026-07-16T11:40:00.000Z"),
+        status: "failed",
+      },
+      {
+        connectionId: "connection_retired",
+        errorClass: "network",
+        finishedAt: new Date("2026-07-16T11:30:00.000Z"),
+        meta: null,
+        projectId: "project_retired",
+        provider: "plausible",
+        startedAt: new Date("2026-07-16T11:30:00.000Z"),
+        status: "failed",
+      },
+    ]);
+
+    const result = await collectDatabaseHeartbeat(now);
+    const failedConnection = result.traffic.find((row) => row.connectionId === "connection_2");
+
+    expect(failedConnection).toMatchObject({
+      connectionId: "connection_2",
+      projectId: "project_2",
+      status: "failed",
+    });
+    expect(failedConnection).not.toHaveProperty("failureEscalated");
   });
 
   it("aggregates fallback attempts on completed checks without double-counting failures", async () => {

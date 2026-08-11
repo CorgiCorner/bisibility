@@ -1,6 +1,11 @@
 #!/usr/bin/env node
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, extname, join, relative, resolve } from "node:path";
+import {
+  analyzeDocsNavigation,
+  docsNavigationExclusions,
+  loadPublishedDocsPages,
+} from "./doc-navigation.mjs";
 
 const ROOT = process.cwd();
 const DOCS_ROOT = join(ROOT, "docs");
@@ -15,9 +20,12 @@ function walk(directory) {
 
 function docsPageExists(page) {
   const clean = page.replace(/^\/+|\/$/g, "");
-  return [join(DOCS_ROOT, `${clean || "index"}.mdx`), join(DOCS_ROOT, clean, "index.mdx")].some(
-    existsSync,
-  );
+  return [
+    join(DOCS_ROOT, `${clean || "index"}.md`),
+    join(DOCS_ROOT, `${clean || "index"}.mdx`),
+    join(DOCS_ROOT, clean, "index.md"),
+    join(DOCS_ROOT, clean, "index.mdx"),
+  ].some(existsSync);
 }
 
 function deploymentDocsPath(href) {
@@ -80,6 +88,18 @@ function checkDocsRoute(route, location) {
 }
 
 const config = JSON.parse(readFileSync(join(DOCS_ROOT, "docs.json"), "utf8"));
+const publishedDocsPages = loadPublishedDocsPages(DOCS_ROOT);
+const docsNavigation = analyzeDocsNavigation(publishedDocsPages, config.navigation);
+for (const pageId of docsNavigation.orphanPageIds) {
+  failures.push(
+    `${relative(ROOT, publishedDocsPages.get(pageId).file)}: orphan documentation page is not reachable from docs/docs.json navigation`,
+  );
+}
+for (const missing of docsNavigation.missingFragments) {
+  failures.push(
+    `${relative(ROOT, missing.sourceFile)}: missing fragment target ${missing.href}`,
+  );
+}
 const docsTab = config.navigation?.tabs?.find((tab) => tab.tab === "Docs");
 const apiWorkflowGroup = docsTab?.groups?.find((group) => group.group === "API workflows");
 const expectedApiWorkflows = [
@@ -177,4 +197,6 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log(`Documentation links valid across ${contentFiles.length} files.`);
+console.log(
+  `Documentation links valid across ${contentFiles.length} files; public pages exclude docs/${docsNavigationExclusions.join(" and docs/")}.`,
+);

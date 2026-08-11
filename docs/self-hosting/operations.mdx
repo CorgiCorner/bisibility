@@ -166,6 +166,59 @@ remain available. Slack-specific controls report that Slack is not configured.
 For local development without SERP credentials, set `BISIBILITY_FAKE_PROVIDER=1`
 to exercise rank-check flows without calling a real SERP provider.
 
+## Back up and restore PostgreSQL
+
+For the Compose topology, create a custom-format application database dump from
+inside the PostgreSQL container:
+
+```bash
+docker compose --env-file .env -f compose.yaml exec -T postgres \
+  pg_dump -U bisibility -d bisibility --format=custom \
+  > bisibility.dump
+chmod 600 bisibility.dump
+docker compose --env-file .env -f compose.yaml exec -T postgres \
+  pg_restore --list \
+  < bisibility.dump \
+  > /dev/null
+```
+
+Keep the dump outside the Compose project directory if that directory is part
+of an automated cleanup. Store the matching `.env` secrets separately; a
+database dump does not preserve `BETTER_AUTH_SECRET` or
+`BISIBILITY_SECRETS_KEY`, and stored provider credentials cannot be decrypted
+without the latter.
+
+Test restores on a separate, non-production instance. Restore with the same
+bisibility release that created the dump, then follow the normal upgrade path
+if a newer release is required. On the restore target, stop both sources of
+application writes before replacing the database:
+
+```bash
+docker compose --env-file .env -f compose.yaml stop app
+docker compose --env-file .env -f compose.yaml -f compose.worker.yaml stop worker
+docker compose --env-file .env -f compose.yaml exec -T postgres \
+  pg_restore --exit-on-error --clean --if-exists --no-owner \
+  -U bisibility -d bisibility \
+  < bisibility.dump
+docker compose --env-file .env -f compose.yaml run --rm db-migrations
+docker compose --env-file .env -f compose.yaml up -d
+curl -fsS http://127.0.0.1:3000/api/v1/readiness
+```
+
+The worker stop command is harmless when the scheduling overlay has not been
+started. If the worker was active, restart it only after the restored app passes
+readiness.
+
+The bundled Temporal topology stores workflow state in the
+`temporal-postgres` service and its `temporal-postgres-data` volume, across both
+the `temporal` and `temporal_visibility` databases. Back up and restore that
+persistence store independently while Temporal Server and the worker are
+stopped. An application PostgreSQL dump does not protect active workflow
+history.
+
+Treat `pg_restore --clean` as destructive: it replaces objects in the target
+database. Confirm the target and the backup before running it.
+
 ## Database growth
 
 Maintenance preserves every `rank_checks` row and `organicRanks` history. It can

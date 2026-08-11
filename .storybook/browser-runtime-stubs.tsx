@@ -438,9 +438,9 @@ export async function markNotificationRead() {
 
 export async function createCloudMigrationHandoff() {
   return {
-    apiImportUrl: "https://bisibility.com/api/cloud/import",
+    apiImportUrl: "https://bisibility.com/api/v1/cloud/import",
     apiRequest:
-      "POST https://bisibility.com/api/cloud/import\nAuthorization: Bearer mig_...\nContent-Type: application/json",
+      "POST https://bisibility.com/api/v1/cloud/import\nAuthorization: Bearer mig_...\nContent-Type: application/json",
     cloudImportUrl: "https://bisibility.com/cloud/import?ctx=preview",
     cloudWorkspaceUrl: "https://bisibility.com/app/overview",
   };

@@ -42,7 +42,7 @@ const token = {
   publicId: "ferry_abcdefghijklmnopqrstuvwx",
   singleUse: true,
 };
-const url = new URL("https://example.com/api/cloud/import");
+const url = new URL("https://example.com/api/v1/cloud/import");
 const ids = {
   destinationProject: "prj_abcdefghijklmnopqrstuvwx",
   firstKeyword: "kw_abcdefghijklmnopqrstuvwx",

@@ -76,9 +76,14 @@ export BISIBILITY_TOKEN="bsb_pat_live_..."
 Then send it as a bearer token:
 
 ```bash
-curl "$BISIBILITY_BASE_URL/projects" \
+curl --fail-with-body "$BISIBILITY_BASE_URL/projects" \
   -H "Authorization: Bearer $BISIBILITY_TOKEN"
 ```
+
+A successful request returns `200 OK` with a `data` array and
+`meta.next_cursor`. A project API key returns its one project; a PAT returns the
+projects available through the user's memberships. See
+[List projects](/api/projects#list-projects) for the complete response shape.
 
 For a self-hosted instance, replace `https://eu.bisibility.com` with the app
 origin.
@@ -137,8 +142,19 @@ Defaults:
 | Personal access token | 120 requests per minute |
 | Anonymous discovery request | 60 requests per minute |
 
-Self-hosters can change these limits with
-`BISIBILITY_API_KEY_RATE_LIMIT_PER_MINUTE`,
-`BISIBILITY_PAT_RATE_LIMIT_PER_MINUTE`, and
-`BISIBILITY_API_ANON_RATE_LIMIT_PER_MINUTE`. When a limit is exceeded, the API
-returns `429 Too Many Requests` and includes `Retry-After`.
+Self-hosters can change these defaults with the
+[API rate-limit environment variables](/self-hosting/configuration#limits-and-networking).
+When a limit is exceeded, the API returns `429 Too Many Requests` and includes
+`Retry-After`.
+
+## Troubleshoot the first request
+
+| Response | Check | Next step |
+| - | - | - |
+| `401 Unauthorized` | The header is missing or malformed, or the credential is invalid, expired, or revoked. | Send exactly one `Authorization: Bearer <token>` header. Create a replacement credential if the current one is expired or revoked; do not retry the rejected secret. |
+| `403 Forbidden` | The credential is valid but its permission level or project scope does not allow the operation. | Use a credential for the target project with the minimum permission level required by that operation. |
+| `429 Too Many Requests` | The credential or anonymous client exceeded its request limit. | Wait for the `Retry-After` interval before retrying. |
+
+All API failures use `application/problem+json`; read `detail` before changing
+the request. The [API error reference](/api/errors) lists the stable codes and
+retry headers.

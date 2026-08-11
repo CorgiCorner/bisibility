@@ -19,15 +19,15 @@
         "groups": [
           {
             "group": "Get started",
-            "pages": [
-              "index",
-              "quickstart",
-              "cli",
-              "architecture",
-              "integrations",
-              "authentication",
-              "audit-log"
-            ]
+            "pages": ["index", "quickstart", "api/quickstart", "authentication"]
+          },
+          {
+            "group": "Build and automate",
+            "pages": ["cli", "integrations"]
+          },
+          {
+            "group": "Concepts",
+            "pages": ["architecture", "audit-log"]
           },
           {
             "group": "Self-hosting",
@@ -67,6 +67,31 @@
               "api/deploy-webhooks",
               "api/cloud-import",
               "api/errors"
+            ]
+          },
+          {
+            "group": "REST resource guides",
+            "pages": [
+              "api/discovery",
+              "api/projects",
+              "api/api-keys",
+              "api/personal-access-tokens",
+              "api/keywords",
+              "api/locations",
+              "api/keyword-research",
+              "api/keyword-metrics",
+              "api/ranked-keyword-suggestions",
+              "api/saved-keywords",
+              "api/competitors",
+              "api/providers",
+              "api/analytics",
+              "api/backlinks",
+              "api/alert-rules",
+              "api/notification-preferences",
+              "api/saved-views",
+              "api/signals",
+              "api/sitemap-monitors",
+              "api/team"
             ]
           },
           {

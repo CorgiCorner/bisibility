@@ -19,12 +19,14 @@ export function trafficCounts(rows: TrafficHeartbeatRow[]) {
   return rows.reduce(
     (counts, row) => {
       if (row.status.startsWith("succeeded_")) counts.ok += 1;
-      else if (row.status === "not_run") counts.notRun += 1;
+      else if (row.status === "needs_reauth" || row.status === "skipped_needs_reauth") {
+        counts.needsReauth += 1;
+      } else if (row.status === "not_run") counts.notRun += 1;
       else if (row.status === "stale") counts.stale += 1;
       else counts.failed += 1;
       return counts;
     },
-    { failed: 0, notRun: 0, ok: 0, stale: 0 },
+    { failed: 0, needsReauth: 0, notRun: 0, ok: 0, stale: 0 },
   );
 }
 
@@ -34,7 +36,7 @@ export function isLikelyMisconfigured(row: TrafficHeartbeatRow) {
 
 function providerTrafficLine(provider: string, rows: TrafficHeartbeatRow[]) {
   const counts = trafficCounts(rows);
-  return `${provider.toUpperCase()} ok ${counts.ok} · stale ${counts.stale} · failed ${counts.failed} · not run ${counts.notRun}`;
+  return `${provider.toUpperCase()} ok ${counts.ok} · needs reauth ${counts.needsReauth} · stale ${counts.stale} · failed ${counts.failed} · not run ${counts.notRun}`;
 }
 
 export function trafficLines(database: DatabaseHeartbeat, now: Date) {

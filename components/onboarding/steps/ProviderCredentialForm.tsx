@@ -21,10 +21,10 @@ type CredentialErrors = Partial<Record<"login" | "secret", string>>;
 
 type ProviderCredentialFormProps = {
   busy: boolean;
-  connectDisabled?: boolean;
+  saveDisabled?: boolean;
   errors: CredentialErrors;
   fields: readonly CredentialField[];
-  onConnect?: () => void;
+  onSave: () => void;
   onTest: () => void;
   providerId: OnboardingSerpProviderId;
   providerLabel: string;
@@ -80,10 +80,10 @@ function TestStatus({
 
 export function ProviderCredentialForm({
   busy,
-  connectDisabled = false,
+  saveDisabled = false,
   errors,
   fields,
-  onConnect,
+  onSave,
   onTest,
   providerId,
   providerLabel,
@@ -93,9 +93,7 @@ export function ProviderCredentialForm({
   testResult,
   testing,
 }: Readonly<ProviderCredentialFormProps>) {
-  const saveHint = onConnect
-    ? "Test validates the key - use Connect backup to save it."
-    : "Test validates the key - it is saved when you continue.";
+  const saveHint = `Test the credentials, then use Save ${providerLabel}.`;
   return (
     <section className="mt-4 rounded-[14px] border border-border bg-bg-elev p-4">
       <div className="grid gap-4 sm:grid-cols-2">
@@ -123,17 +121,15 @@ export function ProviderCredentialForm({
         >
           Test connection
         </Button>
-        {onConnect ? (
-          <Button
-            disabled={busy || connectDisabled}
-            onClick={onConnect}
-            startIcon={<PlusCircle aria-hidden size={15} weight="bold" />}
-            type="button"
-            variant="primary"
-          >
-            Connect backup
-          </Button>
-        ) : null}
+        <Button
+          disabled={busy || saveDisabled}
+          onClick={onSave}
+          startIcon={<PlusCircle aria-hidden size={15} weight="bold" />}
+          type="button"
+          variant="primary"
+        >
+          Save {providerLabel}
+        </Button>
         <TestStatus
           providerLabel={providerLabel}
           savedConnection={savedConnection}

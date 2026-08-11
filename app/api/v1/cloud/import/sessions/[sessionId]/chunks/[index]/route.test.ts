@@ -54,7 +54,7 @@ const keywords = [
   },
 ];
 const checksum = importChunkChecksum({ kind: "keywords", keywords });
-const url = `https://example.com/api/cloud/import/sessions/${jobId}/chunks/1`;
+const url = `https://example.com/api/v1/cloud/import/sessions/${jobId}/chunks/1`;
 
 function job(overrides: Record<string, unknown> = {}) {
   return {
@@ -117,7 +117,7 @@ async function put(req: NextRequest, routeContext = context()) {
   return (await PUT(req, routeContext)) as Response;
 }
 
-describe("PUT /api/cloud/import/sessions/{sessionId}/chunks/{index}", () => {
+describe("PUT /api/v1/cloud/import/sessions/{sessionId}/chunks/{index}", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.unstubAllEnvs();

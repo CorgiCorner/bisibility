@@ -41,6 +41,7 @@ const mocks = vi.hoisted(() => {
         findMany: vi.fn(),
         findUnique: vi.fn(),
         update: vi.fn(),
+        updateMany: vi.fn(),
         upsert: vi.fn(),
       },
       providerConnectionRate: {
@@ -163,6 +164,7 @@ describe("provider actions", () => {
     mocks.prisma.$transaction.mockImplementation((callback) => callback(mocks.prisma));
     mocks.prisma.project.findUnique.mockResolvedValue({ publicId: mocks.project.publicId });
     mocks.prisma.providerConnection.findMany.mockResolvedValue([]);
+    mocks.prisma.providerConnection.updateMany.mockResolvedValue({ count: 0 });
     mocks.prisma.providerConnectionRate.findUnique.mockResolvedValue(null);
     mocks.prisma.providerConnectionRate.deleteMany.mockResolvedValue({ count: 0 });
     mocks.writeAudit.mockResolvedValue({});
@@ -513,9 +515,32 @@ describe("provider actions", () => {
       ok: true,
     });
     expect(mocks.provider.testConnection).toHaveBeenCalledWith({ apiKey: "stored-key" });
+    expect(mocks.prisma.providerConnection.updateMany).toHaveBeenCalledWith({
+      data: { status: "connected" },
+      where: {
+        projectId: "project_1",
+        provider: "serpapi",
+        status: "needs_reauth",
+      },
+    });
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({ action: "provider.test" }),
     );
+  });
+
+  it("does not restore stored connection state after testing credential overrides", async () => {
+    mocks.prisma.providerConnection.findUnique.mockResolvedValue({
+      credentialsEncrypted: encryptSecret(JSON.stringify({ apiKey: "stored-key" })),
+    });
+    mocks.provider.testConnection.mockResolvedValue({ message: "ok", ok: true });
+
+    await testConnection({
+      projectId: "prj_a00000000000000000000000",
+      providerId: "serpapi",
+      secret: "candidate-key",
+    });
+
+    expect(mocks.prisma.providerConnection.updateMany).not.toHaveBeenCalled();
   });
 
   it("rejects missing required credentials before calling the provider", async () => {

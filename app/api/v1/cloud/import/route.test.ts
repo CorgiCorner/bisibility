@@ -117,14 +117,14 @@ function exportBody() {
 }
 
 function request(body: unknown, headers: HeadersInit = { authorization: `Bearer ${rawToken}` }) {
-  return new Request("https://example.com/api/cloud/import", {
+  return new Request("https://example.com/api/v1/cloud/import", {
     body: JSON.stringify(body),
     headers: { "content-type": "application/json", ...headers },
     method: "POST",
   }) as NextRequest;
 }
 
-describe("POST /api/cloud/import", () => {
+describe("POST /api/v1/cloud/import", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();

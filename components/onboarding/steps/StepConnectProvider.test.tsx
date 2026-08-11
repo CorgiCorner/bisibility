@@ -1,31 +1,11 @@
-import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import type { ComponentProps } from "react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { StepConnectProvider } from "./StepConnectProvider";
-
-const push = vi.fn();
-
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push }),
-}));
-
-function defaultValues() {
-  return {
-    login: "provider-login",
-    projectId: "prj_1",
-    providerId: "dataforseo" as const,
-    secret: "provider-password",
-  };
-}
-
-function renderProviderStep(props: Partial<ComponentProps<typeof StepConnectProvider>> = {}) {
-  return render(<StepConnectProvider defaultValues={defaultValues()} {...props} />);
-}
-
-async function clickTestConnection(action: ReturnType<typeof vi.fn>, times = 1) {
-  fireEvent.click(screen.getByRole("button", { name: "Test connection" }));
-  await waitFor(() => expect(action).toHaveBeenCalledTimes(times));
-}
+import {
+  clickTestConnection,
+  defaultValues,
+  push,
+  renderProviderStep,
+} from "./StepConnectProvider.test-utils";
 
 describe("StepConnectProvider", () => {
   beforeEach(() => {
@@ -43,6 +23,26 @@ describe("StepConnectProvider", () => {
     expect(screen.getByRole("radio", { name: /DataForSEO/ })).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: /SerpApi/ })).toBeInTheDocument();
     expect(screen.getByLabelText("API login")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", {
+        name: "Plans include monthly searches. A Top-N check uses up to one search per 10 results, often fewer when a match is found early.",
+      }),
+    ).toBeInTheDocument();
+
+    const skip = screen.getByRole("link", {
+      name: "Skip provider connection and add keywords as paused",
+    });
+    const providerCards = screen.getByRole("radiogroup", {
+      name: "SERP provider",
+    });
+    expect(skip.compareDocumentPosition(providerCards) & Node.DOCUMENT_POSITION_FOLLOWING).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+    expect(screen.queryByText("No provider yet?")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Search Console can be connected/)).not.toBeInTheDocument();
+
+    const pricing = screen.getByText(/Plan-based - monthly search quota/).parentElement;
+    expect(pricing).toHaveClass("mt-2");
 
     fireEvent.click(screen.getByRole("radio", { name: /SerpApi/ }));
 
@@ -52,7 +52,9 @@ describe("StepConnectProvider", () => {
 
   it("selects from the whole radio card and then synchronizes the URL", () => {
     window.history.replaceState(null, "", "/onboarding?step=3&projectId=prj_1");
-    renderProviderStep({ flowState: { projectId: "prj_1", providerId: "dataforseo" } });
+    renderProviderStep({
+      flowState: { projectId: "prj_1", providerId: "dataforseo" },
+    });
 
     const dataForSeo = screen.getByRole("radio", { name: /DataForSEO/ });
     const serpApi = screen.getByRole("radio", { name: /SerpApi/ });
@@ -67,33 +69,7 @@ describe("StepConnectProvider", () => {
     expect(window.location.search).toBe("?step=3&projectId=prj_1&providerId=serpapi");
   });
 
-  it("shows a visible action error when the submit test fails", async () => {
-    const onComplete = vi.fn();
-    const connectProviderAction = vi.fn(async (_input: unknown) => undefined);
-    const testProviderConnectionAction = vi.fn(async (_input: unknown) => ({
-      message: "Invalid credentials",
-      ok: false,
-    }));
-    const { container } = renderProviderStep({
-      connectProviderAction,
-      onComplete,
-      testProviderConnectionAction,
-    });
-
-    fireEvent.click(screen.getByRole("button", { name: "Test connection" }));
-
-    expect(
-      await within(screen.getByRole("status")).findByText("Invalid credentials"),
-    ).toBeInTheDocument();
-    fireEvent.submit(container.querySelector("form") as HTMLFormElement);
-
-    expect(await screen.findByText("Test connection before continuing.")).toBeInTheDocument();
-    expect(connectProviderAction).not.toHaveBeenCalled();
-    expect(onComplete).not.toHaveBeenCalled();
-    expect(push).not.toHaveBeenCalled();
-  });
-
-  it("marks a successful primary connection and reveals the backup CTA", async () => {
+  it("marks a successful connection without hierarchy labels or an extra explainer", async () => {
     const connectProviderAction = vi.fn(async (_input: unknown) => undefined);
     const testProviderConnectionAction = vi.fn(async (_input: unknown) => ({
       balance: 12.34,
@@ -106,42 +82,41 @@ describe("StepConnectProvider", () => {
     });
 
     await clickTestConnection(testProviderConnectionAction);
-    fireEvent.submit(container.querySelector("form") as HTMLFormElement);
+    fireEvent.click(screen.getByRole("button", { name: "Save DataForSEO" }));
 
-    expect(await screen.findByText("Connected (primary)")).toBeInTheDocument();
-    expect(screen.getByText(/Add as fallback \(optional\)/)).toBeInTheDocument();
+    expect(await screen.findByText("Connected")).toBeInTheDocument();
+    expect(screen.queryByText(/Add as fallback \(optional\)/)).not.toBeInTheDocument();
     expect(screen.getByText("Balance: 12.34")).toBeInTheDocument();
+    expect(container).not.toHaveTextContent(/\b(primary|fallback|backup)\b/i);
   });
 
-  it("keeps the fallback Connect backup action accessible and disabled until verified", async () => {
+  it("names the additional provider action and keeps it disabled until verified", async () => {
     const connectProviderAction = vi.fn(async (_input: unknown) => undefined);
     const testProviderConnectionAction = vi.fn(async (_input: unknown) => ({
       message: "Connected",
       ok: true,
     }));
-    const { container } = renderProviderStep({
+    renderProviderStep({
       connectProviderAction,
       testProviderConnectionAction,
     });
 
     await clickTestConnection(testProviderConnectionAction);
-    fireEvent.submit(container.querySelector("form") as HTMLFormElement);
+    fireEvent.click(screen.getByRole("button", { name: "Save DataForSEO" }));
     await waitFor(() => expect(connectProviderAction).toHaveBeenCalledTimes(1));
 
     fireEvent.click(screen.getByRole("radio", { name: /SerpApi/ }));
     fireEvent.change(screen.getByLabelText("API key"), {
       target: { value: "serp-key" },
     });
-    const connectButton = screen.getByRole("button", { name: "Connect backup" });
-    expect(connectButton).toHaveAccessibleName("Connect backup");
-    expect(connectButton).toBeDisabled();
-    expect(connectButton).toHaveClass("MuiButton-root");
-    expect(
-      screen.getByText("Test validates the key - use Connect backup to save it."),
-    ).toBeInTheDocument();
+    const saveButton = screen.getByRole("button", { name: "Save SerpApi" });
+    expect(saveButton).toHaveAccessibleName("Save SerpApi");
+    expect(saveButton).toBeDisabled();
+    expect(saveButton).toHaveClass("MuiButton-root");
+    expect(screen.getByText("Test the credentials, then use Save SerpApi.")).toBeInTheDocument();
     await clickTestConnection(testProviderConnectionAction, 2);
-    expect(connectButton).toBeEnabled();
-    fireEvent.click(connectButton);
+    expect(saveButton).toBeEnabled();
+    fireEvent.click(saveButton);
 
     await waitFor(() => expect(connectProviderAction).toHaveBeenCalledTimes(2));
     expect(connectProviderAction).toHaveBeenLastCalledWith(
@@ -173,27 +148,25 @@ describe("StepConnectProvider", () => {
     expect(screen.getByRole("status")).not.toBeEmptyDOMElement();
   });
 
-  it("continues with a verified provider draft after selecting an unverified provider", async () => {
+  it("keeps Continue disabled until a verified provider is saved", async () => {
     const connectProviderAction = vi.fn(async (_input: unknown) => undefined);
     const onContinueDisabledChange = vi.fn();
     const testProviderConnectionAction = vi.fn(async (_input: unknown) => ({
       message: "Connected",
       ok: true,
     }));
-    const { container } = renderProviderStep({
+    renderProviderStep({
       connectProviderAction,
       onContinueDisabledChange,
       testProviderConnectionAction,
     });
 
     await clickTestConnection(testProviderConnectionAction);
-    fireEvent.click(screen.getByRole("radio", { name: /SerpApi/ }));
-
-    expect(onContinueDisabledChange).toHaveBeenLastCalledWith(false);
-
-    fireEvent.submit(container.querySelector("form") as HTMLFormElement);
+    expect(onContinueDisabledChange).toHaveBeenLastCalledWith(true);
+    fireEvent.click(screen.getByRole("button", { name: "Save DataForSEO" }));
 
     await waitFor(() => expect(connectProviderAction).toHaveBeenCalledTimes(1));
+    expect(onContinueDisabledChange).toHaveBeenLastCalledWith(false);
     expect(connectProviderAction).toHaveBeenCalledWith(
       expect.objectContaining({
         login: "provider-login",
@@ -204,73 +177,54 @@ describe("StepConnectProvider", () => {
     );
   });
 
-  it("keeps test progress on the button and the settled slots quiet", async () => {
-    let resolveTest: ((result: { message: string; ok: boolean }) => void) | undefined;
-    const testProviderConnectionAction = vi.fn(
-      async (_input: unknown) =>
-        new Promise<{ message: string; ok: boolean }>((resolve) => {
-          resolveTest = resolve;
-        }),
-    );
-    const { container } = renderProviderStep({ testProviderConnectionAction });
-
-    fireEvent.click(screen.getByRole("button", { name: "Test connection" }));
-    await waitFor(() => expect(testProviderConnectionAction).toHaveBeenCalledTimes(1));
-
-    const button = screen.getByRole("button", { name: "Test connection" });
-    const spinnerSelector = ".bv-spin, .MuiCircularProgress-root";
-    expect(container.querySelectorAll(spinnerSelector)).toHaveLength(1);
-    expect(button.querySelectorAll(spinnerSelector)).toHaveLength(1);
-    expect(button).toHaveAttribute("aria-busy", "true");
-    expect(screen.queryByText("Testing...")).not.toBeInTheDocument();
-    expect(screen.getByRole("status")).toBeEmptyDOMElement();
-
-    await act(async () => resolveTest?.({ message: "Connected", ok: true }));
-
-    await waitFor(() => expect(button).not.toHaveAttribute("aria-busy"));
-    expect(within(screen.getByRole("status")).getByText("DataForSEO verified")).toBeInTheDocument();
-  });
-
-  it("keeps the previous pill result during a retest", async () => {
-    let attempt = 0;
-    let resolveRetest: ((result: { message: string; ok: boolean }) => void) | undefined;
-    const testProviderConnectionAction = vi.fn(async (_input: unknown) => {
-      attempt += 1;
-      if (attempt === 1) return { message: "Connected", ok: true };
-      return new Promise<{ message: string; ok: boolean }>((resolve) => {
-        resolveRetest = resolve;
-      });
-    });
-    renderProviderStep({ testProviderConnectionAction });
-
-    await clickTestConnection(testProviderConnectionAction);
-    expect(await screen.findByText("Verified")).toBeInTheDocument();
-
-    await clickTestConnection(testProviderConnectionAction, 2);
-    expect(screen.getByText("Verified")).toBeInTheDocument();
-    expect(screen.queryByText("Testing...")).not.toBeInTheDocument();
-    expect(screen.getByRole("status")).toBeEmptyDOMElement();
-
-    await act(async () => resolveRetest?.({ message: "Credentials expired", ok: false }));
-
-    expect(await screen.findByText("Test failed")).toBeInTheDocument();
-    expect(within(screen.getByRole("status")).getByText("Credentials expired")).toBeInTheDocument();
-  });
-
   it("renders a saved provider connection as connected on load", () => {
-    renderProviderStep({ initialConnections: { dataforseo: { primary: true } } });
+    renderProviderStep({ initialConnections: { dataforseo: {} } });
 
-    expect(screen.getByText("Connected (primary)")).toBeInTheDocument();
+    expect(screen.getByText("Connected")).toBeInTheDocument();
     expect(
       screen.getByText("Connections are saved per provider - switching does not disconnect."),
     ).toBeInTheDocument();
+  });
+
+  it("marks edited credentials as unsaved until the named provider is tested and saved", async () => {
+    const connectProviderAction = vi.fn(async (_input: unknown) => undefined);
+    const testProviderConnectionAction = vi.fn(async (_input: unknown) => ({
+      message: "Connected",
+      ok: true,
+    }));
+    renderProviderStep({
+      connectProviderAction,
+      initialConnections: { dataforseo: {} },
+      testProviderConnectionAction,
+    });
+
+    expect(screen.getByText("Connected")).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("API login"), {
+      target: { value: "changed-login" },
+    });
+    fireEvent.change(screen.getByLabelText("API password"), {
+      target: { value: "changed-password" },
+    });
+
+    expect(screen.getByText("Unsaved changes")).toBeInTheDocument();
+    expect(screen.queryByText("Connected")).not.toBeInTheDocument();
+    const saveButton = screen.getByRole("button", { name: "Save DataForSEO" });
+    expect(saveButton).toBeDisabled();
+
+    await clickTestConnection(testProviderConnectionAction);
+    expect(saveButton).toBeEnabled();
+    fireEvent.click(saveButton);
+
+    await waitFor(() => expect(connectProviderAction).toHaveBeenCalledTimes(1));
+    expect(screen.getByText("Connected")).toBeInTheDocument();
+    expect(screen.queryByText("Unsaved changes")).not.toBeInTheDocument();
   });
 
   it("continues with empty fields when the selected provider is already connected", async () => {
     const onComplete = vi.fn();
     const { container } = renderProviderStep({
       defaultValues: { ...defaultValues(), login: "", secret: "" },
-      initialConnections: { dataforseo: { primary: true } },
+      initialConnections: { dataforseo: {} },
       onComplete,
     });
 

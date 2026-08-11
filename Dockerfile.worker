@@ -37,6 +37,7 @@ RUN apt-get update \
 
 ARG APP_VERSION
 ARG APP_REVISION
+ARG CORGICORNER_EPHEMERAL=0
 
 ENV APP_VERSION=${APP_VERSION} \
   APP_REVISION=${APP_REVISION} \
@@ -57,7 +58,8 @@ LABEL org.opencontainers.image.title="bisibility worker" \
   org.opencontainers.image.source="https://github.com/CorgiCorner/bisibility" \
   org.opencontainers.image.licenses="AGPL-3.0-only" \
   org.opencontainers.image.version="${APP_VERSION}" \
-  org.opencontainers.image.revision="${APP_REVISION}"
+  org.opencontainers.image.revision="${APP_REVISION}" \
+  corgicorner.ephemeral="${CORGICORNER_EPHEMERAL}"
 
 USER worker
 

@@ -136,7 +136,7 @@ async function putChunk(
   origin: string,
 ) {
   const response = await migrationFetch(
-    sessionUrl(`/api/cloud/import/sessions/${sessionId}/chunks/${index}`, origin),
+    sessionUrl(`/api/v1/cloud/import/sessions/${sessionId}/chunks/${index}`, origin),
     {
       body: JSON.stringify({ checksum: checksum(payload), ...payload }),
       cache: "no-store",
@@ -183,7 +183,7 @@ export async function createRemoteImportSession(input: unknown): Promise<CreateS
   const target = resolveMigrationTargetActionResult(data.targetOrigin);
   if (!target.ok) return target;
   const origin = target.value;
-  const response = await migrationFetch(sessionUrl("/api/cloud/import/sessions", origin), {
+  const response = await migrationFetch(sessionUrl("/api/v1/cloud/import/sessions", origin), {
     body: JSON.stringify({
       chunk_count: data.chunkCount,
       source_project_id: requirePublicId(project.publicId, "prj"),
@@ -276,7 +276,7 @@ export async function finalizeRemoteImportSession(input: unknown): Promise<Final
   const actor = await getActionActor();
   await requireSourceProject(actor, data.projectId);
   const response = await migrationFetch(
-    sessionUrl(`/api/cloud/import/sessions/${data.sessionId}/finalize`, origin),
+    sessionUrl(`/api/v1/cloud/import/sessions/${data.sessionId}/finalize`, origin),
     {
       cache: "no-store",
       headers: authHeaders(data.token),

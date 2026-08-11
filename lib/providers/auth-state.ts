@@ -6,6 +6,7 @@ import { notifyOps } from "@/lib/ops/notify";
 
 export async function markProviderNeedsReauth(input: {
   connectionId: string;
+  notifyOps?: boolean;
   projectId: string;
   provider: string;
 }) {
@@ -15,15 +16,17 @@ export async function markProviderNeedsReauth(input: {
   });
   if (transitioned.count === 0) return false;
 
-  await notifyOps({
-    fields: {
-      Connection: input.connectionId,
-      Project: projectLabel(input.projectId),
-      Provider: input.provider,
-    },
-    kind: "provider_auth",
-    severity: "error",
-    title: "Google authorization requires reconnection",
-  }).catch(() => undefined);
+  if (input.notifyOps !== false) {
+    await notifyOps({
+      fields: {
+        Connection: input.connectionId,
+        Project: projectLabel(input.projectId),
+        Provider: input.provider,
+      },
+      kind: "provider_auth",
+      severity: "error",
+      title: "Provider authorization requires reconnection",
+    }).catch(() => undefined);
+  }
   return true;
 }

@@ -2,6 +2,7 @@ import { spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { access } from "node:fs/promises";
 import { createServer } from "node:net";
+import { ensureDockerVmFreeSpace } from "../scripts/smoke/docker-ephemeral.mjs";
 
 const port = Number(process.env.SMOKE_APP_PORT ?? 3100);
 const url = `http://127.0.0.1:${port}/`;
@@ -94,6 +95,7 @@ const testEnv = {
   BETTER_AUTH_SECRET: randomBytes(32).toString("base64url"),
   BETTER_AUTH_URL: url.slice(0, -1),
   BISIBILITY_SECRETS_KEY: randomBytes(32).toString("base64"),
+  CORGICORNER_EPHEMERAL: "1",
   DATABASE_URL: databaseUrl,
   DEPLOYMENT_ENV: "test",
   DIRECT_URL: databaseUrl,
@@ -103,6 +105,7 @@ const testEnv = {
 };
 
 try {
+  ensureDockerVmFreeSpace({ profile: "runtime" });
   await run("docker", [...composeArgs, "up", "-d", "--wait", "postgres"], { env: testEnv });
   await run("npm", ["run", "db:migrate"], { env: testEnv });
 
@@ -123,7 +126,7 @@ try {
     await stopServer(server);
   }
 } finally {
-  await run("docker", [...composeArgs, "down", "--volumes", "--remove-orphans"], {
+  await run("docker", [...composeArgs, "down", "--volumes", "--rmi", "local", "--remove-orphans"], {
     env: testEnv,
     reject: false,
   });

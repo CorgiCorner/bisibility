@@ -30,6 +30,41 @@ yourself.
 The MCP endpoint uses the same router as REST. Manual and scheduled checks also
 use the same rank-check runner. These shared paths keep behavior consistent.
 
+## Request and data flow
+
+```mermaid
+flowchart LR
+  client["Browser, CLI, SDK, or MCP client"]
+  web["Web app<br/>auth, REST router, MCP transport"]
+  pg[("PostgreSQL<br/>durable application state")]
+  redis["Valkey / Redis<br/>limits, idempotency, notifications"]
+  temporal["Temporal Server<br/>workflow state and task queues"]
+  worker["bisibility worker<br/>workflows and activities"]
+  provider["Connected SERP or analytics provider"]
+
+  client --> web
+  web --> pg
+  web --> redis
+  web --> provider
+  web --> temporal
+  worker --> temporal
+  worker --> provider
+  worker --> pg
+  worker --> redis
+  redis --> web
+  web --> client
+```
+
+In words: the web process authenticates browser, REST, SDK, CLI, and MCP
+traffic, then reads or writes durable project state in PostgreSQL. Redis-backed
+services enforce cross-process rate limits and idempotency and fan out live
+notifications. A manual check can call the shared rank-check runner from the
+web process. Scheduled work starts through Temporal, whose task queues are
+polled by the bisibility worker. Worker activities call the configured
+provider, persist results and audit rows in PostgreSQL, and publish resulting
+notifications through Redis. Temporal keeps workflow state; it is not the
+source of truth for projects, keywords, or rank history.
+
 ## The worker is not the Temporal server
 
 Temporal is split into two independent pieces, and only one of them ships in the

@@ -100,7 +100,7 @@ x-app-env: &app-env
 
 services:
   db-migrations:
-    image: docker.io/corgicorner/bisibility:0.8.1
+    image: docker.io/corgicorner/bisibility:0.9.0
     pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     command: >
       sh -c 'npm run db:migrate && if [ "$$DEMO_FIXED_OTP" = "1" ]; then node --experimental-strip-types prisma/seed.ts; fi'
@@ -110,7 +110,7 @@ services:
         condition: service_healthy
 
   app:
-    image: docker.io/corgicorner/bisibility:0.8.1
+    image: docker.io/corgicorner/bisibility:0.9.0
     pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     restart: unless-stopped
     ports:
@@ -297,7 +297,7 @@ services:
       - "127.0.0.1:${TEMPORAL_UI_HOST_PORT:-8233}:8080"
 
   worker:
-    image: docker.io/corgicorner/bisibility-worker:0.8.1
+    image: docker.io/corgicorner/bisibility-worker:0.9.0
     pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     profiles: [ "scheduled" ]
     restart: unless-stopped
