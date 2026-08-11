@@ -184,7 +184,7 @@ describe("instance migration actions", () => {
     expect(finalized).toEqual({ counts: { keywords: 1 }, jobId, state: "done" });
 
     const [createUrl, createInit] = mocks.migrationFetch.mock.calls[0];
-    expect(createUrl).toBe("https://cloud.example.com/api/cloud/import/sessions");
+    expect(createUrl).toBe("https://cloud.example.com/api/v1/cloud/import/sessions");
     expect(createInit).toMatchObject({
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       method: "POST",
@@ -295,7 +295,7 @@ describe("instance migration actions", () => {
     });
 
     expect(mocks.migrationFetch.mock.calls[0][0]).toBe(
-      "https://target.example.com/api/cloud/import/sessions",
+      "https://target.example.com/api/v1/cloud/import/sessions",
     );
   });
 

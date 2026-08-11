@@ -1,0 +1,73 @@
+---
+title: "API quickstart"
+description: "Authenticate and make your first successful bisibility REST API request."
+---
+
+Use this path to verify a bearer credential against the REST API by listing the
+projects it can access.
+
+## 1. Choose the API root
+
+Use the regional API root shown by your hosted project, or your self-hosted app
+origin with `/api/v1` appended:
+
+```bash
+export BISIBILITY_BASE_URL="https://rank.example.com/api/v1"
+```
+
+## 2. Create a credential
+
+Create a project API key in **Project Settings -> API keys** for one-project
+automation, or a personal access token in **Account -> Security** for user or
+cross-project automation. [Authentication](/authentication) explains the
+choice, permissions, and secret lifecycle.
+
+Store the credential in your secret manager, then expose it to this shell:
+
+```bash
+export BISIBILITY_TOKEN="bsb_key_live_..."
+```
+
+## 3. List projects
+
+```bash
+curl --fail-with-body "$BISIBILITY_BASE_URL/projects" \
+  -H "Authorization: Bearer $BISIBILITY_TOKEN"
+```
+
+A successful request returns `200 OK` with a `data` array and pagination
+metadata:
+
+```json
+{
+  "data": [
+    {
+      "id": "prj_a00000000000000000000000",
+      "name": "Example",
+      "domain": "example.com",
+      "created_at": "2026-06-28T10:00:00.000Z",
+      "updated_at": "2026-06-28T10:00:00.000Z",
+      "write_mode": "active"
+    }
+  ],
+  "meta": { "next_cursor": null }
+}
+```
+
+A project API key returns its one project. A personal access token returns the
+projects available through the user's memberships.
+
+## Next steps
+
+- Use the [projects guide](/api/projects) for project operations.
+- Read the [API overview](/api/overview) for retries, pagination, and errors.
+- Browse the [GET projects API reference][api-reference-projects]
+  for the generated request and response schemas.
+- Choose an [official SDK](/sdks/overview) when Python, TypeScript, Go, or MCP
+  fits your integration.
+
+For a rejected request, use the
+[authentication troubleshooting table](/authentication#troubleshoot-the-first-request)
+and [API error reference](/api/errors).
+
+[api-reference-projects]: /api-reference/projects/list-projects-visible-to-this-api-key

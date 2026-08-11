@@ -38,6 +38,26 @@ describe("StepSchedule", () => {
     expect(container.querySelector(".grid.max-w-\\[480px\\]")).toHaveClass("items-start");
   });
 
+  it("places the add-location cancel action below the location field", () => {
+    render(<StepSchedule defaultValues={defaultValues()} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Add location" }));
+
+    const cancel = screen.getByRole("button", {
+      name: "Cancel adding location",
+    });
+    expect(cancel).toHaveClass("justify-self-end");
+    expect(cancel).not.toHaveClass("mt-[22px]");
+  });
+
+  it("renders language as a value derived from locations rather than an editable field", () => {
+    render(<StepSchedule defaultValues={defaultValues()} />);
+
+    expect(screen.queryByRole("textbox", { name: "Language" })).not.toBeInTheDocument();
+    expect(screen.getByText("From locations")).toBeInTheDocument();
+    expect(screen.getByText("English")).toBeInTheDocument();
+  });
+
   it("saves selected tracking defaults from concrete location selections", async () => {
     const onComplete = vi.fn();
     const updateProjectDefaultsAction = vi.fn(async () => undefined);
@@ -86,7 +106,7 @@ describe("StepSchedule", () => {
     fireEvent.click(screen.getByLabelText("SERP depth"));
     fireEvent.click(screen.getByText("Top 20"));
 
-    expect(screen.getByDisplayValue("Polish")).toBeInTheDocument();
+    expect(screen.getByText("Polish")).toBeInTheDocument();
     expect(
       screen.getByText("Rankings below Top 20 report as not found and skip alerts."),
     ).toBeInTheDocument();

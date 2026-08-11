@@ -69,9 +69,9 @@ function activeTemporalCounts(input: HeartbeatEventInput) {
 
 function trafficReason(input: HeartbeatEventInput): Reason | null {
   const counts = trafficCounts(input.database.traffic);
-  const unhealthy = counts.notRun + counts.stale + counts.failed;
+  const unhealthy = counts.needsReauth + counts.notRun + counts.stale + counts.failed;
   if (unhealthy === 0) return null;
-  const state = `${counts.notRun} not run, ${counts.stale} stale, ${counts.failed} failed`;
+  const state = `${counts.needsReauth} needs reauth, ${counts.notRun} not run, ${counts.stale} stale, ${counts.failed} failed`;
   if (counts.notRun > 0 && !input.schedulesEnabled[TRAFFIC_SCHEDULE_ID]) {
     return {
       severity: "warning",
@@ -79,7 +79,10 @@ function trafficReason(input: HeartbeatEventInput): Reason | null {
     };
   }
   const hasOperationalFailure = input.database.traffic.some(
-    (row) => row.status === "failed" && !isLikelyMisconfigured(row),
+    (row) =>
+      row.status === "failed" &&
+      !isLikelyMisconfigured(row) &&
+      (row.failureEscalated || row.errorClass === "provider_4xx"),
   );
   return {
     severity: hasOperationalFailure ? "error" : "warning",

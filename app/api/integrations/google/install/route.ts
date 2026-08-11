@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
     const install = {
       actorId: actor.id,
       origin: oauthRequestOrigin(request.url),
-      projectId: project.id,
+      projectId: project.publicId,
       property: query.property,
       provider: query.provider,
       returnPath: query.returnPath ?? appPath(project.publicId, "integrations"),

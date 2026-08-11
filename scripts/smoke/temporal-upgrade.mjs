@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
+import { ensureDockerVmFreeSpace } from "./docker-ephemeral.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const temporaryRoot = mkdtempSync(path.join(tmpdir(), "bisibility-temporal-upgrade-"));
@@ -71,6 +72,7 @@ function eventually(label, callback, attempts = 90) {
 }
 
 try {
+  ensureDockerVmFreeSpace({ profile: "runtime" });
   console.log("Starting the v0.2.0 Temporal 1.25.2 baseline...");
   compose(oldCompose, ["up", "-d", "temporal"]);
   eventually("Temporal 1.25.2", () =>
@@ -119,6 +121,6 @@ try {
   );
   throw error;
 } finally {
-  compose(newCompose, ["down", "-v", "--remove-orphans"], { allowFailure: true });
+  compose(newCompose, ["down", "-v", "--rmi", "local", "--remove-orphans"], { allowFailure: true });
   rmSync(temporaryRoot, { force: true, recursive: true });
 }

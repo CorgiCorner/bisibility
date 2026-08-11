@@ -2,13 +2,13 @@ import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
-import { keywordLabel, projectLabel } from "@/lib/ops/labels";
+import { keywordLabel } from "@/lib/ops/labels";
 import { DEFAULT_STALE_RUNNING_CHECK_MINUTES } from "@/lib/rank-check/stale-checks";
 import {
   collectRankScheduleHeartbeat,
   type RankScheduleHeartbeat,
 } from "./heartbeat-schedule-data";
-import { type TrafficMetrics, trafficMetrics } from "./heartbeat-traffic-metrics";
+import { collectTrafficHeartbeat, type TrafficHeartbeatRow } from "./heartbeat-traffic-data";
 import { failureEntries, fallbackEntries } from "./rank-failure-summary";
 
 export type RankHeartbeat = {
@@ -36,15 +36,7 @@ export type AdminRankHeartbeat = RankHeartbeat & {
   recentFallbacks: AdminRankFailure[];
 };
 
-export type TrafficHeartbeatRow = TrafficMetrics & {
-  connectionId?: string | null;
-  errorClass?: string | null;
-  latestSuccessAt: string | null;
-  project: string;
-  projectId?: string;
-  provider: string;
-  status: string;
-};
+export type { TrafficHeartbeatRow };
 
 export type DatabaseHeartbeat = {
   bootstrapErrors: string[];
@@ -161,103 +153,6 @@ export async function collectRankHeartbeatWindow(
 ): Promise<AdminRankHeartbeat> {
   const result = await collectRankHeartbeatWindows(now, { window: since });
   return result.window;
-}
-
-async function collectTrafficHeartbeat(now: Date, since: Date): Promise<TrafficHeartbeatRow[]> {
-  const historySince = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-  const [runs, connections] = await Promise.all([
-    prisma.operationalRun.findMany({
-      orderBy: { startedAt: "desc" },
-      select: {
-        connectionId: true,
-        errorClass: true,
-        finishedAt: true,
-        meta: true,
-        projectId: true,
-        provider: true,
-        startedAt: true,
-        status: true,
-      },
-      where: { kind: "traffic_sync", startedAt: { gte: historySince } },
-    }),
-    prisma.providerConnection.findMany({
-      select: {
-        id: true,
-        project: { select: { domain: true, id: true, name: true } },
-        provider: true,
-      },
-      where: { enabled: true, kind: "analytics", status: "connected" },
-    }),
-  ]);
-  const runProjectIds = [...new Set(runs.flatMap((run) => (run.projectId ? [run.projectId] : [])))];
-  const runProjects =
-    runProjectIds.length > 0
-      ? await prisma.project.findMany({
-          select: { domain: true, id: true, name: true },
-          where: { id: { in: runProjectIds } },
-        })
-      : [];
-  const projectById = new Map(runProjects.map((project) => [project.id, project]));
-  const grouped = new Map<string, TrafficHeartbeatRow>();
-
-  for (const connection of connections) {
-    grouped.set(`${connection.project.id}:${connection.provider}`, {
-      connectionId: connection.id,
-      latestSuccessAt: null,
-      project: projectLabel(
-        connection.project.id,
-        connection.project.name,
-        connection.project.domain,
-      ),
-      projectId: connection.project.id,
-      provider: connection.provider,
-      rowsFetched: 0,
-      rowsMatched: 0,
-      rowsUpserted: 0,
-      status: "not_run",
-    });
-  }
-
-  for (const run of runs) {
-    const key = `${run.projectId ?? "instance"}:${run.provider ?? "unknown"}`;
-    const existing = grouped.get(key);
-    if (!existing) {
-      grouped.set(key, {
-        connectionId: run.connectionId,
-        errorClass: run.errorClass,
-        latestSuccessAt: null,
-        project: run.projectId
-          ? projectLabel(
-              run.projectId,
-              projectById.get(run.projectId)?.name,
-              projectById.get(run.projectId)?.domain,
-            )
-          : "instance",
-        projectId: run.projectId ?? "instance",
-        provider: run.provider ?? "unknown",
-        rowsFetched: 0,
-        rowsMatched: 0,
-        rowsUpserted: 0,
-        status: run.status,
-      });
-    } else if (existing.status === "not_run") {
-      existing.status = run.status;
-      existing.errorClass = run.errorClass;
-    }
-    const target = grouped.get(key);
-    if (!target) continue;
-    if (!target.latestSuccessAt && run.status.startsWith("succeeded_")) {
-      target.latestSuccessAt = (run.finishedAt ?? run.startedAt).toISOString();
-    }
-    if (run.startedAt >= since) {
-      const metrics = trafficMetrics(run.meta);
-      target.rowsFetched += metrics.rowsFetched;
-      target.rowsMatched += metrics.rowsMatched;
-      target.rowsUpserted += metrics.rowsUpserted;
-    }
-  }
-
-  return [...grouped.values()];
 }
 
 export async function collectOperationalHeartbeat(now: Date): Promise<OperationalHeartbeat> {

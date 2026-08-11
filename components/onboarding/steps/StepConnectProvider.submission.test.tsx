@@ -27,7 +27,7 @@ async function clickTestConnection(action: ReturnType<typeof vi.fn>) {
 
 describe("StepConnectProvider submission", () => {
   it("exposes one selected provider through the radiogroup", () => {
-    renderProviderStep({ initialConnections: { dataforseo: { primary: true } } });
+    renderProviderStep({ initialConnections: { dataforseo: {} } });
 
     const group = screen.getByRole("radiogroup", { name: "SERP provider" });
     const dataForSeo = within(group).getByRole("radio", { name: /DataForSEO/ });
@@ -81,10 +81,11 @@ describe("StepConnectProvider submission", () => {
   it("keeps the skip affordance on the paused-keywords path", () => {
     renderProviderStep({ flowState: { projectId: "prj_1" } });
 
-    expect(screen.getByRole("link", { name: "Skip, add keywords as paused" })).toHaveAttribute(
-      "href",
-      "/onboarding?step=4&projectId=prj_1",
-    );
+    expect(
+      screen.getByRole("link", {
+        name: "Skip provider connection and add keywords as paused",
+      }),
+    ).toHaveAttribute("href", "/onboarding?step=4&projectId=prj_1");
   });
 
   it("submits no client-owned enabled, primary, or priority to the provider action", async () => {
@@ -93,7 +94,7 @@ describe("StepConnectProvider submission", () => {
       message: "ok",
       ok: true,
     }));
-    const { container } = render(
+    render(
       <StepConnectProvider
         connectProviderAction={connectProviderAction}
         defaultValues={defaultValues()}
@@ -102,7 +103,7 @@ describe("StepConnectProvider submission", () => {
     );
 
     await clickTestConnection(testProviderConnectionAction);
-    fireEvent.submit(container.querySelector("form") as HTMLFormElement);
+    fireEvent.click(screen.getByRole("button", { name: "Save DataForSEO" }));
 
     await waitFor(() => expect(connectProviderAction).toHaveBeenCalledTimes(1));
     const connectInput = connectProviderAction.mock.calls[0][0] as Record<string, unknown>;
@@ -117,7 +118,11 @@ describe("StepConnectProvider submission", () => {
     expect(connectInput).not.toHaveProperty("primary");
     expect(connectInput).not.toHaveProperty("priority");
     expect(testProviderConnectionAction).toHaveBeenCalledWith(
-      expect.not.objectContaining({ enabled: true, primary: true, priority: 0 }),
+      expect.not.objectContaining({
+        enabled: true,
+        primary: true,
+        priority: 0,
+      }),
     );
     expect(screen.getByText("Connect your SERP provider")).toBeInTheDocument();
   });
@@ -128,7 +133,7 @@ describe("StepConnectProvider submission", () => {
       message: "ok",
       ok: true,
     }));
-    const { container } = render(
+    render(
       <StepConnectProvider
         connectProviderAction={connectProviderAction}
         defaultValues={{
@@ -145,7 +150,7 @@ describe("StepConnectProvider submission", () => {
     expect(screen.queryByLabelText("API login")).not.toBeInTheDocument();
 
     await clickTestConnection(testProviderConnectionAction);
-    fireEvent.submit(container.querySelector("form") as HTMLFormElement);
+    fireEvent.click(screen.getByRole("button", { name: "Save SerpApi" }));
 
     await waitFor(() => expect(connectProviderAction).toHaveBeenCalledTimes(1));
     const connectInput = connectProviderAction.mock.calls[0][0] as Record<string, unknown>;
@@ -179,7 +184,7 @@ describe("StepConnectProvider submission", () => {
     });
 
     await clickTestConnection(testProviderConnectionAction);
-    expect(onContinueDisabledChange).toHaveBeenLastCalledWith(false);
+    expect(onContinueDisabledChange).toHaveBeenLastCalledWith(true);
 
     fireEvent.change(screen.getByLabelText("API password"), {
       target: { value: "changed-password" },
@@ -188,7 +193,7 @@ describe("StepConnectProvider submission", () => {
 
     fireEvent.submit(container.querySelector("form") as HTMLFormElement);
 
-    expect(await screen.findByText("Test connection before continuing.")).toBeInTheDocument();
+    expect(await screen.findByText("Save a provider before continuing.")).toBeInTheDocument();
     expect(connectProviderAction).not.toHaveBeenCalled();
   });
 

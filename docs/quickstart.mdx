@@ -26,6 +26,22 @@ docker compose -f compose.yaml up -d
 
 Open `http://localhost:3000` and sign in with the demo login.
 
+Before signing in, verify that the web process is responding:
+
+```bash
+curl -fsS http://localhost:3000/api/v1/liveness
+```
+
+Expected response:
+
+```json
+{ "status": "ok" }
+```
+
+This probe confirms only that the web process can serve requests. Use
+[readiness and health](/api/discovery#liveness-and-readiness) to verify the
+database contract and the optional worker before admitting production traffic.
+
 Compose pulls version-pinned web and migration images from Docker Hub by
 default. Add `-f compose.build.yaml --build` to build the checked-out web source
 instead.
@@ -60,8 +76,8 @@ The project domain is used to match organic Google results to your site.
 Open **Integrations**, choose a SERP provider, then select **Connect**.
 
 Enter the provider's credentials and select **Test connection** before saving;
-credential-based, non-OAuth providers must pass the test. Set the provider as
-primary if it should be first in the fallback chain.
+credential-based, non-OAuth providers must pass the test. Connected SERP
+providers are tried in priority order when a fallback is needed.
 
 See [Integrations](/integrations) for the supported providers, their
 credential fields, cost estimates, fallback priority, and the monthly budget
@@ -69,46 +85,18 @@ cap.
 
 ## 4. Add search terms
 
-Choose how to build the first tracking set before opening the add flow:
+Open the tracking table, select the add action, and paste a short list with one
+search term per line. Choose the location and device, add a target URL when you
+know which page should rank, then select **Add & track**.
 
-- **Search Console:** existing sites should begin with queries that already
-  receive impressions. Connect Google Search Console and import only relevant
-  queries. It helps you find Google queries; it does not replace a rank check.
-- **Starter guide:** use [Choose your first keywords](/guides/choose-first-keywords)
-  to build a 10-20 phrase set. Each phrase should have a page that should rank
-  and a reason to track it.
-- **Manual or CSV:** add existing research, brand terms, and phrases that match
-  an important page.
-
-Open the tracking table and select the add action when the set is ready. It does
-not need to be perfect. Your first rank check gives you a starting point to
-review and improve.
-
-Use **Manual** for a short list: paste one keyword per line, choose location and
-device, add the page that should rank (called the target URL), and add tags to
-record why you are tracking it. Then select **Add & track**.
-
-Use **CSV** for imports. The drawer accepts files or pasted CSV with columns:
-
-```text
-keyword,target_url,tags,country,device
-open source analytics,/vs/ga,"Comparison",US,desktop
-self hosted seo tool,/self-host,"Product",US,desktop
-```
-
-Use the existing `tags` column to record why you track a phrase, such as
-`Improve`, `Protect`, `Launch`, `Investigate`, or `Long term`. Every phrase
-should have a target URL or a written reason that its intended page does not
-exist yet.
-
-Review the parsed rows, fix any issues, then confirm the import. Duplicate
-keyword, location, and device combinations are skipped.
+For Search Console, CSV imports, and guidance on building a larger tracking set,
+see [Choose your first keywords](/guides/choose-first-keywords).
 
 ## 5. Run the first check
 
-For a single keyword, open the keyword detail page and select **Run check now**.
-For a project-level manual run, open **Settings** and use **Run check now** in
-the manual checks panel.
+For the first run, open **Overview** or **Keywords** and select **Run first
+check**. To rerun one keyword later, open its detail page and select **Run
+check**.
 
 If you started the scheduling overlays, the worker runs due checks from the
 configured schedule:
@@ -122,43 +110,17 @@ worker.
 
 ## 6. Read results
 
-Open **Overview** after the first completed check. The dashboard shows:
+Open **Overview** to confirm that the first check completed and produced ranking
+data. Open a keyword detail page when you need the recorded position and ranking
+URL.
 
-| Area | What to look for |
-| - | - |
-| KPIs | Average position, tracked terms, movement, and top-ranking coverage. |
-| Trend and distribution | Position history over time and how many terms sit in each rank bucket. |
-| Data source | Connected provider, last check, next check, checks this month, estimated cost, and recent failures. |
-| Highlights | Wins, terms needing attention, new top-10 rankings, and recently added terms. |
+## Automate with the API
 
-Open a keyword detail page for position, best position, movement, ranking URL,
-target URL mismatch, tags, schedule, alerts, and CSV export.
+Choose a project API key or personal access token, then start with:
 
-Open **Alerts** to create rules and read the alert feed. Rules are evaluated
-after completed rank checks, so a new project will not show triggered alerts
-until checks have run.
+- [API quickstart](/api/quickstart) for a verified `GET /api/v1/projects` request.
+- [API overview](/api/overview) for shared HTTP behavior.
+- [API Reference][api-reference-index] for every endpoint and schema.
+- [Official client libraries](/sdks/overview) for Python, TypeScript, Go, and MCP.
 
-## API quickstart
-
-The REST API lives under `/api/v1`. Use a project API key from **Project Settings
--> API keys** for an integration limited to one project. Use a personal access token
-from **Account -> Security** for user, cross-project, or account-level automation.
-[Authentication](/authentication) explains both options and PAT project selection.
-
-Use an [official client library](/sdks/overview) instead of writing the
-HTTP client yourself when Python, TypeScript, Go, or MCP fits your integration.
-The example variable below can hold either bearer credential:
-
-```bash
-export BISIBILITY_BASE_URL="https://rank.example.com/api/v1"
-export BISIBILITY_API_KEY=placeholder
-```
-
-Useful API pages:
-
-- [Authentication](/authentication)
-- [API overview](/api/overview)
-- [Run rank checks](/api/checks)
-- [Retrieve rank history](/api/rank-history)
-- [Webhook integrations](/api/webhooks)
-- **API Reference** tab for every endpoint and schema
+[api-reference-index]: /api-reference/discovery/get-api-capabilities

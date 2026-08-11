@@ -12,7 +12,6 @@ import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 import { useForm } from "react-hook-form";
 import {
-  anyProviderVerified,
   type ConnectedProviderMap,
   currentProviderState,
   formDefaults,
@@ -22,16 +21,14 @@ import {
   onboardingConnectProviderSchemaForConnections,
   type ProviderDraftMap,
   type ProviderTestResultMap,
-  primaryProvider,
   providerConnectInput,
   providerCredentialKey,
   providerOptions,
   providerSelectionState,
   providerTestInput,
-  providerValuesFromDraft,
   replaceSelectedProviderInUrl,
+  savedProviderCompletionInput,
   type TestedCredentialKeyMap,
-  verifiedProviderId,
   withConnectedProvider,
 } from "./StepConnectProvider.fields";
 import type { StepConnectProviderProps } from "./StepConnectProvider.types";
@@ -59,6 +56,9 @@ export function StepConnectProvider({
   const [testingProviderId, setTestingProviderId] = useState<OnboardingSerpProviderId | null>(null);
   const [testResults, setTestResults] = useState<ProviderTestResultMap>({});
   const [testedCredentialKeys, setTestedCredentialKeys] = useState<TestedCredentialKeyMap>({});
+  const [dirtyProviders, setDirtyProviders] = useState<
+    Partial<Record<OnboardingSerpProviderId, boolean>>
+  >({});
   const {
     clearErrors,
     formState: { errors, isSubmitting },
@@ -86,26 +86,31 @@ export function StepConnectProvider({
     testedCredentialKeys,
   );
   const hasCurrentSuccessfulTest = currentTestResult?.ok === true;
-  const primaryProviderId = primaryProvider(connections);
-  const connectedProvider = providerOptions.find(({ value }) => connections[value])?.value;
-  function updateContinueDisabled(
-    values = getValues(),
-    results = testResults,
-    keys = testedCredentialKeys,
-    connectionsMap = connections,
-    draftsMap = drafts,
-  ) {
+  const connectedProvider = providerOptions.find(
+    ({ value }) => connections[value] && !dirtyProviders[value],
+  )?.value;
+  function updateContinueDisabled(connectionsMap = connections, dirtyMap = dirtyProviders) {
     onContinueDisabledChange?.(
-      !anyProviderVerified(connectionsMap, draftsMap, results, keys, values),
+      !providerOptions.some(({ value }) => connectionsMap[value] && !dirtyMap[value]),
     );
   }
-  function clearProviderFeedback(providerId = selectedProviderId) {
+  function clearProviderFeedback(providerId = selectedProviderId, dirtyMap = dirtyProviders) {
     const nextTestResults = { ...testResults, [providerId]: null };
-    const nextTestedCredentialKeys = { ...testedCredentialKeys, [providerId]: undefined };
+    const nextTestedCredentialKeys = {
+      ...testedCredentialKeys,
+      [providerId]: undefined,
+    };
     setActionError(null);
     setTestResults(nextTestResults);
     setTestedCredentialKeys(nextTestedCredentialKeys);
-    updateContinueDisabled(getValues(), nextTestResults, nextTestedCredentialKeys);
+    updateContinueDisabled(connections, dirtyMap);
+  }
+  function handleCredentialChange() {
+    const nextDirtyProviders = connections[selectedProviderId]
+      ? { ...dirtyProviders, [selectedProviderId]: true }
+      : dirtyProviders;
+    if (connections[selectedProviderId]) setDirtyProviders(nextDirtyProviders);
+    clearProviderFeedback(selectedProviderId, nextDirtyProviders);
   }
   function selectProvider(providerId: OnboardingSerpProviderId) {
     const values = getValues();
@@ -118,7 +123,7 @@ export function StepConnectProvider({
     setValue("costPerCheck", nextValues.costPerCheck);
     clearErrors();
     setActionError(null);
-    updateContinueDisabled(nextValues, testResults, testedCredentialKeys, connections, nextDrafts);
+    updateContinueDisabled();
     if (typeof window !== "undefined")
       replaceSelectedProviderInUrl(flowState, values.projectId, providerId);
   }
@@ -134,7 +139,7 @@ export function StepConnectProvider({
       };
       setTestResults(nextTestResults);
       setTestedCredentialKeys(nextTestedCredentialKeys);
-      updateContinueDisabled(values, nextTestResults, nextTestedCredentialKeys);
+      updateContinueDisabled();
       return result;
     } finally {
       setTestingProviderId(null);
@@ -145,10 +150,14 @@ export function StepConnectProvider({
     values = getValues(),
     nextConnections = connections,
   ) {
-    const nextValues = { ...values, providerId };
+    const nextValues = savedProviderCompletionInput(values.projectId, providerId);
     if (onComplete) return onComplete(nextValues, nextConnections);
     router.push(
-      buildOnboardingStepHref(4, { ...flowState, providerId, projectId: nextValues.projectId }),
+      buildOnboardingStepHref(4, {
+        ...flowState,
+        providerId,
+        projectId: nextValues.projectId,
+      }),
     );
   }
   function handleTest() {
@@ -157,7 +166,7 @@ export function StepConnectProvider({
       try {
         await runTest(values);
       } catch (error) {
-        updateContinueDisabled(values);
+        updateContinueDisabled();
         setActionError(actionErrorMessage(error));
       }
     })().catch((error) => {
@@ -165,12 +174,8 @@ export function StepConnectProvider({
       setActionError(actionErrorMessage(error));
     });
   }
-  function handleFallbackConnect() {
+  function handleSave() {
     handleSubmit(async (values) => {
-      if (!connectProviderAction || !primaryProviderId || values.providerId === primaryProviderId) {
-        return;
-      }
-      clearProviderFeedback(values.providerId);
       try {
         const result = testResults[values.providerId];
         if (
@@ -178,21 +183,26 @@ export function StepConnectProvider({
           testedCredentialKeys[values.providerId] !==
             providerCredentialKey(values.providerId, values)
         ) {
-          setActionError("Test connection before connecting this fallback provider.");
-          updateContinueDisabled(values);
+          setActionError(`Test ${selectedProvider.label} before connecting it.`);
+          updateContinueDisabled();
           return;
         }
-        await connectProviderAction(providerConnectInput(values));
+        await connectProviderAction?.(providerConnectInput(values));
         const nextConnections = withConnectedProvider(
           connections,
           values.providerId,
           result.balance,
-          false,
         );
+        const nextDirtyProviders = {
+          ...dirtyProviders,
+          [values.providerId]: false,
+        };
         setConnections(nextConnections);
-        updateContinueDisabled(values, testResults, testedCredentialKeys, nextConnections);
+        setDirtyProviders(nextDirtyProviders);
+        setActionError(null);
+        updateContinueDisabled(nextConnections, nextDirtyProviders);
       } catch (error) {
-        updateContinueDisabled(values);
+        updateContinueDisabled();
         setActionError(actionErrorMessage(error));
       }
     })().catch((error) => {
@@ -202,55 +212,35 @@ export function StepConnectProvider({
   }
   async function onSubmit(values: OnboardingConnectProviderInput) {
     setActionError(null);
-    if (connectedProvider) return continueToNext(primaryProviderId ?? connectedProvider);
-    if (!connectProviderAction || !testProviderConnectionAction)
-      return continueToNext(values.providerId);
-    try {
-      const verifiedProvider = verifiedProviderId(
-        drafts,
-        testResults,
-        testedCredentialKeys,
-        values,
-      );
-      if (!verifiedProvider) {
-        setActionError("Test connection before continuing.");
-        updateContinueDisabled(values);
-        return;
-      }
-      const verifiedValues = providerValuesFromDraft(verifiedProvider, values, drafts);
-      const result = testResults[verifiedProvider];
-      await connectProviderAction(providerConnectInput(verifiedValues));
-      const nextConnections = withConnectedProvider(
-        connections,
-        verifiedProvider,
-        result?.balance,
-        true,
-      );
-      setConnections(nextConnections);
-      updateContinueDisabled(verifiedValues, testResults, testedCredentialKeys, nextConnections);
-      continueToNext(verifiedProvider, verifiedValues, nextConnections);
-    } catch (error) {
-      updateContinueDisabled(values);
-      setActionError(actionErrorMessage(error));
-    }
+    const selectedConnection =
+      connections[values.providerId] && !dirtyProviders[values.providerId]
+        ? values.providerId
+        : null;
+    const providerId = selectedConnection ?? connectedProvider;
+    if (providerId) return continueToNext(providerId, values);
+    setActionError("Save a provider before continuing.");
+    updateContinueDisabled();
   }
   function handleProviderSubmit(event: FormEvent<HTMLFormElement>) {
-    const values = getValues();
-    if (!anyProviderVerified(connections, drafts, testResults, testedCredentialKeys, values))
-      return void handleSubmit(onSubmit)(event);
+    if (!connectedProvider) return void handleSubmit(onSubmit)(event);
     event.preventDefault();
-    void onSubmit(values);
+    void onSubmit(getValues());
   }
   return (
     <form id={onboardingFormId} onSubmit={handleProviderSubmit}>
       <input type="hidden" {...register("projectId")} />
       <input type="hidden" {...register("providerId")} />
-      <div className="text-lg font-semibold tracking-[-0.4px]">Connect your SERP provider</div>
-      <div className="mt-1 text-[13px] text-fg-muted">{OWN_PROVIDER_KEY_COST_EXPLANATION}</div>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="text-lg font-semibold tracking-[-0.4px]">Connect your SERP provider</div>
+          <div className="mt-1 text-[13px] text-fg-muted">{OWN_PROVIDER_KEY_COST_EXPLANATION}</div>
+        </div>
+        <StepConnectProviderSkip flowState={flowState} getValues={getValues} onSkip={onSkip} />
+      </div>
       <StepConnectProviderCards
         connections={connections}
+        dirtyProviders={dirtyProviders}
         onSelect={selectProvider}
-        primaryProviderId={primaryProviderId}
         selectedProviderId={selectedProviderId}
         testResults={testResults}
       />
@@ -259,21 +249,17 @@ export function StepConnectProvider({
       ) : null}
       <StepConnectProviderCredentials
         busy={isSubmitting || testingProviderId !== null}
-        connectDisabled={!hasCurrentSuccessfulTest}
+        saveDisabled={!hasCurrentSuccessfulTest}
         errors={errors}
-        onFallbackConnect={
-          primaryProviderId &&
-          primaryProviderId !== selectedProviderId &&
-          !connections[selectedProviderId]
-            ? handleFallbackConnect
-            : undefined
-        }
-        onCredentialChange={() => clearProviderFeedback()}
+        onCredentialChange={handleCredentialChange}
+        onSave={handleSave}
         onTest={handleTest}
         providerId={selectedProvider.value}
         providerLabel={selectedProvider.label}
         register={register}
-        savedConnection={Boolean(connections[selectedProvider.value])}
+        savedConnection={
+          Boolean(connections[selectedProvider.value]) && !dirtyProviders[selectedProvider.value]
+        }
         testDisabled={testDisabled}
         testResult={currentTestResult}
         testing={testingProviderId === selectedProvider.value}
@@ -281,7 +267,6 @@ export function StepConnectProvider({
       {actionError ? (
         <p className={`m-0 mt-3 ${feedbackClass} text-red-text`}>{actionError}</p>
       ) : null}
-      <StepConnectProviderSkip flowState={flowState} getValues={getValues} onSkip={onSkip} />
     </form>
   );
 }

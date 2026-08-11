@@ -17,7 +17,9 @@ describe("OnboardingWizard", () => {
     ).toBeInTheDocument();
 
     const rail = screen.getByLabelText("Onboarding steps");
-    const lockedStep = within(rail).getByRole("button", { name: "First check" });
+    const lockedStep = within(rail).getByRole("button", {
+      name: "First check",
+    });
     expect(lockedStep).toBeDisabled();
 
     fireEvent.click(lockedStep);
@@ -32,8 +34,12 @@ describe("OnboardingWizard", () => {
     const createProjectAction = vi.fn(async (_input: unknown) => project);
     renderWizard({ actions: { createProjectAction } });
 
-    fireEvent.change(screen.getByLabelText("Project name"), { target: { value: "Example" } });
-    fireEvent.change(screen.getByLabelText("Domain"), { target: { value: "example.com" } });
+    fireEvent.change(screen.getByLabelText("Project name"), {
+      target: { value: "Example" },
+    });
+    fireEvent.change(screen.getByLabelText("Domain"), {
+      target: { value: "example.com" },
+    });
     fireEvent.click(screen.getByRole("button", { name: /continue/i }));
 
     await waitFor(() => expect(createProjectAction).toHaveBeenCalledTimes(1));
@@ -54,7 +60,9 @@ describe("OnboardingWizard", () => {
     });
 
     expect(
-      screen.getByRole("heading", { name: "Connect from your terminal or API" }),
+      screen.getByRole("heading", {
+        name: "Connect from your terminal or API",
+      }),
     ).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /continue/i }));
@@ -62,7 +70,7 @@ describe("OnboardingWizard", () => {
     expect(screen.getByText("Connect your SERP provider")).toBeInTheDocument();
   });
 
-  it("shows nav Skip only on the provider step and clears the provider when clicked", () => {
+  it("shows one top Skip only on the provider step and clears the provider when clicked", () => {
     renderWizard({
       costPerCheckCents: 25,
       initialFlowState: { projectId: "prj_1", providerId: "dataforseo" },
@@ -74,27 +82,30 @@ describe("OnboardingWizard", () => {
     expect(screen.queryByRole("button", { name: "Skip" })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /continue/i }));
 
-    const skipButton = screen.getByRole("button", { name: "Skip" });
-    const footer = skipButton.closest("footer");
-    expect(skipButton).toHaveAccessibleName("Skip");
-    expect(skipButton).toHaveClass("MuiButton-root");
+    const skipButton = screen.getByRole("button", {
+      name: "Skip provider connection and add keywords as paused",
+    });
+    expect(skipButton).toHaveTextContent("Skip");
     expect(skipButton).toBeEnabled();
-    expect(footer).not.toBeNull();
-    expect(
-      within(footer as HTMLElement)
-        .getAllByRole("button")
-        .map((button) => button.textContent?.trim()),
-    ).toEqual(["Back", "Skip", "Continue"]);
+    expect(screen.getAllByText("Skip")).toHaveLength(1);
+    expect(skipButton.closest("footer")).toBeNull();
     fireEvent.click(skipButton);
 
     expect(screen.getByRole("heading", { name: "Tracking defaults" })).toBeInTheDocument();
     expect(screen.getByDisplayValue("Skipped")).toBeInTheDocument();
     expect(window.location.search).toBe("?step=4&projectId=prj_1");
-    expect(screen.queryByRole("button", { name: "Skip" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", {
+        name: "Skip provider connection and add keywords as paused",
+      }),
+    ).not.toBeInTheDocument();
   });
 
-  it("keeps provider continue disabled until the current credentials pass a test", async () => {
-    const testProviderConnectionAction = vi.fn(async () => ({ message: "Connected", ok: true }));
+  it("keeps provider continue disabled until the tested credentials are saved", async () => {
+    const testProviderConnectionAction = vi.fn(async () => ({
+      message: "Connected",
+      ok: true,
+    }));
     renderWizard({
       actions: { testProviderConnectionAction },
       initialFlowState: { projectId: "prj_1", providerId: null },
@@ -103,20 +114,30 @@ describe("OnboardingWizard", () => {
     });
 
     const continueButton = screen.getByRole("button", { name: /continue/i });
-    const skipButton = screen.getByRole("button", { name: "Skip" });
+    const skipButton = screen.getByRole("button", {
+      name: "Skip provider connection and add keywords as paused",
+    });
     expect(continueButton).toBeDisabled();
     expect(skipButton).toBeEnabled();
 
-    fireEvent.change(screen.getByLabelText("API login"), { target: { value: "login" } });
-    fireEvent.change(screen.getByLabelText("API password"), { target: { value: "password" } });
+    fireEvent.change(screen.getByLabelText("API login"), {
+      target: { value: "login" },
+    });
+    fireEvent.change(screen.getByLabelText("API password"), {
+      target: { value: "password" },
+    });
     expect(continueButton).toBeDisabled();
 
     fireEvent.click(screen.getByRole("button", { name: "Test connection" }));
 
     await waitFor(() => expect(testProviderConnectionAction).toHaveBeenCalledTimes(1));
-    expect(continueButton).toBeEnabled();
+    expect(continueButton).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Save DataForSEO" }));
+    await waitFor(() => expect(continueButton).toBeEnabled());
 
-    fireEvent.change(screen.getByLabelText("API password"), { target: { value: "changed" } });
+    fireEvent.change(screen.getByLabelText("API password"), {
+      target: { value: "changed" },
+    });
     expect(continueButton).toBeDisabled();
     expect(skipButton).toBeEnabled();
   });
@@ -133,8 +154,12 @@ describe("OnboardingWizard", () => {
     const continueButton = screen.getByRole("button", { name: /continue/i });
     expect(continueButton).toBeEnabled();
 
-    fireEvent.change(screen.getByLabelText("API login"), { target: { value: "login" } });
-    fireEvent.change(screen.getByLabelText("API password"), { target: { value: "changed" } });
+    fireEvent.change(screen.getByLabelText("API login"), {
+      target: { value: "login" },
+    });
+    fireEvent.change(screen.getByLabelText("API password"), {
+      target: { value: "changed" },
+    });
     expect(continueButton).toBeEnabled();
 
     fireEvent.click(continueButton);
@@ -150,7 +175,7 @@ describe("OnboardingWizard", () => {
     expect(screen.queryByText(/\$7\.50\/month/)).not.toBeInTheDocument();
   });
 
-  it("advances after primary connect and exposes backup only after returning", async () => {
+  it("advances after connecting and exposes another provider only after returning", async () => {
     window.history.replaceState(null, "", "/onboarding?step=3&projectId=prj_1");
     const connectProviderAction = vi.fn(async () => undefined);
     renderWizard({
@@ -160,9 +185,19 @@ describe("OnboardingWizard", () => {
       initialStep: 3,
     });
 
-    fireEvent.change(screen.getByLabelText("API login"), { target: { value: "login" } });
-    fireEvent.change(screen.getByLabelText("API password"), { target: { value: "password" } });
+    fireEvent.change(screen.getByLabelText("API login"), {
+      target: { value: "login" },
+    });
+    fireEvent.change(screen.getByLabelText("API password"), {
+      target: { value: "password" },
+    });
     fireEvent.click(screen.getByRole("button", { name: "Test connection" }));
+    const saveProvider = await screen.findByRole("button", {
+      name: "Save DataForSEO",
+    });
+    await waitFor(() => expect(saveProvider).toBeEnabled());
+    fireEvent.click(saveProvider);
+    await screen.findByText("Connected");
     await waitFor(() => expect(screen.getByRole("button", { name: /continue/i })).toBeEnabled());
     fireEvent.click(screen.getByRole("button", { name: /continue/i }));
 
@@ -173,20 +208,20 @@ describe("OnboardingWizard", () => {
     const rail = screen.getByLabelText("Onboarding steps");
     fireEvent.click(within(rail).getByRole("button", { name: "Connect data, completed" }));
 
-    expect(screen.getByText("Connected (primary)")).toBeInTheDocument();
-    expect(screen.getByText(/Add as fallback \(optional\)/)).toBeInTheDocument();
+    expect(screen.getByText("Connected")).toBeInTheDocument();
+    expect(screen.queryByText(/Add as fallback \(optional\)/)).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("radio", { name: /SerpApi/ }));
-    const connectBackupButton = screen.getByRole("button", { name: "Connect backup" });
-    expect(connectBackupButton).toHaveAccessibleName("Connect backup");
-    expect(connectBackupButton).toBeDisabled();
-    expect(
-      screen.getByText("Test validates the key - use Connect backup to save it."),
-    ).toBeInTheDocument();
+    const saveProviderButton = screen.getByRole("button", {
+      name: "Save SerpApi",
+    });
+    expect(saveProviderButton).toHaveAccessibleName("Save SerpApi");
+    expect(saveProviderButton).toBeDisabled();
+    expect(screen.getByText("Test the credentials, then use Save SerpApi.")).toBeInTheDocument();
     const continueButton = screen.getByRole("button", { name: /continue/i });
     expect(continueButton).toBeEnabled();
     expect(continueButton).toHaveAttribute("type", "submit");
     fireEvent.click(continueButton);
-    expect(screen.getByRole("heading", { name: "Tracking defaults" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Tracking defaults" })).toBeInTheDocument();
   });
 
   it("completes onboarding only when the final dashboard action is submitted", async () => {
@@ -203,7 +238,9 @@ describe("OnboardingWizard", () => {
     fireEvent.click(screen.getByRole("button", { name: /open dashboard/i }));
 
     await waitFor(() => expect(completeOnboardingAction).toHaveBeenCalledTimes(1));
-    expect(completeOnboardingAction).toHaveBeenCalledWith({ projectId: "prj_1" });
+    expect(completeOnboardingAction).toHaveBeenCalledWith({
+      projectId: "prj_1",
+    });
     expect(push).toHaveBeenCalledWith("/app/prj_1/overview");
   });
 
@@ -232,7 +269,9 @@ describe("OnboardingWizard", () => {
     fireEvent.click(screen.getByRole("button", { name: /continue/i }));
 
     await waitFor(() =>
-      expect(syncProjectTrafficAction).toHaveBeenCalledWith({ projectId: "prj_1" }),
+      expect(syncProjectTrafficAction).toHaveBeenCalledWith({
+        projectId: "prj_1",
+      }),
     );
     expect(
       await screen.findByText(

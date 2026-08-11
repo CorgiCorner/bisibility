@@ -35,4 +35,19 @@ describe("markProviderNeedsReauth", () => {
     });
     expect(mocks.notifyOps).toHaveBeenCalledOnce();
   });
+
+  it("can suppress the per-event ops error for user-actionable traffic failures", async () => {
+    mocks.updateMany.mockResolvedValue({ count: 1 });
+
+    await expect(
+      markProviderNeedsReauth({
+        connectionId: "connection_1",
+        notifyOps: false,
+        projectId: "project_1",
+        provider: "plausible",
+      }),
+    ).resolves.toBe(true);
+
+    expect(mocks.notifyOps).not.toHaveBeenCalled();
+  });
 });

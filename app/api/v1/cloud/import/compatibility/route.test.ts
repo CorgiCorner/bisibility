@@ -16,10 +16,10 @@ vi.mock("@/lib/api/ratelimit", () => ({
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 
 function request() {
-  return new Request("https://example.test/api/cloud/import/compatibility") as NextRequest;
+  return new Request("https://example.test/api/v1/cloud/import/compatibility") as NextRequest;
 }
 
-describe("GET /api/cloud/import/compatibility", () => {
+describe("GET /api/v1/cloud/import/compatibility", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.stubEnv("APP_VERSION", "");

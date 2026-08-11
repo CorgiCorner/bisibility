@@ -22,7 +22,7 @@ type StoryProps = {
   analyticsMode?: "connected" | "none";
   competitorMode?: "blank" | "filled";
   maxReachableStep?: OnboardingStepNumber;
-  providerMode?: "both" | "none" | "primary";
+  providerMode?: "both" | "connected" | "none";
   step: OnboardingStepNumber;
 };
 
@@ -82,19 +82,19 @@ function providerPanel(mode: StoryProps["providerMode"] = "none") {
         defaultValues={{ ...providerBaseDefaults, providerId: "serpapi" }}
         flowState={storyFlowState}
         initialConnections={{
-          dataforseo: { balance: 12.34, primary: true },
-          serpapi: { balance: 480, primary: false },
+          dataforseo: { balance: 12.34 },
+          serpapi: { balance: 480 },
         }}
         {...providerActions}
       />
     );
   }
-  if (mode === "primary") {
+  if (mode === "connected") {
     return (
       <StepConnectProvider
         defaultValues={{ ...providerBaseDefaults, providerId: "serpapi" }}
         flowState={storyFlowState}
-        initialConnections={{ dataforseo: { balance: 12.34, primary: true } }}
+        initialConnections={{ dataforseo: { balance: 12.34 } }}
         {...providerActions}
       />
     );
@@ -129,7 +129,7 @@ function panelForStep(
     4: (
       <StepSchedule
         flowState={
-          providerMode === "primary"
+          providerMode === "connected"
             ? { ...storyFlowState, providerId: "dataforseo" }
             : storyFlowState
         }
@@ -146,7 +146,10 @@ function panelForStep(
     ),
     6: (
       <StepFirstCheck
-        flowState={{ projectId: onboardingDefaults.projectId, providerId: "dataforseo" }}
+        flowState={{
+          projectId: onboardingDefaults.projectId,
+          providerId: "dataforseo",
+        }}
         keywordCount={24}
         providerConnected
         {...firstCheckActions}
@@ -180,7 +183,12 @@ function OnboardingStory({
             <Button
               size="xs"
               startIcon={<SignOut aria-hidden size={13} weight="bold" />}
-              sx={{ color: "var(--accent-text)", minHeight: 0, minWidth: 0, padding: 0 }}
+              sx={{
+                color: "var(--accent-text)",
+                minHeight: 0,
+                minWidth: 0,
+                padding: 0,
+              }}
               type="button"
               variant="ghost"
             >
@@ -210,7 +218,12 @@ function OnboardingStory({
 const meta = {
   title: "Onboarding/Wizard",
   component: OnboardingStory,
-  args: { analyticsMode: "none", competitorMode: "blank", providerMode: "none", step: 1 },
+  args: {
+    analyticsMode: "none",
+    competitorMode: "blank",
+    providerMode: "none",
+    step: 1,
+  },
   argTypes: {
     analyticsMode: {
       control: "inline-radio",
@@ -222,7 +235,7 @@ const meta = {
     },
     providerMode: {
       control: "inline-radio",
-      options: ["none", "primary", "both"],
+      options: ["none", "connected", "both"],
     },
     maxReachableStep: {
       control: "inline-radio",
@@ -248,13 +261,21 @@ export const CreateProjectWithCompetitors: Story = {
   args: { competitorMode: "filled", step: 1 },
 };
 export const DeveloperAccess: Story = { args: { step: 2 } };
-export const ConnectProvider: Story = { args: { providerMode: "none", step: 3 } };
+export const ConnectProvider: Story = {
+  args: { providerMode: "none", step: 3 },
+};
 export const LockedAfterProject: Story = {
   args: { maxReachableStep: 2, step: 2 },
 };
-export const ConnectProviderBackup: Story = { args: { providerMode: "primary", step: 3 } };
-export const ConnectProviderBothConnected: Story = { args: { providerMode: "both", step: 3 } };
-export const TrackingDefaults: Story = { args: { providerMode: "primary", step: 4 } };
+export const ConnectProviderAdditional: Story = {
+  args: { providerMode: "connected", step: 3 },
+};
+export const ConnectProviderBothConnected: Story = {
+  args: { providerMode: "both", step: 3 },
+};
+export const TrackingDefaults: Story = {
+  args: { providerMode: "connected", step: 4 },
+};
 export const AddKeywords: Story = { args: { step: 5 } };
 export const AddKeywordsWithAnalytics: Story = {
   args: { analyticsMode: "connected", step: 5 },

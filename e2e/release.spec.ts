@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import { expect, type Page, test } from "@playwright/test";
+import { testAndSaveDataForSeo } from "./workspace";
 
 const otpFile = process.env.BISIBILITY_E2E_OTP_FILE;
 const authResponseTimeout = 30_000;
@@ -97,16 +98,11 @@ async function completeOnboarding(page: Page, suffix: string) {
   // Step 2 - Developer access is optional for dashboard-only use.
   await clickWizardPrimary(page, "Continue", /[?&]step=3(?:&|$)/);
 
-  // Step 3 - Connect provider (fake-provider test + connect, then advance)
+  // Step 3 - Test and save the fake provider, then advance.
   await page.getByLabel("API login").fill("fake-login");
   // Role textbox - the reveal-toggle button's aria-label also contains "API password".
   await page.getByRole("textbox", { name: /API password/ }).fill("fake-secret");
-  // Continue stays disabled until a successful "Test connection" while the project has
-  // no primary provider yet, so run the test first and wait for the gate to open.
-  await page.getByRole("button", { name: "Test connection", exact: true }).click();
-  await expect(page.getByRole("button", { name: "Continue", exact: true })).toBeEnabled({
-    timeout: 15000,
-  });
+  await testAndSaveDataForSeo(page);
   await clickProviderContinue(page, /[?&]step=4(?:&|$)/);
 
   // Step 4 - Tracking defaults (defaults preselected)

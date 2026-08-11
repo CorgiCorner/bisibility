@@ -3,6 +3,7 @@ import { randomBytes } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { ensureDockerVmFreeSpace } from "./docker-ephemeral.mjs";
 import { waitForUsableService } from "./harness-readiness.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
@@ -206,6 +207,7 @@ const testEnv = {
   BETTER_AUTH_URL: baseUrl,
   BISIBILITY_FAKE_PROVIDER: "1",
   BISIBILITY_SECRETS_KEY: secretKey,
+  CORGICORNER_EPHEMERAL: "1",
   DATABASE_URL: pgUrl,
   DEPLOYMENT_ENV: "test",
   DIRECT_URL: pgUrl,
@@ -225,8 +227,12 @@ let server;
 let exitCode = 0;
 
 try {
+  ensureDockerVmFreeSpace({ profile: "runtime" });
   await fs.mkdir(reportDir, { recursive: true });
   await fs.writeFile(otpFile, "{}");
+  await run("docker", [...composeArgs, "down", "--volumes", "--remove-orphans"], {
+    env: testEnv,
+  });
   await run("docker", [...composeArgs, "up", "-d", "--wait", "postgres"], { env: testEnv });
   await waitForPostgres();
   await run("npm", ["run", "db:migrate"], { env: testEnv });
@@ -256,7 +262,7 @@ try {
     console.error(error);
     exitCode = 1;
   }
-  await run("docker", [...composeArgs, "down", "--volumes", "--remove-orphans"], {
+  await run("docker", [...composeArgs, "down", "--volumes", "--rmi", "local", "--remove-orphans"], {
     env: testEnv,
     reject: false,
   });

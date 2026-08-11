@@ -1,6 +1,8 @@
 import "server-only";
 
 import { assertWebhookUrlAllowed } from "@/lib/alerts/webhook-guard";
+import { ProviderAuthError } from "@/lib/providers/auth-error";
+import { ProviderConfigurationError, ProviderHttpError } from "@/lib/providers/failure-class";
 import {
   consumeProviderLimit,
   ProviderRateLimitedError,
@@ -41,12 +43,9 @@ type PlausibleResponse = {
   results?: PlausibleResultRow[];
 };
 
-class PlausibleApiError extends Error {
-  constructor(
-    message: string,
-    readonly status: number,
-  ) {
-    super(message);
+class PlausibleApiError extends ProviderHttpError {
+  constructor(message: string, status: number) {
+    super(status, message);
     this.name = "PlausibleApiError";
   }
 }
@@ -67,7 +66,7 @@ async function assertEndpointAllowed(baseUrl: string) {
   try {
     await assertWebhookUrlAllowed(baseUrl);
   } catch {
-    throw new Error(ENDPOINT_BLOCKED_ERROR);
+    throw new ProviderConfigurationError(ENDPOINT_BLOCKED_ERROR);
   }
 }
 
@@ -76,7 +75,7 @@ function readCredentials(creds: ProviderCredentials) {
   const siteId = creds.login?.trim();
   const baseUrl = normalizeBaseUrl(creds.endpoint);
   if (!siteId || !apiKey) {
-    throw new Error("Plausible requires a site domain and API token.");
+    throw new ProviderConfigurationError("Plausible requires a site domain and API token.");
   }
   return {
     accountKey: providerAccountKey("plausible", {
@@ -147,6 +146,9 @@ async function runQuery(creds: ProviderCredentials, query: PlausibleQuery) {
   if (response.status === 429) {
     const resetAt = writeCooldown(accountKey);
     throw new ProviderRateLimitedError("plausible", { accountKey, resetAt });
+  }
+  if (response.status === 401 || response.status === 403) {
+    throw new ProviderAuthError("plausible");
   }
 
   const payload = await parseJson(response);

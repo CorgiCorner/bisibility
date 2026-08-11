@@ -1,4 +1,5 @@
 import { resetRateLimitStateForTests } from "@/lib/api/ratelimit";
+import { classifyProviderFailure } from "@/lib/providers/failure-class";
 import {
   clearProviderRateLimitState,
   ProviderRateLimitedError,
@@ -27,6 +28,35 @@ function jsonResponse(body: unknown, status = 200) {
 function requestBody(callIndex = 0) {
   const init = vi.mocked(fetch).mock.calls[callIndex]?.[1];
   return JSON.parse(String(init?.body)) as Record<string, unknown>;
+}
+
+async function classifiedPageStatsFailure(status: number) {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue(jsonResponse({ error: `provider failure ${status}` }, status)),
+  );
+
+  try {
+    await plausibleAnalyticsProvider.fetchPageStats?.(credentials, {
+      endDate: "2026-07-03",
+      startDate: "2026-06-03",
+    });
+  } catch (error) {
+    return classifyProviderFailure(error);
+  }
+  throw new Error("Expected Plausible page stats to fail.");
+}
+
+async function classifiedConfigurationFailure(input: typeof credentials & { endpoint?: string }) {
+  try {
+    await plausibleAnalyticsProvider.fetchPageStats?.(input, {
+      endDate: "2026-07-03",
+      startDate: "2026-06-03",
+    });
+  } catch (error) {
+    return classifyProviderFailure(error);
+  }
+  throw new Error("Expected Plausible configuration validation to fail.");
 }
 
 describe("plausible analytics provider", () => {
@@ -118,6 +148,20 @@ describe("plausible analytics provider", () => {
         { endDate: "2026-07-03", startDate: "2026-06-03" },
       ),
     ).rejects.toThrow(/public http\(s\) URL/);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("classifies blocked endpoints and incomplete stored credentials as configuration errors", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(
+      classifiedConfigurationFailure({ ...credentials, endpoint: "https://192.168.1.10:8000" }),
+    ).resolves.toBe("config_invalid");
+    await expect(classifiedConfigurationFailure({ ...credentials, login: " " })).resolves.toBe(
+      "config_invalid",
+    );
+
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
@@ -248,6 +292,14 @@ describe("plausible analytics provider", () => {
     expect(readCooldown(accountKey)?.until).toBeGreaterThan(Date.now());
   });
 
+  it("classifies authorization failures as auth", async () => {
+    await expect(classifiedPageStatsFailure(401)).resolves.toBe("auth");
+  });
+
+  it("classifies server failures as provider_5xx", async () => {
+    await expect(classifiedPageStatsFailure(500)).resolves.toBe("provider_5xx");
+  });
+
   it("maps HTTP 5xx payloads to PlausibleApiError with status", async () => {
     vi.stubGlobal(
       "fetch",
@@ -318,7 +370,7 @@ describe("plausible analytics provider", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({ error: "forbidden" }, 403)));
 
     await expect(plausibleAnalyticsProvider.testConnection(credentials)).resolves.toEqual({
-      message: "forbidden",
+      message: "Provider plausible authorization is no longer valid. Reconnect the account.",
       ok: false,
     });
   });

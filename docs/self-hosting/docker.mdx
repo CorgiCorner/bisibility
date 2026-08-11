@@ -181,6 +181,31 @@ template, and the generator. Publication verifies those bytes.
 `docker-compose.self-host.yml` remains a one-minor compatibility asset for the
 former `--profile scheduled` command.
 
+### Verify and troubleshoot startup
+
+Check every service, the one-shot migration result, and the anonymous traffic
+probe before configuring a reverse proxy:
+
+```bash
+docker compose --env-file .env -f compose.yaml ps --all
+docker compose --env-file .env -f compose.yaml logs --no-color db-migrations app
+curl -fsS http://127.0.0.1:3000/api/v1/liveness
+curl -fsS http://127.0.0.1:3000/api/v1/readiness
+```
+
+Add the worker and Temporal overlays to the first two commands when scheduled
+checks are enabled. Use an API credential or `INTERNAL_PROBE_TOKEN` to request
+full `/api/v1/health` diagnostics without publishing the token in logs.
+
+| Symptom | Check | Resolution |
+| - | - | - |
+| App never starts | `db-migrations` exited nonzero | Read its first migration error, fix database connectivity or the reported migration issue, then rerun the same Compose command. Completed migration steps are skipped. |
+| Liveness succeeds but readiness returns `503` | Database, blocking migrations, or invalid scheduler configuration | Inspect authenticated `/api/v1/health`; do not route traffic until the failing required component is healthy. |
+| Sign-in redirects to the wrong origin | `SITE_URL` and `BETTER_AUTH_URL` | Set both to the exact public origin, including a non-default port, then recreate the app container. |
+| Manual checks work but schedules do not | Worker and Temporal overlays, shared namespace, and task queues | Confirm both overlays are present and web and worker use the same Temporal settings. |
+| Worker repeatedly restarts | Temporal address, TLS mode, namespace, and database access | Follow [worker startup troubleshooting](/self-hosting/temporal#worker-startup-troubleshooting); the worker does not start Temporal Server itself. |
+| Anonymous API callers unexpectedly share one rate-limit bucket | Trusted proxy header configuration | Configure [client IP behind a proxy](/self-hosting/operations#client-ip-behind-a-proxy) or enforce anonymous limits at the edge. |
+
 ### Use the CLI with this instance
 
 Install the CLI on the workstation where you use bisibility:

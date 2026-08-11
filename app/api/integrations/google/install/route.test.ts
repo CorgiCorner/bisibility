@@ -56,7 +56,7 @@ describe("GET /api/integrations/google/install", () => {
     expect(mocks.createGoogleInstallUrl).toHaveBeenCalledWith({
       actorId: "user_1",
       origin: "https://app.example.com",
-      projectId: "project_1",
+      projectId,
       property: undefined,
       provider: "gsc",
       returnPath: `/app/${projectId}/integrations`,
@@ -72,7 +72,7 @@ describe("GET /api/integrations/google/install", () => {
     expect(mocks.createGoogleInstallUrl).toHaveBeenCalledWith({
       actorId: "user_1",
       origin: "https://app.example.com",
-      projectId: "project_1",
+      projectId,
       property: undefined,
       provider: "ga4",
       returnPath: `/app/${projectId}/integrations`,
@@ -93,7 +93,7 @@ describe("GET /api/integrations/google/install", () => {
     expect(response.headers.get("set-cookie")).toBeNull();
     expect(mocks.createGoogleInstallUrl).not.toHaveBeenCalled();
     expect(mocks.reusableGoogleInstallUrl).toHaveBeenCalledWith(
-      expect.objectContaining({ actorId: "user_1", projectId: "project_1", state: "state_live" }),
+      expect.objectContaining({ actorId: "user_1", projectId, state: "state_live" }),
     );
   });
 

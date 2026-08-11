@@ -41,7 +41,7 @@ const stableTokenError = {
 };
 
 function request() {
-  return new Request("https://example.com/api/cloud/import", {
+  return new Request("https://example.com/api/v1/cloud/import", {
     body: JSON.stringify({
       alert_rules: [],
       competitors: [],
@@ -109,7 +109,7 @@ function job(overrides: Record<string, unknown> = {}) {
   };
 }
 
-describe("POST /api/cloud/import token-denial contract", () => {
+describe("POST /api/v1/cloud/import token-denial contract", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();

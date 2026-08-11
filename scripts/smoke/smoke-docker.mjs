@@ -1,5 +1,6 @@
 import { spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";
+import { ensureDockerVmFreeSpace } from "./docker-ephemeral.mjs";
 import { waitForUsableService } from "./harness-readiness.mjs";
 
 const suffix = `${process.pid}-${Date.now().toString(36)}`;
@@ -16,7 +17,9 @@ const authSecret = randomBytes(32).toString("base64url");
 const secretKey = randomBytes(32).toString("base64");
 const containerPgUrl =
   `postgresql://bisibility:${postgresPassword}@postgres:5432/bisibility?schema=public`;
+const buildsImages = process.env.BISIBILITY_SMOKE_SKIP_BUILD !== "1";
 let appPort = "";
+let builtImages = false;
 
 function run(command, args, options = {}) {
   return new Promise((resolve, reject) => {
@@ -148,9 +151,27 @@ async function mappedPort(container, containerPort) {
 }
 
 try {
-  if (process.env.BISIBILITY_SMOKE_SKIP_BUILD !== "1") {
-    await run("docker", ["build", "--target", "migrate", "-t", migrateImage, "."]);
-    await run("docker", ["build", "-t", image, "."]);
+  ensureDockerVmFreeSpace({ profile: buildsImages ? "build" : "runtime" });
+  if (buildsImages) {
+    builtImages = true;
+    await run("docker", [
+      "build",
+      "--build-arg",
+      "CORGICORNER_EPHEMERAL=1",
+      "--target",
+      "migrate",
+      "-t",
+      migrateImage,
+      ".",
+    ]);
+    await run("docker", [
+      "build",
+      "--build-arg",
+      "CORGICORNER_EPHEMERAL=1",
+      "-t",
+      image,
+      ".",
+    ]);
   }
   await run("docker", ["network", "create", network]);
   await run("docker", [
@@ -255,4 +276,10 @@ try {
     reject: false,
     stdio: "ignore",
   });
+  if (builtImages) {
+    await run("docker", ["image", "rm", "--force", image, migrateImage], {
+      reject: false,
+      stdio: "ignore",
+    });
+  }
 }

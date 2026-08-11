@@ -155,13 +155,13 @@ describe("cloud migration handoff actions", () => {
     const result = unwrapActionFailureResult(await createCloudMigrationHandoff({ projectId }));
 
     expect(result).toMatchObject({
-      apiImportUrl: "https://bisibility.com/api/cloud/import",
+      apiImportUrl: "https://bisibility.com/api/v1/cloud/import",
       cloudOrigin: "https://bisibility.com",
       cloudWorkspaceUrl: "https://bisibility.com/app",
       sourceProjectId: projectId,
     });
     expect(result.cloudImportUrl).toBe("https://bisibility.com/app");
-    expect(result.apiRequest).toContain("POST https://bisibility.com/api/cloud/import");
+    expect(result.apiRequest).toContain("POST https://bisibility.com/api/v1/cloud/import");
     expect(result.apiRequest).toContain("Authorization: Bearer mig_...");
   });
 
@@ -199,7 +199,7 @@ describe("cloud migration handoff actions", () => {
       value: { counts: {}, jobId: "imp_abcdefghijklmnopqrstuvwx", state: "done" },
     });
     expect(mocks.migrationFetch).toHaveBeenCalledWith(
-      "https://target.example.com/api/cloud/import",
+      "https://target.example.com/api/v1/cloud/import",
       expect.objectContaining({
         cache: "no-store",
         headers: expect.objectContaining({
@@ -357,7 +357,7 @@ describe("cloud migration handoff actions", () => {
       supportsSessions: true,
     });
     expect(mocks.migrationFetch).toHaveBeenLastCalledWith(
-      "https://target.example.com/api/cloud/import/compatibility",
+      "https://target.example.com/api/v1/cloud/import/compatibility",
       expect.objectContaining({ method: "GET", timeoutMs: 10_000 }),
     );
 

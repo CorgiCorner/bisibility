@@ -60,6 +60,17 @@ async function clickProviderContinue(page: Page, nextUrl: RegExp) {
   await expect(page).toHaveURL(nextUrl, { timeout: 10000 });
 }
 
+export async function testAndSaveDataForSeo(page: Page) {
+  await page.getByRole("button", { name: "Test connection", exact: true }).click();
+  const saveButton = page.getByRole("button", { name: "Save DataForSEO", exact: true });
+  await expect(saveButton).toBeEnabled({ timeout: 15000 });
+  await saveButton.click();
+  await expect(page.getByRole("status")).toContainText("DataForSEO connected", {
+    timeout: 15000,
+  });
+  await expect(page.getByRole("button", { name: "Continue", exact: true })).toBeEnabled();
+}
+
 export async function completeOnboarding(page: Page, suffix: string) {
   const domain = `e2e-${suffix}.example.com`;
   const keyword = `rank tracker ${suffix}`;
@@ -72,10 +83,7 @@ export async function completeOnboarding(page: Page, suffix: string) {
 
   await page.getByLabel("API login").fill("fake-login");
   await page.getByRole("textbox", { name: /API password/ }).fill("fake-secret");
-  await page.getByRole("button", { name: "Test connection", exact: true }).click();
-  await expect(page.getByRole("button", { name: "Continue", exact: true })).toBeEnabled({
-    timeout: 15000,
-  });
+  await testAndSaveDataForSeo(page);
   await clickProviderContinue(page, /[?&]step=4(?:&|$)/);
 
   await clickWizardPrimary(page, "Continue", /[?&]step=5(?:&|$)/);

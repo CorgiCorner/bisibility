@@ -43,6 +43,8 @@ RUN npm run db:download-rds-ca \
   && NODE_OPTIONS="$(node scripts/ci/node-memory-limit.mjs --merge)" npm run build
 
 FROM builder AS migrate
+ARG CORGICORNER_EPHEMERAL=0
+LABEL corgicorner.ephemeral="${CORGICORNER_EPHEMERAL}"
 ENV NODE_ENV=production
 
 USER node
@@ -52,13 +54,15 @@ CMD ["npm", "run", "db:migrate"]
 FROM node:22.23.1-alpine AS runner
 ARG APP_REVISION
 ARG APP_VERSION
+ARG CORGICORNER_EPHEMERAL=0
 
 LABEL org.opencontainers.image.title="bisibility" \
   org.opencontainers.image.description="Open-source search visibility platform" \
   org.opencontainers.image.source="https://github.com/CorgiCorner/bisibility" \
   org.opencontainers.image.licenses="AGPL-3.0-only" \
   org.opencontainers.image.version="${APP_VERSION}" \
-  org.opencontainers.image.revision="${APP_REVISION}"
+  org.opencontainers.image.revision="${APP_REVISION}" \
+  corgicorner.ephemeral="${CORGICORNER_EPHEMERAL}"
 
 WORKDIR /workspace
 ENV APP_VERSION=${APP_VERSION} \

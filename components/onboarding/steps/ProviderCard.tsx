@@ -3,15 +3,13 @@
 import { InfoTooltip, type StatusKind, StatusPill } from "@/components/ui";
 import type { OnboardingSerpProviderId, providerOptions } from "./StepConnectProvider.fields";
 
-export type ProviderCardState = "connected" | "failed" | "idle" | "tested";
+export type ProviderCardState = "connected" | "dirty" | "failed" | "idle" | "tested";
 
 type ProviderCardProps = {
-  fallbackPrompt?: boolean;
   balance?: number;
   provider: (typeof providerOptions)[number];
   selected: boolean;
   state: ProviderCardState;
-  primary?: boolean;
   onSelect: (providerId: OnboardingSerpProviderId) => void;
 };
 
@@ -20,8 +18,9 @@ function stateClass(selected: boolean) {
   return "border-border-strong bg-transparent";
 }
 
-function stateText(state: ProviderCardState, primary?: boolean) {
-  if (state === "connected") return primary ? "Connected (primary)" : "Connected (fallback)";
+function stateText(state: ProviderCardState) {
+  if (state === "connected") return "Connected";
+  if (state === "dirty") return "Unsaved changes";
   if (state === "tested") return "Verified";
   if (state === "failed") return "Test failed";
   return "Ready to connect";
@@ -34,12 +33,10 @@ function statusKind(state: ProviderCardState): StatusKind {
 }
 
 export function ProviderCard({
-  fallbackPrompt = false,
   balance,
   provider,
   selected,
   state,
-  primary = false,
   onSelect,
 }: Readonly<ProviderCardProps>) {
   return (
@@ -58,9 +55,9 @@ export function ProviderCard({
       />
       <span className="pointer-events-none relative z-[1] flex items-center justify-between gap-3">
         <span className="text-sm font-semibold text-fg">{provider.label}</span>
-        <StatusPill label={stateText(state, primary)} size="sm" status={statusKind(state)} />
+        <StatusPill label={stateText(state)} size="sm" status={statusKind(state)} />
       </span>
-      <span className="pointer-events-none relative z-[1] mt-1 flex items-start gap-1 text-[12.5px] leading-[1.4] text-fg-muted">
+      <span className="pointer-events-none relative z-[1] mt-2 flex items-start gap-1 text-[12.5px] leading-[1.4] text-fg-muted">
         <span>{provider.costCaption}</span>
         <span className="pointer-events-auto">
           <InfoTooltip text={provider.costDetail} />
@@ -70,13 +67,6 @@ export function ProviderCard({
         <span className="pointer-events-none relative z-[1] mt-3 block font-mono text-xs text-green-text">
           Balance: {balance}
         </span>
-      ) : null}
-      {fallbackPrompt ? (
-        <p className="pointer-events-none relative z-[1] m-0 mt-3 rounded-[10px] border border-border bg-bg-elev p-3 text-[12.5px] leading-[1.45] text-fg-muted">
-          <span className="font-semibold text-fg">Add as fallback (optional)</span> - automatic
-          fallback on outages and rate limits, and full city-level targeting works best with both
-          providers connected.
-        </p>
       ) : null}
       <span className="pointer-events-none relative z-[1] mt-auto flex items-center justify-between gap-2 pt-3">
         <a

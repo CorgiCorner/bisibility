@@ -15,7 +15,7 @@ export const deployLinks = {
     id: "docker",
     label: "Deploy with Docker",
     description: "Full stack on your server. One command, manual or scheduled checks.",
-    href: `${DOCS_URL}/self-hosting#docker`,
+    href: `${DOCS_URL}/self-hosting/docker`,
   },
   other: {
     id: "other",

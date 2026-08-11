@@ -1,0 +1,26 @@
+import { render, screen } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
+import { GithubStars } from "./GithubStars";
+
+describe("GithubStars", () => {
+  it.each([null, undefined])("keeps the repository link when the count is %s", (count) => {
+    render(<GithubStars count={count} />);
+
+    const link = screen.getByRole("link", { name: "GitHub repository" });
+    expect(link).toHaveAttribute("href", "https://github.com/CorgiCorner/bisibility");
+    expect(link).not.toHaveTextContent(/\d/);
+    expect(link.querySelectorAll("svg")).toHaveLength(1);
+  });
+
+  it("renders the current count with the repository link", () => {
+    render(<GithubStars count="42" />);
+
+    expect(screen.getByRole("link", { name: "42 stars on GitHub" })).toHaveTextContent("42");
+  });
+
+  it("keeps compact thousands formatting", () => {
+    render(<GithubStars count="1200" />);
+
+    expect(screen.getByRole("link", { name: "1.2k stars on GitHub" })).toHaveTextContent("1.2k");
+  });
+});

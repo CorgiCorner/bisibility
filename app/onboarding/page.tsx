@@ -101,7 +101,7 @@ function serpConnectionsMap(categories: IntegrationCategories): ConnectedProvide
       provider.status === "connected" &&
       provider.enabled !== false
     ) {
-      map[provider.id] = { primary: Boolean(provider.primary) };
+      map[provider.id] = {};
     }
   }
   return map;

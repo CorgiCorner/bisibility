@@ -3,7 +3,10 @@ import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import { makePublicId } from "@/lib/db/public-id";
 import { dollarsToCents } from "@/lib/format/currency";
-import { resolveProviderCredentialsWithOverrides } from "@/lib/providers/credentials";
+import {
+  credentialsForProviderTest,
+  restoreProviderAfterSuccessfulTest,
+} from "@/lib/providers/auth-recovery";
 import { decryptProviderCredentials, encryptSecret } from "@/lib/providers/crypto";
 import { PROVIDER_CATALOG } from "@/lib/providers/registry";
 import type { ProviderCredentials } from "@/lib/providers/types";
@@ -87,19 +90,6 @@ async function publicProjectId(context: ProviderMutationContext) {
   return requireApiPublicId(project?.publicId ?? "", "prj");
 }
 
-async function credentialsForTest(
-  projectId: string,
-  providerId: string,
-  inputCredentials: ProviderCredentials,
-) {
-  const connection = await prisma.providerConnection.findUnique({
-    select: { credentialsEncrypted: true },
-    where: { projectId_provider: { projectId, provider: providerId } },
-  });
-
-  const storedCredentials = connection?.credentialsEncrypted;
-  return resolveProviderCredentialsWithOverrides(providerId, storedCredentials, inputCredentials);
-}
 export async function connectProviderConnection(
   input: ConnectProviderInput,
   context: ProviderMutationContext,
@@ -198,7 +188,7 @@ export async function testProviderConnection(
   const targetId = await publicProjectId(context);
 
   try {
-    const credentials = await credentialsForTest(
+    const credentials = await credentialsForProviderTest(
       context.projectId,
       item.id,
       credentialsFromInput(input),
@@ -207,6 +197,12 @@ export async function testProviderConnection(
       credentials,
       projectId: context.projectId,
       provider: item,
+    });
+    await restoreProviderAfterSuccessfulTest({
+      ok: result.ok,
+      projectId: context.projectId,
+      providerId: item.id,
+      testInput: input,
     });
     await auditProviderMutation({
       action: "provider.test",

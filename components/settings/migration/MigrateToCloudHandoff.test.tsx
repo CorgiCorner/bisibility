@@ -8,8 +8,8 @@ vi.mock("@/lib/actions/cloud", () => ({ createCloudMigrationHandoff: mocks.creat
 const publicProjectId = "prj_abcdefghijklmnopqrstuvwx" as const;
 
 const handoff = {
-  apiImportUrl: "https://cloud.example/api/cloud/import",
-  apiRequest: "POST https://cloud.example/api/cloud/import",
+  apiImportUrl: "https://cloud.example/api/v1/cloud/import",
+  apiRequest: "POST https://cloud.example/api/v1/cloud/import",
   cloudImportUrl: "https://cloud.example/app",
   cloudOnboardingUrl: "https://cloud.example/cloud/onboarding",
   cloudOrigin: "https://cloud.example",

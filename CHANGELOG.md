@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## [0.9.0] - 2026-08-11
+
+- Improved Google Search Console and Analytics reliability with reconnect notifications, paused sync during reauthorization, and correct OAuth project callbacks.
+
+- Improved onboarding and self-hosting with clearer provider status, location defaults, deployment links, docs navigation, and a resilient GitHub link.
+
+- **Breaking:** Cloud import endpoints now require `/api/v1/cloud/import`; unversioned `/api/cloud/import` routes have been removed.
+
 ## [0.8.1] - 2026-08-11
 
 - Improved onboarding with the SerpApi free allowance, provider selection/status and API password reveal, primary/backup setup, and owned-domain matching.

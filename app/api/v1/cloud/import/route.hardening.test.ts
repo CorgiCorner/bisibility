@@ -1,4 +1,4 @@
-import { POST } from "@/app/api/cloud/import/route";
+import { POST } from "@/app/api/v1/cloud/import/route";
 import { CloudImportTokenError } from "@/lib/api/cloud-import";
 import type { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -35,7 +35,7 @@ vi.mock("@/lib/auth/audit", () => ({ writeAudit: mocks.writeAudit }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 
 const rawToken = "mig_valid_token_value_12345";
-const url = "https://example.com/api/cloud/import";
+const url = "https://example.com/api/v1/cloud/import";
 const ids = {
   job: "imp_abcdefghijklmnopqrstuvwx",
   keyword: "kw_abcdefghijklmnopqrstuvwx",
@@ -132,7 +132,7 @@ function audit(action: string) {
   return mocks.writeAudit.mock.calls.find(([input]) => input.action === action)?.[0];
 }
 
-describe("POST /api/cloud/import hardening", () => {
+describe("POST /api/v1/cloud/import hardening", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();

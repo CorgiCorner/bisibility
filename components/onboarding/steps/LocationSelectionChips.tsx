@@ -91,7 +91,11 @@ export function LocationSelectionChips({
                 minWidth: 20,
                 padding: 0,
                 "&:hover": { color: "var(--red-text)" },
-                "&.Mui-disabled": { backgroundColor: "transparent", border: 0, opacity: 0.4 },
+                "&.Mui-disabled": {
+                  backgroundColor: "transparent",
+                  border: 0,
+                  opacity: 0.4,
+                },
               }}
               type="button"
               variant="ghost"
@@ -115,7 +119,7 @@ export function LocationSelectionChips({
       </div>
       {adding && canAdd ? (
         <fieldset
-          className="m-0 flex max-w-[360px] items-start gap-2 border-0 p-0"
+          className="m-0 grid max-w-[360px] gap-2 border-0 p-0"
           onBlur={handleAddBlur}
           onKeyDown={handleAddKeyDown}
         >
@@ -132,13 +136,16 @@ export function LocationSelectionChips({
           {values.length > 0 ? (
             <Button
               aria-label="Cancel adding location"
-              className="mt-[22px]"
+              className="justify-self-end"
               onClick={cancelAdd}
               size="xs"
               startIcon={<X aria-hidden size={12} weight="bold" />}
               sx={{
                 borderRadius: "999px",
-                "&:hover": { borderColor: "var(--red)", color: "var(--red-text)" },
+                "&:hover": {
+                  borderColor: "var(--red)",
+                  color: "var(--red-text)",
+                },
               }}
               type="button"
               variant="secondary"

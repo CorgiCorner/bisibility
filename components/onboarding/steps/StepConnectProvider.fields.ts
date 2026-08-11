@@ -48,7 +48,7 @@ export const providerOptions = [
     affiliate: false,
     costCaption: serpApiCostCaption(),
     costDetail:
-      "Plans include monthly searches; one Top-N check uses up to ceil(N/10) searches, usually fewer with stop-on-match.",
+      "Plans include monthly searches. A Top-N check uses up to one search per 10 results, often fewer when a match is found early.",
     docsHref: "https://serpapi.com",
     label: "SerpApi",
     value: "serpapi",
@@ -94,7 +94,7 @@ export type ProviderTestResult = {
   message: string;
   ok: boolean;
 };
-export type ConnectedProvider = { balance?: number; primary: boolean };
+export type ConnectedProvider = { balance?: number };
 export type ConnectedProviderMap = Partial<Record<OnboardingSerpProviderId, ConnectedProvider>>;
 export type ProviderTestResultMap = Partial<
   Record<OnboardingSerpProviderId, ProviderTestResult | null>
@@ -154,6 +154,13 @@ export function providerConnectInput(
   return { ...values, credentials: undefined };
 }
 
+export function savedProviderCompletionInput(
+  projectId: string,
+  providerId: OnboardingSerpProviderId,
+): OnboardingConnectProviderInput {
+  return { projectId, providerId };
+}
+
 export function costOrEmpty(value: number | undefined) {
   return value && value > 0 ? value : undefined;
 }
@@ -189,21 +196,6 @@ export function pickDraft(values: OnboardingConnectProviderInput): ProviderDraft
   };
 }
 
-export function providerValuesFromDraft(
-  providerId: OnboardingSerpProviderId,
-  currentValues: OnboardingConnectProviderInput,
-  drafts: ProviderDraftMap,
-): OnboardingConnectProviderInput {
-  const draft =
-    providerId === currentValues.providerId ? pickDraft(currentValues) : drafts[providerId];
-  return {
-    ...currentValues,
-    ...draft,
-    credentials: providerId === "serpapi" ? { apiKey: draft.secret } : undefined,
-    providerId,
-  };
-}
-
 export function providerSelectionState(
   values: OnboardingConnectProviderInput,
   providerId: OnboardingSerpProviderId,
@@ -220,9 +212,8 @@ export function withConnectedProvider(
   connections: ConnectedProviderMap,
   providerId: OnboardingSerpProviderId,
   balance: number | undefined,
-  primary: boolean,
 ): ConnectedProviderMap {
-  return { ...connections, [providerId]: { balance, primary } };
+  return { ...connections, [providerId]: { balance } };
 }
 
 export function initialDrafts(defaultValues: OnboardingConnectProviderInput): ProviderDraftMap {
@@ -237,10 +228,6 @@ export function initialDrafts(defaultValues: OnboardingConnectProviderInput): Pr
   };
 }
 
-export function primaryProvider(connections: ConnectedProviderMap) {
-  return providerOptions.find((provider) => connections[provider.value]?.primary)?.value;
-}
-
 export function replaceSelectedProviderInUrl(
   flowState: OnboardingFlowState | undefined,
   projectId: string,
@@ -251,50 +238,4 @@ export function replaceSelectedProviderInUrl(
     "",
     buildOnboardingStepHref(3, { ...flowState, projectId, providerId }),
   );
-}
-
-/** Preserves verified state only when restored credentials match the stored successful test. */
-export function draftMatchesStoredTest(
-  providerId: OnboardingSerpProviderId,
-  draft: Pick<ProviderDraft, "login" | "secret">,
-  testResult: ProviderTestResult | null | undefined,
-  testedKey: string | undefined,
-) {
-  return (
-    testResult?.ok === true &&
-    testedKey !== undefined &&
-    credentialFieldsSignature(credentialFields[providerId], {
-      login: draft.login,
-      secret: draft.secret,
-    }) === testedKey
-  );
-}
-
-export function anyProviderVerified(
-  connections: ConnectedProviderMap,
-  drafts: ProviderDraftMap,
-  testResults: ProviderTestResultMap,
-  testedCredentialKeys: TestedCredentialKeyMap,
-  currentValues: OnboardingConnectProviderInput,
-) {
-  return (
-    providerOptions.some(({ value: providerId }) => Boolean(connections[providerId])) ||
-    verifiedProviderId(drafts, testResults, testedCredentialKeys, currentValues) !== undefined
-  );
-}
-
-export function verifiedProviderId(
-  drafts: ProviderDraftMap,
-  testResults: ProviderTestResultMap,
-  testedCredentialKeys: TestedCredentialKeyMap,
-  currentValues: OnboardingConnectProviderInput,
-) {
-  return providerOptions.find(({ value: providerId }) =>
-    draftMatchesStoredTest(
-      providerId,
-      providerValuesFromDraft(providerId, currentValues, drafts),
-      testResults[providerId],
-      testedCredentialKeys[providerId],
-    ),
-  )?.value;
 }

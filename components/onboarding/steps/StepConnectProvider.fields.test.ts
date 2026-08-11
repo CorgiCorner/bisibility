@@ -1,11 +1,10 @@
 import { rateForProvider } from "@/lib/cost-estimate/provider-rates";
 import { describe, expect, it } from "vitest";
 import {
-  anyProviderVerified,
   costPerCheckCentsFromUsd,
-  initialDrafts,
   onboardingConnectProviderSchemaForConnections,
   providerOptions,
+  savedProviderCompletionInput,
 } from "./StepConnectProvider.fields";
 
 const emptyCredentials = {
@@ -46,10 +45,17 @@ describe("costPerCheckCentsFromUsd", () => {
 
   it("accepts empty credentials for an already-connected provider", () => {
     const schema = onboardingConnectProviderSchemaForConnections({
-      dataforseo: { primary: true },
+      dataforseo: {},
     });
 
     expect(schema.safeParse(emptyCredentials).success).toBe(true);
+  });
+
+  it("does not carry form values when continuing with a saved provider", () => {
+    expect(savedProviderCompletionInput("prj_1", "serpapi")).toEqual({
+      projectId: "prj_1",
+      providerId: "serpapi",
+    });
   });
 
   it("rejects empty credentials for a provider without a stored connection", () => {
@@ -62,23 +68,5 @@ describe("costPerCheckCentsFromUsd", () => {
         "Enter your API password.",
       ]);
     }
-  });
-
-  it("keeps another provider eligible when the selected draft is unverified", () => {
-    const dataForSeoValues = {
-      ...emptyCredentials,
-      login: "provider-login",
-      secret: "provider-password",
-    };
-
-    expect(
-      anyProviderVerified(
-        {},
-        initialDrafts(dataForSeoValues),
-        { dataforseo: { message: "Connected", ok: true } },
-        { dataforseo: "login:provider-login|secret:provider-password" },
-        { ...dataForSeoValues, providerId: "serpapi", secret: "unverified-key" },
-      ),
-    ).toBe(true);
   });
 });

@@ -271,7 +271,7 @@ export function getLlmsText() {
     `API versions: ${apiVersions.join(", ")}.`,
     `Optional declaration: ${API_VERSION_HEADER}: ${apiVersions[0]}.`,
     "Auth: Authorization: Bearer <api_key>.",
-    "Exception: cloud-import operations authenticate only with Authorization: Bearer mig_.... Request bodies never carry credentials. GET /cloud/import/compatibility is public.",
+    "Exception: cloud-import operations authenticate only with Authorization: Bearer mig_.... Request bodies never carry credentials. GET /api/v1/cloud/import/compatibility is public.",
     "Errors use application/problem+json. Lists use data/meta.next_cursor.",
     "",
     "Resources: projects, keywords, rank-checks, signals, api-keys, alert-rules, triggered-alerts, team, providers, saved-views, competitors, notification-preferences, migration-tokens, cloud-import.",

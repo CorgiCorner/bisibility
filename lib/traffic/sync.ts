@@ -1,14 +1,14 @@
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
-import { projectLabel } from "@/lib/ops/labels";
-import { notifyOps, shouldNotifyOpsSuccess } from "@/lib/ops/notify";
-import { ProviderAuthError } from "@/lib/providers/auth-error";
+import { notifyProviderNeedsReauth } from "@/lib/notifications/provider-events";
 import { markProviderNeedsReauth } from "@/lib/providers/auth-state";
 import { classifyProviderFailure, type ProviderFailureClass } from "@/lib/providers/failure-class";
 import { ProviderRateLimitedError } from "@/lib/providers/rate-limit";
 import { getAnalyticsProvider } from "@/lib/providers/registry";
+import type { ProviderStatus } from "@/lib/providers/types";
 import { providerChainOrderBy, providerChainWhere } from "@/lib/rank-check/provider-chain-order";
+import { isUserActionableTrafficFailure } from "./failure-policy";
 import type { TrafficKeyword } from "./match";
 import { trafficRuntimeCredentials } from "./runtime-credentials";
 import {
@@ -25,16 +25,18 @@ import {
   upsertQuerySnapshots,
 } from "./snapshots";
 import { addTrafficMetrics, emptyTrafficMetrics, warnIfTrafficTruncated } from "./sync-metrics";
+import { notifyTrafficRun, recordTrafficOperationalRun } from "./sync-observability";
 
 type TrafficConnection = {
   credentialsEncrypted: string | null;
   id: string;
   provider: string;
+  status: ProviderStatus;
 };
 
 export type TrafficConnectionSkip = {
   provider: string;
-  reason: "no_capability" | "rate_limited";
+  reason: "needs_reauth" | "no_capability" | "rate_limited";
 };
 
 export type TrafficSyncRunStatus =
@@ -42,6 +44,7 @@ export type TrafficSyncRunStatus =
   | "succeeded_empty"
   | "deferred_rate_limit"
   | "failed"
+  | "skipped_needs_reauth"
   | "not_applicable";
 
 export type TrafficConnectionRun = TrafficSnapshotSyncMetrics & {
@@ -76,61 +79,15 @@ function errorMessage(error: unknown) {
 
 const REDACTED_PROVIDER_ERROR = "Provider sync failed. See worker logs for details.";
 
-async function notifyTrafficRun(projectId: string, run: TrafficConnectionRun): Promise<void> {
-  if (run.status === "not_applicable") return;
-  const successful = run.status === "succeeded_with_data" || run.status === "succeeded_empty";
-  if (successful && !shouldNotifyOpsSuccess()) return;
-  await notifyOps({
-    ...(successful ? {} : { dedupeKey: `sync:${projectId}:${run.provider}` }),
-    fields: {
-      Connection: run.connectionId,
-      ...(run.status === "failed" ? { Error: "provider_sync_failed" } : {}),
-      ...(run.errorClass ? { "Error class": run.errorClass } : {}),
-      Project: projectLabel(projectId),
-      Provider: run.provider,
-      Rows: `fetched=${run.rowsFetched}, matched=${run.rowsMatched}, upserted=${run.rowsUpserted}`,
-      Status: run.status,
-    },
-    kind: "traffic_sync",
-    severity:
-      run.status === "failed" ? "error" : run.status === "deferred_rate_limit" ? "warning" : "info",
-    title: `Traffic sync: ${run.status.replaceAll("_", " ")}`,
-  }).catch(() => undefined);
-}
-
-async function recordOperationalRun(input: {
-  connection: TrafficConnection;
-  error?: string;
-  errorClass?: ProviderFailureClass;
-  finishedAt: Date;
-  metrics: TrafficSnapshotSyncMetrics;
-  projectId: string;
-  scheduledFor: Date | null;
-  startedAt: Date;
-  status: TrafficSyncRunStatus;
-}): Promise<void> {
-  await prisma.operationalRun.create({
-    data: {
-      connectionId: input.connection.id,
-      error: input.error,
-      errorClass: input.errorClass,
-      finishedAt: input.finishedAt,
-      kind: "traffic_sync",
-      meta: input.metrics,
-      projectId: input.projectId,
-      provider: input.connection.provider,
-      scheduledFor: input.scheduledFor,
-      startedAt: input.startedAt,
-      status: input.status,
-    },
-  });
-}
-
 async function loadConnections(projectId: string): Promise<TrafficConnection[]> {
   return prisma.providerConnection.findMany({
     orderBy: providerChainOrderBy(),
-    select: { credentialsEncrypted: true, id: true, provider: true },
-    where: { ...providerChainWhere("analytics"), projectId },
+    select: { credentialsEncrypted: true, id: true, provider: true, status: true },
+    where: {
+      ...providerChainWhere("analytics"),
+      projectId,
+      status: { in: ["connected", "needs_reauth"] },
+    },
   });
 }
 
@@ -176,82 +133,96 @@ export async function syncTrafficForProject(
     let persistedError: string | undefined;
     let errorClass: ProviderFailureClass | undefined;
 
-    try {
-      const provider = getAnalyticsProvider(connection.provider);
-      const canQuery = hasQueryStats(provider);
-      const canPage = hasPageStats(provider);
-      if (!canQuery && !canPage) {
-        status = "not_applicable";
-        summary.skipped.push({ provider: connection.provider, reason: "no_capability" });
-      } else {
-        const credentials = trafficRuntimeCredentials(connection);
-        // Providers consume quota per request, so pre-consumption would double-count.
-        // Isolate connections so one failure cannot skip later project sources.
-        if (canQuery) {
-          for (const windowDays of QUERY_STATS_WINDOW_DAYS) {
-            const queryMetrics = await upsertQuerySnapshots(
+    if (connection.status === "needs_reauth") {
+      status = "skipped_needs_reauth";
+      summary.skipped.push({ provider: connection.provider, reason: "needs_reauth" });
+    } else {
+      try {
+        const provider = getAnalyticsProvider(connection.provider);
+        const canQuery = hasQueryStats(provider);
+        const canPage = hasPageStats(provider);
+        if (!canQuery && !canPage) {
+          status = "not_applicable";
+          summary.skipped.push({ provider: connection.provider, reason: "no_capability" });
+        } else {
+          const credentials = trafficRuntimeCredentials(connection);
+          // Providers consume quota per request, so pre-consumption would double-count.
+          // Isolate connections so one failure cannot skip later project sources.
+          if (canQuery) {
+            for (const windowDays of QUERY_STATS_WINDOW_DAYS) {
+              const queryMetrics = await upsertQuerySnapshots(
+                connection.provider,
+                credentials,
+                provider,
+                keywords,
+                statsWindow(now, QUERY_STATS_LAG_DAYS, windowDays),
+              );
+              addTrafficMetrics(metrics, queryMetrics);
+              summary.keywordSnapshots += queryMetrics.rowsUpserted;
+            }
+            warnIfTrafficTruncated({
+              connectionId: connection.id,
+              metrics,
+              projectId,
+              provider: connection.provider,
+            });
+          }
+          if (canPage) {
+            const pageMetrics = await upsertPageSnapshots(
+              projectId,
               connection.provider,
               credentials,
               provider,
               keywords,
-              statsWindow(now, QUERY_STATS_LAG_DAYS, windowDays),
+              statsWindow(now, PAGE_STATS_LAG_DAYS),
             );
-            addTrafficMetrics(metrics, queryMetrics);
-            summary.keywordSnapshots += queryMetrics.rowsUpserted;
+            addTrafficMetrics(metrics, pageMetrics);
+            summary.pageSnapshots += pageMetrics.rowsUpserted;
           }
-          warnIfTrafficTruncated({
+
+          status = metrics.rowsFetched === 0 ? "succeeded_empty" : "succeeded_with_data";
+          summary.connections += 1;
+          await prisma.providerConnection.update({
+            data: { lastUsedAt: now },
+            where: { id: connection.id },
+          });
+        }
+      } catch (error) {
+        errorClass = classifyProviderFailure(error);
+        if (isUserActionableTrafficFailure(errorClass)) {
+          persistedError = REDACTED_PROVIDER_ERROR;
+          const transitioned = await markProviderNeedsReauth({
             connectionId: connection.id,
-            metrics,
+            notifyOps: false,
+            projectId,
+            provider: connection.provider,
+          });
+          if (transitioned) {
+            await notifyProviderNeedsReauth({
+              connectionId: connection.id,
+              failedAt: new Date(),
+              projectId,
+              provider: connection.provider,
+            }).catch(() => undefined);
+          }
+        } else if (error instanceof ProviderRateLimitedError) {
+          status = "deferred_rate_limit";
+          errorClass = undefined;
+          summary.skipped.push({ provider: connection.provider, reason: "rate_limited" });
+        } else {
+          persistedError = REDACTED_PROVIDER_ERROR;
+          console.error("[traffic] provider sync failed", {
+            connectionId: connection.id,
+            error,
             projectId,
             provider: connection.provider,
           });
         }
-        if (canPage) {
-          const pageMetrics = await upsertPageSnapshots(
-            projectId,
-            connection.provider,
-            credentials,
-            provider,
-            keywords,
-            statsWindow(now, PAGE_STATS_LAG_DAYS),
-          );
-          addTrafficMetrics(metrics, pageMetrics);
-          summary.pageSnapshots += pageMetrics.rowsUpserted;
-        }
-
-        status = metrics.rowsFetched === 0 ? "succeeded_empty" : "succeeded_with_data";
-        summary.connections += 1;
-        await prisma.providerConnection.update({
-          data: { lastUsedAt: now },
-          where: { id: connection.id },
-        });
-      }
-    } catch (error) {
-      errorClass = classifyProviderFailure(error);
-      if (error instanceof ProviderAuthError) {
-        persistedError = REDACTED_PROVIDER_ERROR;
-        await markProviderNeedsReauth({
-          connectionId: connection.id,
-          projectId,
-          provider: connection.provider,
-        });
-      } else if (error instanceof ProviderRateLimitedError) {
-        status = "deferred_rate_limit";
-        errorClass = undefined;
-        summary.skipped.push({ provider: connection.provider, reason: "rate_limited" });
-      } else {
-        persistedError = REDACTED_PROVIDER_ERROR;
-        console.error("[traffic] provider sync failed", {
-          connectionId: connection.id,
-          error,
-          projectId,
-          provider: connection.provider,
-        });
       }
     }
 
     const finishedAt = new Date();
-    await recordOperationalRun({
+    await recordTrafficOperationalRun({
       connection,
       error: persistedError,
       errorClass,
@@ -271,7 +242,7 @@ export async function syncTrafficForProject(
       status,
     };
     summary.runs.push(run);
-    await notifyTrafficRun(projectId, run);
+    await notifyTrafficRun(projectId, run, finishedAt);
   }
 
   return summary;
@@ -284,7 +255,13 @@ export async function syncTrafficForAllProjects(
   const projects = await prisma.project.findMany({
     select: { id: true },
     where: {
-      providerConnections: { some: { enabled: true, kind: "analytics", status: "connected" } },
+      providerConnections: {
+        some: {
+          enabled: true,
+          kind: "analytics",
+          status: { in: ["connected", "needs_reauth"] },
+        },
+      },
     },
   });
   const results: TrafficProjectRunResult[] = [];

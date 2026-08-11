@@ -44,7 +44,7 @@ const rawToken = "mig_valid_token_value_12345";
 const jobId = "imp_abcdefghijklmnopqrstuvwx";
 const keywordId = "kw_abcdefghijklmnopqrstuvwx";
 const ruleId = "alr_abcdefghijklmnopqrstuvwx";
-const url = `https://example.com/api/cloud/import/sessions/${jobId}/finalize`;
+const url = `https://example.com/api/v1/cloud/import/sessions/${jobId}/finalize`;
 
 function project() {
   return {
@@ -163,7 +163,7 @@ async function post(body?: unknown, sessionId = jobId) {
   return (await POST(request(body), { params: Promise.resolve({ sessionId }) })) as Response;
 }
 
-describe("POST /api/cloud/import/sessions/{sessionId}/finalize", () => {
+describe("POST /api/v1/cloud/import/sessions/{sessionId}/finalize", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.verifyMigrationToken.mockResolvedValue({
