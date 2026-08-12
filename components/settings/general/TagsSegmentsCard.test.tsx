@@ -1,13 +1,8 @@
 import { TagsSegmentsCard } from "@/components/settings/general/TagsSegmentsCard";
+import { routerMock } from "@/tests/next-navigation";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-
-const mocks = vi.hoisted(() => ({ refresh: vi.fn() }));
-
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ refresh: mocks.refresh }),
-}));
 
 const tags = [
   { color: "var(--blue)", label: "product" },
@@ -46,7 +41,7 @@ describe("TagsSegmentsCard", () => {
       expect(createTag).toHaveBeenCalledWith({ name: "research", projectId: "prj_7Kd2Qf9m" }),
     );
     expect(await screen.findByText("Saved")).toBeVisible();
-    expect(mocks.refresh).toHaveBeenCalledOnce();
+    expect(routerMock.refresh).toHaveBeenCalledOnce();
   });
 
   it("stages removals locally before the audited delete action runs", async () => {

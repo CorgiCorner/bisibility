@@ -9,12 +9,13 @@ import { verifyProviderConnectionBeforeSave } from "@/lib/api/provider-verificat
 import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { makePublicId } from "@/lib/db/public-id";
-import type { GoogleOAuthSetup, GooglePropertyOption } from "@/lib/integrations/types";
+import type { GoogleOAuthSetup } from "@/lib/integrations/types";
 import { decryptProviderCredentials, decryptSecret, encryptSecret } from "@/lib/providers/crypto";
 import { PROVIDER_CATALOG } from "@/lib/providers/registry";
 import { cookies } from "next/headers";
 import { z } from "zod";
 import { listGa4Properties, listGoogleSites, refreshGoogleAccessToken } from "./google-client";
+import { ga4PropertyOptions, gscPropertyOptions } from "./google-property-options";
 import { normalizeGa4PropertyId } from "./property-id";
 
 const GOOGLE_OAUTH_PENDING_COOKIE = "google_oauth_pending";
@@ -80,46 +81,6 @@ async function pendingForProject(projectId: string) {
   return { actor, cookieStore, pending, project };
 }
 
-function propertyKind(siteUrl: string): GooglePropertyOption["kind"] {
-  return siteUrl.startsWith("sc-domain:") ? "domain" : "url-prefix";
-}
-
-function propertyLabel(siteUrl: string) {
-  return siteUrl.startsWith("sc-domain:")
-    ? `${siteUrl.slice("sc-domain:".length)} (Domain property)`
-    : `${siteUrl} (URL-prefix property)`;
-}
-
-function propertyOptions(
-  sites: Awaited<ReturnType<typeof listGoogleSites>>,
-): GooglePropertyOption[] {
-  return sites
-    .filter((site) => site.permissionLevel !== "siteUnverifiedUser")
-    .map((site) => ({
-      kind: propertyKind(site.siteUrl),
-      label: propertyLabel(site.siteUrl),
-      permissionLevel: site.permissionLevel,
-      value: site.siteUrl,
-    }))
-    .sort((left, right) => {
-      const kindDelta = Number(left.kind === "url-prefix") - Number(right.kind === "url-prefix");
-      return kindDelta || left.label.localeCompare(right.label);
-    });
-}
-
-function ga4PropertyOptions(
-  properties: Awaited<ReturnType<typeof listGa4Properties>>,
-): GooglePropertyOption[] {
-  return properties
-    .map((property) => ({
-      kind: "ga4" as const,
-      label: `${property.displayName} (${property.propertyId})`,
-      permissionLevel: property.accountDisplayName,
-      value: property.propertyId,
-    }))
-    .sort((left, right) => left.label.localeCompare(right.label));
-}
-
 export async function getPendingGoogleOAuthSetup(
   projectId: string,
 ): Promise<GoogleOAuthSetup | null> {
@@ -130,7 +91,7 @@ export async function getPendingGoogleOAuthSetup(
     const properties =
       context.pending.provider === "ga4"
         ? ga4PropertyOptions(await listGa4Properties(accessToken))
-        : propertyOptions(await listGoogleSites(accessToken));
+        : gscPropertyOptions(await listGoogleSites(accessToken));
     return {
       ...(context.pending.property ? { preferredProperty: context.pending.property } : {}),
       properties,

@@ -126,7 +126,7 @@ describe("rank check preview actions", () => {
       }),
     );
     expect(mocks.revalidatePath).toHaveBeenCalledWith(
-      appPath("[project]", "keywords", "[id]"),
+      appPath("[project]", "rank-tracker", "[id]"),
       "page",
     );
   });

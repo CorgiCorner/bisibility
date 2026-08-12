@@ -10,7 +10,6 @@ const mocks = vi.hoisted(() => ({
     user: { findUnique: vi.fn() },
   },
   revalidatePath: vi.fn(),
-  redirect: vi.fn(),
   requireSession: vi.fn(),
   writeAudit: vi.fn(),
   writeAuditFailure: vi.fn(),
@@ -22,7 +21,6 @@ vi.mock("@/lib/auth/audit", () => ({
   writeAuditFailure: mocks.writeAuditFailure,
 }));
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
-vi.mock("next/navigation", () => ({ redirect: mocks.redirect }));
 vi.mock("next/headers", () => ({ cookies: vi.fn(() => mocks.cookieStore), headers: vi.fn() }));
 vi.mock("@/lib/auth/session", () => ({ requireSession: mocks.requireSession }));
 

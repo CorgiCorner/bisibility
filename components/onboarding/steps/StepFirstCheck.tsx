@@ -16,14 +16,12 @@ import {
 import { Button } from "@/components/ui";
 import { appPath, appRootPath } from "@/lib/routing/app-path";
 import type { ProjectDefaultsInput } from "@/lib/schemas/project";
-import {
-  CheckCircleIcon as CheckCircle,
-  MagnifyingGlassIcon as MagnifyingGlass,
-} from "@phosphor-icons/react";
+import { MagnifyingGlassIcon as MagnifyingGlass } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import type { SyntheticEvent } from "react";
+import { FirstCheckQueueMessage } from "./FirstCheckQueueMessage";
 import { FirstCheckResults } from "./FirstCheckResults";
-import type { OnboardingTrackingDefaultsInput } from "./StepSchedule";
+import type { OnboardingTrackingDefaultsInput } from "./step-schedule-model";
 import { type FirstCheckRunActions, useFirstCheckRun } from "./use-first-check-run";
 
 type FirstCheckProject = {
@@ -41,6 +39,7 @@ type StepFirstCheckProps = FirstCheckRunActions & {
   keywordCount?: number;
   project?: FirstCheckProject | null;
   providerConnected?: boolean;
+  providerId?: string | null;
 };
 
 type CheckState = {
@@ -195,6 +194,7 @@ export function StepFirstCheck({
   listFirstCheckCandidatesAction,
   project,
   providerConnected,
+  providerId,
   queueFirstChecksAction,
   runFirstCheckPreviewAction,
 }: StepFirstCheckProps) {
@@ -219,7 +219,7 @@ export function StepFirstCheck({
     paused,
     project,
     providerReady,
-    providerId: flowState?.providerId,
+    providerId: providerId ?? flowState?.providerId,
     sampleProject,
   });
   const previewMode =
@@ -255,7 +255,6 @@ export function StepFirstCheck({
       <div className="mt-1 text-[13px] text-fg-muted">
         Everything&apos;s ready. Here&apos;s what we&apos;ll start tracking.
       </div>
-
       <div className="mt-5 overflow-hidden rounded-xl border border-border">
         {rows.map((row, index) => (
           <div className={index % 2 === 0 ? "bg-bg-sunken" : "bg-bg-elev"} key={row.label}>
@@ -272,7 +271,6 @@ export function StepFirstCheck({
           </div>
         ))}
       </div>
-
       <div className="mt-5 flex flex-wrap items-center gap-3">
         {canPreview ? (
           <Button
@@ -288,14 +286,8 @@ export function StepFirstCheck({
             {previewButtonLabel(providerReady, hasAnalyticsSource, sampleProject)}
           </Button>
         ) : null}
-        {queueMessage ? (
-          <div className="flex min-w-[220px] flex-1 items-center gap-2 text-[12.5px] text-green-text">
-            <CheckCircle aria-hidden size={16} weight="fill" />
-            {queueMessage}
-          </div>
-        ) : null}
       </div>
-
+      {queueMessage ? <FirstCheckQueueMessage message={queueMessage} /> : null}
       <FirstCheckResults state={state} />
     </form>
   );

@@ -40,7 +40,7 @@ function runsLinks(projectRef: string) {
 function upcomingLinks(projectRef: string) {
   return {
     providerSettingsHref: appPath(projectRef, "integrations"),
-    schedulesHref: appPath(projectRef, "keywords"),
+    schedulesHref: appPath(projectRef, "rank-tracker"),
     timelineHref: appPath(projectRef, "timeline"),
   };
 }
@@ -158,7 +158,7 @@ export function ChecksWorkspace({
       {...runsLinks(projectRef)}
       asOfDate={asOfDate}
       filter={filter}
-      keywordHref={(keywordPublicId) => appPath(projectRef, "keywords", keywordPublicId)}
+      keywordHref={(keywordPublicId) => appPath(projectRef, "rank-tracker", keywordPublicId)}
       now={nowDate}
       onAsOfDateChange={changeAsOfDate}
       onFilterChange={changeFilter}

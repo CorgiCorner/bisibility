@@ -76,19 +76,18 @@ export async function completeOnboarding(page: Page, suffix: string) {
   const keyword = `rank tracker ${suffix}`;
 
   await page.goto("/onboarding");
-  await page.getByLabel("Domain", { exact: true }).fill(domain);
-  await page.getByLabel("Project name").fill(`E2E ${suffix}`);
+  const website = page.getByLabel("Your website", { exact: true });
+  await expect(website).toBeVisible();
+  await website.fill(domain);
   await clickWizardPrimary(page, "Continue", /[?&]step=2(?:&|$)/);
-  await clickWizardPrimary(page, "Continue", /[?&]step=3(?:&|$)/);
 
   await page.getByLabel("API login").fill("fake-login");
   await page.getByRole("textbox", { name: /API password/ }).fill("fake-secret");
   await testAndSaveDataForSeo(page);
-  await clickProviderContinue(page, /[?&]step=4(?:&|$)/);
+  await clickProviderContinue(page, /[?&]step=3(?:&|$)/);
 
-  await clickWizardPrimary(page, "Continue", /[?&]step=5(?:&|$)/);
   await page.getByPlaceholder("One keyword per line").fill(keyword);
-  await clickWizardPrimary(page, "Continue", /[?&]step=6(?:&|$)/);
+  await clickWizardPrimary(page, "Continue", /[?&]step=4(?:&|$)/);
   await clickWizardPrimary(page, "Open dashboard", /\/app\/prj_[^/]+\/overview$/);
 
   const projectRef = new URL(page.url()).pathname.split("/")[2];

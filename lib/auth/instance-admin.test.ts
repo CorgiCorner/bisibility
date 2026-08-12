@@ -1,10 +1,8 @@
+import { notFound } from "@/tests/next-navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getInstanceAdminSession, requireInstanceAdmin } from "./instance-admin";
 
 const mocks = vi.hoisted(() => ({
-  notFound: vi.fn(() => {
-    throw new Error("NEXT_NOT_FOUND");
-  }),
   prisma: {
     user: {
       count: vi.fn(),
@@ -18,7 +16,6 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("server-only", () => ({}));
 vi.mock("react", () => ({ cache: (fn: unknown) => fn }));
-vi.mock("next/navigation", () => ({ notFound: mocks.notFound }));
 vi.mock("@/lib/auth/session", () => ({
   getSession: mocks.getSession,
   getSessionReference: mocks.getSessionReference,
@@ -28,6 +25,9 @@ vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 describe("instance admin authorization", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    notFound.mockImplementation(() => {
+      throw new Error("NEXT_NOT_FOUND");
+    });
     mocks.getSession.mockResolvedValue({ user: { id: "user_1" } });
     mocks.getSessionReference.mockResolvedValue({ user: { id: "user_1" } });
     mocks.prisma.user.count.mockResolvedValue(1);
@@ -54,7 +54,7 @@ describe("instance admin authorization", () => {
 
     await expect(getInstanceAdminSession()).resolves.toBeNull();
     expect(mocks.prisma.user.findUnique).not.toHaveBeenCalled();
-    expect(mocks.notFound).not.toHaveBeenCalled();
+    expect(notFound).not.toHaveBeenCalled();
   });
 
   it.each([null, { isInstanceAdmin: false }])(
@@ -63,7 +63,7 @@ describe("instance admin authorization", () => {
       mocks.prisma.user.findUnique.mockResolvedValue(user);
 
       await expect(requireInstanceAdmin()).rejects.toThrow("NEXT_NOT_FOUND");
-      expect(mocks.notFound).toHaveBeenCalledOnce();
+      expect(notFound).toHaveBeenCalledOnce();
     },
   );
 });

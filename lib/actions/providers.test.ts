@@ -6,6 +6,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   connectProvider,
   disconnectProvider,
+  loadStoredGoogleProperties,
+  saveStoredGoogleProperty,
   testConnection,
   updateProviderCost,
   updateProviderRate,
@@ -31,6 +33,7 @@ const mocks = vi.hoisted(() => {
     actor: { id: "user_1" },
     analyticsProvider,
     getActionActor: vi.fn(),
+    loadStoredGoogleProperties: vi.fn(),
     provider,
     prisma: {
       $queryRaw: vi.fn(),
@@ -54,6 +57,7 @@ const mocks = vi.hoisted(() => {
     requireProjectScope: vi.fn(),
     revalidatePath: vi.fn(),
     startTrafficSyncWorkflow: vi.fn(),
+    saveStoredGoogleProperty: vi.fn(),
     writeAudit: vi.fn(),
   };
 });
@@ -99,13 +103,17 @@ vi.mock("@/lib/providers/registry", () => ({
 vi.mock("@/lib/temporal/traffic-client", () => ({
   startTrafficSyncWorkflow: mocks.startTrafficSyncWorkflow,
 }));
+vi.mock("@/lib/providers/analytics/google-stored-property", () => ({
+  loadStoredGoogleProperties: mocks.loadStoredGoogleProperties,
+  saveStoredGoogleProperty: mocks.saveStoredGoogleProperty,
+}));
 vi.mock("./_shared", () => ({
   getActionActor: mocks.getActionActor,
   parseActionInput: (schema: { parse: (input: unknown) => unknown }, input: unknown) =>
     schema.parse(input),
   requireProjectScope: mocks.requireProjectScope,
   revalidateKeywordViews: () => {
-    mocks.revalidatePath("/app/keywords");
+    mocks.revalidatePath("/app/rank-tracker");
   },
   revalidateProviderViews: () => {
     mocks.revalidatePath("/app/integrations");
@@ -160,6 +168,11 @@ describe("provider actions", () => {
     mocks.provider.testConnection.mockResolvedValue({ message: "ok", ok: true });
     mocks.analyticsProvider.testConnection.mockResolvedValue({ message: "ok", ok: true });
     mocks.requireProjectScope.mockResolvedValue(mocks.project);
+    mocks.loadStoredGoogleProperties.mockResolvedValue({ properties: [], provider: "gsc" });
+    mocks.saveStoredGoogleProperty.mockResolvedValue({
+      property: "sc-domain:example.com",
+      status: "saved",
+    });
     mocks.prisma.$queryRaw.mockResolvedValue([{ id: mocks.project.id }]);
     mocks.prisma.$transaction.mockImplementation((callback) => callback(mocks.prisma));
     mocks.prisma.project.findUnique.mockResolvedValue({ publicId: mocks.project.publicId });
@@ -178,6 +191,48 @@ describe("provider actions", () => {
     await expect(connectProvider({ projectId: "", providerId: "serpapi" })).rejects.toThrow();
 
     expect(mocks.getActionActor).not.toHaveBeenCalled();
+  });
+
+  it("authorizes loading stored properties with manage scope before calling the service", async () => {
+    const result = await loadStoredGoogleProperties({
+      projectId: "prj_a00000000000000000000000",
+      provider: "gsc",
+    });
+
+    expect(mocks.requireProjectScope).toHaveBeenCalledWith(
+      mocks.actor,
+      "manage",
+      "prj_a00000000000000000000000",
+      { type: "provider_connection" },
+    );
+    expect(mocks.loadStoredGoogleProperties).toHaveBeenCalledWith({
+      projectId: "project_1",
+      provider: "gsc",
+    });
+    expect(result).toEqual({ properties: [], provider: "gsc" });
+  });
+
+  it("authorizes and revalidates a stored property change after a successful save", async () => {
+    const result = await saveStoredGoogleProperty({
+      projectId: "prj_a00000000000000000000000",
+      property: "sc-domain:example.com",
+      provider: "gsc",
+    });
+
+    expect(mocks.requireProjectScope).toHaveBeenCalledWith(
+      mocks.actor,
+      "manage",
+      "prj_a00000000000000000000000",
+      { type: "provider_connection" },
+    );
+    expect(mocks.saveStoredGoogleProperty).toHaveBeenCalledWith({
+      actorId: "user_1",
+      projectId: "project_1",
+      property: "sc-domain:example.com",
+      provider: "gsc",
+    });
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/app/integrations");
+    expect(result).toEqual({ property: "sc-domain:example.com", status: "saved" });
   });
 
   it("connects the first provider with encrypted credentials and priority zero", async () => {
@@ -295,7 +350,7 @@ describe("provider actions", () => {
     });
 
     expect(mocks.startTrafficSyncWorkflow).toHaveBeenCalledOnce();
-    expect(mocks.revalidatePath).not.toHaveBeenCalledWith("/app/keywords");
+    expect(mocks.revalidatePath).not.toHaveBeenCalledWith("/app/rank-tracker");
   });
 
   it("connects a provider and writes its audit inside one transaction", async () => {

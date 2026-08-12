@@ -170,12 +170,12 @@ function revalidateTargets(targets: RevalidateTarget[]) {
 }
 
 function keywordDetailTarget(_keywordId?: string | null): RevalidateTarget {
-  return projectPage("keywords", "[id]");
+  return projectPage("rank-tracker", "[id]");
 }
 
 export function revalidateKeywordViews(keywordId?: string | null) {
   revalidateTargets([
-    projectPage("keywords"),
+    projectPage("rank-tracker"),
     keywordDetailTarget(keywordId),
     projectPage("overview"),
     projectPage("timeline"),
@@ -188,7 +188,7 @@ export function revalidateKeywordViews(keywordId?: string | null) {
 export function revalidateRankCheckViews(keywordId?: string | null) {
   revalidateTargets([
     projectPage("overview"),
-    projectPage("keywords"),
+    projectPage("rank-tracker"),
     keywordDetailTarget(keywordId),
     projectPage("checks"),
     projectPage("timeline"),
@@ -238,7 +238,7 @@ export function revalidateBudgetViews() {
 export function revalidateSettingsViews() {
   revalidateTargets([
     projectPage("settings"),
-    projectPage("keywords"),
+    projectPage("rank-tracker"),
     projectPage("settings", "audit"),
   ]);
 }

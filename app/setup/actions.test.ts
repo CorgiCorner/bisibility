@@ -1,3 +1,4 @@
+import { redirect } from "@/tests/next-navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -5,9 +6,6 @@ const mocks = vi.hoisted(() => ({
   firstRun: vi.fn(),
   headers: vi.fn(),
   promote: vi.fn(),
-  redirect: vi.fn((href: string) => {
-    throw new Error(`redirect:${href}`);
-  }),
   requireSession: vi.fn(),
   sendCode: vi.fn(),
   signOut: vi.fn(),
@@ -36,7 +34,6 @@ vi.mock("@/lib/auth/session", () => ({
 vi.mock("next/headers", () => ({
   headers: mocks.headers,
 }));
-vi.mock("next/navigation", () => ({ redirect: mocks.redirect }));
 
 import {
   completeSetupAction,
@@ -61,6 +58,9 @@ const values = {
 describe("administrator setup actions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    redirect.mockImplementation((href: string) => {
+      throw new Error(`redirect:${href}`);
+    });
     mocks.auditContext.mockResolvedValue(requestContext);
     mocks.firstRun.mockResolvedValue(true);
     mocks.headers.mockResolvedValue(new Headers({ cookie: "visitor=1" }));
@@ -140,6 +140,6 @@ describe("administrator setup actions", () => {
     await expect(signOutAndSwitchAccountAction()).rejects.toThrow("redirect:/login");
 
     expect(mocks.signOut).toHaveBeenCalledWith({ headers: requestHeaders });
-    expect(mocks.redirect).toHaveBeenCalledWith("/login");
+    expect(redirect).toHaveBeenCalledWith("/login");
   });
 });

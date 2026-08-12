@@ -1,56 +1,53 @@
+import { stubBlobDownload } from "@/tests/blob-download";
+import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  defaultPackageFile,
+  defaultPublicJobId,
+  defaultPublicProjectId,
+  makeBlockedSessionsPreflightPayload,
+  makeCompatibilityPayload,
+  makeLegacyPreflightPayload,
+  makeOverLimitCompatibilityPayload,
+  makePlanPayload,
+  makePreflightFailurePayload,
+  makePreflightPayload,
+  makeTransferResult,
+  makeUnsupportedPreflightPayload,
+  retryPublicJobId,
+} from "./__tests__/migration.fixtures";
 import { MigrateToCloudWizard } from "./MigrateToCloudWizard";
 
-const mocks = vi.hoisted(() => {
-  const packageFile = {
-    content: JSON.stringify({ keywords: [{ text: "rank tracker" }], rank_checks: [] }),
-    counts: {
-      alertRules: 0,
-      competitors: 0,
-      keywords: 1,
-      notificationPreferences: 0,
-      rankChecks: 0,
-      savedViews: 0,
-    },
-    filename: "bisibility-cloud-import.json",
-    mimeType: "application/json",
-  };
-  return {
-    cancelMigration: vi.fn(async () => ({})),
-    createCloudMigrationHandoff: vi.fn(async () => ({
-      apiImportUrl: "https://bisibility.com/api/v1/cloud/import",
-      apiRequest: "POST https://bisibility.com/api/v1/cloud/import",
-      cloudImportUrl: "https://bisibility.com/app",
-      cloudOnboardingUrl: "https://bisibility.com/cloud/onboarding",
-      cloudOrigin: "https://bisibility.com",
-      cloudWorkspaceUrl: "https://bisibility.com/app",
-      sourceProjectId: "prj_abcdefghijklmnopqrstuvwx",
-    })),
-    createRemoteImportSession: vi.fn(),
-    downloadWorkspacePackage: vi.fn(async (file: { filename: string }) =>
-      file.filename.replace(/\.json$/i, ".zip"),
-    ),
-    exportAndTransferChunk: vi.fn(),
-    exportCloudImportPackage: vi.fn(async () => packageFile),
-    enableMigrationHold: vi.fn(async () => ({})),
-    finalizeRemoteImportSession: vi.fn(),
-    markProjectMigrated: vi.fn(async () => ({})),
-    getCloudMigrationCompatibility: vi.fn(),
-    onClose: vi.fn(),
-    packageFile,
-    planChunkedTransfer: vi.fn(),
-    preflightMigrationTarget: vi.fn(),
-    releaseMigrationHold: vi.fn(async () => ({})),
-    routerRefresh: vi.fn(),
-    transferCloudImportPackage: vi.fn(),
-    transferSectionsChunk: vi.fn(),
-  };
-});
-
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ refresh: mocks.routerRefresh }),
+const mocks = vi.hoisted(() => ({
+  cancelMigration: vi.fn(async () => ({})),
+  createCloudMigrationHandoff: vi.fn(async () => ({
+    apiImportUrl: "https://example.com/api/v1/cloud/import",
+    apiRequest: "POST https://example.com/api/v1/cloud/import",
+    cloudImportUrl: "https://example.com/app",
+    cloudOnboardingUrl: "https://example.com/cloud/onboarding",
+    cloudOrigin: "https://example.com",
+    cloudWorkspaceUrl: "https://example.com/app",
+    sourceProjectId: "prj_abcdefghijklmnopqrstuvwx",
+  })),
+  createRemoteImportSession: vi.fn(),
+  downloadWorkspacePackage: vi.fn(async (file: { filename: string }) =>
+    file.filename.replace(/\.json$/i, ".zip"),
+  ),
+  exportAndTransferChunk: vi.fn(),
+  exportCloudImportPackage: vi.fn(),
+  enableMigrationHold: vi.fn(async () => ({})),
+  finalizeRemoteImportSession: vi.fn(),
+  markProjectMigrated: vi.fn(async () => ({})),
+  getCloudMigrationCompatibility: vi.fn(),
+  onClose: vi.fn(),
+  planChunkedTransfer: vi.fn(),
+  preflightMigrationTarget: vi.fn(),
+  releaseMigrationHold: vi.fn(async () => ({})),
+  transferCloudImportPackage: vi.fn(),
+  transferSectionsChunk: vi.fn(),
 }));
+
 vi.mock("@/components/cloud/workspace-package-download", () => ({
   downloadWorkspacePackage: mocks.downloadWorkspacePackage,
 }));
@@ -63,23 +60,20 @@ vi.mock("@/lib/actions/instance-migration", () => ({
   transferSectionsChunk: mocks.transferSectionsChunk,
 }));
 
-const publicProjectId = "prj_abcdefghijklmnopqrstuvwx";
 const otherPublicProjectId = "prj_zbcdefghijklmnopqrstuvwx";
-const publicJobId = "imp_abcdefghijklmnopqrstuvwx";
-const retryPublicJobId = "imp_zbcdefghijklmnopqrstuvwx";
 
 function Wizard(props: { direction?: "to-cloud" | "to-self-host"; projectId?: string }) {
   return (
     <MigrateToCloudWizard
       cancelMigration={mocks.cancelMigration}
-      defaultTargetOrigin="https://bisibility.com"
+      defaultTargetOrigin="https://example.com"
       direction={props.direction ?? "to-cloud"}
       domain="example.com"
       enableMigrationHold={mocks.enableMigrationHold}
       markProjectMigrated={mocks.markProjectMigrated}
       onClose={mocks.onClose}
       open
-      projectId={props.projectId ?? publicProjectId}
+      projectId={props.projectId ?? defaultPublicProjectId}
       releaseMigrationHold={mocks.releaseMigrationHold}
     />
   );
@@ -121,44 +115,12 @@ describe("MigrateToCloudWizard", () => {
     mocks.cancelMigration.mockResolvedValue({});
     mocks.enableMigrationHold.mockResolvedValue({});
     mocks.releaseMigrationHold.mockResolvedValue({});
-    mocks.getCloudMigrationCompatibility.mockResolvedValue({
-      appVersion: "1.2.3",
-      appVersionSource: "package.json",
-      cloudOrigin: "https://bisibility.com",
-      data: { keywords: 1, rankChecks: 2 },
-      limits: { pushMaxKeywords: 500, sessionsRequired: false },
-      schema: { count: 12, latest: "20260708010000_source" },
-    });
-    mocks.preflightMigrationTarget.mockResolvedValue({
-      appVersion: "1.2.3",
-      latestMigration: "20260708010000_target",
-      origin: "https://bisibility.com",
-      reachable: true,
-      sameInstance: false,
-      schemaVersionsSupported: [5],
-      sourceDeploymentMode: "self-host",
-      supportsSessions: true,
-    });
-    mocks.planChunkedTransfer.mockResolvedValue({
-      chunkCount: 2,
-      totalKeywords: 1,
-      totalRankChecks: 2,
-      useSessions: false,
-    });
-    mocks.transferCloudImportPackage.mockResolvedValue({
-      ok: true,
-      value: {
-        counts: { history: 2, keywords: 1 },
-        jobId: publicJobId,
-        state: "done",
-      },
-    });
-    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined);
-    Object.defineProperty(URL, "createObjectURL", {
-      configurable: true,
-      value: vi.fn(() => "blob:cloud-import"),
-    });
-    Object.defineProperty(URL, "revokeObjectURL", { configurable: true, value: vi.fn() });
+    mocks.getCloudMigrationCompatibility.mockResolvedValue(makeCompatibilityPayload());
+    mocks.preflightMigrationTarget.mockResolvedValue(makePreflightPayload());
+    mocks.planChunkedTransfer.mockResolvedValue(makePlanPayload());
+    mocks.exportCloudImportPackage.mockResolvedValue(defaultPackageFile);
+    mocks.transferCloudImportPackage.mockResolvedValue(makeTransferResult());
+    stubBlobDownload();
   });
 
   it("does not allow leaving Check before a successful current check", () => {
@@ -172,25 +134,21 @@ describe("MigrateToCloudWizard", () => {
   it("renders a configured target failure inline without reclassifying the default as user input", async () => {
     const message =
       "Migration target configuration is invalid. Check BISIBILITY_CLOUD_URL or the site URL. Target URL port must be empty, 80, 443, or 8443.";
-    mocks.preflightMigrationTarget.mockResolvedValueOnce({
-      error: { code: "invalid_migration_target", message, status: 400 },
-      ok: false,
-    });
+    mocks.preflightMigrationTarget.mockResolvedValueOnce(makePreflightFailurePayload(message));
     renderWizard();
 
     fireEvent.click(screen.getByRole("button", { name: /Run compatibility check/i }));
 
     expect(await screen.findByText(message)).toBeInTheDocument();
-    expect(mocks.preflightMigrationTarget).toHaveBeenCalledWith({ projectId: publicProjectId });
+    expect(mocks.preflightMigrationTarget).toHaveBeenCalledWith({
+      projectId: defaultPublicProjectId,
+    });
     expect(screen.getByRole("button", { name: /continue/i })).toBeDisabled();
   });
 
   it("renders a rejected user target inline with the validator reason", async () => {
     const message = "Target URL port must be empty, 80, 443, or 8443.";
-    mocks.preflightMigrationTarget.mockResolvedValueOnce({
-      error: { code: "invalid_migration_target", message, status: 400 },
-      ok: false,
-    });
+    mocks.preflightMigrationTarget.mockResolvedValueOnce(makePreflightFailurePayload(message));
     renderWizard();
     fireEvent.change(screen.getByLabelText("Destination URL"), {
       target: { value: "https://target.example.com:3000" },
@@ -200,29 +158,15 @@ describe("MigrateToCloudWizard", () => {
 
     expect(await screen.findByText(message)).toBeInTheDocument();
     expect(mocks.preflightMigrationTarget).toHaveBeenCalledWith({
-      projectId: publicProjectId,
+      projectId: defaultPublicProjectId,
       targetOrigin: "https://target.example.com:3000",
     });
     expect(screen.getByRole("button", { name: /continue/i })).toBeDisabled();
   });
 
   it("blocks incompatible destinations instead of treating counts as decorative", async () => {
-    mocks.getCloudMigrationCompatibility.mockResolvedValueOnce({
-      appVersion: "1.2.3",
-      appVersionSource: "package.json",
-      cloudOrigin: "https://bisibility.com",
-      data: { keywords: 401, rankChecks: 25_001 },
-      limits: { pushMaxKeywords: 500, sessionsRequired: true },
-      schema: { count: 12, latest: "20260708010000_source" },
-    });
-    mocks.preflightMigrationTarget.mockResolvedValueOnce({
-      appVersion: "1.0.0",
-      latestMigration: null,
-      reachable: true,
-      reason: "Target instance is too old for chunked sessions - upgrade it.",
-      schemaVersionsSupported: [1, 2],
-      supportsSessions: false,
-    });
+    mocks.getCloudMigrationCompatibility.mockResolvedValueOnce(makeOverLimitCompatibilityPayload());
+    mocks.preflightMigrationTarget.mockResolvedValueOnce(makeBlockedSessionsPreflightPayload());
     renderWizard("to-self-host");
     fireEvent.change(screen.getByLabelText("Self-host URL"), {
       target: { value: "https://target.example.com" },
@@ -235,13 +179,7 @@ describe("MigrateToCloudWizard", () => {
   });
 
   it("blocks a reachable target that lacks the required package protocol", async () => {
-    mocks.preflightMigrationTarget.mockResolvedValueOnce({
-      appVersion: "1.0.0",
-      latestMigration: "legacy",
-      reachable: true,
-      schemaVersionsSupported: [1],
-      supportsSessions: false,
-    });
+    mocks.preflightMigrationTarget.mockResolvedValueOnce(makeLegacyPreflightPayload());
     renderWizard();
     fireEvent.click(screen.getByRole("button", { name: /Run compatibility check/i }));
 
@@ -254,13 +192,7 @@ describe("MigrateToCloudWizard", () => {
   });
 
   it("blocks a reachable target when protocol versions are missing", async () => {
-    mocks.preflightMigrationTarget.mockResolvedValueOnce({
-      appVersion: "1.0.0",
-      latestMigration: null,
-      reachable: true,
-      schemaVersionsSupported: null,
-      supportsSessions: false,
-    });
+    mocks.preflightMigrationTarget.mockResolvedValueOnce(makeUnsupportedPreflightPayload());
     renderWizard();
     fireEvent.click(screen.getByRole("button", { name: /Run compatibility check/i }));
 
@@ -287,13 +219,13 @@ describe("MigrateToCloudWizard", () => {
   it("uses one edited to-cloud destination for the check and transfer", async () => {
     renderWizard();
     const input = screen.getByLabelText("Destination URL");
-    expect(input).toHaveValue("https://bisibility.com");
+    expect(input).toHaveValue("https://example.com");
     expect(screen.getByText(/Prefilled from this instance's configuration/i)).toBeInTheDocument();
 
     fireEvent.change(input, { target: { value: "https://target.example.com" } });
     await continueToTransfer();
     expect(mocks.preflightMigrationTarget).toHaveBeenCalledWith({
-      projectId: publicProjectId,
+      projectId: defaultPublicProjectId,
       targetOrigin: "https://target.example.com",
     });
 
@@ -337,7 +269,7 @@ describe("MigrateToCloudWizard", () => {
     renderWizard();
     await continueToTransfer();
     expect(screen.queryByText("Export package")).not.toBeInTheDocument();
-    expect(mocks.enableMigrationHold).toHaveBeenCalledWith({ projectId: publicProjectId });
+    expect(mocks.enableMigrationHold).toHaveBeenCalledWith({ projectId: defaultPublicProjectId });
     expect(screen.getByRole("button", { name: /continue/i })).toBeDisabled();
 
     fireEvent.change(screen.getByLabelText("Migration token"), {
@@ -346,13 +278,15 @@ describe("MigrateToCloudWizard", () => {
     fireEvent.click(screen.getByRole("button", { name: /^Transfer$/ }));
     await waitFor(() => expect(mocks.transferCloudImportPackage).toHaveBeenCalledTimes(1));
     await waitFor(() =>
-      expect(mocks.releaseMigrationHold).toHaveBeenCalledWith({ projectId: publicProjectId }),
+      expect(mocks.releaseMigrationHold).toHaveBeenCalledWith({
+        projectId: defaultPublicProjectId,
+      }),
     );
     await waitFor(() => expect(screen.getByRole("button", { name: /continue/i })).toBeEnabled());
     fireEvent.click(screen.getByRole("button", { name: /continue/i }));
 
     expect(await screen.findByText("hosted instance import complete")).toBeInTheDocument();
-    expect(screen.getByText(`Import job ${publicJobId}`)).toBeInTheDocument();
+    expect(screen.getByText(`Import job ${defaultPublicJobId}`)).toBeInTheDocument();
     expect(screen.getByText("keywords: 1")).toBeInTheDocument();
     expect(screen.getByText("history: 2")).toBeInTheDocument();
     expect(screen.getByText("Writes are active on this source project.")).toBeInTheDocument();
@@ -386,7 +320,7 @@ describe("MigrateToCloudWizard", () => {
     fireEvent.click(screen.getByRole("button", { name: /^Export$/ }));
     await waitFor(() => expect(mocks.exportCloudImportPackage).toHaveBeenCalledTimes(1));
     await waitFor(() =>
-      expect(mocks.downloadWorkspacePackage).toHaveBeenCalledWith(mocks.packageFile),
+      expect(mocks.downloadWorkspacePackage).toHaveBeenCalledWith(defaultPackageFile),
     );
     expect(screen.getByText("bisibility-cloud-import.zip")).toBeInTheDocument();
     expect(screen.queryByText("bisibility-cloud-import.json")).not.toBeInTheDocument();
@@ -426,14 +360,7 @@ describe("MigrateToCloudWizard", () => {
   it("releases a failed transfer and reacquires the hold before retrying", async () => {
     mocks.transferCloudImportPackage
       .mockRejectedValueOnce(new Error("Destination rejected the transfer."))
-      .mockResolvedValueOnce({
-        ok: true,
-        value: {
-          counts: { history: 2, keywords: 1 },
-          jobId: retryPublicJobId,
-          state: "done",
-        },
-      });
+      .mockResolvedValueOnce(makeTransferResult({ jobId: retryPublicJobId }));
     renderWizard();
     await continueToTransfer();
     fireEvent.change(screen.getByLabelText("Migration token"), {
@@ -479,11 +406,11 @@ describe("MigrateToCloudWizard", () => {
     const confirmButtons = screen.getAllByRole("button", { name: "Cancel migration" });
     fireEvent.click(confirmButtons[confirmButtons.length - 1]);
     await waitFor(() =>
-      expect(mocks.cancelMigration).toHaveBeenCalledWith({ projectId: publicProjectId }),
+      expect(mocks.cancelMigration).toHaveBeenCalledWith({ projectId: defaultPublicProjectId }),
     );
     expect(mocks.releaseMigrationHold).not.toHaveBeenCalled();
     await waitFor(() => expect(mocks.onClose).toHaveBeenCalledTimes(1));
     // The recovery card is server-rendered, so cancel must refresh to reflect reality.
-    await waitFor(() => expect(mocks.routerRefresh).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(routerMock.refresh).toHaveBeenCalledTimes(1));
   });
 });

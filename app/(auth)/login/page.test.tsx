@@ -1,3 +1,4 @@
+import { redirect } from "@/tests/next-navigation";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { dynamic } from "./page";
@@ -7,7 +8,6 @@ const mocks = vi.hoisted(() => ({
   getSession: vi.fn(),
   getSignInCapacity: vi.fn(),
   loginForm: vi.fn(),
-  redirect: vi.fn(),
 }));
 
 vi.mock("server-only", () => ({}));
@@ -24,10 +24,6 @@ vi.mock("@/lib/auth/session", () => ({ getSession: mocks.getSession }));
 vi.mock("@/lib/auth/auth", () => {
   throw new Error("The login page must not initialize the full auth server");
 });
-vi.mock("next/navigation", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("next/navigation")>()),
-  redirect: mocks.redirect,
-}));
 vi.mock("@/components/auth/LoginForm", () => ({
   LoginForm: (props: Record<string, unknown>) => {
     mocks.loginForm(props);
@@ -97,7 +93,6 @@ async function renderLoginPage(
 
 beforeEach(() => {
   mocks.getSession.mockResolvedValue(null);
-  mocks.redirect.mockClear();
 });
 
 afterEach(() => {
@@ -205,12 +200,12 @@ describe("login page runtime rendering", () => {
     const selfHosted = await renderLoginPage({
       DEPLOYMENT_MODE: "self-host",
       LEGAL_PRIVACY_URL: "/operator-privacy",
-      LEGAL_TERMS_URL: "https://operator.example/terms",
+      LEGAL_TERMS_URL: "https://operator.example.com/terms",
     });
 
     expect(selfHosted.props.legalConsentLinks).toEqual({
       privacyHref: "/operator-privacy",
-      termsHref: "https://operator.example/terms",
+      termsHref: "https://operator.example.com/terms",
     });
   });
 
@@ -275,33 +270,33 @@ describe("session-aware sign in", () => {
   it("redirects a signed-in visitor to the default home", async () => {
     mocks.getSession.mockResolvedValue({ user: { id: "usr_1" } });
     await renderLoginPage({}, {});
-    expect(mocks.redirect).toHaveBeenCalledWith("/app");
+    expect(redirect).toHaveBeenCalledWith("/app");
     expect(mocks.loginForm).not.toHaveBeenCalled();
   });
 
   it("honors a validated next destination", async () => {
     mocks.getSession.mockResolvedValue({ user: { id: "usr_1" } });
     await renderLoginPage({}, { next: "/cloud/import" });
-    expect(mocks.redirect).toHaveBeenCalledWith("/cloud/import");
+    expect(redirect).toHaveBeenCalledWith("/cloud/import");
   });
 
   it("rejects an off-origin next destination", async () => {
     mocks.getSession.mockResolvedValue({ user: { id: "usr_1" } });
     await renderLoginPage({}, { next: "https://evil.example.com/steal" });
-    expect(mocks.redirect).toHaveBeenCalledWith("/app");
+    expect(redirect).toHaveBeenCalledWith("/app");
   });
 
   it("renders the form for an explicit account switch", async () => {
     mocks.getSession.mockResolvedValue({ user: { id: "usr_1" } });
     await renderLoginPage({}, { switch: "1" });
-    expect(mocks.redirect).not.toHaveBeenCalled();
+    expect(redirect).not.toHaveBeenCalled();
     expect(mocks.loginForm).toHaveBeenCalled();
   });
 
   it("renders the form with no session", async () => {
     mocks.getSession.mockResolvedValue(null);
     await renderLoginPage({}, {});
-    expect(mocks.redirect).not.toHaveBeenCalled();
+    expect(redirect).not.toHaveBeenCalled();
     expect(mocks.loginForm).toHaveBeenCalled();
   });
 });

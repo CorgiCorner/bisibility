@@ -1,6 +1,11 @@
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { clickTestConnection, push, renderProviderStep } from "./StepConnectProvider.test-utils";
+import {
+  clickContinue,
+  clickTestConnection,
+  push,
+  renderProviderStep,
+} from "./StepConnectProvider.test-utils";
 
 describe("StepConnectProvider feedback", () => {
   beforeEach(() => {
@@ -14,7 +19,7 @@ describe("StepConnectProvider feedback", () => {
       message: "Invalid credentials",
       ok: false,
     }));
-    const { container } = renderProviderStep({
+    renderProviderStep({
       connectProviderAction,
       onComplete,
       testProviderConnectionAction,
@@ -25,7 +30,7 @@ describe("StepConnectProvider feedback", () => {
     expect(
       await within(screen.getByRole("status")).findByText("Invalid credentials"),
     ).toBeInTheDocument();
-    fireEvent.submit(container.querySelector("form") as HTMLFormElement);
+    clickContinue();
 
     expect(await screen.findByText("Save a provider before continuing.")).toBeInTheDocument();
     expect(connectProviderAction).not.toHaveBeenCalled();

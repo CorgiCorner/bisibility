@@ -1,10 +1,10 @@
+import { routerMock } from "@/tests/next-navigation";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { InviteSignInForm } from "./InviteSignInForm";
 
 const mocks = vi.hoisted(() => ({
-  refresh: vi.fn(),
   sendVerificationOtp: vi.fn(),
   signIn: vi.fn(),
   signInRedirectUrl: vi.fn(),
@@ -18,9 +18,6 @@ vi.mock("@/lib/auth/client", () => ({
 }));
 vi.mock("@/lib/auth/sign-in-redirect", () => ({
   signInRedirectUrl: mocks.signInRedirectUrl,
-}));
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ refresh: mocks.refresh }),
 }));
 
 describe("InviteSignInForm", () => {
@@ -48,6 +45,6 @@ describe("InviteSignInForm", () => {
         "/invite/invite_123?source=email&section=access-details",
       ),
     );
-    expect(mocks.refresh).not.toHaveBeenCalled();
+    expect(routerMock.refresh).not.toHaveBeenCalled();
   });
 });

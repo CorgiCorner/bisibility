@@ -1,5 +1,6 @@
+import { stubIntersectionObserver, stubResizeObserver } from "@/tests/observers";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { countryLevelTooltip } from "./CheckRunDetails";
 import { CheckRunsSection, type CheckRunsSectionProps } from "./CheckRunsSection";
 import {
@@ -9,15 +10,12 @@ import {
   completedRunFixture,
 } from "./check-runs-fixtures";
 
-const originalIntersectionObserver = globalThis.IntersectionObserver;
-const originalResizeObserver = globalThis.ResizeObserver;
-
 function props(overrides: Partial<CheckRunsSectionProps> = {}): CheckRunsSectionProps {
   return {
     asOfDate: "2026-07-24",
     connectProviderHref: "/app/integrations",
     filter: "all",
-    keywordHref: (keywordPublicId) => `/app/keywords/${keywordPublicId}`,
+    keywordHref: (keywordPublicId) => `/app/rank-tracker/${keywordPublicId}`,
     now: checkRunsNow,
     onAsOfDateChange: vi.fn(),
     onFilterChange: vi.fn(),
@@ -41,12 +39,6 @@ function props(overrides: Partial<CheckRunsSectionProps> = {}): CheckRunsSection
   };
 }
 
-afterEach(() => {
-  globalThis.IntersectionObserver = originalIntersectionObserver;
-  globalThis.ResizeObserver = originalResizeObserver;
-  vi.restoreAllMocks();
-});
-
 describe("CheckRunsSection", () => {
   it("renders the range-aware summary and invokes filter and date callbacks", async () => {
     const onFilterChange = vi.fn();
@@ -59,7 +51,7 @@ describe("CheckRunsSection", () => {
     expect(screen.getByText("82% direct · 43 rate-limited")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "ai meeting notes" })).toHaveAttribute(
       "href",
-      "/app/keywords/kw_ai_meeting_notes",
+      "/app/rank-tracker/kw_ai_meeting_notes",
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Filter by Skipped - 28" }));
@@ -239,17 +231,7 @@ describe("CheckRunsSection", () => {
   });
 
   it("removes narrow columns from the DOM and moves their values into details", async () => {
-    globalThis.ResizeObserver = class ResizeObserver {
-      constructor(private readonly callback: ResizeObserverCallback) {}
-      disconnect() {}
-      observe(target: Element) {
-        this.callback(
-          [{ contentRect: { width: 520 } as DOMRectReadOnly, target } as ResizeObserverEntry],
-          this,
-        );
-      }
-      unobserve() {}
-    };
+    const controllers = stubResizeObserver();
 
     render(
       <CheckRunsSection
@@ -259,6 +241,13 @@ describe("CheckRunsSection", () => {
         })}
       />,
     );
+
+    controllers[0]?.trigger([
+      {
+        contentRect: { width: 520 } as DOMRectReadOnly,
+        target: document.body,
+      } as unknown as ResizeObserverEntry,
+    ]);
 
     await waitFor(() => {
       expect(screen.queryByRole("columnheader", { name: "Depth" })).not.toBeInTheDocument();
@@ -271,33 +260,13 @@ describe("CheckRunsSection", () => {
   });
 
   it("auto-loads only the first three observed pages", () => {
-    const callbacks: IntersectionObserverCallback[] = [];
-    const observers: IntersectionObserver[] = [];
-    globalThis.IntersectionObserver = class IntersectionObserver {
-      constructor(callback: IntersectionObserverCallback) {
-        callbacks.push(callback);
-        observers.push(this);
-      }
-      disconnect() {}
-      observe() {}
-      takeRecords() {
-        return [];
-      }
-      unobserve() {}
-      root = null;
-      rootMargin = "";
-      scrollMargin = "";
-      thresholds = [];
-    };
+    const controllers = stubIntersectionObserver();
     const onLoadMore = vi.fn();
     const initial = props({ onLoadMore });
     const { rerender } = render(<CheckRunsSection {...initial} />);
 
     for (let page = 0; page < 3; page += 1) {
-      callbacks[page]?.(
-        [{ isIntersecting: true } as IntersectionObserverEntry],
-        observers[page] as IntersectionObserver,
-      );
+      controllers[page]?.trigger([{ isIntersecting: true } as IntersectionObserverEntry]);
       rerender(
         <CheckRunsSection
           {...initial}
@@ -316,6 +285,6 @@ describe("CheckRunsSection", () => {
     }
 
     expect(onLoadMore).toHaveBeenCalledTimes(3);
-    expect(callbacks).toHaveLength(3);
+    expect(controllers).toHaveLength(3);
   });
 });

@@ -18,12 +18,18 @@ export type ButtonProps = Omit<MuiButtonProps, "color" | "size" | "variant"> & {
   variant?: ButtonVariant;
 };
 
-const sizeSx = {
-  lg: { borderRadius: "10px", fontSize: "14.5px", minHeight: 44, padding: "11px 18px" },
-  md: { borderRadius: "9px", fontSize: "13px", minHeight: 36, padding: "8px 16px" },
-  sm: { borderRadius: "9px", fontSize: "12.5px", minHeight: 34, padding: "6px 12px" },
-  xs: { borderRadius: "7px", fontSize: "12px", minHeight: 30, padding: "4px 10px" },
+const extraSmallSx = {
+  borderRadius: "7px",
+  fontSize: "12px",
+  minHeight: 30,
+  padding: "4px 10px",
 } as const;
+
+function muiSizeFor(size: ButtonSize): "large" | "medium" | "small" {
+  if (size === "lg") return "large";
+  if (size === "sm" || size === "xs") return "small";
+  return "medium";
+}
 
 const variantSx = {
   destructive: {
@@ -106,6 +112,7 @@ export function Button({
       color="inherit"
       disabled={busy}
       disableElevation
+      size={muiSizeFor(size)}
       startIcon={
         loading ? (
           <CircularProgress aria-hidden color="inherit" size={14} thickness={5} />
@@ -120,7 +127,7 @@ export function Button({
           transition: "background-color .16s ease, border-color .16s ease",
           "&.Mui-disabled": disabledStyle,
         },
-        sizeSx[size],
+        ...(size === "xs" ? [extraSmallSx] : []),
         variantSx[variant],
         ...additionalSx,
       ]}

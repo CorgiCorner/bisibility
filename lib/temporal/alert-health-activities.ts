@@ -6,6 +6,7 @@ import {
   getAlertHealthConfig,
 } from "../alerts/health";
 import { getOpsConfig } from "../ops/config";
+import { ruleLabel } from "../ops/labels";
 import { notifyOps } from "../ops/notify";
 
 export type AlertHealthActivityResult = {
@@ -59,7 +60,7 @@ export async function alertHealthActivity(): Promise<AlertHealthActivityResult> 
       dedupeKey: `alert-health:fire:${spike.ruleId}`,
       fields: {
         Project: spike.projectId,
-        Rule: spike.ruleName,
+        Rule: ruleLabel(spike.ruleId, spike.ruleName),
         Today: spike.today,
         "Trailing daily average": spike.trailingDailyAvg,
       },

@@ -4,7 +4,6 @@ import { describe, expect, it, vi } from "vitest";
 import { CommandPaletteProvider, CommandPaletteTrigger, useCommandPalette } from "./CommandPalette";
 
 const mocks = vi.hoisted(() => ({
-  push: vi.fn(),
   run: vi.fn(async () => undefined),
   search: vi.fn(),
   setMode: vi.fn(),
@@ -12,7 +11,6 @@ const mocks = vi.hoisted(() => ({
 
 type MockGroup = { items: unknown[]; title: string };
 
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push: mocks.push }) }));
 vi.mock("@mui/material/styles", () => ({ useColorScheme: () => ({ setMode: mocks.setMode }) }));
 vi.mock("@mui/material/Tooltip", () => ({
   default: ({ children, title }: { children: ReactNode; title: string }) => (

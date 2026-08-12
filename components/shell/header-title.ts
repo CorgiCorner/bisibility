@@ -54,7 +54,7 @@ export function headerMetaFor(pathname: string, context: HeaderContext = {}): He
 
   // The detail page for one keyword. "Keyword" alone sat one letter away from the list it
   // was opened from, so the header read as a truncation rather than a different screen.
-  if (matches(sectionPath, "/keywords") && sectionPath !== "/keywords") {
+  if (matches(sectionPath, "/rank-tracker") && sectionPath !== "/rank-tracker") {
     return sectionMeta("Keyword details", "Position history, ranking URL and schedule.");
   }
 
@@ -62,17 +62,17 @@ export function headerMetaFor(pathname: string, context: HeaderContext = {}): He
     return { title: "Overview" };
   }
 
-  if (matches(sectionPath, "/keywords")) {
+  if (matches(sectionPath, "/rank-tracker")) {
     const subtitle =
       keywordCount === 0
         ? "No keywords tracked yet"
         : `${pluralize(keywordCount, "tracked keyword")} · click any row to edit`;
-    return sectionMeta("Keywords", subtitle);
+    return sectionMeta("Rank Tracker", subtitle);
   }
 
   if (matches(sectionPath, "/research")) {
     return sectionMeta(
-      "Keyword research",
+      "Keyword Research",
       "Find phrases worth tracking, with the cost visible before every lookup.",
     );
   }
@@ -80,7 +80,7 @@ export function headerMetaFor(pathname: string, context: HeaderContext = {}): He
   if (matches(sectionPath, "/checks")) {
     return sectionMeta(
       "Checks",
-      "Operational log of rank-check runs. Keyword details live in Keywords.",
+      "Operational log of rank-check runs. Keyword details live in Rank Tracker.",
     );
   }
 

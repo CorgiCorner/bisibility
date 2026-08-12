@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## [0.10.0] - 2026-08-12
+
+- Streamlined onboarding with one-field website setup, unified data connections, prefilled provider costs, clearer Search Console actions, keyword imports, and tracking defaults.
+
+- Added property switching for connected Google Search Console and Analytics sources without requiring account reconnection.
+
+- Renamed the dashboard keyword workspace to Rank Tracker at `/rank-tracker`, standardized the Keyword Research title, and made operator Slack alerts easier to scan.
+
+- Added a Discord community link to the signed-in user menu.
+
 ## [0.9.0] - 2026-08-11
 
 - Improved Google Search Console and Analytics reliability with reconnect notifications, paused sync during reauthorization, and correct OAuth project callbacks.

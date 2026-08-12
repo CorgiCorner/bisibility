@@ -1,35 +1,16 @@
-import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import { appPath } from "@/lib/routing/app-path";
+import { makeCostContext } from "@/tests/factories/cost-context";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SavedKeywordsTable } from "./SavedKeywordsTable";
 
-const mocks = vi.hoisted(() => ({ push: vi.fn(), refresh: vi.fn() }));
-
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: mocks.push, refresh: mocks.refresh }),
-}));
-
 const fetchMock = vi.fn(async () => ({ json: async () => ({ data: [] }), ok: true }));
 vi.stubGlobal("fetch", fetchMock);
 
-const costContext: ProjectCostContext = {
-  capCents: 5000,
-  costPerCheckCents: 1,
-  cronExpression: null,
-  depth: 100,
-  deviceCount: 1,
-  devices: ["desktop"],
-  frequency: "daily",
-  keywordCount: 4,
-  locationCount: 1,
+const costContext = makeCostContext({
   projectName: "Acme",
-  providerId: "dataforseo",
-  rawFrequency: "daily",
-  spentCents: 0,
-  timezone: "UTC",
-};
+});
 
 const rows: ComponentProps<typeof SavedKeywordsTable>["rows"] = [
   {

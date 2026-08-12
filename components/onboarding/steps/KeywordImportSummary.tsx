@@ -4,62 +4,45 @@ import {
   keywordCheckSummary,
   keywordMonthlyCheckSummary,
 } from "@/components/onboarding/onboarding-fixtures";
-import { formatEstimateCents, monthlyCostCentsFor } from "@/lib/cost-estimate/project-estimate";
+import { useDeploymentMode } from "@/components/shell/DeploymentModeProvider";
+import { buildCostCalculatorHref } from "@/lib/cost-estimate/calculator-query";
 import type { KeywordScheduleInput } from "@/lib/schemas/keyword";
-import { DEFAULT_SERP_DEPTH, type SerpDepth } from "@/lib/serp/markets";
-import { docsLinkProps } from "@/lib/site/site";
+import { DEFAULT_SERP_DEPTH, type SerpDepth, type SerpDevice } from "@/lib/serp/markets";
 import { OnboardingCostSummary } from "./OnboardingCostSummary";
 
 type KeywordImportSummaryProps = {
-  costPerCheckCents?: number | null;
   cronExpression?: string | null;
-  deviceCount: number;
+  devices: readonly SerpDevice[];
   frequency?: KeywordScheduleInput["frequency"];
   keywordCount: number;
   locationCount: number;
-  monthlyCapCents?: number;
   serpDepth?: SerpDepth;
 };
 
 export function KeywordImportSummary({
-  costPerCheckCents,
   cronExpression,
-  deviceCount,
+  devices,
   frequency = "daily",
   keywordCount,
   locationCount,
-  monthlyCapCents,
   serpDepth = DEFAULT_SERP_DEPTH,
 }: Readonly<KeywordImportSummaryProps>) {
-  const projectedCostCents = monthlyCostCentsFor(
-    {
-      depth: serpDepth,
-      cronExpression,
-      deviceCount,
-      frequency,
-      keywordCount,
-      locationCount,
-    },
-    { overrideCents: costPerCheckCents ?? null, providerId: null },
-  );
-  const monthlyLine =
-    projectedCostCents == null
-      ? `${keywordMonthlyCheckSummary(
-          keywordCount,
-          locationCount,
-          deviceCount,
-          frequency,
-          cronExpression,
-        )} at Top ${serpDepth}`
-      : `${keywordMonthlyCheckSummary(
-          keywordCount,
-          locationCount,
-          deviceCount,
-          frequency,
-          cronExpression,
-        )} at Top ${serpDepth} \u00b7 \u2248 ${formatEstimateCents(projectedCostCents)}/month`;
-  const aboveCap =
-    projectedCostCents != null && monthlyCapCents != null && projectedCostCents > monthlyCapCents;
+  const deploymentMode = useDeploymentMode();
+  const deviceCount = devices.length;
+  const monthlyLine = `${keywordMonthlyCheckSummary(
+    keywordCount,
+    locationCount,
+    deviceCount,
+    frequency,
+    cronExpression,
+  )} at Top ${serpDepth}`;
+  const calculatorHref = buildCostCalculatorHref({
+    depth: serpDepth,
+    devices,
+    frequency,
+    keywordCount,
+    locationCount,
+  });
 
   return (
     <OnboardingCostSummary>
@@ -68,27 +51,14 @@ export function KeywordImportSummary({
       </span>
       <br />
       <span>{monthlyLine}</span>
-      {aboveCap ? (
+      {deploymentMode === "cloud" && calculatorHref && keywordCount > 0 ? (
         <>
           <br />
-          <span className="text-yellow-text">
-            Above the monthly cost cap ({formatEstimateCents(monthlyCapCents)}) {"-"} checks pause
-            once the cap is reached.{" "}
-            <a
-              className="underline"
-              href="/docs/integrations#budget-cap"
-              {...docsLinkProps("/docs/integrations#budget-cap")}
-            >
-              How budgets work
-            </a>
-            .
-          </span>
+          <a className="font-medium text-accent-text hover:underline" href={calculatorHref}>
+            Estimate provider cost
+          </a>
         </>
       ) : null}
-      <br />
-      Each rank check is billed directly by the SERP provider.
-      <br />
-      Locations and devices selected in Tracking defaults apply to these keywords.
     </OnboardingCostSummary>
   );
 }

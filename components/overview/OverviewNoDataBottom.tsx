@@ -81,7 +81,7 @@ export function RecentlyAddedCard({
       {rows.map((row) => (
         <Link
           className="flex items-center justify-between gap-2.5 border-t border-border-soft px-[18px] py-[11px] hover:bg-bg-sunken"
-          href={appPath(projectRef, "keywords")}
+          href={appPath(projectRef, "rank-tracker")}
           key={row.id}
         >
           <span className="min-w-0">
@@ -106,7 +106,7 @@ export function ViewAllKeywordsButton({ projectRef }: Readonly<{ projectRef: str
     <Button
       component={Link}
       endIcon={<CaretRight size={15} weight="bold" />}
-      href={appPath(projectRef, "keywords")}
+      href={appPath(projectRef, "rank-tracker")}
       sx={{
         alignSelf: "flex-start",
         "&:hover": { borderColor: "var(--accent)", color: "var(--accent-text)" },

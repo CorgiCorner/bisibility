@@ -138,7 +138,7 @@ function OverviewSections({
         <Button
           component={Link}
           endIcon={<CaretRight size={15} weight="bold" />}
-          href={appPath(projectRef, "keywords")}
+          href={appPath(projectRef, "rank-tracker")}
           sx={{
             alignSelf: "flex-start",
             minHeight: 38,

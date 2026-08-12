@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
+import { expect, within } from "storybook/test";
 import { StepConnectGscCard } from "./StepConnectGscCard";
 
 const meta = {
@@ -17,13 +18,28 @@ const meta = {
     configured: true,
     projectId: "prj_7Kd2Qf9m",
   },
+  parameters: { nextjs: { appDirectory: true } },
 } satisfies Meta<typeof StepConnectGscCard>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Configured: Story = {};
+export const Configured: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const description = canvas.getByText(
+      "Free - import real queries, clicks, and impressions. No API key is needed.",
+    );
+    const connectButton = canvas.getByRole("link", { name: "Connect" });
+
+    await expect(
+      Math.round(
+        connectButton.getBoundingClientRect().top - description.getBoundingClientRect().bottom,
+      ),
+    ).toBe(16);
+  },
+};
 
 export const JustConnected: Story = {
   args: {

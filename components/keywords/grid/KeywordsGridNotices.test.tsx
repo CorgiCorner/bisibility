@@ -5,8 +5,6 @@ import { describe, expect, it, vi } from "vitest";
 import { ProjectWriteModeProvider } from "../../shell/ProjectWriteModeProvider";
 import { KeywordsGridNotices } from "./KeywordsGridNotices";
 
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
-
 const readyPlan = {
   budget: { capCents: 1000, spentCents: 100 },
   budgetExhausted: false,

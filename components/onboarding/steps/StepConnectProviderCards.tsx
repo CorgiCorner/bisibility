@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { ProviderCard, type ProviderCardState } from "./ProviderCard";
 import {
   type ConnectedProviderMap,
@@ -9,6 +10,8 @@ import {
 } from "./StepConnectProvider.fields";
 
 type StepConnectProviderCardsProps = {
+  analyticsNotice?: ReactNode;
+  analyticsOption?: ReactNode;
   connections: ConnectedProviderMap;
   dirtyProviders: Partial<Record<OnboardingSerpProviderId, boolean>>;
   onSelect: (providerId: OnboardingSerpProviderId) => void;
@@ -35,6 +38,8 @@ function providerState({
 }
 
 export function StepConnectProviderCards({
+  analyticsNotice,
+  analyticsOption,
   connections,
   dirtyProviders,
   onSelect,
@@ -43,22 +48,26 @@ export function StepConnectProviderCards({
 }: Readonly<StepConnectProviderCardsProps>) {
   return (
     <div className="mt-[22px]">
-      <div aria-label="SERP provider" className="grid gap-3 sm:grid-cols-2" role="radiogroup">
-        {providerOptions.map((provider) => (
-          <ProviderCard
-            balance={connections[provider.value]?.balance}
-            key={provider.value}
-            onSelect={onSelect}
-            provider={provider}
-            selected={selectedProviderId === provider.value}
-            state={providerState({
-              connections,
-              dirty: Boolean(dirtyProviders[provider.value]),
-              providerId: provider.value,
-              testResults,
-            })}
-          />
-        ))}
+      {analyticsNotice}
+      <div className="grid items-stretch gap-3 sm:grid-cols-3">
+        <div aria-label="SERP provider" className="contents" role="radiogroup">
+          {providerOptions.map((provider) => (
+            <ProviderCard
+              balance={connections[provider.value]?.balance}
+              key={provider.value}
+              onSelect={onSelect}
+              provider={provider}
+              selected={selectedProviderId === provider.value}
+              state={providerState({
+                connections,
+                dirty: Boolean(dirtyProviders[provider.value]),
+                providerId: provider.value,
+                testResults,
+              })}
+            />
+          ))}
+        </div>
+        {analyticsOption}
       </div>
       {Object.keys(connections).length > 0 ? (
         <p className="m-0 mt-2 text-[11.5px] text-fg-muted">

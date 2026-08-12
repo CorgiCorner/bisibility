@@ -88,7 +88,7 @@ export function NoDataBanner({
         runCheckNowAction={runCheckNowAction}
       />
     ) : (
-      <FirstCheckBannerLink href={appPath(projectRef, "keywords")} label="View keywords" />
+      <FirstCheckBannerLink href={appPath(projectRef, "rank-tracker")} label="View keywords" />
     );
     return <FirstCheckBanner action={action} keywordCount={keywordCount} />;
   }
@@ -101,7 +101,9 @@ export function NoDataBanner({
     />
   );
   if (state === "migration_hold") {
-    action = <FirstCheckBannerLink href={appPath(projectRef, "keywords")} label="View keywords" />;
+    action = (
+      <FirstCheckBannerLink href={appPath(projectRef, "rank-tracker")} label="View keywords" />
+    );
   } else if (state === "needs_attention") {
     action = (
       <FirstCheckBannerLink

@@ -16,13 +16,14 @@ import {
 } from "@/components/onboarding/onboarding-locations";
 import type { OnboardingWizardActions } from "@/components/onboarding/onboarding-wizard-actions";
 import type { ConnectedProviderMap } from "@/components/onboarding/steps/StepConnectProvider.fields";
-import { issueApiKey } from "@/lib/actions/apiKey";
 import { addKeywordsMatrix } from "@/lib/actions/keyword";
 import { importTopQueries } from "@/lib/actions/keyword-suggest";
 import { completeProjectOnboarding } from "@/lib/actions/project";
 import {
   completeGooglePropertySelection,
   connectProvider,
+  loadStoredGoogleProperties,
+  saveStoredGoogleProperty,
   testConnection,
 } from "@/lib/actions/providers";
 import {
@@ -47,13 +48,12 @@ import { getKeywordCount } from "@/lib/queries/keywords";
 import {
   existingOnboardingCityLocationKeys,
   getOnboardingGscPropertyLabel,
-  hasActiveOnboardingApiKey,
 } from "@/lib/queries/onboarding";
 import { listWorkspaces } from "@/lib/queries/workspaces";
 import { DEFAULT_MONTHLY_COST_CAP_CENTS } from "@/lib/rank-check/budget";
 import { listEligibleRankedKeywordConnections } from "@/lib/ranked-keywords/service";
 import { redirect } from "next/navigation";
-import { createOnboardingProject } from "./actions";
+import { createOnboardingProject, deriveOnboardingWebsite } from "./actions";
 
 // Restore ownership matching with issue #863:
 // import { saveMatchingScope } from "./actions";
@@ -193,12 +193,11 @@ export default async function OnboardingPage({ searchParams }: Readonly<Onboardi
   const projectId = project?.publicId ?? null;
   const googleStatus = paramValue(params?.google);
   const googleProvider = paramValue(params?.provider);
-  const [keywordCount, providerState, connectedGscPropertyLabel, hasApiKey, googleOAuth] = projectId
+  const [keywordCount, providerState, connectedGscPropertyLabel, googleOAuth] = projectId
     ? await Promise.all([
         getKeywordCount(projectId),
         getOnboardingProviderState(projectId),
         getOnboardingGscPropertyLabel(project?.id ?? null),
-        hasActiveOnboardingApiKey(project?.id ?? null),
         googleStatus === "select" && googleProvider === "gsc"
           ? getPendingGoogleOAuthSetup(projectId)
           : googleStatus === "error" && googleProvider === "gsc"
@@ -211,7 +210,7 @@ export default async function OnboardingPage({ searchParams }: Readonly<Onboardi
               }
             : null,
       ])
-    : [0, await getOnboardingProviderState(null), null, false, null];
+    : [0, await getOnboardingProviderState(null), null, null];
   const locations = await normalizeOnboardingLocations(
     paramValues(params?.loc),
     paramValues(params?.country),
@@ -247,14 +246,16 @@ export default async function OnboardingPage({ searchParams }: Readonly<Onboardi
     completeOnboardingAction: completeProjectOnboarding,
     connectProviderAction: connectProvider,
     createProjectAction: createOnboardingProject,
+    deriveWebsiteAction: deriveOnboardingWebsite,
     getObservedPositionsAction: getObservedPositions,
     importTopQueriesAction: importTopQueries,
     fetchRankedKeywordSuggestionsAction: fetchRankedKeywordSuggestions,
     installSampleDataAction: installSampleData,
-    issueApiKeyAction: issueApiKey,
+    loadStoredGooglePropertiesAction: loadStoredGoogleProperties,
     listFirstCheckCandidatesAction: listFirstCheckCandidates,
     queueFirstChecksAction: queueFirstChecks,
     runFirstCheckPreviewAction: runFirstCheckPreview,
+    saveStoredGooglePropertyAction: saveStoredGoogleProperty,
     // saveMatchingScopeAction: saveMatchingScope, // Restore with issue #863.
     syncProjectTrafficAction: syncProjectTraffic,
     testProviderConnectionAction: testConnection,
@@ -281,7 +282,6 @@ export default async function OnboardingPage({ searchParams }: Readonly<Onboardi
         gscGoogleOAuth={googleOAuth}
         gscPropertyLabel={connectedGscPropertyLabel}
         hasAnalyticsSource={providerState.hasAnalyticsSource}
-        initialHasApiKey={hasApiKey}
         initialFlowState={flowState}
         initialKeywordCount={keywordCount}
         initialProject={project}

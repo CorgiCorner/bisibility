@@ -3,20 +3,11 @@ import {
   useSessionSpend,
 } from "@/components/cost-estimate/SessionSpendProvider";
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
+import { deferred } from "@/tests/deferred";
 import { act, renderHook } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { useKeywordRunChecks } from "./useKeywordRunChecks";
-
-function deferred() {
-  let reject!: (reason?: unknown) => void;
-  let resolve!: (value: unknown) => void;
-  const promise = new Promise((resolvePromise, rejectPromise) => {
-    reject = rejectPromise;
-    resolve = resolvePromise;
-  });
-  return { promise, reject, resolve };
-}
 
 function wrapper({ children }: Readonly<{ children: ReactNode }>) {
   return <SessionSpendProvider>{children}</SessionSpendProvider>;

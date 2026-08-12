@@ -12,7 +12,11 @@ import { buildFailureBreakdown } from "@/lib/ops/instance-admin-health";
 import type { OpsEventInput, OpsSeverity } from "@/lib/ops/slack";
 
 type SweepSummary = { attempted: number; delivered: number };
-type Reason = { severity: Exclude<OpsSeverity, "info">; text: string };
+type Reason = {
+  section?: "traffic";
+  severity: Exclude<OpsSeverity, "info">;
+  text: string;
+};
 
 export type HeartbeatEventInput = {
   database: DatabaseHeartbeat;
@@ -71,11 +75,11 @@ function trafficReason(input: HeartbeatEventInput): Reason | null {
   const counts = trafficCounts(input.database.traffic);
   const unhealthy = counts.needsReauth + counts.notRun + counts.stale + counts.failed;
   if (unhealthy === 0) return null;
-  const state = `${counts.needsReauth} needs reauth, ${counts.notRun} not run, ${counts.stale} stale, ${counts.failed} failed`;
   if (counts.notRun > 0 && !input.schedulesEnabled[TRAFFIC_SCHEDULE_ID]) {
     return {
+      section: "traffic",
       severity: "warning",
-      text: `Traffic sync: ${state} - schedule disabled (TRAFFIC_SYNC_SCHEDULE_ENABLED unset); enable it on the worker.`,
+      text: "Traffic sync schedule is disabled - set TRAFFIC_SYNC_SCHEDULE_ENABLED on the worker.",
     };
   }
   const hasOperationalFailure = input.database.traffic.some(
@@ -85,8 +89,9 @@ function trafficReason(input: HeartbeatEventInput): Reason | null {
       (row.failureEscalated || row.errorClass === "provider_4xx"),
   );
   return {
+    section: "traffic",
     severity: hasOperationalFailure ? "error" : "warning",
-    text: `Traffic sync: ${state} - schedule enabled but no successful run; inspect ${TRAFFIC_SCHEDULE_ID} and provider credentials.`,
+    text: `Traffic sync needs attention - inspect ${TRAFFIC_SCHEDULE_ID} and provider credentials.`,
   };
 }
 
@@ -251,8 +256,10 @@ export function buildHeartbeatEvent(input: HeartbeatEventInput): OpsEventInput {
   const verdict = heartbeatVerdict(input);
   const transient = transientLine(input);
   const fields: Record<string, string> = {};
-  if (verdict.reasons.length > 0) {
-    fields["Needs attention"] = verdict.reasons.map((reason) => reason.text).join("\n");
+  const attentionReasons = verdict.reasons.filter((reason) => reason.section !== "traffic");
+  const trafficAttention = verdict.reasons.find((reason) => reason.section === "traffic");
+  if (attentionReasons.length > 0) {
+    fields["Needs attention"] = attentionReasons.map((reason) => reason.text).join("\n");
   }
   if (transient) fields.Transient = transient;
   fields["Rank checks (24h)"] = rankLine(input.database);
@@ -260,7 +267,8 @@ export function buildHeartbeatEvent(input: HeartbeatEventInput): OpsEventInput {
     fields["Start lag"] =
       `p50 ${duration(input.database.rank.lagP50Ms)} · p95 ${duration(input.database.rank.lagP95Ms)}`;
   }
-  fields.Traffic = trafficLines(input.database, input.now);
+  const traffic = trafficLines(input.database, input.now);
+  fields.Traffic = trafficAttention ? `${traffic}\n${trafficAttention.text}` : traffic;
   const next = input.temporal.nextActionAt
     ? relativeTime(input.temporal.nextActionAt, input.now)
     : "not scheduled";

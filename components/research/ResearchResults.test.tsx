@@ -2,6 +2,7 @@ import type {
   KeywordResearchSourceDiagnostic,
   KeywordResearchSuccess,
 } from "@/lib/keyword-research/types";
+import { makeCostContext } from "@/tests/factories/cost-context";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { ResearchResults } from "./ResearchResults";
@@ -10,22 +11,9 @@ vi.mock("./ResearchDetailPanel", () => ({ ResearchDetailPanel: () => <div /> }))
 vi.mock("./ResearchFiltersDrawer", () => ({ ResearchFiltersDrawer: () => <div /> }));
 vi.mock("./ResearchResultsTable", () => ({ ResearchResultsTable: () => <div /> }));
 
-const costContext = {
-  capCents: 5000,
-  costPerCheckCents: 1,
-  cronExpression: null,
-  depth: 100 as const,
-  deviceCount: 1,
-  devices: ["desktop" as const],
-  frequency: "daily" as const,
+const costContext = makeCostContext({
   keywordCount: 1,
-  locationCount: 1,
-  projectName: "Example",
-  providerId: "dataforseo",
-  rawFrequency: "daily" as const,
-  spentCents: 0,
-  timezone: "UTC",
-};
+});
 
 const defaultTracking = {
   device: "desktop" as const,

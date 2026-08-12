@@ -2,6 +2,8 @@ import {
   completeGooglePropertySelection as completeGooglePropertySelectionAction,
   connectProvider as connectProviderAction,
   disconnectProvider as disconnectProviderAction,
+  loadStoredGoogleProperties as loadStoredGooglePropertiesAction,
+  saveStoredGoogleProperty as saveStoredGooglePropertyAction,
   testConnection as testConnectionAction,
   updateProviderCost as updateProviderCostAction,
   updateProviderRate as updateProviderRateAction,
@@ -14,6 +16,15 @@ export const demoActions: ProviderActionHandlers = {
   completeGooglePropertySelection: async (input) => ({ property: input.property }),
   connectProvider: async () => undefined,
   disconnectProvider: async () => undefined,
+  loadStoredGoogleProperties: async (input) => ({
+    preferredProperty: "sc-domain:example.com",
+    properties: [],
+    provider: input.provider,
+  }),
+  saveStoredGoogleProperty: async (input) => ({
+    property: input.property,
+    status: "saved" as const,
+  }),
   updateProviderSettings: async () => undefined,
   syncProjectTraffic: async () => ({
     connections: 1,
@@ -37,6 +48,8 @@ export const serverActions = {
   completeGooglePropertySelection: completeGooglePropertySelectionAction,
   connectProvider: connectProviderAction,
   disconnectProvider: disconnectProviderAction,
+  loadStoredGoogleProperties: loadStoredGooglePropertiesAction,
+  saveStoredGoogleProperty: saveStoredGooglePropertyAction,
   updateProviderSettings: updateProviderSettingsAction,
   syncProjectTraffic: syncProjectTrafficAction,
   testProviderConnection: testConnectionAction,

@@ -265,7 +265,7 @@ describe("settings default actions", () => {
 
     expect(settingsActionMocks.revalidatePath.mock.calls).toEqual([
       [appPath("[project]", "settings"), "page"],
-      [appPath("[project]", "keywords"), "page"],
+      [appPath("[project]", "rank-tracker"), "page"],
       [appPath("[project]", "settings", "audit"), "page"],
     ]);
   });

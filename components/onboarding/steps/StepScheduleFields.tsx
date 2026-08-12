@@ -67,39 +67,15 @@ export function SerpDepthWarning({
   );
 }
 
-export function ReadonlyField({
+export function DerivedValue({
   help,
   label,
-  name,
   value,
-}: Readonly<{
-  help?: string;
-  label: string;
-  name: string;
-  value: string;
-}>) {
+}: Readonly<{ help?: string; label: string; value: string }>) {
   return (
     <div className={boxClass}>
       <FieldLabel className={labelClass} help={help} label={label} />
-      <input
-        aria-label={label}
-        name={name}
-        className="w-24 bg-transparent text-right text-[13.5px] font-medium text-fg outline-none focus-visible:outline-none"
-        readOnly
-        value={value}
-      />
-    </div>
-  );
-}
-
-export function DerivedValue({ label, value }: Readonly<{ label: string; value: string }>) {
-  return (
-    <div className={boxClass}>
-      <span>
-        <span className={`${labelClass} block`}>{label}</span>
-        <span className="mt-0.5 block text-[10.5px] text-fg-muted">From locations</span>
-      </span>
-      <output aria-label={label} className="text-right text-[13.5px] font-medium text-fg">
+      <output aria-label={label} className="text-right text-sm font-normal text-fg">
         {value}
       </output>
     </div>

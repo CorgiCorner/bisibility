@@ -1,18 +1,15 @@
+import { routerMock } from "@/tests/next-navigation";
 import { render, screen } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { KeywordsDeviceScope } from "./KeywordsScopeControls";
 
-const mocks = vi.hoisted(() => ({ push: vi.fn() }));
-
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push: mocks.push }) }));
-
 describe("KeywordsDeviceScope", () => {
-  beforeEach(() => mocks.push.mockClear());
+  beforeEach(() => routerMock.push.mockClear());
 
   it("gives inactive device options a visible hover state", () => {
     render(
       <KeywordsDeviceScope
-        basePath="/app/prj_1/keywords"
+        basePath="/app/prj_1/rank-tracker"
         lens={{ device: "all", locationId: null }}
       />,
     );
@@ -31,7 +28,7 @@ describe("KeywordsDeviceScope", () => {
   it("uses the quiet select-sized toolbar treatment", () => {
     render(
       <KeywordsDeviceScope
-        basePath="/app/prj_1/keywords"
+        basePath="/app/prj_1/rank-tracker"
         lens={{ device: "all", locationId: null }}
       />,
     );

@@ -229,7 +229,7 @@ export function ResearchDetailPanel({
             Already tracked.{" "}
             <Link
               className="font-semibold text-accent-text hover:underline"
-              href={appPath(projectId, "keywords")}
+              href={appPath(projectId, "rank-tracker")}
             >
               Open in the keyword grid
             </Link>

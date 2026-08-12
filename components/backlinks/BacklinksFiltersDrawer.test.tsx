@@ -1,6 +1,7 @@
+import { stubBlobDownload } from "@/tests/blob-download";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { BacklinksTable, type BacklinksTableProps } from "./BacklinksTable";
 import { emptyBacklinksFilters } from "./backlinks-filters-model";
 import { backlinksSnapshotFixture } from "./backlinks-fixtures";
@@ -28,17 +29,10 @@ function filtersButton() {
 
 beforeEach(() => {
   exportedBlob = undefined;
-  vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined);
-  Object.defineProperty(URL, "createObjectURL", {
-    configurable: true,
-    value: vi.fn((blob: Blob) => {
-      exportedBlob = blob;
-      return "blob:backlinks";
-    }),
-  });
-  Object.defineProperty(URL, "revokeObjectURL", {
-    configurable: true,
-    value: vi.fn(),
+  const { objectUrls } = stubBlobDownload();
+  objectUrls.mockImplementation((blob: Blob) => {
+    exportedBlob = blob;
+    return "blob:backlinks";
   });
 });
 

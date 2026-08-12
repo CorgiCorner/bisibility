@@ -1,10 +1,10 @@
+import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AlertTargetUrlDialog } from "./AlertTargetUrlDialog";
 
 const mocks = vi.hoisted(() => ({ refresh: vi.fn(), setTarget: vi.fn() }));
 
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: mocks.refresh }) }));
 vi.mock("@/lib/actions/alert-feed", () => ({
   setAlertKeywordTargetUrl: mocks.setTarget,
 }));
@@ -42,6 +42,6 @@ describe("AlertTargetUrlDialog", () => {
       }),
     );
     expect(onClose).toHaveBeenCalledOnce();
-    expect(mocks.refresh).toHaveBeenCalledOnce();
+    expect(routerMock.refresh).toHaveBeenCalledOnce();
   });
 });

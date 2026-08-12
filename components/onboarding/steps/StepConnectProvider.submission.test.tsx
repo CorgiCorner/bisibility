@@ -1,29 +1,12 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import type { ComponentProps } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { StepConnectProvider } from "./StepConnectProvider";
-
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: vi.fn() }),
-}));
-
-function defaultValues() {
-  return {
-    login: "provider-login",
-    projectId: "prj_1",
-    providerId: "dataforseo" as const,
-    secret: "provider-password",
-  };
-}
-
-function renderProviderStep(props: Partial<ComponentProps<typeof StepConnectProvider>> = {}) {
-  return render(<StepConnectProvider defaultValues={defaultValues()} {...props} />);
-}
-
-async function clickTestConnection(action: ReturnType<typeof vi.fn>) {
-  fireEvent.click(screen.getByRole("button", { name: "Test connection" }));
-  await waitFor(() => expect(action).toHaveBeenCalledTimes(1));
-}
+import {
+  clickContinue,
+  clickTestConnection,
+  defaultValues,
+  renderProviderStep,
+} from "./StepConnectProvider.test-utils";
 
 describe("StepConnectProvider submission", () => {
   it("exposes one selected provider through the radiogroup", () => {
@@ -64,14 +47,22 @@ describe("StepConnectProvider submission", () => {
     expect((await screen.findByText("Verified")).closest("span")).toHaveClass("h-5");
   });
 
+  it("uses the same regular label weight for test and save actions", () => {
+    renderProviderStep();
+
+    expect(
+      getComputedStyle(screen.getByRole("button", { name: "Test connection" })).fontWeight,
+    ).toBe(getComputedStyle(screen.getByRole("button", { name: "Save DataForSEO" })).fontWeight);
+  });
+
   it("still rejects empty fields when the selected provider is not connected", async () => {
     const onComplete = vi.fn();
-    const { container } = renderProviderStep({
+    renderProviderStep({
       defaultValues: { ...defaultValues(), login: "", secret: "" },
       onComplete,
     });
 
-    fireEvent.submit(container.querySelector("form") as HTMLFormElement);
+    clickContinue();
 
     expect(await screen.findByText("Enter your API login.")).toBeInTheDocument();
     expect(screen.getByText("Enter your API password.")).toBeInTheDocument();
@@ -85,7 +76,12 @@ describe("StepConnectProvider submission", () => {
       screen.getByRole("link", {
         name: "Skip provider connection and add keywords as paused",
       }),
-    ).toHaveAttribute("href", "/onboarding?step=4&projectId=prj_1");
+    ).toHaveAttribute("href", "/onboarding?step=3&projectId=prj_1");
+    expect(
+      screen.getByRole("link", {
+        name: "Skip provider connection and add keywords as paused",
+      }),
+    ).toHaveStyle({ minHeight: "30px", padding: "4px 10px" });
   });
 
   it("submits no client-owned enabled, primary, or priority to the provider action", async () => {
@@ -124,7 +120,7 @@ describe("StepConnectProvider submission", () => {
         priority: 0,
       }),
     );
-    expect(screen.getByText("Connect your SERP provider")).toBeInTheDocument();
+    expect(screen.getByText("Connect data")).toBeInTheDocument();
   });
 
   it("submits SerpApi from onboarding as an API key credential", async () => {
@@ -177,7 +173,7 @@ describe("StepConnectProvider submission", () => {
       message: "ok",
       ok: true,
     }));
-    const { container } = renderProviderStep({
+    renderProviderStep({
       connectProviderAction,
       onContinueDisabledChange,
       testProviderConnectionAction,
@@ -191,7 +187,7 @@ describe("StepConnectProvider submission", () => {
     });
     expect(onContinueDisabledChange).toHaveBeenLastCalledWith(true);
 
-    fireEvent.submit(container.querySelector("form") as HTMLFormElement);
+    clickContinue();
 
     expect(await screen.findByText("Save a provider before continuing.")).toBeInTheDocument();
     expect(connectProviderAction).not.toHaveBeenCalled();

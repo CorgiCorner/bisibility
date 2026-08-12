@@ -22,15 +22,10 @@ import {
 import { TeamSettingsLoading } from "@/components/settings/team/TeamSettingsLoading";
 import { TrackingSettingsRouteLoading } from "@/components/settings/tracking/TrackingSettingsLoading";
 import { UsageLoading } from "@/components/settings/usage/UsageLoading";
+import { routerMock } from "@/tests/next-navigation";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-
-const mocks = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn() }));
-
-vi.mock("next/navigation", () => ({
-  useRouter: () => mocks,
-}));
 
 const projectRef = "prj_7Kd2Qf9m";
 
@@ -136,7 +131,7 @@ describe("SettingsShell", () => {
     await user.click(screen.getByRole("button", { name: "Settings section" }));
     await user.click(screen.getByRole("menuitem", { name: "Advanced" }));
 
-    expect(mocks.push).toHaveBeenCalledWith("/app/prj_7Kd2Qf9m/settings/advanced");
+    expect(routerMock.push).toHaveBeenCalledWith("/app/prj_7Kd2Qf9m/settings/advanced");
     expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
   });
 
@@ -287,7 +282,7 @@ describe("SettingsShell", () => {
       window.history.replaceState({}, "", `/app/${projectRef}/settings/general${hash}`);
       render(<LegacySettingsHashRedirect projectRef={projectRef} />);
 
-      expect(mocks.replace).toHaveBeenCalledWith(`/app/${projectRef}/settings/${section}`);
+      expect(routerMock.replace).toHaveBeenCalledWith(`/app/${projectRef}/settings/${section}`);
     },
   );
 });

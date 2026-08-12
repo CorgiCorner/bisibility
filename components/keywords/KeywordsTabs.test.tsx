@@ -10,11 +10,11 @@ describe("KeywordsTabs", () => {
 
     expect(screen.getByRole("link", { name: "Tracked 248" })).toHaveAttribute(
       "href",
-      "/app/prj_1/keywords",
+      "/app/prj_1/rank-tracker",
     );
     expect(screen.getByRole("link", { name: "Saved 36" })).toHaveAttribute(
       "href",
-      "/app/prj_1/keywords?tab=saved",
+      "/app/prj_1/rank-tracker?tab=saved",
     );
     expect(screen.getByRole("link", { name: "Tracked 248" })).toHaveAttribute(
       "aria-current",

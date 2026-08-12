@@ -228,7 +228,7 @@ describe("keyword workbook import action", () => {
         targetType: "project",
       }),
     });
-    expect(mocks.revalidatePath).toHaveBeenCalledWith("/app/[project]/keywords", "page");
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/app/[project]/rank-tracker", "page");
   });
 
   it("defers wizard revalidation until the completed result is dismissed", async () => {
@@ -243,7 +243,7 @@ describe("keyword workbook import action", () => {
 
     await refreshKeywordViewsAfterImport();
 
-    expect(mocks.revalidatePath).toHaveBeenCalledWith("/app/[project]/keywords", "page");
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/app/[project]/rank-tracker", "page");
   });
 
   it("rejects an XLSX workbook missing the keyword column before import", async () => {

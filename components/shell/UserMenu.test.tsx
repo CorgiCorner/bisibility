@@ -1,3 +1,4 @@
+import { deferred } from "@/tests/deferred";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -67,16 +68,6 @@ function interceptLocation() {
       },
     },
   });
-}
-
-function deferred<Value>() {
-  let reject: (reason?: unknown) => void = () => undefined;
-  let resolve: (value: Value) => void = () => undefined;
-  const promise = new Promise<Value>((resolvePromise, rejectPromise) => {
-    resolve = resolvePromise;
-    reject = rejectPromise;
-  });
-  return { promise, reject, resolve };
 }
 
 describe("UserMenu", () => {

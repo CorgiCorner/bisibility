@@ -1,12 +1,10 @@
+import { notFound } from "@/tests/next-navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getInstanceAdminAuditPage } from "./instance-admin-audit";
 
 const mocks = vi.hoisted(() => ({
   findMany: vi.fn(),
   getInstanceAdminSession: vi.fn(),
-  notFound: vi.fn(() => {
-    throw new Error("NEXT_NOT_FOUND");
-  }),
 }));
 
 vi.mock("server-only", () => ({}));
@@ -16,7 +14,6 @@ vi.mock("@/lib/auth/instance-admin", () => ({
 vi.mock("@/lib/db/prisma", () => ({
   prisma: { auditLog: { findMany: mocks.findMany } },
 }));
-vi.mock("next/navigation", () => ({ notFound: mocks.notFound }));
 
 function auditPublicId(id: string) {
   return `audit_a${id
@@ -54,6 +51,9 @@ function auditRow(
 describe("getInstanceAdminAuditPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    notFound.mockImplementation(() => {
+      throw new Error("NEXT_NOT_FOUND");
+    });
     mocks.getInstanceAdminSession.mockResolvedValue({ user: { id: "admin_1" } });
     mocks.findMany.mockResolvedValue([]);
   });
@@ -63,7 +63,7 @@ describe("getInstanceAdminAuditPage", () => {
 
     await expect(getInstanceAdminAuditPage()).rejects.toThrow("NEXT_NOT_FOUND");
 
-    expect(mocks.notFound).toHaveBeenCalledOnce();
+    expect(notFound).toHaveBeenCalledOnce();
     expect(mocks.findMany).not.toHaveBeenCalled();
   });
 

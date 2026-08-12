@@ -56,7 +56,7 @@ describe("notification feed", () => {
         {
           body: "Daily check done",
           createdAt: "2026-06-28T10:00:00.000Z",
-          href: appPath(PROJECT_PUBLIC_ID, "keywords"),
+          href: appPath(PROJECT_PUBLIC_ID, "rank-tracker"),
           id: NOTIFICATION_PUBLIC_ID,
           meta: "Daily check done",
           payload: { keywordId: "[redacted]" },

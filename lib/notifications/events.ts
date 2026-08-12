@@ -161,7 +161,7 @@ export async function notifyRankCheckCompleted(input: {
 
     await notifyProjectMembers({
       body: `${keyword.text} is ${positionLabel(input.position)}.`,
-      hrefSegments: ["keywords", keyword.publicId],
+      hrefSegments: ["rank-tracker", keyword.publicId],
       idempotencyKey: `rank-check:${input.rankCheckId}:complete`,
       payload: {
         checkedAt: input.checkedAt.toISOString(),
@@ -230,7 +230,7 @@ export async function notifyCloudImportDone(input: CloudImportDoneInput) {
 
   await notifyProjectMembers({
     body,
-    hrefSegments: ["keywords"],
+    hrefSegments: ["rank-tracker"],
     idempotencyKey: `cloud-import:${input.jobId}:done`,
     payload: {
       counts: (input.counts ?? null) as NotificationPayload,

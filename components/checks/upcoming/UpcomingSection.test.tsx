@@ -14,7 +14,7 @@ const sharedProps = {
   mode: "rail",
   now: upcomingNow,
   providerSettingsHref: "/app/settings#providers",
-  schedulesHref: "/app/keywords",
+  schedulesHref: "/app/rank-tracker",
   timeZone: "Europe/Warsaw",
   timelineHref: "/app/settings#migration",
   view: upcomingViewFixture,
@@ -68,7 +68,7 @@ describe("UpcomingSection", () => {
     expect(within(days).queryByText("example")).not.toBeInTheDocument();
     expect(
       within(days).getByRole("link", { name: "Manage schedules in Keywords" }),
-    ).toHaveAttribute("href", "/app/keywords");
+    ).toHaveAttribute("href", "/app/rank-tracker");
   });
 
   it("opens a strip day sheet and closes it from the backdrop", async () => {
@@ -85,7 +85,7 @@ describe("UpcomingSection", () => {
     expect(within(dialog).getByText("flow dictation app")).toBeInTheDocument();
     expect(
       within(dialog).getByRole("link", { name: "Manage schedules in Keywords" }),
-    ).toHaveAttribute("href", "/app/keywords");
+    ).toHaveAttribute("href", "/app/rank-tracker");
 
     fireEvent.click(screen.getByLabelText("Close upcoming details"));
     await waitFor(() =>
@@ -142,7 +142,7 @@ describe("UpcomingSection", () => {
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Manage schedules in Keywords" })).toHaveAttribute(
       "href",
-      "/app/keywords",
+      "/app/rank-tracker",
     );
   });
 });

@@ -1,14 +1,9 @@
 import type { IntegrationProviderData, ProviderActionHandlers } from "@/lib/integrations/types";
+import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { integrationCategories } from "./integrations-fixtures";
 import { SerpFallbackOrder } from "./SerpFallbackOrder";
-
-const refresh = vi.fn();
-
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ refresh }),
-}));
 
 const actions = {
   connectProvider: vi.fn(async () => undefined),
@@ -76,7 +71,7 @@ describe("SerpFallbackOrder", () => {
       projectId: "prj_1",
       providerId: "dataforseo",
     });
-    expect(refresh).toHaveBeenCalledOnce();
+    expect(routerMock.refresh).toHaveBeenCalledOnce();
   });
 
   it("renumbers active providers before paused providers in every update", async () => {

@@ -34,11 +34,12 @@ export function getOpsConfig(
 ): OpsConfig {
   const webhookUrl = env.OPS_SLACK_WEBHOOK_URL?.trim() || null;
   const requestedEnabled = envFlag(env.OPS_EVENTS_ENABLED, Boolean(webhookUrl));
+  const isManagedCloud = env.DEPLOYMENT_MODE?.trim().toLowerCase() === "cloud";
   return {
     enabled: Boolean(webhookUrl) && requestedEnabled,
     heartbeatCron: env.OPS_HEARTBEAT_CRON?.trim() || DEFAULT_HEARTBEAT_CRON,
     heartbeatTimezone: env.OPS_HEARTBEAT_TZ?.trim() || DEFAULT_HEARTBEAT_TIMEZONE,
-    includeNames: envFlag(env.OPS_SLACK_INCLUDE_NAMES, false),
+    includeNames: !isManagedCloud && envFlag(env.OPS_SLACK_INCLUDE_NAMES, false),
     notifyMode: env.OPS_NOTIFY_MODE?.trim().toLowerCase() === "all" ? "all" : "failures",
     throttleMinutes: positiveNumber(env.OPS_THROTTLE_MINUTES, DEFAULT_THROTTLE_MINUTES),
     webhookUrl,

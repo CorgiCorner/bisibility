@@ -1,4 +1,5 @@
 import { appPath } from "@/lib/routing/app-path";
+import { makeCostContext } from "@/tests/factories/cost-context";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { ResearchDetailPanel } from "./ResearchDetailPanel";
@@ -19,22 +20,10 @@ const location = {
   kind: "country" as const,
 };
 
-const costContext = {
-  capCents: 5000,
-  costPerCheckCents: 1,
-  cronExpression: null,
-  depth: 100 as const,
-  deviceCount: 1,
-  devices: ["desktop" as const],
-  frequency: "daily" as const,
-  keywordCount: 4,
-  locationCount: 1,
-  projectName: "Example",
-  providerId: "dataforseo",
-  rawFrequency: "daily" as const,
+const costContext = makeCostContext({
   spentCents: 100,
   timezone: "America/New_York",
-};
+});
 
 function variant(keyword: string, searchVolume: number) {
   return {
@@ -220,7 +209,7 @@ describe("ResearchDetailPanel", () => {
     expect(screen.queryByRole("button", { name: "Save for later" })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Saved / view in Keywords" })).toHaveAttribute(
       "href",
-      `${appPath("prj_1", "keywords")}?tab=saved`,
+      `${appPath("prj_1", "rank-tracker")}?tab=saved`,
     );
 
     rerender(

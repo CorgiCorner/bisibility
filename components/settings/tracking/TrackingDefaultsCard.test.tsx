@@ -4,8 +4,6 @@ import type { DefaultsData } from "@/lib/settings/options";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
-
 const defaults: DefaultsData = {
   city: null,
   costPerCheck: 0.0155,

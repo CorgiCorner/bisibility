@@ -53,7 +53,7 @@ export function ProviderCard({
         type="radio"
         value={provider.value}
       />
-      <span className="pointer-events-none relative z-[1] flex items-center justify-between gap-3">
+      <span className="pointer-events-none relative z-[1] flex flex-col items-start gap-2">
         <span className="text-sm font-semibold text-fg">{provider.label}</span>
         <StatusPill label={stateText(state)} size="sm" status={statusKind(state)} />
       </span>
@@ -68,7 +68,12 @@ export function ProviderCard({
           Balance: {balance}
         </span>
       ) : null}
-      <span className="pointer-events-none relative z-[1] mt-auto flex items-center justify-between gap-2 pt-3">
+      <span className="pointer-events-none relative z-[1] mt-auto flex flex-col items-start gap-1.5 pt-3">
+        {provider.affiliate ? (
+          <span className="shrink-0 whitespace-nowrap font-mono text-[9.5px] uppercase tracking-[0.4px] text-fg-muted">
+            Affiliate link
+          </span>
+        ) : null}
         <a
           className="pointer-events-auto inline-flex whitespace-nowrap text-[12.5px] font-semibold text-accent-text hover:underline"
           href={provider.docsHref}
@@ -78,11 +83,6 @@ export function ProviderCard({
         >
           Get API credentials ↗
         </a>
-        {provider.affiliate ? (
-          <span className="shrink-0 whitespace-nowrap font-mono text-[9.5px] uppercase tracking-[0.4px] text-fg-muted">
-            Affiliate link
-          </span>
-        ) : null}
       </span>
     </section>
   );

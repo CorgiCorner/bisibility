@@ -1,12 +1,11 @@
 import { providerCredentialFieldsFor } from "@/lib/integrations/credential-fields";
 import type { IntegrationProviderData, ProviderActionHandlers } from "@/lib/integrations/types";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import type { ComponentProps } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ConnectDrawer } from "./ConnectDrawer";
 import { ActionNotice, ActivityList, ConnectionOkBanner, EnvHint } from "./ConnectDrawerControls";
 import { integrationCategories } from "./integrations-fixtures";
-
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 
 const actions = {
   connectProvider: vi.fn(async () => undefined),
@@ -78,6 +77,24 @@ function connectablePlausible(): IntegrationProviderData {
   };
 }
 
+function renderDrawer(
+  provider: IntegrationProviderData = connectableDataForSeo(),
+  overrides: Partial<ComponentProps<typeof ConnectDrawer>> = {},
+) {
+  const onClose = vi.fn();
+  const view = render(
+    <ConnectDrawer
+      actions={actions}
+      onClose={onClose}
+      open
+      projectId="prj_1"
+      provider={provider}
+      {...overrides}
+    />,
+  );
+  return { onClose, view };
+}
+
 describe("ConnectDrawer", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -135,15 +152,7 @@ describe("ConnectDrawer", () => {
   });
 
   it("keeps connection tests disabled until required credentials are filled", () => {
-    render(
-      <ConnectDrawer
-        actions={actions}
-        onClose={vi.fn()}
-        open
-        projectId="prj_1"
-        provider={connectableDataForSeo()}
-      />,
-    );
+    renderDrawer();
 
     const testButton = screen.getByRole("button", { name: "Test connection" });
     expect(testButton).toBeDisabled();
@@ -159,39 +168,29 @@ describe("ConnectDrawer", () => {
   });
 
   it("keeps fallback controls out of individual provider drawers", () => {
-    render(
-      <ConnectDrawer
-        actions={actions}
-        onClose={vi.fn()}
-        open
-        projectId="prj_1"
-        provider={connectableDataForSeo()}
-      />,
-    );
+    renderDrawer();
 
     expect(screen.queryByText("Provider fallback chain")).not.toBeInTheDocument();
     expect(screen.queryByRole("switch")).not.toBeInTheDocument();
   });
 
   it("enables save only for credentials that passed the current connection test", async () => {
-    render(
-      <ConnectDrawer
-        actions={actions}
-        onClose={vi.fn()}
-        open
-        projectId="prj_1"
-        provider={connectableDataForSeo()}
-      />,
-    );
+    renderDrawer();
 
-    const saveButton = screen.getByRole("button", { name: "Connect provider" });
+    const saveButton = screen.getByRole<HTMLButtonElement>("button", {
+      name: "Connect provider",
+    });
+    const saveForm = saveButton.form;
+    expect(saveForm).toBeInstanceOf(HTMLFormElement);
+    if (!saveForm) throw new Error("Expected the save button to be associated with its form");
     expect(saveButton).toBeDisabled();
 
     fireEvent.change(screen.getByLabelText("API login"), { target: { value: "login" } });
     fireEvent.change(screen.getByLabelText("API password"), { target: { value: "password" } });
     expect(saveButton).toBeDisabled();
 
-    fireEvent.submit(document.querySelector("form") as HTMLFormElement);
+    // Exercise the defensive submit guard directly because a disabled button cannot be clicked.
+    fireEvent.submit(saveForm);
     expect(await screen.findByText("Test connection before saving.")).toBeInTheDocument();
     expect(actions.connectProvider).not.toHaveBeenCalled();
 
@@ -206,29 +205,20 @@ describe("ConnectDrawer", () => {
     expect(saveButton).toBeDisabled();
     expect(screen.getByRole("button", { name: "Test connection" })).toBeInTheDocument();
 
-    fireEvent.submit(document.querySelector("form") as HTMLFormElement);
+    fireEvent.submit(saveForm);
     expect(await screen.findByText("Test connection before saving.")).toBeInTheDocument();
     expect(actions.connectProvider).not.toHaveBeenCalled();
   });
 
   it("closes the drawer and clears the secret after a successful save", async () => {
-    const onClose = vi.fn();
-    render(
-      <ConnectDrawer
-        actions={actions}
-        onClose={onClose}
-        open
-        projectId="prj_1"
-        provider={connectableDataForSeo()}
-      />,
-    );
+    const { onClose } = renderDrawer();
 
     fireEvent.change(screen.getByLabelText("API login"), { target: { value: "login" } });
     fireEvent.change(screen.getByLabelText("API password"), { target: { value: "password" } });
     fireEvent.click(screen.getByRole("button", { name: "Test connection" }));
     await waitFor(() => expect(actions.testProviderConnection).toHaveBeenCalledTimes(1));
 
-    fireEvent.submit(document.querySelector("form") as HTMLFormElement);
+    fireEvent.click(screen.getByRole("button", { name: "Connect provider" }));
 
     await waitFor(() => expect(actions.connectProvider).toHaveBeenCalledTimes(1));
     expect(actions.connectProvider).toHaveBeenCalledWith(
@@ -245,15 +235,7 @@ describe("ConnectDrawer", () => {
   });
 
   it("submits a blank cost field as undefined without a validation error", async () => {
-    render(
-      <ConnectDrawer
-        actions={actions}
-        onClose={vi.fn()}
-        open
-        projectId="prj_1"
-        provider={connectableSerpApi()}
-      />,
-    );
+    renderDrawer(connectableSerpApi());
 
     expect(screen.getByText("Provider rates")).toBeInTheDocument();
     expect(screen.queryByText("Cost estimate per check (USD)")).not.toBeInTheDocument();
@@ -261,7 +243,7 @@ describe("ConnectDrawer", () => {
     fireEvent.click(screen.getByRole("button", { name: "Test connection" }));
     await waitFor(() => expect(actions.testProviderConnection).toHaveBeenCalledTimes(1));
 
-    fireEvent.submit(document.querySelector("form") as HTMLFormElement);
+    fireEvent.click(screen.getByRole("button", { name: "Connect provider" }));
 
     await waitFor(() => expect(actions.connectProvider).toHaveBeenCalledTimes(1));
     expect(actions.connectProvider).toHaveBeenCalledWith(
@@ -272,28 +254,20 @@ describe("ConnectDrawer", () => {
 
   it("renders an unresolved drawer rate as Not set instead of zero", () => {
     const provider = connectedDataForSeo();
-    render(
-      <ConnectDrawer
-        actions={actions}
-        onClose={vi.fn()}
-        open
-        projectId="prj_1"
-        provider={{
-          ...provider,
-          drawer: {
-            ...provider.drawer,
-            rates: [
-              {
-                feature: "ranked_keywords",
-                label: "Ranked keywords",
-                source: "unknown",
-                unit: "calls",
-              },
-            ],
+    renderDrawer({
+      ...provider,
+      drawer: {
+        ...provider.drawer,
+        rates: [
+          {
+            feature: "ranked_keywords",
+            label: "Ranked keywords",
+            source: "unknown",
+            unit: "calls",
           },
-        }}
-      />,
-    );
+        ],
+      },
+    });
 
     expect(screen.getByText("Not set")).toBeInTheDocument();
     expect(screen.getByText("no rate yet")).toBeInTheDocument();
@@ -301,21 +275,12 @@ describe("ConnectDrawer", () => {
   });
 
   it("saves connected-provider settings without a fresh test when credentials are untouched", async () => {
-    const onClose = vi.fn();
-    render(
-      <ConnectDrawer
-        actions={actions}
-        onClose={onClose}
-        open
-        projectId="prj_1"
-        provider={connectedDataForSeo()}
-      />,
-    );
+    const { onClose } = renderDrawer(connectedDataForSeo());
 
     expect(screen.getByLabelText("API login")).toHaveValue("team@example.com");
     expect(screen.getByRole("button", { name: "Save changes" })).toBeEnabled();
 
-    fireEvent.submit(document.querySelector("form") as HTMLFormElement);
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
 
     await waitFor(() => expect(actions.connectProvider).toHaveBeenCalledTimes(1));
     expect(actions.testProviderConnection).not.toHaveBeenCalled();
@@ -323,15 +288,7 @@ describe("ConnectDrawer", () => {
   });
 
   it("requires a fresh test after editing credentials but lets a blank secret use the stored one", async () => {
-    render(
-      <ConnectDrawer
-        actions={actions}
-        onClose={vi.fn()}
-        open
-        projectId="prj_1"
-        provider={connectedDataForSeo()}
-      />,
-    );
+    renderDrawer(connectedDataForSeo());
 
     fireEvent.change(screen.getByLabelText("API login"), {
       target: { value: "new-user@example.com" },
@@ -351,15 +308,7 @@ describe("ConnectDrawer", () => {
   });
 
   it("keeps Plausible in key mode and maps token credentials", async () => {
-    render(
-      <ConnectDrawer
-        actions={actions}
-        onClose={vi.fn()}
-        open
-        projectId="prj_1"
-        provider={connectablePlausible()}
-      />,
-    );
+    renderDrawer(connectablePlausible());
 
     const testButton = screen.getByRole("button", { name: "Test connection" });
     expect(screen.getByLabelText("Site domain")).toBeInTheDocument();
@@ -385,7 +334,7 @@ describe("ConnectDrawer", () => {
       providerId: "plausible",
     });
 
-    fireEvent.submit(document.querySelector("form") as HTMLFormElement);
+    fireEvent.click(screen.getByRole("button", { name: "Connect provider" }));
     await waitFor(() => expect(actions.connectProvider).toHaveBeenCalledTimes(1));
     expect(actions.connectProvider).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -406,15 +355,7 @@ describe("ConnectDrawer", () => {
       secondaryAction: undefined,
       status: "ready" as const,
     };
-    render(
-      <ConnectDrawer
-        actions={actions}
-        onClose={vi.fn()}
-        open
-        projectId="prj_1"
-        provider={provider}
-      />,
-    );
+    renderDrawer(provider);
 
     expect(screen.getByRole("link", { name: "Connect Google account" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Test connection" })).not.toBeInTheDocument();
@@ -425,20 +366,10 @@ describe("ConnectDrawer", () => {
   });
 
   it("disconnects an already configured provider after confirmation", async () => {
-    const onClose = vi.fn();
-    render(
-      <ConnectDrawer
-        actions={actions}
-        onClose={onClose}
-        open
-        projectId="prj_1"
-        provider={{ ...connectableDataForSeo(), status: "connected" }}
-      />,
-    );
+    const { onClose } = renderDrawer({ ...connectableDataForSeo(), status: "connected" });
     fireEvent.click(screen.getByRole("button", { name: "Disconnect provider" }));
-    const confirm = screen.getAllByRole("button", { name: "Disconnect provider" }).at(-1);
-    expect(confirm).toBeDefined();
-    if (confirm) fireEvent.click(confirm);
+    const dialog = screen.getByRole("dialog", { name: "Disconnect provider" });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Disconnect provider" }));
     await waitFor(() => expect(actions.disconnectProvider).toHaveBeenCalledTimes(1));
     expect(onClose).toHaveBeenCalledOnce();
   });

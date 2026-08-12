@@ -1,8 +1,9 @@
 import AppErrorBoundary from "@/app/app/error";
 import { FEEDBACK_URL } from "@/lib/site/site";
+import { setNavigationState } from "@/tests/next-navigation";
 import { render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { DeploymentModeProvider } from "./DeploymentModeProvider";
 
 vi.mock("@sentry/nextjs", () => ({
@@ -11,9 +12,9 @@ vi.mock("@sentry/nextjs", () => ({
     callback({ setContext: vi.fn(), setTag: vi.fn() }),
   ),
 }));
-vi.mock("next/navigation", () => ({
-  usePathname: () => "/app/prj_abc/keywords?cursor=x",
-}));
+beforeEach(() => {
+  setNavigationState({ pathname: "/app/prj_abc/rank-tracker?cursor=x" });
+});
 vi.mock("next/link", () => ({
   default: ({ children, href, ...props }: { children: ReactNode; href: string }) => (
     <a href={href} {...props}>

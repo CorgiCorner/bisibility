@@ -3,9 +3,6 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { ProviderRates } from "./ProviderRates";
 
-const refresh = vi.fn();
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
-
 const rates = [
   {
     feature: "ranked_keywords",

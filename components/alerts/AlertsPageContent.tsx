@@ -140,7 +140,7 @@ export function AlertsPageContent({
       {!hasTrackedKeywords ? (
         <AlertBanner
           action={{
-            href: appPath(projectRef, "keywords?add=1"),
+            href: appPath(projectRef, "rank-tracker?add=1"),
             icon: "arrow",
             label: "Add keyword",
           }}

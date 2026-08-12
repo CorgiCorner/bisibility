@@ -136,12 +136,13 @@ describe("heartbeat Slack digest", () => {
 
     expect(event.title).toBe("bisibility daily digest - 2 warnings");
     expect(event.severity).toBe("warning");
-    expect(lines).toHaveLength(2);
-    expect(lines[0]).toContain(
-      "schedule disabled (TRAFFIC_SYNC_SCHEDULE_ENABLED unset); enable it on the worker",
+    expect(lines).toHaveLength(1);
+    expect(lines[0]).toContain("no automatic schedule is active");
+    expect(lines[0]).toContain("Set an automatic keyword schedule");
+    expect(event.fields?.Traffic).toContain("not run 1");
+    expect(event.fields?.Traffic).toContain(
+      "Traffic sync schedule is disabled - set TRAFFIC_SYNC_SCHEDULE_ENABLED on the worker.",
     );
-    expect(lines[1]).toContain("no automatic schedule is active");
-    expect(lines[1]).toContain("Set an automatic keyword schedule");
     expectSafeRenderedDigest(event);
   });
 
@@ -170,6 +171,7 @@ describe("heartbeat Slack digest", () => {
     expect(event.fields?.Healthy).toContain("rank checks: no failures");
     expect(event.fields?.Healthy).not.toMatch(/(?:^| · )no failures(?: · |$)/);
     expect(event.fields?.Traffic).toContain("class provider_5xx");
+    expect(event.fields).not.toHaveProperty("Needs attention");
     expect(event.severity).toBe("warning");
   });
 
@@ -248,6 +250,9 @@ describe("heartbeat Slack digest", () => {
     const event = buildHeartbeatEvent(input);
 
     expect(event.fields?.Traffic).not.toContain("likely misconfigured");
+    expect(event.fields?.Traffic).toContain(
+      "Traffic sync needs attention - inspect maintenance-traffic-sync and provider credentials.",
+    );
     expect(event.severity).toBe("error");
     expect(event.title).toBe("bisibility daily digest - 1 error");
   });

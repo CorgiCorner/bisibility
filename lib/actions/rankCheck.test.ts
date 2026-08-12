@@ -219,7 +219,7 @@ describe("runCheckNow", () => {
         targetId: KEYWORD_PUBLIC_ID,
       }),
     );
-    expect(mocks.revalidatePath).toHaveBeenCalledWith(appPath("[project]", "keywords"), "page");
+    expect(mocks.revalidatePath).toHaveBeenCalledWith(appPath("[project]", "rank-tracker"), "page");
     expect(mocks.revalidatePath).toHaveBeenCalledWith(appPath("[project]", "alerts"), "page");
     expect(mocks.revalidatePath).toHaveBeenCalledWith(appPath("[project]", "competitors"), "page");
   });

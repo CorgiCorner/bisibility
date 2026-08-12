@@ -4,10 +4,6 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { CompetitorSavedViewsControl } from "./CompetitorSavedViewsControl";
 
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
-}));
-
 const config = {
   filters: { excludedKeywordIds: [], position: "all", tag: null },
   scope: { device: "desktop", engine: "google", locationId: "location-us" },

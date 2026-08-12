@@ -59,12 +59,10 @@ export async function notifyTrafficRun(projectId: string, run: TrafficConnection
     ...(successful ? {} : { dedupeKey: `sync:${projectId}:${run.provider}` }),
     fields: {
       Connection: run.connectionId,
-      ...(run.status === "failed" ? { Error: "provider_sync_failed" } : {}),
       ...(run.errorClass ? { "Error class": run.errorClass } : {}),
       Project: projectLabel(projectId),
       Provider: run.provider,
       Rows: `fetched=${run.rowsFetched}, matched=${run.rowsMatched}, upserted=${run.rowsUpserted}`,
-      Status: run.status,
     },
     kind: "traffic_sync",
     severity:

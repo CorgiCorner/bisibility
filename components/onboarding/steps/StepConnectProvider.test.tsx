@@ -1,6 +1,7 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  clickContinue,
   clickTestConnection,
   defaultValues,
   push,
@@ -16,10 +17,8 @@ describe("StepConnectProvider", () => {
     renderProviderStep();
 
     expect(
-      screen.getByText(
-        "bisibility does not scrape Google. You connect a data provider (like DataForSEO) with your own API key - a check costs from about $0.002.",
-      ),
-    ).toBeInTheDocument();
+      screen.getByText("Choose a rank-check provider, Search Console, or both."),
+    ).not.toHaveTextContent("costs from");
     expect(screen.getByRole("radio", { name: /DataForSEO/ })).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: /SerpApi/ })).toBeInTheDocument();
     expect(screen.getByLabelText("API login")).toBeInTheDocument();
@@ -41,6 +40,15 @@ describe("StepConnectProvider", () => {
     expect(screen.queryByText("No provider yet?")).not.toBeInTheDocument();
     expect(screen.queryByText(/Search Console can be connected/)).not.toBeInTheDocument();
 
+    const affiliateDisclosure = screen.getByText("Affiliate link");
+    const credentialLink = screen.getByTitle("Affiliate link");
+    expect(
+      affiliateDisclosure.compareDocumentPosition(credentialLink) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(credentialLink).toHaveAttribute("rel", "sponsored noopener noreferrer");
+    expect(credentialLink).toHaveAttribute("title", "Affiliate link");
+
     const pricing = screen.getByText(/Plan-based - monthly search quota/).parentElement;
     expect(pricing).toHaveClass("mt-2");
 
@@ -51,7 +59,7 @@ describe("StepConnectProvider", () => {
   });
 
   it("selects from the whole radio card and then synchronizes the URL", () => {
-    window.history.replaceState(null, "", "/onboarding?step=3&projectId=prj_1");
+    window.history.replaceState(null, "", "/onboarding?step=2&projectId=prj_1");
     renderProviderStep({
       flowState: { projectId: "prj_1", providerId: "dataforseo" },
     });
@@ -66,7 +74,7 @@ describe("StepConnectProvider", () => {
 
     expect(serpApi).toBeChecked();
     expect(screen.getByLabelText("API key")).toBeInTheDocument();
-    expect(window.location.search).toBe("?step=3&projectId=prj_1&providerId=serpapi");
+    expect(window.location.search).toBe("?step=2&projectId=prj_1&providerId=serpapi");
   });
 
   it("marks a successful connection without hierarchy labels or an extra explainer", async () => {
@@ -222,13 +230,13 @@ describe("StepConnectProvider", () => {
 
   it("continues with empty fields when the selected provider is already connected", async () => {
     const onComplete = vi.fn();
-    const { container } = renderProviderStep({
+    renderProviderStep({
       defaultValues: { ...defaultValues(), login: "", secret: "" },
       initialConnections: { dataforseo: {} },
       onComplete,
     });
 
-    fireEvent.submit(container.querySelector("form") as HTMLFormElement);
+    clickContinue();
 
     await waitFor(() => expect(onComplete).toHaveBeenCalledTimes(1));
     expect(screen.queryByText("Enter your API login.")).not.toBeInTheDocument();

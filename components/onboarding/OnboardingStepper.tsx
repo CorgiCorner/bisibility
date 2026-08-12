@@ -3,7 +3,6 @@
 import {
   buildOnboardingStepHref,
   type OnboardingFlowState,
-  type OnboardingIconKey,
   type OnboardingStepNumber,
   onboardingSteps,
   totalOnboardingSteps,
@@ -11,15 +10,7 @@ import {
 import { StepDotNavigation } from "@/components/onboarding/StepDotNavigation";
 import { Button, type StepDotState, StepDots, stepDotStateClass } from "@/components/ui";
 import { cn } from "@/lib/ui/cn";
-import {
-  CheckIcon as Check,
-  DatabaseIcon as Database,
-  FolderSimpleIcon as FolderSimple,
-  GitBranchIcon as GitBranch,
-  LightningIcon as Lightning,
-  MagnifyingGlassIcon as MagnifyingGlass,
-  SlidersHorizontalIcon as SlidersHorizontal,
-} from "@phosphor-icons/react";
+import { CheckIcon as Check } from "@phosphor-icons/react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -30,15 +21,6 @@ type OnboardingStepperProps = {
   maxReachableStep?: OnboardingStepNumber;
   onStepChange?: (step: OnboardingStepNumber) => void;
 };
-
-const stepIcons = {
-  branch: GitBranch,
-  database: Database,
-  folder: FolderSimple,
-  lightning: Lightning,
-  search: MagnifyingGlass,
-  sliders: SlidersHorizontal,
-} satisfies Record<OnboardingIconKey, typeof FolderSimple>;
 
 function stepAccessibleName(title: string, done: boolean) {
   return done ? `${title}, completed` : title;
@@ -51,7 +33,7 @@ export function OnboardingStepper({
   maxReachableStep = currentStep,
   onStepChange,
 }: Readonly<OnboardingStepperProps>) {
-  const progress = ((currentStep - 1) / (totalOnboardingSteps - 1)) * 100;
+  const progress = (currentStep / totalOnboardingSteps) * 100;
   const activeStep = onboardingSteps[currentStep - 1];
 
   return (
@@ -61,7 +43,14 @@ export function OnboardingStepper({
           Step {currentStep} of {totalOnboardingSteps}
         </span>
       </div>
-      <div className="mt-2 h-[5px] overflow-hidden rounded-[3px] bg-bg-sunken">
+      <div
+        aria-label="Onboarding progress"
+        aria-valuemax={totalOnboardingSteps}
+        aria-valuemin={1}
+        aria-valuenow={currentStep}
+        className="mt-2 h-[5px] overflow-hidden rounded-[3px] bg-bg-sunken"
+        role="progressbar"
+      >
         <div
           className="h-full bg-accent transition-[width] duration-300 ease-out"
           style={{ width: `${progress}%` }}
@@ -120,13 +109,18 @@ function StepDotItem({
   const locked = step.n > maxReachableStep;
   const done = !locked && state === "past";
   const active = state === "current";
-  const Icon = done ? Check : stepIcons[step.icon];
   const className = cn(
     "grid h-[34px] w-[34px] place-items-center rounded-full p-0 text-sm",
-    locked ? "cursor-default" : "cursor-pointer",
-    stepDotStateClass(state),
+    locked ? "cursor-default border-border bg-bg-sunken text-fg-muted" : "cursor-pointer",
+    !locked && stepDotStateClass(state),
   );
-  const icon = <Icon aria-hidden size={15} weight={done ? "bold" : "fill"} />;
+  const icon = done ? (
+    <Check aria-hidden size={15} weight="bold" />
+  ) : (
+    <span aria-hidden className="font-mono text-[12px] font-semibold">
+      {step.n}
+    </span>
+  );
   return (
     <StepDotNavigation
       accessibleName={stepAccessibleName(step.title, done)}
@@ -138,7 +132,7 @@ function StepDotItem({
       onStepChange={onStepChange}
       state={state}
       step={step.n}
-      title={step.title}
+      title={locked ? `${step.title} - complete the previous step first` : step.title}
     />
   );
 }
@@ -160,23 +154,35 @@ function StepRailItem({
   const done = !locked && currentStep > step.n;
   const active = currentStep === step.n;
   const state: StepDotState = done ? "past" : active ? "current" : "upcoming";
-  const Icon = done ? Check : stepIcons[step.icon];
+  const status = done
+    ? "Complete"
+    : active
+      ? "Current"
+      : locked
+        ? "Complete the previous step"
+        : "Next";
 
   const className = cn(
     "flex w-full items-center gap-3 rounded-[11px] border-0 bg-transparent px-3 py-[11px] text-left",
-    locked ? "cursor-default" : "cursor-pointer hover:bg-nav-active",
-    active && "bg-nav-active",
+    locked ? "cursor-default border-border/60 opacity-65" : "cursor-pointer hover:bg-nav-active",
+    active && "border border-accent/40 bg-nav-active",
   );
   const content = (
     <>
       <span
         className={cn(
           "grid h-[30px] w-[30px] shrink-0 place-items-center rounded-[9px] text-[15px]",
-          stepDotStateClass(state),
+          locked ? "border border-border bg-bg-sunken text-fg-muted" : stepDotStateClass(state),
         )}
         data-step-dot-state={state}
       >
-        <Icon aria-hidden size={15} weight={done ? "bold" : "fill"} />
+        {done ? (
+          <Check aria-hidden size={15} weight="bold" />
+        ) : (
+          <span aria-hidden className="font-mono text-[12px] font-semibold">
+            {step.n}
+          </span>
+        )}
       </span>
       <span className="min-w-0">
         <span
@@ -189,6 +195,14 @@ function StepRailItem({
           {step.title}
         </span>
         <span className="mt-0.5 block font-mono text-[10px] text-fg-muted">{step.desc}</span>
+        <span
+          className={cn(
+            "mt-1 block text-[10.5px] leading-tight",
+            active ? "font-medium text-accent-text" : "text-fg-muted",
+          )}
+        >
+          {status}
+        </span>
       </span>
     </>
   );

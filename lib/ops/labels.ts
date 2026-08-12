@@ -15,6 +15,10 @@ export function projectLabel(id: string, name?: string | null, domain?: string |
   return human ? `${human} [${id}]` : id;
 }
 
+export function ruleLabel(id: string, name?: string | null): string {
+  return tenantLabel(id, name);
+}
+
 /** Keep deferred notifications and throttle keys on a fixed, non-tenant vocabulary. */
 export function deferredReasonLabel(reason: string): string {
   const normalized = reason.trim().toLowerCase();

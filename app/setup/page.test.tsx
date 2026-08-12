@@ -1,3 +1,4 @@
+import { redirect } from "@/tests/next-navigation";
 import type { ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -7,9 +8,6 @@ const mocks = vi.hoisted(() => ({
   emailConfigured: vi.fn(),
   firstRun: vi.fn(),
   firstRunAdministratorPending: vi.fn(),
-  redirect: vi.fn((href: string) => {
-    throw new Error(`redirect:${href}`);
-  }),
   requireSession: vi.fn(),
 }));
 
@@ -28,7 +26,6 @@ vi.mock("@/lib/auth/instance-admin", () => ({
 vi.mock("@/lib/auth/session", () => ({ requireSession: mocks.requireSession }));
 vi.mock("@/lib/email/registry", () => ({ isEmailConfigured: mocks.emailConfigured }));
 vi.mock("@/lib/seo/noindex", () => ({ createNoindexMetadata: () => ({}) }));
-vi.mock("next/navigation", () => ({ redirect: mocks.redirect }));
 vi.mock("./actions", () => ({
   signOutAndSwitchAccountAction: vi.fn(),
 }));
@@ -46,6 +43,9 @@ import SetupPage from "./page";
 describe("administrator setup page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    redirect.mockImplementation((href: string) => {
+      throw new Error(`redirect:${href}`);
+    });
     mocks.emailConfigured.mockReturnValue(true);
     mocks.firstRun.mockResolvedValue(false);
     mocks.firstRunAdministratorPending.mockResolvedValue(false);
@@ -108,6 +108,6 @@ describe("administrator setup page", () => {
     expect(markup).toContain(
       "If you ever need to reassign administration, the server operator can do it from the command line.",
     );
-    expect(mocks.redirect).not.toHaveBeenCalled();
+    expect(redirect).not.toHaveBeenCalled();
   });
 });

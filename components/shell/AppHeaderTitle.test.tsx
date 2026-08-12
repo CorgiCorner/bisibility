@@ -1,10 +1,11 @@
 import { AppHeaderTitle } from "@/components/shell/AppHeaderTitle";
+import { setNavigationState } from "@/tests/next-navigation";
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
-const mocks = vi.hoisted(() => ({ pathname: "/app/prj_7Kd2Qf9m/settings/general" }));
-
-vi.mock("next/navigation", () => ({ usePathname: () => mocks.pathname }));
+beforeEach(() => {
+  setNavigationState({ pathname: "/app/prj_7Kd2Qf9m/settings/general" });
+});
 
 describe("AppHeaderTitle", () => {
   it("uses the active project domain as the Settings subtitle with the reference typography", () => {

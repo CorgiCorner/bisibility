@@ -12,7 +12,7 @@ import {
 
 const hrefs = {
   providerSettingsHref: `${appPath("prj_story", "settings")}#providers`,
-  schedulesHref: appPath("prj_story", "keywords"),
+  schedulesHref: appPath("prj_story", "rank-tracker"),
   timelineHref: `${appPath("prj_story", "settings")}#migration`,
 };
 

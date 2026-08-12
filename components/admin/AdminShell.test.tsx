@@ -1,10 +1,8 @@
 import { appRootPath } from "@/lib/routing/app-path";
+import { setNavigationState } from "@/tests/next-navigation";
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({ pathname: "/app/admin" }));
-
-vi.mock("next/navigation", () => ({ usePathname: () => mocks.pathname }));
 vi.mock("@/components/admin/AdminRefresh", () => ({
   AdminRefresh: () => <a href="/app/admin">Refresh</a>,
 }));
@@ -13,7 +11,7 @@ import { AdminShell } from "./AdminShell";
 
 describe("AdminShell", () => {
   beforeEach(() => {
-    mocks.pathname = "/app/admin";
+    setNavigationState({ pathname: "/app/admin" });
   });
 
   it("renders dedicated sticky chrome and a constrained content column", () => {
@@ -49,7 +47,7 @@ describe("AdminShell", () => {
     ["/app/admin/administration", "Administration"],
     ["/app/admin/audit", "Audit"],
   ])("marks %s active", (pathname, label) => {
-    mocks.pathname = pathname;
+    setNavigationState({ pathname });
     render(<AdminShell>Content</AdminShell>);
 
     expect(screen.queryByRole("link", { name: label })).not.toBeInTheDocument();

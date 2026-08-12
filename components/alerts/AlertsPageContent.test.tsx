@@ -5,18 +5,14 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { AnchorHTMLAttributes } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AlertsPageContent } from "./AlertsPageContent";
+import { keywordScopedAlertRule, makeAlertRule } from "./AlertsPageContent.fixtures";
 
 const mocks = vi.hoisted(() => ({
   getAlertCtaTargets: vi.fn(),
   markProjectAlertsRead: vi.fn(),
   muteTriggeredAlert: vi.fn(),
-  push: vi.fn(),
-  refresh: vi.fn(),
 }));
 
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: mocks.push, refresh: mocks.refresh }),
-}));
 vi.mock("next/link", () => ({
   default: ({ children, ...props }: AnchorHTMLAttributes<HTMLAnchorElement>) => (
     <a data-next-link {...props}>
@@ -216,30 +212,7 @@ describe("AlertsPageContent optimistic rollback", () => {
   });
 
   it("states only the known active-rule count in the all-clear state", () => {
-    const rule = {
-      changePct: null,
-      channel: "In-app",
-      channels: [],
-      condition: "rank crosses below #10",
-      conditionType: "threshold" as const,
-      competitorDomain: null,
-      dropPositions: null,
-      depthConflict: { threshold: 50, trackedDepth: 10 },
-      enabled: true,
-      fires: "0 this week",
-      id: "alr_abcdefghijklmnopqrstuvwx",
-      name: "Ranking drop",
-      period: "Each check",
-      recipientIds: [],
-      scope: "Selected keywords",
-      serpFeature: null,
-      severity: "urgent" as const,
-      status: "active" as const,
-      targetIds: ["keyword_1"],
-      targetType: "keyword" as const,
-      thresholdPosition: 10,
-      topN: null,
-    };
+    const rule = keywordScopedAlertRule;
 
     renderAlerts({ firedInWindowCount: 0, initialAlerts: [], rules: [rule] });
 
@@ -291,29 +264,7 @@ describe("AlertsPageContent optimistic rollback", () => {
   it.each(["viewer", "auditor", "member", "admin", "owner"] satisfies Role[])(
     "renders alert mutation affordances for the %s role at the matrix threshold",
     (role) => {
-      const rule = {
-        changePct: null,
-        channel: "In-app",
-        channels: [],
-        condition: "rank crosses below #10",
-        conditionType: "threshold" as const,
-        competitorDomain: null,
-        dropPositions: null,
-        enabled: true,
-        fires: "0 this week",
-        id: "alr_abcdefghijklmnopqrstuvwx",
-        name: "Ranking drop",
-        period: "Each check",
-        recipientIds: [],
-        scope: "All keywords",
-        serpFeature: null,
-        severity: "urgent" as const,
-        status: "active" as const,
-        targetIds: [],
-        targetType: "all" as const,
-        thresholdPosition: 10,
-        topN: null,
-      };
+      const rule = makeAlertRule();
       const canCreate = canProjectAction(role, "create", "alert_rule");
       const canUpdate = canProjectAction(role, "update", "alert_rule");
       const canDelete = canProjectAction(role, "delete", "alert_rule");

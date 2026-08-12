@@ -145,7 +145,7 @@ export function OverviewToolbar({
         action={
           <Button
             component={Link}
-            href={appPath(projectRef, "keywords?add=1")}
+            href={appPath(projectRef, "rank-tracker?add=1")}
             startIcon={<Plus size={15} weight="bold" />}
             sx={{ minHeight: 40, whiteSpace: "nowrap" }}
             variant="primary"

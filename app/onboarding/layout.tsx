@@ -35,13 +35,13 @@ export default async function OnboardingLayout({ children }: Readonly<Onboarding
               </span>
               {email}
             </span>
-            <span className="text-fg-muted">&middot;</span>
+            <span aria-hidden className="h-4 w-px bg-border-strong" />
             <span className="text-fg-muted">Not you?</span>
             <OnboardingLogoutButton />
           </div>
         </header>
         {children}
-        <footer className="mt-14 flex flex-wrap items-center justify-between gap-3 border-border-strong border-t pt-6 font-mono text-xs text-fg-muted">
+        <footer className="mt-14 flex flex-wrap items-center justify-between gap-3 border-border border-t pt-6 font-mono text-xs text-fg-muted">
           <span>© 2026 bisibility</span>
           <ThemeSegments size="sm" />
         </footer>

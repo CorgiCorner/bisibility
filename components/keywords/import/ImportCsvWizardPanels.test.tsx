@@ -1,5 +1,6 @@
+import { stubBlobDownload } from "@/tests/blob-download";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { DoneStep, MapStep, ReviewStep, TemplateStep, UploadStep } from "./ImportCsvWizardPanels";
 
 describe("ImportCsvWizardPanels", () => {
@@ -24,20 +25,14 @@ describe("ImportCsvWizardPanels", () => {
     },
   ];
 
-  beforeEach(() => {
-    Object.defineProperty(URL, "createObjectURL", {
-      configurable: true,
-      value: vi.fn(() => "blob:template"),
-    });
-    Object.defineProperty(URL, "revokeObjectURL", { configurable: true, value: vi.fn() });
-    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined);
-  });
-
   it("downloads the CSV template", async () => {
+    const { objectUrls } = stubBlobDownload();
     render(<TemplateStep />);
     fireEvent.click(screen.getByRole("button", { name: "Download template.csv" }));
-    expect(URL.createObjectURL).toHaveBeenCalled();
-    await waitFor(() => expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:template"));
+    expect(objectUrls).toHaveBeenCalledOnce();
+    const blob = objectUrls.mock.calls[0]?.[0];
+    if (!(blob instanceof Blob)) throw new Error("Expected template blob.");
+    await waitFor(() => expect(URL.revokeObjectURL).toHaveBeenCalledWith(`blob:${blob.size}`));
   });
 
   it("updates pasted CSV and renders errors and singular counts", () => {

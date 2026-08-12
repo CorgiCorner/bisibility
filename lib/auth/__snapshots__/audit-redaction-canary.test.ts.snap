@@ -1413,6 +1413,16 @@ exports[`audit redaction canaries > enumerates every application audit payload p
     "writer": "writeAudit",
   },
   {
+    "action": ""provider.update"",
+    "after": "{ hasCredentials: true, permissionLevel: selected.permissionLevel, property: selected.value, provider: context.provider, }",
+    "before": "{ hasCredentials: Boolean(connection.credentialsEncrypted), property: credentials.login ?? null, provider: context.provider, }",
+    "input": "{ action: "provider.update", actorId: context.actorId, after: { hasCredentials: true, permissionLevel: selected.permissionLevel, property: selected.value, provider: context.provider, }, before: { hasCredentials: Boolean(connection.credentialsEncrypted), property: credentials.login ?? null, provider: context.provider, }, projectId: context.projectId, targetId: requiredPublicAuditId(current.publicId, "conn", "Provider connection"), targetType: "provider_connection", }",
+    "occurrence": 1,
+    "path": "lib/providers/analytics/google-stored-property.ts",
+    "statusReason": null,
+    "writer": "writeAudit",
+  },
+  {
     "action": ""audit_log.view"",
     "after": null,
     "before": null,

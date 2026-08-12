@@ -52,14 +52,14 @@ const routeCases = [
     title: "Integrations",
   },
   {
-    path: appPath("prj_1", "keywords", "kw_test"),
-    pattern: appPath("[project]", "keywords", "[id]"),
+    path: appPath("prj_1", "rank-tracker", "kw_test"),
+    pattern: appPath("[project]", "rank-tracker", "[id]"),
     title: "Keyword details",
   },
   {
-    path: appPath("prj_1", "keywords"),
-    pattern: appPath("[project]", "keywords"),
-    title: "Keywords",
+    path: appPath("prj_1", "rank-tracker"),
+    pattern: appPath("[project]", "rank-tracker"),
+    title: "Rank Tracker",
   },
   {
     path: appPath("prj_1", "overview"),
@@ -69,7 +69,7 @@ const routeCases = [
   {
     path: appPath("prj_1", "research"),
     pattern: appPath("[project]", "research"),
-    title: "Keyword research",
+    title: "Keyword Research",
   },
   {
     path: appPath("prj_1", "settings", "audit"),
@@ -159,14 +159,14 @@ describe("dashboard header titles", () => {
   });
 
   it("uses singular keyword copy for one tracked keyword", () => {
-    expect(headerMetaFor(appPath("prj_1", "keywords"), { keywordCount: 1 }).subtitle).toBe(
+    expect(headerMetaFor(appPath("prj_1", "rank-tracker"), { keywordCount: 1 }).subtitle).toBe(
       "1 tracked keyword · click any row to edit",
     );
   });
 
   it("describes checks without implementation details", () => {
     expect(headerMetaFor(appPath("prj_1", "checks"))).toMatchObject({
-      subtitle: "Operational log of rank-check runs. Keyword details live in Keywords.",
+      subtitle: "Operational log of rank-check runs. Keyword details live in Rank Tracker.",
       title: "Checks",
     });
   });

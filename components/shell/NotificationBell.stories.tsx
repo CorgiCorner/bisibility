@@ -9,7 +9,7 @@ const previewFeed = {
     {
       body: "Ranking moved from #11 to #8 for the tracked target URL.",
       createdAt: "2026-06-30T08:30:00.000Z",
-      href: appPath("prj_story", "keywords", "kw_rank"),
+      href: appPath("prj_story", "rank-tracker", "kw_rank"),
       id: "notif_rank",
       meta: "Google · US · Desktop",
       payload: null,

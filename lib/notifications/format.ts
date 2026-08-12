@@ -17,7 +17,7 @@ export type NotificationProject = {
 
 const DEFAULT_HREFS = {
   alert_fired: "alerts",
-  check_complete: "keywords",
+  check_complete: "rank-tracker",
   check_failed: "integrations",
   import_done: "integrations",
   import_failed: "integrations",

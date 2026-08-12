@@ -155,11 +155,12 @@ describe("keyword detail shared primitives", () => {
       </OnboardingStepper>,
     );
 
-    expect(screen.getByText("Step 2 of 6")).toBeVisible();
+    expect(screen.getByText("Step 2 of 4")).toBeVisible();
     expect(screen.getByLabelText("Onboarding steps")).toBeVisible();
     expect(stepDotClass(onboarding.container, "past")).toContain("bg-green");
     expect(stepDotClass(onboarding.container, "current")).toContain("bg-accent-solid");
-    expect(stepDotClass(onboarding.container, "upcoming")).toContain("border-border-strong");
+    expect(stepDotClass(onboarding.container, "upcoming")).toContain("border-border");
+    expect(stepDotClass(onboarding.container, "upcoming")).toContain("bg-bg-sunken");
     onboarding.unmount();
 
     const keywordDetail = render(

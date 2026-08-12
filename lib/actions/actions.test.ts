@@ -329,8 +329,8 @@ describe("server actions", () => {
       projectId: "prj_a00000000000000000000000",
     });
 
-    expect(mocks.revalidatePath).toHaveBeenCalledWith(appPath("[project]", "keywords"), "page");
-    expect(mocks.revalidatePath).toHaveBeenCalledWith("/app/[project]/keywords/[id]", "page");
+    expect(mocks.revalidatePath).toHaveBeenCalledWith(appPath("[project]", "rank-tracker"), "page");
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/app/[project]/rank-tracker/[id]", "page");
     expect(mocks.revalidatePath).toHaveBeenCalledWith(appPath("[project]", "overview"), "page");
     expect(mocks.revalidatePath).toHaveBeenCalledWith(appPath("[project]", "alerts"), "page");
     expect(mocks.revalidatePath).toHaveBeenCalledWith(appPath("[project]", "competitors"), "page");

@@ -16,6 +16,7 @@ import {
   type SelectableSuggestion,
   selectableKeys,
   selectedQueries,
+  sortByClicks,
   toggleKey,
   topByClicksKeys,
 } from "@/lib/keyword-suggest/top-query-selection";
@@ -46,8 +47,12 @@ type KeywordSuggestionDrawerProps = {
 
 const FILTER_THRESHOLD = 25;
 const metricCell = "w-16 shrink-0 text-right font-mono text-[11.5px] tabular-nums text-fg-muted";
-const bulkButton =
-  "rounded-md border border-border-strong bg-bg-elev px-2.5 py-1 text-[11.5px] font-medium text-fg-muted transition-colors hover:border-accent hover:text-accent-text";
+const bulkButtonSx = {
+  color: "var(--fg-muted)",
+  fontWeight: 400,
+  minHeight: 30,
+  paddingX: 1.25,
+};
 
 function metric(value: number | undefined) {
   return value == null ? "-" : value.toLocaleString();
@@ -120,11 +125,11 @@ export function KeywordSuggestionDrawer({
   suggestions,
 }: Readonly<KeywordSuggestionDrawerProps>) {
   const decorated = useMemo(
-    () => decorateSuggestions(suggestions, existingKeywords),
+    () => sortByClicks(decorateSuggestions(suggestions, existingKeywords)),
     [suggestions, existingKeywords],
   );
   const decoratedHidden = useMemo(
-    () => decorateSuggestions(hidden, existingKeywords),
+    () => sortByClicks(decorateSuggestions(hidden, existingKeywords)),
     [hidden, existingKeywords],
   );
   const [selected, setSelected] = useState<Set<string>>(
@@ -179,26 +184,36 @@ export function KeywordSuggestionDrawer({
     >
       <div className="flex flex-wrap items-center gap-2">
         {allSelected ? null : (
-          <button
-            className={bulkButton}
+          <Button
             onClick={() => setSelected(new Set(selectable))}
+            size="xs"
+            sx={bulkButtonSx}
             type="button"
+            variant="secondary"
           >
             Select all
-          </button>
+          </Button>
         )}
         {hasSelection ? (
-          <button className={bulkButton} onClick={() => setSelected(new Set())} type="button">
+          <Button
+            onClick={() => setSelected(new Set())}
+            size="xs"
+            sx={bulkButtonSx}
+            type="button"
+            variant="secondary"
+          >
             Clear
-          </button>
+          </Button>
         ) : null}
-        <button
-          className={bulkButton}
+        <Button
           onClick={() => setSelected(new Set(topByClicksKeys(decorated, DEFAULT_PRESELECT_TOP_N)))}
+          size="xs"
+          sx={bulkButtonSx}
           type="button"
+          variant="secondary"
         >
           Top {DEFAULT_PRESELECT_TOP_N} by clicks
-        </button>
+        </Button>
       </div>
 
       {decorated.length > FILTER_THRESHOLD ? (

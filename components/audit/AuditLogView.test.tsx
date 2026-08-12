@@ -1,11 +1,11 @@
+import { setNavigationState } from "@/tests/next-navigation";
 import { render, screen, within } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { AuditLogView } from "./AuditLogView";
 
-vi.mock("next/navigation", () => ({
-  usePathname: () => "/app/settings/audit",
-  useRouter: () => ({ replace: vi.fn() }),
-}));
+beforeEach(() => {
+  setNavigationState({ pathname: "/app/settings/audit" });
+});
 
 describe("AuditLogView", () => {
   it("states that client-side filters only search the capped event set", () => {

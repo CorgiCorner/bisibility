@@ -31,7 +31,7 @@ describe("ops Slack payloads", () => {
     );
   });
 
-  it("formats capped Block Kit fields with deployment context", () => {
+  it("formats capped Block Kit values as readable full-width sections", () => {
     vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("APP_VERSION", "1.2.3");
     vi.stubEnv("SITE_URL", "https://bisibility.example/?token=secret");
@@ -47,10 +47,14 @@ describe("ops Slack payloads", () => {
     });
 
     expect(payload.text).toContain("⚠️ Traffic sync warning");
-    expect(payload.blocks[1]).toMatchObject({ type: "section" });
-    const fieldBlock = payload.blocks[1] as { fields: Array<{ text: string }> };
-    expect(fieldBlock.fields).toHaveLength(10);
-    expect(fieldBlock.fields[0]?.text.length).toBeLessThan(650);
+    const fieldBlocks = payload.blocks.slice(1, -1) as Array<{
+      fields?: unknown;
+      text?: { text: string };
+      type: string;
+    }>;
+    expect(fieldBlocks).toHaveLength(10);
+    expect(fieldBlocks.every((block) => block.type === "section" && !block.fields)).toBe(true);
+    expect(fieldBlocks[0]?.text?.text.length).toBeLessThan(650);
     expect(JSON.stringify(payload)).toContain("Release: 1.2.3");
     expect(JSON.stringify(payload)).not.toContain("token=secret");
   });

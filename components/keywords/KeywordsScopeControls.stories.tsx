@@ -28,7 +28,7 @@ type Story = StoryObj<typeof meta>;
 
 export const AllLocations: Story = {
   args: {
-    basePath: appPath("prj_1", "keywords"),
+    basePath: appPath("prj_1", "rank-tracker"),
     lens: { device: "all", locationId: null },
     locationOptions,
   },
@@ -36,7 +36,7 @@ export const AllLocations: Story = {
 
 export const CityMobile: Story = {
   args: {
-    basePath: appPath("prj_1", "keywords"),
+    basePath: appPath("prj_1", "rank-tracker"),
     lens: { device: "mobile", locationId: "loc_austin" },
     locationOptions,
   },

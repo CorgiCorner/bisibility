@@ -140,7 +140,7 @@ describe("saved view actions", () => {
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({ action: "saved_view.create", targetId: VIEW_PUBLIC_ID }),
     );
-    expect(mocks.revalidatePath).toHaveBeenCalledWith(appPath("[project]", "keywords"), "page");
+    expect(mocks.revalidatePath).toHaveBeenCalledWith(appPath("[project]", "rank-tracker"), "page");
     expect(view).toMatchObject({
       canDelete: true,
       id: VIEW_PUBLIC_ID,

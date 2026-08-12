@@ -2,8 +2,11 @@ import { IntegrationCategory } from "@/components/integrations/IntegrationCatego
 import { PageContent } from "@/components/shell/PageContent";
 import { Card } from "@/components/ui";
 import {
+  completeGooglePropertySelection,
   connectProvider,
   disconnectProvider,
+  loadStoredGoogleProperties,
+  saveStoredGoogleProperty,
   testConnection,
   updateProviderCost,
   updateProviderRate,
@@ -19,15 +22,21 @@ import { requireReadableProject, resolveProjectAccess } from "@/lib/queries/_aut
 import { getIntegrationsView } from "@/lib/queries/integrations";
 import { KeyIcon as Key } from "@phosphor-icons/react/dist/ssr";
 
+type IntegrationsProviderActions = ProviderActionHandlers &
+  Required<Pick<ProviderActionHandlers, "completeGooglePropertySelection">>;
+
 const providerActions = {
+  completeGooglePropertySelection,
   connectProvider,
   disconnectProvider,
+  loadStoredGoogleProperties,
+  saveStoredGoogleProperty,
   syncProjectTraffic,
   testProviderConnection: testConnection,
   updateProviderSettings,
   updateProviderCost,
   updateProviderRate,
-} satisfies ProviderActionHandlers;
+} satisfies IntegrationsProviderActions;
 
 type IntegrationsPageProps = {
   params: Promise<{ project: string }>;

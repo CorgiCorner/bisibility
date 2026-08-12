@@ -238,7 +238,9 @@ export function KeywordDataTable({
               onCellClick={handleCellClick}
               onColumnVisibilityModelChange={setColumnVisibilityModel}
               onDensityChange={setDensity}
-              onRowClick={(params) => router.push(appPath(projectId, "keywords", params.row.id))}
+              onRowClick={(params) =>
+                router.push(appPath(projectId, "rank-tracker", params.row.id))
+              }
               onRowSelectionModelChange={setRowSelectionModel}
               pageSizeOptions={[10, 25, 50]}
               pagination

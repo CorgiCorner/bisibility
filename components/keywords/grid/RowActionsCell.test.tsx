@@ -1,12 +1,12 @@
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
 import type { KeywordRow } from "@/lib/queries/keywords";
+import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { RowActionsCell } from "./RowActionsCell";
 
 const mocks = vi.hoisted(() => ({ push: vi.fn(), showToast: vi.fn(), writeText: vi.fn() }));
 
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push: mocks.push }) }));
 vi.mock("@/components/ui", () => ({ useToast: () => ({ showToast: mocks.showToast }) }));
 
 const row = keywordRows[0] as KeywordRow;
@@ -61,7 +61,7 @@ describe("RowActionsCell", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Keyword actions" }));
     fireEvent.click(screen.getByRole("menuitem", { name: "View details" }));
-    expect(mocks.push).toHaveBeenCalledWith(`/app/prj_1/keywords/${row.id}`);
+    expect(routerMock.push).toHaveBeenCalledWith(`/app/prj_1/rank-tracker/${row.id}`);
 
     fireEvent.click(screen.getByRole("button", { name: "Keyword actions" }));
     fireEvent.click(screen.getByRole("menuitem", { name: "Copy keyword ID" }));

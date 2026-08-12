@@ -1,3 +1,4 @@
+import { redirect } from "@/tests/next-navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -5,7 +6,6 @@ const mocks = vi.hoisted(() => ({
   delete: vi.fn(),
   findUnique: vi.fn(),
   executeRaw: vi.fn(),
-  redirect: vi.fn(),
   requireSession: vi.fn(),
   transaction: vi.fn(),
   tx: {
@@ -22,7 +22,6 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("server-only", () => ({}));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
-vi.mock("next/navigation", () => ({ redirect: mocks.redirect }));
 vi.mock("@/lib/account/profile-service", () => ({ updateProfileNameRecord: vi.fn() }));
 vi.mock("@/lib/auth/audit", () => ({ writeAudit: mocks.writeAudit }));
 vi.mock("@/lib/auth/session", () => ({ requireSession: mocks.requireSession }));
@@ -96,7 +95,7 @@ describe("deleteAccount instance-admin guard", () => {
     await deleteAccount({ email: "user_1@example.test" });
 
     expect(mocks.delete).toHaveBeenCalledWith({ where: { id: "user_1" } });
-    expect(mocks.redirect).toHaveBeenCalledWith("/login");
+    expect(redirect).toHaveBeenCalledWith("/login");
   });
 
   it("does not apply the admin count guard to a non-admin account", async () => {

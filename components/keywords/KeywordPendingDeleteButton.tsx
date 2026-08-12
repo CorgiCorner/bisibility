@@ -33,7 +33,7 @@ export function KeywordPendingDeleteButton({
     try {
       await bulkDeleteAction({ keywordIds: [keywordId], projectId });
       setConfirmOpen(false);
-      router.push(appPath(projectRef, "keywords"));
+      router.push(appPath(projectRef, "rank-tracker"));
       router.refresh();
     } catch (error) {
       setActionError(actionErrorMessage(error));

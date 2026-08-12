@@ -6,9 +6,6 @@ import type { KeywordRow } from "@/lib/queries/keywords";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-const refresh = vi.fn();
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
-
 function keyword(state: Exclude<KeywordCheckState, "ranked">): KeywordRow {
   return {
     ...keywordRows[0],

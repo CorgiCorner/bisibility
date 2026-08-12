@@ -35,7 +35,7 @@ function SavedToastMessage({
       {label} /{" "}
       <Link
         className="font-semibold hover:underline"
-        href={appPath(projectRef, "keywords?tab=saved")}
+        href={appPath(projectRef, "rank-tracker?tab=saved")}
       >
         View in Keywords / Saved
       </Link>

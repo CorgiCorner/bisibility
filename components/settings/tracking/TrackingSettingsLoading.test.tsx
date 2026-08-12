@@ -4,8 +4,6 @@ import { trackingCardGeometryClassNames } from "@/components/settings/tracking/t
 import { render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
-
 const defaults = {
   city: null,
   costPerCheck: 0.01,

@@ -7,10 +7,6 @@ import { generalSettingsCardGeometryClassNames } from "@/components/settings/gen
 import { render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ refresh: vi.fn() }),
-}));
-
 const props = {
   canCreateTags: true,
   canDeleteTags: true,

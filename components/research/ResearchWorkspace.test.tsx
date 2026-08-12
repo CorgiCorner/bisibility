@@ -4,7 +4,9 @@ import {
 } from "@/components/cost-estimate/SessionSpendProvider";
 import { ToastProvider } from "@/components/ui";
 import type { ResearchKeywordsAction } from "@/lib/actions/keyword-research";
+import { makeCostContext } from "@/tests/factories/cost-context";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import type { ComponentProps } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ResearchWorkspace } from "./ResearchWorkspace";
 
@@ -201,22 +203,11 @@ const checkHealth = {
   runningCount: 0,
 };
 
-const costContext = {
-  capCents: 5_000,
+const costContext = makeCostContext({
   costPerCheckCents: null,
-  cronExpression: null,
-  depth: 100 as const,
-  deviceCount: 1,
-  devices: ["desktop" as const],
-  frequency: "daily" as const,
-  keywordCount: 4,
-  locationCount: 1,
-  projectName: "Example",
-  providerId: "dataforseo",
-  rawFrequency: "daily" as const,
   spentCents: 200,
   timezone: "America/New_York",
-};
+});
 
 const savedKeywordActions = {
   canDeleteSavedKeywords: true,
@@ -290,35 +281,20 @@ describe("ResearchWorkspace", () => {
   });
 
   it("prefills a source seed and location from the Saved deep link", () => {
-    render(
-      <SessionSpendProvider>
-        <ResearchWorkspace
-          {...savedKeywordActions}
-          addKeywordsAction={vi.fn() as never}
-          checkHealth={checkHealth}
-          context={context}
-          costContext={costContext}
-          prefill={{ locationKey: "PL", seed: "standing desk" }}
-          researchAction={vi.fn() as unknown as ResearchKeywordsAction}
-        />
-      </SessionSpendProvider>,
-    );
+    renderWorkspace(vi.fn() as unknown as ResearchKeywordsAction, {
+      prefill: { locationKey: "PL", seed: "standing desk" },
+    });
 
     expect(screen.getByLabelText("search seeds")).toHaveTextContent("standing desk");
     expect(screen.getByLabelText("search location")).toHaveTextContent("PL");
   });
 
-  it("does not request before input, updates estimates, records paid session spend, and shares the add flow", async () => {
-    let paidCalls = 0;
-    const researchAction = vi.fn(async (input: { estimateOnly?: boolean }) => {
-      if (input.estimateOnly) return success({ cached: false, costCents: 9, estimate: true });
-      paidCalls += 1;
-      return paidCalls === 1
-        ? success({ cached: false, costCents: 4 })
-        : success({ cached: true, costCents: 0 });
-    });
-
-    render(
+  function renderWorkspace(
+    researchAction: ResearchKeywordsAction,
+    overrides: Partial<ComponentProps<typeof ResearchWorkspace>> = {},
+    { withToast = false } = {},
+  ) {
+    const workspace = (
       <SessionSpendProvider>
         <SessionSpendProbe />
         <ResearchWorkspace
@@ -327,10 +303,31 @@ describe("ResearchWorkspace", () => {
           checkHealth={checkHealth}
           context={context}
           costContext={costContext}
-          researchAction={researchAction as unknown as ResearchKeywordsAction}
+          researchAction={researchAction}
+          {...overrides}
         />
-      </SessionSpendProvider>,
+      </SessionSpendProvider>
     );
+    return render(withToast ? <ToastProvider>{workspace}</ToastProvider> : workspace);
+  }
+
+  function paidResearchAction(opts: { firstCostCents?: number; secondCostCents?: number } = {}) {
+    const firstCostCents = opts.firstCostCents ?? 4;
+    const secondCostCents = opts.secondCostCents ?? 0;
+    let paidCalls = 0;
+    const researchAction = vi.fn(async (input: { estimateOnly?: boolean }) => {
+      if (input.estimateOnly) return success({ cached: false, costCents: 9, estimate: true });
+      paidCalls += 1;
+      return paidCalls === 1
+        ? success({ cached: false, costCents: firstCostCents })
+        : success({ cached: true, costCents: secondCostCents });
+    });
+    return { researchAction, paidCalls: () => paidCalls };
+  }
+
+  it("does not request before input and updates the estimate from seed changes", async () => {
+    const { researchAction } = paidResearchAction();
+    renderWorkspace(researchAction as unknown as ResearchKeywordsAction);
 
     expect(researchAction).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole("button", { name: "Prepare seed" }));
@@ -348,10 +345,23 @@ describe("ResearchWorkspace", () => {
         resultLimit: 300,
       }),
     );
+  });
+
+  it("records paid session spend on the first research run", async () => {
+    const { researchAction } = paidResearchAction();
+    renderWorkspace(researchAction as unknown as ResearchKeywordsAction);
 
     fireEvent.click(screen.getByRole("button", { name: "Run research" }));
     await screen.findByRole("button", { name: "Select two" });
     expect(screen.getByLabelText("session spend cents")).toHaveTextContent("4");
+  });
+
+  it("shares the add flow with the tracking drawer", async () => {
+    const { researchAction } = paidResearchAction();
+    renderWorkspace(researchAction as unknown as ResearchKeywordsAction);
+
+    fireEvent.click(screen.getByRole("button", { name: "Run research" }));
+    await screen.findByRole("button", { name: "Select two" });
 
     fireEvent.click(screen.getByRole("button", { name: "Select two" }));
     expect(screen.getByLabelText("tracking drawer")).toHaveTextContent(
@@ -360,9 +370,18 @@ describe("ResearchWorkspace", () => {
     fireEvent.click(screen.getByRole("button", { name: "Complete add" }));
     expect(screen.getByLabelText("tracked keywords")).toHaveTextContent("new typed keyword");
     expect(screen.getByLabelText("tracked keywords")).not.toHaveTextContent("seo tool");
+  });
+
+  it("does not charge again for a cached re-run", async () => {
+    const { researchAction, paidCalls } = paidResearchAction();
+    renderWorkspace(researchAction as unknown as ResearchKeywordsAction);
 
     fireEvent.click(screen.getByRole("button", { name: "Run research" }));
-    await waitFor(() => expect(paidCalls).toBe(2));
+    await screen.findByRole("button", { name: "Select two" });
+    expect(screen.getByLabelText("session spend cents")).toHaveTextContent("4");
+
+    fireEvent.click(screen.getByRole("button", { name: "Run research" }));
+    await waitFor(() => expect(paidCalls()).toBe(2));
     expect(screen.getByLabelText("session spend cents")).toHaveTextContent("4");
   });
 
@@ -371,18 +390,7 @@ describe("ResearchWorkspace", () => {
       ok: false as const,
       reason: "budget_exhausted" as const,
     }));
-    render(
-      <SessionSpendProvider>
-        <ResearchWorkspace
-          {...savedKeywordActions}
-          addKeywordsAction={vi.fn() as never}
-          checkHealth={checkHealth}
-          context={context}
-          costContext={costContext}
-          researchAction={researchAction as unknown as ResearchKeywordsAction}
-        />
-      </SessionSpendProvider>,
-    );
+    renderWorkspace(researchAction as unknown as ResearchKeywordsAction);
 
     fireEvent.click(screen.getByRole("button", { name: "Run research" }));
     await screen.findByText("Monthly provider budget reached");
@@ -401,18 +409,7 @@ describe("ResearchWorkspace", () => {
         estimate: input.estimateOnly,
       }),
     );
-    render(
-      <SessionSpendProvider>
-        <ResearchWorkspace
-          {...savedKeywordActions}
-          addKeywordsAction={vi.fn() as never}
-          checkHealth={checkHealth}
-          context={context}
-          costContext={costContext}
-          researchAction={researchAction as unknown as ResearchKeywordsAction}
-        />
-      </SessionSpendProvider>,
-    );
+    renderWorkspace(researchAction as unknown as ResearchKeywordsAction);
 
     fireEvent.click(screen.getByRole("button", { name: /^saved seed/i }));
     expect(screen.getByLabelText("search seeds")).toHaveTextContent("saved seed");
@@ -437,18 +434,7 @@ describe("ResearchWorkspace", () => {
     const researchAction = vi.fn(async (input: { estimateOnly?: boolean }) =>
       success({ cached: !input.estimateOnly, costCents: 0, estimate: input.estimateOnly }),
     );
-    render(
-      <SessionSpendProvider>
-        <ResearchWorkspace
-          {...savedKeywordActions}
-          addKeywordsAction={vi.fn() as never}
-          checkHealth={checkHealth}
-          context={context}
-          costContext={costContext}
-          researchAction={researchAction as unknown as ResearchKeywordsAction}
-        />
-      </SessionSpendProvider>,
-    );
+    renderWorkspace(researchAction as unknown as ResearchKeywordsAction);
 
     fireEvent.click(screen.getByRole("button", { name: /^saved seed/i }));
     await waitFor(() =>
@@ -480,28 +466,19 @@ describe("ResearchWorkspace", () => {
           : success({ cached: false, costCents: 4 });
       },
     );
-    render(
-      <SessionSpendProvider>
-        <ResearchWorkspace
-          {...savedKeywordActions}
-          addKeywordsAction={vi.fn() as never}
-          checkHealth={checkHealth}
-          context={{
-            ...context,
-            connections: [
-              ...context.connections,
-              {
-                id: "conn_b00000000000000000000000",
-                label: "Backup",
-                provider: "dataforseo",
-              },
-            ],
-          }}
-          costContext={costContext}
-          researchAction={researchAction as unknown as ResearchKeywordsAction}
-        />
-      </SessionSpendProvider>,
-    );
+    renderWorkspace(researchAction as unknown as ResearchKeywordsAction, {
+      context: {
+        ...context,
+        connections: [
+          ...context.connections,
+          {
+            id: "conn_b00000000000000000000000",
+            label: "Backup",
+            provider: "dataforseo",
+          },
+        ],
+      },
+    });
 
     fireEvent.click(screen.getByRole("button", { name: "Run research" }));
     const retry = await screen.findByRole("button", { name: "Retry ~$0.07" });
@@ -531,18 +508,9 @@ describe("ResearchWorkspace", () => {
   it("disables recent chips with a hint when no research provider exists", () => {
     persistRecent();
     const researchAction = vi.fn();
-    render(
-      <SessionSpendProvider>
-        <ResearchWorkspace
-          {...savedKeywordActions}
-          addKeywordsAction={vi.fn() as never}
-          checkHealth={checkHealth}
-          context={{ ...context, connections: [] }}
-          costContext={costContext}
-          researchAction={researchAction as unknown as ResearchKeywordsAction}
-        />
-      </SessionSpendProvider>,
-    );
+    renderWorkspace(researchAction as unknown as ResearchKeywordsAction, {
+      context: { ...context, connections: [] },
+    });
 
     expect(screen.getByRole("button", { name: /^saved seed/i })).toBeDisabled();
     expect(screen.getByText("Connect DataForSEO to replay recent searches.")).toBeInTheDocument();
@@ -577,21 +545,14 @@ describe("ResearchWorkspace", () => {
     }));
     const removeSavedKeywordsAction = vi.fn(async () => ({ removedCount: 8 }));
 
-    render(
-      <ToastProvider>
-        <SessionSpendProvider>
-          <ResearchWorkspace
-            addKeywordsAction={vi.fn() as never}
-            canDeleteSavedKeywords
-            checkHealth={checkHealth}
-            context={context}
-            costContext={costContext}
-            removeSavedKeywordsAction={removeSavedKeywordsAction}
-            researchAction={researchAction as unknown as ResearchKeywordsAction}
-            saveKeywordsAction={saveKeywordsAction}
-          />
-        </SessionSpendProvider>
-      </ToastProvider>,
+    renderWorkspace(
+      researchAction as unknown as ResearchKeywordsAction,
+      {
+        canDeleteSavedKeywords: true,
+        removeSavedKeywordsAction,
+        saveKeywordsAction,
+      },
+      { withToast: true },
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Run research" }));
@@ -615,7 +576,7 @@ describe("ResearchWorkspace", () => {
     expect(screen.getByLabelText("saved keywords")).toHaveTextContent("keyword 1");
     expect(screen.getByRole("link", { name: "View in Keywords / Saved" })).toHaveAttribute(
       "href",
-      "/app/prj_1/keywords?tab=saved",
+      "/app/prj_1/rank-tracker?tab=saved",
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Remove first saved" }));
@@ -650,21 +611,10 @@ describe("ResearchWorkspace", () => {
       savedCount: 0,
     }));
 
-    render(
-      <ToastProvider>
-        <SessionSpendProvider>
-          <ResearchWorkspace
-            addKeywordsAction={vi.fn() as never}
-            canDeleteSavedKeywords
-            checkHealth={checkHealth}
-            context={context}
-            costContext={costContext}
-            removeSavedKeywordsAction={savedKeywordActions.removeSavedKeywordsAction}
-            researchAction={researchAction as unknown as ResearchKeywordsAction}
-            saveKeywordsAction={saveKeywordsAction}
-          />
-        </SessionSpendProvider>
-      </ToastProvider>,
+    renderWorkspace(
+      researchAction as unknown as ResearchKeywordsAction,
+      { canDeleteSavedKeywords: true, saveKeywordsAction },
+      { withToast: true },
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Run research" }));
@@ -684,21 +634,10 @@ describe("ResearchWorkspace", () => {
       savedCount: 1,
     }));
 
-    render(
-      <ToastProvider>
-        <SessionSpendProvider>
-          <ResearchWorkspace
-            addKeywordsAction={vi.fn() as never}
-            canDeleteSavedKeywords={false}
-            checkHealth={checkHealth}
-            context={context}
-            costContext={costContext}
-            removeSavedKeywordsAction={savedKeywordActions.removeSavedKeywordsAction}
-            researchAction={researchAction as unknown as ResearchKeywordsAction}
-            saveKeywordsAction={saveKeywordsAction}
-          />
-        </SessionSpendProvider>
-      </ToastProvider>,
+    renderWorkspace(
+      researchAction as unknown as ResearchKeywordsAction,
+      { canDeleteSavedKeywords: false, saveKeywordsAction },
+      { withToast: true },
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Run research" }));

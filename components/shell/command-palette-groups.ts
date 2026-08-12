@@ -51,7 +51,7 @@ export function commandGroups(
     icon: MagnifyingGlass,
     label: hit.label,
     hint: "Keyword",
-    run: () => push(appPath(projectRef, "keywords", hit.id)),
+    run: () => push(appPath(projectRef, "rank-tracker", hit.id)),
   }));
 
   return [

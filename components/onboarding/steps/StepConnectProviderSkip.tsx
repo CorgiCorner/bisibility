@@ -18,7 +18,7 @@ export function StepConnectProviderSkip({
   getValues,
   onSkip,
 }: Readonly<StepConnectProviderSkipProps>) {
-  const skipHref = buildOnboardingStepHref(4, {
+  const skipHref = buildOnboardingStepHref(3, {
     ...flowState,
     projectId: getValues().projectId,
   });
@@ -26,7 +26,7 @@ export function StepConnectProviderSkip({
   return (
     <OnboardingStepSkip
       ariaLabel="Skip provider connection and add keywords as paused"
-      className="-my-2 inline-flex min-h-10 shrink-0 items-center px-2 text-[13px]"
+      className="shrink-0"
       {...(onSkip ? { onClick: () => onSkip(getValues()) } : { href: skipHref })}
     >
       Skip

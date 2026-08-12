@@ -1,9 +1,9 @@
+import { redirect } from "@/tests/next-navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   connection: vi.fn(),
   findFirst: vi.fn(),
-  redirect: vi.fn(),
   selfHost: true,
 }));
 
@@ -16,7 +16,6 @@ vi.mock("@/lib/deployment/deployment", () => ({
     return mocks.selfHost;
   },
 }));
-vi.mock("next/navigation", () => ({ redirect: mocks.redirect }));
 vi.mock("next/server", () => ({ connection: mocks.connection }));
 
 import {
@@ -83,7 +82,7 @@ describe("self-host first-run detection", () => {
     await expect(redirectToSetupIfFirstRun()).resolves.toBeUndefined();
     expect(mocks.connection).not.toHaveBeenCalled();
     expect(mocks.findFirst).not.toHaveBeenCalled();
-    expect(mocks.redirect).not.toHaveBeenCalled();
+    expect(redirect).not.toHaveBeenCalled();
   });
 
   it("waits for a live self-host request before checking setup state", async () => {
@@ -91,7 +90,7 @@ describe("self-host first-run detection", () => {
 
     expect(mocks.connection).toHaveBeenCalledOnce();
     expect(mocks.findFirst).toHaveBeenCalledOnce();
-    expect(mocks.redirect).toHaveBeenCalledWith("/setup");
+    expect(redirect).toHaveBeenCalledWith("/setup");
   });
 
   it("leaves setup after any account exists", async () => {

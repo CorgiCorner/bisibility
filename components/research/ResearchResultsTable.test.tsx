@@ -1,4 +1,5 @@
 import type { GroupedResearchRow } from "@/lib/keyword-research/grouping";
+import { makeCostContext } from "@/tests/factories/cost-context";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -55,22 +56,9 @@ vi.mock("@/components/keywords/grid/DataGrid", () => ({
   },
 }));
 
-const costContext = {
-  capCents: 5000,
-  costPerCheckCents: 1,
-  cronExpression: null,
-  depth: 100 as const,
-  deviceCount: 1,
-  devices: ["desktop" as const],
-  frequency: "daily" as const,
+const costContext = makeCostContext({
   keywordCount: 1,
-  locationCount: 1,
-  projectName: "Example",
-  providerId: "dataforseo",
-  rawFrequency: "daily" as const,
-  spentCents: 0,
-  timezone: "UTC",
-};
+});
 
 afterEach(() => {
   vi.useRealTimers();

@@ -3,7 +3,7 @@ import { buildOnboardingStepHref, type OnboardingFlowState } from "./onboarding-
 
 describe("onboarding fixtures", () => {
   it("does not include keyword ids in step hrefs", () => {
-    const href = buildOnboardingStepHref(5, {
+    const href = buildOnboardingStepHref(3, {
       devices: ["desktop"],
       keywordIds: ["kw_1", "kw_2"],
       locations: ["US"],
@@ -12,7 +12,7 @@ describe("onboarding fixtures", () => {
     } as unknown as OnboardingFlowState);
 
     expect(href).toBe(
-      "/onboarding?step=5&projectId=prj_1&providerId=serpapi&loc=US&device=desktop",
+      "/onboarding?step=3&projectId=prj_1&providerId=serpapi&loc=US&device=desktop",
     );
     expect(href).not.toContain("keywordId");
   });

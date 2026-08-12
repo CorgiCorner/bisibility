@@ -164,7 +164,7 @@ describe("updateKeywordSchedule", () => {
       timezone: "UTC",
     });
     expect(mocks.revalidatePath).toHaveBeenCalledWith(
-      appPath("[project]", "keywords", "[id]"),
+      appPath("[project]", "rank-tracker", "[id]"),
       "page",
     );
   });

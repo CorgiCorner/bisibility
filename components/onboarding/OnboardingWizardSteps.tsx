@@ -11,19 +11,21 @@ import type {
   OnboardingProject,
 } from "@/components/onboarding/onboarding-wizard-state";
 import { StepAddKeywords } from "@/components/onboarding/steps/StepAddKeywords";
-import { StepConnectGscCard } from "@/components/onboarding/steps/StepConnectGscCard";
+import {
+  StepConnectGscCard,
+  StepConnectGscSetupNotice,
+} from "@/components/onboarding/steps/StepConnectGscCard";
 import { StepConnectProvider } from "@/components/onboarding/steps/StepConnectProvider";
 import type { ConnectedProviderMap } from "@/components/onboarding/steps/StepConnectProvider.fields";
 import { StepCreateProject } from "@/components/onboarding/steps/StepCreateProject";
-import { StepDeveloperAccess } from "@/components/onboarding/steps/StepDeveloperAccess";
 import { StepFirstCheck } from "@/components/onboarding/steps/StepFirstCheck";
-import { StepSchedule } from "@/components/onboarding/steps/StepSchedule";
 import type { GoogleOAuthSetup } from "@/lib/integrations/types";
 import type { RankedKeywordConnection } from "@/lib/ranked-keywords/service";
 
 export type OnboardingWizardStepsProps = {
   actions: OnboardingWizardActions;
   currentStep: OnboardingStepNumber;
+  connectedProviderId?: string | null;
   dataResidencyMessage: string;
   draft: OnboardingDraft;
   flowState: OnboardingFlowState;
@@ -32,9 +34,7 @@ export type OnboardingWizardStepsProps = {
   gscOAuthConfigured: boolean;
   gscPropertyLabel?: string | null;
   hasAnalyticsSource: boolean;
-  hasApiKey: boolean;
   hasConnectedProvider: boolean;
-  isCloud: boolean;
   initialSerpConnections?: ConnectedProviderMap;
   keywordCount: number;
   monthlyCapCents: number;
@@ -42,8 +42,6 @@ export type OnboardingWizardStepsProps = {
   projectedCostPerCheckCents: number | null;
   rankedKeywordConnections: RankedKeywordConnection[];
   onCreateProjectComplete: NonNullable<Parameters<typeof StepCreateProject>[0]["onComplete"]>;
-  onApiKeyIssued: () => void;
-  onDeveloperAccessComplete: () => void;
   onKeywordsChange: NonNullable<Parameters<typeof StepAddKeywords>[0]["onKeywordsChange"]>;
   onKeywordsComplete: NonNullable<Parameters<typeof StepAddKeywords>[0]["onComplete"]>;
   onProviderComplete: NonNullable<Parameters<typeof StepConnectProvider>[0]["onComplete"]>;
@@ -51,12 +49,12 @@ export type OnboardingWizardStepsProps = {
     Parameters<typeof StepConnectProvider>[0]["onContinueDisabledChange"]
   >;
   onProviderSkip: NonNullable<Parameters<typeof StepConnectProvider>[0]["onSkip"]>;
-  onScheduleComplete: NonNullable<Parameters<typeof StepSchedule>[0]["onComplete"]>;
 };
 
 export function OnboardingWizardSteps({
   actions,
   currentStep,
+  connectedProviderId,
   dataResidencyMessage,
   draft,
   flowState,
@@ -65,9 +63,7 @@ export function OnboardingWizardSteps({
   gscOAuthConfigured,
   gscPropertyLabel,
   hasAnalyticsSource,
-  hasApiKey,
   hasConnectedProvider,
-  isCloud,
   initialSerpConnections,
   keywordCount,
   monthlyCapCents,
@@ -75,14 +71,11 @@ export function OnboardingWizardSteps({
   projectedCostPerCheckCents,
   rankedKeywordConnections,
   onCreateProjectComplete,
-  onApiKeyIssued,
-  onDeveloperAccessComplete,
   onKeywordsChange,
   onKeywordsComplete,
   onProviderComplete,
   onProviderContinueDisabledChange,
   onProviderSkip,
-  onScheduleComplete,
 }: Readonly<OnboardingWizardStepsProps>) {
   return (
     <>
@@ -95,24 +88,29 @@ export function OnboardingWizardSteps({
             createProjectAction={actions.createProjectAction}
             dataResidencyMessage={dataResidencyMessage}
             defaultValues={draft.createProject}
+            deriveWebsiteAction={actions.deriveWebsiteAction}
             flowState={flowState}
             initialProject={project}
-            isCloud={isCloud}
             onComplete={onCreateProjectComplete}
           />
         </>
       ) : null}
       {currentStep === 2 ? (
-        <StepDeveloperAccess
-          hasApiKey={hasApiKey}
-          issueApiKeyAction={actions.issueApiKeyAction}
-          onApiKeyIssued={onApiKeyIssued}
-          onComplete={onDeveloperAccessComplete}
-          projectId={project?.publicId ?? flowState.projectId}
-        />
-      ) : null}
-      {currentStep === 3 ? (
         <StepConnectProvider
+          analyticsNotice={<StepConnectGscSetupNotice configured={gscOAuthConfigured} />}
+          analyticsOption={
+            <StepConnectGscCard
+              completePropertySelection={actions.completeGooglePropertySelectionAction}
+              configured={gscOAuthConfigured}
+              connectedPropertyLabel={gscPropertyLabel}
+              googleOAuth={gscGoogleOAuth}
+              justConnected={gscJustConnected}
+              loadStoredProperties={actions.loadStoredGooglePropertiesAction}
+              projectId={project?.publicId ?? flowState.projectId}
+              returnPath={buildOnboardingStepHref(2, flowState)}
+              saveStoredProperty={actions.saveStoredGooglePropertyAction}
+            />
+          }
           connectProviderAction={actions.connectProviderAction}
           defaultValues={draft.connectProvider}
           flowState={flowState}
@@ -123,49 +121,26 @@ export function OnboardingWizardSteps({
           testProviderConnectionAction={actions.testProviderConnectionAction}
         />
       ) : null}
-      {currentStep === 4 ? (
-        <StepSchedule
-          defaultValues={draft.schedule}
+      {currentStep === 3 ? (
+        <StepAddKeywords
+          addKeywordsAction={actions.addKeywordsAction}
+          awaitingPropertySelection={Boolean(gscGoogleOAuth)}
+          costPerCheckCents={projectedCostPerCheckCents}
+          defaultValues={draft.addKeywords}
+          fetchRankedKeywordSuggestionsAction={actions.fetchRankedKeywordSuggestionsAction}
           flowState={flowState}
-          onComplete={onScheduleComplete}
-          projectedCostPerCheckCents={projectedCostPerCheckCents}
+          hasAnalyticsSource={hasAnalyticsSource}
+          importTopQueriesAction={actions.importTopQueriesAction}
+          monthlyCapCents={monthlyCapCents}
+          onComplete={onKeywordsComplete}
+          onKeywordsChange={onKeywordsChange}
+          projectDomain={project?.domain ?? undefined}
+          rankedKeywordConnections={rankedKeywordConnections}
+          trackingDefaults={draft.schedule}
           updateProjectDefaultsAction={actions.updateProjectDefaultsAction}
         />
       ) : null}
-      {currentStep === 5 ? (
-        <>
-          <StepConnectGscCard
-            completePropertySelection={actions.completeGooglePropertySelectionAction}
-            configured={gscOAuthConfigured}
-            connectedPropertyLabel={gscPropertyLabel}
-            googleOAuth={gscGoogleOAuth}
-            justConnected={gscJustConnected}
-            projectId={project?.publicId ?? flowState.projectId}
-            returnPath={buildOnboardingStepHref(5, flowState)}
-          />
-          <StepAddKeywords
-            addKeywordsAction={actions.addKeywordsAction}
-            awaitingPropertySelection={Boolean(gscGoogleOAuth)}
-            costPerCheckCents={projectedCostPerCheckCents}
-            defaultValues={draft.addKeywords}
-            flowState={{
-              ...flowState,
-              cronExpression: draft.schedule.cronExpression,
-              frequency: draft.schedule.frequency,
-              serpDepth: draft.schedule.serpDepth,
-            }}
-            hasAnalyticsSource={hasAnalyticsSource}
-            importTopQueriesAction={actions.importTopQueriesAction}
-            fetchRankedKeywordSuggestionsAction={actions.fetchRankedKeywordSuggestionsAction}
-            monthlyCapCents={monthlyCapCents}
-            onComplete={onKeywordsComplete}
-            onKeywordsChange={onKeywordsChange}
-            projectDomain={project?.domain ?? undefined}
-            rankedKeywordConnections={rankedKeywordConnections}
-          />
-        </>
-      ) : null}
-      {currentStep === 6 ? (
+      {currentStep === 4 ? (
         <StepFirstCheck
           completeOnboardingAction={actions.completeOnboardingAction}
           defaults={draft.schedule}
@@ -176,6 +151,7 @@ export function OnboardingWizardSteps({
           listFirstCheckCandidatesAction={actions.listFirstCheckCandidatesAction}
           project={project}
           providerConnected={hasConnectedProvider}
+          providerId={connectedProviderId}
           queueFirstChecksAction={actions.queueFirstChecksAction}
           runFirstCheckPreviewAction={actions.runFirstCheckPreviewAction}
         />

@@ -1,3 +1,4 @@
+import { redirect } from "@/tests/next-navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -6,7 +7,6 @@ const mocks = vi.hoisted(() => ({
   findUnique: vi.fn(),
   getAuthSession: vi.fn(),
   headers: vi.fn(),
-  redirect: vi.fn(),
 }));
 
 vi.mock("server-only", () => ({}));
@@ -18,7 +18,6 @@ vi.mock("@/lib/db/prisma", () => ({
   },
 }));
 vi.mock("next/headers", () => ({ headers: mocks.headers }));
-vi.mock("next/navigation", () => ({ redirect: mocks.redirect }));
 vi.mock("next/server", () => ({ connection: mocks.connection }));
 
 import { RETURN_TO_REQUEST_HEADER } from "./return-to";
@@ -35,7 +34,7 @@ describe("enforceActiveSession", () => {
     mocks.connection.mockResolvedValue(undefined);
     mocks.deleteMany.mockResolvedValue({ count: 1 });
     mocks.headers.mockResolvedValue(new Headers());
-    mocks.redirect.mockImplementation((destination: string) => {
+    redirect.mockImplementation((destination: string) => {
       throw new Error(`redirect:${destination}`);
     });
   });
@@ -154,7 +153,7 @@ describe("enforceActiveSession", () => {
 
     await expect(requireSession()).rejects.toThrow("redirect:");
 
-    expect(mocks.redirect).toHaveBeenCalledWith("/login?next=%2Fapp%2Fsettings%3Ftab%3Daccess");
+    expect(redirect).toHaveBeenCalledWith("/login?next=%2Fapp%2Fsettings%3Ftab%3Daccess");
   });
 
   it("redirects an unauthenticated request to plain login without a return path", async () => {
@@ -162,7 +161,7 @@ describe("enforceActiveSession", () => {
 
     await expect(requireSession()).rejects.toThrow("redirect:");
 
-    expect(mocks.redirect).toHaveBeenCalledWith("/login");
+    expect(redirect).toHaveBeenCalledWith("/login");
   });
 
   it.each(["https://malicious.example/path", "//malicious.example/path"])(
@@ -173,7 +172,7 @@ describe("enforceActiveSession", () => {
 
       await expect(requireSession()).rejects.toThrow("redirect:");
 
-      expect(mocks.redirect).toHaveBeenCalledWith("/login");
+      expect(redirect).toHaveBeenCalledWith("/login");
     },
   );
 });

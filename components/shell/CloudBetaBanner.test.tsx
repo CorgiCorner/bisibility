@@ -1,3 +1,4 @@
+import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CloudBetaBanner } from "./CloudBetaBanner";
@@ -12,10 +13,8 @@ const mocks = vi.hoisted(() => ({
   downloadPackage: vi.fn(),
   exportPackage: vi.fn(),
   loadCounts: vi.fn(),
-  push: vi.fn(),
 }));
 
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push: mocks.push }) }));
 vi.mock("@/components/settings/migration/MigrateToCloudExportPackage", () => ({
   downloadPackage: mocks.downloadPackage,
   exportActiveCloudImportPackage: mocks.exportPackage,
@@ -202,7 +201,7 @@ describe("CloudBetaBanner", () => {
       expect(screen.getByText("Competitors").parentElement?.parentElement).toHaveTextContent("4"),
     );
     expect(mocks.loadCounts).toHaveBeenCalledTimes(2);
-    expect(mocks.push).not.toHaveBeenCalled();
+    expect(routerMock.push).not.toHaveBeenCalled();
   });
 
   it("never invokes the backup count loader on self-host", () => {

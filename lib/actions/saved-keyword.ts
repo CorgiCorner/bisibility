@@ -7,7 +7,7 @@ import { revalidatePath } from "next/cache";
 import { getActionActor, parseActionInput, requireProjectScope } from "./_shared";
 
 function revalidateSavedKeywords(projectRef: string) {
-  revalidatePath(appPath(projectRef, "keywords"));
+  revalidatePath(appPath(projectRef, "rank-tracker"));
   revalidatePath(appPath(projectRef, "research"));
 }
 

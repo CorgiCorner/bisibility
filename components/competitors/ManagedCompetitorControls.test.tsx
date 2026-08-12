@@ -8,7 +8,6 @@ vi.mock("@/lib/actions/competitors", () => ({
   removeManagedCompetitor: vi.fn(),
   renameManagedCompetitor: vi.fn(),
 }));
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 
 const competitor = {
   domain: "example.net",
