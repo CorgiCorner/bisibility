@@ -1,3 +1,4 @@
+import { unstable_rethrow } from "@/tests/next-navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -10,7 +11,6 @@ const mocks = vi.hoisted(() => ({
   regenerate: vi.fn(),
   requireSession: vi.fn(),
   signOut: vi.fn(),
-  unstableRethrow: vi.fn(),
 }));
 
 vi.mock("@/lib/auth/auth", () => ({ auth: { api: { signOut: mocks.signOut } } }));
@@ -30,7 +30,6 @@ vi.mock("@/lib/auth/two-factor-management", () => ({
   regenerateTwoFactorBackupCodes: mocks.regenerate,
 }));
 vi.mock("next/headers", () => ({ headers: mocks.headers }));
-vi.mock("next/navigation", () => ({ unstable_rethrow: mocks.unstableRethrow }));
 
 import {
   beginTwoFactorEnrollmentAction,
@@ -62,7 +61,7 @@ describe("two-factor management actions", () => {
     mocks.disable.mockResolvedValue({ signedOut: true });
     mocks.headers.mockResolvedValue(new Headers({ cookie: "session=test" }));
     mocks.signOut.mockResolvedValue({ success: true });
-    mocks.unstableRethrow.mockImplementation((error: { digest?: string }) => {
+    unstable_rethrow.mockImplementation((error: { digest?: string }) => {
       if (error?.digest?.startsWith("NEXT_REDIRECT")) throw error;
     });
   });

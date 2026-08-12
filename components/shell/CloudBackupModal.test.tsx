@@ -1,3 +1,4 @@
+import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CloudBackupModal } from "./CloudBackupModal";
@@ -8,10 +9,8 @@ const mocks = vi.hoisted(() => ({
   exportPackage: vi.fn(),
   onClose: vi.fn(),
   onExportSuccess: vi.fn(),
-  push: vi.fn(),
 }));
 
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push: mocks.push }) }));
 vi.mock("@/components/settings/migration/MigrateToCloudExportPackage", () => ({
   exportActiveCloudImportPackage: mocks.exportPackage,
 }));
@@ -147,7 +146,7 @@ describe("CloudBackupModal", () => {
     fireEvent.click(screen.getByRole("button", { name: "Export CSV" }));
 
     await waitFor(() =>
-      expect(mocks.push).toHaveBeenCalledWith("/app/prj_1/keywords?action=export"),
+      expect(routerMock.push).toHaveBeenCalledWith("/app/prj_1/rank-tracker?action=export"),
     );
     expect(mocks.onClose).toHaveBeenCalledOnce();
     expect(mocks.exportPackage).not.toHaveBeenCalled();

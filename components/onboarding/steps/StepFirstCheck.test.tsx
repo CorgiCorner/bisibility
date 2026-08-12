@@ -1,48 +1,42 @@
+import { onboardingFormId } from "@/components/onboarding/onboarding-form-utils";
 import { appPath } from "@/lib/routing/app-path";
+import { deferred } from "@/tests/deferred";
+import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { StepFirstCheck } from "./StepFirstCheck";
 import { type FirstCheckRunActions, useFirstCheckRun } from "./use-first-check-run";
 
-const push = vi.hoisted(() => vi.fn());
-
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push }),
-}));
-
-function deferred<T>() {
-  let resolve: (value: T) => void = () => undefined;
-  const promise = new Promise<T>((done) => {
-    resolve = done;
-  });
-  return { promise, resolve };
-}
-
 function renderReadyStep(overrides: Partial<Parameters<typeof StepFirstCheck>[0]> = {}) {
   return render(
-    <StepFirstCheck
-      flowState={{ projectId: "prj_1", providerId: "dataforseo" }}
-      getObservedPositionsAction={vi.fn(async () => [])}
-      keywordCount={3}
-      listFirstCheckCandidatesAction={vi.fn(async () => ({
-        candidates: [
-          { id: "keyword_1", publicId: "kw_1", text: "rank tracker" },
-          { id: "keyword_2", publicId: "kw_2", text: "seo api" },
-        ],
-        hasAnalyticsSource: false,
-        isSampleProject: false,
-        providerReady: true,
-      }))}
-      providerConnected
-      queueFirstChecksAction={vi.fn(async () => ({ queued: 1 }))}
-      runFirstCheckPreviewAction={vi.fn(async () => ({
-        position: 2,
-        provider: "dataforseo",
-        rankingUrl: "https://example.com/rank-tracker",
-        status: "completed" as const,
-      }))}
-      {...overrides}
-    />,
+    <>
+      <StepFirstCheck
+        flowState={{ projectId: "prj_1", providerId: "dataforseo" }}
+        getObservedPositionsAction={vi.fn(async () => [])}
+        keywordCount={3}
+        listFirstCheckCandidatesAction={vi.fn(async () => ({
+          candidates: [
+            { id: "keyword_1", publicId: "kw_1", text: "rank tracker" },
+            { id: "keyword_2", publicId: "kw_2", text: "seo api" },
+          ],
+          hasAnalyticsSource: false,
+          isSampleProject: false,
+          providerReady: true,
+        }))}
+        providerConnected
+        queueFirstChecksAction={vi.fn(async () => ({ queued: 1 }))}
+        runFirstCheckPreviewAction={vi.fn(async () => ({
+          position: 2,
+          provider: "dataforseo",
+          rankingUrl: "https://example.com/rank-tracker",
+          status: "completed" as const,
+        }))}
+        {...overrides}
+      />
+      <button form={onboardingFormId} type="submit">
+        Open dashboard
+      </button>
+    </>,
   );
 }
 
@@ -63,10 +57,6 @@ function DoubleStartHarness({ actions }: { actions: FirstCheckRunActions }) {
 }
 
 describe("StepFirstCheck", () => {
-  beforeEach(() => {
-    push.mockClear();
-  });
-
   it("renders preview rows incrementally and excludes previewed keywords from the queue", async () => {
     const first = deferred<{
       position: null;
@@ -229,28 +219,28 @@ describe("StepFirstCheck", () => {
 
   it("does not block opening the dashboard while preview is running", async () => {
     const never = new Promise<never>(() => undefined);
-    const { container } = renderReadyStep({
+    renderReadyStep({
       runFirstCheckPreviewAction: vi.fn(() => never),
     });
 
     fireEvent.click(screen.getByRole("button", { name: /Run first checks now/i }));
-    fireEvent.submit(container.querySelector("form") as HTMLFormElement);
+    fireEvent.click(screen.getByRole("button", { name: "Open dashboard" }));
 
-    await waitFor(() => expect(push).toHaveBeenCalledWith(appPath("prj_1", "overview")));
+    await waitFor(() => expect(routerMock.push).toHaveBeenCalledWith(appPath("prj_1", "overview")));
   });
 
   it("marks onboarding complete once before opening the dashboard", async () => {
     const completeOnboardingAction = vi.fn(async () => undefined);
-    const { container } = renderReadyStep({ completeOnboardingAction });
+    renderReadyStep({ completeOnboardingAction });
 
-    fireEvent.submit(container.querySelector("form") as HTMLFormElement);
+    fireEvent.click(screen.getByRole("button", { name: "Open dashboard" }));
 
     await waitFor(() => expect(completeOnboardingAction).toHaveBeenCalledTimes(1));
     expect(completeOnboardingAction).toHaveBeenCalledWith({ projectId: "prj_1" });
     expect(completeOnboardingAction.mock.invocationCallOrder[0]).toBeLessThan(
-      push.mock.invocationCallOrder[0] ?? 0,
+      routerMock.push.mock.invocationCallOrder[0] ?? 0,
     );
-    expect(push).toHaveBeenCalledWith(appPath("prj_1", "overview"));
+    expect(routerMock.push).toHaveBeenCalledWith(appPath("prj_1", "overview"));
   });
 
   it("allows manual preview while automatic checks are paused", () => {

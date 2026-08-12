@@ -183,7 +183,7 @@ describe("notification event producers", () => {
       "Instance import complete",
       "Imported 40 new keywords, 2 history rows. 1 history row skipped.",
       expect.objectContaining({
-        href: "/app/prj_1/keywords",
+        href: "/app/prj_1/rank-tracker",
         idempotencyKey: "cloud-import:job_1:done",
       }),
       "cloud-import:job_1:done",
@@ -203,7 +203,7 @@ describe("notification event producers", () => {
       NotificationType.import_done,
       "Instance import complete",
       "Processed 1 keyword - nothing new to import. 1 keyword skipped.",
-      expect.objectContaining({ href: "/app/prj_1/keywords" }),
+      expect.objectContaining({ href: "/app/prj_1/rank-tracker" }),
       "cloud-import:job_2:done",
     );
   });

@@ -15,7 +15,6 @@ vi.mock("@/components/competitors/HeadToHeadTable", () => ({
 vi.mock("@/components/competitors/ShareOfVoiceCard", () => ({
   ShareOfVoiceCard: () => null,
 }));
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
 
 const marketData = {
   allColumns: [
@@ -92,10 +91,10 @@ describe("CompetitorsWorkspace", () => {
       />,
     );
 
-    expect(screen.getByRole("button", { name: "Export" })).toHaveStyle({ minHeight: "34px" });
-    expect(screen.getByRole("button", { name: "Add competitor" })).toHaveStyle({
-      minHeight: "34px",
-    });
+    expect(screen.getByRole("button", { name: "Export" })).toHaveClass("MuiButton-sizeSmall");
+    expect(screen.getByRole("button", { name: "Add competitor" })).toHaveClass(
+      "MuiButton-sizeSmall",
+    );
   });
 
   it.each(["viewer", "auditor", "member", "admin", "owner"] satisfies Role[])(

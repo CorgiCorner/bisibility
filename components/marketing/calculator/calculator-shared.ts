@@ -1,6 +1,10 @@
 export {
   ANONYMOUS_CALCULATOR_DEFAULTS,
   AUTO_PLAN_KEY,
+  CALCULATOR_KEYWORD_MAX,
+  CALCULATOR_KEYWORD_MIN,
+  CALCULATOR_LOCATION_MAX,
+  CALCULATOR_LOCATION_MIN,
   type CalculatorDefaultInputs,
   type CalculatorDefaults,
   type CalculatorDevices,

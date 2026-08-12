@@ -1,12 +1,12 @@
+import { setNavigationState } from "@/tests/next-navigation";
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { OverviewToolbar } from "./OverviewToolbar";
 import type { OverviewView } from "./types";
 
-vi.mock("next/navigation", () => ({
-  usePathname: () => "/app/prj_1/overview",
-  useSearchParams: () => new URLSearchParams(),
-}));
+beforeEach(() => {
+  setNavigationState({ pathname: "/app/prj_1/overview" });
+});
 
 const selected = {
   availableTags: [],

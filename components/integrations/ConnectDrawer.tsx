@@ -232,9 +232,11 @@ export function ConnectDrawer({
           {authMode === "oauth" ? (
             <ConnectDrawerOauth
               completePropertySelection={activeActions.completeGooglePropertySelection}
+              loadStoredProperties={activeActions.loadStoredGoogleProperties}
               projectId={projectId}
               projectRef={projectRef}
               provider={provider}
+              saveStoredProperty={activeActions.saveStoredGoogleProperty}
               scopes={oauthScopes(provider)}
             />
           ) : (

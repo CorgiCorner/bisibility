@@ -57,7 +57,7 @@ function QuietAlternatives({
         <>
           {" "}
           or{" "}
-          <Link className={quietLinkClass} href={appPath(projectRef, "keywords?add=1")}>
+          <Link className={quietLinkClass} href={appPath(projectRef, "rank-tracker?add=1")}>
             add keywords manually
           </Link>
         </>
@@ -169,7 +169,7 @@ export function KeywordsStage({
         quiet={
           <>
             Or{" "}
-            <Link className={quietLinkClass} href={appPath(projectRef, "keywords?add=1")}>
+            <Link className={quietLinkClass} href={appPath(projectRef, "rank-tracker?add=1")}>
               add keywords manually
             </Link>
             .
@@ -185,7 +185,7 @@ export function KeywordsStage({
         <Button
           component={Link}
           endIcon={<CaretRight size={14} weight="bold" />}
-          href={appPath(projectRef, "keywords?add=1")}
+          href={appPath(projectRef, "rank-tracker?add=1")}
           variant="primary"
         >
           Add keywords

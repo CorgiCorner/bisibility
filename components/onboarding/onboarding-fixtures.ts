@@ -10,14 +10,8 @@ import {
 } from "@/lib/serp/markets";
 import type { RankCheckFrequency } from "@/lib/settings/options";
 
-export type OnboardingStepNumber = 1 | 2 | 3 | 4 | 5 | 6;
-export type OnboardingIconKey =
-  | "branch"
-  | "database"
-  | "folder"
-  | "lightning"
-  | "search"
-  | "sliders";
+export type OnboardingStepNumber = 1 | 2 | 3 | 4;
+export type OnboardingIconKey = "database" | "folder" | "lightning" | "search";
 
 export type OnboardingStep = {
   n: OnboardingStepNumber;
@@ -29,28 +23,20 @@ export type OnboardingStep = {
 };
 
 export const onboardingSteps = [
-  { n: 1, title: "Create project", desc: "Name, domain, what counts as yours", icon: "folder" },
+  { n: 1, title: "Create project", desc: "Name and domain", icon: "folder" },
   {
     n: 2,
-    title: "Developer access",
-    desc: "CLI sign-in or a project API key",
-    icon: "branch",
-    optional: true,
+    title: "Connect data",
+    desc: "Rank checks and search insights",
+    icon: "database",
   },
   {
     n: 3,
-    title: "Connect data",
-    desc: "Your SERP provider for rank tracking",
-    icon: "database",
-  },
-  { n: 4, title: "Tracking defaults", desc: "Engine, location, device", icon: "sliders" },
-  {
-    n: 5,
     title: "Add keywords",
-    desc: "Paste, import, or pull from Search Console",
+    desc: "Keywords and tracking defaults",
     icon: "search",
   },
-  { n: 6, title: "First check", desc: "Run and review", icon: "lightning" },
+  { n: 4, title: "First check", desc: "Run and review", icon: "lightning" },
 ] satisfies OnboardingStep[];
 
 export const totalOnboardingSteps = onboardingSteps.length;
@@ -125,7 +111,7 @@ export function maxSupportedOnboardingStep({
     return 1;
   }
 
-  return keywordCount > 0 ? 6 : 5;
+  return keywordCount > 0 ? 4 : 3;
 }
 
 export function clampOnboardingStep(

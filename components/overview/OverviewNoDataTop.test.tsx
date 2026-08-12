@@ -1,14 +1,11 @@
+import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { OverviewNoData } from "./OverviewNoData";
 import { RecentlyAddedCard } from "./OverviewNoDataBottom";
 import { NoDataBanner, type NoDataBannerState, NoDataKpiRow } from "./OverviewNoDataTop";
 import { overviewFixture } from "./overview-fixtures";
 import type { OverviewView } from "./types";
-
-const router = vi.hoisted(() => ({ refresh: vi.fn() }));
-
-vi.mock("next/navigation", () => ({ useRouter: () => router }));
 
 const readyPlan = {
   budget: { capCents: 5000, spentCents: 0 },
@@ -50,10 +47,6 @@ function renderBanner(
 }
 
 describe("NoDataBanner", () => {
-  beforeEach(() => {
-    router.refresh.mockReset();
-  });
-
   it("offers SERP setup only when no SERP provider exists", () => {
     renderBanner("missing");
 
@@ -90,7 +83,7 @@ describe("NoDataBanner", () => {
     await waitFor(() =>
       expect(runCheckNowAction).toHaveBeenCalledWith({ keywordId: "kw_pending" }),
     );
-    expect(router.refresh).toHaveBeenCalledOnce();
+    expect(routerMock.refresh).toHaveBeenCalledOnce();
   });
 
   it("shows check runs instead of another start action while the first check runs", () => {
@@ -111,7 +104,7 @@ describe("NoDataBanner", () => {
     expect(screen.getByText(/project is on migration hold/i)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "View keywords" })).toHaveAttribute(
       "href",
-      "/app/prj_1/keywords",
+      "/app/prj_1/rank-tracker",
     );
     expect(screen.queryByRole("button", { name: "Run first check" })).not.toBeInTheDocument();
   });
@@ -154,7 +147,7 @@ describe("NoDataBanner", () => {
       "Rank check monthly budget reached.",
     );
     expect(queueFirstChecksAction).not.toHaveBeenCalled();
-    expect(router.refresh).not.toHaveBeenCalled();
+    expect(routerMock.refresh).not.toHaveBeenCalled();
     expect(screen.getByRole("dialog", { name: "Run first check" })).toBeInTheDocument();
   });
 });

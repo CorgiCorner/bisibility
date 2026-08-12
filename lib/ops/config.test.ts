@@ -25,6 +25,7 @@ describe("operator observability config", () => {
   });
 
   it("defaults on with a webhook and supports explicit overrides", () => {
+    vi.stubEnv("DEPLOYMENT_MODE", "");
     vi.stubEnv("OPS_SLACK_WEBHOOK_URL", "https://hooks.slack.com/services/test");
     vi.stubEnv("OPS_NOTIFY_MODE", "all");
     vi.stubEnv("OPS_HEARTBEAT_CRON", "30 9 * * *");
@@ -48,5 +49,15 @@ describe("operator observability config", () => {
     expect(getOpsConfig({ OPS_EVENTS_ENABLED: "1", OPS_SLACK_WEBHOOK_URL: "" })).toMatchObject({
       enabled: false,
     });
+  });
+
+  it("never includes tenant names in managed cloud", () => {
+    expect(
+      getOpsConfig({
+        DEPLOYMENT_MODE: "cloud",
+        OPS_SLACK_INCLUDE_NAMES: "1",
+        OPS_SLACK_WEBHOOK_URL: "https://hooks.slack.com/services/test",
+      }),
+    ).toMatchObject({ includeNames: false });
   });
 });

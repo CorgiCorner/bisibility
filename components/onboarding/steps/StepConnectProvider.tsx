@@ -6,7 +6,6 @@ import {
   feedbackClass,
   onboardingFormId,
 } from "@/components/onboarding/onboarding-form-utils";
-import { OWN_PROVIDER_KEY_COST_EXPLANATION } from "@/lib/cost-estimate/provider-cost-copy";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
@@ -39,6 +38,8 @@ import { StepConnectProviderSkip } from "./StepConnectProviderSkip";
 export type { OnboardingConnectProviderInput } from "./StepConnectProvider.fields";
 
 export function StepConnectProvider({
+  analyticsNotice,
+  analyticsOption,
   connectProviderAction,
   defaultValues,
   flowState,
@@ -153,7 +154,7 @@ export function StepConnectProvider({
     const nextValues = savedProviderCompletionInput(values.projectId, providerId);
     if (onComplete) return onComplete(nextValues, nextConnections);
     router.push(
-      buildOnboardingStepHref(4, {
+      buildOnboardingStepHref(3, {
         ...flowState,
         providerId,
         projectId: nextValues.projectId,
@@ -232,12 +233,16 @@ export function StepConnectProvider({
       <input type="hidden" {...register("providerId")} />
       <div className="flex items-start justify-between gap-3">
         <div>
-          <div className="text-lg font-semibold tracking-[-0.4px]">Connect your SERP provider</div>
-          <div className="mt-1 text-[13px] text-fg-muted">{OWN_PROVIDER_KEY_COST_EXPLANATION}</div>
+          <div className="text-lg font-semibold tracking-[-0.4px]">Connect data</div>
+          <div className="mt-1 text-[13px] text-fg-muted">
+            Choose a rank-check provider, Search Console, or both.
+          </div>
         </div>
         <StepConnectProviderSkip flowState={flowState} getValues={getValues} onSkip={onSkip} />
       </div>
       <StepConnectProviderCards
+        analyticsNotice={analyticsNotice}
+        analyticsOption={analyticsOption}
         connections={connections}
         dirtyProviders={dirtyProviders}
         onSelect={selectProvider}

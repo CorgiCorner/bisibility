@@ -1,20 +1,40 @@
 import { fireEvent, screen, within } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { project, renderWizard } from "./OnboardingWizard.test-utils";
 
-const push = vi.hoisted(() => vi.fn());
-
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push, refresh: vi.fn() }),
-}));
-
 describe("OnboardingWizard provider state", () => {
+  it("keeps the connected provider from flow state when no connection map is supplied", () => {
+    renderWizard({
+      initialFlowState: { projectId: "prj_1", providerId: "dataforseo" },
+      initialKeywordCount: 1,
+      initialProject: project,
+      initialStep: 4,
+      providerConnected: true,
+    });
+
+    expect(screen.getByText("DataForSEO")).toBeInTheDocument();
+  });
+
+  it("prefers the saved provider over a stale provider in the URL", () => {
+    renderWizard({
+      initialFlowState: { projectId: "prj_1", providerId: "dataforseo" },
+      initialKeywordCount: 1,
+      initialProject: project,
+      initialSerpConnections: { serpapi: {} },
+      initialStep: 4,
+      providerConnected: true,
+    });
+
+    expect(screen.getByText("SerpApi")).toBeInTheDocument();
+    expect(screen.queryByText("DataForSEO")).not.toBeInTheDocument();
+  });
+
   it("does not carry dirty credentials into another saved provider after returning", async () => {
     renderWizard({
       initialFlowState: { projectId: "prj_1", providerId: "dataforseo" },
       initialProject: project,
       initialSerpConnections: { dataforseo: {}, serpapi: {} },
-      initialStep: 3,
+      initialStep: 2,
       providerConnected: true,
     });
 
@@ -27,7 +47,9 @@ describe("OnboardingWizard provider state", () => {
     expect(screen.getByText("Unsaved changes")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /continue/i }));
-    expect(await screen.findByRole("heading", { name: "Tracking defaults" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "Add your first keywords" }),
+    ).toBeInTheDocument();
 
     const rail = screen.getByLabelText("Onboarding steps");
     fireEvent.click(within(rail).getByRole("button", { name: "Connect data, completed" }));

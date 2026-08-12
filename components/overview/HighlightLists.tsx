@@ -103,7 +103,7 @@ export function HighlightLists({ lists, projectRef, rowHref }: Readonly<Highligh
                 list.rows.map((row) => (
                   <Link
                     className="flex min-h-[58px] items-center justify-between gap-2.5 border-t border-border-soft px-[18px] py-2.5 hover:bg-bg-sunken"
-                    href={rowHref?.(row) ?? appPath(projectRef, "keywords", row.id)}
+                    href={rowHref?.(row) ?? appPath(projectRef, "rank-tracker", row.id)}
                     key={row.id}
                   >
                     <span className="min-w-0">

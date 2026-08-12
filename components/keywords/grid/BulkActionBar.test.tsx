@@ -4,8 +4,6 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { BulkActionBar } from "./BulkActionBar";
 
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
-
 const actions = {
   bulkClearTargetAction: vi.fn(async () => undefined),
   bulkDeleteAction: vi.fn(async () => undefined),

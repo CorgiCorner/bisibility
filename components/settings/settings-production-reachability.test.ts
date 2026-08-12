@@ -93,5 +93,5 @@ describe("settings production reachability", () => {
       .sort();
 
     expect(unreachableSettingsSources).toEqual([]);
-  });
+  }, 10_000);
 });

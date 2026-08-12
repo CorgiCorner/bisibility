@@ -87,7 +87,7 @@ export function RowActionsCell({
   function open(event: MouseEvent<HTMLElement>) {
     event.stopPropagation();
     setAnchorEl(null);
-    router.push(appPath(projectRef, "keywords", row.id));
+    router.push(appPath(projectRef, "rank-tracker", row.id));
   }
 
   function select(event: MouseEvent<HTMLElement>, action: (row: KeywordRow) => void) {

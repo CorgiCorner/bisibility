@@ -4,8 +4,6 @@ import { describe, expect, it, vi } from "vitest";
 import { ConnectDrawerOauth } from "./ConnectDrawerOauth";
 import { integrationCategories } from "./integrations-fixtures";
 
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
-
 function readyGsc() {
   const provider = integrationCategories[1].providers[0];
   return {
@@ -117,6 +115,96 @@ describe("ConnectDrawerOauth", () => {
     );
   });
 
+  it("changes a connected property with stored credentials before offering account reauth", async () => {
+    const loadStoredProperties = vi.fn(async () => ({
+      preferredProperty: "sc-domain:example.com",
+      properties: [
+        {
+          kind: "domain" as const,
+          label: "example.com (Domain property)",
+          permissionLevel: "siteOwner",
+          value: "sc-domain:example.com",
+        },
+      ],
+      provider: "gsc" as const,
+    }));
+    const saveStoredProperty = vi.fn(async (input) => ({
+      property: input.property,
+      status: "saved" as const,
+    }));
+    const provider = {
+      ...readyGsc(),
+      drawer: {
+        ...readyGsc().drawer,
+        defaults: { ...readyGsc().drawer.defaults, login: "sc-domain:old.example.com" },
+      },
+      status: "connected" as const,
+    };
+
+    render(
+      <ConnectDrawerOauth
+        loadStoredProperties={loadStoredProperties}
+        projectId="prj_1"
+        provider={provider}
+        saveStoredProperty={saveStoredProperty}
+        scopes={["webmasters"]}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Change property" }));
+    expect(
+      await screen.findByRole("button", { name: "Search Console property" }),
+    ).toHaveTextContent("example.com");
+    fireEvent.click(screen.getByRole("button", { name: "Use selected property" }));
+
+    await waitFor(() =>
+      expect(saveStoredProperty).toHaveBeenCalledWith({
+        projectId: "prj_1",
+        property: "sc-domain:example.com",
+        provider: "gsc",
+      }),
+    );
+    expect(screen.getByRole("link", { name: "Reconnect account" })).toHaveAttribute(
+      "href",
+      expect.stringContaining("/api/integrations/google/install"),
+    );
+  });
+
+  it("falls back to the full OAuth link when stored authorization is unavailable", async () => {
+    const provider = {
+      ...readyGsc(),
+      drawer: {
+        ...readyGsc().drawer,
+        defaults: { ...readyGsc().drawer.defaults, login: "sc-domain:example.com" },
+      },
+      status: "connected" as const,
+    };
+
+    render(
+      <ConnectDrawerOauth
+        loadStoredProperties={async () => ({
+          error: "Reconnect the Google account to load its properties.",
+          properties: [],
+          provider: "gsc",
+          requiresReauth: true,
+        })}
+        projectId="prj_1"
+        provider={provider}
+        scopes={["webmasters"]}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Change property" }));
+
+    expect(
+      await screen.findByText("Reconnect the Google account to load its properties."),
+    ).toBeVisible();
+    expect(screen.getByRole("link", { name: "Use a different Google account" })).toHaveAttribute(
+      "href",
+      expect.stringContaining("/api/integrations/google/install"),
+    );
+  });
+
   it("does not start a reconnect flow while the project is read-only", () => {
     const provider = {
       ...readyGsc(),
@@ -129,16 +217,17 @@ describe("ConnectDrawerOauth", () => {
 
     render(
       <ProjectWriteModeProvider projectRef="prj_1" writeMode="migration_hold">
-        <ConnectDrawerOauth projectId="prj_1" provider={provider} scopes={["webmasters"]} />
+        <ConnectDrawerOauth
+          loadStoredProperties={async () => ({ properties: [], provider: "gsc" })}
+          projectId="prj_1"
+          provider={provider}
+          scopes={["webmasters"]}
+        />
       </ProjectWriteModeProvider>,
     );
 
-    expect(
-      screen.getByRole("button", { name: "Change Google account or property" }),
-    ).toBeDisabled();
-    expect(
-      screen.queryByRole("link", { name: "Change Google account or property" }),
-    ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Change property" })).toBeDisabled();
+    expect(screen.queryByRole("link", { name: "Reconnect account" })).not.toBeInTheDocument();
   });
 
   it("renders GA4 property options and enables connecting with the selected numeric id", () => {

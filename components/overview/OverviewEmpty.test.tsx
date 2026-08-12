@@ -5,10 +5,6 @@ import { describe, expect, it, vi } from "vitest";
 import type { GettingStartedProgress } from "./getting-started";
 import { OverviewEmpty } from "./OverviewEmpty";
 
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
-}));
-
 const progress: GettingStartedProgress = {
   gscOAuthConfigured: true,
   hasAnalyticsSource: false,

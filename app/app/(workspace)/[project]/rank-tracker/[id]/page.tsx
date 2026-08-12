@@ -46,7 +46,7 @@ export default async function KeywordDetailPage({ params }: Readonly<KeywordDeta
   const backLink = (
     <Link
       className="inline-flex w-fit items-center gap-2 font-mono text-[12.5px] text-fg-muted hover:text-accent-text"
-      href={appPath(projectRef, "keywords")}
+      href={appPath(projectRef, "rank-tracker")}
     >
       <ArrowLeft size={14} weight="bold" />
       All keywords

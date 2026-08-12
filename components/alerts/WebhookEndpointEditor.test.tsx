@@ -1,10 +1,7 @@
+import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { WebhookEndpointEditor } from "./WebhookEndpointEditor";
-
-const mocks = vi.hoisted(() => ({ refresh: vi.fn() }));
-
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: mocks.refresh }) }));
 
 describe("WebhookEndpointEditor", () => {
   beforeEach(() => vi.clearAllMocks());
@@ -35,7 +32,7 @@ describe("WebhookEndpointEditor", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Enter a valid HTTP or HTTPS webhook URL.",
     );
-    expect(mocks.refresh).not.toHaveBeenCalled();
+    expect(routerMock.refresh).not.toHaveBeenCalled();
   });
 
   it("explains events, fan-out, and write-only encryption before saving", async () => {
@@ -85,7 +82,7 @@ describe("WebhookEndpointEditor", () => {
     expect(await screen.findByRole("status")).toHaveTextContent(
       "Saved enabled endpoint https://example.com/new.",
     );
-    expect(mocks.refresh).toHaveBeenCalledOnce();
+    expect(routerMock.refresh).toHaveBeenCalledOnce();
   });
 
   it("shows HTTP status and latency for a successful test", async () => {

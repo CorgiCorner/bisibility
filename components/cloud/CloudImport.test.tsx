@@ -1,4 +1,5 @@
 import { isoFromFrozenNow } from "@/tests/clock";
+import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CloudImport } from "./CloudImport";
@@ -6,7 +7,6 @@ import type { ActiveMigrationToken, IssuedMigrationToken } from "./cloud-token";
 
 const mocks = vi.hoisted(() => ({
   refresh: vi.fn(),
-  routerRefresh: vi.fn(),
   setJob: vi.fn(),
   writeText: vi.fn(),
 }));
@@ -31,7 +31,6 @@ type TransferMockProps = {
 };
 type NewTokenMockProps = { onNewToken: () => void };
 
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: mocks.routerRefresh }) }));
 vi.mock("./use-cloud-import-job", () => ({
   useCloudImportJobPoll: () => ({
     job: { id: "imp_abcdefghijklmnopqrstuvwx", progress: 0, state: "idle" },
@@ -130,7 +129,7 @@ function renderImport(overrides: Record<string, unknown> = {}) {
     releaseMigrationHoldAction: vi.fn(async () => ({})),
     revokeMigrationTokenAction: vi.fn(async () => ({ ok: true as const, value: {} })),
   };
-  render(
+  const view = render(
     <CloudImport
       activeToken={null}
       canManage
@@ -141,7 +140,7 @@ function renderImport(overrides: Record<string, unknown> = {}) {
       {...overrides}
     />,
   );
-  return actions;
+  return { ...actions, view };
 }
 
 describe("CloudImport", () => {
@@ -201,32 +200,11 @@ describe("CloudImport", () => {
         tokenId: issuedTokenId,
       }),
     );
-    expect(mocks.routerRefresh).toHaveBeenCalledTimes(3);
+    expect(routerMock.refresh).toHaveBeenCalledTimes(3);
   });
 
   it("stops masking the token once a fresh active token arrives from the server", async () => {
-    const actions = {
-      enableMigrationHoldAction: vi.fn(async () => ({})),
-      exportPackageAction: vi.fn(),
-      mintMigrationTokenAction: vi.fn(async () => ({ ok: true as const, value: issuedToken })),
-      pollJobAction: vi.fn(),
-      regenerateMigrationTokenAction: vi.fn(async () => ({
-        ok: true as const,
-        value: issuedToken,
-      })),
-      releaseMigrationHoldAction: vi.fn(async () => ({})),
-      revokeMigrationTokenAction: vi.fn(async () => ({ ok: true as const, value: {} })),
-    };
-    const view = render(
-      <CloudImport
-        activeToken={activeToken}
-        canManage
-        importJob={issuedToken.importJob}
-        projectId={projectId}
-        workspaceName="SEO Project"
-        {...actions}
-      />,
-    );
+    const { view, ...actions } = renderImport({ activeToken });
     expect(screen.getByText("Token status active")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Revoke" }));
@@ -269,7 +247,7 @@ describe("CloudImport", () => {
 
     expect(await screen.findByText("Token status none")).toBeInTheDocument();
     expect(screen.queryByText("mig_new_secret")).not.toBeInTheDocument();
-    expect(mocks.routerRefresh).toHaveBeenCalledOnce();
+    expect(routerMock.refresh).toHaveBeenCalledOnce();
   });
 
   it("shows mint and revoke failures without losing the active token", async () => {

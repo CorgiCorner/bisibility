@@ -8,11 +8,11 @@ describe("sanitizeErrorReport", () => {
       message: "Failed to render",
       name: "Error",
       occurredAt: "18:00:00 UTC",
-      pathname: "/app/prj_abc/keywords?cursor=x#recent",
+      pathname: "/app/prj_abc/rank-tracker?cursor=x#recent",
       stack: "Error: Failed to render",
     });
 
-    expect(sanitized.pathname).toBe("/app/<project>/keywords");
+    expect(sanitized.pathname).toBe("/app/<project>/rank-tracker");
     expect(sanitized).toMatchObject({
       digest: "err_1",
       name: "Error",
@@ -23,13 +23,13 @@ describe("sanitizeErrorReport", () => {
   it("strips query strings and fragments from URLs in messages and stack lines", () => {
     const sanitized = sanitizeErrorReport({
       message: "Request failed at https://api.example.test/search?cursor=secret#response",
-      pathname: "/app/prj_abc/keywords",
+      pathname: "/app/prj_abc/rank-tracker",
       stack:
-        "Error: request failed\n    at load (https://app.example.test/app/prj_abc/keywords?connect=secret#step:12:4)",
+        "Error: request failed\n    at load (https://app.example.test/app/prj_abc/rank-tracker?connect=secret#step:12:4)",
     });
 
     expect(sanitized.message).toBe("Request failed at https://api.example.test/search");
-    expect(sanitized.stack).toContain("https://app.example.test/app/<project>/keywords");
+    expect(sanitized.stack).toContain("https://app.example.test/app/<project>/rank-tracker");
     expect(sanitized.stack).not.toContain("connect=secret");
   });
 

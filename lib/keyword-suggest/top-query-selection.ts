@@ -8,7 +8,7 @@ import type { TopQuerySuggestion } from "./sanitize-top-queries";
 
 export type SelectableSuggestion = TopQuerySuggestion & { alreadyTracked: boolean };
 
-export const DEFAULT_PRESELECT_TOP_N = 20;
+export const DEFAULT_PRESELECT_TOP_N = 3;
 
 function key(query: string) {
   return query.trim().toLowerCase();
@@ -56,6 +56,19 @@ export function topByClicksKeys(
     )
     .slice(0, Math.max(0, count))
     .map(({ suggestion }) => key(suggestion.query));
+}
+
+/** Suggestions ordered by clicks, impressions, then their original source order. */
+export function sortByClicks(suggestions: readonly SelectableSuggestion[]): SelectableSuggestion[] {
+  return suggestions
+    .map((suggestion, index) => ({ index, suggestion }))
+    .sort(
+      (a, b) =>
+        (b.suggestion.clicks ?? 0) - (a.suggestion.clicks ?? 0) ||
+        (b.suggestion.impressions ?? 0) - (a.suggestion.impressions ?? 0) ||
+        a.index - b.index,
+    )
+    .map(({ suggestion }) => suggestion);
 }
 
 /** Case-insensitive substring filter on the query text, preserving order. */

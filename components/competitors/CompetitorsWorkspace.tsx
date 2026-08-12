@@ -112,7 +112,7 @@ export function CompetitorsWorkspace({
         action={
           <Link
             className="inline-flex min-h-10 items-center gap-2 rounded-[10px] border border-border-strong bg-bg-elev px-[18px] text-[13.5px] font-semibold text-fg hover:border-accent hover:text-accent-text"
-            href={appPath(projectRef, "keywords")}
+            href={appPath(projectRef, "rank-tracker")}
           >
             Add keywords first
             <CaretRight aria-hidden size={14} weight="bold" />

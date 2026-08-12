@@ -9,7 +9,6 @@ const mocks = vi.hoisted(() => ({
   deployment: { isCloud: false },
   lastExport: vi.fn(),
   listWorkspaces: vi.fn(),
-  notFound: vi.fn(),
   querySession: vi.fn(),
   workerLiveness: vi.fn(),
 }));
@@ -88,7 +87,6 @@ vi.mock("@/lib/queries/cloud-beta-export", () => ({
 }));
 vi.mock("@/lib/queries/workspaces", () => ({ listWorkspaces: mocks.listWorkspaces }));
 vi.mock("next/headers", () => ({ cookies: mocks.cookies }));
-vi.mock("next/navigation", () => ({ notFound: mocks.notFound }));
 
 import { WorkspaceShell } from "./workspace-shell";
 

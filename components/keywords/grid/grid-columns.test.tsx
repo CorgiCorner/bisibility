@@ -12,7 +12,7 @@ describe("KeywordCell", () => {
 
     expect(screen.getByRole("link", { name: "View keyword details" })).toHaveAttribute(
       "href",
-      `/app/prj_1/keywords/${row.id}`,
+      `/app/prj_1/rank-tracker/${row.id}`,
     );
     expect(screen.getByText(row.keyword)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Copy keyword ID" })).not.toBeInTheDocument();

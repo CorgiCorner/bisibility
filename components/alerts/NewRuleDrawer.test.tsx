@@ -3,14 +3,12 @@ import type {
   AlertRuleView,
   AlertTargetOptions,
 } from "@/lib/alerts/alert-data";
+import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NewRuleDrawer } from "./NewRuleDrawer";
 
-const mocks = vi.hoisted(() => ({ refresh: vi.fn() }));
-
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: mocks.refresh }) }));
 vi.mock("@/components/ui", () => ({
   inputClassName: "border border-border-strong bg-transparent",
   Button: ({
@@ -113,7 +111,7 @@ describe("NewRuleDrawer", () => {
       }),
     );
     expect(onClose).toHaveBeenCalledOnce();
-    expect(mocks.refresh).toHaveBeenCalledOnce();
+    expect(routerMock.refresh).toHaveBeenCalledOnce();
   });
 
   it("allows overriding the template severity before creating a rule", async () => {
@@ -238,7 +236,7 @@ describe("NewRuleDrawer", () => {
       ),
     ).toBeInTheDocument();
     expect(onClose).not.toHaveBeenCalled();
-    expect(mocks.refresh).not.toHaveBeenCalled();
+    expect(routerMock.refresh).not.toHaveBeenCalled();
   });
 
   it("surfaces a field-specific validation error without calling the action", async () => {

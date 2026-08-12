@@ -1,5 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { deferredReasonLabel, keywordLabel, projectLabel, suppressedEventLabel } from "./labels";
+import {
+  deferredReasonLabel,
+  keywordLabel,
+  projectLabel,
+  ruleLabel,
+  suppressedEventLabel,
+} from "./labels";
 
 describe("operator Slack tenant labels", () => {
   afterEach(() => vi.unstubAllEnvs());
@@ -9,9 +15,11 @@ describe("operator Slack tenant labels", () => {
 
     expect(keywordLabel("keyword_1", "private keyword text")).toBe("keyword_1");
     expect(projectLabel("project_1", "Private project name")).toBe("project_1");
+    expect(ruleLabel("rule_1", "Private rule name")).toBe("rule_1");
   });
 
   it("includes tenant names only after explicit opt-in", () => {
+    vi.stubEnv("DEPLOYMENT_MODE", "");
     vi.stubEnv("OPS_SLACK_INCLUDE_NAMES", "1");
 
     expect(keywordLabel("keyword_1", "private keyword text")).toBe(
@@ -24,6 +32,16 @@ describe("operator Slack tenant labels", () => {
       "example.com [project_1]",
     );
     expect(projectLabel("project_1", null, null)).toBe("project_1");
+    expect(ruleLabel("rule_1", "Private rule name")).toBe("rule_1 (Private rule name)");
+  });
+
+  it("ignores the tenant-name opt-in in managed cloud", () => {
+    vi.stubEnv("DEPLOYMENT_MODE", "cloud");
+    vi.stubEnv("OPS_SLACK_INCLUDE_NAMES", "1");
+
+    expect(keywordLabel("keyword_1", "private keyword text")).toBe("keyword_1");
+    expect(projectLabel("project_1", "Private project name", "example.com")).toBe("project_1");
+    expect(ruleLabel("rule_1", "Private rule name")).toBe("rule_1");
   });
 
   it("maps free-form deferred reasons onto stable status identifiers", () => {

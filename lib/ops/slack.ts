@@ -149,9 +149,12 @@ function heartbeatLinks(kind: string) {
 export function formatOpsSlackPayload(input: OpsEventInput) {
   const event = sanitizeOpsEvent(input);
   const title = `${severityEmoji(event.severity)} ${escapeMrkdwn(event.title)}`;
-  const fields = Object.entries(event.fields ?? {}).map(([name, value]) => ({
-    type: "mrkdwn" as const,
-    text: `*${escapeMrkdwn(name)}*\n${escapeMrkdwn(value)}`,
+  const fieldBlocks = Object.entries(event.fields ?? {}).map(([name, value]) => ({
+    type: "section" as const,
+    text: {
+      type: "mrkdwn" as const,
+      text: `*${escapeMrkdwn(name)}*\n${escapeMrkdwn(value)}`,
+    },
   }));
   const footer = cap(
     `Environment: ${deploymentEnvironment()} · Release: ${releaseVersion()} · Instance: ${instanceUrl()}${heartbeatLinks(event.kind)}`,
@@ -160,7 +163,7 @@ export function formatOpsSlackPayload(input: OpsEventInput) {
   return {
     blocks: [
       { type: "section", text: { type: "mrkdwn", text: `*${title}*` } },
-      ...(fields.length ? [{ type: "section", fields }] : []),
+      ...fieldBlocks,
       { type: "context", elements: [{ type: "mrkdwn", text: escapeMrkdwn(footer) }] },
     ],
     text: `${severityEmoji(event.severity)} ${event.title}`,

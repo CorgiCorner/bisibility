@@ -57,6 +57,12 @@ function renderCard(
 }
 
 describe("KeywordRankedImport", () => {
+  it("keeps space between the account note and import action", () => {
+    renderCard();
+
+    const action = screen.getByRole("button", { name: /Import from DataForSEO/ });
+    expect(action.parentElement).toHaveClass("mt-3");
+  });
   it("is hidden without capability and never requests before opt-in", () => {
     const fetchAction = vi.fn();
     const { rerender } = render(
@@ -69,7 +75,9 @@ describe("KeywordRankedImport", () => {
         projectId="prj_1"
       />,
     );
-    expect(screen.queryByText(/Find keywords/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /Import from DataForSEO/ }),
+    ).not.toBeInTheDocument();
     rerender(
       <KeywordRankedImport
         connections={[connection]}
@@ -80,7 +88,9 @@ describe("KeywordRankedImport", () => {
         projectId="prj_1"
       />,
     );
-    expect(screen.getByText("About $0.02 per page")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Import from DataForSEO (about $0.02/page)" }),
+    ).toBeInTheDocument();
     expect(fetchAction).not.toHaveBeenCalled();
   });
 
@@ -95,8 +105,8 @@ describe("KeywordRankedImport", () => {
       ],
     });
 
-    expect(screen.queryByText(/About \$/)).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Find ranked keywords" })).toBeInTheDocument();
+    expect(screen.queryByText(/about \$/i)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Import from DataForSEO" })).toBeInTheDocument();
   });
 
   it("groups variants, disables tracked rows, and preselects within remaining capacity", async () => {
@@ -113,13 +123,13 @@ describe("KeywordRankedImport", () => {
         currentKeywords: Array.from({ length: 499 }, (_, index) => `current ${index}`).join("\n"),
       },
     );
-    fireEvent.click(screen.getByRole("button", { name: "Find ranked keywords" }));
+    fireEvent.click(screen.getByRole("button", { name: /Import from DataForSEO/ }));
     const table = await screen.findByRole("table", { name: "Ranked keyword suggestions" });
     expect(within(table).getByText("SEO api")).toBeInTheDocument();
     expect(within(table).getByText("+1 variants")).toBeInTheDocument();
     expect(within(table).getByText("Already tracked")).toBeInTheDocument();
     expect(screen.getByRole("checkbox", { name: "Select already here" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Add 1 keywords" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Add 1 keyword" })).toBeInTheDocument();
   });
 
   it("appends later pages without dropping selection and excludes later rows from preselect", async () => {
@@ -130,14 +140,14 @@ describe("KeywordRankedImport", () => {
         page([row("second", 9)], { cached: true, offset: 100, totalCount: 2 }),
       );
     const { onAppendQueries } = renderCard(fetchAction);
-    fireEvent.click(screen.getByRole("button", { name: "Find ranked keywords" }));
+    fireEvent.click(screen.getByRole("button", { name: /Import from DataForSEO/ }));
     await screen.findByText("first");
     expect(screen.getByText("1 of 1 selected")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Load next 100/ }));
     await screen.findByText("second");
     expect(screen.getByText("1 of 2 selected")).toBeInTheDocument();
     expect(screen.getByText(/Spent this session: \$0.02. Page 2 cached./)).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Add 1 keywords" }));
+    fireEvent.click(screen.getByRole("button", { name: "Add 1 keyword" }));
     expect(onAppendQueries).toHaveBeenCalledWith(["first"]);
   });
 
@@ -147,7 +157,7 @@ describe("KeywordRankedImport", () => {
       .mockResolvedValueOnce(page([row("first", 10)], { totalCount: 2 }))
       .mockRejectedValueOnce(new Error("network"));
     renderCard(fetchAction);
-    fireEvent.click(screen.getByRole("button", { name: "Find ranked keywords" }));
+    fireEvent.click(screen.getByRole("button", { name: /Import from DataForSEO/ }));
     await screen.findByText("first");
     fireEvent.click(screen.getByRole("button", { name: /Load next 100/ }));
     expect(await screen.findByText("Ranked-keyword lookup failed. Try again.")).toBeInTheDocument();
@@ -157,7 +167,7 @@ describe("KeywordRankedImport", () => {
 
   it("does not offer an offset beyond the API cap", async () => {
     renderCard(vi.fn(async () => page([row("last page", 1)], { offset: 900, totalCount: 2_000 })));
-    fireEvent.click(screen.getByRole("button", { name: "Find ranked keywords" }));
+    fireEvent.click(screen.getByRole("button", { name: /Import from DataForSEO/ }));
     await screen.findByText("last page");
     expect(screen.queryByRole("button", { name: /Load next 100/ })).not.toBeInTheDocument();
   });
@@ -167,10 +177,10 @@ describe("KeywordRankedImport", () => {
       vi.fn(async () => page([row("rank-tracker", 10), row("new", 9)])),
       { currentKeywords: "Rank tracker" },
     );
-    fireEvent.click(screen.getByRole("button", { name: "Find ranked keywords" }));
+    fireEvent.click(screen.getByRole("button", { name: /Import from DataForSEO/ }));
     await screen.findByText("rank-tracker");
     expect(screen.getByRole("checkbox", { name: "Select rank-tracker" })).toBeDisabled();
-    fireEvent.click(screen.getByRole("button", { name: "Add 1 keywords" }));
+    fireEvent.click(screen.getByRole("button", { name: "Add 1 keyword" }));
     expect(onAppendQueries).toHaveBeenCalledWith(["new"]);
   });
 
@@ -183,7 +193,7 @@ describe("KeywordRankedImport", () => {
     ["no_domain", "Add a valid project domain"],
   ] as const)("renders the %s outcome", async (reason, message) => {
     renderCard(vi.fn(async () => ({ reason })));
-    fireEvent.click(screen.getByRole("button", { name: "Find ranked keywords" }));
+    fireEvent.click(screen.getByRole("button", { name: /Import from DataForSEO/ }));
     await waitFor(() => expect(screen.getByText(message, { exact: false })).toBeInTheDocument());
   });
 });

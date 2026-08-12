@@ -159,7 +159,7 @@ export function keywordSavedViewConfig(
 }
 
 export function savedViewHref(projectRef: string, viewId: string | null, lens?: ActiveLens | null) {
-  const keywordsPath = appPath(projectRef, "keywords");
+  const keywordsPath = appPath(projectRef, "rank-tracker");
   if (!viewId) {
     return keywordsPath;
   }

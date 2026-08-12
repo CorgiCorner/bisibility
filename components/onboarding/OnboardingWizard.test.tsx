@@ -1,20 +1,13 @@
+import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { project, renderWizard } from "./OnboardingWizard.test-utils";
-
-const push = vi.hoisted(() => vi.fn());
-
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push, refresh: vi.fn() }),
-}));
 
 describe("OnboardingWizard", () => {
   it("ignores clicks on locked future steps", () => {
     renderWizard();
 
-    expect(
-      screen.getByText("Name the project and define what counts as your site."),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Enter the website you want to track.")).toBeInTheDocument();
 
     const rail = screen.getByLabelText("Onboarding steps");
     const lockedStep = within(rail).getByRole("button", {
@@ -24,50 +17,38 @@ describe("OnboardingWizard", () => {
 
     fireEvent.click(lockedStep);
 
-    expect(
-      screen.getByText("Name the project and define what counts as your site."),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Enter the website you want to track.")).toBeInTheDocument();
     expect(screen.queryByText("Run your first check")).not.toBeInTheDocument();
   });
 
-  it("submits step 1 without includeSubdomains, rootAndWww, or urlPrefix", async () => {
+  it("submits step 1 as one website value", async () => {
     const createProjectAction = vi.fn(async (_input: unknown) => project);
     renderWizard({ actions: { createProjectAction } });
 
-    fireEvent.change(screen.getByLabelText("Project name"), {
-      target: { value: "Example" },
-    });
-    fireEvent.change(screen.getByLabelText("Domain"), {
-      target: { value: "example.com" },
+    fireEvent.change(screen.getByLabelText("Your website"), {
+      target: { value: "https://www.example.com/products" },
     });
     fireEvent.click(screen.getByRole("button", { name: /continue/i }));
 
     await waitFor(() => expect(createProjectAction).toHaveBeenCalledTimes(1));
     expect(createProjectAction.mock.calls[0][0]).toEqual({
-      domain: "example.com",
-      name: "Example",
+      website: "https://www.example.com/products",
     });
     expect(createProjectAction.mock.calls[0][0]).not.toHaveProperty("includeSubdomains");
     expect(createProjectAction.mock.calls[0][0]).not.toHaveProperty("rootAndWww");
     expect(createProjectAction.mock.calls[0][0]).not.toHaveProperty("urlPrefix");
   });
 
-  it("opens developer access after project creation and allows dashboard-only continuation", () => {
+  it("opens data connections directly after project creation", () => {
     renderWizard({
       initialFlowState: { projectId: "prj_1", providerId: null },
       initialProject: project,
       initialStep: 2,
     });
 
-    expect(
-      screen.getByRole("heading", {
-        name: "Connect from your terminal or API",
-      }),
-    ).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: /continue/i }));
-
-    expect(screen.getByText("Connect your SERP provider")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Connect data" })).toBeInTheDocument();
+    expect(screen.getByText("Search Console")).toBeInTheDocument();
+    expect(screen.queryByText("Connect from your terminal or API")).not.toBeInTheDocument();
   });
 
   it("shows one top Skip only on the provider step and clears the provider when clicked", () => {
@@ -79,9 +60,6 @@ describe("OnboardingWizard", () => {
       providerConnected: true,
     });
 
-    expect(screen.queryByRole("button", { name: "Skip" })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /continue/i }));
-
     const skipButton = screen.getByRole("button", {
       name: "Skip provider connection and add keywords as paused",
     });
@@ -91,9 +69,10 @@ describe("OnboardingWizard", () => {
     expect(skipButton.closest("footer")).toBeNull();
     fireEvent.click(skipButton);
 
-    expect(screen.getByRole("heading", { name: "Tracking defaults" })).toBeInTheDocument();
-    expect(screen.getByDisplayValue("Skipped")).toBeInTheDocument();
-    expect(window.location.search).toBe("?step=4&projectId=prj_1");
+    expect(screen.getByRole("heading", { name: "Add your first keywords" })).toBeInTheDocument();
+    expect(screen.queryByLabelText("Provider")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Engine")).not.toBeInTheDocument();
+    expect(window.location.search).toBe("?step=3&projectId=prj_1");
     expect(
       screen.queryByRole("button", {
         name: "Skip provider connection and add keywords as paused",
@@ -110,7 +89,7 @@ describe("OnboardingWizard", () => {
       actions: { testProviderConnectionAction },
       initialFlowState: { projectId: "prj_1", providerId: null },
       initialProject: project,
-      initialStep: 3,
+      initialStep: 2,
     });
 
     const continueButton = screen.getByRole("button", { name: /continue/i });
@@ -148,7 +127,7 @@ describe("OnboardingWizard", () => {
       hasAnalyticsSource: true,
       initialFlowState: { projectId: "prj_1", providerId: null },
       initialProject: project,
-      initialStep: 3,
+      initialStep: 2,
     });
 
     const continueButton = screen.getByRole("button", { name: /continue/i });
@@ -164,10 +143,6 @@ describe("OnboardingWizard", () => {
 
     fireEvent.click(continueButton);
 
-    expect(screen.getByRole("heading", { name: "Tracking defaults" })).toBeInTheDocument();
-    expect(screen.getByDisplayValue("Skipped")).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: /continue/i }));
     expect(await screen.findByText("Add your first keywords")).toBeInTheDocument();
     fireEvent.change(screen.getByPlaceholderText("One keyword per line"), {
       target: { value: "rank tracker" },
@@ -176,13 +151,13 @@ describe("OnboardingWizard", () => {
   });
 
   it("advances after connecting and exposes another provider only after returning", async () => {
-    window.history.replaceState(null, "", "/onboarding?step=3&projectId=prj_1");
+    window.history.replaceState(null, "", "/onboarding?step=2&projectId=prj_1");
     const connectProviderAction = vi.fn(async () => undefined);
     renderWizard({
       actions: { connectProviderAction },
       initialFlowState: { projectId: "prj_1", providerId: null },
       initialProject: project,
-      initialStep: 3,
+      initialStep: 2,
     });
 
     fireEvent.change(screen.getByLabelText("API login"), {
@@ -202,8 +177,8 @@ describe("OnboardingWizard", () => {
     fireEvent.click(screen.getByRole("button", { name: /continue/i }));
 
     await waitFor(() => expect(connectProviderAction).toHaveBeenCalledTimes(1));
-    expect(screen.getByRole("heading", { name: "Tracking defaults" })).toBeInTheDocument();
-    expect(window.location.search).toBe("?step=4&projectId=prj_1&providerId=dataforseo");
+    expect(screen.getByRole("heading", { name: "Add your first keywords" })).toBeInTheDocument();
+    expect(window.location.search).toBe("?step=3&projectId=prj_1&providerId=dataforseo");
 
     const rail = screen.getByLabelText("Onboarding steps");
     fireEvent.click(within(rail).getByRole("button", { name: "Connect data, completed" }));
@@ -221,7 +196,9 @@ describe("OnboardingWizard", () => {
     expect(continueButton).toBeEnabled();
     expect(continueButton).toHaveAttribute("type", "submit");
     fireEvent.click(continueButton);
-    expect(await screen.findByRole("heading", { name: "Tracking defaults" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "Add your first keywords" }),
+    ).toBeInTheDocument();
   });
 
   it("completes onboarding only when the final dashboard action is submitted", async () => {
@@ -231,7 +208,7 @@ describe("OnboardingWizard", () => {
       initialFlowState: { projectId: "prj_1", providerId: "dataforseo" },
       initialKeywordCount: 1,
       initialProject: project,
-      initialStep: 6,
+      initialStep: 4,
       providerConnected: true,
     });
 
@@ -241,7 +218,23 @@ describe("OnboardingWizard", () => {
     expect(completeOnboardingAction).toHaveBeenCalledWith({
       projectId: "prj_1",
     });
-    expect(push).toHaveBeenCalledWith("/app/prj_1/overview");
+    expect(routerMock.push).toHaveBeenCalledWith("/app/prj_1/overview");
+  });
+
+  it("recognizes a saved SerpApi connection on the first-check step", () => {
+    renderWizard({
+      hasAnalyticsSource: true,
+      initialFlowState: { projectId: "prj_1", providerId: null },
+      initialKeywordCount: 1,
+      initialProject: project,
+      initialSerpConnections: { serpapi: {} },
+      initialStep: 4,
+      providerConnected: false,
+    });
+
+    expect(screen.getByText("Run 1 live check now")).toBeInTheDocument();
+    expect(screen.getByText("SerpApi")).toBeInTheDocument();
+    expect(screen.queryByText(/No SERP provider connected/)).toBeNull();
   });
 
   it("surfaces a non-blocking warning when Search Console sync fails", async () => {
@@ -260,7 +253,7 @@ describe("OnboardingWizard", () => {
       hasAnalyticsSource: true,
       initialFlowState: { projectId: "prj_1", providerId: null },
       initialProject: project,
-      initialStep: 5,
+      initialStep: 3,
     });
 
     fireEvent.change(screen.getByPlaceholderText("One keyword per line"), {

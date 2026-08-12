@@ -9,6 +9,12 @@ export type FetchRankedKeywordSuggestionsAction = (input: {
 export type RankedKeywordError =
   Exclude<RankedKeywordsOutcome, { ok: true }> extends { reason: infer T } ? T : never;
 export type RankedKeywordsPage = RankedKeywordsSuccess;
+export type RankedKeywordGroup = {
+  alreadyTracked: boolean;
+  count: number;
+  key: string;
+  row: RankedKeywordsPage["rows"][number];
+};
 
 export function normalizeRankedKeyword(value: string) {
   return value
@@ -22,7 +28,7 @@ export function rankedKeywordTraffic(value: number | null) {
   return value ?? -1;
 }
 
-export function groupRankedKeywords(pages: RankedKeywordsPage[]) {
+export function groupRankedKeywords(pages: RankedKeywordsPage[]): RankedKeywordGroup[] {
   const grouped = new Map<
     string,
     {

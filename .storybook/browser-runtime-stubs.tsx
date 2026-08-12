@@ -54,6 +54,18 @@ export async function updatePresenceInspectionBudget(input: {
   };
 }
 
+export async function loadStoredGoogleProperties(input: { provider: "ga4" | "gsc" }) {
+  return {
+    preferredProperty: input.provider === "gsc" ? "sc-domain:example.com" : "properties/123456",
+    properties: [],
+    provider: input.provider,
+  };
+}
+
+export async function saveStoredGoogleProperty(input: { property: string }) {
+  return { property: input.property, status: "saved" as const };
+}
+
 export default function Link({ children, href = "#", ...props }: LinkProps) {
   return React.createElement("a", { ...props, href }, children);
 }

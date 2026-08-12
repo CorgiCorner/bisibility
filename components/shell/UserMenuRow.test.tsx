@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { UserMenuRow } from "./UserMenuRow";
-import { resourceLinks, resourceLinksForDeployment } from "./user-menu-items";
+import { communityLinks, resourceLinks, resourceLinksForDeployment } from "./user-menu-items";
 
 describe("UserMenuRow", () => {
   it("hides the managed homepage link on self-hosted deployments", () => {
@@ -36,6 +36,25 @@ describe("UserMenuRow", () => {
     });
 
     expect(link).toHaveAttribute("href", "https://bisibility.com");
+    expect(link).toHaveAttribute("rel", "noopener");
+    expect(link).toHaveAttribute("target", "_blank");
+  });
+
+  it("places Discord directly below GitHub in the community links", () => {
+    expect(communityLinks.map((item) => item.label)).toEqual(["GitHub", "Discord"]);
+
+    const discord = communityLinks[1];
+    expect(discord).toBeDefined();
+    if (!discord) {
+      throw new Error("Discord community link is missing");
+    }
+
+    render(<UserMenuRow item={discord} />);
+
+    const link = screen.getByRole("menuitem", {
+      name: "Discord (opens in a new tab)",
+    });
+    expect(link).toHaveAttribute("href", "https://discord.gg/HcYpvfn79w");
     expect(link).toHaveAttribute("rel", "noopener");
     expect(link).toHaveAttribute("target", "_blank");
   });

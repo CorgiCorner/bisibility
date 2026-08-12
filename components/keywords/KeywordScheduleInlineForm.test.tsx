@@ -1,15 +1,10 @@
 import { ToastProvider } from "@/components/ui";
 import type { KeywordLocation, KeywordRow } from "@/lib/queries/keywords";
 import { FIELD_HELP } from "@/lib/settings/field-help";
+import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { KeywordScheduleInlineForm } from "./KeywordScheduleInlineForm";
-
-const refresh = vi.fn();
-
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ refresh }),
-}));
 
 function location(overrides: Partial<KeywordLocation> = {}): KeywordLocation {
   return {
@@ -96,7 +91,7 @@ function renderForm(
 
 describe("KeywordScheduleInlineForm", () => {
   beforeEach(() => {
-    refresh.mockClear();
+    routerMock.refresh.mockClear();
   });
 
   it("renders keyword schedule defaults and inherited hint", () => {
@@ -217,7 +212,7 @@ describe("KeywordScheduleInlineForm", () => {
         timezone: "UTC",
       }),
     );
-    expect(refresh).toHaveBeenCalledTimes(1);
+    expect(routerMock.refresh).toHaveBeenCalledTimes(1);
     expect(screen.getByText("Schedule saved.")).toBeInTheDocument();
   });
 });

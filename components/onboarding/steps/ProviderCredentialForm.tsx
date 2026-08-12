@@ -116,6 +116,7 @@ export function ProviderCredentialForm({
           loading={testing}
           onClick={onTest}
           startIcon={<Plug aria-hidden size={15} />}
+          sx={{ fontWeight: 400 }}
           type="button"
           variant="secondary"
         >
@@ -125,6 +126,7 @@ export function ProviderCredentialForm({
           disabled={busy || saveDisabled}
           onClick={onSave}
           startIcon={<PlusCircle aria-hidden size={15} weight="bold" />}
+          sx={{ fontWeight: 400 }}
           type="button"
           variant="primary"
         >

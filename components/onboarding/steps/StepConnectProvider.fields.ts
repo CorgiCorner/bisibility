@@ -236,6 +236,6 @@ export function replaceSelectedProviderInUrl(
   window.history.replaceState(
     null,
     "",
-    buildOnboardingStepHref(3, { ...flowState, projectId, providerId }),
+    buildOnboardingStepHref(2, { ...flowState, projectId, providerId }),
   );
 }

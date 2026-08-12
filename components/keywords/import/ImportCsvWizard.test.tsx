@@ -1,3 +1,4 @@
+import { routerMock, setNavigationState } from "@/tests/next-navigation";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { type ButtonHTMLAttributes, type ReactNode, useState } from "react";
@@ -9,10 +10,8 @@ const mocks = vi.hoisted(() => ({
   importKeywordsFromCsv: vi.fn(),
   onClose: vi.fn(),
   previewKeywordImportFile: vi.fn(),
-  refresh: vi.fn(),
   refreshKeywordViewsAfterImport: vi.fn(),
   remountGrid: vi.fn(),
-  pathname: vi.fn(() => "/app/keywords"),
 }));
 
 type MockButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -35,10 +34,6 @@ type UploadMockProps = {
   onWorkbookFileChange: (file?: File) => void;
 };
 
-vi.mock("next/navigation", () => ({
-  usePathname: mocks.pathname,
-  useRouter: () => ({ refresh: mocks.refresh }),
-}));
 vi.mock("@/lib/actions/keyword-import-export", () => ({
   importKeywordsFromCsv: mocks.importKeywordsFromCsv,
   previewKeywordImportFile: mocks.previewKeywordImportFile,
@@ -221,9 +216,9 @@ async function reachReviewWithCsv() {
 describe("ImportCsvWizard", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.refresh.mockImplementation(() => undefined);
+    routerMock.refresh.mockImplementation(() => undefined);
     mocks.refreshKeywordViewsAfterImport.mockResolvedValue(undefined);
-    mocks.pathname.mockReturnValue("/app/keywords");
+    setNavigationState({ pathname: "/app/rank-tracker" });
     mocks.importKeywordsFromCsv.mockResolvedValue({
       created: 2,
       errors: [],
@@ -311,12 +306,12 @@ describe("ImportCsvWizard", () => {
       projectId: "project_1",
       refresh: "deferred",
     });
-    expect(mocks.refresh).not.toHaveBeenCalled();
+    expect(routerMock.refresh).not.toHaveBeenCalled();
     expect(mocks.refreshKeywordViewsAfterImport).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole("button", { name: "Done" }));
     expect(mocks.onClose).toHaveBeenCalledOnce();
     await waitFor(() => expect(mocks.refreshKeywordViewsAfterImport).toHaveBeenCalledOnce());
-    expect(mocks.refresh).toHaveBeenCalledOnce();
+    expect(routerMock.refresh).toHaveBeenCalledOnce();
   });
 
   it("submits only after the explicit Review confirmation", async () => {
@@ -364,7 +359,7 @@ describe("ImportCsvWizard", () => {
     expect(screen.getByText("Row 3: Unsupported device")).toBeInTheDocument();
     expect(screen.getByText("Row 4: Unknown location")).toBeInTheDocument();
     expect(screen.getByText("Grid rows: 0")).toBeInTheDocument();
-    expect(mocks.refresh).not.toHaveBeenCalled();
+    expect(routerMock.refresh).not.toHaveBeenCalled();
     expect(mocks.refreshKeywordViewsAfterImport).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByRole("button", { name: "Done" }));
@@ -372,7 +367,7 @@ describe("ImportCsvWizard", () => {
     expect(await screen.findByText("Grid rows: 1")).toBeInTheDocument();
     expect(screen.queryByText("1 added, 0 skipped, 2 failed")).not.toBeInTheDocument();
     expect(mocks.refreshKeywordViewsAfterImport).toHaveBeenCalledOnce();
-    expect(mocks.refresh).toHaveBeenCalledOnce();
+    expect(routerMock.refresh).toHaveBeenCalledOnce();
   });
 
   it("resets frozen children and wizard state when the project changes", async () => {
@@ -403,7 +398,7 @@ describe("ImportCsvWizard", () => {
     fireEvent.click(screen.getByRole("button", { name: "Import" }));
     expect(await screen.findByText("Template instructions")).toBeInTheDocument();
 
-    mocks.pathname.mockReturnValue("/app/overview");
+    setNavigationState({ pathname: "/app/overview" });
     view.rerender(
       <KeywordImportProvider activeProjectId="project_1">
         <p>Overview content</p>

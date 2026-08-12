@@ -1,14 +1,9 @@
 import { NotificationEmailCard } from "@/components/settings/notifications/NotificationEmailCard";
 import type { NotificationPreferencesView } from "@/lib/queries/notification-prefs";
+import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-
-const mocks = vi.hoisted(() => ({ refresh: vi.fn() }));
-
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ refresh: mocks.refresh }),
-}));
 
 const preferences: NotificationPreferencesView = {
   alertEmail: true,
@@ -98,7 +93,7 @@ describe("NotificationEmailCard", () => {
         "New notification email pending confirmation: updated@example.com. Enter its code to confirm the change.",
       ),
     ).toBeInTheDocument();
-    expect(mocks.refresh).not.toHaveBeenCalled();
+    expect(routerMock.refresh).not.toHaveBeenCalled();
 
     fireEvent.change(screen.getByLabelText("Verification code"), { target: { value: "123456" } });
     fireEvent.click(screen.getByRole("button", { name: "Confirm email" }));
@@ -109,7 +104,7 @@ describe("NotificationEmailCard", () => {
       }),
     );
     expect(screen.getByLabelText("Notification email")).toHaveValue("updated@example.com");
-    expect(mocks.refresh).toHaveBeenCalledTimes(1);
+    expect(routerMock.refresh).toHaveBeenCalledTimes(1);
   });
 
   it("does not request or save an invalid notification email", async () => {
@@ -187,6 +182,6 @@ describe("NotificationEmailCard", () => {
       }),
     );
     expect(screen.getByText("Verified")).toBeInTheDocument();
-    expect(mocks.refresh).toHaveBeenCalledTimes(1);
+    expect(routerMock.refresh).toHaveBeenCalledTimes(1);
   });
 });

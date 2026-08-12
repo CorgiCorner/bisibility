@@ -91,7 +91,7 @@ describe("ChecksWorkspace", () => {
     });
     expect(await screen.findByRole("link", { name: "older keyword" })).toHaveAttribute(
       "href",
-      appPath("prj_1", "keywords", "kw_older"),
+      appPath("prj_1", "rank-tracker", "kw_older"),
     );
   });
 

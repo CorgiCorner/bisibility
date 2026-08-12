@@ -3,10 +3,6 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { KeywordInlineEdit } from "./KeywordInlineEdit";
 
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ refresh: vi.fn() }),
-}));
-
 // The location typeahead fetches /api/locations/search; never hit the network in tests.
 const fetchMock = vi.fn(async () => ({
   ok: true,

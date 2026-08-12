@@ -26,10 +26,6 @@ vi.mock("@/lib/actions/saved-views", () => ({
   deleteSavedView: vi.fn(),
 }));
 vi.mock("@/lib/queries/workspaces", () => ({ listWorkspaces: mocks.listWorkspaces }));
-vi.mock("next/navigation", () => ({
-  notFound: vi.fn(),
-  useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
-}));
 
 describe("CompetitorsPage", () => {
   beforeEach(() => {

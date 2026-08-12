@@ -8,7 +8,9 @@ import {
 } from "@/lib/actions/_shared";
 import { createProject } from "@/lib/actions/project";
 import { writeAudit } from "@/lib/auth/audit";
-import type { CreateProjectInput } from "@/lib/schemas/project";
+import { authorize } from "@/lib/auth/authorize";
+import { type OnboardingWebsiteInput, onboardingWebsiteSchema } from "@/lib/onboarding/website";
+import { websiteProjectIdentity } from "@/lib/onboarding/website.server";
 import { z } from "zod";
 
 const matchingScopeSchema = z.object({
@@ -18,8 +20,16 @@ const matchingScopeSchema = z.object({
   urlPrefix: z.coerce.boolean(),
 });
 
-export async function createOnboardingProject(input: CreateProjectInput) {
-  return createProject(input);
+export async function deriveOnboardingWebsite(input: OnboardingWebsiteInput) {
+  const data = parseActionInput(onboardingWebsiteSchema, input);
+  const actor = await getActionActor();
+  authorize(actor, "create", { ownerId: actor.id, requiredRole: "member", type: "project" });
+  return websiteProjectIdentity(data.website);
+}
+
+export async function createOnboardingProject(input: OnboardingWebsiteInput) {
+  const data = parseActionInput(onboardingWebsiteSchema, input);
+  return createProject(websiteProjectIdentity(data.website));
 }
 
 /**

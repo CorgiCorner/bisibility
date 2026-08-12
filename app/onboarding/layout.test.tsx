@@ -46,9 +46,11 @@ describe("onboarding setup-first gate", () => {
     const markup = renderToStaticMarkup(result);
 
     expect(markup).toContain("w-full max-w-[940px] flex-1 flex-col");
+    expect(markup).toContain('aria-hidden="true" class="h-4 w-px bg-border-strong"');
+    expect(markup).not.toContain("·");
     expect(markup).toMatch(/admin@example\.com[\s\S]*Not you\?[\s\S]*data-testid="logout-button"/);
     expect(markup).toMatch(
-      /<footer[^>]*>[\s\S]*© 2026 bisibility[\s\S]*data-size="sm"[\s\S]*data-testid="theme-segments"[\s\S]*<\/footer>/,
+      /<footer[^>]*border-border border-t[^>]*>[\s\S]*© 2026 bisibility[\s\S]*data-size="sm"[\s\S]*data-testid="theme-segments"[\s\S]*<\/footer>/,
     );
   });
 

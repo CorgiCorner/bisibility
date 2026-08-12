@@ -14,7 +14,6 @@ export type OnboardingWizardProps = {
   gscOAuthConfigured: boolean;
   gscPropertyLabel?: string | null;
   hasAnalyticsSource: boolean;
-  initialHasApiKey: boolean;
   initialFlowState: OnboardingFlowState;
   initialKeywordCount: number;
   initialProject: OnboardingProject | null;

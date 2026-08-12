@@ -1,3 +1,4 @@
+import { deferred } from "@/tests/deferred";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -30,14 +31,6 @@ vi.mock("@/lib/actions/instance-migration", () => ({
 const jobId = "imp_abcdefghijklmnopqrstuvwx";
 const keywordId = "kw_abcdefghijklmnopqrstuvwx";
 const projectId = "prj_abcdefghijklmnopqrstuvwx";
-
-function deferred<T>() {
-  let resolve!: (value: T) => void;
-  const promise = new Promise<T>((done) => {
-    resolve = done;
-  });
-  return { promise, resolve };
-}
 
 function Harness() {
   const transfer = useChunkedTransfer();

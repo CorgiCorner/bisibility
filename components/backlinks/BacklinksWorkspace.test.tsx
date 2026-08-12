@@ -1,6 +1,7 @@
 import { SessionSpendProvider } from "@/components/cost-estimate/SessionSpendProvider";
 import type { AnalyzeBacklinksAction } from "@/lib/actions/backlinks";
 import { act, fireEvent, render, screen } from "@testing-library/react";
+import type { ComponentProps } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { BacklinksWorkspace } from "./BacklinksWorkspace";
 
@@ -10,6 +11,21 @@ const context = {
   recentTargets: [],
 };
 const loadMoreAction = vi.fn();
+
+function renderWorkspace(overrides: Partial<ComponentProps<typeof BacklinksWorkspace>> = {}) {
+  return render(
+    <SessionSpendProvider>
+      <BacklinksWorkspace
+        analyzeAction={vi.fn() as unknown as AnalyzeBacklinksAction}
+        context={context}
+        loadMoreAction={loadMoreAction}
+        projectId="prj_1"
+        suggestedEstimateCents={5}
+        {...overrides}
+      />
+    </SessionSpendProvider>,
+  );
+}
 
 function snapshot(target: string) {
   return {
@@ -57,17 +73,7 @@ describe("BacklinksWorkspace", () => {
       if (target === "not-valid") throw new Error("unsupported target");
       return snapshot(target);
     });
-    render(
-      <SessionSpendProvider>
-        <BacklinksWorkspace
-          analyzeAction={analyzeAction as unknown as AnalyzeBacklinksAction}
-          context={context}
-          loadMoreAction={loadMoreAction}
-          projectId="prj_1"
-          suggestedEstimateCents={5}
-        />
-      </SessionSpendProvider>,
-    );
+    renderWorkspace({ analyzeAction: analyzeAction as unknown as AnalyzeBacklinksAction });
 
     const input = screen.getByRole("textbox", { name: "Backlinks target" });
     fireEvent.change(input, { target: { value: "not-valid" } });
@@ -88,17 +94,7 @@ describe("BacklinksWorkspace", () => {
   });
 
   it("renders the binding idle-state copy and live suggested estimate", () => {
-    render(
-      <SessionSpendProvider>
-        <BacklinksWorkspace
-          analyzeAction={vi.fn() as unknown as AnalyzeBacklinksAction}
-          context={context}
-          loadMoreAction={loadMoreAction}
-          projectId="prj_1"
-          suggestedEstimateCents={5}
-        />
-      </SessionSpendProvider>,
-    );
+    renderWorkspace();
 
     expect(screen.getByText("Point it at any domain")).toBeInTheDocument();
     expect(
@@ -112,17 +108,10 @@ describe("BacklinksWorkspace", () => {
     const analyzeAction = vi.fn(async (input: unknown) =>
       snapshot((input as { target: string }).target),
     );
-    render(
-      <SessionSpendProvider>
-        <BacklinksWorkspace
-          analyzeAction={analyzeAction as unknown as AnalyzeBacklinksAction}
-          context={{ ...context, defaultTarget: "example.com" }}
-          loadMoreAction={loadMoreAction}
-          projectId="prj_1"
-          suggestedEstimateCents={5}
-        />
-      </SessionSpendProvider>,
-    );
+    renderWorkspace({
+      analyzeAction: analyzeAction as unknown as AnalyzeBacklinksAction,
+      context: { ...context, defaultTarget: "example.com" },
+    });
 
     fireEvent.click(screen.getByText("example.com").closest("button") as HTMLButtonElement);
     await act(async () => vi.advanceTimersByTimeAsync(320));
@@ -149,29 +138,22 @@ describe("BacklinksWorkspace", () => {
         estimatedCostCents: 5,
       };
     });
-    render(
-      <SessionSpendProvider>
-        <BacklinksWorkspace
-          analyzeAction={analyzeAction as unknown as AnalyzeBacklinksAction}
-          context={{
-            ...context,
-            recentTargets: [
-              {
-                cachedUntil: new Date(Date.now() + 24 * 3_600_000).toISOString(),
-                fetchedAt: new Date(Date.now() - 41 * 60_000).toISOString(),
-                includeSubdomains: true,
-                resultLimit: 100,
-                target: "example.org",
-                targetScope: "site",
-              },
-            ],
-          }}
-          loadMoreAction={loadMoreAction}
-          projectId="prj_1"
-          suggestedEstimateCents={5}
-        />
-      </SessionSpendProvider>,
-    );
+    renderWorkspace({
+      analyzeAction: analyzeAction as unknown as AnalyzeBacklinksAction,
+      context: {
+        ...context,
+        recentTargets: [
+          {
+            cachedUntil: new Date(Date.now() + 24 * 3_600_000).toISOString(),
+            fetchedAt: new Date(Date.now() - 41 * 60_000).toISOString(),
+            includeSubdomains: true,
+            resultLimit: 100,
+            target: "example.org",
+            targetScope: "site",
+          },
+        ],
+      },
+    });
 
     fireEvent.click(screen.getByRole("button", { name: "Backlinks limit" }));
     fireEvent.click(screen.getByRole("menuitem", { name: "Top 500 links" }));
@@ -217,29 +199,22 @@ describe("BacklinksWorkspace", () => {
           resolveReplay = resolve;
         }),
     );
-    render(
-      <SessionSpendProvider>
-        <BacklinksWorkspace
-          analyzeAction={analyzeAction as unknown as AnalyzeBacklinksAction}
-          context={{
-            ...context,
-            recentTargets: [
-              {
-                cachedUntil: new Date(Date.now() + 24 * 3_600_000).toISOString(),
-                fetchedAt: new Date(Date.now() - 41 * 60_000).toISOString(),
-                includeSubdomains: true,
-                resultLimit: 100,
-                target: "example.org",
-                targetScope: "site",
-              },
-            ],
-          }}
-          loadMoreAction={loadMoreAction}
-          projectId="prj_1"
-          suggestedEstimateCents={5}
-        />
-      </SessionSpendProvider>,
-    );
+    renderWorkspace({
+      analyzeAction: analyzeAction as unknown as AnalyzeBacklinksAction,
+      context: {
+        ...context,
+        recentTargets: [
+          {
+            cachedUntil: new Date(Date.now() + 24 * 3_600_000).toISOString(),
+            fetchedAt: new Date(Date.now() - 41 * 60_000).toISOString(),
+            includeSubdomains: true,
+            resultLimit: 100,
+            target: "example.org",
+            targetScope: "site",
+          },
+        ],
+      },
+    });
 
     fireEvent.click(screen.getByRole("button", { name: /example\.org.*whole site/i }));
 
@@ -256,29 +231,22 @@ describe("BacklinksWorkspace", () => {
     const analyzeAction = vi.fn(async (input: unknown) =>
       snapshot((input as { target: string }).target),
     );
-    render(
-      <SessionSpendProvider>
-        <BacklinksWorkspace
-          analyzeAction={analyzeAction as unknown as AnalyzeBacklinksAction}
-          context={{
-            ...context,
-            recentTargets: [
-              {
-                cachedUntil: "2026-07-24T14:59:59.000Z",
-                fetchedAt: "2026-07-23T15:00:00.000Z",
-                includeSubdomains: true,
-                resultLimit: 100,
-                target: "expired.example.org",
-                targetScope: "site",
-              },
-            ],
-          }}
-          loadMoreAction={loadMoreAction}
-          projectId="prj_1"
-          suggestedEstimateCents={5}
-        />
-      </SessionSpendProvider>,
-    );
+    renderWorkspace({
+      analyzeAction: analyzeAction as unknown as AnalyzeBacklinksAction,
+      context: {
+        ...context,
+        recentTargets: [
+          {
+            cachedUntil: "2026-07-24T14:59:59.000Z",
+            fetchedAt: "2026-07-23T15:00:00.000Z",
+            includeSubdomains: true,
+            resultLimit: 100,
+            target: "expired.example.org",
+            targetScope: "site",
+          },
+        ],
+      },
+    });
 
     fireEvent.click(screen.getByRole("button", { name: /expired\.example\.org.*whole site/i }));
     await act(async () => vi.advanceTimersByTimeAsync(320));
@@ -308,29 +276,22 @@ describe("BacklinksWorkspace", () => {
       }
       return snapshot(request.target);
     });
-    render(
-      <SessionSpendProvider>
-        <BacklinksWorkspace
-          analyzeAction={analyzeAction as unknown as AnalyzeBacklinksAction}
-          context={{
-            ...context,
-            recentTargets: [
-              {
-                cachedUntil: new Date(Date.now() + 3_600_000).toISOString(),
-                fetchedAt: new Date(Date.now() - 3_600_000).toISOString(),
-                includeSubdomains: true,
-                resultLimit: 100,
-                target: "racy.example.org",
-                targetScope: "site",
-              },
-            ],
-          }}
-          loadMoreAction={loadMoreAction}
-          projectId="prj_1"
-          suggestedEstimateCents={5}
-        />
-      </SessionSpendProvider>,
-    );
+    renderWorkspace({
+      analyzeAction: analyzeAction as unknown as AnalyzeBacklinksAction,
+      context: {
+        ...context,
+        recentTargets: [
+          {
+            cachedUntil: new Date(Date.now() + 3_600_000).toISOString(),
+            fetchedAt: new Date(Date.now() - 3_600_000).toISOString(),
+            includeSubdomains: true,
+            resultLimit: 100,
+            target: "racy.example.org",
+            targetScope: "site",
+          },
+        ],
+      },
+    });
 
     fireEvent.click(screen.getByRole("button", { name: /racy\.example\.org.*whole site/i }));
     await act(async () => vi.advanceTimersByTimeAsync(320));
@@ -356,17 +317,7 @@ describe("BacklinksWorkspace", () => {
     const analyzeAction = vi.fn(async (input: unknown) =>
       snapshot((input as { target: string }).target),
     );
-    render(
-      <SessionSpendProvider>
-        <BacklinksWorkspace
-          analyzeAction={analyzeAction as unknown as AnalyzeBacklinksAction}
-          context={context}
-          loadMoreAction={loadMoreAction}
-          projectId="prj_1"
-          suggestedEstimateCents={5}
-        />
-      </SessionSpendProvider>,
-    );
+    renderWorkspace({ analyzeAction: analyzeAction as unknown as AnalyzeBacklinksAction });
 
     fireEvent.click(screen.getByRole("radio", { name: "Exact page" }));
     fireEvent.change(screen.getByRole("textbox", { name: "Backlinks target" }), {

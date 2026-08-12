@@ -21,7 +21,7 @@ const actionButtonLabels = {
 let pendingKeywordCommandAction: KeywordCommandAction | null = null;
 
 export function keywordActionHref(projectRef: string, action: KeywordCommandAction) {
-  return `${appPath(projectRef, "keywords")}?${ACTION_PARAM}=${action}`;
+  return `${appPath(projectRef, "rank-tracker")}?${ACTION_PARAM}=${action}`;
 }
 
 export function parseKeywordCommandAction(value: string | null | undefined) {
@@ -47,7 +47,7 @@ export function runKeywordCommandFromPalette(
 ) {
   if (
     typeof window !== "undefined" &&
-    window.location.pathname === appPath(projectRef, "keywords")
+    window.location.pathname === appPath(projectRef, "rank-tracker")
   ) {
     if (performKeywordCommandAction(action)) {
       clearKeywordCommandActionParam();
@@ -97,7 +97,7 @@ export function clearKeywordCommandActionParam() {
 
 export function KeywordCommandActionBridge({ projectRef }: Readonly<{ projectRef: string }>) {
   const pathname = usePathname();
-  const keywordsPath = appPath(projectRef, "keywords");
+  const keywordsPath = appPath(projectRef, "rank-tracker");
   const handledKeyRef = useRef<string | null>(null);
   const attachBridge: RefCallback<HTMLSpanElement> = (node) => {
     if (!node || pathname !== keywordsPath || typeof window === "undefined") {

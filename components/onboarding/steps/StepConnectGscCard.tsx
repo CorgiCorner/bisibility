@@ -1,13 +1,18 @@
 "use client";
 
-import { Button, InlineCallout, InlineCode, MenuSelect } from "@/components/ui";
-import type { GoogleOAuthSetup } from "@/lib/integrations/types";
+import {
+  AppDrawer,
+  Button,
+  InlineCallout,
+  InlineCode,
+  MenuSelect,
+  StatusPill,
+} from "@/components/ui";
+import type { GoogleOAuthSetup, GooglePropertySaveResult } from "@/lib/integrations/types";
 import { gscInstallUrl } from "@/lib/providers/analytics/gsc-install-url";
 import { docsLinkProps } from "@/lib/site/site";
 import {
   ArrowUpRightIcon as ArrowUpRight,
-  CheckCircleIcon as CheckCircle,
-  MagnifyingGlassIcon as MagnifyingGlass,
   WarningCircleIcon as WarningCircle,
 } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
@@ -22,13 +27,38 @@ type StepConnectGscCardProps = {
   connectedPropertyLabel?: string | null;
   googleOAuth?: GoogleOAuthSetup | null;
   justConnected?: boolean;
+  loadStoredProperties?: (input: {
+    projectId: string;
+    provider: "gsc";
+  }) => Promise<GoogleOAuthSetup>;
   projectId?: string | null;
-  /** App-relative onboarding return path the OAuth roundtrip comes back to (step 5). */
+  /** App-relative onboarding return path the OAuth roundtrip comes back to (step 2). */
   returnPath?: string;
+  saveStoredProperty?: (input: {
+    projectId: string;
+    property: string;
+    provider: "gsc";
+  }) => Promise<GooglePropertySaveResult>;
 };
 
-function connectedMessage(propertyLabel?: string | null) {
-  return propertyLabel ? `Search Console connected: ${propertyLabel}` : "Search Console connected.";
+export function StepConnectGscSetupNotice({ configured }: Readonly<{ configured: boolean }>) {
+  if (configured) return null;
+  return (
+    <InlineCallout className="mb-3 w-full" tint="yellow">
+      Search Console OAuth is not configured on this instance. Set{" "}
+      <InlineCode>GOOGLE_CLIENT_ID</InlineCode> and <InlineCode>GOOGLE_CLIENT_SECRET</InlineCode>.
+      See the{" "}
+      <a
+        className="inline-flex items-center gap-0.5 font-medium text-accent-text hover:underline"
+        href="/docs/integrations#analytics-sources"
+        {...docsLinkProps("/docs/integrations#analytics-sources")}
+      >
+        setup guide
+        <ArrowUpRight aria-hidden size={13} weight="bold" />
+      </a>{" "}
+      for how to create them.
+    </InlineCallout>
+  );
 }
 
 export function StepConnectGscCard({
@@ -37,23 +67,68 @@ export function StepConnectGscCard({
   connectedPropertyLabel,
   googleOAuth,
   justConnected = false,
+  loadStoredProperties,
   projectId,
   returnPath,
+  saveStoredProperty,
 }: Readonly<StepConnectGscCardProps>) {
-  const [property, setProperty] = useState(googleOAuth?.properties[0]?.value ?? "");
+  const [setup, setSetup] = useState<GoogleOAuthSetup | null>(googleOAuth ?? null);
+  const [selectionSource, setSelectionSource] = useState<"pending" | "stored" | null>(
+    googleOAuth ? "pending" : null,
+  );
+  const [property, setProperty] = useState(setup?.properties[0]?.value ?? "");
+  const [propertyDrawerDismissed, setPropertyDrawerDismissed] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-  const connected = (justConnected || Boolean(connectedPropertyLabel)) && !googleOAuth;
+  const connected =
+    (justConnected || Boolean(connectedPropertyLabel)) && selectionSource !== "pending";
   const href = configured && projectId ? gscInstallUrl(projectId, returnPath) : null;
-  const selected = googleOAuth?.properties.find((option) => option.value === property);
+  const selected = setup?.properties.find((option) => option.value === property);
 
-  async function selectProperty() {
-    if (!completePropertySelection || !projectId || !property) return;
+  async function changeProperty() {
+    if (!loadStoredProperties || !projectId) return;
     setError(null);
     setPending(true);
     try {
-      await completePropertySelection({ projectId, property });
+      const loaded = await loadStoredProperties({ projectId, provider: "gsc" });
+      setSetup(loaded);
+      setSelectionSource("stored");
+      setProperty(
+        loaded.properties.some((option) => option.value === loaded.preferredProperty)
+          ? (loaded.preferredProperty ?? "")
+          : (loaded.properties[0]?.value ?? ""),
+      );
+      setPropertyDrawerDismissed(false);
+    } catch {
+      setError("Properties could not be loaded. Try again or reconnect the account.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function selectProperty() {
+    if (!projectId || !property || !selectionSource) return;
+    setError(null);
+    setPending(true);
+    try {
+      const result =
+        selectionSource === "stored"
+          ? await saveStoredProperty?.({ projectId, property, provider: "gsc" })
+          : await completePropertySelection?.({ projectId, property });
+      if (!result) throw new Error("Property selection is unavailable.");
+      if ("status" in result && result.status === "reauth_required") {
+        setSetup({
+          error: "Reconnect the Google account to change its property.",
+          properties: [],
+          provider: "gsc",
+          requiresReauth: true,
+        });
+        return;
+      }
+      setSetup(null);
+      setSelectionSource(null);
+      setPropertyDrawerDismissed(true);
       router.refresh();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Search Console connection failed.");
@@ -63,106 +138,105 @@ export function StepConnectGscCard({
   }
 
   return (
-    <section className="mb-5 rounded-xl border border-border-strong bg-transparent p-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="grid h-8 w-8 place-items-center rounded-[9px] bg-bg-elev text-accent-text">
-              <MagnifyingGlass aria-hidden size={17} weight="bold" />
-            </span>
-            <span className="text-[15px] font-semibold text-fg">Google Search Console</span>
-            <span className="rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-semibold text-accent-text">
-              Recommended
-            </span>
-            <span className="rounded-full bg-bg-elev px-2 py-0.5 text-[11px] font-semibold text-fg-muted">
-              free
-            </span>
-          </div>
-          <p className="m-0 mt-2 text-[13px] leading-[1.5] text-fg-muted">
-            Connect Google first, then choose one of the verified properties returned by Search
-            Console. No API key is needed.
-          </p>
-          {connected ? (
-            <p className="m-0 mt-3 inline-flex items-center gap-2 rounded-[9px] bg-bg-elev px-3 py-2 text-[12.5px] font-semibold text-green-text">
-              <CheckCircle aria-hidden size={15} weight="fill" />
-              {connectedMessage(connectedPropertyLabel)}
-            </p>
-          ) : null}
-          {googleOAuth ? (
-            <div className="mt-3 flex max-w-xl flex-col gap-3 rounded-[11px] border border-border-strong bg-bg-elev p-3.5">
-              <div>
-                <p className="m-0 text-[12.5px] font-semibold text-fg">
-                  Select a verified property
-                </p>
-                <p className="m-0 mt-1 text-[11.5px] leading-5 text-fg-muted">
-                  The exact Search Console property ID will be saved to this project.
-                </p>
-              </div>
-              {googleOAuth.properties.length > 0 ? (
-                <>
-                  <MenuSelect
-                    ariaLabel="Search Console property"
-                    onChange={setProperty}
-                    options={googleOAuth.properties}
-                    triggerClassName="min-h-[42px] w-full justify-between"
-                    value={property}
-                  />
-                  {selected ? (
-                    <span className="break-all rounded-[9px] bg-bg-sunken px-3 py-2 font-mono text-[12px] text-fg">
-                      {selected.value}
-                    </span>
-                  ) : null}
-                  <Button
-                    disabled={!property}
-                    loading={pending}
-                    loadingLabel="Connecting…"
-                    onClick={() => void selectProperty()}
-                    type="button"
-                  >
-                    Use selected property
-                  </Button>
-                </>
-              ) : (
-                <p className="m-0 flex gap-2 rounded-[9px] bg-bg-sunken px-3 py-2.5 text-[12px] leading-5 text-fg-muted">
-                  <WarningCircle
-                    aria-hidden
-                    className="mt-0.5 shrink-0 text-yellow-text"
-                    size={15}
-                  />
-                  {googleOAuth.error ??
-                    "This account has no verified Search Console properties. Verify one or connect a different Google account."}
-                </p>
-              )}
-              {error ? (
-                <p className="m-0 text-[12px] text-red-text" role="alert">
-                  {error}
-                </p>
+    <section className="flex h-full flex-col rounded-[14px] border border-border-strong bg-transparent p-4">
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="flex flex-col items-start gap-2">
+            <span className="text-sm font-semibold text-fg">Search Console</span>
+            <StatusPill
+              label={connected ? "Connected" : configured ? "Ready to connect" : "Setup required"}
+              size="sm"
+              status={connected ? "connected" : "ready"}
+            />
+          </span>
+        </div>
+        <p className="m-0 mt-2 text-[13px] leading-[1.5] text-fg-muted">
+          Free - import real queries, clicks, and impressions. No API key is needed.
+        </p>
+      </div>
+      {setup || (connected && loadStoredProperties) || href ? (
+        <div className="mt-4 flex-none">
+          {setup ? (
+            <Button
+              className="w-full"
+              onClick={() => setPropertyDrawerDismissed(false)}
+              type="button"
+              variant="secondary"
+            >
+              Select property
+            </Button>
+          ) : connected && loadStoredProperties ? (
+            <Button
+              className="w-full"
+              loading={pending}
+              loadingLabel="Loading properties…"
+              onClick={() => void changeProperty()}
+              type="button"
+              variant="secondary"
+            >
+              Change property
+            </Button>
+          ) : (
+            <Button className="w-full" href={href ?? undefined} variant="secondary">
+              {connected ? "Change property" : "Connect"}
+            </Button>
+          )}
+        </div>
+      ) : null}
+      {setup ? (
+        <AppDrawer
+          description="Choose a property returned by your connected Google account."
+          footer={
+            <div className="flex flex-wrap justify-end gap-2.5">
+              {href ? (
+                <Button href={href} variant="secondary">
+                  Use another account
+                </Button>
+              ) : null}
+              <Button
+                disabled={!property}
+                loading={pending}
+                loadingLabel="Connecting…"
+                onClick={() => void selectProperty()}
+                type="button"
+              >
+                Use selected property
+              </Button>
+            </div>
+          }
+          onClose={() => setPropertyDrawerDismissed(true)}
+          open={!propertyDrawerDismissed}
+          title="Select a Search Console property"
+        >
+          {setup.properties.length > 0 ? (
+            <div className="flex flex-col gap-3">
+              <MenuSelect
+                ariaLabel="Search Console property"
+                onChange={setProperty}
+                options={setup.properties}
+                triggerClassName="min-h-[42px] w-full justify-between"
+                value={property}
+              />
+              {selected ? (
+                <span className="break-all rounded-[9px] bg-bg-sunken px-3 py-2 font-mono text-[12px] text-fg">
+                  {selected.value}
+                </span>
               ) : null}
             </div>
+          ) : (
+            <p className="m-0 flex gap-2 rounded-[9px] bg-bg-sunken px-3 py-2.5 text-[12px] leading-5 text-fg-muted">
+              <WarningCircle aria-hidden className="mt-0.5 shrink-0 text-yellow-text" size={15} />
+              {setup.error ??
+                "This account has no verified Search Console properties. Verify one or connect a different Google account."}
+            </p>
+          )}
+          {error ? (
+            <p className="m-0 mt-3 text-[12px] text-red-text" role="alert">
+              {error}
+            </p>
           ) : null}
-          {!configured ? (
-            <InlineCallout className="mt-3" tint="yellow">
-              Search Console OAuth is not configured on this instance. Set{" "}
-              <InlineCode>GOOGLE_CLIENT_ID</InlineCode> and{" "}
-              <InlineCode>GOOGLE_CLIENT_SECRET</InlineCode>. See the{" "}
-              <a
-                className="inline-flex items-center gap-0.5 font-medium text-accent-text hover:underline"
-                href="/docs/integrations#analytics-sources"
-                {...docsLinkProps("/docs/integrations#analytics-sources")}
-              >
-                setup guide
-                <ArrowUpRight aria-hidden size={13} weight="bold" />
-              </a>{" "}
-              for how to create them.
-            </InlineCallout>
-          ) : null}
-        </div>
-        {href && !connected ? (
-          <Button className="flex-none" href={href} variant={googleOAuth ? "secondary" : "primary"}>
-            {googleOAuth ? "Use another account" : "Connect Search Console"}
-          </Button>
-        ) : null}
-      </div>
+        </AppDrawer>
+      ) : null}
     </section>
   );
 }

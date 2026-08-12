@@ -175,21 +175,25 @@ describe("applyLens", () => {
 
 describe("lensHref", () => {
   it("serializes default device and null location", () => {
-    expect(lensHref("/app/keywords", { device: "desktop", locationId: null })).toBe(
-      "/app/keywords?device=desktop",
+    expect(lensHref("/app/rank-tracker", { device: "desktop", locationId: null })).toBe(
+      "/app/rank-tracker?device=desktop",
     );
   });
 
   it("serializes location, non-default device and view id", () => {
-    const href = lensHref("/app/keywords", { device: "mobile", locationId: "loc_us" }, "view_1");
+    const href = lensHref(
+      "/app/rank-tracker",
+      { device: "mobile", locationId: "loc_us" },
+      "view_1",
+    );
     expect(href).toContain("location=loc_us");
     expect(href).toContain("device=mobile");
     expect(href).toContain("view=view_1");
   });
 
   it("serializes all-devices as an explicit lens", () => {
-    expect(lensHref("/app/keywords", { device: "all", locationId: null })).toBe(
-      "/app/keywords?device=all",
+    expect(lensHref("/app/rank-tracker", { device: "all", locationId: null })).toBe(
+      "/app/rank-tracker?device=all",
     );
   });
 });

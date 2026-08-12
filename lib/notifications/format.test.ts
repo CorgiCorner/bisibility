@@ -15,10 +15,10 @@ describe("notificationDisplay", () => {
       notificationDisplay(
         NotificationType.check_complete,
         null,
-        { href: "/app/keywords/kw_1" },
+        { href: "/app/rank-tracker/kw_1" },
         project,
       ).href,
-    ).toBe("/app/prj_example/keywords/kw_1");
+    ).toBe("/app/prj_example/rank-tracker/kw_1");
   });
 
   it("keeps newly stored project-scoped hrefs unchanged", () => {

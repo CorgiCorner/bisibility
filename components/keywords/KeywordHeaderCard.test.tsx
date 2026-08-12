@@ -1,4 +1,5 @@
 import { ToastProvider } from "@/components/ui";
+import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -6,7 +7,6 @@ import { KeywordHeaderCard } from "./KeywordHeaderCard";
 
 const mocks = vi.hoisted(() => ({
   exportHistoryCsv: vi.fn(),
-  refresh: vi.fn(),
 }));
 type DimensionMockProps = {
   kind: "device" | "engine" | "location";
@@ -22,9 +22,6 @@ type HeaderActionsMockProps = {
   onRunCheck: (depth: 10 | 20 | 50 | 100) => void;
   onToggleEdit: () => void;
 };
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ refresh: mocks.refresh }),
-}));
 vi.mock("@/components/ui", async () => {
   const actual = await vi.importActual<typeof import("@/components/ui")>("@/components/ui");
   return {
@@ -259,7 +256,7 @@ describe("KeywordHeaderCard", () => {
 
     expect(await screen.findByText("Rank check monthly budget reached.")).toBeInTheDocument();
     expect(screen.queryByText("Check started (Top 100)")).not.toBeInTheDocument();
-    expect(mocks.refresh).not.toHaveBeenCalled();
+    expect(routerMock.refresh).not.toHaveBeenCalled();
   });
 
   it("works without an alert action or schedule editor", () => {

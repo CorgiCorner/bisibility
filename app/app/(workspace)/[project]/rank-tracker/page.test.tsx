@@ -62,7 +62,6 @@ vi.mock("@/lib/queries/saved-views", () => ({
   getSavedView: mocks.getSavedView,
   listSavedViews: mocks.listSavedViews,
 }));
-vi.mock("next/navigation", () => ({ notFound: vi.fn() }));
 
 describe("KeywordsPage tabs", () => {
   beforeEach(() => {

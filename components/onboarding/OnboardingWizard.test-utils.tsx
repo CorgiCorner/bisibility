@@ -22,14 +22,14 @@ export function renderWizard({ actions: actionOverrides, ...props }: RenderWizar
     completeOnboardingAction: vi.fn(async () => ({ completed: true })),
     connectProviderAction: vi.fn(async () => undefined),
     createProjectAction: vi.fn(async () => project),
+    deriveWebsiteAction: vi.fn(async () => ({ domain: "example.com", name: "example" })),
     fetchRankedKeywordSuggestionsAction: vi.fn(async () => ({ reason: "no_source" as const })),
     getObservedPositionsAction: vi.fn(async () => []),
     importTopQueriesAction: vi.fn(async () => ({ queries: [] })),
     installSampleDataAction: vi.fn(async () => undefined),
-    issueApiKeyAction: vi.fn(async () => ({
-      maskedValue: "bsb_key_live_******",
-      name: "Development",
-      raw: "bsb_key_live_secret",
+    loadStoredGooglePropertiesAction: vi.fn(async () => ({
+      properties: [],
+      provider: "gsc" as const,
     })),
     listFirstCheckCandidatesAction: vi.fn(async () => ({
       candidates: [],
@@ -43,6 +43,10 @@ export function renderWizard({ actions: actionOverrides, ...props }: RenderWizar
       provider: "dataforseo",
       rankingUrl: null,
       status: "completed" as const,
+    })),
+    saveStoredGooglePropertyAction: vi.fn(async (input) => ({
+      property: input.property,
+      status: "saved" as const,
     })),
     // saveMatchingScopeAction: vi.fn(async () => undefined), // Restore with issue #863.
     syncProjectTrafficAction: vi.fn(async () => undefined),
@@ -60,7 +64,6 @@ export function renderWizard({ actions: actionOverrides, ...props }: RenderWizar
       gscOAuthConfigured
       gscPropertyLabel={null}
       hasAnalyticsSource={false}
-      initialHasApiKey={false}
       initialFlowState={{ projectId: null, providerId: null }}
       initialKeywordCount={0}
       initialProject={null}

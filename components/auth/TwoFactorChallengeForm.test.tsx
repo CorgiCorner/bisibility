@@ -1,17 +1,12 @@
 import { appRootPath } from "@/lib/routing/app-path";
+import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TwoFactorChallengeForm } from "./TwoFactorChallengeForm";
 
 const mocks = vi.hoisted(() => ({
-  refresh: vi.fn(),
-  replace: vi.fn(),
   verifyBackupCode: vi.fn(),
   verifyTotp: vi.fn(),
-}));
-
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ refresh: mocks.refresh, replace: mocks.replace }),
 }));
 
 vi.mock("@/lib/auth/client", () => ({
@@ -44,8 +39,8 @@ describe("TwoFactorChallengeForm", () => {
     fireEvent.click(screen.getByRole("button", { name: "Verify & continue" }));
 
     await waitFor(() => expect(mocks.verifyTotp).toHaveBeenCalledWith({ code: "123456" }));
-    expect(mocks.replace).toHaveBeenCalledWith(returnTo);
-    expect(mocks.refresh).toHaveBeenCalled();
+    expect(routerMock.replace).toHaveBeenCalledWith(returnTo);
+    expect(routerMock.refresh).toHaveBeenCalled();
   });
 
   it("submits the current challenge with the Enter key after hydration", async () => {
@@ -57,7 +52,7 @@ describe("TwoFactorChallengeForm", () => {
     fireEvent.keyDown(input, { key: "Enter" });
 
     await waitFor(() => expect(mocks.verifyTotp).toHaveBeenCalledWith({ code: "123456" }));
-    expect(mocks.replace).toHaveBeenCalledWith(appRootPath());
+    expect(routerMock.replace).toHaveBeenCalledWith(appRootPath());
   });
 
   it("promotes a pending sign-in after an unused backup code", async () => {
@@ -74,7 +69,7 @@ describe("TwoFactorChallengeForm", () => {
     await waitFor(() =>
       expect(mocks.verifyBackupCode).toHaveBeenCalledWith({ code: "abcde-12345" }),
     );
-    expect(mocks.replace).toHaveBeenCalledWith(returnTo);
+    expect(routerMock.replace).toHaveBeenCalledWith(returnTo);
   });
 
   it("falls back to the signed-in home for an unsafe destination", async () => {
@@ -86,7 +81,7 @@ describe("TwoFactorChallengeForm", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "Verify & continue" }));
 
-    await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith(appRootPath()));
+    await waitFor(() => expect(routerMock.replace).toHaveBeenCalledWith(appRootPath()));
   });
 
   it("keeps the return destination when cancelling back to sign in", () => {
@@ -123,7 +118,7 @@ describe("TwoFactorChallengeForm", () => {
     expect(
       await screen.findByText("That code is invalid, expired, or already used."),
     ).toBeInTheDocument();
-    expect(mocks.replace).not.toHaveBeenCalled();
+    expect(routerMock.replace).not.toHaveBeenCalled();
     expect(screen.getByLabelText("Backup code")).toHaveValue("");
   });
 });

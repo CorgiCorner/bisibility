@@ -1,3 +1,4 @@
+import { redirect } from "@/tests/next-navigation";
 import { render } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import OnboardingPage from "./page";
@@ -14,20 +15,15 @@ const mocks = vi.hoisted(() => ({
     location: { findMany: vi.fn() },
     providerConnection: { findUnique: vi.fn() },
   },
-  redirect: vi.fn((href: string) => {
-    throw new Error(`redirect:${href}`);
-  }),
   requireReadableProject: vi.fn(),
   listEligibleRankedKeywordConnections: vi.fn(),
   wizard: vi.fn((_props: unknown) => null),
 }));
 
-vi.mock("next/navigation", () => ({ redirect: mocks.redirect }));
 vi.mock("@/components/onboarding/OnboardingWizard", () => ({
   OnboardingWizard: (props: unknown) => mocks.wizard(props),
 }));
 vi.mock("@/lib/actions/competitors", () => ({ addManagedCompetitor: vi.fn() }));
-vi.mock("@/lib/actions/apiKey", () => ({ issueApiKey: vi.fn() }));
 vi.mock("@/lib/actions/keyword", () => ({ addKeywordsMatrix: vi.fn() }));
 vi.mock("@/lib/actions/keyword-suggest", () => ({ importTopQueries: vi.fn() }));
 vi.mock("@/lib/actions/project", () => ({
@@ -36,6 +32,8 @@ vi.mock("@/lib/actions/project", () => ({
 vi.mock("@/lib/actions/providers", () => ({
   completeGooglePropertySelection: vi.fn(),
   connectProvider: vi.fn(),
+  loadStoredGoogleProperties: vi.fn(),
+  saveStoredGoogleProperty: vi.fn(),
   testConnection: vi.fn(),
 }));
 vi.mock("@/lib/actions/rankCheck", () => ({ queueFirstChecks: vi.fn() }));
@@ -71,6 +69,7 @@ vi.mock("@/lib/ranked-keywords/service", () => ({
 }));
 vi.mock("./actions", () => ({
   createOnboardingProject: vi.fn(),
+  deriveOnboardingWebsite: vi.fn(),
   saveMatchingScope: vi.fn(),
 }));
 
@@ -85,6 +84,9 @@ const project = {
 describe("OnboardingPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    redirect.mockImplementation((href: string) => {
+      throw new Error(`redirect:${href}`);
+    });
     mocks.isCloud = true;
     mocks.listWorkspaces.mockResolvedValue([{ publicId: "prj_1" }]);
     mocks.requireReadableProject.mockResolvedValue({ project });
@@ -101,7 +103,7 @@ describe("OnboardingPage", () => {
 
     await expect(
       OnboardingPage({
-        searchParams: Promise.resolve({ step: "6" }),
+        searchParams: Promise.resolve({ step: "4" }),
       }),
     ).resolves.toBeTruthy();
 
@@ -114,7 +116,7 @@ describe("OnboardingPage", () => {
     });
     render(page);
 
-    expect(mocks.redirect).not.toHaveBeenCalled();
+    expect(redirect).not.toHaveBeenCalled();
     expect(mocks.requireReadableProject).not.toHaveBeenCalled();
     expect(mocks.wizard).toHaveBeenCalledWith(
       expect.objectContaining({ initialProject: null, initialStep: 1 }),
@@ -126,12 +128,12 @@ describe("OnboardingPage", () => {
 
     await expect(
       OnboardingPage({
-        searchParams: Promise.resolve({ projectId: "prj_1", step: "6" }),
+        searchParams: Promise.resolve({ projectId: "prj_1", step: "4" }),
       }),
-    ).rejects.toThrow("redirect:/onboarding?step=5");
+    ).rejects.toThrow("redirect:/onboarding?step=3");
 
-    expect(mocks.redirect).toHaveBeenCalledWith(
-      "/onboarding?step=5&projectId=prj_1&loc=US&device=desktop",
+    expect(redirect).toHaveBeenCalledWith(
+      "/onboarding?step=3&projectId=prj_1&loc=US&device=desktop",
     );
   });
 
@@ -145,13 +147,13 @@ describe("OnboardingPage", () => {
           country: "Poland",
           loc: ["US/Texas/Austin", "US/Nowhere"],
           projectId: "prj_1",
-          step: "6",
+          step: "4",
         }),
       }),
-    ).rejects.toThrow("redirect:/onboarding?step=5");
+    ).rejects.toThrow("redirect:/onboarding?step=3");
 
-    expect(mocks.redirect).toHaveBeenCalledWith(
-      "/onboarding?step=5&projectId=prj_1&loc=US%2FTexas%2FAustin&loc=PL&device=desktop",
+    expect(redirect).toHaveBeenCalledWith(
+      "/onboarding?step=3&projectId=prj_1&loc=US%2FTexas%2FAustin&loc=PL&device=desktop",
     );
   });
 
@@ -160,11 +162,11 @@ describe("OnboardingPage", () => {
 
     await expect(
       OnboardingPage({
-        searchParams: Promise.resolve({ projectId: "prj_1", step: "6" }),
+        searchParams: Promise.resolve({ projectId: "prj_1", step: "4" }),
       }),
     ).resolves.toBeTruthy();
 
-    expect(mocks.redirect).not.toHaveBeenCalled();
+    expect(redirect).not.toHaveBeenCalled();
   });
 
   it("passes only public ranked-keyword connection IDs to the wizard", async () => {
@@ -178,7 +180,7 @@ describe("OnboardingPage", () => {
     ]);
 
     const page = await OnboardingPage({
-      searchParams: Promise.resolve({ projectId: "prj_1", step: "6" }),
+      searchParams: Promise.resolve({ projectId: "prj_1", step: "4" }),
     });
     render(page);
 
@@ -202,7 +204,7 @@ describe("OnboardingPage", () => {
 
       await expect(
         OnboardingPage({
-          searchParams: Promise.resolve({ projectId: "prj_1", step: "6" }),
+          searchParams: Promise.resolve({ projectId: "prj_1", step: "4" }),
         }),
       ).rejects.toMatchObject({ code: "invalid_public_id" });
       expect(mocks.wizard).not.toHaveBeenCalled();

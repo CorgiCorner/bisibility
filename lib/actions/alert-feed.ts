@@ -92,7 +92,7 @@ export async function getAlertCtaTargets(input: unknown) {
   }
 
   return {
-    keywordHref: appPath(project.publicId, "keywords", alert.keyword.publicId),
+    keywordHref: appPath(project.publicId, "rank-tracker", alert.keyword.publicId),
     keywordText: alert.keyword.text,
     serpUrl:
       serpUrlFromPayload(alert.payload) ??

@@ -66,7 +66,7 @@ export function KeywordCell({
           aria-label="View keyword details"
           className="h-7 min-h-0 w-7 min-w-0 shrink-0"
           component={Link}
-          href={appPath(projectRef, "keywords", row.id)}
+          href={appPath(projectRef, "rank-tracker", row.id)}
           onClick={(event) => event.stopPropagation()}
           size="small"
           sx={{

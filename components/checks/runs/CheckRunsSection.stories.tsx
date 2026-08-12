@@ -19,7 +19,7 @@ const callbacks = {
 
 const links = {
   connectProviderHref: appPath("prj_story", "integrations"),
-  keywordHref: (keywordPublicId: string) => appPath("prj_story", "keywords", keywordPublicId),
+  keywordHref: (keywordPublicId: string) => appPath("prj_story", "rank-tracker", keywordPublicId),
   reorderProvidersHref: appPath("prj_story", "integrations"),
   reviewProvidersHref: appPath("prj_story", "integrations"),
   timelineHref: appPath("prj_story", "activity"),

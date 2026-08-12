@@ -10,5 +10,6 @@ describe("OnboardingNav", () => {
     const continueButton = screen.getByRole("button", { name: "Continue" });
 
     expect(getComputedStyle(back).minHeight).toBe(getComputedStyle(continueButton).minHeight);
+    expect(getComputedStyle(back).fontWeight).toBe(getComputedStyle(continueButton).fontWeight);
   });
 });

@@ -1,4 +1,5 @@
 import { installSampleDataset } from "@/lib/sample-data/install";
+import { redirect } from "@/tests/next-navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { installSampleData, removeSampleData } from "./sample-data";
 
@@ -31,9 +32,6 @@ const mocks = vi.hoisted(() => {
     AuthorizationError,
     authorize: vi.fn(),
     prisma,
-    redirect: vi.fn(() => {
-      throw new Error("NEXT_REDIRECT");
-    }),
     requireSession: vi.fn(),
     revalidatePath: vi.fn(),
     tx,
@@ -43,7 +41,6 @@ const mocks = vi.hoisted(() => {
 
 vi.mock("server-only", () => ({}));
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
-vi.mock("next/navigation", () => ({ redirect: mocks.redirect }));
 vi.mock("@/lib/auth/audit", () => ({
   requiredPublicAuditId: (value: string) => value,
   writeAudit: mocks.writeAudit,
@@ -96,6 +93,9 @@ function mockInstallTransaction() {
 describe("sample-data actions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    redirect.mockImplementation(() => {
+      throw new Error("NEXT_REDIRECT");
+    });
     mockActor();
     mockInstallTransaction();
     mocks.authorize.mockReturnValue({ actorId: "user_1", role: "owner" });
@@ -128,7 +128,7 @@ describe("sample-data actions", () => {
 
     await expect(installSampleData()).rejects.toThrow("NEXT_REDIRECT");
 
-    expect(mocks.redirect).toHaveBeenCalledWith("/app/prj_d00000000000000000000000/overview");
+    expect(redirect).toHaveBeenCalledWith("/app/prj_d00000000000000000000000/overview");
     expect(mocks.prisma.$transaction).toHaveBeenCalledTimes(1);
     expect(mocks.tx.$executeRaw).toHaveBeenCalledTimes(1);
     expect(mocks.tx.$executeRaw.mock.invocationCallOrder[0]).toBeLessThan(
@@ -141,7 +141,7 @@ describe("sample-data actions", () => {
   it("installs sample data and writes an audit record", async () => {
     await expect(installSampleData()).rejects.toThrow("NEXT_REDIRECT");
 
-    expect(mocks.redirect).toHaveBeenCalledWith("/app/prj_e00000000000000000000000/overview");
+    expect(redirect).toHaveBeenCalledWith("/app/prj_e00000000000000000000000/overview");
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({ action: "sample_data.install", projectId: "project_sample" }),
       mocks.tx,

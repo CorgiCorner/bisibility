@@ -9,7 +9,6 @@ import {
 import { onboardingFormId } from "@/components/onboarding/onboarding-form-utils";
 import { Button } from "@/components/ui";
 import { ArrowLeftIcon as ArrowLeft, ArrowRightIcon as ArrowRight } from "@phosphor-icons/react";
-import Link from "next/link";
 import type { ReactNode } from "react";
 
 type OnboardingNavProps = {
@@ -54,12 +53,15 @@ export function OnboardingNav({
     );
   } else if (currentStep > 1) {
     backAction = (
-      <Link
-        className="inline-flex min-h-11 items-center gap-[7px] rounded-[10px] border border-border-strong bg-bg-elev px-[18px] py-2.5 text-[14.5px] font-semibold text-fg-muted"
+      <Button
         href={buildOnboardingStepHref(previousStep, flowState)}
+        size="lg"
+        startIcon={<ArrowLeft aria-hidden size={15} weight="bold" />}
+        sx={{ color: "var(--fg-muted)" }}
+        variant="secondary"
       >
-        <ArrowLeft aria-hidden size={15} weight="bold" /> Back
-      </Link>
+        Back
+      </Button>
     );
   }
 
@@ -74,6 +76,7 @@ export function OnboardingNav({
           form={onContinue ? undefined : onboardingFormId}
           onClick={onContinue}
           size="lg"
+          sx={{ fontWeight: 500 }}
           type={onContinue ? "button" : "submit"}
           variant="primary"
         >

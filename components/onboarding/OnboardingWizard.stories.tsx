@@ -4,15 +4,18 @@ import {
   type OnboardingStepNumber,
   onboardingDefaults,
 } from "@/components/onboarding/onboarding-fixtures";
+import {
+  fetchRankedKeywordSuggestionsAction,
+  rankedKeywordConnection,
+} from "@/components/onboarding/onboarding-story-fixtures";
 import { StepAddKeywords } from "@/components/onboarding/steps/StepAddKeywords";
+import { StepConnectGscCard } from "@/components/onboarding/steps/StepConnectGscCard";
 import { StepConnectProvider } from "@/components/onboarding/steps/StepConnectProvider";
 import {
   type CreateProjectFormValues,
   StepCreateProject,
 } from "@/components/onboarding/steps/StepCreateProject";
-import { StepDeveloperAccess } from "@/components/onboarding/steps/StepDeveloperAccess";
 import { StepFirstCheck } from "@/components/onboarding/steps/StepFirstCheck";
-import { StepSchedule } from "@/components/onboarding/steps/StepSchedule";
 import { BrandLockup, Button } from "@/components/ui";
 import { SignOutIcon as SignOut } from "@phosphor-icons/react/dist/ssr";
 import type { Meta, StoryObj } from "@storybook/react";
@@ -65,20 +68,18 @@ const firstCheckActions = {
   }),
 };
 const storyFlowState = { projectId: onboardingDefaults.projectId };
-const issueApiKeyAction = async () => ({
-  maskedValue: "bsb_key_live_demo******1234",
-  name: "Development",
-  raw: "bsb_key_live_demo_secret_1234",
-});
 const createProjectWithCompetitors: CreateProjectFormValues = {
-  domain: "acme.dev",
-  name: "Acme",
+  website: "acme.dev",
 };
 
 function providerPanel(mode: StoryProps["providerMode"] = "none") {
+  const analyticsOption = (
+    <StepConnectGscCard configured projectId={onboardingDefaults.projectId} />
+  );
   if (mode === "both") {
     return (
       <StepConnectProvider
+        analyticsOption={analyticsOption}
         defaultValues={{ ...providerBaseDefaults, providerId: "serpapi" }}
         flowState={storyFlowState}
         initialConnections={{
@@ -92,6 +93,7 @@ function providerPanel(mode: StoryProps["providerMode"] = "none") {
   if (mode === "connected") {
     return (
       <StepConnectProvider
+        analyticsOption={analyticsOption}
         defaultValues={{ ...providerBaseDefaults, providerId: "serpapi" }}
         flowState={storyFlowState}
         initialConnections={{ dataforseo: { balance: 12.34 } }}
@@ -99,7 +101,13 @@ function providerPanel(mode: StoryProps["providerMode"] = "none") {
       />
     );
   }
-  return <StepConnectProvider flowState={storyFlowState} {...providerActions} />;
+  return (
+    <StepConnectProvider
+      analyticsOption={analyticsOption}
+      flowState={storyFlowState}
+      {...providerActions}
+    />
+  );
 }
 
 function createProjectPanel(competitorMode: StoryProps["competitorMode"]) {
@@ -107,6 +115,7 @@ function createProjectPanel(competitorMode: StoryProps["competitorMode"]) {
     <StepCreateProject
       dataResidencyMessage={dataResidencyMessage}
       defaultValues={competitorMode === "filled" ? createProjectWithCompetitors : undefined}
+      deriveWebsiteAction={async () => ({ domain: "acme.dev", name: "acme" })}
     />
   );
 }
@@ -119,32 +128,24 @@ function panelForStep(
 ) {
   const panelByStep: Record<OnboardingStepNumber, ReactNode> = {
     1: createProjectPanel(competitorMode),
-    2: (
-      <StepDeveloperAccess
-        issueApiKeyAction={issueApiKeyAction}
-        projectId={onboardingDefaults.projectId}
-      />
-    ),
-    3: providerPanel(providerMode),
-    4: (
-      <StepSchedule
+    2: providerPanel(providerMode),
+    3: (
+      <StepAddKeywords
+        costPerCheckCents={1.55}
         flowState={
           providerMode === "connected"
             ? { ...storyFlowState, providerId: "dataforseo" }
             : storyFlowState
         }
-      />
-    ),
-    5: (
-      <StepAddKeywords
-        costPerCheckCents={1.55}
-        flowState={storyFlowState}
         hasAnalyticsSource={analyticsMode === "connected"}
         importTopQueriesAction={importTopQueriesAction}
         monthlyCapCents={5_000}
+        fetchRankedKeywordSuggestionsAction={fetchRankedKeywordSuggestionsAction}
+        projectDomain="acme.dev"
+        rankedKeywordConnections={providerMode === "connected" ? [rankedKeywordConnection] : []}
       />
     ),
-    6: (
+    4: (
       <StepFirstCheck
         flowState={{
           projectId: onboardingDefaults.projectId,
@@ -178,16 +179,15 @@ function OnboardingStory({
               </span>
               demo@acme.dev
             </span>
-            <span className="text-fg-muted">&middot;</span>
+            <span aria-hidden className="h-4 w-px bg-border-strong" />
             <span className="text-fg-muted">Not you?</span>
             <Button
               size="xs"
               startIcon={<SignOut aria-hidden size={13} weight="bold" />}
               sx={{
                 color: "var(--accent-text)",
-                minHeight: 0,
                 minWidth: 0,
-                padding: 0,
+                paddingX: "8px",
               }}
               type="button"
               variant="ghost"
@@ -239,11 +239,11 @@ const meta = {
     },
     maxReachableStep: {
       control: "inline-radio",
-      options: [1, 2, 3, 4, 5, 6],
+      options: [1, 2, 3, 4],
     },
     step: {
       control: "inline-radio",
-      options: [1, 2, 3, 4, 5, 6],
+      options: [1, 2, 3, 4],
     },
   },
   parameters: {
@@ -260,24 +260,23 @@ export const CreateProject: Story = { args: { step: 1 } };
 export const CreateProjectWithCompetitors: Story = {
   args: { competitorMode: "filled", step: 1 },
 };
-export const DeveloperAccess: Story = { args: { step: 2 } };
 export const ConnectProvider: Story = {
-  args: { providerMode: "none", step: 3 },
+  args: { providerMode: "none", step: 2 },
 };
 export const LockedAfterProject: Story = {
   args: { maxReachableStep: 2, step: 2 },
 };
 export const ConnectProviderAdditional: Story = {
-  args: { providerMode: "connected", step: 3 },
+  args: { providerMode: "connected", step: 2 },
 };
 export const ConnectProviderBothConnected: Story = {
-  args: { providerMode: "both", step: 3 },
+  args: { providerMode: "both", step: 2 },
 };
-export const TrackingDefaults: Story = {
-  args: { providerMode: "connected", step: 4 },
-};
-export const AddKeywords: Story = { args: { step: 5 } };
+export const AddKeywords: Story = { args: { step: 3 } };
 export const AddKeywordsWithAnalytics: Story = {
-  args: { analyticsMode: "connected", step: 5 },
+  args: { analyticsMode: "connected", step: 3 },
 };
-export const FirstCheck: Story = { args: { step: 6 } };
+export const AddKeywordsWithSources: Story = {
+  args: { analyticsMode: "connected", providerMode: "connected", step: 3 },
+};
+export const FirstCheck: Story = { args: { step: 4 } };

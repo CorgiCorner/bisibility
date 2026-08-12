@@ -20,9 +20,6 @@ vi.mock("@/lib/auth/otp-resend", () => ({ resendSignInOtp: vi.fn() }));
 vi.mock("@/lib/auth/sign-in-redirect", () => ({
   signInRedirectUrl: mocks.signInRedirectUrl,
 }));
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
-}));
 
 const capacity = {
   emailCodes: { binding: "daily" as const, cap: 200, left: 1 },

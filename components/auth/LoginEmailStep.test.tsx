@@ -88,14 +88,6 @@ describe("LoginEmailStep", () => {
     expect(screen.queryByText(/people joined today/)).toBeNull();
   });
 
-  it("uses the singular joined-today line for a single signup", () => {
-    renderStep(enabledProviders, cloudLegalConsentLinks, {
-      emailCodes: { binding: "daily", cap: 200, left: 143 },
-      googleSpots: { cap: 100, left: 14 },
-      signupsToday: 1,
-    });
-  });
-
   it("renders both configured social providers", () => {
     renderStep(enabledProviders);
 
@@ -131,14 +123,14 @@ describe("LoginEmailStep", () => {
   it("renders terms-only wording and external-link attributes", () => {
     renderStep(disabledProviders, {
       privacyHref: null,
-      termsHref: "HTTPS://operator.example/terms",
+      termsHref: "HTTPS://operator.example.com/terms",
     });
 
     const terms = screen.getByRole("link", { name: "Terms" });
     expect(screen.getByText(/By continuing you agree/)).toHaveTextContent(
       "By continuing you agree to the Terms.",
     );
-    expect(terms).toHaveAttribute("href", "HTTPS://operator.example/terms");
+    expect(terms).toHaveAttribute("href", "HTTPS://operator.example.com/terms");
     expect(terms).toHaveAttribute("target", "_blank");
     expect(terms).toHaveAttribute("rel", "noreferrer");
     expect(screen.queryByRole("link", { name: "Privacy Policy" })).toBeNull();

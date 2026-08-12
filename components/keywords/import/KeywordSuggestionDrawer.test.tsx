@@ -13,10 +13,11 @@ const costContext: SuggestionCostContext = {
 };
 
 const suggestions = [
-  { clicks: 40, impressions: 900, query: "keyword tracking api" },
+  { clicks: 2, impressions: 100, query: "seo dashboard" },
   { clicks: 12, impressions: 800, query: "serp api" },
   { clicks: 5, impressions: 200, query: "rank tracker" },
-  { clicks: 2, impressions: 100, query: "seo dashboard" },
+  { clicks: 40, impressions: 900, query: "keyword tracking api" },
+  { clicks: 8, impressions: 400, query: "keyword monitor" },
 ];
 
 function renderDrawer(props: Partial<Parameters<typeof KeywordSuggestionDrawer>[0]> = {}) {
@@ -45,16 +46,28 @@ describe("KeywordSuggestionDrawer", () => {
     expect(trackedRow).toBeDisabled();
     expect(screen.getByText("Tracked")).toBeInTheDocument();
 
-    // The three untracked queries are preselected by default.
+    // The top three untracked queries are preselected by default.
     expect(screen.getByRole("button", { name: "Add 3 keywords" })).toBeEnabled();
+    expect(screen.getByLabelText("keyword monitor")).toBeChecked();
+    expect(screen.getByLabelText("seo dashboard")).not.toBeChecked();
+    expect(
+      screen.getAllByRole("checkbox").map((checkbox) => checkbox.getAttribute("aria-label")),
+    ).toEqual([
+      "keyword tracking api",
+      "serp api",
+      "keyword monitor",
+      "rank tracker",
+      "seo dashboard",
+    ]);
   });
 
   it("renders Select all and Clear contextually across empty, partial and full states", () => {
     renderDrawer();
 
-    // Default preselects every untracked row (full): only Clear + Top 20.
-    expect(screen.queryByRole("button", { name: "Select all" })).not.toBeInTheDocument();
+    // Default preselects the three strongest rows, so full selection remains available.
+    expect(screen.getByRole("button", { name: "Select all" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Clear" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Top 3 by clicks" })).toBeInTheDocument();
 
     // Empty: only Select all.
     fireEvent.click(screen.getByRole("button", { name: "Clear" }));
@@ -70,7 +83,6 @@ describe("KeywordSuggestionDrawer", () => {
   it("confirms the selected queries in source order", () => {
     const { onConfirm } = renderDrawer();
 
-    // All untracked rows are preselected (full state), so Clear is shown.
     fireEvent.click(screen.getByRole("button", { name: "Clear" }));
     expect(screen.getByRole("button", { name: /Add 0 keywords/ })).toBeDisabled();
 

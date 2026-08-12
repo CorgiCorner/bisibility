@@ -1,3 +1,4 @@
+import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SecurityFactors } from "./SecurityFactors";
@@ -6,14 +7,8 @@ const mocks = vi.hoisted(() => ({
   begin: vi.fn(),
   complete: vi.fn(),
   disable: vi.fn(),
-  refresh: vi.fn(),
   regenerate: vi.fn(),
-  replace: vi.fn(),
   signOut: vi.fn(),
-}));
-
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ refresh: mocks.refresh, replace: mocks.replace }),
 }));
 
 vi.mock("@/lib/actions/two-factor", () => ({
@@ -145,8 +140,8 @@ describe("SecurityFactors", () => {
         password: "",
       }),
     );
-    expect(mocks.replace).toHaveBeenCalledWith("/login");
-    expect(mocks.refresh).toHaveBeenCalled();
+    expect(routerMock.replace).toHaveBeenCalledWith("/login");
+    expect(routerMock.refresh).toHaveBeenCalled();
   });
 
   it("keeps 2FA enabled when the protected action rejects verification", async () => {
@@ -163,7 +158,7 @@ describe("SecurityFactors", () => {
 
     expect(await screen.findByText("Verification failed.")).toBeInTheDocument();
     expect(screen.getByText("Enabled")).toBeInTheDocument();
-    expect(mocks.replace).not.toHaveBeenCalled();
+    expect(routerMock.replace).not.toHaveBeenCalled();
   });
 
   it("offers an explicit sign-in flow when the initial-enrollment session is stale", async () => {
@@ -182,7 +177,7 @@ describe("SecurityFactors", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Sign in again" }));
 
     await waitFor(() => expect(mocks.signOut).toHaveBeenCalledOnce());
-    expect(mocks.replace).toHaveBeenCalledWith("/login?next=%2Fapp%2Faccount%2Fsecurity");
-    expect(mocks.refresh).toHaveBeenCalled();
+    expect(routerMock.replace).toHaveBeenCalledWith("/login?next=%2Fapp%2Faccount%2Fsecurity");
+    expect(routerMock.refresh).toHaveBeenCalled();
   });
 });

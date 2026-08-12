@@ -1,5 +1,6 @@
 "use client";
 
+import { CloudImportWorkspaceButton } from "@/components/onboarding/CloudImportWorkspaceButton";
 import { OnboardingNav } from "@/components/onboarding/OnboardingNav";
 import { OnboardingStepper } from "@/components/onboarding/OnboardingStepper";
 import type { OnboardingWizardProps } from "@/components/onboarding/OnboardingWizard.types";
@@ -24,6 +25,7 @@ import { readCurrentProviderValues } from "./onboarding-provider-values";
 import {
   type ConnectedProviderMap,
   costPerCheckCentsFromUsd,
+  providerOptions,
 } from "./steps/StepConnectProvider.fields";
 
 export function OnboardingWizard({
@@ -35,7 +37,6 @@ export function OnboardingWizard({
   gscOAuthConfigured,
   gscPropertyLabel,
   hasAnalyticsSource,
-  initialHasApiKey,
   initialFlowState,
   initialKeywordCount,
   initialProject,
@@ -57,7 +58,6 @@ export function OnboardingWizard({
     initialOnboardingDraft(initialProject, startingFlowState),
   );
   const [keywordCount, setKeywordCount] = useState(initialKeywordCount);
-  const [hasApiKey, setHasApiKey] = useState(initialHasApiKey);
   const [hasConnectedProvider, setHasConnectedProvider] = useState(providerConnected);
   const [serpConnections, setSerpConnections] = useState<ConnectedProviderMap>(
     initialSerpConnections ?? {},
@@ -70,6 +70,15 @@ export function OnboardingWizard({
   );
   const [projectedCostPerCheckCents, setProjectedCostPerCheckCents] = useState(costPerCheckCents);
   const [inlineWarning, setInlineWarning] = useState<string | null>(null);
+  const requestedProviderId = providerOptions.find(
+    ({ value }) => value === flowState.providerId,
+  )?.value;
+  const savedProviderId = providerOptions.find(({ value }) => serpConnections[value])?.value;
+  const connectedProviderId =
+    requestedProviderId && (serpConnections[requestedProviderId] || savedProviderId === undefined)
+      ? requestedProviderId
+      : savedProviderId;
+  const providerReady = hasConnectedProvider || connectedProviderId !== undefined;
 
   function currentProviderValues() {
     return readCurrentProviderValues(draft.connectProvider, flowState.projectId);
@@ -118,7 +127,6 @@ export function OnboardingWizard({
     updateFlowAndStep(2, nextFlowState);
     setInlineWarning(completion?.warning ?? null);
   };
-  const handleDeveloperAccessComplete = () => updateFlowAndStep(3, flowState);
   const handleProviderComplete: OnboardingWizardStepsProps["onProviderComplete"] = (
     values,
     nextConnections,
@@ -127,43 +135,26 @@ export function OnboardingWizard({
     setHasConnectedProvider(true);
     setSerpConnections(nextConnections);
     setProjectedCostPerCheckCents(costPerCheckCentsFromUsd(values.costPerCheck));
-    updateFlowAndStep(4, { ...flowState, providerId: values.providerId });
+    updateFlowAndStep(3, { ...flowState, providerId: values.providerId });
   };
   const handleProviderSkip: OnboardingWizardStepsProps["onProviderSkip"] = (values) => {
     setDraft((current) => ({ ...current, connectProvider: values }));
     setHasConnectedProvider(false);
     setProjectedCostPerCheckCents(null);
-    updateFlowAndStep(4, { ...flowState, providerId: null });
+    updateFlowAndStep(3, { ...flowState, providerId: null });
   };
   function continueWithConnectedDataSource() {
     handleProviderSkip(currentProviderValues());
   }
-  const handleScheduleComplete: OnboardingWizardStepsProps["onScheduleComplete"] = (values) => {
-    setDraft((current) => ({
-      ...current,
-      addKeywords: {
-        ...current.addKeywords,
-        device: values.device,
-        devices: values.devices,
-        locations: values.locations,
-      },
-      schedule: values,
-    }));
-    updateFlowAndStep(5, {
-      ...flowState,
-      devices: values.devices,
-      locations: values.locations,
-      projectId: values.projectId,
-    });
-  };
   const handleKeywordsComplete: OnboardingWizardStepsProps["onKeywordsComplete"] = (
     values,
+    defaults,
     createdCount,
     warning,
   ) => {
-    setDraft((current) => ({ ...current, addKeywords: values }));
+    setDraft((current) => ({ ...current, addKeywords: values, schedule: defaults }));
     setKeywordCount((current) => current + createdCount);
-    updateFlowAndStep(6, {
+    updateFlowAndStep(4, {
       ...flowState,
       devices: values.devices,
       locations: values.locations,
@@ -185,11 +176,11 @@ export function OnboardingWizard({
     }));
   };
   const providerStepContinueDisabled =
-    currentStep === 3 && providerContinueDisabled && !hasAnalyticsSource;
+    currentStep === 2 && providerContinueDisabled && !hasAnalyticsSource;
   // Connected providers must submit through their form; the analytics-only skip
   // path would clear provider state.
   const canContinueWithConnectedDataSource =
-    currentStep === 3 &&
+    currentStep === 2 &&
     !providerStepContinueDisabled &&
     hasAnalyticsSource &&
     !hasConnectedProvider;
@@ -216,48 +207,47 @@ export function OnboardingWizard({
           gscOAuthConfigured={gscOAuthConfigured}
           gscPropertyLabel={gscPropertyLabel}
           hasAnalyticsSource={hasAnalyticsSource}
-          hasApiKey={hasApiKey}
-          hasConnectedProvider={hasConnectedProvider}
-          isCloud={isCloud}
+          hasConnectedProvider={providerReady}
+          connectedProviderId={connectedProviderId}
           initialSerpConnections={serpConnections}
           keywordCount={keywordCount}
           monthlyCapCents={monthlyCapCents}
           onCreateProjectComplete={handleCreateProjectComplete}
-          onApiKeyIssued={() => setHasApiKey(true)}
-          onDeveloperAccessComplete={handleDeveloperAccessComplete}
           onKeywordsChange={handleKeywordsChange}
           onKeywordsComplete={handleKeywordsComplete}
           onProviderComplete={handleProviderComplete}
           onProviderContinueDisabledChange={setProviderContinueDisabled}
           onProviderSkip={handleProviderSkip}
-          onScheduleComplete={handleScheduleComplete}
           project={project}
           projectedCostPerCheckCents={projectedCostPerCheckCents}
           rankedKeywordConnections={rankedKeywordConnections}
         />
         <OnboardingNav
           continueDisabled={providerStepContinueDisabled}
-          continueLabel={currentStep === 6 ? "Open dashboard" : "Continue"}
+          continueLabel={currentStep === 4 ? "Open dashboard" : "Continue"}
           currentStep={currentStep}
           flowState={flowState}
           leadingAction={
             currentStep === 1 ? (
-              <SampleDataButton
-                action={actions.installSampleDataAction}
-                label="Load sample project"
-                size="small"
-                sx={{
-                  color: "var(--fg-muted)",
-                  fontWeight: 400,
-                  paddingX: 0,
-                  textTransform: "none",
-                  "&:hover": {
-                    backgroundColor: "transparent",
-                    color: "var(--accent-text)",
-                  },
-                }}
-                variant="text"
-              />
+              <div className="flex flex-wrap items-start gap-x-4 gap-y-1">
+                <SampleDataButton
+                  action={actions.installSampleDataAction}
+                  label="Load sample project"
+                  size="small"
+                  sx={{
+                    color: "var(--fg-muted)",
+                    fontWeight: 400,
+                    paddingX: "8px",
+                    textTransform: "none",
+                    "&:hover": {
+                      backgroundColor: "transparent",
+                      color: "var(--accent-text)",
+                    },
+                  }}
+                  variant="text"
+                />
+                {isCloud ? <CloudImportWorkspaceButton /> : null}
+              </div>
             ) : undefined
           }
           onBack={currentStep === 1 ? undefined : () => goToStep(previousStep)}

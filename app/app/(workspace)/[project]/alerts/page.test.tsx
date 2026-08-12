@@ -28,10 +28,6 @@ vi.mock("@/lib/queries/integrations", () => ({
   isProviderConnected: mocks.isProviderConnected,
 }));
 vi.mock("@/lib/queries/workspaces", () => ({ listWorkspaces: mocks.listWorkspaces }));
-vi.mock("next/navigation", () => ({
-  notFound: vi.fn(),
-  useRouter: () => ({ refresh: vi.fn() }),
-}));
 
 describe("AlertsPage", () => {
   beforeEach(() => {
@@ -78,7 +74,7 @@ describe("AlertsPage", () => {
     );
 
     const action = screen.getByRole("link", { name: /add keyword/i });
-    expect(action).toHaveAttribute("href", appPath("prj_abcdefghijklmnopqrstuvwx", "keywords"));
+    expect(action).toHaveAttribute("href", appPath("prj_abcdefghijklmnopqrstuvwx", "rank-tracker"));
     expect(screen.queryByRole("button", { name: /create a rule/i })).not.toBeInTheDocument();
     expect(mocks.getAlertsView).toHaveBeenCalledWith("prj_abcdefghijklmnopqrstuvwx");
     expect(mocks.getAlertFeedStats).toHaveBeenCalledWith("project_1");

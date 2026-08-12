@@ -80,7 +80,7 @@ describe("notification queries", () => {
       "ntf_bbcdefghijklmnopqrstuvwx",
     ]);
     expect(result.items[0]).toMatchObject({
-      href: appPath("prj_abcdefghijklmnopqrstuvwx", "keywords"),
+      href: appPath("prj_abcdefghijklmnopqrstuvwx", "rank-tracker"),
       meta: "Daily check done",
       readAt: null,
       time: "5m",

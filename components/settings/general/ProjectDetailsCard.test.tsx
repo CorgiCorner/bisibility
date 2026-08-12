@@ -1,13 +1,8 @@
 import { ProjectDetailsCard } from "@/components/settings/general/ProjectDetailsCard";
+import { routerMock } from "@/tests/next-navigation";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-
-const mocks = vi.hoisted(() => ({ refresh: vi.fn() }));
-
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ refresh: mocks.refresh }),
-}));
 
 const project = {
   domain: "example.com",
@@ -49,7 +44,7 @@ describe("ProjectDetailsCard", () => {
       }),
     );
     expect(await screen.findByText("Saved")).toBeVisible();
-    expect(mocks.refresh).toHaveBeenCalledOnce();
+    expect(routerMock.refresh).toHaveBeenCalledOnce();
   });
 
   it("renders the wired domain confirmation action separately from the name action", async () => {

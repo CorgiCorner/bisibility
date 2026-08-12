@@ -117,7 +117,7 @@ export function KeywordsGrid({
     () => keywordSavedViewConfig({ filters, lens: activeLens, search: searchValue.trim() }),
     [activeLens, filters, searchValue],
   );
-  const keywordsPath = appPath(projectId, "keywords");
+  const keywordsPath = appPath(projectId, "rank-tracker");
 
   function openAddDrawer(keyword = "", tab: AddKeywordDraft["tab"] = "manual") {
     setAddDraft({ keyword, open: true, tab });

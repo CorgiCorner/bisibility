@@ -1,11 +1,9 @@
+import { notFound } from "@/tests/next-navigation";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   isCloud: true,
-  notFound: vi.fn(() => {
-    throw new Error("not-found");
-  }),
 }));
 
 vi.mock("@/lib/deployment/deployment", () => ({
@@ -14,7 +12,6 @@ vi.mock("@/lib/deployment/deployment", () => ({
   },
 }));
 vi.mock("@/lib/seo/noindex", () => ({ createNoindexMetadata: () => ({}) }));
-vi.mock("next/navigation", () => ({ notFound: mocks.notFound }));
 
 import CloudLayout from "./layout";
 
@@ -22,6 +19,9 @@ describe("CloudLayout deployment guard", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.isCloud = true;
+    notFound.mockImplementation(() => {
+      throw new Error("not-found");
+    });
   });
 
   it("renders cloud route content on a cloud deployment", () => {
@@ -34,6 +34,6 @@ describe("CloudLayout deployment guard", () => {
     mocks.isCloud = false;
 
     expect(() => CloudLayout({ children: <div>Import content</div> })).toThrow("not-found");
-    expect(mocks.notFound).toHaveBeenCalledOnce();
+    expect(notFound).toHaveBeenCalledOnce();
   });
 });

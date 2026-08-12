@@ -3,11 +3,9 @@ import {
   type TeamMembersCardProps,
 } from "@/components/settings/team/TeamMembersCard";
 import type { TeamMemberData } from "@/lib/queries/team";
+import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-
-const mocks = vi.hoisted(() => ({ refresh: vi.fn() }));
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: mocks.refresh }) }));
 
 const owner: TeamMemberData = {
   accessLabel: "Project access since 4 Feb 2025",
@@ -160,7 +158,7 @@ describe("TeamMembersCard", () => {
     fireEvent.click(within(menu).getByText("Editor"));
 
     expect(screen.queryByRole("button", { name: "Save" })).not.toBeInTheDocument();
-    expect(mocks.refresh).not.toHaveBeenCalled();
+    expect(routerMock.refresh).not.toHaveBeenCalled();
   });
 
   it("hides the owner-only Admin tier from an admin manager", async () => {

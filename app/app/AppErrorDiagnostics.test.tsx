@@ -8,7 +8,7 @@ const details = {
   message: "Cannot read properties of undefined (reading 'rows')",
   name: "TypeError",
   occurredAt: "01:28:57 UTC",
-  pathname: "/app/keywords",
+  pathname: "/app/rank-tracker",
   stack: "TypeError: rows of undefined\n    at KeywordTable (keywords.view.js:412:19)",
 };
 
@@ -18,7 +18,7 @@ describe("formatAppErrorReport", () => {
       [
         "reference: err_9c41f2",
         "error: TypeError: Cannot read properties of undefined (reading 'rows')",
-        "view: /app/keywords",
+        "view: /app/rank-tracker",
         "time: 01:28:57 UTC",
         "",
         details.stack,
@@ -41,26 +41,28 @@ describe("formatAppErrorReport", () => {
       {
         ...details,
         message: "Request failed at https://api.example.test/items?cursor=secret",
-        pathname: "/app/prj_abc/keywords?cursor=x",
-        stack: "Error at https://app.example.test/app/prj_abc/keywords?cursor=secret",
+        pathname: "/app/prj_abc/rank-tracker?cursor=x",
+        stack: "Error at https://app.example.test/app/prj_abc/rank-tracker?cursor=secret",
       },
       "self-host",
     );
 
     expect(report).toContain("error: TypeError: Request failed at https://api.example.test/items");
-    expect(report).toContain("view: /app/<project>/keywords");
-    expect(report).toContain("Error at https://app.example.test/app/<project>/keywords");
+    expect(report).toContain("view: /app/<project>/rank-tracker");
+    expect(report).toContain("Error at https://app.example.test/app/<project>/rank-tracker");
     expect(report).not.toContain("secret");
   });
 
   it("limits hosted support reports to the reference, view, and time", () => {
     const report = formatAppErrorReport(
-      { ...details, pathname: "/app/prj_abc/keywords?cursor=x" },
+      { ...details, pathname: "/app/prj_abc/rank-tracker?cursor=x" },
       "cloud",
     );
 
     expect(report).toBe(
-      ["reference: err_9c41f2", "view: /app/<project>/keywords", "time: 01:28:57 UTC"].join("\n"),
+      ["reference: err_9c41f2", "view: /app/<project>/rank-tracker", "time: 01:28:57 UTC"].join(
+        "\n",
+      ),
     );
     expect(report).not.toContain("TypeError");
     expect(report).not.toContain("KeywordTable");
@@ -86,15 +88,15 @@ describe("AppErrorDiagnostics", () => {
         deploymentMode="cloud"
         details={{
           ...details,
-          message: "Failed at /app/prj_customer/keywords?cursor=secret",
-          pathname: "/app/prj_customer/keywords?cursor=secret",
-          stack: "Error at https://app.example.test/app/prj_customer/keywords?cursor=secret",
+          message: "Failed at /app/prj_customer/rank-tracker?cursor=secret",
+          pathname: "/app/prj_customer/rank-tracker?cursor=secret",
+          stack: "Error at https://app.example.test/app/prj_customer/rank-tracker?cursor=secret",
         }}
       />,
     );
 
     expect(
-      screen.getByText("Error at https://app.example.test/app/<project>/keywords"),
+      screen.getByText("Error at https://app.example.test/app/<project>/rank-tracker"),
     ).toBeVisible();
     expect(screen.queryByText(/prj_customer|cursor=secret/u)).not.toBeInTheDocument();
   });

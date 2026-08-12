@@ -1,6 +1,7 @@
 import { applyTheme } from "@/components/shell/set-theme";
 import { mockWorkspaces } from "@/components/shell/workspaces.mock";
 import { appPath } from "@/lib/routing/app-path";
+import { setNavigationState } from "@/tests/next-navigation";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -31,7 +32,9 @@ vi.mock("next/link", () => ({
   ),
 }));
 
-vi.mock("next/navigation", () => ({ usePathname: () => "/app/prj_1/overview" }));
+beforeEach(() => {
+  setNavigationState({ pathname: "/app/prj_1/overview" });
+});
 
 describe("Sidebar", () => {
   beforeEach(() => {
@@ -157,7 +160,7 @@ describe("Sidebar", () => {
     );
 
     const current = screen.getByRole("link", { name: "Overview" });
-    const other = screen.getByRole("link", { name: "Keywords" });
+    const other = screen.getByRole("link", { name: "Rank Tracker" });
 
     expect(current).toHaveAttribute("aria-current", "page");
     expect(current).toHaveClass("font-semibold", "text-fg", "hover:bg-nav-active");

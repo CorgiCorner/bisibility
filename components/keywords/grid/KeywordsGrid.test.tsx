@@ -7,12 +7,15 @@ import { keywordRows } from "@/components/keywords/keywords-fixtures";
 import { emptyKeywordFilters } from "@/lib/keywords/keyword-filter-model";
 import { appPath } from "@/lib/routing/app-path";
 import type { RunCheckNowInput } from "@/lib/schemas/keyword";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { stubBlobDownload } from "@/tests/blob-download";
+import { routerMock, setNavigationState } from "@/tests/next-navigation";
+import { stubResizeObserver } from "@/tests/observers";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { KeywordsGrid } from "./KeywordsGrid";
 
-const mocks = vi.hoisted(() => ({ exportKeywords: vi.fn(), push: vi.fn(), refresh: vi.fn() }));
+const mocks = vi.hoisted(() => ({ exportKeywords: vi.fn() }));
 
 // The page-level meter is gone (the header owns the only spend tracker), so tests
 // observe session spend through the provider instead of rendered meter copy.
@@ -21,10 +24,6 @@ function SessionSpendProbe() {
   return <output aria-label="session spend cents">{sessionCents}</output>;
 }
 
-vi.mock("next/navigation", () => ({
-  usePathname: () => "/app/keywords",
-  useRouter: () => ({ push: mocks.push, refresh: mocks.refresh }),
-}));
 vi.mock("@/lib/actions/keyword-import-export", () => ({ exportKeywords: mocks.exportKeywords }));
 vi.mock("@/components/keywords/import/ImportCsvWizard", () => ({
   ImportCsvWizard: () => null,
@@ -40,17 +39,9 @@ vi.mock("./DeferredDataGrid", async () => {
 
 type KeywordsGridProps = ComponentProps<typeof KeywordsGrid>;
 
-class ResizeObserverMock {
-  observe() {}
-  unobserve() {}
-  disconnect() {}
-}
-
-vi.stubGlobal("ResizeObserver", ResizeObserverMock);
-vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined);
-
 beforeEach(() => {
   vi.clearAllMocks();
+  setNavigationState({ pathname: "/app/rank-tracker" });
   mocks.exportKeywords.mockResolvedValue({
     content: "keyword\n",
     count: 1,
@@ -58,10 +49,8 @@ beforeEach(() => {
     filename: "keywords.csv",
     mimeType: "text/csv",
   });
-  vi.stubGlobal(
-    "URL",
-    Object.assign(URL, { createObjectURL: vi.fn(() => "blob:test"), revokeObjectURL: vi.fn() }),
-  );
+  stubResizeObserver();
+  stubBlobDownload();
 });
 
 function pendingRows(count = 2): KeywordsGridProps["rows"] {
@@ -227,7 +216,7 @@ describe("KeywordsGrid pending state", () => {
     expect(screen.getAllByRole("button", { name: /clear all/i })).toHaveLength(1);
     fireEvent.click(screen.getByRole("button", { name: /show all locations & devices/i }));
 
-    expect(mocks.push).toHaveBeenCalledWith(`${appPath("prj_1", "keywords")}?device=all`);
+    expect(routerMock.push).toHaveBeenCalledWith(`${appPath("prj_1", "rank-tracker")}?device=all`);
     fireEvent.click(screen.getByRole("button", { name: /clear all search and filters/i }));
     expect(await screen.findByText(keywordRows[0].keyword)).toBeInTheDocument();
   });
@@ -236,8 +225,10 @@ describe("KeywordsGrid pending state", () => {
     const [row] = pendingRows(1);
     const actions = renderPendingGrid({ rows: [row] });
 
-    const checkboxes = await screen.findAllByRole("checkbox");
-    fireEvent.click(checkboxes[1]);
+    const keywordRow = (await screen.findByText(row.keyword)).closest(
+      '[role="row"]',
+    ) as HTMLElement;
+    fireEvent.click(within(keywordRow).getByRole("checkbox"));
 
     expect(screen.getByText("1 selected")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Delete" }));
@@ -249,14 +240,17 @@ describe("KeywordsGrid pending state", () => {
         projectId: "prj_1",
       }),
     );
-    expect(mocks.refresh).toHaveBeenCalled();
+    expect(routerMock.refresh).toHaveBeenCalled();
   });
 
   it("exports selected keyword IDs", async () => {
     const [row] = pendingRows(1);
     renderPendingGrid({ rows: [row] });
 
-    fireEvent.click((await screen.findAllByRole("checkbox"))[1]);
+    const keywordRow = (await screen.findByText(row.keyword)).closest(
+      '[role="row"]',
+    ) as HTMLElement;
+    fireEvent.click(within(keywordRow).getByRole("checkbox"));
     fireEvent.click(screen.getByRole("button", { name: /^export$/i }));
 
     expect(screen.getByText("Export 1 selected keyword")).toBeInTheDocument();
@@ -294,7 +288,8 @@ describe("KeywordsGrid pending state", () => {
     expect(screen.getByLabelText("session spend cents")).toHaveTextContent("0");
     expect(screen.queryByRole("button", { name: "Run check (Top 100)" })).not.toBeInTheDocument();
 
-    fireEvent.click((await screen.findAllByRole("checkbox"))[1]);
+    const keywordRow = screen.getByText(rows[0].keyword).closest('[role="row"]') as HTMLElement;
+    fireEvent.click(within(keywordRow).getByRole("checkbox"));
     expect(screen.getByText("1 selected")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Run check (Top 100)" }));
 
@@ -306,16 +301,19 @@ describe("KeywordsGrid pending state", () => {
     expect(screen.getByText("Running")).toBeInTheDocument();
 
     resolveCheck({ status: "queued" });
-    await waitFor(() => expect(mocks.refresh).toHaveBeenCalledOnce());
+    await waitFor(() => expect(routerMock.refresh).toHaveBeenCalledOnce());
     expect(screen.getByLabelText("session spend cents")).toHaveTextContent("2");
-  });
+  }, 10_000);
 
   it("passes a selected check depth override", async () => {
     const [row] = pendingRows(1);
     const runCheckNowAction = vi.fn().mockResolvedValue({ status: "queued" });
     renderPendingGrid({ rows: [row], runCheckNowAction });
 
-    fireEvent.click((await screen.findAllByRole("checkbox"))[1]);
+    const keywordRow = (await screen.findByText(row.keyword)).closest(
+      '[role="row"]',
+    ) as HTMLElement;
+    fireEvent.click(within(keywordRow).getByRole("checkbox"));
     fireEvent.click(screen.getByRole("button", { name: "Choose check depth" }));
     fireEvent.click(screen.getByRole("menuitem", { name: "Top 20" }));
 

@@ -26,7 +26,7 @@ describe("AddCompetitorAction", () => {
   it("opens and closes the add-competitor drawer", () => {
     render(<AddCompetitorAction canCreate projectId="project_1" />);
     const addButton = screen.getByRole("button", { name: "Add competitor" });
-    expect(addButton).toHaveStyle({ minHeight: "34px" });
+    expect(addButton).toHaveClass("MuiButton-sizeSmall");
     fireEvent.click(addButton);
     expect(screen.getByText("Drawer for project_1")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Close competitor" }));

@@ -201,10 +201,9 @@ describe("form primitives", () => {
   it("uses the theme contrast foreground for primary links at the default 36px height", () => {
     render(<Button href="/connect">Connect free</Button>);
 
-    expect(screen.getByRole("link", { name: "Connect free" })).toHaveStyle({
-      color: "var(--mui-palette-primary-contrasttext)",
-      minHeight: "36px",
-    });
+    const link = screen.getByRole("link", { name: "Connect free" });
+    expect(link).toHaveClass("MuiButton-sizeMedium");
+    expect(link).toHaveStyle({ color: "var(--mui-palette-primary-contrasttext)" });
   });
 
   it("forwards download attributes to link buttons", () => {

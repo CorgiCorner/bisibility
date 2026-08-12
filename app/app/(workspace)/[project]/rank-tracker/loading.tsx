@@ -1,4 +1,4 @@
-// Skeleton for /app/keywords. Mirrors the compact scope, saved-view, filter toolbar,
+// Skeleton for /app/rank-tracker. Mirrors the compact scope, saved-view, filter toolbar,
 // weekly summary, and viewport-sized keyword table.
 
 import { PageContent } from "@/components/shell/PageContent";

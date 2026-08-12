@@ -1,11 +1,9 @@
+import { notFound } from "@/tests/next-navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getInstanceAdminAdministration } from "./instance-admin-administration";
 
 const mocks = vi.hoisted(() => ({
   getInstanceAdminSession: vi.fn(),
-  notFound: vi.fn(() => {
-    throw new Error("NEXT_NOT_FOUND");
-  }),
   queryRaw: vi.fn(),
 }));
 
@@ -14,7 +12,6 @@ vi.mock("@/lib/auth/instance-admin", () => ({
   getInstanceAdminSession: mocks.getInstanceAdminSession,
 }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: { $queryRaw: mocks.queryRaw } }));
-vi.mock("next/navigation", () => ({ notFound: mocks.notFound }));
 
 type SqlCall = readonly [readonly string[], ...unknown[]];
 
@@ -37,6 +34,9 @@ const now = new Date("2026-07-18T12:34:56.000Z");
 describe("getInstanceAdminAdministration", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    notFound.mockImplementation(() => {
+      throw new Error("NEXT_NOT_FOUND");
+    });
     mocks.getInstanceAdminSession.mockResolvedValue({ user: { id: "admin_1" } });
   });
 
@@ -45,7 +45,7 @@ describe("getInstanceAdminAdministration", () => {
 
     await expect(getInstanceAdminAdministration(now)).rejects.toThrow("NEXT_NOT_FOUND");
 
-    expect(mocks.notFound).toHaveBeenCalledOnce();
+    expect(notFound).toHaveBeenCalledOnce();
     expect(mocks.queryRaw).not.toHaveBeenCalled();
   });
 

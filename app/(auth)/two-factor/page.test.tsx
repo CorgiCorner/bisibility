@@ -1,10 +1,10 @@
+import { redirect } from "@/tests/next-navigation";
 import type { ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   getSession: vi.fn(),
-  redirect: vi.fn(),
   twoFactorChallengeForm: vi.fn(),
 }));
 
@@ -20,7 +20,6 @@ vi.mock("next/link", () => ({
     <a href={href}>{children}</a>
   ),
 }));
-vi.mock("next/navigation", () => ({ redirect: mocks.redirect }));
 
 import TwoFactorPage from "./page";
 
@@ -53,14 +52,14 @@ describe("two-factor page", () => {
   it("redirects an active session to the validated destination", async () => {
     const returnTo = "/oauth/consent?client_id=client_1&scope=openid";
     mocks.getSession.mockResolvedValue({ user: { id: "user_1" } });
-    mocks.redirect.mockImplementation((destination: string) => {
+    redirect.mockImplementation((destination: string) => {
       throw new Error(`redirect:${destination}`);
     });
 
     await expect(
       TwoFactorPage({ searchParams: Promise.resolve({ next: returnTo }) }),
     ).rejects.toThrow(`redirect:${returnTo}`);
-    expect(mocks.redirect).toHaveBeenCalledWith(returnTo);
+    expect(redirect).toHaveBeenCalledWith(returnTo);
     expect(mocks.twoFactorChallengeForm).not.toHaveBeenCalled();
   });
 });

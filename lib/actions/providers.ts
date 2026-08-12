@@ -14,6 +14,10 @@ import {
 } from "@/lib/api/provider-service";
 import { completePendingGooglePropertySelection } from "@/lib/providers/analytics/google-oauth-pending";
 import {
+  loadStoredGoogleProperties as loadStoredGooglePropertiesService,
+  saveStoredGoogleProperty as saveStoredGooglePropertyService,
+} from "@/lib/providers/analytics/google-stored-property";
+import {
   providerConnectionRefSchema,
   testProviderConnectionSchema,
   updateProviderCostSchema,
@@ -32,6 +36,13 @@ const googlePropertySelectionSchema = z.object({
   projectId: z.string().trim().min(1).max(120),
   property: z.string().trim().min(1).max(300),
 });
+const storedGooglePropertyLoadSchema = z.object({
+  projectId: z.string().trim().min(1).max(120),
+  provider: z.enum(["gsc", "ga4"]),
+});
+const storedGooglePropertySaveSchema = storedGooglePropertyLoadSchema.extend({
+  property: z.string().trim().min(1).max(300),
+});
 
 const providerMutationSuccess = { ok: true } as const;
 
@@ -47,6 +58,25 @@ async function providerScope(projectId: string) {
     type: "provider_connection",
   });
   return { actorId: actor.id, projectId: project.id };
+}
+
+export async function loadStoredGoogleProperties(input: unknown) {
+  const data = parseActionInput(storedGooglePropertyLoadSchema, input);
+  const scope = await providerScope(data.projectId);
+  return loadStoredGooglePropertiesService({ projectId: scope.projectId, provider: data.provider });
+}
+
+export async function saveStoredGoogleProperty(input: unknown) {
+  const data = parseActionInput(storedGooglePropertySaveSchema, input);
+  const scope = await providerScope(data.projectId);
+  const result = await saveStoredGooglePropertyService({
+    actorId: scope.actorId,
+    projectId: scope.projectId,
+    property: data.property,
+    provider: data.provider,
+  });
+  if (result.status === "saved") revalidateProviderViews();
+  return result;
 }
 
 export async function connectProvider(input: unknown) {

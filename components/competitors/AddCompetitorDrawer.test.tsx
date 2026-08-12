@@ -1,3 +1,5 @@
+import { deferred } from "@/tests/deferred";
+import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -5,10 +7,8 @@ import { AddCompetitorDrawer } from "./AddCompetitorDrawer";
 
 const mocks = vi.hoisted(() => ({
   addManagedCompetitor: vi.fn(),
-  refresh: vi.fn(),
 }));
 
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: mocks.refresh }) }));
 vi.mock("@/lib/actions/competitors", () => ({
   addManagedCompetitor: mocks.addManagedCompetitor,
 }));
@@ -48,14 +48,6 @@ vi.mock("@/components/ui", () => ({
       </div>
     ) : null,
 }));
-
-function deferred<T>() {
-  let resolve: (value: T) => void = () => undefined;
-  const promise = new Promise<T>((done) => {
-    resolve = done;
-  });
-  return { promise, resolve };
-}
 
 describe("AddCompetitorDrawer", () => {
   beforeEach(() => {
@@ -105,6 +97,6 @@ describe("AddCompetitorDrawer", () => {
     pending.resolve({ domain: "example.net", id: "competitor_1", label: "example" });
 
     await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
-    expect(mocks.refresh).toHaveBeenCalledOnce();
+    expect(routerMock.refresh).toHaveBeenCalledOnce();
   });
 });

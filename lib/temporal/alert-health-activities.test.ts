@@ -15,6 +15,7 @@ vi.mock("../alerts/health", () => ({
   getAlertHealthConfig: mocks.config,
 }));
 vi.mock("../ops/config", () => ({ getOpsConfig: mocks.opsConfig }));
+vi.mock("../ops/labels", () => ({ ruleLabel: (id: string) => id }));
 vi.mock("../ops/notify", () => ({ notifyOps: mocks.notifyOps }));
 
 describe("alert health activity", () => {
@@ -67,7 +68,11 @@ describe("alert health activity", () => {
     ]);
     await expect(alertHealthActivity()).resolves.toMatchObject({ spikes: 2, status: "completed" });
     expect(mocks.notifyOps).toHaveBeenCalledWith(
-      expect.objectContaining({ dedupeKey: "alert-health:fire:rule_1", kind: "alert_fire_spike" }),
+      expect.objectContaining({
+        dedupeKey: "alert-health:fire:rule_1",
+        fields: expect.objectContaining({ Rule: "rule_1" }),
+        kind: "alert_fire_spike",
+      }),
     );
     expect(mocks.notifyOps).toHaveBeenCalledWith(
       expect.objectContaining({ dedupeKey: "alert-health:fire:rule_2", kind: "alert_fire_spike" }),

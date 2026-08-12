@@ -6,7 +6,7 @@ import {
 import type { AddKeywordsForm } from "@/components/onboarding/steps/StepAddKeywords";
 import type { OnboardingConnectProviderInput } from "@/components/onboarding/steps/StepConnectProvider";
 import type { CreateProjectFormValues } from "@/components/onboarding/steps/StepCreateProject";
-import type { OnboardingTrackingDefaultsInput } from "@/components/onboarding/steps/StepSchedule";
+import type { OnboardingTrackingDefaultsInput } from "@/components/onboarding/steps/step-schedule-model";
 import { DEFAULT_SERP_DEVICE, DEFAULT_SERP_MARKET } from "@/lib/serp/markets";
 // Restore ownership matching with issue #863:
 // import { defaultMatchingScopeValues } from "./MatchingScopeFields";
@@ -67,8 +67,7 @@ export function initialOnboardingDraft(
     },
     createProject: {
       // ...defaultMatchingScopeValues, // Restore ownership matching with issue #863.
-      domain: project?.domain ?? "",
-      name: project?.name ?? "",
+      website: project?.domain ?? "",
     },
     schedule: {
       country: defaultCountry,

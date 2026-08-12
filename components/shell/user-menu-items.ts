@@ -1,8 +1,9 @@
-import { DOCS_URL, FEEDBACK_URL, GITHUB_URL, MARKETING_URL } from "@/lib/site/site";
+import { DISCORD_URL, DOCS_URL, FEEDBACK_URL, GITHUB_URL, MARKETING_URL } from "@/lib/site/site";
 import {
   BookOpenTextIcon as BookOpenText,
   ChatCircleDotsIcon as ChatCircleDots,
   CommandIcon as Command,
+  DiscordLogoIcon as DiscordLogo,
   GithubLogoIcon as GithubLogo,
   HouseIcon as House,
   SignOutIcon as SignOut,
@@ -51,6 +52,7 @@ export function resourceLinksForDeployment(showHostedLinks: boolean) {
 
 export const communityLinks = [
   { label: "GitHub", href: GITHUB_URL, icon: GithubLogo, external: true },
+  { label: "Discord", href: DISCORD_URL, icon: DiscordLogo, external: true },
 ] satisfies UserMenuLink[];
 
 export const signOutLink = { label: "Sign out", icon: SignOut } satisfies UserMenuLink;

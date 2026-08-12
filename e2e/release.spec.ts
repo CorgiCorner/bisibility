@@ -1,9 +1,10 @@
 import fs from "node:fs/promises";
 import { expect, type Page, test } from "@playwright/test";
-import { testAndSaveDataForSeo } from "./workspace";
+import { completeOnboarding } from "./workspace";
 
 const otpFile = process.env.BISIBILITY_E2E_OTP_FILE;
 const authResponseTimeout = 30_000;
+const authRedirectTimeout = 60_000;
 
 async function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -56,68 +57,10 @@ async function signIn(page: Page, email: string) {
     page.getByRole("button", { name: "Verify & continue" }).click(),
   );
   await page.waitForURL((url) => url.pathname === "/app" || url.pathname === "/onboarding", {
-    timeout: authResponseTimeout,
+    timeout: authRedirectTimeout,
+    waitUntil: "commit",
   });
-  await expect(page).toHaveURL(/\/onboarding(\?|$)/);
-}
-
-async function clickWizardPrimary(page: Page, label: string, nextUrl: RegExp) {
-  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
-  const button = page.getByRole("button", { name: label, exact: true });
-  await expect(button).toBeEnabled();
-  await button.click();
-  await expect(page).toHaveURL(nextUrl, { timeout: 10000 });
-}
-
-// The hydrated provider step submits twice to connect then advance; pre-hydration
-// reloads may add an attempt, so loop until navigation completes.
-async function clickProviderContinue(page: Page, nextUrl: RegExp) {
-  for (let attempt = 0; attempt < 4; attempt += 1) {
-    await page.getByRole("button", { name: "Continue", exact: true }).click();
-    try {
-      await expect(page).toHaveURL(nextUrl, { timeout: 4000 });
-      return;
-    } catch {
-      await page.waitForLoadState("networkidle");
-    }
-  }
-  await expect(page).toHaveURL(nextUrl, { timeout: 10000 });
-}
-
-async function completeOnboarding(page: Page, suffix: string) {
-  const domain = `e2e-${suffix}.example.com`;
-  const keyword = `rank tracker ${suffix}`;
-
-  await page.goto("/onboarding");
-
-  // Step 1 - Create project. Matching includes the root domain, www, and all subdomains.
-  await page.getByLabel("Domain", { exact: true }).fill(domain);
-  await page.getByLabel("Project name").fill(`E2E ${suffix}`);
-  await clickWizardPrimary(page, "Continue", /[?&]step=2(?:&|$)/);
-
-  // Step 2 - Developer access is optional for dashboard-only use.
-  await clickWizardPrimary(page, "Continue", /[?&]step=3(?:&|$)/);
-
-  // Step 3 - Test and save the fake provider, then advance.
-  await page.getByLabel("API login").fill("fake-login");
-  // Role textbox - the reveal-toggle button's aria-label also contains "API password".
-  await page.getByRole("textbox", { name: /API password/ }).fill("fake-secret");
-  await testAndSaveDataForSeo(page);
-  await clickProviderContinue(page, /[?&]step=4(?:&|$)/);
-
-  // Step 4 - Tracking defaults (defaults preselected)
-  await clickWizardPrimary(page, "Continue", /[?&]step=5(?:&|$)/);
-
-  // Step 5 - Add keywords
-  await page.getByPlaceholder("One keyword per line").fill(keyword);
-  await clickWizardPrimary(page, "Continue", /[?&]step=6(?:&|$)/);
-
-  // Step 6 - First check (queues the checks, then opens the dashboard)
-  await clickWizardPrimary(page, "Open dashboard", /\/app\/prj_[^/]+\/overview$/);
-
-  const projectRef = new URL(page.url()).pathname.split("/")[2];
-  if (!projectRef) throw new Error("Onboarding did not land on a project-scoped dashboard.");
-  return { keyword, projectRef };
+  await expect(page).toHaveURL(/\/onboarding(\?|$)/, { timeout: authRedirectTimeout });
 }
 
 async function expectAppPage(page: Page, path: string, assertVisible: () => Promise<void>) {
@@ -131,12 +74,12 @@ async function clickThroughAppPages(page: Page, keyword: string, projectRef: str
     await expect(page.getByText("Tracked keywords")).toBeVisible();
   });
 
-  await expectAppPage(page, `/app/${projectRef}/keywords`, async () => {
+  await expectAppPage(page, `/app/${projectRef}/rank-tracker`, async () => {
     await expect(page.getByText(keyword).first()).toBeVisible();
   });
   await page.getByRole("link", { name: "View keyword details" }).click();
   await expect(page).toHaveURL(
-    (url) => url.pathname.startsWith(`/app/${projectRef}/keywords/kw_`),
+    (url) => url.pathname.startsWith(`/app/${projectRef}/rank-tracker/kw_`),
     { timeout: 30_000 },
   );
   await expect(page.getByRole("link", { name: "All keywords" })).toBeVisible();
@@ -171,7 +114,7 @@ async function clickThroughAppPages(page: Page, keyword: string, projectRef: str
 
 async function verifyWorkspaceWidths(page: Page, keywordDetailPath: string, projectRef: string) {
   const analyticsPaths = [
-    `/app/${projectRef}/keywords`,
+    `/app/${projectRef}/rank-tracker`,
     keywordDetailPath,
     `/app/${projectRef}/checks`,
     `/app/${projectRef}/timeline`,
@@ -231,7 +174,10 @@ test("release flow: auth, onboarding, app pages, keyword detail, logout", async 
   await expectSuccessfulAuthPost(page, "/api/auth/sign-out", () =>
     page.getByRole("menuitem", { name: "Sign out" }).click(),
   );
-  await expect(page).toHaveURL((url) => url.pathname === "/login");
+  await page.waitForURL((url) => url.pathname === "/login", {
+    timeout: authRedirectTimeout,
+    waitUntil: "commit",
+  });
 
   await page.goto(`/app/${projectRef}/overview`);
   await expect(page).toHaveURL((url) => url.pathname === "/login");

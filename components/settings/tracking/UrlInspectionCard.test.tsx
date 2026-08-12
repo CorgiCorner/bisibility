@@ -2,8 +2,6 @@ import { UrlInspectionCard } from "@/components/settings/tracking/UrlInspectionC
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
-
 describe("UrlInspectionCard", () => {
   it("shows the project-scoped inspection setting and shared property quota", () => {
     render(

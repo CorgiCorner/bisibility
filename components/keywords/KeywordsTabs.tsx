@@ -46,7 +46,7 @@ export function KeywordsTabs({
         aria-current={trackedActive ? "page" : undefined}
         aria-label={`Tracked ${trackedCount}`}
         className={tabClass(trackedActive)}
-        href={appPath(projectRef, "keywords")}
+        href={appPath(projectRef, "rank-tracker")}
       >
         <ChartLineUp size={14} weight={trackedActive ? "bold" : "regular"} />
         <span>Tracked</span>
@@ -56,7 +56,7 @@ export function KeywordsTabs({
         aria-current={savedActive ? "page" : undefined}
         aria-label={`Saved ${savedCount}`}
         className={tabClass(savedActive)}
-        href={`${appPath(projectRef, "keywords")}?tab=saved`}
+        href={`${appPath(projectRef, "rank-tracker")}?tab=saved`}
       >
         <BookmarkSimple
           className={savedActive ? "text-accent-text" : undefined}

@@ -53,7 +53,12 @@ export type GoogleOAuthSetup = {
   preferredProperty?: string;
   properties: readonly GooglePropertyOption[];
   provider?: "ga4" | "gsc";
+  requiresReauth?: boolean;
 };
+
+export type GooglePropertySaveResult =
+  | { property: string; status: "saved" }
+  | { status: "reauth_required" };
 
 export type DrawerDefaults = {
   costPerCheck?: number;
@@ -138,6 +143,15 @@ export type ProviderActionHandlers = {
     projectId: string;
     property: string;
   }): Promise<{ property: string }>;
+  loadStoredGoogleProperties?(input: {
+    projectId: string;
+    provider: "ga4" | "gsc";
+  }): Promise<GoogleOAuthSetup>;
+  saveStoredGoogleProperty?(input: {
+    projectId: string;
+    property: string;
+    provider: "ga4" | "gsc";
+  }): Promise<GooglePropertySaveResult>;
   connectProvider(input: ConnectProviderActionInput): Promise<unknown>;
   disconnectProvider?(input: DisconnectProviderInput): Promise<unknown>;
   updateProviderSettings(input: ProviderConnectionSettingsInput): Promise<unknown>;

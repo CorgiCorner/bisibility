@@ -1,20 +1,15 @@
+import { notFound, redirect } from "@/tests/next-navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getQueryActor, requireReadableProject, resolveProjectAccess } from "./_auth";
 
 const mocks = vi.hoisted(() => ({
   authorize: vi.fn(),
   cacheEntries: new Map<unknown, Map<string, unknown>>(),
-  notFound: vi.fn(() => {
-    throw new Error("NEXT_NOT_FOUND");
-  }),
   prisma: {
     project: { findFirst: vi.fn(), findMany: vi.fn(), findUnique: vi.fn() },
     session: { deleteMany: vi.fn() },
     user: { findUnique: vi.fn() },
   },
-  redirect: vi.fn(() => {
-    throw new Error("NEXT_REDIRECT");
-  }),
   requireSession: vi.fn(),
 }));
 
@@ -33,7 +28,6 @@ vi.mock("react", () => ({
       return entries.get(key);
     },
 }));
-vi.mock("next/navigation", () => ({ notFound: mocks.notFound, redirect: mocks.redirect }));
 vi.mock("@/lib/auth/authorize", () => ({ authorize: mocks.authorize }));
 vi.mock("@/lib/auth/session", () => ({ requireSession: mocks.requireSession }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
@@ -49,6 +43,12 @@ function mockMemberships(memberships: { projectId: string; role: string }[]) {
 describe("resolveProjectAccess", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    notFound.mockImplementation(() => {
+      throw new Error("NEXT_NOT_FOUND");
+    });
+    redirect.mockImplementation(() => {
+      throw new Error("NEXT_REDIRECT");
+    });
     mocks.cacheEntries.clear();
     mockMemberships([{ projectId: "project_1", role: "member" }]);
   });
@@ -82,7 +82,7 @@ describe("resolveProjectAccess", () => {
     await expect(resolveProjectAccess("prj_h00000000000000000000000")).rejects.toThrow(
       "NEXT_NOT_FOUND",
     );
-    expect(mocks.notFound).toHaveBeenCalledOnce();
+    expect(notFound).toHaveBeenCalledOnce();
   });
 
   it("returns not found for an unknown public id", async () => {
@@ -91,7 +91,7 @@ describe("resolveProjectAccess", () => {
     await expect(resolveProjectAccess("prj_i00000000000000000000000")).rejects.toThrow(
       "NEXT_NOT_FOUND",
     );
-    expect(mocks.notFound).toHaveBeenCalledOnce();
+    expect(notFound).toHaveBeenCalledOnce();
   });
 
   it("rejects a ref that is not a project public id without touching the database", async () => {
@@ -110,6 +110,12 @@ describe("resolveProjectAccess", () => {
 describe("requireReadableProject", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    notFound.mockImplementation(() => {
+      throw new Error("NEXT_NOT_FOUND");
+    });
+    redirect.mockImplementation(() => {
+      throw new Error("NEXT_REDIRECT");
+    });
     mocks.cacheEntries.clear();
     mockMemberships([
       { projectId: "project_1", role: "member" },
@@ -145,6 +151,12 @@ describe("requireReadableProject", () => {
 describe("getQueryActor", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    notFound.mockImplementation(() => {
+      throw new Error("NEXT_NOT_FOUND");
+    });
+    redirect.mockImplementation(() => {
+      throw new Error("NEXT_REDIRECT");
+    });
     mocks.cacheEntries.clear();
     mockMemberships([]);
   });

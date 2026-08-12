@@ -3,16 +3,12 @@ import { NotificationsLoading } from "@/components/settings/notifications/Notifi
 import { canProjectAction } from "@/lib/auth/capabilities";
 import type { Role } from "@/lib/generated/prisma/client";
 import type { NotificationPreferencesView } from "@/lib/queries/notification-prefs";
+import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  refresh: vi.fn(),
   updateNotificationPreferences: vi.fn(),
-}));
-
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ refresh: mocks.refresh }),
 }));
 
 vi.mock("@/lib/actions/notification-prefs", () => ({
@@ -81,7 +77,7 @@ describe("NotificationPreferences", () => {
       ),
     );
     expect(within(channelCard).queryByRole("button", { name: "Save" })).not.toBeInTheDocument();
-    expect(mocks.refresh).toHaveBeenCalled();
+    expect(routerMock.refresh).toHaveBeenCalled();
   });
 
   it("keeps unavailable cells as reference dashes without planned channel columns", () => {

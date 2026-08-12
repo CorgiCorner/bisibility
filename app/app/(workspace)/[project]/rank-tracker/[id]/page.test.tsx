@@ -47,7 +47,6 @@ vi.mock("@/lib/queries/keywords", () => ({
   getKeywordDetail: mocks.getKeywordDetail,
   getKeywordTagSuggestions: mocks.getKeywordTagSuggestions,
 }));
-vi.mock("next/navigation", () => ({ notFound: vi.fn() }));
 
 describe("KeywordDetailPage", () => {
   beforeEach(() => {

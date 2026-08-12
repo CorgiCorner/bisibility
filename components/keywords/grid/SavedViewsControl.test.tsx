@@ -3,10 +3,6 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { SavedViewsControl } from "./SavedViewsControl";
 
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
-}));
-
 const savedViews = [
   {
     canDelete: true,

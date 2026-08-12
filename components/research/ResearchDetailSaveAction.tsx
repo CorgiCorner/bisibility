@@ -19,7 +19,7 @@ export function ResearchDetailSaveAction({
     return (
       <Link
         className="mt-3 flex items-center justify-center gap-2 rounded-[9px] border border-border bg-bg-sunken px-3 py-2.5 text-[12.5px] font-semibold text-accent-text hover:border-border-strong"
-        href={`${appPath(projectRef, "keywords")}?tab=saved`}
+        href={`${appPath(projectRef, "rank-tracker")}?tab=saved`}
       >
         <BookmarkSimple aria-hidden size={14} weight="fill" />
         Saved / view in Keywords

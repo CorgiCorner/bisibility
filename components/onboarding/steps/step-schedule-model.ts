@@ -1,6 +1,10 @@
 import type { LocationFieldValue } from "@/components/keywords/LocationField";
 import type { OnboardingFlowState } from "@/components/onboarding/onboarding-fixtures";
 import {
+  countryNameForLocationValue,
+  locationValueForKey,
+} from "@/components/onboarding/onboarding-location-field";
+import {
   countryLocationKey,
   DEFAULT_ONBOARDING_LOCATION_KEY,
   MAX_ONBOARDING_LOCATIONS,
@@ -56,7 +60,29 @@ export function withTrackingDefaults(
     jitterMinutes: values?.jitterMinutes ?? 60,
     locations,
     projectId: values?.projectId ?? flowState?.projectId ?? "",
-    serpDepth: values?.serpDepth ?? DEFAULT_SERP_DEPTH,
+    serpDepth: values?.serpDepth ?? flowState?.serpDepth ?? DEFAULT_SERP_DEPTH,
     timezone: values?.timezone ?? "UTC",
+  };
+}
+
+export function completedTrackingDefaults(
+  values: TrackingDefaultsForm,
+  selectedLocations: readonly LocationFieldValue[],
+): OnboardingTrackingDefaultsInput {
+  const locationSelections = values.locations.map(
+    (key) =>
+      selectedLocations.find((location) => location.canonicalKey === key) ??
+      locationValueForKey(key),
+  );
+  const primaryLocation =
+    locationSelections[0] ?? locationValueForKey(DEFAULT_ONBOARDING_LOCATION_KEY);
+
+  return {
+    ...values,
+    city: primaryLocation.kind === "city" ? primaryLocation.displayName : null,
+    country: countryNameForLocationValue(primaryLocation),
+    device: values.devices[0] ?? DEFAULT_SERP_DEVICE,
+    locationKey: primaryLocation.canonicalKey,
+    locationSelections,
   };
 }

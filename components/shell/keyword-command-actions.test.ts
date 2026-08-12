@@ -15,13 +15,13 @@ describe("keyword command actions", () => {
   });
 
   it("builds and parses keyword action URLs", () => {
-    expect(keywordActionHref("prj_1", "add")).toBe("/app/prj_1/keywords?action=add");
+    expect(keywordActionHref("prj_1", "add")).toBe("/app/prj_1/rank-tracker?action=add");
     expect(parseKeywordCommandAction("run-check")).toBe("run-check");
     expect(parseKeywordCommandAction("unknown")).toBeNull();
   });
 
   it("clicks the existing keyword action on the keywords page", () => {
-    history.replaceState(null, "", "/app/prj_1/keywords");
+    history.replaceState(null, "", "/app/prj_1/rank-tracker");
     const push = vi.fn();
     const click = vi.fn();
     document.body.innerHTML = `<button type="button">Add keyword</button>`;
@@ -39,7 +39,7 @@ describe("keyword command actions", () => {
 
     runKeywordCommandFromPalette("prj_1", "import", push);
 
-    expect(push).toHaveBeenCalledWith("/app/prj_1/keywords?action=import");
+    expect(push).toHaveBeenCalledWith("/app/prj_1/rank-tracker?action=import");
     expect(consumePendingKeywordCommandAction()).toBe("import");
   });
 

@@ -1,11 +1,8 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { makeCostContext } from "@/tests/factories/cost-context";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AddKeywordDrawer } from "./AddKeywordDrawer";
-
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ refresh: vi.fn() }),
-}));
 
 const fetchMock = vi.fn(async () => ({ ok: true, json: async () => ({ data: [] }) }));
 vi.stubGlobal("fetch", fetchMock);
@@ -31,24 +28,16 @@ function renderDrawer(props: Partial<ComponentProps<typeof AddKeywordDrawer>> = 
   return { ...view, addKeywordsAction, onClose };
 }
 
+function addKeywordForm() {
+  const form = document.querySelector<HTMLFormElement>("form#add-keyword-form");
+  if (!form) throw new Error("Add keyword form was not rendered.");
+  return form;
+}
+
 describe("AddKeywordDrawer", () => {
   it("shows live add-keyword cost and paused estimates", () => {
     renderDrawer({
-      costContext: {
-        capCents: 5000,
-        costPerCheckCents: 10,
-        cronExpression: null,
-        depth: 100,
-        deviceCount: 1,
-        devices: ["desktop"],
-        frequency: "daily",
-        keywordCount: 10,
-        locationCount: 1,
-        projectName: "Example",
-        providerId: "dataforseo",
-        rawFrequency: "daily",
-        spentCents: 100,
-      },
+      costContext: makeCostContext({ costPerCheckCents: 10, keywordCount: 10, spentCents: 100 }),
     });
     fireEvent.change(screen.getByLabelText("Keywords"), {
       target: { value: "first keyword\nsecond keyword" },
@@ -69,21 +58,12 @@ describe("AddKeywordDrawer", () => {
 
   it("shows an exact zero-cost estimate for an explicitly free provider", () => {
     renderDrawer({
-      costContext: {
-        capCents: 5000,
+      costContext: makeCostContext({
         costPerCheckCents: 0,
-        cronExpression: null,
-        depth: 100,
-        deviceCount: 1,
-        devices: ["desktop"],
-        frequency: "daily",
         keywordCount: 0,
-        locationCount: 1,
-        projectName: "Example",
         providerId: "local-sequence",
-        rawFrequency: "daily",
         spentCents: 0,
-      },
+      }),
     });
     fireEvent.change(screen.getByLabelText("Keywords"), { target: { value: "rank tracker" } });
 
@@ -97,21 +77,12 @@ describe("AddKeywordDrawer", () => {
 
   it("shows counts without money when the provider rate is unknown", () => {
     renderDrawer({
-      costContext: {
-        capCents: 5000,
+      costContext: makeCostContext({
         costPerCheckCents: null,
-        cronExpression: null,
-        depth: 100,
-        deviceCount: 1,
-        devices: ["desktop"],
-        frequency: "daily",
         keywordCount: 10,
-        locationCount: 1,
-        projectName: "Example",
         providerId: null,
-        rawFrequency: "daily",
         spentCents: 100,
-      },
+      }),
     });
     fireEvent.change(screen.getByLabelText("Keywords"), { target: { value: "rank tracker" } });
 
@@ -120,21 +91,7 @@ describe("AddKeywordDrawer", () => {
 
   it("keeps the daily project base cost when new keywords are paused", async () => {
     renderDrawer({
-      costContext: {
-        capCents: 5000,
-        costPerCheckCents: 10,
-        cronExpression: null,
-        depth: 100,
-        deviceCount: 1,
-        devices: ["desktop"],
-        frequency: "daily",
-        keywordCount: 10,
-        locationCount: 1,
-        projectName: "Example",
-        providerId: "dataforseo",
-        rawFrequency: "daily",
-        spentCents: 100,
-      },
+      costContext: makeCostContext({ costPerCheckCents: 10, keywordCount: 10, spentCents: 100 }),
       initialKeyword: "rank tracker",
       showSchedule: true,
     });
@@ -151,21 +108,7 @@ describe("AddKeywordDrawer", () => {
 
   it("does not show an estimate for the API tab", () => {
     renderDrawer({
-      costContext: {
-        capCents: 5000,
-        costPerCheckCents: 10,
-        cronExpression: null,
-        depth: 100,
-        deviceCount: 1,
-        devices: ["desktop"],
-        frequency: "daily",
-        keywordCount: 10,
-        locationCount: 1,
-        projectName: "Example",
-        providerId: "dataforseo",
-        rawFrequency: "daily",
-        spentCents: 100,
-      },
+      costContext: makeCostContext({ costPerCheckCents: 10, keywordCount: 10, spentCents: 100 }),
       initialTab: "api",
     });
     expect(screen.queryByText(/project total/)).not.toBeInTheDocument();
@@ -173,21 +116,14 @@ describe("AddKeywordDrawer", () => {
 
   it("never prices a manual project as scheduled monthly spend", () => {
     renderDrawer({
-      costContext: {
-        capCents: 5000,
+      costContext: makeCostContext({
         costPerCheckCents: null,
-        cronExpression: null,
-        depth: 100,
-        deviceCount: 1,
-        devices: ["desktop"],
         frequency: "monthly",
         keywordCount: 10,
-        locationCount: 1,
-        projectName: "Example",
         providerId: null,
         rawFrequency: "manual",
         spentCents: 100,
-      },
+      }),
     });
     fireEvent.change(screen.getByLabelText("Keywords"), { target: { value: "rank tracker" } });
     expect(
@@ -199,21 +135,13 @@ describe("AddKeywordDrawer", () => {
 
   it("labels an unparseable custom cron separately from an unavailable rate", () => {
     renderDrawer({
-      costContext: {
-        capCents: 5000,
+      costContext: makeCostContext({
         costPerCheckCents: 10,
         cronExpression: "not a cron",
-        depth: 100,
-        deviceCount: 1,
-        devices: ["desktop"],
-        frequency: "daily",
         keywordCount: 10,
-        locationCount: 1,
-        projectName: "Example",
-        providerId: "dataforseo",
         rawFrequency: "custom_cron",
         spentCents: 100,
-      },
+      }),
     });
     fireEvent.change(screen.getByLabelText("Keywords"), { target: { value: "rank tracker" } });
 
@@ -271,7 +199,7 @@ describe("AddKeywordDrawer", () => {
     fireEvent.change(screen.getByLabelText("Paste CSV"), {
       target: { value: "rank tracker" },
     });
-    fireEvent.submit(document.querySelector("#add-keyword-form") as HTMLFormElement);
+    fireEvent.submit(addKeywordForm());
 
     expect(await screen.findByRole("heading", { name: "Review keywords" })).toBeInTheDocument();
     expect(addKeywordsAction).not.toHaveBeenCalled();
@@ -296,7 +224,7 @@ describe("AddKeywordDrawer", () => {
     expect(screen.getByText("0 keywords parsed")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /review keywords/i })).toBeDisabled();
 
-    fireEvent.submit(document.querySelector("#add-keyword-form") as HTMLFormElement);
+    fireEvent.click(screen.getByRole("button", { name: /review keywords/i }));
     expect(screen.queryByRole("heading", { name: "Review keywords" })).not.toBeInTheDocument();
     expect(addKeywordsAction).not.toHaveBeenCalled();
   });
@@ -351,7 +279,7 @@ describe("AddKeywordDrawer", () => {
     expect(addKeywordsAction).not.toHaveBeenCalled();
   });
 
-  it("surfaces malformed CSV before review and blocks confirmation", async () => {
+  it("keeps malformed CSV out of the native submit path", async () => {
     const { addKeywordsAction } = renderDrawer({ initialTab: "csv" });
 
     fireEvent.change(screen.getByLabelText("Paste CSV"), {
@@ -363,6 +291,16 @@ describe("AddKeywordDrawer", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("0 keywords parsed")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /review keywords/i })).toBeDisabled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Manual" }));
+    fireEvent.change(screen.getByLabelText("Keywords"), { target: { value: "rank tracker" } });
+    fireEvent.click(screen.getByRole("button", { name: "CSV" }));
+    fireEvent.submit(addKeywordForm());
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    expect(screen.queryByRole("heading", { name: "Review keywords" })).not.toBeInTheDocument();
     expect(addKeywordsAction).not.toHaveBeenCalled();
   });
 
@@ -417,22 +355,12 @@ describe("AddKeywordDrawer", () => {
   it("shares schedule configuration and added results with research callers", async () => {
     const onAdded = vi.fn();
     const { addKeywordsAction } = renderDrawer({
-      costContext: {
-        capCents: 5000,
+      costContext: makeCostContext({
         costPerCheckCents: 10,
-        cronExpression: null,
-        depth: 100,
-        deviceCount: 1,
-        devices: ["desktop"],
-        frequency: "daily",
         keywordCount: 10,
-        locationCount: 1,
-        projectName: "Example",
-        providerId: "dataforseo",
-        rawFrequency: "daily",
         spentCents: 100,
         timezone: "Europe/Warsaw",
-      },
+      }),
       initialKeyword: "rank tracker",
       onAdded,
       showSchedule: true,

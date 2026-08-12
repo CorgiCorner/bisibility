@@ -8,15 +8,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   downloadWorkspacePackage: vi.fn(async () => "project-backup.zip"),
-  push: vi.fn(),
-  refresh: vi.fn(),
 }));
 
 vi.mock("@/components/cloud/workspace-package-download", () => ({
   downloadWorkspacePackage: mocks.downloadWorkspacePackage,
-}));
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: mocks.push, refresh: mocks.refresh }),
 }));
 
 const packageFile = {
