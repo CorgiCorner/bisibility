@@ -20,6 +20,7 @@ export default function KeywordsLoading() {
         <div className="flex gap-1 border-b border-border-strong">
           <Bar className="mb-2 h-[26px] w-[118px]" />
           <Bar className="mb-2 h-[26px] w-[104px]" />
+          <Bar className="mb-2 h-[26px] w-[86px]" />
         </div>
         <div className="overflow-hidden rounded-[14px] border border-border bg-bg-elev">
           <div className="grid gap-3 border-b border-border px-4 py-[14px] xl:flex xl:items-center">

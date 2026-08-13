@@ -48,6 +48,13 @@ export function appPath(projectRef: ProjectRef, ...segments: string[]): string {
   return joinedPath(APP_ROOT, [projectRef, ...segments]);
 }
 
+export type RankTrackerTab = "checks" | "saved" | "tracked";
+
+export function rankTrackerTabPath(projectRef: ProjectRef, tab: RankTrackerTab): string {
+  const path = appPath(projectRef, "rank-tracker");
+  return tab === "tracked" ? path : `${path}?tab=${tab}`;
+}
+
 export function appRootPath(...segments: string[]): string {
   return joinedPath(APP_ROOT, segments);
 }

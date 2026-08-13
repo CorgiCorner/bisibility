@@ -190,7 +190,6 @@ export function revalidateRankCheckViews(keywordId?: string | null) {
     projectPage("overview"),
     projectPage("rank-tracker"),
     keywordDetailTarget(keywordId),
-    projectPage("checks"),
     projectPage("timeline"),
     projectPage("alerts"),
     projectPage("competitors"),
@@ -201,7 +200,7 @@ export function revalidateRankCheckViews(keywordId?: string | null) {
 
 export function revalidateProviderViews() {
   revalidateTargets([
-    projectPage("checks"),
+    projectPage("rank-tracker"),
     projectPage("integrations"),
     projectPage("overview"),
     projectPage("settings"),

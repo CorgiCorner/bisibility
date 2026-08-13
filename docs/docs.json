@@ -86,6 +86,7 @@
               "api/providers",
               "api/analytics",
               "api/backlinks",
+              "api/domain-overview",
               "api/alert-rules",
               "api/notification-preferences",
               "api/saved-views",
@@ -196,6 +197,15 @@
             "pages": [
               "GET /projects/{projectId}/backlinks",
               "POST /projects/{projectId}/backlinks/rows"
+            ]
+          },
+          {
+            "group": "Domain Overview",
+            "pages": [
+              "POST /projects/{projectId}/domain-overview/analyze",
+              "POST /projects/{projectId}/domain-overview/history",
+              "POST /projects/{projectId}/domain-overview/keywords",
+              "POST /projects/{projectId}/domain-overview/pages"
             ]
           },
           {

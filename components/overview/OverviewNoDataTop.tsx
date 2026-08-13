@@ -7,7 +7,7 @@ import {
 } from "@/components/rank-check/FirstCheckBannerAction";
 import { Card } from "@/components/ui";
 import type { ProjectRef } from "@/lib/routing/app-path";
-import { appPath } from "@/lib/routing/app-path";
+import { appPath, rankTrackerTabPath } from "@/lib/routing/app-path";
 import { ClockCountdownIcon as ClockCountdown } from "@phosphor-icons/react/dist/ssr";
 import { PositionDistributionCard } from "./PositionDistributionCard";
 import { PositionTrendCard } from "./PositionTrendCard";
@@ -112,7 +112,12 @@ export function NoDataBanner({
       />
     );
   } else if (state === "running") {
-    action = <FirstCheckBannerLink href={appPath(projectRef, "checks")} label="View check runs" />;
+    action = (
+      <FirstCheckBannerLink
+        href={rankTrackerTabPath(projectRef, "checks")}
+        label="View check runs"
+      />
+    );
   }
 
   // Same "toast" variant as the roadmap-preview SoonBanner: accent border + soft fill.

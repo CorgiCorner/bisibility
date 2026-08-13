@@ -61,4 +61,19 @@ describe("BacklinksPage", () => {
       }),
     );
   });
+
+  it("does not price a suggested target when the page opens empty", async () => {
+    render(
+      await BacklinksPage({
+        params: Promise.resolve({ project: "prj_1" }),
+        searchParams: Promise.resolve({}),
+      }),
+    );
+
+    expect(screen.getByTestId("backlinks-workspace")).toBeInTheDocument();
+    expect(mocks.analyze).not.toHaveBeenCalled();
+    expect(mocks.workspace).toHaveBeenCalledWith(
+      expect.objectContaining({ initialEstimate: undefined, initialTarget: "" }),
+    );
+  });
 });

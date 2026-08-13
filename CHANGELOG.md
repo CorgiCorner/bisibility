@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## [0.12.0] - 2026-08-13
+
+- Added write-scoped Domain Overview API operations for cache-aware estimates, analysis, history, ranked keywords, and relevant pages, with explicit provider-cost caps.
+
+- Moved check history and upcoming checks into a dedicated Checks tab in Rank Tracker.
+
+- Kept Domain Overview controls visible during analysis, aligned recent searches, and simplified Domain Overview and Backlinks empty states.
+
 ## [0.11.0] - 2026-08-13
 
 - Added Domain Overview with provider-backed KPIs, trends, keyword and page tables, cache-aware pricing, shareable URLs, and corrected organic ranked-keyword positions.

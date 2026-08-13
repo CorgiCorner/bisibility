@@ -32,11 +32,6 @@ const routeCases = [
     title: "Backlinks",
   },
   {
-    path: appPath("prj_1", "checks"),
-    pattern: appPath("[project]", "checks"),
-    title: "Checks",
-  },
-  {
     path: appPath("prj_1", "competitors"),
     pattern: appPath("[project]", "competitors"),
     title: "Competitors",
@@ -167,13 +162,6 @@ describe("dashboard header titles", () => {
     expect(headerMetaFor(appPath("prj_1", "rank-tracker"), { keywordCount: 1 }).subtitle).toBe(
       "1 tracked keyword · click any row to edit",
     );
-  });
-
-  it("describes checks without implementation details", () => {
-    expect(headerMetaFor(appPath("prj_1", "checks"))).toMatchObject({
-      subtitle: "Operational log of rank-check runs. Keyword details live in Rank Tracker.",
-      title: "Checks",
-    });
   });
 
   it("uses the current project domain for Settings without changing other route metadata", () => {

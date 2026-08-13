@@ -92,7 +92,7 @@ describe("NoDataBanner", () => {
     expect(screen.getByText("First rank check in progress.")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "View check runs" })).toHaveAttribute(
       "href",
-      "/app/prj_1/checks",
+      "/app/prj_1/rank-tracker?tab=checks",
     );
     expect(screen.queryByRole("button", { name: "Run first check" })).not.toBeInTheDocument();
   });

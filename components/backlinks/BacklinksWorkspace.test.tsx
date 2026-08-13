@@ -20,7 +20,6 @@ function renderWorkspace(overrides: Partial<ComponentProps<typeof BacklinksWorks
         context={context}
         loadMoreAction={loadMoreAction}
         projectId="prj_1"
-        suggestedEstimateCents={5}
         {...overrides}
       />
     </SessionSpendProvider>,
@@ -76,7 +75,6 @@ describe("BacklinksWorkspace", () => {
           initialTarget="linked.example"
           loadMoreAction={loadMoreAction}
           projectId="prj_1"
-          suggestedEstimateCents={5}
         />
       </SessionSpendProvider>,
     );
@@ -112,7 +110,7 @@ describe("BacklinksWorkspace", () => {
     );
   });
 
-  it("renders the binding idle-state copy and live suggested estimate", () => {
+  it("renders the idle-state copy without suggested target shortcuts", () => {
     renderWorkspace();
 
     const heading = screen.getByRole("heading", { level: 3, name: "Point it at any domain" });
@@ -120,26 +118,9 @@ describe("BacklinksWorkspace", () => {
     expect(
       screen.getByText("Runs on your own DataForSEO key, price shown before every run"),
     ).toBeInTheDocument();
-    expect(screen.getByText("~$0.05 each, cached for a day once run")).toBeInTheDocument();
-  });
-
-  it("enables Analyze after selecting the project target badge", async () => {
-    vi.useFakeTimers();
-    const analyzeAction = vi.fn(async (input: unknown) =>
-      snapshot((input as { target: string }).target),
-    );
-    renderWorkspace({
-      analyzeAction: analyzeAction as unknown as AnalyzeBacklinksAction,
-      context: { ...context, defaultTarget: "example.com" },
-    });
-
-    fireEvent.click(screen.getByText("example.com").closest("button") as HTMLButtonElement);
-    await act(async () => vi.advanceTimersByTimeAsync(320));
-
-    expect(screen.getByRole("button", { name: "Analyze ~$0.05" })).toBeEnabled();
-    expect(analyzeAction).toHaveBeenLastCalledWith(
-      expect.objectContaining({ estimateOnly: true, target: "example.com" }),
-    );
+    expect(screen.queryByText("Start with sites you already watch")).not.toBeInTheDocument();
+    expect(screen.queryByText("this project")).not.toBeInTheDocument();
+    expect(screen.queryByText("~$0.05 each, cached for a day once run")).not.toBeInTheDocument();
   });
 
   it("opens a cached recent target immediately", async () => {

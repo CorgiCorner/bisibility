@@ -7,6 +7,7 @@ import type {
   SaveSelectedKeywordsAction,
 } from "@/lib/actions/domain-overview";
 import type { Meta, StoryObj } from "@storybook/react";
+import { userEvent, within } from "storybook/test";
 import { DomainOverviewWorkspace } from "./DomainOverviewWorkspace";
 import {
   domainOverviewHistoryFixture,
@@ -34,6 +35,11 @@ const analyzeAction = (async (input: unknown) => {
         target: "example.com",
       }
     : domainOverviewReportFixture;
+}) as AnalyzeDomainOverviewAction;
+const loadingAnalyzeAction = (async (input: unknown) => {
+  const request = input as { estimateOnly?: boolean };
+  if (request.estimateOnly) return analyzeAction(input);
+  return new Promise(() => undefined);
 }) as AnalyzeDomainOverviewAction;
 const loadHistoryAction = (async () => ({
   cached: false,
@@ -147,6 +153,19 @@ export const Results: Story = {
     initialOutcome: domainOverviewReportFixture,
     initialScope: "root",
     initialTarget: domainOverviewReportFixture.target,
+  },
+};
+
+export const Loading: Story = {
+  args: {
+    ...common,
+    analyzeAction: loadingAnalyzeAction,
+    initialOutcome: null,
+    initialScope: "root",
+    initialTarget: "example.com",
+  },
+  play: async ({ canvasElement }) => {
+    await userEvent.click(within(canvasElement).getByRole("button", { name: /analyze domain/i }));
   },
 };
 

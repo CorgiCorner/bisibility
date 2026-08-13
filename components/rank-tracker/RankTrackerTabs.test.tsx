@@ -1,11 +1,11 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { KeywordsTabs } from "./KeywordsTabs";
+import { RankTrackerTabs } from "./RankTrackerTabs";
 
-describe("KeywordsTabs", () => {
-  it("renders tracked and saved counts with client-side deep links", () => {
+describe("RankTrackerTabs", () => {
+  it("renders tracked, saved, and checks deep links", () => {
     render(
-      <KeywordsTabs activeTab="tracked" projectRef="prj_1" savedCount={36} trackedCount={248} />,
+      <RankTrackerTabs activeTab="tracked" projectRef="prj_1" savedCount={36} trackedCount={248} />,
     );
 
     expect(screen.getByRole("link", { name: "Tracked 248" })).toHaveAttribute(
@@ -16,24 +16,29 @@ describe("KeywordsTabs", () => {
       "href",
       "/app/prj_1/rank-tracker?tab=saved",
     );
+    expect(screen.getByRole("link", { name: "Checks" })).toHaveAttribute(
+      "href",
+      "/app/prj_1/rank-tracker?tab=checks",
+    );
     expect(screen.getByRole("link", { name: "Tracked 248" })).toHaveAttribute(
       "aria-current",
       "page",
     );
   });
 
-  it("fills and accents the bookmark only while Saved is active", () => {
+  it("fills the bookmark only while Saved is active and activates Checks independently", () => {
     const { rerender } = render(
-      <KeywordsTabs activeTab="saved" projectRef="prj_1" savedCount={3} trackedCount={10} />,
+      <RankTrackerTabs activeTab="saved" projectRef="prj_1" savedCount={3} trackedCount={10} />,
     );
 
     expect(screen.getByTestId("saved-tab-icon")).toHaveAttribute("data-weight", "fill");
     expect(screen.getByTestId("saved-tab-icon")).toHaveClass("text-accent-text");
 
     rerender(
-      <KeywordsTabs activeTab="tracked" projectRef="prj_1" savedCount={3} trackedCount={10} />,
+      <RankTrackerTabs activeTab="checks" projectRef="prj_1" savedCount={3} trackedCount={10} />,
     );
     expect(screen.getByTestId("saved-tab-icon")).toHaveAttribute("data-weight", "regular");
     expect(screen.getByTestId("saved-tab-icon")).not.toHaveClass("text-accent-text");
+    expect(screen.getByRole("link", { name: "Checks" })).toHaveAttribute("aria-current", "page");
   });
 });

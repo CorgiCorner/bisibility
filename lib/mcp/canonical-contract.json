@@ -816,6 +816,298 @@
     }
   },
   {
+    "name": "analyze_domain_overview",
+    "title": "Analyze domain overview",
+    "description": "Requires API write scope because a cache miss can spend the project's own DataForSEO budget. Call with estimate_only=true and max_cost_cents=0 first for a free estimate. Every call requires an explicit max_cost_cents. fresh=true bypasses cache but never removes the cost cap. Returns an estimate, cached report, or report with charged keyword and page module outcomes.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "fresh": {
+          "description": "Bypass cached module data and request fresh provider data.",
+          "type": "boolean"
+        },
+        "language_code": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 12,
+          "description": "Language code used for the provider lookup, for example en."
+        },
+        "location_code": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991,
+          "description": "Positive DataForSEO location code identifying the lookup market."
+        },
+        "project_id": {
+          "description": "Project id whose provider connection, budget, and Domain Overview snapshot are used.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "scope_override": {
+          "description": "Override automatic target scope detection with root-domain or subdomain scope.",
+          "type": "string",
+          "enum": ["root", "subdomain"]
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 253,
+          "description": "Domain or subdomain to analyze."
+        },
+        "estimate_only": {
+          "description": "Return a free cost estimate without calling the provider or spending budget.",
+          "type": "boolean"
+        },
+        "keyword_limit": {
+          "description": "Maximum ranked keyword rows to include in the initial report.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "max_cost_cents": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991,
+          "description": "Maximum provider cost for this request, in cents. Use zero for an estimate or explicit cache-only attempt."
+        },
+        "page_limit": {
+          "description": "Maximum relevant page rows to include in the initial report.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        }
+      },
+      "required": ["language_code", "location_code", "project_id", "target", "max_cost_cents"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": true,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "load_domain_overview_history",
+    "title": "Load domain overview history",
+    "description": "Requires API write scope and an explicit max_cost_cents because a cache miss can spend provider budget. Use zero for cache-only. Loads the separately priced historical index series for an unexpired Domain Overview snapshot. snapshot_expired means analysis must run again before history can be loaded.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "fresh": {
+          "description": "Bypass cached module data and request fresh provider data.",
+          "type": "boolean"
+        },
+        "language_code": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 12,
+          "description": "Language code used for the provider lookup, for example en."
+        },
+        "location_code": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991,
+          "description": "Positive DataForSEO location code identifying the lookup market."
+        },
+        "project_id": {
+          "description": "Project id whose provider connection, budget, and Domain Overview snapshot are used.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "scope_override": {
+          "description": "Override automatic target scope detection with root-domain or subdomain scope.",
+          "type": "string",
+          "enum": ["root", "subdomain"]
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 253,
+          "description": "Domain or subdomain to analyze."
+        },
+        "max_cost_cents": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991,
+          "description": "Maximum provider cost for this request, in cents. Use zero for an explicit cache-only attempt."
+        }
+      },
+      "required": ["language_code", "location_code", "project_id", "target", "max_cost_cents"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": true,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "load_domain_overview_keywords",
+    "title": "Load domain overview keywords",
+    "description": "Requires API write scope and an explicit max_cost_cents because a cache miss can spend provider budget. Use zero for cache-only. Loads one ranked-keyword page for the current Domain Overview target; snapshot_expired means analysis must run again first.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "fresh": {
+          "description": "Bypass cached module data and request fresh provider data.",
+          "type": "boolean"
+        },
+        "language_code": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 12,
+          "description": "Language code used for the provider lookup, for example en."
+        },
+        "location_code": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991,
+          "description": "Positive DataForSEO location code identifying the lookup market."
+        },
+        "project_id": {
+          "description": "Project id whose provider connection, budget, and Domain Overview snapshot are used.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "scope_override": {
+          "description": "Override automatic target scope detection with root-domain or subdomain scope.",
+          "type": "string",
+          "enum": ["root", "subdomain"]
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 253,
+          "description": "Domain or subdomain to analyze."
+        },
+        "max_cost_cents": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991,
+          "description": "Maximum provider cost for this request, in cents. Use zero for an explicit cache-only attempt."
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991,
+          "description": "Zero-based provider row offset for this page."
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "description": "Number of ranked keyword rows to load, from 1 through 100."
+        }
+      },
+      "required": [
+        "language_code",
+        "location_code",
+        "project_id",
+        "target",
+        "max_cost_cents",
+        "offset",
+        "limit"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": true,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "load_domain_overview_pages",
+    "title": "Load domain overview pages",
+    "description": "Requires API write scope and an explicit max_cost_cents because a cache miss can spend provider budget. Use zero for cache-only. Loads one relevant-page result page for the current Domain Overview target; snapshot_expired means analysis must run again first.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "fresh": {
+          "description": "Bypass cached module data and request fresh provider data.",
+          "type": "boolean"
+        },
+        "language_code": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 12,
+          "description": "Language code used for the provider lookup, for example en."
+        },
+        "location_code": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991,
+          "description": "Positive DataForSEO location code identifying the lookup market."
+        },
+        "project_id": {
+          "description": "Project id whose provider connection, budget, and Domain Overview snapshot are used.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "scope_override": {
+          "description": "Override automatic target scope detection with root-domain or subdomain scope.",
+          "type": "string",
+          "enum": ["root", "subdomain"]
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 253,
+          "description": "Domain or subdomain to analyze."
+        },
+        "max_cost_cents": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991,
+          "description": "Maximum provider cost for this request, in cents. Use zero for an explicit cache-only attempt."
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991,
+          "description": "Zero-based provider row offset for this page."
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000,
+          "description": "Number of relevant-page rows to load, from 1 through 1000."
+        }
+      },
+      "required": [
+        "language_code",
+        "location_code",
+        "project_id",
+        "target",
+        "max_cost_cents",
+        "offset",
+        "limit"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": true,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
     "name": "get_keyword_metrics",
     "title": "Get keyword metrics",
     "description": "Requires API write scope. Paid metrics lookup uses the project's own DataForSEO account. When cost matters, call with estimate_only first for a free dry run, then use max_cost_cents as a best-effort request guard. Approximate pricing per 100 fetched keywords comes from the current rate card exposed by get_provider_rates. Batches contain up to 700 keywords and cache each keyword for 12 hours, shared with the API and future UI. Clickstream-refined volumes double provider cost.",

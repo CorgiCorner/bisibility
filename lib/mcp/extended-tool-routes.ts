@@ -23,6 +23,13 @@ function body(input: JsonObject, omit: string[]) {
   return Object.fromEntries(Object.entries(input).filter(([key]) => !skipped.has(key)));
 }
 
+function requireCostCap(input: JsonObject) {
+  const value = input.max_cost_cents;
+  if (typeof value !== "number" || !Number.isInteger(value) || value < 0) {
+    throw new Error("max_cost_cents must be a nonnegative integer.");
+  }
+}
+
 function call(
   input: JsonObject,
   path: string,
@@ -90,6 +97,35 @@ export function dispatchExtendedToolRoute(name: string, input: JsonObject): Rest
       );
     case "loadMoreBacklinkRows":
       return call(input, project(input, "backlinks/rows"), "POST", body(input, ["project_id"]));
+    case "analyzeDomainOverview":
+      requireCostCap(input);
+      return call(
+        input,
+        project(input, "domain-overview/analyze"),
+        "POST",
+        body(input, ["project_id"]),
+      );
+    case "loadDomainOverviewHistory":
+      return call(
+        input,
+        project(input, "domain-overview/history"),
+        "POST",
+        body(input, ["project_id"]),
+      );
+    case "loadDomainOverviewKeywords":
+      return call(
+        input,
+        project(input, "domain-overview/keywords"),
+        "POST",
+        body(input, ["project_id"]),
+      );
+    case "loadDomainOverviewPages":
+      return call(
+        input,
+        project(input, "domain-overview/pages"),
+        "POST",
+        body(input, ["project_id"]),
+      );
     case "createSignal":
       return call(input, "/signals", "POST", body(input, ["project_id"]));
     case "listSignals":

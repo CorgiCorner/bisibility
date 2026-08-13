@@ -5,6 +5,7 @@ type OperationPresentation = {
 
 export const openApiOperationPresentation: Record<string, OperationPresentation> = {
   analyzeBacklinks: { summary: "Analyze backlinks" },
+  analyzeDomainOverview: { summary: "Analyze a domain" },
   createApiKey: {
     description: "The scope defaults to admin when omitted.",
     summary: "Create an API key",
@@ -47,6 +48,9 @@ export const openApiOperationPresentation: Record<string, OperationPresentation>
     summary: "Get sitemap monitor status",
   },
   loadMoreBacklinkRows: { summary: "Load more backlink rows" },
+  loadDomainOverviewHistory: { summary: "Load domain history" },
+  loadDomainOverviewKeywords: { summary: "Load domain keywords" },
+  loadDomainOverviewPages: { summary: "Load domain pages" },
   matchProjectKeywords: { summary: "Match tracked keywords" },
   removeCompetitor: { summary: "Remove a competitor by ID" },
   removeProjectCompetitor: { summary: "Remove a project competitor" },

@@ -54,6 +54,13 @@ type ParsedClass = {
   modifiers: string;
 };
 
+type SourceFileGroup = {
+  files: string[];
+  name: string;
+};
+
+const maxSourceFilesPerGroup = 100;
+
 function rgb(hex: `#${string}`): Rgb {
   return [
     Number.parseInt(hex.slice(1, 3), 16),
@@ -214,6 +221,25 @@ function sourceFiles(directory: string): string[] {
   });
 }
 
+function sourceFileGroups(root: string, directories: readonly string[]): SourceFileGroup[] {
+  return directories.flatMap((directory) =>
+    readdirSync(resolve(root, directory), { withFileTypes: true }).flatMap((entry) => {
+      const path = resolve(root, directory, entry.name);
+      if (entry.isDirectory()) {
+        const files = sourceFiles(path);
+        const groupCount = Math.ceil(files.length / maxSourceFilesPerGroup);
+        return Array.from({ length: groupCount }, (_, index) => ({
+          files: files.slice(index * maxSourceFilesPerGroup, (index + 1) * maxSourceFilesPerGroup),
+          name: `${directory}/${entry.name}${groupCount > 1 ? ` (${index + 1}/${groupCount})` : ""}`,
+        }));
+      }
+      return /\.(?:ts|tsx)$/.test(entry.name) && !/\.(?:stories|test)\.(?:ts|tsx)$/.test(entry.name)
+        ? [{ files: [path], name: `${directory}/${entry.name}` }]
+        : [];
+    }),
+  );
+}
+
 function allPairsForScheme(scheme: ColorSchemeName): Pair[] {
   const pairs: Pair[] = [];
 
@@ -291,6 +317,9 @@ function allPairsForScheme(scheme: ColorSchemeName): Pair[] {
 }
 
 describe("theme contrast contract", () => {
+  const root = resolve(import.meta.dirname, "../..");
+  const staticSourceGroups = sourceFileGroups(root, ["components", "app"]);
+
   it("maps semantic Tailwind foregrounds to the theme contrast colors", () => {
     expect(tailwindSemanticColors).toMatchObject({
       "error-contrast": "var(--mui-palette-error-contrastText)",
@@ -357,16 +386,16 @@ describe("theme contrast contract", () => {
     expect(failures).toEqual([]);
   });
 
-  it("rejects inaccessible static Tailwind source pairings", () => {
-    const root = resolve(import.meta.dirname, "../..");
-    const failures = ["components", "app"].flatMap((directory) =>
-      sourceFiles(resolve(root, directory)).flatMap((file) =>
+  it.each(staticSourceGroups)(
+    "rejects inaccessible static Tailwind source pairings in $name",
+    ({ files }) => {
+      const failures = files.flatMap((file) =>
         sourcePairFailures(relative(root, file), readFileSync(file, "utf8")),
-      ),
-    );
+      );
 
-    expect(failures).toEqual([]);
-  });
+      expect(failures).toEqual([]);
+    },
+  );
 
   it("detects an inaccessible accent source pairing", () => {
     expect(sourcePairFailures("fixture.tsx", '<span className="bg-accent text-white" />')).toEqual([

@@ -1139,6 +1139,817 @@
           }
         ]
       },
+      "DomainOverviewAnalyzeRequest": {
+        "additionalProperties": false,
+        "anyOf": [
+          {
+            "properties": {
+              "estimate_only": {
+                "const": true
+              }
+            },
+            "required": ["estimate_only"]
+          },
+          {
+            "required": ["max_cost_cents"]
+          }
+        ],
+        "properties": {
+          "estimate_only": {
+            "default": false,
+            "type": "boolean"
+          },
+          "fresh": {
+            "default": false,
+            "type": "boolean"
+          },
+          "keyword_limit": {
+            "default": 100,
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "language_code": {
+            "maxLength": 12,
+            "minLength": 2,
+            "type": "string"
+          },
+          "location_code": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "max_cost_cents": {
+            "description": "Required for paid analysis; estimate_only may omit it.",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "page_limit": {
+            "default": 100,
+            "maximum": 1000,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "scope_override": {
+            "enum": ["root", "subdomain"],
+            "type": "string"
+          },
+          "target": {
+            "maxLength": 253,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": ["target", "location_code", "language_code"],
+        "type": "object"
+      },
+      "DomainOverviewAnalyzeResponse": {
+        "properties": {
+          "data": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/DomainOverviewEstimate"
+              },
+              {
+                "$ref": "#/components/schemas/DomainOverviewReport"
+              }
+            ]
+          }
+        },
+        "required": ["data"],
+        "type": "object"
+      },
+      "DomainOverviewEstimate": {
+        "properties": {
+          "cached": {
+            "type": "boolean"
+          },
+          "estimate": {
+            "const": true,
+            "type": "boolean"
+          },
+          "estimated_cost_cents": {
+            "minimum": 0,
+            "type": "number"
+          },
+          "fresh_estimated_cost_cents": {
+            "minimum": 0,
+            "type": "number"
+          },
+          "history_estimated_cost_cents": {
+            "minimum": 0,
+            "type": "number"
+          },
+          "history_mode": {
+            "const": "lazy",
+            "type": "string"
+          },
+          "keyword_page_estimated_cost_cents": {
+            "minimum": 0,
+            "type": "number"
+          },
+          "language_code": {
+            "type": "string"
+          },
+          "location_code": {
+            "type": "integer"
+          },
+          "page_page_estimated_cost_cents": {
+            "minimum": 0,
+            "type": "number"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "scope": {
+            "enum": ["root", "subdomain"],
+            "type": "string"
+          },
+          "target": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "cached",
+          "estimate",
+          "estimated_cost_cents",
+          "fresh_estimated_cost_cents",
+          "history_estimated_cost_cents",
+          "history_mode",
+          "keyword_page_estimated_cost_cents",
+          "page_page_estimated_cost_cents",
+          "provider",
+          "target",
+          "scope",
+          "location_code",
+          "language_code"
+        ],
+        "type": "object"
+      },
+      "DomainOverviewHistoricalRow": {
+        "properties": {
+          "metrics": {
+            "$ref": "#/components/schemas/DomainOverviewMetrics"
+          },
+          "month": {
+            "maximum": 12,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "year": {
+            "type": "integer"
+          }
+        },
+        "required": ["year", "month", "metrics"],
+        "type": "object"
+      },
+      "DomainOverviewHistoryRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "fresh": {
+            "default": false,
+            "type": "boolean"
+          },
+          "language_code": {
+            "maxLength": 12,
+            "minLength": 2,
+            "type": "string"
+          },
+          "location_code": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "max_cost_cents": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "scope_override": {
+            "enum": ["root", "subdomain"],
+            "type": "string"
+          },
+          "target": {
+            "maxLength": 253,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": ["target", "location_code", "language_code", "max_cost_cents"],
+        "type": "object"
+      },
+      "DomainOverviewHistoryResponse": {
+        "properties": {
+          "data": {
+            "properties": {
+              "cached": {
+                "type": "boolean"
+              },
+              "cost_cents": {
+                "minimum": 0,
+                "type": "number"
+              },
+              "data": {
+                "items": {
+                  "$ref": "#/components/schemas/DomainOverviewHistoricalRow"
+                },
+                "type": "array"
+              },
+              "fetched_at": {
+                "format": "date-time",
+                "type": "string"
+              }
+            },
+            "required": ["cached", "cost_cents", "data", "fetched_at"],
+            "type": "object"
+          }
+        },
+        "required": ["data"],
+        "type": "object"
+      },
+      "DomainOverviewKeywordsData": {
+        "properties": {
+          "cost_cents": {
+            "minimum": 0,
+            "type": "number"
+          },
+          "rows": {
+            "items": {
+              "properties": {
+                "cpc_cents": {
+                  "type": ["number", "null"]
+                },
+                "difficulty": {
+                  "type": ["number", "null"]
+                },
+                "estimated_traffic": {
+                  "type": ["number", "null"]
+                },
+                "intent": {
+                  "enum": ["informational", "navigational", "commercial", "transactional", null],
+                  "type": ["string", "null"]
+                },
+                "keyword": {
+                  "type": "string"
+                },
+                "position": {
+                  "type": ["number", "null"]
+                },
+                "rank_absolute": {
+                  "type": ["number", "null"]
+                },
+                "rank_absolute_delta": {
+                  "type": ["number", "null"]
+                },
+                "ranking_url": {
+                  "type": ["string", "null"]
+                },
+                "search_volume": {
+                  "type": ["number", "null"]
+                },
+                "serp_features": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                }
+              },
+              "required": [
+                "keyword",
+                "position",
+                "search_volume",
+                "estimated_traffic",
+                "cpc_cents",
+                "difficulty",
+                "intent",
+                "ranking_url",
+                "serp_features",
+                "rank_absolute_delta",
+                "rank_absolute"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "total_count": {
+            "type": ["integer", "null"]
+          }
+        },
+        "required": ["rows", "total_count", "cost_cents"],
+        "type": "object"
+      },
+      "DomainOverviewKeywordsRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "fresh": {
+            "default": false,
+            "type": "boolean"
+          },
+          "language_code": {
+            "maxLength": 12,
+            "minLength": 2,
+            "type": "string"
+          },
+          "limit": {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "location_code": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "max_cost_cents": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "offset": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "scope_override": {
+            "enum": ["root", "subdomain"],
+            "type": "string"
+          },
+          "target": {
+            "maxLength": 253,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "target",
+          "location_code",
+          "language_code",
+          "limit",
+          "offset",
+          "max_cost_cents"
+        ],
+        "type": "object"
+      },
+      "DomainOverviewKeywordsResponse": {
+        "properties": {
+          "data": {
+            "properties": {
+              "cached": {
+                "type": "boolean"
+              },
+              "cost_cents": {
+                "minimum": 0,
+                "type": "number"
+              },
+              "data": {
+                "$ref": "#/components/schemas/DomainOverviewKeywordsData"
+              },
+              "fetched_at": {
+                "format": "date-time",
+                "type": "string"
+              }
+            },
+            "required": ["cached", "cost_cents", "data", "fetched_at"],
+            "type": "object"
+          }
+        },
+        "required": ["data"],
+        "type": "object"
+      },
+      "DomainOverviewMetrics": {
+        "properties": {
+          "count": {
+            "type": ["integer", "null"]
+          },
+          "estimated_traffic_cost_cents": {
+            "type": ["number", "null"]
+          },
+          "etv": {
+            "type": ["number", "null"]
+          },
+          "is_down": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "is_lost": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "is_new": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "is_up": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "pos1": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "pos11_20": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "pos2_3": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "pos21_30": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "pos31_40": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "pos4_10": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "pos41_50": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "pos51_60": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "pos61_70": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "pos71_80": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "pos81_90": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "pos91_100": {
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "count",
+          "estimated_traffic_cost_cents",
+          "etv",
+          "is_down",
+          "is_lost",
+          "is_new",
+          "is_up",
+          "pos1",
+          "pos2_3",
+          "pos4_10",
+          "pos11_20",
+          "pos21_30",
+          "pos31_40",
+          "pos41_50",
+          "pos51_60",
+          "pos61_70",
+          "pos71_80",
+          "pos81_90",
+          "pos91_100"
+        ],
+        "type": "object"
+      },
+      "DomainOverviewModuleFailure": {
+        "properties": {
+          "cost_cents": {
+            "minimum": 0,
+            "type": "number"
+          },
+          "ok": {
+            "const": false,
+            "type": "boolean"
+          },
+          "reason": {
+            "enum": [
+              "budget_exhausted",
+              "cost_limit_exceeded",
+              "in_progress",
+              "lookup_failed",
+              "needs_reauth",
+              "no_source",
+              "rate_limited",
+              "snapshot_expired",
+              "unsupported_location"
+            ],
+            "type": "string"
+          },
+          "reset_at": {
+            "type": "number"
+          }
+        },
+        "required": ["ok", "reason", "cost_cents"],
+        "type": "object"
+      },
+      "DomainOverviewPagesData": {
+        "properties": {
+          "cost_cents": {
+            "minimum": 0,
+            "type": "number"
+          },
+          "rows": {
+            "items": {
+              "properties": {
+                "etv": {
+                  "type": ["number", "null"]
+                },
+                "etv_delta_pct": {
+                  "type": ["number", "null"]
+                },
+                "keyword_count": {
+                  "type": ["integer", "null"]
+                },
+                "path": {
+                  "type": "string"
+                },
+                "top_keyword": {
+                  "type": ["string", "null"]
+                },
+                "top_keyword_position": {
+                  "type": ["number", "null"]
+                }
+              },
+              "required": [
+                "path",
+                "etv",
+                "etv_delta_pct",
+                "keyword_count",
+                "top_keyword",
+                "top_keyword_position"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "total_count": {
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": ["rows", "total_count", "cost_cents"],
+        "type": "object"
+      },
+      "DomainOverviewPagesRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "fresh": {
+            "default": false,
+            "type": "boolean"
+          },
+          "language_code": {
+            "maxLength": 12,
+            "minLength": 2,
+            "type": "string"
+          },
+          "limit": {
+            "maximum": 1000,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "location_code": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "max_cost_cents": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "offset": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "scope_override": {
+            "enum": ["root", "subdomain"],
+            "type": "string"
+          },
+          "target": {
+            "maxLength": 253,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "target",
+          "location_code",
+          "language_code",
+          "limit",
+          "offset",
+          "max_cost_cents"
+        ],
+        "type": "object"
+      },
+      "DomainOverviewPagesResponse": {
+        "properties": {
+          "data": {
+            "properties": {
+              "cached": {
+                "type": "boolean"
+              },
+              "cost_cents": {
+                "minimum": 0,
+                "type": "number"
+              },
+              "data": {
+                "$ref": "#/components/schemas/DomainOverviewPagesData"
+              },
+              "fetched_at": {
+                "format": "date-time",
+                "type": "string"
+              }
+            },
+            "required": ["cached", "cost_cents", "data", "fetched_at"],
+            "type": "object"
+          }
+        },
+        "required": ["data"],
+        "type": "object"
+      },
+      "DomainOverviewProblem": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Problem"
+          },
+          {
+            "properties": {
+              "errors": {
+                "properties": {
+                  "cost_cents": {
+                    "minimum": 0,
+                    "type": "number"
+                  },
+                  "reason": {
+                    "type": "string"
+                  },
+                  "reset_at": {
+                    "type": ["number", "null"]
+                  }
+                },
+                "required": ["reason", "cost_cents"],
+                "type": "object"
+              }
+            },
+            "required": ["errors"],
+            "type": "object"
+          }
+        ]
+      },
+      "DomainOverviewReport": {
+        "properties": {
+          "cached": {
+            "type": "boolean"
+          },
+          "cached_until": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "cost_cents": {
+            "minimum": 0,
+            "type": "number"
+          },
+          "fetched_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "history_mode": {
+            "const": "lazy",
+            "type": "string"
+          },
+          "keywords": {
+            "oneOf": [
+              {
+                "properties": {
+                  "cached": {
+                    "type": "boolean"
+                  },
+                  "cost_cents": {
+                    "minimum": 0,
+                    "type": "number"
+                  },
+                  "data": {
+                    "$ref": "#/components/schemas/DomainOverviewKeywordsData"
+                  },
+                  "fetched_at": {
+                    "format": "date-time",
+                    "type": "string"
+                  },
+                  "ok": {
+                    "const": true,
+                    "type": "boolean"
+                  }
+                },
+                "required": ["ok", "cached", "cost_cents", "data", "fetched_at"],
+                "type": "object"
+              },
+              {
+                "$ref": "#/components/schemas/DomainOverviewModuleFailure"
+              }
+            ]
+          },
+          "language_code": {
+            "type": "string"
+          },
+          "location_code": {
+            "type": "integer"
+          },
+          "overview": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/DomainOverviewMetrics"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "pages": {
+            "oneOf": [
+              {
+                "properties": {
+                  "cached": {
+                    "type": "boolean"
+                  },
+                  "cost_cents": {
+                    "minimum": 0,
+                    "type": "number"
+                  },
+                  "data": {
+                    "$ref": "#/components/schemas/DomainOverviewPagesData"
+                  },
+                  "fetched_at": {
+                    "format": "date-time",
+                    "type": "string"
+                  },
+                  "ok": {
+                    "const": true,
+                    "type": "boolean"
+                  }
+                },
+                "required": ["ok", "cached", "cost_cents", "data", "fetched_at"],
+                "type": "object"
+              },
+              {
+                "$ref": "#/components/schemas/DomainOverviewModuleFailure"
+              }
+            ]
+          },
+          "previous_fetched_at": {
+            "format": "date-time",
+            "type": ["string", "null"]
+          },
+          "previous_overview": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/DomainOverviewMetrics"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "previous_source_snapshot_at": {
+            "format": "date-time",
+            "type": ["string", "null"]
+          },
+          "provider": {
+            "type": "string"
+          },
+          "scope": {
+            "enum": ["root", "subdomain"],
+            "type": "string"
+          },
+          "source_snapshot_at": {
+            "format": "date-time",
+            "type": ["string", "null"]
+          },
+          "state": {
+            "enum": ["no_data", "ok", "partial"],
+            "type": "string"
+          },
+          "target": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "cached",
+          "cached_until",
+          "cost_cents",
+          "fetched_at",
+          "history_mode",
+          "keywords",
+          "language_code",
+          "location_code",
+          "overview",
+          "pages",
+          "previous_fetched_at",
+          "previous_overview",
+          "previous_source_snapshot_at",
+          "provider",
+          "scope",
+          "source_snapshot_at",
+          "state",
+          "target"
+        ],
+        "type": "object"
+      },
       "Keyword": {
         "properties": {
           "country": {
@@ -13693,6 +14504,501 @@
         "tags": ["backlinks"]
       }
     },
+    "/projects/{projectId}/domain-overview/analyze": {
+      "post": {
+        "description": "estimate_only is a free cache-aware dry run. Paid analysis requires an explicit max_cost_cents, including zero for cache-only access. Charged partial reports return HTTP 200 with nested module failures and their costs.",
+        "operationId": "analyzeDomainOverview",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DomainOverviewAnalyzeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainOverviewAnalyzeResponse"
+                }
+              }
+            },
+            "description": "JSON response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainOverviewProblem"
+                }
+              }
+            },
+            "description": "unsupported_target, unsupported_location, needs_reauth, lookup_failed, or cost_limit_exceeded"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainOverviewProblem"
+                }
+              }
+            },
+            "description": "budget_exhausted, in_progress, or rate_limited"
+          }
+        },
+        "security": [
+          {
+            "ProjectApiKey": []
+          },
+          {
+            "PersonalAccessToken": []
+          }
+        ],
+        "summary": "Analyze a domain",
+        "tags": ["domain-overview"]
+      }
+    },
+    "/projects/{projectId}/domain-overview/history": {
+      "post": {
+        "description": "Loads the priced history module for a current overview snapshot. max_cost_cents is required; use zero for cache-only access.",
+        "operationId": "loadDomainOverviewHistory",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DomainOverviewHistoryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainOverviewHistoryResponse"
+                }
+              }
+            },
+            "description": "JSON response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainOverviewProblem"
+                }
+              },
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "snapshot_expired; Unsupported API version"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainOverviewProblem"
+                }
+              }
+            },
+            "description": "unsupported_target, unsupported_location, needs_reauth, lookup_failed, or cost_limit_exceeded"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainOverviewProblem"
+                }
+              }
+            },
+            "description": "budget_exhausted, in_progress, or rate_limited"
+          }
+        },
+        "security": [
+          {
+            "ProjectApiKey": []
+          },
+          {
+            "PersonalAccessToken": []
+          }
+        ],
+        "summary": "Load domain history",
+        "tags": ["domain-overview"]
+      }
+    },
+    "/projects/{projectId}/domain-overview/keywords": {
+      "post": {
+        "description": "Loads one provider-backed keyword page. max_cost_cents is required; use zero for cache-only access.",
+        "operationId": "loadDomainOverviewKeywords",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DomainOverviewKeywordsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainOverviewKeywordsResponse"
+                }
+              }
+            },
+            "description": "JSON response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainOverviewProblem"
+                }
+              },
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "snapshot_expired; Unsupported API version"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainOverviewProblem"
+                }
+              }
+            },
+            "description": "unsupported_target, unsupported_location, needs_reauth, lookup_failed, or cost_limit_exceeded"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainOverviewProblem"
+                }
+              }
+            },
+            "description": "budget_exhausted, in_progress, or rate_limited"
+          }
+        },
+        "security": [
+          {
+            "ProjectApiKey": []
+          },
+          {
+            "PersonalAccessToken": []
+          }
+        ],
+        "summary": "Load domain keywords",
+        "tags": ["domain-overview"]
+      }
+    },
+    "/projects/{projectId}/domain-overview/pages": {
+      "post": {
+        "description": "Loads one provider-backed relevant-pages page. max_cost_cents is required; use zero for cache-only access.",
+        "operationId": "loadDomainOverviewPages",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DomainOverviewPagesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainOverviewPagesResponse"
+                }
+              }
+            },
+            "description": "JSON response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainOverviewProblem"
+                }
+              },
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "snapshot_expired; Unsupported API version"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainOverviewProblem"
+                }
+              }
+            },
+            "description": "unsupported_target, unsupported_location, needs_reauth, lookup_failed, or cost_limit_exceeded"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainOverviewProblem"
+                }
+              }
+            },
+            "description": "budget_exhausted, in_progress, or rate_limited"
+          }
+        },
+        "security": [
+          {
+            "ProjectApiKey": []
+          },
+          {
+            "PersonalAccessToken": []
+          }
+        ],
+        "summary": "Load domain pages",
+        "tags": ["domain-overview"]
+      }
+    },
     "/provider-rates": {
       "get": {
         "operationId": "getProviderRates",
@@ -14280,6 +15586,11 @@
       "description": "Analyze backlinks and page through backlink snapshots.",
       "name": "backlinks",
       "x-group": "Backlinks"
+    },
+    {
+      "description": "Analyze domain visibility and load its history, keywords, and pages.",
+      "name": "domain-overview",
+      "x-group": "Domain Overview"
     },
     {
       "description": "Read project analytics, traffic snapshots, and search-performance data.",

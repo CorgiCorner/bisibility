@@ -1,0 +1,99 @@
+---
+title: "Domain Overview"
+description: "Estimate and load public organic-search visibility for a domain or subdomain through a BYO DataForSEO connection."
+---
+
+## Analyze a domain
+
+```http
+POST /api/v1/projects/{project_id}/domain-overview/analyze
+Authorization: Bearer <api_key>
+Content-Type: application/json
+
+{
+  "target": "example.com",
+  "location_code": 2840,
+  "language_code": "en",
+  "estimate_only": true
+}
+```
+
+Domain Overview can spend the project's connected provider account, so start
+with `estimate_only: true`. To accept a paid result, repeat the request with an
+explicit `max_cost_cents`. Provider estimates and charges may contain fractional
+cents, but request caps must be nonnegative whole cents; round an accepted
+estimate up. A cap of `0` permits cache hits only. A cache miss returns
+`cost_limit_exceeded` instead of spending. `fresh: true` skips cached data but
+never removes the explicit cap requirement.
+
+Omit `scope_override` to detect scope from `target`: a registrable domain uses
+`root`, while a subdomain uses `subdomain`. Set it explicitly only to override
+that behavior. `keyword_limit` accepts 1-100 and `page_limit` accepts 1-1000.
+
+The report combines the overview, first keyword page, and first relevant-pages
+page. It returns `history_mode: "lazy"`; history is not embedded in the report
+and must be loaded separately. Individual keyword or page modules can fail while
+the report remains successful. Each nested module preserves its `ok`, `reason`,
+and actual `cost_cents`. Reopening the same snapshot within twelve hours is free.
+
+## Load history
+
+```http
+POST /api/v1/projects/{project_id}/domain-overview/history
+Authorization: Bearer <api_key>
+Content-Type: application/json
+
+{
+  "target": "example.com",
+  "location_code": 2840,
+  "language_code": "en",
+  "max_cost_cents": 13
+}
+```
+
+History is a separately priced monthly index series for an active Domain
+Overview snapshot. A missing or expired snapshot returns the standard
+`snapshot_expired` problem response. Use `max_cost_cents: 0` for a cache-only
+attempt.
+
+## Load ranked keywords
+
+```http
+POST /api/v1/projects/{project_id}/domain-overview/keywords
+Authorization: Bearer <api_key>
+Content-Type: application/json
+
+{
+  "target": "example.com",
+  "location_code": 2840,
+  "language_code": "en",
+  "limit": 100,
+  "offset": 0,
+  "max_cost_cents": 3
+}
+```
+
+Keyword pages accept `limit` from 1 through 100. Sort or filter returned rows
+locally without another provider call.
+
+## Load relevant pages
+
+```http
+POST /api/v1/projects/{project_id}/domain-overview/pages
+Authorization: Bearer <api_key>
+Content-Type: application/json
+
+{
+  "target": "example.com",
+  "location_code": 2840,
+  "language_code": "en",
+  "limit": 1000,
+  "offset": 0,
+  "max_cost_cents": 25
+}
+```
+
+Relevant-page requests accept `limit` from 1 through 1000. All four operations
+return the standard `{ "data": ... }` response envelope. Top-level failures use
+RFC 9457 Problem Details and preserve `errors.reason`, actual
+`errors.cost_cents`, and `errors.reset_at` when available.

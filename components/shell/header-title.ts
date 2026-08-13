@@ -81,13 +81,6 @@ export function headerMetaFor(pathname: string, context: HeaderContext = {}): He
     );
   }
 
-  if (matches(sectionPath, "/checks")) {
-    return sectionMeta(
-      "Checks",
-      "Operational log of rank-check runs. Keyword details live in Rank Tracker.",
-    );
-  }
-
   if (matches(sectionPath, "/integrations")) {
     return sectionMeta("Integrations", "Connect data providers and analytics sources.");
   }

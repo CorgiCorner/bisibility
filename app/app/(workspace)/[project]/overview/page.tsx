@@ -24,7 +24,7 @@ import { getCheckHealth } from "@/lib/queries/check-health";
 import { getProjectCostContext } from "@/lib/queries/cost-calculator";
 import { getOverview, type OverviewFilters, parseOverviewFilters } from "@/lib/queries/overview";
 import type { WorkspaceDataState } from "@/lib/queries/workspace-state";
-import { appPath } from "@/lib/routing/app-path";
+import { appPath, rankTrackerTabPath } from "@/lib/routing/app-path";
 import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import { type ComponentProps, type ReactNode, Suspense } from "react";
@@ -63,7 +63,7 @@ function CheckHealthBanners({
       {checkHealth.budget.exhausted ? (
         <AlertBanner
           action={{
-            href: appPath(projectRef, "checks"),
+            href: rankTrackerTabPath(projectRef, "checks"),
             icon: "arrow",
             label: "View check runs",
           }}
