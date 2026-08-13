@@ -10,10 +10,11 @@ export function useBacklinksEstimate(
     target: string,
     overrides?: Partial<AnalyzeBacklinksActionInput>,
   ) => AnalyzeBacklinksActionInput,
+  initialEstimate: BacklinksEstimateView = EMPTY_BACKLINKS_ESTIMATE,
 ) {
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const requestSequence = useRef(0);
-  const [estimate, setEstimate] = useState<BacklinksEstimateView>(EMPTY_BACKLINKS_ESTIMATE);
+  const [estimate, setEstimate] = useState<BacklinksEstimateView>(initialEstimate);
 
   function scheduleEstimate(target: string, overrides: Partial<AnalyzeBacklinksActionInput> = {}) {
     requestSequence.current += 1;

@@ -1,0 +1,78 @@
+{
+  "version": "0.1.20260720",
+  "status_code": 20000,
+  "status_message": "Ok.",
+  "cost": 0.02,
+  "tasks_count": 1,
+  "tasks_error": 0,
+  "tasks": [
+    {
+      "id": "history-task",
+      "status_code": 20000,
+      "status_message": "Ok.",
+      "cost": 0.02,
+      "result_count": 1,
+      "result": [
+        {
+          "target": "example.com",
+          "items": [
+            {
+              "year": 2025,
+              "month": 7,
+              "metrics": {
+                "organic": {
+                  "count": 1600,
+                  "etv": 12000.0,
+                  "estimated_paid_traffic_cost": 25000.0,
+                  "pos_1": 10,
+                  "pos_2_3": 28,
+                  "pos_4_10": 100,
+                  "pos_11_20": 190,
+                  "pos_21_30": 170,
+                  "pos_31_40": 140,
+                  "pos_41_50": 130,
+                  "pos_51_60": 120,
+                  "pos_61_70": 110,
+                  "pos_71_80": 100,
+                  "pos_81_90": 90,
+                  "pos_91_100": 80,
+                  "is_new": 20,
+                  "is_up": 35,
+                  "is_down": 25,
+                  "is_lost": 10
+                }
+              }
+            },
+            {
+              "year": 2025,
+              "month": 8,
+              "metrics": {
+                "organic": {
+                  "count": 1820,
+                  "etv": 15420.5,
+                  "estimated_paid_traffic_cost": 33128.75,
+                  "pos_1": 12,
+                  "pos_2_3": 34,
+                  "pos_4_10": 120,
+                  "pos_11_20": 210,
+                  "pos_21_30": 180,
+                  "pos_31_40": 150,
+                  "pos_41_50": 140,
+                  "pos_51_60": 130,
+                  "pos_61_70": 120,
+                  "pos_71_80": 110,
+                  "pos_81_90": 100,
+                  "pos_91_100": 90,
+                  "is_new": 25,
+                  "is_up": 40,
+                  "is_down": 30,
+                  "is_lost": 15
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

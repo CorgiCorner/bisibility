@@ -60,7 +60,7 @@ export function HeadToHeadTable({ market, onExport }: Readonly<HeadToHeadTablePr
       ? "No completed rank checks match the current filters."
       : market.dataState === "no_completed_checks"
         ? "Run at least one rank check for this market to populate head-to-head rows."
-        : "No managed competitor ranks have been observed for this market yet.";
+        : "No competitor rankings have been observed for this market yet.";
 
   return (
     <Card className="overflow-hidden p-0" size="md">
@@ -89,7 +89,7 @@ export function HeadToHeadTable({ market, onExport }: Readonly<HeadToHeadTablePr
 
       {!hasCompetitors ? (
         <div className="border-border-soft border-b bg-bg-sunken px-[18px] py-3 font-mono text-[10.5px] text-fg-muted">
-          Add at least one managed competitor to compare head-to-head ranks.
+          Add at least one competitor to compare head-to-head rankings.
         </div>
       ) : null}
 

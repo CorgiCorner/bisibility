@@ -1,14 +1,26 @@
-import type { RankedKeywordsOutcome, RankedKeywordsSuccess } from "@/lib/ranked-keywords/service";
+import type {
+  RankedKeywordSuggestion,
+  RankedKeywordsOutcome,
+  RankedKeywordsSuccess,
+} from "@/lib/ranked-keywords/service";
+
+type OnboardingRankedKeywordSuggestion = Pick<
+  RankedKeywordSuggestion,
+  "alreadyTracked" | "estimatedTraffic" | "keyword" | "position" | "searchVolume"
+>;
+
+export type RankedKeywordsPage = Omit<RankedKeywordsSuccess, "rows"> & {
+  rows: OnboardingRankedKeywordSuggestion[];
+};
 
 export type FetchRankedKeywordSuggestionsAction = (input: {
   connectionId?: string;
   offset?: number;
   projectId: string;
-}) => Promise<RankedKeywordsSuccess | { reason: RankedKeywordError }>;
+}) => Promise<RankedKeywordsPage | { reason: RankedKeywordError }>;
 
 export type RankedKeywordError =
   Exclude<RankedKeywordsOutcome, { ok: true }> extends { reason: infer T } ? T : never;
-export type RankedKeywordsPage = RankedKeywordsSuccess;
 export type RankedKeywordGroup = {
   alreadyTracked: boolean;
   count: number;

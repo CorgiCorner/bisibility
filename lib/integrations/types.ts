@@ -30,16 +30,22 @@ export type CredentialField = {
 
 export type ProviderMetaRow = { label: string; value: string };
 
-export type ProviderRateData = {
+type ProviderRateDataBase = {
   amountCents?: number;
   checkedAt?: string;
   fallbackSource?: Exclude<ProviderRateSource, "manual" | "unknown">;
-  feature: ProviderRateFeature;
   label: string;
   sampleSize?: number;
   source: ProviderRateSource;
   unit: string;
 };
+
+export type ProviderRateData =
+  | (ProviderRateDataBase & { editable?: true; feature: ProviderRateFeature })
+  | (ProviderRateDataBase & {
+      editable: false;
+      feature: "domain_rank_overview" | "historical_rank_overview" | "relevant_pages";
+    });
 
 export type GooglePropertyOption = {
   kind: "domain" | "ga4" | "url-prefix";

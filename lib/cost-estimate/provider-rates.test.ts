@@ -4,6 +4,8 @@ import { describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import {
   backlinksRates,
+  domainOverviewListEstimate,
+  domainOverviewRates,
   estimatedFeatureCostCents,
   keywordMetricsRate,
   keywordResearchRate,
@@ -154,7 +156,7 @@ describe("provider rates", () => {
       providerId: "dataforseo",
     });
     expect(rankedKeywordPageRate("serpapi")).toBeNull();
-    expect(PROVIDER_FEATURE_RATES).toHaveLength(8);
+    expect(PROVIDER_FEATURE_RATES).toHaveLength(11);
   });
 
   it("prices research sources and metrics by task plus returned item", () => {
@@ -279,6 +281,65 @@ describe("provider rates", () => {
     const costCents = backlinksCostCents(rates.summary, 0) + backlinksCostCents(rates.rows, 100);
 
     expect(costCents).toBe(3);
+  });
+
+  it("pins the provisional domain overview feature rates", () => {
+    const rates = domainOverviewRates("dataforseo");
+
+    expect(rates.overview).toMatchObject({
+      baseCostCents: 1.2,
+      checkedAt: "2026-08-11",
+      costCents: 1.2,
+      feature: "domain_rank_overview",
+      providerId: "dataforseo",
+      sourceUrl: "https://dataforseo.com/pricing/dataforseo-labs/dataforseo-google-api",
+      unitCostCents: 0.012,
+    });
+    expect(rates.history).toMatchObject({
+      baseCostCents: 12,
+      checkedAt: "2026-08-11",
+      costCents: 12,
+      feature: "historical_rank_overview",
+      providerId: "dataforseo",
+      sourceUrl: "https://dataforseo.com/pricing/dataforseo-labs/dataforseo-google-api",
+      unitCostCents: 0.12,
+    });
+    expect(rates.pages).toMatchObject({
+      baseCostCents: 1.2,
+      checkedAt: "2026-08-11",
+      costCents: 1.2,
+      feature: "relevant_pages",
+      providerId: "dataforseo",
+      sourceUrl: "https://dataforseo.com/pricing/dataforseo-labs/dataforseo-google-api",
+      unitCostCents: 0.012,
+    });
+  });
+
+  it("returns nulls for an unknown domain overview provider", () => {
+    const rates = domainOverviewRates("missing");
+
+    expect(rates.overview).toBeNull();
+    expect(rates.history).toBeNull();
+    expect(rates.pages).toBeNull();
+  });
+
+  it("estimates domain overview costs per task plus returned item", () => {
+    const rates = domainOverviewRates("dataforseo");
+
+    expect(estimatedFeatureCostCents(rates.overview, 100, false, LIST_PROVIDER_RATE_CONTEXT)).toBe(
+      2.4,
+    );
+    expect(estimatedFeatureCostCents(rates.history, 12, false, LIST_PROVIDER_RATE_CONTEXT)).toBe(
+      13.44,
+    );
+    expect(estimatedFeatureCostCents(rates.pages, 100, false, LIST_PROVIDER_RATE_CONTEXT)).toBe(
+      2.4,
+    );
+  });
+
+  it("exposes the default list estimate before a target-specific cache check", () => {
+    expect(domainOverviewListEstimate("dataforseo")).toEqual({ core: 5.612, history: 12.12 });
+    expect(domainOverviewListEstimate("missing")).toEqual({ core: null, history: null });
   });
 
   it("keeps provider-rate verification fresh", () => {

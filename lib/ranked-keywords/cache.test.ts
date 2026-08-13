@@ -48,7 +48,7 @@ describe("ranked-keyword cache", () => {
         offset: 200,
         projectId: "project_1",
       }),
-    ).toBe("rk:v1:project_1:conn_1:example.com:US/US-TX/Austin:100:200");
+    ).toBe("rk:v2:project_1:conn_1:example.com:US/US-TX/Austin:100:200");
     expect(rankedKeywordsCacheTtlSeconds()).toBe(43_200);
     vi.stubEnv("RANKED_KEYWORDS_CACHE_TTL_SECONDS", "60");
     expect(rankedKeywordsCacheTtlSeconds()).toBe(60);

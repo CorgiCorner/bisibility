@@ -232,6 +232,11 @@ export function serpProviderCapabilities(id: string) {
   const provider = serpProviders[id];
   if (!provider) return null;
   return {
+    domainOverview:
+      typeof provider.fetchDomainRankOverview === "function" &&
+      typeof provider.fetchHistoricalRankOverview === "function" &&
+      typeof provider.fetchRankedKeywords === "function" &&
+      typeof provider.fetchRelevantPages === "function",
     keywordMetrics: typeof provider.fetchKeywordMetrics === "function",
     keywordResearch:
       typeof provider.fetchRelatedKeywords === "function" ||

@@ -26,6 +26,15 @@ const rates = [
     source: "manual",
     unit: "calls",
   },
+  {
+    amountCents: 12.12,
+    checkedAt: "2026-08-11T00:00:00.000Z",
+    editable: false,
+    feature: "historical_rank_overview",
+    label: "Organic history",
+    source: "list",
+    unit: "calls",
+  },
 ] satisfies readonly ProviderRateData[];
 
 describe("ProviderRates", () => {
@@ -37,6 +46,10 @@ describe("ProviderRates", () => {
     expect(screen.queryByText("$0.00")).not.toBeInTheDocument();
     expect(screen.getByText("$0.0000")).toBeInTheDocument();
     expect(screen.getByText("list price, Jul 22")).toBeInTheDocument();
+    expect(screen.getByText("$0.1212")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Edit Organic history rate" }),
+    ).not.toBeInTheDocument();
   });
 
   it("edits one row and exposes only the real fallback action", async () => {

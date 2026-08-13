@@ -28,12 +28,14 @@ type AnalyzeRequest = {
 export function BacklinksWorkspace({
   analyzeAction,
   context,
+  initialEstimate,
+  initialTarget = "",
   loadMoreAction,
   projectId,
   suggestedEstimateCents,
 }: Readonly<BacklinksWorkspaceProps>) {
   const { addSpend } = useSessionSpend();
-  const [target, setTarget] = useState("");
+  const [target, setTarget] = useState(initialTarget);
   const [scope, setScope] = useState<BacklinkTargetScope>("site");
   const [resultLimit, setResultLimit] = useState<BacklinksLimit>(100);
   const [includeSubdomains, setIncludeSubdomains] = useState(true);
@@ -54,7 +56,11 @@ export function BacklinksWorkspace({
     targetScope: scope,
     ...overrides,
   });
-  const { estimate, scheduleEstimate } = useBacklinksEstimate(analyzeAction, requestInput);
+  const { estimate, scheduleEstimate } = useBacklinksEstimate(
+    analyzeAction,
+    requestInput,
+    initialEstimate,
+  );
 
   function updateTarget(nextTarget: string) {
     setTarget(nextTarget);

@@ -159,7 +159,7 @@ describe("Sidebar", () => {
       </AppThemeRoot>,
     );
 
-    const current = screen.getByRole("link", { name: "Overview" });
+    const current = screen.getByRole("link", { name: "Dashboard" });
     const other = screen.getByRole("link", { name: "Rank Tracker" });
 
     expect(current).toHaveAttribute("aria-current", "page");
@@ -198,9 +198,9 @@ describe("Sidebar", () => {
     // left padding, so the hover fill clears the current-page dot without moving the axis.
     const expanded = render(shell(false));
     expect(expanded.container.querySelector("aside")).toHaveClass("p-[14px]");
-    expect(expanded.getByRole("link", { name: "Overview" })).toHaveClass("ml-2.5", "pl-[1px]");
+    expect(expanded.getByRole("link", { name: "Dashboard" })).toHaveClass("ml-2.5", "pl-[1px]");
     expect(
-      expanded.getByRole("link", { name: "Overview" }).querySelector(".w-\\[30px\\]"),
+      expanded.getByRole("link", { name: "Dashboard" }).querySelector(".w-\\[30px\\]"),
     ).not.toBeNull();
     expanded.unmount();
 
@@ -208,7 +208,7 @@ describe("Sidebar", () => {
     // explicit rather than mx-auto precisely so the two states cannot drift apart.
     const collapsed = render(shell(true));
     expect(collapsed.container.querySelector("aside")).toHaveClass("px-0", "py-[14px]");
-    expect(collapsed.getByRole("link", { name: "Overview" })).toHaveClass(
+    expect(collapsed.getByRole("link", { name: "Dashboard" })).toHaveClass(
       "ml-[22px]",
       "h-9",
       "w-9",
@@ -218,7 +218,7 @@ describe("Sidebar", () => {
     // The dot lands on the same screen x in both states. The rows start 2px apart, so the
     // offsets differ by 2px; equal row heights keep it from drifting further on every row.
     expect(
-      collapsed.getByRole("link", { name: "Overview" }).querySelector("span[aria-hidden]"),
+      collapsed.getByRole("link", { name: "Dashboard" }).querySelector("span[aria-hidden]"),
     ).toHaveClass("-left-2");
   });
 

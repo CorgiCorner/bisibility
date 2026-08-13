@@ -31,6 +31,8 @@ type BacklinksWorkspaceContext = {
 export type BacklinksWorkspaceProps = {
   analyzeAction: AnalyzeBacklinksAction;
   context: BacklinksWorkspaceContext;
+  initialEstimate?: BacklinksEstimateView;
+  initialTarget?: string;
   loadMoreAction: LoadMoreBacklinkRowsAction;
   projectId: string;
   suggestedEstimateCents: number | null;

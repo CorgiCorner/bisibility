@@ -50,6 +50,7 @@ export {
   inlineCalloutCodeClass,
 } from "./InlineCallout";
 export { Input, type InputProps, inputClassName } from "./Input";
+export { Kbd, type KbdProps } from "./Kbd";
 export {
   MenuMultiSelect,
   type MenuMultiSelectProps,

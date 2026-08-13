@@ -1,0 +1,56 @@
+{
+  "version": "0.1.20260720",
+  "status_code": 20000,
+  "status_message": "Ok.",
+  "cost": 0.02,
+  "tasks_count": 1,
+  "tasks_error": 0,
+  "tasks": [
+    {
+      "id": "overview-task",
+      "status_code": 20000,
+      "status_message": "Ok.",
+      "cost": 0.02,
+      "result_count": 1,
+      "result": [
+        {
+          "target": "example.com",
+          "total_count": 1,
+          "items_count": 1,
+          "items": [
+            {
+              "se_type": "google",
+              "metrics": {
+                "organic": {
+                  "count": 1820,
+                  "etv": 15420.5,
+                  "estimated_paid_traffic_cost": 33128.75,
+                  "pos_1": 12,
+                  "pos_2_3": 34,
+                  "pos_4_10": 120,
+                  "pos_11_20": 210,
+                  "pos_21_30": 180,
+                  "pos_31_40": 150,
+                  "pos_41_50": 140,
+                  "pos_51_60": 130,
+                  "pos_61_70": 120,
+                  "pos_71_80": 110,
+                  "pos_81_90": 100,
+                  "pos_91_100": 90,
+                  "is_new": 25,
+                  "is_up": 40,
+                  "is_down": 30,
+                  "is_lost": 15
+                },
+                "paid": {
+                  "count": 50,
+                  "etv": 100.0
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

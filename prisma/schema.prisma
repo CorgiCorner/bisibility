@@ -51,6 +51,7 @@ enum ProviderStatus {
 
 enum ProviderCostFeature {
   backlinks
+  domain_overview
   keyword_metrics
   keyword_research
   rank_check
@@ -469,6 +470,7 @@ model Project {
   providerCostEntries      ProviderCostEntry[]
   queuedRankCheckBatches   QueuedRankCheckBatch[]
   backlinkSnapshots        BacklinkSnapshot[]
+  domainOverviewSnapshots  DomainOverviewSnapshot[]
   pageTrafficSnapshots     PageTrafficSnapshot[]
   apiKeys                  ApiKey[]
   ingestHooks              IngestHook[]
@@ -931,6 +933,31 @@ model BacklinkRow {
 
   @@index([snapshotId, sourceDomain])
   @@map("backlink_rows")
+}
+
+model DomainOverviewSnapshot {
+  id                       String    @id @default(cuid())
+  projectId                String
+  project                  Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  target                   String
+  scope                    String
+  locationCode             Int
+  languageCode             String
+  provider                 String
+  overview                 Json
+  previousOverview         Json?
+  rankedKeywords           Json?
+  relevantPages            Json?
+  history                  Json?
+  fetchedAt                DateTime
+  previousFetchedAt        DateTime?
+  sourceSnapshotAt         DateTime?
+  previousSourceSnapshotAt DateTime?
+  cachedUntil              DateTime
+
+  @@unique([projectId, target, scope, locationCode, languageCode], map: "domain_overview_snapshot_market_key")
+  @@index([projectId, fetchedAt])
+  @@map("domain_overview_snapshots")
 }
 
 model KeywordTrafficSnapshot {

@@ -43,6 +43,34 @@ const marketData = {
 } satisfies CompetitorMarketData;
 
 describe("CompetitorsWorkspace", () => {
+  it("uses the shared empty state without exposing internal managed terminology", () => {
+    render(
+      <CompetitorsWorkspace
+        activeViewId={null}
+        canCreate
+        canDelete
+        canUpdate
+        deletableSavedViewIds={[]}
+        initialFilter={{ excludedKeywordIds: [], position: "all", tag: null }}
+        projectRef="prj_1"
+        savedViews={[]}
+        view={{
+          managedCompetitors: [],
+          market: null,
+          markets: [],
+          projectId: "project_1",
+          scope: null,
+          suggestions: [],
+        }}
+      />,
+    );
+
+    const heading = screen.getByRole("heading", { level: 3, name: "No competitors yet" });
+    expect(heading.parentElement).toHaveClass("rounded-2xl", "border", "bg-bg-elev");
+    expect(screen.getByText(/add at least one competitor/i)).toBeInTheDocument();
+    expect(screen.queryByText(/managed/i)).not.toBeInTheDocument();
+  });
+
   it("uses the same small button size for export and add competitor", () => {
     const market = buildCompetitorMarket(marketData, {
       excludedKeywordIds: [],

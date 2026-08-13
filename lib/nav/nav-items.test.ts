@@ -4,8 +4,9 @@ import { navItems } from "./nav-items";
 describe("navItems", () => {
   it("keeps the primary discovery flow first and preserves the remaining order", () => {
     expect(navItems("prj_example").map((item) => item.label)).toEqual([
-      "Overview",
+      "Dashboard",
       "Keyword Research",
+      "Domain Overview",
       "Rank Tracker",
       "Backlinks",
       "Checks",
@@ -21,8 +22,9 @@ describe("navItems", () => {
     const items = navItems("prj_example");
 
     expect(items.filter((item) => item.group !== "utility").map((item) => item.label)).toEqual([
-      "Overview",
+      "Dashboard",
       "Keyword Research",
+      "Domain Overview",
       "Rank Tracker",
       "Backlinks",
       "Checks",

@@ -28,10 +28,17 @@ function page(
 function row(keyword: string, estimatedTraffic: number, alreadyTracked = false) {
   return {
     alreadyTracked,
+    cpcCents: null,
+    difficulty: null,
     estimatedTraffic,
+    intent: null,
     keyword,
     position: 4,
+    rankAbsoluteDelta: null,
+    rankAbsolute: null,
+    rankingUrl: null,
     searchVolume: 100,
+    serpFeatures: [],
   };
 }
 

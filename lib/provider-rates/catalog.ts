@@ -1,4 +1,6 @@
 import {
+  domainOverviewRates,
+  estimatedFeatureCostCents,
   keywordMetricsRate,
   keywordResearchRate,
   rankedKeywordPageRate,
@@ -8,6 +10,7 @@ import { serpProviderCapabilities } from "@/lib/providers/registry";
 import { defaultCostPerCheckCents } from "@/lib/rank-check/default-cost";
 import { DEFAULT_SERP_DEPTH, type SerpDepth } from "@/lib/serp/markets";
 import type { ProviderRateFeature } from "./resolver";
+import { LIST_PROVIDER_RATE_CONTEXT } from "./resolver";
 
 export const PROVIDER_RATE_LABELS = {
   keyword_metrics: "Keyword metrics",
@@ -70,4 +73,51 @@ export function providerListRate(
   if (!featureRate) return null;
   const amountCents = featureRate.unitCostCents ?? featureRate.costCents;
   return { amountCents, checkedAt: checkedAt(featureRate.checkedAt) };
+}
+
+export function providerDomainOverviewListRates(providerId: string) {
+  if (!serpProviderCapabilities(providerId)?.domainOverview) return [];
+  const rates = domainOverviewRates(providerId);
+  const rows = [
+    {
+      feature: "domain_rank_overview" as const,
+      itemCount: 1,
+      label: "Domain overview",
+      rate: rates.overview,
+      unit: "calls",
+    },
+    {
+      feature: "historical_rank_overview" as const,
+      itemCount: 1,
+      label: "Organic history",
+      rate: rates.history,
+      unit: "calls",
+    },
+    {
+      feature: "relevant_pages" as const,
+      itemCount: 100,
+      label: "Relevant pages (100)",
+      rate: rates.pages,
+      unit: "loads",
+    },
+  ];
+  return rows.flatMap((row) => {
+    if (!row.rate) return [];
+    return [
+      {
+        amountCents: estimatedFeatureCostCents(
+          row.rate,
+          row.itemCount,
+          false,
+          LIST_PROVIDER_RATE_CONTEXT,
+        ),
+        checkedAt: checkedAt(row.rate.checkedAt),
+        editable: false as const,
+        feature: row.feature,
+        label: row.label,
+        source: "list" as const,
+        unit: row.unit,
+      },
+    ];
+  });
 }

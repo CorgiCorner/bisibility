@@ -7,18 +7,15 @@ import {
 } from "@/components/keywords/location-field-parts";
 import { locationKeyHandler } from "@/components/keywords/location-key-handler";
 import {
-  countryNameForCode,
   EMPTY_PROVIDER_HINT_LENGTH,
   type LocationFieldValue,
   type LocationSuggestion,
   useLocationSearch,
 } from "@/components/keywords/location-picker-data";
 import { FieldLabel, Input } from "@/components/ui";
-import {
-  GlobeHemisphereWestIcon as GlobeHemisphereWest,
-  MapPinIcon as MapPin,
-} from "@phosphor-icons/react";
+import { MapPinIcon as MapPin } from "@phosphor-icons/react";
 import { type FocusEvent, useId, useState } from "react";
+import { LocationResults, locationOptionDomId } from "./location-field-results";
 
 export type { LocationFieldValue };
 
@@ -36,16 +33,9 @@ type LocationFieldProps = {
   placeholder?: string;
   /** "form" is the drawer/form field look; "toolbar" matches the compact toolbar controls. */
   variant?: "form" | "toolbar";
+  controlClassName?: string;
 };
 
-function cityCaption(option: LocationSuggestion) {
-  return [option.regionName, countryNameForCode(option.countryCode) ?? option.countryCode]
-    .filter(Boolean)
-    .join(", ");
-}
-
-const optionId = (option: LocationSuggestion) => option.id || option.canonicalKey;
-const optionDomId = (listId: string, index: number) => `${listId}-opt-${index}`;
 export function LocationField({
   value,
   onChange,
@@ -58,6 +48,7 @@ export function LocationField({
   labelHidden = false,
   placeholder = "Search country or city",
   variant = "form",
+  controlClassName,
 }: Readonly<LocationFieldProps>) {
   const fieldClass = locationFieldClassByVariant[variant];
   const reactId = useId();
@@ -150,14 +141,16 @@ export function LocationField({
           />
           <Input
             aria-activedescendant={
-              normalizedActiveIndex >= 0 ? optionDomId(listId, normalizedActiveIndex) : undefined
+              normalizedActiveIndex >= 0
+                ? locationOptionDomId(listId, normalizedActiveIndex)
+                : undefined
             }
             aria-autocomplete="list"
             aria-controls={visible ? listId : undefined}
             aria-expanded={visible}
             aria-label={label}
             autoComplete="off"
-            className={`${fieldClass} normal-case tracking-normal`}
+            className={`${fieldClass} ${controlClassName ?? ""} normal-case tracking-normal`}
             disabled={disabled}
             id={`${prefix}-location`}
             onChange={(event) => handleInput(event.target.value)}
@@ -183,122 +176,5 @@ export function LocationField({
       </div>
       {error ? <span className="normal-case text-red-text">{error}</span> : null}
     </fieldset>
-  );
-}
-
-function LocationResults({
-  activeOption,
-  cities,
-  countries,
-  hasOptions,
-  listId,
-  loading,
-  onPick,
-  showEmpty,
-  visible,
-}: Readonly<{
-  activeOption: LocationSuggestion | undefined;
-  cities: LocationSuggestion[];
-  countries: LocationSuggestion[];
-  hasOptions: boolean;
-  listId: string;
-  loading: boolean;
-  onPick: (option: LocationSuggestion) => void;
-  showEmpty: boolean;
-  visible: boolean;
-}>) {
-  if (!visible) return null;
-  return (
-    <div
-      className="absolute inset-x-0 top-full z-10 mt-1 max-h-64 overflow-auto rounded-[9px] border border-border bg-bg-elev py-1 shadow-lg"
-      id={listId}
-      role="listbox"
-      tabIndex={-1}
-    >
-      {countries.length > 0 ? (
-        <LocationGroup
-          activeOption={activeOption}
-          label="Countries"
-          listId={listId}
-          options={countries}
-          onPick={onPick}
-          startIndex={0}
-        />
-      ) : null}
-      {cities.length > 0 ? (
-        <LocationGroup
-          activeOption={activeOption}
-          label="Cities"
-          listId={listId}
-          options={cities}
-          onPick={onPick}
-          startIndex={countries.length}
-        />
-      ) : null}
-      {loading && !hasOptions ? (
-        <span className="block px-3 py-2 normal-case text-fg-muted">Searching locations...</span>
-      ) : null}
-      {showEmpty ? (
-        <span className="block px-3 py-2 normal-case text-fg-muted">
-          No results yet. City suggestions are powered by your connected providers.
-        </span>
-      ) : null}
-    </div>
-  );
-}
-
-type LocationGroupProps = {
-  activeOption: LocationSuggestion | undefined;
-  label: "Countries" | "Cities";
-  listId: string;
-  options: LocationSuggestion[];
-  onPick: (option: LocationSuggestion) => void;
-  startIndex: number;
-};
-
-function LocationGroup({
-  activeOption,
-  label,
-  listId,
-  options,
-  onPick,
-  startIndex,
-}: Readonly<LocationGroupProps>) {
-  return (
-    <span className="block">
-      <span className="block px-3 pb-1 pt-2 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
-        {label}
-      </span>
-      {options.map((option, index) => {
-        const selected = activeOption ? optionId(activeOption) === optionId(option) : false;
-        const Icon = option.kind === "country" ? GlobeHemisphereWest : MapPin;
-        return (
-          <button
-            aria-selected={selected}
-            className={`flex w-full items-start gap-2 px-3 py-2 text-left normal-case tracking-normal ${
-              selected ? "bg-bg-sunken text-fg" : "text-fg hover:bg-bg-sunken"
-            }`}
-            id={optionDomId(listId, startIndex + index)}
-            key={optionId(option)}
-            onClick={() => onPick(option)}
-            onMouseDown={(event) => event.preventDefault()}
-            role="option"
-            type="button"
-          >
-            <Icon className="mt-0.5 flex-none text-accent-text" size={14} weight="bold" />
-            <span className="min-w-0">
-              <span className="block truncate text-[12.5px] font-semibold">
-                {option.kind === "city" ? option.cityName : option.displayName}
-              </span>
-              {option.kind === "city" ? (
-                <span className="block truncate text-[11.5px] text-fg-muted">
-                  {cityCaption(option)}
-                </span>
-              ) : null}
-            </span>
-          </button>
-        );
-      })}
-    </span>
   );
 }

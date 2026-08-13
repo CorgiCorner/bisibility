@@ -66,6 +66,25 @@ afterEach(() => {
 });
 
 describe("BacklinksWorkspace", () => {
+  it("prefills and prices a target supplied by a linking workspace", () => {
+    render(
+      <SessionSpendProvider>
+        <BacklinksWorkspace
+          analyzeAction={vi.fn() as unknown as AnalyzeBacklinksAction}
+          context={context}
+          initialEstimate={{ cached: false, costCents: 5, loading: false, valid: true }}
+          initialTarget="linked.example"
+          loadMoreAction={loadMoreAction}
+          projectId="prj_1"
+          suggestedEstimateCents={5}
+        />
+      </SessionSpendProvider>,
+    );
+
+    expect(screen.getByText("linked.example")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Analyze ~$0.05" })).toBeEnabled();
+  });
+
   it("uses the server estimate path to validate a target and reveal its price", async () => {
     vi.useFakeTimers();
     const analyzeAction = vi.fn(async (input: unknown) => {
@@ -96,7 +115,8 @@ describe("BacklinksWorkspace", () => {
   it("renders the binding idle-state copy and live suggested estimate", () => {
     renderWorkspace();
 
-    expect(screen.getByText("Point it at any domain")).toBeInTheDocument();
+    const heading = screen.getByRole("heading", { level: 3, name: "Point it at any domain" });
+    expect(heading.parentElement).toHaveClass("rounded-2xl", "border", "bg-bg-elev");
     expect(
       screen.getByText("Runs on your own DataForSEO key, price shown before every run"),
     ).toBeInTheDocument();
