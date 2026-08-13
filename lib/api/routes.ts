@@ -18,6 +18,7 @@ import { requireApiPathPublicIds } from "./public-id";
 import { getRankCheck, listRankChecks, runRankCheck } from "./rank-checks";
 import { analyticsProjectRoute } from "./routes-analytics";
 import { backlinksRoute } from "./routes-backlinks";
+import { domainOverviewRoute } from "./routes-domain-overview";
 import { keywordResearchRoute } from "./routes-keyword-research";
 import { loopClosureRoutes } from "./routes-loop-closure";
 import { topLevelMemberRoutes } from "./routes-members";
@@ -190,6 +191,7 @@ function projectCollectionRoutes(ctx: ApiContext) {
     (resource ? standardProjectCollectionRoute(ctx, projectId, resource) : null) ??
     keywordResearchRoute(ctx) ??
     backlinksRoute(ctx) ??
+    domainOverviewRoute(ctx) ??
     analyticsProjectRoute(ctx, projectId, resource, fourth);
   if (specializedRoute) return specializedRoute;
 

@@ -22,19 +22,20 @@ export default async function BacklinksPage({
 
   const context = await getBacklinksPageContext(publicId);
   const initialTarget = first(query.target)?.trim() ?? "";
-  const estimateTarget = initialTarget || context.defaultTarget;
-  const suggestedEstimate = await analyzeBacklinksAction({
-    estimateOnly: true,
-    includeSubdomains: true,
-    mode: "as_is",
-    projectId: publicId,
-    resultLimit: 100,
-    target: estimateTarget,
-    targetScope: "site",
-  }).catch(() => null);
-  const suggestedEstimateCents =
-    suggestedEstimate?.ok === true
-      ? (suggestedEstimate.estimatedCostCents ?? suggestedEstimate.costCents)
+  const initialEstimateOutcome = initialTarget
+    ? await analyzeBacklinksAction({
+        estimateOnly: true,
+        includeSubdomains: true,
+        mode: "as_is",
+        projectId: publicId,
+        resultLimit: 100,
+        target: initialTarget,
+        targetScope: "site",
+      }).catch(() => null)
+    : null;
+  const initialEstimateCents =
+    initialEstimateOutcome?.ok === true
+      ? (initialEstimateOutcome.estimatedCostCents ?? initialEstimateOutcome.costCents)
       : null;
 
   return (
@@ -45,17 +46,16 @@ export default async function BacklinksPage({
         initialEstimate={
           initialTarget
             ? {
-                cached: suggestedEstimate?.ok === true && suggestedEstimate.cached,
-                costCents: suggestedEstimateCents,
+                cached: initialEstimateOutcome?.ok === true && initialEstimateOutcome.cached,
+                costCents: initialEstimateCents,
                 loading: false,
-                valid: suggestedEstimate?.ok === true,
+                valid: initialEstimateOutcome?.ok === true,
               }
             : undefined
         }
         initialTarget={initialTarget}
         loadMoreAction={loadMoreBacklinkRowsAction}
         projectId={publicId}
-        suggestedEstimateCents={suggestedEstimateCents}
       />
     </PageContent>
   );

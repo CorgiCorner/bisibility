@@ -23,6 +23,7 @@ export const operationPolicy = {
   addCompetitor: policy("POST", "/projects/{project_id}/competitors", "write"),
   addKeywords: policy("POST", "/projects/{project_id}/keywords", "write"),
   analyzeBacklinks: policy("GET", "/projects/{projectId}/backlinks", "write"),
+  analyzeDomainOverview: policy("POST", "/projects/{projectId}/domain-overview/analyze", "write"),
   bulkUpdateKeywords: policy("POST", "/keywords/bulk", "write"),
   connectProvider: policy(
     "POST",
@@ -94,6 +95,17 @@ export const operationPolicy = {
   listTriggeredAlerts: policy("GET", "/projects/{project_id}/triggered-alerts", "read"),
   listWebhookEndpoints: policy("GET", "/projects/{project_id}/webhooks", "read"),
   loadMoreBacklinkRows: policy("POST", "/projects/{projectId}/backlinks/rows", "write"),
+  loadDomainOverviewHistory: policy(
+    "POST",
+    "/projects/{projectId}/domain-overview/history",
+    "write",
+  ),
+  loadDomainOverviewKeywords: policy(
+    "POST",
+    "/projects/{projectId}/domain-overview/keywords",
+    "write",
+  ),
+  loadDomainOverviewPages: policy("POST", "/projects/{projectId}/domain-overview/pages", "write"),
   markProjectAlertsRead: policy(
     "POST",
     "/projects/{project_id}/triggered-alerts/mark-read",

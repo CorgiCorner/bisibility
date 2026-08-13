@@ -1,7 +1,7 @@
 import { AlertBanner } from "@/components/ui";
 import type { CostRateInfo } from "@/lib/cost-estimate/project-estimate";
 import type { KeywordRow } from "@/lib/queries/keywords";
-import { appPath } from "@/lib/routing/app-path";
+import { appPath, rankTrackerTabPath } from "@/lib/routing/app-path";
 import Link from "next/link";
 
 export type CheckHealthView = {
@@ -70,7 +70,7 @@ export function KeywordGridHealthNotices({
       {budget?.exhausted ? (
         <AlertBanner
           action={{
-            href: appPath(projectRef, "checks"),
+            href: rankTrackerTabPath(projectRef, "checks"),
             icon: "arrow",
             label: "View check runs",
           }}

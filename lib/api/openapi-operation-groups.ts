@@ -61,6 +61,15 @@ export const operationGroups: ReadonlyArray<readonly [OpenApiTagName, readonly s
   ],
   ["backlinks", ["analyzeBacklinks", "loadMoreBacklinkRows"]],
   [
+    "domain-overview",
+    [
+      "analyzeDomainOverview",
+      "loadDomainOverviewHistory",
+      "loadDomainOverviewKeywords",
+      "loadDomainOverviewPages",
+    ],
+  ],
+  [
     "analytics",
     [
       "getProjectOverview",

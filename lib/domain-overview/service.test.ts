@@ -261,7 +261,7 @@ describe("domain overview service", () => {
       .mockResolvedValueOnce(null)
       .mockResolvedValueOnce({ cached: true });
 
-    await expect(analyze({ estimateOnly: true })).resolves.toMatchObject({
+    await expect(analyze({ estimateOnly: true, maxCostCents: 0 })).resolves.toMatchObject({
       cached: true,
       estimate: true,
       estimatedCostCents: 0,

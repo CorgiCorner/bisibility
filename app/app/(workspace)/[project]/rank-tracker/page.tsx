@@ -1,6 +1,7 @@
+import { ChecksWorkspace } from "@/components/checks/ChecksWorkspace";
 import { KeywordsGrid } from "@/components/keywords/grid/KeywordsGrid";
-import { KeywordsTabs } from "@/components/keywords/KeywordsTabs";
 import { SavedKeywordsWorkspace } from "@/components/keywords/saved/SavedKeywordsWorkspace";
+import { RankTrackerTabs } from "@/components/rank-tracker/RankTrackerTabs";
 import { PageContent } from "@/components/shell/PageContent";
 import { addKeywords, updateKeyword } from "@/lib/actions/keyword";
 import {
@@ -18,9 +19,11 @@ import { removeSavedKeywords } from "@/lib/actions/saved-keyword";
 import { createSavedView, deleteSavedView } from "@/lib/actions/saved-views";
 import { getProjectRole } from "@/lib/auth/authorize";
 import { canProjectAction } from "@/lib/auth/capabilities";
+import { providerLabel } from "@/lib/checks/attempts";
 import { lensLocationOptions, resolveActiveLens } from "@/lib/keywords/lens-model";
 import { requireReadableProject, resolveProjectAccess } from "@/lib/queries/_auth";
 import { getCheckHealth } from "@/lib/queries/check-health";
+import { getCheckRunsView, getUpcomingView } from "@/lib/queries/check-runs";
 import { getProjectCostContext } from "@/lib/queries/cost-calculator";
 import {
   getKeywordCount,
@@ -31,6 +34,7 @@ import {
 } from "@/lib/queries/keywords";
 import { listSavedKeywords, savedKeywordCount } from "@/lib/queries/saved-keywords";
 import { getSavedView, listSavedViews } from "@/lib/queries/saved-views";
+import { getRequestSerpProviderChain } from "@/lib/queries/workspace-request-data";
 
 type KeywordsPageProps = {
   params: Promise<{ project: string }>;
@@ -70,15 +74,57 @@ async function SavedTab({ projectRef }: Readonly<{ projectRef: string }>) {
   );
 }
 
+async function ChecksTab({
+  projectId,
+  projectRef,
+}: Readonly<{ projectId: string; projectRef: string }>) {
+  const now = new Date();
+  const [initialRuns, upcoming, providerChain, trackedCount, savedCount] = await Promise.all([
+    getCheckRunsView(projectRef, { limit: 50, now, range: "7d", status: "all" }),
+    getUpcomingView(projectRef, { now }),
+    getRequestSerpProviderChain(projectId),
+    getKeywordCount(projectRef),
+    savedKeywordCount(projectRef),
+  ]);
+
+  return (
+    <PageContent>
+      <section className="grid min-w-0 gap-4">
+        <RankTrackerTabs
+          activeTab="checks"
+          projectRef={projectRef}
+          savedCount={savedCount}
+          trackedCount={trackedCount}
+        />
+        <ChecksWorkspace
+          initialRuns={initialRuns}
+          key={`${projectRef}:${now.toISOString()}`}
+          now={now.toISOString()}
+          projectId={projectRef}
+          projectRef={projectRef}
+          providerOptions={providerChain.map(({ provider }) => ({
+            label: providerLabel(provider),
+            value: provider,
+          }))}
+          upcoming={upcoming}
+        />
+      </section>
+    </PageContent>
+  );
+}
+
 export default async function KeywordsPage({
   params: routeParams,
   searchParams,
 }: Readonly<KeywordsPageProps>) {
   const { project } = await routeParams;
-  const { publicId } = await resolveProjectAccess(project);
+  const { projectId, publicId } = await resolveProjectAccess(project);
   const params = await searchParams;
   if (paramValue(params?.tab) === "saved") {
     return SavedTab({ projectRef: publicId });
+  }
+  if (paramValue(params?.tab) === "checks") {
+    return ChecksTab({ projectId, projectRef: publicId });
   }
   const requestedViewId = paramValue(params?.view) ?? null;
   const openAddDrawer = paramValue(params?.add) === "1";
@@ -128,7 +174,7 @@ export default async function KeywordsPage({
   return (
     <PageContent>
       <section className="grid min-w-0 gap-4">
-        <KeywordsTabs
+        <RankTrackerTabs
           activeTab="tracked"
           projectRef={readable.project.publicId}
           savedCount={savedCount}

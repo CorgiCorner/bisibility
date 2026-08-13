@@ -2,60 +2,55 @@
 
 import type { DomainRecentTarget } from "@/lib/domain-overview/types";
 import { relativePast } from "@/lib/format/relative-time";
-import { PlusIcon as Plus } from "@phosphor-icons/react";
+import { ClockCounterClockwiseIcon as Clock } from "@phosphor-icons/react";
 import { cacheHoursRemaining } from "./domain-overview-workspace-model";
 
 type DomainOverviewRecentTargetsProps = {
   currentTarget?: string;
-  onNewSearch?: () => void;
   onOpen: (target: DomainRecentTarget) => void;
   targets: DomainRecentTarget[];
 };
 
 function cacheLabel(target: DomainRecentTarget, now: Date) {
   const hours = cacheHoursRemaining(target.cachedUntil, now);
-  return hours > 0 ? "cached, free" : relativePast(new Date(target.fetchedAt), now);
+  return hours > 0 ? `cached, free for ${hours}h` : "cache expired";
 }
 
 export function DomainOverviewRecentTargets({
   currentTarget,
-  onNewSearch,
   onOpen,
   targets,
 }: Readonly<DomainOverviewRecentTargetsProps>) {
   const visible = targets.filter((target) => target.target !== currentTarget).slice(0, 5);
-  if (visible.length === 0 && !onNewSearch) return null;
+  if (visible.length === 0) return null;
   const now = new Date();
 
   return (
-    <section
-      aria-label="Recent domain analyses"
-      className="flex items-center gap-2.5 overflow-x-auto pb-1"
-    >
-      <span className="shrink-0 font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-fg-muted">
-        Recent
-      </span>
-      {visible.map((target) => (
-        <button
-          className="inline-flex shrink-0 items-center gap-2 rounded-full border border-border bg-transparent px-3 py-1.5 text-[12.5px] text-fg-muted transition-colors hover:border-border-strong hover:text-fg"
-          key={`${target.target}:${target.scope}:${target.locationCode}:${target.languageCode}`}
-          onClick={() => onOpen(target)}
-          type="button"
-        >
-          {target.target}
-          <span className="font-mono text-[10.5px] text-green-text">{cacheLabel(target, now)}</span>
-        </button>
-      ))}
-      {onNewSearch ? (
-        <button
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-dashed border-border-strong px-3 py-1.5 text-[12.5px] font-medium text-fg-muted transition-colors hover:border-accent-text hover:text-accent-text"
-          onClick={onNewSearch}
-          type="button"
-        >
-          <Plus aria-hidden size={11} weight="bold" />
-          New search
-        </button>
-      ) : null}
+    <section aria-label="Recent searches">
+      <div className="mb-2 flex items-center gap-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.5px] text-fg-muted">
+        <Clock aria-hidden size={13} /> Recent searches
+      </div>
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        {visible.map((target) => (
+          <button
+            className="flex shrink-0 items-center gap-2 rounded-full border border-border-strong bg-bg-elev px-3 py-1.5 text-left transition-colors hover:border-accent"
+            key={`${target.target}:${target.scope}:${target.locationCode}:${target.languageCode}`}
+            onClick={() => onOpen(target)}
+            type="button"
+          >
+            <strong className="max-w-[180px] truncate text-[12px] font-semibold">
+              {target.target}
+            </strong>
+            <span className="font-mono text-[10px] text-fg-muted">
+              {target.scope === "subdomain" ? "Subdomain" : "Whole domain"} -{" "}
+              {relativePast(new Date(target.fetchedAt), now)}
+            </span>
+            <span className="rounded-full bg-accent-soft px-2 py-0.5 font-mono text-[9.5px] text-accent-text">
+              {cacheLabel(target, now)}
+            </span>
+          </button>
+        ))}
+      </div>
     </section>
   );
 }

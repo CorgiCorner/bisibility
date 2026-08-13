@@ -190,7 +190,6 @@ export function DomainOverviewWorkspace({
           ? "unsupported_location"
           : failureState(outcome);
 
-  if (submitting && !report) return <DomainOverviewResultsLoading />;
   return (
     <section aria-label="Domain Overview" className="grid min-w-0 gap-4">
       {market ? (
@@ -217,31 +216,14 @@ export function DomainOverviewWorkspace({
           report={report}
         />
       ) : null}
-      {!target && activeMarket ? (
-        <div className="flex flex-wrap items-center gap-2 text-[12.5px] text-fg-muted">
-          <span className="font-mono text-[10px] uppercase tracking-[0.08em]">Try</span>
-          {[context.defaultTarget, ...context.competitorDomains]
-            .filter(Boolean)
-            .slice(0, 5)
-            .map((suggestion) => (
-              <button
-                className="rounded-full border border-border px-3 py-1.5 transition-colors hover:border-border-strong hover:text-fg"
-                key={suggestion}
-                onClick={() => updateTarget(suggestion)}
-                type="button"
-              >
-                {suggestion}
-              </button>
-            ))}
-          <span className="font-mono text-[10.5px]">Price appears before analysis</span>
-        </div>
-      ) : null}
       <DomainOverviewRecentTargets
         currentTarget={report?.target}
         onOpen={openRecent}
         targets={recentTargets}
       />
-      {report && activeMarket ? (
+      {submitting && !report ? (
+        <DomainOverviewResultsLoading />
+      ) : report && activeMarket ? (
         <DomainOverviewResults
           history={history?.data ?? null}
           historyError={historyError}

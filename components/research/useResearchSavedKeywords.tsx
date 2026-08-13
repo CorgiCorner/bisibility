@@ -2,7 +2,7 @@
 
 import { useToast } from "@/components/ui";
 import type { removeSavedKeywords, saveKeywords } from "@/lib/actions/saved-keyword";
-import { appPath } from "@/lib/routing/app-path";
+import { rankTrackerTabPath } from "@/lib/routing/app-path";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { BookmarkSimpleIcon as BookmarkSimple } from "@phosphor-icons/react";
 import Link from "next/link";
@@ -35,7 +35,7 @@ function SavedToastMessage({
       {label} /{" "}
       <Link
         className="font-semibold hover:underline"
-        href={appPath(projectRef, "rank-tracker?tab=saved")}
+        href={rankTrackerTabPath(projectRef, "saved")}
       >
         View in Keywords / Saved
       </Link>

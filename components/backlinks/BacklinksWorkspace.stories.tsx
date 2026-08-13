@@ -70,6 +70,5 @@ export const Idle: Story = {
     },
     loadMoreAction,
     projectId: "prj_story",
-    suggestedEstimateCents: 5,
   },
 };

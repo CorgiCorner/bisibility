@@ -1,4 +1,4 @@
-import { appPath } from "@/lib/routing/app-path";
+import { rankTrackerTabPath } from "@/lib/routing/app-path";
 import { makeCostContext } from "@/tests/factories/cost-context";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
@@ -209,7 +209,7 @@ describe("ResearchDetailPanel", () => {
     expect(screen.queryByRole("button", { name: "Save for later" })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Saved / view in Keywords" })).toHaveAttribute(
       "href",
-      `${appPath("prj_1", "rank-tracker")}?tab=saved`,
+      rankTrackerTabPath("prj_1", "saved"),
     );
 
     rerender(

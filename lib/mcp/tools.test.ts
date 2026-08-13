@@ -43,11 +43,11 @@ describe("MCP tool dispatch", () => {
     vi.clearAllMocks();
   });
 
-  it("publishes the canonical unprefixed 87-tool contract", () => {
+  it("publishes the canonical unprefixed 91-tool contract", () => {
     const definitions = getMcpToolDefinitions();
 
     expect(definitions.map((tool) => tool.name)).toEqual(MCP_TOOL_NAMES);
-    expect(definitions).toHaveLength(87);
+    expect(definitions).toHaveLength(91);
     expect(definitions.every((tool) => /^[a-z][a-z0-9_]*$/.test(tool.name))).toBe(true);
     expect(definitions.some((tool) => tool.name.startsWith("bisibility_"))).toBe(false);
     expect(definitions.some((tool) => tool.name === "list_rank_checks")).toBe(false);
@@ -403,6 +403,49 @@ describe("MCP tool dispatch", () => {
       method: "PATCH",
       path: ["projects", projectId, "providers", "dataforseo"],
     });
+  });
+
+  it.each([
+    ["analyze_domain_overview", "analyze", { estimate_only: true, max_cost_cents: 0 }],
+    ["load_domain_overview_history", "history", { max_cost_cents: 0 }],
+    ["load_domain_overview_keywords", "keywords", { limit: 100, max_cost_cents: 0, offset: 0 }],
+    ["load_domain_overview_pages", "pages", { limit: 100, max_cost_cents: 0, offset: 0 }],
+  ] as const)("routes %s with the explicit cost contract", async (name, action, extra) => {
+    const projectId = "prj_a00000000000000000000000";
+    const result = await dispatchMcpTool(
+      name,
+      {
+        ...extra,
+        language_code: "en",
+        location_code: 2840,
+        project_id: projectId,
+        target: "example.com",
+      },
+      "bsb_key_live_test",
+    );
+
+    expect(result.payload).toMatchObject({
+      body: expect.objectContaining(extra),
+      method: "POST",
+      path: ["projects", projectId, "domain-overview", action],
+    });
+  });
+
+  it("rejects uncapped hosted Domain Overview analysis before REST dispatch", async () => {
+    await expect(
+      dispatchMcpTool(
+        "analyze_domain_overview",
+        {
+          estimate_only: true,
+          language_code: "en",
+          location_code: 2840,
+          project_id: "prj_a00000000000000000000000",
+          target: "example.com",
+        },
+        "bsb_key_live_test",
+      ),
+    ).rejects.toThrow("max_cost_cents must be a nonnegative integer");
+    expect(mocks.handleApiRequest).not.toHaveBeenCalled();
   });
 
   it("maps optional project_id to the PAT project-selection header", async () => {

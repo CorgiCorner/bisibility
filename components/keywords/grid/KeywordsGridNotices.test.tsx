@@ -1,4 +1,4 @@
-import { appPath } from "@/lib/routing/app-path";
+import { appPath, rankTrackerTabPath } from "@/lib/routing/app-path";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { describe, expect, it, vi } from "vitest";
@@ -161,7 +161,7 @@ describe("KeywordsGridNotices", () => {
     expect(screen.getByText("Rank checks paused - monthly budget reached.")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "View check runs" })).toHaveAttribute(
       "href",
-      appPath("prj_1", "checks"),
+      rankTrackerTabPath("prj_1", "checks"),
     );
     expect(screen.getByRole("link", { name: "Raise the budget" })).toHaveAttribute(
       "href",

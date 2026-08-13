@@ -9,7 +9,6 @@ describe("navItems", () => {
       "Domain Overview",
       "Rank Tracker",
       "Backlinks",
-      "Checks",
       "Competitors",
       "Timeline",
       "Integrations",
@@ -27,7 +26,6 @@ describe("navItems", () => {
       "Domain Overview",
       "Rank Tracker",
       "Backlinks",
-      "Checks",
       "Competitors",
       "Timeline",
     ]);

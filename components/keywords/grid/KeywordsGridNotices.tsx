@@ -9,7 +9,7 @@ import {
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
 import { AlertBanner } from "@/components/ui";
 import type { KeywordCheckState } from "@/lib/queries/keyword-row";
-import { appPath } from "@/lib/routing/app-path";
+import { appPath, rankTrackerTabPath } from "@/lib/routing/app-path";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { CheckHealthView } from "./KeywordGridHealthNotices";
@@ -66,7 +66,11 @@ function emptyRankNotice({
   }
   if (budgetExhausted) {
     return {
-      action: { href: appPath(projectRef, "checks"), icon: "arrow", label: "View check runs" },
+      action: {
+        href: rankTrackerTabPath(projectRef, "checks"),
+        icon: "arrow",
+        label: "View check runs",
+      },
       detail: (
         <>
           No new rank checks can start until the monthly budget resets or is increased.{" "}
@@ -85,7 +89,11 @@ function emptyRankNotice({
   }
   if (failedCount > 0 || checkStates.includes("failed")) {
     return {
-      action: { href: appPath(projectRef, "checks"), icon: "arrow", label: "Review check runs" },
+      action: {
+        href: rankTrackerTabPath(projectRef, "checks"),
+        icon: "arrow",
+        label: "Review check runs",
+      },
       detail: "At least one latest rank check failed before producing a position.",
       kind: "alert",
       tint: "red",
@@ -94,7 +102,11 @@ function emptyRankNotice({
   }
   if (checkStates.includes("running")) {
     return {
-      action: { href: appPath(projectRef, "checks"), icon: "arrow", label: "View check runs" },
+      action: {
+        href: rankTrackerTabPath(projectRef, "checks"),
+        icon: "arrow",
+        label: "View check runs",
+      },
       detail: "Ranking data will appear after the running checks finish.",
       kind: "alert",
       tint: "yellow",
@@ -103,7 +115,11 @@ function emptyRankNotice({
   }
   if (checkStates.some((state) => state === "not_ranked")) {
     return {
-      action: { href: appPath(projectRef, "checks"), icon: "arrow", label: "View check runs" },
+      action: {
+        href: rankTrackerTabPath(projectRef, "checks"),
+        icon: "arrow",
+        label: "View check runs",
+      },
       detail: "Completed checks did not find these domains in the top 100 results.",
       kind: "alert",
       tint: "yellow",

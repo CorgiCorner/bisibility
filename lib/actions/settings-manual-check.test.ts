@@ -53,7 +53,7 @@ describe("manual project checks from settings", () => {
       }),
     );
     expect(settingsActionMocks.revalidatePath).toHaveBeenCalledWith(
-      appPath("[project]", "checks"),
+      appPath("[project]", "rank-tracker"),
       "page",
     );
     expect(settingsActionMocks.revalidatePath).toHaveBeenCalledWith(

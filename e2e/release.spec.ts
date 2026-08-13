@@ -116,7 +116,7 @@ async function verifyWorkspaceWidths(page: Page, keywordDetailPath: string, proj
   const analyticsPaths = [
     `/app/${projectRef}/rank-tracker`,
     keywordDetailPath,
-    `/app/${projectRef}/checks`,
+    `/app/${projectRef}/rank-tracker?tab=checks`,
     `/app/${projectRef}/timeline`,
     `/app/${projectRef}/competitors`,
   ];

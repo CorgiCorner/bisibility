@@ -85,10 +85,10 @@ describe("makePublicId", () => {
 });
 
 describe("revalidateProviderViews", () => {
-  it("refreshes the checks page provider indicator after configuration changes", () => {
+  it("refreshes the Rank Tracker checks tab provider indicator after configuration changes", () => {
     revalidateProviderViews();
 
-    expect(mocks.revalidatePath).toHaveBeenCalledWith(appPath("[project]", "checks"), "page");
+    expect(mocks.revalidatePath).toHaveBeenCalledWith(appPath("[project]", "rank-tracker"), "page");
   });
 });
 

@@ -44,6 +44,11 @@ export const openApiTags = [
     "x-group": "Backlinks",
   },
   {
+    name: "domain-overview",
+    description: "Analyze domain visibility and load its history, keywords, and pages.",
+    "x-group": "Domain Overview",
+  },
+  {
     name: "analytics",
     description: "Read project analytics, traffic snapshots, and search-performance data.",
     "x-group": "Analytics",

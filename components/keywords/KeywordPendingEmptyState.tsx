@@ -1,5 +1,5 @@
 import type { KeywordCheckState } from "@/lib/queries/keyword-row";
-import { appPath } from "@/lib/routing/app-path";
+import { appPath, rankTrackerTabPath } from "@/lib/routing/app-path";
 import { notRankedLabel } from "@/lib/serp/rank-depth";
 
 export type EmptyRankCopy = {
@@ -21,7 +21,7 @@ export function emptyRankCopy(
     return {
       badge: "No data",
       body: "The provider is fetching results for this keyword. The page updates as soon as the check completes.",
-      href: appPath(projectRef, "checks"),
+      href: rankTrackerTabPath(projectRef, "checks"),
       link: "Refresh",
       position: "No data",
       title: "Rank check in progress",
@@ -31,7 +31,7 @@ export function emptyRankCopy(
     return {
       badge: "No data",
       body: "The last check returned an error.",
-      href: appPath(projectRef, "checks"),
+      href: rankTrackerTabPath(projectRef, "checks"),
       link: "Retry check",
       position: "No data",
       title: "No position from the latest check",
@@ -41,7 +41,7 @@ export function emptyRankCopy(
     return {
       badge: notRankedLabel(trackedDepth),
       body: "Outside the tracked depth on the last check.",
-      href: appPath(projectRef, "checks"),
+      href: rankTrackerTabPath(projectRef, "checks"),
       link: "Check top 100",
       position: `outside top ${trackedDepth}`,
       title: `Not ranked in the top ${trackedDepth}`,

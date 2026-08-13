@@ -32,7 +32,6 @@ export function BacklinksWorkspace({
   initialTarget = "",
   loadMoreAction,
   projectId,
-  suggestedEstimateCents,
 }: Readonly<BacklinksWorkspaceProps>) {
   const { addSpend } = useSessionSpend();
   const [target, setTarget] = useState(initialTarget);
@@ -212,11 +211,7 @@ export function BacklinksWorkspace({
           snapshot={snapshot}
         />
       ) : (
-        <BacklinksIdleState
-          estimateCents={suggestedEstimateCents}
-          onSelectTarget={(nextTarget) => selectTarget(nextTarget)}
-          suggestions={[{ kind: "project", target: context.defaultTarget }]}
-        />
+        <BacklinksIdleState />
       )}
     </section>
   );

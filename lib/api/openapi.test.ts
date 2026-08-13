@@ -1,3 +1,4 @@
+import { AjvJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/ajv";
 import { describe, expect, it } from "vitest";
 import { API_VERSION_HEADER } from "./api-versions";
 import { getCapabilities, getLlmsText } from "./capabilities";
@@ -27,6 +28,7 @@ describe("OpenAPI document", () => {
         "rank-checks",
         "keyword-research",
         "backlinks",
+        "domain-overview",
         "analytics",
         "alerts",
         "competitors",
@@ -40,7 +42,7 @@ describe("OpenAPI document", () => {
         "migration",
       ].map((name) => expect.objectContaining({ name })),
     );
-    expect(operations).toHaveLength(96);
+    expect(operations).toHaveLength(100);
     expect(operations.every((operation) => operation.tags?.length === 1)).toBe(true);
     expect(
       operations.every(
@@ -55,6 +57,58 @@ describe("OpenAPI document", () => {
     expect(doc.paths["/projects/{project_id}/keywords"].get.tags).toEqual(["keywords"]);
     expect(doc.paths["/projects/{project_id}/alert-rules"].post.tags).toEqual(["alerts"]);
     expect(doc.paths["/projects/{project_id}/webhooks"].get.tags).toEqual(["webhooks"]);
+    expect(doc.paths["/projects/{projectId}/domain-overview/analyze"].post.tags).toEqual([
+      "domain-overview",
+    ]);
+  });
+
+  it("documents the paid Domain Overview safety contract", () => {
+    const doc = getOpenApiDocument();
+    const analyze = doc.paths["/projects/{projectId}/domain-overview/analyze"].post;
+    const history = doc.paths["/projects/{projectId}/domain-overview/history"].post;
+
+    expect(analyze).toMatchObject({
+      operationId: "analyzeDomainOverview",
+      requestBody: { required: true },
+      responses: {
+        "200": expect.any(Object),
+        "422": expect.any(Object),
+        "429": expect.any(Object),
+      },
+    });
+    expect(history).toMatchObject({
+      operationId: "loadDomainOverviewHistory",
+      requestBody: { required: true },
+      responses: { "409": expect.any(Object), "422": expect.any(Object) },
+    });
+    expect(doc.components.schemas.DomainOverviewProblem).toMatchObject({
+      allOf: expect.arrayContaining([
+        expect.objectContaining({ $ref: "#/components/schemas/Problem" }),
+      ]),
+    });
+    expect(doc.components.schemas.DomainOverviewMetrics.properties).toHaveProperty("pos1");
+    expect(doc.components.schemas.DomainOverviewMetrics.properties).not.toHaveProperty("pos_1");
+  });
+
+  it("publishes executable Domain Overview request constraints", () => {
+    const schemas = getOpenApiDocument().components.schemas;
+    const schemaValidator = new AjvJsonSchemaValidator();
+    const common = { language_code: "en", location_code: 2840, target: "example.com" };
+    const analyze = schemaValidator.getValidator(schemas.DomainOverviewAnalyzeRequest as never);
+
+    expect(analyze({ ...common, estimate_only: true }).valid).toBe(true);
+    expect(analyze({ ...common, estimate_only: true, max_cost_cents: 0 }).valid).toBe(true);
+    expect(analyze({ ...common, estimate_only: false, max_cost_cents: 6 }).valid).toBe(true);
+    expect(analyze(common).valid).toBe(false);
+    expect(analyze({ ...common, estimate_only: false }).valid).toBe(false);
+    expect(analyze({ ...common, estimate_only: true, unknown: true }).valid).toBe(false);
+
+    const keywords = schemaValidator.getValidator(schemas.DomainOverviewKeywordsRequest as never);
+    const pages = schemaValidator.getValidator(schemas.DomainOverviewPagesRequest as never);
+    expect(keywords({ ...common, limit: 100, max_cost_cents: 0, offset: 0 }).valid).toBe(true);
+    expect(keywords({ ...common, limit: 101, max_cost_cents: 0, offset: 0 }).valid).toBe(false);
+    expect(pages({ ...common, limit: 1_000, max_cost_cents: 0, offset: 0 }).valid).toBe(true);
+    expect(pages({ ...common, limit: 1_001, max_cost_cents: 0, offset: 0 }).valid).toBe(false);
   });
 
   it("documents optional API version declarations and mismatch responses", () => {

@@ -3,6 +3,7 @@ import { analyticsPaths } from "./openapi-analytics";
 import { apiKeyPaths } from "./openapi-api-keys";
 import { backlinksPaths, backlinksSchemas } from "./openapi-backlinks";
 import { ref, schemas } from "./openapi-components";
+import { domainOverviewPaths, domainOverviewSchemas } from "./openapi-domain-overview";
 import { keywordResearchPaths } from "./openapi-keyword-research";
 import { keywordPaths } from "./openapi-keywords";
 import { locationSearchPaths } from "./openapi-locations";
@@ -20,33 +21,31 @@ import { publicPaths } from "./openapi-public";
 import { rankedKeywordSuggestionPaths } from "./openapi-ranked-keywords";
 import { savedKeywordPaths } from "./openapi-saved-keywords";
 import { savedViewOperations } from "./openapi-saved-views";
+import { createSignalOperation, runRankCheckOperation } from "./openapi-special-operations";
 import { openApiTags, tagOpenApiPaths } from "./openapi-tags";
 import { teamMutationPaths } from "./openapi-team-mutations";
 
 const json = (schema: object) => ({ "application/json": { schema } });
-function response(schema: object, description = "JSON response") {
-  return { content: json(schema), description };
-}
-
+const response = (schema: object, description = "JSON response") => ({
+  content: json(schema),
+  description,
+});
 function list(schema: object) {
+  const meta = {
+    properties: { next_cursor: { type: ["string", "null"] } },
+    required: ["next_cursor"],
+    type: "object",
+  };
   return {
     properties: {
       data: { items: schema, type: "array" },
-      meta: {
-        properties: {
-          next_cursor: { type: ["string", "null"] },
-        },
-        required: ["next_cursor"],
-        type: "object",
-      },
+      meta,
     },
     required: ["data", "meta"],
     type: "object",
   };
 }
-
 const obj = { type: "object" };
-
 const problemResponses = {
   "400": response(ref("Problem"), "Bad request"),
   "401": response(ref("Problem"), "Unauthorized"),
@@ -54,7 +53,6 @@ const problemResponses = {
   "404": response(ref("Problem"), "Not found"),
   "429": response(ref("Problem"), "Rate limited"),
 };
-
 function bearerOperation(
   summary: string,
   operationId: string,
@@ -88,39 +86,10 @@ function createdBearerOperation(
   };
 }
 
-function runRankCheckOperation() {
-  return {
-    operationId: "runRankCheck",
-    parameters: [asyncParameter],
-    responses: {
-      "201": response(ref("RankCheck"), "Rank check completed"),
-      "202": response(ref("RankCheck"), "Rank check started"),
-      "503": response(ref("Problem"), "Scheduler unavailable"),
-      ...problemResponses,
-    },
-    security: personalAccess.apiCredentialSecurity,
-    summary: "Run one rank check synchronously or asynchronously",
-  };
-}
-
-function createSignalOperation() {
-  return {
-    operationId: "createSignal",
-    requestBody: { content: json(ref("SignalCreate")), required: true },
-    responses: {
-      "201": response(ref("Signal"), "Signal ingested"),
-      "423": response(ref("Problem"), "Project read-only"),
-      ...problemResponses,
-    },
-    security: personalAccess.apiCredentialSecurity,
-    summary: "Ingest a project signal",
-  };
-}
-
 export function getOpenApiDocument() {
   return {
     components: {
-      schemas: { ...schemas, ...backlinksSchemas },
+      schemas: { ...schemas, ...backlinksSchemas, ...domainOverviewSchemas },
       securitySchemes: {
         ...personalAccess.apiCredentialSecuritySchemes,
         ...migrationSecuritySchemes,
@@ -162,7 +131,14 @@ export function getOpenApiDocument() {
         delete: bearerOperation("Remove a competitor", "removeCompetitor", obj),
       },
       ...migrationPaths,
-      "/keywords/{id}/checks": { post: runRankCheckOperation() },
+      "/keywords/{id}/checks": {
+        post: runRankCheckOperation({
+          asyncParameter,
+          problemResponses,
+          rankCheckRef: ref("RankCheck"),
+          security: personalAccess.apiCredentialSecurity,
+        }),
+      },
       "/keywords/{id}/rank-checks": {
         get: bearerOperation(
           "List rank checks for a keyword",
@@ -222,6 +198,7 @@ export function getOpenApiDocument() {
       },
       ...analyticsPaths({ bearer: bearerOperation, ref }),
       ...backlinksPaths({ bearer: bearerOperation }),
+      ...domainOverviewPaths({ bearer: bearerOperation }),
       "/projects/{project_id}/competitors": {
         get: bearerOperation("List competitors", "listCompetitors", list(obj)),
         post: bearerOperation("Add a competitor", "addCompetitor", obj),
@@ -296,7 +273,10 @@ export function getOpenApiDocument() {
         delete: bearerOperation("Delete a saved view", "deleteSavedView", obj),
       },
       "/signals": {
-        post: createSignalOperation(),
+        post: createSignalOperation({
+          problemResponses,
+          security: personalAccess.apiCredentialSecurity,
+        }),
       },
       "/team/invites/{invite_id}": {
         delete: bearerOperation("Revoke a team invite", "revokeTeamInvite", obj),

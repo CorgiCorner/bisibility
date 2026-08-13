@@ -85,6 +85,36 @@ describe("DomainOverviewWorkspace", () => {
     expect(routerMock.push).not.toHaveBeenCalled();
   });
 
+  it("keeps the analysis form visible while the first report loads", async () => {
+    const analyzeAction = vi.fn().mockReturnValue(new Promise(() => undefined));
+    render(
+      <SessionSpendProvider>
+        <DomainOverviewWorkspace
+          analyzeAction={analyzeAction}
+          context={context}
+          initialEstimate={initialEstimate}
+          initialOutcome={null}
+          initialTarget="example.com"
+          loadHistoryAction={vi.fn()}
+          loadKeywordsPageAction={vi.fn()}
+          loadPagesPageAction={vi.fn()}
+          market={domainOverviewMarketFixture}
+          projectId="prj_1"
+          projectRef="prj_1"
+          selectMarketAction={vi.fn()}
+        />
+      </SessionSpendProvider>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /analyze domain/i }));
+
+    await waitFor(() =>
+      expect(screen.getByRole("textbox", { name: "Domain or subdomain" })).toBeDisabled(),
+    );
+    expect(screen.getByRole("button", { name: /analyzing domain/i })).toBeDisabled();
+    expect(screen.getByLabelText(/domain overview loading/i)).toBeInTheDocument();
+  });
+
   it("caps a fresh refresh with the full estimate even when the report is cached", async () => {
     const analyzeAction = vi.fn().mockResolvedValue(domainOverviewReportFixture);
     render(
@@ -305,6 +335,9 @@ describe("DomainOverviewWorkspace", () => {
       </SessionSpendProvider>,
     );
 
+    expect(screen.getByLabelText("Recent searches")).toBeInTheDocument();
+    expect(screen.queryByText("Try")).not.toBeInTheDocument();
+    expect(screen.queryByText("Price appears before analysis")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /recent\.example\.com/i }));
     expect(routerMock.push).toHaveBeenCalledWith(
       "/app/prj_1/domain-overview?domain=recent.example.com&market=US%2FUS-TX%2FAustin&scope=root",

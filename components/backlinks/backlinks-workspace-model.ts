@@ -35,7 +35,6 @@ export type BacklinksWorkspaceProps = {
   initialTarget?: string;
   loadMoreAction: LoadMoreBacklinkRowsAction;
   projectId: string;
-  suggestedEstimateCents: number | null;
 };
 
 export const EMPTY_BACKLINKS_ESTIMATE: BacklinksEstimateView = {
