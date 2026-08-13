@@ -1,0 +1,130 @@
+import type { DomainOverviewReport } from "@/lib/domain-overview/types";
+import type { HistoricalOverviewRow } from "@/lib/providers/types";
+import type { DomainOverviewMarketView } from "./domain-overview-workspace-model";
+
+const overview = {
+  count: 12_940,
+  estimatedTrafficCostCents: 6_130_000,
+  etv: 48_200,
+  isDown: 84,
+  isLost: 39,
+  isNew: 412,
+  isUp: 263,
+  pos1: 84,
+  pos11_20: 714,
+  pos21_30: 1_020,
+  pos2_3: 116,
+  pos31_40: 1_210,
+  pos41_50: 1_380,
+  pos4_10: 186,
+  pos51_60: 1_440,
+  pos61_70: 1_520,
+  pos71_80: 1_610,
+  pos81_90: 1_720,
+  pos91_100: 1_940,
+};
+
+export const domainOverviewMarketFixture: DomainOverviewMarketView = {
+  canonicalKey: "US/US-TX/Austin",
+  cityName: "Austin",
+  countryCode: "US",
+  displayName: "Austin, Texas, United States",
+  hl: "en",
+  kind: "city",
+  languageCode: "en",
+  languageLabel: "English",
+  locationCode: 1_026_201,
+  regionName: "Texas",
+};
+
+export const domainOverviewReportFixture: DomainOverviewReport = {
+  cached: true,
+  cachedUntil: "2026-08-12T22:00:00.000Z",
+  costCents: 0,
+  fetchedAt: "2026-08-12T12:00:00.000Z",
+  historyMode: "lazy",
+  keywords: {
+    cached: true,
+    costCents: 0,
+    data: {
+      consumedCount: 100,
+      costCents: 0,
+      rows: Array.from({ length: 100 }, (_, index) => ({
+        cpcCents: 125 + index * 12,
+        difficulty: 18 + index * 5,
+        estimatedTraffic: 4_820 - index * 307,
+        intent: index % 2 === 0 ? ("commercial" as const) : ("informational" as const),
+        keyword:
+          [
+            "standing desk",
+            "ergonomic desk",
+            "office desk",
+            "desk setup",
+            "adjustable desk",
+            "home office desk",
+            "wood desk",
+            "desk accessories",
+            "modern desk",
+            "best standing desk",
+          ][index] ?? `keyword ${index}`,
+        position: index + 1,
+        rankAbsolute: index + 3,
+        rankAbsoluteDelta: index % 3 === 0 ? 2 : index % 3 === 1 ? -1 : 0,
+        rankingUrl: `https://example.com/desks/${index + 1}`,
+        searchVolume: 22_000 - index * 1_300,
+        serpFeatures: index % 2 === 0 ? ["featured_snippet"] : [],
+      })),
+      totalCount: 12_940,
+    },
+    fetchedAt: "2026-08-12T12:00:00.000Z",
+    ok: true,
+  },
+  languageCode: "en",
+  locationCode: 1_026_201,
+  ok: true,
+  overview,
+  pages: {
+    cached: true,
+    costCents: 0,
+    data: {
+      consumedCount: 100,
+      costCents: 0,
+      rows: Array.from({ length: 100 }, (_, index) => ({
+        etv: 8_420 - index * 530,
+        etvDeltaPct: index % 2 === 0 ? 4.2 : -1.8,
+        keywordCount: 340 - index * 17,
+        path: `/collections/desks/${index + 1}`,
+        topKeyword: `standing desk ${index + 1}`,
+        topKeywordPosition: index + 1,
+      })),
+      totalCount: 1_204,
+    },
+    fetchedAt: "2026-08-12T12:00:00.000Z",
+    ok: true,
+  },
+  previousFetchedAt: "2026-08-05T12:00:00.000Z",
+  previousOverview: { ...overview, count: 12_528, etv: 45_300, pos1: 78 },
+  previousSourceSnapshotAt: "2026-08-05T00:00:00.000Z",
+  provider: "dataforseo",
+  scope: "root",
+  sourceSnapshotAt: "2026-08-12T00:00:00.000Z",
+  state: "ok",
+  target: "example.com",
+};
+
+export const domainOverviewHistoryFixture: HistoricalOverviewRow[] = Array.from(
+  { length: 13 },
+  (_, index) => ({
+    metrics: {
+      ...overview,
+      count: 9_800 + index * 260,
+      estimatedTrafficCostCents: 4_200_000 + index * 160_000,
+      etv: 34_000 + index * 1_200,
+      pos1: 58 + index * 2,
+      pos2_3: 90 + index * 2,
+      pos4_10: 132 + index * 4,
+    },
+    month: ((index + 7) % 12) + 1,
+    year: 2025 + Math.floor((index + 7) / 12),
+  }),
+);

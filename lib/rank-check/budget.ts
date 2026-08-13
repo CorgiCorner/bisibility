@@ -80,7 +80,12 @@ export type ConnectionLookupSpend = {
   connectionId: string;
   costCents: number;
   entryCount: number;
-  feature: "backlinks" | "keyword_metrics" | "keyword_research" | "ranked_keywords";
+  feature:
+    | "backlinks"
+    | "domain_overview"
+    | "keyword_metrics"
+    | "keyword_research"
+    | "ranked_keywords";
 };
 
 export async function monthlyLookupSpendByConnection(

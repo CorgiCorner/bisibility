@@ -72,7 +72,7 @@ export function ManagedCompetitorControls({
   }
 
   function onRemove() {
-    if (!confirm(`Remove ${competitor.label} from managed competitors?`)) {
+    if (!confirm(`Remove ${competitor.label} from competitors?`)) {
       return;
     }
     setMessage(null);

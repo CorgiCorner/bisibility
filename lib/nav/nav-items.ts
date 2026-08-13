@@ -7,6 +7,7 @@ import {
   BookOpenTextIcon as BookOpenText,
   ClockCounterClockwiseIcon as ClockCounterClockwise,
   GearSixIcon as GearSix,
+  GlobeIcon as Globe,
   LinkIcon as Link,
   MagnifyingGlassIcon as MagnifyingGlass,
   PulseIcon as Pulse,
@@ -37,11 +38,12 @@ export type NavItem = {
 
 export function navItems(projectRef: string): NavItem[] {
   return [
-    { label: "Overview", href: appPath(projectRef, "overview"), icon: SquaresFour },
+    { label: "Dashboard", href: appPath(projectRef, "overview"), icon: SquaresFour },
     // Keyword research scouts the market (Binoculars); Rank Tracker is the tracked list you then
     // search and filter (MagnifyingGlass); Checks is a recurring heartbeat, not a calendar (Pulse).
     // The research label says "keyword" because the rail also carries Backlinks and Competitors.
     { label: "Keyword Research", href: appPath(projectRef, "research"), icon: Binoculars },
+    { label: "Domain Overview", href: appPath(projectRef, "domain-overview"), icon: Globe },
     { label: "Rank Tracker", href: appPath(projectRef, "rank-tracker"), icon: MagnifyingGlass },
     { label: "Backlinks", href: appPath(projectRef, "backlinks"), icon: Link },
     { label: "Checks", href: appPath(projectRef, "checks"), icon: Pulse },

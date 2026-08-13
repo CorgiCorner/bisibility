@@ -42,6 +42,11 @@ const routeCases = [
     title: "Competitors",
   },
   {
+    path: appPath("prj_1", "domain-overview"),
+    pattern: appPath("[project]", "domain-overview"),
+    title: "Domain Overview",
+  },
+  {
     path: appPath("prj_1", "docs"),
     pattern: appPath("[project]", "docs"),
     title: "Docs",
@@ -64,7 +69,7 @@ const routeCases = [
   {
     path: appPath("prj_1", "overview"),
     pattern: appPath("[project]", "overview"),
-    title: "Overview",
+    title: "Dashboard",
   },
   {
     path: appPath("prj_1", "research"),
@@ -155,7 +160,7 @@ describe("dashboard header titles", () => {
   });
 
   it("keeps the overview header free of project metadata", () => {
-    expect(headerMetaFor(appPath("prj_1", "overview"))).toEqual({ title: "Overview" });
+    expect(headerMetaFor(appPath("prj_1", "overview"))).toEqual({ title: "Dashboard" });
   });
 
   it("uses singular keyword copy for one tracked keyword", () => {

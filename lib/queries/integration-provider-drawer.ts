@@ -3,6 +3,7 @@ import type { ProviderMetaRow, ProviderRateData } from "@/lib/integrations/types
 import {
   PROVIDER_RATE_LABELS,
   PROVIDER_RATE_UNITS,
+  providerDomainOverviewListRates,
   providerListRate,
   providerRateFeatures,
 } from "@/lib/provider-rates/catalog";
@@ -132,7 +133,7 @@ export function providerRates(
   providerId: string,
   costEntries: readonly ProviderCostEntryRow[],
 ): ProviderRateData[] {
-  return providerRateFeatures(providerId).map((feature) => {
+  const editableRates = providerRateFeatures(providerId).map((feature) => {
     const manualRate = connection?.rates?.find((rate) => rate.feature === feature);
     const legacyRankRate =
       feature === "rank_check" && !manualRate ? connection?.costPerCheckCents : null;
@@ -150,6 +151,10 @@ export function providerRates(
     });
     return serializedRate(feature, resolved, fallback);
   });
+  const domainOverviewRates: ProviderRateData[] = providerDomainOverviewListRates(providerId).map(
+    (rate) => ({ ...rate, checkedAt: rate.checkedAt.toISOString() }),
+  );
+  return [...editableRates, ...domainOverviewRates];
 }
 
 export function displayedProviderLogin(itemId: string, login: string | undefined) {

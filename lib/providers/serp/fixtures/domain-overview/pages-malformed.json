@@ -1,0 +1,107 @@
+{
+  "version": "0.1.20260720",
+  "status_code": 20000,
+  "status_message": "Ok.",
+  "cost": 0.02,
+  "tasks_count": 1,
+  "tasks_error": 0,
+  "tasks": [
+    {
+      "id": "pages-malformed-task",
+      "status_code": 20000,
+      "status_message": "Ok.",
+      "cost": 0.02,
+      "result_count": 1,
+      "result": [
+        {
+          "target": "example.com",
+          "total_count": 142,
+          "items": [
+            {
+              "page_address": "https://example.com/",
+              "metrics": {
+                "organic": {
+                  "count": 520,
+                  "etv": 8200.5,
+                  "estimated_paid_traffic_cost": 12000.0,
+                  "pos_1": 5,
+                  "pos_2_3": 10,
+                  "pos_4_10": 40,
+                  "pos_11_20": 80,
+                  "pos_21_30": 70,
+                  "pos_31_40": 60,
+                  "pos_41_50": 55,
+                  "pos_51_60": 50,
+                  "pos_61_70": 45,
+                  "pos_71_80": 40,
+                  "pos_81_90": 35,
+                  "pos_91_100": 30,
+                  "is_new": 10,
+                  "is_up": 15,
+                  "is_down": 12,
+                  "is_lost": 8
+                }
+              }
+            },
+            {
+              "page_address": "",
+              "metrics": {
+                "organic": {
+                  "count": 100,
+                  "etv": 500.0,
+                  "estimated_paid_traffic_cost": 800.0,
+                  "pos_1": 1,
+                  "pos_2_3": 2,
+                  "pos_4_10": 3,
+                  "pos_11_20": 4,
+                  "pos_21_30": 5,
+                  "pos_31_40": 6,
+                  "pos_41_50": 7,
+                  "pos_51_60": 8,
+                  "pos_61_70": 9,
+                  "pos_71_80": 10,
+                  "pos_81_90": 11,
+                  "pos_91_100": 12,
+                  "is_new": 1,
+                  "is_up": 2,
+                  "is_down": 3,
+                  "is_lost": 4
+                }
+              }
+            },
+            {
+              "page_address": "https://example.com/missing-organic",
+              "metrics": {}
+            },
+            {
+              "page_address": "https://example.com/blog/post",
+              "metrics": {
+                "organic": {
+                  "count": 310,
+                  "etv": 4200.0,
+                  "estimated_paid_traffic_cost": 6000.0,
+                  "pos_1": 3,
+                  "pos_2_3": 8,
+                  "pos_4_10": 25,
+                  "pos_11_20": 50,
+                  "pos_21_30": 45,
+                  "pos_31_40": 40,
+                  "pos_41_50": 35,
+                  "pos_51_60": 30,
+                  "pos_61_70": 25,
+                  "pos_71_80": 20,
+                  "pos_81_90": 18,
+                  "pos_91_100": 15,
+                  "is_new": 5,
+                  "is_up": 10,
+                  "is_down": 8,
+                  "is_lost": 4
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

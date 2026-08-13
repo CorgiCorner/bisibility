@@ -24,6 +24,7 @@ vi.mock("@/lib/providers/auth-state", () => ({ markProviderNeedsReauth: vi.fn() 
 import { keywordMetricsRate, keywordResearchRate } from "@/lib/cost-estimate/provider-rates";
 import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
 import { dataForSeoProvider } from "@/lib/providers/serp/dataforseo";
+import { DataForSeoUnsupportedLocationError } from "@/lib/providers/serp/dataforseo-errors";
 import { monthlySpendCents } from "@/lib/rank-check/budget";
 import { paidProviderCall, requiredEstimatedCostCents } from "./paid-call";
 
@@ -138,6 +139,29 @@ describe("paid provider lookup", () => {
     ).rejects.toThrow("network unavailable");
 
     expect(mocks.prisma.providerCostEntry.create).not.toHaveBeenCalled();
+  });
+
+  it("preserves charged cost when mapping unsupported locations to a signal", async () => {
+    await expect(
+      paidProviderCall({
+        call: async () => {
+          throw new DataForSeoUnsupportedLocationError("unsupported", 7);
+        },
+        connection: {
+          credentialsEncrypted: "encrypted",
+          id: "connection_1",
+          provider: "dataforseo",
+        },
+        feature: "keyword_metrics",
+        itemCount: 1,
+        projectId: "project_1",
+        provider: dataForSeoProvider,
+        rate: keywordMetricsRate("dataforseo"),
+      }),
+    ).rejects.toMatchObject({
+      outcome: { costCents: 7, reason: "unsupported_location" },
+    });
+    expect(mocks.ledger).toEqual([{ costCents: 7, failed: true }]);
   });
 
   it.each([

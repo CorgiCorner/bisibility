@@ -10,6 +10,7 @@ import {
   DataForSeoBillingError,
   DataForSeoError,
   DataForSeoValidationError,
+  noSearchResults,
   validationFailure,
 } from "./dataforseo-errors";
 import { type DataForSeoResponse, dataForSeoResponseCostCents } from "./dataforseo-payload";
@@ -71,7 +72,7 @@ function assertSuccess(data: unknown) {
   const statusCode = number(currentTask.status_code || root.status_code);
   const message = string(currentTask.status_message || root.status_message);
   if (statusCode === 20000) return "success" as const;
-  if (statusCode === 40501 && /no search results/i.test(message)) return "empty" as const;
+  if (noSearchResults(statusCode, message)) return "empty" as const;
   const chargedCost = responseCostCents(data);
   const costCents = chargedCost > 0 ? chargedCost : null;
   if (

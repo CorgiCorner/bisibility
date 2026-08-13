@@ -1,5 +1,38 @@
 import type { SerpRankLocation } from "@/lib/serp/location";
 import type { SerpDepth } from "@/lib/serp/markets";
+import type {
+  AnalyticsQueryStatsInput,
+  AnalyticsTopQuery,
+  PageStatRow,
+  QueryStatRow,
+} from "./analytics-types";
+import type {
+  DomainOverviewInput,
+  DomainOverviewResult,
+  HistoricalOverviewResult,
+  HistoricalRankOverviewInput,
+  RelevantPagesInput,
+  RelevantPagesResult,
+} from "./domain-overview-types";
+
+export type {
+  AnalyticsMetricRange,
+  AnalyticsQueryStatsInput,
+  AnalyticsTopQuery,
+  PageStatRow,
+  QueryStatRow,
+} from "./analytics-types";
+export type {
+  DomainOverviewInput,
+  DomainOverviewResult,
+  DomainRankMetrics,
+  HistoricalOverviewResult,
+  HistoricalOverviewRow,
+  HistoricalRankOverviewInput,
+  RelevantPageRow,
+  RelevantPagesInput,
+  RelevantPagesResult,
+} from "./domain-overview-types";
 
 export type ProviderCredentials = {
   login?: string;
@@ -18,48 +51,6 @@ export type ProviderTestResult = {
   ok: boolean;
   message: string;
   balance?: number;
-};
-
-export type AnalyticsTopQuery = {
-  query: string;
-  clicks?: number;
-  impressions?: number;
-};
-
-export type QueryStatRow = {
-  query: string;
-  page?: string;
-  clicks: number;
-  impressions: number;
-  ctr: number;
-  position: number;
-};
-
-export type AnalyticsMetricRange = {
-  max?: number;
-  min?: number;
-};
-
-export type AnalyticsQueryStatsInput = {
-  clicks?: AnalyticsMetricRange;
-  endDate: string;
-  impressions?: AnalyticsMetricRange;
-  limit?: number;
-  pagePath?: { match: "contains" | "prefix"; value: string };
-  position?: AnalyticsMetricRange;
-  query?: string;
-  startDate: string;
-};
-
-export type PageStatRow = {
-  path: string;
-  sessions: number;
-  visitors?: number;
-  engagementRate?: number;
-  keyEvents?: number;
-  bounceRate?: number;
-  visitDurationSeconds?: number;
-  scrollDepth?: number;
 };
 
 export type SerpRankInput = {
@@ -104,9 +95,18 @@ export type RankedKeywordRow = {
   position: number | null;
   searchVolume: number | null;
   estimatedTraffic: number | null;
+  cpcCents: number | null;
+  difficulty: number | null;
+  intent: "informational" | "navigational" | "commercial" | "transactional" | null;
+  rankingUrl: string | null;
+  serpFeatures: string[];
+  rankAbsoluteDelta: number | null; // previous rankAbsolute minus current rankAbsolute
+  rankAbsolute: number | null;
 };
 
 export type RankedKeywordsPage = {
+  /** Raw provider items consumed by this offset page, before malformed rows are dropped. */
+  consumedCount: number;
   rows: RankedKeywordRow[];
   totalCount: number | null;
   costCents: number;
@@ -193,7 +193,14 @@ export type SerpProvider = {
   fetchRank(input: SerpRankInput): Promise<SerpRankResult>;
   fetchRankedKeywords?(
     credentials: ProviderCredentials,
-    input: { domain: string; location: SerpRankLocation; limit: number; offset: number },
+    input: {
+      domain: string;
+      languageCode?: string;
+      limit: number;
+      location: SerpRankLocation;
+      locationCode?: number;
+      offset: number;
+    },
   ): Promise<RankedKeywordsPage>;
   fetchRelatedKeywords?(
     credentials: ProviderCredentials,
@@ -231,6 +238,18 @@ export type SerpProvider = {
       offset: number;
     },
   ): Promise<BacklinkRowsResult>;
+  fetchDomainRankOverview?(
+    credentials: ProviderCredentials,
+    input: DomainOverviewInput,
+  ): Promise<DomainOverviewResult>;
+  fetchHistoricalRankOverview?(
+    credentials: ProviderCredentials,
+    input: HistoricalRankOverviewInput,
+  ): Promise<HistoricalOverviewResult>;
+  fetchRelevantPages?(
+    credentials: ProviderCredentials,
+    input: RelevantPagesInput,
+  ): Promise<RelevantPagesResult>;
 };
 
 export type AnalyticsProvider = {

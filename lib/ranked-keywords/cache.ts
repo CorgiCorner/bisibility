@@ -35,7 +35,7 @@ export function rankedKeywordsCacheKey(input: {
   offset: number;
   projectId: string;
 }) {
-  return `rk:v1:${input.projectId}:${input.connectionId}:${input.normalizedDomain}:${input.locationKey}:${input.limit}:${input.offset}`;
+  return `rk:v2:${input.projectId}:${input.connectionId}:${input.normalizedDomain}:${input.locationKey}:${input.limit}:${input.offset}`;
 }
 
 export function readRankedKeywordsCache(key: string) {

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## [0.11.0] - 2026-08-13
+
+- Added Domain Overview with provider-backed KPIs, trends, keyword and page tables, cache-aware pricing, shareable URLs, and corrected organic ranked-keyword positions.
+
 ## [0.10.0] - 2026-08-12
 
 - Streamlined onboarding with one-field website setup, unified data connections, prefilled provider costs, clearer Search Console actions, keyword imports, and tracking defaults.

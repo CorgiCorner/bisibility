@@ -59,7 +59,11 @@ export function headerMetaFor(pathname: string, context: HeaderContext = {}): He
   }
 
   if (matches(sectionPath, "/overview")) {
-    return { title: "Overview" };
+    return { title: "Dashboard" };
+  }
+
+  if (matches(sectionPath, "/domain-overview")) {
+    return sectionMeta("Domain Overview", "Analyze estimated organic visibility for any domain.");
   }
 
   if (matches(sectionPath, "/rank-tracker")) {

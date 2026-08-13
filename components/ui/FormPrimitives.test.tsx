@@ -3,6 +3,7 @@ import { useState } from "react";
 import { describe, expect, it } from "vitest";
 import { Button } from "./Button";
 import { Checkbox } from "./Checkbox";
+import { Kbd } from "./Kbd";
 import { Pill } from "./Pill";
 import { SegmentedControl } from "./SegmentedControl";
 import { Switch } from "./Switch";
@@ -43,6 +44,21 @@ function SegmentedHarness({
 }
 
 describe("form primitives", () => {
+  it("renders keyboard hints as semantic keycaps", () => {
+    render(
+      <Kbd>
+        <span aria-hidden>↵</span>
+        <span className="sr-only">Enter</span>
+      </Kbd>,
+    );
+
+    const keycap = screen.getByText("↵").closest("kbd");
+    expect(keycap).not.toBeNull();
+    expect(keycap?.tagName).toBe("KBD");
+    expect(keycap).toHaveTextContent("↵Enter");
+    expect(screen.getByText("Enter")).toHaveClass("sr-only");
+  });
+
   it("renders and toggles a native checkbox", () => {
     render(<Checkbox label="All subdomains" name="includeSubdomains" />);
 

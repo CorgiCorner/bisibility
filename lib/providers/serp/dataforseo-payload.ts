@@ -38,10 +38,20 @@ export type DataForSeoResponse = {
 type RankedKeywordItem = {
   keyword_data?: {
     keyword?: string;
-    keyword_info?: { search_volume?: number | null };
+    keyword_info?: { search_volume?: number | null; cpc?: number | null };
+    keyword_properties?: { keyword_difficulty?: number | null } | null;
+    search_intent_info?: { main_intent?: string | null } | null;
+    serp_info?: { serp_item_types?: unknown[] } | null;
   };
   ranked_serp_element?: {
-    serp_item?: { etv?: number | null; rank_absolute?: number | null };
+    keyword_difficulty?: number | null;
+    serp_item?: {
+      etv?: number | null;
+      rank_absolute?: number | null;
+      rank_group?: number | null;
+      rank_changes?: { previous_rank_absolute?: number | null } | null;
+      url?: string;
+    };
   };
 };
 
@@ -126,19 +136,48 @@ export function dataForSeoRankedKeywordsPage(data: DataForSeoResponse): RankedKe
   const result = data.tasks?.[0]?.result?.[0] as
     | { items?: RankedKeywordItem[]; total_count?: number }
     | undefined;
-  const rows = (result?.items ?? []).flatMap((item) => {
-    const keyword = item.keyword_data?.keyword?.trim();
+  const items = result?.items ?? [];
+  const rows = items.flatMap((item) => {
+    const keywordData = item.keyword_data;
+    const keyword = keywordData?.keyword?.trim();
     if (!keyword) return [];
+    const serpItem = item.ranked_serp_element?.serp_item;
+    const rankAbsolute = finiteNumber(serpItem?.rank_absolute);
+    const previousRankAbsolute = finiteNumber(serpItem?.rank_changes?.previous_rank_absolute);
+    const rankAbsoluteDelta =
+      rankAbsolute !== null && previousRankAbsolute !== null
+        ? previousRankAbsolute - rankAbsolute
+        : null;
+    const cpc = finiteNumber(keywordData?.keyword_info?.cpc);
+    const difficulty =
+      finiteNumber(keywordData?.keyword_properties?.keyword_difficulty) ??
+      finiteNumber(item.ranked_serp_element?.keyword_difficulty);
+    const intentValue = intent(keywordData?.search_intent_info?.main_intent);
+    const rankingUrl =
+      typeof serpItem?.url === "string" && serpItem.url.trim() !== "" ? serpItem.url.trim() : null;
+    const serpFeatures = Array.isArray(keywordData?.serp_info?.serp_item_types)
+      ? keywordData.serp_info.serp_item_types.filter(
+          (value): value is string => typeof value === "string",
+        )
+      : [];
     return [
       {
-        estimatedTraffic: finiteNumber(item.ranked_serp_element?.serp_item?.etv),
+        cpcCents: cpc === null ? null : Math.round(cpc * 100),
+        difficulty,
+        estimatedTraffic: finiteNumber(serpItem?.etv),
+        intent: intentValue === "unknown" ? null : intentValue,
         keyword,
-        position: finiteNumber(item.ranked_serp_element?.serp_item?.rank_absolute),
-        searchVolume: finiteNumber(item.keyword_data?.keyword_info?.search_volume),
+        position: finiteNumber(serpItem?.rank_group),
+        rankAbsoluteDelta,
+        rankAbsolute,
+        rankingUrl,
+        searchVolume: finiteNumber(keywordData?.keyword_info?.search_volume),
+        serpFeatures,
       },
     ];
   });
   return {
+    consumedCount: items.length,
     costCents: dataForSeoResponseCostCents(data),
     rows,
     totalCount: finiteNumber(result?.total_count),

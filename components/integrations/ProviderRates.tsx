@@ -5,6 +5,7 @@ import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider
 import { Button } from "@/components/ui";
 import { centsToDollars } from "@/lib/format/currency";
 import type { ProviderActionHandlers, ProviderRateData } from "@/lib/integrations/types";
+import type { ProviderRateFeature } from "@/lib/provider-rates/resolver";
 import { PROVIDER_RATE_COST_BOUNDS } from "@/lib/schemas/provider";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -40,7 +41,7 @@ export function ProviderRates({
 }: Readonly<ProviderRatesProps>) {
   const router = useRouter();
   const { readOnly } = useProjectWriteMode();
-  const [editing, setEditing] = useState<ProviderRateData["feature"] | null>(null);
+  const [editing, setEditing] = useState<ProviderRateFeature | null>(null);
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,6 +49,7 @@ export function ProviderRates({
   if (rates.length === 0) return null;
 
   function edit(rate: ProviderRateData) {
+    if (rate.editable === false) return;
     if (!connected || readOnly || pending) return;
     if (editing === rate.feature) {
       setEditing(null);
@@ -61,6 +63,7 @@ export function ProviderRates({
   }
 
   async function save(rate: ProviderRateData, costPerUnit: number | null) {
+    if (rate.editable === false) return;
     if (!updateRate || readOnly) return;
     setPending(true);
     setError(null);
@@ -82,6 +85,7 @@ export function ProviderRates({
   }
 
   function saveDraft(rate: ProviderRateData) {
+    if (rate.editable === false) return;
     const normalized = draft.trim().replace(",", ".");
     const value = Number(normalized);
     const { maximum, minimum } = PROVIDER_RATE_COST_BOUNDS;
@@ -104,26 +108,35 @@ export function ProviderRates({
           <div className="border-border-soft border-t" key={rate.feature}>
             <div className="flex items-start justify-between gap-3 px-3.5 py-2.5">
               <span className="pt-1 text-[13px] font-medium">{rate.label}</span>
-              <button
-                aria-label={`Edit ${rate.label} rate`}
-                className={`inline-flex items-center gap-[9px] rounded-[7px] border px-2 py-1 outline-none transition-colors hover:border-border-strong hover:bg-bg-sunken focus-visible:border-accent disabled:cursor-default disabled:opacity-70 ${
-                  rate.source === "manual" || isEditing
-                    ? "border-accent bg-accent-soft"
-                    : "border-transparent bg-transparent"
-                }`}
-                disabled={!connected || readOnly || pending}
-                onClick={() => edit(rate)}
-                type="button"
-              >
-                <span
-                  className={`font-mono text-xs font-medium ${
-                    rate.amountCents === undefined ? "text-fg-muted" : "text-fg"
-                  }`}
-                >
-                  {displayedAmount(rate)}
+              {rate.editable === false ? (
+                <span className="inline-flex items-center gap-[9px] px-2 py-1">
+                  <span className="font-mono text-xs font-medium text-fg">
+                    {displayedAmount(rate)}
+                  </span>
+                  <RateSourceChip {...rate} />
                 </span>
-                <RateSourceChip {...rate} />
-              </button>
+              ) : (
+                <button
+                  aria-label={`Edit ${rate.label} rate`}
+                  className={`inline-flex items-center gap-[9px] rounded-[7px] border px-2 py-1 outline-none transition-colors hover:border-border-strong hover:bg-bg-sunken focus-visible:border-accent disabled:cursor-default disabled:opacity-70 ${
+                    rate.source === "manual" || isEditing
+                      ? "border-accent bg-accent-soft"
+                      : "border-transparent bg-transparent"
+                  }`}
+                  disabled={!connected || readOnly || pending}
+                  onClick={() => edit(rate)}
+                  type="button"
+                >
+                  <span
+                    className={`font-mono text-xs font-medium ${
+                      rate.amountCents === undefined ? "text-fg-muted" : "text-fg"
+                    }`}
+                  >
+                    {displayedAmount(rate)}
+                  </span>
+                  <RateSourceChip {...rate} />
+                </button>
+              )}
             </div>
             {isEditing ? (
               <div className="flex items-center gap-[9px] px-3.5 pb-3">

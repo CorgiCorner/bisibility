@@ -59,6 +59,10 @@ export function validationFailure(message: string) {
   return /invalid field|invalid parameter|validation/i.test(message);
 }
 
+export function noSearchResults(statusCode: number | undefined, message: string) {
+  return (statusCode === 40102 || statusCode === 40501) && /no search results/i.test(message);
+}
+
 export function unsupportedLabsRequest(message: string) {
   return /(?:location|target).*(?:invalid|not found|not supported|unsupported)|(?:invalid field|unsupported).*(?:location|target)/i.test(
     message,

@@ -686,7 +686,7 @@ describe("dataForSeoProvider", () => {
     });
   });
 
-  it("fetches one ranked-keyword page with a normalized domain and offset", async () => {
+  it("maps the ranked-keywords serp_info returned without an unsupported request flag", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       jsonResponse({
         cost: 0.02,
@@ -700,8 +700,11 @@ describe("dataForSeoProvider", () => {
                     keyword_data: {
                       keyword: "rank tracker",
                       keyword_info: { search_volume: 500 },
+                      serp_info: { serp_item_types: ["organic", "ai_overview"] },
                     },
-                    ranked_serp_element: { serp_item: { etv: 12.4, rank_absolute: 4 } },
+                    ranked_serp_element: {
+                      serp_item: { etv: 12.4, rank_absolute: 4, rank_group: 2 },
+                    },
                   },
                 ],
                 total_count: 201,
@@ -724,7 +727,11 @@ describe("dataForSeoProvider", () => {
           offset: 100,
         },
       ),
-    ).resolves.toMatchObject({ costCents: 2, totalCount: 201 });
+    ).resolves.toMatchObject({
+      costCents: 2,
+      rows: [{ position: 2, serpFeatures: ["organic", "ai_overview"] }],
+      totalCount: 201,
+    });
     expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body))).toEqual([
       {
         language_code: "en",
@@ -735,6 +742,50 @@ describe("dataForSeoProvider", () => {
         target: "example.com",
       },
     ]);
+    expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body))[0]).not.toHaveProperty(
+      "include_serp_info",
+    );
+  });
+
+  it.each([40102, 40501])("maps Labs no-data status %i through the real adapter", async (code) => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        jsonResponse({
+          status_code: 20000,
+          tasks: [
+            {
+              result: [{ google: { date_update: "2026-08-04" } }],
+              status_code: 20000,
+            },
+          ],
+        }),
+      )
+      .mockResolvedValueOnce(
+        jsonResponse({
+          cost: 0.02,
+          status_code: 20000,
+          tasks: [
+            { cost: 0.02, result: null, status_code: code, status_message: "No Search Results" },
+          ],
+        }),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(
+      dataForSeoProvider.fetchDomainRankOverview?.(
+        { login: "login", password: "secret" },
+        {
+          includeSubdomains: false,
+          location: location(),
+          target: "example.com",
+        },
+      ),
+    ).resolves.toEqual({
+      costCents: 2,
+      metrics: null,
+      sourceSnapshotAt: "2026-08-04T00:00:00.000Z",
+    });
   });
 
   it("degrades city locations to the country level for Labs lookups", async () => {

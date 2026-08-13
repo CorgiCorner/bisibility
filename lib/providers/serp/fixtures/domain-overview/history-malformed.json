@@ -1,0 +1,137 @@
+{
+  "version": "0.1.20260720",
+  "status_code": 20000,
+  "status_message": "Ok.",
+  "cost": 0.02,
+  "tasks_count": 1,
+  "tasks_error": 0,
+  "tasks": [
+    {
+      "id": "history-malformed-task",
+      "status_code": 20000,
+      "status_message": "Ok.",
+      "cost": 0.02,
+      "result_count": 1,
+      "result": [
+        {
+          "target": "example.com",
+          "items": [
+            {
+              "year": 2025,
+              "month": 7,
+              "metrics": {
+                "organic": {
+                  "count": 1600,
+                  "etv": 12000.0,
+                  "estimated_paid_traffic_cost": 25000.0,
+                  "pos_1": 10,
+                  "pos_2_3": 28,
+                  "pos_4_10": 100,
+                  "pos_11_20": 190,
+                  "pos_21_30": 170,
+                  "pos_31_40": 140,
+                  "pos_41_50": 130,
+                  "pos_51_60": 120,
+                  "pos_61_70": 110,
+                  "pos_71_80": 100,
+                  "pos_81_90": 90,
+                  "pos_91_100": 80,
+                  "is_new": 20,
+                  "is_up": 35,
+                  "is_down": 25,
+                  "is_lost": 10
+                }
+              }
+            },
+            {
+              "year": 2019,
+              "month": 7,
+              "metrics": {
+                "organic": {
+                  "count": 100,
+                  "etv": 500.0,
+                  "estimated_paid_traffic_cost": 800.0,
+                  "pos_1": 1,
+                  "pos_2_3": 2,
+                  "pos_4_10": 3,
+                  "pos_11_20": 4,
+                  "pos_21_30": 5,
+                  "pos_31_40": 6,
+                  "pos_41_50": 7,
+                  "pos_51_60": 8,
+                  "pos_61_70": 9,
+                  "pos_71_80": 10,
+                  "pos_81_90": 11,
+                  "pos_91_100": 12,
+                  "is_new": 1,
+                  "is_up": 2,
+                  "is_down": 3,
+                  "is_lost": 4
+                }
+              }
+            },
+            {
+              "year": 2025,
+              "month": 13,
+              "metrics": {
+                "organic": {
+                  "count": 200,
+                  "etv": 1000.0,
+                  "estimated_paid_traffic_cost": 1200.0,
+                  "pos_1": 2,
+                  "pos_2_3": 3,
+                  "pos_4_10": 4,
+                  "pos_11_20": 5,
+                  "pos_21_30": 6,
+                  "pos_31_40": 7,
+                  "pos_41_50": 8,
+                  "pos_51_60": 9,
+                  "pos_61_70": 10,
+                  "pos_71_80": 11,
+                  "pos_81_90": 12,
+                  "pos_91_100": 13,
+                  "is_new": 1,
+                  "is_up": 2,
+                  "is_down": 3,
+                  "is_lost": 4
+                }
+              }
+            },
+            {
+              "year": 2025,
+              "month": 8,
+              "metrics": {}
+            },
+            {
+              "year": 2025,
+              "month": 8,
+              "metrics": {
+                "organic": {
+                  "count": 1820,
+                  "etv": 15420.5,
+                  "estimated_paid_traffic_cost": 33128.75,
+                  "pos_1": 12,
+                  "pos_2_3": 34,
+                  "pos_4_10": 120,
+                  "pos_11_20": 210,
+                  "pos_21_30": 180,
+                  "pos_31_40": 150,
+                  "pos_41_50": 140,
+                  "pos_51_60": 130,
+                  "pos_61_70": 120,
+                  "pos_71_80": 110,
+                  "pos_81_90": 100,
+                  "pos_91_100": 90,
+                  "is_new": 25,
+                  "is_up": 40,
+                  "is_down": 30,
+                  "is_lost": 15
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -28,6 +28,7 @@ import {
   CaretRightIcon as CaretRight,
   ExportIcon as Export,
   FunnelSimpleIcon as FunnelSimple,
+  UsersThreeIcon as UsersThree,
 } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -96,8 +97,9 @@ export function CompetitorsWorkspace({
               />
             ) : undefined
           }
-          description="Add at least one managed competitor before benchmarking share of voice and head-to-head ranks."
-          title="No managed competitors"
+          description="Add at least one competitor to compare share of voice and head-to-head rankings."
+          icon={<UsersThree aria-hidden size={28} />}
+          title="No competitors yet"
         />
       </div>
     );
@@ -118,7 +120,7 @@ export function CompetitorsWorkspace({
             <CaretRight aria-hidden size={14} weight="bold" />
           </Link>
         }
-        description={`${view.managedCompetitors.length} managed competitor${view.managedCompetitors.length === 1 ? "" : "s"} (${competitorNames}) saved. Track at least one keyword before benchmarking.`}
+        description={`${view.managedCompetitors.length} competitor${view.managedCompetitors.length === 1 ? "" : "s"} (${competitorNames}) saved. Track at least one keyword before benchmarking.`}
         title="No tracked keywords"
       />
     );

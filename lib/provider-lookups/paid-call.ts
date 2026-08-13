@@ -19,6 +19,7 @@ import type { SerpProvider } from "@/lib/providers/types";
 import { assertBudgetAvailable, isBudgetExhaustedError } from "@/lib/rank-check/budget";
 
 export type ProviderLookupFailure = {
+  costCents?: number;
   ok: false;
   reason:
     | "budget_exhausted"
@@ -78,7 +79,12 @@ async function recordProviderCost(input: {
   connectionId: string;
   costCents: number;
   failed: boolean;
-  feature: "backlinks" | "keyword_metrics" | "keyword_research" | "ranked_keywords";
+  feature:
+    | "backlinks"
+    | "domain_overview"
+    | "keyword_metrics"
+    | "keyword_research"
+    | "ranked_keywords";
   projectId: string;
   unitCostCents?: number | null;
 }) {
@@ -102,7 +108,12 @@ export async function paidProviderCall<T extends { costCents: number }>(input: {
   budgetCapCents?: number;
   call: (credentials: ReturnType<typeof resolveProviderCredentials>) => Promise<T>;
   connection: { credentialsEncrypted: string | null; id: string; provider: string };
-  feature: "backlinks" | "keyword_metrics" | "keyword_research" | "ranked_keywords";
+  feature:
+    | "backlinks"
+    | "domain_overview"
+    | "keyword_metrics"
+    | "keyword_research"
+    | "ranked_keywords";
   includeClickstream?: boolean;
   itemCount: number;
   projectId: string;
@@ -114,7 +125,7 @@ export async function paidProviderCall<T extends { costCents: number }>(input: {
   // resolve; it prices from the list rates until the rate catalog models those sub-rates.
   const context =
     input.rateContext ??
-    (input.feature === "backlinks"
+    (input.feature === "backlinks" || input.feature === "domain_overview"
       ? LIST_PROVIDER_RATE_CONTEXT
       : await loadProviderRateContext(input.connection.id, input.feature));
   const estimatedCostCents = requiredEstimatedCostCents({
@@ -167,10 +178,18 @@ export async function paidProviderCall<T extends { costCents: number }>(input: {
           provider: input.provider.id,
         }),
       ).catch(() => undefined);
-      throw new ProviderLookupSignal({ ok: false, reason: "needs_reauth" });
+      throw new ProviderLookupSignal({
+        ...(chargedCostCents == null ? {} : { costCents: chargedCostCents }),
+        ok: false,
+        reason: "needs_reauth",
+      });
     }
     if (error instanceof DataForSeoUnsupportedLocationError) {
-      throw new ProviderLookupSignal({ ok: false, reason: "unsupported_location" });
+      throw new ProviderLookupSignal({
+        ...(chargedCostCents == null ? {} : { costCents: chargedCostCents }),
+        ok: false,
+        reason: "unsupported_location",
+      });
     }
     throw error;
   }

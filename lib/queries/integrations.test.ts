@@ -206,6 +206,24 @@ describe("integration queries", () => {
       { amountCents: 1, fallbackSource: "list", source: "manual" },
       { source: "list" },
       { source: "list" },
+      {
+        amountCents: 1.212,
+        editable: false,
+        feature: "domain_rank_overview",
+        source: "list",
+      },
+      {
+        amountCents: 12.12,
+        editable: false,
+        feature: "historical_rank_overview",
+        source: "list",
+      },
+      {
+        amountCents: 2.4,
+        editable: false,
+        feature: "relevant_pages",
+        source: "list",
+      },
     ]);
     expect(serpapi.drawer.rates?.map((rate) => rate.feature)).toEqual(["rank_check"]);
     expect(mocks.prisma.$queryRaw).toHaveBeenCalledTimes(1);
