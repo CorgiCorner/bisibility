@@ -4,6 +4,7 @@ import {
 } from "@/components/cost-estimate/SessionSpendProvider";
 import { ToastProvider } from "@/components/ui";
 import type { ResearchKeywordsAction } from "@/lib/actions/keyword-research";
+import * as locationModule from "@/lib/serp/location";
 import { makeCostContext } from "@/tests/factories/cost-context";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ComponentProps } from "react";
@@ -647,5 +648,121 @@ describe("ResearchWorkspace", () => {
     fireEvent.click(screen.getByRole("button", { name: "Save 3" }));
     expect(await screen.findByText(/Saved 1 keyword/)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Undo" })).not.toBeInTheDocument();
+  });
+
+  it("renders the metrics scope banner for a country-level selection", () => {
+    renderWorkspace(vi.fn() as unknown as ResearchKeywordsAction);
+
+    expect(screen.getByLabelText("metrics scope")).toHaveTextContent(
+      "Metrics scope: United States - English",
+    );
+  });
+
+  it("renders the metrics scope banner for a city selection", () => {
+    renderWorkspace(vi.fn() as unknown as ResearchKeywordsAction, {
+      context: {
+        ...context,
+        defaultMarket: {
+          city: "Malaga",
+          country: "Spain",
+          device: "desktop" as const,
+          displayName: "Malaga, Andalusia, Spain",
+          locationKey: "ES/ES-AN/Malaga",
+          source: "explicit" as const,
+        },
+        language: { code: "es", label: "Spanish" },
+        location: {
+          canonicalKey: "ES/ES-AN/Malaga",
+          cityName: "Malaga",
+          countryCode: "ES",
+          displayName: "Malaga, Andalusia, Spain",
+          hl: "es",
+          kind: "city" as const,
+          languageLabel: "Spanish",
+          regionName: null,
+        },
+      },
+    });
+
+    expect(screen.getByLabelText("metrics scope")).toHaveTextContent(
+      "Metrics scope: Spain - Spanish",
+    );
+  });
+
+  it("does not include the city name in the metrics scope banner for a sub-country selection", () => {
+    renderWorkspace(vi.fn() as unknown as ResearchKeywordsAction, {
+      context: {
+        ...context,
+        defaultMarket: {
+          city: "Malaga",
+          country: "Spain",
+          device: "desktop" as const,
+          displayName: "Malaga, Andalusia, Spain",
+          locationKey: "ES/ES-AN/Malaga",
+          source: "explicit" as const,
+        },
+        language: { code: "es", label: "Spanish" },
+        location: {
+          canonicalKey: "ES/ES-AN/Malaga",
+          cityName: "Malaga",
+          countryCode: "ES",
+          displayName: "Malaga, Andalusia, Spain",
+          hl: "es",
+          kind: "city" as const,
+          languageLabel: "Spanish",
+          regionName: null,
+        },
+      },
+    });
+
+    expect(screen.getByLabelText("metrics scope")).not.toHaveTextContent("Malaga");
+  });
+
+  it("derives a city selection scope through the shared country degradation helper", () => {
+    const degrade = vi.spyOn(locationModule, "countryDegradedRankLocation");
+
+    renderWorkspace(vi.fn() as unknown as ResearchKeywordsAction, {
+      context: {
+        ...context,
+        language: { code: "es", label: "Spanish" },
+        location: {
+          canonicalKey: "ES/ES-AN/Malaga",
+          cityName: "Malaga",
+          countryCode: "ES",
+          displayName: "Malaga, Andalusia, Spain",
+          hl: "es",
+          kind: "city" as const,
+          languageLabel: "Spanish",
+          regionName: null,
+        },
+      },
+    });
+
+    expect(degrade).toHaveBeenCalledWith(expect.objectContaining({ gl: "es", hl: "es" }));
+    degrade.mockRestore();
+  });
+
+  it("never falls back to a city name when the country scope cannot be resolved", () => {
+    renderWorkspace(vi.fn() as unknown as ResearchKeywordsAction, {
+      context: {
+        ...context,
+        language: { code: "es", label: "Spanish" },
+        location: {
+          canonicalKey: "ZZ/Malaga",
+          cityName: "Malaga",
+          countryCode: "ZZ",
+          displayName: "Malaga, Unknown",
+          hl: "es",
+          kind: "city" as const,
+          languageLabel: "Spanish",
+          regionName: null,
+        },
+      },
+    });
+
+    expect(screen.getByLabelText("metrics scope")).toHaveTextContent(
+      "Metrics scope: Unknown country - Spanish",
+    );
+    expect(screen.getByLabelText("metrics scope")).not.toHaveTextContent("Malaga");
   });
 });

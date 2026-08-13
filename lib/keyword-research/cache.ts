@@ -8,6 +8,7 @@ import {
   writeProviderLookupCache,
 } from "@/lib/provider-lookups/cache";
 import type { KeywordMetrics, ResearchKeywordRow } from "@/lib/providers/types";
+import { countryDegradedRankLocation, type SerpRankLocation } from "@/lib/serp/location";
 import type { KeywordResearchSource } from "./types";
 
 const DEFAULT_TTL_SECONDS = 43_200;
@@ -38,13 +39,14 @@ export function keywordResearchCachedUntil(fetchedAts: string | readonly string[
 export function keywordResearchCacheKey(input: {
   connectionId: string;
   includeClickstream: boolean;
-  locationKey: string;
+  location: SerpRankLocation;
   normalizedSeed: string;
   projectId: string;
   resultLimit: number;
   source: KeywordResearchSource;
 }) {
-  return `kr:v1:${input.projectId}:${input.connectionId}:${input.normalizedSeed}:${input.locationKey}:${input.source}:${input.resultLimit}:${input.includeClickstream ? 1 : 0}`;
+  const degraded = countryDegradedRankLocation(input.location);
+  return `kr:v2:${input.projectId}:${input.connectionId}:${input.normalizedSeed}:${degraded.primaryGeoName}:${degraded.hl}:${input.source}:${input.resultLimit}:${input.includeClickstream ? 1 : 0}`;
 }
 
 export function keywordMetricsCacheKey(input: {

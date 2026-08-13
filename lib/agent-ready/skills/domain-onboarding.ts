@@ -11,9 +11,9 @@ export const skill: TaskSkill = {
   body: `# Domain onboarding
 
 Onboard a brand-new domain into bisibility so it is fully ready for rank
-tracking: create the project, configure its defaults (locale, search engine,
-device), connect a data provider, add the initial keyword set, and trigger a
-first rank check so the user immediately has data flowing.
+tracking: create the project, configure its defaults (country, device), connect
+a data provider, add the initial keyword set, and trigger a first rank check so
+the user immediately has data flowing.
 
 ## When to use this skill
 
@@ -63,17 +63,14 @@ call uses that variable.
 
 ### 2. Set project defaults - \`PATCH /projects/{project_id}/defaults\` (updateProjectDefaults)
 
-Define the defaults new keywords inherit: target search engine, locale/country,
-language, and device. Setting these now means you don't repeat them per keyword.
+Define the defaults new keywords inherit: country and device.
 
 \`\`\`bash
 curl -sS -X PATCH "$BISIBILITY_BASE/projects/$PROJECT_ID/defaults" \\
   -H "Authorization: Bearer $BISIBILITY_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
-    "search_engine": "google",
     "country": "US",
-    "language": "en",
     "device": "desktop"
   }'
 \`\`\`
@@ -148,7 +145,7 @@ Lists: \`{ data, meta.next_cursor }\`; paginate \`?limit&cursor\`. Errors:
 | METHOD path | operationId | key fields |
 |-|-|-|
 | POST /projects | createProject | \`name\`, \`domain\` |
-| PATCH /projects/{project_id}/defaults | updateProjectDefaults | \`search_engine\`, \`country\`, \`language\`, \`device\` |
+| PATCH /projects/{project_id}/defaults | updateProjectDefaults | \`country\`, \`device\` |
 | POST /projects/{project_id}/keywords | addKeywords | \`keywords[].keyword\`, optional \`target_url\`/\`device\` |
 | POST /keywords/{id}/checks | runRankCheck | (no body; enqueues async check) |
 

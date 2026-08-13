@@ -10,8 +10,8 @@ export const densityValues = ["compact", "standard", "comfortable"] as const;
 export const landingValues = ["overview", "keywords"] as const;
 export const dateFormatValues = ["iso", "eu", "long"] as const;
 
-// Timezone + language are free-form selects; lift the timezone options from the mockup
-// Settings (Europe/Warsaw · UTC · America/New_York) plus a few common zones.
+// Timezone and language remain internal formatting inputs so existing cookies keep
+// working, but account Preferences no longer exposes controls for changing them.
 export const timezoneValues = ["Europe/Warsaw", "UTC", "America/New_York"] as const;
 
 export const languageValues = ["en", "pl", "de"] as const;
@@ -74,18 +74,6 @@ export const landingOptions = [
   { label: "Overview", value: "overview" },
   { label: "Keywords", value: "keywords" },
 ] as const satisfies readonly { label: string; value: UserPreferences["landing"] }[];
-
-export const timezoneOptions = [
-  { label: "Europe/Warsaw (UTC+1)", value: "Europe/Warsaw" },
-  { label: "UTC", value: "UTC" },
-  { label: "America/New_York", value: "America/New_York" },
-] as const satisfies readonly { label: string; value: UserPreferences["timezone"] }[];
-
-export const languageOptions = [
-  { label: "English", value: "en" },
-  { label: "Polski", value: "pl" },
-  { label: "Deutsch", value: "de" },
-] as const satisfies readonly { label: string; value: UserPreferences["language"] }[];
 
 export const dateFormatOptions = [
   { label: "2025-06-19 (ISO)", value: "iso" },

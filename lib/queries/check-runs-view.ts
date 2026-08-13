@@ -65,7 +65,14 @@ export async function getCheckRunsView(projectId: string, options: CheckRunsView
         estimatedCostCents: true,
         finishedAt: true,
         publicId: true,
-        keyword: { select: { publicId: true, text: true } },
+        keyword: {
+          select: {
+            publicId: true,
+            text: true,
+            device: true,
+            locationRef: { select: { displayName: true, languageLabel: true } },
+          },
+        },
         position: true,
         previousPosition: true,
         provider: true,

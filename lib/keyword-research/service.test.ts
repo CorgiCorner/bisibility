@@ -14,6 +14,8 @@ const mocks = vi.hoisted(() => ({
   withCache: vi.fn(),
 }));
 
+const cacheKeySpy = vi.fn();
+
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/provider-rates/connection-context", () => ({
   loadProviderRateContext: () => Promise.resolve({ entries: [], manualAmountCents: null }),
@@ -44,7 +46,10 @@ vi.mock("./cache", () => ({
     );
     return new Date(Math.min(...values) + 12 * 60 * 60 * 1000).toISOString();
   },
-  keywordResearchCacheKey: ({ source }: { source: string }) => `kr:${source}`,
+  keywordResearchCacheKey: (input: { source: string }) => {
+    cacheKeySpy(input);
+    return `kr:${input.source}`;
+  },
   readKeywordResearchCache: mocks.readCache,
   withKeywordResearchCache: mocks.withCache,
 }));
@@ -135,6 +140,18 @@ describe("keyword research service", () => {
       ],
     });
     expect(mocks.ideas).not.toHaveBeenCalled();
+  });
+
+  it("keys on the resolved SerpRankLocation, not the city-level canonical key", async () => {
+    await run();
+    expect(cacheKeySpy).toHaveBeenCalled();
+    for (const input of cacheKeySpy.mock.calls.map((call) => call[0])) {
+      expect(input.location).toEqual(
+        expect.objectContaining({ gl: "us", hl: "en", primaryGeoName: "United States" }),
+      );
+      expect(typeof input.location).toBe("object");
+      expect(input.locationKey).toBeUndefined();
+    }
   });
 
   it("selects by public ID while keeping the internal ID for provider work", async () => {

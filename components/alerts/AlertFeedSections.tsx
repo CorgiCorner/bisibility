@@ -5,6 +5,7 @@ import { Card } from "@/components/ui";
 import type {
   AlertDeliveryStateView,
   AlertSeverity,
+  Device,
   TriggeredAlertView,
 } from "@/lib/alerts/alert-data";
 import { severityMeta } from "@/lib/alerts/alert-data";
@@ -24,6 +25,10 @@ const severityIcons: Record<AlertSeverity, Icon> = {
   warning: Warning,
   info: Info,
 };
+
+function deviceLabel(device: Device) {
+  return device[0].toUpperCase() + device.slice(1);
+}
 
 const deliveryStateMeta = {
   dead_letter: { className: "text-red-text", label: "Failed / dead letter" },
@@ -143,7 +148,8 @@ export function AlertFeedRow({
           </div>
         ) : null}
         <p className="m-0 mt-2 font-mono text-[10.5px] text-fg-muted">
-          {meta.label} / {alert.rule} / Google / US / Desktop / {alert.when}
+          {meta.label} / {alert.rule} / Google / {alert.location} / {deviceLabel(alert.device)} /{" "}
+          {alert.when}
         </p>
         <DeliveryStatus alert={alert} />
         <AlertRowActions

@@ -3,6 +3,8 @@
 // components/checks/upcoming. Seeded identically on all checks-v2 branches;
 // keep changes additive and mirror them across branches before merging.
 
+import type { Device } from "@/lib/generated/prisma/client";
+
 export type RankCheckStatus = "running" | "completed" | "failed" | "deferred";
 
 export type CheckRange = "24h" | "7d" | "30d";
@@ -42,6 +44,12 @@ export type CheckRunRow = {
   /** Identifier usable in /keywords/[id] links. */
   keywordPublicId: string;
   keyword: string;
+  /** Persisted display name of the keyword's location. */
+  location: string;
+  /** Persisted language label for the keyword's location, or null when unavailable. */
+  languageLabel: string | null;
+  /** Device targeted by the keyword. */
+  device: Device;
   status: Exclude<RankCheckStatus, "deferred">;
   position: number | null;
   previousPosition: number | null;

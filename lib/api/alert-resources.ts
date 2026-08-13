@@ -14,7 +14,10 @@ type ApiDeliveryAttempt = Omit<
   webhookEndpointId: string | null;
 };
 
-export type ApiTriggeredAlertView = Omit<TriggeredAlertView, "deliveryAttempts"> & {
+export type ApiTriggeredAlertView = Omit<
+  TriggeredAlertView,
+  "deliveryAttempts" | "device" | "location"
+> & {
   deliveryAttempts: ApiDeliveryAttempt[];
 };
 
@@ -103,23 +106,26 @@ export async function triggeredAlertApiResources(
   const alertPublicIds = publicIdByInternalId(alertRows, "al");
   const endpointPublicIds = publicIdByInternalId(endpointRows, "we");
 
-  return alerts.map((alert) => ({
-    ...alert,
-    deliveryAttempts: alert.deliveryAttempts.map((rawAttempt) => {
-      const {
-        id: _id,
-        webhookEndpointId,
-        ...attempt
-      } = rawAttempt as typeof rawAttempt & {
-        id?: string;
-      };
-      return {
-        ...attempt,
-        webhookEndpointId: webhookEndpointId
-          ? mappedPublicId(endpointPublicIds, webhookEndpointId, "we")
-          : null,
-      };
-    }),
-    id: mappedPublicId(alertPublicIds, alert.id, "al"),
-  }));
+  return alerts.map((alert) => {
+    const { device: _device, location: _location, ...apiAlert } = alert;
+    return {
+      ...apiAlert,
+      deliveryAttempts: alert.deliveryAttempts.map((rawAttempt) => {
+        const {
+          id: _id,
+          webhookEndpointId,
+          ...attempt
+        } = rawAttempt as typeof rawAttempt & {
+          id?: string;
+        };
+        return {
+          ...attempt,
+          webhookEndpointId: webhookEndpointId
+            ? mappedPublicId(endpointPublicIds, webhookEndpointId, "we")
+            : null,
+        };
+      }),
+      id: mappedPublicId(alertPublicIds, alert.id, "al"),
+    };
+  });
 }
