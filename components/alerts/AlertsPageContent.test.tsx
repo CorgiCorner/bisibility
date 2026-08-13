@@ -56,6 +56,8 @@ const alerts: TriggeredAlertView[] = [
     headline: "Ranking dropped",
     id: "al_abcdefghijklmnopqrstuvwx",
     keyword: "rank tracker",
+    location: "United States",
+    device: "desktop",
     previous: "#3",
     rule: "Slipped",
     severity: "urgent",
@@ -130,6 +132,50 @@ describe("AlertsPageContent optimistic rollback", () => {
       expect(screen.getByText("Could not mark alerts read. Try again.")).toBeInTheDocument(),
     );
     expect(markAllRead).not.toBeDisabled();
+  });
+
+  it("renders the triggering keyword's real location and device in the meta line", () => {
+    renderAlerts({
+      initialAlerts: [
+        {
+          ...alerts[0],
+          keyword: "rank tracker",
+          location: "Warsaw, Poland",
+          device: "mobile",
+        },
+      ],
+    });
+
+    const meta = screen.getByText(/Google \/ Warsaw, Poland \/ Mobile \/ 5m ago/);
+    expect(meta).toBeInTheDocument();
+    expect(meta.textContent).not.toContain("US");
+    expect(meta.textContent).not.toContain("Desktop");
+  });
+
+  it("renders distinct meta lines for alerts with different keyword markets", () => {
+    renderAlerts({
+      initialAlerts: [
+        {
+          ...alerts[0],
+          id: "al_aaaaaaaaaaaaaaaaaaaaaaaa",
+          keyword: "rank tracker",
+          location: "Warsaw, Poland",
+          device: "mobile",
+        },
+        {
+          ...alerts[0],
+          id: "al_bbbbbbbbbbbbbbbbbbbbbbbb",
+          keyword: "best CRM",
+          location: "London, United Kingdom",
+          device: "desktop",
+        },
+      ],
+    });
+
+    expect(screen.getByText(/Google \/ Warsaw, Poland \/ Mobile \/ 5m ago/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Google \/ London, United Kingdom \/ Desktop \/ 5m ago/),
+    ).toBeInTheDocument();
   });
 
   it("renders the terminal delivery state and its affected channel", () => {

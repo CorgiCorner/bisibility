@@ -35,7 +35,12 @@ function row(publicId: string) {
     estimatedCostCents: null,
     finishedAt: new Date("2026-07-24T10:00:02.000Z"),
     publicId,
-    keyword: { publicId: "kw_abcdefghijklmnopqrstuvwx", text: "rank tracker" },
+    keyword: {
+      publicId: "kw_abcdefghijklmnopqrstuvwx",
+      text: "rank tracker",
+      device: "desktop",
+      locationRef: { displayName: "San Francisco, California, US", languageLabel: "English" },
+    },
     position: 4,
     previousPosition: 6,
     provider: "serpapi",
@@ -121,5 +126,62 @@ describe("check runs view query", () => {
       counts: { completed: 2, failed: 1, runs: 3, viaFallback: 1 },
       spendCents: 0.5,
     });
+  });
+
+  it("maps distinct (location, device) pairs for the same keyword text across markets", async () => {
+    mocks.prisma.rankCheck.findMany.mockResolvedValue([
+      {
+        ...row("check_a"),
+        publicId: "check_a",
+        keyword: {
+          publicId: "kw_sf",
+          text: "rank tracker",
+          device: "desktop",
+          locationRef: { displayName: "San Francisco, CA, US", languageLabel: "English" },
+        },
+      },
+      {
+        ...row("check_b"),
+        publicId: "check_b",
+        keyword: {
+          publicId: "kw_sf_mobile",
+          text: "rank tracker",
+          device: "mobile",
+          locationRef: { displayName: "San Francisco, CA, US", languageLabel: "English" },
+        },
+      },
+      {
+        ...row("check_c"),
+        publicId: "check_c",
+        keyword: {
+          publicId: "kw_lon",
+          text: "rank tracker",
+          device: "desktop",
+          locationRef: { displayName: "London, UK", languageLabel: "English" },
+        },
+      },
+      {
+        ...row("check_d"),
+        publicId: "check_d",
+        keyword: {
+          publicId: "kw_lon_mobile",
+          text: "rank tracker",
+          device: "mobile",
+          locationRef: { displayName: "London, UK", languageLabel: "English" },
+        },
+      },
+    ]);
+
+    const view = await getCheckRunsView("prj_abcdefghijklmnopqrstuvwx", { now: NOW });
+
+    const pairs = view.rows.map((r) => ({ location: r.location, device: r.device }));
+    expect(pairs).toEqual([
+      { location: "San Francisco, CA, US", device: "desktop" },
+      { location: "San Francisco, CA, US", device: "mobile" },
+      { location: "London, UK", device: "desktop" },
+      { location: "London, UK", device: "mobile" },
+    ]);
+    const distinct = new Set(pairs.map((p) => `${p.location}|${p.device}`));
+    expect(distinct.size).toBe(4);
   });
 });

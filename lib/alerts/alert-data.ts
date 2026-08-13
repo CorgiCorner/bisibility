@@ -4,7 +4,10 @@ import type {
   AlertTargetTypeInput,
 } from "@/lib/alerts/schema";
 import type { AlertSeverity as AlertSeverityValue } from "@/lib/alerts/severity";
+import type { Device } from "@/lib/generated/prisma/client";
 import { ruleTemplates } from "./new-rule-data";
+
+export type { Device };
 
 export type AlertSeverity = AlertSeverityValue;
 export type AlertRuleStatus = "active" | "paused" | "learning" | "setup";
@@ -37,6 +40,8 @@ export type TriggeredAlertView = {
   headline: string;
   id: string;
   keyword: string;
+  location: string;
+  device: Device;
   previous: string;
   rankingUrl?: string | null;
   rule: string;

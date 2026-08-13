@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+## [0.12.1] - 2026-08-13
+
+- Fixed alert rows to show the triggering keyword's actual location and device instead of a hardcoded market.
+
+- Added location, language, and device columns to check runs so identical keywords across markets remain distinguishable.
+
+- Disclosed the effective country-language metrics scope and reused country-scoped keyword research cache entries across cities.
+
+- Removed unsupported language and refresh columns from the CSV import wizard's advertised format.
+
+- Aligned the served domain onboarding agent skill with the accepted country and device project defaults.
+
+- Removed the Timezone and Language controls from account preferences, while keeping the internal timezone and language values unchanged when saving remaining visible preferences.
+
+- Updated the transitive nanoid dependency to 3.3.18 to address a denial-of-service vulnerability in custom generators.
+
 ## [0.12.0] - 2026-08-13
 
 - Added write-scoped Domain Overview API operations for cache-aware estimates, analysis, history, ranked keywords, and relevant pages, with explicit provider-cost caps.

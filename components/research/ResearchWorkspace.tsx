@@ -12,6 +12,7 @@ import { ResearchResults } from "./ResearchResults";
 import { ResearchSearchCard } from "./ResearchSearchCard";
 import { ResearchSeedTabs } from "./ResearchSeedTabs";
 import { ResearchStatePanel } from "./ResearchStatePanel";
+import { metricsScope } from "./research-metrics-scope";
 import {
   focusResearchSeedInput,
   nextBudgetResetLabel,
@@ -113,6 +114,8 @@ export function ResearchWorkspace({
     value: connection.id,
   }));
 
+  const scope = metricsScope(location, context.language.label);
+
   function openRecentSearch(search: Parameters<typeof recentSearchReplay>[0]) {
     const replay = recentSearchReplay(
       search,
@@ -182,6 +185,14 @@ export function ResearchWorkspace({
             />
           </div>
         </Tooltip>
+      ) : null}
+      {hasProvider ? (
+        <p
+          aria-label="metrics scope"
+          className="m-0 rounded-lg border border-border bg-bg-sunken px-3 py-2 font-mono text-[11px] text-fg-muted"
+        >
+          Metrics scope: {scope.country} - {scope.language}
+        </p>
       ) : null}
       <RecentResearchSearches
         disabled={!hasProvider}

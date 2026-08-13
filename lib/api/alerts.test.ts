@@ -110,6 +110,10 @@ function triggeredAlertRow() {
     deliveryState: "delivered",
     firedAt: new Date("2026-01-04T00:00:00.000Z"),
     id: "ta_1",
+    keyword: {
+      device: "desktop",
+      locationRef: { displayName: "United States" },
+    },
     keywordId: "keyword_1",
     payload: null,
     publicId: "al_a00000000000000000000000",

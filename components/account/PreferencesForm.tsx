@@ -5,10 +5,8 @@ import {
   dateFormatOptions,
   densityOptions,
   landingOptions,
-  languageOptions,
   preferencesSchema,
   themeOptions,
-  timezoneOptions,
   type UserPreferences,
 } from "@/lib/account/preferences-shared";
 import { zodResolver } from "@/lib/forms/zod-resolver";
@@ -94,14 +92,8 @@ function setPreferenceValue(
   if (key === "landing") {
     setValue("landing", value as UserPreferences["landing"], options);
   }
-  if (key === "language") {
-    setValue("language", value as UserPreferences["language"], options);
-  }
   if (key === "theme") {
     setValue("theme", value as UserPreferences["theme"], options);
-  }
-  if (key === "timezone") {
-    setValue("timezone", value as UserPreferences["timezone"], options);
   }
 }
 
@@ -115,8 +107,6 @@ export function PreferencesForm({ defaults, updatePreferences }: Readonly<Prefer
     resolver: zodResolver(preferencesSchema),
   });
   const theme = watch("theme");
-  const timezone = watch("timezone");
-  const language = watch("language");
   const dateFormat = watch("dateFormat");
   const landing = watch("landing");
   const density = watch("density");
@@ -161,28 +151,6 @@ export function PreferencesForm({ defaults, updatePreferences }: Readonly<Prefer
             />
           </div>
           <div className="grid gap-[14px] border-t border-border-soft pt-4 sm:grid-cols-2">
-            <div className={fieldLabelClass}>
-              <span>Timezone</span>
-              <input type="hidden" {...register("timezone")} />
-              <MenuSelect
-                ariaLabel="Timezone"
-                onChange={(value) => persist("timezone", value as UserPreferences["timezone"])}
-                options={timezoneOptions}
-                triggerClassName={selectTriggerClass}
-                value={timezone}
-              />
-            </div>
-            <div className={fieldLabelClass}>
-              <span>Language</span>
-              <input type="hidden" {...register("language")} />
-              <MenuSelect
-                ariaLabel="Language"
-                onChange={(value) => persist("language", value as UserPreferences["language"])}
-                options={languageOptions}
-                triggerClassName={selectTriggerClass}
-                value={language}
-              />
-            </div>
             <div className={fieldLabelClass}>
               <span>Date format</span>
               <input type="hidden" {...register("dateFormat")} />

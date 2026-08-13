@@ -20,7 +20,12 @@ function source(overrides: Partial<CheckRunSource> = {}): CheckRunSource {
     estimatedCostCents: 0.3,
     finishedAt: new Date("2026-07-24T10:00:02.000Z"),
     publicId: "check_abcdefghijklmnopqrstuvwx",
-    keyword: { publicId: "kw_abcdefghijklmnopqrstuvwx", text: "rank tracker" },
+    keyword: {
+      publicId: "kw_abcdefghijklmnopqrstuvwx",
+      text: "rank tracker",
+      device: "desktop",
+      locationRef: { displayName: "San Francisco, California, US", languageLabel: "English" },
+    },
     position: 4,
     previousPosition: 6,
     provider: "dataforseo",
@@ -80,6 +85,43 @@ describe("checks runs view", () => {
     });
     expect(view.counts).toBe(summary.counts);
     expect(view.spendCents).toBe(0.5);
+  });
+
+  it("maps keyword market fields from the location relation without defaults", () => {
+    const view = buildCheckRunsView(
+      [
+        source({
+          keyword: {
+            publicId: "kw_a",
+            text: "rank tracker",
+            device: "mobile",
+            locationRef: { displayName: "London, UK", languageLabel: "English" },
+          },
+        }),
+        source({
+          keyword: {
+            publicId: "kw_b",
+            text: "rank tracker",
+            device: "desktop",
+            locationRef: { displayName: "Berlin, DE", languageLabel: "German" },
+          },
+        }),
+      ],
+      summary,
+      { limit: 10 },
+    );
+
+    expect(view.rows).toHaveLength(2);
+    expect(view.rows[0]).toMatchObject({
+      location: "London, UK",
+      languageLabel: "English",
+      device: "mobile",
+    });
+    expect(view.rows[1]).toMatchObject({
+      location: "Berlin, DE",
+      languageLabel: "German",
+      device: "desktop",
+    });
   });
 
   it("builds provider health from grouped completions and bounded attempt candidates", () => {

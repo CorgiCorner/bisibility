@@ -30,6 +30,9 @@ function tableHeaders(columns: RunTableColumns) {
   return [
     "Status",
     "Keyword",
+    "Location",
+    "Language",
+    "Device",
     "Result",
     "Provider",
     columns.depth ? "Depth" : null,
@@ -131,6 +134,15 @@ function RunCells({
         </Link>
       </td>
       <td className="min-w-0 px-3 py-3">
+        <span className="block truncate text-fg" title={run.location}>
+          {run.location}
+        </span>
+      </td>
+      <td className="min-w-0 px-3 py-3">
+        <span className="block truncate text-fg-muted">{run.languageLabel ?? "-"}</span>
+      </td>
+      <td className="px-3 py-3 text-fg-muted">{run.device === "mobile" ? "Mobile" : "Desktop"}</td>
+      <td className="min-w-0 px-3 py-3">
         <ResultCell now={now} run={run} />
       </td>
       <td className="min-w-0 px-3 py-3">
@@ -221,7 +233,8 @@ export function CheckRunsTable(props: Readonly<TableProps>) {
   return (
     <>
       <div className="overflow-x-auto border-border border-y" ref={containerRef}>
-        <table aria-label="Check runs" className="w-full table-fixed border-collapse">
+        {/* 900px leaves about 125px for each of six flexible data columns after fixed status and action columns. */}
+        <table aria-label="Check runs" className="w-full min-w-[900px] table-fixed border-collapse">
           <thead className="bg-bg-sunken text-left font-mono text-[10px] uppercase tracking-[.05em] text-fg-muted">
             <tr>
               {tableHeaders(columns).map((header, index) => (

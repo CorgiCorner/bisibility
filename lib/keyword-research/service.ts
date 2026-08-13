@@ -3,6 +3,7 @@ import "server-only";
 import { requireApiPublicId } from "@/lib/api/public-id";
 import { ProviderLookupSignal } from "@/lib/provider-lookups/paid-call";
 import type { ResearchPage } from "@/lib/providers/types";
+import type { SerpRankLocation } from "@/lib/serp/location";
 import {
   keywordResearchCachedUntil,
   keywordResearchCacheKey,
@@ -38,7 +39,7 @@ function sourceKey(input: {
   connectionId: string;
   includeClickstream: boolean;
   limit: number;
-  locationKey: string;
+  location: SerpRankLocation;
   projectId: string;
   seed: string;
   source: KeywordResearchSource;
@@ -46,7 +47,7 @@ function sourceKey(input: {
   return keywordResearchCacheKey({
     connectionId: input.connectionId,
     includeClickstream: input.includeClickstream,
-    locationKey: input.locationKey,
+    location: input.location,
     normalizedSeed: normalizeResearchKeyword(input.seed),
     projectId: input.projectId,
     resultLimit: input.limit,
@@ -74,7 +75,7 @@ async function estimateResearch(input: {
   fresh?: boolean;
   includeClickstream: boolean;
   limit: number;
-  locationKey: string;
+  location: SerpRankLocation;
   mode: KeywordResearchMode;
   projectId: string;
   seed: string;
@@ -90,7 +91,7 @@ async function estimateResearch(input: {
               connectionId: input.selected.connection.id,
               includeClickstream: input.includeClickstream,
               limit: input.limit,
-              locationKey: input.locationKey,
+              location: input.location,
               projectId: input.projectId,
               seed: input.seed,
               source,
@@ -144,7 +145,7 @@ export async function researchKeywords(input: {
       ...input,
       context: rateContext,
       limit: input.resultLimit,
-      locationKey: location.key,
+      location: location.value,
       selected,
     });
     return annotateResearchResult(
@@ -179,7 +180,7 @@ export async function researchKeywords(input: {
       connectionId: selected.connection.id,
       includeClickstream: input.includeClickstream,
       limit: input.resultLimit,
-      locationKey: location.key,
+      location: location.value,
       projectId: project.id,
       seed: input.seed,
       source,

@@ -93,16 +93,14 @@ vector database,/products/vector,product,US,mobile
 llms.txt,/blog/llms-txt,content,GB,desktop`}</pre>
       </div>
       <div className="mt-[18px] flex flex-wrap gap-1.5">
-        {["keyword*", "target_url", "tags", "country", "device", "language", "refresh"].map(
-          (item) => (
-            <span
-              className="rounded-[7px] bg-bg-sunken px-[9px] py-[3px] font-mono text-[11px] text-fg-muted first:bg-accent-soft first:font-semibold first:text-accent-text"
-              key={item}
-            >
-              {item}
-            </span>
-          ),
-        )}
+        {["keyword*", "target_url", "tags", "country", "device"].map((item) => (
+          <span
+            className="rounded-[7px] bg-bg-sunken px-[9px] py-[3px] font-mono text-[11px] text-fg-muted first:bg-accent-soft first:font-semibold first:text-accent-text"
+            key={item}
+          >
+            {item}
+          </span>
+        ))}
       </div>
       <div className="mt-3 flex items-center gap-[7px] text-[12px] text-fg-muted">
         <Info size={14} />

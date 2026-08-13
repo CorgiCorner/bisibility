@@ -1,3 +1,4 @@
+import type { Device } from "@/lib/generated/prisma/client";
 import { completedCheckAttempts, parseCheckAttempts, providerLabel } from "./attempts";
 import type {
   CheckRange,
@@ -31,7 +32,12 @@ export type CheckRunSource = {
   estimatedCostCents: unknown;
   finishedAt: Date | null;
   publicId: string | null;
-  keyword: { publicId: string; text: string };
+  keyword: {
+    publicId: string;
+    text: string;
+    device: Device;
+    locationRef: { displayName: string; languageLabel: string };
+  };
   position: number | null;
   previousPosition: number | null;
   provider: string;
@@ -107,6 +113,7 @@ function rowFor(source: CheckRunSource): CheckRunRow | null {
     checkedAt: source.checkedAt.toISOString(),
     costCents: finiteNumber(source.costCents),
     degradedToCountry: source.degradedToCountry,
+    device: source.keyword.device,
     durationMs: durationMs(source.startedAt, source.finishedAt),
     error: source.error,
     estimatedCostCents: finiteNumber(source.estimatedCostCents),
@@ -115,6 +122,8 @@ function rowFor(source: CheckRunSource): CheckRunRow | null {
     keyword: source.keyword.text,
     keywordId: source.keyword.publicId,
     keywordPublicId: source.keyword.publicId,
+    languageLabel: source.keyword.locationRef.languageLabel,
+    location: source.keyword.locationRef.displayName,
     position: source.position,
     previousPosition: source.previousPosition,
     provider: source.provider,

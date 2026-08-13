@@ -84,6 +84,10 @@ describe("alert feed window", () => {
         deliveryState: "dead_letter",
         firedAt: new Date("2026-07-15T11:54:00.000Z"),
         id: "alert_1",
+        keyword: {
+          device: "desktop",
+          locationRef: { displayName: "United States" },
+        },
         keywordId: "keyword_1",
         payload: null,
         publicId: "al_abcdefghijklmnopqrstuvwx",
@@ -133,6 +137,10 @@ describe("alert feed window", () => {
       deliveryState: "delivered",
       firedAt: new Date("2026-07-15T11:54:00.000Z"),
       id: "alert_1",
+      keyword: {
+        device: "desktop",
+        locationRef: { displayName: "United States" },
+      },
       keywordId: "keyword_1",
       payload: null,
       publicId: "al_abcdefghijklmnopqrstuvwx",
@@ -207,6 +215,10 @@ describe("alert feed window", () => {
         deliveryState: "delivered",
         firedAt: new Date("2026-07-15T11:54:00.000Z"),
         id: rawAlert,
+        keyword: {
+          device: "desktop",
+          locationRef: { displayName: "United States" },
+        },
         keywordId: "keyword_1",
         payload: null,
         publicId: "al_abcdefghijklmnopqrstuvwx",
@@ -226,6 +238,45 @@ describe("alert feed window", () => {
     expect(alert.deliveryAttempts[0]).not.toHaveProperty("id");
     expect(JSON.stringify(alert)).not.toContain(rawAlert);
     expect(JSON.stringify(alert)).not.toContain(rawAttempt);
+  });
+
+  it("selects the keyword location relation and maps location and device from it", async () => {
+    mocks.prisma.triggeredAlert.findMany.mockResolvedValue([
+      {
+        afterPosition: 14,
+        beforePosition: 8,
+        deliveryAttempts: [],
+        deliveryState: "delivered",
+        firedAt: new Date("2026-07-15T11:54:00.000Z"),
+        id: "alert_1",
+        keyword: {
+          device: "mobile",
+          locationRef: { displayName: "Warsaw, Poland" },
+        },
+        keywordId: "keyword_1",
+        payload: null,
+        publicId: "al_abcdefghijklmnopqrstuvwx",
+        rule: {
+          conditionType: "exits_top_n",
+          name: "Slipped",
+          projectId: "project_1",
+          severity: "urgent",
+        },
+        status: "firing",
+      },
+    ]);
+
+    const [alert] = await listTriggeredAlertViews("project_1");
+
+    expect(mocks.prisma.triggeredAlert.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        include: expect.objectContaining({
+          keyword: { select: { device: true, locationRef: { select: { displayName: true } } } },
+        }),
+      }),
+    );
+    expect(alert.location).toBe("Warsaw, Poland");
+    expect(alert.device).toBe("mobile");
   });
 
   it("counts fired alerts independently from the visible snooze filter", async () => {

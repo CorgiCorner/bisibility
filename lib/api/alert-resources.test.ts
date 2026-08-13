@@ -64,6 +64,8 @@ const alert: Omit<TriggeredAlertView, "deliveryAttempts"> & {
   headline: "Rank dropped",
   id: "alert_db_1",
   keyword: "rank tracker",
+  location: "United States",
+  device: "desktop",
   previous: "#4",
   rule: "Rank drop",
   severity: "urgent",
@@ -110,5 +112,7 @@ describe("REST alert resources", () => {
       expect.objectContaining({ webhookEndpointId: "we_a00000000000000000000000" }),
     ]);
     expect(resource.deliveryAttempts[0]).not.toHaveProperty("id");
+    expect(resource).not.toHaveProperty("location");
+    expect(resource).not.toHaveProperty("device");
   });
 });
