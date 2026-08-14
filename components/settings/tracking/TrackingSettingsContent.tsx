@@ -29,7 +29,7 @@ export function TrackingSettingsContent({
   updateDefaults,
 }: Readonly<TrackingSettingsContentProps>) {
   return (
-    <div className="max-w-[640px] space-y-5" data-tracking-settings-content="">
+    <div className="max-w-[760px] space-y-5" data-tracking-settings-content="">
       <div data-tracking-settled-frame="checkDefaults">
         <TrackingDefaultsCard
           canEdit={canEdit}

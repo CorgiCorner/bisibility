@@ -7,6 +7,7 @@ import { emptyCompetitorFilter } from "@/lib/competitors/competitor-market-model
 import { parseCompetitorScope } from "@/lib/competitors/scope-model";
 import { resolveProjectAccess } from "@/lib/queries/_auth";
 import { getCompetitorsView } from "@/lib/queries/competitors";
+import { getProjectMarkets } from "@/lib/queries/project-markets";
 import { getSavedView, listSavedViews } from "@/lib/queries/saved-views";
 import { listWorkspaces } from "@/lib/queries/workspaces";
 import { notFound } from "next/navigation";
@@ -35,9 +36,10 @@ export default async function CompetitorsPage({
 
   const search = await searchParams;
   const requestedViewId = paramValue(search?.view) ?? null;
-  const [savedViews, activeView] = await Promise.all([
+  const [savedViews, activeView, projectMarkets] = await Promise.all([
     listSavedViews(active.id, "competitors"),
     getSavedView(active.id, requestedViewId, "competitors"),
+    getProjectMarkets(active.id),
   ]);
   const urlScope = parseCompetitorScope({
     device: paramValue(search?.device),
@@ -72,6 +74,7 @@ export default async function CompetitorsPage({
         deleteSavedViewAction={deletableSavedViewIds.length > 0 ? deleteSavedView : undefined}
         initialFilter={activeView?.config.filters ?? emptyCompetitorFilter}
         projectRef={access.publicId}
+        projectMarkets={projectMarkets}
         savedViews={savedViews}
         view={view}
       />

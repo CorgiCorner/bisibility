@@ -7,6 +7,7 @@ import type {
   SaveSelectedKeywordsAction,
   SelectDomainOverviewMarketAction,
 } from "@/lib/actions/domain-overview";
+import type { DomainOverviewMarketOption } from "@/lib/domain-overview/market-options";
 import type {
   DomainOverviewOutcome,
   DomainOverviewReport,
@@ -25,11 +26,13 @@ export type DomainOverviewMarketSelection = LocationFieldValue & {
 export type DomainOverviewMarketView = DomainOverviewMarketSelection & { locationCode: number };
 
 export type DomainOverviewPageContext = {
+  catalogMarkets: DomainOverviewMarketOption[];
   competitorDomains: string[];
   costContext: { capCents: number; spentCents: number; timezone?: string };
   defaultTarget: string;
   providerStatus: "connected" | "needs_reauth" | "no_provider";
   recentTargets: DomainRecentTarget[];
+  trackedMarkets: DomainOverviewMarketOption[];
 };
 
 export type DomainOverviewEstimateView = {

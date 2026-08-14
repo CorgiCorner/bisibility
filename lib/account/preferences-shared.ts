@@ -10,19 +10,11 @@ export const densityValues = ["compact", "standard", "comfortable"] as const;
 export const landingValues = ["overview", "keywords"] as const;
 export const dateFormatValues = ["iso", "eu", "long"] as const;
 
-// Timezone and language remain internal formatting inputs so existing cookies keep
-// working, but account Preferences no longer exposes controls for changing them.
-export const timezoneValues = ["Europe/Warsaw", "UTC", "America/New_York"] as const;
-
-export const languageValues = ["en", "pl", "de"] as const;
-
 export const preferencesSchema = z.object({
   dateFormat: z.enum(dateFormatValues).default("iso"),
   density: z.enum(densityValues).default("standard"),
   landing: z.enum(landingValues).default("overview"),
-  language: z.enum(languageValues).default("en"),
   theme: z.enum(themeValues).default("system"),
-  timezone: z.enum(timezoneValues).default("Europe/Warsaw"),
 });
 
 export type UserPreferences = z.infer<typeof preferencesSchema>;
@@ -31,10 +23,8 @@ export const PREFERENCE_COOKIES = {
   dateFormat: "pref_date_format",
   density: "pref_density",
   landing: "pref_landing",
-  language: "pref_language",
   // theme reuses the existing cookie set by ThemeSegments and read before paint.
   theme: "theme",
-  timezone: "pref_timezone",
 } as const;
 
 // Parse loosely: any missing/invalid field falls back to its schema default rather than
@@ -46,9 +36,7 @@ export function parsePreferences(
     dateFormat: pick(dateFormatValues, raw.dateFormat),
     density: pick(densityValues, raw.density),
     landing: pick(landingValues, raw.landing),
-    language: pick(languageValues, raw.language),
     theme: pick(themeValues, raw.theme),
-    timezone: pick(timezoneValues, raw.timezone),
   });
 }
 

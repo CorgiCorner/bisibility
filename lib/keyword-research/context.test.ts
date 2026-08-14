@@ -1,12 +1,25 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { connectionResources, keywordResearchPageProject, keywordResearchProject } from "./context";
+import {
+  connectionResources,
+  keywordResearchPageProject,
+  keywordResearchProject,
+  researchLocation,
+} from "./context";
 
 const mocks = vi.hoisted(() => ({
+  defaultMarket: vi.fn(),
   project: { findFirst: vi.fn() },
+  resolveLocation: vi.fn(),
 }));
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db/prisma", () => ({ prisma: { project: mocks.project } }));
+vi.mock("@/lib/serp/default-market", () => ({
+  projectDefaultSerpMarket: mocks.defaultMarket,
+}));
+vi.mock("@/lib/serp/location-service", () => ({
+  resolveKeywordLocation: mocks.resolveLocation,
+}));
 
 const provider = { id: "dataforseo", label: "DataForSEO" };
 const connection = {
@@ -20,6 +33,17 @@ describe("keyword research connection IDs", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.project.findFirst.mockResolvedValue(null);
+    mocks.defaultMarket.mockReturnValue({ locationKey: "US" });
+    mocks.resolveLocation.mockResolvedValue({
+      location: {
+        canonicalKey: "ES@en",
+        gl: "ES",
+        hl: "en",
+        primaryGeoCode: null,
+        primaryGeoName: "Spain",
+        secondaryGeoName: "Spain",
+      },
+    });
   });
 
   it("loads public IDs in both project contexts", async () => {
@@ -55,4 +79,21 @@ describe("keyword research connection IDs", () => {
       ).toThrow("Expected a v3 public");
     },
   );
+
+  it("resolves a qualified country market with its explicit language", async () => {
+    await expect(
+      researchLocation(
+        {
+          defaults: null,
+          id: "project_1",
+          keywords: [],
+        } as never,
+        "ES@en",
+      ),
+    ).resolves.toMatchObject({ key: "ES@en", value: { gl: "ES", hl: "en" } });
+    expect(mocks.resolveLocation).toHaveBeenCalledWith({
+      projectId: "project_1",
+      selection: { countryCode: "ES", kind: "country", languageCode: "en" },
+    });
+  });
 });

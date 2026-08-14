@@ -22,3 +22,8 @@ export function metricsScope(location: LocationFieldValue, fallbackLanguage: str
       location.languageLabel ?? (scope.hl === seed.hl ? seed.languageLabel : fallbackLanguage),
   };
 }
+
+export function hasMetricsScopeMismatch(location: LocationFieldValue) {
+  const baseKey = location.canonicalKey.split("@", 1)[0] ?? "";
+  return location.kind === "city" || Boolean(location.cityName) || baseKey.includes("/");
+}

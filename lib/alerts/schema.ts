@@ -73,6 +73,7 @@ export const alertRuleFormBaseSchema = z.object({
     .trim()
     .min(ALERT_RULE_NAME_MIN_LENGTH, "Name the rule.")
     .max(ALERT_RULE_TEXT_MAX_LENGTH),
+  marketIds: z.array(idSchema).default([]),
   projectId: idSchema,
   // Omitted create input defaults to the actor; omitted update input preserves recipients.
   // An explicit empty array always means no recipients.
@@ -86,10 +87,11 @@ export const alertRuleFormBaseSchema = z.object({
   topN: nullableRankNumber,
 });
 
-export function refineAlertRuleForm(
-  value: z.infer<typeof alertRuleFormBaseSchema>,
-  ctx: z.RefinementCtx,
-) {
+type AlertRuleRefinementInput = Omit<z.infer<typeof alertRuleFormBaseSchema>, "marketIds"> & {
+  marketIds?: string[];
+};
+
+export function refineAlertRuleForm(value: AlertRuleRefinementInput, ctx: z.RefinementCtx) {
   if (value.targetType !== "all" && value.targetIds.length === 0) {
     ctx.addIssue({
       code: "custom",
@@ -169,6 +171,12 @@ export function refineAlertRuleForm(
 }
 
 export const alertRuleFormSchema = alertRuleFormBaseSchema.superRefine(refineAlertRuleForm);
+export const alertRuleUpdateFormSchema = alertRuleFormBaseSchema
+  .extend({
+    // PATCH omission preserves market scope; an explicit empty array means All markets.
+    marketIds: z.array(idSchema).optional(),
+  })
+  .superRefine(refineAlertRuleForm);
 
 export const alertRuleToggleSchema = z.object({
   enabled: z.coerce.boolean(),
@@ -187,4 +195,5 @@ export const slackConnectionPlaceholderSchema = z.object({
 });
 
 export type AlertRuleForm = z.infer<typeof alertRuleFormSchema>;
+export type AlertRuleUpdateForm = z.infer<typeof alertRuleUpdateFormSchema>;
 export type AlertRuleToggleInput = z.infer<typeof alertRuleToggleSchema>;

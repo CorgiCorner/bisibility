@@ -40,7 +40,7 @@ export function WorkspaceRow({ workspace, active, onSelect }: Readonly<Workspace
     <MenuItem
       aria-current={active ? "true" : undefined}
       component={Link}
-      href={appPath(workspace.publicId, "overview")}
+      href={appPath(workspace.publicId, "dashboard")}
       onClick={onSelect}
       sx={MENU_ROW_SX}
     >

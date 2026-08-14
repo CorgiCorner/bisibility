@@ -39,4 +39,13 @@ describe("CloudImportWorkspaceButton", () => {
       scroll: true,
     });
   });
+
+  it("sends the provided browser timezone to the import workspace action", async () => {
+    render(<CloudImportWorkspaceButton browserTimezone="Europe/Madrid" />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Import self-hosted project" }));
+
+    await waitFor(() => expect(createCloudImportWorkspace).toHaveBeenCalledOnce());
+    expect(createCloudImportWorkspace).toHaveBeenCalledWith("Europe/Madrid");
+  });
 });

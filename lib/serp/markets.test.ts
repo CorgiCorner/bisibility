@@ -1,15 +1,18 @@
 import { describe, expect, it } from "vitest";
 import {
   googleSerpLocale,
+  isSupportedSerpLanguageCode,
   languageForSerpMarket,
   normalizeSerpMarketName,
   resolveEffectiveSerpDepth,
   resolveSerpDepth,
   resolveSerpMarket,
   resolveSerpStopOnMatch,
+  serpMarketLanguages,
   serpMarketLocationValues,
   serpMarketNames,
   serpMarkets,
+  suggestedSerpMarketLanguages,
 } from "./markets";
 
 function aliasKey(value: string) {
@@ -77,6 +80,7 @@ describe("SERP market model", () => {
     expect(market.google.gl).toMatch(/^[a-z]{2}$/);
     expect(market.language.code.trim().length).toBeGreaterThan(0);
     expect(market.language.label.trim().length).toBeGreaterThan(0);
+    expect(market.languages[0]).toEqual(market.language);
     // Resolvers stay consistent with the table for every entry.
     expect(resolveSerpMarket(market.name)).toEqual(market);
     expect(googleSerpLocale(market.name)).toEqual({
@@ -84,6 +88,74 @@ describe("SERP market model", () => {
       gl: market.google.gl,
       hl: market.language.code,
     });
+  });
+
+  it("preserves every existing market default and orders it first", () => {
+    const legacyDefaults = {
+      Australia: "en",
+      Austria: "de",
+      Belgium: "nl",
+      Brazil: "pt",
+      Canada: "en",
+      Denmark: "da",
+      Finland: "fi",
+      France: "fr",
+      Germany: "de",
+      India: "en",
+      Ireland: "en",
+      Italy: "it",
+      Japan: "ja",
+      Mexico: "es",
+      Netherlands: "nl",
+      "New Zealand": "en",
+      Norway: "no",
+      Poland: "pl",
+      Portugal: "pt",
+      Singapore: "en",
+      "South Africa": "en",
+      Spain: "es",
+      Sweden: "sv",
+      Switzerland: "de",
+      "United Arab Emirates": "en",
+      "United Kingdom": "en",
+      "United States": "en",
+    };
+
+    for (const market of serpMarkets) {
+      expect(market.language.code).toBe(legacyDefaults[market.name]);
+      expect(market.languages[0]).toEqual(market.language);
+    }
+  });
+
+  it("uses the global hard catalog while keeping CLDR suggestions country scoped", () => {
+    const spanishLanguages = serpMarketLanguages("Spain");
+    expect(spanishLanguages.map((language) => language.code).slice(0, 3)).toEqual([
+      "es",
+      "ach",
+      "af",
+    ]);
+    expect(spanishLanguages.map((language) => language.code)).toEqual(
+      expect.arrayContaining(["bem", "es-419"]),
+    );
+    expect(suggestedSerpMarketLanguages("Spain").map((language) => language.code)).toEqual([
+      "es",
+      "ca",
+      "gl",
+    ]);
+    expect(suggestedSerpMarketLanguages("Belgium").map((language) => language.code)).toEqual([
+      "nl",
+      "fr",
+      "de",
+    ]);
+  });
+
+  it("validates all hard-catalog language codes without making them suggestions", () => {
+    expect(isSupportedSerpLanguageCode("bem")).toBe(true);
+    expect(isSupportedSerpLanguageCode("es-419")).toBe(true);
+    expect(isSupportedSerpLanguageCode("zz")).toBe(false);
+    expect(suggestedSerpMarketLanguages("Spain").map((language) => language.code)).not.toContain(
+      "bem",
+    );
   });
 
   it("rejects unsupported result depths", () => {

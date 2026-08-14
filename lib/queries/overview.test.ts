@@ -5,12 +5,14 @@ const mocks = vi.hoisted(() => ({
   prisma: {
     apiKey: { findFirst: vi.fn() },
     keyword: { count: vi.fn(), findMany: vi.fn() },
+    projectMarket: { findMany: vi.fn() },
     projectDefaults: { findUnique: vi.fn() },
     providerConnection: { findMany: vi.fn() },
     rankCheck: { findFirst: vi.fn(), findMany: vi.fn() },
     tag: { findMany: vi.fn() },
   },
   fetchProjectKeywordVolumes: vi.fn(),
+  fetchOverviewMarketChecks: vi.fn(),
   requireReadableProject: vi.fn(),
 }));
 
@@ -23,6 +25,9 @@ vi.mock("./_auth", () => ({ requireReadableProject: mocks.requireReadableProject
 vi.mock("./keyword-metrics-query", () => ({
   fetchProjectKeywordVolumes: mocks.fetchProjectKeywordVolumes,
 }));
+vi.mock("./overview-market-query", () => ({
+  fetchOverviewMarketChecks: mocks.fetchOverviewMarketChecks,
+}));
 
 const now = new Date("2026-06-28T12:00:00.000Z");
 const project = {
@@ -32,6 +37,11 @@ const project = {
   ownerId: "user_1",
   publicId: "prj_1",
   writeMode: "active",
+};
+const activeMarketScope = {
+  locationRef: {
+    projectMarkets: { some: { projectId: "project_1", status: "active" } },
+  },
 };
 
 function rankCheck(overrides: Record<string, unknown>) {
@@ -57,6 +67,7 @@ function keyword(overrides: Record<string, unknown>) {
       (overrides.id as string | undefined) ??
       (overrides.publicId as string | undefined) ??
       "keyword_1",
+    locationRef: { displayName: "United States", languageLabel: "English" },
     publicId: "kw_1",
     rankChecks,
     schedule: null,
@@ -74,9 +85,11 @@ describe("overview query", () => {
     vi.clearAllMocks();
     mocks.requireReadableProject.mockResolvedValue({ project });
     mocks.fetchProjectKeywordVolumes.mockResolvedValue(new Map());
+    mocks.fetchOverviewMarketChecks.mockResolvedValue(new Map());
     mocks.prisma.projectDefaults.findUnique.mockResolvedValue(null);
     mocks.prisma.keyword.count.mockResolvedValue(0);
     mocks.prisma.keyword.findMany.mockResolvedValue([]);
+    mocks.prisma.projectMarket.findMany.mockResolvedValue([]);
     mocks.prisma.providerConnection.findMany.mockResolvedValue([]);
     mocks.prisma.apiKey.findFirst.mockResolvedValue(null);
     mocks.prisma.rankCheck.findMany.mockResolvedValue([]);
@@ -89,20 +102,138 @@ describe("overview query", () => {
       parseOverviewFilters({
         device: "Mobile",
         range: "90d",
+        market: ["loc_es_es", "loc_be_nl"],
         tag: ["Docs"],
       }),
-    ).toEqual({ device: "mobile", range: "90d", tag: "Docs" });
+    ).toEqual({
+      device: "mobile",
+      marketIds: ["loc_es_es", "loc_be_nl"],
+      range: "90d",
+      tag: "Docs",
+    });
     expect(parseOverviewFilters({ device: "tablet", range: "all", tag: "" })).toEqual({
       device: "all",
+      marketIds: [],
       range: "28d",
       tag: null,
     });
+  });
+
+  it("scopes every dashboard read to selected active registry markets", async () => {
+    mocks.prisma.projectMarket.findMany.mockResolvedValue([
+      {
+        location: {
+          countryCode: "BE",
+          displayName: "Belgium",
+          languageCode: "nl",
+          languageLabel: "Dutch",
+        },
+        locationId: "loc_be_nl",
+      },
+      {
+        location: {
+          countryCode: "ES",
+          displayName: "Spain",
+          languageCode: "es",
+          languageLabel: "Spanish",
+        },
+        locationId: "loc_es_es",
+      },
+    ]);
+    mocks.prisma.keyword.count.mockResolvedValue(1);
+    mocks.prisma.keyword.findMany.mockResolvedValue([
+      keyword({ locationId: "loc_be_nl", publicId: "kw_be", text: "shared keyword" }),
+    ]);
+
+    const result = await getOverview("prj_1", {
+      filters: { marketIds: ["loc_be_nl"] },
+      now,
+    });
+
+    expect(mocks.prisma.projectMarket.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { projectId: "project_1", status: "active" } }),
+    );
+    expect(mocks.prisma.keyword.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          ...activeMarketScope,
+          locationId: { in: ["loc_be_nl"] },
+          projectId: "project_1",
+        },
+      }),
+    );
+    expect(result.toolbar).toMatchObject({
+      marketValues: ["loc_be_nl"],
+      marketOptions: [
+        { label: "Belgium", secondary: "Dutch", value: "loc_be_nl" },
+        { label: "Spain", secondary: "Spanish", value: "loc_es_es" },
+      ],
+    });
+    expect(result.byMarket).toHaveLength(1);
+    expect(result.byMarket[0]).toMatchObject({
+      locationId: "loc_be_nl",
+      locationLabel: "Belgium",
+      targetCount: 1,
+    });
+  });
+
+  it("builds rollup rows from every active registry market instead of keyword-derived markets", async () => {
+    mocks.prisma.projectMarket.findMany.mockResolvedValue([
+      {
+        location: {
+          countryCode: "BE",
+          displayName: "Belgium",
+          languageCode: "ar",
+          languageLabel: "Arabic",
+        },
+        locationId: "loc_be_ar",
+      },
+      {
+        location: {
+          countryCode: "ES",
+          displayName: "Spain",
+          languageCode: "en",
+          languageLabel: "English",
+        },
+        locationId: "loc_es_en",
+      },
+      {
+        location: {
+          countryCode: "ES",
+          displayName: "Spain",
+          languageCode: "es",
+          languageLabel: "Spanish",
+        },
+        locationId: "loc_es_es",
+      },
+    ]);
+    mocks.prisma.keyword.count.mockResolvedValue(1);
+    mocks.prisma.keyword.findMany.mockResolvedValue([
+      keyword({ locationId: "loc_es_es", publicId: "kw_es", text: "one source keyword" }),
+    ]);
+
+    const result = await getOverview("prj_1", { now });
+
+    expect(result.byMarket.map((row) => [row.locationId, row.targetCount])).toEqual([
+      ["loc_be_ar", 0],
+      ["loc_es_en", 0],
+      ["loc_es_es", 1],
+    ]);
+    expect(result.byMarket[0]).toMatchObject({
+      languageLabel: "Arabic",
+      locationLabel: "Belgium",
+      researchAvailable: false,
+    });
+    expect(mocks.prisma.projectMarket.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { projectId: "project_1", status: "active" } }),
+    );
   });
 
   it("aggregates real rank history into KPIs, trend, buckets, movers and freshness", async () => {
     mocks.prisma.projectDefaults.findUnique.mockResolvedValue({
       frequency: "weekly",
       nextCheckAt: new Date("2026-06-29T12:00:00.000Z"),
+      timezone: "America/New_York",
     });
     mocks.prisma.providerConnection.findMany.mockResolvedValue([
       {
@@ -248,11 +379,18 @@ describe("overview query", () => {
           text: true,
         }),
         take: 2000,
-        where: { projectId: "project_1" },
+        where: { ...activeMarketScope, projectId: "project_1" },
       }),
     );
     expect(keywordFindArgs).not.toHaveProperty("include");
     expect(keywordFindArgs.select.rankChecks.select).not.toHaveProperty("raw");
+    const marketKeywordFindArgs = mocks.prisma.keyword.findMany.mock.calls[1]?.[0];
+    expect(marketKeywordFindArgs.select).not.toHaveProperty("rankChecks");
+    expect(mocks.fetchOverviewMarketChecks).toHaveBeenCalledWith("project_1", 2000, now, "28d", {
+      device: null,
+      marketIds: [],
+      tag: null,
+    });
     expect(result).toMatchObject({
       gettingStarted: {
         gscOAuthConfigured: true,
@@ -290,9 +428,9 @@ describe("overview query", () => {
       { delta: "+5.0pp", deltaTone: "positive", label: "Visibility", value: "11%" },
     ]);
     expect(result.trend).toEqual([
-      { label: "2026-06-20", value: 12 },
-      { label: "2026-06-21", value: 7 },
-      { label: "2026-06-27", value: 9 },
+      { label: "2026-06-19", value: 12 },
+      { label: "2026-06-20", value: 7 },
+      { label: "2026-06-26", value: 9 },
       { label: "now", value: 8.5 },
     ]);
     expect(result.distribution.map((bucket) => [bucket.label, bucket.count])).toEqual([
@@ -305,7 +443,7 @@ describe("overview query", () => {
     expect(metric(result, "Primary provider")).toBe("DataForSEO");
     expect(metric(result, "Last check via")).toBe("SerpApi");
     expect(metric(result, "Last check")).toBe("2h ago");
-    expect(metric(result, "Next check")).toBe("in 3d");
+    expect(metric(result, "Next check")).toBe("in 4d");
     expect(metric(result, "Checks this month")).toBe("2");
     expect(metric(result, "Est. provider cost")).toBe("$1.23");
     expect(result.highlights.find((list) => list.kind === "wins")?.rows[0]).toMatchObject({
@@ -394,6 +532,7 @@ describe("overview query", () => {
     });
 
     const where = {
+      ...activeMarketScope,
       device: "mobile",
       projectId: "project_1",
       tags: { some: { tag: { name: "Docs" } } },
@@ -449,6 +588,11 @@ describe("overview query", () => {
       device: "mobile",
       tag: "Docs",
     });
+    expect(mocks.fetchOverviewMarketChecks).toHaveBeenCalledWith("project_1", 2000, now, "7d", {
+      device: "mobile",
+      marketIds: [],
+      tag: "Docs",
+    });
     expect(result.toolbar).toMatchObject({
       availableTags: ["Docs"],
       device: "Mobile",
@@ -475,7 +619,7 @@ describe("overview query", () => {
             gte: new Date("2026-06-01T00:00:00.000Z"),
             lt: new Date("2026-07-01T00:00:00.000Z"),
           },
-          keyword: { projectId: "project_1" },
+          keyword: { ...activeMarketScope, projectId: "project_1" },
           status: "completed",
         }),
       }),

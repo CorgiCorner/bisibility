@@ -82,7 +82,7 @@ export function AnalyzeCard({
     <Card className="overflow-visible p-4 sm:p-5" size="md">
       <form className="grid gap-3" onSubmit={handleSubmit(onSubmit)}>
         <div className="flex flex-col gap-3 md:flex-row md:items-start">
-          <div className="flex min-h-[34px] flex-1 items-center gap-2 rounded-[9px] border border-border-strong bg-transparent px-2.5 text-[13px] focus-within:border-accent md:min-w-[240px]">
+          <div className="flex h-[38px] flex-1 items-center gap-2 rounded-[9px] border border-border-strong bg-transparent px-2.5 text-[13px] focus-within:border-accent md:min-w-[240px]">
             <GlobeSimple aria-hidden className="shrink-0 text-fg-muted" size={15} />
             {targetIsSet ? (
               <span className="inline-flex min-w-0 items-center gap-1.5 rounded-[6px] bg-bg-sunken px-2 py-1 font-medium">
@@ -119,10 +119,10 @@ export function AnalyzeCard({
           </div>
           <SegmentedControl
             ariaLabel="Backlinks target scope"
-            className="shrink-0"
+            className="shrink-0 [&>div]:!min-h-[38px]"
             fitContent
             onChange={onScopeChange}
-            optionClassName="min-w-[92px]"
+            optionClassName="min-w-[92px] !min-h-[30px]"
             options={scopeOptions}
             size="field"
             value={scope}

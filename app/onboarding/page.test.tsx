@@ -4,15 +4,17 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import OnboardingPage from "./page";
 
 const mocks = vi.hoisted(() => ({
+  existingOnboardingCityLocationKeys: vi.fn(),
   getIntegrationCategories: vi.fn(),
   getKeywordCount: vi.fn(),
+  getOnboardingProjectMarketKeys: vi.fn(),
   getProjectCostContext: vi.fn(),
+  getRequestProjectDefaults: vi.fn(),
   isCloud: true,
   listWorkspaces: vi.fn(),
   completeProjectOnboarding: vi.fn(),
   prisma: {
     apiKey: { findFirst: vi.fn() },
-    location: { findMany: vi.fn() },
     providerConnection: { findUnique: vi.fn() },
   },
   requireReadableProject: vi.fn(),
@@ -36,7 +38,6 @@ vi.mock("@/lib/actions/providers", () => ({
   saveStoredGoogleProperty: vi.fn(),
   testConnection: vi.fn(),
 }));
-vi.mock("@/lib/actions/rankCheck", () => ({ queueFirstChecks: vi.fn() }));
 vi.mock("@/lib/actions/settings", () => ({ updateDefaultRankCheckSettings: vi.fn() }));
 vi.mock("@/lib/actions/traffic-sync", () => ({ syncProjectTraffic: vi.fn() }));
 vi.mock("@/lib/deployment/deployment", () => ({
@@ -61,8 +62,16 @@ vi.mock("@/lib/queries/cost-calculator", () => ({
 vi.mock("@/lib/queries/integrations", () => ({
   getIntegrationCategories: mocks.getIntegrationCategories,
 }));
-vi.mock("@/lib/queries/keywords", () => ({ getKeywordCount: mocks.getKeywordCount }));
+vi.mock("@/lib/queries/onboarding", () => ({
+  existingOnboardingCityLocationKeys: mocks.existingOnboardingCityLocationKeys,
+  getOnboardingGscPropertyLabel: vi.fn(async () => null),
+  getOnboardingKeywordCount: mocks.getKeywordCount,
+  getOnboardingProjectMarketKeys: mocks.getOnboardingProjectMarketKeys,
+}));
 vi.mock("@/lib/queries/workspaces", () => ({ listWorkspaces: mocks.listWorkspaces }));
+vi.mock("@/lib/queries/workspace-request-data", () => ({
+  getRequestProjectDefaults: mocks.getRequestProjectDefaults,
+}));
 vi.mock("@/lib/rank-check/budget", () => ({ DEFAULT_MONTHLY_COST_CAP_CENTS: 5_000 }));
 vi.mock("@/lib/ranked-keywords/service", () => ({
   listEligibleRankedKeywordConnections: mocks.listEligibleRankedKeywordConnections,
@@ -70,7 +79,7 @@ vi.mock("@/lib/ranked-keywords/service", () => ({
 vi.mock("./actions", () => ({
   createOnboardingProject: vi.fn(),
   deriveOnboardingWebsite: vi.fn(),
-  saveMatchingScope: vi.fn(),
+  saveOnboardingMarkets: vi.fn(),
 }));
 
 const project = {
@@ -92,7 +101,9 @@ describe("OnboardingPage", () => {
     mocks.requireReadableProject.mockResolvedValue({ project });
     mocks.getIntegrationCategories.mockResolvedValue([]);
     mocks.getProjectCostContext.mockResolvedValue({ costPerCheckCents: null });
-    mocks.prisma.location.findMany.mockResolvedValue([]);
+    mocks.existingOnboardingCityLocationKeys.mockResolvedValue(new Set<string>());
+    mocks.getOnboardingProjectMarketKeys.mockResolvedValue([]);
+    mocks.getRequestProjectDefaults.mockResolvedValue(null);
     mocks.prisma.apiKey.findFirst.mockResolvedValue(null);
     mocks.prisma.providerConnection.findUnique.mockResolvedValue(null);
     mocks.listEligibleRankedKeywordConnections.mockResolvedValue([]);
@@ -119,7 +130,90 @@ describe("OnboardingPage", () => {
     expect(redirect).not.toHaveBeenCalled();
     expect(mocks.requireReadableProject).not.toHaveBeenCalled();
     expect(mocks.wizard).toHaveBeenCalledWith(
-      expect.objectContaining({ initialProject: null, initialStep: 1 }),
+      expect.objectContaining({
+        initialFlowState: expect.objectContaining({ locations: ["US"] }),
+        initialProject: null,
+        initialStep: 1,
+      }),
+    );
+    expect(mocks.getOnboardingProjectMarketKeys).not.toHaveBeenCalled();
+  });
+
+  it("hydrates resumed market defaults from the active and paused registry", async () => {
+    mocks.getKeywordCount.mockResolvedValue(2);
+    mocks.getOnboardingProjectMarketKeys.mockResolvedValue(["US", "ES@en"]);
+
+    const page = await OnboardingPage({
+      searchParams: Promise.resolve({ projectId: "prj_1", step: "4" }),
+    });
+    render(page);
+
+    expect(mocks.getOnboardingProjectMarketKeys).toHaveBeenCalledWith("prj_1");
+    expect(mocks.wizard).toHaveBeenCalledWith(
+      expect.objectContaining({
+        initialFlowState: expect.objectContaining({ locations: ["US", "ES@en"] }),
+      }),
+    );
+  });
+
+  it("keeps explicit draft locations instead of replacing them from the registry", async () => {
+    mocks.getKeywordCount.mockResolvedValue(2);
+    mocks.getOnboardingProjectMarketKeys.mockResolvedValue(["US", "ES@en"]);
+
+    const page = await OnboardingPage({
+      searchParams: Promise.resolve({ loc: "PL", projectId: "prj_1", step: "4" }),
+    });
+    render(page);
+
+    expect(mocks.getOnboardingProjectMarketKeys).not.toHaveBeenCalled();
+    expect(mocks.wizard).toHaveBeenCalledWith(
+      expect.objectContaining({
+        initialFlowState: expect.objectContaining({ locations: ["PL"] }),
+      }),
+    );
+  });
+
+  it("hydrates the registry when every explicit location parameter is invalid", async () => {
+    mocks.getKeywordCount.mockResolvedValue(2);
+    mocks.getOnboardingProjectMarketKeys.mockResolvedValue(["US", "ES@en"]);
+
+    const page = await OnboardingPage({
+      searchParams: Promise.resolve({
+        country: "Atlantis",
+        loc: ["invalid", "not/a/key"],
+        projectId: "prj_1",
+        step: "4",
+      }),
+    });
+    render(page);
+
+    expect(mocks.getOnboardingProjectMarketKeys).toHaveBeenCalledWith("prj_1");
+    expect(mocks.wizard).toHaveBeenCalledWith(
+      expect.objectContaining({
+        initialFlowState: expect.objectContaining({ locations: ["US", "ES@en"] }),
+      }),
+    );
+  });
+
+  it("hydrates the registry when the only explicit city does not exist", async () => {
+    mocks.getKeywordCount.mockResolvedValue(2);
+    mocks.getOnboardingProjectMarketKeys.mockResolvedValue(["PL"]);
+
+    const page = await OnboardingPage({
+      searchParams: Promise.resolve({
+        loc: "US/Nowhere",
+        projectId: "prj_1",
+        step: "4",
+      }),
+    });
+    render(page);
+
+    expect(mocks.existingOnboardingCityLocationKeys).toHaveBeenCalledWith(["US/Nowhere"]);
+    expect(mocks.getOnboardingProjectMarketKeys).toHaveBeenCalledWith("prj_1");
+    expect(mocks.wizard).toHaveBeenCalledWith(
+      expect.objectContaining({
+        initialFlowState: expect.objectContaining({ locations: ["PL"] }),
+      }),
     );
   });
 
@@ -139,7 +233,7 @@ describe("OnboardingPage", () => {
 
   it("normalizes loc keys, verifies city rows, and keeps country as a legacy alias", async () => {
     mocks.getKeywordCount.mockResolvedValue(0);
-    mocks.prisma.location.findMany.mockResolvedValue([{ canonicalKey: "US/Texas/Austin" }]);
+    mocks.existingOnboardingCityLocationKeys.mockResolvedValue(new Set(["US/Texas/Austin"]));
 
     await expect(
       OnboardingPage({
@@ -167,6 +261,41 @@ describe("OnboardingPage", () => {
     ).resolves.toBeTruthy();
 
     expect(redirect).not.toHaveBeenCalled();
+  });
+
+  it("loads persisted project timezone into initialProject on resume", async () => {
+    mocks.getKeywordCount.mockResolvedValue(2);
+    mocks.getRequestProjectDefaults.mockResolvedValue({ timezone: "Europe/Madrid" });
+
+    const page = await OnboardingPage({
+      searchParams: Promise.resolve({ projectId: "prj_1", step: "4" }),
+    });
+    render(page);
+
+    expect(mocks.wizard).toHaveBeenCalledWith(
+      expect.objectContaining({
+        initialProject: expect.not.objectContaining({ defaults: expect.anything() }),
+      }),
+    );
+    expect(mocks.wizard.mock.calls.at(-1)?.[0]).toMatchObject({
+      initialProject: { timezone: "Europe/Madrid" },
+    });
+  });
+
+  it("falls back to UTC for initialProject.timezone when the project has no defaults", async () => {
+    mocks.getKeywordCount.mockResolvedValue(2);
+    mocks.getRequestProjectDefaults.mockResolvedValue(null);
+
+    const page = await OnboardingPage({
+      searchParams: Promise.resolve({ projectId: "prj_1", step: "4" }),
+    });
+    render(page);
+
+    expect(mocks.wizard).toHaveBeenCalledWith(
+      expect.objectContaining({
+        initialProject: expect.objectContaining({ timezone: "UTC" }),
+      }),
+    );
   });
 
   it("passes only public ranked-keyword connection IDs to the wizard", async () => {

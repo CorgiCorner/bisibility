@@ -13,6 +13,7 @@ export function makeAlertRule(overrides: Partial<AlertRuleView> = {}): AlertRule
     enabled: true,
     fires: "0 this week",
     id: "alr_abcdefghijklmnopqrstuvwx",
+    marketIds: [],
     name: "Ranking drop",
     period: "Each check",
     recipientIds: [],

@@ -165,6 +165,28 @@ declare(["settings.budget_updated"], {
   after: f.numbers("capCents"),
   before: f.numbers("capCents"),
 });
+declare(["settings.project_market.add"], {
+  after: { ...f.numbers("added"), marketIds: list("string") },
+});
+declare(["onboarding.project_markets.reconcile"], {
+  after: {
+    ...f.numbers("added"),
+    marketIds: list("string"),
+    removedMarketIds: list("string"),
+  },
+  before: { marketIds: list("string") },
+});
+declare(
+  [
+    "settings.project_market.pause",
+    "settings.project_market.remove",
+    "settings.project_market.resume",
+  ],
+  {
+    after: strings("status"),
+    before: strings("status"),
+  },
+);
 
 const competitor = { ...strings("domain", "id", "label") };
 declare(["competitor.add"], { after: competitor });

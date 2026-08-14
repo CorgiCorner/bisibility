@@ -33,7 +33,7 @@ vi.mock("next/link", () => ({
 }));
 
 beforeEach(() => {
-  setNavigationState({ pathname: "/app/prj_1/overview" });
+  setNavigationState({ pathname: "/app/prj_1/dashboard" });
 });
 
 describe("Sidebar", () => {
@@ -150,7 +150,7 @@ describe("Sidebar", () => {
     render(
       <AppThemeRoot data-collapsed="false" defaultTheme="light">
         <Sidebar
-          activeHref={appPath(mockWorkspaces[0].publicId, "overview")}
+          activeHref={appPath(mockWorkspaces[0].publicId, "dashboard")}
           activeProjectId={mockWorkspaces[0].id}
           canCreateWorkspace
           projectRef={mockWorkspaces[0].publicId}

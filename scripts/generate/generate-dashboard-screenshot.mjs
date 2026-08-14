@@ -174,13 +174,13 @@ async function waitForAuthResult(target, page, failurePrefix) {
 }
 
 async function captureDashboard(origin, browser, projectRef) {
-  const overviewPath = `/app/${projectRef}/overview`;
+  const dashboardPath = `/app/${projectRef}/dashboard`;
   const page = await browser.newPage({
     deviceScaleFactor: 2,
     viewport: { height: 980, width: captureWidth },
   });
   await page.emulateMedia({ colorScheme: "light", reducedMotion: "reduce" });
-  await page.goto(`${origin}/login?next=${encodeURIComponent(overviewPath)}`, {
+  await page.goto(`${origin}/login?next=${encodeURIComponent(dashboardPath)}`, {
     waitUntil: "networkidle",
   });
   const email = page.locator("#login-email");
@@ -196,7 +196,7 @@ async function captureDashboard(origin, browser, projectRef) {
   await firstOtpDigit.pressSequentially(demoOtp);
   await page.getByRole("button", { name: "Verify & continue" }).click();
   await waitForAuthResult(
-    page.waitForURL((url) => url.pathname === overviewPath, { timeout: 30_000 }),
+    page.waitForURL((url) => url.pathname === dashboardPath, { timeout: 30_000 }),
     page,
     "Demo sign-in failed",
   );
@@ -207,13 +207,20 @@ async function captureDashboard(origin, browser, projectRef) {
   const shell = page.locator("[data-shell-root]:visible");
   await shell.first().waitFor({ state: "visible" });
   await page
-    .getByRole("heading", { name: "Overview", exact: true })
+    .getByRole("heading", { name: "Dashboard", exact: true })
     .waitFor({ state: "visible" });
   await page
     .getByRole("button", { name: "Switch project" })
     .getByText("Demo", { exact: true })
     .waitFor();
   await page.getByText("20 keywords", { exact: true }).first().waitFor({ state: "visible" });
+  await page
+    .getByRole("button", { exact: true, name: "Markets" })
+    .waitFor({ state: "visible" });
+  await page.getByRole("heading", { name: "By market" }).waitFor({ state: "visible" });
+  await page
+    .getByText("3 active markets / paused markets excluded", { exact: true })
+    .waitFor({ state: "visible" });
   await page.locator(".MuiAreaElement-root").first().waitFor({ state: "visible" });
   await page.locator(".MuiBarElement-root").first().waitFor({ state: "visible" });
 

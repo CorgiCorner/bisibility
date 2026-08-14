@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   getKeywordRows: vi.fn(),
   getKeywordTagSuggestions: vi.fn(),
   getProjectCostContext: vi.fn(),
+  getProjectMarkets: vi.fn(),
   getSavedView: vi.fn(),
   getRequestSerpProviderChain: vi.fn(),
   getUpcomingView: vi.fn(),
@@ -70,6 +71,9 @@ vi.mock("@/lib/queries/keywords", () => ({
   getKeywordTagSuggestions: mocks.getKeywordTagSuggestions,
   KEYWORD_LIST_MAX: 1000,
 }));
+vi.mock("@/lib/queries/project-markets", () => ({
+  getProjectMarkets: mocks.getProjectMarkets,
+}));
 vi.mock("@/lib/queries/saved-keywords", () => ({
   listSavedKeywords: mocks.listSavedKeywords,
   savedKeywordCount: mocks.savedKeywordCount,
@@ -104,6 +108,13 @@ describe("KeywordsPage tabs", () => {
     mocks.getKeywordRows.mockResolvedValue([]);
     mocks.getKeywordTagSuggestions.mockResolvedValue([]);
     mocks.getProjectCostContext.mockResolvedValue({ costPerCheckCents: 1 });
+    mocks.getProjectMarkets.mockResolvedValue({
+      markets: [],
+      maxMarkets: 5,
+      monthlyCostCents: 0,
+      perMarketChecks: 0,
+      projectId: "prj_1",
+    });
     mocks.getSavedView.mockResolvedValue(null);
     mocks.getRequestSerpProviderChain.mockResolvedValue([
       { isPrimary: true, provider: "dataforseo" },

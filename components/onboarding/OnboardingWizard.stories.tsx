@@ -51,15 +51,25 @@ const firstCheckActions = {
   getObservedPositionsAction: async () => [],
   listFirstCheckCandidatesAction: async () => ({
     candidates: [
-      { id: "keyword_1", publicId: "kw_1", text: "rank tracker" },
-      { id: "keyword_2", publicId: "kw_2", text: "seo api" },
-      { id: "keyword_3", publicId: "kw_3", text: "keyword monitoring" },
+      {
+        device: "desktop" as const,
+        id: "keyword_1",
+        market: { languageLabel: "English", locationLabel: "United States" },
+        publicId: "kw_1",
+        text: "rank tracker",
+      },
+      {
+        device: "mobile" as const,
+        id: "keyword_2",
+        market: { languageLabel: "English", locationLabel: "United States" },
+        publicId: "kw_2",
+        text: "rank tracker",
+      },
     ],
     hasAnalyticsSource: false,
     isSampleProject: false,
     providerReady: true,
   }),
-  queueFirstChecksAction: async () => ({ queued: 21 }),
   runFirstCheckPreviewAction: async () => ({
     position: 4,
     provider: "dataforseo",
@@ -147,11 +157,37 @@ function panelForStep(
     ),
     4: (
       <StepFirstCheck
+        defaults={{
+          city: null,
+          country: "United States",
+          cronExpression: "0 6 * * *",
+          device: "desktop",
+          devices: ["desktop", "mobile"],
+          frequency: "daily",
+          jitterMinutes: 60,
+          locationKey: "US",
+          locationSelections: [
+            {
+              canonicalKey: "US",
+              countryCode: "US",
+              displayName: "United States",
+              kind: "country",
+              languageCode: "en",
+              languageLabel: "English",
+            },
+          ],
+          locations: ["US"],
+          projectId: onboardingDefaults.projectId,
+          serpDepth: 100,
+          timezone: "America/New_York",
+        }}
         flowState={{
           projectId: onboardingDefaults.projectId,
           providerId: "dataforseo",
         }}
         keywordCount={24}
+        keywordDraft={"rank tracker\nseo api\nkeyword monitoring"}
+        project={{ domain: "acme.dev", name: "Acme", publicId: onboardingDefaults.projectId }}
         providerConnected
         {...firstCheckActions}
       />
@@ -207,7 +243,7 @@ function OnboardingStory({
         <OnboardingStepper currentStep={step} maxReachableStep={maxReachableStep}>
           <section className="rounded-2xl border border-border bg-bg-elev p-6 sm:px-7 sm:py-[26px]">
             {panelForStep(step, providerMode, competitorMode, analyticsMode)}
-            <OnboardingNav currentStep={step} />
+            {step === 4 ? null : <OnboardingNav currentStep={step} />}
           </section>
         </OnboardingStepper>
       </div>

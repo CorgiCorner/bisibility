@@ -34,7 +34,7 @@ export function AlertSeveritySelect({
         }
         onChange={(next) => onChange(next as AlertSeverity)}
         options={options}
-        triggerClassName="mb-3 min-h-10 w-full justify-between rounded-[9px] border-border-strong bg-transparent px-3 text-[13px] font-medium"
+        triggerClassName="mb-3 min-h-10 w-full justify-between rounded-[9px] border-border-strong bg-transparent px-3 text-[13px] font-medium [&>span:nth-of-type(2)]:flex-1 [&>span:nth-of-type(2)]:text-left"
         value={value}
       />
     </div>

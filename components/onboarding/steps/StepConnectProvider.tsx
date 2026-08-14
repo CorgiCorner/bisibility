@@ -6,6 +6,7 @@ import {
   feedbackClass,
   onboardingFormId,
 } from "@/components/onboarding/onboarding-form-utils";
+import { InfoTooltip } from "@/components/ui";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
@@ -232,17 +233,11 @@ export function StepConnectProvider({
       <input type="hidden" {...register("projectId")} />
       <input type="hidden" {...register("providerId")} />
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <div className="text-lg font-semibold tracking-[-0.4px]">Connect data</div>
-          <div className="mt-1 text-[13px] text-fg-muted">
-            Choose a rank-check provider, Search Console, or both.
-          </div>
-        </div>
+        <div className="text-lg font-semibold tracking-[-0.4px]">Connect data</div>
         <StepConnectProviderSkip flowState={flowState} getValues={getValues} onSkip={onSkip} />
       </div>
       <StepConnectProviderCards
         analyticsNotice={analyticsNotice}
-        analyticsOption={analyticsOption}
         connections={connections}
         dirtyProviders={dirtyProviders}
         onSelect={selectProvider}
@@ -271,6 +266,15 @@ export function StepConnectProvider({
       />
       {actionError ? (
         <p className={`m-0 mt-3 ${feedbackClass} text-red-text`}>{actionError}</p>
+      ) : null}
+      {analyticsOption ? (
+        <div className="mt-[22px]">
+          <div className="flex items-center gap-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.5px] text-fg-muted">
+            Your site&apos;s data / optional, free
+            <InfoTooltip text="Search Console shows the queries your site already ranks for. Free import for keyword suggestions; it cannot check rankings." />
+          </div>
+          <div className="mt-2 grid items-stretch gap-3 sm:grid-cols-2">{analyticsOption}</div>
+        </div>
       ) : null}
     </form>
   );

@@ -268,7 +268,7 @@
   {
     "name": "search_locations",
     "title": "Search locations",
-    "description": "Search canonical keyword locations. Use the returned location_key verbatim when creating or updating keywords for city-level tracking.",
+    "description": "Search canonical keyword markets. Use the returned location_key verbatim when creating or updating keywords so an optional @language qualifier preserves the exact location-language pair.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -399,7 +399,7 @@
   {
     "name": "update_project_defaults",
     "title": "Update project defaults",
-    "description": "Update the project default rank-check schedule and SERP market. The schedule is replaced as a whole: omitted schedule fields reset to their defaults (jitter 60, timezone UTC, no cron). Provide country and device together, or a location_key, to move the default SERP market. Use search_locations and pass its location_key verbatim for city-level tracking.",
+    "description": "Update the project default rank-check schedule and SERP market. The schedule is replaced as a whole: omitted schedule fields reset to their defaults (jitter 60, timezone UTC, no cron). Provide country and device together, or a location_key, to move the default SERP market. Use search_locations and pass its location_key verbatim to preserve the exact location-language pair.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -456,7 +456,8 @@
         },
         "location_key": {
           "type": "string",
-          "pattern": "^[A-Z]{2}(\\/[^/]{1,80}){0,2}$"
+          "pattern": "^[A-Z]{2}(\\/[^/@]{1,80}){0,2}(@[a-z]{2,3}(-[a-z0-9]{2,8})?)?$",
+          "description": "Canonical country, region, or city key. Append @language for a non-default language pair; an unqualified key uses the country's default language."
         },
         "project_id": {
           "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
@@ -487,7 +488,7 @@
   {
     "name": "list_keywords",
     "title": "List project keywords",
-    "description": "List keywords for a project with pagination, search, filters, and sorting.",
+    "description": "List keywords for a project with pagination, search, filters, and sorting. Each keyword includes location_key, language_code, and language_label for its exact market pair.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -1167,7 +1168,7 @@
   {
     "name": "add_keywords",
     "title": "Add keywords",
-    "description": "Add one or more keywords to a project, optionally with tags, target URL, and schedule. Use search_locations and pass its location_key verbatim for city-level tracking.",
+    "description": "Add one or more keywords to a project, optionally with tags, target URL, and schedule. Use search_locations and pass its location_key verbatim; an @language qualifier selects a non-default language for that location.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -1203,7 +1204,8 @@
         },
         "location_key": {
           "type": "string",
-          "pattern": "^[A-Z]{2}(\\/[^/]{1,80}){0,2}$"
+          "pattern": "^[A-Z]{2}(\\/[^/@]{1,80}){0,2}(@[a-z]{2,3}(-[a-z0-9]{2,8})?)?$",
+          "description": "Canonical country, region, or city key. Append @language for a non-default language pair; an unqualified key uses the country's default language."
         },
         "topic": {
           "anyOf": [
@@ -1267,7 +1269,8 @@
                   },
                   "location_key": {
                     "type": "string",
-                    "pattern": "^[A-Z]{2}(\\/[^/]{1,80}){0,2}$"
+                    "pattern": "^[A-Z]{2}(\\/[^/@]{1,80}){0,2}(@[a-z]{2,3}(-[a-z0-9]{2,8})?)?$",
+                    "description": "Canonical country, region, or city key. Append @language for a non-default language pair; an unqualified key uses the country's default language."
                   },
                   "topic": {
                     "anyOf": [
@@ -1449,7 +1452,7 @@
   {
     "name": "get_keyword",
     "title": "Get keyword",
-    "description": "Get a keyword and its latest rank position by keyword id.",
+    "description": "Get a keyword and its latest rank position by keyword id, including location_key, language_code, and language_label for its exact market pair.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -1479,7 +1482,7 @@
   {
     "name": "update_keyword",
     "title": "Update keyword",
-    "description": "Update keyword metadata such as text, country, device, target URL, tags, or schedule. Use search_locations and pass its location_key verbatim for city-level tracking.",
+    "description": "Update keyword metadata such as text, country, device, target URL, tags, or schedule. Use search_locations and pass its location_key verbatim; an @language qualifier selects a non-default language for that location.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -1520,7 +1523,8 @@
         },
         "location_key": {
           "type": "string",
-          "pattern": "^[A-Z]{2}(\\/[^/]{1,80}){0,2}$"
+          "pattern": "^[A-Z]{2}(\\/[^/@]{1,80}){0,2}(@[a-z]{2,3}(-[a-z0-9]{2,8})?)?$",
+          "description": "Canonical country, region, or city key. Append @language for a non-default language pair; an unqualified key uses the country's default language."
         },
         "topic": {
           "anyOf": [
@@ -4140,7 +4144,8 @@
                   },
                   "location": {
                     "type": "string",
-                    "pattern": "^[A-Z]{2}(\\/[^/]{1,80}){0,2}$"
+                    "pattern": "^[A-Z]{2}(\\/[^/@]{1,80}){0,2}(@[a-z]{2,3}(-[a-z0-9]{2,8})?)?$",
+                    "description": "Canonical country, region, or city key. Append @language for a non-default language pair; an unqualified key uses the country's default language."
                   },
                   "search_volume": {
                     "anyOf": [

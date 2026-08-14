@@ -232,6 +232,31 @@ describe("serpApiProvider", () => {
     expect(requestedUrl).not.toContain("lon=");
   });
 
+  it("passes through a non-default market language", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        jsonResponse(searchResponse([{ link: "https://example.com/page", position: 1 }])),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await serpApiProvider.fetchRank(
+      rankInput({
+        location: location({
+          gl: "es",
+          hl: "en",
+          primaryGeoName: "Spain",
+          secondaryGeoName: "Spain",
+        }),
+      }),
+    );
+
+    const requestedUrl = String(fetchMock.mock.calls[0][0]);
+    expect(requestedUrl).toContain("gl=es");
+    expect(requestedUrl).toContain("hl=en");
+    expect(requestedUrl).toContain("location=Spain");
+  });
+
   it("uses the first matching result after normalizing www and subdomains", async () => {
     vi.stubGlobal(
       "fetch",

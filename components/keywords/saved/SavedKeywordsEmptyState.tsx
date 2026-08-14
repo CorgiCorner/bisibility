@@ -40,7 +40,7 @@ export function SavedKeywordsEmptyState({ projectRef }: Readonly<{ projectRef: s
         </p>
         <Button
           component={Link}
-          href={appPath(projectRef, "research")}
+          href={appPath(projectRef, "keyword-research")}
           size="md"
           startIcon={<MagnifyingGlass size={13} weight="bold" />}
           sx={{ marginTop: "22px", minHeight: 40, paddingInline: "18px" }}

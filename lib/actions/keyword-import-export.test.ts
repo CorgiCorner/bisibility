@@ -157,6 +157,73 @@ bad,not a url,tag,US,desktop`);
     ]);
   });
 
+  it("qualifies each CSV country with its language while location_key wins", () => {
+    const result = parseKeywordImportCsv(
+      [
+        "keyword,country,city,language,location_key,device",
+        "spanish row,ES,,es,,desktop",
+        "english city row,ES,Malaga,en,,mobile",
+        "qualified city row,,,en,ES/Andalusia/Malaga,desktop",
+        "explicit row,US,,es,GB@en,desktop",
+      ].join("\n"),
+    );
+
+    expect(result.errors).toEqual([]);
+    expect(result.parsed).toMatchObject([
+      { keyword: "spanish row", language: "es", locationKey: "ES@es" },
+      {
+        city: "Malaga",
+        keyword: "english city row",
+        language: "en",
+        locationKey: "ES/Malaga@en",
+      },
+      {
+        keyword: "qualified city row",
+        language: "en",
+        locationKey: "ES/Andalusia/Malaga@en",
+      },
+      { keyword: "explicit row", language: "es", locationKey: "GB@en" },
+    ]);
+  });
+
+  it("keeps the project default city when a row overrides only language", () => {
+    const result = parseKeywordImportCsv("keyword,language,device\ncity default,es,desktop", {
+      city: "New York",
+      country: "United States",
+      device: "desktop",
+      locationKey: "US/New York/New York",
+    });
+
+    expect(result.errors).toEqual([]);
+    expect(result.parsed).toMatchObject([
+      {
+        city: "New York",
+        keyword: "city default",
+        language: "es",
+        locationKey: "US/New York/New York@es",
+      },
+    ]);
+  });
+
+  it("replaces the default key language suffix without dropping its city path", () => {
+    const result = parseKeywordImportCsv("keyword,language,device\ncity default,es,desktop", {
+      city: "Malaga",
+      country: "Spain",
+      device: "desktop",
+      locationKey: "ES/Andalusia/Malaga@en",
+    });
+
+    expect(result.errors).toEqual([]);
+    expect(result.parsed).toMatchObject([
+      {
+        city: "Malaga",
+        keyword: "city default",
+        language: "es",
+        locationKey: "ES/Andalusia/Malaga@es",
+      },
+    ]);
+  });
+
   it("builds duplicate keys from canonical country codes when available", () => {
     const row = { device: "desktop" as const, keyword: "rank tracker", location: "United Kingdom" };
 

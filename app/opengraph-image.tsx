@@ -2,7 +2,7 @@ import { OpenGraphBrandLockup } from "@/lib/seo/og-brand-lockup";
 import { LICENSE } from "@/lib/site/site";
 import { ImageResponse } from "next/og";
 
-export const alt = "bisibility SEO observability for developers";
+export const alt = "Open-source observability for your rankings";
 export const contentType = "image/png";
 export const runtime = "edge";
 export const size = {
@@ -43,16 +43,17 @@ export default function Image() {
           style={{
             display: "flex",
             flexDirection: "column",
-            fontSize: 72,
+            fontSize: 68,
             fontWeight: 800,
             letterSpacing: 0,
             lineHeight: 1.04,
-            maxWidth: 920,
+            maxWidth: 1000,
+            whiteSpace: "nowrap",
           }}
         >
-          Know where you rank.
+          Open-source observability
           <br />
-          See what changed.
+          for your rankings.
         </div>
 
         <div
@@ -60,15 +61,16 @@ export default function Image() {
             alignItems: "center",
             color: "#6b6657",
             display: "flex",
-            fontSize: 26,
-            gap: "18px",
+            fontSize: 23,
+            gap: "14px",
+            whiteSpace: "nowrap",
           }}
         >
           <span>{LICENSE}</span>
           <span style={{ color: "#d97757" }}>|</span>
-          <span>Signals timeline</span>
+          <span>MCP server + SDKs + CLI</span>
           <span style={{ color: "#d97757" }}>|</span>
-          <span>BYO SERP provider</span>
+          <span>Agent-ready</span>
         </div>
       </div>
     </div>,

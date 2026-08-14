@@ -38,6 +38,7 @@ const rawRule = {
   enabled: true,
   fires: "0 this week",
   id: "rule_db_1",
+  marketIds: [],
   name: "Rank drop",
   period: "Each check",
   recipientIds: ["user_db_1"],
@@ -151,6 +152,17 @@ describe("alert-rule REST mutations", () => {
       expect.objectContaining({ severity: "warning" }),
       expect.anything(),
     );
+    expect(mocks.updateAlertRuleRecord.mock.calls[0]?.[0]).not.toHaveProperty("marketIds");
     expect(mocks.alertRuleApiResources).toHaveBeenCalledWith([publicRule]);
+  });
+
+  it("passes an explicit empty market set through PATCH as All markets", async () => {
+    const response = await updateAlertRuleById(
+      context("/alert-rules/alr_a00000000000000000000000", { ...input, market_ids: [] }),
+      "alr_a00000000000000000000000",
+    );
+
+    expect(response.status).toBe(200);
+    expect(mocks.updateAlertRuleRecord.mock.calls[0]?.[0]).toHaveProperty("marketIds", []);
   });
 });

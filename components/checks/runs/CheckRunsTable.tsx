@@ -2,6 +2,7 @@
 
 import { Button, CheckStatusChip } from "@/components/ui";
 import type { CheckRunFilter, CheckRunRow, CheckRunsView } from "@/lib/checks/contract";
+import { RESEARCH_METRICS_UNAVAILABLE_TOOLTIP } from "@/lib/serp/market-capability";
 import Tooltip from "@mui/material/Tooltip";
 import {
   ArrowDownIcon as ArrowDown,
@@ -140,6 +141,17 @@ function RunCells({
       </td>
       <td className="min-w-0 px-3 py-3">
         <span className="block truncate text-fg-muted">{run.languageLabel ?? "-"}</span>
+        {!run.researchMetricsAvailable ? (
+          <Tooltip title={RESEARCH_METRICS_UNAVAILABLE_TOOLTIP}>
+            <button
+              aria-label={`no volume/KD: ${RESEARCH_METRICS_UNAVAILABLE_TOOLTIP}`}
+              className="mt-1 inline-flex cursor-help rounded-full border border-dashed border-border-strong bg-bg-sunken px-1.5 py-0.5 font-mono text-[9.5px] font-semibold text-fg-muted"
+              type="button"
+            >
+              no volume/KD
+            </button>
+          </Tooltip>
+        ) : null}
       </td>
       <td className="px-3 py-3 text-fg-muted">{run.device === "mobile" ? "Mobile" : "Desktop"}</td>
       <td className="min-w-0 px-3 py-3">

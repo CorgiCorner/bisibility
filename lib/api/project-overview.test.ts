@@ -230,6 +230,9 @@ describe("project overview API", () => {
         }),
         where: {
           device: "mobile",
+          locationRef: {
+            projectMarkets: { some: { projectId: "project_1", status: "active" } },
+          },
           projectId: "project_1",
           tags: { some: { tag: { name: "Docs" } } },
         },

@@ -1,11 +1,7 @@
 "use client";
 
 import { buildCsvKeywordReview } from "@/components/keywords/AddKeywordCsvReviewModel";
-import {
-  actionErrorMessage,
-  actionWarningMessage,
-  splitTagInput,
-} from "@/components/keywords/action-utils";
+import { splitTagInput } from "@/components/keywords/action-utils";
 import type { LocationFieldValue } from "@/components/keywords/LocationField";
 import { AppDrawer } from "@/components/ui";
 import { zodResolver } from "@/lib/forms/zod-resolver";
@@ -17,22 +13,21 @@ import {
   parseKeywordLines,
 } from "@/lib/keywords/add-keyword-drawer-shared";
 import { DEFAULT_SERP_DEVICE, DEFAULT_SERP_MARKET, type SerpDevice } from "@/lib/serp/markets";
-import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { buildDrawerCsvKeywordRowsForTracking } from "./AddKeywordCsvRows";
 import {
   type AddKeywordDrawerProps,
-  addedKeywordResult,
   addKeywordDrawerCtaLabel,
-  trackingScheduleValue,
   useAddKeywordTrackingSchedule,
 } from "./AddKeywordDrawerExtensions";
 import { AddKeywordDrawerFeedback } from "./AddKeywordDrawerFeedback";
 import { AddKeywordDrawerFooter } from "./AddKeywordDrawerFooter";
-import { countryForSelection, initialLocationValue } from "./AddKeywordDrawerLocation";
+import { drawerFormDefaults, drawerLocationFields } from "./AddKeywordDrawerFormDefaults";
+import { initialLocationValue } from "./AddKeywordDrawerLocation";
 import { AddKeywordDrawerPanels } from "./AddKeywordDrawerPanels";
-import { addKeywordDrawerInput } from "./AddKeywordDrawerSubmit";
+import { resetAddKeywordDrawer } from "./AddKeywordDrawerReset";
+import { useAddKeywordDrawerSave } from "./useAddKeywordDrawerSave";
 
 export function AddKeywordDrawer({
   addKeywordsAction,
@@ -44,22 +39,44 @@ export function AddKeywordDrawer({
   domain,
   existingKeywords = [],
   initialKeyword,
+  initialMarketKeys,
   initialScheduleFrequency,
   initialTab,
   onClose,
   onAdded,
   open,
   projectId,
+  projectMarkets,
   tagSuggestions = [],
   showSchedule = false,
 }: AddKeywordDrawerProps) {
-  const router = useRouter();
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionWarning, setActionWarning] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<AddKeywordTab>(initialTab ?? "manual");
   const [csvReviewOpen, setCsvReviewOpen] = useState(false);
   const [csvText, setCsvText] = useState("");
   const [tagsText, setTagsText] = useState("");
+  const drawerMarkets = projectMarkets ?? {
+    markets: [],
+    maxMarkets: 5,
+    monthlyCostCents: null,
+    perMarketChecks: 0,
+    projectId,
+  };
+  const defaultMarketKeys = drawerMarkets.markets
+    .filter(
+      (market) =>
+        market.status === "active" &&
+        (initialMarketKeys === undefined || initialMarketKeys.includes(market.canonicalKey)),
+    )
+    .map((market) => market.canonicalKey);
+  const [matrixSelection, setMatrixSelection] = useState<{
+    devices: SerpDevice[];
+    locationKeys: string[];
+  }>({
+    devices: [defaultDevice],
+    locationKeys: defaultMarketKeys,
+  });
   const [locationValue, setLocationValue] = useState(() =>
     initialLocationValue(defaultLocation, defaultLocationSelection),
   );
@@ -72,18 +89,14 @@ export function AddKeywordDrawer({
     trigger,
     watch,
   } = useForm<AddKeywordDrawerForm>({
-    defaultValues: {
-      city: locationValue.cityName ?? null,
-      device: defaultDevice,
-      isPaused: false,
-      keywords: initialKeyword ?? "",
-      location: countryForSelection(locationValue) as AddKeywordDrawerForm["location"],
-      locationKey: locationValue.kind === "country" ? undefined : locationValue.canonicalKey,
+    defaultValues: drawerFormDefaults({
+      costContext,
+      defaultDevice,
+      initialKeyword,
+      initialScheduleFrequency,
+      location: locationValue,
       projectId,
-      schedule: trackingScheduleValue(initialScheduleFrequency, costContext),
-      tags: [],
-      targetUrl: "",
-    },
+    }),
     resolver: zodResolver(addKeywordDrawerSchema),
   });
   const keywordsValue = watch("keywords");
@@ -121,51 +134,46 @@ export function AddKeywordDrawer({
   const submitDisabled =
     isSubmitting ||
     activeTab === "api" ||
+    (activeTab === "manual" &&
+      (matrixSelection.locationKeys.length === 0 || matrixSelection.devices.length === 0)) ||
     hasCsvRowErrors ||
     Boolean(activeTab === "csv" && csvParseError);
   const ctaLabel = addKeywordDrawerCtaLabel(activeTab, csvReviewOpen, effectivePaused, count);
 
+  const handleMatrixChange = useCallback(
+    (next: { devices: SerpDevice[]; locationKeys: string[] }) => setMatrixSelection(next),
+    [],
+  );
+
   function handleLocationChange(next: LocationFieldValue) {
     setLocationValue(next);
-    setValue("location", countryForSelection(next) as AddKeywordDrawerForm["location"], {
-      shouldDirty: true,
-      shouldValidate: true,
-    });
-    setValue("city", next.kind === "city" ? (next.cityName ?? null) : null, {
-      shouldDirty: true,
-      shouldValidate: true,
-    });
-    setValue("locationKey", next.kind === "country" ? undefined : next.canonicalKey, {
-      shouldDirty: true,
-      shouldValidate: true,
-    });
+    const fields = drawerLocationFields(next);
+    setValue("location", fields.location, { shouldDirty: true, shouldValidate: true });
+    setValue("city", fields.city, { shouldDirty: true, shouldValidate: true });
+    setValue("locationKey", fields.locationKey, { shouldDirty: true, shouldValidate: true });
   }
 
   function handleDeviceChange(next: string) {
     setValue("device", next as SerpDevice, { shouldDirty: true, shouldValidate: true });
   }
-  // Closing is one thing and resetting is another: the reset used to run before the panel had
-  // finished sliding out, so the tabs snapped back to Manual and the fields emptied in view.
   function handleExited() {
-    setActionError(null);
-    setActionWarning(null);
-    setActiveTab("manual");
-    setCsvReviewOpen(false);
-    setCsvText("");
-    setTagsText("");
     const nextLocation = initialLocationValue(defaultLocation, defaultLocationSelection);
     setLocationValue(nextLocation);
-    reset({
-      city: nextLocation.cityName ?? null,
-      device: defaultDevice,
-      isPaused: false,
-      keywords: "",
-      location: countryForSelection(nextLocation) as AddKeywordDrawerForm["location"],
-      locationKey: nextLocation.kind === "country" ? undefined : nextLocation.canonicalKey,
+    resetAddKeywordDrawer({
+      costContext,
+      defaultDevice,
+      defaultMarketKeys,
+      initialScheduleFrequency,
+      location: nextLocation,
       projectId,
-      schedule: trackingScheduleValue(initialScheduleFrequency, costContext),
-      tags: [],
-      targetUrl: "",
+      reset,
+      setActionError,
+      setActionWarning,
+      setActiveTab,
+      setCsvReviewOpen,
+      setCsvText,
+      setMatrixSelection,
+      setTagsText,
     });
   }
 
@@ -201,41 +209,20 @@ export function AddKeywordDrawer({
     if (await trigger("keywords")) setCsvReviewOpen(true);
   }
 
-  async function save(values: AddKeywordDrawerForm) {
-    setActionError(null);
-    setActionWarning(null);
-    const pending = addKeywordDrawerInput({
-      activeTab,
-      csvText,
-      existingKeywords,
-      locationValue,
-      values,
-    });
-    if ("warning" in pending) {
-      setActionWarning(pending.warning);
-      return;
-    }
-    try {
-      const input =
-        consumeSavedIds && consumeSavedIds.length > 0
-          ? { ...pending.input, consumeSavedIds: [...consumeSavedIds] }
-          : pending.input;
-      const result = await addKeywordsAction(input);
-      const addedKeywords = addedKeywordResult(result);
-      const warning = actionWarningMessage(result);
-      if (warning) {
-        setActionWarning(warning);
-        onAdded?.(addedKeywords);
-        router.refresh();
-        return;
-      }
-      onAdded?.(addedKeywords);
-      onClose();
-      router.refresh();
-    } catch (error) {
-      setActionError(actionErrorMessage(error));
-    }
-  }
+  const save = useAddKeywordDrawerSave({
+    activeTab,
+    addKeywordsAction,
+    consumeSavedIds,
+    csvText,
+    devices: matrixSelection.devices,
+    existingKeywords,
+    locationKeys: matrixSelection.locationKeys,
+    locationValue,
+    onAdded,
+    onClose,
+    setActionError,
+    setActionWarning,
+  });
 
   async function submit(values: AddKeywordDrawerForm) {
     if (activeTab === "csv" && !csvReviewOpen) return handleReviewKeywords();
@@ -251,18 +238,16 @@ export function AddKeywordDrawer({
         <AddKeywordDrawerFooter
           ctaLabel={ctaLabel}
           activeTab={activeTab}
-          costContext={costContext}
-          count={count}
+          deviceCount={matrixSelection.devices.length}
           isPaused={isPaused}
           isReviewMode={isCsvReviewButton}
           isSubmitting={isSubmitting}
+          keywordCount={count}
           onReview={() => void handleReviewKeywords()}
           register={register}
           submitDisabled={submitDisabled}
           showPauseToggle={!showSchedule}
-          frequencyOverride={
-            scheduleFrequency === "project_default" ? undefined : scheduleFrequency
-          }
+          marketCount={matrixSelection.locationKeys.length}
         />
       }
       onClose={onClose}
@@ -283,6 +268,7 @@ export function AddKeywordDrawer({
           csvText={csvText}
           csvParseError={csvParseError}
           device={device}
+          defaultDevice={defaultDevice}
           domain={domain}
           errors={errors}
           location={locationValue}
@@ -291,11 +277,14 @@ export function AddKeywordDrawer({
           onCsvTextChange={handleCsvTextChange}
           onDeviceChange={handleDeviceChange}
           onLocationChange={handleLocationChange}
+          onMatrixChange={handleMatrixChange}
           onScheduleChange={handleScheduleChange}
           onTabChange={handleTabChange}
           onTagsChange={handleTagsChange}
           projectId={projectId}
           projectDefaultFrequency={costContext?.rawFrequency}
+          projectMarkets={drawerMarkets}
+          initialMarketKeys={defaultMarketKeys}
           register={register}
           reviewItems={reviewItems}
           tagSuggestions={tagSuggestions}

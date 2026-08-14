@@ -8,7 +8,7 @@ import { getActionActor, parseActionInput, requireProjectScope } from "./_shared
 
 function revalidateSavedKeywords(projectRef: string) {
   revalidatePath(appPath(projectRef, "rank-tracker"));
-  revalidatePath(appPath(projectRef, "research"));
+  revalidatePath(appPath(projectRef, "keyword-research"));
 }
 
 export async function saveKeywords(input: unknown) {

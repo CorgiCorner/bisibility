@@ -2,6 +2,7 @@ import { Card, MonoText, SectionTitle } from "@/components/ui";
 import type { CompetitorFilter, CompetitorKind, CompetitorMarket } from "@/lib/competitors/types";
 import { countLabel } from "@/lib/format/pluralize";
 import { InfoIcon as Info } from "@phosphor-icons/react";
+import type { ReactNode } from "react";
 import { CompetitorFilterControls } from "./CompetitorFilterControls";
 import { CompetitorTile } from "./CompetitorTile";
 import { ManagedCompetitorControls } from "./ManagedCompetitorControls";
@@ -13,6 +14,7 @@ type ShareOfVoiceCardProps = {
   market: CompetitorMarket;
   onFilterChange: (filter: CompetitorFilter) => void;
   projectId: string;
+  scopeControls?: ReactNode;
 };
 
 const kindStyles = {
@@ -30,6 +32,7 @@ export function ShareOfVoiceCard({
   market,
   onFilterChange,
   projectId,
+  scopeControls,
 }: Readonly<ShareOfVoiceCardProps>) {
   const maxShare = Math.max(1, ...market.shares.map((competitor) => competitor.shareOfVoice));
   const emptyCopy = {
@@ -37,6 +40,8 @@ export function ShareOfVoiceCard({
       "Rank checks have completed for this market, but no tracked domain ranked in the top 100.",
     filter_excludes_all:
       "No completed rank checks match the current filters. Adjust the filters to view available market data.",
+    no_volume_data:
+      "No positive search volume is available for the compared keywords. Head-to-head ranks remain available below.",
     no_completed_checks:
       "No completed rank checks exist for this market yet. Run a check to calculate share of voice from real positions.",
     ranked: null,
@@ -48,8 +53,10 @@ export function ShareOfVoiceCard({
         <div className="flex min-w-0 flex-col gap-1">
           <SectionTitle>Share of voice</SectionTitle>
           <MonoText muted>
-            {countLabel(market.checkedKeywordCount, "keyword")} in comparison · Google ·{" "}
-            {market.location} · {market.device === "mobile" ? "Mobile" : "Desktop"}
+            Visibility across {countLabel(market.trackedKeywordCount, "tracked keyword")} / Google
+            {" / "}
+            {market.location} / {market.languageLabel} /{" "}
+            {market.device === "mobile" ? "Mobile" : "Desktop"}
             {market.checkedKeywordCount < market.trackedKeywordCount ? " · Partial data" : ""}
           </MonoText>
         </div>
@@ -60,13 +67,15 @@ export function ShareOfVoiceCard({
         />
       </div>
 
+      {scopeControls ? <div className="mt-3.5">{scopeControls}</div> : null}
+
       {emptyCopy ? (
         <div className="mt-[18px] rounded-[11px] border border-dashed border-border-strong bg-transparent px-3.5 py-3 text-[12.5px] leading-5 text-fg-muted">
           {emptyCopy}
         </div>
       ) : null}
 
-      {market.hasRankData ? (
+      {market.dataState === "ranked" ? (
         <div className="mt-[18px] flex flex-col gap-[13px]">
           {market.shares.map((competitor) => {
             const kind = kindStyles[competitor.kind];
@@ -142,7 +151,7 @@ export function ShareOfVoiceCard({
 
       <p className="m-0 mt-4 flex items-center gap-2 border-border-soft border-t pt-3.5 text-[11.5px] text-fg-muted">
         <Info aria-hidden className="shrink-0 text-accent-text" size={14} />
-        SOV = share of rank-weighted top-10 visibility from completed checks in this market.
+        SOV = share of estimated top-10 visibility (rank x search volume).
       </p>
     </Card>
   );

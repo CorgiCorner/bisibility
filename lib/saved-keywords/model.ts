@@ -5,9 +5,11 @@ export type SavedKeywordTrendPoint = {
 };
 
 export type SavedKeywordRow = {
+  countryCode: string;
   cpc: number | null;
   difficulty: number | null;
   intent: string | null;
+  languageCode: string;
   location: string;
   publicId: string;
   savedAt: string;

@@ -3,6 +3,8 @@ import { MonoText } from "@/components/ui";
 import type { TimelineItem } from "@/lib/timeline/timeline-data";
 import {
   ArrowUpRightIcon as ArrowUpRight,
+  DesktopIcon as Desktop,
+  DeviceMobileIcon as DeviceMobile,
   FileMagnifyingGlassIcon as FileMagnifyingGlass,
   MedalIcon as Medal,
   NotePencilIcon as NotePencil,
@@ -29,6 +31,31 @@ const tintStyles = {
   green: { bg: "color-mix(in srgb, var(--green) 13%, transparent)", color: "var(--green)" },
   red: { bg: "color-mix(in srgb, var(--red) 10%, transparent)", color: "var(--red)" },
 } satisfies Record<TimelineItem["tint"], { bg: string; color: string }>;
+
+function TimelineMeta({ item }: Readonly<{ item: TimelineItem }>) {
+  if (!item.marketMeta) return <>{item.meta}</>;
+  const [keyword, location, language, source] = item.marketMeta.segments;
+  const deviceLabel = item.marketMeta.device === "mobile" ? "Mobile" : "Desktop";
+  const DeviceIcon = item.marketMeta.device === "mobile" ? DeviceMobile : Desktop;
+  const textSegments = [keyword, location, language];
+
+  return (
+    <span className="flex min-w-0 items-center gap-1" title={item.meta}>
+      {textSegments.map((segment, index) => (
+        <span className="contents" key={`${segment}-${index}`}>
+          {index > 0 ? <span aria-hidden>/</span> : null}
+          <span className="max-w-[220px] truncate">{segment}</span>
+        </span>
+      ))}
+      <span aria-hidden>/</span>
+      <span aria-label={deviceLabel} role="img" title={deviceLabel}>
+        <DeviceIcon aria-hidden size={12} />
+      </span>
+      <span aria-hidden>/</span>
+      <span className="max-w-[220px] truncate">{source}</span>
+    </span>
+  );
+}
 
 type TimelineRowProps = {
   canDelete: boolean;
@@ -79,7 +106,9 @@ export function TimelineRow({ canDelete, item, projectId }: Readonly<TimelineRow
               </span>
             ) : null}
           </div>
-          <div className="mt-1 min-w-0 font-mono text-[11px] text-fg-muted">{item.meta}</div>
+          <div className="mt-1 min-w-0 font-mono text-[11px] text-fg-muted">
+            <TimelineMeta item={item} />
+          </div>
           {item.url ? (
             <a
               className="mt-1 inline-flex max-w-full items-center gap-1 truncate font-mono text-[12px] text-fg hover:text-accent-text hover:underline"

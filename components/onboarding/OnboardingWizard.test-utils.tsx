@@ -37,13 +37,13 @@ export function renderWizard({ actions: actionOverrides, ...props }: RenderWizar
       isSampleProject: false,
       providerReady: false,
     })),
-    queueFirstChecksAction: vi.fn(async () => undefined),
     runFirstCheckPreviewAction: vi.fn(async () => ({
       position: null,
       provider: "dataforseo",
       rankingUrl: null,
       status: "completed" as const,
     })),
+    saveMarketsAction: vi.fn(async (input) => ({ marketKeys: input.marketKeys })),
     saveStoredGooglePropertyAction: vi.fn(async (input) => ({
       property: input.property,
       status: "saved" as const,

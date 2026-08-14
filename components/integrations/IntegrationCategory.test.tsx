@@ -30,6 +30,7 @@ describe("IntegrationCategory", () => {
         canManageProviders
         canUpdateProject
         category={integrationCategories[0]}
+        timeZone="UTC"
       />,
     );
 
@@ -45,6 +46,7 @@ describe("IntegrationCategory", () => {
         canManageProviders
         canUpdateProject
         category={integrationCategories[1]}
+        timeZone="UTC"
       />,
     );
 

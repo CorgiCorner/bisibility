@@ -3,6 +3,7 @@ export type KeywordImportCsvColumns = {
   device: number;
   intent: number;
   keyword: number;
+  language: number;
   location: number;
   locationKey: number;
   tags: number;
@@ -23,6 +24,7 @@ export type KeywordImportCsvRow = {
   device?: string;
   intent?: string;
   keyword: string;
+  language?: string;
   location?: string;
   locationKey?: string;
   row: number;
@@ -152,6 +154,7 @@ const columnAliases = {
   device: ["device"],
   intent: ["intent"],
   keyword: ["keyword", "keywords", "query"],
+  language: ["language", "lang", "hl"],
   location: ["country", "geo", "location"],
   locationKey: ["locationkey"],
   tags: ["tag", "tags"],
@@ -226,6 +229,7 @@ export function parseKeywordImportCsvTable(csv: string): KeywordImportCsvTable {
       device: columnIndex(header, [...columnAliases.device], 4),
       intent: columnIndex(header, [...columnAliases.intent], -1),
       keyword: columnIndex(header, [...columnAliases.keyword], 0),
+      language: columnIndex(header, [...columnAliases.language], -1),
       location: columnIndex(header, [...columnAliases.location], 3),
       locationKey: columnIndex(header, [...columnAliases.locationKey], -1),
       tags: columnIndex(header, [...columnAliases.tags], 2),
@@ -252,6 +256,7 @@ export function parseKeywordImportCsvRows(csv: string): KeywordImportCsvRow[] {
     device: optionalCell(row, table.columns.device),
     intent: optionalCell(row, table.columns.intent),
     keyword: row[table.columns.keyword]?.trim() ?? "",
+    language: optionalCell(row, table.columns.language),
     location: optionalCell(row, table.columns.location),
     locationKey: optionalCell(row, table.columns.locationKey),
     row: offset + table.firstDataRowNumber,

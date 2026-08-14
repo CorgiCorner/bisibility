@@ -8,6 +8,7 @@ import {
   ScopeFields,
   TemplatePicker,
 } from "@/components/alerts/NewRuleDrawerControls";
+import { NewRuleMarketFields, RulePreview } from "@/components/alerts/NewRuleMarketFields";
 import { newRuleFormDefaults } from "@/components/alerts/new-rule-form-defaults";
 import {
   ProjectReadOnlyTooltip,
@@ -76,8 +77,9 @@ export function NewRuleDrawer({
   const router = useRouter();
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionWarning, setActionWarning] = useState<string | null>(null);
+  const availableMarketIds = targets.markets.map((market) => market.id);
   const form = useForm<NewRuleForm>({
-    defaultValues: newRuleFormDefaults(projectId, initialTemplate, initialRule),
+    defaultValues: newRuleFormDefaults(projectId, initialTemplate, initialRule, availableMarketIds),
     resolver: zodResolver(newRuleSchema),
   });
   const {
@@ -99,7 +101,7 @@ export function NewRuleDrawer({
   function handleClose() {
     setActionError(null);
     setActionWarning(null);
-    reset(newRuleFormDefaults(projectId, initialTemplate, initialRule));
+    reset(newRuleFormDefaults(projectId, initialTemplate, initialRule, availableMarketIds));
     onClose();
   }
 
@@ -227,6 +229,11 @@ export function NewRuleDrawer({
           targets={targets}
           targetType={watch("targetType")}
         />
+        <NewRuleMarketFields
+          marketIds={watch("marketIds")}
+          markets={targets.markets}
+          setValue={setValue}
+        />
         <section>
           <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
             Condition
@@ -285,14 +292,7 @@ export function NewRuleDrawer({
             {actionWarning}
           </p>
         ) : null}
-        <section>
-          <div className="mb-[9px] font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
-            Preview
-          </div>
-          <div className="rounded-[11px] border border-border bg-bg-sunken px-[15px] py-3.5 text-[13.5px] leading-[1.55]">
-            {selected.preview}
-          </div>
-        </section>
+        <RulePreview>{selected.preview}</RulePreview>
       </form>
     </Sheet>
   );

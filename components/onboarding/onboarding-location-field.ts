@@ -9,6 +9,7 @@ import {
   languageForSerpMarket,
   normalizeSerpMarketName,
   type SerpMarketName,
+  serpMarketLanguages,
 } from "@/lib/serp/markets";
 import { countryNameForLocationKey, DEFAULT_ONBOARDING_LOCATION_KEY } from "./onboarding-locations";
 
@@ -39,10 +40,22 @@ export function locationValueForKey(key: string): LocationFieldValue {
     return country;
   }
   const selector = parseCanonicalKey(key);
-  if (!selector?.cityName) {
+  if (!selector) {
     return defaultLocationValue();
   }
   const countryValue = countryValueForCode(selector.countryCode);
+  if (!selector.cityName) {
+    const language = serpMarketLanguages(selector.countryCode).find(
+      (item) => item.code === selector.languageCode,
+    );
+    return {
+      ...(countryValue ?? defaultLocationValue()),
+      canonicalKey: key,
+      countryCode: selector.countryCode,
+      languageCode: selector.languageCode ?? countryValue?.languageCode,
+      languageLabel: language?.label ?? countryValue?.languageLabel,
+    };
+  }
   const region = selector.regionName ?? selector.regionCode ?? null;
   return {
     canonicalKey: key,

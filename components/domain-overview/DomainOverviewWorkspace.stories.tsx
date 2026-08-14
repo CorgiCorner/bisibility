@@ -67,6 +67,48 @@ const saveSelectedKeywordsAction = (async (input: unknown) => {
   return { created: [], duplicateCount: 0, savedCount: rows.length };
 }) as SaveSelectedKeywordsAction;
 
+const trackedMarkets = [
+  {
+    canonicalKey: "ES",
+    cityName: null,
+    countryCode: "ES",
+    displayName: "Spain",
+    kind: "country" as const,
+    languageCode: "es",
+    languageLabel: "Spanish",
+    locationCode: 2724,
+    provenance: "Malaga tracked at city level - domain analysis runs on the country pair.",
+    regionName: null,
+    researchAvailable: true,
+  },
+  {
+    canonicalKey: "ES@en",
+    cityName: null,
+    countryCode: "ES",
+    displayName: "Spain",
+    kind: "country" as const,
+    languageCode: "en",
+    languageLabel: "English",
+    locationCode: 2724,
+    provenance: null,
+    regionName: null,
+    researchAvailable: false,
+  },
+];
+
+const catalogMarkets = [
+  {
+    ...trackedMarkets[0],
+    canonicalKey: "US",
+    countryCode: "US",
+    displayName: "United States",
+    languageCode: "en",
+    languageLabel: "English",
+    locationCode: 2840,
+    provenance: null,
+  },
+];
+
 const meta = {
   component: DomainOverviewWorkspace,
   decorators: [
@@ -88,11 +130,13 @@ type Story = StoryObj<typeof meta>;
 const common = {
   analyzeAction,
   context: {
+    catalogMarkets,
     competitorDomains: ["competitor-one.example.com", "competitor-two.example.com"],
     costContext: { capCents: 5000, spentCents: 1419 },
     defaultTarget: "example.com",
     providerStatus: "connected" as const,
     recentTargets: [],
+    trackedMarkets,
   },
   initialEstimate: {
     cached: false,
@@ -107,7 +151,7 @@ const common = {
   loadHistoryAction,
   loadKeywordsPageAction,
   loadPagesPageAction,
-  market: domainOverviewMarketFixture,
+  market: trackedMarkets[0],
   projectId: "prj_story",
   projectRef: "prj_story",
   selectMarketAction: async (input: unknown) => {

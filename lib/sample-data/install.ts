@@ -54,6 +54,7 @@ async function ensureUsLocation(tx: Pick<Prisma.TransactionClient, "location">) 
       gl: "us",
       hl: "en",
       kind: LocationKind.country,
+      languageCode: "en",
       languageLabel: "English",
       primaryGeoCode: null,
       primaryGeoName: "United States",

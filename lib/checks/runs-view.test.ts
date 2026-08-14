@@ -24,7 +24,12 @@ function source(overrides: Partial<CheckRunSource> = {}): CheckRunSource {
       publicId: "kw_abcdefghijklmnopqrstuvwx",
       text: "rank tracker",
       device: "desktop",
-      locationRef: { displayName: "San Francisco, California, US", languageLabel: "English" },
+      locationRef: {
+        countryCode: "US",
+        displayName: "San Francisco, California, US",
+        languageCode: "en",
+        languageLabel: "English",
+      },
     },
     position: 4,
     previousPosition: 6,
@@ -95,7 +100,12 @@ describe("checks runs view", () => {
             publicId: "kw_a",
             text: "rank tracker",
             device: "mobile",
-            locationRef: { displayName: "London, UK", languageLabel: "English" },
+            locationRef: {
+              countryCode: "GB",
+              displayName: "London, UK",
+              languageCode: "en",
+              languageLabel: "English",
+            },
           },
         }),
         source({
@@ -103,7 +113,12 @@ describe("checks runs view", () => {
             publicId: "kw_b",
             text: "rank tracker",
             device: "desktop",
-            locationRef: { displayName: "Berlin, DE", languageLabel: "German" },
+            locationRef: {
+              countryCode: "DE",
+              displayName: "Berlin, DE",
+              languageCode: "de",
+              languageLabel: "German",
+            },
           },
         }),
       ],
@@ -116,11 +131,41 @@ describe("checks runs view", () => {
       location: "London, UK",
       languageLabel: "English",
       device: "mobile",
+      researchMetricsAvailable: true,
     });
     expect(view.rows[1]).toMatchObject({
       location: "Berlin, DE",
       languageLabel: "German",
       device: "desktop",
+      researchMetricsAvailable: true,
+    });
+  });
+
+  it("marks an unsupported research pair without changing its rank-check market", () => {
+    const view = buildCheckRunsView(
+      [
+        source({
+          keyword: {
+            publicId: "kw_ar",
+            text: "rank tracker",
+            device: "desktop",
+            locationRef: {
+              countryCode: "BE",
+              displayName: "Belgium",
+              languageCode: "ar",
+              languageLabel: "Arabic",
+            },
+          },
+        }),
+      ],
+      summary,
+    );
+
+    expect(view.rows[0]).toMatchObject({
+      device: "desktop",
+      languageLabel: "Arabic",
+      location: "Belgium",
+      researchMetricsAvailable: false,
     });
   });
 

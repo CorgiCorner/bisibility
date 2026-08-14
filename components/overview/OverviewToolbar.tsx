@@ -1,7 +1,7 @@
 "use client";
 
 import { Toolbar } from "@/components/shell/Toolbar";
-import { Button, Pill } from "@/components/ui";
+import { Button, MenuMultiSelect, Pill } from "@/components/ui";
 import { appPath } from "@/lib/routing/app-path";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
@@ -10,12 +10,13 @@ import {
   CalendarBlankIcon as CalendarBlank,
   CaretDownIcon as CaretDown,
   CheckIcon as Check,
+  GlobeHemisphereWestIcon as Globe,
   MonitorIcon as Monitor,
   PlusIcon as Plus,
   TagIcon as Tag,
 } from "@phosphor-icons/react";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { type ReactNode, useState } from "react";
 import type { OverviewView } from "./types";
 
@@ -24,7 +25,6 @@ type SelectedFilters = OverviewView["toolbar"];
 
 type FilterOption = { label: string; value: string | null };
 type FilterMenu = {
-  active?: boolean;
   icon: ReactNode;
   key: MenuKey;
   options: readonly FilterOption[];
@@ -43,6 +43,9 @@ const DEVICE_OPTIONS: readonly FilterOption[] = [
   { label: "Desktop", value: "desktop" },
   { label: "Mobile", value: "mobile" },
 ];
+
+const OVERVIEW_FILTER_CLASS = "overview-toolbar-filter";
+const OVERVIEW_MARKET_FILTER_CLASS = `${OVERVIEW_FILTER_CLASS} !rounded-full !bg-bg-elev !px-3 !text-xs !font-semibold !text-fg-muted hover:!border-accent hover:!bg-bg-sunken hover:!text-accent`;
 
 function tagOptions(tags: readonly string[]): FilterOption[] {
   return [{ label: "All tags", value: null }, ...tags.map((tag) => ({ label: tag, value: tag }))];
@@ -65,7 +68,6 @@ function filterMenus(selected: SelectedFilters): readonly FilterMenu[] {
       selected: selected.deviceValue,
     },
     {
-      active: Boolean(selected.tagValue),
       icon: <Tag aria-hidden className="text-fg-muted" size={15} />,
       key: "tag",
       options: tagOptions(selected.availableTags),
@@ -106,11 +108,14 @@ export function OverviewToolbar({
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [openKey, setOpenKey] = useState<MenuKey | null>(null);
   const pathname = usePathname();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const selected = initialSelected ?? {
     availableTags: [],
     device: "All devices",
     deviceValue: "all",
+    marketOptions: [],
+    marketValues: [],
     range: "Last 28 days",
     rangeValue: "28d",
     refresh: "Daily",
@@ -139,6 +144,14 @@ export function OverviewToolbar({
     return query ? `${pathname}?${query}` : pathname;
   }
 
+  function changeMarkets(values: string[]) {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("market");
+    for (const value of values) params.append("market", value);
+    const query = params.toString();
+    router.push(query ? `${pathname}?${query}` : pathname);
+  }
+
   return (
     <div className="-mx-4 -mt-4 mb-[22px] sm:-mx-5 lg:-mx-7 lg:-mt-[22px]">
       <Toolbar
@@ -146,8 +159,9 @@ export function OverviewToolbar({
           <Button
             component={Link}
             href={appPath(projectRef, "rank-tracker?add=1")}
+            size="sm"
             startIcon={<Plus size={15} weight="bold" />}
-            sx={{ minHeight: 40, whiteSpace: "nowrap" }}
+            sx={{ height: 37, minHeight: 37, whiteSpace: "nowrap" }}
             variant="primary"
           >
             <span className="hidden sm:inline">Add keyword</span>
@@ -155,6 +169,26 @@ export function OverviewToolbar({
           </Button>
         }
       >
+        {selected.marketOptions.length > 0 ? (
+          <MenuMultiSelect
+            allLabel="All markets"
+            ariaLabel="Markets"
+            leadingIcon={<Globe aria-hidden size={15} />}
+            minSelected={0}
+            onChange={changeMarkets}
+            options={selected.marketOptions}
+            placeholder="All markets"
+            summary={(markets) => {
+              if (markets.length === 0) return "All markets";
+              if (markets.length === 1) {
+                return `${markets[0]?.label} / ${markets[0]?.secondary}`;
+              }
+              return `${markets.length} markets`;
+            }}
+            triggerClassName={OVERVIEW_MARKET_FILTER_CLASS}
+            values={selected.marketValues}
+          />
+        ) : null}
         {selected.refresh === "Mixed schedules" ? null : (
           <Pill active aria-label={`Refresh cadence ${selected.refresh}`}>
             <ArrowsClockwise aria-hidden className="text-accent-text" size={15} />
@@ -165,10 +199,10 @@ export function OverviewToolbar({
           const open = openKey === menu.key;
           return (
             <Pill
-              active={menu.active}
               aria-controls={open ? `overview-${menu.key}-menu` : undefined}
               aria-expanded={open}
               aria-haspopup="menu"
+              className={OVERVIEW_FILTER_CLASS}
               key={menu.key}
               onClick={(event) => openMenu(menu.key, event.currentTarget)}
             >

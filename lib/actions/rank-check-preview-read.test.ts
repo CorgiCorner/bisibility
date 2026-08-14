@@ -6,6 +6,16 @@ const SECOND_KEYWORD_PUBLIC_ID = "kw_bcdefghijklmnopqrstuvwxy";
 const PROJECT_PUBLIC_ID = "prj_abcdefghijklmnopqrstuvwx";
 const SAMPLE_PROJECT_PUBLIC_ID = "prj_bcdefghijklmnopqrstuvwxy";
 
+function keywordRow(id: string, publicId: string, text: string, device: "desktop" | "mobile") {
+  return {
+    device,
+    id,
+    locationRef: { displayName: "United States", languageLabel: "English" },
+    publicId,
+    text,
+  };
+}
+
 const mocks = vi.hoisted(() => ({
   authorize: vi.fn(),
   loadSerpProviderChain: vi.fn(),
@@ -62,10 +72,10 @@ describe("rank check preview read actions", () => {
   it("lists only keywords without completed checks and keeps target URLs first", async () => {
     mocks.prisma.keyword.findMany
       .mockResolvedValueOnce([
-        { id: "keyword_1", publicId: KEYWORD_PUBLIC_ID, text: "rank tracker" },
+        keywordRow("keyword_1", KEYWORD_PUBLIC_ID, "rank tracker", "desktop"),
       ])
       .mockResolvedValueOnce([
-        { id: "keyword_2", publicId: SECOND_KEYWORD_PUBLIC_ID, text: "seo api" },
+        keywordRow("keyword_2", SECOND_KEYWORD_PUBLIC_ID, "seo api", "mobile"),
       ]);
     mocks.prisma.providerConnection.count.mockResolvedValueOnce(1).mockResolvedValueOnce(0);
 
@@ -73,8 +83,20 @@ describe("rank check preview read actions", () => {
 
     expect(result).toEqual({
       candidates: [
-        { id: "keyword_1", publicId: KEYWORD_PUBLIC_ID, text: "rank tracker" },
-        { id: "keyword_2", publicId: SECOND_KEYWORD_PUBLIC_ID, text: "seo api" },
+        {
+          device: "desktop",
+          id: "keyword_1",
+          market: { languageLabel: "English", locationLabel: "United States" },
+          publicId: KEYWORD_PUBLIC_ID,
+          text: "rank tracker",
+        },
+        {
+          device: "mobile",
+          id: "keyword_2",
+          market: { languageLabel: "English", locationLabel: "United States" },
+          publicId: SECOND_KEYWORD_PUBLIC_ID,
+          text: "seo api",
+        },
       ],
       hasAnalyticsSource: false,
       isSampleProject: false,
@@ -102,6 +124,25 @@ describe("rank check preview read actions", () => {
           rankChecks: { none: { status: "completed" } },
           targetUrl: null,
         },
+      }),
+    );
+  });
+
+  it("limits the sample matrix to the selected keyword text", async () => {
+    mocks.prisma.keyword.findMany.mockResolvedValueOnce([]).mockResolvedValueOnce([]);
+    mocks.prisma.providerConnection.count.mockResolvedValueOnce(1).mockResolvedValueOnce(0);
+
+    await listFirstCheckCandidates({
+      keywordText: "seo api",
+      limit: 6,
+      projectId: PROJECT_PUBLIC_ID,
+    });
+
+    expect(mocks.prisma.keyword.findMany).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        take: 6,
+        where: expect.objectContaining({ projectId: "project_1", text: "seo api" }),
       }),
     );
   });

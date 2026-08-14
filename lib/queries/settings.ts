@@ -5,7 +5,7 @@ import { projectedMonthlySpendCents } from "@/lib/cost-estimate/spend-pace";
 import { prisma } from "@/lib/db/prisma";
 import { parsePublicId } from "@/lib/db/public-id";
 import { centsToDollars } from "@/lib/format/currency";
-import { createUserDateTimeFormatter, type DateTimePreferences } from "@/lib/format/user-datetime";
+import { createUserDateTimeFormatter, type DateFormatPreference } from "@/lib/format/user-datetime";
 import { DEFAULT_INSPECTION_DAILY_LIMIT } from "@/lib/presence/constants";
 import { presenceUrl } from "@/lib/presence/url";
 import {
@@ -123,9 +123,8 @@ function labelFromDate(prefix: string, date: Date | null | undefined, dateTime: 
 }
 
 // biome-ignore format: compact signature keeps this query under the line cap.
-export async function getSettings(projectId: string, options: { now?: Date; preferences?: DateTimePreferences } = {}): Promise<SettingsView> {
+export async function getSettings(projectId: string, options: { dateFormat?: DateFormatPreference; now?: Date } = {}): Promise<SettingsView> {
   const { project } = await requireReadableProject(projectId);
-  const dateTime = createUserDateTimeFormatter(options.preferences);
   const now = options.now ?? new Date();
   const [fullProject, monthChecks, spentCents, connectionLookups] = await Promise.all([
     prisma.project.findUnique({
@@ -169,6 +168,10 @@ export async function getSettings(projectId: string, options: { now?: Date; pref
     nextCheckAt: null,
     timezone: "UTC",
   };
+  const dateTime = createUserDateTimeFormatter({
+    dateFormat: options.dateFormat,
+    timezone: schedule.timezone,
+  });
   const devices = new Set(fullProject.keywords.map((keyword) => keyword.device));
   const locations = new Set(fullProject.keywords.map((keyword) => keyword.location));
   const targetUrls = new Set(

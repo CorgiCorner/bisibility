@@ -15,6 +15,7 @@ export type Keyword = {
   createdAt: Date;
   device: string;
   id: string;
+  locationRef: { displayName: string; languageLabel: string };
   publicId: string;
   rankChecks: Check[];
   schedule: { frequency: string; nextCheckAt: Date | null } | null;

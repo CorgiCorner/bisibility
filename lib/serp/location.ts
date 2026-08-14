@@ -1,3 +1,4 @@
+import { resolveSerpLanguage, type SerpLanguage } from "./language-catalog";
 import {
   DEFAULT_SERP_MARKET,
   normalizeSerpMarketName,
@@ -20,6 +21,7 @@ export type ResolvedLocation = {
   cityName: string | null;
   gl: string; // Google geo hint, e.g. "us"
   hl: string; // Google UI language, e.g. "en"
+  languageCode: string; // normalized market language, e.g. "en"
   languageLabel: string; // "English"
   primaryGeoCode: number | null; // numeric geo id for the code-based provider
   primaryGeoName: string; // exact hierarchical name for the code-based provider
@@ -29,15 +31,22 @@ export type ResolvedLocation = {
 
 export type LocationSelector = {
   countryCode: string;
+  languageCode?: string | null;
   regionCode?: string | null;
   regionName?: string | null;
   cityName?: string | null;
 };
 
 export type LocationSelection =
-  | { kind: "country"; countryCode: string }
+  | { kind: "country"; countryCode: string; languageCode?: string | null }
   | { kind: "city"; canonicalKey: string }
-  | { kind: "city"; countryCode: string; regionName?: string | null; cityName: string };
+  | {
+      kind: "city";
+      countryCode: string;
+      languageCode?: string | null;
+      regionName?: string | null;
+      cityName: string;
+    };
 
 // A city match returned by a provider location lookup. Carries the neutral
 // handles the adapters need; the resolver decides caching/persistence.
@@ -73,6 +82,7 @@ export type CountrySeed = {
   displayName: string;
   gl: string;
   hl: string;
+  languageCode: string;
   languageLabel: string;
 };
 
@@ -86,6 +96,7 @@ const countrySeeds = new Map<string, CountrySeed>(
         displayName: market.name,
         gl: market.google.gl,
         hl: market.language.code,
+        languageCode: market.language.code,
         languageLabel: market.language.label,
       },
     ];
@@ -110,22 +121,68 @@ function normalizePart(value: string) {
   return value.trim().replace(/\s+/g, " ").replaceAll("/", " ");
 }
 
+export class LocationInputError extends Error {
+  readonly field: "canonicalKey" | "languageCode";
+
+  constructor(field: "canonicalKey" | "languageCode", message: string) {
+    super(message);
+    this.name = "LocationInputError";
+    this.field = field;
+  }
+}
+
+function selectedLanguage(countryCode: string, languageCode?: string | null): SerpLanguage | null {
+  const seed = countrySeed(countryCode);
+  const requested = languageCode?.trim() || seed?.languageCode;
+  return requested ? resolveSerpLanguage(requested) : null;
+}
+
+export function locationLanguage(countryCode: string, languageCode?: string | null): SerpLanguage {
+  const language = selectedLanguage(countryCode, languageCode);
+  if (!language) {
+    throw new LocationInputError(
+      "languageCode",
+      `Unsupported language: ${languageCode?.trim() || "(missing)"}`,
+    );
+  }
+  return language;
+}
+
 /** Stable dedup key. Country: "US". City: "US/US-TX/Austin" or "US/Texas/Austin". */
 export function canonicalKey(selector: LocationSelector): string {
   const country = selector.countryCode.trim().toUpperCase();
   const city = selector.cityName ? normalizePart(selector.cityName) : "";
+  let key = country;
   if (!city) {
-    return country;
+    key = country;
+  } else {
+    let region = "";
+    if (selector.regionCode) region = normalizePart(selector.regionCode).toUpperCase();
+    else if (selector.regionName) region = normalizePart(selector.regionName);
+    key = [country, region, city].filter((part) => part !== "").join("/");
   }
-  let region = "";
-  if (selector.regionCode) region = normalizePart(selector.regionCode).toUpperCase();
-  else if (selector.regionName) region = normalizePart(selector.regionName);
-  return [country, region, city].filter((part) => part !== "").join("/");
+
+  if (!selector.languageCode) {
+    return key;
+  }
+
+  const language = locationLanguage(country, selector.languageCode);
+  const defaultLanguage = countrySeed(country)?.languageCode;
+  return language.code === defaultLanguage ? key : `${key}@${language.code}`;
 }
 
 export function parseCanonicalKey(value: string): LocationSelector | null {
-  const parts = value
-    .trim()
+  const qualifiedParts = value.trim().split("@");
+  if (qualifiedParts.length > 2 || !qualifiedParts[0]) {
+    return null;
+  }
+  const [baseKey, rawLanguageCode] = qualifiedParts;
+  const languageCode = rawLanguageCode ? resolveSerpLanguage(rawLanguageCode)?.code : undefined;
+  if (rawLanguageCode !== undefined && !languageCode) {
+    return null;
+  }
+
+  const parts = baseKey
     .split("/")
     .map((part) => normalizePart(part))
     .filter(Boolean);
@@ -133,18 +190,38 @@ export function parseCanonicalKey(value: string): LocationSelector | null {
   if (!countryCode || !/^[A-Z]{2}$/.test(countryCode) || parts.length > 3) {
     return null;
   }
+  const language = languageCode ? { languageCode } : {};
   if (parts.length === 1) {
-    return { countryCode };
+    return { countryCode, ...language };
   }
   if (parts.length === 2) {
-    return { cityName: middle, countryCode };
+    return { cityName: middle, countryCode, ...language };
   }
   if (!cityName) {
     return null;
   }
   return /^[A-Z]{2}-[A-Z0-9]+$/.test(middle)
-    ? { cityName, countryCode, regionCode: middle }
-    : { cityName, countryCode, regionName: middle };
+    ? { cityName, countryCode, ...language, regionCode: middle }
+    : { cityName, countryCode, ...language, regionName: middle };
+}
+
+export function normalizeCanonicalLocationKey(value: string): {
+  canonicalKey: string;
+  selector: LocationSelector;
+} {
+  const atCount = value.split("@").length - 1;
+  if (atCount > 1) {
+    throw new LocationInputError("languageCode", "A location key accepts one language qualifier.");
+  }
+  const rawLanguageCode = value.includes("@") ? value.slice(value.indexOf("@") + 1) : null;
+  if (rawLanguageCode !== null && !resolveSerpLanguage(rawLanguageCode)) {
+    throw new LocationInputError("languageCode", `Unsupported language: ${rawLanguageCode}`);
+  }
+  const selector = parseCanonicalKey(value);
+  if (!selector) {
+    throw new LocationInputError("canonicalKey", `Unsupported location key: ${value}`);
+  }
+  return { canonicalKey: canonicalKey(selector), selector };
 }
 
 // Carry code-based and name-based provider handles plus gl/hl so adapters never

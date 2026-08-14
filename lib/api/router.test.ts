@@ -63,6 +63,7 @@ const mocks = vi.hoisted(() => {
       },
       keywordSchedule: { createMany: vi.fn(), upsert: vi.fn() },
       keywordTag: { createMany: vi.fn(), deleteMany: vi.fn() },
+      projectMarket: { findMany: vi.fn(), upsert: vi.fn() },
       projectDefaults: { findUnique: vi.fn() },
       providerConnection: {
         findUnique: vi.fn(),
@@ -100,6 +101,7 @@ const mocks = vi.hoisted(() => {
             hl: country === "Germany" ? "de" : "en",
             id: country === "Germany" ? "loc_de" : "loc_1",
             kind: "country",
+            languageCode: country === "Germany" ? "de" : "en",
             languageLabel: country === "Germany" ? "German" : "English",
             primaryGeoCode: null,
             primaryGeoName: country,
@@ -189,6 +191,11 @@ function keywordRow(id = "kw_a00000000000000000000000") {
     intent: "commercial",
     location: "United States",
     locationId: "loc_1",
+    locationRef: {
+      canonicalKey: "US",
+      languageCode: "en",
+      languageLabel: "English",
+    },
     project: { defaults: null },
     projectId: "project_1",
     publicId: id,
@@ -326,6 +333,10 @@ describe("public API router", () => {
     mocks.prisma.webhookEndpoint.findFirst.mockResolvedValue(webhookRow());
     mocks.prisma.webhookEndpoint.update.mockResolvedValue(webhookRow());
     mocks.prisma.keywordTag.createMany.mockResolvedValue({ count: 1 });
+    mocks.prisma.projectMarket.findMany.mockResolvedValue([]);
+    mocks.prisma.projectMarket.upsert.mockImplementation(({ create }) =>
+      Promise.resolve({ ...create, id: `project_market_${create.locationId}` }),
+    );
     mocks.prisma.projectDefaults.findUnique.mockResolvedValue(null);
     mocks.prisma.providerConnection.findUnique.mockResolvedValue(null);
     mocks.prisma.providerConnection.findMany.mockResolvedValue([]);
@@ -803,6 +814,7 @@ describe("public API router", () => {
         hl: "en",
         id: "loc_1",
         kind: "country",
+        languageCode: "en",
         languageLabel: "English",
         primaryGeoCode: null,
         primaryGeoName: "United States",
@@ -848,6 +860,7 @@ describe("public API router", () => {
         hl: "en",
         id: "loc_austin",
         kind: "city",
+        languageCode: "en",
         languageLabel: "English",
         primaryGeoCode: 1026201,
         primaryGeoName: "Austin",

@@ -4,6 +4,7 @@ import CompetitorsPage from "./page";
 
 const mocks = vi.hoisted(() => ({
   getCompetitorsView: vi.fn(),
+  getProjectMarkets: vi.fn(),
   getQueryActor: vi.fn(),
   getSavedView: vi.fn(),
   listSavedViews: vi.fn(),
@@ -16,6 +17,9 @@ vi.mock("@/lib/queries/_auth", () => ({
   resolveProjectAccess: mocks.resolveProjectAccess,
 }));
 vi.mock("@/lib/queries/competitors", () => ({ getCompetitorsView: mocks.getCompetitorsView }));
+vi.mock("@/lib/queries/project-markets", () => ({
+  getProjectMarkets: mocks.getProjectMarkets,
+}));
 vi.mock("@/lib/queries/saved-views", () => ({
   getSavedView: mocks.getSavedView,
   listSavedViews: mocks.listSavedViews,
@@ -37,6 +41,13 @@ describe("CompetitorsPage", () => {
     });
     mocks.getQueryActor.mockResolvedValue({ id: "actor-1" });
     mocks.getSavedView.mockResolvedValue(null);
+    mocks.getProjectMarkets.mockResolvedValue({
+      markets: [],
+      maxMarkets: 5,
+      monthlyCostCents: 0,
+      perMarketChecks: 0,
+      projectId: "prj_abcdefghijklmnopqrstuvwx",
+    });
     mocks.listSavedViews.mockResolvedValue([]);
     mocks.listWorkspaces.mockResolvedValue([
       {

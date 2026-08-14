@@ -111,7 +111,7 @@ export function PlanCard({
                 label="What would you pay per month?"
               />
               <div className="mt-1.5 flex flex-col gap-2 sm:flex-row sm:items-start">
-                <SettingsField className="flex items-center gap-2" width="sm">
+                <SettingsField className="flex items-center gap-2" width="field">
                   <span aria-hidden className="font-mono text-[13px] text-fg-muted">
                     $
                   </span>

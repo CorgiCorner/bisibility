@@ -194,7 +194,7 @@ export function NotificationEmailCard({
         title="Notification email"
       >
         <form id="notification-email-form" onSubmit={(event) => event.preventDefault()}>
-          <SettingsField width="md">
+          <SettingsField width="field">
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center gap-2">
                 <FieldLabel

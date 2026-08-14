@@ -5,6 +5,7 @@ const competitorPublicId = "cmp_aaaaaaaaaaaaaaaaaaaaaaaa";
 const projectPublicId = "prj_aaaaaaaaaaaaaaaaaaaaaaaa";
 
 const mocks = vi.hoisted(() => ({
+  fetchProjectKeywordVolumes: vi.fn(),
   prisma: {
     $queryRaw: vi.fn(),
     competitor: { findMany: vi.fn() },
@@ -20,6 +21,9 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
+vi.mock("@/lib/queries/keyword-metrics-query", () => ({
+  fetchProjectKeywordVolumes: mocks.fetchProjectKeywordVolumes,
+}));
 vi.mock("./_auth", () => ({ requireReadableProject: mocks.requireReadableProject }));
 
 const location = {
@@ -68,6 +72,7 @@ function detail(overrides: Record<string, unknown> = {}) {
 describe("competitors query", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.fetchProjectKeywordVolumes.mockResolvedValue(new Map([["keyword_1", 1_000]]));
     mocks.requireReadableProject.mockResolvedValue({ project: mocks.project });
     mocks.prisma.competitor.findMany.mockResolvedValue([
       {
@@ -105,6 +110,8 @@ describe("competitors query", () => {
       id: "kw_1",
       ranks: { "example.com": 6, "rankzly.io": 3 },
     });
+    expect(view.market?.observations[0]?.volume).toBe(1_000);
+    expect(mocks.fetchProjectKeywordVolumes).toHaveBeenCalledWith("project_1", 3);
     expect(mocks.prisma.keyword.findMany).toHaveBeenCalledTimes(2);
     expect(mocks.prisma.keyword.findMany.mock.calls[0]?.[0]).not.toHaveProperty("take");
     expect(mocks.prisma.keyword.findMany.mock.calls[1]?.[0]).toMatchObject({

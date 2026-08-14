@@ -1,3 +1,5 @@
+import { MAX_PROJECT_MARKETS } from "@/lib/markets/limits";
+import { normalizeCanonicalLocationKey } from "@/lib/serp/location";
 import {
   DEFAULT_SERP_DEVICE,
   DEFAULT_SERP_MARKET,
@@ -5,7 +7,7 @@ import {
   serpDeviceValues,
   serpMarketNames,
 } from "@/lib/serp/markets";
-import { isSupportedTimezone } from "@/lib/settings/timezones";
+import { isSupportedProjectTimezone } from "@/lib/settings/timezones";
 import { z } from "zod";
 import { serpDepthSchema } from "./serp-depth";
 
@@ -35,7 +37,17 @@ export const serpMarketNameSchema = z.preprocess(
 export const canonicalKeySchema = z
   .string()
   .trim()
-  .regex(/^[A-Z]{2}(\/[^/]{1,80}){0,2}$/);
+  .max(260)
+  .superRefine((value, ctx) => {
+    try {
+      normalizeCanonicalLocationKey(value);
+    } catch (error) {
+      ctx.addIssue({
+        code: "custom",
+        message: error instanceof Error ? error.message : "Choose a supported location.",
+      });
+    }
+  });
 
 export const locationSelectionSchema = z.union([
   z.object({ country: serpMarketNameSchema }),
@@ -105,7 +117,7 @@ export const keywordScheduleBaseSchema = z.object({
     .trim()
     .min(1)
     .max(80)
-    .refine(isSupportedTimezone, { message: "Select a valid time zone." })
+    .refine(isSupportedProjectTimezone, { message: "Select a valid time zone." })
     .default("UTC"),
 });
 
@@ -176,6 +188,7 @@ export const addKeywordsSchema = addKeywordSchema
 
 export const addKeywordsMatrixSchema = z
   .object({
+    consumeSavedIds: z.array(idSchema).max(500).optional(),
     devices: z.array(deviceSchema).min(1),
     keywords: z
       .array(z.string().trim().min(1).max(KEYWORD_TEXT_MAX))
@@ -243,7 +256,13 @@ export const runCheckNowSchema = z.object({
 });
 
 export const listFirstCheckCandidatesSchema = z.object({
-  limit: z.coerce.number().int().min(1).max(3).default(3),
+  keywordText: z.string().trim().min(1).max(KEYWORD_TEXT_MAX).optional(),
+  limit: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(MAX_PROJECT_MARKETS * serpDeviceValues.length)
+    .default(3),
   projectId: idSchema,
 });
 

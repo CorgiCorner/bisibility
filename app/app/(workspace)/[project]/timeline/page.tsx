@@ -34,7 +34,7 @@ export default async function TimelinePage({
       <TimelineFeed
         canCreate={canProjectAction(role, "create", "signal")}
         canDelete={canProjectAction(role, "delete", "signal")}
-        preferences={preferences}
+        dateFormat={preferences.dateFormat}
         projectId={publicId}
         projectRef={publicId}
         view={timeline}

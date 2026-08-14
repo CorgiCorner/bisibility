@@ -2,7 +2,7 @@ import { ToastProvider } from "@/components/ui";
 import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { KeywordHeaderCard } from "./KeywordHeaderCard";
 
 const mocks = vi.hoisted(() => ({
@@ -36,19 +36,8 @@ vi.mock("./keyword-history-export", () => ({
 vi.mock("./KeywordIndexStatus", () => ({
   KeywordIndexStatus: () => <p>Index status</p>,
 }));
-vi.mock("./KeywordEditDrawer", () => ({
-  KeywordEditDrawer: ({
-    open,
-    updateKeywordScheduleAction,
-  }: {
-    open: boolean;
-    updateKeywordScheduleAction?: unknown;
-  }) =>
-    open ? (
-      <p>
-        Edit drawer · {updateKeywordScheduleAction ? "Schedule enabled" : "Schedule unavailable"}
-      </p>
-    ) : null,
+vi.mock("./KeywordMarketsDrawer", () => ({
+  KeywordMarketsDrawer: () => <p>Markets and devices drawer</p>,
 }));
 vi.mock("@/components/keywords/add/AddKeywordDrawer", () => ({
   AddKeywordDrawer: ({
@@ -126,6 +115,7 @@ const keyword = {
     displayName: "United States",
     gl: "us",
     hl: "en",
+    languageLabel: "English",
   },
   locationName: "United States",
   rankingUrl: "https://example.com/rank-tracker",
@@ -137,6 +127,8 @@ const keyword = {
 function renderCard(overrides: Record<string, unknown> = {}) {
   const actions = {
     addKeywordsAction: vi.fn(),
+    addKeywordsMatrixAction: vi.fn(),
+    bulkDeleteAction: vi.fn(),
     createKeywordAlertAction: vi.fn(async () => ({})),
     runCheckNowAction: vi.fn(async () => ({ status: "running" })),
     updateKeywordAction: vi.fn(),
@@ -158,10 +150,28 @@ function renderCard(overrides: Record<string, unknown> = {}) {
 }
 
 describe("KeywordHeaderCard", () => {
-  beforeEach(() => vi.clearAllMocks());
+  const originalTZ = process.env.TZ;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    process.env.TZ = "UTC";
+  });
+
+  afterEach(() => {
+    if (originalTZ === undefined) delete process.env.TZ;
+    else process.env.TZ = originalTZ;
+  });
 
   it("starts a check, creates an alert, exports, and opens editing", async () => {
-    const actions = renderCard();
+    const actions = renderCard({
+      projectMarkets: {
+        markets: [],
+        maxMarkets: 5,
+        monthlyCostCents: 0,
+        perMarketChecks: 0,
+        projectId: "project_1",
+      },
+    });
     fireEvent.click(screen.getByRole("button", { name: "Run" }));
     expect(await screen.findByText("Check started (Top 100)")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Alert" }));
@@ -170,7 +180,8 @@ describe("KeywordHeaderCard", () => {
     fireEvent.click(screen.getByRole("button", { name: "Export" }));
     expect(mocks.exportHistoryCsv).toHaveBeenCalledWith(keyword);
     fireEvent.click(screen.getByRole("button", { name: "Edit" }));
-    expect(screen.getByText(/Edit drawer · Schedule enabled/)).toBeInTheDocument();
+    expect(screen.getByText("Markets and devices drawer")).toBeInTheDocument();
+    expect(screen.queryByText(/Edit drawer/)).not.toBeInTheDocument();
     expect(actions.runCheckNowAction).toHaveBeenCalledWith({
       depth: 100,
       keywordId: "keyword_1",
@@ -206,26 +217,28 @@ describe("KeywordHeaderCard", () => {
 
     const metadata = screen.getByLabelText("Keyword check metadata");
     expect(metadata).toHaveTextContent("Target /rank-tracker");
-    expect(metadata).toHaveTextContent("Ranking /rank-tracker Matches target");
+    expect(metadata).toHaveTextContent("Ranking /rank-tracker");
+    expect(metadata).toHaveTextContent("Matches target");
     expect(metadata).toHaveTextContent("Last check");
     expect(metadata).toHaveTextContent("Next check");
     expect(metadata).toHaveTextContent("DataForSEO");
   });
 
-  it("keeps the engine chip label to the engine while the external link retains its locale", () => {
+  it("keeps the live search link locale after removing the redundant engine chip", () => {
     renderCard();
 
-    expect(screen.getByTestId("dimension-engine")).toHaveTextContent("Google");
-    expect(screen.getByTestId("dimension-engine")).not.toHaveTextContent("/");
+    expect(screen.queryByTestId("dimension-engine")).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open live search results" })).toHaveAttribute(
+      "href",
+      expect.stringContaining("gl=us&hl=en"),
+    );
   });
 
-  it("opens tracking drawers with device and location prefills", () => {
+  it("renders the keyword market controls without the old location/device add flow", () => {
     renderCard();
-    fireEvent.click(screen.getByRole("button", { name: "Track device" }));
-    expect(screen.getByText("Drawer mobile United States")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Close drawer" }));
-    fireEvent.click(screen.getByRole("button", { name: "Track location" }));
-    expect(screen.getByText("Drawer desktop Poland")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /United States \/ English/ })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Track location" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Track device" })).not.toBeInTheDocument();
   });
 
   it("reports check and alert failures and prevents duplicate alert requests", async () => {
@@ -262,10 +275,18 @@ describe("KeywordHeaderCard", () => {
   it("works without an alert action or schedule editor", () => {
     renderCard({
       createKeywordAlertAction: undefined,
+      projectMarkets: {
+        markets: [],
+        maxMarkets: 5,
+        monthlyCostCents: 0,
+        perMarketChecks: 0,
+        projectId: "project_1",
+      },
       updateKeywordScheduleAction: undefined,
     });
     fireEvent.click(screen.getByRole("button", { name: "Alert" }));
     fireEvent.click(screen.getByRole("button", { name: "Edit" }));
-    expect(screen.getByText(/Edit drawer · Schedule unavailable/)).toBeInTheDocument();
+    expect(screen.getByText("Markets and devices drawer")).toBeInTheDocument();
+    expect(screen.queryByText(/Schedule/)).not.toBeInTheDocument();
   });
 });

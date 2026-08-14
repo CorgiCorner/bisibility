@@ -8,6 +8,7 @@ import { withPublicIdWrites } from "../lib/db/public-id-writes.ts";
 import {
   Device,
   PrismaClient,
+  ProjectMarketStatus,
   ProviderKind,
   ProviderStatus,
   RankCheckFrequency,
@@ -21,7 +22,7 @@ import {
   acmeCheckDates,
   acmeTagDefinitions,
 } from "../lib/sample-data/fixtures.ts";
-import { usLocationId } from "./location-seed.ts";
+import { seedDemoMarketLocations } from "./location-seed.ts";
 
 const datasourceUrl =
   process.env.DATABASE_URL ?? "postgresql://bisibility:bisibility@localhost:5432/bisibility";
@@ -155,12 +156,14 @@ async function upsertDefaults(projectId: string, lastCheckedAt: Date | null, nex
   });
 }
 
-async function upsertKeyword(projectId: string, item: SeedKeyword) {
+type SeedMarket = Awaited<ReturnType<typeof seedDemoMarketLocations>>[number];
+
+async function upsertKeyword(projectId: string, item: SeedKeyword, market: SeedMarket) {
   const publicId = seededPublicId("kw", `seed:${item.publicId}`);
   const data = {
     device: Device.desktop,
-    location: "United States",
-    locationId: await usLocationId(prisma),
+    location: market.displayName,
+    locationId: market.id,
     targetUrl: item.targetUrl ?? null,
     text: item.text,
   };
@@ -185,6 +188,32 @@ async function upsertKeyword(projectId: string, item: SeedKeyword) {
     create: { ...schedule, keywordId: keyword.id },
   });
   return keyword;
+}
+
+async function seedDemoProjectMarkets(projectId: string) {
+  const markets = await seedDemoMarketLocations(prisma);
+  await prisma.projectMarket.updateMany({
+    where: {
+      projectId,
+      locationId: { notIn: markets.map((market) => market.id) },
+    },
+    data: { status: ProjectMarketStatus.removed },
+  });
+  await Promise.all(
+    markets.map((market) =>
+      prisma.projectMarket.upsert({
+        where: { projectId_locationId: { locationId: market.id, projectId } },
+        update: { status: ProjectMarketStatus.active },
+        create: {
+          locationId: market.id,
+          projectId,
+          publicId: seededPublicId("pmkt", `seed:market:${projectId}:${market.canonicalKey}`),
+          status: ProjectMarketStatus.active,
+        },
+      }),
+    ),
+  );
+  return markets;
 }
 
 function isDirectRun() {
@@ -248,6 +277,7 @@ export async function seed() {
 
   const acme = await upsertWorkspace(owner.id, projects.acme);
   const newsite = await upsertWorkspace(owner.id, projects.newsite);
+  const demoMarkets = await seedDemoProjectMarkets(acme.id);
 
   const lastCheckedAt = new Date(acmeCheckDates[acmeCheckDates.length - 1]);
   const nextCheckAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
@@ -314,8 +344,8 @@ export async function seed() {
   });
 
   await prisma.rankCheck.deleteMany({ where: { keyword: { projectId: acme.id } } });
-  for (const item of acmeSeedKeywords) {
-    const keyword = await upsertKeyword(acme.id, item);
+  for (const [index, item] of acmeSeedKeywords.entries()) {
+    const keyword = await upsertKeyword(acme.id, item, demoMarkets[index % demoMarkets.length]);
     for (const tagName of item.tags ?? []) {
       const tagId = tagByName.get(tagName);
       if (tagId) {

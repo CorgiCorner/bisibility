@@ -111,6 +111,7 @@ export function competitorMarketData(
   keywords: QueryKeywordDetail[],
   latestByKeyword: Map<string, LatestRank>,
   legacyRanks: Map<string, OrganicDomainRank[]>,
+  volumes: Map<string, number | null>,
   ownDomain: string,
   managed: ManagedCompetitor[],
 ): CompetitorMarketData {
@@ -134,6 +135,7 @@ export function competitorMarketData(
         [ownDomain, ...managedDomains].map((domain) => [domain, ranks.get(domain) ?? null]),
       ),
       tags,
+      volume: volumes.get(keyword.id) ?? null,
     };
   });
   return {
@@ -145,6 +147,7 @@ export function competitorMarketData(
     device: option.device,
     engine: COMPETITOR_ENGINE,
     key: option.key,
+    languageLabel: option.languageLabel,
     location: option.location,
     locationId: option.locationId,
     locationKind: option.locationKind,

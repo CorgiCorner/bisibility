@@ -11,10 +11,7 @@ import {
   onboardingFormId,
 } from "@/components/onboarding/onboarding-form-utils";
 import { locationValuesForKeys } from "@/components/onboarding/onboarding-location-field";
-import {
-  DEFAULT_ONBOARDING_LOCATION_KEY,
-  locationSelectionInputForKey,
-} from "@/components/onboarding/onboarding-locations";
+import { locationSelectionInputForKey } from "@/components/onboarding/onboarding-locations";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import type { RankedKeywordConnection } from "@/lib/ranked-keywords/service";
 import { type AddKeywordsMatrixInput, KEYWORD_IMPORT_MAX } from "@/lib/schemas/keyword";
@@ -36,6 +33,7 @@ import {
   keywordSetupFormSchema,
   projectDefaultsInput,
 } from "./keyword-setup-model";
+import type { SaveOnboardingMarketsAction } from "./OnboardingMarkets";
 import {
   type AddKeywordsForm,
   keywordDraftMessage,
@@ -56,6 +54,7 @@ type CreatedKeyword = { id: string; publicId: string };
 type StepAddKeywordsProps = {
   addKeywordsAction?: (input: AddKeywordsInput) => Promise<{
     created: number;
+    keywordCount?: number;
     keywords: CreatedKeyword[];
     skippedDuplicates: number;
     warnings?: string[];
@@ -71,12 +70,14 @@ type StepAddKeywordsProps = {
   onComplete?: (
     values: AddKeywordsForm,
     defaults: OnboardingTrackingDefaultsInput,
-    createdCount: number,
+    keywordCount: number,
     warning?: string | null,
   ) => void;
   onKeywordsChange?: (keywords: string) => void;
+  onMarketsChange?: (locations: string[]) => void;
   projectDomain?: string;
   rankedKeywordConnections?: RankedKeywordConnection[];
+  saveMarketsAction?: SaveOnboardingMarketsAction;
   trackingDefaults?: OnboardingTrackingDefaultsInput;
   updateProjectDefaultsAction?: (input: ProjectDefaultsInput) => Promise<unknown>;
 };
@@ -100,8 +101,10 @@ export function StepAddKeywords({
   importTopQueriesAction,
   onComplete,
   onKeywordsChange,
+  onMarketsChange,
   projectDomain = "your site",
   rankedKeywordConnections = [],
+  saveMarketsAction,
   trackingDefaults,
   updateProjectDefaultsAction,
 }: Readonly<StepAddKeywordsProps>) {
@@ -133,7 +136,7 @@ export function StepAddKeywords({
   });
   const keywords = watch("keywords") ?? "";
   const projectId = watch("projectId") ?? flowState?.projectId ?? "";
-  const locations = watch("locations") ?? [DEFAULT_ONBOARDING_LOCATION_KEY];
+  const locations = watch("locations") ?? formDefaults.locations;
   const devices = watch("devices") ?? [DEFAULT_SERP_DEVICE];
   const frequency = watch("frequency");
   const serpDepth = watch("serpDepth");
@@ -169,6 +172,7 @@ export function StepAddKeywords({
     const defaults = completedTrackingDefaults(values, selectedLocations);
     const submitted = keywordDraftPreview(values.keywords);
     try {
+      await saveMarketsAction?.({ marketKeys: values.locations, projectId: values.projectId });
       await updateProjectDefaultsAction?.(projectDefaultsInput(defaults));
       if (!addKeywordsAction) {
         onComplete?.(keywordFormValues(values), defaults, submitted.uniqueKeywords.length);
@@ -186,7 +190,12 @@ export function StepAddKeywords({
         setActionSuccess(`${result.created} added, ${result.skippedDuplicates} already tracked`);
         setActionWarning(warning);
         await new Promise((resolve) => setTimeout(resolve, 0));
-        onComplete?.(keywordFormValues(values), defaults, result.created, warning);
+        onComplete?.(
+          keywordFormValues(values),
+          defaults,
+          result.keywordCount ?? submitted.uniqueKeywords.length,
+          warning,
+        );
       }
       if (!onComplete) router.push(buildOnboardingStepHref(4, { ...flowState, projectId }));
     } catch (cause) {
@@ -258,15 +267,13 @@ export function StepAddKeywords({
           setValue("frequency", value, { shouldDirty: true })
         }
         onLocationsChange={(next) => {
+          const locationKeys = next.map((item) => item.canonicalKey);
           setSelectedLocations(next);
-          setValue(
-            "locations",
-            next.map((item) => item.canonicalKey),
-            {
-              shouldDirty: true,
-              shouldValidate: true,
-            },
-          );
+          setValue("locations", locationKeys, {
+            shouldDirty: true,
+            shouldValidate: true,
+          });
+          onMarketsChange?.(locationKeys);
         }}
         serpDepth={serpDepth}
       />

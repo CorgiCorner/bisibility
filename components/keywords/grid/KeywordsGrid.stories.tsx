@@ -46,7 +46,7 @@ const actionArgs = {
 const meta = {
   title: "Keywords/Workspace",
   component: KeywordsGrid,
-  parameters: { layout: "fullscreen" },
+  parameters: { layout: "fullscreen", nextjs: { appDirectory: true } },
   decorators: [
     (Story) => (
       <SessionSpendProvider>
@@ -164,5 +164,69 @@ export const CityLens: Story = {
     lens: { device: "desktop", locationId: "loc_us_austin" },
     projectId: "prj_7Kd2Qf9m",
     rows: keywordRows,
+  },
+};
+
+const marketLocations = [
+  {
+    canonicalKey: "country:us@en",
+    cityName: null,
+    countryCode: "US",
+    displayName: "United States",
+    gl: "us",
+    hl: "en",
+    id: "country:us@en",
+    kind: "country" as const,
+    languageLabel: "English",
+  },
+  {
+    canonicalKey: "country:es@es",
+    cityName: null,
+    countryCode: "ES",
+    displayName: "Spain",
+    gl: "es",
+    hl: "es",
+    id: "country:es@es",
+    kind: "country" as const,
+    languageLabel: "Spanish",
+  },
+  {
+    canonicalKey: "country:es@en",
+    cityName: null,
+    countryCode: "ES",
+    displayName: "Spain",
+    gl: "es",
+    hl: "en",
+    id: "country:es@en",
+    kind: "country" as const,
+    languageLabel: "English",
+  },
+];
+
+const groupedMarketRows = keywordRows.slice(0, 2).flatMap((source, keywordIndex) =>
+  marketLocations.flatMap((location, marketIndex) =>
+    ["Desktop", "Mobile"].map((device, deviceIndex) => ({
+      ...source,
+      device,
+      id: `${source.id}-${marketIndex}-${deviceIndex}`,
+      location,
+      locationName: `${location.displayName} / ${location.languageLabel}`,
+      position: source.position + marketIndex + deviceIndex,
+      positionBaseline:
+        source.positionBaseline == null
+          ? null
+          : source.positionBaseline + keywordIndex + marketIndex,
+      rankingUrl: `https://example.com/${keywordIndex}/${marketIndex}/${deviceIndex}`,
+      volume: marketIndex === 2 ? 0 : source.volume + marketIndex * 500,
+      volumeKnown: marketIndex !== 2,
+    })),
+  ),
+);
+
+export const GroupedMarkets: Story = {
+  args: {
+    ...actionArgs,
+    projectId: "prj_7Kd2Qf9m",
+    rows: groupedMarketRows,
   },
 };

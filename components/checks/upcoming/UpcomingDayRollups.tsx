@@ -1,16 +1,16 @@
 "use client";
 
+import { ZonedTime } from "@/components/ui";
 import type { UpcomingDayGroup } from "@/lib/checks/contract";
 import { CaretDownIcon as CaretDown, CaretRightIcon as CaretRight } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useState } from "react";
-import { formatCheckCount, formatEstimatedCost, fuzzySampleTime } from "./upcoming-format";
+import { formatCheckCount, formatEstimatedCost } from "./upcoming-format";
 
 export type UpcomingDayRollupsProps = {
   days: UpcomingDayGroup[];
   initialExpandedDayKey?: string;
   mode: "rail" | "slim";
-  now: Date;
   schedulesHref: string;
   timeZone: string;
 };
@@ -34,11 +34,7 @@ function DaySummary({ day }: Readonly<{ day: UpcomingDayGroup }>) {
   );
 }
 
-function SampleRows({
-  day,
-  now,
-  timeZone,
-}: Readonly<{ day: UpcomingDayGroup; now: Date; timeZone: string }>) {
+function SampleRows({ day, timeZone }: Readonly<{ day: UpcomingDayGroup; timeZone: string }>) {
   return (
     <ul className="m-0 list-none space-y-2 border-border-soft border-t px-3.5 py-3">
       {day.samples.slice(0, 3).map((sample) => (
@@ -48,7 +44,7 @@ function SampleRows({
         >
           <span className="truncate text-fg-muted">{sample.keyword}</span>
           <span className="shrink-0 font-mono text-[10.5px] text-fg-muted">
-            {fuzzySampleTime(sample.nextCheckAt, day.label, now, timeZone)}
+            <ZonedTime timeZone={timeZone} value={sample.nextCheckAt} />
           </span>
         </li>
       ))}
@@ -60,7 +56,6 @@ export function UpcomingDayRollups({
   days,
   initialExpandedDayKey,
   mode,
-  now,
   schedulesHref,
   timeZone,
 }: Readonly<UpcomingDayRollupsProps>) {
@@ -116,7 +111,7 @@ export function UpcomingDayRollups({
             </button>
             {expanded ? (
               <div id={detailsId}>
-                <SampleRows day={day} now={now} timeZone={timeZone} />
+                <SampleRows day={day} timeZone={timeZone} />
                 <div className="border-border-soft border-t px-3.5 py-2.5">
                   <Link className={manageLinkClassName} href={schedulesHref}>
                     Manage schedules in Keywords

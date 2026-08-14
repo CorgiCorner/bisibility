@@ -29,6 +29,7 @@ export async function searchApiLocations(ctx: LocationApiContext) {
       display_name: candidate.display_name,
       hl: candidate.hl,
       kind: candidate.kind,
+      language_code: candidate.language_code,
       language_label: candidate.language_label,
       location_key: candidate.canonical_key,
       region_code: candidate.region_code,

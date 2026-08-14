@@ -9,6 +9,10 @@ import {
 } from "@/lib/provider-lookups/paid-call";
 import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
 import type { SerpRankLocation } from "@/lib/serp/location";
+import {
+  researchProviderLanguageCode,
+  researchProviderLocation,
+} from "@/lib/serp/market-capability";
 import type { DomainOverviewSource } from "./context";
 import type { DomainOverviewMarket, DomainOverviewScope } from "./types";
 
@@ -57,13 +61,7 @@ function paidCallInput(input: {
 }
 
 function providerLocation(market: DomainOverviewMarket): SerpRankLocation {
-  return {
-    gl: "",
-    hl: market.languageCode,
-    primaryGeoCode: market.locationCode,
-    primaryGeoName: "",
-    secondaryGeoName: "",
-  };
+  return researchProviderLocation(market);
 }
 
 function providerTarget(
@@ -72,9 +70,10 @@ function providerTarget(
     target: string;
   },
 ) {
+  const languageCode = researchProviderLanguageCode(input.countryCode ?? "", input.languageCode);
   return {
     includeSubdomains: input.scope === "root",
-    languageCode: input.languageCode,
+    languageCode,
     location: providerLocation(input),
     locationCode: input.locationCode,
     target: input.target,
@@ -149,12 +148,13 @@ export function fetchDomainKeywords(
     target: string;
   },
 ) {
+  const languageCode = researchProviderLanguageCode(input.countryCode ?? "", input.languageCode);
   return paidProviderCall({
     ...paidCallInput(input),
     call: (credentials) =>
       input.source.provider.fetchRankedKeywords(credentials, {
         domain: input.target,
-        languageCode: input.languageCode,
+        languageCode,
         limit: input.limit,
         location: providerLocation(input),
         locationCode: input.locationCode,

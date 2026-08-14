@@ -1,4 +1,5 @@
 import { hasUrlMismatch } from "@/lib/alerts/url-mismatch";
+import { marketGridParent } from "@/lib/keywords/market-grid-model";
 import { pathFromUrl } from "@/lib/queries/keyword-row-format";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import Tooltip from "@mui/material/Tooltip";
@@ -40,6 +41,16 @@ function MatchStatus({ row }: Readonly<{ row: KeywordRow }>) {
 }
 
 export function TargetRankingCell({ row }: Readonly<TargetRankingCellProps>) {
+  const parent = marketGridParent(row);
+  if (parent && parent.aggregate.rankingUrls.length > 1) {
+    return (
+      <Tooltip title={parent.aggregate.rankingUrls.join("\n")}>
+        <span className="font-mono text-[11.5px] text-fg-muted">
+          {parent.aggregate.rankingUrls.length} URLs
+        </span>
+      </Tooltip>
+    );
+  }
   const rankingLabel = row.rankingUrl
     ? pathFromUrl(row.rankingUrl)
     : row.checkState === "never_checked"

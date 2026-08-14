@@ -1,6 +1,7 @@
 "use client";
 
 import { SettingsCard } from "@/components/settings/shell/SettingsCard";
+import { SettingsField } from "@/components/settings/shell/settings-field-widths";
 import { trackingCardGeometryClassNames } from "@/components/settings/tracking/tracking-settings-layout";
 import { FieldLabel } from "@/components/ui";
 import { updatePresenceInspectionBudget } from "@/lib/actions/presence-settings";
@@ -61,7 +62,7 @@ export function UrlInspectionCard({
     >
       <form onSubmit={(event) => event.preventDefault()}>
         <fieldset className="contents" disabled={!canEdit}>
-          <div className="max-w-[240px]">
+          <SettingsField width="field">
             <FieldLabel
               className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted"
               htmlFor="inspection-daily-limit"
@@ -81,7 +82,7 @@ export function UrlInspectionCard({
                 {form.formState.errors.inspectionDailyLimit.message}
               </p>
             ) : null}
-          </div>
+          </SettingsField>
         </fieldset>
         <p className="m-0 mt-4 text-[12px] leading-[1.55] text-fg-muted">
           Google allows 2,000 inspections per day per property, shared across every tool using it.

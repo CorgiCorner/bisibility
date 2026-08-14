@@ -24,6 +24,7 @@ function requirePathId(path: string[], index: number, prefix: PublicIdPrefix) {
 }
 
 type AlertRulePublicIdInput = {
+  marketIds?: string[];
   recipientIds?: string[];
   targetIds: string[];
   targetType: "all" | "keyword" | "tag";
@@ -31,6 +32,7 @@ type AlertRulePublicIdInput = {
 
 /** Reject raw alert-rule body identifiers at the REST boundary. */
 export function requireApiAlertRulePublicIds(input: AlertRulePublicIdInput) {
+  for (const marketId of input.marketIds ?? []) requireApiPublicId(marketId, "pmkt");
   for (const recipientId of input.recipientIds ?? []) requireApiPublicId(recipientId, "usr");
   if (input.targetType === "all" && input.targetIds.length > 0) {
     throw new ApiInputError("All-target rules cannot include target IDs.", "bad_request");

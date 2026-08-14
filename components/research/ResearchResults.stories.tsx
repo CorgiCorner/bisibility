@@ -107,3 +107,22 @@ export const CachedPartialResult: Story = {
     seed: "seo tools",
   },
 };
+
+export const OffCatalogMetricsUnavailable: Story = {
+  args: {
+    ...CachedPartialResult.args,
+    defaultTracking: {
+      ...CachedPartialResult.args.defaultTracking,
+      location: {
+        canonicalKey: "ES@en",
+        countryCode: "ES",
+        displayName: "Spain - English",
+        hl: "en",
+        kind: "country",
+        languageLabel: "English",
+      },
+    },
+    metricsAvailable: false,
+    trackingMarketCount: 3,
+  },
+};

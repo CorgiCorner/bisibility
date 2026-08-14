@@ -1,0 +1,152 @@
+---
+title: "Markets and languages"
+description: "Understand the location and language pairs used for rank tracking and research."
+---
+
+A market is a location and language pair. A tracked target adds a device, so
+one keyword can have separate desktop and mobile targets for each market.
+Google is the current search engine.
+
+Position tracking accepts every country and language listed below. The app
+suggests the languages commonly used in a selected country first, but **More
+languages** exposes the complete language list. Suggestions are a convenience,
+not a validation limit.
+
+## Location key syntax
+
+Canonical location keys accept an optional `@language` qualifier:
+
+```text
+US
+ES/Andalusia/Malaga@en
+```
+
+The language code comes from the supported-language list below. An unqualified
+key uses the country's default language. Supplying that same default explicitly
+resolves to the same canonical row, so `ES` and `ES@es` both normalize to `ES`.
+
+Pass a qualified `location_key` to create or update a keyword. The keyword
+resource returns `location_key`, `language_code`, and `language_label` so clients
+do not need to reconstruct the market from display text.
+
+## Supported countries
+
+These countries can be used for position tracking. The default language is used
+when a location key has no `@language` qualifier.
+
+<!-- supported-market-catalog:start -->
+| Country | ISO code | Default language |
+| - | - | - |
+| United States | `US` | English (`en`) |
+| United Kingdom | `GB` | English (`en`) |
+| Canada | `CA` | English (`en`) |
+| Australia | `AU` | English (`en`) |
+| Germany | `DE` | German (`de`) |
+| France | `FR` | French (`fr`) |
+| Spain | `ES` | Spanish (`es`) |
+| Italy | `IT` | Italian (`it`) |
+| Netherlands | `NL` | Dutch (`nl`) |
+| Sweden | `SE` | Swedish (`sv`) |
+| Poland | `PL` | Polish (`pl`) |
+| Ireland | `IE` | English (`en`) |
+| Portugal | `PT` | Portuguese (`pt`) |
+| Belgium | `BE` | Dutch (`nl`) |
+| Switzerland | `CH` | German (`de`) |
+| Austria | `AT` | German (`de`) |
+| Denmark | `DK` | Danish (`da`) |
+| Norway | `NO` | Norwegian (`no`) |
+| Finland | `FI` | Finnish (`fi`) |
+| Brazil | `BR` | Portuguese (`pt`) |
+| Mexico | `MX` | Spanish (`es`) |
+| India | `IN` | English (`en`) |
+| Japan | `JP` | Japanese (`ja`) |
+| Singapore | `SG` | English (`en`) |
+| New Zealand | `NZ` | English (`en`) |
+| South Africa | `ZA` | English (`en`) |
+| United Arab Emirates | `AE` | English (`en`) |
+<!-- supported-market-catalog:end -->
+
+## Supported languages
+
+These language codes can qualify any supported country, region, or city key for
+position tracking.
+
+<!-- supported-language-catalog:start -->
+Luo (`ach`) · Afrikaans (`af`) · Akan (`ak`) · Amharic (`am`)
+
+Arabic (`ar`) · Azeri (`az`) · Belarusian (`be`) · IciBemba (`bem`)
+
+Bulgarian (`bg`) · Bengali (`bn`) · Bosnian (`bs`) · Catalan (`ca`)
+
+Kurdish (`ckb`) · Kreol Seselwa (`crs`) · Czech (`cs`) · Welsh (`cy`)
+
+Danish (`da`) · German (`de`) · Ewe (`ee`) · Greek (`el`)
+
+English (`en`) · Spanish (`es`) · Espanol (Latinoamerica) (`es-419`) · Estonian (`et`)
+
+Basque (`eu`) · Farsi (`fa`) · Finnish (`fi`) · Faroese (`fo`)
+
+French (`fr`) · Frisian (`fy`) · Irish (`ga`) · Ga (`gaa`)
+
+Galician (`gl`) · Gujarati (`gu`) · Hausa (`ha`) · Hebrew (`he`)
+
+Hindi (`hi`) · Croatian (`hr`) · Haitian (`ht`) · Hungarian (`hu`)
+
+Armenian (`hy`) · Indonesian (`id`) · Igbo (`ig`) · Icelandic (`is`)
+
+Italian (`it`) · Hebrew (old) (`iw`) · Japanese (`ja`) · Georgian (`ka`)
+
+Kongo (`kg`) · Kazakh (`kk`) · Khmer (`km`) · Kannada (`kn`)
+
+Korean (`ko`) · Krio (`kri`) · Kyrgyz (`ky`) · Ganda (`lg`)
+
+Lingala (`ln`) · Lao (`lo`) · Silozi (`loz`) · Lithuanian (`lt`)
+
+Tshiluba (`lua`) · Latvian (`lv`) · Kreol morisien (`mfe`) · Malagasy (`mg`)
+
+Maori (`mi`) · Macedonian (`mk`) · Malayam (`ml`) · Mongolian (`mn`)
+
+Marathi (`mr`) · Malay (`ms`) · Maltese (`mt`) · Burmese (`my`)
+
+Nepali (`ne`) · Dutch (`nl`) · Norwegian (`no`) · Northern Sotho (`nso`)
+
+Chichewa (`ny`) · Nyankole (`nyn`) · Oromo (`om`) · Punjabi (`pa`)
+
+Pidgin (`pcm`) · Polish (`pl`) · Pashto (`ps`) · Portuguese (`pt`) · Portuguese (Brazil) (`pt-br`) · Portuguese (Portugal) (`pt-pt`)
+
+Quechua (`qu`) · Romansh (`rm`) · Kirundi (`rn`) · Romanian (`ro`)
+
+Russian (`ru`) · Kinyarwanda (`rw`) · Sindhi (`sd`) · Sinhalese (`si`)
+
+Slovak (`sk`) · Slovenian (`sl`) · Shona (`sn`) · Somali (`so`)
+
+Albanian (`sq`) · Serbian (`sr`) · Montenegro (`sr-me`) · Sesotho (`st`) · Swedish (`sv`)
+
+Swahili (`sw`) · Tamil (`ta`) · Telugu (`te`) · Tajik (`tg`)
+
+Thai (`th`) · Tigrinya (`ti`) · Turkmen (`tk`) · Tagalog (`tl`)
+
+Tswana (`tn`) · Tonga (Tonga Islands) (`to`) · Turkish (`tr`) · Tumbuka (`tum`)
+
+Ukrainian (`uk`) · Urdu (`ur`) · Uzbek (`uz`) · Vietnamese (`vi`)
+
+Wolof (`wo`) · Xhosa (`xh`) · Yoruba (`yo`) · Chinese (Simplified) (`zh-cn`) · Chinese (Traditional) (`zh-tw`) · Zulu (`zu`)
+<!-- supported-language-catalog:end -->
+
+## Research capability
+
+Rank checks and Research do not have the same availability boundary. Position
+tracking accepts every supported country-language pair above. Research metrics
+use DataForSEO Labs, whose catalog supports a smaller set of pairs and works at
+country scope. A city or region market is therefore translated to its country
+while retaining its language for Research.
+
+If Labs does not support that country-language pair, bisibility does not
+substitute another country's data. The app keeps position tracking available and
+shows Research metrics as `n/a`.
+
+Keyword metrics come from the provider's `keyword_overview` package. Capability
+is all-or-nothing for that request: an unsupported pair makes the entire metrics
+bundle unavailable, including volume, trend, CPC, competition, difficulty, and
+intent. The API reports `unsupported_location` instead of returning mixed or
+substituted metrics.

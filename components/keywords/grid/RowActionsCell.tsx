@@ -2,6 +2,7 @@
 
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
 import { useToast } from "@/components/ui";
+import { marketGridParent } from "@/lib/keywords/market-grid-model";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { appPath } from "@/lib/routing/app-path";
 import IconButton from "@mui/material/IconButton";
@@ -44,14 +45,15 @@ export function rowActionsColumn(
     field: "actions",
     filterable: false,
     headerName: "",
-    renderCell: ({ row }) => (
-      <RowActionsCell
-        {...callbacks}
-        checkPending={pendingCheckIds.has(row.id)}
-        projectRef={projectRef}
-        row={row}
-      />
-    ),
+    renderCell: ({ row }) =>
+      marketGridParent(row) ? null : (
+        <RowActionsCell
+          {...callbacks}
+          checkPending={pendingCheckIds.has(row.id)}
+          projectRef={projectRef}
+          row={row}
+        />
+      ),
     resizable: false,
     sortable: false,
     width: 52,

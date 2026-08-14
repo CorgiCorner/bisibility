@@ -19,11 +19,11 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Expanded: Story = {
-  args: { activeHref: appPath("prj_1", "overview"), projectRef: "prj_1" },
+  args: { activeHref: appPath("prj_1", "dashboard"), projectRef: "prj_1" },
 };
 
 export const Collapsed: Story = {
-  args: { activeHref: appPath("prj_1", "overview"), collapsed: true, projectRef: "prj_1" },
+  args: { activeHref: appPath("prj_1", "dashboard"), collapsed: true, projectRef: "prj_1" },
   decorators: [
     (Story) => (
       <div className="w-[72px] bg-bg-elev p-3 text-fg">

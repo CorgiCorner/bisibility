@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   prisma: {
     alertRule: { findMany: vi.fn() },
     keyword: { findMany: vi.fn() },
+    projectMarket: { findMany: vi.fn() },
     tag: { findMany: vi.fn() },
     triggeredAlert: { findMany: vi.fn() },
     user: { findMany: vi.fn() },
@@ -30,6 +31,7 @@ const rule = {
   enabled: true,
   fires: "0 this week",
   id: "rule_db_1",
+  marketIds: [],
   name: "Rank drop",
   period: "Each check",
   recipientIds: ["user_db_1"],
@@ -82,6 +84,7 @@ describe("REST alert resources", () => {
     mocks.prisma.keyword.findMany.mockResolvedValue([
       { id: "keyword_db_1", publicId: "kw_a00000000000000000000000" },
     ]);
+    mocks.prisma.projectMarket.findMany.mockResolvedValue([]);
     mocks.prisma.tag.findMany.mockResolvedValue([]);
     mocks.prisma.user.findMany.mockResolvedValue([
       { id: "user_db_1", publicId: "usr_a00000000000000000000000" },

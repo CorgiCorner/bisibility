@@ -114,8 +114,10 @@ function highlightRow(keyword: KeywordFixture, note: string): HighlightRow {
   const change = keyword.previousPosition - keyword.position;
 
   return {
+    device: "desktop",
     id: keywordId(keyword.keyword),
     keyword: keyword.keyword,
+    marketLabel: "United States / English",
     note,
     positionText: `#${keyword.position}`,
     delta:
@@ -153,8 +155,10 @@ const needsAttention = byGain
   );
 
 needsAttention.push({
+  device: "desktop",
   id: "kw_edge_function_logs",
   keyword: "edge function logs",
+  marketLabel: "United States / English",
   note: "Provider check failed · retry",
   positionText: "No data",
   positionTone: "danger",
@@ -168,6 +172,7 @@ const newTop10 = keywords
 
 export const overviewFixture = {
   addedThisMonth: 12,
+  byMarket: [],
   kpis: [
     { label: "Avg. position", value: "7.0", delta: "▼ 1.3", deltaTone: "positive" },
     { label: "Tracked keywords", value: "248", delta: "+12", deltaTone: "neutral" },
@@ -234,6 +239,11 @@ export const overviewFixture = {
     availableTags: ["Docs", "Product"],
     device: "All devices",
     deviceValue: "all",
+    marketOptions: [
+      { label: "Spain", secondary: "Spanish", value: "loc_es_es" },
+      { label: "Belgium", secondary: "Dutch", value: "loc_be_nl" },
+    ],
+    marketValues: [],
     range: "Last 28 days",
     rangeValue: "28d",
     refresh: "Daily",

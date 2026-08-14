@@ -2,13 +2,12 @@ import "server-only";
 
 import { listPersonalTokens, tierFromScopes } from "@/lib/api/pat-service";
 import { parsePublicId } from "@/lib/db/public-id";
-import { createUserDateTimeFormatter, type DateTimePreferences } from "@/lib/format/user-datetime";
 
 export type PersonalTokenData = {
-  createdLabel: string;
-  expiresLabel: string;
+  createdAt: string;
+  expiresAt: string | null;
   id: string;
-  lastUsedLabel: string;
+  lastUsedAt: string | null;
   maskedValue: string;
   name: string;
   scope: "admin" | "read" | "write";
@@ -21,31 +20,18 @@ function requiredPublicId(value: string | null) {
   return value;
 }
 
-export async function getPersonalTokens(
-  userId: string,
-  options: { preferences?: Partial<DateTimePreferences> } = {},
-): Promise<PersonalTokenData[]> {
-  const dateTime = createUserDateTimeFormatter(options.preferences);
+export async function getPersonalTokens(userId: string): Promise<PersonalTokenData[]> {
   const tokens = await listPersonalTokens(userId);
 
   return tokens
     .filter((token) => !token.revokedAt)
-    .map((token) => {
-      let expiresLabel = "never expires";
-      if (token.expiresAt) {
-        const prefix = token.expiresAt <= new Date() ? "expired" : "expires";
-        expiresLabel = `${prefix} ${dateTime.formatDate(token.expiresAt)}`;
-      }
-      return {
-        createdLabel: `created ${dateTime.formatDate(token.createdAt)}`,
-        expiresLabel,
-        id: requiredPublicId(token.publicId),
-        lastUsedLabel: token.lastUsedAt
-          ? `last used ${dateTime.formatDate(token.lastUsedAt)}`
-          : "never used",
-        maskedValue: `${token.prefix}******`,
-        name: token.name,
-        scope: tierFromScopes(token.scopes),
-      };
-    });
+    .map((token) => ({
+      createdAt: token.createdAt.toISOString(),
+      expiresAt: token.expiresAt?.toISOString() ?? null,
+      id: requiredPublicId(token.publicId),
+      lastUsedAt: token.lastUsedAt?.toISOString() ?? null,
+      maskedValue: `${token.prefix}******`,
+      name: token.name,
+      scope: tierFromScopes(token.scopes),
+    }));
 }

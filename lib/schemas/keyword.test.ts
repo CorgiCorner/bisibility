@@ -62,6 +62,22 @@ describe("SERP keyword schemas", () => {
     expect(() => keywordScheduleUpdateSchema.parse({ ...schedule, timezone: "warsaw" })).toThrow(
       "Select a valid time zone.",
     );
+    expect(() =>
+      keywordScheduleUpdateSchema.parse({ ...schedule, timezone: "Mars/Olympus" }),
+    ).toThrow("Select a valid time zone.");
+  });
+
+  it("rejects values absent from the strict allowlist at the project defaults boundary", () => {
+    const schedule = {
+      cronExpression: null,
+      frequency: "daily",
+      jitterMinutes: 0,
+      projectId: "prj_1",
+    };
+
+    expect(() => projectDefaultsSchema.parse({ ...schedule, timezone: "Etc/GMT+5" })).toThrow(
+      "Select a valid time zone.",
+    );
   });
 
   it("normalizes supported country aliases to canonical market names", () => {
@@ -119,6 +135,10 @@ describe("SERP keyword schemas", () => {
     expect(canonicalKeySchema.parse("US")).toBe("US");
     expect(canonicalKeySchema.parse("US/Texas/Austin")).toBe("US/Texas/Austin");
     expect(canonicalKeySchema.parse("US/US-TX/Austin")).toBe("US/US-TX/Austin");
+    expect(canonicalKeySchema.parse("ES/Andalusia/Malaga@en")).toBe("ES/Andalusia/Malaga@en");
+    expect(canonicalKeySchema.parse("ES/Andalusia/Malaga@es-419")).toBe(
+      "ES/Andalusia/Malaga@es-419",
+    );
     expect(locationSelectionSchema.parse({ country: "US" })).toEqual({
       country: "United States",
     });
@@ -127,6 +147,12 @@ describe("SERP keyword schemas", () => {
     });
     expect(() => canonicalKeySchema.parse("us/texas/austin")).toThrow();
     expect(() => locationSelectionSchema.parse({ locationKey: "US/Texas/Austin/Extra" })).toThrow();
+    expect(() => canonicalKeySchema.parse("ES/Andalusia/Malaga@made-up")).toThrow(
+      "Unsupported language",
+    );
+    expect(() => canonicalKeySchema.parse("ES/Andalusia/Malaga@en@es")).toThrow(
+      "one language qualifier",
+    );
   });
 
   it("accepts canonical location keys on keyword add and update inputs", () => {

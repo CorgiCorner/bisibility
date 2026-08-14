@@ -63,6 +63,11 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
+        destination: "/app/:project/keyword-research",
+        permanent: true,
+        source: "/app/:project/research",
+      },
+      {
         // Retired duplicate of the audit log in settings.
         destination: "/app/settings/audit",
         permanent: false,

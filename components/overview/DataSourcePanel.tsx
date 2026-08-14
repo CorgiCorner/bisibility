@@ -1,6 +1,6 @@
 import { Card, MonoText, SectionTitle } from "@/components/ui";
 import { InfoIcon as Info } from "@phosphor-icons/react/dist/ssr";
-import { dataSourceStatusColor } from "./data-source-status";
+import { DataSourceStatusBadge } from "./DataSourceStatusBadge";
 import type { DataSourceHealth } from "./types";
 
 export type DataSourcePanelProps = {
@@ -12,7 +12,6 @@ export type DataSourcePanelProps = {
 };
 
 export function DataSourcePanel({ checkHealth, health }: Readonly<DataSourcePanelProps>) {
-  const statusColor = dataSourceStatusColor(health.status);
   const metrics = checkHealth
     ? [...health.metrics, { label: "Failed (24h)", value: String(checkHealth.failed24h.count) }]
     : health.metrics;
@@ -25,20 +24,7 @@ export function DataSourcePanel({ checkHealth, health }: Readonly<DataSourcePane
           <MonoText muted>{health.description}</MonoText>
         </div>
         <div className="flex flex-wrap justify-end gap-2">
-          <span
-            className="inline-flex flex-none items-center gap-[7px] rounded-full px-[11px] py-1.5 font-mono text-[11.5px] font-semibold"
-            style={{
-              backgroundColor: `color-mix(in srgb, ${statusColor} 12%, transparent)`,
-              color: statusColor,
-            }}
-          >
-            <span
-              className="h-[7px] w-[7px] rounded-full"
-              style={{ backgroundColor: statusColor }}
-              aria-hidden
-            />
-            {health.status}
-          </span>
+          <DataSourceStatusBadge status={health.status} />
           {checkHealth?.budget.exhausted ? (
             <span
               className="inline-flex flex-none items-center gap-[7px] rounded-full px-[11px] py-1.5 font-mono text-[11.5px] font-semibold"

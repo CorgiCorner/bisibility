@@ -10,25 +10,31 @@ import {
   keywordTargetLineError,
   parseKeywordTargetLines,
 } from "@/lib/keywords/add-keyword-drawer-shared";
-import type { AddKeywordsInput } from "@/lib/schemas/keyword";
+import type { AddKeywordsInput, AddKeywordsMatrixInput } from "@/lib/schemas/keyword";
 import { buildDrawerCsvKeywordRowsForForm } from "./AddKeywordCsvRows";
 import { pausedSchedule } from "./AddKeywordDrawerLocation";
 
 type DrawerInputArgs = {
   activeTab: AddKeywordTab;
   csvText: string;
+  devices: AddKeywordsMatrixInput["devices"];
   existingKeywords: readonly ExistingKeyword[];
   locationValue: LocationFieldValue;
+  locationKeys: string[];
   values: AddKeywordDrawerForm;
 };
 
-type DrawerInputResult = { input: AddKeywordsInput } | { warning: string };
+type DrawerInputResult = { input: AddKeywordsInput | AddKeywordsMatrixInput } | { warning: string };
 
 function scheduleFor(values: AddKeywordDrawerForm) {
   return values.isPaused ? pausedSchedule : values.schedule;
 }
 
-function manualInput(values: AddKeywordDrawerForm): DrawerInputResult {
+function manualInput(
+  values: AddKeywordDrawerForm,
+  devices: AddKeywordsMatrixInput["devices"],
+  locationKeys: string[],
+): DrawerInputResult {
   const parsed = parseKeywordTargetLines(values.keywords);
   const lineError = keywordTargetLineError(parsed);
   if (lineError) {
@@ -39,33 +45,15 @@ function manualInput(values: AddKeywordDrawerForm): DrawerInputResult {
   // Any per-line "keyword | url" override routes through the per-row path so each
   // keyword keeps its own target; the batch target URL is the fallback.
   if (hasPerLineTarget(parsed)) {
-    return {
-      input: {
-        projectId: values.projectId,
-        rows: entries.map((entry) => ({
-          city: values.city ?? null,
-          device: values.device,
-          intent: values.intent,
-          keyword: entry.keyword,
-          location: values.location,
-          locationKey: values.locationKey,
-          tags: values.tags ?? [],
-          targetUrl: entry.targetUrl ?? values.targetUrl ?? null,
-          topic: values.topic,
-        })),
-        schedule: scheduleFor(values),
-      },
-    };
+    return { warning: "Per-line target URLs cannot be combined with multiple markets." };
   }
 
   return {
     input: {
-      city: values.city ?? null,
-      device: values.device,
       intent: values.intent,
       keywords: entries.map((entry) => entry.keyword),
-      location: values.location,
-      locationKey: values.locationKey,
+      devices,
+      locations: locationKeys.map((locationKey) => ({ locationKey })),
       projectId: values.projectId,
       schedule: scheduleFor(values),
       tags: values.tags ?? [],
@@ -93,5 +81,7 @@ function csvInput({
 }
 
 export function addKeywordDrawerInput(args: DrawerInputArgs): DrawerInputResult {
-  return args.activeTab === "csv" ? csvInput(args) : manualInput(args.values);
+  return args.activeTab === "csv"
+    ? csvInput(args)
+    : manualInput(args.values, args.devices, args.locationKeys);
 }

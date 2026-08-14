@@ -19,6 +19,7 @@ export type OnboardingProject = {
   isSample?: boolean;
   name: string;
   publicId: string;
+  timezone?: string;
 };
 
 export type OnboardingDraft = {
@@ -79,7 +80,7 @@ export function initialOnboardingDraft(
       locationSelections,
       locations,
       projectId,
-      timezone: "UTC",
+      timezone: project?.timezone ?? "UTC",
     },
   };
 }

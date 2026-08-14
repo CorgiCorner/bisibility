@@ -11,6 +11,8 @@ import {
 type TimelineEvent = RankingUrlEvent & { changed: boolean };
 
 const POSITION_EXPLANATION = "#N is the position at that period's last check.";
+const HISTORY_EXPLANATION =
+  "A change means Google now ranks a different page of yours. Often fine; check if it dropped. The rank shown for each period is the position recorded at that period's last check.";
 const periodDateFormatter = new Intl.DateTimeFormat("en-US", {
   day: "numeric",
   month: "short",
@@ -75,9 +77,9 @@ export function RankingUrlHistory({ keyword }: Readonly<{ keyword: KeywordRow }>
           <div className="flex items-center gap-2">
             <SectionTitle>Ranking URL history</SectionTitle>
             <button
-              aria-label={POSITION_EXPLANATION}
+              aria-label={HISTORY_EXPLANATION}
               className="bv-tip after:max-w-[280px] inline-grid h-4 w-4 cursor-help place-items-center border-0 bg-transparent p-0 text-fg-muted"
-              data-tip={POSITION_EXPLANATION}
+              data-tip={HISTORY_EXPLANATION}
               type="button"
             >
               <Info size={14} />
@@ -104,10 +106,11 @@ export function RankingUrlHistory({ keyword }: Readonly<{ keyword: KeywordRow }>
         {timeline.length ? (
           timeline.map((event, index) => (
             <div
-              className="flex items-center gap-[14px] border-b border-border-soft px-5 py-[13px] last:border-b-0"
+              className="grid grid-cols-[18px_minmax(0,1fr)_auto] items-center gap-x-[14px] gap-y-1 border-b border-border-soft px-5 py-[13px] last:border-b-0 sm:grid-cols-[18px_108px_minmax(0,1fr)_auto]"
+              data-testid="ranking-url-period"
               key={`${event.startAt}-${event.endAt}-${event.url}-${index}`}
             >
-              <span className="flex w-[18px] flex-none justify-center">
+              <span className="col-start-1 row-start-1 flex w-[18px] flex-none justify-center">
                 <span
                   className={`h-[9px] w-[9px] rounded-full ${
                     event.isCurrent
@@ -116,25 +119,37 @@ export function RankingUrlHistory({ keyword }: Readonly<{ keyword: KeywordRow }>
                   }`}
                 />
               </span>
-              <MonoText className="w-[108px] flex-none text-fg-muted" component="span">
+              <MonoText
+                className="col-start-2 row-start-1 w-[108px] text-fg-muted"
+                component="span"
+              >
                 {periodDateRange(event)}
               </MonoText>
-              <a
-                className="min-w-0 flex-1 truncate font-mono text-[12.5px] text-fg hover:text-accent-text hover:underline"
-                href={event.url}
-                rel="noreferrer noopener"
-                target="_blank"
-                title="Open ranking URL in a new tab"
-              >
-                <span>{pathFromUrl(event.url)}</span>
-                <ArrowUpRight aria-hidden className="ml-1 inline-block" size={12} weight="bold" />
-              </a>
-              {periodNote(event, index, timeline.length) ? (
-                <span className="max-w-[200px] flex-none truncate text-[11.5px] text-fg-muted">
-                  {periodNote(event, index, timeline.length)}
-                </span>
-              ) : null}
-              <span className="flex flex-none items-center gap-[7px]">
+              <div className="col-span-2 col-start-2 row-start-2 min-w-0 sm:col-span-1 sm:col-start-3 sm:row-start-1">
+                <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5">
+                  <a
+                    className="min-w-0 flex-1 truncate font-mono text-[12.5px] text-fg hover:text-accent-text hover:underline"
+                    href={event.url}
+                    rel="noreferrer noopener"
+                    target="_blank"
+                    title="Open ranking URL in a new tab"
+                  >
+                    <span>{pathFromUrl(event.url)}</span>
+                    <ArrowUpRight
+                      aria-hidden
+                      className="ml-1 inline-block"
+                      size={12}
+                      weight="bold"
+                    />
+                  </a>
+                  {periodNote(event, index, timeline.length) ? (
+                    <span className="max-w-[200px] truncate text-[11.5px] text-fg-muted">
+                      {periodNote(event, index, timeline.length)}
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+              <span className="col-start-3 row-start-1 flex flex-none items-center gap-[7px] sm:col-start-4">
                 <span className="font-mono text-[13px] font-semibold text-fg">
                   {positionLabel(event)}
                 </span>

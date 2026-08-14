@@ -38,7 +38,7 @@ export function createDataForSeoLabsClient(options: DataForSeoLabsClientOptions)
       });
     } catch (error) {
       if (error instanceof DataForSeoError) {
-        const unsupported = unsupportedLabsRequest(error.message);
+        const unsupported = unsupportedLabsRequest(undefined, error.message);
         if (unsupported || validationFailure(error.message)) {
           const message = messageWithSentParameters(error.message, payload, credentials);
           if (unsupported) {
@@ -55,7 +55,7 @@ export function createDataForSeoLabsClient(options: DataForSeoLabsClientOptions)
     const rawMessage = options.envelopeMessage(data);
     const statusCode = data.tasks?.[0]?.status_code ?? data.status_code;
     if (noSearchResults(statusCode, rawMessage)) return data;
-    const unsupported = unsupportedLabsRequest(rawMessage);
+    const unsupported = unsupportedLabsRequest(statusCode, rawMessage);
     const message =
       unsupported || validationFailure(rawMessage)
         ? messageWithSentParameters(rawMessage, payload, credentials)

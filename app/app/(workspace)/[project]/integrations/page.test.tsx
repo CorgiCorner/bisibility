@@ -65,6 +65,7 @@ describe("IntegrationsPage", () => {
     mocks.getIntegrationsView.mockResolvedValue({
       categories: [{ id: "analytics", items: [], title: "Analytics" }],
       connectionCount: 0,
+      timeZone: "Europe/Madrid",
     });
   });
 
@@ -83,5 +84,6 @@ describe("IntegrationsPage", () => {
     );
     expect(props.actions.loadStoredGoogleProperties).toBe(mocks.loadStoredGoogleProperties);
     expect(props.actions.saveStoredGoogleProperty).toBe(mocks.saveStoredGoogleProperty);
+    expect(props).toMatchObject({ timeZone: "Europe/Madrid" });
   });
 });

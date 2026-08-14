@@ -1,12 +1,9 @@
 import "server-only";
 
-import {
-  DAILY_INTERVAL_MS,
-  stableIntervalPhaseMs,
-  WEEKLY_INTERVAL_MS,
-} from "@/lib/rank-check/interval-phase";
+import { stableIntervalPhaseMs } from "@/lib/rank-check/interval-phase";
 import type { RankCheckScheduleInput } from "@/lib/rank-check/schedule";
 import { sha256Bytes } from "@/lib/rank-check/sha256";
+import { nextZonedCron, stableZonedIntervalCron } from "@/lib/rank-check/zoned-recurrence";
 import { CronExpressionParser } from "cron-parser";
 
 export type NextThreeCronRunsInput = Readonly<{
@@ -35,12 +32,6 @@ export function deterministicJitterSeconds(keywordId: string, jitterMinutes?: nu
   if (windowSeconds === 0) return 0;
 
   return hashModulo(`${keywordId}:dispatcher-jitter`, windowSeconds + 1);
-}
-
-function nextInterval(keywordId: string, intervalMs: number, from: Date, jitterSeconds: number) {
-  const offsetMs = stableIntervalPhaseMs(keywordId, intervalMs) + jitterSeconds * 1_000;
-  const cycle = Math.floor((from.getTime() - offsetMs) / intervalMs) + 1;
-  return new Date(cycle * intervalMs + offsetMs);
 }
 
 function zonedAnchorCron(schedule: RankCheckScheduleInput) {
@@ -75,40 +66,24 @@ export function nextThreeCronRuns(input: NextThreeCronRunsInput): NextThreeCronR
   ];
 }
 
-function nextCron(expression: string, timezone: string, from: Date, jitterSeconds: number) {
-  const jitterMs = jitterSeconds * 1_000;
-  const interval = parseCronExpression({
-    cronExpression: expression,
-    from: new Date(from.getTime() - jitterMs),
-    timezone,
-  });
-  let next = new Date(interval.next().getTime() + jitterMs);
-  if (next <= from) {
-    next = new Date(interval.next().getTime() + jitterMs);
-  }
-  return next;
-}
-
 export function computeDispatcherNextCheckAt(
   schedule: RankCheckScheduleInput,
   keywordId: string,
   from = new Date(),
 ) {
   const jitterSeconds = deterministicJitterSeconds(keywordId, schedule.jitterMinutes);
-
-  if (schedule.frequency === "daily") {
-    return nextInterval(keywordId, DAILY_INTERVAL_MS, from, jitterSeconds);
-  }
-  if (schedule.frequency === "weekly") {
-    return nextInterval(keywordId, WEEKLY_INTERVAL_MS, from, jitterSeconds);
-  }
-
   const timezone = schedule.timezone ?? "UTC";
+
+  if (schedule.frequency === "daily" || schedule.frequency === "weekly") {
+    const { cronExpression, secondOffset } = stableZonedIntervalCron(keywordId, schedule.frequency);
+    return nextZonedCron(cronExpression, timezone, from, secondOffset + jitterSeconds);
+  }
+
   if (schedule.frequency === "monthly") {
-    return nextCron(zonedAnchorCron(schedule), timezone, from, jitterSeconds);
+    return nextZonedCron(zonedAnchorCron(schedule), timezone, from, jitterSeconds);
   }
   if (schedule.frequency === "custom_cron" && schedule.cronExpression) {
-    return nextCron(schedule.cronExpression, timezone, from, jitterSeconds);
+    return nextZonedCron(schedule.cronExpression, timezone, from, jitterSeconds);
   }
 
   throw new Error("Only automatic rank-check schedules can be dispatched.");

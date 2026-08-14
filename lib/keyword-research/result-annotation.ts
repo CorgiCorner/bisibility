@@ -1,4 +1,5 @@
 import type { ResearchPage } from "@/lib/providers/types";
+import { locationLanguage, normalizeCanonicalLocationKey } from "@/lib/serp/location";
 import {
   connectionResources,
   type eligibleResearchConnections,
@@ -21,10 +22,22 @@ export function annotateResearchResult(
   eligible: ReturnType<typeof eligibleResearchConnections>,
   locationKey: string,
 ): KeywordResearchOutcome {
-  const tracked = new Set(project.keywords.map((row) => normalizeResearchKeyword(row.text)));
+  const market = normalizeCanonicalLocationKey(locationKey);
+  const countryCode = market.selector.countryCode;
+  const languageCode = locationLanguage(countryCode, market.selector.languageCode).code;
+  const tracked = new Set(
+    project.keywords
+      .filter((row) => row.locationRef.canonicalKey === market.canonicalKey)
+      .map((row) => normalizeResearchKeyword(row.text)),
+  );
   const saved = new Set(
     project.savedKeywords
-      .filter((row) => row.location === locationKey)
+      .filter(
+        (row) =>
+          row.location === market.canonicalKey &&
+          row.countryCode === countryCode &&
+          row.languageCode === languageCode,
+      )
       .map((row) => row.normalizedText),
   );
   return {

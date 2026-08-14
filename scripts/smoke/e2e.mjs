@@ -88,7 +88,7 @@ async function waitForHttp(url) {
 }
 
 async function warmDevelopmentRoutes() {
-  const paths = ["/login", "/onboarding", "/app/prj_e2e_warmup/overview"];
+  const paths = ["/login", "/onboarding", "/app/prj_e2e_warmup/dashboard"];
 
   for (const routePath of paths) {
     const response = await fetch(new URL(routePath, baseUrl), { redirect: "manual" });

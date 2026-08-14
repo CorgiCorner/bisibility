@@ -70,6 +70,7 @@ export function KeywordsGrid({
   lens,
   providerConnected,
   projectId,
+  projectMarkets,
   queueFirstChecksAction,
   runCheckNowAction,
   rows,
@@ -145,6 +146,7 @@ export function KeywordsGrid({
         onCloseAdd={closeAddDrawer}
         onCloseExport={() => setExportTarget(null)}
         projectId={projectId}
+        projectMarkets={projectMarkets}
         rows={rows}
         tagSuggestions={tagSuggestions}
       />
@@ -245,6 +247,7 @@ export function KeywordsGrid({
         onSearchChange={setSearchValue}
         pendingCheckIds={pendingIds}
         projectId={projectId}
+        projectMarkets={projectMarkets}
         rows={filteredRows}
         searchValue={searchValue}
         scopeChip={

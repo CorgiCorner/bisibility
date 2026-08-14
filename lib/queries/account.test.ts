@@ -108,13 +108,20 @@ describe("account queries", () => {
     await expect(getAccount()).rejects.toThrow("Public ID migration is incomplete.");
   });
 
-  it("parses browser preferences from cookies", async () => {
+  it("parses the four browser preferences and ignores stale timezone and language cookies", async () => {
     const values: Record<string, string> = {
       pref_density: "compact",
+      pref_language: "de",
+      pref_timezone: "America/New_York",
       theme: "dark",
     };
     mocks.cookies.mockResolvedValue({ get: vi.fn((key: string) => ({ value: values[key] })) });
 
-    await expect(getPreferences()).resolves.toMatchObject({ density: "compact", theme: "dark" });
+    await expect(getPreferences()).resolves.toEqual({
+      dateFormat: "iso",
+      density: "compact",
+      landing: "overview",
+      theme: "dark",
+    });
   });
 });

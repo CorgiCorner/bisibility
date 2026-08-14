@@ -73,11 +73,13 @@ type KeywordRowInput = {
     hl: string;
     id: string;
     kind: KeywordLocation["kind"];
+    languageLabel?: string;
   } | null;
   publicId: string;
   queuedRankCheckTasks?: { state: string }[];
   rankChecks: {
     checkedAt: Date;
+    degradedToCountry?: boolean;
     id: string;
     normalizationVersion: string | null;
     position: number | null;
@@ -235,6 +237,7 @@ export function mapKeyword(
         : [
             {
               checkedAt: check.checkedAt.toISOString(),
+              ...(check.degradedToCountry ? { degradedToCountry: true } : {}),
               label: positionDateLabel(check.checkedAt),
               position: check.position,
             },

@@ -20,6 +20,10 @@ const mocks = vi.hoisted(() => {
     keywordTag: { createMany: vi.fn() },
     location: { findUnique: vi.fn(), upsert: vi.fn() },
     project: { findFirst: vi.fn(), findUnique: vi.fn() },
+    projectMarket: {
+      findMany: vi.fn(),
+      upsert: vi.fn().mockResolvedValue({ publicId: "pmkt_a00000000000000000000000" }),
+    },
     tag: { createMany: vi.fn(), findMany: vi.fn() },
     user: { findUnique: vi.fn() },
   };
@@ -54,6 +58,7 @@ function resolvedLocation(country: string, warning: string | null = null) {
       hl: "en",
       id: `loc_${key}`,
       kind: "country",
+      languageCode: "en",
       languageLabel: "English",
       primaryGeoCode: null,
       primaryGeoName: country,
@@ -118,6 +123,10 @@ describe("keyword workbook import action", () => {
       ownerId: "user_1",
       publicId: PROJECT_PUBLIC_ID,
     });
+    mocks.prisma.projectMarket.findMany.mockResolvedValue([
+      { location: { canonicalKey: "US" }, locationId: "loc_US" },
+      { location: { canonicalKey: "GB" }, locationId: "loc_GB" },
+    ]);
     mocks.resolveKeywordLocation.mockImplementation(
       async (input: {
         city?: string | null;
@@ -244,6 +253,29 @@ describe("keyword workbook import action", () => {
     await refreshKeywordViewsAfterImport();
 
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/app/[project]/rank-tracker", "page");
+  });
+
+  it("keeps out-of-registry market rows visible as errors without creating them", async () => {
+    mocks.prisma.projectMarket.findMany.mockResolvedValue([
+      { location: { canonicalKey: "US" }, locationId: "loc_US" },
+    ]);
+    mocks.resolveKeywordLocation.mockResolvedValueOnce({
+      ...resolvedLocation("United Kingdom"),
+      location: { ...resolvedLocation("United Kingdom").location, canonicalKey: "GB@en" },
+    });
+
+    const result = await importKeywordsFromCsv({
+      csv: "keyword,country,language,device\nrank tracker,GB,en,desktop",
+      projectId: PROJECT_PUBLIC_ID,
+      refresh: "deferred",
+    });
+
+    expect(result).toMatchObject({
+      created: 0,
+      errors: [{ message: expect.stringContaining("Settings > Markets"), row: 2 }],
+      failed: 1,
+    });
+    expect(mocks.prisma.keyword.createMany).not.toHaveBeenCalled();
   });
 
   it("rejects an XLSX workbook missing the keyword column before import", async () => {

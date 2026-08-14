@@ -8,7 +8,7 @@ import {
   totalOnboardingSteps,
 } from "@/components/onboarding/onboarding-fixtures";
 import { StepDotNavigation } from "@/components/onboarding/StepDotNavigation";
-import { Button, type StepDotState, StepDots, stepDotStateClass } from "@/components/ui";
+import { Button, type StepDotState, StepDots } from "@/components/ui";
 import { cn } from "@/lib/ui/cn";
 import { CheckIcon as Check } from "@phosphor-icons/react";
 import Link from "next/link";
@@ -26,6 +26,12 @@ function stepAccessibleName(title: string, done: boolean) {
   return done ? `${title}, completed` : title;
 }
 
+function onboardingNavStepStateClass(state: StepDotState) {
+  if (state === "current") return "bg-accent-solid text-primary-contrast";
+  if (state === "past") return "bg-green-text text-accent-on-solid dark:text-bg";
+  return "border border-border-strong bg-bg-sunken text-fg-muted";
+}
+
 export function OnboardingStepper({
   children,
   currentStep,
@@ -41,6 +47,9 @@ export function OnboardingStepper({
       <div className="flex items-center justify-between">
         <span className="font-mono text-xs text-fg-muted">
           Step {currentStep} of {totalOnboardingSteps}
+        </span>
+        <span className="font-mono text-[10px] uppercase tracking-[0.09em] text-fg-muted">
+          Project setup
         </span>
       </div>
       <div
@@ -112,7 +121,7 @@ function StepDotItem({
   const className = cn(
     "grid h-[34px] w-[34px] place-items-center rounded-full p-0 text-sm",
     locked ? "cursor-default border-border bg-bg-sunken text-fg-muted" : "cursor-pointer",
-    !locked && stepDotStateClass(state),
+    !locked && onboardingNavStepStateClass(state),
   );
   const icon = done ? (
     <Check aria-hidden size={15} weight="bold" />
@@ -154,25 +163,21 @@ function StepRailItem({
   const done = !locked && currentStep > step.n;
   const active = currentStep === step.n;
   const state: StepDotState = done ? "past" : active ? "current" : "upcoming";
-  const status = done
-    ? "Complete"
-    : active
-      ? "Current"
-      : locked
-        ? "Complete the previous step"
-        : "Next";
+  const status = done ? "Complete" : active ? "Current" : locked ? "Next" : "Next";
 
   const className = cn(
     "flex w-full items-center gap-3 rounded-[11px] border-0 bg-transparent px-3 py-[11px] text-left",
-    locked ? "cursor-default border-border/60 opacity-65" : "cursor-pointer hover:bg-nav-active",
-    active && "border border-accent/40 bg-nav-active",
+    locked ? "cursor-default" : "cursor-pointer hover:bg-nav-active",
+    active && "border border-accent bg-nav-active",
   );
   const content = (
     <>
       <span
         className={cn(
           "grid h-[30px] w-[30px] shrink-0 place-items-center rounded-[9px] text-[15px]",
-          locked ? "border border-border bg-bg-sunken text-fg-muted" : stepDotStateClass(state),
+          locked
+            ? "border border-border bg-bg-sunken text-fg-muted"
+            : onboardingNavStepStateClass(state),
         )}
         data-step-dot-state={state}
       >

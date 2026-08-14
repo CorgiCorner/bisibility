@@ -194,6 +194,29 @@ describe("dataForSeoProvider", () => {
     ]);
   });
 
+  it("sends a non-default market language independently of the country handle", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(serpEnvelope([])));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await dataForSeoProvider.fetchRank(
+      rankInput({
+        location: location({
+          gl: "es",
+          hl: "en",
+          primaryGeoName: "Spain",
+          secondaryGeoName: "Spain",
+        }),
+      }),
+    );
+
+    expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body))).toEqual([
+      expect.objectContaining({
+        language_code: "en",
+        location_name: "Spain",
+      }),
+    ]);
+  });
+
   it("preserves the requested mobile device", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       jsonResponse(
@@ -886,6 +909,47 @@ describe("dataForSeoProvider", () => {
         { domain: "example.com", limit: 100, location: location(), offset: 0 },
       ),
     ).rejects.toMatchObject({ name: "DataForSeoUnsupportedLocationError" });
+  });
+
+  it.each(["language_name", "language_code"])(
+    "maps the probed 40501 invalid %s pair to a typed unsupported error",
+    async (field) => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue(
+          jsonResponse({
+            status_code: 20000,
+            tasks: [{ status_code: 40501, status_message: `Invalid Field: '${field}'.` }],
+          }),
+        ),
+      );
+
+      await expect(
+        dataForSeoProvider.fetchRankedKeywords?.(
+          { login: "login", password: "secret" },
+          { domain: "example.com", limit: 100, location: location(), offset: 0 },
+        ),
+      ).rejects.toMatchObject({ name: "DataForSeoUnsupportedLocationError" });
+    },
+  );
+
+  it("does not classify a generic non-40501 language validation as unsupported", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse({
+          status_code: 20000,
+          tasks: [{ status_code: 40000, status_message: "Invalid Field: 'language_code'." }],
+        }),
+      ),
+    );
+
+    await expect(
+      dataForSeoProvider.fetchRankedKeywords?.(
+        { login: "login", password: "secret" },
+        { domain: "example.com", limit: 100, location: location(), offset: 0 },
+      ),
+    ).rejects.toMatchObject({ name: "DataForSeoError" });
   });
 
   it.each([

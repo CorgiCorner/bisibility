@@ -36,8 +36,12 @@ describe("LocationCell", () => {
     render(<LocationCell row={row} />);
 
     const location = screen.getByText(row.location.displayName);
-    expect(location.parentElement).toHaveClass("inline-flex");
-    expect(location.parentElement).not.toHaveAttribute("aria-label", row.location.displayName);
+    expect(location.parentElement?.parentElement).toHaveClass("inline-flex");
+    expect(location.parentElement?.parentElement).not.toHaveAttribute(
+      "aria-label",
+      row.location.displayName,
+    );
+    expect(screen.getByText(`/ ${row.location.languageLabel ?? row.location.hl}`)).toBeVisible();
   });
 });
 

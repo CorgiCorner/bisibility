@@ -47,6 +47,15 @@ describe("keyword API list filters", () => {
     vi.clearAllMocks();
     mocks.findMany.mockResolvedValue([]);
     mocks.findFirst.mockResolvedValue(null);
+    mocks.resolveLocation.mockResolvedValue({
+      location: {
+        countryCode: "US",
+        displayName: "Austin, Texas, United States",
+        id: "location_1",
+        languageCode: "en",
+        languageLabel: "English",
+      },
+    });
   });
 
   it("rejects invalid devices, numbers, and metadata", async () => {
@@ -59,6 +68,40 @@ describe("keyword API list filters", () => {
     await expect(
       listKeywords(context(`?topic=${"x".repeat(81)}`), "prj_a00000000000000000000000"),
     ).rejects.toThrow("topic must be a non-empty string");
+  });
+
+  it("serializes the resolved market key and language on keyword resources", async () => {
+    const { keywordResource } = await vi.importActual<typeof import("./resources")>("./resources");
+    const resource = keywordResource(
+      {
+        createdAt: new Date("2026-08-14T00:00:00.000Z"),
+        device: "desktop",
+        id: "keyword_1",
+        intent: null,
+        location: "Malaga, Andalusia, Spain (English)",
+        locationRef: {
+          canonicalKey: "ES/Andalusia/Malaga@en",
+          languageCode: "en",
+          languageLabel: "English",
+        },
+        project: { defaults: null },
+        publicId: "kw_a00000000000000000000000",
+        rankChecks: [],
+        schedule: null,
+        tags: [],
+        targetUrl: null,
+        text: "rank tracker",
+        topic: null,
+        updatedAt: new Date("2026-08-14T00:00:00.000Z"),
+      } as never,
+      "prj_a00000000000000000000000",
+    );
+
+    expect(resource).toMatchObject({
+      language_code: "en",
+      language_label: "English",
+      location_key: "ES/Andalusia/Malaga@en",
+    });
   });
 
   it("builds alternate-name filters, market aliases, and ascending sort", async () => {
@@ -193,9 +236,6 @@ describe("keyword API list filters", () => {
     };
     mocks.findFirst.mockResolvedValue(keyword);
     mocks.update.mockResolvedValue(keyword);
-    mocks.resolveLocation.mockResolvedValue({
-      location: { displayName: "Austin, Texas, United States", id: "location_1" },
-    });
     const response = await patchKeyword(
       context("", {
         city: "Austin",
@@ -226,9 +266,6 @@ describe("keyword API list filters", () => {
     };
     mocks.findFirst.mockResolvedValue(keyword);
     mocks.update.mockResolvedValue(keyword);
-    mocks.resolveLocation.mockResolvedValue({
-      location: { displayName: "Austin, Texas, United States", id: "location_1" },
-    });
     await patchKeyword(
       context("", { keyword: "rank tracker", location_key: "US/Texas/Austin" }),
       "kw_a00000000000000000000000",

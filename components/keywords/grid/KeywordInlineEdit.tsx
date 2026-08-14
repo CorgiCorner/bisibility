@@ -17,6 +17,7 @@ import { TargetUrlField } from "@/components/keywords/TargetUrlField";
 import { Button, FieldLabel, MenuSelect } from "@/components/ui";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import type { KeywordRow } from "@/lib/queries/keywords";
+import type { ProjectMarketsView } from "@/lib/queries/project-markets";
 import { type UpdateKeywordInput, updateKeywordSchema } from "@/lib/schemas/keyword";
 import { normalizeSerpMarketName, serpDeviceOptions } from "@/lib/serp/markets";
 import { FIELD_HELP } from "@/lib/settings/field-help";
@@ -25,11 +26,13 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { type FieldErrors, useForm } from "react-hook-form";
 import { z } from "zod";
+import { DrawerMarketSelector } from "./DrawerMarketSelector";
 import { KeywordInlineEditTextField } from "./KeywordInlineEditTextField";
 
 type KeywordInlineEditProps = Pick<KeywordDetailActions, "updateKeywordAction"> & {
   formId?: string;
   focusTargetUrl?: boolean;
+  drawerMarkets?: ProjectMarketsView["markets"];
   hideSubmit?: boolean;
   keyword: KeywordRow;
   layout?: "drawer" | "inline";
@@ -59,6 +62,7 @@ function initialLocationValue(keyword: KeywordRow): LocationFieldValue {
 export function KeywordInlineEdit({
   formId,
   focusTargetUrl = false,
+  drawerMarkets = [],
   hideSubmit = false,
   keyword,
   layout = "inline",
@@ -95,6 +99,7 @@ export function KeywordInlineEdit({
   });
   const tagMessage = tagsError(errors);
   const device = watch("device");
+  const selectedLocationKey = watch("locationKey") ?? keyword.location.canonicalKey;
   const selectedDevice = device ?? deviceValue(keyword.device);
   const deviceOptions = serpDeviceOptions.map((option) => ({
     label: option.label,
@@ -161,6 +166,10 @@ export function KeywordInlineEdit({
     });
   }
 
+  function handleDrawerMarketChange(canonicalKey: string) {
+    setValue("locationKey", canonicalKey, { shouldDirty: true, shouldValidate: true });
+  }
+
   function handleTagsChange(value: string) {
     setTagsText(value);
     setValue("tags", splitTagInput(value), {
@@ -215,14 +224,27 @@ export function KeywordInlineEdit({
           layout === "inline" && "md:col-span-3",
         )}
       >
-        <LocationField
-          error={errors.locationKey?.message ?? errors.location?.message ?? errors.city?.message}
-          idPrefix={`inline-${keyword.id}`}
-          help={FIELD_HELP.location}
-          onChange={handleLocationChange}
-          projectId={projectId ?? null}
-          value={locationValue}
-        />
+        {layout === "drawer" ? (
+          <DrawerMarketSelector
+            currentKey={selectedLocationKey}
+            currentLabel={`${keyword.locationName} / ${keyword.location.languageLabel ?? ""}`.replace(
+              / \/ $/,
+              "",
+            )}
+            error={errors.locationKey?.message ?? errors.location?.message ?? errors.city?.message}
+            markets={drawerMarkets}
+            onChange={handleDrawerMarketChange}
+          />
+        ) : (
+          <LocationField
+            error={errors.locationKey?.message ?? errors.location?.message ?? errors.city?.message}
+            idPrefix={`inline-${keyword.id}`}
+            help={FIELD_HELP.location}
+            onChange={handleLocationChange}
+            projectId={projectId ?? null}
+            value={locationValue}
+          />
+        )}
       </div>
       <KeywordInlineEditTextField
         error={errors.topic?.message}

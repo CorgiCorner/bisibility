@@ -39,6 +39,7 @@ const source = {
   provider,
 };
 const market = {
+  countryCode: "PL",
   languageCode: "pl",
   locationCode: 2616,
 };
@@ -116,7 +117,7 @@ describe("domain overview provider calls", () => {
         includeSubdomains: true,
         languageCode: "pl",
         location: {
-          gl: "",
+          gl: "pl",
           hl: "pl",
           primaryGeoCode: 2616,
           primaryGeoName: "",

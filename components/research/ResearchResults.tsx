@@ -13,6 +13,7 @@ import {
   emptyResearchFilters,
 } from "@/lib/keyword-research/view-model";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
+import { RESEARCH_METRICS_UNAVAILABLE_TOOLTIP } from "@/lib/serp/market-capability";
 import {
   InfoIcon as Info,
   WarningCircleIcon as WarningCircle,
@@ -22,6 +23,7 @@ import { type ReactNode, useMemo, useState } from "react";
 import { ResearchDetailPanel } from "./ResearchDetailPanel";
 import { ResearchFiltersDrawer } from "./ResearchFiltersDrawer";
 import { ResearchResultsTable } from "./ResearchResultsTable";
+import { rowsForResearchMarket } from "./research-market-capability";
 import { deeperResearchCostCents } from "./research-results-model";
 import type { ResearchAddDraft, ResearchSaveDraft } from "./research-workspace-model";
 
@@ -33,10 +35,12 @@ type ResearchResultsProps = {
   onDeeper: () => void;
   onRemoveSaved?: (draft: ResearchSaveDraft) => void;
   onSave?: (draft: ResearchSaveDraft) => void;
+  metricsAvailable?: boolean;
   projectId: string;
   requestedLimit: 100 | 300 | 500;
   result: KeywordResearchSuccess;
   seed: string;
+  trackingMarketCount?: number;
 };
 
 const sourceLabels: Record<KeywordResearchSource, string> = {
@@ -127,17 +131,22 @@ export function ResearchResults({
   onDeeper,
   onRemoveSaved,
   onSave,
+  metricsAvailable = true,
   projectId,
   requestedLimit,
   result,
   seed,
+  trackingMarketCount = 1,
 }: Readonly<ResearchResultsProps>) {
   const [activeKeyword, setActiveKeyword] = useState<string | null>(null);
   const [dismissed, setDismissed] = useState<string[]>([]);
   const [filters, setFilters] = useState(emptyResearchFilters);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [selectedKeywords, setSelectedKeywords] = useState<string[]>([]);
-  const grouped = useMemo(() => groupResearchRows(result.rows), [result.rows]);
+  const grouped = useMemo(
+    () => groupResearchRows(rowsForResearchMarket(result.rows, metricsAvailable)),
+    [metricsAvailable, result.rows],
+  );
   const rows = useMemo(() => applyResearchFilters(grouped, filters), [filters, grouped]);
   const active = grouped.find((row) => row.keyword === activeKeyword) ?? null;
   const infoSkips = result.sources.filter(isInfoSkip);
@@ -205,11 +214,11 @@ export function ResearchResults({
           activeKeyword={activeKeyword}
           cached={result.cached}
           canRemoveSaved={Boolean(onRemoveSaved)}
-          costContext={costContext}
           deeper={deeper}
           fetchedAt={result.fetchedAt}
           fetchedCount={result.rows.length}
           filterCount={activeResearchFilterCount(filters)}
+          metricsAvailable={metricsAvailable}
           onActiveChange={(row) => setActiveKeyword(row.keyword)}
           onAddSelected={() => onAdd({ ...defaultTracking, keywords: selectedKeywords })}
           onDeeper={onDeeper}
@@ -223,17 +232,26 @@ export function ResearchResults({
           seed={seed}
           selectedKeywords={selectedKeywords}
           totalCount={result.rows.length}
+          trackingMarketCount={trackingMarketCount}
         />
         <ResearchDetailPanel
           active={active}
           costContext={costContext}
           defaultTracking={defaultTracking}
+          metricsAvailable={metricsAvailable}
           onAdd={onAdd}
           onSave={onSave ? (row) => onSave(saveDraft([row])) : undefined}
           projectId={projectId}
           seed={seed}
+          trackingMarketCount={trackingMarketCount}
         />
       </div>
+      {!metricsAvailable ? (
+        <p className="m-0 flex items-start gap-2 text-[12.5px] leading-5 text-fg-muted">
+          <Info aria-hidden className="mt-0.5 shrink-0" size={14} />
+          {RESEARCH_METRICS_UNAVAILABLE_TOOLTIP}
+        </p>
+      ) : null}
       <ResearchFiltersDrawer
         filters={filters}
         intentCounts={intentCounts}

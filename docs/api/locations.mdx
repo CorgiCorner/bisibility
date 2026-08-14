@@ -33,6 +33,7 @@ provider credentials.
       "city_name": "Austin",
       "location_key": "US/Texas/Austin",
       "hl": "en",
+      "language_code": "en",
       "language_label": "English"
     }
   ],
@@ -41,3 +42,6 @@ provider credentials.
 ```
 
 Pass the returned `location_key` verbatim when creating or updating keywords.
+To select a non-default language, append an `@language` qualifier from the
+[supported languages](/markets#supported-languages), for example
+`ES/Andalusia/Malaga@en`. An unqualified key uses the country's default language.

@@ -13,6 +13,7 @@ import {
 } from "@/lib/provider-lookups/cache";
 import { loadProviderRateContext } from "@/lib/provider-rates/connection-context";
 import type { KeywordMetrics, ResearchKeywordRow } from "@/lib/providers/types";
+import { researchProviderRankLocation, supportsResearchMarket } from "@/lib/serp/market-capability";
 import {
   type KeywordMetricsCacheEntry,
   keywordMetricsCacheKey,
@@ -132,8 +133,11 @@ export async function fetchKeywordMetrics(input: {
     ? eligible.find(({ connection }) => connection.publicId === requestedConnectionId)
     : eligible[0];
   if (!selected?.provider.fetchKeywordMetrics) return { ok: false, reason: "no_source" };
-  const rateContext = await loadProviderRateContext(selected.connection.id, "keyword_metrics");
   const location = await researchLocation(project);
+  if (!supportsResearchMarket(location.value.gl, location.value.hl)) {
+    return { ok: false, reason: "unsupported_location" };
+  }
+  const rateContext = await loadProviderRateContext(selected.connection.id, "keyword_metrics");
   const keys = uniqueKeywords(input.keywords).map((item) => ({
     ...item,
     cacheKey: keywordMetricsCacheKey({
@@ -204,7 +208,7 @@ export async function fetchKeywordMetrics(input: {
           selected.provider.fetchKeywordMetrics?.(credentials, {
             includeClickstream: input.includeClickstream,
             keywords: chunk.map((item) => item.keyword),
-            location: location.value,
+            location: researchProviderRankLocation(location.value),
           }) ?? Promise.resolve({ costCents: 0, rows: [] }),
         connection: selected.connection,
         feature: "keyword_metrics",

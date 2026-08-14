@@ -5,6 +5,9 @@ import { tierFromScopes } from "./key-scope";
 import { requireApiPublicId } from "./public-id";
 
 export const keywordInclude = {
+  locationRef: {
+    select: { canonicalKey: true, languageCode: true, languageLabel: true },
+  },
   project: { select: { defaults: true } },
   rankChecks: {
     orderBy: { checkedAt: "desc" },
@@ -193,6 +196,9 @@ export function keywordResource(keyword: KeywordRecord, projectPublicId: string)
     intent: keyword.intent,
     latest_position: latest?.position ?? null,
     location: keyword.location,
+    location_key: keyword.locationRef.canonicalKey,
+    language_code: keyword.locationRef.languageCode,
+    language_label: keyword.locationRef.languageLabel,
     previous_position: latest?.previousPosition ?? null,
     project_id: requireApiPublicId(projectPublicId, "prj"),
     ranking_url: latest?.rankingUrl ?? null,

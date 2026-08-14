@@ -3,8 +3,8 @@ title: "Keywords"
 description: "Create, list, update, delete, and bulk mutate tracked keywords."
 ---
 
-Keywords belong to a project and identify a search phrase, location, device, and
-target URL.
+Keywords belong to a project and identify a search phrase, market, device, and
+target URL. A market is a location and language pair.
 
 ## Keyword resource
 
@@ -15,6 +15,9 @@ target URL.
   "text": "rank tracker api",
   "country": "United States",
   "location": "United States",
+  "location_key": "US",
+  "language_code": "en",
+  "language_label": "English",
   "device": "desktop",
   "target_url": "https://example.com/rank-tracker",
   "topic": "API",
@@ -38,6 +41,15 @@ target URL.
 
 `device` is `desktop` or `mobile`. `frequency` is `paused`, `manual`, `daily`,
 `weekly`, `monthly`, or `custom_cron`.
+
+`location_key` accepts an optional `@language` qualifier such as
+`ES/Andalusia/Malaga@en`. An unqualified key uses the country's default
+language. Supplying the default explicitly is an alias of the unqualified key,
+so `ES` and `ES@es` resolve to the same canonical market. Use the codes listed
+under [Markets and languages](/markets).
+
+Every keyword resource reports `language_code` and `language_label` alongside
+the canonical `location_key`.
 
 ## List project keywords
 
@@ -104,6 +116,8 @@ matching markets and its returned rows are partial.
         "country_code": "US",
         "location": "Austin, Texas, United States",
         "location_key": "US/Texas/Austin",
+        "language_code": "en",
+        "language_label": "English",
         "device": "desktop"
       },
       "latest_position": 3,
@@ -136,8 +150,8 @@ object with a `keywords` array. String entries in `keywords` are converted to
       "topic": "API",
       "intent": "commercial",
       "device": "desktop",
-      "country": "United States",
-      "location_key": "US/Texas/Austin",
+      "country": "Spain",
+      "location_key": "ES/Andalusia/Malaga@en",
       "tags": ["api"],
       "schedule": {
         "frequency": "daily",
@@ -161,7 +175,7 @@ Request fields:
 | `device` | Optional. Defaults to `desktop`. |
 | `country` | Optional supported SERP country. Defaults to the project's default market, which falls back to United States for new projects. |
 | `city` | Optional city name resolved against the selected country. Unresolved cities fall back to country-level tracking with a warning. |
-| `location_key` | Optional canonical country, region, or city key such as `US/Texas/Austin`. Takes precedence over `country`, `location`, and `city`. |
+| `location_key` | Optional canonical country, region, or city key, optionally qualified with `@language`, such as `ES/Andalusia/Malaga@en`. Takes precedence over `country`, `location`, and `city`. |
 | `location` | Alias for `country`; prefer `country`. When both are sent, `location` wins. |
 | `tags` | Optional. Up to 12 tags, each 1 to 48 characters. |
 | `schedule` | Optional schedule object. |
@@ -190,6 +204,9 @@ with unique warning messages.
         "text": "rank tracker api",
         "country": "United States",
         "location": "United States",
+        "location_key": "US",
+        "language_code": "en",
+        "language_label": "English",
         "device": "desktop",
         "target_url": "https://example.com/rank-tracker",
         "topic": "API",
@@ -250,7 +267,7 @@ Patch fields are optional:
 | `device` | `desktop` or `mobile`. |
 | `country` | Supported SERP country. |
 | `city` | City name resolved against the selected country. |
-| `location_key` | Canonical country, region, or city key. |
+| `location_key` | Canonical country, region, or city key, optionally qualified with `@language`. |
 | `location` | Alias for `country`; prefer `country`. When both are sent, `location` wins. |
 | `tags` | Replaces the full tag set. |
 | `frequency` | Sets a default schedule with timezone `UTC`, jitter `60`, and no cron expression. |

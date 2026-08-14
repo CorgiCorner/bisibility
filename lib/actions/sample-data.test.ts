@@ -128,7 +128,7 @@ describe("sample-data actions", () => {
 
     await expect(installSampleData()).rejects.toThrow("NEXT_REDIRECT");
 
-    expect(redirect).toHaveBeenCalledWith("/app/prj_d00000000000000000000000/overview");
+    expect(redirect).toHaveBeenCalledWith("/app/prj_d00000000000000000000000/dashboard");
     expect(mocks.prisma.$transaction).toHaveBeenCalledTimes(1);
     expect(mocks.tx.$executeRaw).toHaveBeenCalledTimes(1);
     expect(mocks.tx.$executeRaw.mock.invocationCallOrder[0]).toBeLessThan(
@@ -141,7 +141,7 @@ describe("sample-data actions", () => {
   it("installs sample data and writes an audit record", async () => {
     await expect(installSampleData()).rejects.toThrow("NEXT_REDIRECT");
 
-    expect(redirect).toHaveBeenCalledWith("/app/prj_e00000000000000000000000/overview");
+    expect(redirect).toHaveBeenCalledWith("/app/prj_e00000000000000000000000/dashboard");
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({ action: "sample_data.install", projectId: "project_sample" }),
       mocks.tx,

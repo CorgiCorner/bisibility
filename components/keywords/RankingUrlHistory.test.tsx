@@ -65,15 +65,29 @@ describe("RankingUrlHistory", () => {
     renderHistory([...designSourceNewestFirst].reverse());
 
     expect(screen.getByText("URL changed")).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", {
-        name: "#N is the position at that period's last check.",
-      }),
-    ).toBeInTheDocument();
+    const explanation = screen.getByRole("button", {
+      name: /A change means Google now ranks a different page of yours/,
+    });
+    expect(explanation).toBeInTheDocument();
+    expect(explanation).toHaveAttribute(
+      "data-tip",
+      expect.stringContaining("The rank shown for each period"),
+    );
     expect(screen.getAllByTitle("Open ranking URL in a new tab")).not.toHaveLength(0);
     expect(screen.getByText("Current page")).toBeInTheDocument();
     expect(screen.getByText("First indexed for this query")).toBeInTheDocument();
     expect(screen.getByText("URL switched")).toBeInTheDocument();
+  });
+
+  it("uses a narrow-safe grid with dates inside the content column", () => {
+    renderHistory([event()]);
+
+    const period = screen.getByTestId("ranking-url-period");
+    expect(period).toHaveClass("grid-cols-[18px_minmax(0,1fr)_auto]");
+    expect(screen.getByText("Jun 18 - now")).toHaveClass("col-start-2", "row-start-1");
+    expect(
+      screen.getByTitle("Open ranking URL in a new tab").parentElement?.parentElement,
+    ).toHaveClass("row-start-2", "sm:row-start-1");
   });
 
   it("does not present a closed newest period as current", () => {

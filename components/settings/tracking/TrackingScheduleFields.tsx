@@ -4,7 +4,7 @@ import type { TrackingDefaultsForm } from "@/components/settings/tracking/tracki
 import { FieldLabel, Input, MenuSelect } from "@/components/ui";
 import type { CronPreviewResult } from "@/lib/actions/settings-cron-preview";
 import { frequencyOptions } from "@/lib/settings/options";
-import { timezoneSelectOptions } from "@/lib/settings/timezones";
+import { isSupportedProjectTimezone, timezoneSelectOptions } from "@/lib/settings/timezones";
 import type { UseFormReturn } from "react-hook-form";
 
 const labelClass = "font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted";
@@ -34,12 +34,14 @@ export function TrackingScheduleFields({
 }: Readonly<TrackingScheduleFieldsProps>) {
   const frequency = form.watch("frequency");
   const timezone = form.watch("timezone");
+  const timezoneError = form.formState.errors.timezone;
+  const timezoneInvalid = !isSupportedProjectTimezone(timezone);
   const cronRegistration = form.register("cronExpression");
-  const timed = frequency === "monthly" || frequency === "custom_cron";
+  const showCron = frequency === "custom_cron";
 
   return (
     <div className="space-y-4">
-      <SettingsField width="sm">
+      <SettingsField width="field">
         <FieldLabel className={labelClass} label="Frequency" />
         <input type="hidden" {...form.register("frequency")} />
         <MenuSelect
@@ -54,8 +56,8 @@ export function TrackingScheduleFields({
         </p>
       </SettingsField>
 
-      {frequency === "custom_cron" ? (
-        <SettingsField width="md">
+      {showCron ? (
+        <SettingsField width="field">
           <FieldLabel className={labelClass} htmlFor="tracking-cron" label="Cron expression" />
           <Input
             aria-describedby="tracking-cron-help"
@@ -73,30 +75,39 @@ export function TrackingScheduleFields({
         </SettingsField>
       ) : null}
 
-      {timed ? (
-        <SettingsField width="md">
-          <FieldLabel className={labelClass} label="Timezone" />
-          <input type="hidden" {...form.register("timezone")} />
-          <MenuSelect
-            ariaLabel="Timezone"
-            onChange={onTimezoneChange}
-            options={timezoneSelectOptions(timezone)}
-            searchable
-            searchPlaceholder="Search time zones..."
-            triggerClassName={`${triggerClass} mt-1.5`}
-            value={timezone}
-          />
-          <p className="m-0 mt-1.5 text-[11.5px] leading-5 text-fg-muted">
-            {frequency === "monthly"
-              ? "The monthly wall-clock anchor follows this timezone through daylight saving changes."
-              : "The cron expression is read in this timezone."}
+      <SettingsField width="field">
+        <FieldLabel className={labelClass} label="Timezone" />
+        <input type="hidden" {...form.register("timezone")} />
+        <MenuSelect
+          ariaDescribedBy={
+            timezoneInvalid
+              ? "tracking-timezone-help tracking-timezone-error"
+              : "tracking-timezone-help"
+          }
+          ariaInvalid={timezoneInvalid}
+          ariaLabel="Timezone"
+          onChange={onTimezoneChange}
+          options={timezoneSelectOptions(timezone)}
+          searchable
+          searchPlaceholder="Search time zones..."
+          triggerClassName={`${triggerClass} mt-1.5`}
+          value={timezone}
+        />
+        <p className="m-0 mt-1.5 text-[11.5px] leading-5 text-fg-muted" id="tracking-timezone-help">
+          Anchors all check schedules to the selected local clock.
+        </p>
+        {timezoneInvalid ? (
+          <p
+            className="m-0 mt-1 text-[11.5px] text-red-text"
+            id="tracking-timezone-error"
+            role="alert"
+          >
+            {timezoneError?.message ?? "Select a valid time zone."}
           </p>
-        </SettingsField>
-      ) : null}
+        ) : null}
+      </SettingsField>
 
-      {frequency === "custom_cron" ? (
-        <CronRunPreview pending={previewPending} preview={preview} />
-      ) : null}
+      {showCron ? <CronRunPreview pending={previewPending} preview={preview} /> : null}
       <input type="hidden" {...form.register("jitterMinutes", { valueAsNumber: true })} />
     </div>
   );

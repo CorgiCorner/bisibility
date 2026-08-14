@@ -21,6 +21,7 @@ vi.mock("./ResearchSearchCard", () => ({
     connectionId: string;
     disabled?: boolean;
     estimate: { costCents: number | null };
+    lookupDisabled?: boolean;
     onConnectionChange: (value: string) => void;
     onIncludeClickstreamChange: (value: boolean) => void;
     onLimitChange: (value: 100 | 300 | 500) => void;
@@ -28,14 +29,23 @@ vi.mock("./ResearchSearchCard", () => ({
     onSeedsChange: (value: string[]) => void;
     onSubmit: (value: string[]) => void;
     location: { canonicalKey: string };
+    metricsScope?: { country: string; language: string };
     seeds: string[];
   }) => (
     <div>
       <output aria-label="active connection">{props.connectionId}</output>
       <output aria-label="estimate cost">{props.estimate.costCents ?? "unknown"}</output>
       <output aria-label="research disabled">{String(props.disabled)}</output>
+      <output aria-label="research lookup disabled">{String(props.lookupDisabled)}</output>
       <output aria-label="search seeds">{props.seeds.join(" ")}</output>
       <output aria-label="search location">{props.location.canonicalKey}</output>
+      {props.metricsScope ? (
+        <output
+          aria-label={`Metrics scope: ${props.metricsScope.country} - ${props.metricsScope.language}`}
+        >
+          Metrics scope: {props.metricsScope.country} - {props.metricsScope.language}
+        </output>
+      ) : null}
       <button onClick={() => props.onSeedsChange(["rank tracker"])} type="button">
         Prepare seed
       </button>
@@ -61,6 +71,7 @@ vi.mock("./ResearchSearchCard", () => ({
         Connection 2
       </button>
       <button
+        disabled={props.disabled || props.lookupDisabled}
         onClick={() => {
           props.onSubmit(props.seeds.length > 0 ? props.seeds : ["rank tracker"]);
           props.onSeedsChange([]);
@@ -75,19 +86,25 @@ vi.mock("./ResearchSearchCard", () => ({
 
 vi.mock("./ResearchResults", () => ({
   ResearchResults: ({
+    metricsAvailable,
     onAdd,
     onRemoveSaved,
     onSave,
     result,
+    trackingMarketCount,
   }: {
+    metricsAvailable: boolean;
     onAdd: (draft: unknown) => void;
     onRemoveSaved?: (draft: unknown) => void;
     onSave: (draft: unknown) => void;
     result: {
       rows: Array<{ alreadySaved: boolean; alreadyTracked: boolean; keyword: string }>;
     };
+    trackingMarketCount: number;
   }) => (
     <div>
+      <output aria-label="research metrics available">{String(metricsAvailable)}</output>
+      <output aria-label="tracking market count">{trackingMarketCount}</output>
       <output aria-label="tracked keywords">
         {result.rows
           .filter((row) => row.alreadyTracked)
@@ -148,11 +165,16 @@ vi.mock("@/components/keywords/add/AddKeywordDrawer", () => ({
     initialKeyword,
     onAdded,
     open,
+    projectMarkets,
     showSchedule,
   }: {
     initialKeyword: string;
-    onAdded: (keywords: Array<{ publicId: string; text: string }>) => void;
+    onAdded: (
+      keywords: Array<{ publicId: string; text: string }>,
+      context: { locationKeys: readonly string[] },
+    ) => void;
     open: boolean;
+    projectMarkets?: { markets: Array<{ canonicalKey: string }> };
     showSchedule: boolean;
   }) =>
     open ? (
@@ -160,11 +182,28 @@ vi.mock("@/components/keywords/add/AddKeywordDrawer", () => ({
         <output aria-label="tracking drawer">
           {initialKeyword}|schedule:{String(showSchedule)}
         </output>
+        <output aria-label="drawer markets">
+          {projectMarkets?.markets.map((market) => market.canonicalKey).join(",")}
+        </output>
         <button
-          onClick={() => onAdded([{ publicId: "kw_new", text: "new typed keyword" }])}
+          onClick={() =>
+            onAdded([{ publicId: "kw_new", text: "new typed keyword" }], {
+              locationKeys: ["US"],
+            })
+          }
           type="button"
         >
           Complete add
+        </button>
+        <button
+          onClick={() =>
+            onAdded([{ publicId: "kw_new", text: "new typed keyword" }], {
+              locationKeys: ["ES@en"],
+            })
+          }
+          type="button"
+        >
+          Complete add in Spain
         </button>
       </div>
     ) : null,
@@ -281,13 +320,16 @@ describe("ResearchWorkspace", () => {
     window.localStorage.clear();
   });
 
-  it("prefills a source seed and location from the Saved deep link", () => {
-    renderWorkspace(vi.fn() as unknown as ResearchKeywordsAction, {
-      prefill: { locationKey: "PL", seed: "standing desk" },
+  it("prefills a qualified country market from the Saved deep link", () => {
+    const researchAction = vi.fn() as unknown as ResearchKeywordsAction;
+    renderWorkspace(researchAction, {
+      prefill: { locationKey: "ES@en", seed: "standing desk" },
     });
 
     expect(screen.getByLabelText("search seeds")).toHaveTextContent("standing desk");
-    expect(screen.getByLabelText("search location")).toHaveTextContent("PL");
+    expect(screen.getByLabelText("search location")).toHaveTextContent("ES@en");
+    expect(screen.getByLabelText("research lookup disabled")).toHaveTextContent("true");
+    expect(researchAction).not.toHaveBeenCalled();
   });
 
   function renderWorkspace(
@@ -371,6 +413,72 @@ describe("ResearchWorkspace", () => {
     fireEvent.click(screen.getByRole("button", { name: "Complete add" }));
     expect(screen.getByLabelText("tracked keywords")).toHaveTextContent("new typed keyword");
     expect(screen.getByLabelText("tracked keywords")).not.toHaveTextContent("seo tool");
+  });
+
+  it("passes the project registry to the drawer and marks only persisted pairs", async () => {
+    const { researchAction } = paidResearchAction();
+    renderWorkspace(researchAction as unknown as ResearchKeywordsAction, {
+      projectMarkets: {
+        markets: [
+          {
+            canonicalKey: "US",
+            countryCode: "US",
+            displayName: "United States",
+            id: "pmkt_us",
+            languageCode: "en",
+            languageLabel: "English",
+            monthlyCostCents: 100,
+            researchAvailable: true,
+            status: "active",
+          },
+          {
+            canonicalKey: "ES@en",
+            countryCode: "ES",
+            displayName: "Spain - English",
+            id: "pmkt_es_en",
+            languageCode: "en",
+            languageLabel: "English",
+            monthlyCostCents: 100,
+            researchAvailable: false,
+            status: "active",
+          },
+        ],
+        maxMarkets: 5,
+        monthlyCostCents: 200,
+        perMarketChecks: 3,
+        projectId: "prj_1",
+      },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Run research" }));
+    await screen.findByRole("button", { name: "Select two" });
+    expect(screen.getByLabelText("tracking market count")).toHaveTextContent("2");
+    fireEvent.click(screen.getByRole("button", { name: "Select two" }));
+    expect(screen.getByLabelText("drawer markets")).toHaveTextContent("US,ES@en");
+
+    fireEvent.click(screen.getByRole("button", { name: "Complete add in Spain" }));
+    expect(screen.getByLabelText("tracked keywords")).not.toHaveTextContent("new typed keyword");
+  });
+
+  it("disables an off-catalog pair and shows unsupported_location without provider work", () => {
+    const { researchAction } = paidResearchAction();
+    renderWorkspace(researchAction as unknown as ResearchKeywordsAction, {
+      context: {
+        ...context,
+        location: {
+          ...context.location,
+          canonicalKey: "ES@en",
+          countryCode: "ES",
+          displayName: "Spain - English",
+        },
+      },
+    });
+
+    expect(screen.getByRole("button", { name: "Run research" })).toBeDisabled();
+    expect(screen.getByLabelText("research lookup disabled")).toHaveTextContent("true");
+    expect(screen.queryByRole("status", { name: /Metrics scope:/ })).not.toBeInTheDocument();
+    expect(screen.getByText("This market is not supported for research")).toBeInTheDocument();
+    expect(researchAction).not.toHaveBeenCalled();
   });
 
   it("does not charge again for a cached re-run", async () => {
@@ -650,12 +758,10 @@ describe("ResearchWorkspace", () => {
     expect(screen.queryByRole("button", { name: "Undo" })).not.toBeInTheDocument();
   });
 
-  it("renders the metrics scope banner for a country-level selection", () => {
+  it("hides the metrics scope banner for a country-level selection", () => {
     renderWorkspace(vi.fn() as unknown as ResearchKeywordsAction);
 
-    expect(screen.getByLabelText("metrics scope")).toHaveTextContent(
-      "Metrics scope: United States - English",
-    );
+    expect(screen.queryByRole("status", { name: /Metrics scope:/ })).not.toBeInTheDocument();
   });
 
   it("renders the metrics scope banner for a city selection", () => {
@@ -684,9 +790,9 @@ describe("ResearchWorkspace", () => {
       },
     });
 
-    expect(screen.getByLabelText("metrics scope")).toHaveTextContent(
-      "Metrics scope: Spain - Spanish",
-    );
+    expect(
+      screen.getByRole("status", { name: "Metrics scope: Spain - Spanish" }),
+    ).toHaveTextContent("Metrics scope: Spain - Spanish");
   });
 
   it("does not include the city name in the metrics scope banner for a sub-country selection", () => {
@@ -715,7 +821,9 @@ describe("ResearchWorkspace", () => {
       },
     });
 
-    expect(screen.getByLabelText("metrics scope")).not.toHaveTextContent("Malaga");
+    expect(
+      screen.getByRole("status", { name: "Metrics scope: Spain - Spanish" }),
+    ).not.toHaveTextContent("Malaga");
   });
 
   it("derives a city selection scope through the shared country degradation helper", () => {
@@ -742,7 +850,7 @@ describe("ResearchWorkspace", () => {
     degrade.mockRestore();
   });
 
-  it("never falls back to a city name when the country scope cannot be resolved", () => {
+  it("uses the unsupported state instead of a metrics scope banner for an off-catalog city", () => {
     renderWorkspace(vi.fn() as unknown as ResearchKeywordsAction, {
       context: {
         ...context,
@@ -760,9 +868,7 @@ describe("ResearchWorkspace", () => {
       },
     });
 
-    expect(screen.getByLabelText("metrics scope")).toHaveTextContent(
-      "Metrics scope: Unknown country - Spanish",
-    );
-    expect(screen.getByLabelText("metrics scope")).not.toHaveTextContent("Malaga");
+    expect(screen.queryByRole("status", { name: /Metrics scope:/ })).not.toBeInTheDocument();
+    expect(screen.getByText(/Keyword research is not available/i)).toBeInTheDocument();
   });
 });

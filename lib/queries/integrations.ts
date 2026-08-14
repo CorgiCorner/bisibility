@@ -36,12 +36,14 @@ import {
   providerMeta,
   providerRates,
 } from "./integration-provider-drawer";
+import { getRequestProjectDefaults } from "./workspace-request-data";
 
 type SyncFailure = NonNullable<IntegrationProvider["syncFailure"]>;
 
 export type IntegrationsView = {
   categories: IntegrationCategory[];
   connectionCount: number;
+  timeZone: string;
 };
 
 const activeIntegrationKinds = [
@@ -221,14 +223,15 @@ export async function getIntegrationsView(
 ): Promise<IntegrationsView> {
   const { project } = await requireReadableProject(projectId);
   const now = options.now ?? new Date();
-  const [connectionCount, categories] = await Promise.all([
+  const [connectionCount, categories, defaults] = await Promise.all([
     prisma.providerConnection.count({
       where: { projectId: project.id, status: "connected" },
     }),
     categoriesForProject(project.id, now, options.googleOAuth),
+    getRequestProjectDefaults(project.id),
   ]);
 
-  return { categories, connectionCount };
+  return { categories, connectionCount, timeZone: defaults?.timezone ?? "UTC" };
 }
 
 export async function getIntegrationCategories(

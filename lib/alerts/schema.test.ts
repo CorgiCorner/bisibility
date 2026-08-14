@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { newRuleSchema, ruleTemplates } from "./new-rule-data";
+import { alertRuleUpdateFormSchema } from "./schema";
 import { alertRuleFormServerSchema } from "./schema.server";
 
 const ctrRule = {
@@ -50,5 +51,36 @@ describe("CTR drop alert schema", () => {
         expect(result.error.issues.some((issue) => issue.path[0] === "changePct")).toBe(true);
       }
     }
+  });
+});
+
+describe("alert market scope schema", () => {
+  it("defaults omitted create markets to All markets", () => {
+    const result = alertRuleFormServerSchema.parse(ctrRule);
+
+    expect(result.marketIds).toEqual([]);
+  });
+
+  it("preserves omitted PATCH markets but retains an explicit All markets set", () => {
+    const omitted = alertRuleUpdateFormSchema.parse(ctrRule);
+    const explicit = alertRuleUpdateFormSchema.parse({ ...ctrRule, marketIds: [] });
+
+    expect(omitted.marketIds).toBeUndefined();
+    expect(explicit.marketIds).toEqual([]);
+  });
+
+  it("accepts only project-market public IDs", () => {
+    expect(
+      alertRuleFormServerSchema.safeParse({
+        ...ctrRule,
+        marketIds: ["pmkt_a00000000000000000000000"],
+      }).success,
+    ).toBe(true);
+    expect(
+      alertRuleFormServerSchema.safeParse({
+        ...ctrRule,
+        marketIds: ["kw_a00000000000000000000000"],
+      }).success,
+    ).toBe(false);
   });
 });

@@ -95,12 +95,14 @@ export type CompetitorObservation = {
   ranked: boolean;
   ranks: Record<string, number | null>;
   tags: string[];
+  volume: number | null;
 };
 
 export type CompetitorMarketDataState =
   | "no_completed_checks"
   | "completed_unranked"
   | "filter_excludes_all"
+  | "no_volume_data"
   | "ranked";
 
 // Raw, filter-independent market data. The client recomputes shares and head-to-head
@@ -111,6 +113,7 @@ export type CompetitorMarketData = {
   device: "desktop" | "mobile";
   engine: "google";
   key: string;
+  languageLabel: string;
   location: string;
   locationId: string;
   locationKind: "country" | "region" | "city";

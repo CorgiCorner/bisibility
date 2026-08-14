@@ -1,8 +1,13 @@
 import { canonicalKeySchema } from "@/lib/schemas/keyword";
-import { countryCodeForMarketName, countrySeed, parseCanonicalKey } from "@/lib/serp/location";
+import {
+  countryCodeForMarketName,
+  countrySeed,
+  normalizeCanonicalLocationKey,
+  parseCanonicalKey,
+} from "@/lib/serp/location";
 import { DEFAULT_SERP_MARKET, type SerpMarketName } from "@/lib/serp/markets";
 
-export const MAX_ONBOARDING_LOCATIONS = 5;
+export { MAX_PROJECT_MARKETS as MAX_ONBOARDING_LOCATIONS } from "@/lib/markets/limits";
 export const DEFAULT_ONBOARDING_LOCATION_KEY =
   countryCodeForMarketName(DEFAULT_SERP_MARKET) ?? "US";
 
@@ -16,16 +21,14 @@ function normalizeLocationKey(value: string): OnboardingLocationCandidate | null
   if (!parsed.success) {
     return null;
   }
-  const selector = parseCanonicalKey(parsed.data);
-  if (!selector) {
-    return null;
-  }
+  const normalized = normalizeCanonicalLocationKey(parsed.data);
+  const selector = normalized.selector;
   if (!selector.cityName) {
     return countrySeed(selector.countryCode)
-      ? { key: selector.countryCode.toUpperCase(), kind: "country" }
+      ? { key: normalized.canonicalKey, kind: "country" }
       : null;
   }
-  return { key: parsed.data, kind: "city" };
+  return { key: normalized.canonicalKey, kind: "city" };
 }
 
 export function countryLocationKey(value: string | undefined | null) {

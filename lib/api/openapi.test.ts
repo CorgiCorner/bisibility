@@ -222,12 +222,16 @@ describe("OpenAPI document", () => {
     });
   });
 
-  it("documents alert severity on REST mutation inputs", () => {
+  it("documents alert severity and market scope on REST mutation inputs", () => {
     const doc = getOpenApiDocument();
 
     expect(doc.components.schemas.AlertRuleInput.properties.severity).toMatchObject({
       enum: ["info", "warning", "urgent"],
       type: "string",
+    });
+    expect(doc.components.schemas.AlertRuleInput.properties.market_ids).toMatchObject({
+      items: { pattern: "^pmkt_[a-z][a-z0-9]{23}$", type: "string" },
+      type: "array",
     });
     expect(doc.paths["/projects/{project_id}/alert-rules"].post).toMatchObject({
       requestBody: {
@@ -337,9 +341,16 @@ describe("OpenAPI document", () => {
     expect(match.properties.text).toMatchObject({
       description: expect.stringContaining("Stored keyword text"),
     });
-    expect(market.properties.location_key).toMatchObject({ example: "US/Texas/Austin" });
+    expect(market.properties.location_key).toMatchObject({ example: "ES/Andalusia/Malaga@en" });
     expect(market.required).toEqual(
-      expect.arrayContaining(["location", "location_key", "country_code", "device"]),
+      expect.arrayContaining([
+        "location",
+        "location_key",
+        "country_code",
+        "language_code",
+        "language_label",
+        "device",
+      ]),
     );
   });
 
@@ -407,7 +418,10 @@ describe("OpenAPI document", () => {
     expect(keyword.required).toEqual(
       expect.arrayContaining([
         "created_at",
+        "language_code",
+        "language_label",
         "location",
+        "location_key",
         "previous_position",
         "schedule",
         "updated_at",
@@ -415,7 +429,10 @@ describe("OpenAPI document", () => {
     );
     expect(keyword.properties).toMatchObject({
       created_at: { format: "date-time", type: "string" },
+      language_code: { type: "string" },
+      language_label: { type: "string" },
       location: { type: "string" },
+      location_key: { type: "string" },
       previous_position: { type: ["integer", "null"] },
       schedule: { type: ["object", "null"] },
       updated_at: { format: "date-time", type: "string" },

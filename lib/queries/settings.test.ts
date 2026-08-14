@@ -151,6 +151,32 @@ describe("settings queries", () => {
     expect(result.usage.onPaceCents).toBe(4_650);
   });
 
+  it("formats project settings dates in the project timezone", async () => {
+    const projectWithMadridTime = fullProject();
+    mocks.prisma.project.findUnique.mockResolvedValue({
+      ...projectWithMadridTime,
+      apiKeys: [
+        {
+          createdAt: new Date("2026-05-01T23:30:00.000Z"),
+          expiresAt: null,
+          id: "key_1",
+          lastUsedAt: null,
+          name: "Production",
+          prefix: "bsb_key_live_",
+          publicId: "key_abcdefghijklmnopqrstuvwx",
+        },
+      ],
+      defaults: { ...projectWithMadridTime.defaults, timezone: "Europe/Madrid" },
+    });
+
+    const result = await getSettings("prj_abcdefghijklmnopqrstuvwx", {
+      dateFormat: "long",
+      now: new Date("2026-06-01T12:00:00.000Z"),
+    });
+
+    expect(result.apiKeys[0]?.createdLabel).toBe("created May 2, 2026");
+  });
+
   it("maps settings from real project data and picks the dominant keyword market", async () => {
     mocks.prisma.project.findUnique.mockResolvedValue(
       fullProject({

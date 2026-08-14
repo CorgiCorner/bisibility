@@ -4,7 +4,7 @@ import { ToastProvider } from "@/components/ui";
 import type { KeywordCheckState } from "@/lib/queries/keyword-row-types";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 function keyword(state: Exclude<KeywordCheckState, "ranked">): KeywordRow {
   return {
@@ -45,6 +45,17 @@ function renderDetail(
 }
 
 describe("KeywordPendingDetail", () => {
+  const originalTZ = process.env.TZ;
+
+  beforeEach(() => {
+    process.env.TZ = "UTC";
+  });
+
+  afterEach(() => {
+    if (originalTZ === undefined) delete process.env.TZ;
+    else process.env.TZ = originalTZ;
+  });
+
   it.each([
     [
       "never_checked",

@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { isProjectReadOnly } from "@/lib/deployment/project-write-mode";
 import { centsToDollars } from "@/lib/format/currency";
 import { relativeFuture, relativePast } from "@/lib/format/relative-time";
-import { createUserDateTimeFormatter, type DateTimePreferences } from "@/lib/format/user-datetime";
+import { createUserDateTimeFormatter, type DateFormatPreference } from "@/lib/format/user-datetime";
 import {
   resolveEffectiveSchedule,
   summarizeEffectiveSchedules,
@@ -36,6 +36,7 @@ import {
   overviewRangeLabels,
   overviewRangeStart,
 } from "./overview-filters";
+import { buildOverviewMarkets } from "./overview-markets";
 import { deriveWorkspaceState } from "./workspace-state";
 
 export type { OverviewFilters } from "./overview-filters";
@@ -61,18 +62,18 @@ function deviceLabelForFilter(device: OverviewDevice) {
 function providerLabel(provider: string) { if (provider === "dataforseo") { return "DataForSEO"; } if (provider === "serpapi") { return "SerpApi"; } return provider.split(/[-_]/).map((part) => `${part.slice(0, 1).toUpperCase()}${part.slice(1)}`).join(" "); }
 
 // biome-ignore format: dense query assembly keeps this file under the project line cap.
-export async function getOverview(projectId: string, options: { filters?: Partial<OverviewFilters>; now?: Date; preferences?: DateTimePreferences } = {}) {
+export async function getOverview(projectId: string, options: { dateFormat?: DateFormatPreference; filters?: Partial<OverviewFilters>; now?: Date } = {}) {
   const now = options.now ?? new Date();
-  const dateTime = createUserDateTimeFormatter(options.preferences);
   const filters = normalizeOverviewFilters(options.filters);
   const trendStart = overviewRangeStart(now, filters.range);
   const { project } = await requireReadableProject(projectId);
   const where = overviewKeywordWhere(project.id, filters);
-  const hasKeywordFilter = filters.device !== "all" || filters.tag !== null;
+  const hasKeywordFilter =
+    filters.device !== "all" || filters.marketIds.length > 0 || filters.tag !== null;
   // Keep independent reads parallel, but reuse the filtered count when no keyword filter is
   // active so the default dashboard never repeats the same count statement.
   const [metricData, unfilteredKeywordCount, providerConnections, monthChecks, tags] = await Promise.all([
-    loadOverviewMetricData(project.id, filters, now),
+    loadOverviewMetricData(project.id, filters, now, { includeMarkets: true }),
     hasKeywordFilter ? prisma.keyword.count({ where: { projectId: project.id } }) : Promise.resolve(null),
     prisma.providerConnection.findMany({ orderBy: providerChainOrderBy(), select: { enabled: true, kind: true, priority: true, provider: true, status: true }, where: { OR: [{ kind: "serp" }, { enabled: true, kind: "analytics", status: "connected" }], projectId: project.id } }),
     prisma.rankCheck.findMany({ select: { costCents: true }, where: { checkedAt: { gte: monthStartUtc(now), lt: nextMonthStartUtc(now) }, keyword: where, status: "completed" } }),
@@ -84,8 +85,14 @@ export async function getOverview(projectId: string, options: { filters?: Partia
     keywordVolumes,
     keywords,
     latestCheck,
+    marketKeywords,
+    projectMarkets,
     projectDefaults,
   } = metricData;
+  const dateTime = createUserDateTimeFormatter({
+    dateFormat: options.dateFormat,
+    timezone: projectDefaults?.timezone ?? "UTC",
+  });
   const totalKeywordCount = unfilteredKeywordCount ?? filteredKeywordCount;
   const serpProviders = providerConnections.filter((connection) => connection.kind === "serp");
   const snapshots = keywords.map((keyword) => snapshotFor(keyword, keywordVolumes.get(keyword.id) ?? null));
@@ -128,6 +135,17 @@ export async function getOverview(projectId: string, options: { filters?: Partia
   };
   return {
     addedThisMonth,
+    byMarket: buildOverviewMarkets(
+      marketKeywords,
+      projectMarkets.filter(
+        (market) => filters.marketIds.length === 0 || filters.marketIds.includes(market.locationId),
+      ),
+      {
+      defaultFrequency: projectDefaults?.frequency,
+      now,
+      range: filters.range,
+      },
+    ),
     checksThisMonth,
     dataSource,
     distribution: buildDistribution(positions),
@@ -151,6 +169,12 @@ export async function getOverview(projectId: string, options: { filters?: Partia
       availableTags: tags.map((tag) => tag.name),
       device: deviceLabelForFilter(filters.device),
       deviceValue: filters.device,
+      marketOptions: projectMarkets.map((market) => ({
+        label: market.location.displayName,
+        secondary: market.location.languageLabel,
+        value: market.locationId,
+      })),
+      marketValues: filters.marketIds,
       range: overviewRangeLabels[filters.range],
       rangeValue: filters.range,
       refresh: scheduleSummary.refresh,

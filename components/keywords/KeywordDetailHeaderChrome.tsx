@@ -3,13 +3,15 @@ import {
   type DimensionKind,
   DimensionSwitcher,
 } from "@/components/keywords/filters/DimensionSwitcher";
-import { Card, IdChip } from "@/components/ui";
+import { Card, IdChip, ZonedTime } from "@/components/ui";
+import { comparableUrl } from "@/lib/alerts/url-mismatch";
 import type { KeywordDetailRankState } from "@/lib/keyword-detail/state-model";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import {
+  ArrowUpRightIcon as ArrowUpRight,
   FlagIcon as Flag,
-  GlobeSimpleIcon as GlobeSimple,
   MonitorIcon as Monitor,
+  WarningIcon as Warning,
 } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
 import { KeywordIndexStatus } from "./KeywordIndexStatus";
@@ -17,18 +19,13 @@ import { metadataChipClassName } from "./keyword-header-model";
 
 type KeywordDetailHeaderChromeProps = {
   actions: ReactNode;
+  dimensionControls?: ReactNode;
   keyword: KeywordRow;
   onTrack?: (kind: DimensionKind, value: string) => void;
   providerId?: string | null;
   rankState?: KeywordDetailRankState;
+  timeZone: string;
 };
-
-const dateFormatter = new Intl.DateTimeFormat("en-US", {
-  day: "numeric",
-  hour: "numeric",
-  minute: "2-digit",
-  month: "short",
-});
 
 function pathLabel(value: string | null) {
   if (!value) return "Not set";
@@ -41,12 +38,19 @@ function pathLabel(value: string | null) {
   }
 }
 
-function lastCheckLabel(value: string | null) {
+function lastCheckLabel(value: string | null, timeZone: string) {
   if (!value) return "Not checked yet";
   const minutes = Math.max(0, Math.floor((Date.now() - new Date(value).getTime()) / 60_000));
   if (minutes < 60) return `${minutes || 1} min ago`;
   if (minutes < 1_440) return `${Math.floor(minutes / 60)}h ago`;
-  return dateFormatter.format(new Date(value));
+  return new Intl.DateTimeFormat("en-US", {
+    day: "numeric",
+    hour: "numeric",
+    hourCycle: "h23",
+    minute: "2-digit",
+    month: "short",
+    timeZone,
+  }).format(new Date(value));
 }
 
 function providerLabel(providerId: string | null | undefined) {
@@ -69,15 +73,28 @@ function userTags(keyword: KeywordRow) {
 
 export function KeywordDetailHeaderChrome({
   actions,
+  dimensionControls,
   keyword,
   onTrack,
   providerId,
   rankState,
+  timeZone,
 }: Readonly<KeywordDetailHeaderChromeProps>) {
   const currentRankingUrl = rankState && rankState !== "normal" ? null : keyword.rankingUrl;
-  const nextCheck = keyword.schedule?.next_check_at
-    ? dateFormatter.format(new Date(keyword.schedule.next_check_at))
-    : "Not scheduled";
+  const liveSerpHref = buildGoogleSerpUrl(keyword.keyword, keyword.location);
+  const comparableRankingUrl = comparableUrl(currentRankingUrl);
+  const comparableTargetUrl = comparableUrl(keyword.targetUrl, currentRankingUrl);
+  const targetMismatch = Boolean(
+    comparableRankingUrl && comparableTargetUrl && comparableRankingUrl !== comparableTargetUrl,
+  );
+  const matchesTarget = Boolean(
+    comparableRankingUrl && comparableTargetUrl && comparableRankingUrl === comparableTargetUrl,
+  );
+  const nextCheck = keyword.schedule?.next_check_at ? (
+    <ZonedTime timeZone={timeZone} value={keyword.schedule.next_check_at} />
+  ) : (
+    "Not scheduled"
+  );
 
   return (
     <Card className="rounded-[14px]" size="lg">
@@ -90,28 +107,24 @@ export function KeywordDetailHeaderChrome({
             <IdChip className="border-border bg-transparent" size="xs" value={keyword.id} />
           </div>
           <div className="mt-3 flex flex-wrap items-center gap-[7px]">
-            <DimensionSwitcher
-              icon={<Flag size={13} />}
-              kind="location"
-              label={keyword.location.displayName}
-              onTrack={onTrack}
-              value={keyword.locationName}
-            />
-            <DimensionSwitcher
-              icon={<Monitor size={13} />}
-              kind="device"
-              label={keyword.device}
-              onTrack={onTrack}
-              value={keyword.device}
-            />
-            <DimensionSwitcher
-              icon={<GlobeSimple size={13} />}
-              kind="engine"
-              label={keyword.engine}
-              onTrack={onTrack}
-              serpHref={buildGoogleSerpUrl(keyword.keyword, keyword.location)}
-              value={keyword.engine}
-            />
+            {dimensionControls ?? (
+              <>
+                <DimensionSwitcher
+                  icon={<Flag size={13} />}
+                  kind="location"
+                  label={keyword.location.displayName}
+                  onTrack={onTrack}
+                  value={keyword.locationName}
+                />
+                <DimensionSwitcher
+                  icon={<Monitor size={13} />}
+                  kind="device"
+                  label={keyword.device}
+                  onTrack={onTrack}
+                  value={keyword.device}
+                />
+              </>
+            )}
             {keyword.topic ? (
               <span className={metadataChipClassName}>Topic: {keyword.topic}</span>
             ) : null}
@@ -137,11 +150,28 @@ export function KeywordDetailHeaderChrome({
               Ranking{" "}
               <strong className="font-semibold text-fg">
                 {currentRankingUrl ? pathLabel(currentRankingUrl) : "No ranking URL yet"}
-              </strong>{" "}
-              {currentRankingUrl && currentRankingUrl === keyword.targetUrl ? "Matches target" : ""}
+              </strong>
             </span>
+            {matchesTarget ? <span>Matches target</span> : null}
+            {targetMismatch ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-yellow/15 px-2 py-0.5 font-semibold text-[10px] text-yellow-text">
+                <Warning aria-hidden size={11} weight="fill" />
+                Target mismatch
+              </span>
+            ) : null}
             <span aria-hidden className="h-[11px] w-px bg-border" />
-            <span>Last check {lastCheckLabel(keyword.lastCheckAt)}</span>
+            <a
+              className="inline-flex items-center gap-1 font-sans text-[11.5px] font-medium text-accent-text hover:underline focus-visible:underline"
+              href={liveSerpHref}
+              rel="noreferrer noopener"
+              target="_blank"
+              title="Open live search results in a new tab"
+            >
+              Open live search results
+              <ArrowUpRight aria-hidden size={10} weight="bold" />
+            </a>
+            <span aria-hidden className="h-[11px] w-px bg-border" />
+            <span>Last check {lastCheckLabel(keyword.lastCheckAt, timeZone)}</span>
             <span aria-hidden className="h-[11px] w-px bg-border" />
             <span>Next check {nextCheck}</span>
             <span aria-hidden className="h-[11px] w-px bg-border" />

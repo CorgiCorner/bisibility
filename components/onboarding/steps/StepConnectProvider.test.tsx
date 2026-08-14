@@ -16,9 +16,9 @@ describe("StepConnectProvider", () => {
   it("renders provider cards and reveals selected credential fields", () => {
     renderProviderStep();
 
-    expect(
-      screen.getByText("Choose a rank-check provider, Search Console, or both."),
-    ).not.toHaveTextContent("costs from");
+    expect(screen.getByText("Rank data / powers rank checks")).toBeInTheDocument();
+    expect(screen.getByText("Also powers keyword research and difficulty.")).toBeInTheDocument();
+    expect(screen.getByText("Rank checks only.")).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: /DataForSEO/ })).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: /SerpApi/ })).toBeInTheDocument();
     expect(screen.getByLabelText("API login")).toBeInTheDocument();
@@ -40,10 +40,10 @@ describe("StepConnectProvider", () => {
     expect(screen.queryByText("No provider yet?")).not.toBeInTheDocument();
     expect(screen.queryByText(/Search Console can be connected/)).not.toBeInTheDocument();
 
-    const affiliateDisclosure = screen.getByText("Affiliate link");
+    const affiliateDisclosure = screen.getByText("affiliate");
     const credentialLink = screen.getByTitle("Affiliate link");
     expect(
-      affiliateDisclosure.compareDocumentPosition(credentialLink) &
+      credentialLink.compareDocumentPosition(affiliateDisclosure) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
     expect(credentialLink).toHaveAttribute("rel", "sponsored noopener noreferrer");

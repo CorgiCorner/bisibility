@@ -45,7 +45,9 @@ describe("saved keyword service", () => {
       .mockReturnValueOnce("svkw_a00000000000000000000000")
       .mockReturnValueOnce("svkw_b00000000000000000000000")
       .mockReturnValueOnce("svkw_c00000000000000000000000");
-    mocks.findManyTracked.mockResolvedValue([{ text: "Already tracked" }]);
+    mocks.findManyTracked.mockResolvedValue([
+      { locationRef: { canonicalKey: "US" }, text: "Already tracked" },
+    ]);
     mocks.createMany.mockResolvedValue({ count: 1 });
     mocks.findManySaved.mockResolvedValue([{ publicId: "svkw_b00000000000000000000000" }]);
     mocks.writeAudit.mockResolvedValue({ id: "audit_1" });
@@ -64,6 +66,8 @@ describe("saved keyword service", () => {
     expect(mocks.createMany).toHaveBeenCalledWith({
       data: [
         expect.objectContaining({
+          countryCode: "US",
+          languageCode: "en",
           normalizedText: "new keyword",
           publicId: "svkw_b00000000000000000000000",
         }),
@@ -86,6 +90,70 @@ describe("saved keyword service", () => {
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({ actorId: null, projectId: "project_1" }),
     );
+  });
+
+  it("keeps the same normalized keyword distinct across language pairs", async () => {
+    mocks.findManyTracked.mockResolvedValue([
+      { locationRef: { canonicalKey: "ES" }, text: "Rank tracker" },
+    ]);
+    mocks.createMany.mockResolvedValue({ count: 1 });
+    mocks.findManySaved.mockResolvedValue([{ publicId: "svkw_b00000000000000000000000" }]);
+
+    const result = await saveSavedKeywordRows(
+      [
+        { keyword: "Rank tracker", location: "ES", variantCount: 0 },
+        { keyword: "Rank tracker", location: "ES@en", variantCount: 0 },
+      ],
+      scope,
+    );
+
+    expect(mocks.createMany).toHaveBeenCalledWith({
+      data: [
+        expect.objectContaining({
+          countryCode: "ES",
+          languageCode: "en",
+          location: "ES@en",
+          normalizedText: "rank tracker",
+        }),
+      ],
+      skipDuplicates: true,
+    });
+    expect(result.results).toEqual([
+      { keyword: "Rank tracker", status: "skipped" },
+      { keyword: "Rank tracker", status: "created" },
+    ]);
+  });
+
+  it("round trips a default-language alias through its canonical saved location", async () => {
+    mocks.findManyTracked.mockResolvedValue([]);
+    mocks.findManySaved.mockResolvedValue([{ publicId: "svkw_a00000000000000000000000" }]);
+    mocks.deleteMany.mockResolvedValue({ count: 1 });
+
+    await saveSavedKeywordRows(
+      [{ keyword: "Rank tracker", location: "ES@es", variantCount: 0 }],
+      scope,
+    );
+    await expect(
+      removeSavedKeywordRows({ rows: [{ keyword: "  RANK tracker ", location: "ES@es" }] }, scope),
+    ).resolves.toEqual({ removedCount: 1 });
+
+    expect(mocks.createMany).toHaveBeenCalledWith({
+      data: [
+        expect.objectContaining({
+          countryCode: "ES",
+          languageCode: "es",
+          location: "ES",
+          normalizedText: "rank tracker",
+        }),
+      ],
+      skipDuplicates: true,
+    });
+    expect(mocks.deleteMany).toHaveBeenCalledWith({
+      where: {
+        OR: [{ location: "ES", normalizedText: "rank tracker" }],
+        projectId: "project_1",
+      },
+    });
   });
 
   it("deletes only saved keywords inside the authenticated project", async () => {

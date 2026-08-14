@@ -12,6 +12,8 @@ import { requireReadableProject } from "./_auth";
 import { loadCheckRunsSummary } from "./check-runs-stats";
 import { getRequestSerpProviderChain } from "./workspace-request-data";
 
+const STALE_AFTER_MS = 48 * 60 * 60 * 1000;
+
 function statusWhere(status: CheckRunsViewOptions["status"]): Prisma.RankCheckWhereInput {
   if (status === "fallback") return { status: "completed", viaFallback: true };
   if (status && status !== "all") return { status };
@@ -52,7 +54,8 @@ export async function getCheckRunsView(projectId: string, options: CheckRunsView
   const limit = checkRunsPageLimit(options.limit);
   const { project } = await requireReadableProject(projectId);
   const providerChain = getRequestSerpProviderChain(project.id);
-  const [rows, summary] = await Promise.all([
+  const staleBefore = new Date(now.getTime() - STALE_AFTER_MS);
+  const [rows, summary, staleCount] = await Promise.all([
     prisma.rankCheck.findMany({
       orderBy: [{ checkedAt: "desc" }, { publicId: "desc" }],
       select: {
@@ -70,7 +73,14 @@ export async function getCheckRunsView(projectId: string, options: CheckRunsView
             publicId: true,
             text: true,
             device: true,
-            locationRef: { select: { displayName: true, languageLabel: true } },
+            locationRef: {
+              select: {
+                countryCode: true,
+                displayName: true,
+                languageCode: true,
+                languageLabel: true,
+              },
+            },
           },
         },
         position: true,
@@ -86,9 +96,19 @@ export async function getCheckRunsView(projectId: string, options: CheckRunsView
       where: checkRunRowsWhere(project.id, rangeStart, now, options),
     }),
     loadCheckRunsSummary(project.id, { end: now, start: rangeStart }, providerChain),
+    prisma.keyword.count({
+      where: {
+        dispatchState: { isNot: null },
+        projectId: project.id,
+        rankChecks: {
+          none: { checkedAt: { gte: staleBefore }, status: "completed" },
+          some: { checkedAt: { lt: staleBefore }, status: "completed" },
+        },
+      },
+    }),
   ]);
 
-  return buildCheckRunsView(rows, summary, { limit });
+  return buildCheckRunsView(rows, summary, { limit, staleCount });
 }
 
 export type { CheckRunsViewOptions };

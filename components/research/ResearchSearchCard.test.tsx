@@ -11,9 +11,12 @@ const baseProps = {
     canonicalKey: "US",
     countryCode: "US",
     displayName: "United States",
+    hl: "en",
     kind: "country" as const,
+    languageLabel: "English",
   },
   mode: "auto" as const,
+  metricsScope: undefined,
   onConnectionChange: vi.fn(),
   onIncludeClickstreamChange: vi.fn(),
   onLimitChange: vi.fn(),
@@ -49,16 +52,54 @@ describe("ResearchSearchCard", () => {
     expect(screen.getByRole("button", { name: "Research free, cached" })).toBeInTheDocument();
   });
 
-  it("uses a quiet pricing trigger and a clearly bounded popover", () => {
+  it("keeps the market language visible in the control", () => {
     render(<ResearchSearchCard {...baseProps} />);
 
-    const trigger = screen.getByRole("button", { name: "How is this priced?" });
-    expect(trigger).not.toHaveClass("font-semibold", "underline");
-    fireEvent.click(trigger);
+    expect(screen.getByRole("combobox", { name: "Market" })).toHaveValue("United States / English");
+  });
 
-    const popover = screen.getByText("Estimated DataForSEO cost").closest(".MuiPopover-paper");
-    expect(popover).toHaveClass("rounded-[12px]", "border", "border-border-strong");
-    expect(popover).toHaveStyle({ overflow: "hidden" });
+  it("disables provider work for an unsupported pair but keeps the market editable", () => {
+    render(<ResearchSearchCard {...baseProps} lookupDisabled />);
+
+    expect(screen.getByRole("button", { name: "Research ~$0.03" })).toBeDisabled();
+    expect(screen.getByRole("combobox", { name: "Market" })).toBeEnabled();
+  });
+
+  it("hides the metrics scope when the country selection already matches it", () => {
+    render(<ResearchSearchCard {...baseProps} />);
+
+    expect(screen.queryByRole("status", { name: /Metrics scope:/ })).not.toBeInTheDocument();
+  });
+
+  it("renders the exact metrics scope for a city degraded to its country", () => {
+    render(
+      <ResearchSearchCard
+        {...baseProps}
+        metricsScope={{ country: "Spain", language: "Spanish" }}
+      />,
+    );
+
+    expect(
+      screen.getByRole("status", { name: "Metrics scope: Spain - Spanish" }),
+    ).toHaveTextContent("Metrics scope: Spain - Spanish");
+  });
+
+  it("shows the provider control even when only one connection is eligible", () => {
+    render(<ResearchSearchCard {...baseProps} />);
+
+    expect(screen.getByRole("button", { name: "Data provider connection" })).toHaveTextContent(
+      "Provider:DataForSEO",
+    );
+  });
+
+  it("links pricing guidance to the provider docs", () => {
+    render(<ResearchSearchCard {...baseProps} />);
+
+    expect(screen.getByRole("link", { name: "How is this priced?" })).toHaveAttribute(
+      "href",
+      "https://bisibility.com/docs/api/keyword-research#research-keywords",
+    );
+    expect(screen.queryByText("Estimated DataForSEO cost")).not.toBeInTheDocument();
   });
 
   it("creates seed chips before submit and clears the pending seed list", async () => {

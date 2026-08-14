@@ -74,7 +74,7 @@ export async function installSampleData() {
     revalidateSampleDataViews();
   }
 
-  redirect(appPath(result.project.publicId, "overview"));
+  redirect(appPath(result.project.publicId, "dashboard"));
 }
 
 export async function removeSampleData(input: unknown) {

@@ -7,7 +7,7 @@ import {
 
 const serpMarketSchema = { enum: serpMarketOptions, example: "United States", type: "string" };
 const serpDeviceSchema = { enum: serpDeviceValues, type: "string" };
-const locationKeySchema = { example: "US/Texas/Austin", type: "string" };
+const locationKeySchema = { example: "ES/Andalusia/Malaga@en", type: "string" };
 
 export const projectSchemas = {
   Project: {

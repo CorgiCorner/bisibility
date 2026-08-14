@@ -22,6 +22,7 @@ export type LocationCandidate = {
   city_name: string | null;
   canonical_key: string;
   hl: string;
+  language_code: string;
   language_label: string;
 };
 
@@ -50,6 +51,7 @@ function toCacheCandidate(row: Location): LocationCandidate {
     hl: row.hl,
     id: candidateId(row.kind, row.canonicalKey),
     kind: row.kind,
+    language_code: row.languageCode,
     language_label: row.languageLabel,
     region_code: row.regionCode,
     region_name: row.kind === "city" ? regionNameFromDisplayName(row.displayName) : null,
@@ -66,6 +68,7 @@ function toSuggestionCandidate(candidate: LocationSuggestion): LocationCandidate
     hl: seed?.hl ?? "en",
     id: candidateId("city", candidate.canonicalKey),
     kind: "city",
+    language_code: seed?.languageCode ?? "en",
     language_label: seed?.languageLabel ?? "English",
     region_code: candidate.regionCode,
     region_name: candidate.regionName ?? regionNameFromDisplayName(candidate.displayName),
@@ -104,6 +107,7 @@ function countryCandidates(query: string): LocationCandidate[] {
           hl: market.language.code,
           id: candidateId("country", countryCode),
           kind: "country" as const,
+          language_code: market.language.code,
           language_label: market.language.label,
           rank,
           region_code: null,

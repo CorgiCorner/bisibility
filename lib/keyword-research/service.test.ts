@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   ideas: vi.fn(),
   paidCall: vi.fn(),
   project: vi.fn(),
+  rateContext: vi.fn(),
   related: vi.fn(),
   readCache: vi.fn(),
   suggestions: vi.fn(),
@@ -18,7 +19,7 @@ const cacheKeySpy = vi.fn();
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/provider-rates/connection-context", () => ({
-  loadProviderRateContext: () => Promise.resolve({ entries: [], manualAmountCents: null }),
+  loadProviderRateContext: mocks.rateContext,
 }));
 vi.mock("./context", () => ({
   connectionResources: () => [
@@ -27,12 +28,12 @@ vi.mock("./context", () => ({
   eligibleResearchConnections: (project: { eligible: unknown[] }) => project.eligible,
   keywordResearchProject: mocks.project,
   normalizeResearchKeyword: (value: string) => value.trim().replace(/\s+/g, " ").toLowerCase(),
-  researchLocation: () =>
+  researchLocation: (_project: unknown, overrideKey?: string) =>
     Promise.resolve({
-      key: "US",
+      key: overrideKey ?? "US",
       value: {
-        gl: "us",
-        hl: "en",
+        gl: (overrideKey ?? "US").slice(0, 2).toLowerCase(),
+        hl: overrideKey?.split("@")[1] ?? "en",
         primaryGeoCode: null,
         primaryGeoName: "United States",
         secondaryGeoName: "United States",
@@ -79,7 +80,7 @@ const project = {
     },
   ],
   id: "project_1",
-  keywords: [{ text: "tracked keyword" }],
+  keywords: [{ locationRef: { canonicalKey: "US" }, text: "tracked keyword" }],
   savedKeywords: [],
 };
 
@@ -110,6 +111,7 @@ describe("keyword research service", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.project.mockResolvedValue(project);
+    mocks.rateContext.mockResolvedValue({ entries: [], manualAmountCents: null });
     mocks.readCache.mockResolvedValue(null);
     mocks.withCache.mockImplementation(async ({ load }: { load: () => Promise<unknown> }) => ({
       cached: false,
@@ -192,12 +194,42 @@ describe("keyword research service", () => {
     expect(mocks.paidCall).not.toHaveBeenCalled();
   });
 
+  it("does not annotate the same tracked text from another market pair", async () => {
+    mocks.project.mockResolvedValue({
+      ...project,
+      keywords: [{ locationRef: { canonicalKey: "GB" }, text: "tracked keyword" }],
+    });
+    mocks.withCache.mockResolvedValue({
+      cached: true,
+      status: "success",
+      value: {
+        costCents: 1,
+        fetchedAt: "2026-07-22T10:00:00.000Z",
+        rows: [row("Tracked Keyword")],
+      },
+    });
+
+    await expect(run({ mode: "ideas" })).resolves.toMatchObject({
+      rows: [{ alreadyTracked: false }],
+    });
+  });
+
   it("annotates saved rows by normalized text and active location", async () => {
     mocks.project.mockResolvedValue({
       ...project,
       savedKeywords: [
-        { location: "US", normalizedText: "saved keyword" },
-        { location: "GB", normalizedText: "other market" },
+        {
+          countryCode: "US",
+          languageCode: "en",
+          location: "US",
+          normalizedText: "saved keyword",
+        },
+        {
+          countryCode: "GB",
+          languageCode: "en",
+          location: "GB",
+          normalizedText: "other market",
+        },
       ],
     });
     mocks.withCache.mockResolvedValue({
@@ -216,6 +248,48 @@ describe("keyword research service", () => {
         { alreadySaved: false, keyword: "Other Market" },
       ],
     });
+  });
+
+  it("does not annotate the same saved text from another language pair", async () => {
+    mocks.project.mockResolvedValue({
+      ...project,
+      savedKeywords: [
+        {
+          countryCode: "CA",
+          languageCode: "en",
+          location: "CA",
+          normalizedText: "saved keyword",
+        },
+      ],
+    });
+    mocks.withCache.mockResolvedValue({
+      cached: true,
+      status: "success",
+      value: {
+        costCents: 1,
+        fetchedAt: "2026-07-22T10:00:00.000Z",
+        rows: [row("Saved keyword")],
+      },
+    });
+
+    await expect(run({ locationKey: "CA@fr", mode: "ideas" })).resolves.toMatchObject({
+      rows: [{ alreadySaved: false, keyword: "Saved keyword" }],
+    });
+  });
+
+  it("rejects an unsupported pair before rates, cache, or provider work", async () => {
+    await expect(run({ locationKey: "ES@en" })).resolves.toEqual({
+      ok: false,
+      reason: "unsupported_location",
+    });
+
+    expect(mocks.rateContext).not.toHaveBeenCalled();
+    expect(mocks.readCache).not.toHaveBeenCalled();
+    expect(mocks.withCache).not.toHaveBeenCalled();
+    expect(mocks.paidCall).not.toHaveBeenCalled();
+    expect(mocks.related).not.toHaveBeenCalled();
+    expect(mocks.suggestions).not.toHaveBeenCalled();
+    expect(mocks.ideas).not.toHaveBeenCalled();
   });
 
   it("returns the earliest server cache expiry across successful sources", async () => {

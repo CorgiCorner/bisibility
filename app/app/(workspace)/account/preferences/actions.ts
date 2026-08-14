@@ -23,11 +23,11 @@ export async function updatePreferences(input: unknown): Promise<UserPreferences
     store.set(name, value, { maxAge: COOKIE_MAX_AGE, path: "/", sameSite: "lax" });
 
   write(PREFERENCE_COOKIES.theme, prefs.theme);
-  write(PREFERENCE_COOKIES.timezone, prefs.timezone);
-  write(PREFERENCE_COOKIES.language, prefs.language);
   write(PREFERENCE_COOKIES.dateFormat, prefs.dateFormat);
   write(PREFERENCE_COOKIES.density, prefs.density);
   write(PREFERENCE_COOKIES.landing, prefs.landing);
+  store.delete("pref_timezone");
+  store.delete("pref_language");
 
   revalidatePath("/app/account/preferences");
   return prefs;

@@ -1,18 +1,21 @@
 "use client";
 
-import { AddKeywordDrawer } from "@/components/keywords/add/AddKeywordDrawer";
-import type { DimensionKind } from "@/components/keywords/filters/DimensionSwitcher";
 import { useToast } from "@/components/ui";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import type { KeywordRow } from "@/lib/queries/keywords";
+import type { ProjectMarketsView } from "@/lib/queries/project-markets";
 import { isBudgetExhaustedResult } from "@/lib/rank-check/budget-contract";
-import { type RunCheckNowInput, runCheckNowSchema } from "@/lib/schemas/keyword";
+import {
+  type AddKeywordsMatrixInput,
+  type BulkKeywordIdsInput,
+  type RunCheckNowInput,
+  runCheckNowSchema,
+} from "@/lib/schemas/keyword";
 import { DEFAULT_SERP_DEPTH, type SerpDepth } from "@/lib/serp/markets";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { existingKeywordsFromRows } from "./AddKeywordCsvReviewModel";
 import {
   type AddKeywordsInput,
   actionErrorMessage,
@@ -21,44 +24,43 @@ import {
   type KeywordDetailActions,
 } from "./action-utils";
 import { KeywordDetailHeaderChrome } from "./KeywordDetailHeaderChrome";
-import { KeywordEditDrawer } from "./KeywordEditDrawer";
 import { KeywordHeaderActions } from "./KeywordHeaderActions";
-import { deriveDomain, deviceValue } from "./keyword-header-model";
+import { KeywordMarketSwitcher } from "./KeywordMarketSwitcher";
+import { KeywordMarketsDrawer } from "./KeywordMarketsDrawer";
 import { exportHistoryCsv } from "./keyword-history-export";
-import { locationFieldValueFromKeywordLocation } from "./location-field-value";
 
 type KeywordHeaderCardProps = KeywordDetailActions & {
   addKeywordsAction: KeywordAction<AddKeywordsInput>;
+  addKeywordsMatrixAction?: KeywordAction<AddKeywordsMatrixInput>;
+  bulkDeleteAction: KeywordAction<BulkKeywordIdsInput>;
   canCreateKeyword: boolean;
   canUpdateKeyword: boolean;
   costContext?: ProjectCostContext;
   keyword: KeywordRow;
   projectId: string;
+  projectMarkets?: ProjectMarketsView;
+  targets?: readonly KeywordRow[];
   tagSuggestions?: readonly string[];
 };
 
 export function KeywordHeaderCard({
   addKeywordsAction,
+  addKeywordsMatrixAction,
+  bulkDeleteAction,
   canCreateKeyword,
   canUpdateKeyword,
   costContext,
   createKeywordAlertAction,
   keyword,
   projectId,
+  projectMarkets,
   runCheckNowAction,
-  tagSuggestions = [],
-  updateKeywordAction,
-  updateKeywordScheduleAction,
+  targets = [keyword],
 }: KeywordHeaderCardProps) {
   const router = useRouter();
   const { showToast } = useToast();
   const [alertStatus, setAlertStatus] = useState<"created" | "creating" | "idle">("idle");
   const [editing, setEditing] = useState(false);
-  const [addOpen, setAddOpen] = useState(false);
-  const [trackPrefill, setTrackPrefill] = useState<{
-    device?: "desktop" | "mobile";
-    location?: string;
-  }>({});
   const {
     formState: { isSubmitting },
     handleSubmit,
@@ -69,7 +71,6 @@ export function KeywordHeaderCard({
   });
   const alertCreated = alertStatus === "created";
   const alertCreating = alertStatus === "creating";
-  const domain = deriveDomain(keyword.rankingUrl ?? keyword.targetUrl ?? "");
   const effectiveDepth =
     keyword.schedule?.serp_depth ?? keyword.projectSerpDepth ?? DEFAULT_SERP_DEPTH;
   const providerRate = costContext
@@ -114,14 +115,6 @@ export function KeywordHeaderCard({
     }
   }
 
-  function handleTrackDimension(kind: DimensionKind, value: string) {
-    let prefill = {};
-    if (kind === "device") prefill = { device: deviceValue(value) };
-    else if (kind === "location") prefill = { location: value };
-    setTrackPrefill(prefill);
-    setAddOpen(true);
-  }
-
   const submitRunCheck = (depth: SerpDepth) =>
     handleSubmit((values) => handleRunCheckNow({ ...values, depth }))();
 
@@ -144,40 +137,32 @@ export function KeywordHeaderCard({
             runPending={isSubmitting}
           />
         }
+        dimensionControls={
+          <KeywordMarketSwitcher
+            addKeywordsAction={addKeywordsAction}
+            bulkDeleteAction={bulkDeleteAction}
+            canCreateKeyword={canCreateKeyword}
+            keyword={keyword}
+            projectId={projectId}
+            projectMarkets={projectMarkets}
+            targets={targets}
+          />
+        }
         keyword={keyword}
-        onTrack={canCreateKeyword ? handleTrackDimension : undefined}
         providerId={costContext?.providerId}
+        timeZone={costContext?.timezone ?? "UTC"}
       />
       <input type="hidden" {...register("keywordId")} />
-      {canUpdateKeyword ? (
-        <KeywordEditDrawer
+      {canUpdateKeyword && editing && projectMarkets && addKeywordsMatrixAction ? (
+        <KeywordMarketsDrawer
+          addKeywordsMatrixAction={addKeywordsMatrixAction}
+          bulkDeleteAction={bulkDeleteAction}
+          canCreateKeyword={canCreateKeyword}
           keyword={keyword}
           onClose={() => setEditing(false)}
-          open={editing}
           projectId={projectId}
-          providerRate={providerRate}
-          updateKeywordAction={updateKeywordAction}
-          updateKeywordScheduleAction={updateKeywordScheduleAction}
-        />
-      ) : null}
-      {canCreateKeyword && addOpen ? (
-        <AddKeywordDrawer
-          addKeywordsAction={addKeywordsAction}
-          costContext={costContext}
-          defaultDevice={trackPrefill.device ?? deviceValue(keyword.device)}
-          defaultLocation={trackPrefill.location ?? keyword.locationName}
-          defaultLocationSelection={
-            trackPrefill.location
-              ? undefined
-              : locationFieldValueFromKeywordLocation(keyword.location, keyword.locationName)
-          }
-          domain={domain}
-          existingKeywords={existingKeywordsFromRows([keyword])}
-          initialKeyword={keyword.keyword}
-          onClose={() => setAddOpen(false)}
-          open
-          projectId={projectId}
-          tagSuggestions={tagSuggestions}
+          projectMarkets={projectMarkets}
+          targets={targets}
         />
       ) : null}
     </>

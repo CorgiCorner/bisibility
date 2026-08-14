@@ -7,9 +7,27 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { ResearchResults } from "./ResearchResults";
 
-vi.mock("./ResearchDetailPanel", () => ({ ResearchDetailPanel: () => <div /> }));
+vi.mock("./ResearchDetailPanel", () => ({
+  ResearchDetailPanel: ({ metricsAvailable }: { metricsAvailable: boolean }) => (
+    <output aria-label="detail metrics available">{String(metricsAvailable)}</output>
+  ),
+}));
 vi.mock("./ResearchFiltersDrawer", () => ({ ResearchFiltersDrawer: () => <div /> }));
-vi.mock("./ResearchResultsTable", () => ({ ResearchResultsTable: () => <div /> }));
+vi.mock("./ResearchResultsTable", () => ({
+  ResearchResultsTable: ({
+    metricsAvailable,
+    rows,
+  }: {
+    metricsAvailable: boolean;
+    rows: Array<{
+      cpcCents: number | null;
+      difficulty: number | null;
+      searchVolume: number | null;
+    }>;
+  }) => (
+    <output aria-label="table metrics">{JSON.stringify({ metricsAvailable, row: rows[0] })}</output>
+  ),
+}));
 
 const costContext = makeCostContext({
   keywordCount: 1,
@@ -87,6 +105,33 @@ const resultLimitSkip = [
 ] satisfies KeywordResearchSourceDiagnostic[];
 
 describe("ResearchResults diagnostics", () => {
+  it("removes every keyword-overview metric and explains an unsupported pair", () => {
+    render(
+      <ResearchResults
+        costContext={costContext}
+        defaultTracking={defaultTracking}
+        metricsAvailable={false}
+        onAdd={vi.fn()}
+        onDeeper={vi.fn()}
+        projectId="prj_1"
+        requestedLimit={100}
+        result={makeResult(resultLimitSkip)}
+        seed="seo"
+      />,
+    );
+
+    expect(screen.getByLabelText("table metrics")).toHaveTextContent('"metricsAvailable":false');
+    expect(screen.getByLabelText("table metrics")).toHaveTextContent('"searchVolume":null');
+    expect(screen.getByLabelText("table metrics")).toHaveTextContent('"difficulty":null');
+    expect(screen.getByLabelText("table metrics")).toHaveTextContent('"cpcCents":null');
+    expect(screen.getByLabelText("detail metrics available")).toHaveTextContent("false");
+    expect(
+      screen.getByText(
+        "No search volume or difficulty data for this market - positions are tracked normally.",
+      ),
+    ).toBeInTheDocument();
+  });
+
   it("explains a result-limit skip as a plain-language note, not a warning", () => {
     renderResults(makeResult(resultLimitSkip));
 

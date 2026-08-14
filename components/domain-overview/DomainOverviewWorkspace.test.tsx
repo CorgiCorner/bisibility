@@ -1,25 +1,53 @@
 import { SessionSpendProvider } from "@/components/cost-estimate/SessionSpendProvider";
+import type { DomainOverviewMarketOption } from "@/lib/domain-overview/market-options";
 import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { DomainOverviewWorkspace } from "./DomainOverviewWorkspace";
 import { domainOverviewMarketFixture, domainOverviewReportFixture } from "./fixtures";
 
-vi.mock("@/components/keywords/LocationField", () => ({
-  LocationField: ({
+vi.mock("./DomainOverviewMarketCombobox", () => ({
+  DomainOverviewMarketCombobox: ({
     onChange,
     value,
   }: {
-    onChange: (value: typeof domainOverviewMarketFixture) => void;
+    onChange: (value: DomainOverviewMarketOption) => void;
     value: typeof domainOverviewMarketFixture;
   }) => (
     <>
-      <button aria-label="Market" onClick={() => onChange(value)} type="button">
+      <button
+        aria-label="Market"
+        onClick={() =>
+          onChange({
+            ...value,
+            cityName: null,
+            kind: "country",
+            provenance: null,
+            regionName: null,
+            researchAvailable: true,
+          })
+        }
+        type="button"
+      >
         {value.displayName}
       </button>
       <button
         aria-label="Other market"
-        onClick={() => onChange({ ...value, canonicalKey: "GB", displayName: "United Kingdom" })}
+        onClick={() =>
+          onChange({
+            canonicalKey: "GB",
+            cityName: null,
+            countryCode: "GB",
+            displayName: "United Kingdom",
+            kind: "country",
+            languageCode: "en",
+            languageLabel: "English",
+            locationCode: 2826,
+            provenance: null,
+            regionName: null,
+            researchAvailable: true,
+          })
+        }
         type="button"
       >
         United Kingdom
@@ -29,11 +57,13 @@ vi.mock("@/components/keywords/LocationField", () => ({
 }));
 
 const context = {
+  catalogMarkets: [],
   competitorDomains: ["competitor.example.com"],
   costContext: { capCents: 5000, spentCents: 100 },
   defaultTarget: "example.com",
   providerStatus: "connected" as const,
   recentTargets: [],
+  trackedMarkets: [],
 };
 const initialEstimate = {
   cached: false,
@@ -72,7 +102,10 @@ describe("DomainOverviewWorkspace", () => {
         />
       </SessionSpendProvider>,
     );
-    fireEvent.click(screen.getByRole("button", { name: /analyze domain/i }));
+    const analyzeButton = screen.getByRole("button", { name: /analyze domain/i });
+    expect(analyzeButton).toHaveClass("MuiButton-sizeSmall");
+    expect(analyzeButton).toHaveStyle({ height: "37px", minHeight: "37px" });
+    fireEvent.click(analyzeButton);
     await waitFor(() => expect(analyzeAction).toHaveBeenCalledTimes(1));
     expect(analyzeAction).toHaveBeenCalledWith(
       expect.objectContaining({ estimateOnly: false, maxCostCents: 4, target: "example.com" }),

@@ -86,6 +86,7 @@ function storedRule(input: Partial<AlertConditionRule>, id = "rule_1") {
     channels: ["email"],
     createdBy: { email: "owner@example.com" },
     id,
+    markets: [],
     name: "Rule",
     severity: "warning",
     targetType: "all",
@@ -294,6 +295,7 @@ describe("evaluateKeywordAlerts", () => {
     mocks.loadGscCtrMetrics.mockResolvedValue(null);
     mocks.prisma.keyword.findUnique.mockResolvedValue({
       id: "keyword_1",
+      locationId: "location_us_en",
       project: {
         domain: "example.com",
         id: "project_1",
@@ -345,6 +347,42 @@ describe("evaluateKeywordAlerts", () => {
       data: expect.objectContaining({ deliveryState: "pending" }),
     });
     expect(mocks.reserveRuleDailyBudget).not.toHaveBeenCalled();
+  });
+
+  it("evaluates only rules scoped to the keyword's selected active market", async () => {
+    mocks.prisma.alertRule.findMany.mockResolvedValue([
+      {
+        ...storedRule({ conditionType: "threshold", thresholdPosition: 10 }, "matching_rule"),
+        markets: [
+          {
+            projectMarket: { locationId: "location_us_en", status: "active" },
+          },
+        ],
+      },
+      {
+        ...storedRule({ conditionType: "threshold", thresholdPosition: 10 }, "other_rule"),
+        markets: [
+          {
+            projectMarket: { locationId: "location_es_es", status: "active" },
+          },
+        ],
+      },
+      {
+        ...storedRule({ conditionType: "threshold", thresholdPosition: 10 }, "paused_rule"),
+        markets: [
+          {
+            projectMarket: { locationId: "location_us_en", status: "paused" },
+          },
+        ],
+      },
+    ]);
+
+    await evaluateKeywordAlerts("keyword_1", snap(8), snap(14, { rankCheckId: "check_1" }));
+
+    expect(mocks.prisma.triggeredAlert.create).toHaveBeenCalledOnce();
+    expect(mocks.prisma.triggeredAlert.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ ruleId: "matching_rule" }),
+    });
   });
 
   it("suppresses transition alerts but keeps current-state alerts across a boundary", async () => {

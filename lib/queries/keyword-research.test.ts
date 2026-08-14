@@ -19,6 +19,17 @@ vi.mock("@/lib/keyword-research/default-market", () => ({
 }));
 vi.mock("@/lib/serp/location", () => ({
   countrySeed: () => ({ countryCode: "US", hl: "en", languageLabel: "English" }),
+  locationLanguage: (_countryCode: string, languageCode?: string) => ({
+    code: languageCode ?? "en",
+    label: languageCode === "es" ? "Spanish" : "English",
+  }),
+  normalizeCanonicalLocationKey: (locationKey: string) => {
+    const [countryCode, languageCode] = locationKey.split("@");
+    return {
+      canonicalKey: locationKey,
+      selector: { countryCode, kind: "country", languageCode },
+    };
+  },
 }));
 vi.mock("./_auth", () => ({ requireReadableProject: mocks.readable }));
 
@@ -54,6 +65,20 @@ describe("keyword research page connection IDs", () => {
       getKeywordResearchPageContext("prj_a00000000000000000000000"),
     ).resolves.toMatchObject({
       connections: [{ id: "conn_a00000000000000000000000" }],
+    });
+  });
+
+  it("preserves a qualified default market instead of replacing its language", async () => {
+    mocks.defaultMarket.mockResolvedValue({
+      locationRef: null,
+      market: { city: null, displayName: "Spain - English", locationKey: "ES@en" },
+    });
+
+    await expect(
+      getKeywordResearchPageContext("prj_a00000000000000000000000"),
+    ).resolves.toMatchObject({
+      language: { code: "en", label: "English" },
+      location: { canonicalKey: "ES@en", countryCode: "ES", hl: "en" },
     });
   });
 

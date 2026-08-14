@@ -4,8 +4,7 @@ export const FIELD_HELP = {
   frequency:
     "How often ranks are checked automatically, from daily through monthly. Manual and Paused stop scheduled checks.",
   cron: "Custom schedule in cron syntax: minute hour day-of-month month day-of-week.",
-  timezone:
-    "Time zone anchors monthly and custom cron wall-clock schedules only. Daily and weekly use a stable per-keyword interval phase that timezone does not move.",
+  timezone: "Anchors daily, weekly, monthly, and custom schedules to the selected local clock.",
   jitter:
     "Each keyword has a stable position within its check interval; jitter adds a random delay of 0 to N minutes so it does not land at the exact same moment every run, reducing overlap with provider rate-limit windows or maintenance blips.",
   serpDepth:

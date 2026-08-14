@@ -68,6 +68,41 @@ describe("KeywordMetricCards", () => {
     expect(screen.queryByText(/Compared with the check/)).not.toBeInTheDocument();
   });
 
+  it("shows the target mismatch badge and expected path", () => {
+    render(
+      <KeywordMetricCards
+        keyword={{
+          ...keywordRows[0],
+          rankingUrl: "https://example.com/actual",
+          targetUrl: "https://example.com/expected",
+        }}
+        keywordContext="full"
+      />,
+    );
+
+    expect(screen.getByText("Target mismatch")).toBeVisible();
+    expect(screen.getByText("Expected /expected")).toBeVisible();
+    expect(screen.queryByText("Ranking page differs from target")).not.toBeInTheDocument();
+  });
+
+  it("keeps differing URLs mismatched when position data is unavailable", () => {
+    render(
+      <KeywordMetricCards
+        keyword={{
+          ...keywordRows[0],
+          hasRankData: false,
+          position: 0,
+          rankingUrl: "https://example.com/actual",
+          targetUrl: "https://example.com/expected",
+        }}
+        keywordContext="full"
+      />,
+    );
+
+    expect(screen.getByText("Target mismatch")).toBeVisible();
+    expect(screen.queryByText("Matches target")).not.toBeInTheDocument();
+  });
+
   it("hides Best for a one-check chart and makes a ranking URL a real new-tab link", () => {
     render(
       <KeywordMetricCards chartState="one_check" keyword={keywordRows[0]} keywordContext="full" />,
@@ -170,16 +205,31 @@ describe("KeywordMetricCards", () => {
     );
     expect(screen.getByText("Volume")).toBeInTheDocument();
     expect(screen.getByText("Intent")).toBeInTheDocument();
-    expect(screen.queryByText("CPC")).not.toBeInTheDocument();
-    expect(screen.queryByText("Difficulty")).not.toBeInTheDocument();
+    expect(screen.getByText("CPC")).toBeInTheDocument();
+    expect(screen.getByText("Difficulty")).toBeInTheDocument();
+    expect(screen.getAllByText("n/a")).toHaveLength(2);
 
     rerender(
       <KeywordMetricCards keyword={{ ...keywordRows[0], hasTag: false }} keywordContext="full" />,
     );
     expect(screen.queryByText("Medium")).not.toBeInTheDocument();
 
-    rerender(<KeywordMetricCards keyword={keywordRows[0]} keywordContext="unavailable" />);
-    expect(screen.getByText("Keyword metrics unavailable from this provider.")).toBeInTheDocument();
-    expect(screen.queryByText("Volume")).not.toBeInTheDocument();
+    rerender(
+      <KeywordMetricCards
+        keyword={{
+          ...keywordRows[0],
+          cpcKnown: false,
+          difficultyKnown: false,
+          volumeKnown: false,
+        }}
+        keywordContext="unavailable"
+      />,
+    );
+    expect(screen.getAllByText("n/a")).toHaveLength(3);
+    expect(
+      screen.getAllByTitle(
+        "No search volume or difficulty data for this market - positions are tracked normally.",
+      ),
+    ).toHaveLength(3);
   });
 });

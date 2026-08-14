@@ -46,19 +46,23 @@ export function KeywordImportSummary({
 
   return (
     <OnboardingCostSummary>
-      <span className="font-mono text-fg">
-        {keywordCheckSummary(keywordCount, locationCount, deviceCount)}
-      </span>
-      <br />
-      <span>{monthlyLine}</span>
-      {deploymentMode === "cloud" && calculatorHref && keywordCount > 0 ? (
-        <>
-          <br />
-          <a className="font-medium text-accent-text hover:underline" href={calculatorHref}>
-            Estimate provider cost
+      <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
+        <span>
+          <span className="block font-mono text-fg">
+            {keywordCheckSummary(keywordCount, locationCount, deviceCount)}
+          </span>
+          <span className="block">{monthlyLine}</span>
+        </span>
+        {deploymentMode === "cloud" && calculatorHref && keywordCount > 0 ? (
+          <a
+            aria-label="Estimate provider cost"
+            className="font-medium text-accent-text hover:underline"
+            href={calculatorHref}
+          >
+            Estimate provider cost ↗
           </a>
-        </>
-      ) : null}
+        ) : null}
+      </div>
     </OnboardingCostSummary>
   );
 }

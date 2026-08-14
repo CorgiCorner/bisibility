@@ -84,6 +84,7 @@ export function LocationField({
       displayName: option.displayName,
       hl: option.hl,
       kind: option.kind,
+      languageCode: option.languageCode,
       languageLabel: option.languageLabel,
       regionName: option.regionName,
     });

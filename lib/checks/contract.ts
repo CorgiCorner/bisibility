@@ -48,6 +48,8 @@ export type CheckRunRow = {
   location: string;
   /** Persisted language label for the keyword's location, or null when unavailable. */
   languageLabel: string | null;
+  /** Whether the market/language pair has research volume and difficulty coverage. */
+  researchMetricsAvailable: boolean;
   /** Device targeted by the keyword. */
   device: Device;
   status: Exclude<RankCheckStatus, "deferred">;
@@ -106,6 +108,8 @@ export type DeferredGroup = {
 export type CheckRunsView = {
   rows: CheckRunRow[];
   counts: CheckRunsCounts;
+  /** Scheduled project keywords whose latest completed check is more than 48 hours old. */
+  staleCount: number;
   nextCursor: CheckRunsCursor;
   providerHealth: ProviderHealthEntry[];
   deferredGroups: DeferredGroup[];

@@ -90,7 +90,7 @@ export function TrackingCheckFields({
       <input type="hidden" {...form.register("city")} />
       <input type="hidden" {...form.register("country")} />
       <input type="hidden" {...form.register("locationKey")} />
-      <SettingsField width="md">
+      <SettingsField width="field">
         <LocationField
           disabled={!canEdit}
           help="One project-wide default. Typing filters countries and available city locations."
@@ -102,7 +102,7 @@ export function TrackingCheckFields({
         />
       </SettingsField>
 
-      <SettingsField width="sm">
+      <SettingsField width="field">
         <FieldLabel className={labelClass} label="Device" />
         <input type="hidden" {...form.register("device")} />
         <MenuSelect
@@ -117,7 +117,7 @@ export function TrackingCheckFields({
         </p>
       </SettingsField>
 
-      <SettingsField width="sm">
+      <SettingsField width="field">
         <FieldLabel className={labelClass} label="Default SERP depth" />
         <input type="hidden" {...form.register("serpDepth", { valueAsNumber: true })} />
         <MenuSelect

@@ -50,12 +50,14 @@ describe("DomainOverviewPage", () => {
     vi.clearAllMocks();
     mocks.resolve.mockResolvedValue({ publicId: "prj_1" });
     mocks.context.mockResolvedValue({
+      catalogMarkets: [],
       competitorDomains: [],
       costContext: { capCents: 5000, spentCents: 0 },
       defaultMarket,
       defaultTarget: "example.com",
       providerStatus: "connected",
       recentTargets: [],
+      trackedMarkets: [],
     });
     mocks.market.mockResolvedValue(defaultMarket);
   });

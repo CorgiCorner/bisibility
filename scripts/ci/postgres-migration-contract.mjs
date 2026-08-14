@@ -2,6 +2,7 @@
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
+import { verifySavedKeywordMarketMigration } from "./saved-keyword-market-migration-postgres.ts";
 
 const { Client } = pg;
 
@@ -52,6 +53,7 @@ export async function runPostgresMigrationContract() {
   const databaseUrl = required("DATABASE_URL");
   const directUrl = required("DIRECT_URL");
   await waitForPostgres(directUrl);
+  await verifySavedKeywordMarketMigration(directUrl);
 
   const configuredEnv = {
     DATABASE_URL: databaseUrl,

@@ -15,6 +15,9 @@ import MenuItem from "@mui/material/MenuItem";
 import {
   ArrowUpRightIcon as ArrowUpRight,
   CaretDownIcon as CaretDown,
+  CheckIcon as Check,
+  DeviceMobileIcon as DeviceMobile,
+  MonitorIcon as Monitor,
 } from "@phosphor-icons/react";
 import { type ReactNode, useState } from "react";
 
@@ -53,6 +56,14 @@ const DIMENSION_META: Record<DimensionKind, { lower: boolean; name: string; noun
   location: { lower: false, name: "Location", noun: "locations" },
 };
 
+function deviceIcon(value: string) {
+  return value.toLowerCase() === "mobile" ? (
+    <DeviceMobile aria-hidden size={15} />
+  ) : (
+    <Monitor aria-hidden size={15} />
+  );
+}
+
 type DimensionSwitcherProps = {
   icon: ReactNode;
   kind: DimensionKind;
@@ -77,12 +88,15 @@ export function DimensionSwitcher({
     kind === "location" && !DIMENSION_VALUES.location.includes(value)
       ? [value, ...DIMENSION_VALUES.location]
       : DIMENSION_VALUES[kind];
-  const addable = values.filter((item) => item !== value);
+  const normalizedValue = meta.lower ? value.toLowerCase() : value;
+  const addable = values.filter(
+    (item) => (meta.lower ? item.toLowerCase() : item) !== normalizedValue,
+  );
   const hasAddable = addable.length > 0;
   const canTrack = hasAddable && Boolean(onTrack);
   const open = Boolean(anchorEl);
   const menuId = `dimension-menu-${kind}`;
-  const current = meta.lower ? value.toLowerCase() : value;
+  const current = normalizedValue;
   let suggestion = "another option";
   if (addable[0]) suggestion = meta.lower ? addable[0].toLowerCase() : addable[0];
   const explainer = `You're only tracking ${current}. Add ${suggestion} to compare rankings across ${meta.noun}.`;
@@ -106,7 +120,7 @@ export function DimensionSwitcher({
       aria-controls={open ? menuId : undefined}
       aria-expanded={open}
       aria-haspopup={canTrack ? "menu" : undefined}
-      className={`inline-flex items-center gap-1.5 ${chipShape} bg-bg-sunken py-1 pl-2.5 pr-2 font-mono text-[11px] text-fg-muted outline-none transition-colors hover:text-fg focus-visible:outline-none disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted`}
+      className={`inline-flex items-center gap-1.5 ${chipShape} bg-bg-sunken py-1 pl-2.5 pr-2 font-mono text-[11px] text-fg outline-none transition-colors hover:border-border-strong hover:bg-nav-active focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted`}
       disabled={!canTrack || readOnly}
       onClick={(event) => {
         if (canTrack && !readOnly) setAnchorEl(event.currentTarget);
@@ -146,24 +160,75 @@ export function DimensionSwitcher({
           id={menuId}
           onClose={() => setAnchorEl(null)}
           open={open}
-          slotProps={{ paper: { sx: { border: "1px solid var(--border)", maxWidth: 288 } } }}
+          slotProps={{
+            paper: {
+              sx: {
+                border: "1px solid var(--border)",
+                maxWidth: "calc(100vw - 24px)",
+                width: 290,
+              },
+            },
+          }}
         >
-          <div className="px-4 pb-1 pt-2 font-mono text-[10px] uppercase tracking-[0.6px] text-fg-muted">
+          <div className="px-3.5 pb-1 pt-2 font-mono text-[9.5px] uppercase tracking-[0.5px] text-fg-muted">
             {meta.name}
           </div>
-          <div className="px-4 pt-1 text-[11px] font-semibold text-fg">
+          <MenuItem
+            aria-current="true"
+            aria-label={`${label}, currently shown`}
+            onClick={() => setAnchorEl(null)}
+            selected
+            sx={{
+              borderRadius: "8px",
+              gap: 1.125,
+              marginX: "5px",
+              minHeight: "36px",
+              paddingX: "9px",
+              "&.Mui-selected": { backgroundColor: "var(--accent-soft)" },
+              "&.Mui-selected:hover": { backgroundColor: "var(--bg-sunken)" },
+            }}
+          >
+            <span className="inline-flex shrink-0 items-center text-fg-muted">{icon}</span>
+            <span
+              className="min-w-0 flex-1 truncate text-[12.5px] font-semibold text-fg"
+              title={label}
+            >
+              {label}
+            </span>
+            <Check aria-hidden className="shrink-0 text-accent-text" size={13} weight="bold" />
+          </MenuItem>
+          <div aria-hidden className="mx-2 my-1 h-px bg-border" />
+          <div className="px-3.5 pt-1 text-[11px] font-semibold text-fg">
             Add a {meta.name.toLowerCase()}
           </div>
-          <p className="m-0 px-4 pb-2 pt-1 text-[11.5px] leading-snug text-fg-muted">{explainer}</p>
+          <p className="m-0 px-3.5 pb-2 pt-1 text-[11.5px] leading-snug text-fg-muted">
+            {explainer}
+          </p>
           {addable.map((item) => (
             <MenuItem
+              aria-label={`Add ${item}`}
               key={item}
               onClick={() => handleTrack(item)}
-              sx={{ gap: 2, justifyContent: "space-between" }}
+              title={`Add ${item}`}
+              sx={{
+                borderRadius: "8px",
+                gap: 1.125,
+                justifyContent: "space-between",
+                marginX: "5px",
+                minHeight: "34px",
+                paddingX: "9px",
+              }}
             >
-              <span className="text-[13px] text-fg">{item}</span>
-              <span className="inline-flex items-center gap-0.5 rounded-full border border-border bg-bg-sunken px-2 py-0.5 text-[11px] font-semibold text-fg">
-                + Track
+              {kind === "device" ? (
+                <span className="inline-flex shrink-0 items-center text-fg-muted">
+                  {deviceIcon(item)}
+                </span>
+              ) : null}
+              <span className="min-w-0 flex-1 truncate text-[12.5px] text-fg-muted" title={item}>
+                {item}
+              </span>
+              <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-accent px-2 py-0.5 text-[10.5px] font-semibold text-accent-text">
+                <span aria-hidden>+</span> Track
               </span>
             </MenuItem>
           ))}

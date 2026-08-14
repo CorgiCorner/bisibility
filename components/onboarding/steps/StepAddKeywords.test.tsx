@@ -208,6 +208,7 @@ describe("StepAddKeywords", () => {
     const onComplete = vi.fn();
     const addKeywordsAction = vi.fn(async (_input: AddKeywordsInput) => ({
       created: 2,
+      keywordCount: 1,
       keywords: [
         { id: "keyword_1", publicId: "kw_1" },
         { id: "keyword_2", publicId: "kw_2" },
@@ -243,7 +244,7 @@ describe("StepAddKeywords", () => {
     });
     expect(await screen.findByText("2 added, 6 already tracked")).toBeInTheDocument();
     await waitFor(() =>
-      expect(onComplete).toHaveBeenCalledWith(expect.any(Object), expect.any(Object), 2, null),
+      expect(onComplete).toHaveBeenCalledWith(expect.any(Object), expect.any(Object), 1, null),
     );
   });
 

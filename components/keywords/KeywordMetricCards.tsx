@@ -1,4 +1,5 @@
 import { Card } from "@/components/ui";
+import { comparableUrl } from "@/lib/alerts/url-mismatch";
 import {
   deriveKeywordDetailChangeDimensions,
   deriveKeywordDetailWhatChanged,
@@ -14,6 +15,7 @@ import {
   ArrowUpIcon as ArrowUp,
   ArrowUpRightIcon as ArrowUpRight,
   MinusIcon as Minus,
+  WarningIcon as Warning,
 } from "@phosphor-icons/react/ssr";
 import type { ReactNode } from "react";
 import { inferredKeywordContext, KeywordContextRow } from "./KeywordContextRow";
@@ -109,7 +111,10 @@ function PositionSummary({
 
 function RankingUrlSummary({ keyword }: Readonly<{ keyword: KeywordRow }>) {
   const firstSeen = keyword.rankingUrlHistory.at(0)?.startAt;
-  const matchesTarget = Boolean(keyword.rankingUrl && keyword.rankingUrl === keyword.targetUrl);
+  const rankingUrl = comparableUrl(keyword.rankingUrl);
+  const targetUrl = comparableUrl(keyword.targetUrl, keyword.rankingUrl);
+  const targetMismatch = Boolean(rankingUrl && targetUrl && rankingUrl !== targetUrl);
+  const matchesTarget = Boolean(rankingUrl && targetUrl && rankingUrl === targetUrl);
 
   return (
     <SummaryCard label="Ranking URL">
@@ -130,7 +135,16 @@ function RankingUrlSummary({ keyword }: Readonly<{ keyword: KeywordRow }>) {
       <div className="mt-2.5 grid gap-1 font-mono text-[11px] text-fg-muted">
         {keyword.rankingUrl ? (
           <>
-            <span>{matchesTarget ? "Matches target" : "Ranking page differs from target"}</span>
+            {matchesTarget ? <span>Matches target</span> : null}
+            {targetMismatch && keyword.targetUrl ? (
+              <span className="flex flex-wrap items-center gap-1.5">
+                <span className="inline-flex items-center gap-1 rounded-full bg-yellow/15 px-2 py-0.5 font-semibold text-[10px] text-yellow-text">
+                  <Warning aria-hidden size={11} weight="fill" />
+                  Target mismatch
+                </span>
+                <span>Expected {compactPath(keyword.targetUrl)}</span>
+              </span>
+            ) : null}
             <span>First seen {dateLabel(firstSeen)}</span>
             <span className="pt-1">1 URL ranking</span>
           </>

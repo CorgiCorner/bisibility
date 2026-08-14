@@ -21,7 +21,7 @@ export function savedKeywordResearchHref(
   const params = new URLSearchParams();
   if (row.sourceSeed) params.set("seed", row.sourceSeed);
   params.set("location", row.location);
-  return `${appPath(projectRef, "research")}?${params.toString()}`;
+  return `${appPath(projectRef, "keyword-research")}?${params.toString()}`;
 }
 
 export function savedKeywordLocation(location: string): LocationFieldValue | null {

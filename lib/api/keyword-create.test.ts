@@ -1,3 +1,4 @@
+import { ProjectMarketLimitExceededError } from "@/lib/markets/limits";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createKeywords, KEYWORD_CREATE_TRANSACTION_TIMEOUT_MS } from "./keyword-create";
 
@@ -70,7 +71,9 @@ vi.mock("./resources", () => ({
   }),
 }));
 
-function context() {
+function context(
+  body: unknown = { keyword: "atomic keyword", location: "United States", tags: [] },
+) {
   return {
     auth: {
       project: {
@@ -81,7 +84,7 @@ function context() {
     headers: new Headers(),
     instance: "urn:bisibility:test",
     req: new Request("https://example.com/api/v1/projects/project_1/keywords", {
-      body: JSON.stringify({ keyword: "atomic keyword", location: "United States", tags: [] }),
+      body: JSON.stringify(body),
       headers: { "content-type": "application/json" },
       method: "POST",
     }),
@@ -95,7 +98,13 @@ describe("REST keyword creation transaction", () => {
     mocks.resolveKeywordLocation.mockImplementation(async () => {
       calls.push("location");
       return {
-        location: { displayName: "United States", id: "location_1" },
+        location: {
+          countryCode: "US",
+          displayName: "United States",
+          id: "location_1",
+          languageCode: "en",
+          languageLabel: "English",
+        },
         warning: null,
       };
     });
@@ -129,6 +138,65 @@ describe("REST keyword creation transaction", () => {
     expect(mocks.createKeywordBatchSet).toHaveBeenCalledWith(tx, "project_1", expect.any(Array));
   });
 
+  it("keeps same-pair duplicates skipped while creating a keyword in another language pair", async () => {
+    const spanish = { ...keyword, id: "keyword_es", publicId: "kw_b00000000000000000000000" };
+    const english = { ...keyword, id: "keyword_en", publicId: "kw_c00000000000000000000000" };
+    mocks.resolveKeywordLocation.mockImplementation(async (input) => {
+      const key = "selection" in input ? input.selection.canonicalKey : "";
+      return {
+        location:
+          key === "ES/Andalusia/Malaga@en"
+            ? {
+                canonicalKey: key,
+                countryCode: "ES",
+                displayName: "Malaga, Andalusia, Spain",
+                id: "location_es_en",
+                languageCode: "en",
+                languageLabel: "English",
+              }
+            : {
+                canonicalKey: "ES/Andalusia/Malaga",
+                countryCode: "ES",
+                displayName: "Malaga, Andalusia, Spain",
+                id: "location_es",
+                languageCode: "es",
+                languageLabel: "Spanish",
+              },
+        warning: null,
+      };
+    });
+    mocks.createKeywordBatchSet.mockResolvedValue({
+      accepted: [
+        { created: false, keyword: spanish, row: {} },
+        { created: true, keyword: english, row: {} },
+      ],
+      created: [english],
+    });
+    tx.keyword.findMany.mockResolvedValue([spanish, english]);
+
+    const response = await createKeywords(
+      context([
+        { keyword: "rank tracker", location_key: "ES/Andalusia/Malaga" },
+        { keyword: "rank tracker", location_key: "ES/Andalusia/Malaga@en" },
+      ]),
+      "prj_a00000000000000000000000",
+    );
+
+    expect(await response.json()).toMatchObject({
+      created: 1,
+      results: [{ status: "skipped" }, { status: "created" }],
+      skipped: 1,
+    });
+    expect(mocks.resolveKeywordLocation).toHaveBeenCalledWith({
+      projectId: "project_1",
+      selection: { canonicalKey: "ES/Andalusia/Malaga", kind: "city" },
+    });
+    expect(mocks.resolveKeywordLocation).toHaveBeenCalledWith({
+      projectId: "project_1",
+      selection: { canonicalKey: "ES/Andalusia/Malaga@en", kind: "city" },
+    });
+  });
+
   it("propagates a batch failure so the owning transaction can roll back", async () => {
     mocks.createKeywordBatchSet.mockRejectedValueOnce(new Error("seed failed"));
 
@@ -136,5 +204,19 @@ describe("REST keyword creation transaction", () => {
       "seed failed",
     );
     expect(mocks.writeAudit).not.toHaveBeenCalled();
+  });
+
+  it("maps the project-market cap to a typed problem response", async () => {
+    mocks.createKeywordBatchSet.mockRejectedValueOnce(new ProjectMarketLimitExceededError(5));
+
+    const response = await createKeywords(context(), "prj_a00000000000000000000000");
+
+    expect(response.status).toBe(403);
+    expect(response.headers.get("content-type")).toContain("application/problem+json");
+    await expect(response.json()).resolves.toMatchObject({
+      detail: "This project can track up to 5 markets.",
+      status: 403,
+      type: "https://bisibility.com/problems/forbidden",
+    });
   });
 });

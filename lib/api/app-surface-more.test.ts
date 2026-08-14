@@ -163,6 +163,7 @@ describe("public API remaining app surface routes", () => {
           device: "desktop",
           engine: "google",
           location: "United States",
+          observations: [],
           rows: [{ gap: null, id: ids.keyword, keyword: "rank tracker", ranks: {} }],
           shares: [{ domain: "example.com", shareOfVoice: 100, sharedKeywords: 1 }],
         },

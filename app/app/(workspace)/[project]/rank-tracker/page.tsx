@@ -32,6 +32,7 @@ import {
   getKeywordTagSuggestions,
   KEYWORD_LIST_MAX,
 } from "@/lib/queries/keywords";
+import { getProjectMarkets } from "@/lib/queries/project-markets";
 import { listSavedKeywords, savedKeywordCount } from "@/lib/queries/saved-keywords";
 import { getSavedView, listSavedViews } from "@/lib/queries/saved-views";
 import { getRequestSerpProviderChain } from "@/lib/queries/workspace-request-data";
@@ -46,7 +47,7 @@ function paramValue(value: string | string[] | undefined) {
 }
 
 async function SavedTab({ projectRef }: Readonly<{ projectRef: string }>) {
-  const [saved, savedCount, trackedCount, readable, costContext, keywordDefaults] =
+  const [saved, savedCount, trackedCount, readable, costContext, keywordDefaults, projectMarkets] =
     await Promise.all([
       listSavedKeywords(projectRef),
       savedKeywordCount(projectRef),
@@ -54,6 +55,7 @@ async function SavedTab({ projectRef }: Readonly<{ projectRef: string }>) {
       requireReadableProject(projectRef),
       getProjectCostContext(projectRef),
       getKeywordDefaultMarket(projectRef),
+      getProjectMarkets(projectRef),
     ]);
   const role = getProjectRole(readable.actor, readable.project.id);
   return (
@@ -66,6 +68,7 @@ async function SavedTab({ projectRef }: Readonly<{ projectRef: string }>) {
         defaultDevice={keywordDefaults.device}
         initialSavedCount={savedCount}
         projectId={readable.project.publicId}
+        projectMarkets={projectMarkets}
         removeSavedKeywordsAction={removeSavedKeywords}
         rows={saved.rows}
         trackedCount={trackedCount}
@@ -138,6 +141,7 @@ export default async function KeywordsPage({
     tagSuggestions,
     keywordDefaults,
     savedCount,
+    projectMarkets,
   ] = await Promise.all([
     getKeywordRows(publicId),
     listSavedViews(publicId),
@@ -148,6 +152,7 @@ export default async function KeywordsPage({
     getKeywordTagSuggestions(publicId),
     getKeywordDefaultMarket(publicId),
     savedKeywordCount(publicId),
+    getProjectMarkets(publicId),
   ]);
   // Counting only matters when the capped list may be truncated.
   const totalKeywordCount =
@@ -208,6 +213,7 @@ export default async function KeywordsPage({
           lens={lens}
           providerConnected={checkHealth.providerConnected}
           projectId={readable.project.publicId}
+          projectMarkets={projectMarkets}
           queueFirstChecksAction={queueFirstChecks}
           runCheckNowAction={runCheckNow}
           rows={rows}

@@ -30,6 +30,6 @@ describe("commandGroups", () => {
 
     navigate?.items.find((item) => item.label === "Keyword Research")?.run();
 
-    expect(push).toHaveBeenCalledWith("/app/prj_1/research");
+    expect(push).toHaveBeenCalledWith("/app/prj_1/keyword-research");
   });
 });

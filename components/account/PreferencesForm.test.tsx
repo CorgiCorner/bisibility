@@ -7,9 +7,7 @@ const defaults = {
   dateFormat: "eu",
   density: "standard",
   landing: "overview",
-  language: "de",
   theme: "system",
-  timezone: "America/New_York",
 } as const;
 
 describe("PreferencesForm", () => {
@@ -22,17 +20,14 @@ describe("PreferencesForm", () => {
     expect(screen.getByText("Default landing page")).toBeInTheDocument();
   });
 
-  it("preserves internal timezone and language values when saving a visible preference", async () => {
+  it("saves exactly the four visible preference fields", async () => {
     const updatePreferences = vi.fn().mockImplementation(async (input) => input);
     render(<PreferencesForm defaults={defaults} updatePreferences={updatePreferences} />);
 
     fireEvent.click(screen.getByRole("radio", { name: "Dark" }));
 
     await waitFor(() =>
-      expect(updatePreferences).toHaveBeenCalledWith({
-        ...defaults,
-        theme: "dark",
-      }),
+      expect(updatePreferences).toHaveBeenCalledWith({ ...defaults, theme: "dark" }),
     );
     expect(routerMock.refresh).toHaveBeenCalledOnce();
   });

@@ -1,5 +1,8 @@
-import { createUserDateTimeFormatter, type DateTimePreferences } from "@/lib/format/user-datetime";
-import type { SignalSeverity, SignalSource } from "@/lib/generated/prisma/client";
+import {
+  createUserDateTimeFormatter,
+  type DateTimeFormatContext,
+} from "@/lib/format/user-datetime";
+import type { Device, SignalSeverity, SignalSource } from "@/lib/generated/prisma/client";
 import type { TimelineFilterKey, TimelineSignalRow, TimelineView } from "@/lib/queries/timeline";
 import { DEFAULT_SERP_DEPTH } from "@/lib/serp/markets";
 import { SIGNAL_TYPES } from "@/lib/signals/types";
@@ -14,6 +17,10 @@ export type TimelineFilterView = {
 };
 export type TimelineBadge = "Test event" | "URL changed";
 export type TimelineItemDetail = { label: string; value: string };
+export type TimelineMarketMeta = {
+  device: Device;
+  segments: [keyword: string, location: string, language: string, source: string];
+};
 export type TimelineItem = {
   badge?: TimelineBadge;
   date: string;
@@ -21,6 +28,7 @@ export type TimelineItem = {
   id: string;
   icon: TimelineItemIcon;
   meta: string;
+  marketMeta?: TimelineMarketMeta;
   note?: string;
   position?: string;
   removable: boolean;
@@ -179,10 +187,25 @@ function deployDetails(row: TimelineSignalRow, payload: JsonObject) {
   return details.length ? details : undefined;
 }
 
-function metaFor(row: TimelineSignalRow) {
+function metaFor(row: TimelineSignalRow): Pick<TimelineItem, "marketMeta" | "meta"> {
+  const isRankingSignal =
+    row.type === SIGNAL_TYPES.rankingChanged || row.type === SIGNAL_TYPES.rankingUrlChanged;
+  if (isRankingSignal && row.keyword?.locationRef) {
+    const segments: TimelineMarketMeta["segments"] = [
+      row.keyword.text,
+      row.keyword.locationRef.displayName,
+      row.keyword.locationRef.languageLabel,
+      sourceLabel[row.source],
+    ];
+    const deviceLabel = row.keyword.device === "mobile" ? "Mobile" : "Desktop";
+    return {
+      marketMeta: { device: row.keyword.device, segments },
+      meta: [...segments.slice(0, 3), deviceLabel, segments[3]].join(" / "),
+    };
+  }
   const keyword = row.keyword?.text ? `Keyword: ${row.keyword.text}` : null;
   const actor = row.type === SIGNAL_TYPES.note ? `by ${actorLabel(row)}` : null;
-  return [keyword, sourceLabel[row.source], actor].filter(Boolean).join(" · ");
+  return { meta: [keyword, sourceLabel[row.source], actor].filter(Boolean).join(" · ") };
 }
 
 function safeHref(value: string | null | undefined) {
@@ -199,6 +222,7 @@ function mapRow(
 ): TimelineItem {
   const payload = asObject(row.payload);
   const url = urlFor(row, payload);
+  const meta = metaFor(row);
 
   return {
     badge:
@@ -211,7 +235,7 @@ function mapRow(
     details: deployDetails(row, payload),
     icon: iconBySource[row.source],
     id: row.publicId,
-    meta: metaFor(row),
+    ...meta,
     note: noteFor(row, payload),
     position: positionFor(row, payload),
     removable: row.source === "manual" && row.type === SIGNAL_TYPES.note,
@@ -233,9 +257,9 @@ export function timelineFilters(view: TimelineView): TimelineFilterView[] {
 export function timelineGroups(
   rows: TimelineSignalRow[],
   now: Date,
-  preferences?: DateTimePreferences,
+  context: DateTimeFormatContext,
 ): TimelineGroup[] {
-  const dateTime = createUserDateTimeFormatter(preferences);
+  const dateTime = createUserDateTimeFormatter(context);
   const groups = new Map<string, TimelineItem[]>();
   for (const row of rows) {
     const day = dateTime.formatRelativeDay(row.happenedAt, now);

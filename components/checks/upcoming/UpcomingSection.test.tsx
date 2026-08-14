@@ -1,10 +1,9 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { UpcomingSection, type UpcomingSectionProps } from "./UpcomingSection";
 import {
   emptyUpcomingView,
   upcomingNoProviderView,
-  upcomingNow,
   upcomingUnblockedView,
   upcomingViewFixture,
 } from "./upcoming-fixtures";
@@ -12,7 +11,6 @@ import { formatEstimatedCost } from "./upcoming-format";
 
 const sharedProps = {
   mode: "rail",
-  now: upcomingNow,
   providerSettingsHref: "/app/settings#providers",
   schedulesHref: "/app/rank-tracker",
   timeZone: "Europe/Warsaw",
@@ -21,13 +19,24 @@ const sharedProps = {
 } satisfies UpcomingSectionProps;
 
 describe("UpcomingSection", () => {
+  const originalTZ = process.env.TZ;
+
+  beforeEach(() => {
+    process.env.TZ = "UTC";
+  });
+
+  afterEach(() => {
+    if (originalTZ === undefined) delete process.env.TZ;
+    else process.env.TZ = originalTZ;
+  });
+
   it("keeps positive sub-cent estimates visible", () => {
     expect(formatEstimatedCost(0)).toBe("~$0.00");
     expect(formatEstimatedCost(0.35)).toBe("<$0.01");
     expect(formatEstimatedCost(1)).toBe("~$0.01");
   });
 
-  it("renders the rail hierarchy and expanded day with fuzzy sample times", () => {
+  it("renders the rail hierarchy and expanded day with project-zone sample times", () => {
     render(<UpcomingSection {...sharedProps} initialExpandedDayKey="2026-07-24" />);
 
     expect(screen.getByText("Upcoming")).toBeInTheDocument();
@@ -35,10 +44,12 @@ describe("UpcomingSection", () => {
     expect(screen.getByText("214 checks")).toBeInTheDocument();
     expect(screen.getByText("~$0.45 est.")).toBeInTheDocument();
     expect(screen.getByText("flow dictation app")).toBeInTheDocument();
-    expect(screen.getByText("~2h")).toBeInTheDocument();
-    expect(screen.getByText("~3h")).toBeInTheDocument();
-    expect(screen.queryByText("hidden fourth sample")).not.toBeInTheDocument();
+    expect(screen.queryByText("~2h")).not.toBeInTheDocument();
+    expect(screen.queryByText("~3h")).not.toBeInTheDocument();
     expect(screen.queryByText(/14:17/)).not.toBeInTheDocument();
+    expect(screen.getByText(/Jul 24, 16:17/)).toBeInTheDocument();
+    expect(screen.getAllByText(/\(Europe\/Warsaw\)/).length).toBe(3);
+    expect(screen.queryByText("hidden fourth sample")).not.toBeInTheDocument();
 
     expect(
       screen.getByText(
@@ -50,14 +61,15 @@ describe("UpcomingSection", () => {
     ).toBeInTheDocument();
   });
 
-  it("uses fuzzy clock hours for a future day", () => {
+  it("uses project-zone times for a future day", () => {
     render(<UpcomingSection {...sharedProps} view={upcomingUnblockedView} />);
 
     fireEvent.click(screen.getByRole("button", { name: /Tomorrow/ }));
 
     expect(screen.getByText("example")).toBeInTheDocument();
-    expect(screen.getByText("~09:00")).toBeInTheDocument();
-    expect(screen.queryByText(/09:37/)).not.toBeInTheDocument();
+    expect(screen.getByText(/Jul 25, 09:37/)).toBeInTheDocument();
+    expect(screen.queryByText(/~09:00/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/~09:37/)).not.toBeInTheDocument();
   });
 
   it("renders slim day cards without samples and keeps the manage link visible", () => {

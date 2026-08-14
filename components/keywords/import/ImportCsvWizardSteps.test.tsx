@@ -15,22 +15,23 @@ describe("ImportCsvWizardSteps TemplateStep", () => {
   it("advertises only columns consumed by the CSV parser", () => {
     const { container } = render(<TemplateStep />);
     const columns = advertisedColumns(container);
-    expect(columns).toEqual(["keyword*", "target_url", "tags", "country", "device"]);
+    expect(columns).toEqual(["keyword*", "target_url", "tags", "country", "language", "device"]);
 
     const [row] = parseKeywordImportCsvRows(
-      `${columns.map((column) => (column.endsWith("*") ? column.slice(0, -1) : column)).join(",")}\nrank tracker,https://example.com/rank,seo;tracking,Poland,mobile`,
+      `${columns.map((column) => (column.endsWith("*") ? column.slice(0, -1) : column)).join(",")}\nrank tracker,https://example.com/rank,seo;tracking,PL,pl,mobile`,
     );
     expect(row).toMatchObject({
       device: "mobile",
       keyword: "rank tracker",
-      location: "Poland",
+      location: "PL",
+      language: "pl",
       tags: ["seo", "tracking"],
       targetUrl: "https://example.com/rank",
     });
   });
 
-  it("does not advertise the unimplemented language column", () => {
+  it("advertises the implemented language column", () => {
     render(<TemplateStep />);
-    expect(screen.queryByText(/^language$/)).not.toBeInTheDocument();
+    expect(screen.getByText(/^language$/)).toBeInTheDocument();
   });
 });

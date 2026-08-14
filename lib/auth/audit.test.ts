@@ -45,6 +45,7 @@ const addressableTargets = [
   ["personal_access_token", "pat", "Personal access token"],
   ["project", "prj", "Project"],
   ["project_defaults", "prj", "Project defaults"],
+  ["project_market", "pmkt", "Project market"],
   ["provider_connection", "conn", "Provider connection"],
   ["rank_check", "check", "Rank-check"],
   ["saved_keyword", "svkw", "Saved keyword"],

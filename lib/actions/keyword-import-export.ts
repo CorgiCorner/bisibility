@@ -13,6 +13,7 @@ import {
 } from "@/lib/keywords/import-csv-parser";
 import { loadRankHistoryExport } from "@/lib/rank-history/export-service";
 import { KEYWORD_IMPORT_MAX, keywordImportFileLimitMessage } from "@/lib/schemas/keyword";
+import { denormalizedLocationLabel } from "@/lib/serp/location-label";
 import { resolveKeywordLocation } from "@/lib/serp/location-service";
 import ExcelJS from "exceljs";
 import { z } from "zod";
@@ -179,6 +180,13 @@ export async function importKeywordsFromCsv(input: unknown) {
   }
 
   const warnings = new Set<string>();
+  const registeredMarkets = await prisma.projectMarket.findMany({
+    select: { location: { select: { canonicalKey: true } } },
+    where: { projectId: project.id, status: { in: ["active", "paused"] } },
+  });
+  const registeredKeys = new Set(
+    registeredMarkets.map((market) => market.location.canonicalKey),
+  );
   const locations = new Map<string, Awaited<ReturnType<typeof resolveKeywordLocation>>>();
   const preparedRows: KeywordBatchRow[] = [];
   for (const row of uniqueRows) {
@@ -189,11 +197,18 @@ export async function importKeywordsFromCsv(input: unknown) {
       resolved = await resolveKeywordLocation(row.locationKey ? { projectId: project.id, selection: { canonicalKey: row.locationKey, kind: "city" } } : { city: row.city, country: row.location, projectId: project.id });
       locations.set(locationCacheKey, resolved);
     }
+    if (!registeredKeys.has(resolved.location.canonicalKey)) {
+      errors.push({
+        message: `Market ${resolved.location.canonicalKey} is not tracked by this project. Add it in Settings > Markets first.`,
+        row: row.row,
+      });
+      continue;
+    }
     if (resolved.warning) warnings.add(resolved.warning);
     preparedRows.push({
       device: row.device,
       keyword: row.keyword,
-      location: resolved.location.displayName,
+      location: denormalizedLocationLabel(resolved.location),
       locationId: resolved.location.id,
       schedule: null,
       tags: row.tags,

@@ -70,7 +70,7 @@ async function expectAppPage(page: Page, path: string, assertVisible: () => Prom
 }
 
 async function clickThroughAppPages(page: Page, keyword: string, projectRef: string) {
-  await expectAppPage(page, `/app/${projectRef}/overview`, async () => {
+  await expectAppPage(page, `/app/${projectRef}/dashboard`, async () => {
     await expect(page.getByText("Tracked keywords")).toBeVisible();
   });
 
@@ -179,6 +179,6 @@ test("release flow: auth, onboarding, app pages, keyword detail, logout", async 
     waitUntil: "commit",
   });
 
-  await page.goto(`/app/${projectRef}/overview`);
+  await page.goto(`/app/${projectRef}/dashboard`);
   await expect(page).toHaveURL((url) => url.pathname === "/login");
 });

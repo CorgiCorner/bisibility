@@ -5,7 +5,9 @@ import { createKeywordBatchSet } from "@/lib/actions/keyword-helpers";
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
+import { ProjectMarketLimitExceededError } from "@/lib/markets/limits";
 import { projectDefaultSerpMarket } from "@/lib/serp/default-market";
+import { denormalizedLocationLabel } from "@/lib/serp/location-label";
 import { resolveKeywordLocation } from "@/lib/serp/location-service";
 import { type ApiContext, forbidden, projectMatches } from "./context";
 import { scheduleFromCreate } from "./keyword-utils";
@@ -47,6 +49,7 @@ type KeywordCreateTransaction = Pick<
   | "keyword"
   | "keywordTag"
   | "keywordSchedule"
+  | "projectMarket"
   | "projectDefaults"
   | "tag"
 >;
@@ -153,7 +156,7 @@ export async function createKeywords(
       resolvedItems.map(({ item, market, resolved }) => ({
         device: market.device,
         keyword: item.keyword,
-        location: resolved.location.displayName,
+        location: denormalizedLocationLabel(resolved.location),
         locationId: resolved.location.id,
         schedule: scheduleFromCreate(item),
         tags: item.tags,
@@ -204,7 +207,12 @@ export async function createKeywords(
           })
         : await persist(client);
   } catch (error) {
-    if (!(error instanceof KeywordLimitExceededError)) throw error;
+    if (
+      !(error instanceof KeywordLimitExceededError) &&
+      !(error instanceof ProjectMarketLimitExceededError)
+    ) {
+      throw error;
+    }
     return errorResponse("forbidden", error.message, 403, {
       headers: ctx.headers,
       instance: ctx.instance,

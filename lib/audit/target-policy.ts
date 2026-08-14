@@ -30,6 +30,7 @@ export const AUDIT_TARGET_POLICIES = {
   personal_access_token: { mode: "public", prefix: "pat", resource: "Personal access token" },
   project: { mode: "public", prefix: "prj", resource: "Project" },
   project_defaults: { mode: "public", prefix: "prj", resource: "Project defaults" },
+  project_market: { mode: "public", prefix: "pmkt", resource: "Project market" },
   provider_connection: { mode: "public", prefix: "conn", resource: "Provider connection" },
   rank_check: { mode: "public", prefix: "check", resource: "Rank-check" },
   saved_keyword: { mode: "public", prefix: "svkw", resource: "Saved keyword" },

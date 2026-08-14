@@ -1,4 +1,5 @@
 import type { Device } from "@/lib/generated/prisma/client";
+import { supportsResearchMarket } from "@/lib/serp/market-capability";
 import { completedCheckAttempts, parseCheckAttempts, providerLabel } from "./attempts";
 import type {
   CheckRange,
@@ -36,7 +37,12 @@ export type CheckRunSource = {
     publicId: string;
     text: string;
     device: Device;
-    locationRef: { displayName: string; languageLabel: string };
+    locationRef: {
+      countryCode: string;
+      displayName: string;
+      languageCode: string;
+      languageLabel: string;
+    };
   };
   position: number | null;
   previousPosition: number | null;
@@ -129,6 +135,10 @@ function rowFor(source: CheckRunSource): CheckRunRow | null {
     provider: source.provider,
     providerLabel: providerLabel(source.provider),
     requestedDepth: source.requestedDepth,
+    researchMetricsAvailable: supportsResearchMarket(
+      source.keyword.locationRef.countryCode,
+      source.keyword.locationRef.languageCode,
+    ),
     startedAt: source.startedAt?.toISOString() ?? null,
     status: source.status,
     trigger: validTrigger(source.trigger),
@@ -189,7 +199,7 @@ export function buildProviderHealth(
 export function buildCheckRunsView(
   pageRows: readonly CheckRunSource[],
   summary: CheckRunsSummary,
-  options: Pick<CheckRunsViewOptions, "limit"> = {},
+  options: Pick<CheckRunsViewOptions, "limit"> & { staleCount?: number } = {},
 ): CheckRunsView {
   const requestedLimit = checkRunsPageLimit(options.limit);
   const mappedRows = pageRows.flatMap((source) => {
@@ -206,5 +216,6 @@ export function buildCheckRunsView(
         ? { checkedAt: last.checkedAt, id: last.id }
         : null,
     rows,
+    staleCount: options.staleCount ?? 0,
   };
 }

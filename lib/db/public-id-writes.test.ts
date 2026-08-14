@@ -22,6 +22,7 @@ describe("public ID Prisma write defaults", () => {
       "Notification",
       "PersonalAccessToken",
       "Project",
+      "ProjectMarket",
       "ProviderConnection",
       "RankCheck",
       "SavedKeyword",

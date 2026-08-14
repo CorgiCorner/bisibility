@@ -4,9 +4,11 @@ import { savedKeywordsCsv } from "./saved-keywords-export";
 
 const rows: SavedKeywordRow[] = [
   {
+    countryCode: "US",
     cpc: 1.12,
     difficulty: 31,
     intent: "transactional",
+    languageCode: "en",
     location: "US",
     publicId: "skw_1",
     savedAt: "2026-07-22T12:00:00.000Z",
@@ -17,9 +19,11 @@ const rows: SavedKeywordRow[] = [
     volume: 12_100,
   },
   {
+    countryCode: "PL",
     cpc: null,
     difficulty: null,
     intent: null,
+    languageCode: "pl",
     location: "PL",
     publicId: "skw_2",
     savedAt: "2026-07-23T09:30:00.000Z",

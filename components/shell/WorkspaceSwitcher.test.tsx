@@ -29,7 +29,7 @@ describe("WorkspaceSwitcher", () => {
       expect(screen.queryByRole("menuitem", { name: "Project settings" })).toBeNull();
       expect(
         screen.getByRole("menuitem", { name: new RegExp(mockWorkspaces[1].name) }),
-      ).toHaveAttribute("href", `/app/${mockWorkspaces[1].publicId}/overview`);
+      ).toHaveAttribute("href", `/app/${mockWorkspaces[1].publicId}/dashboard`);
     },
   );
 

@@ -41,6 +41,20 @@ vi.mock("@mui/x-charts/LineChart", () => ({
 }));
 
 describe("PositionHistoryCard", () => {
+  const originalTZ = process.env.TZ;
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-07-20T12:00:00.000Z"));
+    process.env.TZ = "UTC";
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    if (originalTZ === undefined) delete process.env.TZ;
+    else process.env.TZ = originalTZ;
+  });
+
   it("shows a discontinuity marker only when the visible history crosses a contract boundary", () => {
     render(
       <PositionHistoryCard
@@ -48,6 +62,7 @@ describe("PositionHistoryCard", () => {
           ...keywordRows[0],
           positionHistoryBoundaryAt: "2026-07-01T10:00:00.000Z",
         }}
+        timeZone="UTC"
       />,
     );
 
@@ -63,13 +78,6 @@ describe("PositionHistoryCard", () => {
     ).not.toBeInTheDocument();
   });
 
-  beforeEach(() => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-07-20T12:00:00.000Z"));
-  });
-
-  afterEach(() => vi.useRealTimers());
-
   it("shows paused instead of leaving the next-check value blank", () => {
     render(
       <PositionHistoryCard
@@ -82,6 +90,7 @@ describe("PositionHistoryCard", () => {
             next_check_at: null,
           },
         }}
+        timeZone="UTC"
       />,
     );
 
@@ -91,6 +100,20 @@ describe("PositionHistoryCard", () => {
     expect(screen.getByLabelText("Single rank check point").nextElementSibling).toHaveClass(
       "left-[12.33%]",
     );
+  });
+
+  it("formats the latest check date in the project timezone", () => {
+    render(
+      <PositionHistoryCard
+        keyword={{
+          ...keywordRows[0],
+          positionHistory: [{ checkedAt: "2026-07-20T01:00:00.000Z", label: "Today", position: 3 }],
+        }}
+        timeZone="America/New_York"
+      />,
+    );
+
+    expect(screen.getByText(/^Latest #3 · Jul 19/)).toBeInTheDocument();
   });
 
   it("filters by elapsed days and keeps only the latest check from each day", () => {
@@ -106,6 +129,7 @@ describe("PositionHistoryCard", () => {
             { checkedAt: "2026-07-20T10:00:00.000Z", label: "Today", position: 5 },
           ],
         }}
+        timeZone="UTC"
       />,
     );
 
@@ -141,6 +165,7 @@ describe("PositionHistoryCard", () => {
             next_check_at: null,
           },
         }}
+        timeZone="UTC"
       />,
     );
 
@@ -162,6 +187,7 @@ describe("PositionHistoryCard", () => {
           ],
           targetPosition: 3,
         }}
+        timeZone="UTC"
       />,
     );
 
@@ -193,6 +219,7 @@ describe("PositionHistoryCard", () => {
           ],
           targetPosition: 1,
         }}
+        timeZone="UTC"
       />,
     );
 
@@ -204,7 +231,9 @@ describe("PositionHistoryCard", () => {
   });
 
   it("hides every target element when no positional alert target exists", () => {
-    render(<PositionHistoryCard keyword={{ ...keywordRows[0], targetPosition: null }} />);
+    render(
+      <PositionHistoryCard keyword={{ ...keywordRows[0], targetPosition: null }} timeZone="UTC" />,
+    );
     expect(screen.queryByTestId("reference-line")).not.toBeInTheDocument();
     expect(screen.queryByText(/away from target|target reached/)).not.toBeInTheDocument();
   });
@@ -220,6 +249,7 @@ describe("PositionHistoryCard", () => {
           ],
           targetPosition: 50,
         }}
+        timeZone="UTC"
       />,
     );
 
@@ -231,13 +261,34 @@ describe("PositionHistoryCard", () => {
   });
 
   it("uses the reference rank labels on the position axis", () => {
-    render(<PositionHistoryCard keyword={keywordRows[0]} />);
+    render(<PositionHistoryCard keyword={keywordRows[0]} timeZone="UTC" />);
 
     const yAxis = lineChart.mock.calls.at(-1)?.[0].yAxis[0];
     expect(yAxis.tickInterval).toEqual([1, 10, 20]);
     expect(yAxis.valueFormatter?.(1)).toBe("#1");
     expect(yAxis.valueFormatter?.(10)).toBe("#10");
     expect(yAxis.valueFormatter?.(20)).toBe("#20");
+  });
+
+  it("renders a scheduled next check with the project timezone", () => {
+    render(
+      <PositionHistoryCard
+        keyword={{
+          ...keywordRows[0],
+          positionHistory: [{ checkedAt: "2026-07-20T10:00:00.000Z", label: "Today", position: 6 }],
+          schedule: {
+            ...keywordRows[0].schedule,
+            frequency: "daily",
+            next_check_at: "2026-07-21T06:00:00.000Z",
+          },
+        }}
+        timeZone="Europe/Madrid"
+      />,
+    );
+
+    const overlay = screen.getByText("Not enough history to chart yet.").parentElement;
+    expect(overlay).toHaveTextContent("Current #6 | Next check Jul 21, 08:00");
+    expect(overlay).toHaveTextContent("(Europe/Madrid)");
   });
 
   it("moves the annotation 12 pixels farther when it would cross the target line", () => {
@@ -247,5 +298,71 @@ describe("PositionHistoryCard", () => {
     expect(
       historyAnnotationTop({ bottom: 252, latest: 100, previous: 102, target: 108, top: 18 }),
     ).toBe(116);
+  });
+
+  it("renders a computed degraded marker, final tooltip copy, and conditional legend", () => {
+    render(
+      <PositionHistoryCard
+        keyword={{
+          ...keywordRows[0],
+          location: {
+            ...keywordRows[0].location,
+            cityName: "Malaga",
+            countryCode: "ES",
+            displayName: "Malaga",
+          },
+          positionHistory: [
+            {
+              checkedAt: "2026-07-14T10:00:00.000Z",
+              degradedToCountry: true,
+              label: "Jul 14",
+              position: 8,
+            },
+            { checkedAt: "2026-07-20T10:00:00.000Z", label: "Today", position: 5 },
+          ],
+        }}
+        timeZone="UTC"
+      />,
+    );
+
+    expect(screen.getByText("checked at country level")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Checked at country level - the provider had no handle for this city. Position measured for Spain, not Malaga.",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("plots all markets with an accessible market and position inventory", () => {
+    const belgium = {
+      ...keywordRows[0],
+      id: "kw_be",
+      location: {
+        ...keywordRows[0].location,
+        canonicalKey: "country:BE:lang:nl",
+        countryCode: "BE",
+        displayName: "Belgium",
+        languageLabel: "Dutch",
+      },
+      position: 9,
+      positionHistory: [
+        { checkedAt: "2026-07-14T10:00:00.000Z", label: "Jul 14", position: 11 },
+        { checkedAt: "2026-07-20T10:00:00.000Z", label: "Today", position: 9 },
+      ],
+    };
+    render(
+      <PositionHistoryCard
+        keyword={keywordRows[0]}
+        marketTargets={[keywordRows[0], belgium]}
+        timeZone="UTC"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("radio", { name: "All markets" }));
+    expect(lineChart.mock.calls.at(-1)?.[0].series).toHaveLength(2);
+    expect(
+      screen.getByRole("region", { name: /All-market position history:.*Belgium \/ Dutch #9/ }),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Compared markets")).toHaveTextContent("Belgium / Dutch #9");
   });
 });

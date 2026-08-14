@@ -31,12 +31,12 @@ describe("OnboardingWizard", () => {
     fireEvent.click(screen.getByRole("button", { name: /continue/i }));
 
     await waitFor(() => expect(createProjectAction).toHaveBeenCalledTimes(1));
-    expect(createProjectAction.mock.calls[0][0]).toEqual({
-      website: "https://www.example.com/products",
-    });
-    expect(createProjectAction.mock.calls[0][0]).not.toHaveProperty("includeSubdomains");
-    expect(createProjectAction.mock.calls[0][0]).not.toHaveProperty("rootAndWww");
-    expect(createProjectAction.mock.calls[0][0]).not.toHaveProperty("urlPrefix");
+    const submittedInput = createProjectAction.mock.calls[0][0] as Record<string, unknown>;
+    expect(submittedInput.website).toBe("https://www.example.com/products");
+    expect(typeof submittedInput.timezone).toBe("string");
+    expect(submittedInput).not.toHaveProperty("includeSubdomains");
+    expect(submittedInput).not.toHaveProperty("rootAndWww");
+    expect(submittedInput).not.toHaveProperty("urlPrefix");
   });
 
   it("opens data connections directly after project creation", () => {
@@ -47,7 +47,15 @@ describe("OnboardingWizard", () => {
     });
 
     expect(screen.getByRole("heading", { name: "Connect data" })).toBeInTheDocument();
+    expect(screen.getByText("Rank data / powers rank checks")).toBeInTheDocument();
+    expect(screen.getByText("Your site's data / optional, free")).toBeInTheDocument();
     expect(screen.getByText("Search Console")).toBeInTheDocument();
+    expect(
+      screen
+        .getByLabelText("API login")
+        .compareDocumentPosition(screen.getByText("Your site's data / optional, free")) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
     expect(screen.queryByText("Connect from your terminal or API")).not.toBeInTheDocument();
   });
 
@@ -218,7 +226,34 @@ describe("OnboardingWizard", () => {
     expect(completeOnboardingAction).toHaveBeenCalledWith({
       projectId: "prj_1",
     });
-    expect(routerMock.push).toHaveBeenCalledWith("/app/prj_1/overview");
+    expect(routerMock.push).toHaveBeenCalledWith("/app/prj_1/dashboard");
+  });
+
+  it("renders and saves hydrated registry markets on a resumed final step", async () => {
+    const saveMarketsAction = vi.fn(async (input) => ({ marketKeys: input.marketKeys }));
+    renderWizard({
+      actions: { saveMarketsAction },
+      initialFlowState: {
+        locations: ["US", "ES@en"],
+        projectId: "prj_1",
+        providerId: "dataforseo",
+      },
+      initialKeywordCount: 1,
+      initialProject: project,
+      initialStep: 4,
+      providerConnected: true,
+    });
+
+    expect(screen.getByText("United States")).toBeInTheDocument();
+    expect(screen.getByText("Spain")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Open dashboard" }));
+
+    await waitFor(() =>
+      expect(saveMarketsAction).toHaveBeenCalledWith({
+        marketKeys: ["US", "ES@en"],
+        projectId: "prj_1",
+      }),
+    );
   });
 
   it("recognizes a saved SerpApi connection on the first-check step", () => {
@@ -232,7 +267,7 @@ describe("OnboardingWizard", () => {
       providerConnected: false,
     });
 
-    expect(screen.getByText("Run 1 live check now")).toBeInTheDocument();
+    expect(screen.getByText("1 sample check - one per market and device")).toBeInTheDocument();
     expect(screen.getByText("SerpApi")).toBeInTheDocument();
     expect(screen.queryByText(/No SERP provider connected/)).toBeNull();
   });

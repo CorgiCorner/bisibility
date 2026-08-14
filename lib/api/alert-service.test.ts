@@ -8,6 +8,7 @@ import {
 const mocks = vi.hoisted(() => {
   const tx = {
     alertRule: { update: vi.fn() },
+    alertRuleMarket: { deleteMany: vi.fn() },
     alertRuleRecipient: { deleteMany: vi.fn() },
     alertRuleTarget: { deleteMany: vi.fn() },
     auditLog: { create: vi.fn() },
@@ -15,6 +16,7 @@ const mocks = vi.hoisted(() => {
   const prisma = {
     $transaction: vi.fn(),
     alertRule: { count: vi.fn(), create: vi.fn(), delete: vi.fn(), findFirst: vi.fn() },
+    projectMarket: { findMany: vi.fn() },
     alertRuleTarget: { deleteMany: vi.fn() },
     auditLog: { create: vi.fn() },
     keyword: { findMany: vi.fn() },
@@ -30,12 +32,18 @@ vi.mock("@/lib/auth/audit", () => ({ writeAudit: mocks.writeAudit }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 
 const context = { actorId: null, projectId: "project_1" };
+const ruleInclude = {
+  markets: { include: { projectMarket: { select: { publicId: true } } } },
+  recipients: { select: { userId: true } },
+  targets: true,
+};
 
 function form(overrides: Record<string, unknown> = {}) {
   return {
     channels: [],
     conditionType: "threshold",
     enabled: true,
+    marketIds: [],
     name: "Rank drop",
     projectId: "prj_a00000000000000000000000",
     targetIds: [],
@@ -70,6 +78,7 @@ describe("alert service", () => {
     mocks.prisma.alertRule.delete.mockResolvedValue(rule());
     mocks.prisma.alertRule.findFirst.mockResolvedValue(rule());
     mocks.prisma.keyword.findMany.mockResolvedValue([]);
+    mocks.prisma.projectMarket.findMany.mockResolvedValue([]);
     mocks.prisma.project.findUnique.mockResolvedValue({ ownerId: "owner_1" });
     mocks.prisma.tag.findMany.mockResolvedValue([]);
     mocks.prisma.user.findMany.mockImplementation(({ where }) => {
@@ -86,7 +95,7 @@ describe("alert service", () => {
 
     expect(mocks.prisma.alertRule.create).toHaveBeenCalledWith({
       data: expect.objectContaining({ createdById: null, projectId: "project_1" }),
-      include: { recipients: { select: { userId: true } }, targets: true },
+      include: ruleInclude,
     });
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({ action: "alert_rule.create", actorId: null }),
@@ -117,7 +126,7 @@ describe("alert service", () => {
         createdById: null,
         recipients: { create: [{ userId: "owner_1" }] },
       }),
-      include: { recipients: { select: { userId: true } }, targets: true },
+      include: ruleInclude,
     });
   });
 
@@ -128,7 +137,7 @@ describe("alert service", () => {
     expect(mocks.prisma.user.findMany).not.toHaveBeenCalled();
     expect(mocks.prisma.alertRule.create).toHaveBeenCalledWith({
       data: expect.not.objectContaining({ recipients: expect.anything() }),
-      include: { recipients: { select: { userId: true } }, targets: true },
+      include: ruleInclude,
     });
   });
 
@@ -158,7 +167,7 @@ describe("alert service", () => {
         createdById: "user_1",
         recipients: { create: [{ userId: "user_1" }] },
       }),
-      include: { recipients: { select: { userId: true } }, targets: true },
+      include: ruleInclude,
     });
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({ action: "alert_rule.create", actorId: "user_1" }),
@@ -233,10 +242,33 @@ describe("alert service", () => {
     expect(mocks.tx.alertRuleTarget.deleteMany).toHaveBeenCalledWith({
       where: { ruleId: "rule_1" },
     });
+    expect(mocks.tx.alertRuleMarket.deleteMany).toHaveBeenCalledWith({
+      where: { ruleId: "rule_1" },
+    });
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({ action: "alert_rule.update", actorId: "user_1" }),
       mocks.tx,
     );
+  });
+
+  it("preserves market scope when an old PATCH client omits market ids", async () => {
+    const { marketIds: _marketIds, ...data } = form({ ruleId: "rule_1" });
+
+    await updateAlertRuleRecord(data, context);
+
+    expect(mocks.prisma.projectMarket.findMany).not.toHaveBeenCalled();
+    expect(mocks.tx.alertRuleMarket.deleteMany).not.toHaveBeenCalled();
+    expect(mocks.tx.alertRule.update.mock.calls[0]?.[0].data.markets).toBeUndefined();
+  });
+
+  it("clears market scope when PATCH provides an explicit empty set", async () => {
+    await updateAlertRuleRecord(form({ marketIds: [], ruleId: "rule_1" }), context);
+
+    expect(mocks.prisma.projectMarket.findMany).not.toHaveBeenCalled();
+    expect(mocks.tx.alertRuleMarket.deleteMany).toHaveBeenCalledWith({
+      where: { ruleId: "rule_1" },
+    });
+    expect(mocks.tx.alertRule.update.mock.calls[0]?.[0].data.markets).toBeUndefined();
   });
 
   it("preserves severity on omitted updates and applies explicit overrides", async () => {

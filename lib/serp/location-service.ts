@@ -2,7 +2,11 @@ import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
 import { providerChainOrderBy, providerChainWhere } from "@/lib/rank-check/provider-chain-order";
-import { countryCodeForMarketName, type LocationSelection, parseCanonicalKey } from "./location";
+import {
+  countryCodeForMarketName,
+  type LocationSelection,
+  normalizeCanonicalLocationKey,
+} from "./location";
 import {
   createCityLocationLookup,
   lookupConfigFromConnections,
@@ -75,20 +79,21 @@ function isSelectionInput(
 async function resolveSelection(input: SelectionKeywordLocationInput): Promise<LocationResolution> {
   if (input.selection.kind === "country") {
     return resolveLocation(
-      { countryCode: input.selection.countryCode },
+      {
+        countryCode: input.selection.countryCode,
+        languageCode: input.selection.languageCode,
+      },
       { store: prismaLocationStore },
     );
   }
 
   if ("canonicalKey" in input.selection) {
-    const cached = await prismaLocationStore.findByKey(input.selection.canonicalKey);
+    const normalized = normalizeCanonicalLocationKey(input.selection.canonicalKey);
+    const cached = await prismaLocationStore.findByKey(normalized.canonicalKey);
     if (cached) {
       return { degraded: false, location: cached, warning: null };
     }
-    const selector = parseCanonicalKey(input.selection.canonicalKey);
-    if (!selector) {
-      throw new Error(`Unsupported location key: ${input.selection.canonicalKey}`);
-    }
+    const { selector } = normalized;
     if (!selector.cityName) {
       return resolveLocation(selector, { store: prismaLocationStore });
     }
@@ -101,6 +106,7 @@ async function resolveSelection(input: SelectionKeywordLocationInput): Promise<L
     {
       cityName: input.selection.cityName,
       countryCode: input.selection.countryCode,
+      languageCode: input.selection.languageCode,
       regionName: input.selection.regionName,
     },
     { lookup, store: prismaLocationStore },

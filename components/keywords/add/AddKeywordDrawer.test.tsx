@@ -1,15 +1,43 @@
-import { makeCostContext } from "@/tests/factories/cost-context";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AddKeywordDrawer } from "./AddKeywordDrawer";
 
+const { addKeywordsMatrix } = vi.hoisted(() => ({
+  addKeywordsMatrix: vi.fn(async () => ({ created: 1, keywords: [] })),
+}));
+vi.mock("@/lib/actions/keyword", () => ({ addKeywordsMatrix }));
+vi.mock("@/lib/actions/project-markets", () => ({
+  addProjectMarkets: vi.fn(),
+}));
+
 const fetchMock = vi.fn(async () => ({ ok: true, json: async () => ({ data: [] }) }));
 vi.stubGlobal("fetch", fetchMock);
 
 afterEach(() => {
+  addKeywordsMatrix.mockClear();
   fetchMock.mockClear();
 });
+
+const projectMarkets = {
+  markets: [
+    {
+      canonicalKey: "US",
+      countryCode: "US",
+      displayName: "United States",
+      id: "pmkt_us",
+      languageCode: "en",
+      languageLabel: "English",
+      monthlyCostCents: 30,
+      researchAvailable: true,
+      status: "active" as const,
+    },
+  ],
+  maxMarkets: 5,
+  monthlyCostCents: 30,
+  perMarketChecks: 1,
+  projectId: "prj_1",
+};
 
 function renderDrawer(props: Partial<ComponentProps<typeof AddKeywordDrawer>> = {}) {
   const addKeywordsAction = vi.fn(async () => ({ created: 1, keywords: [] }));
@@ -21,6 +49,7 @@ function renderDrawer(props: Partial<ComponentProps<typeof AddKeywordDrawer>> = 
       onClose={onClose}
       open
       projectId="prj_1"
+      projectMarkets={projectMarkets}
       {...props}
     />,
   );
@@ -35,120 +64,28 @@ function addKeywordForm() {
 }
 
 describe("AddKeywordDrawer", () => {
-  it("shows live add-keyword cost and paused estimates", () => {
-    renderDrawer({
-      costContext: makeCostContext({ costPerCheckCents: 10, keywordCount: 10, spentCents: 100 }),
-    });
+  it("shows target-matrix math and a paused switch without a cost estimate", () => {
+    renderDrawer();
+    expect(
+      screen.getByText("0 keywords x 1 market x 1 device = 0 checks per run for this keyword."),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/\$/)).not.toBeInTheDocument();
+    expect(screen.getByRole("switch", { name: /pause new targets/i })).toBeInTheDocument();
+  });
+
+  it("blocks manual submission until at least one active market is selected", () => {
+    renderDrawer();
     fireEvent.change(screen.getByLabelText("Keywords"), {
-      target: { value: "first keyword\nsecond keyword" },
+      target: { value: "rank tracker" },
     });
-    expect(
-      screen.getByText(
-        "Adding 2 keywords at Daily ~ +$6.00/mo - project total ~ $36.00/mo of $50.00 cap.",
-      ),
-    ).toBeInTheDocument();
+    const submit = screen.getByRole("button", { name: "Add & track" });
+    expect(submit).toBeEnabled();
 
-    fireEvent.click(screen.getByRole("switch", { name: "Paused" }));
-    expect(
-      screen.getByText(
-        "Adding 2 keywords at Daily ~ +$0.00/mo (paused) - project total ~ $30.00/mo of $50.00 cap.",
-      ),
-    ).toBeInTheDocument();
-  });
+    fireEvent.click(screen.getByRole("button", { name: "United States / English" }));
 
-  it("shows an exact zero-cost estimate for an explicitly free provider", () => {
-    renderDrawer({
-      costContext: makeCostContext({
-        costPerCheckCents: 0,
-        keywordCount: 0,
-        providerId: "local-sequence",
-        spentCents: 0,
-      }),
-    });
-    fireEvent.change(screen.getByLabelText("Keywords"), { target: { value: "rank tracker" } });
-
-    expect(
-      screen.getByText(
-        "Adding 1 keyword at Daily ~ +$0.00/mo - project total ~ $0.00/mo of $50.00 cap.",
-      ),
-    ).toBeInTheDocument();
-    expect(screen.queryByText(/provider rate unavailable/i)).not.toBeInTheDocument();
-  });
-
-  it("shows counts without money when the provider rate is unknown", () => {
-    renderDrawer({
-      costContext: makeCostContext({
-        costPerCheckCents: null,
-        keywordCount: 10,
-        providerId: null,
-        spentCents: 100,
-      }),
-    });
-    fireEvent.change(screen.getByLabelText("Keywords"), { target: { value: "rank tracker" } });
-
-    expect(screen.getByText("Adding 1 keyword, 1 location, daily.")).toBeInTheDocument();
-  });
-
-  it("keeps the daily project base cost when new keywords are paused", async () => {
-    renderDrawer({
-      costContext: makeCostContext({ costPerCheckCents: 10, keywordCount: 10, spentCents: 100 }),
-      initialKeyword: "rank tracker",
-      showSchedule: true,
-    });
-
-    fireEvent.click(screen.getByRole("button", { name: "Schedule" }));
-    fireEvent.click(await screen.findByRole("menuitem", { name: "Paused" }));
-
-    expect(
-      screen.getByText(
-        "Adding 1 keyword at Paused ~ +$0.00/mo - project total scheduled spend $30.00/mo of $50.00 cap.",
-      ),
-    ).toBeInTheDocument();
-  });
-
-  it("does not show an estimate for the API tab", () => {
-    renderDrawer({
-      costContext: makeCostContext({ costPerCheckCents: 10, keywordCount: 10, spentCents: 100 }),
-      initialTab: "api",
-    });
-    expect(screen.queryByText(/project total/)).not.toBeInTheDocument();
-  });
-
-  it("never prices a manual project as scheduled monthly spend", () => {
-    renderDrawer({
-      costContext: makeCostContext({
-        costPerCheckCents: null,
-        frequency: "monthly",
-        keywordCount: 10,
-        providerId: null,
-        rawFrequency: "manual",
-        spentCents: 100,
-      }),
-    });
-    fireEvent.change(screen.getByLabelText("Keywords"), { target: { value: "rank tracker" } });
-    expect(
-      screen.getByText(
-        "Adding 1 keyword at Manual ~ +$0.00/mo - project total scheduled spend $0.00/mo of $50.00 cap.",
-      ),
-    ).toBeInTheDocument();
-  });
-
-  it("labels an unparseable custom cron separately from an unavailable rate", () => {
-    renderDrawer({
-      costContext: makeCostContext({
-        costPerCheckCents: 10,
-        cronExpression: "not a cron",
-        keywordCount: 10,
-        rawFrequency: "custom_cron",
-        spentCents: 100,
-      }),
-    });
-    fireEvent.change(screen.getByLabelText("Keywords"), { target: { value: "rank tracker" } });
-
-    expect(
-      screen.getByText("Adding 1 keyword at Custom cron - estimate excludes custom cron schedule."),
-    ).toBeInTheDocument();
-    expect(screen.queryByText(/provider rate unavailable/)).not.toBeInTheDocument();
+    expect(submit).toBeDisabled();
+    fireEvent.click(submit);
+    expect(addKeywordsMatrix).not.toHaveBeenCalled();
   });
 
   it("appends suggested project tags", () => {
@@ -171,7 +108,7 @@ describe("AddKeywordDrawer", () => {
       target: { value: "first keyword\nsecond keyword" },
     });
     expect(screen.getByRole("button", { name: "Add & track 2 keywords" })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("switch", { name: "Paused" }));
+    fireEvent.click(screen.getByRole("switch", { name: /pause new targets/i }));
     expect(screen.getByRole("button", { name: "Add 2 paused" })).toBeInTheDocument();
   });
 
@@ -305,7 +242,7 @@ describe("AddKeywordDrawer", () => {
   });
 
   it("does not let a hidden CSV error disable manual keyword submission", async () => {
-    const { addKeywordsAction } = renderDrawer({ initialTab: "csv" });
+    renderDrawer({ initialTab: "csv" });
     fireEvent.change(screen.getByLabelText("Paste CSV"), {
       target: { value: "keyword;country\nrank tracker;US" },
     });
@@ -317,7 +254,7 @@ describe("AddKeywordDrawer", () => {
     expect(submit).toBeEnabled();
     fireEvent.click(submit);
 
-    await waitFor(() => expect(addKeywordsAction).toHaveBeenCalledOnce());
+    await waitFor(() => expect(addKeywordsMatrix).toHaveBeenCalledOnce());
   });
 
   it("offers city results in the CSV drawer tracking section", async () => {
@@ -352,45 +289,13 @@ describe("AddKeywordDrawer", () => {
     );
   });
 
-  it("shares schedule configuration and added results with research callers", async () => {
-    const onAdded = vi.fn();
-    const { addKeywordsAction } = renderDrawer({
-      costContext: makeCostContext({
-        costPerCheckCents: 10,
-        keywordCount: 10,
-        spentCents: 100,
-        timezone: "Europe/Warsaw",
-      }),
-      initialKeyword: "rank tracker",
-      onAdded,
-      showSchedule: true,
-    });
-    addKeywordsAction.mockResolvedValue({
-      created: 1,
-      keywords: [{ publicId: "kw_1", text: "rank tracker" }],
-    } as never);
-
-    fireEvent.click(screen.getByRole("button", { name: "Schedule" }));
-    fireEvent.click(await screen.findByRole("menuitem", { name: "Weekly" }));
-    expect(screen.queryByRole("switch", { name: "Paused" })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Add & track" }));
-
-    await waitFor(() => expect(addKeywordsAction).toHaveBeenCalledOnce());
-    expect(addKeywordsAction).toHaveBeenCalledWith(
-      expect.objectContaining({
-        schedule: expect.objectContaining({ frequency: "weekly", timezone: "Europe/Warsaw" }),
-      }),
-    );
-    expect(onAdded).toHaveBeenCalledWith([{ publicId: "kw_1", text: "rank tracker" }]);
-  });
-
   it("reports created keywords when the action also returns a warning", async () => {
     const onAdded = vi.fn();
-    const { addKeywordsAction } = renderDrawer({
+    renderDrawer({
       initialKeyword: "rank tracker",
       onAdded,
     });
-    addKeywordsAction.mockResolvedValue({
+    addKeywordsMatrix.mockResolvedValue({
       created: 1,
       keywords: [{ publicId: "kw_1", text: "rank tracker" }],
       warning: "Austin was not found; tracking United States instead.",
@@ -398,8 +303,10 @@ describe("AddKeywordDrawer", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Add & track" }));
 
-    await waitFor(() => expect(addKeywordsAction).toHaveBeenCalledOnce());
-    expect(onAdded).toHaveBeenCalledWith([{ publicId: "kw_1", text: "rank tracker" }]);
+    await waitFor(() => expect(addKeywordsMatrix).toHaveBeenCalledOnce());
+    expect(onAdded).toHaveBeenCalledWith([{ publicId: "kw_1", text: "rank tracker" }], {
+      locationKeys: ["US"],
+    });
     expect(
       screen.getByText("Austin was not found; tracking United States instead."),
     ).toBeInTheDocument();

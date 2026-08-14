@@ -34,18 +34,21 @@ describe("domain overview page context", () => {
       displayName: "United States",
       hl: "en",
       kind: "country",
+      languageCode: "en",
       languageLabel: "English",
       primaryGeoCode: 2840,
     });
     mocks.projectDetails.mockResolvedValue({
       competitors: [{ domain: "competitor.example.com" }],
       defaults: null,
+      markets: [],
       providerConnections: [{ provider: "dataforseo", status: "connected" }],
     });
   });
 
   it("returns provider state, project suggestions, recents, market, and spend", async () => {
     await expect(getDomainOverviewPageContext("prj_1")).resolves.toEqual({
+      catalogMarkets: expect.any(Array),
       competitorDomains: ["competitor.example.com"],
       costContext: { capCents: 5000, spentCents: 125 },
       defaultMarket: {
@@ -62,6 +65,7 @@ describe("domain overview page context", () => {
       defaultTarget: "example.com",
       providerStatus: "connected",
       recentTargets: [{ target: "example.com" }],
+      trackedMarkets: [],
     });
     expect(mocks.recent).toHaveBeenCalledWith("project_1");
     expect(mocks.cost).toHaveBeenCalledWith("prj_1");
@@ -93,6 +97,7 @@ describe("domain overview page context", () => {
       displayName: "United States",
       hl: "en",
       kind: "country",
+      languageCode: "en",
       languageLabel: "English",
       primaryGeoCode: null,
     });
@@ -103,10 +108,95 @@ describe("domain overview page context", () => {
     });
   });
 
+  it("degrades a URL-selected city to its country-language research pair", async () => {
+    mocks.location.findUnique.mockResolvedValueOnce({
+      canonicalKey: "ES/Andalusia/Malaga",
+      cityName: "Malaga",
+      countryCode: "ES",
+      displayName: "Malaga, Andalusia, Spain",
+      hl: "es",
+      kind: "city",
+      languageCode: "es",
+      languageLabel: "Spanish",
+      primaryGeoCode: 1_009_548,
+    });
+
+    await expect(getDomainOverviewMarket("prj_1", "ES/Andalusia/Malaga")).resolves.toMatchObject({
+      canonicalKey: "ES",
+      cityName: null,
+      displayName: "Spain",
+      kind: "country",
+      locationCode: 2724,
+    });
+  });
+
+  it("returns registry-first country pairs with city provenance and off-catalog capability", async () => {
+    mocks.projectDetails.mockResolvedValueOnce({
+      competitors: [],
+      defaults: null,
+      markets: [
+        {
+          location: {
+            canonicalKey: "ES",
+            cityName: null,
+            countryCode: "ES",
+            displayName: "Spain",
+            hl: "es",
+            kind: "country",
+            languageCode: "es",
+            languageLabel: "Spanish",
+            primaryGeoCode: null,
+          },
+        },
+        {
+          location: {
+            canonicalKey: "ES/Andalusia/Malaga@es",
+            cityName: "Malaga",
+            countryCode: "ES",
+            displayName: "Malaga, Andalusia, Spain",
+            hl: "es",
+            kind: "city",
+            languageCode: "es",
+            languageLabel: "Spanish",
+            primaryGeoCode: 1_009_548,
+          },
+        },
+        {
+          location: {
+            canonicalKey: "ES@en",
+            cityName: null,
+            countryCode: "ES",
+            displayName: "Spain",
+            hl: "en",
+            kind: "country",
+            languageCode: "en",
+            languageLabel: "English",
+            primaryGeoCode: null,
+          },
+        },
+      ],
+      providerConnections: [{ provider: "dataforseo", status: "connected" }],
+    });
+
+    const context = await getDomainOverviewPageContext("prj_1");
+    expect(context.trackedMarkets).toEqual([
+      expect.objectContaining({
+        canonicalKey: "ES",
+        provenance: "Malaga tracked at city level - domain analysis runs on the country pair.",
+        researchAvailable: true,
+      }),
+      expect.objectContaining({ canonicalKey: "ES@en", researchAvailable: false }),
+    ]);
+    expect(context.catalogMarkets).not.toContainEqual(
+      expect.objectContaining({ canonicalKey: "ES" }),
+    );
+  });
+
   it("distinguishes reauthentication from no capable provider", async () => {
     mocks.projectDetails.mockResolvedValueOnce({
       competitors: [],
       defaults: null,
+      markets: [],
       providerConnections: [{ provider: "dataforseo", status: "needs_reauth" }],
     });
     await expect(getDomainOverviewPageContext("prj_1")).resolves.toMatchObject({
@@ -116,6 +206,7 @@ describe("domain overview page context", () => {
     mocks.projectDetails.mockResolvedValueOnce({
       competitors: [],
       defaults: null,
+      markets: [],
       providerConnections: [{ provider: "serpapi", status: "connected" }],
     });
     await expect(getDomainOverviewPageContext("prj_1")).resolves.toMatchObject({

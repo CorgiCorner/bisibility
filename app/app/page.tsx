@@ -6,5 +6,5 @@ export default async function AppEntryPage() {
   const completedWorkspace = (await listWorkspaces()).find(
     (workspace) => workspace.onboardingCompletedAt !== null,
   );
-  redirect(completedWorkspace ? appPath(completedWorkspace.publicId, "overview") : "/onboarding");
+  redirect(completedWorkspace ? appPath(completedWorkspace.publicId, "dashboard") : "/onboarding");
 }

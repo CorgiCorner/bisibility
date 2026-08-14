@@ -4,6 +4,7 @@ import type {
   RunFirstCheckAction,
 } from "@/components/rank-check/FirstCheckBannerAction";
 import type { ProjectRef } from "@/lib/routing/app-path";
+import { ByMarketRollup } from "./ByMarketRollup";
 import {
   DataSourceNoDataPanel,
   RecentlyAddedCard,
@@ -65,6 +66,11 @@ export function OverviewNoData({
         distribution={overview.distribution}
         domain={overview.domain}
         trend={overview.trend}
+      />
+      <ByMarketRollup
+        device={overview.toolbar.deviceValue}
+        projectRef={projectRef}
+        rows={overview.byMarket}
       />
       <DataSourceNoDataPanel health={overview.dataSource} />
       <RecentlyAddedCard projectRef={projectRef} rows={recentlyAddedRows} />

@@ -4,6 +4,7 @@ import { KeywordInlineEdit } from "@/components/keywords/grid/KeywordInlineEdit"
 import { Button, SegmentedControl, Sheet } from "@/components/ui";
 import type { CostRateInfo } from "@/lib/cost-estimate/project-estimate";
 import type { KeywordRow } from "@/lib/queries/keywords";
+import type { ProjectMarketsView } from "@/lib/queries/project-markets";
 import { useState } from "react";
 import type { KeywordDetailActions } from "./action-utils";
 import { KeywordScheduleInlineForm } from "./KeywordScheduleInlineForm";
@@ -19,6 +20,7 @@ type KeywordEditDrawerProps = Pick<
   onClose: () => void;
   open: boolean;
   projectId: string;
+  projectMarkets?: ProjectMarketsView;
   providerRate?: CostRateInfo;
 };
 
@@ -33,6 +35,7 @@ export function KeywordEditDrawer({
   onClose,
   open,
   projectId,
+  projectMarkets,
   providerRate,
   updateKeywordAction,
   updateKeywordScheduleAction,
@@ -99,6 +102,7 @@ export function KeywordEditDrawer({
         <KeywordInlineEdit
           focusTargetUrl={focusTargetUrl}
           formId={detailsFormId}
+          drawerMarkets={projectMarkets?.markets}
           hideSubmit
           keyword={keyword}
           layout="drawer"

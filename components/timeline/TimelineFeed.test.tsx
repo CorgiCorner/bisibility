@@ -33,6 +33,35 @@ const manualNote: TimelineSignalRow = {
 };
 
 describe("TimelineFeed empty state", () => {
+  it("uses the app header once and keeps Add note after Timeline search", () => {
+    render(
+      <TimelineFeed
+        canCreate
+        canDelete
+        projectId="prj_1"
+        projectRef="prj_1"
+        view={{
+          filter: "all",
+          hasNextPage: false,
+          hasPreviousPage: false,
+          isFiltered: false,
+          now: new Date("2026-07-15T12:00:00.000Z"),
+          page: 1,
+          rows: [],
+          search: "",
+          timeZone: "UTC",
+        }}
+      />,
+    );
+
+    expect(screen.queryByText("Newest project signals first")).not.toBeInTheDocument();
+    const search = screen.getByRole("button", { name: "Search" });
+    const addNote = screen.getByRole("button", { name: "Add note" });
+    expect(search.closest("form")).not.toContainElement(addNote);
+    expect(search.closest("form")?.parentElement).toContainElement(addNote);
+    expect(search.compareDocumentPosition(addNote) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it("identifies an out-of-range page and links back to page one", () => {
     render(
       <TimelineFeed
@@ -49,6 +78,7 @@ describe("TimelineFeed empty state", () => {
           page: 999,
           rows: [],
           search: "",
+          timeZone: "UTC",
         }}
       />,
     );
@@ -81,6 +111,7 @@ describe("TimelineFeed empty state", () => {
             page: 1,
             rows: [manualNote],
             search: "",
+            timeZone: "UTC",
           }}
         />,
       );

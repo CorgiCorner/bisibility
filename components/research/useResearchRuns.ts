@@ -142,8 +142,13 @@ export function useResearchRuns({
     setActiveTabId((current) => (current === id ? null : current));
   }
 
-  function markAdded(keywords: string[]) {
-    setTabs((current) => markTabsTracked(current, keywords));
+  function markAdded(keywords: string[], locationKeys: readonly string[]) {
+    const selected = new Set(locationKeys);
+    setTabs((current) =>
+      current.map((tab) =>
+        selected.has(tab.location.canonicalKey) ? markTabsTracked([tab], keywords)[0] : tab,
+      ),
+    );
   }
 
   function markSaved(keywords: string[], alreadySaved: boolean) {

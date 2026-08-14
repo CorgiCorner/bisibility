@@ -1,6 +1,6 @@
 import { monthlyCronExpression, nextCronRun, zonedCronParts } from "./cron";
-import { DAILY_INTERVAL_MS, nextStableIntervalTime, WEEKLY_INTERVAL_MS } from "./interval-phase";
 import { isScheduledFrequency, type RankCheckFrequency } from "./schedule-frequency";
+import { nextZonedCron, stableZonedIntervalCron } from "./zoned-recurrence";
 
 export {
   isScheduledFrequency,
@@ -24,6 +24,16 @@ function nextWallClockRun(from: Date, timezone: string, weekly: boolean) {
   return nextCronRun(`${parts.minute} ${parts.hour} * * ${weekday}`, from, timezone);
 }
 
+function nextStableZonedRun(
+  from: Date,
+  timezone: string,
+  keywordId: string,
+  frequency: "daily" | "weekly",
+) {
+  const { cronExpression, secondOffset } = stableZonedIntervalCron(keywordId, frequency);
+  return nextZonedCron(cronExpression, timezone, from, secondOffset);
+}
+
 export function computeNextCheckAt(
   schedule: RankCheckScheduleInput,
   from = new Date(),
@@ -35,13 +45,13 @@ export function computeNextCheckAt(
 
   if (schedule.frequency === "daily") {
     return keywordId
-      ? nextStableIntervalTime(from, keywordId, DAILY_INTERVAL_MS)
+      ? nextStableZonedRun(from, schedule.timezone ?? "UTC", keywordId, "daily")
       : nextWallClockRun(from, schedule.timezone ?? "UTC", false);
   }
 
   if (schedule.frequency === "weekly") {
     return keywordId
-      ? nextStableIntervalTime(from, keywordId, WEEKLY_INTERVAL_MS)
+      ? nextStableZonedRun(from, schedule.timezone ?? "UTC", keywordId, "weekly")
       : nextWallClockRun(from, schedule.timezone ?? "UTC", true);
   }
 

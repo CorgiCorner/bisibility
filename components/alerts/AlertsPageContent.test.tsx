@@ -108,7 +108,7 @@ function renderAlerts({
       projectRef="prj_abcdefghijklmnopqrstuvwx"
       rules={rules}
       snoozedInWindowCount={snoozedInWindowCount}
-      targets={{ keywords: [], members: [], tags: [] }}
+      targets={{ keywords: [], markets: [], members: [], tags: [] }}
       templates={templates}
     />,
   );

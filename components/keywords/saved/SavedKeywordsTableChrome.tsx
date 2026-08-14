@@ -51,7 +51,7 @@ export function SavedKeywordsToolbar({
       <Button
         component={Link}
         endIcon={<CaretRight className="text-fg-muted" size={12} />}
-        href={appPath(projectRef, "research")}
+        href={appPath(projectRef, "keyword-research")}
         size="sm"
         startIcon={<MagnifyingGlass size={13} />}
         variant="secondary"

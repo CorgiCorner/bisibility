@@ -1,7 +1,7 @@
 import "server-only";
 
 import { MAX_ALERT_RULES_PER_PROJECT } from "@/lib/alerts/limits";
-import type { AlertRuleForm } from "@/lib/alerts/schema";
+import type { AlertRuleForm, AlertRuleUpdateForm } from "@/lib/alerts/schema";
 import { type AlertSeverity, defaultAlertSeverity } from "@/lib/alerts/severity";
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
@@ -15,6 +15,7 @@ export type AlertMutationContext = { actorId: string | null; projectId: string }
 
 type TargetCreate = { keywordId?: string; tagId?: string };
 type RecipientCreate = { userId: string };
+type MarketCreate = { projectMarketId: string };
 
 function uniqueIds(ids: string[]) {
   return Array.from(new Set(ids.map((id) => id.trim()).filter(Boolean)));
@@ -75,6 +76,23 @@ async function recipientCreates(projectId: string, rawIds: string[]): Promise<Re
   return users.map(({ id }) => ({ userId: id }));
 }
 
+async function marketCreates(projectId: string, rawIds: string[]): Promise<MarketCreate[]> {
+  const ids = uniqueIds(rawIds);
+  if (ids.length === 0) return [];
+  const markets = await prisma.projectMarket.findMany({
+    select: { id: true },
+    where: {
+      OR: [{ id: { in: ids } }, { publicId: { in: ids } }],
+      projectId,
+      status: "active",
+    },
+  });
+  if (markets.length !== ids.length) {
+    throw new Error("One or more alert markets are not active project markets.");
+  }
+  return markets.map(({ id }) => ({ projectMarketId: id }));
+}
+
 async function createRecipientIds(data: AlertRuleForm, context: AlertMutationContext) {
   if (data.recipientIds !== undefined) {
     return data.recipientIds;
@@ -95,7 +113,12 @@ async function createRecipientIds(data: AlertRuleForm, context: AlertMutationCon
   return [project.ownerId];
 }
 
-function ruleData(data: AlertRuleForm, targets: TargetCreate[], severity: AlertSeverity) {
+function ruleData(
+  data: AlertRuleUpdateForm,
+  targets: TargetCreate[],
+  markets: MarketCreate[],
+  severity: AlertSeverity,
+) {
   return {
     channels: data.channels,
     changePct: data.changePct ?? null,
@@ -103,6 +126,7 @@ function ruleData(data: AlertRuleForm, targets: TargetCreate[], severity: AlertS
     conditionType: prismaConditionType(data.conditionType),
     dropPositions: data.dropPositions ?? null,
     enabled: data.enabled,
+    markets: markets.length ? { create: markets } : undefined,
     name: data.name,
     serpFeature: data.serpFeature ?? null,
     severity,
@@ -115,7 +139,11 @@ function ruleData(data: AlertRuleForm, targets: TargetCreate[], severity: AlertS
 
 export async function requireAlertRule(projectId: string, ruleId: string) {
   const rule = await prisma.alertRule.findFirst({
-    include: { recipients: { select: { userId: true } }, targets: true },
+    include: {
+      markets: { include: { projectMarket: { select: { publicId: true } } } },
+      recipients: { select: { userId: true } },
+      targets: true,
+    },
     where: isPublicIdOfType(ruleId, "alr")
       ? { projectId, publicId: ruleId }
       : { id: ruleId, projectId },
@@ -128,6 +156,7 @@ export async function requireAlertRule(projectId: string, ruleId: string) {
 
 export async function createAlertRuleRecord(data: AlertRuleForm, context: AlertMutationContext) {
   const targets = await targetCreates(context.projectId, data.targetType, data.targetIds);
+  const markets = await marketCreates(context.projectId, data.marketIds ?? []);
   const requestedRecipients = await createRecipientIds(data, context);
   const recipients = await recipientCreates(context.projectId, requestedRecipients);
   const count = await prisma.alertRule.count({ where: { projectId: context.projectId } });
@@ -138,13 +167,22 @@ export async function createAlertRuleRecord(data: AlertRuleForm, context: AlertM
   }
   const rule = await prisma.alertRule.create({
     data: {
-      ...ruleData(data, targets, data.severity ?? defaultAlertSeverity(data.conditionType)),
+      ...ruleData(
+        data,
+        targets,
+        markets,
+        data.severity ?? defaultAlertSeverity(data.conditionType),
+      ),
       createdById: context.actorId,
       publicId: makePublicId("alr"),
       projectId: context.projectId,
       recipients: recipients.length ? { create: recipients } : undefined,
     },
-    include: { recipients: { select: { userId: true } }, targets: true },
+    include: {
+      markets: { include: { projectMarket: { select: { publicId: true } } } },
+      recipients: { select: { userId: true } },
+      targets: true,
+    },
   });
 
   await writeAudit({
@@ -159,28 +197,42 @@ export async function createAlertRuleRecord(data: AlertRuleForm, context: AlertM
   return rule;
 }
 
-export async function updateAlertRuleRecord(data: AlertRuleForm, context: AlertMutationContext) {
+export async function updateAlertRuleRecord(
+  data: AlertRuleUpdateForm,
+  context: AlertMutationContext,
+) {
   if (!data.ruleId) {
     throw new Error("Alert rule id is required.");
   }
 
   const before = await requireAlertRule(context.projectId, data.ruleId);
   const targets = await targetCreates(context.projectId, data.targetType, data.targetIds);
+  const replacesMarkets = data.marketIds !== undefined;
+  const markets = replacesMarkets
+    ? await marketCreates(context.projectId, data.marketIds ?? [])
+    : [];
   const replacesRecipients = data.recipientIds !== undefined;
   const recipients = replacesRecipients
     ? await recipientCreates(context.projectId, data.recipientIds ?? [])
     : [];
   return prisma.$transaction(async (tx) => {
+    if (replacesMarkets) {
+      await tx.alertRuleMarket.deleteMany({ where: { ruleId: before.id } });
+    }
     await tx.alertRuleTarget.deleteMany({ where: { ruleId: before.id } });
     if (replacesRecipients) {
       await tx.alertRuleRecipient.deleteMany({ where: { ruleId: before.id } });
     }
     const updated = await tx.alertRule.update({
       data: {
-        ...ruleData(data, targets, data.severity ?? before.severity),
+        ...ruleData(data, targets, markets, data.severity ?? before.severity),
         recipients: recipients.length ? { create: recipients } : undefined,
       },
-      include: { recipients: { select: { userId: true } }, targets: true },
+      include: {
+        markets: { include: { projectMarket: { select: { publicId: true } } } },
+        recipients: { select: { userId: true } },
+        targets: true,
+      },
       where: { id: before.id },
     });
     await writeAudit(

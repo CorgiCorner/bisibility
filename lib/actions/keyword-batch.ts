@@ -1,5 +1,7 @@
 import { assertKeywordCapacity, lockKeywordCapacity } from "@/lib/api/resource-limits";
 import type { Prisma } from "@/lib/generated/prisma/client";
+import { ProjectMarketLimitExceededError } from "@/lib/markets/limits";
+import { ensureKeywordProjectMarketsWithinLimit } from "@/lib/markets/registry";
 import { seedKeywordDispatchStates } from "@/lib/rank-check/dispatcher-state";
 import { type StoredSchedule, scheduleForKeyword } from "./_schedule";
 import { makePublicId } from "./_shared";
@@ -18,7 +20,13 @@ export type KeywordBatchRow = {
 
 type KeywordBatchClient = Pick<
   Prisma.TransactionClient,
-  "$executeRaw" | "$queryRaw" | "keyword" | "keywordSchedule" | "keywordTag" | "tag"
+  | "$executeRaw"
+  | "$queryRaw"
+  | "keyword"
+  | "keywordSchedule"
+  | "keywordTag"
+  | "projectMarket"
+  | "tag"
 >;
 
 type StoredKeyword = {
@@ -124,6 +132,14 @@ export async function createKeywordBatchSet(
   const rowsByKey = uniqueRows(rows);
   const canonicalRows = [...rowsByKey.values()];
   const limit = await lockKeywordCapacity(client, projectId);
+  const marketResult = await ensureKeywordProjectMarketsWithinLimit(
+    projectId,
+    canonicalRows.map(({ locationId }) => ({ locationId })),
+    client,
+  );
+  if (!marketResult.ok) {
+    throw new ProjectMarketLimitExceededError(marketResult.maxMarkets);
+  }
   const select = {
     device: true,
     id: true,

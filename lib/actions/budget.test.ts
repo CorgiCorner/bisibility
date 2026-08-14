@@ -92,7 +92,7 @@ describe("updateProjectBudgetAction", () => {
       where: { id: "project_1" },
     });
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/app", "layout");
-    expect(mocks.revalidatePath).toHaveBeenCalledWith(appPath("[project]", "overview"), "page");
+    expect(mocks.revalidatePath).toHaveBeenCalledWith(appPath("[project]", "dashboard"), "page");
     expect(mocks.revalidatePath).toHaveBeenCalledWith(appPath("[project]", "settings"), "page");
   });
 

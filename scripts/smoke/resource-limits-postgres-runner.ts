@@ -142,6 +142,7 @@ async function main() {
       gl: "us",
       hl: "en",
       kind: "country",
+      languageCode: "en",
       languageLabel: "English",
       primaryGeoName: "United States",
       secondaryGeoName: "United States",

@@ -60,6 +60,7 @@ export type AlertTemplate = {
 
 export type AlertTargetOptions = {
   keywords: { id: string; label: string }[];
+  markets: { canonicalKey: string; id: string; label: string }[];
   members: { id: string; label: string }[];
   projectDomain?: string;
   tags: { id: string; label: string }[];
@@ -93,6 +94,7 @@ export type AlertRuleView = {
   enabled: boolean;
   fires: string;
   id: string;
+  marketIds: string[];
   name: string;
   period: string;
   recipientIds: string[];

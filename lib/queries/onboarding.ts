@@ -1,8 +1,33 @@
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
+import { ProjectMarketStatus } from "@/lib/generated/prisma/client";
 import { decryptProviderCredentials } from "@/lib/providers/crypto";
+import { requireReadableProject } from "./_auth";
 import { activeApiKeyWhere } from "./api-key-settings";
+
+export async function getOnboardingProjectMarketKeys(projectId: string) {
+  const { project } = await requireReadableProject(projectId);
+  const markets = await prisma.projectMarket.findMany({
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+    select: { location: { select: { canonicalKey: true } } },
+    where: {
+      projectId: project.id,
+      status: { in: [ProjectMarketStatus.active, ProjectMarketStatus.paused] },
+    },
+  });
+  return markets.map((market) => market.location.canonicalKey);
+}
+
+export async function getOnboardingKeywordCount(projectId: string) {
+  const { project } = await requireReadableProject(projectId);
+  const [result] = await prisma.$queryRaw<Array<{ count: number }>>`
+    SELECT COUNT(DISTINCT lower(btrim("text")))::int AS "count"
+    FROM "keywords"
+    WHERE "projectId" = ${project.id}
+  `;
+  return result?.count ?? 0;
+}
 
 export async function getOnboardingGscPropertyLabel(projectId: string | null) {
   if (!projectId) return null;

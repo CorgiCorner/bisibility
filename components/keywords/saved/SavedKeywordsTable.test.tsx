@@ -1,9 +1,13 @@
 import { appPath } from "@/lib/routing/app-path";
 import { makeCostContext } from "@/tests/factories/cost-context";
+import { projectMarketsFixture } from "@/tests/factories/project-markets";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SavedKeywordsTable } from "./SavedKeywordsTable";
+
+const mocks = vi.hoisted(() => ({ addKeywordsMatrix: vi.fn() }));
+vi.mock("@/lib/actions/keyword", () => ({ addKeywordsMatrix: mocks.addKeywordsMatrix }));
 
 const fetchMock = vi.fn(async () => ({ json: async () => ({ data: [] }), ok: true }));
 vi.stubGlobal("fetch", fetchMock);
@@ -14,9 +18,11 @@ const costContext = makeCostContext({
 
 const rows: ComponentProps<typeof SavedKeywordsTable>["rows"] = [
   {
+    countryCode: "US",
     cpc: 1.12,
     difficulty: 31,
     intent: "transactional",
+    languageCode: "en",
     location: "US",
     publicId: "skw_1",
     savedAt: "2026-07-22T12:00:00.000Z",
@@ -27,9 +33,11 @@ const rows: ComponentProps<typeof SavedKeywordsTable>["rows"] = [
     volume: 12_100,
   },
   {
+    countryCode: "US",
     cpc: 1.38,
     difficulty: 29,
     intent: "commercial",
+    languageCode: "en",
     location: "US",
     publicId: "skw_2",
     savedAt: "2026-07-22T12:00:00.000Z",
@@ -40,9 +48,11 @@ const rows: ComponentProps<typeof SavedKeywordsTable>["rows"] = [
     volume: 8_100,
   },
   {
+    countryCode: "US",
     cpc: 0.51,
     difficulty: 24,
     intent: "informational",
+    languageCode: "en",
     location: "US",
     publicId: "skw_3",
     savedAt: "2026-07-22T12:00:00.000Z",
@@ -81,6 +91,10 @@ function renderTable(overrides: Partial<ComponentProps<typeof SavedKeywordsTable
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.addKeywordsMatrix.mockResolvedValue({
+    created: 3,
+    keywords: rows.map((row, index) => ({ id: `kw_${index}`, text: row.text })),
+  });
 });
 
 afterEach(() => {
@@ -90,7 +104,7 @@ afterEach(() => {
 
 describe("SavedKeywordsTable", () => {
   it("selects rows into the priced bulk bar and tracks through the prefilled drawer", async () => {
-    const { addKeywordsAction, onCountChange } = renderTable();
+    const { onCountChange } = renderTable({ projectMarkets: projectMarketsFixture });
     for (const row of rows) {
       fireEvent.click(screen.getByRole("checkbox", { name: `Select ${row.text}` }));
     }
@@ -102,14 +116,19 @@ describe("SavedKeywordsTable", () => {
     expect(screen.getByRole("textbox", { name: "Keywords" })).toHaveValue(
       rows.map((row) => row.text).join("\n"),
     );
-    expect(screen.getByRole("combobox", { name: "Location" })).toHaveValue("United States");
+    expect(screen.getByRole("button", { name: /United States \/ English/ })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
     fireEvent.click(screen.getByRole("button", { name: "Add & track 3 keywords" }));
 
     await waitFor(() =>
-      expect(addKeywordsAction).toHaveBeenCalledWith(
+      expect(mocks.addKeywordsMatrix).toHaveBeenCalledWith(
         expect.objectContaining({
           consumeSavedIds: ["skw_1", "skw_2", "skw_3"],
+          devices: ["desktop"],
           keywords: rows.map((row) => row.text),
+          locations: [{ locationKey: "US" }],
           projectId: "prj_1",
         }),
       ),
@@ -118,22 +137,65 @@ describe("SavedKeywordsTable", () => {
     expect(screen.queryByText("standing desk mat")).not.toBeInTheDocument();
   });
 
-  it("rejects bulk tracking across mixed saved locations", () => {
-    const mixedRows = [
+  it("promotes mixed saved pairs through the registry selector and consumes only selected pairs", async () => {
+    const pairRows = [
       rows[0],
-      { ...rows[1], location: "PL", publicId: "skw_pl", text: "standing desk Poland" },
+      {
+        ...rows[1],
+        countryCode: "ES",
+        languageCode: "en",
+        location: "ES@en",
+        publicId: "skw_es_en",
+        text: "standing desk Spain English",
+      },
     ];
-    renderTable({ rows: mixedRows, total: mixedRows.length });
+    const projectMarkets = {
+      ...projectMarketsFixture,
+      markets: [
+        ...projectMarketsFixture.markets,
+        {
+          canonicalKey: "ES@en",
+          countryCode: "ES",
+          displayName: "Spain",
+          id: "pmkt_fixture_es_en",
+          languageCode: "en",
+          languageLabel: "English",
+          monthlyCostCents: 120,
+          researchAvailable: false,
+          status: "active" as const,
+        },
+      ],
+    };
+    const { onCountChange } = renderTable({
+      projectMarkets,
+      rows: pairRows,
+      total: pairRows.length,
+    });
 
-    for (const row of mixedRows) {
+    for (const row of pairRows) {
       fireEvent.click(screen.getByRole("checkbox", { name: `Select ${row.text}` }));
     }
 
-    expect(
-      screen.getByText("Select keywords from one location to track them together."),
-    ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Track 2 ~$0.60/mo" })).toBeDisabled();
-    expect(screen.queryByRole("textbox", { name: "Keywords" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Track 2 ~$0.60/mo" }));
+    const us = screen.getByRole("button", { name: /United States \/ English/ });
+    const es = screen.getByRole("button", { name: /Spain \/ English/ });
+    expect(us).toHaveAttribute("aria-pressed", "true");
+    expect(es).toHaveAttribute("aria-pressed", "true");
+
+    fireEvent.click(us);
+    fireEvent.click(screen.getByRole("button", { name: "Add & track 2 keywords" }));
+
+    await waitFor(() =>
+      expect(mocks.addKeywordsMatrix).toHaveBeenCalledWith(
+        expect.objectContaining({
+          consumeSavedIds: ["skw_1", "skw_es_en"],
+          locations: [{ locationKey: "ES@en" }],
+        }),
+      ),
+    );
+    await waitFor(() => expect(onCountChange).toHaveBeenLastCalledWith(1));
+    expect(screen.getByText("standing desk mat")).toBeInTheDocument();
+    expect(screen.queryByText("standing desk Spain English")).not.toBeInTheDocument();
   });
 
   it("removes a saved row from the row menu", async () => {
@@ -182,7 +244,7 @@ describe("SavedKeywordsTable", () => {
     const source = screen.getAllByRole("link", { name: "standing desk / US" })[0];
     expect(source).toHaveAttribute(
       "href",
-      `${appPath("prj_1", "research")}?seed=standing+desk&location=US`,
+      `${appPath("prj_1", "keyword-research")}?seed=standing+desk&location=US`,
     );
     source.addEventListener("click", (event) => event.preventDefault());
     fireEvent.click(source);

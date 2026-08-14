@@ -17,6 +17,7 @@ export type ResourceType =
   | "ownership"
   | "project"
   | "project_defaults"
+  | "project_market"
   | "provider_connection"
   | "saved_view"
   | "signal"

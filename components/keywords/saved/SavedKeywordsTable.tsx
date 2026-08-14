@@ -5,6 +5,7 @@ import { AddKeywordDrawer } from "@/components/keywords/add/AddKeywordDrawer";
 import { Card } from "@/components/ui";
 import { monthlyTrackingCostCents } from "@/lib/cost-estimate/project-estimate";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
+import type { ProjectMarketsView } from "@/lib/queries/project-markets";
 import type { SavedKeywordRow } from "@/lib/saved-keywords/model";
 import type { AddKeywordsInput } from "@/lib/schemas/keyword";
 import type { RemoveSavedKeywordsInput } from "@/lib/schemas/saved-keyword";
@@ -29,6 +30,7 @@ export type SavedKeywordsTableProps = {
   domain?: string;
   onCountChange?: (count: number) => void;
   projectId: string;
+  projectMarkets?: ProjectMarketsView;
   removeSavedKeywordsAction: (input: RemoveSavedKeywordsInput) => Promise<unknown>;
   rows: SavedKeywordRow[];
   total: number;
@@ -45,6 +47,7 @@ export function SavedKeywordsTable({
   domain,
   onCountChange,
   projectId,
+  projectMarkets,
   removeSavedKeywordsAction,
   rows: initialRows,
   total,
@@ -65,10 +68,6 @@ export function SavedKeywordsTable({
   const pageRows = filtered.slice(startIndex, startIndex + pageSize);
   const selectedSet = new Set(selectedIds);
   const selectedRows = rows.filter((row) => selectedSet.has(row.publicId));
-  const mixedLocationSelection =
-    new Set(selectedRows.map((row) => row.location)).size > 1
-      ? "Select keywords from one location to track them together."
-      : undefined;
   const trackingCost = monthlyTrackingCostCents(
     selectedRows.length,
     {
@@ -145,7 +144,6 @@ export function SavedKeywordsTable({
             onClear={() => setSelectedIds([])}
             onRemove={() => void removeRows(selectedRows)}
             onTrack={() => setTrackDraft(selectedRows)}
-            trackDisabledReason={mixedLocationSelection}
           />
         ) : null}
         {actionError ? (
@@ -196,15 +194,24 @@ export function SavedKeywordsTable({
         }
         domain={domain}
         initialKeyword={trackDraft?.map((row) => row.text).join("\n")}
+        initialMarketKeys={[...new Set(trackDraft?.map((row) => row.location) ?? [])]}
         initialScheduleFrequency="project_default"
         key={trackDraft?.map((row) => row.publicId).join(":") ?? "closed"}
-        onAdded={() => {
-          if (trackDraft) updateRows(trackDraft.map((row) => row.publicId));
+        onAdded={(_, context) => {
+          if (trackDraft) {
+            const promotedMarkets = new Set(context.locationKeys);
+            updateRows(
+              trackDraft
+                .filter((row) => promotedMarkets.has(row.location))
+                .map((row) => row.publicId),
+            );
+          }
           setTrackDraft(null);
         }}
         onClose={() => setTrackDraft(null)}
         open={Boolean(trackDraft)}
         projectId={projectId}
+        projectMarkets={projectMarkets}
         showSchedule
       />
     </>

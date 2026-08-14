@@ -1,6 +1,5 @@
 import type { TrackingConfigurationValue } from "@/components/keywords/add/TrackingConfigurationFields";
 import type { LocationFieldValue } from "@/components/keywords/LocationField";
-import { countryValueForCode } from "@/components/keywords/location-picker-data";
 import type { addKeywords } from "@/lib/actions/keyword";
 import type {
   ResearchKeywordsAction,
@@ -21,9 +20,12 @@ import type {
 import type { CheckHealth } from "@/lib/queries/check-health";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import type { getKeywordResearchPageContext } from "@/lib/queries/keyword-research";
+import type { ProjectMarketsView } from "@/lib/queries/project-markets";
 import type { SaveKeywordsInput } from "@/lib/schemas/saved-keyword";
 import type { ResearchEstimateView } from "./ResearchSearchCard";
 import type { ResearchState } from "./ResearchStatePanel";
+
+export { recentSearchLocation } from "./research-location";
 
 type PageContext = Awaited<ReturnType<typeof getKeywordResearchPageContext>>;
 
@@ -34,6 +36,7 @@ export type ResearchWorkspaceProps = {
   context: PageContext;
   costContext: ProjectCostContext;
   prefill?: { locationKey?: string; seed: string };
+  projectMarkets?: ProjectMarketsView;
   removeSavedKeywordsAction: typeof removeSavedKeywords;
   researchAction: ResearchKeywordsAction;
   saveKeywordsAction: typeof saveKeywords;
@@ -186,24 +189,6 @@ export function markTabsSaved(
 
 export function researchKeywordIdentity(value: string) {
   return value.trim().replace(/\s+/g, " ").toLowerCase();
-}
-
-// Legacy entries lack locationKey and therefore fall back to the project-default market.
-export function recentSearchLocation(
-  search: Pick<RecentKeywordResearch, "locationKey" | "market">,
-  projectDefault: LocationFieldValue,
-): LocationFieldValue {
-  const key = search.locationKey;
-  if (!key || key === projectDefault.canonicalKey) return projectDefault;
-  const [countryCode = "", , cityName = null] = key.split("/");
-  if (!key.includes("/")) return countryValueForCode(countryCode) ?? projectDefault;
-  return {
-    canonicalKey: key,
-    cityName,
-    countryCode,
-    displayName: search.market,
-    kind: "city",
-  };
 }
 
 export function recentSearchReplay(

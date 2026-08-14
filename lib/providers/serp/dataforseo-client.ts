@@ -1,6 +1,7 @@
 import { ProviderAuthError } from "@/lib/providers/auth-error";
 import type { ProviderCredentials } from "@/lib/providers/types";
-import { countryDegradedRankLocation, type SerpRankLocation } from "@/lib/serp/location";
+import type { SerpRankLocation } from "@/lib/serp/location";
+import { countryDegradedResearchLocation } from "@/lib/serp/market-capability";
 import { resolveSerpDepth } from "@/lib/serp/markets";
 import { DataForSeoError, redactedMessage } from "./dataforseo-errors";
 import { type DataForSeoResponse, dataForSeoResponseCostCents } from "./dataforseo-payload";
@@ -41,7 +42,7 @@ export function dataForSeoGoogleParams(input: { depth?: number; location: SerpRa
 
 export function dataForSeoLabsLocationParams(location: SerpRankLocation) {
   const { depth: _depth, ...params } = dataForSeoGoogleParams({
-    location: countryDegradedRankLocation(location),
+    location: countryDegradedResearchLocation(location),
   });
   return params;
 }

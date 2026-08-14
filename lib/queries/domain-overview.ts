@@ -1,8 +1,12 @@
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
+import {
+  domainOverviewCatalogMarkets,
+  domainOverviewCountryMarket,
+  domainOverviewTrackedMarkets,
+} from "@/lib/domain-overview/market-options";
 import { recentDomainOverviewTargets } from "@/lib/domain-overview/recent";
-import { domainOverviewLocationCode } from "@/lib/domain-overview/target";
 import { serpProviderCapabilities } from "@/lib/providers/registry";
 import { trackedProjectDomain } from "@/lib/schemas/project";
 import { requireReadableProject } from "./_auth";
@@ -26,6 +30,7 @@ const domainOverviewMarketSelect = {
   displayName: true,
   hl: true,
   kind: true,
+  languageCode: true,
   languageLabel: true,
   primaryGeoCode: true,
 } as const;
@@ -37,19 +42,21 @@ function marketView(location: {
   displayName: string;
   hl: string;
   kind: "country" | "region" | "city";
+  languageCode: string;
   languageLabel: string;
   primaryGeoCode: number | null;
 }) {
+  const market = domainOverviewCountryMarket(location);
   return {
-    canonicalKey: location.canonicalKey,
-    cityName: location.cityName,
-    countryCode: location.countryCode,
-    displayName: location.displayName,
-    kind: location.kind,
-    languageCode: location.hl,
-    languageLabel: location.languageLabel,
-    locationCode: domainOverviewLocationCode(location),
-    regionName: null,
+    canonicalKey: market.canonicalKey,
+    cityName: market.cityName,
+    countryCode: market.countryCode,
+    displayName: market.displayName,
+    kind: market.kind,
+    languageCode: market.languageCode,
+    languageLabel: market.languageLabel,
+    locationCode: market.researchAvailable ? market.locationCode : null,
+    regionName: market.regionName,
   };
 }
 
@@ -75,6 +82,11 @@ export async function getDomainOverviewPageContext(projectId: string) {
             },
           },
         },
+        markets: {
+          orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+          select: { location: { select: domainOverviewMarketSelect } },
+          where: { status: { in: ["active", "paused"] } },
+        },
         providerConnections: {
           orderBy: [{ priority: "asc" }, { provider: "asc" }],
           select: { provider: true, status: true },
@@ -92,13 +104,21 @@ export async function getDomainOverviewPageContext(projectId: string) {
   ]);
   if (!details) throw new Error("Project not found.");
   const location = details.defaults?.locationRef ?? fallbackLocation;
+  const trackedMarkets = domainOverviewTrackedMarkets(
+    details.markets.map((market) => market.location),
+  );
+  const trackedKeys = new Set(trackedMarkets.map((market) => market.canonicalKey));
 
   return {
+    catalogMarkets: domainOverviewCatalogMarkets().filter(
+      (market) => !trackedKeys.has(market.canonicalKey),
+    ),
     competitorDomains: details.competitors.map((competitor) => competitor.domain),
     costContext,
     defaultMarket: location ? marketView(location) : null,
     defaultTarget: trackedProjectDomain(project.domain) ?? "",
     providerStatus: providerStatus(details.providerConnections),
     recentTargets,
+    trackedMarkets,
   };
 }

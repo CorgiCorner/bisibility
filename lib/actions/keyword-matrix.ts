@@ -4,12 +4,19 @@ import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { requireTrackedDomain } from "@/lib/projects/tracked-domain";
 import { type AddKeywordsMatrixInput, addKeywordsMatrixSchema } from "@/lib/schemas/keyword";
-import { countryCodeForMarketName, parseCanonicalKey } from "@/lib/serp/location";
+import { countryCodeForMarketName, normalizeCanonicalLocationKey } from "@/lib/serp/location";
+import { denormalizedLocationLabel } from "@/lib/serp/location-label";
 import { resolveKeywordLocation } from "@/lib/serp/location-service";
 import { normalizeSchedule } from "./_schedule";
 import { getActionActor, parseActionInput, requireProjectScope } from "./_shared";
 import { uniqueKeywordTexts } from "./keyword-create";
-import { createKeywordBatchSet, revalidateKeywords } from "./keyword-helpers";
+import {
+  consumeSavedKeywords,
+  createKeywordBatchSet,
+  promotedSavedKeywordPairs,
+  publicKeywordView,
+  revalidateKeywords,
+} from "./keyword-helpers";
 
 type CreatedKeyword = { id: string; publicId: string };
 type MatrixLocationInput = AddKeywordsMatrixInput["locations"][number];
@@ -28,19 +35,21 @@ function matrixSelectionInput(selection: MatrixLocationInput, projectId: string)
     }
     return { projectId, selection: { countryCode, kind: "country" as const } };
   }
-  const selector = parseCanonicalKey(selection.locationKey);
-  if (!selector) {
-    throw new Error(`Unsupported location key: ${selection.locationKey}`);
-  }
+  const normalized = normalizeCanonicalLocationKey(selection.locationKey);
+  const { selector } = normalized;
   if (!selector.cityName) {
     return {
       projectId,
-      selection: { countryCode: selector.countryCode, kind: "country" as const },
+      selection: {
+        countryCode: selector.countryCode,
+        kind: "country" as const,
+        languageCode: selector.languageCode,
+      },
     };
   }
   return {
     projectId,
-    selection: { canonicalKey: selection.locationKey, kind: "city" as const },
+    selection: { canonicalKey: normalized.canonicalKey, kind: "city" as const },
   };
 }
 
@@ -74,7 +83,7 @@ export async function addKeywordsMatrix(input: unknown) {
         keywords.map((keyword) => ({
           device,
           keyword,
-          location: resolved.location.displayName,
+          location: denormalizedLocationLabel(resolved.location),
           locationId: resolved.location.id,
           schedule,
           tags: data.tags,
@@ -85,8 +94,20 @@ export async function addKeywordsMatrix(input: unknown) {
       ),
     );
     const persisted = await createKeywordBatchSet(tx, project.id, rows);
+    const canonicalKeys = new Map(
+      locations.map(({ resolved }) => [resolved.location.id, resolved.location.canonicalKey]),
+    );
+    const promotedPairs = persisted.accepted.flatMap(({ keyword }) => {
+      const key = canonicalKeys.get(keyword.locationId);
+      return key ? promotedSavedKeywordPairs([keyword], key) : [];
+    });
     const created: CreatedKeyword[] = persisted.created;
     const skippedDuplicates = rows.length - created.length;
+    const [keywordCountRow] = await tx.$queryRaw<Array<{ count: number }>>`
+      SELECT COUNT(DISTINCT lower(btrim("text")))::int AS "count"
+      FROM "keywords"
+      WHERE "projectId" = ${project.id}
+    `;
 
     await writeAudit(
       {
@@ -106,14 +127,16 @@ export async function addKeywordsMatrix(input: unknown) {
       },
       tx,
     );
-    return { created, skippedDuplicates };
+    await consumeSavedKeywords(tx, project.id, data.consumeSavedIds, promotedPairs);
+    return { created, keywordCount: keywordCountRow?.count ?? 0, skippedDuplicates };
   });
 
   revalidateKeywords();
   const warnings = uniqueWarnings(locations);
   return {
     created: result.created.length,
-    keywords: result.created,
+    keywordCount: result.keywordCount,
+    keywords: result.created.map(publicKeywordView),
     skippedDuplicates: result.skippedDuplicates,
     ...(warnings.length > 0 ? { warnings } : {}),
   };

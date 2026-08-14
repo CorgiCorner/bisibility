@@ -1,6 +1,7 @@
 import { parsePublicId } from "@/lib/db/public-id";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { normalizeResearchKeyword } from "@/lib/keyword-research/context";
+import { locationLanguage, normalizeCanonicalLocationKey } from "@/lib/serp/location";
 import { makePublicId, revalidateKeywordViews } from "./_shared";
 
 export {
@@ -15,12 +16,27 @@ export function revalidateKeywords(keywordId?: string | null) {
   revalidateKeywordViews(keywordId);
 }
 
+export function publicKeywordView<T extends { id: string; publicId: string | null }>(keyword: T) {
+  if (!keyword.publicId) throw new Error("Keyword public ID is not available.");
+  return { ...keyword, id: keyword.publicId };
+}
+
 export function promotedSavedKeywordPairs(
   keywords: readonly { text: string }[],
   location: string,
-): Array<{ location: string; normalizedText: string }> {
+): Array<{
+  countryCode: string;
+  languageCode: string;
+  location: string;
+  normalizedText: string;
+}> {
+  const market = normalizeCanonicalLocationKey(location);
+  const countryCode = market.selector.countryCode;
+  const languageCode = locationLanguage(countryCode, market.selector.languageCode).code;
   return keywords.map((keyword) => ({
-    location,
+    countryCode,
+    languageCode,
+    location: market.canonicalKey,
     normalizedText: normalizeResearchKeyword(keyword.text),
   }));
 }
@@ -29,7 +45,12 @@ export async function consumeSavedKeywords(
   tx: Pick<Prisma.TransactionClient, "savedKeyword">,
   projectId: string,
   publicIds: readonly string[] | undefined,
-  promotedPairs: readonly { location: string; normalizedText: string }[],
+  promotedPairs: readonly {
+    countryCode: string;
+    languageCode: string;
+    location: string;
+    normalizedText: string;
+  }[],
 ) {
   if (!publicIds?.length || promotedPairs.length === 0) return;
   await tx.savedKeyword.deleteMany({

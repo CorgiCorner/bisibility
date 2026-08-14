@@ -5,6 +5,9 @@ const mocks = vi.hoisted(() => ({
   getRequestSerpProviderChain: vi.fn(),
   prisma: {
     $queryRaw: vi.fn(),
+    keyword: {
+      count: vi.fn(),
+    },
     rankCheck: {
       count: vi.fn(),
       findMany: vi.fn(),
@@ -39,7 +42,12 @@ function row(publicId: string) {
       publicId: "kw_abcdefghijklmnopqrstuvwx",
       text: "rank tracker",
       device: "desktop",
-      locationRef: { displayName: "San Francisco, California, US", languageLabel: "English" },
+      locationRef: {
+        countryCode: "US",
+        displayName: "San Francisco, California, US",
+        languageCode: "en",
+        languageLabel: "English",
+      },
     },
     position: 4,
     previousPosition: 6,
@@ -61,6 +69,7 @@ describe("check runs view query", () => {
       { provider: "serpapi" },
     ]);
     mocks.prisma.rankCheck.findMany.mockResolvedValue([row("check_1")]);
+    mocks.prisma.keyword.count.mockResolvedValue(2);
     mocks.prisma.rankCheck.count.mockResolvedValue(1);
     mocks.prisma.rankCheck.groupBy
       .mockResolvedValueOnce([
@@ -125,6 +134,36 @@ describe("check runs view query", () => {
     expect(view).toMatchObject({
       counts: { completed: 2, failed: 1, runs: 3, viaFallback: 1 },
       spendCents: 0.5,
+      staleCount: 2,
+    });
+  });
+
+  it("counts stale keywords outside the selected range, filters, and result page", async () => {
+    await getCheckRunsView("prj_abcdefghijklmnopqrstuvwx", {
+      cursor: { checkedAt: "2026-07-24T10:00:00.000Z", id: "check_mabcdefghijklmnopqrstuvw" },
+      limit: 1,
+      now: NOW,
+      provider: "serpapi",
+      range: "24h",
+      status: "failed",
+      trigger: "manual",
+    });
+
+    expect(mocks.prisma.keyword.count).toHaveBeenCalledWith({
+      where: {
+        dispatchState: { isNot: null },
+        projectId: "project_1",
+        rankChecks: {
+          none: {
+            checkedAt: { gte: new Date("2026-07-22T12:00:00.000Z") },
+            status: "completed",
+          },
+          some: {
+            checkedAt: { lt: new Date("2026-07-22T12:00:00.000Z") },
+            status: "completed",
+          },
+        },
+      },
     });
   });
 
@@ -137,7 +176,12 @@ describe("check runs view query", () => {
           publicId: "kw_sf",
           text: "rank tracker",
           device: "desktop",
-          locationRef: { displayName: "San Francisco, CA, US", languageLabel: "English" },
+          locationRef: {
+            countryCode: "US",
+            displayName: "San Francisco, CA, US",
+            languageCode: "en",
+            languageLabel: "English",
+          },
         },
       },
       {
@@ -147,7 +191,12 @@ describe("check runs view query", () => {
           publicId: "kw_sf_mobile",
           text: "rank tracker",
           device: "mobile",
-          locationRef: { displayName: "San Francisco, CA, US", languageLabel: "English" },
+          locationRef: {
+            countryCode: "US",
+            displayName: "San Francisco, CA, US",
+            languageCode: "en",
+            languageLabel: "English",
+          },
         },
       },
       {
@@ -157,7 +206,12 @@ describe("check runs view query", () => {
           publicId: "kw_lon",
           text: "rank tracker",
           device: "desktop",
-          locationRef: { displayName: "London, UK", languageLabel: "English" },
+          locationRef: {
+            countryCode: "GB",
+            displayName: "London, UK",
+            languageCode: "en",
+            languageLabel: "English",
+          },
         },
       },
       {
@@ -167,7 +221,12 @@ describe("check runs view query", () => {
           publicId: "kw_lon_mobile",
           text: "rank tracker",
           device: "mobile",
-          locationRef: { displayName: "London, UK", languageLabel: "English" },
+          locationRef: {
+            countryCode: "GB",
+            displayName: "London, UK",
+            languageCode: "en",
+            languageLabel: "English",
+          },
         },
       },
     ]);

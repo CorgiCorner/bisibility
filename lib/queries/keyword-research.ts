@@ -8,7 +8,7 @@ import {
 } from "@/lib/keyword-research/context";
 import { keywordResearchDefaultMarket } from "@/lib/keyword-research/default-market";
 import { trackedProjectDomain } from "@/lib/schemas/project";
-import { countrySeed } from "@/lib/serp/location";
+import { locationLanguage, normalizeCanonicalLocationKey } from "@/lib/serp/location";
 import { requireReadableProject } from "./_auth";
 
 export async function getKeywordResearchPageContext(projectId: string) {
@@ -20,7 +20,11 @@ export async function getKeywordResearchPageContext(projectId: string) {
 
   const { locationRef: persistedLocation, market } =
     await keywordResearchDefaultMarket(researchProject);
-  const language = countrySeed(market.locationKey.split("/")[0] ?? "");
+  const normalizedMarket = normalizeCanonicalLocationKey(market.locationKey);
+  const language = locationLanguage(
+    normalizedMarket.selector.countryCode,
+    normalizedMarket.selector.languageCode,
+  );
   const eligible = eligibleResearchConnections(researchProject, "research");
 
   return {
@@ -30,8 +34,8 @@ export async function getKeywordResearchPageContext(projectId: string) {
     })),
     defaultMarket: market,
     language: {
-      code: language?.hl ?? "en",
-      label: language?.languageLabel ?? "English",
+      code: language.code,
+      label: language.label,
     },
     location: persistedLocation
       ? {
@@ -47,11 +51,11 @@ export async function getKeywordResearchPageContext(projectId: string) {
       : {
           canonicalKey: market.locationKey,
           cityName: market.city,
-          countryCode: language?.countryCode ?? "US",
+          countryCode: normalizedMarket.selector.countryCode,
           displayName: market.displayName,
-          hl: language?.hl ?? "en",
+          hl: language.code,
           kind: market.city ? ("city" as const) : ("country" as const),
-          languageLabel: language?.languageLabel ?? "English",
+          languageLabel: language.label,
           regionName: null,
         },
     project: {

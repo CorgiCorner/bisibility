@@ -22,6 +22,7 @@ const costContext = {
 
 const actionArgs = {
   addKeywordsAction: async () => undefined,
+  bulkDeleteAction: async () => undefined,
   canCreateKeyword: true,
   canUpdateKeyword: true,
   costContext,

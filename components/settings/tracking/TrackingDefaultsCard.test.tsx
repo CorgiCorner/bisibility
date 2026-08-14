@@ -62,6 +62,54 @@ describe("TrackingDefaultsCard", () => {
     expect(screen.queryByLabelText("Cron expression")).not.toBeInTheDocument();
   });
 
+  it("renders the timezone menu, current timezone, and helper copy for a daily fixture", () => {
+    renderCard({
+      schedule: { ...defaults.schedule, frequency: "daily" },
+    });
+
+    expect(screen.getByRole("button", { name: "Timezone" })).toHaveTextContent("Europe/Warsaw");
+    expect(
+      screen.getByText("Anchors all check schedules to the selected local clock."),
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText("Cron expression")).not.toBeInTheDocument();
+  });
+
+  it("marks the card dirty and submits the selected timezone when the menu changes", async () => {
+    const { updateDefaults } = renderCard({
+      schedule: { ...defaults.schedule, frequency: "daily" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Timezone" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: /UTC/ }));
+
+    expect(screen.getByRole("button", { name: "Save" })).not.toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => expect(updateDefaults).toHaveBeenCalledTimes(1));
+    expect(updateDefaults).toHaveBeenCalledWith(expect.objectContaining({ timezone: "UTC" }));
+  });
+
+  it("surfaces an invalid stored timezone before save and does not submit it", async () => {
+    const { updateDefaults } = renderCard({
+      schedule: { ...defaults.schedule, timezone: "Etc/GMT+5" },
+    });
+
+    const timezone = screen.getByRole("button", { name: "Timezone" });
+    expect(screen.getByRole("alert")).toHaveTextContent("Select a valid time zone.");
+    expect(timezone).toHaveAttribute("aria-invalid", "true");
+    expect(timezone).toHaveAttribute(
+      "aria-describedby",
+      "tracking-timezone-help tracking-timezone-error",
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Frequency" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Daily" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(await screen.findByText("Select a valid time zone.")).toBeInTheDocument();
+    expect(updateDefaults).not.toHaveBeenCalled();
+  });
+
   it("labels Custom cron times as anchors before deterministic dispatcher jitter", () => {
     renderCard({
       schedule: {

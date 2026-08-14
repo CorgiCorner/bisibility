@@ -38,6 +38,7 @@ vi.mock("./keyword-traffic", () => ({
 
 const rankCheckSelect = {
   checkedAt: true,
+  degradedToCountry: true,
   id: true,
   normalizationVersion: true,
   position: true,

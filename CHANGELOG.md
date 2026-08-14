@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## [0.13.0] - 2026-08-14
+
+- Added project-local timezones and local wall-clock daily and weekly schedules, with editable settings and clearer check-time labels.
+
+- Added location-language markets across rank tracking and research, including market-aware Dashboard rollups, filters, management, and summaries.
+
+- Polished onboarding, Settings, Overview, Tracking, Timeline, Backlinks, Checks, alerts, and keyword views to match the approved design.
+
+- Updated Keyword Research routing and scope messaging, refreshed public positioning, and aligned the demo dashboard with multi-market data.
+
 ## [0.12.1] - 2026-08-13
 
 - Fixed alert rows to show the triggering keyword's actual location and device instead of a hardcoded market.

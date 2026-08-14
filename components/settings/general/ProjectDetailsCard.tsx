@@ -86,7 +86,7 @@ export function ProjectDetailsCard({
         title="Project details"
       >
         <div className="space-y-4">
-          <SettingsField width="md">
+          <SettingsField width="field">
             <label className={labelClass} htmlFor="general-project-name">
               Project name
             </label>
@@ -102,7 +102,7 @@ export function ProjectDetailsCard({
               </p>
             ) : null}
           </SettingsField>
-          <SettingsField width="md">
+          <SettingsField width="field">
             <span className="flex flex-wrap items-center justify-between gap-2">
               <FieldLabel className={labelClass} htmlFor="general-project-domain" label="Domain" />
               <Button
@@ -127,7 +127,7 @@ export function ProjectDetailsCard({
               confirmation.
             </p>
           </SettingsField>
-          <SettingsField width="md">
+          <SettingsField width="field">
             <FieldLabel className={labelClass} label="Project ID" />
             <span className="mt-1.5 flex min-h-10 items-center gap-2 rounded-[9px] border border-border-strong bg-bg-sunken px-3">
               <span className="min-w-0 flex-1 truncate font-mono text-[12.5px] text-fg-muted">

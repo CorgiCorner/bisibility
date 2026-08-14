@@ -1,5 +1,6 @@
 import { normalizeDomain } from "@/lib/domains/normalize";
 import { ProviderLookupSignal } from "@/lib/provider-lookups/paid-call";
+import { researchCountryLocationCode, supportsResearchMarket } from "@/lib/serp/market-capability";
 import { getDomain } from "tldts";
 import type {
   AnalyzeDomainOverviewOptions,
@@ -8,39 +9,6 @@ import type {
 } from "./types";
 
 const DEFAULT_PAGE_LIMIT = 100;
-
-// DataForSEO Labs uses Google Ads geo target constants for country-level lookups.
-// Country rows in the shared location model intentionally use names, so Domain
-// Overview supplies the equivalent numeric handle required by its persisted key.
-const DATAFORSEO_LABS_COUNTRY_CODES: Readonly<Record<string, number>> = {
-  AE: 2784,
-  AT: 2040,
-  AU: 2036,
-  BE: 2056,
-  BR: 2076,
-  CA: 2124,
-  CH: 2756,
-  DE: 2276,
-  DK: 2208,
-  ES: 2724,
-  FI: 2246,
-  FR: 2250,
-  GB: 2826,
-  IE: 2372,
-  IN: 2356,
-  IT: 2380,
-  JP: 2392,
-  MX: 2484,
-  NL: 2528,
-  NO: 2578,
-  NZ: 2554,
-  PL: 2616,
-  PT: 2620,
-  SE: 2752,
-  SG: 2702,
-  US: 2840,
-  ZA: 2710,
-};
 
 export class UnsupportedDomainOverviewTargetError extends Error {
   readonly code = "unsupported_target";
@@ -73,11 +41,19 @@ export function normalizeDomainOverviewTarget(
 }
 
 export function normalizeDomainOverviewMarket(options: DomainOverviewMarket) {
+  const countryCode = options.countryCode?.trim().toUpperCase();
   const languageCode = options.languageCode.trim().toLowerCase();
   if (!Number.isInteger(options.locationCode) || options.locationCode <= 0 || !languageCode) {
     throw new ProviderLookupSignal({ ok: false, reason: "unsupported_location" });
   }
-  return { languageCode, locationCode: options.locationCode };
+  if (countryCode && !supportsResearchMarket(countryCode, languageCode)) {
+    throw new ProviderLookupSignal({ ok: false, reason: "unsupported_location" });
+  }
+  return {
+    ...(countryCode ? { countryCode } : {}),
+    languageCode,
+    locationCode: options.locationCode,
+  };
 }
 
 export function domainOverviewLocationCode(location: {
@@ -90,7 +66,7 @@ export function domainOverviewLocationCode(location: {
   }
   if (location.kind && location.kind !== "country") return null;
   const countryCode = location.countryCode?.trim().toUpperCase();
-  return countryCode ? (DATAFORSEO_LABS_COUNTRY_CODES[countryCode] ?? null) : null;
+  return countryCode ? researchCountryLocationCode(countryCode) : null;
 }
 
 export function domainOverviewPageLimit(value: number | undefined, maximum: number) {

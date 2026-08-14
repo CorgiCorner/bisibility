@@ -31,6 +31,21 @@ function ScopeHarness() {
 }
 
 describe("AnalyzeCard", () => {
+  it("keeps the domain field the same 38px height as the adjacent selects", () => {
+    render(<AnalyzeCard {...baseProps} />);
+
+    expect(screen.getByPlaceholderText("Enter a domain or URL").parentElement).toHaveClass(
+      "h-[38px]",
+    );
+    expect(screen.getByRole("button", { name: "Backlinks limit" })).toHaveClass("min-h-[38px]");
+    expect(screen.getByRole("group", { name: "Backlinks target scope" })).toHaveClass(
+      "[&>div]:!min-h-[38px]",
+    );
+    expect(screen.getByRole("radio", { name: "Whole site" }).nextElementSibling).toHaveClass(
+      "!min-h-[30px]",
+    );
+  });
+
   it("keeps Analyze disabled until the estimate path validates a target, then shows price", () => {
     const { rerender } = render(<AnalyzeCard {...baseProps} />);
     expect(screen.getByRole("button", { name: "Analyze" })).toBeDisabled();

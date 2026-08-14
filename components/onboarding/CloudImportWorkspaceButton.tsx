@@ -6,7 +6,17 @@ import { createCloudImportWorkspace } from "@/lib/actions/cloud";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState, useTransition } from "react";
 
-export function CloudImportWorkspaceButton() {
+function resolvedBrowserTimezone(): string {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone ?? "UTC";
+  } catch {
+    return "UTC";
+  }
+}
+
+export function CloudImportWorkspaceButton({
+  browserTimezone,
+}: Readonly<{ browserTimezone?: string }>) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -16,7 +26,9 @@ export function CloudImportWorkspaceButton() {
     setError(null);
     startTransition(async () => {
       try {
-        const destination = await createCloudImportWorkspace();
+        const destination = await createCloudImportWorkspace(
+          browserTimezone ?? resolvedBrowserTimezone(),
+        );
         router.push(destination, { scroll: true });
       } catch (cause) {
         setError(actionErrorMessage(cause, "Import project could not be opened."));

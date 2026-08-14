@@ -43,6 +43,7 @@ export const failedRunFixture: CheckRunRow = {
   provider: "dataforseo",
   providerLabel: "DataForSEO",
   requestedDepth: 20,
+  researchMetricsAvailable: true,
   startedAt: "2026-07-24T14:33:00.000Z",
   status: "failed",
   trigger: "scheduled",
@@ -90,6 +91,7 @@ export const fallbackRunFixture: CheckRunRow = {
   provider: "serpapi",
   providerLabel: "SerpApi",
   requestedDepth: 20,
+  researchMetricsAvailable: true,
   startedAt: "2026-07-24T14:19:00.000Z",
   status: "completed",
   trigger: "scheduled",
@@ -118,6 +120,7 @@ export const runningRunFixture: CheckRunRow = {
   provider: "dataforseo",
   providerLabel: "DataForSEO",
   requestedDepth: 20,
+  researchMetricsAvailable: true,
   startedAt: "2026-07-24T14:44:18.000Z",
   status: "running",
   trigger: "manual",
@@ -156,10 +159,22 @@ export const completedRunFixture: CheckRunRow = {
   provider: "dataforseo",
   providerLabel: "DataForSEO",
   requestedDepth: 20,
+  researchMetricsAvailable: true,
   startedAt: "2026-07-24T13:45:00.000Z",
   status: "completed",
   trigger: "scheduled",
   viaFallback: false,
+};
+
+export const staleRunFixture: CheckRunRow = {
+  ...completedRunFixture,
+  checkedAt: "2026-07-21T13:45:00.000Z",
+  finishedAt: "2026-07-21T13:45:01.900Z",
+  id: "run_stale",
+  keyword: "headless cms",
+  keywordId: "keyword_stale",
+  keywordPublicId: "kw_headless_cms",
+  startedAt: "2026-07-21T13:45:00.000Z",
 };
 
 export const checkRunsFixtureView: CheckRunsView = {
@@ -224,6 +239,7 @@ export const checkRunsFixtureView: CheckRunsView = {
   ],
   rows: [failedRunFixture, runningRunFixture, fallbackRunFixture, completedRunFixture],
   spendCents: 241,
+  staleCount: 0,
 };
 
 export function checkRunsViewFor(filter: CheckRunFilter): CheckRunsView {

@@ -42,6 +42,7 @@ describe("resolveLocation", () => {
       countryCode: "US",
       gl: "us",
       hl: "en",
+      languageCode: "en",
       primaryGeoCode: null,
       canonicalKey: "US",
     });
@@ -49,6 +50,67 @@ describe("resolveLocation", () => {
     const second = await resolveLocation({ countryCode: "us" }, { store });
     expect(second.location.id).toBe(first.location.id);
     expect(creates).toEqual(["US"]); // created once, second hit the cache
+  });
+
+  it("keeps the default-language alias on the existing key and creates other languages", async () => {
+    const { store, creates } = fakeStore();
+    const unqualified = await resolveLocation(
+      { cityName: "Malaga", countryCode: "ES", regionName: "Andalusia" },
+      {
+        lookup: {
+          findCity: async () => ({
+            ...austin,
+            cityName: "Malaga",
+            displayName: "Malaga, Andalusia, Spain",
+            primaryGeoName: "Malaga,Andalusia,Spain",
+            regionCode: null,
+            regionName: "Andalusia",
+            secondaryGeoName: "Malaga, Andalusia, Spain",
+          }),
+        },
+        store,
+      },
+    );
+    const defaultAlias = await resolveLocation(
+      { cityName: "Malaga", countryCode: "ES", languageCode: "es", regionName: "Andalusia" },
+      {
+        lookup: {
+          findCity: async () => ({
+            ...austin,
+            cityName: "Malaga",
+            displayName: "Malaga, Andalusia, Spain",
+            primaryGeoName: "Malaga,Andalusia,Spain",
+            regionCode: null,
+            regionName: "Andalusia",
+            secondaryGeoName: "Malaga, Andalusia, Spain",
+          }),
+        },
+        store,
+      },
+    );
+    const english = await resolveLocation(
+      { cityName: "Malaga", countryCode: "ES", languageCode: "en", regionName: "Andalusia" },
+      {
+        lookup: {
+          findCity: async () => ({
+            ...austin,
+            cityName: "Malaga",
+            displayName: "Malaga, Andalusia, Spain",
+            primaryGeoName: "Malaga,Andalusia,Spain",
+            regionCode: null,
+            regionName: "Andalusia",
+            secondaryGeoName: "Malaga, Andalusia, Spain",
+          }),
+        },
+        store,
+      },
+    );
+
+    expect(defaultAlias.location.id).toBe(unqualified.location.id);
+    expect(unqualified.location.canonicalKey).toBe("ES/Andalusia/Malaga");
+    expect(english.location.canonicalKey).toBe("ES/Andalusia/Malaga@en");
+    expect(english.location.languageCode).toBe("en");
+    expect(creates).toEqual(["ES/Andalusia/Malaga", "ES/Andalusia/Malaga@en"]);
   });
 
   it("resolves a city through the provider lookup and caches by key", async () => {
@@ -156,5 +218,31 @@ describe("resolveLocation", () => {
     const res = await resolveLocation({ countryCode: "US" }, { store: racingStore });
     expect(res.location.id).toBe("loc_winner");
     expect(creates).toBe(1);
+  });
+
+  it("converges concurrent non-default language creates on one row", async () => {
+    let winner: ResolvedLocation | null = null;
+    const store: LocationStore = {
+      async findByKey(key) {
+        return winner?.canonicalKey === key ? winner : null;
+      },
+      async create(row) {
+        await Promise.resolve();
+        if (winner) {
+          throw new Error("unique constraint violation");
+        }
+        winner = { ...row, id: "loc_english" };
+        return winner;
+      },
+    };
+
+    const [first, second] = await Promise.all([
+      resolveLocation({ countryCode: "ES", languageCode: "en" }, { store }),
+      resolveLocation({ countryCode: "ES", languageCode: "en" }, { store }),
+    ]);
+
+    expect(first.location.id).toBe("loc_english");
+    expect(second.location.id).toBe("loc_english");
+    expect(first.location.canonicalKey).toBe("ES@en");
   });
 });

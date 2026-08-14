@@ -14,6 +14,8 @@ function keywordMatchResource(match: KeywordMatchRow) {
     market: {
       country_code: match.countryCode,
       device: match.device,
+      language_code: match.languageCode,
+      language_label: match.languageLabel,
       location: match.location,
       location_key: match.locationKey,
     },

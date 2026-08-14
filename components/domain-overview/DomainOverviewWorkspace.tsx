@@ -1,7 +1,7 @@
 "use client";
 
 import { useSessionSpend } from "@/components/cost-estimate/SessionSpendProvider";
-import type { LocationFieldValue } from "@/components/keywords/LocationField";
+import type { DomainOverviewMarketOption } from "@/lib/domain-overview/market-options";
 import type { DomainOverviewScope, DomainRecentTarget } from "@/lib/domain-overview/types";
 import { appPath } from "@/lib/routing/app-path";
 import { useRouter } from "next/navigation";
@@ -101,7 +101,7 @@ export function DomainOverviewWorkspace({
     if (activeMarket) scheduleEstimate(nextTarget, nextScope);
   }
 
-  async function changeMarket(next: LocationFieldValue) {
+  async function changeMarket(next: DomainOverviewMarketOption) {
     if (next.canonicalKey === market?.canonicalKey) return;
     setSubmitting(true);
     try {
@@ -194,6 +194,7 @@ export function DomainOverviewWorkspace({
     <section aria-label="Domain Overview" className="grid min-w-0 gap-4">
       {market ? (
         <DomainOverviewAnalyzeCard
+          catalogMarkets={context.catalogMarkets}
           estimate={estimate}
           market={market}
           onMarketChange={(next) => void changeMarket(next)}
@@ -209,10 +210,10 @@ export function DomainOverviewWorkspace({
             )
           }
           onTargetChange={updateTarget}
-          projectId={projectId}
           scopeOverride={scopeOverride}
           submitting={submitting}
           target={target}
+          trackedMarkets={context.trackedMarkets}
           report={report}
         />
       ) : null}
