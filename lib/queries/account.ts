@@ -159,8 +159,6 @@ export async function getPreferences(): Promise<UserPreferences> {
     dateFormat: store.get(PREFERENCE_COOKIES.dateFormat)?.value,
     density: store.get(PREFERENCE_COOKIES.density)?.value,
     landing: store.get(PREFERENCE_COOKIES.landing)?.value,
-    language: store.get(PREFERENCE_COOKIES.language)?.value,
     theme: store.get(PREFERENCE_COOKIES.theme)?.value,
-    timezone: store.get(PREFERENCE_COOKIES.timezone)?.value,
   });
 }

@@ -62,13 +62,18 @@ const routeCases = [
     title: "Rank Tracker",
   },
   {
+    path: appPath("prj_1", "dashboard"),
+    pattern: appPath("[project]", "dashboard"),
+    title: "Dashboard",
+  },
+  {
     path: appPath("prj_1", "overview"),
     pattern: appPath("[project]", "overview"),
     title: "Dashboard",
   },
   {
-    path: appPath("prj_1", "research"),
-    pattern: appPath("[project]", "research"),
+    path: appPath("prj_1", "keyword-research"),
+    pattern: appPath("[project]", "keyword-research"),
     title: "Keyword Research",
   },
   {
@@ -80,6 +85,11 @@ const routeCases = [
     path: appPath("prj_1", "settings", "import"),
     pattern: appPath("[project]", "settings", "import"),
     title: "Import from another instance",
+  },
+  {
+    path: appPath("prj_1", "settings", "markets"),
+    pattern: appPath("[project]", "settings", "markets"),
+    title: "Settings",
   },
   {
     path: appPath("prj_1", "settings"),
@@ -155,7 +165,14 @@ describe("dashboard header titles", () => {
   });
 
   it("keeps the overview header free of project metadata", () => {
-    expect(headerMetaFor(appPath("prj_1", "overview"))).toEqual({ title: "Dashboard" });
+    expect(headerMetaFor(appPath("prj_1", "dashboard"))).toEqual({ title: "Dashboard" });
+  });
+
+  it("does not advertise removed timezone preferences", () => {
+    expect(headerMetaFor("/app/account/preferences")).toEqual({
+      subtitle: "Theme and personal defaults.",
+      title: "Preferences",
+    });
   });
 
   it("uses singular keyword copy for one tracked keyword", () => {

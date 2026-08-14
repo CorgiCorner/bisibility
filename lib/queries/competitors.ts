@@ -14,6 +14,7 @@ import type { CompetitorMarketOption } from "@/lib/competitors/types";
 import { normalizeCompetitorDomain } from "@/lib/competitors/types";
 import { prisma } from "@/lib/db/prisma";
 import { isPublicIdOfType } from "@/lib/db/public-id";
+import { fetchProjectKeywordVolumes } from "@/lib/queries/keyword-metrics-query";
 import { storedOrganicDomainRanks } from "@/lib/rank-check/organic-ranks";
 import { trackedProjectDomain } from "@/lib/schemas/project";
 import { requireReadableProject } from "./_auth";
@@ -108,7 +109,12 @@ async function queryCompetitors(
     ...missingSnapshotIds,
   ];
   const fallbackIds = [...new Set(prioritizedMissingIds)].slice(0, LEGACY_FALLBACK_MAX);
-  const legacyRows = await legacyOrganicRanks(project.id, fallbackIds);
+  const [legacyRows, volumes] = await Promise.all([
+    legacyOrganicRanks(project.id, fallbackIds),
+    details.length > 0
+      ? fetchProjectKeywordVolumes(project.id, keywordSummaries.length)
+      : Promise.resolve(new Map<string, number | null>()),
+  ]);
   const legacyRanks = new Map(legacyRows.map((row) => [row.keywordId, row.ranks]));
   const suggestions = competitorSuggestions(summaries, legacyRows, ownDomain, managed);
   const detailsByMarket = new Map<string, QueryKeywordDetail[]>();
@@ -129,6 +135,7 @@ async function queryCompetitors(
         detailsByMarket.get(option.key) ?? [],
         latestByKeyword,
         legacyRanks,
+        volumes,
         ownDomain,
         managed,
       ),

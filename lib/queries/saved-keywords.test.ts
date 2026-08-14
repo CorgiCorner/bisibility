@@ -28,9 +28,11 @@ describe("saved keyword queries", () => {
     mocks.prisma.savedKeyword.count.mockResolvedValueOnce(2);
     mocks.prisma.savedKeyword.findMany.mockResolvedValueOnce([
       {
+        countryCode: "US",
         cpc: 1.25,
         difficulty: 42,
         intent: "commercial",
+        languageCode: "en",
         location: "US",
         publicId: "skw_1",
         savedAt: new Date("2026-07-24T14:00:00.000Z"),

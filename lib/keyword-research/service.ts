@@ -4,6 +4,7 @@ import { requireApiPublicId } from "@/lib/api/public-id";
 import { ProviderLookupSignal } from "@/lib/provider-lookups/paid-call";
 import type { ResearchPage } from "@/lib/providers/types";
 import type { SerpRankLocation } from "@/lib/serp/location";
+import { supportsResearchMarket } from "@/lib/serp/market-capability";
 import {
   keywordResearchCachedUntil,
   keywordResearchCacheKey,
@@ -137,8 +138,11 @@ export async function researchKeywords(input: {
     ? eligible.find(({ connection }) => connection.publicId === requestedConnectionId)
     : eligible[0];
   if (!selected) return { ok: false, reason: "no_source" };
-  const rateContext = await loadProviderRateContext(selected.connection.id, "keyword_research");
   const location = await researchLocation(project, input.locationKey);
+  if (!supportsResearchMarket(location.value.gl, location.value.hl)) {
+    return { ok: false, reason: "unsupported_location" };
+  }
+  const rateContext = await loadProviderRateContext(selected.connection.id, "keyword_research");
   const fetchedAt = new Date().toISOString();
   if (input.estimateOnly) {
     const estimate = await estimateResearch({

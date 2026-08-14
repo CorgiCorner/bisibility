@@ -7,6 +7,7 @@ import {
 import { ProviderLookupSignal, requiredEstimatedCostCents } from "@/lib/provider-lookups/paid-call";
 import type { ProviderRateContext } from "@/lib/provider-rates/connection-context";
 import type { ProviderCredentials, ResearchPage } from "@/lib/providers/types";
+import { researchProviderRankLocation } from "@/lib/serp/market-capability";
 import type { eligibleResearchConnections, researchLocation } from "./context";
 import { paidProviderCall } from "./paid-call";
 import type { KeywordResearchMode, KeywordResearchSource } from "./types";
@@ -78,7 +79,7 @@ export async function callResearchSource(input: {
       method.call(input.selected.provider, credentials, {
         includeClickstream: input.includeClickstream,
         limit: input.limit,
-        location: input.location,
+        location: researchProviderRankLocation(input.location),
         seed: input.seed,
       }),
     connection: input.selected.connection,

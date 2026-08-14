@@ -8,11 +8,14 @@ import {
   checkRunsNow,
   checkRunsViewFor,
   completedRunFixture,
+  staleRunFixture,
 } from "./check-runs-fixtures";
 
 function props(overrides: Partial<CheckRunsSectionProps> = {}): CheckRunsSectionProps {
   return {
     asOfDate: "2026-07-24",
+    budget: { blocked: [], forecast: null },
+    budgetSettingsHref: "/app/settings#provider-usage",
     connectProviderHref: "/app/integrations",
     filter: "all",
     keywordHref: (keywordPublicId) => `/app/rank-tracker/${keywordPublicId}`,
@@ -48,7 +51,7 @@ describe("CheckRunsSection", () => {
 
     expect(screen.getByText("DataForSEO is rate-limiting.")).toBeInTheDocument();
     expect(screen.getByText(/43 checks hit rate limits in the last 24 hours/)).toBeInTheDocument();
-    expect(screen.getByText("82% direct · 43 rate-limited")).toBeInTheDocument();
+    expect(screen.getByText("973 as primary · 43 rate-limited")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "ai meeting notes" })).toHaveAttribute(
       "href",
       "/app/rank-tracker/kw_ai_meeting_notes",
@@ -71,6 +74,17 @@ describe("CheckRunsSection", () => {
     expect(onAsOfDateChange).toHaveBeenCalledWith("2026-07-20");
     expect(onRangeChange).toHaveBeenCalledWith("7d");
     expect(screen.queryByRole("dialog", { name: "As of date" })).not.toBeInTheDocument();
+  });
+
+  it("keeps the skipped and fallback filters on the solid neutral chip treatment", () => {
+    render(<CheckRunsSection {...props()} />);
+
+    for (const filterName of [/^Skipped28$/, /^Fallback19$/]) {
+      const filter = screen.getByRole("button", { name: filterName });
+
+      expect(filter).toHaveClass("border-border-strong", "bg-bg-elev", "text-fg-muted");
+      expect(filter).not.toHaveClass("border-dashed");
+    }
   });
 
   it("renders provider and trigger controls from the supplied options", async () => {
@@ -137,7 +151,9 @@ describe("CheckRunsSection", () => {
     expect(screen.getByText("fallback")).toBeInTheDocument();
     fireEvent.mouseOver(badges[0] as HTMLElement);
     expect(await screen.findByText(countryLevelTooltip)).toBeInTheDocument();
-    expect(screen.getByText("Completed · #5 of top 20")).toBeInTheDocument();
+    expect(
+      screen.getByText("via backup (SerpApi) - DataForSEO rate-limited · #5 of top 20"),
+    ).toBeInTheDocument();
   });
 
   it("shows running elapsed time and an estimated cost", () => {
@@ -147,6 +163,32 @@ describe("CheckRunsSection", () => {
 
     expect(screen.getByText("42s")).toBeInTheDocument();
     expect(screen.getByText("~$0.002")).toBeInTheDocument();
+  });
+
+  it("does not label an intentionally historical view as stale", () => {
+    render(
+      <CheckRunsSection
+        {...props({
+          asOfDate: "2026-07-21",
+          view: {
+            ...checkRunsFixtureView,
+            counts: {
+              completed: 1,
+              deferred: 0,
+              failed: 0,
+              running: 0,
+              runs: 1,
+              viaFallback: 0,
+            },
+            deferredGroups: [],
+            rows: [staleRunFixture],
+            staleCount: 1,
+          },
+        })}
+      />,
+    );
+
+    expect(screen.queryByText(/Positions shown may be stale/)).not.toBeInTheDocument();
   });
 
   it("replaces the table with range-aware skipped groups", () => {
@@ -166,68 +208,6 @@ describe("CheckRunsSection", () => {
     expect(screen.getByText("No provider assigned")).toBeInTheDocument();
     expect(screen.getByText("Budget cap reached")).toBeInTheDocument();
     expect(screen.getByText("Paused during import")).toBeInTheDocument();
-  });
-
-  it("collapses provider health when the selected range has no issues", () => {
-    render(
-      <CheckRunsSection
-        {...props({
-          view: {
-            ...checkRunsFixtureView,
-            deferredGroups: [],
-            providerHealth: [
-              {
-                coveredAsFallback: 0,
-                direct: 4,
-                failed: 0,
-                isPrimary: true,
-                provider: "dataforseo",
-                providerLabel: "DataForSEO",
-                rateLimited: 0,
-              },
-            ],
-          },
-        })}
-      />,
-    );
-
-    expect(screen.getByText("Providers healthy · DataForSEO 100% direct")).toBeInTheDocument();
-    expect(screen.queryByText(/is rate-limiting/)).not.toBeInTheDocument();
-  });
-
-  it("uses the explicit primary provider instead of the first health entry", () => {
-    render(
-      <CheckRunsSection
-        {...props({
-          view: {
-            ...checkRunsFixtureView,
-            deferredGroups: [],
-            providerHealth: [
-              {
-                coveredAsFallback: 0,
-                direct: 0,
-                failed: 0,
-                isPrimary: false,
-                provider: "serpapi",
-                providerLabel: "SerpApi",
-                rateLimited: 0,
-              },
-              {
-                coveredAsFallback: 0,
-                direct: 4,
-                failed: 0,
-                isPrimary: true,
-                provider: "dataforseo",
-                providerLabel: "DataForSEO",
-                rateLimited: 0,
-              },
-            ],
-          },
-        })}
-      />,
-    );
-
-    expect(screen.getByText("Providers healthy · DataForSEO 100% direct")).toBeInTheDocument();
   });
 
   it("removes narrow columns from the DOM and moves their values into details", async () => {

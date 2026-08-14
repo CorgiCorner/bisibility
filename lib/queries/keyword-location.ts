@@ -13,6 +13,7 @@ export type KeywordLocation = {
   kind: "country" | "region" | "city";
   gl: string;
   hl: string;
+  languageLabel?: string;
 };
 
 type LocationRelation = {
@@ -24,6 +25,7 @@ type LocationRelation = {
   kind: KeywordLocation["kind"];
   gl: string;
   hl: string;
+  languageLabel?: string;
 };
 
 /**
@@ -44,6 +46,7 @@ export function locationView(row: {
       hl: ref.hl,
       id: ref.canonicalKey,
       kind: ref.kind,
+      languageLabel: ref.languageLabel,
     };
   }
   return {
@@ -55,5 +58,6 @@ export function locationView(row: {
     hl: "en",
     id: row.location,
     kind: "country",
+    languageLabel: "English",
   };
 }

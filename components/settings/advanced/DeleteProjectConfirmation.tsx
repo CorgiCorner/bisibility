@@ -62,7 +62,7 @@ export function DeleteProjectConfirmation({
       close();
       router.push(
         result.nextProjectPublicId
-          ? appPath(result.nextProjectPublicId, "overview")
+          ? appPath(result.nextProjectPublicId, "dashboard")
           : "/onboarding",
       );
       router.refresh();

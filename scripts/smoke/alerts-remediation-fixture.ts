@@ -74,6 +74,7 @@ export async function createAcceptanceFixture(prefix: string) {
       hl: "en",
       id: `${prefix}-location`,
       kind: "country",
+      languageCode: "en",
       languageLabel: "English",
       primaryGeoName: "United States",
       secondaryGeoName: "",

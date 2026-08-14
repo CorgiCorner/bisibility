@@ -30,6 +30,7 @@ function keyword(id: string, rankChecks: Check[] = [], overrides: Partial<Keywor
     createdAt: new Date("2026-06-01T00:00:00.000Z"),
     device: "desktop",
     id,
+    locationRef: { displayName: "United States", languageLabel: "English" },
     publicId: id,
     rankChecks,
     schedule: null,
@@ -137,8 +138,16 @@ describe("overview builders", () => {
 
   it("distinguishes failed, outside-top-100, and running latest attempts", () => {
     const rows = highlights([
-      keyword("failed", [check(null, { status: "failed" })]),
-      keyword("outside", [check(null, { status: "completed" })]),
+      keyword("failed", [
+        check(null, { status: "failed" }),
+        check(3, { checkedAt: new Date("2026-06-27T10:00:00.000Z") }),
+        check(8, { checkedAt: new Date("2026-06-21T10:00:00.000Z") }),
+      ]),
+      keyword("outside", [
+        check(null, { status: "completed" }),
+        check(3, { checkedAt: new Date("2026-06-27T10:00:00.000Z") }),
+        check(8, { checkedAt: new Date("2026-06-21T10:00:00.000Z") }),
+      ]),
       keyword("running", [check(null, { status: "running" })]),
     ]).find((list) => list.kind === "attention")?.rows;
 
@@ -156,6 +165,8 @@ describe("overview builders", () => {
         }),
       ]),
     );
+    expect(rows?.find((row) => row.id === "failed")).not.toHaveProperty("delta");
+    expect(rows?.find((row) => row.id === "outside")).not.toHaveProperty("delta");
     expect(rows?.some((row) => row.id === "running")).toBe(false);
   });
 

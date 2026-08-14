@@ -1,5 +1,6 @@
 "use client";
 
+import { InfoTooltip } from "@/components/ui";
 import type { ReactNode } from "react";
 import { ProviderCard, type ProviderCardState } from "./ProviderCard";
 import {
@@ -11,7 +12,6 @@ import {
 
 type StepConnectProviderCardsProps = {
   analyticsNotice?: ReactNode;
-  analyticsOption?: ReactNode;
   connections: ConnectedProviderMap;
   dirtyProviders: Partial<Record<OnboardingSerpProviderId, boolean>>;
   onSelect: (providerId: OnboardingSerpProviderId) => void;
@@ -39,7 +39,6 @@ function providerState({
 
 export function StepConnectProviderCards({
   analyticsNotice,
-  analyticsOption,
   connections,
   dirtyProviders,
   onSelect,
@@ -49,31 +48,34 @@ export function StepConnectProviderCards({
   return (
     <div className="mt-[22px]">
       {analyticsNotice}
-      <div className="grid items-stretch gap-3 sm:grid-cols-3">
-        <div aria-label="SERP provider" className="contents" role="radiogroup">
-          {providerOptions.map((provider) => (
-            <ProviderCard
-              balance={connections[provider.value]?.balance}
-              key={provider.value}
-              onSelect={onSelect}
-              provider={provider}
-              selected={selectedProviderId === provider.value}
-              state={providerState({
-                connections,
-                dirty: Boolean(dirtyProviders[provider.value]),
-                providerId: provider.value,
-                testResults,
-              })}
-            />
-          ))}
-        </div>
-        {analyticsOption}
+      <div className="flex items-center gap-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.5px] text-fg-muted">
+        Rank data / powers rank checks
+        <InfoTooltip text="Google has no official rankings API, so checks run through a SERP provider. Bisibility uses your own provider account and you pay the provider directly, per check. You can skip this and connect later in Integrations - keywords can be added now, but checks stay paused until a provider is connected." />
       </div>
-      {Object.keys(connections).length > 0 ? (
-        <p className="m-0 mt-2 text-[11.5px] text-fg-muted">
-          Connections are saved per provider - switching does not disconnect.
-        </p>
-      ) : null}
+      <div
+        aria-label="SERP provider"
+        className="mt-2 grid items-stretch gap-3 sm:grid-cols-2"
+        role="radiogroup"
+      >
+        {providerOptions.map((provider) => (
+          <ProviderCard
+            balance={connections[provider.value]?.balance}
+            key={provider.value}
+            onSelect={onSelect}
+            provider={provider}
+            selected={selectedProviderId === provider.value}
+            state={providerState({
+              connections,
+              dirty: Boolean(dirtyProviders[provider.value]),
+              providerId: provider.value,
+              testResults,
+            })}
+          />
+        ))}
+      </div>
+      <p className="m-0 mt-2 text-[11.5px] text-fg-muted">
+        Connections are saved per provider - switching does not disconnect.
+      </p>
     </div>
   );
 }

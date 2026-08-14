@@ -58,10 +58,19 @@ export const keywordMatchSchemas = {
     properties: {
       country_code: { example: "US", type: "string" },
       device: { enum: ["desktop", "mobile"], type: "string" },
+      language_code: { example: "en", type: "string" },
+      language_label: { example: "English", type: "string" },
       location: { example: "United States", type: "string" },
-      location_key: { example: "US/Texas/Austin", type: "string" },
+      location_key: { example: "ES/Andalusia/Malaga@en", type: "string" },
     },
-    required: ["location", "location_key", "country_code", "device"],
+    required: [
+      "location",
+      "location_key",
+      "country_code",
+      "language_code",
+      "language_label",
+      "device",
+    ],
     type: "object",
   },
   KeywordMatchRequest: {

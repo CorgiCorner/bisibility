@@ -8,14 +8,18 @@ import type {
   CheckRunsView,
   CheckRunTriggerFilter,
 } from "@/lib/checks/contract";
+import { zonedDateInputValue } from "@/lib/checks/date-boundary";
 import { useState } from "react";
 import { CheckRunFilters, CheckRunStats, CheckRunsHeader } from "./CheckRunsControls";
 import { ProviderHealth, RateLimitBanner } from "./CheckRunsProviderHealth";
+import { type CheckRunsBudget, CheckRunsStatusBands } from "./CheckRunsStatusBands";
 import { CheckRunsTable } from "./CheckRunsTable";
 import { type SkippedRunsLinks, SkippedRunsView } from "./SkippedRunsView";
 
 export type CheckRunsSectionProps = SkippedRunsLinks & {
   asOfDate: string;
+  budget: CheckRunsBudget;
+  budgetSettingsHref: string;
   filter: CheckRunFilter;
   initialExpandedRunIds?: readonly string[];
   keywordHref: (keywordPublicId: string) => string;
@@ -25,6 +29,8 @@ export type CheckRunsSectionProps = SkippedRunsLinks & {
   onLoadMore: () => void;
   onProviderChange: (provider: string) => void;
   onRangeChange: (range: CheckRange) => void;
+  onRetryFailed?: () => void;
+  onRetryStale?: () => void;
   onTriggerChange: (trigger: CheckRunTriggerFilter) => void;
   provider: string;
   providerOptions: readonly CheckRunProviderOption[];
@@ -37,6 +43,8 @@ export type CheckRunsSectionProps = SkippedRunsLinks & {
 
 export function CheckRunsSection({
   asOfDate,
+  budget,
+  budgetSettingsHref,
   connectProviderHref,
   filter,
   initialExpandedRunIds = [],
@@ -47,6 +55,8 @@ export function CheckRunsSection({
   onLoadMore,
   onProviderChange,
   onRangeChange,
+  onRetryFailed,
+  onRetryStale,
   onTriggerChange,
   provider,
   providerOptions,
@@ -86,8 +96,28 @@ export function CheckRunsSection({
           trigger={trigger}
         />
         <CheckRunStats counts={view.counts} filter={filter} onFilterChange={onFilterChange} />
+        <CheckRunsStatusBands
+          budget={budget}
+          budgetSettingsHref={budgetSettingsHref}
+          now={now}
+          onRetryFailed={onRetryFailed}
+          onRetryStale={onRetryStale}
+          showStale={
+            asOfDate === zonedDateInputValue(now, timeZone) &&
+            filter === "all" &&
+            provider === "all" &&
+            trigger === "all"
+          }
+          timeZone={timeZone}
+          view={view}
+        />
         <RateLimitBanner onFilterChange={onFilterChange} range={range} view={view} />
-        <ProviderHealth range={range} reorderProvidersHref={reorderProvidersHref} view={view} />
+        <ProviderHealth
+          onFilterChange={onFilterChange}
+          range={range}
+          reorderProvidersHref={reorderProvidersHref}
+          view={view}
+        />
         <CheckRunFilters counts={view.counts} filter={filter} onFilterChange={onFilterChange} />
         {filter === "deferred" ? (
           <SkippedRunsView

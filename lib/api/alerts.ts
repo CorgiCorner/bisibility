@@ -4,7 +4,11 @@ import {
   markProjectAlertsRead as markProjectAlertsReadCore,
   muteTriggeredAlert as muteTriggeredAlertCore,
 } from "@/lib/alerts/feed-mutations";
-import { alertRuleDeleteSchema, alertRuleFormSchema } from "@/lib/alerts/schema";
+import {
+  alertRuleDeleteSchema,
+  alertRuleFormSchema,
+  alertRuleUpdateFormSchema,
+} from "@/lib/alerts/schema";
 import { listAlertRuleViews, listTriggeredAlertViews } from "./alert-list";
 import { alertRuleApiResources, triggeredAlertApiResources } from "./alert-resources";
 import {
@@ -66,7 +70,7 @@ export async function createAlertRuleForProject(ctx: ApiContext, projectId: stri
 
 export async function updateAlertRuleById(ctx: ApiContext, ruleId: string) {
   const body = await readJsonBody(ctx);
-  const input = parseApiInput(alertRuleFormSchema, {
+  const input = parseApiInput(alertRuleUpdateFormSchema, {
     ...objectBody(body),
     project_id: ctx.auth.project.id,
     rule_id: ruleId,

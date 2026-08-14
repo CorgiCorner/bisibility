@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { SIGNAL_TYPES } from "@/lib/signals/types";
 import { requireReadableProject } from "./_auth";
+import { getRequestProjectDefaults } from "./workspace-request-data";
 
 const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 50;
@@ -12,7 +13,14 @@ export type TimelineFilterKey = "all" | "deploys" | "notes" | "pages" | "ranking
 export type TimelineSignalRow = Prisma.SignalGetPayload<{
   include: {
     createdBy: { select: { email: true; name: true } };
-    keyword: { select: { publicId: true; text: true } };
+    keyword: {
+      select: {
+        device: true;
+        locationRef: { select: { displayName: true; languageLabel: true } };
+        publicId: true;
+        text: true;
+      };
+    };
   };
 }>;
 export type TimelineView = {
@@ -24,6 +32,7 @@ export type TimelineView = {
   page: number;
   rows: TimelineSignalRow[];
   search: string;
+  timeZone: string;
 };
 export type TimelineQueryInput = {
   filter?: string | string[];
@@ -109,16 +118,26 @@ export async function getTimelineView(
   const { project } = await requireReadableProject(projectId);
   const now = input.now ?? new Date();
   const { filter, page, pageSize, search } = normalize(input);
-  const rows = await prisma.signal.findMany({
-    include: {
-      createdBy: { select: { email: true, name: true } },
-      keyword: { select: { publicId: true, text: true } },
-    },
-    orderBy: [{ happenedAt: "desc" }, { id: "desc" }],
-    skip: (page - 1) * pageSize,
-    take: pageSize + 1,
-    where: andWhere({ projectId: project.id }, searchWhere(search), filterWhere(filter)),
-  });
+  const [defaults, rows] = await Promise.all([
+    getRequestProjectDefaults(project.id),
+    prisma.signal.findMany({
+      include: {
+        createdBy: { select: { email: true, name: true } },
+        keyword: {
+          select: {
+            device: true,
+            locationRef: { select: { displayName: true, languageLabel: true } },
+            publicId: true,
+            text: true,
+          },
+        },
+      },
+      orderBy: [{ happenedAt: "desc" }, { id: "desc" }],
+      skip: (page - 1) * pageSize,
+      take: pageSize + 1,
+      where: andWhere({ projectId: project.id }, searchWhere(search), filterWhere(filter)),
+    }),
+  ]);
 
   return {
     filter,
@@ -129,5 +148,6 @@ export async function getTimelineView(
     page,
     rows: rows.slice(0, pageSize),
     search,
+    timeZone: defaults?.timezone ?? "UTC",
   };
 }

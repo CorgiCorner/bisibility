@@ -18,6 +18,7 @@ import {
 } from "@/lib/competitors/saved-view-model";
 import type { CompetitorFilter, CompetitorsViewModel } from "@/lib/competitors/types";
 import type { DeleteSavedViewInput } from "@/lib/keywords/saved-view-model";
+import type { ProjectMarketsView } from "@/lib/queries/project-markets";
 import { appPath, type ProjectRef } from "@/lib/routing/app-path";
 import type {
   CompetitorSavedView,
@@ -44,6 +45,7 @@ type CompetitorsWorkspaceProps = Partial<Pick<KeywordWorkspaceActions, "addKeywo
   deleteSavedViewAction?: (input: DeleteSavedViewInput) => Promise<unknown>;
   initialFilter: CompetitorFilter;
   projectRef: ProjectRef;
+  projectMarkets?: ProjectMarketsView;
   savedViews: CompetitorSavedView[];
   view: CompetitorsViewModel;
 };
@@ -59,6 +61,7 @@ export function CompetitorsWorkspace({
   deleteSavedViewAction,
   initialFilter,
   projectRef,
+  projectMarkets,
   savedViews,
   view,
 }: Readonly<CompetitorsWorkspaceProps>) {
@@ -136,6 +139,7 @@ export function CompetitorsWorkspace({
         <CompetitorScopeControls
           markets={view.markets}
           projectRef={projectRef}
+          projectMarkets={projectMarkets}
           scope={view.scope}
           viewId={activeViewId}
         />
@@ -166,6 +170,7 @@ export function CompetitorsWorkspace({
             onClose={() => setTrackOpen(false)}
             open
             projectId={view.projectId}
+            projectMarkets={projectMarkets}
           />
         ) : null}
       </div>
@@ -196,12 +201,6 @@ export function CompetitorsWorkspace({
   return (
     <div className="flex w-full min-w-0 flex-col gap-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <CompetitorScopeControls
-          markets={view.markets}
-          projectRef={projectRef}
-          scope={view.scope}
-          viewId={activeViewId}
-        />
         <div className="flex flex-wrap items-center gap-2">
           <CompetitorSavedViewsControl
             activeViewId={activeViewId}
@@ -249,6 +248,15 @@ export function CompetitorsWorkspace({
         market={market}
         onFilterChange={draft.setFilter}
         projectId={view.projectId}
+        scopeControls={
+          <CompetitorScopeControls
+            markets={view.markets}
+            projectRef={projectRef}
+            projectMarkets={projectMarkets}
+            scope={view.scope}
+            viewId={activeViewId}
+          />
+        }
       />
       <HeadToHeadTable
         key={`${market.key}:${activeFilter.position}:${activeFilter.tag ?? "all"}:${activeFilter.excludedKeywordIds.join(",")}`}

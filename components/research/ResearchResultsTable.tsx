@@ -1,17 +1,12 @@
 "use client";
 
-import { Sparkline } from "@/components/charts/Sparkline";
 import { DataGrid } from "@/components/keywords/grid/DataGrid";
 import { keywordGridSx } from "@/components/keywords/grid/keyword-data-grid-config";
 import { Button, Card } from "@/components/ui";
-import {
-  formatEstimateCents,
-  monthlyTrackingCostCents,
-} from "@/lib/cost-estimate/project-estimate";
+import { formatEstimateCents } from "@/lib/cost-estimate/project-estimate";
 import { relativePast } from "@/lib/format/relative-time";
 import type { GroupedResearchRow } from "@/lib/keyword-research/grouping";
-import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
-import type { GridColDef, GridRowSelectionModel } from "@mui/x-data-grid";
+import type { GridRowSelectionModel } from "@mui/x-data-grid";
 import {
   BookmarkSimpleIcon as BookmarkSimple,
   FunnelIcon as Funnel,
@@ -19,8 +14,7 @@ import {
   XIcon as X,
 } from "@phosphor-icons/react";
 import { useMemo } from "react";
-import { ResearchKeywordCell } from "./ResearchKeywordCell";
-import { chronologicalTrend, difficultyPillStyle, IntentChip } from "./research-results-model";
+import { researchResultsColumns } from "./research-results-columns";
 import { ResearchExportMenu } from "./research-results-view";
 
 export type ResearchDeeperOffer = { cached: boolean; costCents: number | null; nextLimit: number };
@@ -29,11 +23,11 @@ type ResearchResultsTableProps = {
   activeKeyword: string | null;
   cached: boolean;
   canRemoveSaved: boolean;
-  costContext: ProjectCostContext;
   deeper: ResearchDeeperOffer | null;
   fetchedAt: string;
   fetchedCount: number;
   filterCount: number;
+  metricsAvailable?: boolean;
   onActiveChange: (row: GroupedResearchRow) => void;
   onAddSelected: () => void;
   onDeeper: () => void;
@@ -45,100 +39,13 @@ type ResearchResultsTableProps = {
   seed: string;
   selectedKeywords: string[];
   totalCount: number;
+  trackingMarketCount?: number;
 };
-
-function tableColumns(
-  onToggleSave: (row: GroupedResearchRow) => void,
-  canRemoveSaved: boolean,
-): GridColDef<GroupedResearchRow>[] {
-  return [
-    {
-      field: "keyword",
-      flex: 1.5,
-      headerName: "Keyword",
-      minWidth: 210,
-      renderCell: ({ row }) => (
-        <ResearchKeywordCell
-          canRemoveSaved={canRemoveSaved}
-          onToggleSave={onToggleSave}
-          row={row}
-        />
-      ),
-      sortable: false,
-    },
-    {
-      field: "searchVolume",
-      headerName: "Volume",
-      minWidth: 92,
-      renderCell: ({ row }) => (
-        <span className="font-mono text-[12px]">
-          {row.searchVolume == null ? "-" : row.searchVolume.toLocaleString("en-US")}
-        </span>
-      ),
-    },
-    {
-      field: "trend",
-      headerName: "Trend",
-      minWidth: 102,
-      renderCell: ({ row }) => (
-        <Sparkline
-          ariaLabel={`Monthly volume trend for ${row.keyword}`}
-          data={chronologicalTrend(row.monthlyTrend).map((point) => point.searchVolume)}
-        />
-      ),
-      sortable: false,
-    },
-    {
-      field: "difficulty",
-      headerName: "KD",
-      minWidth: 68,
-      renderCell: ({ row }) => (
-        <span
-          className="rounded-full border px-2 py-0.5 font-mono text-[11px] font-semibold"
-          style={difficultyPillStyle(row.difficulty)}
-        >
-          {row.difficulty ?? "-"}
-        </span>
-      ),
-      sortable: false,
-    },
-    {
-      field: "cpcCents",
-      headerName: "CPC",
-      minWidth: 78,
-      renderCell: ({ row }) => (
-        <span className="font-mono text-[11.5px]">
-          {row.cpcCents == null ? "-" : formatEstimateCents(row.cpcCents)}
-        </span>
-      ),
-      sortable: false,
-    },
-    {
-      field: "intent",
-      headerName: "Intent",
-      minWidth: 96,
-      renderCell: ({ row }) => <IntentChip intent={row.intent} />,
-      sortable: false,
-    },
-    {
-      field: "source",
-      headerName: "Source",
-      minWidth: 104,
-      renderCell: ({ row }) => (
-        <code className="rounded bg-bg-sunken px-2 py-1 text-[10.5px] text-fg-muted">
-          {row.source}
-        </code>
-      ),
-      sortable: false,
-    },
-  ];
-}
 
 export function ResearchResultsTable({
   activeKeyword,
   cached,
   canRemoveSaved,
-  costContext,
   deeper,
   fetchedAt,
   fetchedCount,
@@ -154,16 +61,15 @@ export function ResearchResultsTable({
   seed,
   selectedKeywords,
   totalCount,
+  trackingMarketCount = 1,
+  metricsAvailable = true,
 }: Readonly<ResearchResultsTableProps>) {
   const columns = useMemo(
-    () => tableColumns(onToggleSave, canRemoveSaved),
-    [canRemoveSaved, onToggleSave],
+    () => researchResultsColumns({ canRemoveSaved, metricsAvailable, onToggleSave }),
+    [canRemoveSaved, metricsAvailable, onToggleSave],
   );
   const selectionModel: GridRowSelectionModel = { ids: new Set(selectedKeywords), type: "include" };
-  const trackingCost = monthlyTrackingCostCents(selectedKeywords.length, {
-    ...costContext,
-    overrideCents: costContext.costPerCheckCents,
-  });
+  const checksPerRun = selectedKeywords.length * trackingMarketCount;
   const fetchedAge = relativePast(new Date(fetchedAt), new Date());
 
   return (
@@ -219,7 +125,7 @@ export function ResearchResultsTable({
               startIcon={<Plus size={14} />}
             >
               Add {selectedKeywords.length} to tracking
-              {trackingCost == null ? "" : ` ~${formatEstimateCents(trackingCost)}/mo`}
+              {` +${checksPerRun} ${checksPerRun === 1 ? "check" : "checks"} per run`}
             </Button>
           </div>
         </div>

@@ -1,5 +1,10 @@
-import { afterEach, describe, expect, it } from "vitest";
-import { isSupportedTimezone, timezoneSelectOptions } from "./timezones";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import {
+  isSupportedProjectTimezone,
+  isSupportedTimezone,
+  normalizeProjectTimezone,
+  timezoneSelectOptions,
+} from "./timezones";
 
 const winterReference = new Date("2026-01-15T12:00:00.000Z");
 const supportedValuesOf = Intl.supportedValuesOf;
@@ -72,5 +77,73 @@ describe("isSupportedTimezone", () => {
     expect(isSupportedTimezone("UTC")).toBe(true);
     expect(isSupportedTimezone("Europe/Warsaw")).toBe(true);
     expect(isSupportedTimezone("warsaw")).toBe(false);
+  });
+});
+
+describe("isSupportedProjectTimezone", () => {
+  it("accepts IANA identifiers in the module-cached allowlist", () => {
+    expect(isSupportedProjectTimezone("UTC")).toBe(true);
+    expect(isSupportedProjectTimezone("Europe/Warsaw")).toBe(true);
+    expect(isSupportedProjectTimezone("America/New_York")).toBe(true);
+  });
+
+  it("rejects free-form or unsupported values by set membership", () => {
+    expect(isSupportedProjectTimezone("warsaw")).toBe(false);
+    expect(isSupportedProjectTimezone("Mars/Olympus")).toBe(false);
+    expect(isSupportedProjectTimezone("")).toBe(false);
+    expect(isSupportedProjectTimezone("GMT")).toBe(false);
+  });
+
+  it("uses the fallback set when supportedValuesOf is unavailable", async () => {
+    Object.defineProperty(Intl, "supportedValuesOf", {
+      configurable: true,
+      value: undefined,
+      writable: true,
+    });
+    vi.resetModules();
+    const { isSupportedProjectTimezone } = await import("./timezones");
+
+    expect(isSupportedProjectTimezone("UTC")).toBe(true);
+    expect(isSupportedProjectTimezone("Europe/Warsaw")).toBe(true);
+    expect(isSupportedProjectTimezone("America/New_York")).toBe(true);
+    expect(isSupportedProjectTimezone("Europe/Madrid")).toBe(false);
+  });
+});
+
+describe("normalizeProjectTimezone", () => {
+  it("returns valid IANA identifiers unchanged", () => {
+    expect(normalizeProjectTimezone("UTC")).toBe("UTC");
+    expect(normalizeProjectTimezone("Europe/Madrid")).toBe("Europe/Madrid");
+    expect(normalizeProjectTimezone("America/New_York")).toBe("America/New_York");
+  });
+
+  it("trims surrounding whitespace from valid input", () => {
+    expect(normalizeProjectTimezone("  Europe/Madrid  ")).toBe("Europe/Madrid");
+  });
+
+  it("falls back to UTC for missing, non-string, or junk input", () => {
+    expect(normalizeProjectTimezone(undefined)).toBe("UTC");
+    expect(normalizeProjectTimezone(null)).toBe("UTC");
+    expect(normalizeProjectTimezone(42)).toBe("UTC");
+    expect(normalizeProjectTimezone({ zone: "Europe/Madrid" })).toBe("UTC");
+    expect(normalizeProjectTimezone("")).toBe("UTC");
+    expect(normalizeProjectTimezone("   ")).toBe("UTC");
+    expect(normalizeProjectTimezone("warsaw")).toBe("UTC");
+    expect(normalizeProjectTimezone("Europe/Madrid/Extra")).toBe("UTC");
+  });
+
+  it("uses the fallback set when supportedValuesOf is unavailable", async () => {
+    Object.defineProperty(Intl, "supportedValuesOf", {
+      configurable: true,
+      value: undefined,
+      writable: true,
+    });
+    vi.resetModules();
+    const { normalizeProjectTimezone } = await import("./timezones");
+
+    expect(normalizeProjectTimezone("UTC")).toBe("UTC");
+    expect(normalizeProjectTimezone("Europe/Warsaw")).toBe("Europe/Warsaw");
+    expect(normalizeProjectTimezone("America/New_York")).toBe("America/New_York");
+    expect(normalizeProjectTimezone("Europe/Madrid")).toBe("UTC");
   });
 });

@@ -50,30 +50,6 @@ export function findBlockedGroup(blocked: UpcomingBlockedGroup[], reason: Upcomi
   return blocked.find((group) => group.reason === reason);
 }
 
-export function fuzzySampleTime(
-  nextCheckAt: string,
-  dayLabel: string,
-  now: Date,
-  timeZone: string,
-) {
-  const next = new Date(nextCheckAt);
-  if (dayLabel === "Today") {
-    const hours = Math.max(1, Math.round((next.getTime() - now.getTime()) / 3_600_000));
-    return `~${hours}h`;
-  }
-
-  const hour = new Intl.DateTimeFormat("en-US", {
-    hour: "2-digit",
-    hour12: false,
-    hourCycle: "h23",
-    timeZone,
-  })
-    .formatToParts(next)
-    .find((part) => part.type === "hour")?.value;
-
-  return `~${hour ?? "00"}:00`;
-}
-
 export function blockedChipLabel(blocked: UpcomingBlockedGroup[]) {
   const labels: string[] = [];
   const noProvider = findBlockedGroup(blocked, "no_provider");

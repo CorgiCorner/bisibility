@@ -1,5 +1,4 @@
 import type { GroupedResearchRow } from "@/lib/keyword-research/grouping";
-import { makeCostContext } from "@/tests/factories/cost-context";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -16,7 +15,6 @@ vi.mock("@/components/keywords/grid/DataGrid", () => ({
     onRowSelectionModelChange: (model: { ids: Set<string> }) => void;
     rows: GroupedResearchRow[];
   }) => {
-    const keywordColumn = props.columns.find((column) => column.field === "keyword");
     return (
       <div>
         <output aria-label="tracked selectable">
@@ -34,7 +32,9 @@ vi.mock("@/components/keywords/grid/DataGrid", () => ({
                 }}
                 tabIndex={0}
               >
-                <td>{keywordColumn?.renderCell?.({ row })}</td>
+                {props.columns.map((column) => (
+                  <td key={column.field}>{column.renderCell?.({ row })}</td>
+                ))}
               </tr>
             ))}
           </tbody>
@@ -55,10 +55,6 @@ vi.mock("@/components/keywords/grid/DataGrid", () => ({
     );
   },
 }));
-
-const costContext = makeCostContext({
-  keywordCount: 1,
-});
 
 afterEach(() => {
   vi.useRealTimers();
@@ -94,7 +90,6 @@ function renderTable(overrides: Partial<Parameters<typeof ResearchResultsTable>[
       activeKeyword={null}
       cached
       canRemoveSaved
-      costContext={costContext}
       deeper={{ cached: false, costCents: 6, nextLimit: 500 }}
       fetchedAt="2026-07-22T10:00:00.000Z"
       fetchedCount={2}
@@ -154,14 +149,47 @@ describe("ResearchResultsTable", () => {
     expect(screen.getByText(/cached yesterday/)).toBeInTheDocument();
   });
 
-  it("prices the bulk add in the selection header before the paid action", () => {
-    const { onAddSelected } = renderTable({ selectedKeywords: ["seo tool"] });
+  it("shows the persisted matrix cost in checks per run before the add action", () => {
+    const { onAddSelected } = renderTable({
+      selectedKeywords: ["seo tool"],
+      trackingMarketCount: 3,
+    });
 
     expect(screen.getByText("1 selected")).toBeInTheDocument();
     const addButton = screen.getByRole("button", { name: /Add 1 to tracking/ });
-    expect(addButton).toHaveTextContent(/~\$\d+\.\d{2}\/mo/);
+    expect(addButton).toHaveTextContent("+3 checks per run");
+    expect(addButton).not.toHaveTextContent("$");
+    expect(addButton).not.toHaveTextContent("/mo");
     fireEvent.click(addButton);
     expect(onAddSelected).toHaveBeenCalledOnce();
+  });
+
+  it("keeps the default single-market cost free of dollar and monthly estimates", () => {
+    const selectedKeywords = ["seo tool", "rank tracker", "keyword research"];
+    renderTable({
+      rows: selectedKeywords.map((keyword) => row(keyword)),
+      selectedKeywords,
+      totalCount: selectedKeywords.length,
+    });
+
+    const addButton = screen.getByRole("button", { name: /Add 3 to tracking/ });
+    expect(addButton).toHaveTextContent("+3 checks per run");
+    expect(addButton).not.toHaveTextContent("$");
+    expect(addButton).not.toHaveTextContent("/mo");
+  });
+
+  it("renders unavailable keyword-overview metrics as accessible n/a values", () => {
+    renderTable({ metricsAvailable: false });
+
+    for (const label of [
+      "Search volume unavailable",
+      "Search trend unavailable",
+      "KD unavailable",
+      "CPC unavailable",
+    ]) {
+      expect(screen.getAllByLabelText(label)).toHaveLength(2);
+      for (const value of screen.getAllByLabelText(label)) expect(value).toHaveTextContent("n/a");
+    }
   });
 
   it("groups the selection summary and bulk actions for responsive layout", () => {

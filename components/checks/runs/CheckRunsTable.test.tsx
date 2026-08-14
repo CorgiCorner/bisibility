@@ -39,6 +39,7 @@ function marketRow(overrides: Partial<CheckRunRow> = {}): CheckRunRow {
     provider: "dataforseo",
     providerLabel: "DataForSEO",
     requestedDepth: 20,
+    researchMetricsAvailable: true,
     startedAt: "2026-07-24T13:45:00.000Z",
     status: "completed",
     trigger: "scheduled",
@@ -62,6 +63,7 @@ function viewFor(rows: CheckRunRow[]): CheckRunsView {
     providerHealth: [],
     rows,
     spendCents: 0,
+    staleCount: 0,
   };
 }
 
@@ -142,6 +144,28 @@ describe("CheckRunsTable", () => {
     const bodyRows = within(table).getAllByRole("row").slice(1);
     expect(bodyRows).toHaveLength(1);
     expect(within(bodyRows[0]).getByText("-")).toBeInTheDocument();
+  });
+
+  it("labels a tracked pair that has no volume or difficulty coverage", () => {
+    stubResizeObserver();
+    stubIntersectionObserver();
+
+    render(
+      <CheckRunsTable
+        {...tableProps(
+          viewFor([
+            marketRow({
+              languageLabel: "Arabic",
+              location: "Belgium",
+              researchMetricsAvailable: false,
+            }),
+          ]),
+        )}
+      />,
+    );
+
+    const marker = screen.getByRole("button", { name: /no volume\/KD:/ });
+    expect(marker).toHaveTextContent("no volume/KD");
   });
 
   it("renders two rows with identical keyword text but different markets as visually distinguishable", () => {

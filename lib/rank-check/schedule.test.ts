@@ -181,14 +181,23 @@ describe("computeNextCheckAt", () => {
   });
 
   it.each(["daily", "weekly"] as const)(
-    "keeps the keyword-specific %s phase independent of timezone",
+    "anchors the keyword-specific %s phase in the project timezone",
     (frequency) => {
       const from = new Date("2026-07-28T00:00:00.000Z");
       const keywordId = "keyword_1";
+      const warsaw = computeNextCheckAt(
+        { frequency, timezone: "Europe/Warsaw" },
+        from,
+        keywordId,
+      ) as Date;
+      const utc = computeNextCheckAt({ frequency, timezone: "UTC" }, from, keywordId) as Date;
 
-      expect(computeNextCheckAt({ frequency, timezone: "Europe/Warsaw" }, from, keywordId)).toEqual(
-        computeNextCheckAt({ frequency, timezone: "UTC" }, from, keywordId),
-      );
+      expect(warsaw).not.toEqual(utc);
+      expect(zonedClockParts(warsaw, "Europe/Warsaw")).toMatchObject({
+        hour: 5,
+        minute: 50,
+      });
+      expect(zonedClockParts(utc, "UTC")).toMatchObject({ hour: 5, minute: 50 });
     },
   );
 

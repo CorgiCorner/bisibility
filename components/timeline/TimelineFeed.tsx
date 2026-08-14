@@ -1,13 +1,7 @@
 import { AddNoteForm } from "@/components/timeline/AddNoteForm";
 import { TimelineRow } from "@/components/timeline/TimelineRow";
-import {
-  Card,
-  EmptyState,
-  filterChipStateClassName,
-  MonoText,
-  SectionTitle,
-} from "@/components/ui";
-import type { DateTimePreferences } from "@/lib/format/user-datetime";
+import { Card, EmptyState, filterChipStateClassName } from "@/components/ui";
+import type { DateFormatPreference } from "@/lib/format/user-datetime";
 import type { TimelineFilterKey, TimelineView } from "@/lib/queries/timeline";
 import { appPath } from "@/lib/routing/app-path";
 import {
@@ -17,13 +11,13 @@ import {
   timelineGroups,
 } from "@/lib/timeline/timeline-data";
 import {
+  ClockCounterClockwiseIcon as ClockCounterClockwise,
+  FileDashedIcon as FileDashed,
   FileMagnifyingGlassIcon as FileMagnifyingGlass,
-  InfoIcon as Info,
   MagnifyingGlassIcon as MagnifyingGlass,
   MedalIcon as Medal,
   NotePencilIcon as NotePencil,
   RocketLaunchIcon as RocketLaunch,
-  SlidersHorizontalIcon as SlidersHorizontal,
   StackIcon as Stack,
 } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
@@ -31,14 +25,11 @@ import Link from "next/link";
 type TimelineFeedProps = {
   canCreate: boolean;
   canDelete: boolean;
-  preferences?: DateTimePreferences;
+  dateFormat?: DateFormatPreference;
   projectId: string;
   projectRef: string;
   view: TimelineView;
 };
-
-const TOOLTIP =
-  "Signals combine rank checks, page events, deploys, and manual notes into one project timeline.";
 
 const filterIcons = {
   all: Stack,
@@ -132,7 +123,7 @@ function TimelineEmpty({
           </Link>
         }
         description="This page has no timeline entries. Return to the first page to continue browsing."
-        icon={<SlidersHorizontal aria-hidden size={24} weight="fill" />}
+        icon={<FileDashed aria-hidden size={24} />}
         title="No timeline entries on this page"
       />
     );
@@ -145,7 +136,13 @@ function TimelineEmpty({
           ? "Adjust the search or filter to see more timeline entries."
           : "Rank changes, page events, deploys, and manual notes will appear here."
       }
-      icon={<SlidersHorizontal aria-hidden size={24} weight="fill" />}
+      icon={
+        filtered ? (
+          <MagnifyingGlass aria-hidden size={24} />
+        ) : (
+          <ClockCounterClockwise aria-hidden size={24} />
+        )
+      }
       title={filtered ? "No matching timeline entries" : "No timeline entries yet"}
     />
   );
@@ -196,57 +193,45 @@ function Pagination({ projectRef, view }: Readonly<{ projectRef: string; view: T
 export function TimelineFeed({
   canCreate,
   canDelete,
-  preferences,
+  dateFormat,
   projectId,
   projectRef,
   view,
 }: Readonly<TimelineFeedProps>) {
   const filters = timelineFilters(view);
-  const groups = timelineGroups(view.rows, view.now, preferences);
+  const groups = timelineGroups(view.rows, view.now, {
+    dateFormat,
+    timezone: view.timeZone,
+  });
 
   return (
     <div className="flex w-full min-w-0 flex-col gap-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <SectionTitle>Timeline</SectionTitle>
-            <button
-              aria-label={TOOLTIP}
-              className="bv-tip inline-grid h-4 w-4 cursor-help place-items-center border-0 bg-transparent p-0 text-fg-muted"
-              data-tip={TOOLTIP}
-              type="button"
-            >
-              <Info size={14} />
-            </button>
-          </div>
-          <MonoText muted>Newest project signals first</MonoText>
-        </div>
+      <div className="flex min-h-10 items-center gap-2">
+        <form
+          action={appPath(projectRef, "timeline")}
+          className="flex min-w-0 flex-1 items-center gap-2"
+          method="get"
+        >
+          {view.filter !== "all" ? <input name="filter" type="hidden" value={view.filter} /> : null}
+          <label className="flex min-h-10 min-w-0 flex-1 items-center gap-2 rounded-[10px] border border-border-strong bg-transparent px-3 transition-colors focus-within:border-accent">
+            <MagnifyingGlass aria-hidden className="shrink-0 text-fg-muted" size={15} />
+            <input
+              className="min-w-0 flex-1 bg-transparent font-mono text-[12.5px] text-fg outline-none focus-visible:outline-none placeholder:text-fg-muted"
+              defaultValue={view.search}
+              name="q"
+              placeholder="Search timeline (type, URL, note)..."
+              type="search"
+            />
+          </label>
+          <button
+            className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-lg border border-border-strong bg-bg-elev px-3 text-[12px] font-semibold text-fg-muted outline-none transition-colors hover:border-accent hover:text-accent-text focus-visible:border-accent focus-visible:text-accent-text"
+            type="submit"
+          >
+            Search
+          </button>
+        </form>
         <AddNoteForm canCreate={canCreate} projectId={projectId} />
       </div>
-
-      <form
-        action={appPath(projectRef, "timeline")}
-        className="flex min-h-10 items-center gap-2"
-        method="get"
-      >
-        {view.filter !== "all" ? <input name="filter" type="hidden" value={view.filter} /> : null}
-        <label className="flex min-h-10 min-w-0 flex-1 items-center gap-2 rounded-[10px] border border-border-strong bg-transparent px-3 transition-colors focus-within:border-accent">
-          <MagnifyingGlass aria-hidden className="shrink-0 text-fg-muted" size={15} />
-          <input
-            className="min-w-0 flex-1 bg-transparent font-mono text-[12.5px] text-fg outline-none focus-visible:outline-none placeholder:text-fg-muted"
-            defaultValue={view.search}
-            name="q"
-            placeholder="Search timeline (type, URL, note)..."
-            type="search"
-          />
-        </label>
-        <button
-          className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-lg border border-border-strong bg-bg-elev px-3 text-[12px] font-semibold text-fg-muted outline-none transition-colors hover:border-accent hover:text-accent-text focus-visible:border-accent focus-visible:text-accent-text"
-          type="submit"
-        >
-          Search
-        </button>
-      </form>
 
       <div className="flex min-w-0 flex-wrap gap-[7px]">
         {filters.map((filter) => (

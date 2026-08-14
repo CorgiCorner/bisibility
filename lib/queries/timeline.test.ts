@@ -16,11 +16,15 @@ const mocks = vi.hoisted(() => ({
     publicId: "prj_1",
   },
   requireReadableProject: vi.fn(),
+  getRequestProjectDefaults: vi.fn(),
 }));
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 vi.mock("./_auth", () => ({ requireReadableProject: mocks.requireReadableProject }));
+vi.mock("./workspace-request-data", () => ({
+  getRequestProjectDefaults: mocks.getRequestProjectDefaults,
+}));
 
 const now = new Date("2026-07-04T12:00:00.000Z");
 
@@ -31,7 +35,12 @@ function signalRow(overrides: Record<string, unknown> = {}) {
     createdById: "user_1",
     happenedAt: new Date("2026-07-04T10:30:00.000Z"),
     id: "signal_1",
-    keyword: { publicId: "kw_1", text: "seo software" },
+    keyword: {
+      device: "mobile",
+      locationRef: { displayName: "Malaga, Spain", languageLabel: "Spanish" },
+      publicId: "kw_1",
+      text: "seo software",
+    },
     keywordId: "keyword_1",
     payload: { after: 14, before: 18, delta: 4 },
     projectId: "project_1",
@@ -48,6 +57,7 @@ describe("getTimelineView", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.requireReadableProject.mockResolvedValue({ project: mocks.project });
+    mocks.getRequestProjectDefaults.mockResolvedValue({ timezone: "Europe/Madrid" });
     mocks.prisma.signal.findMany.mockResolvedValue([]);
   });
 
@@ -60,19 +70,29 @@ describe("getTimelineView", () => {
     expect(mocks.prisma.signal.findMany).toHaveBeenCalledWith({
       include: {
         createdBy: { select: { email: true, name: true } },
-        keyword: { select: { publicId: true, text: true } },
+        keyword: {
+          select: {
+            device: true,
+            locationRef: { select: { displayName: true, languageLabel: true } },
+            publicId: true,
+            text: true,
+          },
+        },
       },
       orderBy: [{ happenedAt: "desc" }, { id: "desc" }],
       skip: 0,
       take: 21,
       where: { projectId: "project_1" },
     });
-    expect(timelineGroups(view.rows, view.now)).toEqual([
+    expect(view.timeZone).toBe("Europe/Madrid");
+    expect(
+      timelineGroups(view.rows, view.now, { dateFormat: "iso", timezone: view.timeZone }),
+    ).toEqual([
       {
         day: "Today",
         items: [
           expect.objectContaining({
-            meta: "Keyword: seo software · Rank tracker",
+            meta: "seo software / Malaga, Spain / Spanish / Mobile / Rank tracker",
             position: "#14",
             title: "Position 18 → 14",
             urlLabel: "/pricing",

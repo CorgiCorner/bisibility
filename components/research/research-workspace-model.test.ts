@@ -29,6 +29,19 @@ describe("research workspace model", () => {
       expect.objectContaining({ canonicalKey: "DE", countryCode: "DE", kind: "country" }),
     );
     expect(
+      recentSearchLocation({ locationKey: "ES@en", market: "Spain - English" }, projectDefault),
+    ).toEqual(
+      expect.objectContaining({
+        canonicalKey: "ES@en",
+        countryCode: "ES",
+        displayName: "Spain - English",
+        hl: "en",
+        kind: "country",
+        languageCode: "en",
+        languageLabel: "English",
+      }),
+    );
+    expect(
       recentSearchLocation(
         { locationKey: "US/US-TX/Austin", market: "Austin, Texas, United States" },
         projectDefault,

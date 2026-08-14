@@ -7,7 +7,9 @@ import type {
 import { actionErrorMessage } from "@/components/keywords/action-utils";
 import { Card, ConfirmModal, SummaryStrip } from "@/components/ui";
 import type { KeywordFilterChip } from "@/lib/keywords/keyword-filter-model";
+import { marketGridChild } from "@/lib/keywords/market-grid-model";
 import type { KeywordRow } from "@/lib/queries/keywords";
+import type { ProjectMarketsView } from "@/lib/queries/project-markets";
 import { appPath } from "@/lib/routing/app-path";
 import type { SerpDepth } from "@/lib/serp/markets";
 import type { GridCellParams, GridDensity, GridRowSelectionModel } from "@mui/x-data-grid";
@@ -29,6 +31,7 @@ import {
   keywordTableCardSx,
 } from "./keyword-data-grid-config";
 import { buildKeywordWeeklySummary } from "./keyword-weekly-summary";
+import { useMarketGridView } from "./use-market-grid-view";
 
 const GRID_CHECKBOX_SELECTION_FIELD = "__check__";
 
@@ -62,6 +65,7 @@ type KeywordDataTableProps = Omit<KeywordWorkspaceActions, "addKeywordsAction"> 
     onSearchChange: (value: string) => void;
     pendingCheckIds: ReadonlySet<string>;
     projectId: string;
+    projectMarkets?: ProjectMarketsView;
     rows: KeywordRow[];
     noRowsState?: KeywordNoRowsState;
     searchValue: string;
@@ -99,6 +103,7 @@ export function KeywordDataTable({
   onSearchChange,
   pendingCheckIds,
   projectId,
+  projectMarkets,
   rows,
   noRowsState,
   savedViewControl,
@@ -125,7 +130,16 @@ export function KeywordDataTable({
     ids: new Set(),
     type: "include",
   });
-  const selectedIds = [...rowSelectionModel.ids].map(String);
+  const {
+    groupingControl,
+    selectedTargetIds,
+    setSortModel,
+    sortModel,
+    sortingMode,
+    toggleParent,
+    viewRows,
+  } = useMarketGridView(rows);
+  const selectedIds = selectedTargetIds(new Set([...rowSelectionModel.ids].map(String)));
   const selectedRows = rows.filter((row) => selectedIds.includes(row.id));
   const weeklySummary = useMemo(() => buildKeywordWeeklySummary(rows), [rows]);
   const columns = useMemo(
@@ -169,6 +183,7 @@ export function KeywordDataTable({
         density={density}
         filterChips={filterChips}
         filterCount={filterCount}
+        groupingControl={groupingControl}
         onAddKeyword={onAddKeyword}
         onClearFilters={onClearFilters}
         onColumnVisibilityChange={setColumnVisibilityModel}
@@ -238,14 +253,22 @@ export function KeywordDataTable({
               onCellClick={handleCellClick}
               onColumnVisibilityModelChange={setColumnVisibilityModel}
               onDensityChange={setDensity}
-              onRowClick={(params) =>
-                router.push(appPath(projectId, "rank-tracker", params.row.id))
+              getRowClassName={(params) =>
+                marketGridChild(params.row) ? "bv-market-grid-child" : ""
               }
+              onRowClick={(params) => {
+                if (!toggleParent(params.row)) {
+                  router.push(appPath(projectId, "rank-tracker", params.row.id));
+                }
+              }}
               onRowSelectionModelChange={setRowSelectionModel}
+              onSortModelChange={setSortModel}
               pageSizeOptions={[10, 25, 50]}
               pagination
               rowSelectionModel={rowSelectionModel}
-              rows={rows}
+              rows={viewRows}
+              sortingMode={sortingMode}
+              sortModel={sortModel}
               slotProps={{ noRowsOverlay: { state: noRowsState } }}
               slots={gridSlots}
               sx={keywordGridSx}
@@ -261,6 +284,7 @@ export function KeywordDataTable({
           onClose={() => setEditing(null)}
           open
           projectId={projectId}
+          projectMarkets={projectMarkets}
           providerRate={checkHealth?.providerRate}
           updateKeywordAction={updateKeywordAction}
           updateKeywordScheduleAction={updateKeywordScheduleAction}
@@ -276,5 +300,3 @@ export function KeywordDataTable({
     </Card>
   );
 }
-
-export type { CheckHealthView } from "./KeywordGridHealthNotices";

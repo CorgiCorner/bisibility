@@ -11,7 +11,12 @@ function signalRow(overrides: Partial<TimelineSignalRow> = {}): TimelineSignalRo
     createdById: null,
     happenedAt: new Date("2026-07-04T10:30:00.000Z"),
     id: "signal_1",
-    keyword: { publicId: "kw_1", text: "seo software" },
+    keyword: {
+      device: "mobile",
+      locationRef: { displayName: "Malaga, Spain", languageLabel: "Spanish" },
+      publicId: "kw_1",
+      text: "seo software",
+    },
     keywordId: "keyword_1",
     payload: null,
     projectId: "project_1",
@@ -25,7 +30,7 @@ function signalRow(overrides: Partial<TimelineSignalRow> = {}): TimelineSignalRo
 }
 
 function firstItem(row: TimelineSignalRow) {
-  return timelineGroups([row], now)[0]?.items[0];
+  return timelineGroups([row], now, { dateFormat: "iso", timezone: "UTC" })[0]?.items[0];
 }
 
 describe("timeline data mapping", () => {
@@ -38,7 +43,11 @@ describe("timeline data mapping", () => {
       ),
     ).toMatchObject({
       icon: "rankings",
-      meta: "Keyword: seo software · Rank tracker",
+      marketMeta: {
+        device: "mobile",
+        segments: ["seo software", "Malaga, Spain", "Spanish", "Rank tracker"],
+      },
+      meta: "seo software / Malaga, Spain / Spanish / Mobile / Rank tracker",
       position: "#14",
       tint: "green",
       title: "Position 18 → 14",

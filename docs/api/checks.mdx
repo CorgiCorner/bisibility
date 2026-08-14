@@ -5,6 +5,13 @@ description: "Run an immediate rank check for one keyword."
 
 Use checks when you need a fresh position for one keyword immediately.
 
+Each keyword already belongs to one location-language market and one device.
+The check inherits that exact target from the keyword resource. To check the same
+phrase in another language, create a separate keyword target with a qualified
+`location_key`, such as `ES/Andalusia/Malaga@en`, then run the check for that
+keyword ID. An unqualified key uses the country's default language. See
+[Markets and languages](/markets).
+
 ## Run rank check
 
 ```http

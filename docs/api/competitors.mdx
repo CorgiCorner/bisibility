@@ -17,6 +17,13 @@ path. See [Authentication](/authentication) for scopes.
 Competitor metrics are derived from rank-check results. Adding a competitor does
 not trigger a provider request by itself.
 
+Reports compare one market at a time. A market is a location and language pair,
+plus the selected device for the report. Language-qualified locations remain
+separate: results for `ES` (Spanish) are not combined with `ES@en` (English).
+Share of voice needs search-volume data, so a tracked market whose language is
+not supported by Research remains available for position checks but is disabled
+in the competitor market selector. See [Markets and languages](/markets).
+
 The generated
 [OpenAPI JSON](https://bisibility.com/api/v1/openapi.json) remains the
 machine-readable source of truth for request and response schemas.

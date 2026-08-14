@@ -76,6 +76,7 @@ describe("resolveKeywordLocation", () => {
       hl: "en",
       id: "loc_existing",
       kind: "city",
+      languageCode: "en",
       languageLabel: "English",
       primaryGeoCode: 1026201,
       primaryGeoName: "Austin,Texas,United States",
@@ -93,6 +94,49 @@ describe("resolveKeywordLocation", () => {
     expect(mocks.prisma.providerConnection.findMany).not.toHaveBeenCalled();
     expect(mocks.createCityLocationLookup).not.toHaveBeenCalled();
   });
+
+  it("normalizes a default-language key before the first database lookup", async () => {
+    mocks.prisma.location.findUnique.mockResolvedValueOnce({
+      canonicalKey: "ES",
+      cityName: null,
+      countryCode: "ES",
+      displayName: "Spain",
+      gl: "es",
+      hl: "es",
+      id: "loc_spain",
+      kind: "country",
+      languageCode: "es",
+      languageLabel: "Spanish",
+      primaryGeoCode: null,
+      primaryGeoName: "Spain",
+      regionCode: null,
+      secondaryGeoName: "Spain",
+    });
+
+    const result = await resolveKeywordLocation({
+      projectId: "p1",
+      selection: { canonicalKey: "ES@es", kind: "city" },
+    });
+
+    expect(mocks.prisma.location.findUnique).toHaveBeenCalledWith({
+      where: { canonicalKey: "ES" },
+    });
+    expect(result.location.id).toBe("loc_spain");
+    expect(mocks.prisma.providerConnection.findMany).not.toHaveBeenCalled();
+  });
+
+  it.each(["ES@zz", "ES@en@fr", "ES@"])(
+    "rejects invalid language qualifiers before database lookup: %s",
+    async (canonicalKey) => {
+      await expect(
+        resolveKeywordLocation({
+          projectId: "p1",
+          selection: { canonicalKey, kind: "city" },
+        }),
+      ).rejects.toMatchObject({ field: "languageCode" });
+      expect(mocks.prisma.location.findUnique).not.toHaveBeenCalled();
+    },
+  );
 
   it("city resolves through the configured provider and yields a city locationId", async () => {
     mocks.prisma.providerConnection.findMany.mockResolvedValue([

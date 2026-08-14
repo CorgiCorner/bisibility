@@ -991,7 +991,7 @@ describe("MCP tool dispatch", () => {
     expect(runRankCheck?.description).toContain("cannot enforce the client's confirmation UI");
   });
 
-  it("advertises canonical country naming for keyword market tools", () => {
+  it("advertises language-qualified keys for keyword market tools", () => {
     const definitions = getMcpToolDefinitions();
     const addKeywords = definitions.find((tool) => tool.name === "add_keywords");
     const updateKeyword = definitions.find((tool) => tool.name === "update_keyword");
@@ -1006,9 +1006,20 @@ describe("MCP tool dispatch", () => {
     expect(addKeywords?.inputSchema).toMatchObject({
       properties: expect.objectContaining({
         location: expect.anything(),
-        location_key: expect.anything(),
+        location_key: expect.objectContaining({
+          description: expect.stringContaining("@language"),
+          pattern: expect.any(String),
+        }),
       }),
     });
+    const addProperties = addKeywords?.inputSchema.properties as
+      | Record<string, { pattern?: string }>
+      | undefined;
+    const locationKeyPattern = new RegExp(addProperties?.location_key?.pattern ?? "$.^");
+    expect(locationKeyPattern.test("ES/Andalusia/Malaga@en")).toBe(true);
+    expect(locationKeyPattern.test("ES@es-419")).toBe(true);
+    expect(locationKeyPattern.test("ES@")).toBe(false);
+    expect(locationKeyPattern.test("ES@en/us")).toBe(false);
     expect(updateKeyword?.inputSchema).toMatchObject({
       properties: expect.objectContaining({ country: expect.anything() }),
     });

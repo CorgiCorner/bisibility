@@ -1,21 +1,32 @@
 "use client";
 
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
-import { Card, ChartRegion, SectionTitle } from "@/components/ui";
+import { Card, ChartRegion, SectionTitle, SegmentedControl, ZonedTime } from "@/components/ui";
 import type { KeywordDetailChartState } from "@/lib/keyword-detail/state-model";
 import { resolveEffectiveSchedule } from "@/lib/keywords/effective-schedule";
+import {
+  comparisonAriaLabel,
+  comparisonTargets,
+  keywordMarketLabel,
+  marketComparisonData,
+} from "@/lib/keywords/market-position-history";
 import { dailyPositionPoints, positionHistoryAriaLabel } from "@/lib/keywords/position-history";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { chartColors } from "@/lib/theme/chart-colors";
 import { LineChart } from "@mui/x-charts/LineChart";
+import type { ReactNode } from "react";
 import { useState } from "react";
+import { DegradedPositionMarkers } from "./DegradedPositionMarkers";
 import { LatestPositionAnnotation, TargetReferenceLine } from "./PositionHistoryAnnotations";
+import { marketPositionPalette, PositionHistoryMarketLegend } from "./PositionHistoryMarketLegend";
 
 export { historyAnnotationTop } from "./PositionHistoryAnnotations";
 
 type PositionHistoryCardProps = {
   chartState?: KeywordDetailChartState;
   keyword: KeywordRow;
+  marketTargets?: readonly KeywordRow[];
+  timeZone: string;
 };
 
 const RANGES = [
@@ -32,27 +43,22 @@ const axisTextStyle = {
   fontSize: 11,
 };
 
-const nextCheckFormatter = new Intl.DateTimeFormat("en-US", {
-  day: "numeric",
-  hour: "numeric",
-  minute: "2-digit",
-  month: "short",
-});
-
-const historyDateFormatter = new Intl.DateTimeFormat("en-US", { day: "numeric", month: "short" });
-
-function scheduleStatus(keyword: KeywordRow) {
-  const schedule = resolveEffectiveSchedule(keyword.schedule);
-  if (schedule.frequency === "paused") return "Paused";
-  if (!schedule.nextCheckAt) return "Not scheduled";
-  return `Next check ${nextCheckFormatter.format(schedule.nextCheckAt)}`;
-}
-
-export function PositionHistoryCard({ chartState, keyword }: Readonly<PositionHistoryCardProps>) {
+export function PositionHistoryCard({
+  chartState,
+  keyword,
+  marketTargets = [keyword],
+  timeZone,
+}: Readonly<PositionHistoryCardProps>) {
   const [range, setRange] = useState<RangeLabel>("30d");
+  const [scope, setScope] = useState<"all" | "single">("single");
   const { readOnly } = useProjectWriteMode();
   const activeRange = RANGES.find((option) => option.label === range) ?? RANGES[1];
   const history = dailyPositionPoints(keyword.positionHistory, activeRange.days);
+  const markets = comparisonTargets(marketTargets, keyword);
+  const visibleMarkets = markets.slice(0, 6);
+  const showComparison = markets.length > 1;
+  const allMarkets = showComparison && scope === "all";
+  const comparison = marketComparisonData(visibleMarkets, activeRange.days);
   const boundaryVisible =
     history.length > 0 &&
     Boolean(
@@ -63,19 +69,55 @@ export function PositionHistoryCard({ chartState, keyword }: Readonly<PositionHi
   const labels = history.map((point) => point.label);
   const positions = history.map((point) => point.position);
   const target = keyword.targetPosition ?? null;
-  const maxPosition = Math.max(20, ...positions, target ?? 1);
+  const comparisonPositions = comparison.values.flatMap((series) =>
+    series.data.flatMap((position) => (position === null ? [] : [position])),
+  );
+  const maxPosition = Math.max(20, ...(allMarkets ? comparisonPositions : positions), target ?? 1);
   const rangeEmpty = positions.length === 0;
   const notEnough = chartState === "one_check" || (!chartState && positions.length < 2);
-  const chartLabels = notEnough ? [] : labels;
+  const chartLabels = allMarkets ? comparison.labels : notEnough ? [] : labels;
   const chartPositions = notEnough ? [] : positions;
+  const chartSeries = allMarkets
+    ? comparison.values.map((series, index) => ({
+        color: marketPositionPalette[index % marketPositionPalette.length],
+        curve: "linear" as const,
+        data: series.data,
+        label: keywordMarketLabel(series.target),
+        showMark: false,
+      }))
+    : [
+        {
+          area: true,
+          baseline: maxPosition,
+          color: chartColors.accent,
+          curve: "linear" as const,
+          data: chartPositions,
+          label: "Position",
+          showMark: false,
+        },
+      ];
   const latestPosition = keyword.positionHistory.at(-1)?.position ?? null;
   const displayedPosition = positions.at(-1) ?? latestPosition;
   const latestCheckedAt = keyword.positionHistory.at(-1)?.checkedAt;
+  const historyDateFormatter = new Intl.DateTimeFormat("en-US", {
+    day: "numeric",
+    month: "short",
+    timeZone,
+  });
   const latestChip =
     latestPosition !== null && latestPosition > 0
       ? `Latest #${latestPosition} · ${latestCheckedAt ? historyDateFormatter.format(new Date(latestCheckedAt)) : "Today"}`
       : "Latest unavailable";
-  const nextCheckStatus = readOnly ? "Paused - migration hold" : scheduleStatus(keyword);
+  const effectiveSchedule = resolveEffectiveSchedule(keyword.schedule);
+  const nextCheckLabel: ReactNode = readOnly ? (
+    "Paused - migration hold"
+  ) : effectiveSchedule.frequency === "paused" ? (
+    "Paused"
+  ) : !effectiveSchedule.nextCheckAt ? (
+    "Not scheduled"
+  ) : (
+    <ZonedTime timeZone={timeZone} value={effectiveSchedule.nextCheckAt.toISOString()} />
+  );
 
   return (
     <Card className="rounded-[14px]" size="lg">
@@ -92,9 +134,23 @@ export function PositionHistoryCard({ chartState, keyword }: Readonly<PositionHi
           ) : null}
         </div>
         <div className="flex flex-wrap items-center justify-end gap-2">
+          {showComparison ? (
+            <SegmentedControl
+              activeVariant="accent"
+              ariaLabel="Position history scope"
+              fitContent
+              onChange={setScope}
+              options={[
+                { label: "This market", value: "single" },
+                { label: "All markets", value: "all" },
+              ]}
+              size="xs"
+              value={scope}
+            />
+          ) : null}
           <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-bg-sunken px-3 py-1 font-mono text-[11px] text-fg-muted">
             <span aria-hidden className="h-2 w-2 rounded-full bg-accent-solid" />
-            {latestChip}
+            {allMarkets ? `${markets.length} markets` : latestChip}
           </span>
           <div
             aria-label="Position history range"
@@ -123,31 +179,25 @@ export function PositionHistoryCard({ chartState, keyword }: Readonly<PositionHi
       </div>
       <ChartRegion
         className="relative mt-3 h-[280px]"
-        label={positionHistoryAriaLabel(keyword.keyword, positions.at(-1), target)}
+        label={
+          allMarkets
+            ? comparisonAriaLabel(visibleMarkets)
+            : positionHistoryAriaLabel(keyword.keyword, positions.at(-1), target)
+        }
       >
         <LineChart
           grid={{ horizontal: true }}
           height={280}
           hideLegend
           margin={{ top: 18, right: 18, bottom: 28, left: 42 }}
-          series={[
-            {
-              area: true,
-              baseline: maxPosition,
-              color: chartColors.accent,
-              curve: "linear",
-              data: chartPositions,
-              label: "Position",
-              showMark: false,
-            },
-          ]}
+          series={chartSeries}
           skipAnimation
           sx={{
             "& .MuiAreaElement-root": { fill: "var(--accent)", fillOpacity: 0.1 },
             "& .MuiChartsGrid-line": { stroke: "var(--border)" },
             "& .MuiChartsAxis-tickLabel": axisTextStyle,
             "& .MuiLineElement-root": {
-              stroke: "var(--accent)",
+              ...(allMarkets ? {} : { stroke: "var(--accent)" }),
               strokeLinecap: "round",
               strokeLinejoin: "round",
               strokeWidth: 2.8,
@@ -176,14 +226,32 @@ export function PositionHistoryCard({ chartState, keyword }: Readonly<PositionHi
             },
           ]}
         >
-          {target !== null && !rangeEmpty && !notEnough ? (
+          {!allMarkets && target !== null && !rangeEmpty && !notEnough ? (
             <TargetReferenceLine target={target} />
           ) : null}
-          {target !== null && !rangeEmpty && !notEnough ? (
+          {!allMarkets && target !== null && !rangeEmpty && !notEnough ? (
             <LatestPositionAnnotation labels={labels} positions={positions} target={target} />
           ) : null}
+          {allMarkets ? (
+            comparison.values.map((series, index) => (
+              <DegradedPositionMarkers
+                color={
+                  marketPositionPalette[index % marketPositionPalette.length] ?? chartColors.accent
+                }
+                key={series.target.id}
+                location={series.target.location}
+                points={series.points}
+              />
+            ))
+          ) : (
+            <DegradedPositionMarkers
+              color={chartColors.accent}
+              location={keyword.location}
+              points={history}
+            />
+          )}
         </LineChart>
-        {notEnough && !rangeEmpty ? (
+        {!allMarkets && notEnough && !rangeEmpty ? (
           <>
             <span
               aria-label="Single rank check point"
@@ -195,7 +263,7 @@ export function PositionHistoryCard({ chartState, keyword }: Readonly<PositionHi
             />
           </>
         ) : null}
-        {notEnough ? (
+        {!allMarkets && notEnough ? (
           <div
             className="absolute inset-0 grid place-items-center rounded-[12px]"
             style={{ background: "color-mix(in srgb, var(--bg-elev) 72%, transparent)" }}
@@ -209,13 +277,20 @@ export function PositionHistoryCard({ chartState, keyword }: Readonly<PositionHi
               {displayedPosition !== null ? (
                 <span className="inline-flex items-center gap-2 rounded-full bg-bg-sunken px-3 py-1 font-mono text-[11px] text-fg-muted">
                   {rangeEmpty ? "Latest" : "Current"} #{displayedPosition} | Next check{" "}
-                  {nextCheckStatus.replace(/^Next check\s+/, "")}
+                  {nextCheckLabel}
                 </span>
               ) : null}
             </div>
           </div>
         ) : null}
       </ChartRegion>
+      <PositionHistoryMarketLegend
+        allMarkets={allMarkets}
+        comparisonPoints={comparison.values.map((series) => series.points)}
+        history={history}
+        markets={markets}
+        visibleMarkets={visibleMarkets}
+      />
     </Card>
   );
 }

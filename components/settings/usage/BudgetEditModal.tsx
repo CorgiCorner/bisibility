@@ -71,7 +71,7 @@ export function BudgetEditModal({
           Monthly cap for all recorded provider spend in this project. Checks and research pause
           when the cap is reached.
         </p>
-        <SettingsField className="mt-4" width="sm">
+        <SettingsField className="mt-4" width="field">
           <FieldLabel htmlFor="usage-budget-dollars" label="Monthly budget in dollars" />
           <div className="relative mt-1.5">
             <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center font-mono text-[13px] text-fg-muted">

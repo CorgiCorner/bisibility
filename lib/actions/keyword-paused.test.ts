@@ -16,6 +16,10 @@ const mocks = vi.hoisted(() => {
     keywordSchedule: { createMany: vi.fn() },
     keywordTag: { createMany: vi.fn() },
     project: { findFirst: vi.fn() },
+    projectMarket: {
+      findMany: vi.fn().mockResolvedValue([]),
+      upsert: vi.fn().mockResolvedValue({ publicId: "pmkt_a00000000000000000000000" }),
+    },
     tag: { createMany: vi.fn(), findMany: vi.fn() },
     user: { findUnique: vi.fn() },
   };
@@ -173,7 +177,7 @@ describe("paused keyword create action", () => {
         data: [
           expect.objectContaining({
             device: "mobile",
-            location: "United Kingdom",
+            location: "United Kingdom (English)",
             locationId: "loc_gb",
             targetUrl: "/rank",
             text: "rank tracker",

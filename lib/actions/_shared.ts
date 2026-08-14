@@ -177,7 +177,7 @@ export function revalidateKeywordViews(keywordId?: string | null) {
   revalidateTargets([
     projectPage("rank-tracker"),
     keywordDetailTarget(keywordId),
-    projectPage("overview"),
+    projectPage("dashboard"),
     projectPage("timeline"),
     projectPage("alerts"),
     projectPage("competitors"),
@@ -187,7 +187,7 @@ export function revalidateKeywordViews(keywordId?: string | null) {
 
 export function revalidateRankCheckViews(keywordId?: string | null) {
   revalidateTargets([
-    projectPage("overview"),
+    projectPage("dashboard"),
     projectPage("rank-tracker"),
     keywordDetailTarget(keywordId),
     projectPage("timeline"),
@@ -202,7 +202,7 @@ export function revalidateProviderViews() {
   revalidateTargets([
     projectPage("rank-tracker"),
     projectPage("integrations"),
-    projectPage("overview"),
+    projectPage("dashboard"),
     projectPage("settings"),
     projectPage("settings", "audit"),
   ]);
@@ -215,7 +215,7 @@ export function revalidateAlertViews() {
 export function revalidateCompetitorViews() {
   revalidateTargets([
     projectPage("competitors"),
-    projectPage("overview"),
+    projectPage("dashboard"),
     projectPage("settings", "audit"),
   ]);
 }
@@ -228,7 +228,7 @@ export function revalidateBudgetViews() {
   // The workspace layout renders the header spend meter, so revalidate it as a layout.
   revalidateTargets([
     { path: appRootPath(), type: "layout" },
-    projectPage("overview"),
+    projectPage("dashboard"),
     projectPage("settings"),
     projectPage("settings", "audit"),
   ]);

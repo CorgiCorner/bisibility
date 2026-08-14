@@ -26,6 +26,7 @@ const keyword = {
   ],
   intent: "High intent",
   positionBaseline: 5,
+  targetUrl: "https://acme.dev/legacy-headless-cms",
   positionHistory: keywordRows[0].positionHistory.map((point, index, history) => ({
     ...point,
     position: index === history.length - 2 ? 5 : point.position,
@@ -61,6 +62,7 @@ const costContext = {
   providerId: "dataforseo",
   rawFrequency: "weekly",
   spentCents: 0,
+  timezone: "Europe/Warsaw",
 } satisfies ProjectCostContext;
 const query = {
   clicks: 412,
@@ -88,6 +90,7 @@ const pages = [
 ] satisfies PageTrafficSnapshotLike[];
 const actions = {
   addKeywordsAction: async () => undefined,
+  bulkDeleteAction: async () => undefined,
   canCreateKeyword: true,
   canUpdateKeyword: true,
   costContext,
@@ -107,7 +110,11 @@ const meta = {
           <main className="grid max-w-6xl gap-4 text-fg">
             <KeywordHeaderCard {...actions} keyword={keyword} />
             <KeywordMetricCards keyword={keyword} keywordContext="full" />
-            <PositionHistoryCard chartState="normal" keyword={keyword} />
+            <PositionHistoryCard
+              chartState="normal"
+              keyword={keyword}
+              timeZone={costContext.timezone}
+            />
             <KeywordTrafficCard
               projectRef="prj_demo"
               traffic={{

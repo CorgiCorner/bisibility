@@ -24,6 +24,7 @@ describe("HeadToHeadTable", () => {
         device: "desktop",
         engine: "google",
         key: "location_us::desktop::google",
+        languageLabel: "English",
         location: "United States",
         locationId: "location_us",
         locationKind: "country",
@@ -35,6 +36,7 @@ describe("HeadToHeadTable", () => {
             ranked: true,
             ranks: Object.fromEntries(columns.map((column, index) => [column.domain, index + 1])),
             tags: [],
+            volume: 1_000,
           },
         ],
         tags: [],
@@ -45,6 +47,9 @@ describe("HeadToHeadTable", () => {
 
     render(<HeadToHeadTable market={market} onExport={vi.fn()} />);
 
+    expect(
+      screen.getByText("United States / English / Desktop · 1 shared of 1 tracked"),
+    ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "+2 more" })).toBeInTheDocument();
     expect(screen.queryByText("Competitor 4")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "+2 more" }));
@@ -60,6 +65,7 @@ describe("HeadToHeadTable", () => {
         device: "desktop",
         engine: "google",
         key: "location_us::desktop::google",
+        languageLabel: "English",
         location: "United States",
         locationId: "location_us",
         locationKind: "country",
@@ -70,6 +76,7 @@ describe("HeadToHeadTable", () => {
           ranked: true,
           ranks: { "example.com": index + 1 },
           tags: [],
+          volume: 1_000,
         })),
         tags: [],
         trackedKeywordCount: 250,

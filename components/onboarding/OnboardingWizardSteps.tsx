@@ -43,12 +43,15 @@ export type OnboardingWizardStepsProps = {
   rankedKeywordConnections: RankedKeywordConnection[];
   onCreateProjectComplete: NonNullable<Parameters<typeof StepCreateProject>[0]["onComplete"]>;
   onKeywordsChange: NonNullable<Parameters<typeof StepAddKeywords>[0]["onKeywordsChange"]>;
+  onMarketsChange: NonNullable<Parameters<typeof StepAddKeywords>[0]["onMarketsChange"]>;
   onKeywordsComplete: NonNullable<Parameters<typeof StepAddKeywords>[0]["onComplete"]>;
   onProviderComplete: NonNullable<Parameters<typeof StepConnectProvider>[0]["onComplete"]>;
   onProviderContinueDisabledChange: NonNullable<
     Parameters<typeof StepConnectProvider>[0]["onContinueDisabledChange"]
   >;
   onProviderSkip: NonNullable<Parameters<typeof StepConnectProvider>[0]["onSkip"]>;
+  onFirstCheckBack?: () => void;
+  onTimezoneChange?: (timezone: string) => Promise<void> | void;
 };
 
 export function OnboardingWizardSteps({
@@ -72,10 +75,13 @@ export function OnboardingWizardSteps({
   rankedKeywordConnections,
   onCreateProjectComplete,
   onKeywordsChange,
+  onMarketsChange,
   onKeywordsComplete,
   onProviderComplete,
   onProviderContinueDisabledChange,
   onProviderSkip,
+  onFirstCheckBack,
+  onTimezoneChange,
 }: Readonly<OnboardingWizardStepsProps>) {
   return (
     <>
@@ -134,8 +140,10 @@ export function OnboardingWizardSteps({
           monthlyCapCents={monthlyCapCents}
           onComplete={onKeywordsComplete}
           onKeywordsChange={onKeywordsChange}
+          onMarketsChange={onMarketsChange}
           projectDomain={project?.domain ?? undefined}
           rankedKeywordConnections={rankedKeywordConnections}
+          saveMarketsAction={actions.saveMarketsAction}
           trackingDefaults={draft.schedule}
           updateProjectDefaultsAction={actions.updateProjectDefaultsAction}
         />
@@ -148,12 +156,15 @@ export function OnboardingWizardSteps({
           getObservedPositionsAction={actions.getObservedPositionsAction}
           hasAnalyticsSource={hasAnalyticsSource}
           keywordCount={keywordCount}
+          keywordDraft={draft.addKeywords.keywords}
           listFirstCheckCandidatesAction={actions.listFirstCheckCandidatesAction}
           project={project}
           providerConnected={hasConnectedProvider}
           providerId={connectedProviderId}
-          queueFirstChecksAction={actions.queueFirstChecksAction}
           runFirstCheckPreviewAction={actions.runFirstCheckPreviewAction}
+          saveMarketsAction={actions.saveMarketsAction}
+          onBack={onFirstCheckBack}
+          onTimezoneChange={onTimezoneChange}
         />
       ) : null}
     </>

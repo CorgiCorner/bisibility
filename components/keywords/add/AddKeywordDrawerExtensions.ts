@@ -5,6 +5,7 @@ import type { KeywordWorkspaceActions } from "@/components/keywords/action-utils
 import type { LocationFieldValue } from "@/components/keywords/LocationField";
 import type { AddKeywordDrawerForm, AddKeywordTab } from "@/lib/keywords/add-keyword-drawer-shared";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
+import type { ProjectMarketsView } from "@/lib/queries/project-markets";
 import type { SerpDevice } from "@/lib/serp/markets";
 import type { RankCheckFrequency } from "@/lib/settings/options";
 import type { UseFormSetValue, UseFormWatch } from "react-hook-form";
@@ -18,13 +19,18 @@ export type AddKeywordDrawerProps = Pick<KeywordWorkspaceActions, "addKeywordsAc
   domain?: string;
   existingKeywords?: readonly ExistingKeyword[];
   initialKeyword?: string;
+  initialMarketKeys?: readonly string[];
   initialScheduleFrequency?: TrackingScheduleSelection;
   initialTab?: AddKeywordTab;
   consumeSavedIds?: readonly string[];
-  onAdded?: (keywords: Array<{ publicId: string; text: string }>) => void;
+  onAdded?: (
+    keywords: Array<{ publicId: string; text: string }>,
+    context: { locationKeys: readonly string[] },
+  ) => void;
   onClose: () => void;
   open: boolean;
   projectId: string;
+  projectMarkets?: ProjectMarketsView;
   showSchedule?: boolean;
   tagSuggestions?: readonly string[];
 };

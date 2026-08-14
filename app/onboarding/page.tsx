@@ -7,13 +7,6 @@ import {
   normalizeOnboardingStep,
   type OnboardingFlowState,
 } from "@/components/onboarding/onboarding-fixtures";
-import {
-  DEFAULT_ONBOARDING_LOCATION_KEY,
-  legacyCountryLocationCandidates,
-  MAX_ONBOARDING_LOCATIONS,
-  onboardingLocationCandidates,
-  uniqueLocationCandidates,
-} from "@/components/onboarding/onboarding-locations";
 import type { OnboardingWizardActions } from "@/components/onboarding/onboarding-wizard-actions";
 import type { ConnectedProviderMap } from "@/components/onboarding/steps/StepConnectProvider.fields";
 import { addKeywordsMatrix } from "@/lib/actions/keyword";
@@ -31,7 +24,6 @@ import {
   listFirstCheckCandidates,
   runFirstCheckPreview,
 } from "@/lib/actions/rank-check-preview";
-import { queueFirstChecks } from "@/lib/actions/rankCheck";
 import { fetchRankedKeywordSuggestions } from "@/lib/actions/ranked-keywords";
 import { installSampleData } from "@/lib/actions/sample-data";
 import { updateDefaultRankCheckSettings } from "@/lib/actions/settings";
@@ -44,36 +36,27 @@ import { getPendingGoogleOAuthSetup } from "@/lib/providers/analytics/google-oau
 import { requireReadableProject } from "@/lib/queries/_auth";
 import { getProjectCostContext } from "@/lib/queries/cost-calculator";
 import { getIntegrationCategories } from "@/lib/queries/integrations";
-import { getKeywordCount } from "@/lib/queries/keywords";
-import {
-  existingOnboardingCityLocationKeys,
-  getOnboardingGscPropertyLabel,
-} from "@/lib/queries/onboarding";
+import { getOnboardingGscPropertyLabel, getOnboardingKeywordCount } from "@/lib/queries/onboarding";
+import { getRequestProjectDefaults } from "@/lib/queries/workspace-request-data";
 import { listWorkspaces } from "@/lib/queries/workspaces";
 import { DEFAULT_MONTHLY_COST_CAP_CENTS } from "@/lib/rank-check/budget";
 import { listEligibleRankedKeywordConnections } from "@/lib/ranked-keywords/service";
 import { redirect } from "next/navigation";
-import { createOnboardingProject, deriveOnboardingWebsite } from "./actions";
+import { createOnboardingProject, deriveOnboardingWebsite, saveOnboardingMarkets } from "./actions";
+import { resolveOnboardingLocations } from "./onboarding-location-state";
 
 // Restore ownership matching with issue #863:
 // import { saveMatchingScope } from "./actions";
-
 type OnboardingPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
-
 type SearchParamValue = string | string[] | undefined;
-
 function paramValue(value: SearchParamValue) {
   return Array.isArray(value) ? value[0] : value;
 }
 
 function paramValues(value: SearchParamValue) {
-  if (!value) {
-    return [];
-  }
-
-  return Array.isArray(value) ? value : [value];
+  return value ? (Array.isArray(value) ? value : [value]) : [];
 }
 
 type IntegrationCategories = Awaited<ReturnType<typeof getIntegrationCategories>>;
@@ -90,8 +73,7 @@ function connectedSerpProvider(categories: IntegrationCategories) {
   );
 }
 
-// Saved SERP connections keyed by provider so step 3 can render each card's
-// connected/verified state on load instead of resetting to "Not tested yet".
+// Saved connections let step 3 restore each provider card's verified state.
 function serpConnectionsMap(categories: IntegrationCategories): ConnectedProviderMap {
   const providers = categories.find((category) => category.id === "serp")?.providers ?? [];
   const map: ConnectedProviderMap = {};
@@ -150,30 +132,6 @@ async function getOnboardingProviderState(projectId: string | null) {
   };
 }
 
-async function normalizeOnboardingLocations(
-  locValues: readonly string[],
-  countryValues: readonly string[],
-) {
-  const candidates = uniqueLocationCandidates([
-    ...onboardingLocationCandidates(locValues),
-    ...legacyCountryLocationCandidates(countryValues),
-  ]);
-  const cityKeys = candidates
-    .filter((candidate) => candidate.kind === "city")
-    .map((candidate) => candidate.key);
-  const existingCityKeys = await existingOnboardingCityLocationKeys(cityKeys);
-  const locations = candidates.flatMap((candidate) => {
-    if (candidate.kind === "country" || existingCityKeys.has(candidate.key)) {
-      return [candidate.key];
-    }
-    return [];
-  });
-  return (locations.length > 0 ? locations : [DEFAULT_ONBOARDING_LOCATION_KEY]).slice(
-    0,
-    MAX_ONBOARDING_LOCATIONS,
-  );
-}
-
 export default async function OnboardingPage({ searchParams }: Readonly<OnboardingPageProps>) {
   const params = await searchParams;
   const requestedStep = paramValue(params?.step);
@@ -181,8 +139,7 @@ export default async function OnboardingPage({ searchParams }: Readonly<Onboardi
   const workspaces = await listWorkspaces();
   const requestedProjectId = paramValue(params?.projectId) ?? null;
   const gscJustConnected = gscCallbackSucceeded(params);
-  // "Create project" passes ?new=1 to force a fresh project from step 1, instead of
-  // resuming the actor's existing project at the provider step.
+  // ?new=1 forces a fresh step 1 instead of resuming an existing project.
   const isNewWorkspace = paramValue(params?.new) === "1";
   const activeProjectRef = isNewWorkspace
     ? null
@@ -193,28 +150,31 @@ export default async function OnboardingPage({ searchParams }: Readonly<Onboardi
   const projectId = project?.publicId ?? null;
   const googleStatus = paramValue(params?.google);
   const googleProvider = paramValue(params?.provider);
-  const [keywordCount, providerState, connectedGscPropertyLabel, googleOAuth] = projectId
-    ? await Promise.all([
-        getKeywordCount(projectId),
-        getOnboardingProviderState(projectId),
-        getOnboardingGscPropertyLabel(project?.id ?? null),
-        googleStatus === "select" && googleProvider === "gsc"
-          ? getPendingGoogleOAuthSetup(projectId)
-          : googleStatus === "error" && googleProvider === "gsc"
-            ? {
-                error: googleOAuthErrorCopy(
-                  paramValue(params?.reason),
-                  "Google connection wasn't completed. Try again with the account that owns the property.",
-                ),
-                properties: [],
-              }
-            : null,
-      ])
-    : [0, await getOnboardingProviderState(null), null, null];
-  const locations = await normalizeOnboardingLocations(
-    paramValues(params?.loc),
-    paramValues(params?.country),
-  );
+  const [keywordCount, providerState, connectedGscPropertyLabel, googleOAuth, projectDefaults] =
+    project
+      ? await Promise.all([
+          getOnboardingKeywordCount(project.publicId),
+          getOnboardingProviderState(project.publicId),
+          getOnboardingGscPropertyLabel(project.id),
+          googleStatus === "select" && googleProvider === "gsc"
+            ? getPendingGoogleOAuthSetup(project.publicId)
+            : googleStatus === "error" && googleProvider === "gsc"
+              ? {
+                  error: googleOAuthErrorCopy(
+                    paramValue(params?.reason),
+                    "Google connection wasn't completed. Try again with the account that owns the property.",
+                  ),
+                  properties: [],
+                }
+              : null,
+          getRequestProjectDefaults(project.id),
+        ])
+      : [0, await getOnboardingProviderState(null), null, null, null];
+  const locations = await resolveOnboardingLocations({
+    countryValues: paramValues(params?.country),
+    locValues: paramValues(params?.loc),
+    projectId,
+  });
   const devices = normalizeOnboardingDevices(paramValues(params?.device));
   const flowState: OnboardingFlowState = {
     devices,
@@ -222,6 +182,9 @@ export default async function OnboardingPage({ searchParams }: Readonly<Onboardi
     projectId,
     providerId: paramValue(params?.providerId) ?? providerState.providerId,
   };
+  const initialProject = project
+    ? { ...project, timezone: projectDefaults?.timezone ?? "UTC" }
+    : null;
 
   if (project && currentStep === 1 && !requestedStep) {
     redirect(buildOnboardingStepHref(2, flowState));
@@ -253,8 +216,8 @@ export default async function OnboardingPage({ searchParams }: Readonly<Onboardi
     installSampleDataAction: installSampleData,
     loadStoredGooglePropertiesAction: loadStoredGoogleProperties,
     listFirstCheckCandidatesAction: listFirstCheckCandidates,
-    queueFirstChecksAction: queueFirstChecks,
     runFirstCheckPreviewAction: runFirstCheckPreview,
+    saveMarketsAction: saveOnboardingMarkets,
     saveStoredGooglePropertyAction: saveStoredGoogleProperty,
     // saveMatchingScopeAction: saveMatchingScope, // Restore with issue #863.
     syncProjectTrafficAction: syncProjectTraffic,
@@ -284,7 +247,7 @@ export default async function OnboardingPage({ searchParams }: Readonly<Onboardi
         hasAnalyticsSource={providerState.hasAnalyticsSource}
         initialFlowState={flowState}
         initialKeywordCount={keywordCount}
-        initialProject={project}
+        initialProject={initialProject}
         initialSerpConnections={providerState.serpConnections}
         initialStep={currentStep}
         isCloud={isCloud}

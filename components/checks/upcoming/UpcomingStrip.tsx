@@ -1,5 +1,6 @@
 "use client";
 
+import { ZonedTime } from "@/components/ui";
 import type { UpcomingBlockedGroup, UpcomingDayGroup } from "@/lib/checks/contract";
 import Drawer from "@mui/material/Drawer";
 import {
@@ -14,14 +15,12 @@ import {
   formatCheckCount,
   formatCount,
   formatEstimatedCost,
-  fuzzySampleTime,
 } from "./upcoming-format";
 
 export type UpcomingStripProps = {
   blocked: UpcomingBlockedGroup[];
   days: UpcomingDayGroup[];
   initialOpenDayKey?: string;
-  now: Date;
   schedulesHref: string;
   timeZone: string;
 };
@@ -30,7 +29,6 @@ export function UpcomingStrip({
   blocked,
   days,
   initialOpenDayKey,
-  now,
   schedulesHref,
   timeZone,
 }: Readonly<UpcomingStripProps>) {
@@ -135,7 +133,7 @@ export function UpcomingStrip({
                   >
                     <span className="truncate text-fg">{sample.keyword}</span>
                     <span className="shrink-0 font-mono text-[11px] text-fg-muted">
-                      {fuzzySampleTime(sample.nextCheckAt, openDay.label, now, timeZone)}
+                      <ZonedTime timeZone={timeZone} value={sample.nextCheckAt} />
                     </span>
                   </li>
                 ))}

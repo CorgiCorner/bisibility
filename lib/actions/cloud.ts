@@ -22,6 +22,7 @@ import { getCloudImportJobStatus } from "@/lib/queries/cloud";
 import { getCloudBackupCounts } from "@/lib/queries/cloud-backup-counts";
 import { appPath } from "@/lib/routing/app-path";
 import { absoluteSiteUrl } from "@/lib/seo/jsonld";
+import { normalizeProjectTimezone } from "@/lib/settings/timezones";
 import packageJson from "@/package.json";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -152,19 +153,23 @@ export async function pollCloudImportJob(input: unknown) {
   return getCloudImportJobStatus(data.projectId);
 }
 
-async function createCloudImportWorkspaceDestination() {
+async function createCloudImportWorkspaceDestination(timezone?: string) {
   const { createProject } = await import("./project");
   // No domain: the workspace is addressed by public ID, and the tracked domain is
   // whatever the user later enters in settings.
-  const project = await createProject({ name: "New project" });
+  const normalizedTimezone = normalizeProjectTimezone(timezone);
+  const project = await createProject({
+    name: "New project",
+    defaults: { frequency: "daily", timezone: normalizedTimezone },
+  });
   return `/cloud/import?ctx=onboard&project=${encodeURIComponent(project.publicId)}`;
 }
 
-export async function createCloudImportWorkspace() {
+export async function createCloudImportWorkspace(timezone?: string) {
   if (!isCloud) {
     throw new Error("Instance import projects are available only on hosted deployments.");
   }
-  return createCloudImportWorkspaceDestination();
+  return createCloudImportWorkspaceDestination(timezone);
 }
 
 // biome-ignore format: compact action keeps this action module under the file line cap.

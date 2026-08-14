@@ -86,4 +86,15 @@ describe("workspace request data", () => {
     expect(mocks.prisma.rankCheck.aggregate).toHaveBeenCalledOnce();
     expect(mocks.prisma.providerCostEntry.aggregate).toHaveBeenCalledOnce();
   });
+
+  it("returns the stored project timezone without a narrowing select", async () => {
+    mocks.prisma.projectDefaults.findUnique.mockResolvedValue({ timezone: "Europe/Warsaw" });
+
+    await expect(getRequestProjectDefaults("project_1")).resolves.toMatchObject({
+      timezone: "Europe/Warsaw",
+    });
+    expect(mocks.prisma.projectDefaults.findUnique).toHaveBeenCalledWith({
+      where: { projectId: "project_1" },
+    });
+  });
 });

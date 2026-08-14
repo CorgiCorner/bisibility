@@ -7,14 +7,8 @@ import { type SerpDepth, type SerpDevice, serpDeviceOptions } from "@/lib/serp/m
 import { FIELD_HELP } from "@/lib/settings/field-help";
 import { frequencyOptions, type RankCheckFrequency } from "@/lib/settings/options";
 import { LocationSelectionChips } from "./LocationSelectionChips";
-import {
-  DerivedValue,
-  deviceSummary,
-  languagesForLocations,
-  MenuField,
-  SerpDepthField,
-  SerpDepthWarning,
-} from "./StepScheduleFields";
+import { OnboardingMarkets } from "./OnboardingMarkets";
+import { deviceSummary, MenuField, SerpDepthField, SerpDepthWarning } from "./StepScheduleFields";
 
 const selectTriggerClass =
   "min-h-0 min-w-0 justify-end border-0 bg-transparent px-0 text-right text-sm hover:border-transparent focus-visible:border-transparent";
@@ -59,47 +53,50 @@ export function TrackingDefaultsFields({
       <p className="m-0 mt-1 text-[12.5px] text-fg-muted">
         Applied to these keywords. You can change each keyword later.
       </p>
-      <div className="mt-4 grid max-w-[560px] items-start gap-3 sm:grid-cols-2">
-        <div className="sm:col-span-2">
+      <div className="mt-4 max-w-[560px]">
+        {flowState?.projectId ? (
+          <OnboardingMarkets
+            onChange={onLocationsChange}
+            projectId={flowState.projectId}
+            values={locations}
+          />
+        ) : (
           <LocationSelectionChips
             error={errors?.locations}
             onChange={onLocationsChange}
             projectId={flowState?.projectId}
             values={locations}
           />
+        )}
+        <div className="mt-3 grid items-start gap-3 sm:grid-cols-2">
+          <MenuField help={FIELD_HELP.device} label="Devices">
+            <MenuMultiSelect
+              ariaLabel="Devices"
+              onChange={(values) => onDevicesChange(values as SerpDevice[])}
+              options={deviceOptions}
+              summary={deviceSummary}
+              triggerClassName={selectTriggerClass}
+              values={devices}
+            />
+          </MenuField>
+          <div>
+            <SerpDepthField
+              depth={serpDepth}
+              onChange={onDepthChange}
+              triggerClassName={selectTriggerClass}
+            />
+            <SerpDepthWarning currentDepth={serpDepth} initialDepth={initialDepth} />
+          </div>
+          <MenuField help={FIELD_HELP.frequency} label="Frequency">
+            <MenuSelect
+              ariaLabel="Frequency"
+              onChange={(value) => onFrequencyChange(value as RankCheckFrequency)}
+              options={refreshOptions}
+              triggerClassName={selectTriggerClass}
+              value={frequency}
+            />
+          </MenuField>
         </div>
-        <DerivedValue
-          help="Derived from the selected locations."
-          label="Language"
-          value={languagesForLocations(locations)}
-        />
-        <MenuField help={FIELD_HELP.device} label="Devices">
-          <MenuMultiSelect
-            ariaLabel="Devices"
-            onChange={(values) => onDevicesChange(values as SerpDevice[])}
-            options={deviceOptions}
-            summary={deviceSummary}
-            triggerClassName={selectTriggerClass}
-            values={devices}
-          />
-        </MenuField>
-        <div>
-          <SerpDepthField
-            depth={serpDepth}
-            onChange={onDepthChange}
-            triggerClassName={selectTriggerClass}
-          />
-          <SerpDepthWarning currentDepth={serpDepth} initialDepth={initialDepth} />
-        </div>
-        <MenuField help={FIELD_HELP.frequency} label="Refresh">
-          <MenuSelect
-            ariaLabel="Refresh"
-            onChange={(value) => onFrequencyChange(value as RankCheckFrequency)}
-            options={refreshOptions}
-            triggerClassName={selectTriggerClass}
-            value={frequency}
-          />
-        </MenuField>
       </div>
       <p className="m-0 mt-3 text-[11.5px] text-fg-muted">
         More locations or devices create more provider checks.

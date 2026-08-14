@@ -6,6 +6,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 const meta = {
   title: "Keywords/PositionHistoryCard",
   component: PositionHistoryCard,
+  args: { timeZone: "Europe/Warsaw" },
   decorators: [
     (Story) => (
       <KeywordDetailStoryThemes>

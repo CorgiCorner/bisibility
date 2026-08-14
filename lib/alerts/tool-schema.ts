@@ -48,6 +48,7 @@ export const alertRuleToolProperties = {
     minLength: ALERT_RULE_NAME_MIN_LENGTH,
     type: "string",
   },
+  market_ids: { items: publicIdSchema("pmkt"), type: "array" },
   recipient_ids: { items: publicIdSchema("usr"), type: "array" },
   serp_feature: nullableStringSchema,
   severity: { enum: alertSeverities, type: "string" },

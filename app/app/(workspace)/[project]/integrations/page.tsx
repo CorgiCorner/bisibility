@@ -72,7 +72,7 @@ export default async function IntegrationsPage({
       provider: googleProvider,
     };
   }
-  const [{ categories, connectionCount }, readable] = await Promise.all([
+  const [{ categories, connectionCount, timeZone }, readable] = await Promise.all([
     getIntegrationsView(publicId, {
       googleOAuth: googleOAuth ?? undefined,
       now: new Date(),
@@ -109,6 +109,7 @@ export default async function IntegrationsPage({
             noProvidersYet={noProvidersYet}
             projectId={publicId}
             projectRef={publicId}
+            timeZone={timeZone}
           />
         ))}
       </div>

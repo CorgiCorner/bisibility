@@ -1,17 +1,10 @@
-import {
-  CsvParseError,
-  parseKeywordImportCsvTable,
-  splitKeywordImportTags,
-} from "@/lib/keywords/import-csv-parser";
-import { addKeywordSchema } from "@/lib/schemas/keyword";
-import type { ProjectDefaultMarket } from "@/lib/serp/default-market";
-import {
-  DEFAULT_SERP_DEVICE,
-  DEFAULT_SERP_MARKET,
-  normalizeSerpMarketName,
-  resolveSerpMarket,
-} from "@/lib/serp/markets";
 import ExcelJS from "exceljs";
+
+export {
+  type KeywordImportRow,
+  keywordImportKey,
+  parseKeywordImportCsv,
+} from "./keyword-import-csv";
 
 export const keywordExportColumns = [
   "url",
@@ -29,18 +22,6 @@ export type KeywordExportOptions = {
   granularity: "daily" | "weekly";
   range: "30" | "90" | "all";
   scope: "current" | "history";
-};
-export type KeywordImportRow = {
-  city?: string | null;
-  device: "desktop" | "mobile";
-  keyword: string;
-  location: string;
-  locationKey?: string | null;
-  row: number;
-  tags: string[];
-  targetUrl?: string | null;
-  topic?: string | null;
-  intent?: string | null;
 };
 export type KeywordExportRow = {
   createdAt: Date;
@@ -72,84 +53,6 @@ export function keywordExportOptions(data: KeywordExportOptionInput): KeywordExp
   return {
     columns: Object.fromEntries(keywordExportColumns.map((column) => [column, data.columns[column] ?? false])) as KeywordExportOptions["columns"], granularity: data.granularity, range: data.range, scope: data.scope,
   };
-}
-
-const fallbackImportDefaults: Pick<
-  ProjectDefaultMarket,
-  "city" | "country" | "device" | "locationKey"
-> = {
-  city: null,
-  country: DEFAULT_SERP_MARKET,
-  device: DEFAULT_SERP_DEVICE,
-  locationKey: "US",
-};
-
-export function parseKeywordImportCsv(
-  csv: string,
-  defaults: Pick<
-    ProjectDefaultMarket,
-    "city" | "country" | "device" | "locationKey"
-  > = fallbackImportDefaults,
-) {
-  let table: ReturnType<typeof parseKeywordImportCsvTable>;
-  try {
-    table = parseKeywordImportCsvTable(csv);
-  } catch (error) {
-    if (error instanceof CsvParseError)
-      return { errors: [{ message: error.message, row: error.row }], parsed: [], received: 0 };
-    throw error;
-  }
-  const errors: { message: string; row: number }[] = [];
-  const parsed: KeywordImportRow[] = [];
-
-  for (const [offset, row] of table.dataRows.entries()) {
-    const rowNumber = offset + table.firstDataRowNumber;
-    const rowCity = row[table.columns.city]?.trim() || undefined;
-    const rowIntent = row[table.columns.intent]?.trim() || undefined;
-    const rowLocation = row[table.columns.location]?.trim() || undefined;
-    const rowLocationKey = row[table.columns.locationKey]?.trim() || undefined;
-    const rowTopic = row[table.columns.topic]?.trim() || undefined;
-    const hasRowLocation = Boolean(rowCity || rowLocation || rowLocationKey);
-    const hasOwnLocation = Boolean(rowCity || rowLocation);
-    const result = addKeywordSchema.safeParse({
-      city: rowCity ?? (hasRowLocation ? null : defaults.city),
-      device: row[table.columns.device] || defaults.device,
-      intent: rowIntent,
-      keyword: row[table.columns.keyword] ?? "",
-      location: rowLocation || defaults.country,
-      locationKey: rowLocationKey ?? (hasOwnLocation ? undefined : defaults.locationKey),
-      projectId: "project",
-      tags: splitKeywordImportTags(row[table.columns.tags] ?? ""),
-      targetUrl: row[table.columns.targetUrl] || undefined,
-      topic: rowTopic,
-    });
-    if (result.success) parsed.push({ ...result.data, row: rowNumber });
-    else {
-      errors.push({
-        message: result.error.issues[0]?.message ?? "Invalid row.",
-        row: rowNumber,
-      });
-    }
-  }
-  return { errors, parsed, received: table.dataRows.length };
-}
-
-export function keywordImportKey(
-  row: Pick<KeywordImportRow, "city" | "device" | "keyword" | "location" | "locationKey">,
-) {
-  const city = row.city?.trim().replace(/\s+/g, " ");
-  const locationKey =
-    row.locationKey?.trim() ||
-    [importLocationKey(row.location), city].filter(Boolean).join("\u0000");
-  return `${row.keyword}\u0000${locationKey}\u0000${row.device}`;
-}
-
-function importLocationKey(location: string) {
-  const market = normalizeSerpMarketName(location);
-  if (market) {
-    return resolveSerpMarket(market).google.gl.toUpperCase();
-  }
-  return location.trim().replace(/\s+/g, " ");
 }
 
 function cutoff(range: KeywordExportOptions["range"]) {

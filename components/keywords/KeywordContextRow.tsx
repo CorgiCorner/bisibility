@@ -4,6 +4,9 @@ import type { ReactNode } from "react";
 
 type ContextChipProps = { children: ReactNode; label: string };
 
+const unavailableCopy =
+  "No search volume or difficulty data for this market - positions are tracked normally.";
+
 function ContextChip({ children, label }: Readonly<ContextChipProps>) {
   return (
     <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-bg-sunken px-2.5 py-1">
@@ -40,44 +43,43 @@ export function inferredKeywordContext(keyword: KeywordRow): KeywordDetailKeywor
 
 export function KeywordContextRow({
   keyword,
-  state = inferredKeywordContext(keyword),
 }: Readonly<{ keyword: KeywordRow; state?: KeywordDetailKeywordContext }>) {
   const intent = keyword.intent ?? "Not set";
-  if (state === "unavailable") {
-    return (
-      <section className="flex flex-wrap items-center gap-3 px-0.5">
-        <p className="m-0 font-mono text-[10px] uppercase tracking-[0.65px] text-fg-muted">
-          Keyword context
-        </p>
-        <p className="m-0 text-[12px] text-fg-muted">
-          Keyword metrics unavailable from this provider.
-        </p>
-      </section>
-    );
-  }
+  const provenance = `${keyword.location.displayName} / ${keyword.location.languageLabel ?? keyword.location.hl}`;
 
   return (
     <section className="flex flex-wrap items-center gap-2.5 px-0.5">
       <p className="m-0 mr-1 font-mono text-[10px] uppercase tracking-[0.65px] text-fg-muted">
         Keyword context
       </p>
-      {keyword.volumeKnown !== false ? (
-        <ContextChip label="Volume">{formatVolume(keyword.volume)}</ContextChip>
-      ) : null}
-      {state === "full" && keyword.cpcKnown !== false ? (
-        <ContextChip label="CPC">${keyword.cpc}</ContextChip>
-      ) : null}
-      {state === "full" && keyword.difficultyKnown !== false ? (
-        <ContextChip label="Difficulty">
-          <span className="font-mono text-[11px] text-yellow-text">{keyword.difficulty}</span>
-          {keyword.hasTag !== false ? (
-            <span className="font-mono text-[9.5px] uppercase text-fg-muted">
-              {difficultyLabel(keyword.difficulty)}
-            </span>
-          ) : null}
+      <span title={keyword.volumeKnown === false ? unavailableCopy : undefined}>
+        <ContextChip label="Volume">
+          {keyword.volumeKnown === false ? "n/a" : formatVolume(keyword.volume)}
         </ContextChip>
-      ) : null}
+      </span>
+      <span title={keyword.cpcKnown === false ? unavailableCopy : undefined}>
+        <ContextChip label="CPC">
+          {keyword.cpcKnown === false ? "n/a" : `$${keyword.cpc}`}
+        </ContextChip>
+      </span>
+      <span title={keyword.difficultyKnown === false ? unavailableCopy : undefined}>
+        <ContextChip label="Difficulty">
+          {keyword.difficultyKnown === false ? (
+            "n/a"
+          ) : (
+            <>
+              <span className="font-mono text-[11px] text-yellow-text">{keyword.difficulty}</span>
+              {keyword.hasTag !== false ? (
+                <span className="font-mono text-[9.5px] uppercase text-fg-muted">
+                  {difficultyLabel(keyword.difficulty)}
+                </span>
+              ) : null}
+            </>
+          )}
+        </ContextChip>
+      </span>
       <ContextChip label="Intent">{intent}</ContextChip>
+      <span className="font-mono text-[10.5px] text-fg-muted">for {provenance}</span>
     </section>
   );
 }

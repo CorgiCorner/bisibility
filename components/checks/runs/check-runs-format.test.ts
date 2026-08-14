@@ -36,6 +36,7 @@ function failedRun(error: string | null): CheckRunRow {
     provider: "dataforseo",
     providerLabel: "DataForSEO",
     requestedDepth: 20,
+    researchMetricsAvailable: true,
     startedAt: null,
     status: "failed",
     trigger: "scheduled",

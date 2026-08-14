@@ -17,6 +17,11 @@ count. Results are deduplicated case-insensitively and the seed itself is
 excluded. There is no offset pagination. Choose `result_limit` as `100`, `300`,
 or `500` before the lookup.
 
+Research uses the project's default market at country scope. A city or region
+is translated to its country while retaining the market language. This differs
+from rank checks, which continue to use the exact tracked location. See
+[Markets and languages](/markets#research-capability).
+
 The current per-source estimate comes from bisibility's maintained provider
 rates table. `include_clickstream=true` requests clickstream-refined volumes and
 doubles the provider price. Results, including empty results, are cached for 12
@@ -41,6 +46,14 @@ connections, aggregate cost, cache status, and fetch time. Each source has an
 `ok`, `failed`, or `skipped` status and an optional machine-readable reason.
 Successful sources are cached independently, so retrying a partial response
 does not pay again for completed source calls.
+
+DataForSEO Labs supports fewer country-language pairs than position tracking.
+For keyword metrics, bisibility treats the provider's `keyword_overview`
+package as one capability. If the pair is unsupported, the entire metrics bundle
+of volume, trend, CPC, competition, difficulty, and intent is unavailable.
+Bisibility does not substitute another country's data. The API returns the
+standard `unsupported_location` problem response; the app shows those metrics as
+`n/a` while position tracking remains available.
 
 Unsupported locations, exhausted budgets, provider throttling,
 reauthorization, and missing eligible sources use the standard problem response.

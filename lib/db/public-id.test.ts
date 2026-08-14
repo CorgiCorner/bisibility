@@ -33,6 +33,7 @@ describe("public ID v3", () => {
       mbr: "membership",
       ntf: "notification",
       pat: "personalAccessToken",
+      pmkt: "projectMarket",
       prj: "project",
       sid: "session",
       sig: "signal",

@@ -1,6 +1,7 @@
 import { SessionSpendProvider } from "@/components/cost-estimate/SessionSpendProvider";
 import type { Meta, StoryObj } from "@storybook/react";
 import { ResearchWorkspace } from "./ResearchWorkspace";
+import type { ResearchWorkspaceProps } from "./research-workspace-model";
 
 const meta = {
   component: ResearchWorkspace,
@@ -13,14 +14,14 @@ const meta = {
       </SessionSpendProvider>
     ),
   ],
-  parameters: { layout: "fullscreen" },
+  parameters: { layout: "fullscreen", nextjs: { appDirectory: true } },
   title: "Research/Workspace",
 } satisfies Meta<typeof ResearchWorkspace>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const context = {
+const context: ResearchWorkspaceProps["context"] = {
   connections: [
     { id: "conn_a00000000000000000000000", label: "DataForSEO", provider: "dataforseo" },
   ],
@@ -98,5 +99,33 @@ export const BudgetExhausted: Story = {
       ...Idle.args?.checkHealth,
       budget: { capCents: 5000, exhausted: true, spentCents: 5000 },
     } as never,
+  },
+};
+
+export const CityMetricsScope: Story = {
+  args: {
+    ...Idle.args,
+    context: {
+      ...context,
+      defaultMarket: {
+        city: "Malaga",
+        country: "Spain",
+        device: "desktop",
+        displayName: "Malaga, Andalusia, Spain",
+        locationKey: "ES/ES-AN/Malaga",
+        source: "explicit",
+      },
+      language: { code: "es", label: "Spanish" },
+      location: {
+        canonicalKey: "ES/ES-AN/Malaga",
+        cityName: "Malaga",
+        countryCode: "ES",
+        displayName: "Malaga, Andalusia, Spain",
+        hl: "es",
+        kind: "city",
+        languageLabel: "Spanish",
+        regionName: null,
+      },
+    },
   },
 };

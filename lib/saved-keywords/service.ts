@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db/prisma";
 import { makePublicId } from "@/lib/db/public-id";
 import { normalizeResearchKeyword } from "@/lib/keyword-research/context";
 import type { saveKeywordsSchema } from "@/lib/schemas/saved-keyword";
+import { locationLanguage, normalizeCanonicalLocationKey } from "@/lib/serp/location";
 import type { z } from "zod";
 import { type SavedKeywordRow, savedKeywordTrend } from "./model";
 
@@ -18,9 +19,11 @@ type SaveRow = z.output<typeof saveKeywordsSchema>["rows"][number];
 type RemoveInput = { publicIds: string[] } | { rows: Array<{ keyword: string; location: string }> };
 
 const savedKeywordSelect = {
+  countryCode: true,
   cpc: true,
   difficulty: true,
   intent: true,
+  languageCode: true,
   location: true,
   publicId: true,
   savedAt: true,
@@ -30,6 +33,22 @@ const savedKeywordSelect = {
   variantCount: true,
   volume: true,
 } as const;
+
+function savedKeywordMarket(location: string) {
+  const normalized = normalizeCanonicalLocationKey(location);
+  return {
+    countryCode: normalized.selector.countryCode,
+    languageCode: locationLanguage(
+      normalized.selector.countryCode,
+      normalized.selector.languageCode,
+    ).code,
+    location: normalized.canonicalKey,
+  };
+}
+
+function savedKeywordTuple(normalizedText: string, location: string) {
+  return `${normalizedText}\u0000${location}`;
+}
 
 export async function listSavedKeywordRows(projectId: string): Promise<SavedKeywordRow[]> {
   const rows = await prisma.savedKeyword.findMany({
@@ -45,28 +64,37 @@ export async function listSavedKeywordRows(projectId: string): Promise<SavedKeyw
 }
 
 export async function saveSavedKeywordRows(rows: SaveRow[], scope: SavedKeywordMutationScope) {
-  const candidates = rows.map((row) => ({
-    cpc: row.cpcCents == null ? null : row.cpcCents / 100,
-    difficulty: row.difficulty ?? null,
-    intent: row.intent ?? null,
-    location: row.location,
-    normalizedText: normalizeResearchKeyword(row.keyword),
-    projectId: scope.projectId,
-    publicId: makePublicId("svkw"),
-    sourceSeed: row.sourceSeed ?? null,
-    text: row.keyword,
-    trend: row.monthlyTrend ?? undefined,
-    variantCount: row.variantCount,
-    volume: row.searchVolume ?? null,
-  }));
+  const candidates = rows.map((row) => {
+    const market = savedKeywordMarket(row.location);
+    return {
+      ...market,
+      cpc: row.cpcCents == null ? null : row.cpcCents / 100,
+      difficulty: row.difficulty ?? null,
+      intent: row.intent ?? null,
+      normalizedText: normalizeResearchKeyword(row.keyword),
+      projectId: scope.projectId,
+      publicId: makePublicId("svkw"),
+      sourceSeed: row.sourceSeed ?? null,
+      text: row.keyword,
+      trend: row.monthlyTrend ?? undefined,
+      variantCount: row.variantCount,
+      volume: row.searchVolume ?? null,
+    };
+  });
   const { createdRows, result } = await prisma.$transaction(
     async (tx) => {
       const trackedRows = await tx.keyword.findMany({
-        select: { text: true },
+        select: { locationRef: { select: { canonicalKey: true } }, text: true },
         where: { projectId: scope.projectId },
       });
-      const tracked = new Set(trackedRows.map((row) => normalizeResearchKeyword(row.text)));
-      const saveableRows = candidates.filter((row) => !tracked.has(row.normalizedText));
+      const tracked = new Set(
+        trackedRows.map((row) =>
+          savedKeywordTuple(normalizeResearchKeyword(row.text), row.locationRef.canonicalKey),
+        ),
+      );
+      const saveableRows = candidates.filter(
+        (row) => !tracked.has(savedKeywordTuple(row.normalizedText, row.location)),
+      );
       if (saveableRows.length === 0) return { createdRows: [], result: { count: 0 } };
 
       const result = await tx.savedKeyword.createMany({
@@ -120,7 +148,7 @@ export async function removeSavedKeywordRows(data: RemoveInput, scope: SavedKeyw
       ? { projectId: scope.projectId, publicId: { in: data.publicIds } }
       : {
           OR: data.rows.map((row) => ({
-            location: row.location,
+            location: normalizeCanonicalLocationKey(row.location).canonicalKey,
             normalizedText: normalizeResearchKeyword(row.keyword),
           })),
           projectId: scope.projectId,

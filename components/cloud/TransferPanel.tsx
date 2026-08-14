@@ -186,7 +186,7 @@ export function TransferPanel({
           </span>
           <a
             className="inline-flex flex-none items-center gap-1.5 rounded-lg bg-accent-solid px-[14px] py-2 font-semibold text-[12px] text-primary-contrast"
-            href={appPath(projectRef, "overview")}
+            href={appPath(projectRef, "dashboard")}
           >
             Open project
             <CaretRight aria-hidden size={12} weight="bold" />

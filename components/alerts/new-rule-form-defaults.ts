@@ -5,8 +5,10 @@ export function newRuleFormDefaults(
   projectId: string,
   templateId: RuleTemplateId,
   rule?: AlertRuleView,
+  availableMarketIds?: readonly string[],
 ): NewRuleForm {
   const template = ruleTemplates[templateId];
+  const availableMarkets = availableMarketIds ? new Set(availableMarketIds) : null;
 
   return {
     channels: rule?.channels ?? [],
@@ -15,6 +17,7 @@ export function newRuleFormDefaults(
     conditionType: rule?.conditionType ?? template.defaults.conditionType,
     dropPositions: rule?.dropPositions ?? template.defaults.dropPositions,
     enabled: rule?.enabled ?? true,
+    marketIds: (rule?.marketIds ?? []).filter((id) => availableMarkets?.has(id) ?? true),
     name: rule?.name ?? template.name,
     projectId,
     recipientIds: rule?.recipientIds ?? [],

@@ -7,6 +7,7 @@ import { prisma } from "@/lib/db/prisma";
 import { Device, type Prisma } from "@/lib/generated/prisma/client";
 import { refreshKeywordDispatchStates } from "@/lib/rank-check/dispatcher-state";
 import { intentSchema, topicSchema } from "@/lib/schemas/keyword";
+import { denormalizedLocationLabel } from "@/lib/serp/location-label";
 import { resolveKeywordLocation } from "@/lib/serp/location-service";
 import { serpMarketLocationValues } from "@/lib/serp/markets";
 import { type ApiContext, forbidden, notFound, projectMatches } from "./context";
@@ -207,7 +208,7 @@ export async function patchKeyword(ctx: ApiContext, keywordId: string) {
   const updated = await prisma.keyword.update({
     data: {
       device: data.device,
-      location: resolved?.location.displayName ?? country,
+      location: resolved ? denormalizedLocationLabel(resolved.location) : country,
       locationId: resolved?.location.id,
       targetUrl: data.target_url,
       text: data.keyword,

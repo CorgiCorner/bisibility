@@ -3,6 +3,7 @@ import {
   checkRunsFixtureView,
   checkRunsNow,
   checkRunsViewFor,
+  staleRunFixture,
 } from "@/components/checks/runs/check-runs-fixtures";
 import { appPath } from "@/lib/routing/app-path";
 import type { Meta, StoryObj } from "@storybook/react";
@@ -13,6 +14,8 @@ const callbacks = {
   onLoadMore: fn(),
   onProviderChange: fn(),
   onRangeChange: fn(),
+  onRetryFailed: fn(),
+  onRetryStale: fn(),
   onAsOfDateChange: fn(),
   onTriggerChange: fn(),
 };
@@ -41,6 +44,16 @@ const meta = {
     ...callbacks,
     ...links,
     asOfDate: "2026-07-24",
+    budget: {
+      blocked: [{ keywordCount: 4, reason: "budget_exhausted" }],
+      forecast: {
+        capCents: 5_000,
+        capLastsUntil: "2026-08-08",
+        next48hCents: 530,
+        spentCents: 5_000,
+      },
+    },
+    budgetSettingsHref: appPath("prj_story", "settings#provider-usage"),
     filter: "all",
     now: checkRunsNow,
     provider: "all",
@@ -63,6 +76,7 @@ export const Default: Story = {};
 
 export const FailedWithChainExpanded: Story = {
   args: {
+    budget: { blocked: [], forecast: null },
     filter: "failed",
     initialExpandedRunIds: ["run_failed"],
     view: checkRunsViewFor("failed"),
@@ -74,6 +88,43 @@ export const FallbackCountryLevel: Story = {
     filter: "fallback",
     initialExpandedRunIds: ["run_fallback"],
     view: checkRunsViewFor("fallback"),
+  },
+};
+
+export const StaleWithRetry: Story = {
+  args: {
+    budget: { blocked: [], forecast: null },
+    view: {
+      ...checkRunsFixtureView,
+      counts: { completed: 1, deferred: 0, failed: 0, running: 0, runs: 1, viaFallback: 0 },
+      deferredGroups: [],
+      providerHealth: [
+        {
+          coveredAsFallback: 0,
+          direct: 1,
+          failed: 0,
+          isPrimary: true,
+          provider: "dataforseo",
+          providerLabel: "DataForSEO",
+          rateLimited: 0,
+        },
+      ],
+      rows: [staleRunFixture],
+    },
+  },
+};
+
+export const BudgetWarning: Story = {
+  args: {
+    budget: {
+      blocked: [],
+      forecast: {
+        capCents: 5_000,
+        capLastsUntil: "2026-08-08",
+        next48hCents: 300,
+        spentCents: 3_900,
+      },
+    },
   },
 };
 

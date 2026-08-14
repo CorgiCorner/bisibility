@@ -63,8 +63,12 @@ export function noSearchResults(statusCode: number | undefined, message: string)
   return (statusCode === 40102 || statusCode === 40501) && /no search results/i.test(message);
 }
 
-export function unsupportedLabsRequest(message: string) {
-  return /(?:location|target).*(?:invalid|not found|not supported|unsupported)|(?:invalid field|unsupported).*(?:location|target)/i.test(
-    message,
-  );
+export function unsupportedLabsRequest(statusCode: number | undefined, message: string) {
+  const unsupportedLocation =
+    /(?:location|target).*(?:invalid|not found|not supported|unsupported)|(?:invalid field|unsupported).*(?:location|target)/i.test(
+      message,
+    );
+  const unsupportedLanguage =
+    statusCode === 40501 && /invalid field:\s*['"]language_(?:code|name)['"]/i.test(message);
+  return unsupportedLocation || unsupportedLanguage;
 }

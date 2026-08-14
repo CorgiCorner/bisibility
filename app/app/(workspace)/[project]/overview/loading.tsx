@@ -1,4 +1,4 @@
-// Skeleton for /app/overview. Mirrors OverviewSections: the full-bleed toolbar (filter
+// Skeleton for the project Dashboard. Mirrors OverviewSections: the full-bleed toolbar (filter
 // pills + add action), a four-up KPI grid, the position trend / distribution chart row,
 // and the data source panel, so navigation shows the real layout, not an empty slot.
 

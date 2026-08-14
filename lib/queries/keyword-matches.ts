@@ -11,6 +11,8 @@ export type KeywordMatchRow = {
   device: "desktop" | "mobile";
   keywordId: string;
   latestPosition: number | null;
+  languageCode: string;
+  languageLabel: string;
   location: string;
   locationKey: string;
   matchedText: string;
@@ -42,6 +44,8 @@ export async function findKeywordMatches(projectId: string, texts: readonly stri
         k."location",
         l."canonicalKey" AS "locationKey",
         l."countryCode" AS "countryCode",
+        l."languageCode" AS "languageCode",
+        l."languageLabel" AS "languageLabel",
         k."device"::text AS "device",
         lower(btrim(k."text")) AS "matchedText",
         rc."position" AS "latestPosition",

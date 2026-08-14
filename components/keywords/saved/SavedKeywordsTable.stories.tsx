@@ -31,9 +31,11 @@ const terms = [
 ] as const;
 
 const rows: SavedKeywordRow[] = terms.map(([text, volume, difficulty, intent], index) => ({
+  countryCode: "US",
   cpc: 0.32 + index * 0.2,
   difficulty,
   intent,
+  languageCode: "en",
   location: "US",
   publicId: `skw_${index}`,
   savedAt: new Date(Date.now() - (index === 6 ? 34 : index + 2) * 86_400_000).toISOString(),

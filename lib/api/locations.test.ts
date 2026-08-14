@@ -24,6 +24,7 @@ describe("location search REST endpoint", () => {
           display_name: "Austin, Texas, United States",
           hl: "en",
           kind: "city",
+          language_code: "en",
           language_label: "English",
           region_code: "TX",
           region_name: "Texas",
@@ -38,7 +39,14 @@ describe("location search REST endpoint", () => {
     expect(response.status).toBe(200);
     const body = await response.json();
     expect(body).toMatchObject({
-      data: [{ display_name: "Austin, Texas, United States", location_key: "US/Texas/Austin" }],
+      data: [
+        {
+          display_name: "Austin, Texas, United States",
+          language_code: "en",
+          language_label: "English",
+          location_key: "US/Texas/Austin",
+        },
+      ],
       meta: { next_cursor: null },
     });
     expect(body.data[0]).not.toHaveProperty("id");

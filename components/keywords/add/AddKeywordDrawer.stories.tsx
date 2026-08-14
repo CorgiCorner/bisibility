@@ -16,7 +16,7 @@ function installFetchStub() {
 const meta = {
   title: "Keywords/AddKeywordDrawer",
   component: AddKeywordDrawer,
-  parameters: { layout: "fullscreen" },
+  parameters: { layout: "fullscreen", nextjs: { appDirectory: true } },
   decorators: [
     (Story) => {
       installFetchStub();
@@ -28,6 +28,48 @@ const meta = {
 export default meta;
 
 type Story = StoryObj<typeof meta>;
+
+const projectMarkets = {
+  markets: [
+    {
+      canonicalKey: "ES",
+      countryCode: "ES",
+      displayName: "Spain",
+      id: "pmkt_spain_spanish",
+      languageCode: "es",
+      languageLabel: "Spanish",
+      monthlyCostCents: 1100,
+      researchAvailable: true,
+      status: "active" as const,
+    },
+    {
+      canonicalKey: "ES@en",
+      countryCode: "ES",
+      displayName: "Spain",
+      id: "pmkt_spain_english",
+      languageCode: "en",
+      languageLabel: "English",
+      monthlyCostCents: 1100,
+      researchAvailable: true,
+      status: "active" as const,
+    },
+    {
+      canonicalKey: "BE@ar",
+      countryCode: "BE",
+      displayName: "Belgium",
+      id: "pmkt_belgium_arabic",
+      languageCode: "ar",
+      languageLabel: "Arabic",
+      monthlyCostCents: 1100,
+      researchAvailable: false,
+      status: "paused" as const,
+    },
+  ],
+  maxMarkets: 5,
+  monthlyCostCents: 2200,
+  perMarketChecks: 24,
+  projectId: "prj_7Kd2Qf9m",
+};
 
 export const Open: Story = {
   args: {
@@ -51,6 +93,7 @@ export const Open: Story = {
     onClose: () => undefined,
     open: true,
     projectId: "prj_7Kd2Qf9m",
+    projectMarkets,
     tagSuggestions: ["Product", "Docs", "Comparison", "Integration"],
   },
   render: (args) => (

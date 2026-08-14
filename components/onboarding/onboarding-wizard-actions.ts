@@ -1,3 +1,4 @@
+import type { SaveOnboardingMarketsAction } from "@/components/onboarding/steps/OnboardingMarkets";
 import type { StepAddKeywords } from "@/components/onboarding/steps/StepAddKeywords";
 import type { StepConnectGscCard } from "@/components/onboarding/steps/StepConnectGscCard";
 import type { StepConnectProvider } from "@/components/onboarding/steps/StepConnectProvider";
@@ -36,12 +37,10 @@ export type OnboardingWizardActions = {
   listFirstCheckCandidatesAction: NonNullable<
     Parameters<typeof StepFirstCheck>[0]["listFirstCheckCandidatesAction"]
   >;
-  queueFirstChecksAction: NonNullable<
-    Parameters<typeof StepFirstCheck>[0]["queueFirstChecksAction"]
-  >;
   runFirstCheckPreviewAction: NonNullable<
     Parameters<typeof StepFirstCheck>[0]["runFirstCheckPreviewAction"]
   >;
+  saveMarketsAction: SaveOnboardingMarketsAction;
   saveStoredGooglePropertyAction: NonNullable<
     Parameters<typeof StepConnectGscCard>[0]["saveStoredProperty"]
   >;

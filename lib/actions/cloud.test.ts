@@ -448,18 +448,40 @@ describe("cloud migration actions", () => {
       publicId: "prj_bbcdefghijklmnopqrstuvwx",
     });
 
-    await expect(createCloudImportWorkspace()).resolves.toBe(
+    await expect(createCloudImportWorkspace("Europe/Madrid")).resolves.toBe(
       "/cloud/import?ctx=onboard&project=prj_bbcdefghijklmnopqrstuvwx",
     );
 
     expect(mocks.createProject).toHaveBeenCalledTimes(1);
-    expect(mocks.createProject).toHaveBeenCalledWith({ name: "New project" });
+    expect(mocks.createProject).toHaveBeenCalledWith({
+      name: "New project",
+      defaults: { frequency: "daily", timezone: "Europe/Madrid" },
+    });
+  });
+
+  it("normalizes an absent or junk browser timezone to UTC on import creation", async () => {
+    mocks.createProject.mockResolvedValue({
+      id: "project_new",
+      publicId: "prj_bbcdefghijklmnopqrstuvwx",
+    });
+
+    await createCloudImportWorkspace();
+    expect(mocks.createProject).toHaveBeenLastCalledWith({
+      name: "New project",
+      defaults: { frequency: "daily", timezone: "UTC" },
+    });
+
+    await createCloudImportWorkspace("warsaw");
+    expect(mocks.createProject).toHaveBeenLastCalledWith({
+      name: "New project",
+      defaults: { frequency: "daily", timezone: "UTC" },
+    });
   });
 
   it("rejects import project creation on self-hosted deployments", async () => {
     mocks.isCloud = false;
 
-    await expect(createCloudImportWorkspace()).rejects.toThrow(
+    await expect(createCloudImportWorkspace("Europe/Madrid")).rejects.toThrow(
       "Instance import projects are available only on hosted deployments.",
     );
 

@@ -218,13 +218,12 @@ export function CheckRunFilters({ counts, filter, onFilterChange }: Readonly<Fil
     <nav aria-label="Check run filters" className="flex flex-wrap gap-1.5 px-4 py-3">
       {filters.map((item) => {
         const selected = filter === item.id;
-        const outlined = (item.id === "deferred" || item.id === "fallback") && !selected;
         return (
           <button
             aria-pressed={selected}
             className={`inline-flex min-h-8 items-center gap-1.5 rounded-lg border px-2.5 text-[11.5px] font-semibold outline-none transition-colors ${filterChipStateClassName(
               selected,
-            )} ${outlined ? "border-dashed text-fg-muted" : ""}`}
+            )}`}
             key={item.id}
             onClick={() => onFilterChange(item.id)}
             title={item.tooltip}

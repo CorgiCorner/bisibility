@@ -144,7 +144,7 @@ export default async function InvitePage({ params }: Readonly<InvitePageProps>) 
   async function acceptInviteAction() {
     "use server";
     const result = await acceptInvite({ token });
-    redirect(appPath(result.publicId, "overview"));
+    redirect(appPath(result.publicId, "dashboard"));
   }
 
   let inviteAction = <InviteSignInForm email={invite.email} />;

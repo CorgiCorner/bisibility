@@ -1,3 +1,6 @@
+import { cldrMarketLanguageSuggestions } from "./generated/cldr-market-language-suggestions";
+import { serpLanguageCatalog } from "./generated/serp-language-catalog";
+
 export const SERP_ENGINE = {
   id: "google",
   label: "Google",
@@ -63,37 +66,44 @@ export type SerpMarket = {
     code: string;
     label: string;
   };
+  languages: readonly {
+    code: string;
+    label: string;
+  }[];
   name: SerpMarketName;
 };
 
+export const serpLanguages = serpLanguageCatalog;
+const languageByCode = new Map(serpLanguages.map((language) => [language.code, language]));
+
 const markets = [
-  market("United States", "us", "English", "en", ["US", "USA", "United States of America"]),
-  market("United Kingdom", "gb", "English", "en", ["GB", "UK", "Great Britain"]),
-  market("Canada", "ca", "English", "en", ["CA"]),
-  market("Australia", "au", "English", "en", ["AU"]),
-  market("Germany", "de", "German", "de", ["DE", "Deutschland"]),
-  market("France", "fr", "French", "fr", ["FR"]),
-  market("Spain", "es", "Spanish", "es", ["ES", "Espana", "España"]),
-  market("Italy", "it", "Italian", "it", ["IT", "Italia"]),
-  market("Netherlands", "nl", "Dutch", "nl", ["NL", "Holland"]),
-  market("Sweden", "se", "Swedish", "sv", ["SE"]),
-  market("Poland", "pl", "Polish", "pl", ["PL", "Polska"]),
-  market("Ireland", "ie", "English", "en", ["IE"]),
-  market("Portugal", "pt", "Portuguese", "pt", ["PT"]),
-  market("Belgium", "be", "Dutch", "nl", ["BE"]),
-  market("Switzerland", "ch", "German", "de", ["CH"]),
-  market("Austria", "at", "German", "de", ["AT"]),
-  market("Denmark", "dk", "Danish", "da", ["DK"]),
-  market("Norway", "no", "Norwegian", "no", ["NO"]),
-  market("Finland", "fi", "Finnish", "fi", ["FI"]),
-  market("Brazil", "br", "Portuguese", "pt", ["BR"]),
-  market("Mexico", "mx", "Spanish", "es", ["MX"]),
-  market("India", "in", "English", "en", ["IN"]),
-  market("Japan", "jp", "Japanese", "ja", ["JP"]),
-  market("Singapore", "sg", "English", "en", ["SG"]),
-  market("New Zealand", "nz", "English", "en", ["NZ"]),
-  market("South Africa", "za", "English", "en", ["ZA"]),
-  market("United Arab Emirates", "ae", "English", "en", ["AE", "UAE"]),
+  market("United States", "us", "en", ["US", "USA", "United States of America"]),
+  market("United Kingdom", "gb", "en", ["GB", "UK", "Great Britain"]),
+  market("Canada", "ca", "en", ["CA"]),
+  market("Australia", "au", "en", ["AU"]),
+  market("Germany", "de", "de", ["DE", "Deutschland"]),
+  market("France", "fr", "fr", ["FR"]),
+  market("Spain", "es", "es", ["ES", "Espana", "España"]),
+  market("Italy", "it", "it", ["IT", "Italia"]),
+  market("Netherlands", "nl", "nl", ["NL", "Holland"]),
+  market("Sweden", "se", "sv", ["SE"]),
+  market("Poland", "pl", "pl", ["PL", "Polska"]),
+  market("Ireland", "ie", "en", ["IE"]),
+  market("Portugal", "pt", "pt", ["PT"]),
+  market("Belgium", "be", "nl", ["BE"]),
+  market("Switzerland", "ch", "de", ["CH"]),
+  market("Austria", "at", "de", ["AT"]),
+  market("Denmark", "dk", "da", ["DK"]),
+  market("Norway", "no", "no", ["NO"]),
+  market("Finland", "fi", "fi", ["FI"]),
+  market("Brazil", "br", "pt", ["BR"]),
+  market("Mexico", "mx", "es", ["MX"]),
+  market("India", "in", "en", ["IN"]),
+  market("Japan", "jp", "ja", ["JP"]),
+  market("Singapore", "sg", "en", ["SG"]),
+  market("New Zealand", "nz", "en", ["NZ"]),
+  market("South Africa", "za", "en", ["ZA"]),
+  market("United Arab Emirates", "ae", "en", ["AE", "UAE"]),
 ] as const satisfies readonly SerpMarket[];
 
 export const serpMarkets = markets;
@@ -113,14 +123,19 @@ for (const item of serpMarkets) {
 function market(
   name: SerpMarketName,
   gl: string,
-  languageLabel: string,
   languageCode: string,
   aliases: readonly string[] = [],
 ): SerpMarket {
+  const language = languageByCode.get(languageCode);
+  if (!language) {
+    throw new Error(`Unsupported default language: ${languageCode}`);
+  }
+
   return {
     aliases,
     google: { gl },
-    language: { code: languageCode, label: languageLabel },
+    language,
+    languages: [language, ...serpLanguages.filter((item) => item.code !== language.code)],
     name,
   };
 }
@@ -181,6 +196,26 @@ export function resolveSerpMarket(value: string): SerpMarket {
   }
 
   return market;
+}
+
+export function isSupportedSerpLanguageCode(value: unknown): value is string {
+  return typeof value === "string" && languageByCode.has(value.trim().toLowerCase());
+}
+
+export function serpMarketLanguages(value: string | undefined): readonly SerpMarket["language"][] {
+  const name = normalizeSerpMarketName(value ?? DEFAULT_SERP_MARKET) ?? DEFAULT_SERP_MARKET;
+  return resolveSerpMarket(name).languages;
+}
+
+export function suggestedSerpMarketLanguages(
+  value: string | undefined,
+): readonly SerpMarket["language"][] {
+  const market = resolveSerpMarket(
+    normalizeSerpMarketName(value ?? DEFAULT_SERP_MARKET) ?? DEFAULT_SERP_MARKET,
+  );
+  return (cldrMarketLanguageSuggestions[market.google.gl.toUpperCase()] ?? []).flatMap(
+    (code) => languageByCode.get(code) ?? [],
+  );
 }
 
 export function resolveSerpDepth(value: number | undefined): SerpDepth {

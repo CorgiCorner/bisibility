@@ -18,7 +18,12 @@ import { signalSchemas } from "./openapi-signal-components";
 const serpMarketSchema = { enum: serpMarketOptions, example: "United States", type: "string" };
 const serpDeviceSchema = { enum: serpDeviceValues, type: "string" };
 const publicIdPattern = "^[a-z]+_[a-z][a-z0-9]{23}$";
-const locationKeySchema = { example: "US/Texas/Austin", type: "string" };
+const locationKeySchema = {
+  description:
+    "Canonical country, region, or city key, optionally qualified with @language. The default language normalizes to the unqualified key.",
+  example: "ES/Andalusia/Malaga@en",
+  type: "string",
+};
 const keywordLocationSchema = {
   description: "Resolved keyword location display name.",
   example: "Austin, Texas, United States",
@@ -46,6 +51,12 @@ const keywordScheduleResourceSchema = {
   ],
   type: ["object", "null"],
 };
+// biome-ignore format: grouped fields keep the central schema below the enforced line limit.
+const keywordResourceRequiredFields = [
+  "id", "project_id", "text", "country", "location", "device", "latest_position",
+  "language_code", "language_label", "location_key", "previous_position", "ranking_url",
+  "schedule", "tags", "target_url", "topic", "intent", "created_at", "updated_at",
+];
 
 export const schemas = {
   PublicIdV3: {
@@ -117,7 +128,10 @@ export const schemas = {
       },
       intent: { type: ["string", "null"] },
       latest_position: { type: ["integer", "null"] },
+      language_code: { example: "en", type: "string" },
+      language_label: { example: "English", type: "string" },
       location: keywordLocationSchema,
+      location_key: locationKeySchema,
       previous_position: { type: ["integer", "null"] },
       project_id: {
         example: "prj_a00000000000000000000000",
@@ -132,24 +146,7 @@ export const schemas = {
       topic: { type: ["string", "null"] },
       updated_at: { format: "date-time", type: "string" },
     },
-    required: [
-      "id",
-      "project_id",
-      "text",
-      "country",
-      "location",
-      "device",
-      "latest_position",
-      "previous_position",
-      "ranking_url",
-      "schedule",
-      "tags",
-      "target_url",
-      "topic",
-      "intent",
-      "created_at",
-      "updated_at",
-    ],
+    required: keywordResourceRequiredFields,
     type: "object",
   },
   KeywordCreateItem: {

@@ -5,7 +5,7 @@ import {
   BellIcon as Bell,
   BinocularsIcon as Binoculars,
   BookOpenTextIcon as BookOpenText,
-  ClockCounterClockwiseIcon as ClockCounterClockwise,
+  CalendarDotsIcon as CalendarDots,
   GearSixIcon as GearSix,
   GlobeIcon as Globe,
   LinkIcon as Link,
@@ -37,18 +37,22 @@ export type NavItem = {
 
 export function navItems(projectRef: string): NavItem[] {
   return [
-    { label: "Dashboard", href: appPath(projectRef, "overview"), icon: SquaresFour },
+    { label: "Dashboard", href: appPath(projectRef, "dashboard"), icon: SquaresFour },
     // Keyword research scouts the market (Binoculars); Rank Tracker is the tracked list you then
     // search and filter (MagnifyingGlass).
     // The research label says "keyword" because the rail also carries Backlinks and Competitors.
-    { label: "Keyword Research", href: appPath(projectRef, "research"), icon: Binoculars },
+    {
+      label: "Keyword Research",
+      href: appPath(projectRef, "keyword-research"),
+      icon: Binoculars,
+    },
     { label: "Domain Overview", href: appPath(projectRef, "domain-overview"), icon: Globe },
     { label: "Rank Tracker", href: appPath(projectRef, "rank-tracker"), icon: MagnifyingGlass },
     { label: "Backlinks", href: appPath(projectRef, "backlinks"), icon: Link },
     { label: "Competitors", href: appPath(projectRef, "competitors"), icon: UsersThree },
     // Timeline reads the project's own history, so it belongs with the primary flow; Integrations
     // is setup you touch once, which is what utilities are for.
-    { label: "Timeline", href: appPath(projectRef, "timeline"), icon: ClockCounterClockwise },
+    { label: "Timeline", href: appPath(projectRef, "timeline"), icon: CalendarDots },
     {
       group: "utility",
       label: "Integrations",

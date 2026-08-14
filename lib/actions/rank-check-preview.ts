@@ -52,9 +52,16 @@ function connectionCount(projectId: string, kind: "analytics" | "serp") {
   });
 }
 
-async function firstCheckCandidates(projectId: string, limit: number) {
-  const select = { id: true, publicId: true, text: true } as const;
+async function firstCheckCandidates(projectId: string, limit: number, keywordText?: string) {
+  const select = {
+    device: true,
+    id: true,
+    locationRef: { select: { displayName: true, languageLabel: true } },
+    publicId: true,
+    text: true,
+  } as const;
   const uncheckedWhere = {
+    ...(keywordText ? { text: keywordText } : {}),
     projectId,
     rankChecks: { none: { status: "completed" } },
   } as const;
@@ -65,7 +72,7 @@ async function firstCheckCandidates(projectId: string, limit: number) {
     where: { ...uncheckedWhere, targetUrl: { not: null } },
   });
   const remaining = limit - targeted.length;
-  if (remaining <= 0) return targeted;
+  if (remaining <= 0) return targeted.map(firstCheckCandidate);
 
   return [
     ...targeted,
@@ -75,7 +82,26 @@ async function firstCheckCandidates(projectId: string, limit: number) {
       take: remaining,
       where: { ...uncheckedWhere, targetUrl: null },
     })),
-  ];
+  ].map(firstCheckCandidate);
+}
+
+function firstCheckCandidate(row: {
+  device: "desktop" | "mobile";
+  id: string;
+  locationRef: { displayName: string; languageLabel: string };
+  publicId: string;
+  text: string;
+}) {
+  return {
+    device: row.device,
+    id: row.id,
+    market: {
+      languageLabel: row.locationRef.languageLabel,
+      locationLabel: row.locationRef.displayName,
+    },
+    publicId: row.publicId,
+    text: row.text,
+  };
 }
 
 export async function listFirstCheckCandidates(
@@ -86,7 +112,9 @@ export async function listFirstCheckCandidates(
   const project = await requireProjectScope(actor, "read", data.projectId, { type: "project" });
   const sampleProject = isSampleProject(project);
   const [candidates, serpConnections, analyticsConnections] = await Promise.all([
-    sampleProject ? Promise.resolve([]) : firstCheckCandidates(project.id, data.limit),
+    sampleProject
+      ? Promise.resolve([])
+      : firstCheckCandidates(project.id, data.limit, data.keywordText),
     sampleProject ? Promise.resolve(0) : connectionCount(project.id, "serp"),
     connectionCount(project.id, "analytics"),
   ]);

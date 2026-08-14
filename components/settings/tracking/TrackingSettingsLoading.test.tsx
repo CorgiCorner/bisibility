@@ -29,6 +29,32 @@ const defaults = {
 };
 
 describe("TrackingSettingsLoading", () => {
+  it("uses the tracked-markets column width for settled and loading content", () => {
+    const { container } = render(
+      <>
+        <TrackingSettingsContent
+          canEdit
+          defaults={defaults}
+          domain="example.com"
+          initialCronPreview={{ message: "", runs: [], status: "idle" }}
+          previewCron={vi.fn()}
+          projectId="prj_1"
+          updateDefaults={vi.fn()}
+        />
+        <TrackingSettingsLoading />
+      </>,
+    );
+
+    for (const selector of [
+      "[data-tracking-settings-content]",
+      "[data-tracking-settings-loading]",
+    ]) {
+      const column = container.querySelector(selector);
+      expect(column).toHaveClass("max-w-[760px]");
+      expect(column).not.toHaveClass("max-w-[640px]");
+    }
+  });
+
   it("shares every settled card geometry class", () => {
     const { container } = render(
       <>

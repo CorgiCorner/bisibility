@@ -106,8 +106,10 @@ describe("saved keyword actions", () => {
       data: [
         {
           cpc: 1.25,
+          countryCode: "US",
           difficulty: 42,
           intent: "commercial",
+          languageCode: "en",
           location: "US",
           normalizedText: "rank tracker",
           projectId: "project_1",
@@ -133,6 +135,14 @@ describe("saved keyword actions", () => {
         publicId: { in: ["svkw_a00000000000000000000000", "svkw_b00000000000000000000000"] },
       },
     });
+    expect(mocks.revalidatePath).toHaveBeenNthCalledWith(
+      1,
+      "/app/prj_a00000000000000000000000/rank-tracker",
+    );
+    expect(mocks.revalidatePath).toHaveBeenNthCalledWith(
+      2,
+      "/app/prj_a00000000000000000000000/keyword-research",
+    );
   });
 
   it("does not write when project permission is denied", async () => {
@@ -149,7 +159,9 @@ describe("saved keyword actions", () => {
   });
 
   it("atomically skips a snapshot that is already tracked at write time", async () => {
-    mocks.prisma.keyword.findMany.mockResolvedValueOnce([{ text: " Rank   Tracker " }]);
+    mocks.prisma.keyword.findMany.mockResolvedValueOnce([
+      { locationRef: { canonicalKey: "US" }, text: " Rank   Tracker " },
+    ]);
     mocks.prisma.savedKeyword.findMany.mockResolvedValueOnce([
       { publicId: "svkw_b00000000000000000000000" },
     ]);
@@ -169,7 +181,7 @@ describe("saved keyword actions", () => {
     });
 
     expect(mocks.prisma.keyword.findMany).toHaveBeenCalledWith({
-      select: { text: true },
+      select: { locationRef: { select: { canonicalKey: true } }, text: true },
       where: { projectId: "project_1" },
     });
     expect(mocks.prisma.savedKeyword.createMany).toHaveBeenCalledWith({

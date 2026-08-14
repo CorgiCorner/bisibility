@@ -46,6 +46,32 @@ const active = {
 };
 
 describe("ResearchDetailPanel", () => {
+  it("shows explicit unavailable values for the whole keyword-overview package", () => {
+    render(
+      <ResearchDetailPanel
+        active={active}
+        costContext={costContext}
+        defaultTracking={{ device: "desktop", location, scheduleFrequency: "project_default" }}
+        metricsAvailable={false}
+        onAdd={vi.fn()}
+        projectId="prj_1"
+        seed="seo"
+      />,
+    );
+
+    for (const label of [
+      "KD unavailable",
+      "Volume unavailable",
+      "CPC unavailable",
+      "Competition unavailable",
+      "Search trend unavailable",
+      "Variant search volume unavailable",
+    ]) {
+      expect(screen.getAllByLabelText(label)[0]).toHaveTextContent("n/a");
+    }
+    expect(screen.queryByTestId("line-chart")).not.toBeInTheDocument();
+  });
+
   it("uses the shared tracking configuration and forwards the selected values", () => {
     const onAdd = vi.fn();
     render(
@@ -116,6 +142,22 @@ describe("ResearchDetailPanel", () => {
     expect(
       screen.getByText("Tracking estimate: 1 keyword, 1 location, daily."),
     ).toBeInTheDocument();
+  });
+
+  it("prices the active project-market matrix that the tracking drawer selects by default", () => {
+    render(
+      <ResearchDetailPanel
+        active={active}
+        costContext={costContext}
+        defaultTracking={{ device: "desktop", location, scheduleFrequency: "project_default" }}
+        onAdd={vi.fn()}
+        projectId="prj_1"
+        seed="seo"
+        trackingMarketCount={3}
+      />,
+    );
+
+    expect(screen.getByText("~$0.90")).toBeInTheDocument();
   });
 
   it("keeps the Location and Schedule labels screen-reader only", () => {

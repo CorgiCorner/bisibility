@@ -1,5 +1,9 @@
 import { Button } from "@/components/ui";
 import {
+  keywordImportTemplateColumns,
+  keywordImportTemplateCsv,
+} from "@/lib/keywords/import-csv-template";
+import {
   ArrowRightIcon as ArrowRight,
   CheckCircleIcon as CheckCircle,
   CloudArrowUpIcon as CloudArrowUp,
@@ -16,6 +20,7 @@ const mapRows = [
   ["target_url", "Target URL", ""],
   ["tags", "Tags", ""],
   ["country", "Country", ""],
+  ["language", "Language", ""],
   ["device", "Device", ""],
   ["notes", "Ignore this column", ""],
 ] as const;
@@ -87,20 +92,22 @@ export function TemplateStep() {
           <span>template.csv</span>
           <span className="text-green-text">UTF-8</span>
         </div>
-        <pre className="m-0 overflow-x-auto bg-code-bg px-[15px] py-[13px] font-mono text-[11.5px] leading-[1.75] text-code-fg">{`keyword,target_url,tags,country,device
-edge function logs,/docs/logs,docs;infra,US,desktop
-vector database,/products/vector,product,US,mobile
-llms.txt,/blog/llms-txt,content,GB,desktop`}</pre>
+        <pre className="m-0 overflow-x-auto bg-code-bg px-[15px] py-[13px] font-mono text-[11.5px] leading-[1.75] text-code-fg">
+          {keywordImportTemplateCsv}
+        </pre>
       </div>
       <div className="mt-[18px] flex flex-wrap gap-1.5">
-        {["keyword*", "target_url", "tags", "country", "device"].map((item) => (
-          <span
-            className="rounded-[7px] bg-bg-sunken px-[9px] py-[3px] font-mono text-[11px] text-fg-muted first:bg-accent-soft first:font-semibold first:text-accent-text"
-            key={item}
-          >
-            {item}
-          </span>
-        ))}
+        {keywordImportTemplateColumns.map((column) => {
+          const item = column === "keyword" ? "keyword*" : column;
+          return (
+            <span
+              className="rounded-[7px] bg-bg-sunken px-[9px] py-[3px] font-mono text-[11px] text-fg-muted first:bg-accent-soft first:font-semibold first:text-accent-text"
+              key={item}
+            >
+              {item}
+            </span>
+          );
+        })}
       </div>
       <div className="mt-3 flex items-center gap-[7px] text-[12px] text-fg-muted">
         <Info size={14} />

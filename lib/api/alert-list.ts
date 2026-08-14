@@ -153,6 +153,9 @@ function ruleView(
     enabled: rule.enabled,
     fires: `${rule.triggered.length} this week`,
     id: requiredPublicId(rule.publicId, "Alert rule", "alr"),
+    marketIds: rule.markets.map(({ projectMarket }) =>
+      requiredPublicId(projectMarket.publicId, "Project market", "pmkt"),
+    ),
     name: rule.name,
     period: rule.conditionType === "ctr_drop" ? "7d vs prior 28d" : "Each check",
     recipientIds: rule.recipients.map(({ user }) =>
@@ -213,6 +216,7 @@ async function loadRules(projectId: string) {
   const weekAgo = new Date(Date.now() - 7 * 86_400_000);
   return prisma.alertRule.findMany({
     include: {
+      markets: { include: { projectMarket: { select: { publicId: true } } } },
       recipients: { select: { user: { select: { publicId: true } } } },
       targets: {
         include: {

@@ -26,6 +26,7 @@ export type LocationFieldValue = {
   displayName: string;
   countryCode: string;
   hl?: string;
+  languageCode?: string;
   languageLabel?: string;
   regionName?: string | null;
   cityName?: string | null;
@@ -63,6 +64,7 @@ export function countryValueForCode(code: string): LocationFieldValue | null {
     displayName: name,
     hl: countryOptions.find((option) => option.code === countryCode)?.hl,
     kind: "country",
+    languageCode: countryOptions.find((option) => option.code === countryCode)?.hl,
     languageLabel: countryOptions.find((option) => option.code === countryCode)?.languageLabel,
     regionName: null,
   };
@@ -86,6 +88,7 @@ type LocationSearchItem = {
   city_name: string | null;
   canonical_key: string;
   hl?: string;
+  language_code?: string;
   kind: "country" | "region" | "city";
   language_label?: string;
 };
@@ -102,6 +105,7 @@ function toSuggestion(item: LocationSearchItem): LocationSuggestion | null {
     hl: item.hl,
     id: item.id,
     kind: item.kind,
+    languageCode: item.language_code ?? item.hl,
     languageLabel: item.language_label,
     regionName: item.region_name,
   };

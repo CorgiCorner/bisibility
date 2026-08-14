@@ -13,6 +13,7 @@ describe("OnboardingStepper", () => {
     );
 
     expect(screen.getByText("Step 2 of 4")).toBeInTheDocument();
+    expect(screen.getByText("Project setup")).toBeInTheDocument();
     const rail = screen.getByLabelText("Onboarding steps");
     const links = within(rail).getAllByRole("link");
 
@@ -33,12 +34,29 @@ describe("OnboardingStepper", () => {
       "aria-disabled",
       "true",
     );
-    expect(rail.querySelector('[aria-label="First check"]')).toHaveTextContent(
-      "Complete the previous step",
-    );
+    expect(rail.querySelector('[aria-label="First check"]')).toHaveTextContent("Next");
     expect(
       rail.querySelector('[aria-label="First check"] [data-step-dot-state]'),
     ).toHaveTextContent("4");
+
+    const completedStep = rail.querySelector(
+      '[aria-label="Create project, completed"] [data-step-dot-state="past"]',
+    );
+    const currentStep = rail.querySelector(
+      '[aria-label="Connect data"] [data-step-dot-state="current"]',
+    );
+    const nextSteps = rail.querySelectorAll('[data-step-dot-state="upcoming"]');
+
+    expect(completedStep).toHaveClass("bg-green-text");
+    expect(currentStep).toHaveClass("bg-accent-solid");
+    expect(nextSteps).toHaveLength(2);
+    for (const nextStep of nextSteps) {
+      expect(nextStep).toHaveClass("bg-bg-sunken");
+    }
+    expect(rail.querySelector('[aria-current="step"]')).toHaveClass(
+      "border-accent",
+      "bg-nav-active",
+    );
   });
 
   it("disables future step buttons and keeps completed steps clickable", () => {

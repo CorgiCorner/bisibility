@@ -5,6 +5,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 const meta = {
   title: "Integrations/ProviderCard",
   component: ProviderCard,
+  args: { timeZone: "Europe/Warsaw" },
   decorators: [
     (Story) => (
       <div className="min-h-[360px] max-w-xl bg-bg p-6 text-fg">

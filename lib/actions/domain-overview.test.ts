@@ -71,6 +71,17 @@ describe("domain overview actions", () => {
     );
   });
 
+  it("forwards an explicit ISO country without changing legacy action inputs", async () => {
+    mocks.analyze.mockResolvedValue({ costCents: 0, ok: false, reason: "no_source" });
+
+    await analyzeDomainOverviewAction({ ...base, countryCode: "es", estimateOnly: true });
+
+    expect(mocks.analyze).toHaveBeenCalledWith(
+      { actorId: "user_1", projectId: "project_1" },
+      expect.objectContaining({ countryCode: "es", languageCode: "en", locationCode: 2840 }),
+    );
+  });
+
   it("delegates provider pagination while sort and filters stay free client state", async () => {
     const input = {
       ...base,
@@ -116,7 +127,12 @@ describe("domain overview actions", () => {
 
   it("resolves a selected market through the shared persisted location path", async () => {
     mocks.resolveLocation.mockResolvedValue({
-      location: { canonicalKey: "US/Texas/Austin", primaryGeoCode: 1_026_201 },
+      location: {
+        canonicalKey: "US/Texas/Austin",
+        countryCode: "US",
+        languageCode: "en",
+        primaryGeoCode: 1_026_201,
+      },
     });
     await expect(
       selectDomainOverviewMarketAction({
@@ -140,12 +156,53 @@ describe("domain overview actions", () => {
         canonicalKey: "US",
         countryCode: "US",
         kind: "country",
+        languageCode: "en",
         primaryGeoCode: null,
       },
     });
     await expect(
       selectDomainOverviewMarketAction({ canonicalKey: "US", projectId: "prj_1" }),
     ).resolves.toEqual({ canonicalKey: "US", locationCode: 2840, supported: true });
+    expect(mocks.resolveLocation).toHaveBeenCalledWith({
+      projectId: "project_1",
+      selection: { countryCode: "US", kind: "country", languageCode: undefined },
+    });
+  });
+
+  it("preserves the language qualifier when resolving a catalog country pair", async () => {
+    mocks.resolveLocation.mockResolvedValue({
+      location: {
+        canonicalKey: "US@es",
+        countryCode: "US",
+        kind: "country",
+        languageCode: "es",
+        primaryGeoCode: null,
+      },
+    });
+
+    await expect(
+      selectDomainOverviewMarketAction({ canonicalKey: "US@es", projectId: "prj_1" }),
+    ).resolves.toEqual({ canonicalKey: "US@es", locationCode: 2840, supported: true });
+    expect(mocks.resolveLocation).toHaveBeenCalledWith({
+      projectId: "project_1",
+      selection: { countryCode: "US", kind: "country", languageCode: "es" },
+    });
+  });
+
+  it("rejects an off-catalog pair even when its country has a numeric Labs handle", async () => {
+    mocks.resolveLocation.mockResolvedValue({
+      location: {
+        canonicalKey: "ES@en",
+        countryCode: "ES",
+        kind: "country",
+        languageCode: "en",
+        primaryGeoCode: null,
+      },
+    });
+
+    await expect(
+      selectDomainOverviewMarketAction({ canonicalKey: "ES@en", projectId: "prj_1" }),
+    ).resolves.toEqual({ canonicalKey: "ES@en", locationCode: null, supported: false });
   });
 
   it("returns an explicit unsupported result for a city without a numeric Labs handle", async () => {
@@ -154,6 +211,7 @@ describe("domain overview actions", () => {
         canonicalKey: "US/Texas/Austin",
         countryCode: "US",
         kind: "city",
+        languageCode: "en",
         primaryGeoCode: null,
       },
     });

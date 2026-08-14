@@ -9,6 +9,7 @@ import { alertDepthConflict } from "./depth-conflict";
 import { emitDepthConflictSignal } from "./depth-conflict-signal";
 import { type AlertTrendCheck, downtrendSummary, hasDowntrend } from "./downtrend";
 import { loadRecentCompletedChecks } from "./history";
+import { alertMarketMatches } from "./market-scope";
 import { hasPositionDrop } from "./position-drop";
 import { alertPayload } from "./presentation";
 import type { AlertConditionTypeInput } from "./schema";
@@ -163,6 +164,7 @@ export async function evaluateKeywordAlerts(
   const keyword = await prisma.keyword.findUnique({
     select: {
       id: true,
+      locationId: true,
       project: {
         select: {
           domain: true,
@@ -191,11 +193,19 @@ export async function evaluateKeywordAlerts(
   };
   const rules = await prisma.alertRule.findMany({
     include: {
+      markets: {
+        select: {
+          projectMarket: { select: { locationId: true, status: true } },
+        },
+      },
       targets: { select: { keywordId: true, tagId: true } },
     },
     where: { enabled: true, projectId: keyword.projectId },
   });
-  const targetRules = rules.filter((rule) => targetMatches(rule, keyword.id, tagIds));
+  const targetRules = rules.filter(
+    (rule) =>
+      targetMatches(rule, keyword.id, tagIds) && alertMarketMatches(rule, keyword.locationId),
+  );
   const currentCheck = {
     checkedAt: afterSnapshot.checkedAt,
     normalizationVersion: afterSnapshot.normalizationVersion,

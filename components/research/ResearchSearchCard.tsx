@@ -11,9 +11,13 @@ import {
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import type { KeywordResearchMode } from "@/lib/keyword-research/types";
 import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
-import Popover from "@mui/material/Popover";
-import { MagnifyingGlassIcon as MagnifyingGlass, XIcon as X } from "@phosphor-icons/react";
-import { type KeyboardEvent, useState } from "react";
+import { docsLinkProps } from "@/lib/site/site";
+import {
+  GlobeSimpleIcon as GlobeSimple,
+  MagnifyingGlassIcon as MagnifyingGlass,
+  XIcon as X,
+} from "@phosphor-icons/react";
+import type { KeyboardEvent } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -30,6 +34,7 @@ const limitOptions = [100, 300, 500].map((value) => ({
   label: `${value} results`,
   value: String(value),
 }));
+const pricingDocsHref = "/docs/api/keyword-research#research-keywords";
 
 export type ResearchEstimateView = {
   cached: boolean;
@@ -43,7 +48,9 @@ type ResearchSearchCardProps = {
   disabled?: boolean;
   estimate: ResearchEstimateView;
   includeClickstream: boolean;
+  lookupDisabled?: boolean;
   location: LocationFieldValue;
+  metricsScope?: { country: string; language: string };
   mode: KeywordResearchMode;
   onConnectionChange: (value: string) => void;
   onIncludeClickstreamChange: (value: boolean) => void;
@@ -77,13 +84,23 @@ function researchButtonLabel(
   return `${prefix} ~${formatEstimateCents(costCents)}`;
 }
 
+function researchLanguageLabel(location: LocationFieldValue) {
+  return location.languageLabel?.trim() || location.hl?.trim() || "English";
+}
+
+function researchMarketLabel(location: LocationFieldValue) {
+  return `${location.displayName} / ${researchLanguageLabel(location)}`;
+}
+
 export function ResearchSearchCard({
   connectionId,
   connectionOptions,
   disabled = false,
   estimate,
   includeClickstream,
+  lookupDisabled = false,
   location,
+  metricsScope,
   mode,
   onConnectionChange,
   onIncludeClickstreamChange,
@@ -97,7 +114,6 @@ export function ResearchSearchCard({
   researching,
   seeds,
 }: Readonly<ResearchSearchCardProps>) {
-  const [pricingAnchor, setPricingAnchor] = useState<HTMLElement | null>(null);
   const { getValues, handleSubmit, register, resetField } = useForm<FormValues>({
     defaultValues: { seed: "" },
     resolver: zodResolver(formSchema),
@@ -120,6 +136,7 @@ export function ResearchSearchCard({
   }
 
   function submit() {
+    if (lookupDisabled) return;
     const next = commitSeed();
     if (next.length === 0) return;
     onSubmit(next);
@@ -144,6 +161,7 @@ export function ResearchSearchCard({
   const fallbackCostCents = pricingRows.every((row) => row.cost != null)
     ? pricingRows.reduce((sum, row) => sum + (row.cost ?? 0), 0) * Math.max(seeds.length, 1)
     : null;
+  const marketLabel = researchMarketLabel(location);
 
   return (
     <Card className="overflow-visible p-4 sm:p-5" size="md">
@@ -186,9 +204,17 @@ export function ResearchSearchCard({
               labelHidden
               onChange={onLocationChange}
               projectId={projectId}
-              value={location}
+              value={{ ...location, displayName: marketLabel }}
             />
           </div>
+          <MenuSelect
+            ariaLabel="Data provider connection"
+            leadingIcon={<span>Provider:</span>}
+            onChange={onConnectionChange}
+            options={connectionOptions}
+            triggerClassName="justify-between md:w-[160px]"
+            value={connectionId}
+          />
           <MenuSelect
             ariaLabel="Results limit"
             onChange={(value) => onLimitChange(Number(value) as 100 | 300 | 500)}
@@ -204,15 +230,6 @@ export function ResearchSearchCard({
             triggerClassName="justify-between md:w-auto md:min-w-[132px]"
             value={mode}
           />
-          {connectionOptions.length > 1 ? (
-            <MenuSelect
-              ariaLabel="Data provider connection"
-              onChange={onConnectionChange}
-              options={connectionOptions}
-              triggerClassName="justify-between md:w-[160px]"
-              value={connectionId}
-            />
-          ) : null}
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -227,15 +244,15 @@ export function ResearchSearchCard({
             <InfoTooltip text="Volumes corrected with real-user browsing data instead of Google Ads estimates alone. About twice the lookup cost." />
           </span>
           <div className="flex flex-wrap items-center gap-4">
-            <button
-              className="text-[12px] text-fg-muted transition-colors hover:text-fg"
-              onClick={(event) => setPricingAnchor(event.currentTarget)}
-              type="button"
+            <a
+              className="text-[12px] text-fg-muted underline decoration-border underline-offset-4 transition-colors hover:text-fg"
+              href={pricingDocsHref}
+              {...docsLinkProps(pricingDocsHref)}
             >
               How is this priced?
-            </button>
+            </a>
             <Button
-              disabled={disabled || researching}
+              disabled={disabled || lookupDisabled || researching}
               loading={researching}
               loadingLabel={researchButtonLabel(true, estimate, fallbackCostCents)}
               startIcon={<MagnifyingGlass size={15} weight="bold" />}
@@ -246,42 +263,19 @@ export function ResearchSearchCard({
             </Button>
           </div>
         </div>
-      </form>
-      <Popover
-        anchorEl={pricingAnchor}
-        onClose={() => setPricingAnchor(null)}
-        open={Boolean(pricingAnchor)}
-        anchorOrigin={{ horizontal: "left", vertical: "bottom" }}
-        slotProps={{
-          paper: {
-            className: "rounded-[12px] border border-border-strong",
-            sx: {
-              bgcolor: "var(--bg-elev)",
-              border: "1px solid var(--border-strong)",
-              borderRadius: "12px",
-              boxShadow: "none",
-              overflow: "hidden",
-            },
-          },
-        }}
-      >
-        <div className="w-[300px] bg-bg-elev p-4 text-fg">
-          <p className="m-0 text-[13px] font-semibold">Estimated DataForSEO cost</p>
-          <div className="mt-2 grid gap-1.5 font-mono text-[11.5px] text-fg-muted">
-            {pricingRows.map((row) => (
-              <div className="flex justify-between" key={row.source}>
-                <span>{row.source}</span>
-                <span>
-                  {row.cost == null ? "rate unavailable" : `~${formatEstimateCents(row.cost)}`}
-                </span>
-              </div>
-            ))}
+        {metricsScope ? (
+          <div
+            aria-label={`Metrics scope: ${metricsScope.country} - ${metricsScope.language}`}
+            className="-mx-4 -mb-4 mt-1 flex items-center gap-2 rounded-b-[12px] border-t border-border bg-bg-sunken px-4 py-2.5 font-mono text-[11.5px] text-fg-muted sm:-mx-5 sm:-mb-5 sm:px-5"
+            role="status"
+          >
+            <GlobeSimple aria-hidden size={14} />
+            <span>
+              Metrics scope: {metricsScope.country} - {metricsScope.language}
+            </span>
           </div>
-          <p className="mb-0 mt-3 text-[11.5px] leading-5 text-fg-muted">
-            Cache hits are free for 12 hours. Actual provider cost may differ slightly.
-          </p>
-        </div>
-      </Popover>
+        ) : null}
+      </form>
     </Card>
   );
 }

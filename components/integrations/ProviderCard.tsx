@@ -28,8 +28,8 @@ export type ProviderCardProps = {
   projectId?: string;
   projectRef?: ProjectRef;
   provider: IntegrationProviderData;
+  timeZone: string;
 };
-
 const actionLabels = {
   connected: "Manage",
   needs_reauth: "Reconnect",
@@ -68,6 +68,7 @@ export function ProviderCard({
   projectId,
   projectRef,
   provider,
+  timeZone,
 }: Readonly<ProviderCardProps>) {
   const [drawerOpen, setDrawerOpen] = useState(initialOpen && canManageProviders);
   const [testPending, setTestPending] = useState(false);
@@ -88,7 +89,6 @@ export function ProviderCard({
     if (readOnly) {
       return;
     }
-
     setSyncPending(true);
     setSyncResult(null);
     try {
@@ -110,7 +110,6 @@ export function ProviderCard({
       setSyncPending(false);
     }
   }
-
   async function handleSecondaryAction() {
     if (readOnly) {
       return;
@@ -119,7 +118,6 @@ export function ProviderCard({
       setDrawerOpen(true);
       return;
     }
-
     setTestPending(true);
     setTestResult(null);
     try {
@@ -196,7 +194,9 @@ export function ProviderCard({
           </p>
         ) : null}
         <ProviderCredentialWarning credentialIssue={provider.credentialIssue} />
-        {provider.syncFailure ? <ProviderSyncFailureAlert failure={provider.syncFailure} /> : null}
+        {provider.syncFailure ? (
+          <ProviderSyncFailureAlert failure={provider.syncFailure} timeZone={timeZone} />
+        ) : null}
         <div className="mt-3.5 flex shrink-0 items-center gap-[7px] border-border-soft border-t pt-3.5 sm:col-start-2 sm:row-start-1 sm:mt-0 sm:flex-wrap sm:justify-end sm:border-t-0 sm:pt-0">
           {provider.secondaryAction && canManageProviders ? (
             <ProjectReadOnlyTooltip className={actionWrapperClass}>

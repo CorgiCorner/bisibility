@@ -51,7 +51,7 @@ describe("AlertsPage", () => {
         publicId: "prj_abcdefghijklmnopqrstuvwx",
       },
       rules: [],
-      targets: { keywords: [], tags: [] },
+      targets: { keywords: [], markets: [], tags: [] },
     });
     mocks.isProviderConnected.mockResolvedValue(false);
   });
@@ -124,7 +124,7 @@ describe("AlertsPage", () => {
           topN: null,
         },
       ],
-      targets: { keywords: [], tags: [] },
+      targets: { keywords: [], markets: [], tags: [] },
     });
 
     render(
@@ -157,7 +157,7 @@ describe("AlertsPage", () => {
         publicId: "prj_abcdefghijklmnopqrstuvwx",
       },
       rules: [],
-      targets: { keywords: [], tags: [] },
+      targets: { keywords: [], markets: [], tags: [] },
     });
 
     render(

@@ -138,6 +138,12 @@ enum ProjectWriteMode {
   migrated
 }
 
+enum ProjectMarketStatus {
+  active
+  paused
+  removed
+}
+
 enum SignalSource {
   rank_tracker
   search_analytics
@@ -462,6 +468,7 @@ model Project {
   owner                    User                     @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: Cascade)
   members                  Membership[]
   keywords                 Keyword[]
+  markets                  ProjectMarket[]
   savedKeywords            SavedKeyword[]
   tags                     Tag[]
   competitors              Competitor[]
@@ -556,6 +563,24 @@ model ProjectDefaults {
   @@map("project_defaults")
 }
 
+model ProjectMarket {
+  id               String              @id @default(cuid())
+  publicId         String              @unique
+  projectId        String
+  locationId       String
+  status           ProjectMarketStatus @default(active)
+  project          Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  location         Location            @relation(fields: [locationId], references: [id], onDelete: Restrict)
+  alertRuleMarkets AlertRuleMarket[]
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+
+  @@unique([projectId, locationId])
+  @@index([projectId, status, createdAt, id])
+  @@index([locationId])
+  @@map("project_markets")
+}
+
 // Migration-only expression index: keywords_projectId_normalized_text_idx
 // (20260727064500_keyword_match_index) uses lower(btrim(text)), which Prisma cannot model.
 model Keyword {
@@ -597,6 +622,8 @@ model SavedKeyword {
   text           String
   normalizedText String
   location       String
+  countryCode    String
+  languageCode   String
   volume         Int?
   difficulty     Int?
   cpc            Float?
@@ -607,7 +634,7 @@ model SavedKeyword {
   savedAt        DateTime @default(now())
   project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
-  @@unique([projectId, normalizedText, location])
+  @@unique([projectId, normalizedText, location, countryCode, languageCode], map: "saved_keywords_market_pair_key")
   @@index([projectId, savedAt])
   @@map("saved_keywords")
 }
@@ -621,6 +648,7 @@ model Location {
   cityName         String?
   gl               String
   hl               String
+  languageCode     String
   languageLabel    String
   primaryGeoCode   Int?
   primaryGeoName   String
@@ -630,6 +658,7 @@ model Location {
   updatedAt        DateTime          @updatedAt
   keywords         Keyword[]
   projectDefaults  ProjectDefaults[] @relation("ProjectDefaultLocation")
+  projectMarkets   ProjectMarket[]
 
   @@index([countryCode])
   @@map("locations")
@@ -1205,6 +1234,7 @@ model AlertRule {
   competitorDomain  String?
   channels          AlertChannel[]
   targets           AlertRuleTarget[]
+  markets           AlertRuleMarket[]
   recipients        AlertRuleRecipient[]
   triggered         TriggeredAlert[]
   dailyStats        AlertRuleDailyStat[]
@@ -1216,6 +1246,19 @@ model AlertRule {
   @@index([projectId])
   @@index([projectId, enabled])
   @@map("alert_rules")
+}
+
+model AlertRuleMarket {
+  id              String        @id @default(cuid())
+  ruleId          String
+  projectMarketId String
+  rule            AlertRule     @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+  projectMarket   ProjectMarket @relation(fields: [projectMarketId], references: [id], onDelete: Cascade)
+  createdAt       DateTime      @default(now())
+
+  @@unique([ruleId, projectMarketId])
+  @@index([projectMarketId])
+  @@map("alert_rule_markets")
 }
 
 model AlertRuleTarget {

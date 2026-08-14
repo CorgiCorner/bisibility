@@ -10,7 +10,9 @@ import { domainOverviewLocationCode } from "@/lib/domain-overview/target";
 import { appPath } from "@/lib/routing/app-path";
 import { saveSavedKeywordRows } from "@/lib/saved-keywords/service";
 import { saveKeywordsSchema } from "@/lib/schemas/saved-keyword";
+import { normalizeCanonicalLocationKey } from "@/lib/serp/location";
 import { resolveKeywordLocation } from "@/lib/serp/location-service";
+import { supportsResearchMarket } from "@/lib/serp/market-capability";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getActionActor, parseActionInput, requireProjectScope } from "./_shared";
@@ -19,6 +21,11 @@ const projectId = z.string().trim().min(1).max(120);
 const target = z.string().trim().min(1).max(253);
 const scopeOverride = z.enum(["root", "subdomain"]).optional();
 const market = {
+  countryCode: z
+    .string()
+    .trim()
+    .regex(/^[A-Za-z]{2}$/)
+    .optional(),
   languageCode: z.string().trim().min(2).max(12),
   locationCode: z.number().int().positive(),
 };
@@ -83,6 +90,7 @@ export async function analyzeDomainOverviewAction(input: unknown) {
     {
       estimateOnly: data.estimateOnly,
       fresh: data.fresh,
+      ...(data.countryCode ? { countryCode: data.countryCode } : {}),
       languageCode: data.languageCode,
       locationCode: data.locationCode,
       maxCostCents: data.maxCostCents,
@@ -95,18 +103,25 @@ export async function analyzeDomainOverviewAction(input: unknown) {
 export async function selectDomainOverviewMarketAction(input: unknown) {
   const data = parseActionInput(selectMarketSchema, input);
   const { project } = await mutationScope(data);
-  const country = /^[A-Z]{2}$/.test(data.canonicalKey);
+  const normalized = normalizeCanonicalLocationKey(data.canonicalKey);
   const resolved = await resolveKeywordLocation({
     projectId: project.id,
-    selection: country
-      ? { countryCode: data.canonicalKey, kind: "country" }
-      : { canonicalKey: data.canonicalKey, kind: "city" },
+    selection: normalized.selector.cityName
+      ? { canonicalKey: normalized.canonicalKey, kind: "city" }
+      : {
+          countryCode: normalized.selector.countryCode,
+          kind: "country",
+          languageCode: normalized.selector.languageCode,
+        },
   });
   const locationCode = domainOverviewLocationCode(resolved.location);
+  const supported =
+    locationCode != null &&
+    supportsResearchMarket(resolved.location.countryCode, resolved.location.languageCode);
   return {
     canonicalKey: resolved.location.canonicalKey,
-    locationCode,
-    supported: locationCode != null,
+    locationCode: supported ? locationCode : null,
+    supported,
   };
 }
 
@@ -117,6 +132,7 @@ export async function loadDomainHistoryAction(input: unknown) {
     { actorId: actor.id, projectId: project.id },
     {
       fresh: data.fresh,
+      ...(data.countryCode ? { countryCode: data.countryCode } : {}),
       languageCode: data.languageCode,
       locationCode: data.locationCode,
       maxCostCents: data.maxCostCents,
@@ -139,6 +155,7 @@ async function loadTablePage(input: unknown, module: "keywords" | "pages") {
   const { actor, project } = await mutationScope(data);
   const options = {
     fresh: data.fresh,
+    ...(data.countryCode ? { countryCode: data.countryCode } : {}),
     languageCode: data.languageCode,
     limit: data.limit,
     locationCode: data.locationCode,

@@ -27,7 +27,7 @@
           },
           {
             "group": "Concepts",
-            "pages": ["architecture", "audit-log"]
+            "pages": ["architecture", "markets", "audit-log"]
           },
           {
             "group": "Self-hosting",

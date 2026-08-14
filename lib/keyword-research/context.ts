@@ -6,7 +6,7 @@ import { getSerpProvider } from "@/lib/providers/registry";
 import type { SerpProvider } from "@/lib/providers/types";
 import { providerChainOrderBy, providerChainWhere } from "@/lib/rank-check/provider-chain-order";
 import { projectDefaultSerpMarket } from "@/lib/serp/default-market";
-import { serpRankLocation } from "@/lib/serp/location";
+import { normalizeCanonicalLocationKey, serpRankLocation } from "@/lib/serp/location";
 import { resolveKeywordLocation } from "@/lib/serp/location-service";
 import type { KeywordResearchConnection } from "./types";
 
@@ -17,7 +17,9 @@ export async function keywordResearchProject(projectId: string) {
       defaults: { include: { locationRef: true } },
       id: true,
       keywords: { select: { device: true, location: true, locationRef: true, text: true } },
-      savedKeywords: { select: { location: true, normalizedText: true } },
+      savedKeywords: {
+        select: { countryCode: true, languageCode: true, location: true, normalizedText: true },
+      },
       providerConnections: {
         orderBy: providerChainOrderBy(),
         select: { credentialsEncrypted: true, id: true, provider: true, publicId: true },
@@ -87,6 +89,7 @@ export function connectionResources(
 export async function researchLocation(project: KeywordResearchProject, overrideKey?: string) {
   const market = projectDefaultSerpMarket(project.defaults, project.keywords);
   const locationKey = overrideKey ?? market.locationKey;
+  const normalized = normalizeCanonicalLocationKey(locationKey);
   const persisted =
     overrideKey === undefined
       ? (project.defaults?.locationRef ??
@@ -95,12 +98,15 @@ export async function researchLocation(project: KeywordResearchProject, override
       : project.keywords.find((keyword) => keyword.locationRef?.canonicalKey === overrideKey)
           ?.locationRef;
   if (persisted) return { key: persisted.canonicalKey, value: serpRankLocation(persisted) };
-  // Country keys ("US") carry no path segment; only segmented keys are city-level.
   const resolved = await resolveKeywordLocation({
     projectId: project.id,
-    selection: locationKey.includes("/")
-      ? { canonicalKey: locationKey, kind: "city" }
-      : { countryCode: locationKey, kind: "country" },
+    selection: normalized.selector.cityName
+      ? { canonicalKey: normalized.canonicalKey, kind: "city" }
+      : {
+          countryCode: normalized.selector.countryCode,
+          kind: "country",
+          languageCode: normalized.selector.languageCode,
+        },
   });
   return { key: resolved.location.canonicalKey, value: serpRankLocation(resolved.location) };
 }

@@ -101,9 +101,11 @@ describe("saved keyword API", () => {
   it("returns public resources and project-scoped deletion results", async () => {
     mocks.listSaved.mockResolvedValue([
       {
+        countryCode: "US",
         cpc: null,
         difficulty: null,
         intent: null,
+        languageCode: "en",
         location: "US",
         publicId: "svkw_a00000000000000000000000",
         savedAt: "2026-08-01T12:00:00.000Z",
@@ -116,13 +118,23 @@ describe("saved keyword API", () => {
     ]);
 
     const listResponse = await listProjectSavedKeywords(context(), "prj_a00000000000000000000000");
-    await expect(listResponse.json()).resolves.toMatchObject({
+    await expect(listResponse.json()).resolves.toEqual({
       data: [
         {
+          cpc: null,
+          difficulty: null,
           id: "svkw_a00000000000000000000000",
+          intent: null,
+          location: "US",
           saved_at: "2026-08-01T12:00:00.000Z",
+          source_seed: null,
+          text: "new keyword",
+          trend: [],
+          variant_count: 0,
+          volume: null,
         },
       ],
+      meta: { next_cursor: null },
     });
 
     const deleteResponse = await deleteProjectSavedKeyword(

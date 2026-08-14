@@ -134,6 +134,37 @@ describe("runCheckWithFallback", () => {
     expect(unused.fetchRank).not.toHaveBeenCalled();
   });
 
+  it("keeps a non-default language when DataForSEO fails over to SerpApi", async () => {
+    const dataForSeo = provider("dataforseo", vi.fn().mockRejectedValue(new Error("network down")));
+    const serpApi = provider("serpapi", vi.fn().mockResolvedValue(ranked(4)));
+
+    await runCheckWithFallback({
+      connections: [
+        { provider: "dataforseo", credentials: { login: "login", password: "secret" } },
+        { provider: "serpapi", credentials: { apiKey: "serp-key" } },
+      ],
+      keyword: {
+        ...KEYWORD,
+        location: {
+          gl: "es",
+          hl: "en",
+          primaryGeoCode: 1000080,
+          primaryGeoName: "Madrid,Spain",
+          secondaryGeoName: "Madrid, Spain",
+        },
+      },
+      locationGranular: true,
+      resolveProvider: (id) => (id === "dataforseo" ? dataForSeo : serpApi),
+      schedule: { frequency: "manual" },
+    });
+
+    expect(serpApi.fetchRank).toHaveBeenCalledWith(
+      expect.objectContaining({
+        location: expect.objectContaining({ gl: "es", hl: "en" }),
+      }),
+    );
+  });
+
   it("does not fall through on errors outside the fallback code set", async () => {
     const secondary = provider("secondary", vi.fn().mockResolvedValue(ranked(4)));
     const resolveProvider = vi.fn((id: string) => {
@@ -696,6 +727,7 @@ describe("runKeywordCheckWithFallback", () => {
     expect(call.location.primaryGeoName).toBe("United States");
     expect(call.location.secondaryGeoName).toBe("United States");
     expect(call.location.gl).toBe("us");
+    expect(call.location.hl).toBe("en");
   });
 
   it("loads the enabled chain, persists the fallback winner, and keeps previous raw", async () => {

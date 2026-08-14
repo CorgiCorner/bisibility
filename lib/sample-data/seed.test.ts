@@ -43,7 +43,11 @@ const mocks = vi.hoisted(() => {
       },
       keywordSchedule: { upsert: vi.fn(() => Promise.resolve({ id: "schedule_1" })) },
       keywordTag: { upsert: vi.fn(() => Promise.resolve({ id: "keyword_tag_1" })) },
-      location: { upsert: vi.fn(() => Promise.resolve({ id: "loc_us" })) },
+      location: {
+        upsert: vi.fn(({ where }) =>
+          Promise.resolve({ id: `loc_${where.canonicalKey.replaceAll("@", "_")}` }),
+        ),
+      },
       membership: { upsert: vi.fn(() => Promise.resolve({ id: "membership_1" })) },
       oauthClient: { upsert: vi.fn(() => Promise.resolve({ id: "oc_bisibility_cli" })) },
       project: {
@@ -57,6 +61,13 @@ const mocks = vi.hoisted(() => {
         ),
       },
       projectDefaults: { upsert: vi.fn(() => Promise.resolve({ id: "defaults_1" })) },
+      projectMarket: {
+        deleteMany: vi.fn(() => Promise.resolve({ count: 0 })),
+        updateMany: vi.fn(() => Promise.resolve({ count: 0 })),
+        upsert: vi.fn(({ create }) =>
+          Promise.resolve({ ...create, id: `market_${create.locationId}` }),
+        ),
+      },
       providerConnection: {
         deleteMany: vi.fn(() => Promise.resolve({ count: 0 })),
         upsert: vi.fn(() => Promise.resolve({ id: "provider_connection_1" })),
@@ -87,6 +98,7 @@ vi.mock("@/lib/generated/prisma/client", () => ({
   PrismaClient: vi.fn(function PrismaClient() {
     return mocks.prisma;
   }),
+  ProjectMarketStatus: { active: "active", paused: "paused", removed: "removed" },
   ProviderKind: { serp: "serp" },
   ProviderStatus: { connected: "connected" },
   RankCheckFrequency: {
@@ -201,5 +213,34 @@ describe("database seed", () => {
           input.data.every((row) => row.keywordId && row.requestedDepth === 100),
       ),
     ).toBe(true);
+  });
+
+  it("seeds the three-market demo shown in the README dashboard", async () => {
+    await seed();
+
+    expect(mocks.prisma.projectMarket.deleteMany).not.toHaveBeenCalled();
+    expect(mocks.prisma.projectMarket.updateMany).toHaveBeenCalledWith({
+      data: { status: "removed" },
+      where: {
+        locationId: { notIn: ["loc_BE_ar", "loc_ES_en", "loc_ES"] },
+        projectId: "project_acme",
+      },
+    });
+    const marketCreates = mocks.prisma.projectMarket.upsert.mock.calls.map(
+      ([input]) => input.create,
+    );
+    expect(marketCreates).toHaveLength(3);
+    expect(marketCreates.map((market) => market.locationId)).toEqual([
+      "loc_BE_ar",
+      "loc_ES_en",
+      "loc_ES",
+    ]);
+    expect(marketCreates.every((market) => market.projectId === "project_acme")).toBe(true);
+
+    const keywordLocations = mocks.prisma.keyword.upsert.mock.calls
+      .map(([input]) => input.create)
+      .filter((create) => create.projectId === "project_acme")
+      .map((create) => create.locationId);
+    expect(new Set(keywordLocations)).toEqual(new Set(["loc_BE_ar", "loc_ES_en", "loc_ES"]));
   });
 });

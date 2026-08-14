@@ -14,6 +14,7 @@ type KeywordsFilterBarProps = {
   density: GridDensity;
   filterChips: KeywordFilterChip[];
   filterCount: number;
+  groupingControl?: ReactNode;
   onAddKeyword?: () => void;
   onClearFilters: () => void;
   onColumnVisibilityChange: (model: GridColumnVisibilityModel) => void;
@@ -34,6 +35,7 @@ export function KeywordsFilterBar({
   density,
   filterChips,
   filterCount,
+  groupingControl,
   onAddKeyword,
   onClearFilters,
   onColumnVisibilityChange,
@@ -60,6 +62,7 @@ export function KeywordsFilterBar({
         {scopeControl ? (
           <div className="flex min-w-0 items-center gap-2 xl:shrink-0">{scopeControl}</div>
         ) : null}
+        {groupingControl ? <div className="flex-none">{groupingControl}</div> : null}
         {scopeControl ? <div className="hidden h-8 w-px bg-border-strong xl:block" /> : null}
         <div className="grid min-w-0 flex-1 gap-2 sm:grid-cols-[minmax(220px,1fr)_auto] sm:items-center">
           <div className="flex min-w-0 items-center gap-2">

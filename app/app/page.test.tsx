@@ -38,8 +38,8 @@ describe("app entry page", () => {
       },
     ]);
 
-    await expect(AppEntryPage()).rejects.toThrow("NEXT_REDIRECT:/app/prj_complete/overview");
+    await expect(AppEntryPage()).rejects.toThrow("NEXT_REDIRECT:/app/prj_complete/dashboard");
 
-    expect(redirect).toHaveBeenCalledWith("/app/prj_complete/overview");
+    expect(redirect).toHaveBeenCalledWith("/app/prj_complete/dashboard");
   });
 });

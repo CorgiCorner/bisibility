@@ -36,7 +36,7 @@ export async function signIn(page: Page, email: string) {
   await firstBox.focus();
   await page.keyboard.type(await latestOtpFor(email));
   await page.getByRole("button", { name: "Verify & continue" }).click();
-  await expect(page).toHaveURL(/\/(app\/[^/]+\/overview|onboarding)(\?|$)/);
+  await expect(page).toHaveURL(/\/(app\/[^/]+\/dashboard|onboarding)(\?|$)/);
 }
 
 async function clickWizardPrimary(page: Page, label: string, nextUrl: RegExp) {
@@ -88,7 +88,7 @@ export async function completeOnboarding(page: Page, suffix: string) {
 
   await page.getByPlaceholder("One keyword per line").fill(keyword);
   await clickWizardPrimary(page, "Continue", /[?&]step=4(?:&|$)/);
-  await clickWizardPrimary(page, "Open dashboard", /\/app\/prj_[^/]+\/overview$/);
+  await clickWizardPrimary(page, "Open dashboard", /\/app\/prj_[^/]+\/dashboard$/);
 
   const projectRef = new URL(page.url()).pathname.split("/")[2];
   if (!projectRef) throw new Error("Onboarding did not land on a project-scoped dashboard.");

@@ -1,3 +1,4 @@
+import { ProviderLookupSignal } from "@/lib/provider-lookups/paid-call";
 import { serpMarkets } from "@/lib/serp/markets";
 import { describe, expect, it } from "vitest";
 import {
@@ -114,5 +115,18 @@ describe("domain overview target", () => {
         target: "www.example.com",
       }),
     ).toMatchObject({ keywordLimit: 100, languageCode: "en", pageLimit: 1_000 });
+  });
+
+  it("validates an explicit Labs country-language pair but preserves numeric compatibility", () => {
+    expect(
+      normalizeDomainOverviewMarket({ countryCode: "ES", languageCode: "es", locationCode: 2724 }),
+    ).toEqual({ countryCode: "ES", languageCode: "es", locationCode: 2724 });
+    expect(() =>
+      normalizeDomainOverviewMarket({ countryCode: "ES", languageCode: "en", locationCode: 2724 }),
+    ).toThrow(ProviderLookupSignal);
+    expect(normalizeDomainOverviewMarket({ languageCode: "en", locationCode: 2724 })).toEqual({
+      languageCode: "en",
+      locationCode: 2724,
+    });
   });
 });

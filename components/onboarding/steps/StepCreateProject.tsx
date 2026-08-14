@@ -31,10 +31,14 @@ type CreatedProject = {
   isSample?: boolean;
   name: string;
   publicId: string;
+  timezone?: string;
 };
 
+type CreateProjectActionInput = OnboardingWebsiteInput & { timezone?: string };
+
 type StepCreateProjectProps = {
-  createProjectAction?: (input: OnboardingWebsiteInput) => Promise<CreatedProject>;
+  browserTimezone?: string;
+  createProjectAction?: (input: CreateProjectActionInput) => Promise<CreatedProject>;
   dataResidencyMessage?: string;
   defaultValues?: CreateProjectFormValues;
   deriveWebsiteAction?: (input: OnboardingWebsiteInput) => Promise<WebsiteProjectIdentity>;
@@ -47,7 +51,16 @@ type StepCreateProjectProps = {
   ) => void;
 };
 
+function resolvedBrowserTimezone(): string {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone ?? "UTC";
+  } catch {
+    return "UTC";
+  }
+}
+
 export function StepCreateProject({
+  browserTimezone = resolvedBrowserTimezone(),
   createProjectAction,
   dataResidencyMessage,
   defaultValues,
@@ -130,7 +143,7 @@ export function StepCreateProject({
       if (!createProjectAction) {
         return;
       }
-      const project = await createProjectAction(values);
+      const project = await createProjectAction({ ...values, timezone: browserTimezone });
       advance(values, project);
     } catch (error) {
       setActionError(actionErrorMessage(error));

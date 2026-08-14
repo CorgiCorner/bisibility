@@ -13,6 +13,7 @@ export type IntegrationCategoryProps = {
   noProvidersYet?: boolean;
   projectId?: string;
   projectRef?: ProjectRef;
+  timeZone: string;
 };
 
 export function IntegrationCategory({
@@ -24,6 +25,7 @@ export function IntegrationCategory({
   noProvidersYet = false,
   projectId,
   projectRef,
+  timeZone,
 }: Readonly<IntegrationCategoryProps>) {
   return (
     <section className="space-y-3">
@@ -61,6 +63,7 @@ export function IntegrationCategory({
               projectId={projectId}
               projectRef={projectRef}
               provider={provider}
+              timeZone={timeZone}
             />
           );
         })}

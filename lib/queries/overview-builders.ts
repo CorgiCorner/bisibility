@@ -23,7 +23,7 @@ export type OverviewMetrics = {
   visibilityDelta: number | null;
 };
 // biome-ignore format: compact query-local shapes keep this file under the line cap.
-export type HighlightRow = { delta?: { direction: "down" | "up"; title: string; value: string }; id: string; keyword: string; note: string; positionText: string; positionTone?: "danger" | "default" | "muted" };
+export type HighlightRow = { delta?: { direction: "down" | "up"; title: string; value: string }; device?: string; id: string; keyword: string; marketLabel?: string; note: string; positionText: string; positionTone?: "danger" | "default" | "muted" };
 // biome-ignore format: compact query-local shapes keep this file under the line cap.
 export type HighlightList = { kind: "attention" | "newTop10" | "recentlyAdded" | "wins"; rows: HighlightRow[]; subtitle: string; title: string };
 export type Snapshot = ReturnType<typeof snapshotFor>;
@@ -94,15 +94,17 @@ export function delta(current: number | null, previous: number | null) {
   } as const;
 }
 
-export function rowFor(snapshot: Snapshot, note?: string): HighlightRow {
+export function rowFor(snapshot: Snapshot, note?: string, showDelta = true): HighlightRow {
   const observation = rankObservationState({
     completedChecks: snapshot.latestAttempt?.status === "completed" ? 1 : 0,
     position: snapshot.latestAttempt?.position,
   });
   return {
-    delta: delta(snapshot.position, snapshot.previous),
+    ...(showDelta ? { delta: delta(snapshot.position, snapshot.previous) } : {}),
+    device: snapshot.keyword.device,
     id: snapshot.keyword.publicId,
     keyword: snapshot.keyword.text,
+    marketLabel: `${snapshot.keyword.locationRef.displayName} / ${snapshot.keyword.locationRef.languageLabel}`,
     note: note ?? snapshot.latest?.rankingUrl ?? "No ranking URL observed",
     positionText: snapshot.position ? `#${snapshot.position}` : observation.label,
     positionTone: snapshot.position ? "default" : "muted",
@@ -133,10 +135,10 @@ export function buildHighlights(snapshots: Snapshot[], now: Date): HighlightList
   const successfulLatest = (item: Snapshot) => item.latestAttempt?.status === "completed" && Boolean(pos(item.latestAttempt.position));
   const wins = byGain.filter((item) => (item.movement ?? 0) > 0 && successfulLatest(item)).slice(0, 4).map((item) => rowFor(item, note(item, "Gained")));
   const failures = snapshots.filter((item) => item.latestAttempt?.status === "failed").map((item) => ({
-    id: item.keyword.publicId, keyword: item.keyword.text, note: "Latest check failed", positionText: "No data", positionTone: "danger" as const,
+    ...rowFor(item, undefined, false), note: "Latest check failed", positionText: "No data", positionTone: "danger" as const,
   }));
   const outsideTop100 = snapshots.filter((item) => item.latestAttempt?.status === "completed" && !pos(item.latestAttempt.position)).map((item) => ({
-    id: item.keyword.publicId, keyword: item.keyword.text, note: `Latest check completed - ${notRankedLabel().toLowerCase()}`, positionText: notRankedLabel(), positionTone: "muted" as const,
+    ...rowFor(item, undefined, false), note: `Latest check completed - ${notRankedLabel().toLowerCase()}`, positionText: notRankedLabel(), positionTone: "muted" as const,
   }));
   const drops = byGain.filter((item) => (item.movement ?? 0) < 0 && successfulLatest(item)).reverse().map((item) => rowFor(item, note(item, "Dropped")));
   const top10 = snapshots

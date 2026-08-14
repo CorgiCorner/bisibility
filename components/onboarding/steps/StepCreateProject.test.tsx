@@ -93,14 +93,36 @@ describe("StepCreateProject", () => {
   it("creates the project from the website input only", async () => {
     const createProjectAction = vi.fn(async () => project);
     const onComplete = vi.fn();
-    renderCreateProjectStep({ createProjectAction, onComplete });
+    renderCreateProjectStep({ browserTimezone: "Europe/Madrid", createProjectAction, onComplete });
 
     submitProject();
 
     await waitFor(() => expect(createProjectAction).toHaveBeenCalledTimes(1));
-    expect(createProjectAction).toHaveBeenCalledWith({ website: "example.com" });
+    expect(createProjectAction).toHaveBeenCalledWith({
+      website: "example.com",
+      timezone: "Europe/Madrid",
+    });
     expect(onComplete).toHaveBeenCalledWith({ website: "example.com" }, project);
     expect(routerMock.push).not.toHaveBeenCalled();
+  });
+
+  it("sends the resolved browser timezone but keeps onComplete to visible form values", async () => {
+    const createProjectAction = vi.fn(async () => ({ ...project, timezone: "Europe/Madrid" }));
+    const onComplete = vi.fn();
+    renderCreateProjectStep({ browserTimezone: "Europe/Madrid", createProjectAction, onComplete });
+
+    submitProject();
+
+    await waitFor(() => expect(createProjectAction).toHaveBeenCalledTimes(1));
+    expect(createProjectAction).toHaveBeenCalledWith({
+      website: "example.com",
+      timezone: "Europe/Madrid",
+    });
+    expect(onComplete).toHaveBeenCalledTimes(1);
+    const [values, created] = onComplete.mock.calls[0];
+    expect(values).toEqual({ website: "example.com" });
+    expect(values).not.toHaveProperty("timezone");
+    expect(created).toMatchObject({ publicId: "prj_1", timezone: "Europe/Madrid" });
   });
 
   it("surfaces create failures without advancing", async () => {

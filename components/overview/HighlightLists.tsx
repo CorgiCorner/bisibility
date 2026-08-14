@@ -4,6 +4,8 @@ import Tooltip from "@mui/material/Tooltip";
 import {
   ArrowDownIcon as ArrowDown,
   ArrowUpIcon as ArrowUp,
+  DeviceMobileIcon as DeviceMobile,
+  MonitorIcon as Monitor,
   PlusCircleIcon as PlusCircle,
   StarIcon as Star,
   TrendUpIcon as TrendUp,
@@ -77,6 +79,22 @@ function Delta({ row }: Readonly<{ row: HighlightRow }>) {
   );
 }
 
+function MarketIdentity({ row }: Readonly<{ row: HighlightRow }>) {
+  if (!row.marketLabel || !row.device) return null;
+  const Device = row.device === "mobile" ? DeviceMobile : Monitor;
+  const deviceLabel = row.device === "mobile" ? "Mobile" : "Desktop";
+  return (
+    <span className="mt-1 flex min-w-0 items-center gap-1.5">
+      <span className="max-w-[190px] truncate rounded-full border border-border bg-bg-sunken px-2 py-0.5 text-[10.5px] text-fg-muted">
+        {row.marketLabel}
+      </span>
+      <span title={deviceLabel}>
+        <Device aria-label={deviceLabel} size={12} />
+      </span>
+    </span>
+  );
+}
+
 export function HighlightLists({ lists, projectRef, rowHref }: Readonly<HighlightListsProps>) {
   return (
     <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-4">
@@ -110,6 +128,7 @@ export function HighlightLists({ lists, projectRef, rowHref }: Readonly<Highligh
                       <span className="block truncate text-[13px] font-medium text-fg">
                         {row.keyword}
                       </span>
+                      <MarketIdentity row={row} />
                       <span className="mt-px block truncate font-mono text-[10.5px] text-fg-muted">
                         {row.note}
                       </span>

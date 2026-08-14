@@ -9,8 +9,14 @@ import type {
 } from "@/lib/keyword-detail/state-model";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import type { KeywordRow } from "@/lib/queries/keywords";
+import type { ProjectMarketsView } from "@/lib/queries/project-markets";
 import { isBudgetExhaustedResult } from "@/lib/rank-check/budget-contract";
 import type { ProjectRef } from "@/lib/routing/app-path";
+import type {
+  AddKeywordsInput,
+  AddKeywordsMatrixInput,
+  BulkKeywordIdsInput,
+} from "@/lib/schemas/keyword";
 import type { SerpDepth } from "@/lib/serp/markets";
 import { CaretRightIcon as CaretRight, SpinnerGapIcon as SpinnerGap } from "@phosphor-icons/react";
 import Link from "next/link";
@@ -19,40 +25,52 @@ import { useState } from "react";
 import {
   actionErrorMessage,
   type CreateKeywordAlertInput,
+  type KeywordAction,
   type KeywordDetailActions,
 } from "./action-utils";
 import { KeywordDetailHeaderChrome } from "./KeywordDetailHeaderChrome";
-import { KeywordEditDrawer } from "./KeywordEditDrawer";
 import { KeywordHeaderActions } from "./KeywordHeaderActions";
+import { KeywordMarketSwitcher } from "./KeywordMarketSwitcher";
+import { KeywordMarketsDrawer } from "./KeywordMarketsDrawer";
 import { emptyRankCopy } from "./KeywordPendingEmptyState";
 import { KeywordPendingModules } from "./KeywordPendingModules";
 import { exportHistoryCsv } from "./keyword-history-export";
 
 type KeywordPendingDetailProps = KeywordDetailActions & {
+  addKeywordsAction?: KeywordAction<AddKeywordsInput>;
+  addKeywordsMatrixAction?: KeywordAction<AddKeywordsMatrixInput>;
+  bulkDeleteAction?: KeywordAction<BulkKeywordIdsInput>;
+  canCreateKeyword?: boolean;
   canUpdateKeyword: boolean;
   costContext?: ProjectCostContext;
   keyword: KeywordRow;
   keywordContext?: KeywordDetailKeywordContext;
   providerConnected: boolean;
   projectId: string;
+  projectMarkets?: ProjectMarketsView;
   projectRef: ProjectRef;
   rankState?: Exclude<KeywordDetailRankState, "normal">;
+  targets?: readonly KeywordRow[];
   whatChanged?: KeywordDetailWhatChanged;
 };
 
 export function KeywordPendingDetail({
+  addKeywordsAction,
+  addKeywordsMatrixAction,
+  bulkDeleteAction,
+  canCreateKeyword = false,
   canUpdateKeyword,
   costContext,
   createKeywordAlertAction,
   keyword,
   keywordContext,
   projectId,
+  projectMarkets,
   projectRef,
   providerConnected,
   rankState,
   runCheckNowAction,
-  updateKeywordAction,
-  updateKeywordScheduleAction,
+  targets = [keyword],
   whatChanged,
 }: Readonly<KeywordPendingDetailProps>) {
   const router = useRouter();
@@ -154,19 +172,38 @@ export function KeywordPendingDetail({
     <>
       <KeywordDetailHeaderChrome
         actions={actions}
+        dimensionControls={
+          addKeywordsAction && bulkDeleteAction ? (
+            <KeywordMarketSwitcher
+              addKeywordsAction={addKeywordsAction}
+              bulkDeleteAction={bulkDeleteAction}
+              canCreateKeyword={canCreateKeyword}
+              keyword={keyword}
+              projectId={projectId}
+              projectMarkets={projectMarkets}
+              targets={targets}
+            />
+          ) : undefined
+        }
         keyword={keyword}
         providerId={costContext?.providerId}
         rankState={state}
+        timeZone={costContext?.timezone ?? "UTC"}
       />
-      {canUpdateKeyword ? (
-        <KeywordEditDrawer
+      {canUpdateKeyword &&
+      editing &&
+      projectMarkets &&
+      addKeywordsMatrixAction &&
+      bulkDeleteAction ? (
+        <KeywordMarketsDrawer
+          addKeywordsMatrixAction={addKeywordsMatrixAction}
+          bulkDeleteAction={bulkDeleteAction}
+          canCreateKeyword={canCreateKeyword}
           keyword={keyword}
           onClose={() => setEditing(false)}
-          open={editing}
           projectId={projectId}
-          providerRate={providerRate}
-          updateKeywordAction={updateKeywordAction}
-          updateKeywordScheduleAction={updateKeywordScheduleAction}
+          projectMarkets={projectMarkets}
+          targets={targets}
         />
       ) : null}
       <KeywordPendingModules

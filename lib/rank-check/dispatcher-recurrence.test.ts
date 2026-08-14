@@ -10,7 +10,7 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 
 describe("dispatcher recurrence", () => {
-  it("advances daily and weekly schedules from stable keyword phases", () => {
+  it("advances daily and weekly schedules from stable local keyword phases", () => {
     const from = new Date("2026-07-28T12:00:00.000Z");
     const daily = { frequency: "daily" as const, jitterMinutes: 0, timezone: "UTC" };
     const weekly = { frequency: "weekly" as const, jitterMinutes: 0, timezone: "UTC" };
@@ -27,6 +27,68 @@ describe("dispatcher recurrence", () => {
       computeDispatcherNextCheckAt(weekly, "keyword_1", weeklyNext).getTime() -
         weeklyNext.getTime(),
     ).toBe(7 * 24 * 60 * 60 * 1_000);
+  });
+
+  it("keeps a daily keyword phase at the same Warsaw wall-clock time across DST", () => {
+    const schedule = {
+      frequency: "daily" as const,
+      jitterMinutes: 0,
+      timezone: "Europe/Warsaw",
+    };
+    const previous = new Date("2026-03-28T04:50:18.000Z");
+    const next = computeDispatcherNextCheckAt(schedule, "keyword_1", previous);
+
+    expect(next.toISOString()).toBe("2026-03-29T03:50:18.000Z");
+    expect(next.getTime() - previous.getTime()).toBe(23 * 60 * 60 * 1_000);
+  });
+
+  it("keeps a weekly keyword phase at the same Warsaw weekday and time across DST", () => {
+    const schedule = {
+      frequency: "weekly" as const,
+      jitterMinutes: 0,
+      timezone: "Europe/Warsaw",
+    };
+    const previous = new Date("2026-03-22T04:50:18.000Z");
+    const next = computeDispatcherNextCheckAt(schedule, "keyword_1", previous);
+
+    expect(next.toISOString()).toBe("2026-03-29T03:50:18.000Z");
+    expect(next.getTime() - previous.getTime()).toBe(167 * 60 * 60 * 1_000);
+  });
+
+  it("moves a stable daily phase through the spring-forward gap without skipping a day", () => {
+    const schedule = {
+      frequency: "daily" as const,
+      jitterMinutes: 0,
+      timezone: "Europe/Warsaw",
+    };
+    const gapRun = computeDispatcherNextCheckAt(
+      schedule,
+      "dst_3857",
+      new Date("2026-03-28T02:00:00.000Z"),
+    );
+
+    expect(gapRun.toISOString()).toBe("2026-03-29T01:30:01.000Z");
+    expect(computeDispatcherNextCheckAt(schedule, "dst_3857", gapRun).toISOString()).toBe(
+      "2026-03-30T00:30:01.000Z",
+    );
+  });
+
+  it("uses one stable weekly occurrence during the repeated fall-back hour", () => {
+    const schedule = {
+      frequency: "weekly" as const,
+      jitterMinutes: 0,
+      timezone: "Europe/Warsaw",
+    };
+    const repeatedHourRun = computeDispatcherNextCheckAt(
+      schedule,
+      "weekly_dst_446",
+      new Date("2026-10-24T01:00:00.000Z"),
+    );
+
+    expect(repeatedHourRun.toISOString()).toBe("2026-10-25T00:30:39.000Z");
+    expect(
+      computeDispatcherNextCheckAt(schedule, "weekly_dst_446", repeatedHourRun).toISOString(),
+    ).toBe("2026-11-01T01:30:39.000Z");
   });
 
   it("allows a weekly phase within the next day", () => {
@@ -75,17 +137,25 @@ describe("dispatcher recurrence", () => {
   });
 
   it("returns the next three custom cron runs in the dispatcher's timezone", () => {
-    const runs = nextThreeCronRuns({
+    const input = {
       cronExpression: "15 6 * * 1",
       from: new Date("2026-07-27T04:16:00.000Z"),
       timezone: "Europe/Warsaw",
-    });
+    };
+    const runs = nextThreeCronRuns(input);
 
     expect(runs.map((run) => run.toISOString())).toEqual([
       "2026-08-03T04:15:00.000Z",
       "2026-08-10T04:15:00.000Z",
       "2026-08-17T04:15:00.000Z",
     ]);
+    expect(
+      computeDispatcherNextCheckAt(
+        { ...input, frequency: "custom_cron", jitterMinutes: 0 },
+        "keyword_1",
+        input.from,
+      ),
+    ).toEqual(runs[0]);
   });
 
   it("returns deterministic next-three cron previews", () => {
@@ -205,6 +275,11 @@ describe("dispatcher recurrence", () => {
     expect(firstPhase).toBeGreaterThanOrEqual(0);
     expect(firstPhase).toBeLessThan(dailySeconds);
     expect(secondPhase).not.toBe(firstPhase);
+    const from = new Date("2026-07-28T00:00:00.000Z");
+    const schedule = { frequency: "daily" as const, jitterMinutes: 60, timezone: "UTC" };
+    expect(computeDispatcherNextCheckAt(schedule, "keyword_1", from)).not.toEqual(
+      computeDispatcherNextCheckAt(schedule, "keyword_2", from),
+    );
     expect(deterministicJitterSeconds("keyword_1", 60)).toBe(
       deterministicJitterSeconds("keyword_1", 60),
     );

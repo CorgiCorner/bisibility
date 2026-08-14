@@ -39,11 +39,11 @@ function SampleCard({ className }: Readonly<{ className?: string }>) {
       title="Project details"
     >
       <div className="flex flex-col gap-4">
-        <SettingsField width="sm">
+        <SettingsField width="field">
           <FieldLabel htmlFor="shell-project-name" label="Project name" />
           <Input defaultValue="Acme" id="shell-project-name" />
         </SettingsField>
-        <SettingsField width="md">
+        <SettingsField width="field">
           <FieldLabel htmlFor="shell-domain" label="Domain" />
           <Input defaultValue="example.com" id="shell-domain" />
         </SettingsField>
@@ -106,14 +106,11 @@ export const FieldWidths: Story = {
   render: () => (
     <div className="space-y-4" data-settings-shell-story="field-widths">
       <h1 className="sr-only">Settings field widths</h1>
-      <SettingsField className="rounded-[9px] border border-border bg-bg-elev p-3" width="sm">
-        Small - 260px
-      </SettingsField>
-      <SettingsField className="rounded-[9px] border border-border bg-bg-elev p-3" width="md">
-        Medium - 400px
+      <SettingsField className="rounded-[9px] border border-border bg-bg-elev p-3" width="field">
+        Field - 340px, every labelled input
       </SettingsField>
       <SettingsField className="rounded-[9px] border border-border bg-bg-elev p-3" width="full">
-        Full - 640px
+        Full - 640px, a switch or a table that owns the card row
       </SettingsField>
     </div>
   ),

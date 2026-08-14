@@ -26,9 +26,9 @@ export default async function DevelopersSettingsPage({
   const { project: projectRef } = await params;
   const preferences = await getPreferences();
   const [settings, access, hooks] = await Promise.all([
-    getSettings(projectRef, { preferences }),
+    getSettings(projectRef, { dateFormat: preferences.dateFormat }),
     requireReadableProject(projectRef),
-    getIngestHooks(projectRef, { preferences }),
+    getIngestHooks(projectRef, { dateFormat: preferences.dateFormat }),
   ]);
   const role = getProjectRole(access.actor, access.project.id);
   const canManage =

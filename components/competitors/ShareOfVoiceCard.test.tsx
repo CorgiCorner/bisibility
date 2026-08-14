@@ -22,6 +22,7 @@ const data = {
   device: "desktop",
   engine: "google",
   key: "location_us::desktop::google",
+  languageLabel: "English",
   location: "United States",
   locationId: "location_us",
   locationKind: "country",
@@ -33,6 +34,7 @@ const data = {
       ranked: false,
       ranks: { "example.com": null, "rankzly.io": null },
       tags: [],
+      volume: 1_000,
     },
   ],
   tags: [],
@@ -60,7 +62,61 @@ describe("ShareOfVoiceCard no-data semantics", () => {
     );
 
     expect(screen.getByText(/no tracked domain ranked in the top 100/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Visibility across 1 tracked keyword / Google / United States / English / Desktop",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/US \/ Desktop/)).not.toBeInTheDocument();
     expect(screen.queryByText(/no completed rank checks exist/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/0%/)).not.toBeInTheDocument();
+  });
+
+  it("renders the SOV market contract copy supplied with the selector", () => {
+    const filter: CompetitorFilter = { excludedKeywordIds: [], position: "all", tag: null };
+    const market = buildCompetitorMarket(data, filter);
+
+    render(
+      <ShareOfVoiceCard
+        canDelete
+        canUpdate
+        filter={filter}
+        market={market}
+        onFilterChange={vi.fn()}
+        projectId="project_1"
+        scopeControls={
+          <span>SOV compares one market (location + language) + device + engine at a time</span>
+        }
+      />,
+    );
+
+    expect(
+      screen.getByText("SOV compares one market (location + language) + device + engine at a time"),
+    ).toBeInTheDocument();
+  });
+
+  it("does not render a zero-percent SOV chart when every volume is missing", () => {
+    const filter: CompetitorFilter = { excludedKeywordIds: [], position: "all", tag: null };
+    const missingVolume = {
+      ...data,
+      observations: [
+        { ...data.observations[0], ranked: true, ranks: { "example.com": 2 }, volume: null },
+      ],
+    } satisfies CompetitorMarketData;
+    const market = buildCompetitorMarket(missingVolume, filter);
+
+    render(
+      <ShareOfVoiceCard
+        canDelete
+        canUpdate
+        filter={filter}
+        market={market}
+        onFilterChange={vi.fn()}
+        projectId="project_1"
+      />,
+    );
+
+    expect(screen.getByText(/no positive search volume is available/i)).toBeInTheDocument();
     expect(screen.queryByText(/0%/)).not.toBeInTheDocument();
   });
 

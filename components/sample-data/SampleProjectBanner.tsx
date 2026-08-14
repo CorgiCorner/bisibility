@@ -33,7 +33,7 @@ export function SampleProjectBanner({ projectId, projectRef }: Readonly<SamplePr
     startTransition(() => {
       void removeSampleData({ projectId })
         .then(() => {
-          router.push(appPath(projectRef ?? asProjectRef(projectId), "overview"));
+          router.push(appPath(projectRef ?? asProjectRef(projectId), "dashboard"));
           router.refresh();
         })
         .catch((error_: unknown) => {

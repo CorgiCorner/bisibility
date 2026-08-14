@@ -24,6 +24,12 @@ const monoTextVariants = cva("font-mono", {
   },
 });
 
+const monoTextSizeSx = {
+  sm: { fontSize: "9px", lineHeight: 1.45 },
+  md: { fontSize: "10px", lineHeight: 1.45 },
+  lg: { fontSize: "11px", lineHeight: "normal" },
+} as const;
+
 export function MonoText({ className, muted = false, size = "md", sx, ...props }: MonoTextProps) {
   const additionalSx = sxArray(sx);
 
@@ -34,6 +40,7 @@ export function MonoText({ className, muted = false, size = "md", sx, ...props }
         {
           color: muted ? "var(--fg-muted)" : "var(--fg-muted)",
           fontFamily: "var(--font-mono), monospace",
+          ...monoTextSizeSx[size],
           // MUI's Typography root sets `margin: 0`, and emotion injects its rules OUTSIDE any
           // cascade layer, so an unlayered declaration always beats Tailwind's `@layer
           // utilities`. Every `className="mt-*"` a caller passed was therefore dead - 19 call

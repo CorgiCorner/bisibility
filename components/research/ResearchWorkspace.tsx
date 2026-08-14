@@ -1,7 +1,6 @@
 "use client";
 
 import { useSessionSpend } from "@/components/cost-estimate/SessionSpendProvider";
-import { AddKeywordDrawer } from "@/components/keywords/add/AddKeywordDrawer";
 import type { LocationFieldValue } from "@/components/keywords/LocationField";
 import type { ResearchKeywordsActionInput } from "@/lib/actions/keyword-research";
 import type { KeywordResearchMode } from "@/lib/keyword-research/types";
@@ -12,7 +11,9 @@ import { ResearchResults } from "./ResearchResults";
 import { ResearchSearchCard } from "./ResearchSearchCard";
 import { ResearchSeedTabs } from "./ResearchSeedTabs";
 import { ResearchStatePanel } from "./ResearchStatePanel";
-import { metricsScope } from "./research-metrics-scope";
+import { ResearchTrackingDrawer } from "./ResearchTrackingDrawer";
+import { researchMetricsAvailable } from "./research-market-capability";
+import { hasMetricsScopeMismatch, metricsScope } from "./research-metrics-scope";
 import {
   focusResearchSeedInput,
   nextBudgetResetLabel,
@@ -36,6 +37,7 @@ export function ResearchWorkspace({
   context,
   costContext,
   prefill,
+  projectMarkets,
   removeSavedKeywordsAction,
   researchAction,
   saveKeywordsAction,
@@ -73,17 +75,7 @@ export function ResearchWorkspace({
     ...overrides,
   });
   const { estimate, scheduleEstimate } = useResearchEstimate(researchAction, requestInput);
-  const {
-    activeTab,
-    budgetBlocked,
-    closeTab,
-    markAdded,
-    markSaved,
-    researching,
-    runResearch,
-    setActiveTabId,
-    tabs,
-  } = useResearchRuns({
+  const researchRuns = useResearchRuns({
     addSpend,
     connectionId,
     includeClickstream,
@@ -95,6 +87,9 @@ export function ResearchWorkspace({
     researchAction,
     resultLimit,
   });
+  // biome-ignore format: grouped hook state keeps this page component below the line limit.
+  const { activeTab, budgetBlocked, closeTab, markAdded, markSaved, researching, runResearch, setActiveTabId, tabs } = researchRuns;
+  const researchAvailable = researchMetricsAvailable(location);
   const savedKeywords = useResearchSavedKeywords({
     canRemove: canDeleteSavedKeywords,
     markSaved,
@@ -105,7 +100,7 @@ export function ResearchWorkspace({
 
   function updateSeeds(next: string[]) {
     setSeeds(next);
-    scheduleEstimate(next);
+    scheduleEstimate(researchAvailable ? next : []);
   }
 
   const hasProvider = context.connections.length > 0;
@@ -113,7 +108,6 @@ export function ResearchWorkspace({
     label: connection.label,
     value: connection.id,
   }));
-
   const scope = metricsScope(location, context.language.label);
 
   function openRecentSearch(search: Parameters<typeof recentSearchReplay>[0]) {
@@ -129,6 +123,11 @@ export function ResearchWorkspace({
     setIncludeClickstream(search.includeClickstream);
     setConnectionId(replay.connectionId);
     setLocation(searchLocation);
+    if (!researchMetricsAvailable(searchLocation)) {
+      setSeeds([search.seed]);
+      scheduleEstimate([]);
+      return;
+    }
     if (replay.cached) {
       void runResearch([search.seed], replay.overrides, searchLocation);
       return;
@@ -155,26 +154,32 @@ export function ResearchWorkspace({
               estimate={estimate}
               includeClickstream={includeClickstream}
               location={location}
+              metricsScope={
+                researchAvailable && hasMetricsScopeMismatch(location) ? scope : undefined
+              }
               mode={mode}
               onConnectionChange={(value) => {
                 setConnectionId(value);
-                scheduleEstimate(seeds, { connectionId: value });
+                scheduleEstimate(researchAvailable ? seeds : [], { connectionId: value });
               }}
               onIncludeClickstreamChange={(value) => {
                 setIncludeClickstream(value);
-                scheduleEstimate(seeds, { includeClickstream: value });
+                scheduleEstimate(researchAvailable ? seeds : [], { includeClickstream: value });
               }}
               onLimitChange={(value) => {
                 setResultLimit(value);
-                scheduleEstimate(seeds, { resultLimit: value });
+                scheduleEstimate(researchAvailable ? seeds : [], { resultLimit: value });
               }}
               onLocationChange={(value) => {
                 setLocation(value);
-                scheduleEstimate(seeds, { locationKey: value.canonicalKey });
+                scheduleEstimate(researchMetricsAvailable(value) ? seeds : [], {
+                  locationKey: value.canonicalKey,
+                });
               }}
+              lookupDisabled={!researchAvailable}
               onModeChange={(value) => {
                 setMode(value);
-                scheduleEstimate(seeds, { mode: value });
+                scheduleEstimate(researchAvailable ? seeds : [], { mode: value });
               }}
               onSeedsChange={updateSeeds}
               onSubmit={(next) => void runResearch(next)}
@@ -185,14 +190,6 @@ export function ResearchWorkspace({
             />
           </div>
         </Tooltip>
-      ) : null}
-      {hasProvider ? (
-        <p
-          aria-label="metrics scope"
-          className="m-0 rounded-lg border border-border bg-bg-sunken px-3 py-2 font-mono text-[11px] text-fg-muted"
-        >
-          Metrics scope: {scope.country} - {scope.language}
-        </p>
       ) : null}
       <RecentResearchSearches
         disabled={!hasProvider}
@@ -211,7 +208,9 @@ export function ResearchWorkspace({
         <ResearchStatePanel
           projectRef={context.project.id}
           resumeLabel={nextBudgetResetLabel(costContext.timezone ?? "UTC")}
-          state={budgetBlocked ? "budget_exhausted" : "idle"}
+          state={
+            budgetBlocked ? "budget_exhausted" : researchAvailable ? "idle" : "unsupported_location"
+          }
         />
       ) : null}
       {hasProvider &&
@@ -257,6 +256,7 @@ export function ResearchWorkspace({
           }}
           deeperEstimate={activeTab.deeperEstimate}
           key={activeTab.id}
+          metricsAvailable={researchMetricsAvailable(activeTab.location)}
           onAdd={setAddDraft}
           onDeeper={() => {
             const deeper = activeTab.requestedLimit === 100 ? 300 : 500;
@@ -275,26 +275,27 @@ export function ResearchWorkspace({
           result={activeTab.outcome}
           projectId={context.project.id}
           seed={activeTab.seed}
+          trackingMarketCount={
+            projectMarkets?.markets.filter((market) => market.status === "active").length ?? 0
+          }
         />
       ) : null}
-      <AddKeywordDrawer
+      <ResearchTrackingDrawer
         addKeywordsAction={addKeywordsAction}
         costContext={costContext}
-        defaultDevice={addDraft?.device ?? context.defaultMarket.device}
-        defaultLocation={context.defaultMarket.country}
-        defaultLocationSelection={addDraft?.location ?? projectLocation}
-        domain={context.project.domain}
-        initialKeyword={addDraft?.keywords.join("\n")}
-        initialScheduleFrequency={addDraft?.scheduleFrequency}
-        key={addDraft ? JSON.stringify(addDraft) : "closed"}
-        onAdded={(created) => {
-          markAdded(created.map((keyword) => keyword.text));
+        draft={addDraft}
+        location={projectLocation}
+        onAdded={(created, added) => {
+          markAdded(
+            created.map((keyword) => keyword.text),
+            added.locationKeys,
+          );
           setAddDraft(null);
         }}
         onClose={() => setAddDraft(null)}
-        open={Boolean(addDraft)}
-        projectId={context.project.id}
-        showSchedule
+        project={context.project}
+        projectDefaultDevice={context.defaultMarket.device}
+        projectMarkets={projectMarkets}
       />
     </section>
   );

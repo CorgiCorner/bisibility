@@ -51,6 +51,34 @@ function supportedTimezones() {
   return ["UTC", ...Intl.supportedValuesOf("timeZone")];
 }
 
+// The strict project-timezone allowlist is computed once at module load so a
+// project-creation action can normalize untrusted browser input without
+// re-running Intl on every request.
+const SUPPORTED_PROJECT_TIMEZONES: ReadonlySet<string> = new Set(supportedTimezones());
+
+/**
+ * Strict membership test against the module-cached IANA allowlist. Use this
+ * for server-action validation boundaries so untrusted input is rejected by
+ * set membership, not by a per-call `Intl` try/catch.
+ */
+export function isSupportedProjectTimezone(value: string): boolean {
+  return SUPPORTED_PROJECT_TIMEZONES.has(value);
+}
+
+/**
+ * Normalize an untrusted browser timezone for project creation. Valid IANA
+ * identifiers (per `Intl.supportedValuesOf("timeZone")`, UTC included) are
+ * returned unchanged; missing, non-string, or unsupported input falls back to
+ * "UTC" silently. Never throws.
+ */
+export function normalizeProjectTimezone(value: unknown): string {
+  if (typeof value !== "string") {
+    return "UTC";
+  }
+  const trimmed = value.trim();
+  return trimmed.length > 0 && isSupportedProjectTimezone(trimmed) ? trimmed : "UTC";
+}
+
 function unique(values: readonly string[]) {
   return [...new Set(values)];
 }

@@ -157,6 +157,8 @@ export function ChecksWorkspace({
     <CheckRunsSection
       {...runsLinks(projectRef)}
       asOfDate={asOfDate}
+      budget={{ blocked: upcoming.blocked, forecast: upcoming.forecast }}
+      budgetSettingsHref={appPath(projectRef, "settings#provider-usage")}
       filter={filter}
       keywordHref={(keywordPublicId) => appPath(projectRef, "rank-tracker", keywordPublicId)}
       now={nowDate}

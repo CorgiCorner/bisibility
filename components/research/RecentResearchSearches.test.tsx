@@ -77,6 +77,24 @@ describe("RecentResearchSearches", () => {
     expect(remove).not.toHaveClass("group-hover:opacity-100");
   });
 
+  it.each([
+    ["2026-07-22T20:00:00.000Z", "cached, free for 10h"],
+    ["2026-07-22T16:00:00.000Z", "cached, free for 6h"],
+  ])("derives the remaining cache TTL from %s", (cachedUntil, expected) => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-07-22T10:00:00.000Z"));
+
+    render(
+      <RecentResearchSearches
+        onOpen={vi.fn()}
+        onRemove={vi.fn()}
+        searches={[{ ...search, cachedUntil }]}
+      />,
+    );
+
+    expect(screen.getByText(expected)).toBeInTheDocument();
+  });
+
   it("uses the shared relative-time labels", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-07-23T16:00:00.000Z"));

@@ -17,7 +17,7 @@ describe("SavedKeywordsEmptyState", () => {
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Find keywords in Research" })).toHaveAttribute(
       "href",
-      "/app/prj_1/research",
+      "/app/prj_1/keyword-research",
     );
     expect(
       screen.getByText(

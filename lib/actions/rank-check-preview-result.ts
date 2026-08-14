@@ -5,7 +5,12 @@ import { isBudgetExhaustedError } from "@/lib/rank-check/budget";
 import { RankCheckRunnerError } from "@/lib/rank-check/runner";
 
 export type FirstCheckCandidate = {
+  device: "desktop" | "mobile";
   id: string;
+  market: {
+    languageLabel: string;
+    locationLabel: string;
+  };
   publicId: string;
   text: string;
 };

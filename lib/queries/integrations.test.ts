@@ -21,11 +21,15 @@ const mocks = vi.hoisted(() => ({
     publicId: "prj_1",
   },
   requireReadableProject: vi.fn(),
+  getRequestProjectDefaults: vi.fn(),
 }));
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 vi.mock("./_auth", () => ({ requireReadableProject: mocks.requireReadableProject }));
+vi.mock("./workspace-request-data", () => ({
+  getRequestProjectDefaults: mocks.getRequestProjectDefaults,
+}));
 
 function connection(overrides: Record<string, unknown>) {
   return {
@@ -52,6 +56,7 @@ describe("integration queries", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.requireReadableProject.mockResolvedValue({ project: mocks.project });
+    mocks.getRequestProjectDefaults.mockResolvedValue({ timezone: "Europe/Madrid" });
     mocks.prisma.providerConnection.count.mockResolvedValue(2);
     mocks.prisma.operationalRun.findMany.mockResolvedValue([]);
     mocks.prisma.$queryRaw.mockResolvedValue([]);
@@ -441,6 +446,7 @@ describe("integration queries", () => {
       where: { projectId: "project_1", status: "connected" },
     });
     expect(view.connectionCount).toBe(2);
+    expect(view.timeZone).toBe("Europe/Madrid");
   });
 
   it("surfaces a Google connection that needs reauthorization", async () => {

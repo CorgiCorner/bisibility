@@ -12,6 +12,7 @@ import {
 } from "./alerts";
 
 const keywordPublicId = "kw_a00000000000000000000000";
+const marketPublicId = "pmkt_a00000000000000000000000";
 const projectPublicId = "prj_a00000000000000000000000";
 const rulePublicId = "alr_a00000000000000000000000";
 const tagPublicId = "tag_a00000000000000000000000";
@@ -52,9 +53,11 @@ const mocks = vi.hoisted(() => {
       findFirst: vi.fn(),
       update: vi.fn(),
     },
+    alertRuleMarket: { deleteMany: vi.fn() },
     alertRuleTarget: { deleteMany: vi.fn() },
     keyword: { findMany: vi.fn() },
     project: { findFirst: vi.fn() },
+    projectMarket: { findMany: vi.fn() },
     slackConnection: { findUnique: vi.fn(), update: vi.fn() },
     tag: { findMany: vi.fn() },
     user: { findMany: vi.fn(), findUnique: vi.fn() },
@@ -148,6 +151,7 @@ describe("alert actions", () => {
     mocks.assertWebhookUrlAllowed.mockResolvedValue(undefined);
     mocks.postSignedWebhookTest.mockResolvedValue({ latencyMs: 12, status: 204 });
     mocks.prisma.keyword.findMany.mockResolvedValue([]);
+    mocks.prisma.projectMarket.findMany.mockResolvedValue([]);
     mocks.prisma.user.findMany.mockImplementation(({ where }) => {
       const ids = (where.OR as { id?: { in?: string[] } }[]).flatMap(
         (condition) => condition.id?.in ?? [],
@@ -192,7 +196,11 @@ describe("alert actions", () => {
         projectId: "project_1",
         targets: { create: [{ keywordId: "keyword_1" }] },
       }),
-      include: { recipients: { select: { userId: true } }, targets: true },
+      include: {
+        markets: { include: { projectMarket: { select: { publicId: true } } } },
+        recipients: { select: { userId: true } },
+        targets: true,
+      },
     });
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -224,6 +232,63 @@ describe("alert actions", () => {
     expect(mocks.revalidatePath).not.toHaveBeenCalled();
   });
 
+  it("persists only selected active markets from the authorized project", async () => {
+    mocks.prisma.projectMarket.findMany.mockResolvedValue([{ id: "project_market_1" }]);
+    mocks.prisma.alertRule.create.mockResolvedValue({
+      id: "rule_1",
+      markets: [{ projectMarket: { publicId: marketPublicId } }],
+      name: "Scoped rule",
+      publicId: rulePublicId,
+      targets: [],
+    });
+
+    await createAlertRule({
+      channels: [],
+      conditionType: "threshold",
+      marketIds: [marketPublicId],
+      name: "Scoped rule",
+      projectId: projectPublicId,
+      thresholdPosition: 10,
+    });
+
+    expect(mocks.prisma.projectMarket.findMany).toHaveBeenCalledWith({
+      select: { id: true },
+      where: {
+        OR: [{ id: { in: [marketPublicId] } }, { publicId: { in: [marketPublicId] } }],
+        projectId: "project_1",
+        status: "active",
+      },
+    });
+    expect(mocks.prisma.alertRule.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          markets: { create: [{ projectMarketId: "project_market_1" }] },
+        }),
+      }),
+    );
+    expect(mocks.writeAudit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        after: expect.objectContaining({ marketIds: [marketPublicId] }),
+      }),
+    );
+  });
+
+  it("rejects a missing, paused, or cross-project market before creating the rule", async () => {
+    mocks.prisma.projectMarket.findMany.mockResolvedValue([]);
+
+    await expect(
+      createAlertRule({
+        channels: [],
+        conditionType: "threshold",
+        marketIds: [marketPublicId],
+        name: "Scoped rule",
+        projectId: projectPublicId,
+        thresholdPosition: 10,
+      }),
+    ).rejects.toThrow("One or more alert markets are not active project markets.");
+    expect(mocks.prisma.alertRule.create).not.toHaveBeenCalled();
+  });
+
   it("quick-creates a default keyword alert rule", async () => {
     mocks.prisma.keyword.findMany.mockResolvedValue([{ id: "keyword_1" }]);
     mocks.prisma.alertRule.create.mockResolvedValue({
@@ -245,7 +310,11 @@ describe("alert actions", () => {
         targetType: "keyword",
         topN: 10,
       }),
-      include: { recipients: { select: { userId: true } }, targets: true },
+      include: {
+        markets: { include: { projectMarket: { select: { publicId: true } } } },
+        recipients: { select: { userId: true } },
+        targets: true,
+      },
     });
   });
 

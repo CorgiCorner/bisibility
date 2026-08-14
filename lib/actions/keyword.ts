@@ -3,6 +3,7 @@
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { addKeywordSchema, addKeywordsSchema, updateKeywordSchema } from "@/lib/schemas/keyword";
+import { denormalizedLocationLabel } from "@/lib/serp/location-label";
 import { resolveKeywordLocation } from "@/lib/serp/location-service";
 import { DEFAULT_SERP_MARKET } from "@/lib/serp/markets";
 import { normalizeSchedule } from "./_schedule";
@@ -18,6 +19,7 @@ import {
   createKeywordBatch,
   createKeywordBatchSet,
   promotedSavedKeywordPairs,
+  publicKeywordView,
   revalidateKeywords,
 } from "./keyword-helpers";
 import {
@@ -29,11 +31,6 @@ import { addKeywordsMatrix as addKeywordsMatrixImpl } from "./keyword-matrix";
 
 export async function addKeywordsMatrix(input: unknown) {
   return addKeywordsMatrixImpl(input);
-}
-
-function publicKeywordView<T extends { id: string; publicId: string | null }>(keyword: T) {
-  if (!keyword.publicId) throw new Error("Keyword public ID is not available.");
-  return { ...keyword, id: keyword.publicId };
 }
 
 export async function addKeyword(input: unknown) {
@@ -50,7 +47,7 @@ export async function addKeyword(input: unknown) {
       projectId: project.id,
     }),
   );
-  const locationName = resolved.location.displayName;
+  const locationName = denormalizedLocationLabel(resolved.location);
   const keyword = await prisma.$transaction(async (tx) => {
     const [created] = await createKeywordBatch(tx, {
       device: data.device,
@@ -127,7 +124,7 @@ export async function addKeywords(input: unknown) {
         resolvedRows.map(({ resolved, row }) => ({
           device: row.device,
           keyword: row.keyword,
-          location: resolved.location.displayName,
+          location: denormalizedLocationLabel(resolved.location),
           locationId: resolved.location.id,
           schedule,
           tags: row.tags,
@@ -193,7 +190,7 @@ export async function addKeywords(input: unknown) {
       keywordText.map((keyword) => ({
         device: data.device,
         keyword,
-        location: resolved.location.displayName,
+        location: denormalizedLocationLabel(resolved.location),
         locationId: resolved.location.id,
         schedule,
         tags: data.tags,
@@ -272,7 +269,7 @@ export async function updateKeyword(input: unknown) {
   const updated = await prisma.keyword.update({
     data: {
       device: data.device,
-      location: resolved?.location.displayName ?? data.location,
+      location: resolved ? denormalizedLocationLabel(resolved.location) : data.location,
       locationId: resolved?.location.id,
       text: data.keyword,
       ...(data.targetUrl !== undefined ? { targetUrl: data.targetUrl } : {}),

@@ -1,8 +1,8 @@
 "use client";
 
-import { LocationField, type LocationFieldValue } from "@/components/keywords/LocationField";
 import { Button, Card, Kbd } from "@/components/ui";
 import { formatEstimateCents } from "@/lib/cost-estimate/project-estimate";
+import type { DomainOverviewMarketOption } from "@/lib/domain-overview/market-options";
 import type { DomainOverviewReport, DomainOverviewScope } from "@/lib/domain-overview/types";
 import { normalizeDomain } from "@/lib/domains/normalize";
 import { zodResolver } from "@/lib/forms/zod-resolver";
@@ -10,6 +10,7 @@ import { GlobeIcon as Globe, InfoIcon as Info } from "@phosphor-icons/react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { DomainOverviewMarketCombobox } from "./DomainOverviewMarketCombobox";
 import { DomainOverviewPricingPopover } from "./DomainOverviewPricingPopover";
 import { domainOverviewControlHeight } from "./domain-overview-control-styles";
 import {
@@ -22,16 +23,17 @@ const formSchema = z.object({ target: z.string().trim().min(1).max(253) });
 type FormValues = z.infer<typeof formSchema>;
 
 type DomainOverviewAnalyzeCardProps = {
+  catalogMarkets: readonly DomainOverviewMarketOption[];
   estimate: DomainOverviewEstimateView;
   market: DomainOverviewMarketSelection;
-  onMarketChange: (market: LocationFieldValue) => void;
+  onMarketChange: (market: DomainOverviewMarketOption) => void;
   onScopeChange: (scope: DomainOverviewScope | undefined) => void;
   onSubmit: (target: string, fresh: boolean) => void;
   onTargetChange: (target: string) => void;
-  projectId: string;
   scopeOverride?: DomainOverviewScope;
   submitting: boolean;
   target: string;
+  trackedMarkets: readonly DomainOverviewMarketOption[];
   report?: DomainOverviewReport | null;
 };
 
@@ -49,16 +51,17 @@ function submitLabel(estimate: DomainOverviewEstimateView, fresh: boolean, submi
 }
 
 export function DomainOverviewAnalyzeCard({
+  catalogMarkets,
   estimate,
   market,
   onMarketChange,
   onScopeChange,
   onSubmit,
   onTargetChange,
-  projectId,
   scopeOverride,
   submitting,
   target,
+  trackedMarkets,
   report,
 }: Readonly<DomainOverviewAnalyzeCardProps>) {
   const [pricingAnchor, setPricingAnchor] = useState<HTMLElement | null>(null);
@@ -113,16 +116,12 @@ export function DomainOverviewAnalyzeCard({
             ) : null}
           </div>
           <div className="md:w-[230px]">
-            <LocationField
-              controlClassName={domainOverviewControlHeight()}
+            <DomainOverviewMarketCombobox
+              catalogMarkets={catalogMarkets}
               disabled={submitting}
-              idPrefix="domain-overview"
-              label="Market"
-              labelHidden
               onChange={onMarketChange}
-              projectId={projectId}
+              trackedMarkets={trackedMarkets}
               value={market}
-              variant="toolbar"
             />
           </div>
         </div>
@@ -168,12 +167,12 @@ export function DomainOverviewAnalyzeCard({
               aria-describedby={
                 report && !matchesReport ? "domain-overview-report-target-note" : undefined
               }
-              className={domainOverviewControlHeight()}
               disabled={!valid || submitting}
               loading={submitting}
               loadingLabel={submitLabel(estimate, matchesReport, true)}
+              size="sm"
               startIcon={<Globe aria-hidden size={14} weight="bold" />}
-              sx={{ minHeight: 40, minWidth: 200 }}
+              sx={{ height: 37, minHeight: 37, minWidth: 200 }}
               title={!valid ? "Enter a valid domain and wait for its price" : undefined}
               type="submit"
             >

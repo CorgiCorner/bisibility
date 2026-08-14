@@ -32,6 +32,9 @@ export const alertRuleFormServerSchema = alertRuleFormBaseSchema.superRefine((va
   refineAlertRuleForm(value, ctx);
   validatePublicId(value.projectId, "prj", ["projectId"], ctx);
   validatePublicId(value.ruleId, "alr", ["ruleId"], ctx);
+  value.marketIds?.forEach((id, index) => {
+    validatePublicId(id, "pmkt", ["marketIds", index], ctx);
+  });
   value.recipientIds?.forEach((id, index) => {
     validatePublicId(id, "usr", ["recipientIds", index], ctx);
   });

@@ -20,6 +20,7 @@ export const PUBLIC_ID_RESOURCE_REGISTRY = {
   mbr: "membership",
   ntf: "notification",
   pat: "personalAccessToken",
+  pmkt: "projectMarket",
   prj: "project",
   sid: "session",
   sig: "signal",

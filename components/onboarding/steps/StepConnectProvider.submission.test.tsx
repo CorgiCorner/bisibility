@@ -40,7 +40,7 @@ describe("StepConnectProvider submission", () => {
     }));
     renderProviderStep({ testProviderConnectionAction });
 
-    for (const status of screen.getAllByText("Ready to connect")) {
+    for (const status of screen.getAllByText("Not connected")) {
       expect(status.closest("span")).toHaveClass("h-5");
     }
     await clickTestConnection(testProviderConnectionAction);

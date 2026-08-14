@@ -4,8 +4,10 @@ import KeywordDetailPage from "./page";
 
 const mocks = vi.hoisted(() => ({
   getKeywordDetail: vi.fn(),
+  getKeywordMarketTargets: vi.fn(),
   getKeywordTagSuggestions: vi.fn(),
   getProjectCostContext: vi.fn(),
+  getProjectMarkets: vi.fn(),
   requireReadableProject: vi.fn(),
   resolveProjectAccess: vi.fn(),
 }));
@@ -22,8 +24,13 @@ vi.mock("@/components/keywords/KeywordPendingDetail", () => ({
 vi.mock("@/components/keywords/KeywordTrafficCard", () => ({
   KeywordTrafficCard: () => <div data-testid="traffic-card" />,
 }));
+const positionHistoryProps = vi.fn();
+
 vi.mock("@/components/keywords/PositionHistoryCard", () => ({
-  PositionHistoryCard: () => <div data-testid="position-history" />,
+  PositionHistoryCard: (props: { chartState?: unknown; keyword: unknown; timeZone: string }) => {
+    positionHistoryProps(props);
+    return <div data-testid="position-history" />;
+  },
 }));
 vi.mock("@/components/keywords/RankingUrlHistory", () => ({
   RankingUrlHistory: () => <div data-testid="ranking-history" />,
@@ -31,9 +38,10 @@ vi.mock("@/components/keywords/RankingUrlHistory", () => ({
 vi.mock("@/lib/actions/alerts", () => ({ createKeywordAlertRule: vi.fn() }));
 vi.mock("@/lib/actions/keyword", () => ({
   addKeywords: vi.fn(),
-  bulkDeleteKeywords: vi.fn(),
+  addKeywordsMatrix: vi.fn(),
   updateKeyword: vi.fn(),
 }));
+vi.mock("@/lib/actions/keyword-bulk", () => ({ bulkDeleteKeywords: vi.fn() }));
 vi.mock("@/lib/actions/keyword-schedule", () => ({ updateKeywordSchedule: vi.fn() }));
 vi.mock("@/lib/actions/rankCheck", () => ({ runCheckNow: vi.fn() }));
 vi.mock("@/lib/queries/_auth", () => ({
@@ -47,17 +55,32 @@ vi.mock("@/lib/queries/keywords", () => ({
   getKeywordDetail: mocks.getKeywordDetail,
   getKeywordTagSuggestions: mocks.getKeywordTagSuggestions,
 }));
+vi.mock("@/lib/queries/keyword-market-targets", () => ({
+  getKeywordMarketTargets: mocks.getKeywordMarketTargets,
+}));
+vi.mock("@/lib/queries/project-markets", () => ({
+  getProjectMarkets: mocks.getProjectMarkets,
+}));
 
 describe("KeywordDetailPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    positionHistoryProps.mockClear();
     mocks.resolveProjectAccess.mockResolvedValue({
       mode: "member",
       projectId: "project_1",
       publicId: "prj_1",
     });
     mocks.getKeywordTagSuggestions.mockResolvedValue([]);
+    mocks.getKeywordMarketTargets.mockResolvedValue([]);
     mocks.getProjectCostContext.mockResolvedValue({ costPerCheckCents: null });
+    mocks.getProjectMarkets.mockResolvedValue({
+      markets: [],
+      maxMarkets: 5,
+      monthlyCostCents: 0,
+      perMarketChecks: 0,
+      projectId: "prj_1",
+    });
     mocks.requireReadableProject.mockResolvedValue({
       actor: {
         id: "user_1",
@@ -123,5 +146,54 @@ describe("KeywordDetailPage", () => {
     expect(summary.nextElementSibling).toBe(chart);
     expect(chart.nextElementSibling).toBe(traffic);
     expect(traffic.nextElementSibling).toBe(history);
+  });
+
+  it("passes costContext.timezone to PositionHistoryCard", async () => {
+    mocks.getProjectCostContext.mockResolvedValue({
+      costPerCheckCents: null,
+      timezone: "Europe/Madrid",
+    });
+    mocks.getKeywordDetail.mockResolvedValue({
+      checkState: "ranked",
+      hasRankData: true,
+      positionHistory: [
+        { checkedAt: "2026-08-09T10:00:00.000Z", label: "Yesterday", position: 4 },
+        { checkedAt: "2026-08-10T10:00:00.000Z", label: "Today", position: 3 },
+      ],
+      rankingUrlHistory: [{ url: "/old" }, { url: "/new" }],
+      traffic: { hasAnalyticsConnection: false, pages: [], query: null },
+    });
+
+    render(
+      await KeywordDetailPage({
+        params: Promise.resolve({ id: "kw_ranked", project: "prj_1" }),
+      }),
+    );
+
+    expect(positionHistoryProps).toHaveBeenCalledWith(
+      expect.objectContaining({ timeZone: "Europe/Madrid" }),
+    );
+  });
+
+  it("falls back to UTC when costContext lacks a timezone", async () => {
+    mocks.getProjectCostContext.mockResolvedValue({ costPerCheckCents: null });
+    mocks.getKeywordDetail.mockResolvedValue({
+      checkState: "ranked",
+      hasRankData: true,
+      positionHistory: [
+        { checkedAt: "2026-08-09T10:00:00.000Z", label: "Yesterday", position: 4 },
+        { checkedAt: "2026-08-10T10:00:00.000Z", label: "Today", position: 3 },
+      ],
+      rankingUrlHistory: [{ url: "/old" }, { url: "/new" }],
+      traffic: { hasAnalyticsConnection: false, pages: [], query: null },
+    });
+
+    render(
+      await KeywordDetailPage({
+        params: Promise.resolve({ id: "kw_ranked", project: "prj_1" }),
+      }),
+    );
+
+    expect(positionHistoryProps).toHaveBeenCalledWith(expect.objectContaining({ timeZone: "UTC" }));
   });
 });

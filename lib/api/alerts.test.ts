@@ -16,10 +16,12 @@ const mocks = vi.hoisted(() => {
       update: vi.fn(),
     },
     alertRuleTarget: { deleteMany: vi.fn() },
+    alertRuleMarket: { deleteMany: vi.fn() },
     apiKey: { findMany: vi.fn(), update: vi.fn() },
     auditLog: { create: vi.fn() },
     keyword: { findMany: vi.fn() },
     projectDefaults: { findUnique: vi.fn() },
+    projectMarket: { findMany: vi.fn() },
     tag: { findMany: vi.fn() },
     triggeredAlert: { findMany: vi.fn() },
     user: { findMany: vi.fn() },
@@ -87,6 +89,7 @@ function alertRuleRow(overrides: Record<string, unknown> = {}) {
     dropPositions: null,
     enabled: true,
     id: "rule_1",
+    markets: [],
     name: "Drop",
     projectId: "project_1",
     publicId: rulePublicId,
@@ -167,8 +170,10 @@ describe("alert API routes", () => {
     mocks.prisma.alertRule.update.mockResolvedValue(alertRuleRow({ name: "Updated" }));
     mocks.prisma.alertRule.delete.mockResolvedValue(alertRuleRow());
     mocks.prisma.alertRuleTarget.deleteMany.mockResolvedValue({ count: 1 });
+    mocks.prisma.alertRuleMarket.deleteMany.mockResolvedValue({ count: 0 });
     mocks.prisma.keyword.findMany.mockResolvedValue([]);
     mocks.prisma.projectDefaults.findUnique.mockResolvedValue(null);
+    mocks.prisma.projectMarket.findMany.mockResolvedValue([]);
     mocks.prisma.tag.findMany.mockResolvedValue([]);
     mocks.prisma.triggeredAlert.findMany.mockResolvedValue([triggeredAlertRow()]);
     mocks.prisma.user.findMany.mockResolvedValue([]);
@@ -196,7 +201,11 @@ describe("alert API routes", () => {
     expect(response.status).toBe(201);
     expect(mocks.prisma.alertRule.create).toHaveBeenCalledWith({
       data: expect.objectContaining({ createdById: null, projectId: "project_1" }),
-      include: { recipients: { select: { userId: true } }, targets: true },
+      include: {
+        markets: { include: { projectMarket: { select: { publicId: true } } } },
+        recipients: { select: { userId: true } },
+        targets: true,
+      },
     });
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({ action: "alert_rule.create", actorId: null }),
@@ -228,7 +237,11 @@ describe("alert API routes", () => {
     expect(response.status).toBe(201);
     expect(mocks.prisma.alertRule.create).toHaveBeenCalledWith({
       data: expect.objectContaining(data),
-      include: { recipients: { select: { userId: true } }, targets: true },
+      include: {
+        markets: { include: { projectMarket: { select: { publicId: true } } } },
+        recipients: { select: { userId: true } },
+        targets: true,
+      },
     });
   });
 
@@ -243,6 +256,7 @@ describe("alert API routes", () => {
     expect(mocks.prisma.alertRuleTarget.deleteMany).toHaveBeenCalledWith({
       where: { ruleId: "rule_1" },
     });
+    expect(mocks.prisma.alertRuleMarket.deleteMany).not.toHaveBeenCalled();
   });
 
   it("deletes alert rules and audits with a null actor", async () => {

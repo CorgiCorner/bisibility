@@ -40,6 +40,9 @@ export async function alertRuleApiResources(rules: AlertRuleView[]): Promise<Ale
   const recipientIds = rules
     .flatMap((rule) => rule.recipientIds)
     .filter((id) => !isPublicIdOfType(id, "usr"));
+  const marketIds = rules
+    .flatMap((rule) => rule.marketIds)
+    .filter((id) => !isPublicIdOfType(id, "pmkt"));
   const keywordIds = rules
     .filter((rule) => rule.targetType === "keyword")
     .flatMap((rule) => rule.targetIds)
@@ -48,7 +51,7 @@ export async function alertRuleApiResources(rules: AlertRuleView[]): Promise<Ale
     .filter((rule) => rule.targetType === "tag")
     .flatMap((rule) => rule.targetIds)
     .filter((id) => !isPublicIdOfType(id, "tag"));
-  const [ruleRows, recipientRows, keywordRows, tagRows] = await Promise.all([
+  const [ruleRows, recipientRows, marketRows, keywordRows, tagRows] = await Promise.all([
     prisma.alertRule.findMany({
       select: { id: true, publicId: true },
       where: { id: { in: ruleIds } },
@@ -56,6 +59,10 @@ export async function alertRuleApiResources(rules: AlertRuleView[]): Promise<Ale
     prisma.user.findMany({
       select: { id: true, publicId: true },
       where: { id: { in: recipientIds } },
+    }),
+    prisma.projectMarket.findMany({
+      select: { id: true, publicId: true },
+      where: { id: { in: marketIds } },
     }),
     prisma.keyword.findMany({
       select: { id: true, publicId: true },
@@ -65,12 +72,14 @@ export async function alertRuleApiResources(rules: AlertRuleView[]): Promise<Ale
   ]);
   const rulePublicIds = publicIdByInternalId(ruleRows, "alr");
   const recipientPublicIds = publicIdByInternalId(recipientRows, "usr");
+  const marketPublicIds = publicIdByInternalId(marketRows, "pmkt");
   const keywordPublicIds = publicIdByInternalId(keywordRows, "kw");
   const tagPublicIds = publicIdByInternalId(tagRows, "tag");
 
   return rules.map((rule) => ({
     ...rule,
     id: mappedPublicId(rulePublicIds, rule.id, "alr"),
+    marketIds: rule.marketIds.map((id) => mappedPublicId(marketPublicIds, id, "pmkt")),
     recipientIds: rule.recipientIds.map((id) => mappedPublicId(recipientPublicIds, id, "usr")),
     targetIds:
       rule.targetType === "keyword"

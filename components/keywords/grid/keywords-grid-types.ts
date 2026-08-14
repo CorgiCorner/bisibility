@@ -10,8 +10,9 @@ import type {
 } from "@/lib/keywords/saved-view-model";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import type { KeywordRow } from "@/lib/queries/keywords";
+import type { ProjectMarketsView } from "@/lib/queries/project-markets";
 import type { ProjectDefaultMarket } from "@/lib/serp/default-market";
-import type { CheckHealthView } from "./KeywordDataTable";
+import type { CheckHealthView } from "./KeywordGridHealthNotices";
 
 export type KeywordsGridProps = KeywordActions.KeywordWorkspaceActions & {
   activeViewId?: string | null;
@@ -32,6 +33,7 @@ export type KeywordsGridProps = KeywordActions.KeywordWorkspaceActions & {
   lens?: ActiveLens;
   providerConnected?: boolean;
   projectId: string;
+  projectMarkets?: ProjectMarketsView;
   queueFirstChecksAction: FirstCheckActions.QueueFirstChecksAction;
   rows: KeywordRow[];
   runCheckNowAction?: KeywordActions.KeywordDetailActions["runCheckNowAction"];

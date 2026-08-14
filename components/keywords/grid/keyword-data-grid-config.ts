@@ -11,6 +11,7 @@ export const defaultKeywordColumnVisibility: GridColumnVisibilityModel = {
   targetRanking: true,
   topic: true,
   volume: true,
+  difficulty: true,
 };
 
 export const initialKeywordGridState = {
@@ -47,6 +48,9 @@ export const keywordGridSx = {
   "& .MuiDataGrid-row:hover .bv-keyword-title": {
     color: "var(--accent-text)",
     textDecoration: "underline",
+  },
+  "& .bv-market-grid-child .MuiDataGrid-cell": {
+    backgroundColor: "color-mix(in srgb, var(--bg-sunken) 52%, transparent)",
   },
 };
 

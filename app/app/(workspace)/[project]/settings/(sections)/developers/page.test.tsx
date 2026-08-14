@@ -80,10 +80,10 @@ describe("DevelopersSettingsPage", () => {
 
     expect(mocks.requireReadableProject).toHaveBeenCalledWith("prj_untrusted");
     expect(mocks.getSettings).toHaveBeenCalledWith("prj_untrusted", {
-      preferences: { dateFormat: "auto" },
+      dateFormat: "auto",
     });
     expect(mocks.getIngestHooks).toHaveBeenCalledWith("prj_untrusted", {
-      preferences: { dateFormat: "auto" },
+      dateFormat: "auto",
     });
     expect(screen.getByRole("main")).toHaveAttribute("data-project-ref", "prj_resolved");
     expect(screen.getByTestId("developers-content")).toHaveAttribute("data-can-manage", "true");

@@ -43,13 +43,45 @@ function AttemptTone({ attempt }: Readonly<{ attempt: CheckAttempt }>) {
   return <XCircle aria-hidden className="text-red-text" size={15} weight="fill" />;
 }
 
-function AttemptRow({ attempt, run }: Readonly<{ attempt: CheckAttempt; run: CheckRunRow }>) {
+function fallbackOutcome(run: CheckRunRow, index: number) {
+  const attempt = run.attempts[index];
+  if (!run.viaFallback || attempt?.outcome !== "ok" || index === 0) return null;
+  let primary: CheckAttempt | undefined;
+  for (let cursor = index - 1; cursor >= 0; cursor -= 1) {
+    if (run.attempts[cursor]?.outcome !== "ok") {
+      primary = run.attempts[cursor];
+      break;
+    }
+  }
+  if (!primary) return null;
+  const reasons: Record<Exclude<CheckAttempt["outcome"], "ok">, string> = {
+    credentials_unavailable: "credentials unavailable",
+    provider_failed: "failed",
+    rate_limited: "rate-limited",
+  };
+  if (primary.outcome === "ok") return null;
+  const reason = reasons[primary.outcome];
+  const position =
+    typeof run.position === "number"
+      ? ` · #${run.position}${
+          typeof run.requestedDepth === "number" ? ` of top ${run.requestedDepth}` : ""
+        }`
+      : "";
+  return `via backup (${attempt.providerLabel}) - ${primary.providerLabel} ${reason}${position}`;
+}
+
+function AttemptRow({
+  attempt,
+  index,
+  run,
+}: Readonly<{ attempt: CheckAttempt; index: number; run: CheckRunRow }>) {
   const outcome =
-    attempt.outcome === "ok" && typeof run.position === "number"
+    fallbackOutcome(run, index) ??
+    (attempt.outcome === "ok" && typeof run.position === "number"
       ? `${formatAttemptOutcome(attempt)} · #${run.position}${
           typeof run.requestedDepth === "number" ? ` of top ${run.requestedDepth}` : ""
         }`
-      : formatAttemptOutcome(attempt);
+      : formatAttemptOutcome(attempt));
   return (
     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 py-1.5 text-[11.5px]">
       <AttemptTone attempt={attempt} />
@@ -131,7 +163,12 @@ export function CheckRunDetails({ columns, now, run }: Readonly<DetailsProps>) {
       {run.attempts.length > 0 ? (
         <div className="mt-2 divide-y divide-border-soft">
           {run.attempts.map((attempt, index) => (
-            <AttemptRow attempt={attempt} key={`${attempt.provider}-${index}`} run={run} />
+            <AttemptRow
+              attempt={attempt}
+              index={index}
+              key={`${attempt.provider}-${index}`}
+              run={run}
+            />
           ))}
         </div>
       ) : null}

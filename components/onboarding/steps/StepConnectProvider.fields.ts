@@ -28,6 +28,7 @@ export type CredentialField = {
 type ProviderOption = {
   /** Marks the credentials link as a paid affiliate destination (rel + disclosure). */
   affiliate?: boolean;
+  capability: string;
   costCaption: string;
   costDetail: string;
   docsHref: string;
@@ -37,6 +38,7 @@ type ProviderOption = {
 export const providerOptions = [
   {
     affiliate: true,
+    capability: "Also powers keyword research and difficulty.",
     costCaption: "Pay per check - from ~$0.002",
     costDetail:
       "Billed in USD at your configured depth - about $0.002 at Top 10 and $0.0155 at Top 100.",
@@ -46,6 +48,7 @@ export const providerOptions = [
   },
   {
     affiliate: false,
+    capability: "Rank checks only.",
     costCaption: serpApiCostCaption(),
     costDetail:
       "Plans include monthly searches. A Top-N check uses up to one search per 10 results, often fewer when a match is found early.",

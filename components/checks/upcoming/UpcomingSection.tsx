@@ -19,6 +19,7 @@ export type UpcomingSectionProps = {
   initialExpandedDayKey?: string;
   initialOpenDayKey?: string;
   mode: UpcomingDisplayMode;
+  /** @deprecated Replaced by ZonedTime absolute formatting; kept for backward compatibility. */
   now?: Date;
   providerSettingsHref: string;
   schedulesHref: string;
@@ -87,7 +88,6 @@ export function UpcomingSection({
   initialExpandedDayKey,
   initialOpenDayKey,
   mode,
-  now = new Date(),
   providerSettingsHref,
   schedulesHref,
   timeZone = "UTC",
@@ -120,7 +120,6 @@ export function UpcomingSection({
           blocked={view.blocked}
           days={view.days}
           initialOpenDayKey={initialOpenDayKey}
-          now={now}
           schedulesHref={schedulesHref}
           timeZone={timeZone}
         />
@@ -143,7 +142,6 @@ export function UpcomingSection({
               days={view.days}
               initialExpandedDayKey={initialExpandedDayKey}
               mode={mode}
-              now={now}
               schedulesHref={schedulesHref}
               timeZone={timeZone}
             />

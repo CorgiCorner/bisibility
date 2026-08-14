@@ -1,6 +1,7 @@
 import "server-only";
 
 import { addManagedCompetitor, removeManagedCompetitor } from "@/lib/actions/competitors";
+import type { CompetitorObservation } from "@/lib/competitors/types";
 import { addManagedCompetitorSchema, removeManagedCompetitorSchema } from "@/lib/competitors/types";
 import { getCompetitorsApiView } from "@/lib/queries/competitors";
 import type { ApiContext } from "./context";
@@ -14,6 +15,17 @@ import {
   scopedProject,
   snakeizeKeys,
 } from "./surface";
+
+function publicObservation({
+  completed,
+  id,
+  keyword,
+  ranked,
+  ranks,
+  tags,
+}: CompetitorObservation): Omit<CompetitorObservation, "volume"> {
+  return { completed, id, keyword, ranked, ranks, tags };
+}
 
 export async function listProjectCompetitors(ctx: ApiContext, projectId: string) {
   const scoped = scopedProject(ctx, projectId);
@@ -30,6 +42,7 @@ export async function listProjectCompetitors(ctx: ApiContext, projectId: string)
         country: market.location,
         device: market.device === "mobile" ? "Mobile" : "Desktop",
         engine: "Google",
+        observations: market.observations.map(publicObservation),
       })),
       suggestions: view.suggestions,
     }) as Record<string, unknown>,

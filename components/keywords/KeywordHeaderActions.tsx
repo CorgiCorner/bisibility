@@ -191,7 +191,10 @@ export function KeywordHeaderActions({
               setActionsMenuAnchor(null);
               onToggleEdit();
             }}
-            option={{ label: editing ? "Close edit" : "Edit", value: "edit" }}
+            option={{
+              label: editing ? "Close markets & devices" : "Manage markets & devices",
+              value: "edit",
+            }}
           />
         ) : null}
         <MenuSelectOptionItem

@@ -9,6 +9,7 @@ import { requireReadableProject, resolveProjectAccess } from "@/lib/queries/_aut
 import { getCheckHealth } from "@/lib/queries/check-health";
 import { getProjectCostContext } from "@/lib/queries/cost-calculator";
 import { getKeywordResearchPageContext } from "@/lib/queries/keyword-research";
+import { getProjectMarkets } from "@/lib/queries/project-markets";
 
 type ResearchPageProps = {
   params: Promise<{ project: string }>;
@@ -29,11 +30,12 @@ export default async function ResearchPage({
   const seed = paramValue(params?.seed)?.trim();
   const locationKey = paramValue(params?.location)?.trim();
 
-  const [context, checkHealth, costContext, readable] = await Promise.all([
+  const [context, checkHealth, costContext, readable, projectMarkets] = await Promise.all([
     getKeywordResearchPageContext(publicId),
     getCheckHealth(publicId),
     getProjectCostContext(publicId),
     requireReadableProject(publicId),
+    getProjectMarkets(publicId),
   ]);
   const role = getProjectRole(readable.actor, readable.project.id);
 
@@ -46,6 +48,7 @@ export default async function ResearchPage({
         context={context}
         costContext={costContext}
         prefill={seed ? { locationKey: locationKey || undefined, seed } : undefined}
+        projectMarkets={projectMarkets}
         removeSavedKeywordsAction={removeSavedKeywords}
         researchAction={researchKeywordsAction}
         saveKeywordsAction={saveKeywords}

@@ -14,6 +14,7 @@ import {
   type OnboardingStepNumber,
 } from "@/components/onboarding/onboarding-fixtures";
 import { feedbackClass } from "@/components/onboarding/onboarding-form-utils";
+import { locationValuesForKeys } from "@/components/onboarding/onboarding-location-field";
 import {
   initialOnboardingDraft,
   initialReachableOnboardingStep,
@@ -122,7 +123,14 @@ export function OnboardingWizard({
   ) => {
     const nextFlowState = { ...flowState, projectId: nextProject.publicId };
     setProject(nextProject);
-    setDraft((current) => ({ ...current, createProject: values }));
+    setDraft((current) => ({
+      ...current,
+      createProject: values,
+      schedule: {
+        ...current.schedule,
+        timezone: nextProject.timezone ?? current.schedule.timezone,
+      },
+    }));
     mergeProjectId(nextProject.publicId);
     updateFlowAndStep(2, nextFlowState);
     setInlineWarning(completion?.warning ?? null);
@@ -149,11 +157,11 @@ export function OnboardingWizard({
   const handleKeywordsComplete: OnboardingWizardStepsProps["onKeywordsComplete"] = (
     values,
     defaults,
-    createdCount,
+    nextKeywordCount,
     warning,
   ) => {
     setDraft((current) => ({ ...current, addKeywords: values, schedule: defaults }));
-    setKeywordCount((current) => current + createdCount);
+    setKeywordCount(nextKeywordCount);
     updateFlowAndStep(4, {
       ...flowState,
       devices: values.devices,
@@ -175,6 +183,22 @@ export function OnboardingWizard({
       addKeywords: { ...current.addKeywords, keywords },
     }));
   };
+  const handleMarketsChange: OnboardingWizardStepsProps["onMarketsChange"] = (locations) => {
+    setDraft((current) => ({
+      ...current,
+      addKeywords: { ...current.addKeywords, locations },
+      schedule: {
+        ...current.schedule,
+        locations,
+        locationSelections: locationValuesForKeys(locations),
+      },
+    }));
+  };
+  async function handleTimezoneChange(timezone: string) {
+    const defaults = { ...draft.schedule, timezone };
+    setDraft((current) => ({ ...current, schedule: defaults }));
+    await actions.updateProjectDefaultsAction(defaults);
+  }
   const providerStepContinueDisabled =
     currentStep === 2 && providerContinueDisabled && !hasAnalyticsSource;
   // Connected providers must submit through their form; the analytics-only skip
@@ -214,47 +238,52 @@ export function OnboardingWizard({
           monthlyCapCents={monthlyCapCents}
           onCreateProjectComplete={handleCreateProjectComplete}
           onKeywordsChange={handleKeywordsChange}
+          onMarketsChange={handleMarketsChange}
           onKeywordsComplete={handleKeywordsComplete}
           onProviderComplete={handleProviderComplete}
           onProviderContinueDisabledChange={setProviderContinueDisabled}
           onProviderSkip={handleProviderSkip}
+          onFirstCheckBack={() => goToStep(3)}
+          onTimezoneChange={handleTimezoneChange}
           project={project}
           projectedCostPerCheckCents={projectedCostPerCheckCents}
           rankedKeywordConnections={rankedKeywordConnections}
         />
-        <OnboardingNav
-          continueDisabled={providerStepContinueDisabled}
-          continueLabel={currentStep === 4 ? "Open dashboard" : "Continue"}
-          currentStep={currentStep}
-          flowState={flowState}
-          leadingAction={
-            currentStep === 1 ? (
-              <div className="flex flex-wrap items-start gap-x-4 gap-y-1">
-                <SampleDataButton
-                  action={actions.installSampleDataAction}
-                  label="Load sample project"
-                  size="small"
-                  sx={{
-                    color: "var(--fg-muted)",
-                    fontWeight: 400,
-                    paddingX: "8px",
-                    textTransform: "none",
-                    "&:hover": {
-                      backgroundColor: "transparent",
-                      color: "var(--accent-text)",
-                    },
-                  }}
-                  variant="text"
-                />
-                {isCloud ? <CloudImportWorkspaceButton /> : null}
-              </div>
-            ) : undefined
-          }
-          onBack={currentStep === 1 ? undefined : () => goToStep(previousStep)}
-          onContinue={
-            canContinueWithConnectedDataSource ? continueWithConnectedDataSource : undefined
-          }
-        />
+        {currentStep !== 4 ? (
+          <OnboardingNav
+            continueDisabled={providerStepContinueDisabled}
+            continueLabel="Continue"
+            currentStep={currentStep}
+            flowState={flowState}
+            leadingAction={
+              currentStep === 1 ? (
+                <div className="flex flex-wrap items-start gap-x-4 gap-y-1">
+                  <SampleDataButton
+                    action={actions.installSampleDataAction}
+                    label="Load sample project"
+                    size="small"
+                    sx={{
+                      color: "var(--fg-muted)",
+                      fontWeight: 400,
+                      paddingX: "8px",
+                      textTransform: "none",
+                      "&:hover": {
+                        backgroundColor: "transparent",
+                        color: "var(--accent-text)",
+                      },
+                    }}
+                    variant="text"
+                  />
+                  {isCloud ? <CloudImportWorkspaceButton /> : null}
+                </div>
+              ) : undefined
+            }
+            onBack={currentStep === 1 ? undefined : () => goToStep(previousStep)}
+            onContinue={
+              canContinueWithConnectedDataSource ? continueWithConnectedDataSource : undefined
+            }
+          />
+        ) : null}
       </section>
     </OnboardingStepper>
   );

@@ -3,7 +3,14 @@ import type { ProviderActionHandlers } from "@/lib/integrations/types";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { integrationCategories } from "./integrations-fixtures";
-import { ProviderCard } from "./ProviderCard";
+import { ProviderCard as ProductionProviderCard, type ProviderCardProps } from "./ProviderCard";
+
+function ProviderCard({
+  timeZone = "UTC",
+  ...props
+}: Omit<ProviderCardProps, "timeZone"> & { timeZone?: string }) {
+  return <ProductionProviderCard {...props} timeZone={timeZone} />;
+}
 
 vi.mock("@/components/integrations/ConnectDrawer", () => ({
   ConnectDrawer: ({ open }: { open: boolean }) =>
@@ -114,7 +121,7 @@ describe("ProviderCard", () => {
     expect(actions.syncProjectTraffic).toHaveBeenCalledWith({ projectId: "prj_1" });
   });
 
-  it("renders sync failures with the shared UTC date format", () => {
+  it("renders sync failures in the project timezone", () => {
     const provider = {
       ...integrationCategories[1].providers[0],
       enabled: true,
@@ -134,18 +141,17 @@ describe("ProviderCard", () => {
         canUpdateProject
         projectId="prj_1"
         provider={provider}
+        timeZone="Europe/Madrid"
       />,
     );
 
     const alert = screen.getByRole("alert");
     expect(alert).toHaveTextContent(
-      "Traffic sync is failing. Failing since Jul 18, 2026, 13:40 UTC · 1 consecutive failure · unclassified (recorded before error-class upgrade).",
+      "Traffic sync is failing. Failing since Jul 18, 2026, 15:40 (Europe/Madrid) · 1 consecutive failure · unclassified (recorded before error-class upgrade).",
     );
     expect(alert).not.toHaveTextContent("18 Jul 2026");
-    expect(screen.getByText("Jul 18, 2026, 13:40 UTC")).toHaveAttribute(
-      "dateTime",
-      "2026-07-18T13:40:00.000Z",
-    );
+    expect(alert.querySelector("time")).toHaveTextContent("Jul 18, 2026, 15:40 (Europe/Madrid)");
+    expect(alert.querySelector("time")).toHaveAttribute("dateTime", "2026-07-18T13:40:00.000Z");
     expect(screen.queryByText("Never synced.")).not.toBeInTheDocument();
     expect(screen.queryByText(/authorization is no longer valid/)).not.toBeInTheDocument();
   });

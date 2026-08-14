@@ -1,8 +1,9 @@
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
-import { createUserDateTimeFormatter, type DateTimePreferences } from "@/lib/format/user-datetime";
+import { createUserDateTimeFormatter, type DateFormatPreference } from "@/lib/format/user-datetime";
 import { requireReadableProject } from "./_auth";
+import { getRequestProjectDefaults } from "./workspace-request-data";
 
 export type IngestHookListItem = {
   createdLabel: string;
@@ -25,20 +26,26 @@ function labelFromDate(
 
 export async function getIngestHooks(
   projectId: string,
-  options: { preferences?: DateTimePreferences } = {},
+  options: { dateFormat?: DateFormatPreference } = {},
 ): Promise<IngestHookListItem[]> {
   const { project } = await requireReadableProject(projectId);
-  const dateTime = createUserDateTimeFormatter(options.preferences);
-  const hooks = await prisma.ingestHook.findMany({
-    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-    select: {
-      createdAt: true,
-      disabled: true,
-      label: true,
-      lastUsedAt: true,
-      publicId: true,
-    },
-    where: { projectId: project.id },
+  const [defaults, hooks] = await Promise.all([
+    getRequestProjectDefaults(project.id),
+    prisma.ingestHook.findMany({
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      select: {
+        createdAt: true,
+        disabled: true,
+        label: true,
+        lastUsedAt: true,
+        publicId: true,
+      },
+      where: { projectId: project.id },
+    }),
+  ]);
+  const dateTime = createUserDateTimeFormatter({
+    dateFormat: options.dateFormat,
+    timezone: defaults?.timezone ?? "UTC",
   });
 
   return hooks.map((hook) => ({

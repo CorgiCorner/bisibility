@@ -70,9 +70,21 @@ function savedKeywordRow(item: SavedKeywordItem, defaultLocation: string) {
   };
 }
 
-/** Public IDs are exposed as `id`; `publicId` never leaves the REST boundary. */
-function savedKeywordApiResource({ publicId, ...row }: SavedKeywordRow) {
-  return { id: publicId, ...row };
+/** Public IDs are exposed as `id`; internal pair columns stay behind the REST boundary. */
+function savedKeywordApiResource(row: SavedKeywordRow) {
+  return {
+    cpc: row.cpc,
+    difficulty: row.difficulty,
+    id: row.publicId,
+    intent: row.intent,
+    location: row.location,
+    savedAt: row.savedAt,
+    sourceSeed: row.sourceSeed,
+    text: row.text,
+    trend: row.trend,
+    variantCount: row.variantCount,
+    volume: row.volume,
+  };
 }
 
 export async function listProjectSavedKeywords(ctx: ApiContext, projectId: string) {

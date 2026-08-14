@@ -54,6 +54,9 @@ export function SettingsCard({
       setDirty(false);
       setSaved(true);
       savedTimer.current = window.setTimeout(() => setSaved(false), 2_500);
+    } catch {
+      // The owning card renders the actionable validation or server error.
+      // Keep the card dirty and avoid leaking an unhandled event-handler promise.
     } finally {
       setSaving(false);
     }

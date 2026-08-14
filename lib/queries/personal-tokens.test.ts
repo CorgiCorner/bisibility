@@ -37,7 +37,10 @@ describe("personal token queries", () => {
   it("returns only the stored public token ID to account clients", async () => {
     await expect(getPersonalTokens("user_1")).resolves.toEqual([
       expect.objectContaining({
+        createdAt: "2026-07-01T00:00:00.000Z",
+        expiresAt: null,
         id: TOKEN_PUBLIC_ID,
+        lastUsedAt: null,
         name: "Automation",
       }),
     ]);

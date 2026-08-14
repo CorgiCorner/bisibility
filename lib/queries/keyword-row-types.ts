@@ -10,7 +10,12 @@ export type KeywordSchedule = {
   serp_depth?: SerpDepth | null;
   timezone: string;
 };
-export type PositionPoint = { checkedAt: string; label: string; position: number };
+export type PositionPoint = {
+  checkedAt: string;
+  degradedToCountry?: boolean;
+  label: string;
+  position: number;
+};
 export type CompletedComparableCheck = {
   checkedAt: string;
   position: number | null;

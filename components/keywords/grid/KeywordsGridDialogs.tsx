@@ -8,6 +8,7 @@ import type { KeywordExportTarget } from "@/components/keywords/export-target-mo
 import type { AddKeywordTab } from "@/lib/keywords/add-keyword-drawer-shared";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import type { KeywordRow } from "@/lib/queries/keywords";
+import type { ProjectMarketsView } from "@/lib/queries/project-markets";
 import type { ProjectDefaultMarket } from "@/lib/serp/default-market";
 import { useMemo } from "react";
 import {
@@ -26,6 +27,7 @@ type KeywordsGridDialogsProps = Pick<KeywordWorkspaceActions, "addKeywordsAction
   onCloseAdd: () => void;
   onCloseExport: () => void;
   projectId: string;
+  projectMarkets?: ProjectMarketsView;
   rows: KeywordRow[];
   tagSuggestions: readonly string[];
 };
@@ -39,6 +41,7 @@ export function KeywordsGridDialogs({
   onCloseAdd,
   onCloseExport,
   projectId,
+  projectMarkets,
   rows,
   tagSuggestions,
 }: KeywordsGridDialogsProps) {
@@ -64,6 +67,7 @@ export function KeywordsGridDialogs({
         onClose={onCloseAdd}
         open={addDraft.open}
         projectId={projectId}
+        projectMarkets={projectMarkets}
         tagSuggestions={tagSuggestions}
       />
       {exportTarget ? (

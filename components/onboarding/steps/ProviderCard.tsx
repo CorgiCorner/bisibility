@@ -23,7 +23,7 @@ function stateText(state: ProviderCardState) {
   if (state === "dirty") return "Unsaved changes";
   if (state === "tested") return "Verified";
   if (state === "failed") return "Test failed";
-  return "Ready to connect";
+  return "Not connected";
 }
 
 function statusKind(state: ProviderCardState): StatusKind {
@@ -55,6 +55,7 @@ export function ProviderCard({
       />
       <span className="pointer-events-none relative z-[1] flex flex-col items-start gap-2">
         <span className="text-sm font-semibold text-fg">{provider.label}</span>
+        <span className="text-xs leading-[1.4] text-fg-muted">{provider.capability}</span>
         <StatusPill label={stateText(state)} size="sm" status={statusKind(state)} />
       </span>
       <span className="pointer-events-none relative z-[1] mt-2 flex items-start gap-1 text-[12.5px] leading-[1.4] text-fg-muted">
@@ -68,12 +69,7 @@ export function ProviderCard({
           Balance: {balance}
         </span>
       ) : null}
-      <span className="pointer-events-none relative z-[1] mt-auto flex flex-col items-start gap-1.5 pt-3">
-        {provider.affiliate ? (
-          <span className="shrink-0 whitespace-nowrap font-mono text-[9.5px] uppercase tracking-[0.4px] text-fg-muted">
-            Affiliate link
-          </span>
-        ) : null}
+      <span className="pointer-events-none relative z-[1] mt-auto flex flex-wrap items-baseline gap-[5px] pt-3">
         <a
           className="pointer-events-auto inline-flex whitespace-nowrap text-[12.5px] font-semibold text-accent-text hover:underline"
           href={provider.docsHref}
@@ -83,6 +79,14 @@ export function ProviderCard({
         >
           Get API credentials ↗
         </a>
+        {provider.affiliate ? (
+          <>
+            <span aria-hidden className="text-[11.5px] text-fg-muted">
+              /
+            </span>
+            <span className="text-[11.5px] text-fg-muted">affiliate</span>
+          </>
+        ) : null}
       </span>
     </section>
   );

@@ -19,25 +19,25 @@ Self-host it or start with the hosted beta.
 
 *Dashboard running with demo data.*
 
-## Early release
-
-bisibility is an early release. Everything listed as Available can be tested today, but
-you may encounter rough edges and breaking changes before 1.0.
-
-Please report installation problems, bugs, and workflow feedback through
+bisibility is an early release: everything below can be tested today, but expect
+rough edges and breaking changes before 1.0. Please report installation problems,
+bugs, and workflow feedback through
 [GitHub Issues](https://github.com/CorgiCorner/bisibility/issues).
 
 ## Why bisibility?
 
-- **Research before you track.** Explore keyword opportunities and backlink data, then
-  use the findings to decide what belongs in a tracked project.
+- **Research before you track.** Explore keyword opportunities and backlink data,
+  then use the findings to decide what belongs in a tracked project.
 - **Own the history.** Positions, ranking URLs, timestamps, and per-check provider
   cost data live in a PostgreSQL database you operate, with direct SQL access and
   full-history export.
-- **Connect the context.** Compare Share of Voice, add opt-in Search Console and GA4
-  metrics, and line ranking movement up with deploy and CMS signals.
-- **Operate as a team.** Use Owner, Admin, Editor, and Viewer roles, review the audit
-  log, and deliver events through signed outbound webhooks.
+- **One model instead of raw provider APIs.** Rank results from DataForSEO and
+  SerpAPI are normalized behind a single application model with per-keyword
+  schedules, alert rules, and stored SERP snapshots when you self-host.
+- **Connect the context.** Compare Share of Voice, add opt-in Search Console and
+  GA4 metrics, and line ranking movement up with deploy and CMS signals.
+- **Operate as a team.** Owner, Admin, Editor, and Viewer roles, an audit log, and
+  signed outbound webhooks.
 - **Inspect the system.** The dashboard, scheduler, provider adapters, and delivery
   pipeline are open source under AGPL-3.0.
 
@@ -58,10 +58,8 @@ docker compose -f compose.yaml up -d
 ```
 
 Open [http://localhost:3000](http://localhost:3000) and sign in with email
-`demo@acme.dev` and OTP `000000`.
-
-Compose pulls version-pinned images from Docker Hub by default. To build the
-checked-out web and worker source instead, add `-f compose.build.yaml --build`.
+`demo@acme.dev` and OTP `000000`. Compose pulls version-pinned images by default;
+add `-f compose.build.yaml --build` to build the checked-out source instead.
 
 > [!WARNING]
 > Demo authentication is intentionally insecure and is meant for a throwaway local
@@ -69,88 +67,44 @@ checked-out web and worker source instead, add `-f compose.build.yaml --build`.
 > (`EMAIL_PROVIDER` with [Resend or Amazon SES](https://bisibility.com/docs/guides/email))
 > before exposing an instance to other users or real data.
 
-### Enable scheduled checks
-
-The default Compose stack runs manual rank checks only. To run recurring schedules,
-add the worker and bundled Temporal overlays:
+The default stack runs manual rank checks only. For recurring schedules, add the
+worker and bundled Temporal overlays (`--profile temporal-ui` serves the Temporal
+Web UI at [http://localhost:8233](http://localhost:8233)):
 
 ```bash
 docker compose -f compose.yaml -f compose.worker.yaml -f compose.temporal.yaml up -d
 ```
 
-Add `--profile temporal-ui` to serve the Temporal Web UI at
-[http://localhost:8233](http://localhost:8233). The worker image contains only
-the bisibility worker; the Temporal overlay supplies the pinned server separately.
+## Features
 
-## Why use bisibility instead of raw provider APIs?
-
-Provider APIs return individual datasets and result snapshots. bisibility turns them
-into persistent research, monitoring, alerting, and automation workflows:
-
-- normalizes rank results from DataForSEO and SerpAPI behind one application model,
-  with access to stored normalized SERP snapshots when you self-host;
-- stores position history in PostgreSQL and runs per-keyword schedules with
-  project-level defaults and per-keyword overrides;
-- records provider-reported rank-check costs when available and stores estimates
-  separately otherwise;
-- evaluates alert rules after new results arrive and notifies in-app and by email;
-- exposes history through the dashboard, REST API v1, CSV export, and MCP, and
-  delivers events through signed outbound webhooks.
-
-## Product status
-
-Available means the capability can be tested in this early release; it does not imply
-a stable 1.0 contract.
-
-| Capability | Status |
-| --- | --- |
-| Google rank tracking | Available |
-| Keyword research | Available |
-| Backlink research | Available |
-| Competitor benchmarking and Share of Voice | Available |
-| Search Console and GA4 connections | Available |
-| Deploy and CMS signal timeline | Available |
-| Signed outbound webhooks | Available |
-| Team roles and audit log | Available |
-| REST API and OpenAPI | Available |
-| MCP endpoint | Available |
-| TypeScript, Python, and Go SDKs | Available |
-| CLI | Available |
-| Self-hosting with Docker | Available |
-| Hosted | Open beta |
-| Domain overview | Planned |
-
-### Included workflows
-
-- Keyword research with related queries, suggestions, ideas, search volume, 12-month
+- Keyword research: related queries, suggestions, ideas, search volume, 12-month
   trends, CPC, competition, difficulty, and intent data
-- Backlink research with referring domains and pages, 12-month new and lost link
+- Backlink research: referring domains and pages, 12-month new and lost link
   history, authority and spam metrics, and link attributes
-- Rank tracking with position history, trend charts, and intended URL monitoring
+- Rank tracking: position history, trend charts, intended URL monitoring, and
+  Google index status
 - Competitor benchmarking with Share of Voice
 - Manual, daily, weekly, monthly, and custom cron schedules
-- Rank alerts in-app and by email, plus weekly email digests for projects with
-  recent rank-check activity
+- Rank alerts in-app and by email, plus weekly email digests
 - Keyword tags and saved views
-- Opt-in Search Console connections, with queries, clicks, and impressions per keyword
-- Opt-in GA4 connections with landing-page sessions, engagement, and key events
+- Opt-in Search Console (queries, clicks, impressions) and GA4 (landing-page
+  sessions, engagement, key events) connections
 - A signal timeline for rank checks, deploys, CMS events, and manual notes
-- Google index status on keyword details
-- REST API v1 with OpenAPI, an MCP endpoint, signed outbound webhooks, and CSV export
+- REST API v1 with OpenAPI, an MCP endpoint, signed outbound webhooks, CSV export,
+  a CLI, and TypeScript, Python, and Go SDKs
 - Owner, Admin, Editor, and Viewer team roles, with an audit log
 
-## Not yet
-
-Tracked on the [roadmap](https://bisibility.com/roadmap): Slack alert delivery,
-AI Overview and LLM visibility tracking, domain overview, hosted general availability,
-hosted usage limits and billing controls, and hosted uptime SLA and backup restore targets.
+Everything above ships in the current early release; none of it is a stable 1.0
+contract yet. The hosted service is in open beta, and a domain overview is planned.
+Slack alert delivery, AI Overview and LLM visibility tracking, and hosted general
+availability are tracked on the [roadmap](https://bisibility.com/roadmap).
 
 ## AI agents and MCP
 
-bisibility is API-first. Agents work with the same projects, keywords, checks, alerts,
-and history that power the dashboard: the REST API, the OpenAPI schema, and the MCP
-endpoint converge on the same application model, so agent behavior does not rely on
-dashboard scraping.
+bisibility is API-first. Agents work with the same projects, keywords, checks,
+alerts, and history that power the dashboard: the REST API, the OpenAPI schema, and
+the MCP endpoint converge on the same application model, so agent behavior does not
+rely on dashboard scraping.
 
 For example, connect Codex to a self-hosted instance with a personal access token:
 
@@ -163,33 +117,14 @@ codex mcp add bisibility \
 
 Project API keys work too. Other clients use different configuration fields, but the
 HTTP connection uses the `/api/mcp` Streamable HTTP endpoint and an
-`Authorization: Bearer <token>` header. The MCP endpoint is available in the current
-early release, but tool names and schemas may change before 1.0. The endpoint
-advertises its tool inventory through the
-[MCP server card](https://bisibility.com/.well-known/mcp/server-card.json).
+`Authorization: Bearer <token>` header. The endpoint advertises its tool inventory
+through the [MCP server card](https://bisibility.com/.well-known/mcp/server-card.json);
+tool names and schemas may change before 1.0. The built-in endpoint and the
+separately installed `@bisibility/mcp` package expose the same unprefixed
+`snake_case` tools.
 
-### Example agent workflow
-
-> Find the tracked keywords whose latest completed check is at least three positions
-> worse than their previous completed check, and return their current ranking URLs.
-
-The built-in endpoint and the separately installed `@bisibility/mcp` package expose the
-same unprefixed `snake_case` tools. For this workflow, an agent can:
-
-1. select the project with `list_projects`;
-2. paginate through `list_keywords`;
-3. request the two latest completed checks with `get_rank_history`;
-4. compare numeric positions and return the latest ranking URL when available.
-
-When fewer than two completed checks exist, the agent should report
-`schedule.next_check_at`. It can offer `run_rank_check` instead, but only with write
-access and the user's explicit approval of the provider cost. This workflow makes one
-history call per keyword, so it is best suited to small projects.
-
-The CLI and typed TypeScript, Python, and Go SDKs are available to test. CLI commands,
-flags, and output formats may change before 1.0.
-
-[Agent documentation](https://bisibility.com/docs/agents)
+See the [agent documentation](https://bisibility.com/docs/agents) for worked
+examples, cost-approval guidance, and the CLI and SDKs.
 
 ## Provider support
 
@@ -203,24 +138,19 @@ flags, and output formats may change before 1.0.
 
 ## Self-hosting in production
 
-Production deployments need PostgreSQL, Valkey or another Redis-compatible endpoint, and a supported SERP provider
-account. Scheduled checks additionally require the Temporal worker. Read the
+Production deployments need PostgreSQL, Valkey or another Redis-compatible endpoint,
+and a supported SERP provider account. Scheduled checks additionally require the
+Temporal worker. Read the
 [self-hosting guide](https://bisibility.com/docs/self-hosting) before serving real
 traffic.
 
 ## Cost model
 
-Self-hosted bisibility has no application subscription and no per-keyword license fee.
-You pay separately for:
-
-1. the infrastructure you run;
-2. SERP requests made through your own DataForSEO or SerpAPI account;
-3. optional third-party services such as email delivery.
-
-bisibility does not resell SERP data: provider credentials and billing remain between
-you and the provider. Completed checks store provider-reported cost when available.
-When a provider does not return a per-response dollar amount, bisibility keeps the
-configured or model-based estimate separately. Use the
+Self-hosted bisibility has no application subscription and no per-keyword license
+fee. You pay separately for the infrastructure you run, SERP requests made through
+your own provider account, and optional third-party services such as email delivery.
+bisibility does not resell SERP data. Completed checks store provider-reported cost
+when available and keep configured or model-based estimates separately. Use the
 [rank-tracking cost calculator](https://bisibility.com/rank-tracking-cost-calculator)
 before enabling a large schedule.
 
@@ -235,16 +165,12 @@ before enabling a large schedule.
 
 ## Hosted
 
-The hosted beta is available in open beta and is not generally available yet. It runs
-the same core application without requiring you to operate PostgreSQL, Valkey,
-or the Temporal worker.
-
-The hosted service is free during the open beta and does not require a payment
-method. Provider usage is not included: DataForSEO or SerpAPI requests are billed
+The [hosted beta](https://bisibility.com/) runs the same core application without
+requiring you to operate PostgreSQL, Valkey, or the Temporal worker. It is free
+during the open beta and does not require a payment method; provider usage is billed
 directly to your connected provider account. Hosted pricing will be announced before
-the beta ends, and nothing will be charged without explicit confirmation. Self-hosting
-remains available without an application subscription.
-[Start the hosted beta](https://bisibility.com/).
+the beta ends, and nothing will be charged without explicit confirmation.
+Self-hosting remains available without an application subscription.
 
 ## Documentation
 

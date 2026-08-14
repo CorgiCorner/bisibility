@@ -21,7 +21,7 @@ export function SidebarNav({
   projectRef,
 }: Readonly<SidebarNavProps>) {
   const pathname = usePathname();
-  const currentHref = activeHref ?? pathname ?? appPath(projectRef, "overview");
+  const currentHref = activeHref ?? pathname ?? appPath(projectRef, "dashboard");
   const allItems = navItems(projectRef);
   const items = allItems.filter((item) => item.group !== "utility");
   const utilityItems = allItems.filter((item) => item.group === "utility");

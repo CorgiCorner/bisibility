@@ -73,6 +73,7 @@ async function createHealthFixture(
       gl: "us",
       hl: "en",
       kind: LocationKind.country,
+      languageCode: "en",
       languageLabel: "English",
       primaryGeoName: "United States",
       secondaryGeoName: "",

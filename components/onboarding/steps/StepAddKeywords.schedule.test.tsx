@@ -35,7 +35,7 @@ describe("StepAddKeywords schedule summary", () => {
     expect(screen.getByText("≈ 8 checks/month at Top 100")).toBeInTheDocument();
   });
 
-  it("places usage after defaults and updates it from refresh, devices, and depth", async () => {
+  it("places usage after defaults and updates it from frequency, devices, and depth", async () => {
     render(<StepAddKeywords flowState={{ projectId: "prj_1", providerId: "dataforseo" }} />);
     fireEvent.change(keywordBox(), { target: { value: "rank tracker\nseo api" } });
 
@@ -45,7 +45,7 @@ describe("StepAddKeywords schedule summary", () => {
       defaultsHeading.compareDocumentPosition(initialEstimate) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
 
-    fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
+    fireEvent.click(screen.getByRole("button", { name: "Frequency" }));
     fireEvent.click(screen.getByRole("menuitem", { name: "Monthly" }));
     expect(screen.getByText("≈ 2 checks/month at Top 100")).toBeInTheDocument();
 
@@ -81,7 +81,7 @@ describe("StepAddKeywords schedule summary", () => {
     expect(screen.queryByRole("link", { name: "Estimate provider cost" })).toBeNull();
   });
 
-  it("saves tracking defaults with keywords and keeps language derived", async () => {
+  it("saves tracking defaults with keywords and keeps language inside market chips", async () => {
     const onComplete = vi.fn();
     const updateProjectDefaultsAction = vi.fn(async () => undefined);
     render(
@@ -97,9 +97,8 @@ describe("StepAddKeywords schedule summary", () => {
       </>,
     );
 
-    expect(screen.getByLabelText("Language").tagName).toBe("OUTPUT");
-    expect(screen.getByLabelText("Language")).toHaveClass("font-normal");
-    expect(screen.queryByRole("textbox", { name: "Language" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Remove United States / English" })).toBeDisabled();
+    expect(screen.queryByLabelText("Language")).not.toBeInTheDocument();
     fireEvent.change(keywordBox(), { target: { value: "rank tracker" } });
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
 

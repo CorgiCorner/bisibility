@@ -37,5 +37,8 @@ describe("navItems", () => {
     expect(items.find((item) => item.label === "Rank Tracker")?.href).toBe(
       "/app/prj_example/rank-tracker",
     );
+    expect(items.find((item) => item.label === "Keyword Research")?.href).toBe(
+      "/app/prj_example/keyword-research",
+    );
   });
 });

@@ -1,5 +1,6 @@
 "use client";
 
+import { MenuMultiSelectOption } from "@/components/ui/MenuMultiSelectOption";
 import { MenuSelectOptionItem, menuSelectRowSx } from "@/components/ui/MenuSelectOptionItem";
 import { toolbarControlClassName } from "@/components/ui/toolbar-control-styles";
 import { cn } from "@/lib/ui/cn";
@@ -18,6 +19,8 @@ export type MenuSelectOption = {
 };
 
 export type MenuSelectProps = {
+  ariaDescribedBy?: string;
+  ariaInvalid?: boolean;
   ariaLabel: string;
   /** Optional leading "pre-icon" rendered inside the trigger, before the value. */
   leadingIcon?: ReactNode;
@@ -30,6 +33,7 @@ export type MenuSelectProps = {
 };
 
 export type MenuMultiSelectProps = {
+  allLabel?: string;
   ariaLabel: string;
   leadingIcon?: ReactNode;
   minSelected?: number;
@@ -107,6 +111,8 @@ function MenuSearchField({ onChange, placeholder, value }: Readonly<MenuSearchFi
 // Styled MUI toolbar dropdown used instead of native select; supports a leading icon.
 // Trigger: weight 500, token colors/border, 9px radius, 34px minimum height.
 export function MenuSelect({
+  ariaDescribedBy,
+  ariaInvalid,
   ariaLabel,
   leadingIcon,
   onChange,
@@ -136,8 +142,10 @@ export function MenuSelect({
   return (
     <>
       <button
+        aria-describedby={ariaDescribedBy}
         aria-expanded={open}
         aria-haspopup="menu"
+        aria-invalid={ariaInvalid}
         aria-label={ariaLabel}
         className={cn(triggerClass, triggerClassName)}
         onClick={(event) => setAnchorEl(event.currentTarget)}
@@ -181,6 +189,7 @@ export function MenuSelect({
 }
 
 export function MenuMultiSelect({
+  allLabel,
   ariaLabel,
   leadingIcon,
   minSelected = 1,
@@ -200,7 +209,11 @@ export function MenuMultiSelect({
   const selectedValues = new Set(values);
   const selected = options.filter((option) => selectedValues.has(option.value));
   const filteredOptions = search
-    ? options.filter((option) => option.label.toLowerCase().includes(search.trim().toLowerCase()))
+    ? options.filter((option) =>
+        `${option.label} ${option.secondary ?? ""}`
+          .toLowerCase()
+          .includes(search.trim().toLowerCase()),
+      )
     : options;
 
   function closeMenu() {
@@ -253,28 +266,33 @@ export function MenuMultiSelect({
         {searchable ? (
           <MenuSearchField onChange={setSearch} placeholder={searchPlaceholder} value={search} />
         ) : null}
+        {allLabel ? (
+          <MenuItem
+            aria-checked={values.length === 0}
+            onClick={() => onChange([])}
+            role="menuitemradio"
+            sx={menuSelectRowSx}
+          >
+            <span className={values.length === 0 ? "font-semibold text-fg" : undefined}>
+              {allLabel}
+            </span>
+            {values.length === 0 ? (
+              <Check aria-hidden className="text-accent-text" size={15} weight="bold" />
+            ) : null}
+          </MenuItem>
+        ) : null}
         {filteredOptions.length === 0 ? (
           <div className="px-2 py-2 text-[12px] text-fg-muted">No results</div>
         ) : null}
-        {filteredOptions.map((option) => {
-          const current = selectedValues.has(option.value);
-          const disabled = current && values.length <= minSelected;
-          return (
-            <MenuItem
-              aria-checked={current}
-              disabled={disabled}
-              key={option.value}
-              onClick={() => toggle(option.value)}
-              role="menuitemcheckbox"
-              sx={menuSelectRowSx}
-            >
-              <span className={current ? "font-semibold text-fg" : undefined}>{option.label}</span>
-              {current ? (
-                <Check aria-hidden className="text-accent-text" size={15} weight="bold" />
-              ) : null}
-            </MenuItem>
-          );
-        })}
+        {filteredOptions.map((option) => (
+          <MenuMultiSelectOption
+            current={selectedValues.has(option.value)}
+            disabled={selectedValues.has(option.value) && values.length <= minSelected}
+            key={option.value}
+            onSelect={() => toggle(option.value)}
+            option={option}
+          />
+        ))}
       </Menu>
     </>
   );

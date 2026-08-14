@@ -46,6 +46,10 @@ const mocks = vi.hoisted(() => {
     savedKeyword: { deleteMany: vi.fn() },
     keywordTag: { createMany: vi.fn(), deleteMany: vi.fn() },
     project: { findFirst: vi.fn(), findUnique: vi.fn() },
+    projectMarket: {
+      findMany: vi.fn().mockResolvedValue([]),
+      upsert: vi.fn().mockResolvedValue({ publicId: "pmkt_a00000000000000000000000" }),
+    },
     providerConnection: { findUnique: vi.fn(), updateMany: vi.fn(), upsert: vi.fn() },
     tag: { createMany: vi.fn(), findMany: vi.fn() },
     user: { findUnique: vi.fn() },
@@ -190,6 +194,7 @@ describe("server actions", () => {
           hl: "en",
           id: "loc_1",
           kind: city ? "city" : "country",
+          languageCode: "en",
           languageLabel: "English",
           primaryGeoCode: null,
           primaryGeoName: country,
@@ -303,7 +308,13 @@ describe("server actions", () => {
 
     expect(mocks.prisma.keyword.createMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: [expect.objectContaining({ intent: "commercial", topic: "Product" })],
+        data: [
+          expect.objectContaining({
+            intent: "commercial",
+            location: "United States",
+            topic: "Product",
+          }),
+        ],
       }),
     );
     expect(mocks.writeAudit).toHaveBeenCalledWith(
@@ -320,6 +331,41 @@ describe("server actions", () => {
     );
   });
 
+  it("adds a language suffix only for a non-default market row", async () => {
+    mocks.resolveKeywordLocation.mockResolvedValue({
+      degraded: false,
+      location: {
+        canonicalKey: "ES/Andalusia/Malaga@en",
+        cityName: "Malaga",
+        countryCode: "ES",
+        displayName: "Malaga, Andalusia, Spain",
+        gl: "es",
+        hl: "en",
+        id: "loc_es_en",
+        kind: "city",
+        languageCode: "en",
+        languageLabel: "English",
+        primaryGeoCode: 1000080,
+        primaryGeoName: "Malaga,Andalusia,Spain",
+        regionCode: "AN",
+        secondaryGeoName: "Malaga, Andalusia, Spain",
+      },
+      warning: null,
+    });
+
+    await addKeyword({
+      keyword: "rank tracker",
+      locationKey: "ES/Andalusia/Malaga@en",
+      projectId: "prj_a00000000000000000000000",
+    });
+
+    expect(mocks.prisma.keyword.createMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: [expect.objectContaining({ location: "Malaga, Andalusia, Spain (English)" })],
+      }),
+    );
+  });
+
   it("revalidates keyword, dependent alert/competitor, activity, and audit views after keyword mutations", async () => {
     mocks.prisma.tag.findMany.mockResolvedValue([]);
 
@@ -331,7 +377,7 @@ describe("server actions", () => {
 
     expect(mocks.revalidatePath).toHaveBeenCalledWith(appPath("[project]", "rank-tracker"), "page");
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/app/[project]/rank-tracker/[id]", "page");
-    expect(mocks.revalidatePath).toHaveBeenCalledWith(appPath("[project]", "overview"), "page");
+    expect(mocks.revalidatePath).toHaveBeenCalledWith(appPath("[project]", "dashboard"), "page");
     expect(mocks.revalidatePath).toHaveBeenCalledWith(appPath("[project]", "alerts"), "page");
     expect(mocks.revalidatePath).toHaveBeenCalledWith(appPath("[project]", "competitors"), "page");
     expect(mocks.revalidatePath).toHaveBeenCalledWith(
@@ -446,7 +492,14 @@ describe("server actions", () => {
 
     expect(mocks.prisma.savedKeyword.deleteMany).toHaveBeenCalledWith({
       where: {
-        OR: [{ location: "US", normalizedText: "rank tracker" }],
+        OR: [
+          {
+            countryCode: "US",
+            languageCode: "en",
+            location: "US",
+            normalizedText: "rank tracker",
+          },
+        ],
         projectId: "project_1",
         publicId: { in: ["svkw_a00000000000000000000000", "svkw_c00000000000000000000000"] },
       },
@@ -480,7 +533,14 @@ describe("server actions", () => {
     expect(mocks.prisma.keyword.createMany).not.toHaveBeenCalled();
     expect(mocks.prisma.savedKeyword.deleteMany).toHaveBeenCalledWith({
       where: {
-        OR: [{ location: "US", normalizedText: "rank tracker" }],
+        OR: [
+          {
+            countryCode: "US",
+            languageCode: "en",
+            location: "US",
+            normalizedText: "rank tracker",
+          },
+        ],
         projectId: "project_1",
         publicId: { in: ["svkw_a00000000000000000000000"] },
       },
@@ -510,8 +570,18 @@ describe("server actions", () => {
     expect(mocks.prisma.savedKeyword.deleteMany).toHaveBeenCalledWith({
       where: {
         OR: [
-          { location: "US", normalizedText: "rank tracker" },
-          { location: "US", normalizedText: "seo tool" },
+          {
+            countryCode: "US",
+            languageCode: "en",
+            location: "US",
+            normalizedText: "rank tracker",
+          },
+          {
+            countryCode: "US",
+            languageCode: "en",
+            location: "US",
+            normalizedText: "seo tool",
+          },
         ],
         projectId: "project_1",
         publicId: {
@@ -538,8 +608,18 @@ describe("server actions", () => {
     expect(mocks.prisma.savedKeyword.deleteMany).toHaveBeenCalledWith({
       where: {
         OR: [
-          { location: "US", normalizedText: "rank tracker" },
-          { location: "PL", normalizedText: "seo tool" },
+          {
+            countryCode: "US",
+            languageCode: "en",
+            location: "US",
+            normalizedText: "rank tracker",
+          },
+          {
+            countryCode: "PL",
+            languageCode: "pl",
+            location: "PL",
+            normalizedText: "seo tool",
+          },
         ],
         projectId: "project_1",
         publicId: {

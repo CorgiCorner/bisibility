@@ -1,101 +1,26 @@
 import { Sparkline } from "@/components/charts/Sparkline";
-import { MonoText } from "@/components/ui";
+import { marketGridParent } from "@/lib/keywords/market-grid-model";
 import type { KeywordRow } from "@/lib/queries/keywords";
-import { appPath } from "@/lib/routing/app-path";
 import * as rankDepth from "@/lib/serp/rank-depth";
 import { chartColors } from "@/lib/theme/chart-colors";
-import IconButton from "@mui/material/IconButton";
-import Tooltip from "@mui/material/Tooltip";
 import type { GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
-import {
-  EyeIcon as Eye,
-  MapPinIcon as MapPin,
-  MonitorIcon as Monitor,
-} from "@phosphor-icons/react";
-import Link from "next/link";
+import { MonitorIcon as Monitor } from "@phosphor-icons/react";
 import { FrequencyCell } from "./FrequencyCell";
 import { trafficColumns } from "./grid-columns-traffic";
 import { KeywordChangeCell } from "./KeywordChangeCell";
 import type { KeywordColumnActions } from "./keyword-column-actions";
 import { LastCheckedCell } from "./LastCheckedCell";
+import {
+  MarketDifficultyCell,
+  MarketKeywordCell,
+  MarketLocationCell,
+  MarketPositionCell,
+  MarketVolumeCell,
+  NoDataValue,
+  noRankLabel,
+} from "./market-grid-cells";
 import { rowActionsColumn } from "./RowActionsCell";
 import { TargetRankingCell } from "./TargetRankingCell";
-
-const noDataClassName = "font-mono text-xs font-semibold text-fg-muted";
-
-function formatVolume(volume: number) {
-  if (volume >= 10000) {
-    return `${(volume / 1000).toFixed(0)}k`;
-  }
-  if (volume >= 1000) {
-    return `${(volume / 1000).toFixed(1)}k`;
-  }
-  return String(volume);
-}
-
-function noRankLabel(row: KeywordRow) {
-  const state = row.checkState ?? row.lastCheckStatus;
-  if (state === "running") return "Check running";
-  if (state === "failed") return "Latest check failed";
-  if (state === "not_ranked" || state === "completed")
-    return rankDepth.notRankedLabel(row.trackedDepth);
-  return "Awaiting first check";
-}
-
-function NoDataValue({
-  className,
-  label = "No data",
-}: Readonly<{ className?: string; label?: string }>) {
-  return (
-    <Tooltip title={label}>
-      <span aria-label={label} className={[noDataClassName, className].join(" ")}>
-        -
-      </span>
-    </Tooltip>
-  );
-}
-
-export function KeywordCell({
-  projectRef,
-  row,
-}: Readonly<Pick<GridRenderCellParams<KeywordRow>, "row"> & { projectRef: string }>) {
-  return (
-    <span className="flex w-full min-w-0 items-center gap-1">
-      <Tooltip title="View keyword details">
-        <IconButton
-          aria-label="View keyword details"
-          className="h-7 min-h-0 w-7 min-w-0 shrink-0"
-          component={Link}
-          href={appPath(projectRef, "rank-tracker", row.id)}
-          onClick={(event) => event.stopPropagation()}
-          size="small"
-          sx={{
-            color: "var(--fg-muted)",
-            "&:hover": { backgroundColor: "var(--accent-soft)", color: "var(--accent-text)" },
-          }}
-        >
-          <Eye size={14} />
-        </IconButton>
-      </Tooltip>
-      <span
-        className="bv-keyword-title min-w-0 flex-1 truncate text-[13.5px] font-medium text-fg"
-        style={{ lineHeight: "18px" }}
-      >
-        {row.keyword}
-      </span>
-    </span>
-  );
-}
-
-function PositionCell({ row }: Readonly<GridRenderCellParams<KeywordRow>>) {
-  if (!row.hasRankData) {
-    return <NoDataValue className="text-[13px]" label={noRankLabel(row)} />;
-  }
-  if (rankDepth.isPositionOutsideTrackedDepth(row.position, row.trackedDepth))
-    return <span>{`Not found in top ${row.trackedDepth ?? 100}`}</span>;
-
-  return <span className="font-mono text-[13.5px] font-semibold text-fg">#{row.position}</span>;
-}
 
 function DeviceCell({ row }: Readonly<GridRenderCellParams<KeywordRow>>) {
   return (
@@ -124,20 +49,6 @@ function SparklineCell({ row }: Readonly<GridRenderCellParams<KeywordRow>>) {
       data={row.sparkline}
       valueFormatter={(value) => (value ? `#${value}` : "")}
     />
-  );
-}
-
-export function LocationCell({ row }: Readonly<Pick<GridRenderCellParams<KeywordRow>, "row">>) {
-  const isCity = row.location.kind === "city";
-  return (
-    <span className="inline-flex min-w-0 items-center gap-1.5">
-      <MapPin
-        className={isCity ? "flex-none text-accent-text" : "flex-none text-fg-muted"}
-        size={13}
-        weight={isCity ? "fill" : "regular"}
-      />
-      <span className="truncate text-[12.5px] text-fg-muted">{row.location.displayName}</span>
-    </span>
   );
 }
 
@@ -178,7 +89,7 @@ export function keywordColumns(
       headerName: "Keyword",
       flex: 1.55,
       minWidth: 210,
-      renderCell: ({ row }) => <KeywordCell projectRef={projectRef} row={row} />,
+      renderCell: ({ row }) => <MarketKeywordCell projectRef={projectRef} row={row} />,
     },
     {
       field: "device",
@@ -191,7 +102,7 @@ export function keywordColumns(
       field: "position",
       headerName: "Pos",
       minWidth: 170,
-      renderCell: PositionCell,
+      renderCell: MarketPositionCell,
       type: "number",
     },
     {
@@ -213,12 +124,17 @@ export function keywordColumns(
       field: "volume",
       headerName: "Volume",
       minWidth: 96,
-      renderCell: ({ row }) => (
-        <MonoText component="span" size="lg">
-          {formatVolume(row.volume)}
-        </MonoText>
-      ),
+      renderCell: MarketVolumeCell,
       type: "number",
+    },
+    {
+      field: "difficulty",
+      headerName: "Difficulty",
+      minWidth: 104,
+      renderCell: MarketDifficultyCell,
+      type: "number",
+      valueGetter: (_value, row) =>
+        marketGridParent(row)?.aggregate.difficulty === "mixed" ? null : row.difficulty,
     },
     {
       field: "sparkline",
@@ -255,7 +171,7 @@ export function keywordColumns(
       headerName: "Location",
       flex: 0.9,
       minWidth: 150,
-      renderCell: LocationCell,
+      renderCell: MarketLocationCell,
       valueGetter: (_value, row) => row.location.displayName,
     },
     {
@@ -291,3 +207,5 @@ export function keywordColumns(
     rowActionsColumn(actions, projectRef, pendingCheckIds),
   ];
 }
+
+export { MarketKeywordCell as KeywordCell, MarketLocationCell as LocationCell };

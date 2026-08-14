@@ -65,7 +65,14 @@ export function HeadToHeadTable({ market, onExport }: Readonly<HeadToHeadTablePr
   return (
     <Card className="overflow-hidden p-0" size="md">
       <div className="flex flex-wrap items-center justify-between gap-3 border-border border-b px-[18px] py-[15px]">
-        <SectionTitle>Shared keywords · head-to-head</SectionTitle>
+        <div className="flex min-w-0 flex-col gap-1">
+          <SectionTitle>Shared keywords · head-to-head</SectionTitle>
+          <p className="m-0 font-mono text-[11px] text-fg-muted">
+            {market.location} / {market.languageLabel} /{" "}
+            {market.device === "mobile" ? "Mobile" : "Desktop"} · {market.sharedKeywordCount} shared
+            of {market.trackedKeywordCount} tracked
+          </p>
+        </div>
         <div className="flex items-center gap-2">
           {hiddenCount > 0 ? (
             <button

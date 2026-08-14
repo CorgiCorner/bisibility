@@ -23,6 +23,30 @@ export async function removeSampleData() {
   return { projectId: "project_sample", publicId: "prj_sample_preview" };
 }
 
+export async function addKeywordsMatrix() {
+  return { created: 0, keywords: [], skippedDuplicates: 0 };
+}
+
+export async function addProjectMarkets() {
+  return { added: 0, marketIds: [], ok: true as const };
+}
+
+export async function addSignalNote() {
+  return { id: "sig_preview" };
+}
+
+export async function removeSignalNote() {
+  return { removed: true };
+}
+
+export function parseActionInput<T>(schema: { parse: (input: unknown) => T }, input: unknown): T {
+  return schema.parse(input);
+}
+
+export function revalidateSettingsViews() {
+  return undefined;
+}
+
 export async function loadCloudBackupCounts() {
   return {
     alertRules: 3,

@@ -29,6 +29,7 @@ const publicIdTables = {
   mbr: "memberships",
   ntf: "notifications",
   pat: "personal_access_tokens",
+  pmkt: "project_markets",
   prj: "projects",
   sid: "sessions",
   sig: "signals",

@@ -14,6 +14,7 @@ export type DomainOverviewServiceContext = {
 };
 
 export type DomainOverviewMarket = {
+  countryCode?: string;
   languageCode: string;
   locationCode: number;
 };

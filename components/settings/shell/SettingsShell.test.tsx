@@ -10,7 +10,10 @@ import {
   Loading as LoadingStory,
 } from "@/components/settings/shell/SettingsShell.stories";
 import { SettingsShellLoading } from "@/components/settings/shell/SettingsShellLoading";
-import { SettingsField } from "@/components/settings/shell/settings-field-widths";
+import {
+  SettingsField,
+  settingsFieldWidths,
+} from "@/components/settings/shell/settings-field-widths";
 import {
   settingsCardGeometryClassNames,
   settingsShellGridClassName,
@@ -84,6 +87,7 @@ describe("SettingsShell", () => {
       "page",
     );
     expect(subnav?.querySelectorAll("[data-settings-subnav-icon] svg")).toHaveLength(7);
+    expect(screen.queryByRole("link", { name: "Markets" })).not.toBeInTheDocument();
     expect(subnav?.querySelector('[data-settings-subnav-icon="developers"]')).toHaveAttribute(
       "data-settings-subnav-icon-weight",
       "fill",
@@ -226,21 +230,24 @@ describe("SettingsShell", () => {
   it("publishes the field width tokens as semantic markers", () => {
     const { container } = render(
       <>
-        <SettingsField width="sm" />
-        <SettingsField width="md" />
+        <SettingsField width="field" />
         <SettingsField width="full" />
       </>,
     );
 
-    expect(container.querySelector('[data-settings-field-width="sm"]')).toHaveClass(
-      "max-w-[260px]",
-    );
-    expect(container.querySelector('[data-settings-field-width="md"]')).toHaveClass(
-      "max-w-[400px]",
+    expect(container.querySelector('[data-settings-field-width="field"]')).toHaveClass(
+      "max-w-[340px]",
     );
     expect(container.querySelector('[data-settings-field-width="full"]')).toHaveClass(
       "max-w-[640px]",
     );
+  });
+
+  // Settings offers ONE input width. A second one is how the page drifted back to a column of
+  // controls that stepped between 240px, 260px and 400px, so the token set is asserted here.
+  it("offers a single input width next to the card-wide one", () => {
+    expect([...Object.keys(settingsFieldWidths)].sort()).toEqual(["field", "full"]);
+    expect(settingsFieldWidths.field).toBe(340);
   });
 
   it("gives isolated Storybook states truthful level-one headings", () => {

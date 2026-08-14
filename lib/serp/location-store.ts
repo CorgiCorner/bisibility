@@ -26,6 +26,7 @@ function toResolvedLocation(row: Location): ResolvedLocation {
     hl: row.hl,
     id: row.id,
     kind: toLocationKind(row.kind),
+    languageCode: row.languageCode,
     languageLabel: row.languageLabel,
     primaryGeoCode: row.primaryGeoCode,
     primaryGeoName: row.primaryGeoName,

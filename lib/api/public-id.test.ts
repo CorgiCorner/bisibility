@@ -30,6 +30,7 @@ describe("public API ID boundary", () => {
   it("rejects raw alert-rule target and recipient IDs", () => {
     expectInvalidPublicId(() =>
       requireApiAlertRulePublicIds({
+        marketIds: [],
         recipientIds: ["user_db_1"],
         targetIds: ["kw_a00000000000000000000000"],
         targetType: "keyword",
@@ -37,8 +38,16 @@ describe("public API ID boundary", () => {
     );
     expectInvalidPublicId(() =>
       requireApiAlertRulePublicIds({
+        marketIds: [],
         targetIds: ["kw_a00000000000000000000000"],
         targetType: "tag",
+      }),
+    );
+    expectInvalidPublicId(() =>
+      requireApiAlertRulePublicIds({
+        marketIds: ["project_market_db_1"],
+        targetIds: [],
+        targetType: "all",
       }),
     );
   });

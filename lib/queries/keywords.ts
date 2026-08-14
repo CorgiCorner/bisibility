@@ -50,6 +50,7 @@ const EMPTY_METRICS: Metrics = {
 };
 const rankCheckSelect = {
   checkedAt: true,
+  degradedToCountry: true,
   id: true,
   normalizationVersion: true,
   position: true,
@@ -81,6 +82,7 @@ const locationRefSelect = {
   hl: true,
   id: true,
   kind: true,
+  languageLabel: true,
 } as const;
 const presenceSelect = {
   canonicalOk: true,

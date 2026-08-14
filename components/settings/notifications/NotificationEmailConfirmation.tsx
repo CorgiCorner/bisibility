@@ -39,7 +39,7 @@ export function NotificationEmailConfirmation({
         </Button>
         <p className="m-0 text-[12px] leading-5 text-fg-muted">{description}</p>
       </div>
-      <SettingsField width="sm">
+      <SettingsField width="field">
         <FieldLabel htmlFor="notification-email-code" label="Verification code" />
         <div className="mt-1.5 flex flex-wrap items-start gap-2">
           <div className="min-w-[180px] flex-1">

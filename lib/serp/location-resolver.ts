@@ -1,3 +1,4 @@
+import type { SerpLanguage } from "./language-catalog";
 import {
   type CityLocationLookup,
   type CountrySeed,
@@ -5,6 +6,7 @@ import {
   countrySeed,
   type LocationSelector,
   type LocationStore,
+  locationLanguage,
   type ResolvedLocation,
 } from "./location";
 
@@ -34,10 +36,11 @@ export async function resolveLocation(
   if (!seed) {
     throw new Error(`Unsupported country: ${selector.countryCode}`);
   }
+  const language = locationLanguage(countryCode, selector.languageCode);
 
   const cityName = selector.cityName?.trim();
   if (!cityName) {
-    const location = await getOrCreateCountry(countryCode, seed, deps.store);
+    const location = await getOrCreateCountry(countryCode, seed, language, deps.store);
     return { location, degraded: false, warning: null };
   }
 
@@ -51,7 +54,7 @@ export async function resolveLocation(
     : null;
 
   if (!candidate) {
-    const location = await getOrCreateCountry(countryCode, seed, deps.store);
+    const location = await getOrCreateCountry(countryCode, seed, language, deps.store);
     return {
       location,
       degraded: true,
@@ -64,6 +67,7 @@ export async function resolveLocation(
     regionCode: candidate.regionCode,
     regionName: candidate.regionName,
     cityName: candidate.cityName,
+    languageCode: language.code,
   });
   const cached = await deps.store.findByKey(key);
   if (cached) {
@@ -77,8 +81,9 @@ export async function resolveLocation(
     regionCode: candidate.regionCode,
     cityName: candidate.cityName,
     gl: seed.gl,
-    hl: seed.hl,
-    languageLabel: seed.languageLabel,
+    hl: language.code,
+    languageCode: language.code,
+    languageLabel: language.label,
     primaryGeoCode: candidate.primaryGeoCode,
     primaryGeoName: candidate.primaryGeoName,
     secondaryGeoName: candidate.secondaryGeoName,
@@ -90,9 +95,10 @@ export async function resolveLocation(
 async function getOrCreateCountry(
   countryCode: string,
   seed: CountrySeed,
+  language: SerpLanguage,
   store: LocationStore,
 ): Promise<ResolvedLocation> {
-  const key = canonicalKey({ countryCode });
+  const key = canonicalKey({ countryCode, languageCode: language.code });
   const cached = await store.findByKey(key);
   if (cached) {
     return cached;
@@ -104,8 +110,9 @@ async function getOrCreateCountry(
     regionCode: null,
     cityName: null,
     gl: seed.gl,
-    hl: seed.hl,
-    languageLabel: seed.languageLabel,
+    hl: language.code,
+    languageCode: language.code,
+    languageLabel: language.label,
     // Country queries use the country name on both providers (matches prior
     // behavior); numeric codes only matter for disambiguating cities.
     primaryGeoCode: null,

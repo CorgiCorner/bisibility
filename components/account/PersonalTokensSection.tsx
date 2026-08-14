@@ -10,6 +10,7 @@ import {
   Modal,
   MonoText,
 } from "@/components/ui";
+import type { DateFormatPreference } from "@/lib/format/user-datetime";
 import type { PersonalTokenData } from "@/lib/queries/personal-tokens";
 import type { IssuePersonalTokenInput } from "@/lib/schemas/personalToken";
 import { actionErrorMessage } from "@/lib/ui/action-error";
@@ -23,30 +24,29 @@ import {
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { AccountSection } from "./AccountSection";
+import { PersonalTokenDateLabels } from "./PersonalTokenDateLabels";
 
 export type IssuedPersonalToken = {
   maskedValue: string;
   name: string;
   raw: string;
 };
-
 export type PersonalTokensSectionProps = {
+  dateFormat: DateFormatPreference;
   issueToken: (input: IssuePersonalTokenInput) => Promise<IssuedPersonalToken>;
   revokeToken: (input: { tokenId: string }) => Promise<unknown>;
   tokens: readonly PersonalTokenData[];
 };
-
 const expiryOptions = [
   { days: 30, label: "30 days" },
   { days: 90, label: "90 days" },
   { days: 365, label: "1 year" },
   { days: null, label: "No expiry" },
 ] as const;
-
 const inputClass = `${inputClassName} mt-[7px] min-h-11 w-full rounded-[9px] px-[13px] font-mono text-[13.5px] font-medium`;
 const labelClass = "font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted";
-
 export function PersonalTokensSection({
+  dateFormat,
   issueToken,
   revokeToken,
   tokens,
@@ -130,7 +130,7 @@ export function PersonalTokensSection({
                   {token.maskedValue}
                 </MonoText>
                 <MonoText className="mt-1" muted>
-                  {token.createdLabel} · {token.lastUsedLabel} · {token.expiresLabel}
+                  <PersonalTokenDateLabels dateFormat={dateFormat} token={token} />
                 </MonoText>
               </span>
               <button

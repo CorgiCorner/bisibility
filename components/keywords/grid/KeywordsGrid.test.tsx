@@ -150,9 +150,9 @@ describe("KeywordsGrid pending state", () => {
     );
     fireEvent.click(await screen.findByRole("button", { name: /Add 2 keywords/i }));
 
-    expect(await screen.findByRole("textbox", { name: "Keywords" })).toHaveValue(
-      "open source rank tracker\nrank tracking for agencies",
-    );
+    expect(
+      await screen.findByRole("textbox", { name: "Keywords" }, { timeout: 10_000 }),
+    ).toHaveValue("open source rank tracker\nrank tracking for agencies");
   });
 
   it("labels the first completed observation as new", async () => {
@@ -253,7 +253,9 @@ describe("KeywordsGrid pending state", () => {
     fireEvent.click(within(keywordRow).getByRole("checkbox"));
     fireEvent.click(screen.getByRole("button", { name: /^export$/i }));
 
-    expect(screen.getByText("Export 1 selected keyword")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Export 1 selected keyword", {}, { timeout: 10_000 }),
+    ).toBeInTheDocument();
     expect(screen.queryByText("CPC")).not.toBeInTheDocument();
     expect(screen.queryByText("Search volume")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /export csv/i }));

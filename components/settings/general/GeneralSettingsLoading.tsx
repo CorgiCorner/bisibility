@@ -34,16 +34,16 @@ function GeneralSettingsLoadingFrames() {
         <div className="mt-5 space-y-4">
           <div className="space-y-1.5">
             <SettingsLoadingBar className="h-3 w-20" />
-            <SettingsLoadingBar className="h-10 w-full max-w-[400px]" />
+            <SettingsLoadingBar className="h-10 w-full max-w-[340px]" />
           </div>
           <div className="space-y-1.5">
             <SettingsLoadingBar className="h-3 w-28" />
-            <SettingsLoadingBar className="h-10 w-full max-w-[400px]" />
+            <SettingsLoadingBar className="h-10 w-full max-w-[340px]" />
             <SettingsLoadingBar className="h-3 w-full max-w-[380px]" />
           </div>
           <div className="space-y-1.5">
             <SettingsLoadingBar className="h-3 w-20" />
-            <SettingsLoadingBar className="h-10 w-full max-w-[400px]" />
+            <SettingsLoadingBar className="h-10 w-full max-w-[340px]" />
           </div>
         </div>
       </section>

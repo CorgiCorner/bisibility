@@ -25,14 +25,21 @@ vi.mock("@/components/ui", () => ({
     ariaLabel,
     onChange,
     options,
+    triggerClassName,
     value,
   }: {
     ariaLabel: string;
     onChange: (value: string) => void;
     options: readonly { label: string; value: string }[];
+    triggerClassName?: string;
     value: string;
   }) => (
-    <select aria-label={ariaLabel} onChange={(event) => onChange(event.target.value)} value={value}>
+    <select
+      aria-label={ariaLabel}
+      className={triggerClassName}
+      onChange={(event) => onChange(event.target.value)}
+      value={value}
+    >
       {options.map((option) => (
         <option key={option.value} value={option.value}>
           {option.label}
@@ -59,7 +66,7 @@ vi.mock("@/components/ui", () => ({
       </div>
     ) : null,
 }));
-const targets: AlertTargetOptions = { keywords: [], members: [], tags: [] };
+const targets: AlertTargetOptions = { keywords: [], markets: [], members: [], tags: [] };
 
 function renderDrawer(
   actions: Pick<AlertActionHandlers, "createAlertRuleAction" | "updateAlertRuleAction">,
@@ -131,6 +138,43 @@ describe("NewRuleDrawer", () => {
     );
   });
 
+  it("left-aligns the selected severity value between its dot and caret", () => {
+    renderDrawer({ createAlertRuleAction: vi.fn(), updateAlertRuleAction: vi.fn() });
+
+    expect(screen.getByRole("combobox", { name: "Severity" })).toHaveClass(
+      "[&>span:nth-of-type(2)]:flex-1",
+      "[&>span:nth-of-type(2)]:text-left",
+    );
+  });
+
+  it("defaults to all markets and submits selected registry pairs", async () => {
+    const createAlertRuleAction = vi.fn().mockResolvedValue({ id: "rule_1" });
+    renderDrawer({ createAlertRuleAction, updateAlertRuleAction: vi.fn() }, vi.fn(), {
+      ...targets,
+      markets: [
+        {
+          canonicalKey: "ES@es",
+          id: "pmkt_a00000000000000000000000",
+          label: "Spain / Spanish",
+        },
+      ],
+    });
+
+    expect(screen.getByRole("button", { name: "All markets" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(screen.getByText("Rule fires only for checks in the selected markets.")).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "Spain / Spanish" }));
+    fireEvent.click(screen.getByRole("button", { name: "Create rule" }));
+
+    await waitFor(() =>
+      expect(createAlertRuleAction).toHaveBeenCalledWith(
+        expect.objectContaining({ marketIds: ["pmkt_a00000000000000000000000"] }),
+      ),
+    );
+  });
+
   it("resets severity to the newly selected template default", () => {
     renderDrawer({ createAlertRuleAction: vi.fn(), updateAlertRuleAction: vi.fn() });
 
@@ -154,6 +198,7 @@ describe("NewRuleDrawer", () => {
       enabled: true,
       fires: "0 this week",
       id: "alr_a00000000000000000000000",
+      marketIds: [],
       name: "Top three",
       period: "Each check",
       recipientIds: [],

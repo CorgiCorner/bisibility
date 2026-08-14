@@ -11,12 +11,18 @@ const mocks = vi.hoisted(() => {
   }
   const prisma = {
     $executeRaw: vi.fn(),
+    $queryRaw: vi.fn(),
     $transaction: vi.fn(),
     auditLog: { create: vi.fn() },
     keyword: { createMany: vi.fn(), findMany: vi.fn() },
     keywordSchedule: { createMany: vi.fn() },
     keywordTag: { createMany: vi.fn() },
+    savedKeyword: { deleteMany: vi.fn() },
     project: { findFirst: vi.fn() },
+    projectMarket: {
+      findMany: vi.fn().mockResolvedValue([]),
+      upsert: vi.fn().mockResolvedValue({ publicId: "pmkt_a00000000000000000000000" }),
+    },
     tag: { createMany: vi.fn(), findMany: vi.fn() },
     user: { findUnique: vi.fn() },
   };
@@ -71,6 +77,7 @@ describe("addKeywordsMatrix", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.prisma.$executeRaw.mockResolvedValue(0);
+    mocks.prisma.$queryRaw.mockResolvedValue([{ count: 0 }]);
     mocks.prisma.$transaction.mockImplementation((callback) => callback(mocks.prisma));
     mocks.requireSession.mockResolvedValue({ user: { id: "user_1" } });
     mocks.prisma.user.findUnique.mockResolvedValue({
@@ -116,6 +123,24 @@ describe("addKeywordsMatrix", () => {
     }
   });
 
+  it("rejects an empty market matrix at the server boundary", () => {
+    const result = addKeywordsMatrixSchema.safeParse({
+      devices: ["desktop"],
+      keywords: ["rank tracker"],
+      locations: [],
+      projectId: "prj_a00000000000000000000000",
+      tags: [],
+      targetUrl: null,
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues).toEqual(
+        expect.arrayContaining([expect.objectContaining({ path: ["locations"] })]),
+      );
+    }
+  });
+
   it("dedupes input case-insensitively and retries idempotently", async () => {
     const createdRows = [
       {
@@ -139,6 +164,7 @@ describe("addKeywordsMatrix", () => {
         topic: "Product",
       },
     ];
+    mocks.prisma.$queryRaw.mockResolvedValue([{ count: 2 }]);
     mocks.prisma.keyword.findMany
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce(createdRows)
@@ -169,8 +195,18 @@ describe("addKeywordsMatrix", () => {
       targetUrl: null,
     });
 
-    expect(first).toMatchObject({ created: 2, skippedDuplicates: 0 });
-    expect(second).toEqual({ created: 0, keywords: [], skippedDuplicates: 2 });
+    expect(first).toMatchObject({ created: 2, keywordCount: 2, skippedDuplicates: 0 });
+    expect(first.keywords).toEqual([
+      expect.objectContaining({
+        id: "kw_a00000000000000000000000",
+        publicId: "kw_a00000000000000000000000",
+      }),
+      expect.objectContaining({
+        id: "kw_b00000000000000000000000",
+        publicId: "kw_b00000000000000000000000",
+      }),
+    ]);
+    expect(second).toEqual({ created: 0, keywordCount: 2, keywords: [], skippedDuplicates: 2 });
     expect(mocks.prisma.keyword.createMany).toHaveBeenCalledTimes(1);
     expect(mocks.prisma.keyword.createMany).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -205,6 +241,54 @@ describe("addKeywordsMatrix", () => {
       mocks.prisma,
     );
     expect(mocks.prisma.keywordSchedule.createMany).toHaveBeenCalledTimes(1);
+  });
+
+  it("consumes promoted saved keywords for each language-qualified market", async () => {
+    mocks.resolveKeywordLocation.mockResolvedValue({
+      ...resolvedLocation("ES@en"),
+      location: {
+        ...resolvedLocation("ES@en").location,
+        canonicalKey: "ES@en",
+        id: "loc_ES@en",
+      },
+    });
+    mocks.prisma.keyword.findMany.mockResolvedValueOnce([]).mockResolvedValueOnce([
+      {
+        device: "desktop",
+        id: "keyword_1",
+        intent: null,
+        locationId: "loc_ES@en",
+        publicId: "kw_a00000000000000000000000",
+        targetUrl: null,
+        text: "rank tracker",
+        topic: null,
+      },
+    ]);
+
+    await addKeywordsMatrix({
+      consumeSavedIds: ["skw_a00000000000000000000000"],
+      devices: ["desktop"],
+      keywords: ["rank tracker"],
+      locations: [{ locationKey: "ES@en" }],
+      projectId: "prj_a00000000000000000000000",
+      tags: [],
+      targetUrl: null,
+    });
+
+    expect(mocks.prisma.savedKeyword.deleteMany).toHaveBeenCalledWith({
+      where: {
+        OR: [
+          {
+            countryCode: "ES",
+            languageCode: "en",
+            location: "ES@en",
+            normalizedText: "rank tracker",
+          },
+        ],
+        projectId: "project_1",
+        publicId: { in: ["skw_a00000000000000000000000"] },
+      },
+    });
   });
 
   it("refuses to add keywords until the workspace has a domain", async () => {

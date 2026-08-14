@@ -121,21 +121,23 @@ describe("project actions", () => {
 
   it("rejects invalid project input before reading the session", async () => {
     await expect(createProject({ domain: "bad", name: "" })).rejects.toThrow();
-
     expect(mocks.requireSession).not.toHaveBeenCalled();
   });
 
   it("persists the provided tracking scope on project creation", async () => {
     const result = await createProject({
+      defaults: { frequency: "daily", timezone: "Europe/Warsaw" },
       domain: "https://Example.com/",
       name: "Example",
       trackingScope: "country",
     });
-
     expect(mocks.prisma.project.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
           domain: "example.com",
+          defaults: {
+            create: expect.objectContaining({ frequency: "daily", timezone: "Europe/Warsaw" }),
+          },
           name: "Example",
           trackingScope: "country",
         }),

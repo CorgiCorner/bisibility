@@ -70,7 +70,8 @@ function domainScores(observations: CompetitorObservation[], domains: string[]) 
       const rank = rankOf(observation, domain);
       if (!rank) continue;
       counts.set(domain, (counts.get(domain) ?? 0) + 1);
-      scores.set(domain, (scores.get(domain) ?? 0) + visibilityScore(rank));
+      const volume = Math.max(0, observation.volume ?? 0);
+      scores.set(domain, (scores.get(domain) ?? 0) + visibilityScore(rank) * volume);
     }
   }
   return { counts, scores };
@@ -155,7 +156,9 @@ export function buildCompetitorMarket(
     : filterActive && observations.length === 0
       ? "filter_excludes_all"
       : hasRankData
-        ? "ranked"
+        ? total > 0
+          ? "ranked"
+          : "no_volume_data"
         : "completed_unranked";
   return {
     ...data,

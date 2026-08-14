@@ -41,7 +41,7 @@ function NotificationLoadingCard({ id }: Readonly<{ id: (typeof frames)[number][
           </div>
           <div className="space-y-2">
             <SettingsLoadingBar className="h-3 w-32" />
-            <SettingsLoadingBar className="h-10 w-full max-w-[400px]" />
+            <SettingsLoadingBar className="h-10 w-full max-w-[340px]" />
             <SettingsLoadingBar className="h-3 w-4/5" />
           </div>
         </div>

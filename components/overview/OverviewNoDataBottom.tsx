@@ -6,15 +6,13 @@ import {
   PlusCircleIcon as PlusCircle,
 } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
-import { dataSourceStatusColor } from "./data-source-status";
+import { DataSourceStatusBadge } from "./DataSourceStatusBadge";
 import type { DataSourceHealth, HighlightRow } from "./types";
 
 // Values that signal an absent reading and should render in the muted tone.
 const mutedValue = /^(not connected|never|not scheduled)$/i;
 
 export function DataSourceNoDataPanel({ health }: Readonly<{ health: DataSourceHealth }>) {
-  const color = dataSourceStatusColor(health.status);
-
   return (
     <Card size="md" style={{ borderRadius: 14, padding: "18px 20px" }}>
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -24,20 +22,7 @@ export function DataSourceNoDataPanel({ health }: Readonly<{ health: DataSourceH
             {health.description}
           </div>
         </div>
-        <span
-          className="inline-flex items-center gap-[7px] rounded-full px-[11px] py-[5px] font-mono text-[11.5px] font-semibold leading-normal"
-          style={{
-            backgroundColor: `color-mix(in srgb, ${color} 14%, transparent)`,
-            color,
-          }}
-        >
-          <span
-            className="h-[7px] w-[7px] rounded-full"
-            style={{ backgroundColor: color }}
-            aria-hidden
-          />
-          {health.status}
-        </span>
+        <DataSourceStatusBadge status={health.status} />
       </div>
       <div className="mt-[18px] grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-x-[18px] gap-y-3.5">
         {health.metrics.map((metric) => (

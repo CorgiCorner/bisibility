@@ -64,6 +64,7 @@ export function alertRuleAuditResource(value: {
   conditionType: string;
   dropPositions?: number | null;
   enabled: boolean;
+  markets?: { projectMarket: { publicId: string | null } }[];
   name: string;
   publicId: string | null;
   serpFeature?: string | null;
@@ -80,6 +81,9 @@ export function alertRuleAuditResource(value: {
     dropPositions: value.dropPositions ?? null,
     enabled: value.enabled,
     id: requireApiPublicId(value.publicId ?? "", "alr"),
+    marketIds: (value.markets ?? []).map(({ projectMarket }) =>
+      requireApiPublicId(projectMarket.publicId ?? "", "pmkt"),
+    ),
     name: value.name,
     serpFeature: value.serpFeature ?? null,
     severity: value.severity,

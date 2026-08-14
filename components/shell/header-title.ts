@@ -27,7 +27,7 @@ export function headerMetaFor(pathname: string, context: HeaderContext = {}): He
   }
 
   if (matches(sectionPath, "/account/preferences")) {
-    return sectionMeta("Preferences", "Theme, timezone and personal defaults.");
+    return sectionMeta("Preferences", "Theme and personal defaults.");
   }
 
   if (matches(sectionPath, "/account")) {
@@ -58,7 +58,7 @@ export function headerMetaFor(pathname: string, context: HeaderContext = {}): He
     return sectionMeta("Keyword details", "Position history, ranking URL and schedule.");
   }
 
-  if (matches(sectionPath, "/overview")) {
+  if (matches(sectionPath, "/dashboard") || matches(sectionPath, "/overview")) {
     return { title: "Dashboard" };
   }
 
@@ -74,7 +74,7 @@ export function headerMetaFor(pathname: string, context: HeaderContext = {}): He
     return sectionMeta("Rank Tracker", subtitle);
   }
 
-  if (matches(sectionPath, "/research")) {
+  if (matches(sectionPath, "/keyword-research")) {
     return sectionMeta(
       "Keyword Research",
       "Find phrases worth tracking, with the cost visible before every lookup.",

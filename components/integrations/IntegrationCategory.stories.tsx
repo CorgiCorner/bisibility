@@ -5,6 +5,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 const meta = {
   title: "Integrations/IntegrationCategory",
   component: IntegrationCategory,
+  args: { timeZone: "Europe/Warsaw" },
   decorators: [
     (Story) => (
       <div className="min-h-[560px] bg-bg p-6 text-fg">

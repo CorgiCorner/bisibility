@@ -23,7 +23,7 @@ function requiredPublicId(value: string | null, prefix: PublicIdPrefix, resource
 }
 
 async function loadTargets(projectId: string) {
-  const [keywordData, tags, members, webhookEndpoints] = await Promise.all([
+  const [keywordData, tags, members, webhookEndpoints, markets] = await Promise.all([
     getRequestAlertKeywordData(projectId),
     prisma.tag.findMany({
       orderBy: { name: "asc" },
@@ -38,6 +38,11 @@ async function loadTargets(projectId: string) {
       },
     }),
     listWebhookEndpointsWithHistory(projectId),
+    prisma.projectMarket.findMany({
+      include: { location: true },
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+      where: { projectId, status: "active" },
+    }),
   ]);
 
   return {
@@ -55,6 +60,11 @@ async function loadTargets(projectId: string) {
       keywords: keywordData.keywords.map((keyword) => ({
         id: requiredPublicId(keyword.publicId, "kw", "Keyword"),
         label: keyword.text,
+      })),
+      markets: markets.map((market) => ({
+        canonicalKey: market.location.canonicalKey,
+        id: requiredPublicId(market.publicId, "pmkt", "Project market"),
+        label: `${market.location.displayName} / ${market.location.languageLabel}`,
       })),
       members: members.map((user) => ({
         id: requiredPublicId(user.publicId, "usr", "User"),

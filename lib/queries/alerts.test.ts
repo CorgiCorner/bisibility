@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
     alertRule: { findMany: vi.fn() },
     keyword: { findMany: vi.fn() },
     projectDefaults: { findUnique: vi.fn() },
+    projectMarket: { findMany: vi.fn() },
     tag: { findMany: vi.fn() },
     triggeredAlert: { findMany: vi.fn() },
     user: { findMany: vi.fn() },
@@ -49,6 +50,7 @@ describe("getAlertsView", () => {
     mocks.prisma.triggeredAlert.findMany.mockResolvedValue([]);
     mocks.prisma.keyword.findMany.mockResolvedValue([]);
     mocks.prisma.projectDefaults.findUnique.mockResolvedValue(null);
+    mocks.prisma.projectMarket.findMany.mockResolvedValue([]);
     mocks.prisma.tag.findMany.mockResolvedValue([]);
     mocks.prisma.user.findMany.mockResolvedValue([]);
     mocks.prisma.webhookEndpoint.findMany.mockResolvedValue([]);
@@ -162,6 +164,11 @@ describe("getAlertsView", () => {
         enabled: true,
         id: "rule_1",
         name: "Exit top 50",
+        markets: [
+          {
+            projectMarket: { publicId: "pmkt_abcdefghijklmnopqrstuvwx" },
+          },
+        ],
         publicId: "alr_abcdefghijklmnopqrstuvwx",
         recipients: [],
         serpFeature: null,
@@ -193,6 +200,7 @@ describe("getAlertsView", () => {
     const view = await getAlertsView("prj_abcdefghijklmnopqrstuvwx");
 
     expect(view.rules[0]?.depthConflict).toEqual({ threshold: 50, trackedDepth: 20 });
+    expect(view.rules[0]?.marketIds).toEqual(["pmkt_abcdefghijklmnopqrstuvwx"]);
     expect(view.rules[0]?.targetIds).toEqual(["kw_abcdefghijklmnopqrstuvwx"]);
   });
 
@@ -226,6 +234,17 @@ describe("getAlertsView", () => {
         publicId: "usr_abcdefghijklmnopqrstuvwx",
       },
     ]);
+    mocks.prisma.projectMarket.findMany.mockResolvedValue([
+      {
+        id: "project_market_1",
+        location: {
+          canonicalKey: "ES@es",
+          displayName: "Spain",
+          languageLabel: "Spanish",
+        },
+        publicId: "pmkt_abcdefghijklmnopqrstuvwx",
+      },
+    ]);
 
     const view = await getAlertsView("prj_abcdefghijklmnopqrstuvwx");
 
@@ -237,6 +256,13 @@ describe("getAlertsView", () => {
       {
         id: "usr_abcdefghijklmnopqrstuvwx",
         label: "Owner (owner@example.com)",
+      },
+    ]);
+    expect(view.targets.markets).toEqual([
+      {
+        canonicalKey: "ES@es",
+        id: "pmkt_abcdefghijklmnopqrstuvwx",
+        label: "Spain / Spanish",
       },
     ]);
   });

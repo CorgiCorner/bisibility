@@ -36,7 +36,7 @@ export function Sidebar({
 }: Readonly<SidebarProps>) {
   const { collapsed, setCollapsed } = useSidebarCollapsed();
   const pathname = usePathname();
-  const currentHref = activeHref ?? pathname ?? appPath(projectRef, "overview");
+  const currentHref = activeHref ?? pathname ?? appPath(projectRef, "dashboard");
   const allItems = navItems(projectRef);
   // Utilities sit at the foot of the rail, the way every comparable tool places them; primary
   // navigation keeps the top so the reading order matches how often each group is used.

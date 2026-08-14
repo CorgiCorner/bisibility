@@ -12,7 +12,7 @@ import { getPersonalTokens } from "@/lib/queries/personal-tokens";
 export default async function SecurityPage() {
   const session = await requireSession();
   const [account, preferences] = await Promise.all([getAccount(), getPreferences()]);
-  const personalTokens = await getPersonalTokens(session.user.id, { preferences });
+  const personalTokens = await getPersonalTokens(session.user.id);
 
   return (
     <PageContent className="flex flex-col gap-[22px]" variant="form">
@@ -22,6 +22,7 @@ export default async function SecurityPage() {
         initiallyEnabled={account.twoFactorEnabled}
       />
       <PersonalTokensSection
+        dateFormat={preferences.dateFormat}
         issueToken={issuePersonalTokenAction}
         revokeToken={revokePersonalTokenAction}
         tokens={personalTokens}
