@@ -80,7 +80,7 @@ describe("HighlightLists", () => {
     // one row cannot make it taller than a row without one.
     expect(screen.getByText("Spain").parentElement).toHaveClass("h-[22px]");
     for (const row of screen.getAllByRole("link")) {
-      expect(row).toHaveClass("min-h-[58px]");
+      expect(row).toHaveClass("min-h-[68px]");
     }
     // Not `queryByText("/ ")`: the default normalizer trims the element text, so that
     // string can never match anything and the assertion would hold with the guard gone.
@@ -88,6 +88,47 @@ describe("HighlightLists", () => {
     expect(within(paired).getByText("/ Spanish")).toBeVisible();
     expect(within(unpaired).queryByText(/\//)).not.toBeInTheDocument();
     expect(within(unpaired).getByText("unpaired keyword")).toBeVisible();
+  });
+
+  it("separates the chip and note with enough vertical rhythm to never overlap", () => {
+    render(
+      <HighlightLists
+        lists={[
+          {
+            kind: "wins",
+            rows: [
+              {
+                device: "desktop",
+                id: "kw_long_url",
+                keyword: "a very long keyword that stretches the row width",
+                marketLanguageLabel: "Spanish",
+                marketLocationLabel: "Malaga, Spain",
+                note: "Gained 2 positions since last check",
+                positionText: "#3",
+              },
+            ],
+            subtitle: "Gained the most",
+            title: "Biggest wins",
+          },
+        ]}
+        projectRef="prj_1"
+      />,
+    );
+
+    const row = screen.getByRole("link");
+    // The row must reserve enough height for all three lines (keyword, chip, note).
+    expect(row).toHaveClass("min-h-[68px]");
+    // The chip wrapper and the note each use the same mt-1 rhythm token so neither
+    // can collapse into the other at any URL or label length.
+    const chipWrapper = screen.getByText("Malaga, Spain").closest("span[class*='mt-1']");
+    expect(chipWrapper).not.toBeNull();
+    const note = screen.getByText("Gained 2 positions since last check");
+    expect(note).toHaveClass("mt-1");
+    // All three lines are block-level so they stack vertically, never inline.
+    expect(screen.getByText("a very long keyword that stretches the row width")).toHaveClass(
+      "block",
+    );
+    expect(note).toHaveClass("block");
   });
 
   it("renders comparison and no-match empty states per list", () => {

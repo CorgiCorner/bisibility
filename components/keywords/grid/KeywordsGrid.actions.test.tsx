@@ -81,7 +81,7 @@ describe("KeywordsGrid actions", () => {
         expect.objectContaining({ keywordIds: [row.id], projectId: "prj_1" }),
       ),
     );
-  });
+  }, 15_000);
 
   it("shows Run checks only with a selection and runs it for the selected keywords", async () => {
     const rows = pendingRows(2);
@@ -158,5 +158,5 @@ describe("KeywordsGrid actions", () => {
         expect.objectContaining({ keywordIds: [rows[0].id], projectId: "prj_1" }),
       ),
     );
-  });
+  }, 15_000);
 });

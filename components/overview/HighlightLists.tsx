@@ -119,7 +119,7 @@ export function HighlightLists({ lists, projectRef, rowHref }: Readonly<Highligh
               ) : (
                 list.rows.map((row) => (
                   <Link
-                    className="flex min-h-[58px] items-center justify-between gap-2.5 border-t border-border-soft px-[18px] py-2.5 hover:bg-bg-sunken"
+                    className="flex min-h-[68px] items-center justify-between gap-2.5 border-t border-border-soft px-[18px] py-2.5 hover:bg-bg-sunken"
                     href={rowHref?.(row) ?? appPath(projectRef, "rank-tracker", row.id)}
                     key={row.id}
                   >
@@ -128,7 +128,7 @@ export function HighlightLists({ lists, projectRef, rowHref }: Readonly<Highligh
                         {row.keyword}
                       </span>
                       <MarketIdentity row={row} />
-                      <span className="mt-px block truncate font-mono text-[10.5px] text-fg-muted">
+                      <span className="mt-1 block truncate font-mono text-[10.5px] text-fg-muted">
                         {row.note}
                       </span>
                     </span>

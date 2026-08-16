@@ -1,4 +1,5 @@
 import { ProjectWriteModeProvider } from "@/components/shell/ProjectWriteModeProvider";
+import type { SerpDepth } from "@/lib/serp/markets";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { KeywordHeaderActions } from "./KeywordHeaderActions";
@@ -57,6 +58,65 @@ describe("KeywordHeaderActions", () => {
     expect(handlers.onRunCheck).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole("button", { name: "Run check" }));
     expect(handlers.onRunCheck).toHaveBeenCalledWith(20);
+  });
+
+  it("re-renders the primary label from the selected depth when the menu changes depth", () => {
+    const depthLabel = (depth: SerpDepth) => `Check top ${depth}`;
+    const handlers = renderActions({ effectiveDepth: 100, primaryLabel: depthLabel });
+
+    expect(screen.getByRole("button", { name: "Check top 100" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Choose check depth" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Top 20" }));
+
+    expect(screen.getByRole("button", { name: "Check top 20" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Check top 20" }));
+    expect(handlers.onRunCheck).toHaveBeenCalledWith(20);
+  });
+
+  it("re-resolves a depth label against the effective depth on rerender", () => {
+    const depthLabel = (depth: SerpDepth) => `Check top ${depth}`;
+    const { rerender } = render(
+      <ProjectWriteModeProvider projectRef="prj_1" writeMode="active">
+        <KeywordHeaderActions
+          alertCreated={false}
+          alertCreating={false}
+          canCreateAlert
+          canUpdateKeyword
+          editing={false}
+          effectiveDepth={100}
+          onCreateAlert={vi.fn()}
+          onExport={vi.fn()}
+          onRunCheck={vi.fn()}
+          onToggleEdit={vi.fn()}
+          primaryLabel={depthLabel}
+          runPending={false}
+        />
+      </ProjectWriteModeProvider>,
+    );
+
+    expect(screen.getByRole("button", { name: "Check top 100" })).toBeInTheDocument();
+
+    rerender(
+      <ProjectWriteModeProvider projectRef="prj_1" writeMode="active">
+        <KeywordHeaderActions
+          alertCreated={false}
+          alertCreating={false}
+          canCreateAlert
+          canUpdateKeyword
+          editing={false}
+          effectiveDepth={50}
+          onCreateAlert={vi.fn()}
+          onExport={vi.fn()}
+          onRunCheck={vi.fn()}
+          onToggleEdit={vi.fn()}
+          primaryLabel={depthLabel}
+          runPending={false}
+        />
+      </ProjectWriteModeProvider>,
+    );
+
+    expect(screen.getByRole("button", { name: "Check top 50" })).toBeInTheDocument();
   });
 
   it("keeps cost and depth in the split menu, never in the primary action", () => {

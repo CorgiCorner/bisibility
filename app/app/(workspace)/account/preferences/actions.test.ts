@@ -25,7 +25,7 @@ describe("updatePreferences", () => {
       updatePreferences({
         dateFormat: "long",
         density: "comfortable",
-        landing: "keywords",
+        landing: "rank-tracker",
         language: "de",
         theme: "dark",
         timezone: "America/New_York",
@@ -33,7 +33,7 @@ describe("updatePreferences", () => {
     ).resolves.toEqual({
       dateFormat: "long",
       density: "comfortable",
-      landing: "keywords",
+      landing: "rank-tracker",
       theme: "dark",
     });
 

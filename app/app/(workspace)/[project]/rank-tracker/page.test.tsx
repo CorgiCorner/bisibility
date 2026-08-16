@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   getKeywordDefaultMarket: vi.fn(),
   getKeywordRows: vi.fn(),
   getKeywordTagSuggestions: vi.fn(),
+  getPreferences: vi.fn(),
   getProjectCostContext: vi.fn(),
   getProjectMarkets: vi.fn(),
   getSavedView: vi.fn(),
@@ -26,6 +27,7 @@ const mocks = vi.hoisted(() => ({
 
 let capturedInitialAction: RankTrackerAction | null | undefined;
 let capturedInitialAddOpen: boolean | undefined;
+let capturedInitialDensity: string | undefined;
 
 vi.mock("@/components/rank-tracker/RankTrackerTabs", () => ({
   RankTrackerTabs: (props: { activeTab: string; savedCount: number; trackedCount: number }) => (
@@ -42,9 +44,14 @@ vi.mock("@/components/checks/ChecksWorkspace", () => ({
   ),
 }));
 vi.mock("@/components/keywords/grid/KeywordsGrid", () => ({
-  KeywordsGrid: (props: { initialAction?: RankTrackerAction | null; initialAddOpen?: boolean }) => {
+  KeywordsGrid: (props: {
+    initialAction?: RankTrackerAction | null;
+    initialAddOpen?: boolean;
+    initialDensity?: string;
+  }) => {
     capturedInitialAction = props.initialAction;
     capturedInitialAddOpen = props.initialAddOpen;
+    capturedInitialDensity = props.initialDensity;
     return <div data-testid="tracked-grid" />;
   },
 }));
@@ -64,6 +71,7 @@ vi.mock("@/lib/queries/_auth", () => ({
   requireReadableProject: mocks.requireReadableProject,
   resolveProjectAccess: mocks.resolveProjectAccess,
 }));
+vi.mock("@/lib/queries/account", () => ({ getPreferences: mocks.getPreferences }));
 vi.mock("@/lib/queries/check-health", () => ({ getCheckHealth: mocks.getCheckHealth }));
 vi.mock("@/lib/queries/check-runs", () => ({
   getCheckRunsView: mocks.getCheckRunsView,
@@ -108,6 +116,7 @@ describe("KeywordsPage tabs", () => {
     vi.clearAllMocks();
     capturedInitialAction = undefined;
     capturedInitialAddOpen = undefined;
+    capturedInitialDensity = undefined;
     mocks.resolveProjectAccess.mockResolvedValue({
       mode: "member",
       projectId: "project_1",
@@ -139,6 +148,12 @@ describe("KeywordsPage tabs", () => {
       { isPrimary: true, provider: "dataforseo" },
     ]);
     mocks.getUpcomingView.mockResolvedValue(upcomingViewFixture);
+    mocks.getPreferences.mockResolvedValue({
+      dateFormat: "iso",
+      density: "standard",
+      landing: "dashboard",
+      theme: "system",
+    });
     mocks.listSavedKeywords.mockResolvedValue({ rows: [], total: 2 });
     mocks.listSavedViews.mockResolvedValue([]);
     mocks.requireReadableProject.mockResolvedValue({
@@ -155,6 +170,7 @@ describe("KeywordsPage tabs", () => {
     expect(screen.getByTestId("tracked-grid")).toBeInTheDocument();
     expect(screen.queryByTestId("saved-workspace")).not.toBeInTheDocument();
     expect(capturedInitialAction).toBeNull();
+    expect(capturedInitialDensity).toBe("standard");
     expect(mocks.getKeywordRows).toHaveBeenCalledWith("prj_1");
     expect(mocks.getCheckHealth).toHaveBeenCalledWith("prj_1");
     expect(mocks.getProjectCostContext).toHaveBeenCalledWith("prj_1");

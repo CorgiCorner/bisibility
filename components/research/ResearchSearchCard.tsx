@@ -171,7 +171,7 @@ export function ResearchSearchCard({
   const marketLabel = researchMarketLabel(location);
 
   return (
-    <Card className="overflow-visible p-4 sm:p-5" size="md">
+    <Card className="p-4 sm:p-5" size="md">
       <form className="grid gap-3" onSubmit={handleSubmit(submit)}>
         <div className="flex flex-col gap-3 md:flex-row md:items-start">
           <div className="flex min-h-[34px] flex-1 flex-wrap items-center gap-1.5 rounded-[9px] border border-border-strong bg-transparent px-2.5 py-0.5 focus-within:border-accent md:min-w-[240px]">

@@ -120,7 +120,7 @@ describe("account queries", () => {
     await expect(getPreferences()).resolves.toEqual({
       dateFormat: "iso",
       density: "compact",
-      landing: "overview",
+      landing: "dashboard",
       theme: "dark",
     });
   });

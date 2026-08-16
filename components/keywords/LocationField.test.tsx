@@ -41,12 +41,10 @@ function Harness({ initial = country() }: { initial?: LocationFieldValue }) {
 describe("LocationField", () => {
   it("keeps form and toolbar fields transparent with a visible border", () => {
     const { rerender } = render(<LocationField onChange={vi.fn()} value={country()} />);
-
     expect(screen.getByRole("combobox", { name: /location/i })).toHaveClass(
       "bg-transparent",
       "border-border-strong",
     );
-
     rerender(<LocationField onChange={vi.fn()} value={country()} variant="toolbar" />);
     expect(screen.getByRole("combobox", { name: /location/i })).toHaveClass(
       "bg-transparent",
@@ -88,9 +86,6 @@ describe("LocationField", () => {
     expect(url).toContain("project=prj_1");
     expect(await screen.findByText("Countries")).toBeInTheDocument();
     expect(await screen.findByText("Cities")).toBeInTheDocument();
-    // The suggestion list overlays the content below instead of pushing it down.
-    expect(screen.getByRole("listbox")).toHaveClass("absolute");
-
     fireEvent.click(screen.getByText("Austin"));
     expect(screen.getByTestId("kind")).toHaveTextContent("city");
     expect(screen.getByTestId("display")).toHaveTextContent("Austin, Texas, United States");
@@ -114,7 +109,6 @@ describe("LocationField", () => {
     const input = screen.getByRole("combobox", { name: /location/i });
     fireEvent.change(input, { target: { value: "ger" } });
     await screen.findByText("Germany");
-
     fireEvent.keyDown(input, { key: "ArrowDown" });
     fireEvent.keyDown(input, { key: "Enter" });
     expect(screen.getByTestId("display")).toHaveTextContent("Germany");
@@ -200,6 +194,70 @@ describe("LocationField", () => {
       target: { value: "a" },
     });
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("portals the listbox outside the field control so card overflow cannot clip it", async () => {
+    mockLocations([
+      {
+        canonical_key: "FR",
+        city_name: null,
+        country_code: "FR",
+        display_name: "France",
+        id: "country:FR",
+        kind: "country",
+        region_name: null,
+      },
+    ]);
+
+    render(<Harness />);
+    const input = screen.getByRole("combobox", { name: /location/i });
+    fireEvent.change(input, { target: { value: "fra" } });
+    const listbox = await screen.findByRole("listbox");
+    expect(listbox.closest("fieldset")).toBeNull();
+  });
+
+  it("keeps the portaled listbox open when blur targets a listbox option", async () => {
+    mockLocations([
+      {
+        canonical_key: "IT",
+        city_name: null,
+        country_code: "IT",
+        display_name: "Italy",
+        id: "country:IT",
+        kind: "country",
+        region_name: null,
+      },
+    ]);
+    render(<Harness />);
+    const input = screen.getByRole("combobox", { name: /location/i });
+    fireEvent.change(input, { target: { value: "ita" } });
+    const listbox = await screen.findByRole("listbox");
+    fireEvent.focusOut(input, { relatedTarget: await within(listbox).findByRole("option") });
+    expect(screen.getByRole("listbox")).toBeInTheDocument();
+  });
+
+  it("closes the portaled listbox on blur when focus leaves the field and listbox", async () => {
+    mockLocations([
+      {
+        canonical_key: "IT",
+        city_name: null,
+        country_code: "IT",
+        display_name: "Italy",
+        id: "country:IT",
+        kind: "country",
+        region_name: null,
+      },
+    ]);
+
+    render(<Harness />);
+    const input = screen.getByRole("combobox", { name: /location/i });
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: "ita" } });
+    await screen.findByRole("listbox");
+    fireEvent.focusOut(input, { relatedTarget: null });
+    await waitFor(() => {
+      expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+    });
   });
 
   it("keeps the clear search target at the WCAG 2.2 AA minimum without moving its center", () => {

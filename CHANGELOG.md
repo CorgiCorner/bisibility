@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+## [0.13.2] - 2026-08-16
+
+- The default landing page preference derives from the primary sidebar entries and redirects `/app` to the saved page, migrating legacy `overview` and `keywords` choices.
+
+- Fixed highlight list row spacing so the market chip and note line never overlap at any URL length.
+
+- Dashboard loading skeleton now structurally mirrors the loaded dashboard: toolbar, KPI internals, trend/distribution grid, market rollup, data-source panel, and highlight cards.
+
+- Location suggestions render through a viewport-aware portal and are not clipped by cards, drawers, or viewport edges.
+
+- Unified segmented-control active styling and persisted rank-tracker density preference.
+
+- Team role capabilities and the footnote now have exactly one divider.
+
+- Pending keyword checks now relabel the primary action immediately to the selected result depth.
+
 ## [0.13.1] - 2026-08-15
 
 - Cleaned up account and settings navigation, external help links, Rank Tracker search layout, and notification email controls.

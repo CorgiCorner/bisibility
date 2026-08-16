@@ -82,9 +82,12 @@ export function TeamRolesAccessCard() {
               </span>
             ))}
           </div>
-          {capabilityRows.map((row) => (
+          {capabilityRows.map((row, index) => (
             <div
-              className="grid min-h-[42px] grid-cols-[minmax(220px,1.5fr)_repeat(4,1fr)] items-center border-b border-border-soft px-4 text-[12.5px] last:border-b-0"
+              className={cn(
+                "grid min-h-[42px] grid-cols-[minmax(220px,1.5fr)_repeat(4,1fr)] items-center px-4 text-[12.5px]",
+                index < capabilityRows.length - 1 && "border-b border-border-soft",
+              )}
               key={row.label}
             >
               <span>{row.label}</span>

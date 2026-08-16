@@ -1,15 +1,20 @@
 import type { KeywordCheckState } from "@/lib/queries/keyword-row";
 import { appPath, rankTrackerTabPath } from "@/lib/routing/app-path";
+import type { SerpDepth } from "@/lib/serp/markets";
 import { notRankedLabel } from "@/lib/serp/rank-depth";
 
 export type EmptyRankCopy = {
   badge: string;
   body: string;
   href: string;
-  link: string;
+  link: string | ((depth: SerpDepth) => string);
   position: string;
   title: string;
 };
+
+export function checkTopDepthLabel(depth: SerpDepth): string {
+  return `Check top ${depth}`;
+}
 
 export function emptyRankCopy(
   state: Exclude<KeywordCheckState, "ranked">,
@@ -42,7 +47,7 @@ export function emptyRankCopy(
       badge: notRankedLabel(trackedDepth),
       body: "Outside the tracked depth on the last check.",
       href: rankTrackerTabPath(projectRef, "checks"),
-      link: "Check top 100",
+      link: checkTopDepthLabel,
       position: `outside top ${trackedDepth}`,
       title: `Not ranked in the top ${trackedDepth}`,
     };

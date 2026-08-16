@@ -36,7 +36,7 @@ type KeywordHeaderActionsProps = {
   onExport: () => void;
   onRunCheck: (depth: SerpDepth) => void;
   onToggleEdit: () => void;
-  primaryLabel?: string;
+  primaryLabel?: string | ((depth: SerpDepth) => string);
   providerRate?: CostRateInfo;
   runPending: boolean;
   showCheck?: boolean;
@@ -89,6 +89,8 @@ export function KeywordHeaderActions({
     setDepthSelection({ effectiveDepth, selectedDepth: effectiveDepth });
   }
   const selectedDepth = depthSelection.selectedDepth;
+  const resolvedPrimaryLabel =
+    typeof primaryLabel === "function" ? primaryLabel(selectedDepth) : primaryLabel;
   let alertLabel = "Add alert";
   if (alertCreating) alertLabel = "Adding...";
   else if (alertCreated) alertLabel = "Alert on";
@@ -106,7 +108,7 @@ export function KeywordHeaderActions({
               startIcon={<ArrowsClockwise size={15} weight="bold" />}
               sx={{ ...checkActionSx, minHeight: 40 }}
             >
-              {runPending ? "Starting..." : primaryLabel}
+              {runPending ? "Starting..." : resolvedPrimaryLabel}
             </MuiButton>
             <MuiButton
               aria-label="Choose check depth"

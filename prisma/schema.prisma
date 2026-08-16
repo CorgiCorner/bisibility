@@ -440,13 +440,17 @@ model Jwks {
 }
 
 model Waitlist {
-  id              String   @id @default(cuid())
-  email           String   @unique
-  source          String
-  cloudPrice      String?
-  submissions     Int      @default(1)
-  lastSubmittedAt DateTime @default(now())
-  createdAt       DateTime @default(now())
+  id                   String   @id @default(cuid())
+  email                String   @unique
+  source               String
+  cloudPrice           String?
+  hostedPrice          String?
+  hostedPriceAnsweredAt DateTime?
+  // Lifetime count: incremented on every accepted upsert across all sources;
+  // not a per-source feedback counter and never reset.
+  submissions          Int      @default(1)
+  lastSubmittedAt      DateTime @default(now())
+  createdAt            DateTime @default(now())
 
   @@map("waitlists")
 }

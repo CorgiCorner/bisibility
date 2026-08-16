@@ -23,6 +23,7 @@ import { providerLabel } from "@/lib/checks/attempts";
 import { lensLocationOptions, resolveActiveLens } from "@/lib/keywords/lens-model";
 import { parseRankTrackerAction } from "@/lib/keywords/rank-tracker-command";
 import { requireReadableProject, resolveProjectAccess } from "@/lib/queries/_auth";
+import { getPreferences } from "@/lib/queries/account";
 import { getCheckHealth } from "@/lib/queries/check-health";
 import { getCheckRunsView, getUpcomingView } from "@/lib/queries/check-runs";
 import { getProjectCostContext } from "@/lib/queries/cost-calculator";
@@ -144,6 +145,7 @@ export default async function KeywordsPage({
     keywordDefaults,
     savedCount,
     projectMarkets,
+    preferences,
   ] = await Promise.all([
     getKeywordRows(publicId),
     listSavedViews(publicId),
@@ -155,6 +157,7 @@ export default async function KeywordsPage({
     getKeywordDefaultMarket(publicId),
     savedKeywordCount(publicId),
     getProjectMarkets(publicId),
+    getPreferences(),
   ]);
   // Counting only matters when the capped list may be truncated.
   const totalKeywordCount =
@@ -211,6 +214,7 @@ export default async function KeywordsPage({
           initialAddOpen={openAddDrawer}
           initialViewConfig={activeView?.config}
           importTopQueriesAction={importTopQueries}
+          initialDensity={preferences.density}
           key={gridKey}
           keywordDefaults={keywordDefaults}
           lens={lens}

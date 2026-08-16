@@ -6,7 +6,7 @@ const six = ["traffic", "keywords", "top10", "value", "pos1", "new"] as const;
 const eight = ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8"] as const;
 
 function Bar({ className, ...props }: Readonly<ComponentPropsWithoutRef<"div">>) {
-  return <div className={cn("animate-pulse rounded-[8px] bg-bg-sunken", className)} {...props} />;
+  return <div className={cn("animate-pulse rounded-[10px] bg-bg-sunken", className)} {...props} />;
 }
 
 function ContextLoading() {

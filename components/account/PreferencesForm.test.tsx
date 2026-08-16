@@ -6,7 +6,7 @@ import { PreferencesForm } from "./PreferencesForm";
 const defaults = {
   dateFormat: "eu",
   density: "standard",
-  landing: "overview",
+  landing: "dashboard",
   theme: "system",
 } as const;
 

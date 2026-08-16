@@ -12,11 +12,9 @@ import { Textarea } from "./Textarea";
 type Frequency = "daily" | "manual" | "weekly";
 
 function SegmentedHarness({
-  activeVariant,
   disabled = false,
   size,
 }: {
-  activeVariant?: "accent" | "neutral";
   disabled?: boolean;
   size?: "default" | "toolbar" | "xs";
 }) {
@@ -25,7 +23,6 @@ function SegmentedHarness({
   return (
     <>
       <SegmentedControl
-        activeVariant={activeVariant}
         disabled={disabled}
         label="Frequency"
         name="frequency"
@@ -135,7 +132,7 @@ describe("form primitives", () => {
     const daily = screen.getByRole("radio", { name: "Daily" });
     const weekly = screen.getByRole("radio", { name: "Weekly" });
 
-    expect(daily.nextElementSibling).toHaveClass("bg-bg-elev");
+    expect(daily.nextElementSibling).toHaveClass("bg-nav-active");
     expect(weekly.nextElementSibling).toHaveClass("hover:bg-nav-active");
 
     fireEvent.click(weekly);
@@ -151,8 +148,8 @@ describe("form primitives", () => {
     expect(daily).toBeChecked();
   });
 
-  it("offers quiet and primary active treatments with a select-sized toolbar variant", () => {
-    const { rerender } = render(<SegmentedHarness size="toolbar" />);
+  it("uses the unified active treatment at the select-sized toolbar variant", () => {
+    render(<SegmentedHarness size="toolbar" />);
 
     const daily = screen.getByRole("radio", { name: "Daily" });
     expect(daily.parentElement?.parentElement).toHaveClass(
@@ -164,13 +161,10 @@ describe("form primitives", () => {
       "h-[26px]",
       "bg-nav-active",
       "border-border-strong",
+      "text-fg",
     );
     expect(daily.nextElementSibling?.className).not.toContain("shadow-");
-
-    rerender(<SegmentedHarness activeVariant="accent" size="toolbar" />);
-    const accented = screen.getByRole("radio", { name: "Daily" }).nextElementSibling;
-    expect(accented).toHaveClass("bg-accent-solid", "border-accent", "text-primary-contrast");
-    expect(accented?.className).not.toContain("shadow-");
+    expect(daily.nextElementSibling?.className).not.toContain("bg-accent");
   });
 
   it("aligns extra-small segmented controls with extra-small buttons", () => {
@@ -196,6 +190,40 @@ describe("form primitives", () => {
 
     expect(weekly).toBeDisabled();
     expect(screen.getByRole("radio", { name: "Daily" })).toBeChecked();
+  });
+
+  it("ignores the deprecated activeVariant prop and uses one canonical active style", () => {
+    const CANONICAL = ["border-border-strong", "bg-nav-active", "text-fg"];
+
+    function VariantHarness({ activeVariant }: { activeVariant: "accent" | "neutral" }) {
+      const [value, setValue] = useState<Frequency>("daily");
+      return (
+        <SegmentedControl
+          activeVariant={activeVariant}
+          label="Frequency"
+          name="frequency"
+          onChange={setValue}
+          options={[
+            { label: "Daily", value: "daily" },
+            { label: "Weekly", value: "weekly" },
+          ]}
+          value={value}
+        />
+      );
+    }
+
+    const { rerender } = render(<VariantHarness activeVariant="neutral" />);
+    const neutralActive = screen.getByRole("radio", { name: "Daily" }).nextElementSibling;
+    expect(neutralActive).toHaveClass(...CANONICAL);
+    expect(neutralActive?.className).not.toContain("bg-accent");
+    const neutralClassName = neutralActive?.className;
+
+    rerender(<VariantHarness activeVariant="accent" />);
+    const accentActive = screen.getByRole("radio", { name: "Daily" }).nextElementSibling;
+    expect(accentActive).toHaveClass(...CANONICAL);
+    expect(accentActive?.className).not.toContain("bg-accent");
+    expect(accentActive?.className).not.toContain("border-accent");
+    expect(accentActive?.className).toBe(neutralClassName);
   });
 
   it("disables and dims buttons without repainting their variant while loading", () => {

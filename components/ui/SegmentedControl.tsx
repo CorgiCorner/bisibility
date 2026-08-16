@@ -13,11 +13,19 @@ export type SegmentedControlOption<T extends string> = {
   value: T;
 };
 
+/**
+ * @deprecated Both variants now render the same canonical active style.
+ * The prop is retained for caller compatibility but has no visual effect.
+ */
 export type SegmentedControlActiveVariant = "accent" | "neutral";
+
 export type SegmentedControlSize = "default" | "field" | "toolbar" | "xs";
 
 export type SegmentedControlProps<T extends string> = {
-  /** Neutral is a quiet inset selection; accent is the solid primary treatment. */
+  /**
+   * @deprecated Both variants now render the same canonical active style.
+   * The prop is retained for caller compatibility but has no visual effect.
+   */
   activeVariant?: SegmentedControlActiveVariant;
   ariaLabel?: string;
   className?: string;
@@ -53,7 +61,6 @@ function enabledIndex<T extends string>(
 }
 
 export function SegmentedControl<T extends string>({
-  activeVariant = "neutral",
   ariaLabel,
   className,
   disabled = false,
@@ -153,11 +160,7 @@ export function SegmentedControl<T extends string>({
                         ? "min-h-8 px-2 py-1 text-[12.5px] font-semibold"
                         : "min-h-9 px-2 py-1.5 text-[12.5px] font-semibold",
                   active
-                    ? activeVariant === "accent"
-                      ? "border-accent bg-accent-solid text-primary-contrast"
-                      : size === "toolbar"
-                        ? "border-border-strong bg-nav-active text-fg"
-                        : "border-border-strong bg-bg-elev text-fg"
+                    ? "border-border-strong bg-nav-active text-fg"
                     : "text-fg-muted hover:bg-nav-active hover:text-fg",
                   optionDisabled &&
                     "cursor-not-allowed text-fg-muted hover:bg-transparent hover:text-fg-muted",

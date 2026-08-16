@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { ThemeSegments } from "./ThemeSegments";
 
 function segment(name: "Light" | "Dark" | "System") {
-  return screen.getByRole("button", { name });
+  return screen.getByRole("radio", { name });
 }
 
 describe("ThemeSegments", () => {
@@ -21,8 +21,8 @@ describe("ThemeSegments", () => {
 
     act(() => applyTheme("dark"));
 
-    expect(segment("Dark")).toHaveAttribute("aria-pressed", "true");
-    expect(segment("Light")).toHaveAttribute("aria-pressed", "false");
+    expect(segment("Dark")).toBeChecked();
+    expect(segment("Light")).not.toBeChecked();
   });
 
   it("stores system as the preference and paints the resolved theme", () => {
@@ -30,7 +30,7 @@ describe("ThemeSegments", () => {
 
     fireEvent.click(segment("System"));
 
-    expect(segment("System")).toHaveAttribute("aria-pressed", "true");
+    expect(segment("System")).toBeChecked();
     expect(document.cookie).toContain("theme=system");
     // jsdom reports no dark preference, so system resolves to light.
     expect(document.documentElement.dataset.theme).toBe("light");
@@ -40,9 +40,12 @@ describe("ThemeSegments", () => {
     render(<ThemeSegments />);
 
     for (const name of ["Light", "Dark", "System"] as const) {
-      expect(segment(name)).toHaveAttribute("aria-label", name);
-      expect(segment(name)).not.toHaveAttribute("aria-labelledby");
-      expect(segment(name)).not.toHaveAttribute("title");
+      const radio = segment(name);
+      expect(radio).toHaveAttribute("aria-label", name);
+      expect(radio).not.toHaveAttribute("aria-labelledby");
+      expect(radio).not.toHaveAttribute("title");
+      const wrappingLabel = radio.closest("label");
+      expect(wrappingLabel).toHaveAttribute("title", name);
     }
   });
 
@@ -52,25 +55,25 @@ describe("ThemeSegments", () => {
 
     render(<ThemeSegments />);
 
-    expect(segment("System")).toHaveAttribute("aria-pressed", "true");
+    expect(segment("System")).toBeChecked();
   });
 
   it("keeps every segment at or above the 24px minimum target in both sizes", () => {
     const { rerender } = render(<ThemeSegments size="sm" />);
 
-    expect(segment("Light").className).toContain("h-6");
-    expect(segment("Light").className).toContain("w-[26px]");
+    expect(segment("Light").nextElementSibling).toHaveClass("h-6");
+    expect(segment("Light").nextElementSibling).toHaveClass("w-[26px]");
 
     rerender(<ThemeSegments size="md" />);
 
-    expect(segment("Light").className).toContain("h-7");
-    expect(segment("Light").className).toContain("w-8");
+    expect(segment("Light").nextElementSibling).toHaveClass("h-7");
+    expect(segment("Light").nextElementSibling).toHaveClass("w-8");
   });
 
-  it("marks the active segment with the solid accent, not the light brand hue", () => {
+  it("marks the active segment with the unified neutral treatment, not accent", () => {
     render(<ThemeSegments defaultPreference="light" />);
 
-    expect(segment("Light").className).toContain("bg-accent-solid");
-    expect(segment("Dark").className).not.toContain("bg-accent");
+    expect(segment("Light").nextElementSibling).toHaveClass("bg-nav-active");
+    expect(segment("Light").nextElementSibling?.className).not.toContain("bg-accent");
   });
 });

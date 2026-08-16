@@ -79,7 +79,7 @@ export function AnalyzeCard({
   }
 
   return (
-    <Card className="overflow-visible p-4 sm:p-5" size="md">
+    <Card className="p-4 sm:p-5" size="md">
       <form className="grid gap-3" onSubmit={handleSubmit(onSubmit)}>
         <div className="flex flex-col gap-3 md:flex-row md:items-start">
           <div className="flex h-[38px] flex-1 items-center gap-2 rounded-[9px] border border-border-strong bg-transparent px-2.5 text-[13px] focus-within:border-accent md:min-w-[240px]">

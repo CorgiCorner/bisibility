@@ -13,8 +13,9 @@ import {
   useLocationSearch,
 } from "@/components/keywords/location-picker-data";
 import { FieldLabel, Input } from "@/components/ui";
+import Popper from "@mui/material/Popper";
 import { MapPinIcon as MapPin } from "@phosphor-icons/react";
-import { type FocusEvent, useId, useState } from "react";
+import { type FocusEvent, useId, useRef, useState } from "react";
 import { LocationResults, locationOptionDomId } from "./location-field-results";
 
 export type { LocationFieldValue };
@@ -56,6 +57,8 @@ export function LocationField({
   const [draft, setDraft] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
+  const anchorRef = useRef<HTMLSpanElement | null>(null);
+  const listboxRef = useRef<HTMLDivElement | null>(null);
   const { clear, lastCompletedTerm, loading, search, suggestions } = useLocationSearch(projectId);
   const cities = suggestions.filter((suggestion) => suggestion.kind === "city");
   const countries = suggestions.filter((suggestion) => suggestion.kind === "country");
@@ -110,8 +113,9 @@ export function LocationField({
 
   function handleBlur(event: FocusEvent<HTMLFieldSetElement>) {
     const nextTarget = event.relatedTarget;
-    if (nextTarget instanceof Node && event.currentTarget.contains(nextTarget)) {
-      return;
+    if (nextTarget instanceof Node) {
+      if (event.currentTarget.contains(nextTarget)) return;
+      if (listboxRef.current?.contains(nextTarget)) return;
     }
     setDraft(null);
     setExpanded(false);
@@ -133,8 +137,8 @@ export function LocationField({
         htmlFor={`${prefix}-location`}
         label={label}
       />
-      <div className="relative">
-        <span className="relative flex items-center">
+      <div>
+        <span className="relative flex items-center" ref={anchorRef}>
           <MapPin
             className="pointer-events-none absolute left-2.5 text-fg-muted"
             size={14}
@@ -163,17 +167,39 @@ export function LocationField({
           />
           {draft !== null ? <LocationClearButton onClick={clearDraft} /> : null}
         </span>
-        <LocationResults
-          activeOption={activeOption}
-          cities={cities}
-          countries={countries}
-          hasOptions={hasOptions}
-          listId={listId}
-          loading={loading}
-          onPick={selectOption}
-          showEmpty={showEmpty}
-          visible={visible}
-        />
+        <Popper
+          anchorEl={anchorRef.current}
+          open={visible}
+          placement="bottom-start"
+          ref={listboxRef}
+          sx={(theme) => ({ zIndex: theme.zIndex.modal + 1 })}
+          modifiers={[
+            { name: "flip", enabled: true },
+            { name: "preventOverflow", enabled: true, options: { padding: 8 } },
+            { name: "offset", enabled: true, options: { offset: [0, 4] } },
+            {
+              name: "sameWidth",
+              enabled: true,
+              phase: "beforeWrite",
+              requires: ["computeStyles"],
+              fn: ({ state }) => {
+                state.styles.popper.width = `${state.rects.reference.width}px`;
+              },
+            },
+          ]}
+        >
+          <LocationResults
+            activeOption={activeOption}
+            cities={cities}
+            countries={countries}
+            hasOptions={hasOptions}
+            listId={listId}
+            loading={loading}
+            onPick={selectOption}
+            showEmpty={showEmpty}
+            visible={visible}
+          />
+        </Popper>
       </div>
       {error ? <span className="normal-case text-red-text">{error}</span> : null}
     </fieldset>

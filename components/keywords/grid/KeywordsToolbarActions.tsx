@@ -4,10 +4,9 @@ import {
   ProjectReadOnlyTooltip,
   useProjectWriteMode,
 } from "@/components/shell/ProjectWriteModeProvider";
-import { Button, type ButtonProps } from "@/components/ui";
+import { Button, type ButtonProps, SegmentedControl } from "@/components/ui";
 import { sxArray } from "@/lib/ui/mui-sx";
 import Checkbox from "@mui/material/Checkbox";
-import IconButton from "@mui/material/IconButton";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import type { SxProps, Theme } from "@mui/material/styles";
@@ -130,7 +129,7 @@ export function KeywordsToolbarActions({
         open={Boolean(anchorEl)}
         slotProps={{ paper: { sx: { border: "1px solid var(--border)" } } }}
       >
-        <div className="px-4 pb-1 pt-2 font-mono text-[10px] uppercase tracking-[0.6px] text-fg-muted">
+        <div className="px-4 pb-1 pt-2 font-mono text-[11px] uppercase tracking-[0.6px] text-fg-muted">
           Toggle columns
         </div>
         <MenuItem disabled sx={menuRowSx}>
@@ -161,41 +160,31 @@ export function KeywordsToolbarActions({
         variant="secondary"
       >
         {hasFilters ? (
-          <span className="ml-1 grid h-[17px] min-w-[17px] place-items-center rounded-full bg-accent-solid px-1 font-mono text-[10px] text-primary-contrast">
+          <span className="ml-1 grid h-[17px] min-w-[17px] place-items-center rounded-full bg-accent-solid px-1 font-mono text-[11px] text-primary-contrast">
             {filterCount}
           </span>
         ) : null}
       </ToolbarButton>
-      <div className="hidden items-center gap-0.5 rounded-[9px] border border-border-strong bg-bg-elev p-0.5 sm:flex">
-        {densities.map((item) => {
-          const Icon = item.icon;
-          const active = item.value === density;
-          return (
-            <Tooltip key={item.value} title={item.label}>
-              <IconButton
-                aria-label={item.label}
-                aria-pressed={active}
-                onClick={() => onDensityChange(item.value)}
-                size="small"
-                sx={{
-                  "&:hover": {
-                    backgroundColor: active ? "var(--accent-soft)" : "var(--bg-sunken)",
-                    color: active ? "var(--accent-hover)" : "var(--fg)",
-                  },
-                  backgroundColor: active ? "var(--bg-sunken)" : "transparent",
-                  borderRadius: "7px",
-                  boxShadow: active ? "0 0 0 1px var(--border-strong)" : "none",
-                  color: active ? "var(--accent)" : "var(--fg-muted)",
-                  height: 28,
-                  width: 30,
-                }}
-              >
-                <Icon aria-hidden size={15} weight={active ? "bold" : "regular"} />
-              </IconButton>
-            </Tooltip>
-          );
-        })}
-      </div>
+      <span className="hidden sm:inline-flex">
+        <SegmentedControl
+          activeVariant="neutral"
+          ariaLabel="Table density"
+          fitContent
+          onChange={onDensityChange}
+          options={densities.map((item) => {
+            const Icon = item.icon;
+            const active = item.value === density;
+            return {
+              ariaLabel: item.label,
+              label: <Icon aria-hidden size={13} weight={active ? "fill" : "regular"} />,
+              tooltip: item.label,
+              value: item.value,
+            };
+          })}
+          size="toolbar"
+          value={density}
+        />
+      </span>
       <span className="hidden sm:inline-flex">
         <ToolbarButton
           label="Export"

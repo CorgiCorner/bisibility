@@ -97,6 +97,7 @@ export function KeywordPendingDetail({
   const providerRate = costContext
     ? { overrideCents: costContext.costPerCheckCents, providerId: costContext.providerId }
     : undefined;
+  const linkLabel = typeof copy.link === "function" ? copy.link(defaultDepth) : copy.link;
 
   async function createAlert() {
     if (!createKeywordAlertAction || alertCreated || alertCreating) return;
@@ -160,7 +161,7 @@ export function KeywordPendingDetail({
           className="inline-flex items-center gap-[7px] rounded-[10px] bg-accent-solid px-4 py-2.5 text-[13px] font-semibold text-[color:var(--accent-on-solid)] hover:bg-accent-solid-hover"
           href={copy.href}
         >
-          {copy.link}
+          {linkLabel}
           <CaretRight size={14} weight="bold" />
         </Link>
       )}
