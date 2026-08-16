@@ -2,13 +2,12 @@
 
 import { ConnectDrawer } from "@/components/integrations/ConnectDrawer";
 import { ProviderCredentialWarning } from "@/components/integrations/ProviderCredentialWarning";
-import { ProviderStatusBadge } from "@/components/integrations/ProviderStatusBadge";
 import { ProviderSyncFailureAlert } from "@/components/integrations/ProviderSyncFailureAlert";
 import {
   ProjectReadOnlyTooltip,
   useProjectWriteMode,
 } from "@/components/shell/ProjectWriteModeProvider";
-import { Button, Card, ProviderLogo, SectionTitle } from "@/components/ui";
+import { Button, Card, ProviderLogo, SectionTitle, StatusPill } from "@/components/ui";
 import { testConnection as testConnectionAction } from "@/lib/actions/providers";
 import type {
   IntegrationProviderData,
@@ -41,6 +40,10 @@ const responsiveActionSx = {
   width: "100%",
   "@media (min-width:640px)": { width: "auto" },
 } as const;
+const reauthCopy: Record<string, string> = {
+  gsc: "Google authorization is no longer valid. Reconnect to resume traffic and index-status syncs.",
+  ga4: "Google authorization is no longer valid. Reconnect to resume traffic syncs.",
+};
 const outlineActionSx = {
   ...responsiveActionSx,
   color: "var(--fg-muted)",
@@ -156,16 +159,10 @@ export function ProviderCard({
               <SectionTitle className="text-[14.5px]" component="h3" size="md">
                 {provider.name}
               </SectionTitle>
-              <ProviderStatusBadge status={provider.status} />
-              {provider.primary ? (
-                <span className="inline-flex items-center rounded-full bg-accent-soft px-2 py-0.5 font-mono text-[10px] font-semibold text-accent-text">
-                  Primary
-                </span>
-              ) : null}
+              <StatusPill size="sm" status={provider.status} />
+              {provider.primary ? <StatusPill size="sm" status="primary" /> : null}
               {provider.status === "connected" && provider.enabled === false ? (
-                <span className="inline-flex items-center rounded-full bg-bg-sunken px-2 py-0.5 font-mono text-[10px] font-semibold text-fg-muted">
-                  Disabled
-                </span>
+                <StatusPill size="sm" status="disabled" />
               ) : null}
             </div>
             <p className="m-0 mt-[5px] text-[12.5px] leading-[1.5] text-fg-muted">
@@ -189,8 +186,8 @@ export function ProviderCard({
             className="m-0 mt-3 rounded-lg border border-red bg-red/5 px-3 py-2 text-[12.5px] leading-[1.45] text-red-text sm:col-span-2"
             role="alert"
           >
-            Google authorization is no longer valid. Reconnect to resume traffic
-            {provider.id === "gsc" ? " and index-status" : ""} syncs.
+            {reauthCopy[provider.id as string] ??
+              "Authorization is no longer valid. Reconnect to resume traffic syncs."}
           </p>
         ) : null}
         <ProviderCredentialWarning credentialIssue={provider.credentialIssue} />

@@ -102,6 +102,54 @@ describe("ResearchSearchCard", () => {
     expect(screen.queryByText("Estimated DataForSEO cost")).not.toBeInTheDocument();
   });
 
+  it("disables the submit button and shows a hover-reachable hint when no seed is committed or typed", () => {
+    render(<ResearchSearchCard {...baseProps} />);
+
+    const button = screen.getByRole("button", { name: "Research ~$0.03" });
+    expect(button).toBeDisabled();
+
+    const describedBy = button.getAttribute("aria-describedby");
+    expect(describedBy).not.toBeNull();
+
+    const wrapper = button.parentElement;
+    expect(wrapper).not.toBeNull();
+    expect(wrapper).toHaveAttribute("title", "Enter a seed keyword first - the price appears here");
+    expect(getComputedStyle(wrapper as HTMLElement).pointerEvents).not.toBe("none");
+
+    const description = describedBy ? document.getElementById(describedBy) : null;
+    expect(description).not.toBeNull();
+    expect(description).toHaveClass("sr-only");
+    expect(description).toHaveTextContent("Enter a seed keyword first - the price appears here");
+  });
+
+  it("enables the submit button as soon as a non-whitespace seed character is typed", () => {
+    render(<ResearchSearchCard {...baseProps} />);
+
+    const input = screen.getByRole("textbox", { name: "Seed keyword" });
+    fireEvent.change(input, { target: { value: "x" } });
+
+    const button = screen.getByRole("button", { name: "Research ~$0.03" });
+    expect(button).toBeEnabled();
+    expect(button).not.toHaveAttribute("title");
+    expect(button).not.toHaveAttribute("aria-describedby");
+    expect(button.parentElement).not.toHaveAttribute("title");
+  });
+
+  it("keeps the submit button disabled for the budget prop even with a committed seed", () => {
+    render(<ResearchSearchCard {...baseProps} disabled seeds={["seo"]} />);
+
+    expect(screen.getByRole("button", { name: "Research ~$0.03" })).toBeDisabled();
+  });
+
+  it("keeps the submit button disabled when lookup is blocked even with a typed seed", () => {
+    render(<ResearchSearchCard {...baseProps} lookupDisabled />);
+
+    const input = screen.getByRole("textbox", { name: "Seed keyword" });
+    fireEvent.change(input, { target: { value: "seo" } });
+
+    expect(screen.getByRole("button", { name: "Research ~$0.03" })).toBeDisabled();
+  });
+
   it("creates seed chips before submit and clears the pending seed list", async () => {
     const onSeedsChange = vi.fn();
     const onSubmit = vi.fn();

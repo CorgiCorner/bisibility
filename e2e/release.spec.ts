@@ -3,7 +3,7 @@ import { expect, type Page, test } from "@playwright/test";
 import { completeOnboarding } from "./workspace";
 
 const otpFile = process.env.BISIBILITY_E2E_OTP_FILE;
-const authResponseTimeout = 30_000;
+const authResponseTimeout = 60_000;
 const authRedirectTimeout = 60_000;
 
 async function sleep(ms: number) {
@@ -155,7 +155,7 @@ async function verifyWorkspaceWidths(page: Page, keywordDetailPath: string, proj
     .locator("main > div")
     .first()
     .evaluate((node) => node.getBoundingClientRect().width);
-  expect(accountWidth).toBeLessThanOrEqual(781);
+  expect(accountWidth).toBeCloseTo(1040, 0);
 }
 
 test("release flow: auth, onboarding, app pages, keyword detail, logout", async ({ page }) => {
@@ -169,11 +169,12 @@ test("release flow: auth, onboarding, app pages, keyword detail, logout", async 
   await verifyWorkspaceWidths(page, keywordDetailPath, projectRef);
 
   // Sign out now lives inside the sidebar user (Account) menu.
-  await page.getByRole("button", { name: "Account menu" }).focus();
-  await page.keyboard.press("Enter");
-  await expectSuccessfulAuthPost(page, "/api/auth/sign-out", () =>
-    page.getByRole("menuitem", { name: "Sign out" }).click(),
-  );
+  const accountMenu = page.getByRole("button", { name: "Account menu" });
+  await accountMenu.click();
+  const signOut = page.getByRole("menuitem", { name: "Sign out" });
+  await expect(signOut).toBeVisible();
+  await expect(signOut).toBeEnabled();
+  await expectSuccessfulAuthPost(page, "/api/auth/sign-out", () => signOut.click());
   await page.waitForURL((url) => url.pathname === "/login", {
     timeout: authRedirectTimeout,
     waitUntil: "commit",

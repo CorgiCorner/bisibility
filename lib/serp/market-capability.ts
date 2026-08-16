@@ -4,6 +4,12 @@ import { countryDegradedRankLocation, type SerpRankLocation } from "./location";
 export const RESEARCH_METRICS_UNAVAILABLE_TOOLTIP =
   "No search volume or difficulty data for this market - positions are tracked normally.";
 
+/** The same sentence named per language, for surfaces where several pairs are in play and
+    only some of them are off catalog. Keep it in step with the tooltip above. */
+export function researchMetricsUnavailableNote(languageLabel: string) {
+  return `${languageLabel}: no search volume or difficulty data for this market - positions are tracked normally.`;
+}
+
 const RESEARCH_COUNTRY_LOCATION_CODES: Readonly<Record<string, number>> = {
   AE: 2784,
   AT: 2040,

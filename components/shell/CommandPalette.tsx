@@ -2,15 +2,22 @@
 
 import { handleShellKeyDown } from "@/components/shell/command-keyboard";
 import {
+  type CommandGroup,
   type CommandItem,
   commandGroups,
   filterGroups,
 } from "@/components/shell/command-palette-groups";
-import { KeywordCommandActionBridge } from "@/components/shell/keyword-command-actions";
+import {
+  CommandRegistryProvider,
+  useRegisteredCommands,
+} from "@/components/shell/command-registry";
 import { useKeywordSearch } from "@/components/shell/use-keyword-search";
 import { useColorScheme } from "@mui/material/styles";
 import Tooltip from "@mui/material/Tooltip";
-import { MagnifyingGlassIcon as MagnifyingGlass } from "@phosphor-icons/react";
+import {
+  CursorIcon as Cursor,
+  MagnifyingGlassIcon as MagnifyingGlass,
+} from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { createContext, type ReactNode, useCallback, useContext, useMemo, useState } from "react";
 
@@ -82,23 +89,24 @@ export function CommandPaletteProvider({
 
   return (
     <CommandPaletteContext.Provider value={contextValue}>
-      <div
-        className="contents"
-        onKeyDownCapture={(event) =>
-          handleShellKeyDown(event, { closePalette, paletteOpen: open, togglePalette })
-        }
-      >
-        {children}
-        <CommandPalette
-          onClose={closePalette}
-          open={open}
-          projectId={projectId}
-          projectRef={projectRef}
-          query={query}
-          setQuery={setQuery}
-        />
-        <KeywordCommandActionBridge projectRef={projectRef} />
-      </div>
+      <CommandRegistryProvider>
+        <div
+          className="contents"
+          onKeyDownCapture={(event) =>
+            handleShellKeyDown(event, { closePalette, paletteOpen: open, togglePalette })
+          }
+        >
+          {children}
+          <CommandPalette
+            onClose={closePalette}
+            open={open}
+            projectId={projectId}
+            projectRef={projectRef}
+            query={query}
+            setQuery={setQuery}
+          />
+        </div>
+      </CommandRegistryProvider>
     </CommandPaletteContext.Provider>
   );
 }
@@ -123,8 +131,26 @@ function CommandPalette({
   const router = useRouter();
   const { setMode } = useColorScheme();
   const { keywordHits, search } = useKeywordSearch(projectId);
+  const registeredCommands = useRegisteredCommands();
+
+  const contextual: CommandGroup[] =
+    registeredCommands.length > 0
+      ? [
+          {
+            title: "On this page",
+            items: registeredCommands.map((cmd) => ({
+              id: cmd.id,
+              icon: Cursor,
+              label: cmd.label,
+              hint: cmd.hint,
+              run: cmd.run,
+            })),
+          },
+        ]
+      : [];
+
   const groups = filterGroups(
-    commandGroups(projectRef, router.push, setMode, keywordHits),
+    [...contextual, ...commandGroups(projectRef, router.push, setMode, keywordHits)],
     query,
   ).filter((group) => group.items.length > 0);
   const hasResults = groups.length > 0;
@@ -189,11 +215,11 @@ function CommandPalette({
                 {group.title}
               </div>
               {group.items.map((item) => {
-                const Icon = item.icon;
+                const Icon = item.icon ?? Cursor;
                 return (
                   <button
                     className="flex w-full items-center gap-3 rounded-[9px] px-[11px] py-[9px] text-left text-fg outline-none hover:bg-nav-active focus-visible:bg-nav-active"
-                    key={`${group.title}-${item.label}`}
+                    key={item.id ?? `${group.title}-${item.label}`}
                     onClick={() => void runItem(item)}
                     type="button"
                   >

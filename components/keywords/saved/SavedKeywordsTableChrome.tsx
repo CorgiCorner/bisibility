@@ -1,6 +1,7 @@
 "use client";
 
-import { Button, MenuSelect } from "@/components/ui";
+import { type RegisteredCommand, useRegisterCommands } from "@/components/shell/command-registry";
+import { Button, MenuSelect, ToolbarSearch } from "@/components/ui";
 import { formatEstimateCents } from "@/lib/cost-estimate/project-estimate";
 import { appPath } from "@/lib/routing/app-path";
 import type { SavedKeywordRow } from "@/lib/saved-keywords/model";
@@ -12,6 +13,7 @@ import {
   TrashIcon as Trash,
 } from "@phosphor-icons/react";
 import Link from "next/link";
+import { useMemo, useRef } from "react";
 import { downloadSavedKeywordsCsv } from "./saved-keywords-export";
 
 export function SavedKeywordsToolbar({
@@ -25,20 +27,42 @@ export function SavedKeywordsToolbar({
   rows: readonly SavedKeywordRow[];
   search: string;
 }>) {
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const savedCommands = useMemo<RegisteredCommand[]>(() => {
+    const cmds: RegisteredCommand[] = [
+      {
+        id: "sk-filter",
+        label: "Filter",
+        scope: "saved-keywords",
+        hint: "Search saved keywords",
+        run: () => searchInputRef.current?.focus(),
+      },
+    ];
+    if (rows.length > 0) {
+      cmds.push({
+        id: "sk-export",
+        label: "Export",
+        scope: "saved-keywords",
+        hint: "Download CSV",
+        run: () => downloadSavedKeywordsCsv(rows),
+      });
+    }
+    return cmds;
+  }, [rows]);
+  const savedRegisterRef = useRegisterCommands(savedCommands);
+
   return (
     <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-3">
-      <label className="flex h-[34px] min-w-[220px] items-center gap-2 rounded-[9px] border border-border-strong bg-transparent px-3 focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent-solid">
-        <MagnifyingGlass className="shrink-0 text-fg-muted" size={15} />
-        <span className="sr-only">Filter saved keywords</span>
-        <input
-          aria-label="Filter saved keywords"
-          className="min-w-0 flex-1 border-0 bg-transparent p-0 font-mono text-[12.5px] text-fg outline-none placeholder:text-fg-muted"
-          onChange={(event) => onSearchChange(event.target.value)}
-          placeholder="Filter saved keywords..."
-          type="search"
-          value={search}
-        />
-      </label>
+      <ToolbarSearch
+        className="min-w-[220px]"
+        id="saved-keywords-filter"
+        inputRef={searchInputRef}
+        label="Filter saved keywords"
+        onChange={onSearchChange}
+        placeholder="Filter saved keywords..."
+        value={search}
+        variant="outlined"
+      />
       <span className="flex-1" />
       <Button
         onClick={() => downloadSavedKeywordsCsv(rows)}
@@ -58,6 +82,7 @@ export function SavedKeywordsToolbar({
       >
         Find more in Research
       </Button>
+      <span aria-hidden hidden ref={savedRegisterRef} />
     </div>
   );
 }

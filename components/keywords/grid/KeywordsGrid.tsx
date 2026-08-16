@@ -36,6 +36,7 @@ import { KeywordsEmptyState } from "./KeywordsEmptyState";
 import type { AddKeywordDraft } from "./KeywordsGridDialogs";
 import { KeywordsGridNotices } from "./KeywordsGridNotices";
 import { FiltersDrawer, KeywordsGridDialogs } from "./KeywordsGridOverlays";
+import { emptyCheckStates } from "./keyword-empty-check-states";
 import {
   BASE_KEYWORD_LENS,
   keywordNoRowsState,
@@ -44,6 +45,7 @@ import {
 import type { KeywordsGridProps } from "./keywords-grid-types";
 import { SavedViewsControl } from "./SavedViewsControl";
 import { useKeywordRunChecks } from "./useKeywordRunChecks";
+import { RankTrackerCommandMarker } from "./useRankTrackerCommands";
 
 export function KeywordsGrid({
   activeViewId = null,
@@ -63,6 +65,7 @@ export function KeywordsGrid({
   deletableSavedViewIds,
   deleteSavedViewAction,
   getFirstCheckRunPlanAction,
+  initialAction = null,
   initialAddOpen = false,
   initialViewConfig,
   importTopQueriesAction,
@@ -84,7 +87,6 @@ export function KeywordsGrid({
   const { openKeywordImport } = useKeywordImport();
   const activeLens: ActiveLens = lens ?? { device: DEFAULT_LENS_DEVICE, locationId: null };
   const viewConfig = cloneSavedViewConfig(initialViewConfig ?? emptySavedViewConfig);
-  // Initialize from ?add=1 once so closing ignores the stale query param without an effect.
   const [addDraft, setAddDraft] = useState<AddKeywordDraft>({
     keyword: "",
     open: canCreateKeyword && initialAddOpen,
@@ -102,11 +104,13 @@ export function KeywordsGrid({
   const locationOptions = useMemo(() => lensLocationOptions(rows), [rows]);
   const lensRows = useMemo(() => applyLens(rows, activeLens), [rows, activeLens]);
   const filterChips = useMemo(() => getFilterChips(filters), [filters]);
-  const filteredRows = useMemo(() => {
-    return applyKeywordFilters(lensRows, filters).filter((row) =>
-      matchesKeywordSearch(row, searchValue),
-    );
-  }, [filters, lensRows, searchValue]);
+  const filteredRows = useMemo(
+    () =>
+      applyKeywordFilters(lensRows, filters).filter((row) =>
+        matchesKeywordSearch(row, searchValue),
+      ),
+    [filters, lensRows, searchValue],
+  );
   const capturedFilters = [
     keywordScopeSummary(activeLens, locationOptions),
     searchValue.trim() ? `Search: "${searchValue.trim()}"` : null,
@@ -129,28 +133,42 @@ export function KeywordsGrid({
       keywordExportTarget({ filterChips, filteredRows, rows, searchValue, selectedIds }),
     );
   }
-  function clearFilters() {
+  const clearFilters = () => {
     setFilters(emptyKeywordFilters);
     setSearchValue("");
-  }
+  };
   const resetScope = () => router.push(lensHref(keywordsPath, BASE_KEYWORD_LENS, activeViewId));
 
-  const dialogs =
-    (canCreateKeyword && addDraft.open) || exportTarget ? (
-      <KeywordsGridDialogs
-        addDraft={addDraft}
-        addKeywordsAction={addKeywordsAction}
-        exportTarget={exportTarget}
-        costContext={costContext}
-        keywordDefaults={keywordDefaults}
-        onCloseAdd={closeAddDrawer}
-        onCloseExport={() => setExportTarget(null)}
-        projectId={projectId}
-        projectMarkets={projectMarkets}
-        rows={rows}
-        tagSuggestions={tagSuggestions}
+  const dialogs = (
+    <>
+      {(canCreateKeyword && addDraft.open) || exportTarget ? (
+        <KeywordsGridDialogs
+          addDraft={addDraft}
+          addKeywordsAction={addKeywordsAction}
+          exportTarget={exportTarget}
+          costContext={costContext}
+          keywordDefaults={keywordDefaults}
+          onCloseAdd={closeAddDrawer}
+          onCloseExport={() => setExportTarget(null)}
+          projectId={projectId}
+          projectMarkets={projectMarkets}
+          rows={rows}
+          tagSuggestions={tagSuggestions}
+        />
+      ) : null}
+      <RankTrackerCommandMarker
+        canCreateKeyword={canCreateKeyword}
+        canUpdateKeyword={canUpdateKeyword}
+        initialAction={initialAction ?? null}
+        onAdd={openAddDrawer}
+        onExport={() => openExport([])}
+        onFilter={() => setFiltersOpen(true)}
+        onImport={() => openKeywordImport(projectId)}
+        onRunChecks={() => runChecks(filteredRows.map((r) => r.id))}
+        rowCounts={{ all: rows.length, visible: filteredRows.length }}
       />
-    ) : null;
+    </>
+  );
 
   if (rows.length === 0) {
     return (
@@ -171,17 +189,7 @@ export function KeywordsGrid({
     );
   }
 
-  const emptyRankCheckStates = rows.every((row) => !row.hasRankData)
-    ? rows.map(
-        (row) =>
-          row.checkState ??
-          (row.lastCheckStatus === "failed" || row.lastCheckStatus === "running"
-            ? row.lastCheckStatus
-            : row.lastCheckStatus === "completed"
-              ? "not_ranked"
-              : "never_checked"),
-      )
-    : [];
+  const emptyRankCheckStates = emptyCheckStates(rows);
   const hasSearch = Boolean(searchValue.trim());
   const noRowsState =
     filteredRows.length === 0

@@ -5,6 +5,7 @@ import { exportActiveCloudImportPackage } from "@/components/settings/migration/
 import { Button, Modal } from "@/components/ui";
 import { relativePast } from "@/lib/format/relative-time";
 import { zodResolver } from "@/lib/forms/zod-resolver";
+import { rankTrackerActionHref } from "@/lib/keywords/rank-tracker-command";
 import {
   CLOUD_BACKUP_SECTIONS,
   type CloudBackupCounts,
@@ -21,7 +22,6 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { runKeywordCommandFromPalette } from "./keyword-command-actions";
 
 const backupFormatSchema = z.object({
   format: z.enum(["package", "csv"]),
@@ -72,7 +72,7 @@ export function CloudBackupModal({
     setFeedback(null);
     if (values.format === "csv") {
       onClose();
-      runKeywordCommandFromPalette(projectRef, "export", router.push);
+      router.push(rankTrackerActionHref(projectRef, "export"));
       return;
     }
 

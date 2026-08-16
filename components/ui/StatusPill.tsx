@@ -22,6 +22,18 @@ const statusMeta = {
   ready: { label: "Ready", color: "var(--blue)", healthy: false },
   planned: { label: "Planned", color: "var(--yellow)", healthy: false },
   optional: { label: "Optional", color: "var(--fg-muted)", healthy: false },
+  success: { label: "Success", color: "var(--green)", healthy: false },
+  failed: { label: "Failed", color: "var(--red)", healthy: false },
+  matches: { label: "Matches", color: "var(--green)", healthy: false },
+  wrong_url: { label: "Wrong URL", color: "var(--yellow)", healthy: false },
+  primary: { label: "Primary", color: "var(--accent)", healthy: false },
+  disabled: { label: "Disabled", color: "var(--fg-muted)", healthy: false },
+  create: { label: "CREATE", color: "var(--green)", healthy: false },
+  update: { label: "UPDATE", color: "var(--yellow)", healthy: false },
+  delete: { label: "DELETE", color: "var(--red)", healthy: false },
+  import: { label: "IMPORT", color: "var(--blue)", healthy: false },
+  export: { label: "EXPORT", color: "var(--blue)", healthy: false },
+  login: { label: "LOGIN", color: "var(--purple)", healthy: false },
 } satisfies Record<StatusKind, { label: string; color: string; healthy: boolean }>;
 
 const chipVariants = cva(

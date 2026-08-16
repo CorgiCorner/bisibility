@@ -125,6 +125,52 @@ describe("CompetitorsWorkspace", () => {
     expect(screen.getByRole("button", { name: "Add competitor" })).toHaveClass(
       "MuiButton-sizeSmall",
     );
+    expect(screen.queryByLabelText("Search engine")).not.toBeInTheDocument();
+  });
+
+  it("does not render a search engine control in the untracked-market state", () => {
+    const option = {
+      canonicalKey: "country:us",
+      checkedKeywordCount: 1,
+      cityName: null,
+      countryCode: "US",
+      device: "desktop",
+      engine: "google",
+      hl: "en",
+      key: "location_us::desktop::google",
+      keywordCount: 1,
+      languageLabel: "English",
+      location: "United States",
+      locationId: "location_us",
+      locationKind: "country",
+      regionName: null,
+    } as const;
+
+    render(
+      <CompetitorsWorkspace
+        activeViewId={null}
+        canCreate
+        canDelete
+        canUpdate
+        deletableSavedViewIds={[]}
+        initialFilter={{ excludedKeywordIds: [], position: "all", tag: null }}
+        projectRef="prj_1"
+        savedViews={[]}
+        view={{
+          managedCompetitors: [
+            { domain: "example.net", id: "competitor_1", initials: "EN", label: "Example" },
+          ],
+          market: null,
+          markets: [option],
+          projectId: "project_1",
+          scope: { device: "desktop", engine: "google", locationId: "location_us" },
+          suggestions: [],
+        }}
+      />,
+    );
+
+    expect(screen.queryByLabelText("Search engine")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Google/)).not.toBeInTheDocument();
   });
 
   it.each(["viewer", "auditor", "member", "admin", "owner"] satisfies Role[])(

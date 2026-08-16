@@ -6,46 +6,46 @@ import {
 import { settingsCardFrameClassName } from "@/components/settings/shell/settings-layout";
 import { cn } from "@/lib/ui/cn";
 
-const frames = [
-  { id: "channels", className: notificationCardGeometryClassNames.channels },
-  { id: "email", className: notificationCardGeometryClassNames.email },
-] as const;
-
-function NotificationLoadingCard({ id }: Readonly<{ id: (typeof frames)[number]["id"] }>) {
+function ChannelsLoadingCard() {
   return (
     <section
-      className={cn(settingsCardFrameClassName, frames.find((frame) => frame.id === id)?.className)}
-      data-notification-loading-frame={id}
-      data-settings-loading-frame={id}
+      className={cn(settingsCardFrameClassName, notificationCardGeometryClassNames.channels)}
+      data-notification-loading-frame="channels"
+      data-settings-loading-frame="channels"
     >
-      {id === "channels" ? (
-        <div className="space-y-5">
+      <div className="space-y-5">
+        <div className="space-y-2">
+          <SettingsLoadingBar className="h-4 w-20" />
+          <SettingsLoadingBar className="h-3 w-72 max-w-full" />
+        </div>
+        <div className="space-y-2">
+          <SettingsLoadingBar className="h-3 w-32" />
+          <SettingsLoadingBar className="h-[208px] w-full" />
+          <SettingsLoadingBar className="h-3 w-5/6" />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function DeliveryAddressLoadingCard() {
+  return (
+    <section
+      className={settingsCardFrameClassName}
+      data-notification-loading-frame="delivery"
+      data-settings-loading-frame="delivery"
+    >
+      <div className="space-y-4">
+        <div className="flex items-start justify-between gap-4">
           <div className="space-y-2">
-            <SettingsLoadingBar className="h-4 w-20" />
-            <SettingsLoadingBar className="h-3 w-72 max-w-full" />
-          </div>
-          <div className="space-y-2">
-            <SettingsLoadingBar className="h-3 w-32" />
-            <SettingsLoadingBar className="h-[208px] w-full" />
-            <SettingsLoadingBar className="h-3 w-5/6" />
+            <SettingsLoadingBar className="h-4 w-32" />
+            <SettingsLoadingBar className="h-3 w-60" />
           </div>
         </div>
-      ) : (
-        <div className="space-y-4">
-          <div className="flex items-start justify-between gap-4">
-            <div className="space-y-2">
-              <SettingsLoadingBar className="h-4 w-32" />
-              <SettingsLoadingBar className="h-3 w-60" />
-            </div>
-            <SettingsLoadingBar className="h-8 w-14" />
-          </div>
-          <div className="space-y-2">
-            <SettingsLoadingBar className="h-3 w-32" />
-            <SettingsLoadingBar className="h-10 w-full max-w-[340px]" />
-            <SettingsLoadingBar className="h-3 w-4/5" />
-          </div>
+        <div className="space-y-2">
+          <SettingsLoadingBar className="h-3 w-72" />
         </div>
-      )}
+      </div>
     </section>
   );
 }
@@ -53,9 +53,8 @@ function NotificationLoadingCard({ id }: Readonly<{ id: (typeof frames)[number][
 export function NotificationsLoading() {
   return (
     <div aria-hidden className="space-y-5" data-notifications-loading="">
-      {frames.map((frame) => (
-        <NotificationLoadingCard id={frame.id} key={frame.id} />
-      ))}
+      <ChannelsLoadingCard />
+      <DeliveryAddressLoadingCard />
     </div>
   );
 }

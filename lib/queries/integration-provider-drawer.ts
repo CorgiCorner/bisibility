@@ -1,5 +1,9 @@
 import { providerAgeLabel } from "@/lib/integrations/provider-age";
-import type { ProviderMetaRow, ProviderRateData } from "@/lib/integrations/types";
+import type {
+  ProviderMetaRow,
+  ProviderRateData,
+  ProviderStatusKind,
+} from "@/lib/integrations/types";
 import {
   PROVIDER_RATE_LABELS,
   PROVIDER_RATE_UNITS,
@@ -16,7 +20,6 @@ import {
 import { normalizeGscProperty } from "@/lib/providers/analytics/gsc-property";
 import type { PROVIDER_CATALOG } from "@/lib/providers/registry";
 import type { ProviderCredentials, ProviderKind } from "@/lib/providers/types";
-import type { StatusKind } from "@/lib/ui/status-kind";
 
 export type ProviderConnectionRow = {
   costPerCheckCents: unknown;
@@ -27,7 +30,7 @@ export type ProviderConnectionRow = {
   lastUsedAt: Date | null;
   priority: number;
   provider: string;
-  status: StatusKind;
+  status: ProviderStatusKind;
   updatedAt: Date;
   rates?: readonly {
     amountCents: unknown;

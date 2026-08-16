@@ -231,6 +231,12 @@ describe("StepFirstCheck", () => {
     expect(listFirstCheckCandidatesAction).toHaveBeenCalledTimes(2);
   });
 
+  // This case opens the timezone menu, which renders the full IANA zone list. It measures ~800ms
+  // locally while every other case in this file stays between 4ms and 164ms, so it is the only one
+  // here with no headroom under the 5s default. On a slower runner that packs more files into a
+  // single shard it crosses 5s repeatably while passing everywhere else. The timeout covers the
+  // measured cost; it does not paper over a hang, and shrinking the rendered zone list would
+  // remove the need for it.
   it("restores the saved timezone when an update fails", async () => {
     renderReadyStep({
       defaults: {
@@ -252,7 +258,7 @@ describe("StepFirstCheck", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Timezone could not be saved");
     expect(screen.getByRole("button", { name: "Project timezone" })).toHaveTextContent("UTC");
-  });
+  }, 20_000);
 
   it("does not expose a live-check action without a provider or analytics", () => {
     renderReadyStep({

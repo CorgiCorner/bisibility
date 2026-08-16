@@ -21,6 +21,7 @@ import { getProjectRole } from "@/lib/auth/authorize";
 import { canProjectAction } from "@/lib/auth/capabilities";
 import { providerLabel } from "@/lib/checks/attempts";
 import { lensLocationOptions, resolveActiveLens } from "@/lib/keywords/lens-model";
+import { parseRankTrackerAction } from "@/lib/keywords/rank-tracker-command";
 import { requireReadableProject, resolveProjectAccess } from "@/lib/queries/_auth";
 import { getCheckHealth } from "@/lib/queries/check-health";
 import { getCheckRunsView, getUpcomingView } from "@/lib/queries/check-runs";
@@ -131,6 +132,7 @@ export default async function KeywordsPage({
   }
   const requestedViewId = paramValue(params?.view) ?? null;
   const openAddDrawer = paramValue(params?.add) === "1";
+  const requestedAction = parseRankTrackerAction(paramValue(params?.action));
   const [
     rows,
     savedViews,
@@ -205,6 +207,7 @@ export default async function KeywordsPage({
           deletableSavedViewIds={deletableSavedViewIds}
           deleteSavedViewAction={deletableSavedViewIds.length > 0 ? deleteSavedView : undefined}
           getFirstCheckRunPlanAction={getFirstCheckRunPlan}
+          initialAction={requestedAction}
           initialAddOpen={openAddDrawer}
           initialViewConfig={activeView?.config}
           importTopQueriesAction={importTopQueries}

@@ -82,9 +82,31 @@ describe("AdminAuditTable", () => {
       screen.queryByRole("button", { name: "Copy audit target instance_ops:unavailable" }),
     ).not.toBeInTheDocument();
     expect(screen.getByText("-")).toBeInTheDocument();
-    expect(screen.getByText("ok")).toHaveClass("text-green-text");
-    expect(screen.getByText("blocked")).toHaveClass("text-yellow-text");
-    expect(screen.getByText("failed")).toHaveClass("text-red-text");
+  });
+
+  it("renders every result state through the shared neutral StatusPill chip and dot", () => {
+    render(<AdminAuditTable entries={entries} filter="all" nextCursor={null} />);
+
+    const okPill = screen.getByText("OK");
+    expect(okPill).toHaveClass("bg-bg-sunken");
+    expect(okPill).toHaveClass("border-border");
+    expect(okPill.querySelector("span[aria-hidden]")).toHaveStyle({
+      backgroundColor: "var(--green)",
+    });
+
+    const blockedPill = screen.getByText("Blocked");
+    expect(blockedPill).toHaveClass("bg-bg-sunken");
+    expect(blockedPill).toHaveClass("border-border");
+    expect(blockedPill.querySelector("span[aria-hidden]")).toHaveStyle({
+      backgroundColor: "var(--yellow)",
+    });
+
+    const failedPill = screen.getByText("Failed");
+    expect(failedPill).toHaveClass("bg-bg-sunken");
+    expect(failedPill).toHaveClass("border-border");
+    expect(failedPill.querySelector("span[aria-hidden]")).toHaveStyle({
+      backgroundColor: "var(--red)",
+    });
   });
 
   it("links to the next cursor while preserving the active filter", () => {

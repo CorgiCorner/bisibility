@@ -3,12 +3,8 @@ import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  confirmAccountEmailChange: vi.fn(),
-  confirmCurrentAccountEmailVerification: vi.fn(),
   getNotificationPreferences: vi.fn(),
   NotificationPreferences: vi.fn(),
-  requestAccountEmailChange: vi.fn(),
-  requestCurrentAccountEmailVerification: vi.fn(),
   requireReadableProject: vi.fn(),
 }));
 
@@ -25,12 +21,6 @@ vi.mock("@/lib/queries/_auth", () => ({
 }));
 vi.mock("@/lib/queries/notification-prefs", () => ({
   getNotificationPreferences: mocks.getNotificationPreferences,
-}));
-vi.mock("@/lib/actions/account-email", () => ({
-  confirmAccountEmailChange: mocks.confirmAccountEmailChange,
-  confirmCurrentAccountEmailVerification: mocks.confirmCurrentAccountEmailVerification,
-  requestAccountEmailChange: mocks.requestAccountEmailChange,
-  requestCurrentAccountEmailVerification: mocks.requestCurrentAccountEmailVerification,
 }));
 
 import NotificationsSettingsPage from "@/app/app/(workspace)/[project]/settings/(sections)/notifications/page";
@@ -89,20 +79,17 @@ describe("NotificationsSettingsPage", () => {
     },
   );
 
-  it("passes all audited account email actions to notification preferences", async () => {
+  it("does not pass account email actions to notification preferences", async () => {
     render(
       await NotificationsSettingsPage({ params: Promise.resolve({ project: "prj_untrusted" }) }),
     );
 
     const [props] = mocks.NotificationPreferences.mock.calls.at(-1) ?? [];
 
-    expect(props).toEqual(
-      expect.objectContaining({
-        confirmAccountEmailChange: mocks.confirmAccountEmailChange,
-        confirmCurrentAccountEmailVerification: mocks.confirmCurrentAccountEmailVerification,
-        requestAccountEmailChange: mocks.requestAccountEmailChange,
-        requestCurrentAccountEmailVerification: mocks.requestCurrentAccountEmailVerification,
-      }),
-    );
+    expect(Object.keys(props ?? {}).sort()).toEqual(["canEdit", "preferences"]);
+    expect(props).not.toHaveProperty("confirmAccountEmailChange");
+    expect(props).not.toHaveProperty("confirmCurrentAccountEmailVerification");
+    expect(props).not.toHaveProperty("requestAccountEmailChange");
+    expect(props).not.toHaveProperty("requestCurrentAccountEmailVerification");
   });
 });

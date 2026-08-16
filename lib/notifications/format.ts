@@ -59,16 +59,24 @@ function safeHref(value: string | null) {
   return value;
 }
 
+function normalizeStoredHref(href: string): string {
+  return href.replace(
+    /^\/app\/([^/]+\/)?keywords\/([^/?#]+)([?#].*)?$/,
+    "/app/$1rank-tracker/$2$3",
+  );
+}
+
 function notificationHref(
   type: NotificationType,
   payload: Prisma.JsonValue | null,
   project: NotificationProject,
 ) {
   const storedHref = safeHref(payloadString(payload, "href"));
+  const normalizedHref = storedHref ? normalizeStoredHref(storedHref) : null;
   if (!project) {
-    return storedHref ?? appRootPath();
+    return normalizedHref ?? appRootPath();
   }
-  return projectScopedHref(project.publicId, storedHref ?? DEFAULT_HREFS[type]);
+  return projectScopedHref(project.publicId, normalizedHref ?? DEFAULT_HREFS[type]);
 }
 
 export function notificationDisplay(

@@ -7,7 +7,6 @@ import {
   GithubLogoIcon as GithubLogo,
   HouseIcon as House,
   SignOutIcon as SignOut,
-  SlidersHorizontalIcon as SlidersHorizontal,
   UserCircleIcon as UserCircle,
 } from "@phosphor-icons/react";
 
@@ -29,7 +28,6 @@ export type UserMenuLink = {
 // Account / personal section (HANDOFF-2 §6). Project config stays in Settings.
 export const accountLinks = [
   { label: "Account settings", href: "/app/account", icon: UserCircle },
-  { label: "Preferences", href: "/app/account/preferences", icon: SlidersHorizontal },
   { label: "Keyboard shortcuts", action: "command-palette", icon: Command, hint: "⌘K" },
 ] satisfies UserMenuLink[];
 

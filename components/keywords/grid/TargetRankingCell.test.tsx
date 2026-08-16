@@ -17,14 +17,18 @@ describe("TargetRankingCell", () => {
     const matchStatus = screen.getByText("Matches");
     expect(matchStatus).toHaveClass(
       "inline-flex",
-      "h-5",
-      "self-center",
       "items-center",
-      "px-2",
-      "text-[9.5px]",
-      "leading-none",
+      "rounded-full",
+      "border",
+      "bg-bg-sunken",
+      "font-mono",
+      "font-semibold",
     );
-    expect(matchStatus.previousElementSibling).toHaveClass("grid", "flex-1");
+    expect(matchStatus.parentElement?.parentElement).toHaveClass("shrink-0", "self-center");
+    expect(matchStatus.parentElement?.parentElement?.previousElementSibling).toHaveClass(
+      "grid",
+      "flex-1",
+    );
     expect(screen.getByRole("link", { name: "/docs" })).toHaveAttribute(
       "href",
       "https://acme.dev/docs",

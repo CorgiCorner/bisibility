@@ -1,15 +1,13 @@
 "use client";
 
-import { runKeywordCommandFromPalette } from "@/components/shell/keyword-command-actions";
 import type { KeywordHit } from "@/components/shell/keyword-search";
 import { applyTheme, readTheme } from "@/components/shell/set-theme";
 import { authClient } from "@/lib/auth/client";
+import { rankTrackerActionHref } from "@/lib/keywords/rank-tracker-command";
 import { docsNavItem, navItems } from "@/lib/nav/nav-items";
 import { appPath } from "@/lib/routing/app-path";
 import {
-  ArrowsClockwiseIcon as ArrowsClockwise,
   DownloadSimpleIcon as DownloadSimple,
-  FunnelSimpleIcon as FunnelSimple,
   MagnifyingGlassIcon as MagnifyingGlass,
   PaletteIcon as Palette,
   PlusIcon as Plus,
@@ -19,14 +17,15 @@ import {
 import type { Icon } from "@phosphor-icons/react/lib";
 
 export type CommandItem = {
-  icon: Icon;
+  icon?: Icon;
+  id?: string;
   label: string;
   hint: string;
   run: () => void | Promise<void>;
 };
 
-type CommandGroup = {
-  title: "Actions" | "Keywords" | "Navigate";
+export type CommandGroup = {
+  title: "Actions" | "Keywords" | "Navigate" | "On this page";
   items: CommandItem[];
 };
 
@@ -61,7 +60,7 @@ export function commandGroups(
   ];
 }
 
-export function filterGroups(groups: CommandGroup[], query: string) {
+export function filterGroups(groups: CommandGroup[], query: string): CommandGroup[] {
   const normalized = query.trim().toLowerCase();
   if (!normalized) {
     return groups;
@@ -83,33 +82,21 @@ function actionItems(
   return [
     {
       icon: Plus,
-      label: "Add keyword",
-      hint: "Action",
-      run: () => runKeywordCommandFromPalette(projectRef, "add", push),
+      label: "Rank Tracker: Add keyword",
+      hint: "New keyword",
+      run: () => push(rankTrackerActionHref(projectRef, "add")),
     },
     {
       icon: UploadSimple,
-      label: "Import CSV",
-      hint: "Action",
-      run: () => runKeywordCommandFromPalette(projectRef, "import", push),
+      label: "Rank Tracker: Import CSV",
+      hint: "Upload file",
+      run: () => push(rankTrackerActionHref(projectRef, "import")),
     },
     {
       icon: DownloadSimple,
-      label: "Export",
-      hint: "Action",
-      run: () => runKeywordCommandFromPalette(projectRef, "export", push),
-    },
-    {
-      icon: FunnelSimple,
-      label: "Filter",
-      hint: "Action",
-      run: () => runKeywordCommandFromPalette(projectRef, "filter", push),
-    },
-    {
-      icon: ArrowsClockwise,
-      label: "Run rank checks",
-      hint: "Action",
-      run: () => runKeywordCommandFromPalette(projectRef, "run-check", push),
+      label: "Rank Tracker: Export keywords",
+      hint: "Download file",
+      run: () => push(rankTrackerActionHref(projectRef, "export")),
     },
     {
       icon: Palette,

@@ -1,7 +1,12 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { UserMenuRow } from "./UserMenuRow";
-import { communityLinks, resourceLinks, resourceLinksForDeployment } from "./user-menu-items";
+import {
+  accountLinks,
+  communityLinks,
+  resourceLinks,
+  resourceLinksForDeployment,
+} from "./user-menu-items";
 
 describe("UserMenuRow", () => {
   it("hides the managed homepage link on self-hosted deployments", () => {
@@ -57,5 +62,12 @@ describe("UserMenuRow", () => {
     expect(link).toHaveAttribute("href", "https://discord.gg/HcYpvfn79w");
     expect(link).toHaveAttribute("rel", "noopener");
     expect(link).toHaveAttribute("target", "_blank");
+  });
+
+  it("exposes only Account settings and Keyboard shortcuts in account links", () => {
+    expect(accountLinks.map((item) => item.label)).toEqual([
+      "Account settings",
+      "Keyboard shortcuts",
+    ]);
   });
 });

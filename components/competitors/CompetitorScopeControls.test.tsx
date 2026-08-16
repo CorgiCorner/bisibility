@@ -79,4 +79,18 @@ describe("CompetitorScopeControls", () => {
       "/app/prj_1/competitors?device=desktop&engine=google&location=loc_be_nl&view=view_1",
     );
   });
+
+  it("does not render a search engine control or Google copy", () => {
+    render(
+      <CompetitorScopeControls
+        markets={markets}
+        projectMarkets={projectMarkets}
+        projectRef="prj_1"
+        scope={{ device: "desktop", engine: "google", locationId: "loc_es_es" }}
+      />,
+    );
+
+    expect(screen.queryByLabelText("Search engine")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Google/)).not.toBeInTheDocument();
+  });
 });

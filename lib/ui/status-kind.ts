@@ -1,1 +1,18 @@
-export type StatusKind = "connected" | "needs_reauth" | "ready" | "planned" | "optional";
+export type StatusKind =
+  | "connected"
+  | "needs_reauth"
+  | "ready"
+  | "planned"
+  | "optional"
+  | "success"
+  | "failed"
+  | "matches"
+  | "wrong_url"
+  | "primary"
+  | "disabled"
+  | "create"
+  | "update"
+  | "delete"
+  | "import"
+  | "export"
+  | "login";

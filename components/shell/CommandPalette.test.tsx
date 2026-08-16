@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { CommandPaletteProvider, CommandPaletteTrigger, useCommandPalette } from "./CommandPalette";
+import { type RegisteredCommand, useRegisterCommands } from "./command-registry";
 
 const mocks = vi.hoisted(() => ({
   run: vi.fn(async () => undefined),
@@ -9,7 +10,8 @@ const mocks = vi.hoisted(() => ({
   setMode: vi.fn(),
 }));
 
-type MockGroup = { items: unknown[]; title: string };
+type MockItem = { label: string; hint?: string; icon?: unknown; id?: string; run?: () => void };
+type MockGroup = { items: MockItem[]; title: string };
 
 vi.mock("@mui/material/styles", () => ({ useColorScheme: () => ({ setMode: mocks.setMode }) }));
 vi.mock("@mui/material/Tooltip", () => ({
@@ -17,7 +19,6 @@ vi.mock("@mui/material/Tooltip", () => ({
     <span data-tooltip={title}>{children}</span>
   ),
 }));
-vi.mock("./keyword-command-actions", () => ({ KeywordCommandActionBridge: () => null }));
 vi.mock("./use-keyword-search", () => ({
   useKeywordSearch: () => ({ keywordHits: [], search: mocks.search }),
 }));
@@ -35,8 +36,16 @@ vi.mock("./command-palette-groups", () => ({
       title: "Navigation",
     },
   ],
-  filterGroups: (groups: MockGroup[], query: string) =>
-    query === "missing" ? groups.map((group: MockGroup) => ({ ...group, items: [] })) : groups,
+  filterGroups: (groups: MockGroup[], query: string) => {
+    const normalized = query.trim().toLowerCase();
+    if (!normalized) return groups;
+    return groups
+      .map((group) => ({
+        ...group,
+        items: group.items.filter((item) => item.label.toLowerCase().includes(normalized)),
+      }))
+      .filter((group) => group.items.length > 0);
+  },
 }));
 
 function Controls() {
@@ -52,6 +61,11 @@ function Controls() {
       </button>
     </>
   );
+}
+
+function RegistrationMarker({ commands }: { commands: RegisteredCommand[] }) {
+  const ref = useRegisterCommands(commands);
+  return <span ref={ref} hidden aria-hidden data-testid="marker" />;
 }
 
 describe("CommandPalette", () => {
@@ -111,5 +125,118 @@ describe("CommandPalette", () => {
     expect(screen.getByRole("dialog")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Close context" }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("does not show On this page without registrations", () => {
+    render(
+      <CommandPaletteProvider defaultOpen projectId="project_1" projectRef="prj_1">
+        <Controls />
+      </CommandPaletteProvider>,
+    );
+    expect(screen.queryByText(/on this page/i)).not.toBeInTheDocument();
+  });
+
+  it("shows On this page first with hints, filters by label, and closes before running", () => {
+    const runAdd = vi.fn();
+    const runExport = vi.fn();
+    const commands: RegisteredCommand[] = [
+      {
+        id: "rt-add",
+        label: "Add keyword",
+        scope: "rank-tracker",
+        hint: "New keyword",
+        run: runAdd,
+      },
+      {
+        id: "rt-export",
+        label: "Export keywords",
+        scope: "rank-tracker",
+        hint: "Download file",
+        run: runExport,
+      },
+    ];
+
+    render(
+      <CommandPaletteProvider defaultOpen projectId="project_1" projectRef="prj_1">
+        <Controls />
+        <RegistrationMarker commands={commands} />
+      </CommandPaletteProvider>,
+    );
+
+    const headings = screen.getAllByText(/on this page|navigation/i);
+    expect(headings[0].textContent).toMatch(/on this page/i);
+    expect(screen.getByText("Add keyword")).toBeInTheDocument();
+    expect(screen.getByText("New keyword")).toBeInTheDocument();
+    expect(screen.getByText("Export keywords")).toBeInTheDocument();
+    expect(screen.getByText("Download file")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /Add keyword/ }));
+    expect(runAdd).toHaveBeenCalledOnce();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("runs duplicate-label commands independently by stable id", () => {
+    const runA = vi.fn();
+    const runB = vi.fn();
+    const commands: RegisteredCommand[] = [
+      { id: "dup-a", label: "Duplicate", scope: "page", hint: "Hint A", run: runA },
+      { id: "dup-b", label: "Duplicate", scope: "page", hint: "Hint B", run: runB },
+    ];
+
+    render(
+      <CommandPaletteProvider defaultOpen projectId="project_1" projectRef="prj_1">
+        <Controls />
+        <RegistrationMarker commands={commands} />
+      </CommandPaletteProvider>,
+    );
+
+    const buttons = screen.getAllByRole("button", { name: /Duplicate/ });
+    expect(buttons).toHaveLength(2);
+    expect(screen.getByText("Hint A")).toBeInTheDocument();
+    expect(screen.getByText("Hint B")).toBeInTheDocument();
+
+    fireEvent.click(buttons[0]);
+    expect(runA).toHaveBeenCalledOnce();
+    expect(runB).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Search" }));
+    const reopened = screen.getAllByRole("button", { name: /Duplicate/ });
+    expect(reopened).toHaveLength(2);
+    fireEvent.click(reopened[1]);
+    expect(runB).toHaveBeenCalledOnce();
+    expect(runA).toHaveBeenCalledOnce();
+  });
+
+  it("filters registered commands by contextual label", () => {
+    const commands: RegisteredCommand[] = [
+      {
+        id: "rt-add",
+        label: "Add keyword",
+        scope: "rank-tracker",
+        hint: "New keyword",
+        run: vi.fn(),
+      },
+      {
+        id: "rt-export",
+        label: "Export keywords",
+        scope: "rank-tracker",
+        hint: "Download file",
+        run: vi.fn(),
+      },
+    ];
+
+    render(
+      <CommandPaletteProvider defaultOpen projectId="project_1" projectRef="prj_1">
+        <Controls />
+        <RegistrationMarker commands={commands} />
+      </CommandPaletteProvider>,
+    );
+
+    fireEvent.change(screen.getByPlaceholderText(/Search keywords/), {
+      target: { value: "export" },
+    });
+
+    expect(screen.queryByText("Add keyword")).not.toBeInTheDocument();
+    expect(screen.getByText("Export keywords")).toBeInTheDocument();
   });
 });

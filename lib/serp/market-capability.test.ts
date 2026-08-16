@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   countryDegradedResearchLocation,
+  RESEARCH_METRICS_UNAVAILABLE_TOOLTIP,
   researchCountryLocationCode,
+  researchMetricsUnavailableNote,
   researchProviderLanguageCode,
   researchProviderLocation,
   researchProviderRankLocation,
@@ -66,5 +68,15 @@ describe("research market capability", () => {
   it("owns the country-to-Labs numeric translation used by research consumers", () => {
     expect(researchCountryLocationCode("es")).toBe(2724);
     expect(researchCountryLocationCode("XX")).toBeNull();
+  });
+
+  it("keeps the named note and the standalone tooltip saying the same thing", () => {
+    // Two hand-kept copies of one sentence drift the moment either is reworded, and the
+    // capitalisation difference stops one being spelled in terms of the other.
+    const [first, ...rest] = RESEARCH_METRICS_UNAVAILABLE_TOOLTIP;
+
+    expect(researchMetricsUnavailableNote("Arabic")).toBe(
+      `Arabic: ${first.toLowerCase()}${rest.join("")}`,
+    );
   });
 });

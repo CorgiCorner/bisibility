@@ -1,11 +1,5 @@
 import { NotificationPreferences } from "@/components/settings/notifications/NotificationPreferences";
 import { SettingsShell } from "@/components/settings/shell/SettingsShell";
-import {
-  confirmAccountEmailChange,
-  confirmCurrentAccountEmailVerification,
-  requestAccountEmailChange,
-  requestCurrentAccountEmailVerification,
-} from "@/lib/actions/account-email";
 import { getProjectRole } from "@/lib/auth/authorize";
 import { canProjectAction } from "@/lib/auth/capabilities";
 import { requireReadableProject } from "@/lib/queries/_auth";
@@ -29,14 +23,7 @@ export default async function NotificationsSettingsPage({
   return (
     <SettingsShell activeSection="notifications" projectRef={asProjectRef(project.publicId)}>
       <div data-settings-section-slot="notifications">
-        <NotificationPreferences
-          canEdit={canEdit}
-          confirmAccountEmailChange={confirmAccountEmailChange}
-          confirmCurrentAccountEmailVerification={confirmCurrentAccountEmailVerification}
-          preferences={preferences}
-          requestAccountEmailChange={requestAccountEmailChange}
-          requestCurrentAccountEmailVerification={requestCurrentAccountEmailVerification}
-        />
+        <NotificationPreferences canEdit={canEdit} preferences={preferences} />
       </div>
     </SettingsShell>
   );

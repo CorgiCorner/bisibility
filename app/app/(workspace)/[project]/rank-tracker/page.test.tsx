@@ -1,5 +1,6 @@
 import { checkRunsFixtureView } from "@/components/checks/runs/check-runs-fixtures";
 import { upcomingViewFixture } from "@/components/checks/upcoming/upcoming-fixtures";
+import type { RankTrackerAction } from "@/lib/keywords/rank-tracker-command";
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import KeywordsPage from "./page";
@@ -23,6 +24,9 @@ const mocks = vi.hoisted(() => ({
   savedKeywordCount: vi.fn(),
 }));
 
+let capturedInitialAction: RankTrackerAction | null | undefined;
+let capturedInitialAddOpen: boolean | undefined;
+
 vi.mock("@/components/rank-tracker/RankTrackerTabs", () => ({
   RankTrackerTabs: (props: { activeTab: string; savedCount: number; trackedCount: number }) => (
     <div data-testid="rank-tracker-tabs">
@@ -38,7 +42,11 @@ vi.mock("@/components/checks/ChecksWorkspace", () => ({
   ),
 }));
 vi.mock("@/components/keywords/grid/KeywordsGrid", () => ({
-  KeywordsGrid: () => <div data-testid="tracked-grid" />,
+  KeywordsGrid: (props: { initialAction?: RankTrackerAction | null; initialAddOpen?: boolean }) => {
+    capturedInitialAction = props.initialAction;
+    capturedInitialAddOpen = props.initialAddOpen;
+    return <div data-testid="tracked-grid" />;
+  },
 }));
 vi.mock("@/components/keywords/saved/SavedKeywordsWorkspace", () => ({
   SavedKeywordsWorkspace: (props: { initialSavedCount: number; trackedCount: number }) => (
@@ -86,9 +94,20 @@ vi.mock("@/lib/queries/workspace-request-data", () => ({
   getRequestSerpProviderChain: mocks.getRequestSerpProviderChain,
 }));
 
+async function renderPage(searchParams: Record<string, string | string[] | undefined>) {
+  render(
+    await KeywordsPage({
+      params: Promise.resolve({ project: "prj_1" }),
+      searchParams: Promise.resolve(searchParams),
+    }),
+  );
+}
+
 describe("KeywordsPage tabs", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    capturedInitialAction = undefined;
+    capturedInitialAddOpen = undefined;
     mocks.resolveProjectAccess.mockResolvedValue({
       mode: "member",
       projectId: "project_1",
@@ -130,29 +149,36 @@ describe("KeywordsPage tabs", () => {
   });
 
   it("keeps Tracked as the default branch and renders both counts", async () => {
-    render(
-      await KeywordsPage({
-        params: Promise.resolve({ project: "prj_1" }),
-        searchParams: Promise.resolve({}),
-      }),
-    );
+    await renderPage({});
 
     expect(screen.getByTestId("rank-tracker-tabs")).toHaveTextContent("tracked:0:2");
     expect(screen.getByTestId("tracked-grid")).toBeInTheDocument();
     expect(screen.queryByTestId("saved-workspace")).not.toBeInTheDocument();
+    expect(capturedInitialAction).toBeNull();
     expect(mocks.getKeywordRows).toHaveBeenCalledWith("prj_1");
     expect(mocks.getCheckHealth).toHaveBeenCalledWith("prj_1");
     expect(mocks.getProjectCostContext).toHaveBeenCalledWith("prj_1");
     expect(mocks.requireReadableProject).toHaveBeenCalledWith("prj_1");
   });
 
+  it("passes each validated action and rejects unknown input", async () => {
+    for (const action of ["add", "import", "export", "filter"] as const) {
+      await renderPage({ action });
+      expect(capturedInitialAction).toBe(action);
+    }
+    await renderPage({ action: "run-check" });
+    expect(capturedInitialAction).toBeNull();
+    await renderPage({ action: "unknown" });
+    expect(capturedInitialAction).toBeNull();
+  });
+
+  it("preserves the legacy add entry", async () => {
+    await renderPage({ add: "1" });
+    expect(capturedInitialAddOpen).toBe(true);
+  });
+
   it("renders the Saved branch for the ?tab=saved deep link", async () => {
-    render(
-      await KeywordsPage({
-        params: Promise.resolve({ project: "prj_1" }),
-        searchParams: Promise.resolve({ tab: "saved" }),
-      }),
-    );
+    await renderPage({ tab: "saved" });
 
     expect(screen.getByTestId("saved-workspace")).toHaveTextContent("9:2");
     expect(screen.queryByTestId("tracked-grid")).not.toBeInTheDocument();
@@ -162,12 +188,7 @@ describe("KeywordsPage tabs", () => {
   });
 
   it("renders the Checks branch for the ?tab=checks deep link", async () => {
-    render(
-      await KeywordsPage({
-        params: Promise.resolve({ project: "prj_1" }),
-        searchParams: Promise.resolve({ tab: "checks" }),
-      }),
-    );
+    await renderPage({ tab: "checks" });
 
     expect(screen.getByTestId("rank-tracker-tabs")).toHaveTextContent("checks:9:2");
     expect(screen.getByTestId("checks-workspace")).toHaveTextContent("prj_1:1");

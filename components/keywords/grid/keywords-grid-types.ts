@@ -2,6 +2,7 @@ import type * as KeywordActions from "@/components/keywords/action-utils";
 import type { ImportTopQueriesAction } from "@/components/onboarding/steps/KeywordTopQueryImport";
 import type * as FirstCheckActions from "@/components/rank-check/FirstCheckBannerAction";
 import type { ActiveLens } from "@/lib/keywords/lens-model";
+import type { RankTrackerAction } from "@/lib/keywords/rank-tracker-command";
 import type {
   CreateSavedViewInput,
   DeleteSavedViewInput,
@@ -26,6 +27,7 @@ export type KeywordsGridProps = KeywordActions.KeywordWorkspaceActions & {
   deletableSavedViewIds: readonly string[];
   deleteSavedViewAction?: (input: DeleteSavedViewInput) => Promise<unknown>;
   getFirstCheckRunPlanAction: FirstCheckActions.GetFirstCheckRunPlanAction;
+  initialAction?: RankTrackerAction | null;
   initialAddOpen?: boolean;
   initialViewConfig?: SavedViewConfig;
   importTopQueriesAction?: ImportTopQueriesAction;

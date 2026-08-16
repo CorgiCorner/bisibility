@@ -1,14 +1,19 @@
 import { displayTime } from "@/components/admin/AdminPrimitives";
-import { Card, CopyButton, filterChipStateClassName, SectionTitle } from "@/components/ui";
+import {
+  Card,
+  CopyButton,
+  filterChipStateClassName,
+  SectionTitle,
+  StatusPill,
+} from "@/components/ui";
 import type {
   InstanceAdminAuditFilter,
   InstanceAdminAuditPage,
+  InstanceAdminAuditResult,
 } from "@/lib/queries/instance-admin-audit";
 import { appRootPath } from "@/lib/routing/app-path";
 import { ClockCounterClockwiseIcon as ClockCounterClockwise } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
-
-type AuditEntry = InstanceAdminAuditPage["entries"][number];
 
 const filters = [
   { key: "all", label: "All" },
@@ -16,12 +21,6 @@ const filters = [
   { key: "ops", label: "Ops" },
   { key: "setup", label: "Setup" },
 ] as const satisfies readonly { key: InstanceAdminAuditFilter; label: string }[];
-
-const resultClasses = {
-  blocked: "bg-yellow/10 text-yellow-text",
-  failed: "bg-red/10 text-red-text",
-  ok: "bg-green/10 text-green-text",
-} satisfies Record<AuditEntry["result"], string>;
 
 function auditHref(filter: InstanceAdminAuditFilter, cursor?: string | null) {
   const params = new URLSearchParams();
@@ -33,14 +32,19 @@ function auditHref(filter: InstanceAdminAuditFilter, cursor?: string | null) {
   return query ? `${path}?${query}` : path;
 }
 
-function AuditResult({ result }: Readonly<{ result: AuditEntry["result"] }>) {
-  return (
-    <span
-      className={`inline-flex rounded-full px-2.5 py-1 font-mono text-[10px] font-bold uppercase ${resultClasses[result]}`}
-    >
-      {result}
-    </span>
-  );
+function AuditResultCell({ result }: Readonly<{ result: InstanceAdminAuditResult }>) {
+  switch (result) {
+    case "ok":
+      return <StatusPill label="OK" size="sm" status="success" />;
+    case "failed":
+      return <StatusPill size="sm" status="failed" />;
+    case "blocked":
+      return <StatusPill label="Blocked" showDot size="sm" status="planned" />;
+    default: {
+      const exhaustive: never = result;
+      throw new Error(`Unhandled audit result: ${exhaustive}`);
+    }
+  }
 }
 
 export function AdminAuditTable({ entries, filter, nextCursor }: Readonly<InstanceAdminAuditPage>) {
@@ -147,7 +151,7 @@ export function AdminAuditTable({ entries, filter, nextCursor }: Readonly<Instan
                         </span>
                       </td>
                       <td className="px-2 py-2.5">
-                        <AuditResult result={entry.result} />
+                        <AuditResultCell result={entry.result} />
                       </td>
                     </tr>
                   );

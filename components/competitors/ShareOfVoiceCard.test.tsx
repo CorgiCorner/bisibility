@@ -63,10 +63,9 @@ describe("ShareOfVoiceCard no-data semantics", () => {
 
     expect(screen.getByText(/no tracked domain ranked in the top 100/i)).toBeInTheDocument();
     expect(
-      screen.getByText(
-        "Visibility across 1 tracked keyword / Google / United States / English / Desktop",
-      ),
+      screen.getByText("Visibility across 1 tracked keyword / United States / English / Desktop"),
     ).toBeInTheDocument();
+    expect(screen.queryByText(/Google/)).not.toBeInTheDocument();
     expect(screen.queryByText(/US \/ Desktop/)).not.toBeInTheDocument();
     expect(screen.queryByText(/no completed rank checks exist/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/0%/)).not.toBeInTheDocument();
@@ -85,13 +84,13 @@ describe("ShareOfVoiceCard no-data semantics", () => {
         onFilterChange={vi.fn()}
         projectId="project_1"
         scopeControls={
-          <span>SOV compares one market (location + language) + device + engine at a time</span>
+          <span>SOV compares one market (location + language) + device at a time</span>
         }
       />,
     );
 
     expect(
-      screen.getByText("SOV compares one market (location + language) + device + engine at a time"),
+      screen.getByText("SOV compares one market (location + language) + device at a time"),
     ).toBeInTheDocument();
   });
 

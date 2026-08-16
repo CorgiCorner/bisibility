@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-export const notificationEmailSchema = z.object({
-  email: z.string().trim().email("Enter a valid notification email.").max(320),
+export const accountEmailSchema = z.object({
+  email: z.string().trim().email("Enter a valid account email.").max(320),
 });
 
 export const verificationCodeSchema = z.object({
@@ -11,5 +11,5 @@ export const verificationCodeSchema = z.object({
     .regex(/^\d{6}$/, "Enter the 6-digit verification code."),
 });
 
-export type NotificationEmailForm = z.infer<typeof notificationEmailSchema>;
+export type AccountEmailForm = z.infer<typeof accountEmailSchema>;
 export type VerificationCodeForm = z.infer<typeof verificationCodeSchema>;

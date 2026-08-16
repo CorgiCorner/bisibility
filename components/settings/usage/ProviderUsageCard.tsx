@@ -6,10 +6,10 @@ import {
   type UpdateUsageBudget,
 } from "@/components/settings/usage/BudgetEditModal";
 import { UsageCard } from "@/components/settings/usage/UsageCard";
-import { Button, MonoText, StatusPill } from "@/components/ui";
+import { Button, ExternalLink, MonoText, StatusPill } from "@/components/ui";
 import { formatMoneyCents } from "@/lib/format/money";
 import type { ProviderConnectionUsageData, ProviderUsageData } from "@/lib/settings/options";
-import { DOCS_URL, docsLinkProps } from "@/lib/site/site";
+import { DOCS_URL, MARKETING_URL } from "@/lib/site/site";
 import { PencilSimpleIcon as PencilSimple } from "@phosphor-icons/react";
 import { useState } from "react";
 
@@ -151,19 +151,18 @@ export function ProviderUsageCard({
         className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border-soft pt-4"
         data-provider-usage-footer=""
       >
-        <a
-          className="text-[12px] font-medium text-accent-text hover:text-accent-text hover:underline"
-          href={`${DOCS_URL}/integrations#budget-cap`}
-          {...docsLinkProps(`${DOCS_URL}/integrations#budget-cap`)}
+        <ExternalLink
+          className="text-[12px] font-medium text-accent-text hover:underline"
+          href="/docs/integrations#budget-cap"
         >
           How budgets work
-        </a>
-        <a
-          className="text-[12px] font-medium text-accent-text hover:text-accent-text hover:underline"
-          href="/rank-tracking-cost-calculator"
+        </ExternalLink>
+        <ExternalLink
+          className="text-[12px] font-medium text-accent-text hover:underline"
+          href={`${MARKETING_URL}/rank-tracking-cost-calculator`}
         >
           Estimate future cost
-        </a>
+        </ExternalLink>
       </div>
       {editOpen ? (
         <BudgetEditModal

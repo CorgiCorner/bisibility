@@ -1,4 +1,4 @@
-import { IdChip } from "@/components/ui";
+import { IdChip, StatusPill } from "@/components/ui";
 import type { AuditEntry, AuditStatus } from "@/lib/queries/audit";
 import type { GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import { CaretRightIcon as CaretRight } from "@phosphor-icons/react";
@@ -45,26 +45,10 @@ function ResourceCell({ row }: Readonly<GridRenderCellParams<AuditEntry>>) {
   );
 }
 
-function StatusChip({ status }: Readonly<{ status: AuditStatus }>) {
-  const color = status === "success" ? "var(--green)" : "var(--red)";
-  const label = status === "success" ? "Success" : "Failed";
-  return (
-    <span
-      className="inline-flex rounded-full px-2 py-0.5 font-mono text-[10px] font-semibold leading-none"
-      style={{
-        backgroundColor: `color-mix(in srgb, ${color} 14%, transparent)`,
-        color,
-      }}
-    >
-      {label}
-    </span>
-  );
-}
-
 function StatusCell({ status }: Readonly<{ status: AuditStatus }>) {
   return (
     <span className="flex w-full items-center justify-between gap-2">
-      <StatusChip status={status} />
+      <StatusPill size="sm" status={status} />
       <CaretRight aria-hidden className="shrink-0 text-fg-muted" size={12} />
     </span>
   );

@@ -1,11 +1,10 @@
+import { MarketChip } from "@/components/markets/MarketChip";
 import { Card, EmptyState, MonoText } from "@/components/ui";
 import { appPath } from "@/lib/routing/app-path";
 import Tooltip from "@mui/material/Tooltip";
 import {
   ArrowDownIcon as ArrowDown,
   ArrowUpIcon as ArrowUp,
-  DeviceMobileIcon as DeviceMobile,
-  MonitorIcon as Monitor,
   PlusCircleIcon as PlusCircle,
   StarIcon as Star,
   TrendUpIcon as TrendUp,
@@ -80,17 +79,17 @@ function Delta({ row }: Readonly<{ row: HighlightRow }>) {
 }
 
 function MarketIdentity({ row }: Readonly<{ row: HighlightRow }>) {
-  if (!row.marketLabel || !row.device) return null;
-  const Device = row.device === "mobile" ? DeviceMobile : Monitor;
-  const deviceLabel = row.device === "mobile" ? "Mobile" : "Desktop";
+  // Guarded so a bare `/` can never render: a row without a resolved pair shows no chip.
+  if (!row.marketLocationLabel || !row.marketLanguageLabel) return null;
+
   return (
-    <span className="mt-1 flex min-w-0 items-center gap-1.5">
-      <span className="max-w-[190px] truncate rounded-full border border-border bg-bg-sunken px-2 py-0.5 text-[10.5px] text-fg-muted">
-        {row.marketLabel}
-      </span>
-      <span title={deviceLabel}>
-        <Device aria-label={deviceLabel} size={12} />
-      </span>
+    <span className="mt-1 flex min-w-0 items-center">
+      <MarketChip
+        className="max-w-[208px]"
+        device={row.device === "mobile" || row.device === "desktop" ? row.device : null}
+        languageLabel={row.marketLanguageLabel}
+        locationLabel={row.marketLocationLabel}
+      />
     </span>
   );
 }
