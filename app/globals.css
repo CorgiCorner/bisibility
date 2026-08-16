@@ -10,6 +10,7 @@
   --bg-sidebar: #ffffff;
   --bg-sunken: #ece7db;
   --bg-inset: #e2ddd0;
+  --table-header-bg: #ece7db;
   --fg: #1a1813;
   --fg-muted: #615b4d;
   --border: #bfb7a4;
@@ -59,6 +60,7 @@
   --bg-sidebar: #070603;
   --bg-sunken: #15110a;
   --bg-inset: #080704;
+  --table-header-bg: #15110a;
   --fg: #ece7db;
   --fg-muted: #9f998a;
   --border: #463d2e;

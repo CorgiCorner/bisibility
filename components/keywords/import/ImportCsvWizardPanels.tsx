@@ -2,7 +2,7 @@
 
 import { actionWarningMessage } from "@/components/keywords/action-utils";
 import { LocationActionWarning } from "@/components/keywords/LocationActionWarning";
-import { Button } from "@/components/ui";
+import { Button, tableHeaderClassName } from "@/components/ui";
 import type { KeywordImportCsvRow } from "@/lib/keywords/import-csv-parser";
 import { keywordImportTemplateCsv } from "@/lib/keywords/import-csv-template";
 import { downloadTextFile } from "@/lib/ui/download";
@@ -170,7 +170,7 @@ function ParsedRowsPreview({ rows }: Readonly<{ rows: KeywordImportCsvRow[] | nu
   return (
     <div className="mt-4 overflow-x-auto rounded-xl border border-border">
       <table className="w-full min-w-[640px] border-collapse text-left text-[12px]">
-        <thead className="bg-bg-sunken font-mono text-[10px] uppercase tracking-[0.4px] text-fg-muted">
+        <thead className={tableHeaderClassName}>
           <tr>
             {["Keyword", "Target URL", "Tags", "Market", "Device"].map((label) => (
               <th className="px-3 py-2 font-medium" key={label}>

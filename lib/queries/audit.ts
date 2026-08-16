@@ -2,6 +2,8 @@ import "server-only";
 import { getAuditRetentionDays } from "@/lib/audit/retention";
 import { writeAudit } from "@/lib/auth/audit";
 import { type Actor, AuthorizationError, authorize, getProjectRole } from "@/lib/auth/authorize";
+import { gravatarUrl } from "@/lib/avatar/gravatar";
+import { initials as avatarInitials } from "@/lib/avatar/initials";
 import { prisma } from "@/lib/db/prisma";
 import { parsePublicId } from "@/lib/db/public-id";
 import { trackedProjectDomain } from "@/lib/schemas/project";
@@ -22,6 +24,7 @@ export type AuditEntry = {
   eventName: string;
   eventType: AuditEventType;
   actor: {
+    avatarUrl?: string | null;
     id: string;
     name: string;
     email: string;
@@ -132,16 +135,6 @@ function eventNameFor(action: string): string {
   const words = action.replace(/[._]/g, " ").trim();
   return words.charAt(0).toUpperCase() + words.slice(1);
 }
-function initialsFor(name: string, email: string): string {
-  const base = (name.trim() || email).trim();
-  const parts = base.split(/\s+/).filter(Boolean);
-  const first = parts[0] ?? "";
-  const second = parts[1] ?? "";
-  if (second) {
-    return `${first.charAt(0)}${second.charAt(0)}`.toUpperCase();
-  }
-  return base.slice(0, 2).toUpperCase();
-}
 type AuditRow = {
   id: string;
   publicId: string | null;
@@ -182,9 +175,10 @@ function mapAuditRow(row: AuditRow): AuditEntry {
   const email = row.actor?.email ?? "system@bisibility";
   return {
     actor: {
+      avatarUrl: row.actor ? gravatarUrl(email, 26) : null,
       email,
       id: row.actor ? requiredPublicId(row.actor.publicId, "Audit actor", "usr") : "system",
-      initials: initialsFor(name, email),
+      initials: avatarInitials(name, email),
       name,
     },
     diff: diffFor(redactAuditIds(row.before), redactAuditIds(row.after)),

@@ -1,5 +1,6 @@
 "use client";
 
+import { tableHeaderClassName } from "@/components/ui";
 import type { DataGridProps, GridColDef, GridValidRowModel } from "@mui/x-data-grid";
 import dynamic from "next/dynamic";
 import { useCallback, useState } from "react";
@@ -39,13 +40,9 @@ function InitialKeywordTable<R extends GridValidRowModel>({
         className="min-w-[1080px] table-fixed text-left text-[12px]"
       >
         <thead>
-          <tr className="h-[42px] border-b border-border bg-bg-sunken">
+          <tr className={`h-[42px] border-b border-border ${tableHeaderClassName}`}>
             {visibleColumns.map((column) => (
-              <th
-                key={column.field}
-                scope="col"
-                className="truncate px-3 py-3 font-mono text-[10.5px] font-semibold uppercase tracking-[0.6px] text-fg-muted"
-              >
+              <th key={column.field} scope="col" className="truncate px-3 py-3 font-semibold">
                 {column.headerName ?? column.field}
               </th>
             ))}

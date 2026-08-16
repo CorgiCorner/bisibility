@@ -13,6 +13,8 @@ vi.mock("@/components/shell/CommandPalette", () => ({
   useCommandPalette: () => ({ openPalette: mocks.openPalette }),
 }));
 vi.mock("@/components/ui", () => ({
+  Avatar: ({ initials, src }: { initials: string; src?: string | null }) =>
+    src ? <span data-avatar-src={src} /> : <span>{initials}</span>,
   useToast: () => ({ showToast: mocks.showToast }),
 }));
 vi.mock("@/lib/auth/client", () => ({ authClient: { signOut: mocks.signOut } }));
@@ -45,8 +47,8 @@ function renderMenu() {
   render(
     <UserMenu
       anchorEl={document.createElement("button")}
+      avatarUrl="https://example.com/avatar.png"
       email="member@example.com"
-      initials="ME"
       name="Member Example"
       onClose={vi.fn()}
       roleLine="Member"
@@ -78,6 +80,14 @@ describe("UserMenu", () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+  });
+
+  it("renders the server-derived avatar URL", () => {
+    renderMenu();
+
+    expect(
+      document.querySelector('[data-avatar-src="https://example.com/avatar.png"]'),
+    ).not.toBeNull();
   });
 
   it("keeps the user informed when sign out fails", async () => {

@@ -106,16 +106,3 @@ export function domainOverviewTrackedMarkets(
         : null,
   }));
 }
-
-export function filterDomainOverviewMarkets(
-  markets: readonly DomainOverviewMarketOption[],
-  query: string,
-) {
-  const term = query.trim().toLocaleLowerCase("en-US");
-  if (!term) return [...markets];
-  return markets.filter((market) =>
-    `${market.displayName} ${market.countryCode} ${market.languageLabel} ${market.languageCode}`
-      .toLocaleLowerCase("en-US")
-      .includes(term),
-  );
-}

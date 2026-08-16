@@ -33,7 +33,7 @@ function normalizeHost(domain: string | null | undefined) {
   }
 }
 
-export function buildDomainIconUrl({ domain, size = 64 }: DomainIconUrlInput) {
+export function buildDomainIconUrl({ domain }: DomainIconUrlInput) {
   if (process.env.NEXT_PUBLIC_DOMAIN_ICONS === "off") {
     return null;
   }
@@ -43,6 +43,6 @@ export function buildDomainIconUrl({ domain, size = 64 }: DomainIconUrlInput) {
     return null;
   }
 
-  const params = new URLSearchParams({ domain: host, sz: String(size) });
+  const params = new URLSearchParams({ domain: host, sz: "32" });
   return `https://www.google.com/s2/favicons?${params.toString()}`;
 }

@@ -5,9 +5,11 @@ import {
   keywordMonthlyCheckSummary,
 } from "@/components/onboarding/onboarding-fixtures";
 import { useDeploymentMode } from "@/components/shell/DeploymentModeProvider";
+import { ExternalLink } from "@/components/ui";
 import { buildCostCalculatorHref } from "@/lib/cost-estimate/calculator-query";
 import type { KeywordScheduleInput } from "@/lib/schemas/keyword";
 import { DEFAULT_SERP_DEPTH, type SerpDepth, type SerpDevice } from "@/lib/serp/markets";
+import { MARKETING_URL } from "@/lib/site/site";
 import { OnboardingCostSummary } from "./OnboardingCostSummary";
 
 type KeywordImportSummaryProps = {
@@ -53,14 +55,14 @@ export function KeywordImportSummary({
           </span>
           <span className="block">{monthlyLine}</span>
         </span>
-        {deploymentMode === "cloud" && calculatorHref && keywordCount > 0 ? (
-          <a
+        {deploymentMode === "cloud" && keywordCount > 0 && calculatorHref !== null ? (
+          <ExternalLink
             aria-label="Estimate provider cost"
             className="font-medium text-accent-text hover:underline"
-            href={calculatorHref}
+            href={`${MARKETING_URL}${calculatorHref}`}
           >
-            Estimate provider cost ↗
-          </a>
+            Estimate provider cost
+          </ExternalLink>
         ) : null}
       </div>
     </OnboardingCostSummary>

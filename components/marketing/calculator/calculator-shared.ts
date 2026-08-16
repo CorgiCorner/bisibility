@@ -162,7 +162,6 @@ export function hintLabel(label: string, hint: string) {
 
 export const neutralSegmentProps = {
   className: "min-w-0 [&>div]:gap-0.5",
-  optionClassName:
-    "flex-row min-h-7 px-2.5 py-0.5 text-[12px] font-medium peer-checked:bg-nav-active peer-checked:font-semibold",
+  optionClassName: "flex-row min-h-7 px-2.5 py-0.5 text-[12px] font-medium",
   size: "field" as const,
 };

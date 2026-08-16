@@ -15,7 +15,7 @@ const consentSchema = z.object({ accept: z.boolean() });
 type ConsentValues = z.infer<typeof consentSchema>;
 
 export type OAuthConsentFormProps = {
-  account: { email: string; initials: string };
+  account: { avatarUrl?: string | null; email: string; initials: string };
   client: OAuthConsentClient;
   expiresAt: number;
   scopes: string[];
@@ -87,7 +87,11 @@ export function OAuthConsentForm({
 
   return (
     <div className="w-full max-w-[520px]">
-      <OAuthConsentAccountBar email={account.email} initials={account.initials} />
+      <OAuthConsentAccountBar
+        avatarUrl={account.avatarUrl}
+        email={account.email}
+        initials={account.initials}
+      />
       <OAuthConsentRequest
         client={client}
         disabled={!client.id || pendingChoice !== null}

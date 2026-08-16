@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+## [0.13.3] - 2026-08-16
+
+- Fixed uneven provider segment fills in the cost calculator.
+
+- Standardized cost calculator links with clear external-link behavior.
+
+- Kept onboarding first checks tied to configured rank-tracking providers.
+
+- Added consistent Gravatar avatars with initials fallbacks across account and team surfaces.
+
+- Unified searchable market selection across keyword, competitor, and domain workflows.
+
+- Improved project favicon detection while preserving initials for missing icons.
+
+- Unified table header colors and typography across app tables and loading states.
+
 ## [0.13.2] - 2026-08-16
 
 - The default landing page preference derives from the primary sidebar entries and redirects `/app` to the saved page, migrating legacy `overview` and `keywords` choices.

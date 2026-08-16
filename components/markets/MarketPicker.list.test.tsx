@@ -1,6 +1,6 @@
 import { countryValueForCode } from "@/components/keywords/location-picker-data";
 import { serpLanguageCatalog } from "@/lib/serp/generated/serp-language-catalog";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { MarketPicker } from "./MarketPicker";
 import { recommendedMarketLanguages } from "./market-picker-model";
@@ -28,7 +28,7 @@ vi.mock("@/components/keywords/LocationField", () => ({
   ),
 }));
 
-const offCatalogNote =
+const _offCatalogNote =
   "English: no search volume or difficulty data for this market - positions are tracked normally.";
 
 function spain() {

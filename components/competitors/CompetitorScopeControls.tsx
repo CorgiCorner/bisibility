@@ -1,5 +1,6 @@
 "use client";
 
+import { MarketCombobox } from "@/components/markets/MarketCombobox";
 import { SegmentedControl } from "@/components/ui";
 import { competitorScopeHref } from "@/lib/competitors/scope-model";
 import type { CompetitorMarketOption, CompetitorsViewModel } from "@/lib/competitors/types";
@@ -10,7 +11,7 @@ import {
   MonitorIcon as Monitor,
 } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
-import { CompetitorMarketSelector } from "./CompetitorMarketSelector";
+import { competitorRegistryOptions } from "./competitor-market-mapping";
 
 type CompetitorScopeControlsProps = {
   markets: CompetitorMarketOption[];
@@ -60,17 +61,28 @@ export function CompetitorScopeControls({
     };
   });
 
+  const currentMarket = markets.find((m) => m.locationId === current.locationId) ?? markets[0];
+  const options = competitorRegistryOptions(markets, current.device, projectMarkets);
+
   return (
     <div className="flex flex-wrap items-center gap-2 rounded-[11px] border border-border bg-bg-sunken px-3 py-2.5">
-      <span className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">Market</span>
-      <CompetitorMarketSelector
-        currentDevice={current.device}
-        currentLocationId={current.locationId}
-        markets={markets}
-        onChange={(market) =>
-          navigate({ device: market.device, engine: market.engine, locationId: market.locationId })
-        }
-        projectMarkets={projectMarkets}
+      <span className="font-mono text-[11px] uppercase tracking-[0.5px] text-fg-muted">Market</span>
+      <MarketCombobox
+        ariaLabel="Competitor market"
+        catalogMarkets={[]}
+        menuWidth={280}
+        onChange={(payload) => {
+          if (payload) {
+            navigate({
+              device: payload.device,
+              engine: payload.engine,
+              locationId: payload.locationId,
+            });
+          }
+        }}
+        trackedMarkets={options}
+        triggerClassName="max-w-[280px]"
+        value={currentMarket?.canonicalKey ?? ""}
       />
       <SegmentedControl
         ariaLabel="Competitor device"
@@ -80,7 +92,7 @@ export function CompetitorScopeControls({
         size="toolbar"
         value={current.device}
       />
-      <span className="ml-auto flex items-center gap-1.5 font-mono text-[10.5px] text-fg-muted">
+      <span className="ml-auto flex items-center gap-1.5 font-mono text-[11px] text-fg-muted">
         <Info aria-hidden className="shrink-0 text-accent-text" size={13} />
         SOV compares one market (location + language) + device at a time
       </span>

@@ -80,8 +80,6 @@ export function StepFirstCheck({
   completeOnboardingAction,
   defaults,
   flowState,
-  getObservedPositionsAction,
-  hasAnalyticsSource = false,
   keywordCount = 0,
   keywordDraft,
   listFirstCheckCandidatesAction,
@@ -118,13 +116,10 @@ export function StepFirstCheck({
     saveMarketsAction,
   });
   const { retryFailed, start, state } = useFirstCheckRun({
-    getObservedPositionsAction,
     listFirstCheckCandidatesAction,
     runFirstCheckPreviewAction,
   });
-  const previewMode =
-    !providerReady && hasAnalyticsSource && !sampleProject ? "observed" : "preview";
-  const canPreview = providerReady || hasAnalyticsSource || sampleProject;
+  const canPreview = providerReady || sampleProject;
   const previewDisabled =
     state.status === "running" ||
     !hasProject ||
@@ -138,16 +133,12 @@ export function StepFirstCheck({
   const firstCheckLabel = sampleProject
     ? "Sample project preview only"
     : !providerReady
-      ? hasAnalyticsSource
-        ? "Observed Search Console positions"
-        : "Paused until a provider is connected"
+      ? "Paused until a provider is connected"
       : `${sampleCount} sample ${sampleCount === 1 ? "check" : "checks"} - one per market and device`;
   const queueMessage = sampleProject
     ? "Sample projects keep their synthetic ranking history."
     : !providerReady
-      ? hasAnalyticsSource
-        ? "No SERP provider connected. Review observed Search Console positions instead."
-        : null
+      ? null
       : paused
         ? "Manual preview can run now. Scheduled checks stay paused."
         : state.status === "running"
@@ -160,7 +151,6 @@ export function StepFirstCheck({
     void start({
       keywordText: sampleKeyword,
       limit: sampleCount || undefined,
-      mode: previewMode,
       projectId,
     });
   }
@@ -232,7 +222,7 @@ export function StepFirstCheck({
         submitError={submitError}
         timezoneError={timezoneError}
       />
-      {!providerReady && !hasAnalyticsSource ? (
+      {!providerReady ? (
         <div className="mt-5 flex flex-col items-start gap-2.5 rounded-xl border border-border-strong border-dashed bg-bg-sunken p-[18px]">
           <span className="flex items-start gap-2 text-[13px] leading-[1.5] text-fg-muted">
             <Plug aria-hidden className="mt-0.5 shrink-0" size={16} />
@@ -276,9 +266,7 @@ export function StepFirstCheck({
             >
               {state.status === "completed"
                 ? "Run again"
-                : !providerReady && hasAnalyticsSource
-                  ? "Show observed positions"
-                  : `Run ${sampleCount} sample ${sampleCount === 1 ? "check" : "checks"}`}
+                : `Run ${sampleCount} sample ${sampleCount === 1 ? "check" : "checks"}`}
             </Button>
           ) : null}
         </div>

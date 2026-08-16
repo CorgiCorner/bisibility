@@ -17,7 +17,9 @@ vi.mock("@/components/ui", () => ({
 }));
 vi.mock("@/components/shell/types", () => ({
   shellUserEmail: (user: { email: string }) => user.email,
-  shellUserInitials: () => "A",
+}));
+vi.mock("@/lib/avatar/initials", () => ({
+  initials: () => "A",
 }));
 vi.mock("@/lib/auth/first-run", () => ({
   redirectToSetupIfFirstRun: mocks.firstRunGate,

@@ -1,6 +1,8 @@
 import type { ThemePreference } from "@/components/shell/set-theme";
 
 export type ShellUser = {
+  /** Server-derived Gravatar URL for the user's email. */
+  avatarUrl?: string | null;
   email?: string | null;
   name?: string | null;
   /** Stored theme preference, read server-side from the cookie. `system` follows the OS. */
@@ -17,18 +19,6 @@ export function shellUserName(user?: ShellUser) {
 
 export function shellUserEmail(user?: ShellUser) {
   return user?.email?.trim() || "";
-}
-
-export function shellUserInitials(user?: ShellUser) {
-  const label = user?.name?.trim() || user?.email?.trim() || FALLBACK_NAME;
-  const initials = label
-    .split(/[\s@._-]+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join("");
-
-  return (initials || "U").toUpperCase();
 }
 
 export function shellUserRoleLine(user?: ShellUser) {

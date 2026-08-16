@@ -67,6 +67,9 @@ describe("account queries", () => {
     const account = await getAccount();
 
     expect(account).toMatchObject({
+      avatarUrl: expect.stringMatching(
+        /^https:\/\/www\.gravatar\.com\/avatar\/[a-f0-9]{64}\?d=404&s=108$/,
+      ),
       email: "person@example.com",
       emailVerified: true,
       name: "Person",

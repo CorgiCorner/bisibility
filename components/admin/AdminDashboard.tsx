@@ -6,7 +6,7 @@ import { AdminProviderHealth } from "@/components/admin/AdminProviderHealth";
 import { AdminProviderUsageTable } from "@/components/admin/AdminProviderUsageTable";
 import { AdminSectionUnavailable } from "@/components/admin/AdminSectionUnavailable";
 import { AdminWorkerHealth } from "@/components/admin/AdminWorkerHealth";
-import { MonoText } from "@/components/ui";
+import { MonoText, tableHeaderClassName } from "@/components/ui";
 import { checkFailureRate } from "@/lib/ops/instance-admin-health";
 import type { InstanceAdminDashboard } from "@/lib/queries/instance-admin";
 
@@ -202,7 +202,7 @@ export function AdminDashboard({ data }: Readonly<{ data: InstanceAdminDashboard
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[760px] text-left text-xs">
-              <thead className="border-b border-border text-fg-muted">
+              <thead className={`border-b border-border ${tableHeaderClassName}`}>
                 <tr>
                   <th className="pb-2 pr-3">Kind</th>
                   <th className="pb-2 pr-3">Severity</th>

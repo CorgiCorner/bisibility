@@ -18,7 +18,6 @@ import {
   clientErrorRow,
   type FirstCheckRunState,
   initialFirstCheckRunState,
-  observedRow,
   pendingRow,
   previewRow,
 } from "./first-check-run-rows";
@@ -61,39 +60,6 @@ export function useFirstCheckRun(actions: FirstCheckRunActions) {
     }
   }
 
-  async function showObservedPositions(projectId: string) {
-    if (!actions.getObservedPositionsAction) {
-      setState({
-        message: "Observed positions are not available in this build.",
-        mode: "observed",
-        rows: [],
-        status: "failed",
-      });
-      return;
-    }
-
-    setState({ message: null, mode: "observed", rows: [], status: "running" });
-    try {
-      const positions = await actions.getObservedPositionsAction({ projectId });
-      setState({
-        message:
-          positions.length === 0
-            ? "Search Console query snapshots can lag by about 3 days, so new sites may not show observed positions yet."
-            : null,
-        mode: "observed",
-        rows: positions.map(observedRow),
-        status: "completed",
-      });
-    } catch (error) {
-      setState({
-        message: actionErrorMessage(error),
-        mode: "observed",
-        rows: [],
-        status: "failed",
-      });
-    }
-  }
-
   async function runPreview(projectId: string, options: { keywordText: string; limit?: number }) {
     if (!actions.listFirstCheckCandidatesAction || !actions.runFirstCheckPreviewAction) {
       setState({
@@ -107,7 +73,7 @@ export function useFirstCheckRun(actions: FirstCheckRunActions) {
 
     setState({ message: null, mode: "preview", rows: [], status: "running" });
     try {
-      const { candidates, hasAnalyticsSource, isSampleProject, providerReady } =
+      const { candidates, isSampleProject, providerReady } =
         await actions.listFirstCheckCandidatesAction({
           keywordText: options.keywordText,
           ...(options.limit ? { limit: options.limit } : {}),
@@ -125,10 +91,6 @@ export function useFirstCheckRun(actions: FirstCheckRunActions) {
       }
 
       if (!providerReady) {
-        if (hasAnalyticsSource) {
-          await showObservedPositions(projectId);
-          return;
-        }
         setState({
           message: "Connect a SERP provider before running checks.",
           mode: "preview",
@@ -169,19 +131,10 @@ export function useFirstCheckRun(actions: FirstCheckRunActions) {
     }
   }
 
-  async function start(input: {
-    keywordText?: string;
-    limit?: number;
-    mode: "observed" | "preview";
-    projectId: string | null;
-  }) {
+  async function start(input: { keywordText?: string; limit?: number; projectId: string | null }) {
     if (runningRef.current || !input.projectId) return;
     runningRef.current = true;
     try {
-      if (input.mode === "observed") {
-        await showObservedPositions(input.projectId);
-        return;
-      }
       if (!input.keywordText) {
         setState({
           message: "Select one keyword for the sample checks.",

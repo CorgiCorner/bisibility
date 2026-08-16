@@ -224,12 +224,12 @@ describe("ShareOfVoiceCard no-data semantics", () => {
     expect(screen.getByText("EO")).toBeInTheDocument();
     const probe = screen.getAllByTestId("competitor-tile-favicon-probe")[1];
     Object.defineProperties(probe, {
-      naturalHeight: { configurable: true, value: 64 },
-      naturalWidth: { configurable: true, value: 64 },
+      naturalHeight: { configurable: true, value: 32 },
+      naturalWidth: { configurable: true, value: 32 },
     });
     fireEvent.load(probe);
     expect(screen.getByTestId("competitor-tile-favicon")).toHaveStyle({
-      backgroundImage: 'url("https://www.google.com/s2/favicons?domain=example.org&sz=64")',
+      backgroundImage: 'url("https://www.google.com/s2/favicons?domain=example.org&sz=32")',
       backgroundSize: "cover",
     });
     expect(container.innerHTML).not.toContain("logo.dev");

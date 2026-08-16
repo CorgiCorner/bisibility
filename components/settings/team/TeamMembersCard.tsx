@@ -7,7 +7,7 @@ import {
   TeamMemberActionsMenu,
 } from "@/components/settings/team/TeamMemberActionsMenu";
 import { teamCardGeometryClassNames } from "@/components/settings/team/team-card-layout";
-import { Button, StatusPill } from "@/components/ui";
+import { Avatar, Button, StatusPill } from "@/components/ui";
 import type { TeamMemberData } from "@/lib/queries/team";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { cn } from "@/lib/ui/cn";
@@ -133,14 +133,15 @@ export function TeamMembersCard(props: Readonly<TeamMembersCardProps>) {
                 (member.canChangeRole || member.canTransferOwnership || member.canRemove);
               return (
                 <div className="flex flex-wrap items-center gap-2 p-3 sm:gap-3" key={member.id}>
-                  <span
+                  <Avatar
+                    alt=""
                     className={cn(
                       "grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[9px] font-mono text-xs font-semibold",
                       avatarColors[member.color],
                     )}
-                  >
-                    {member.initials}
-                  </span>
+                    initials={member.initials}
+                    src={member.avatarUrl}
+                  />
                   <span className="min-w-[140px] flex-1">
                     <span className="flex items-center gap-2 text-[13.5px] font-semibold">
                       <span className="truncate">{member.name}</span>

@@ -21,7 +21,7 @@ export default async function AccountPage() {
         <ProfileSection
           email={account.email}
           emailVerified={account.emailVerified}
-          image={account.image}
+          image={account.avatarUrl}
           name={account.name}
           publicId={account.publicId}
           updateProfile={updateProfile}

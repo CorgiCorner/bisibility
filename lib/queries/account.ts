@@ -6,6 +6,7 @@ import {
   type UserPreferences,
 } from "@/lib/account/preferences-shared";
 import { requireSession } from "@/lib/auth/session";
+import { gravatarUrl } from "@/lib/avatar/gravatar";
 import { prisma } from "@/lib/db/prisma";
 import { parsePublicId } from "@/lib/db/public-id";
 import { cookies } from "next/headers";
@@ -25,6 +26,7 @@ export type ActiveSession = {
 };
 
 export type AccountView = {
+  avatarUrl: string;
   connectedAccounts: ConnectedAccount[];
   email: string;
   emailVerified: boolean;
@@ -130,6 +132,7 @@ export async function getAccount(): Promise<AccountView> {
   }
 
   return {
+    avatarUrl: gravatarUrl(user?.email ?? session.user.email, 54),
     connectedAccounts,
     email: user?.email ?? session.user.email,
     emailVerified: user?.emailVerified ?? false,

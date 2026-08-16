@@ -6,14 +6,14 @@ describe("buildDomainIconUrl", () => {
     vi.unstubAllEnvs();
   });
 
-  it("builds a domain icon URL with the default size", () => {
+  it("builds a domain icon URL that requests sz=32", () => {
     expect(buildDomainIconUrl({ domain: "example.com" })).toBe(
-      "https://www.google.com/s2/favicons?domain=example.com&sz=64",
+      "https://www.google.com/s2/favicons?domain=example.com&sz=32",
     );
   });
 
-  it("uses an explicit size", () => {
-    expect(buildDomainIconUrl({ domain: "example.com", size: 32 })).toBe(
+  it("always requests sz=32 regardless of the legacy size option", () => {
+    expect(buildDomainIconUrl({ domain: "example.com", size: 64 })).toBe(
       "https://www.google.com/s2/favicons?domain=example.com&sz=32",
     );
   });
@@ -26,13 +26,13 @@ describe("buildDomainIconUrl", () => {
 
   it("normalizes full URLs and bare domains with paths to lowercase hosts", () => {
     expect(buildDomainIconUrl({ domain: "HTTPS://WWW.Example.COM/path?query=yes" })).toBe(
-      "https://www.google.com/s2/favicons?domain=www.example.com&sz=64",
+      "https://www.google.com/s2/favicons?domain=www.example.com&sz=32",
     );
     expect(buildDomainIconUrl({ domain: "Example.ORG/path" })).toBe(
-      "https://www.google.com/s2/favicons?domain=example.org&sz=64",
+      "https://www.google.com/s2/favicons?domain=example.org&sz=32",
     );
     expect(buildDomainIconUrl({ domain: "xn--bcher-kva.example/path" })).toBe(
-      "https://www.google.com/s2/favicons?domain=xn--bcher-kva.example&sz=64",
+      "https://www.google.com/s2/favicons?domain=xn--bcher-kva.example&sz=32",
     );
   });
 

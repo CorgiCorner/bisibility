@@ -1,8 +1,12 @@
 "use client";
 
+import { MarketCombobox, type MarketComboboxOption } from "@/components/markets/MarketCombobox";
 import { Button, Card, Kbd } from "@/components/ui";
 import { formatEstimateCents } from "@/lib/cost-estimate/project-estimate";
-import type { DomainOverviewMarketOption } from "@/lib/domain-overview/market-options";
+import {
+  DOMAIN_OVERVIEW_UNAVAILABLE_TOOLTIP,
+  type DomainOverviewMarketOption,
+} from "@/lib/domain-overview/market-options";
 import type { DomainOverviewReport, DomainOverviewScope } from "@/lib/domain-overview/types";
 import { normalizeDomain } from "@/lib/domains/normalize";
 import { zodResolver } from "@/lib/forms/zod-resolver";
@@ -10,7 +14,6 @@ import { GlobeIcon as Globe, InfoIcon as Info } from "@phosphor-icons/react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { DomainOverviewMarketCombobox } from "./DomainOverviewMarketCombobox";
 import { DomainOverviewPricingPopover } from "./DomainOverviewPricingPopover";
 import { domainOverviewControlHeight } from "./domain-overview-control-styles";
 import {
@@ -18,6 +21,24 @@ import {
   type DomainOverviewMarketSelection,
   detectedDomainScope,
 } from "./domain-overview-workspace-model";
+
+export function toMarketOption(
+  market: DomainOverviewMarketOption,
+): MarketComboboxOption<DomainOverviewMarketOption> {
+  return {
+    countryCode: market.countryCode,
+    disabled: !market.researchAvailable,
+    languageCode: market.languageCode,
+    languageLabel: market.languageLabel,
+    locationLabel: market.displayName,
+    payload: market,
+    secondary: !market.researchAvailable ? "unavailable" : undefined,
+    tooltip: !market.researchAvailable
+      ? DOMAIN_OVERVIEW_UNAVAILABLE_TOOLTIP
+      : (market.provenance ?? undefined),
+    value: market.canonicalKey,
+  };
+}
 
 const formSchema = z.object({ target: z.string().trim().min(1).max(253) });
 type FormValues = z.infer<typeof formSchema>;
@@ -116,12 +137,20 @@ export function DomainOverviewAnalyzeCard({
             ) : null}
           </div>
           <div className="md:w-[230px]">
-            <DomainOverviewMarketCombobox
-              catalogMarkets={catalogMarkets}
+            <MarketCombobox
+              ariaLabel={`Market: ${market.displayName} / ${market.languageLabel}`}
+              catalogMarkets={catalogMarkets.map(toMarketOption)}
+              catalogSearchOnly
               disabled={submitting}
+              emptyMessage="Type to search the catalog."
+              leadingIcon={<Globe aria-hidden className="shrink-0 text-fg-muted" size={14} />}
+              menuWidth={340}
+              noResultsMessage="No market matches this search."
               onChange={onMarketChange}
-              trackedMarkets={trackedMarkets}
-              value={market}
+              trackedMarkets={trackedMarkets.map(toMarketOption)}
+              triggerClassName={`${domainOverviewControlHeight()} w-full bg-bg-elev px-3 text-[13px] disabled:opacity-55`}
+              triggerTitle="Change market - location and language"
+              value={market.canonicalKey}
             />
           </div>
         </div>

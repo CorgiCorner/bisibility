@@ -1,3 +1,4 @@
+import { tableHeaderClassName } from "@/components/ui";
 import type { BacklinksRow } from "@/lib/backlinks/types";
 import {
   CaretRightIcon as CaretRight,
@@ -260,7 +261,7 @@ export function BacklinksRows({
 export function BacklinksColumnHeaders() {
   return (
     <div
-      className={`grid ${columns} items-center gap-2 border-b border-border-strong px-4 py-2 font-mono text-[10px] font-medium uppercase tracking-[.08em] text-fg-muted`}
+      className={`grid ${columns} items-center gap-2 border-b border-border-strong px-4 py-2 font-medium ${tableHeaderClassName}`}
     >
       <span />
       <span>Source</span>

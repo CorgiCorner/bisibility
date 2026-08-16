@@ -19,6 +19,19 @@ export const initialKeywordGridState = {
   sorting: { sortModel: [{ field: "position", sort: "asc" }] },
 } as const;
 
+/** Canonical MUI DataGrid column-header sx, shared by every DataGrid surface. */
+export const dataGridHeaderSx = {
+  backgroundColor: "var(--table-header-bg)",
+  borderColor: "var(--border)",
+  borderRadius: 0,
+  color: "var(--fg-muted)",
+  fontFamily: "var(--font-mono), monospace",
+  fontSize: "11px",
+  fontWeight: 600,
+  letterSpacing: "0.5px",
+  textTransform: "uppercase",
+} as const;
+
 export const keywordGridSx = {
   "&.MuiDataGrid-root": { borderRadius: 0 },
   border: 0,
@@ -31,17 +44,7 @@ export const keywordGridSx = {
     lineHeight: "normal",
     outline: "none",
   },
-  "& .MuiDataGrid-columnHeaders": {
-    backgroundColor: "var(--bg-sunken)",
-    borderRadius: 0,
-    borderColor: "var(--border)",
-    color: "var(--fg-muted)",
-    fontFamily: "var(--font-mono), monospace",
-    fontSize: "10.5px",
-    fontWeight: 600,
-    letterSpacing: "0.6px",
-    textTransform: "uppercase",
-  },
+  "& .MuiDataGrid-columnHeaders": dataGridHeaderSx,
   "& .MuiDataGrid-footerContainer": { borderColor: "var(--border)" },
   "& .MuiDataGrid-row": { cursor: "pointer" },
   "& .MuiDataGrid-row:hover": { backgroundColor: "var(--bg-sunken)" },

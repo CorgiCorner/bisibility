@@ -3,11 +3,13 @@
 import {
   type ShellUser,
   shellUserEmail,
-  shellUserInitials,
   shellUserName,
   shellUserRoleLine,
 } from "@/components/shell/types";
 import { UserMenu } from "@/components/shell/UserMenu";
+import { Avatar } from "@/components/ui";
+import { initials as avatarInitials } from "@/lib/avatar/initials";
+import { cn } from "@/lib/ui/cn";
 import { DotsThreeVerticalIcon as DotsThreeVertical } from "@phosphor-icons/react";
 import { useState } from "react";
 
@@ -27,7 +29,7 @@ export function SidebarUserButton({
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const name = shellUserName(user);
   const email = shellUserEmail(user);
-  const initials = shellUserInitials(user);
+  const initials = avatarInitials(name, email);
   // With no name set, `name` falls back to the email; don't print the email twice.
   const showEmail = Boolean(email) && email !== name;
   const open = Boolean(anchorEl);
@@ -59,15 +61,16 @@ export function SidebarUserButton({
         {/* Same tile spec as the search and bell buttons beside it (bg-bg-elev on
             border-border-strong, hover to bg-bg-sunken); the accent initials alone carry
             the identity signal, so the cluster reads as one family of controls. */}
-        <span
-          className={[
+        <Avatar
+          alt=""
+          className={cn(
             "grid flex-none place-items-center rounded-[9px] border border-border-strong bg-bg-elev font-mono font-semibold text-accent-text transition-colors",
             collapsed ? "h-8 w-8 text-[10.5px] group-hover:bg-bg-sunken" : "h-8 w-8 text-xs",
             collapsed && open ? "bg-bg-sunken" : "",
-          ].join(" ")}
-        >
-          {initials}
-        </span>
+          )}
+          initials={initials}
+          src={user?.avatarUrl}
+        />
         {collapsed ? null : (
           <>
             <span className="min-w-0 flex-1">
@@ -86,8 +89,8 @@ export function SidebarUserButton({
       </button>
       <UserMenu
         anchorEl={anchorEl}
+        avatarUrl={user?.avatarUrl}
         email={email}
-        initials={initials}
         name={name}
         onClose={close}
         onNavigate={onNavigate}

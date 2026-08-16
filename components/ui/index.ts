@@ -1,5 +1,6 @@
 export { AlertBanner, type AlertBannerAction, type AlertBannerProps } from "./AlertBanner";
 export { AppDrawer, type AppDrawerProps } from "./AppDrawer";
+export { Avatar, type AvatarProps } from "./Avatar";
 export {
   BrandLockup,
   type BrandLockupOrientation,
@@ -57,6 +58,7 @@ export {
   type MenuMultiSelectProps,
   MenuSelect,
   type MenuSelectOption,
+  type MenuSelectOptionGroup,
   type MenuSelectProps,
   menuSelectPaperSx,
 } from "./MenuSelect";
@@ -110,5 +112,6 @@ export {
   type ToolbarSearchProps,
   type ToolbarSearchVariant,
 } from "./ToolbarSearch";
+export { tableHeaderClassName } from "./table-header-styles";
 export { toolbarControlClassName } from "./toolbar-control-styles";
 export { useBrowserTimeZone, ZonedTime, type ZonedTimeProps } from "./ZonedTime";

@@ -8,11 +8,13 @@ export type DomainIconLayerProps = {
   testId?: string;
 };
 
+const MIN_ICON_DIMENSION = 32;
+
 /**
  * Paints a verified domain icon as a background, leaving the caller's text fallback visible
  * when the icon service resolves to a smaller placeholder or an error.
  */
-export function DomainIconLayer({ size = 64, src, testId }: Readonly<DomainIconLayerProps>) {
+export function DomainIconLayer({ src, testId }: Readonly<DomainIconLayerProps>) {
   const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
   const verifiedSrc = loadedSrc === src ? src : null;
 
@@ -35,7 +37,11 @@ export function DomainIconLayer({ size = 64, src, testId }: Readonly<DomainIconL
           onError={() => setLoadedSrc((current) => (current === src ? null : current))}
           onLoad={(event) => {
             const { naturalHeight, naturalWidth } = event.currentTarget;
-            if (naturalHeight === size && naturalWidth === size) {
+            if (
+              naturalWidth === naturalHeight &&
+              naturalWidth >= MIN_ICON_DIMENSION &&
+              naturalHeight >= MIN_ICON_DIMENSION
+            ) {
               setLoadedSrc(src);
               return;
             }

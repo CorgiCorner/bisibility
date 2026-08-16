@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, CheckStatusChip } from "@/components/ui";
+import { Button, CheckStatusChip, tableHeaderClassName } from "@/components/ui";
 import type { CheckRunFilter, CheckRunRow, CheckRunsView } from "@/lib/checks/contract";
 import { RESEARCH_METRICS_UNAVAILABLE_TOOLTIP } from "@/lib/serp/market-capability";
 import Tooltip from "@mui/material/Tooltip";
@@ -247,7 +247,7 @@ export function CheckRunsTable(props: Readonly<TableProps>) {
       <div className="overflow-x-auto border-border border-y" ref={containerRef}>
         {/* 900px leaves about 125px for each of six flexible data columns after fixed status and action columns. */}
         <table aria-label="Check runs" className="w-full min-w-[900px] table-fixed border-collapse">
-          <thead className="bg-bg-sunken text-left font-mono text-[10px] uppercase tracking-[.05em] text-fg-muted">
+          <thead className={`text-left ${tableHeaderClassName}`}>
             <tr>
               {tableHeaders(columns).map((header, index) => (
                 <th
