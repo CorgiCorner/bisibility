@@ -39,7 +39,7 @@ export function LocationResults({
   if (!visible) return null;
   return (
     <div
-      className="absolute inset-x-0 top-full z-10 mt-1 max-h-64 overflow-auto rounded-[9px] border border-border bg-bg-elev py-1 shadow-lg"
+      className="max-h-64 overflow-auto rounded-[9px] border border-border bg-bg-elev py-1 shadow-lg"
       id={listId}
       role="listbox"
       tabIndex={-1}

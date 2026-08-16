@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { ResearchSearchCard } from "./ResearchSearchCard";
 
 const baseProps = {
@@ -30,13 +30,44 @@ const baseProps = {
   seeds: [] as string[],
 };
 
-describe("ResearchSearchCard", () => {
-  it("lets market search results overlay content below the card", () => {
-    render(<ResearchSearchCard {...baseProps} />);
+const fetchMock = vi.fn();
+vi.stubGlobal("fetch", fetchMock);
 
-    expect(screen.getByRole("combobox", { name: "Market" }).closest(".MuiCard-root")).toHaveClass(
-      "overflow-visible",
-    );
+afterEach(() => {
+  fetchMock.mockReset();
+});
+
+describe("ResearchSearchCard", () => {
+  it("portals the market listbox outside the card and keeps options selectable", async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        data: [
+          {
+            canonical_key: "DE",
+            city_name: null,
+            country_code: "DE",
+            display_name: "Germany",
+            id: "country:DE",
+            kind: "country",
+            region_name: null,
+          },
+        ],
+      }),
+    } as Response);
+
+    const onLocationChange = vi.fn();
+    render(<ResearchSearchCard {...baseProps} onLocationChange={onLocationChange} />);
+
+    const marketInput = screen.getByRole("combobox", { name: "Market" });
+    fireEvent.change(marketInput, { target: { value: "ger" } });
+
+    const listbox = await screen.findByRole("listbox");
+    expect(listbox.closest(".MuiCard-root")).toBeNull();
+
+    const germanyOption = await screen.findByText("Germany");
+    fireEvent.click(germanyOption);
+    expect(onLocationChange).toHaveBeenCalledWith(expect.objectContaining({ canonicalKey: "DE" }));
   });
 
   it("renders the action estimate and its cached-free state", () => {

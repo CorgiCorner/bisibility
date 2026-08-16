@@ -6,6 +6,7 @@ import type {
 } from "@/components/keywords/action-utils";
 import { actionErrorMessage } from "@/components/keywords/action-utils";
 import { Card, ConfirmModal, SummaryStrip } from "@/components/ui";
+import { PREFERENCE_COOKIES } from "@/lib/account/preferences-shared";
 import type { KeywordFilterChip } from "@/lib/keywords/keyword-filter-model";
 import { marketGridChild } from "@/lib/keywords/market-grid-model";
 import type { KeywordRow } from "@/lib/queries/keywords";
@@ -34,18 +35,15 @@ import { buildKeywordWeeklySummary } from "./keyword-weekly-summary";
 import { useMarketGridView } from "./use-market-grid-view";
 
 const GRID_CHECKBOX_SELECTION_FIELD = "__check__";
-
 const KeywordEditDrawer = dynamic(
   () => import("@/components/keywords/KeywordEditDrawer").then((mod) => mod.KeywordEditDrawer),
   { ssr: false },
 );
-
 declare module "@mui/x-data-grid" {
   interface NoRowsOverlayPropsOverrides {
     state?: KeywordNoRowsState;
   }
 }
-
 type KeywordDataTableProps = Omit<KeywordWorkspaceActions, "addKeywordsAction"> &
   Pick<KeywordDetailActions, "updateKeywordAction" | "updateKeywordScheduleAction"> & {
     canDeleteKeyword: boolean;
@@ -54,6 +52,7 @@ type KeywordDataTableProps = Omit<KeywordWorkspaceActions, "addKeywordsAction"> 
     checkHealth?: CheckHealthView;
     filterChips: KeywordFilterChip[];
     filterCount: number;
+    initialDensity?: GridDensity;
     onAddKeyword?: () => void;
     onClearFilters: () => void;
     onDismissFailure: () => void;
@@ -92,6 +91,7 @@ export function KeywordDataTable({
   checkHealth,
   filterChips,
   filterCount,
+  initialDensity,
   onAddKeyword,
   onClearFilters,
   onDismissFailure,
@@ -117,15 +117,17 @@ export function KeywordDataTable({
   const [columnVisibilityModel, setColumnVisibilityModel] = useState(
     defaultKeywordColumnVisibility,
   );
-  const [density, setDensity] = useState<GridDensity>("standard");
+  const [density, setDensity] = useState<GridDensity>(initialDensity ?? "standard");
   const [deletingKeyword, setDeletingKeyword] = useState<KeywordRow | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [editing, setEditing] = useState<{
-    focusTargetUrl: boolean;
-    row: KeywordRow;
-  } | null>(null);
+  const [editing, setEditing] = useState<{ focusTargetUrl: boolean; row: KeywordRow } | null>(null);
   const [rowActionError, setRowActionError] = useState<string | null>(null);
   const getRowHeight = useCallback(() => renderedRowHeightForDensity(density), [density]);
+  function handleDensityChange(next: GridDensity) {
+    setDensity(next);
+    // biome-ignore lint/suspicious/noDocumentCookie: density preference must be written synchronously from the user event.
+    document.cookie = `${PREFERENCE_COOKIES.density}=${next}; path=/; max-age=31536000; SameSite=Lax`;
+  }
   const [rowSelectionModel, setRowSelectionModel] = useState<GridRowSelectionModel>({
     ids: new Set(),
     type: "include",
@@ -157,10 +159,7 @@ export function KeywordDataTable({
       ),
     [canDeleteKeyword, canUpdateKeyword, onRunChecks, pendingCheckIds, projectId],
   );
-  const gridSlots = {
-    noRowsOverlay: KeywordNoRowsOverlay,
-  };
-
+  const gridSlots = { noRowsOverlay: KeywordNoRowsOverlay };
   async function handleDeleteKeyword() {
     if (!deletingKeyword) return;
     setDeleting(true);
@@ -175,7 +174,6 @@ export function KeywordDataTable({
       setDeleting(false);
     }
   }
-
   return (
     <Card className="min-w-0 overflow-hidden p-0" size="md" sx={keywordTableCardSx}>
       <KeywordsFilterBar
@@ -187,7 +185,7 @@ export function KeywordDataTable({
         onAddKeyword={onAddKeyword}
         onClearFilters={onClearFilters}
         onColumnVisibilityChange={setColumnVisibilityModel}
-        onDensityChange={setDensity}
+        onDensityChange={handleDensityChange}
         onImportCsv={onImportCsv}
         onOpenExport={() => onOpenExport(selectedIds)}
         onOpenFilters={onOpenFilters}
@@ -252,7 +250,7 @@ export function KeywordDataTable({
               initialState={initialKeywordGridState}
               onCellClick={handleCellClick}
               onColumnVisibilityModelChange={setColumnVisibilityModel}
-              onDensityChange={setDensity}
+              onDensityChange={handleDensityChange}
               getRowClassName={(params) =>
                 marketGridChild(params.row) ? "bv-market-grid-child" : ""
               }

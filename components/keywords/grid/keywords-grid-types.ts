@@ -13,6 +13,7 @@ import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
 import type { ProjectDefaultMarket } from "@/lib/serp/default-market";
+import type { GridDensity } from "@mui/x-data-grid";
 import type { CheckHealthView } from "./KeywordGridHealthNotices";
 
 export type KeywordsGridProps = KeywordActions.KeywordWorkspaceActions & {
@@ -28,6 +29,7 @@ export type KeywordsGridProps = KeywordActions.KeywordWorkspaceActions & {
   deleteSavedViewAction?: (input: DeleteSavedViewInput) => Promise<unknown>;
   getFirstCheckRunPlanAction: FirstCheckActions.GetFirstCheckRunPlanAction;
   initialAction?: RankTrackerAction | null;
+  initialDensity?: GridDensity;
   initialAddOpen?: boolean;
   initialViewConfig?: SavedViewConfig;
   importTopQueriesAction?: ImportTopQueriesAction;

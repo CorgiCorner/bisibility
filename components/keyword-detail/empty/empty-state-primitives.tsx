@@ -1,4 +1,4 @@
-import { Card } from "@/components/ui";
+import { Card, SegmentedControl } from "@/components/ui";
 import type { ReactNode } from "react";
 
 const ranges = ["7d", "30d", "90d"] as const;
@@ -28,25 +28,15 @@ type StaticRangeTabsProps = {
 
 export function StaticRangeTabs({ selected }: Readonly<StaticRangeTabsProps>) {
   return (
-    <div
-      aria-label="Position history range"
-      className="inline-flex items-center gap-0.5 rounded-[8px] border border-border-strong bg-bg-elev p-0.5"
-      role="tablist"
-    >
-      {ranges.map((range) => (
-        <button
-          aria-selected={range === selected}
-          className={`rounded-[6px] px-2.5 py-1 font-mono text-[11px] ${
-            range === selected ? "bg-nav-active text-fg" : "text-fg-muted"
-          }`}
-          key={range}
-          role="tab"
-          type="button"
-        >
-          {range}
-        </button>
-      ))}
-    </div>
+    <SegmentedControl
+      ariaLabel="Position history range"
+      className="bg-bg-elev font-mono"
+      fitContent
+      onChange={() => {}}
+      options={ranges.map((range) => ({ label: range, value: range }))}
+      size="xs"
+      value={selected}
+    />
   );
 }
 

@@ -36,6 +36,8 @@ beforeEach(() => {
   });
   stubResizeObserver();
   stubBlobDownload();
+  // biome-ignore lint/suspicious/noDocumentCookie: jsdom cookie reset mirrors the browser contract.
+  document.cookie = "pref_density=; path=/; max-age=0";
 });
 
 describe("KeywordsGrid pending state", () => {
@@ -134,5 +136,21 @@ describe("KeywordsGrid pending state", () => {
     expect(routerMock.push).toHaveBeenCalledWith(`${appPath("prj_1", "rank-tracker")}?device=all`);
     fireEvent.click(screen.getByRole("button", { name: /clear all search and filters/i }));
     expect(await screen.findByText(keywordRows[0].keyword)).toBeInTheDocument();
+  });
+
+  it("passes the supplied initial density to the grid", () => {
+    renderPendingGrid({ initialDensity: "compact" });
+
+    expect(screen.getByRole("radio", { name: "Compact" })).toBeChecked();
+    expect(screen.getByRole("radio", { name: "Standard" })).not.toBeChecked();
+  });
+
+  it("persists density changes to a cookie and keeps the selection", () => {
+    renderPendingGrid({ initialDensity: "standard" });
+
+    fireEvent.click(screen.getByRole("radio", { name: "Compact" }));
+
+    expect(document.cookie).toContain("pref_density=compact");
+    expect(screen.getByRole("radio", { name: "Compact" })).toBeChecked();
   });
 });

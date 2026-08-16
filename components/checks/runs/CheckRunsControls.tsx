@@ -89,7 +89,6 @@ export function CheckRunsHeader({
             value={trigger}
           />
           <SegmentedControl
-            activeVariant="accent"
             ariaLabel="Check run range"
             fitContent
             onChange={onRangeChange}

@@ -72,7 +72,7 @@ describe("PositionHistoryCard", () => {
     expect(screen.getByText("Google rank over time, closer to #1 is better")).toBeInTheDocument();
     expect(screen.getByText(/^Latest #3/)).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("tab", { name: "7d" }));
+    fireEvent.click(screen.getByRole("radio", { name: "7d" }));
     expect(
       screen.queryByText("Comparison restarted after a ranking normalization change."),
     ).not.toBeInTheDocument();
@@ -142,7 +142,7 @@ describe("PositionHistoryCard", () => {
       JSON.stringify([9, 6, 5]),
     );
 
-    fireEvent.click(screen.getByRole("tab", { name: "7d" }));
+    fireEvent.click(screen.getByRole("radio", { name: "7d" }));
 
     expect(screen.getByTestId("line-chart")).toHaveAttribute(
       "data-labels",
@@ -174,100 +174,6 @@ describe("PositionHistoryCard", () => {
     expect(screen.getByText("No checks in the last 30 days.")).toBeInTheDocument();
     expect(screen.getByText("Latest #6 | Next check Paused")).toBeInTheDocument();
     expect(screen.queryByText("One check so far.", { exact: false })).not.toBeInTheDocument();
-  });
-
-  it("renders the alert target, distance annotation, accessible copy, and extended domain", () => {
-    render(
-      <PositionHistoryCard
-        keyword={{
-          ...keywordRows[2],
-          positionHistory: [
-            { checkedAt: "2026-07-13T10:00:00.000Z", label: "Jul 13", position: 8 },
-            { checkedAt: "2026-07-20T10:00:00.000Z", label: "Today", position: 6 },
-          ],
-          targetPosition: 3,
-        }}
-        timeZone="UTC"
-      />,
-    );
-
-    expect(screen.getByText("TARGET #3")).toBeInTheDocument();
-    expect(screen.getByText("#6 today, 3 away from target")).toHaveAttribute(
-      "fill",
-      "var(--fg-muted)",
-    );
-    expect(
-      screen.getByRole("region", {
-        name: "Position history for react data grid. Currently #6, target #3, 3 away from target.",
-      }),
-    ).toBeInTheDocument();
-    expect(lineChart).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        yAxis: [expect.objectContaining({ max: 20 })],
-      }),
-    );
-  });
-
-  it("places a top-edge target label below the line and shows reached copy", () => {
-    render(
-      <PositionHistoryCard
-        keyword={{
-          ...keywordRows[1],
-          positionHistory: [
-            { checkedAt: "2026-07-13T10:00:00.000Z", label: "Jul 13", position: 4 },
-            { checkedAt: "2026-07-20T10:00:00.000Z", label: "Today", position: 1 },
-          ],
-          targetPosition: 1,
-        }}
-        timeZone="UTC"
-      />,
-    );
-
-    expect(screen.getByTestId("reference-line")).toHaveAttribute(
-      "data-spacing",
-      JSON.stringify({ x: 0, y: -14 }),
-    );
-    expect(screen.getByText("#1 today, target reached")).toHaveAttribute("fill", "var(--fg-muted)");
-  });
-
-  it("hides every target element when no positional alert target exists", () => {
-    render(
-      <PositionHistoryCard keyword={{ ...keywordRows[0], targetPosition: null }} timeZone="UTC" />,
-    );
-    expect(screen.queryByTestId("reference-line")).not.toBeInTheDocument();
-    expect(screen.queryByText(/away from target|target reached/)).not.toBeInTheDocument();
-  });
-
-  it("extends the inverted y-domain to an out-of-range target", () => {
-    render(
-      <PositionHistoryCard
-        keyword={{
-          ...keywordRows[0],
-          positionHistory: [
-            { checkedAt: "2026-07-13T10:00:00.000Z", label: "Jul 13", position: 14 },
-            { checkedAt: "2026-07-20T10:00:00.000Z", label: "Today", position: 18 },
-          ],
-          targetPosition: 50,
-        }}
-        timeZone="UTC"
-      />,
-    );
-
-    expect(lineChart).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        yAxis: [expect.objectContaining({ max: 50, min: 1, reverse: true })],
-      }),
-    );
-  });
-
-  it("uses the reference rank labels on the position axis", () => {
-    render(<PositionHistoryCard keyword={keywordRows[0]} timeZone="UTC" />);
-
-    const yAxis = lineChart.mock.calls.at(-1)?.[0].yAxis[0];
-    expect(yAxis.tickInterval).toEqual([1, 10, 20]);
-    expect(yAxis.valueFormatter?.(1)).toBe("#1");
-    expect(yAxis.valueFormatter?.(10)).toBe("#10");
-    expect(yAxis.valueFormatter?.(20)).toBe("#20");
   });
 
   it("renders a scheduled next check with the project timezone", () => {

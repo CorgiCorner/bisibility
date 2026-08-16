@@ -45,7 +45,7 @@ function SearchCardLoading() {
 
 function IdleStateLoading() {
   return (
-    <div className="flex min-h-[258px] flex-col items-center justify-center rounded-[14px] border border-dashed border-border-strong bg-bg-elev p-8">
+    <div className="flex min-h-[258px] flex-col items-center justify-center rounded-[14px] border border-border-strong bg-bg-elev p-8">
       <Bar className="mb-4 size-7 rounded-full bg-accent-soft" />
       <Bar className="h-4 w-[190px]" />
       <div className="mt-2.5 grid w-full max-w-[320px] gap-2">

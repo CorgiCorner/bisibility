@@ -136,7 +136,6 @@ export function PositionHistoryCard({
         <div className="flex flex-wrap items-center justify-end gap-2">
           {showComparison ? (
             <SegmentedControl
-              activeVariant="accent"
               ariaLabel="Position history scope"
               fitContent
               onChange={setScope}
@@ -152,29 +151,18 @@ export function PositionHistoryCard({
             <span aria-hidden className="h-2 w-2 rounded-full bg-accent-solid" />
             {allMarkets ? `${markets.length} markets` : latestChip}
           </span>
-          <div
-            aria-label="Position history range"
-            className="flex items-center gap-0.5 rounded-[9px] border border-border-strong bg-bg-elev p-0.5"
-            role="tablist"
-          >
-            {RANGES.map((option) => (
-              <button
-                aria-selected={option.label === range}
-                className={[
-                  "rounded-[7px] px-3 py-1.5 font-mono text-[11.5px] outline-none transition-colors focus-visible:outline-none",
-                  option.label === range
-                    ? "bg-accent-solid text-accent-on-solid"
-                    : "text-fg-muted hover:text-fg",
-                ].join(" ")}
-                key={option.label}
-                onClick={() => setRange(option.label)}
-                role="tab"
-                type="button"
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
+          <SegmentedControl
+            ariaLabel="Position history range"
+            className="bg-bg-elev font-mono"
+            fitContent
+            onChange={(value) => setRange(value as RangeLabel)}
+            options={RANGES.map((option) => ({
+              label: option.label,
+              value: option.label,
+            }))}
+            size="xs"
+            value={range}
+          />
         </div>
       </div>
       <ChartRegion

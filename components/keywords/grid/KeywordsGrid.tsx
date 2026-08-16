@@ -67,6 +67,7 @@ export function KeywordsGrid({
   getFirstCheckRunPlanAction,
   initialAction = null,
   initialAddOpen = false,
+  initialDensity,
   initialViewConfig,
   importTopQueriesAction,
   keywordDefaults,
@@ -138,7 +139,6 @@ export function KeywordsGrid({
     setSearchValue("");
   };
   const resetScope = () => router.push(lensHref(keywordsPath, BASE_KEYWORD_LENS, activeViewId));
-
   const dialogs = (
     <>
       {(canCreateKeyword && addDraft.open) || exportTarget ? (
@@ -169,7 +169,6 @@ export function KeywordsGrid({
       />
     </>
   );
-
   if (rows.length === 0) {
     return (
       <section className="grid w-full min-w-0 gap-4">
@@ -231,6 +230,7 @@ export function KeywordsGrid({
         checkHealth={checkHealth}
         filterChips={filterChips}
         filterCount={filterChips.length}
+        initialDensity={initialDensity}
         noRowsState={noRowsState}
         savedViewControl={
           <SavedViewsControl

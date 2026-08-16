@@ -46,7 +46,7 @@ describe("keyword detail empty module states", () => {
     expect(screen.getByText("Not enough history to chart yet.")).toBeVisible();
     expect(screen.getByText("Current #3 | Next check Aug 2, 6:00 AM")).toBeVisible();
     expect(screen.getByLabelText("Single rank check point")).toHaveClass("left-[12.33%]");
-    expect(screen.getAllByRole("tab")).toHaveLength(3);
+    expect(screen.getAllByRole("radio")).toHaveLength(3);
     expect(container.querySelector('[data-chart-height="180"]')).toBeInTheDocument();
 
     rerender(<PositionHistoryNoChecksInRange />);

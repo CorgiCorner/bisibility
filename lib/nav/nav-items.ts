@@ -35,24 +35,51 @@ export type NavItem = {
   external?: boolean;
 };
 
+/**
+ * Route segments for the primary (non-utility) sidebar entries. The account "default landing
+ * page" preference stores one of these, so the preference options stay in lockstep with the
+ * rail without a second hand-maintained list.
+ */
+export const landingSegments = [
+  "dashboard",
+  "keyword-research",
+  "domain-overview",
+  "rank-tracker",
+  "backlinks",
+  "competitors",
+  "timeline",
+] as const;
+
+export type LandingSegment = (typeof landingSegments)[number];
+
+type PrimaryNavEntry = {
+  label: string;
+  segment: LandingSegment;
+  icon: Icon;
+};
+
+// Keyword research scouts the market (Binoculars); Rank Tracker is the tracked list you then
+// search and filter (MagnifyingGlass). The research label says "keyword" because the rail also
+// carries Backlinks and Competitors.
+// Timeline reads the project's own history, so it belongs with the primary flow; Integrations
+// is setup you touch once, which is what utilities are for.
+export const primaryNavEntries: readonly PrimaryNavEntry[] = [
+  { label: "Dashboard", segment: "dashboard", icon: SquaresFour },
+  { label: "Keyword Research", segment: "keyword-research", icon: Binoculars },
+  { label: "Domain Overview", segment: "domain-overview", icon: Globe },
+  { label: "Rank Tracker", segment: "rank-tracker", icon: MagnifyingGlass },
+  { label: "Backlinks", segment: "backlinks", icon: Link },
+  { label: "Competitors", segment: "competitors", icon: UsersThree },
+  { label: "Timeline", segment: "timeline", icon: CalendarDots },
+];
+
 export function navItems(projectRef: string): NavItem[] {
   return [
-    { label: "Dashboard", href: appPath(projectRef, "dashboard"), icon: SquaresFour },
-    // Keyword research scouts the market (Binoculars); Rank Tracker is the tracked list you then
-    // search and filter (MagnifyingGlass).
-    // The research label says "keyword" because the rail also carries Backlinks and Competitors.
-    {
-      label: "Keyword Research",
-      href: appPath(projectRef, "keyword-research"),
-      icon: Binoculars,
-    },
-    { label: "Domain Overview", href: appPath(projectRef, "domain-overview"), icon: Globe },
-    { label: "Rank Tracker", href: appPath(projectRef, "rank-tracker"), icon: MagnifyingGlass },
-    { label: "Backlinks", href: appPath(projectRef, "backlinks"), icon: Link },
-    { label: "Competitors", href: appPath(projectRef, "competitors"), icon: UsersThree },
-    // Timeline reads the project's own history, so it belongs with the primary flow; Integrations
-    // is setup you touch once, which is what utilities are for.
-    { label: "Timeline", href: appPath(projectRef, "timeline"), icon: CalendarDots },
+    ...primaryNavEntries.map((entry) => ({
+      label: entry.label,
+      href: appPath(projectRef, entry.segment),
+      icon: entry.icon,
+    })),
     {
       group: "utility",
       label: "Integrations",
