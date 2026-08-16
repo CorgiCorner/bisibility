@@ -55,7 +55,7 @@ function ResultsTableLoading() {
       </div>
       <div className="min-w-0 overflow-x-auto">
         <div className="min-w-[840px]">
-          <div className="grid h-[42px] grid-cols-[minmax(220px,1.5fr)_minmax(180px,1fr)_minmax(160px,1fr)_92px_112px] items-center gap-4 border-b border-border bg-bg-sunken px-4">
+          <div className="grid h-[42px] grid-cols-[minmax(220px,1.5fr)_minmax(180px,1fr)_minmax(160px,1fr)_92px_112px] items-center gap-4 border-b border-border bg-table-header-bg px-4">
             {tableHeaderKeys.map((key, index) => (
               <Bar className={cn("h-2.5 bg-border", index === 0 ? "w-[82px]" : "w-11")} key={key} />
             ))}

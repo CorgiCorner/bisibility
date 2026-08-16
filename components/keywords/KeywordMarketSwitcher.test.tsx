@@ -1,3 +1,4 @@
+import { ProjectWriteModeProvider } from "@/components/shell/ProjectWriteModeProvider";
 import { ToastProvider } from "@/components/ui";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
@@ -157,5 +158,76 @@ describe("KeywordMarketSwitcher", () => {
     expect(await screen.findByText("Netherlands / Dutch is already tracked")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Undo" })).not.toBeInTheDocument();
     expect(bulkDeleteAction).not.toHaveBeenCalled();
+  });
+
+  it("disables add choices in read-only mode but keeps tracked navigation enabled", async () => {
+    const current = target("kw_current");
+    const belgium = {
+      ...target("kw_be"),
+      location: {
+        ...current.location,
+        canonicalKey: "country:BE:lang:nl",
+        countryCode: "BE",
+        displayName: "Belgium",
+        languageLabel: "Dutch",
+      },
+    };
+    render(
+      <ProjectWriteModeProvider projectRef="prj_test" writeMode="migration_hold">
+        <KeywordMarketSwitcher
+          addKeywordsAction={vi.fn()}
+          bulkDeleteAction={vi.fn()}
+          canCreateKeyword
+          keyword={current}
+          projectId="prj_test"
+          projectMarkets={markets}
+          targets={[current, belgium]}
+        />
+      </ProjectWriteModeProvider>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /United States \/ English/ }));
+    const add = await screen.findByRole("menuitem", {
+      name: "Add Netherlands / Dutch, +1 check per run",
+    });
+    expect(add).toHaveAttribute("aria-disabled", "true");
+    expect(add).toHaveAttribute("title", "Read-only during migration hold");
+
+    fireEvent.click(screen.getByRole("menuitem", { name: "Switch to Belgium / Dutch" }));
+    expect(routerMock.push).toHaveBeenCalledWith("/app/prj_test/rank-tracker/kw_be");
+  });
+
+  it("disables add choices when canCreateKeyword is false but keeps tracked navigation enabled", async () => {
+    const current = target("kw_current");
+    const belgium = {
+      ...target("kw_be"),
+      location: {
+        ...current.location,
+        canonicalKey: "country:BE:lang:nl",
+        countryCode: "BE",
+        displayName: "Belgium",
+        languageLabel: "Dutch",
+      },
+    };
+    render(
+      <KeywordMarketSwitcher
+        addKeywordsAction={vi.fn()}
+        bulkDeleteAction={vi.fn()}
+        canCreateKeyword={false}
+        keyword={current}
+        projectId="prj_test"
+        projectMarkets={markets}
+        targets={[current, belgium]}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /United States \/ English/ }));
+    const add = await screen.findByRole("menuitem", {
+      name: "Add Netherlands / Dutch, +1 check per run",
+    });
+    expect(add).toHaveAttribute("aria-disabled", "true");
+
+    fireEvent.click(screen.getByRole("menuitem", { name: "Switch to Belgium / Dutch" }));
+    expect(routerMock.push).toHaveBeenCalledWith("/app/prj_test/rank-tracker/kw_be");
   });
 });

@@ -5,8 +5,9 @@ import {
   countryValueForCode,
   type LocationFieldValue,
 } from "@/components/keywords/location-picker-data";
-import { Button, Input, MonoText } from "@/components/ui";
+import { Button, ExternalLink, Input, MonoText } from "@/components/ui";
 import { researchMetricsUnavailableNote } from "@/lib/serp/market-capability";
+import { MARKETING_URL } from "@/lib/site/site";
 import Tooltip from "@mui/material/Tooltip";
 import { CheckIcon as Check, MagnifyingGlassIcon as Search } from "@phosphor-icons/react";
 import { useId, useMemo, useState } from "react";
@@ -261,9 +262,12 @@ export function MarketPicker({
           {calculatorHref ? (
             <>
               {" / "}
-              <a className="text-accent-text hover:underline" href={calculatorHref}>
+              <ExternalLink
+                className="text-accent-text hover:underline"
+                href={`${MARKETING_URL}${calculatorHref}`}
+              >
                 Estimate provider cost
-              </a>
+              </ExternalLink>
             </>
           ) : null}
         </span>

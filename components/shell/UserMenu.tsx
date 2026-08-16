@@ -8,8 +8,9 @@ import {
   resourceLinksForDeployment,
   signOutLink,
 } from "@/components/shell/user-menu-items";
-import { useToast } from "@/components/ui";
+import { Avatar, useToast } from "@/components/ui";
 import { authClient } from "@/lib/auth/client";
+import { initials as avatarInitials } from "@/lib/avatar/initials";
 import Divider from "@mui/material/Divider";
 import Menu from "@mui/material/Menu";
 import { useState } from "react";
@@ -30,8 +31,8 @@ const DIVIDER_SX = { borderColor: "var(--border)", marginX: "4px", marginY: "6px
 
 export type UserMenuProps = {
   anchorEl: HTMLElement | null;
+  avatarUrl?: string | null;
   email: string;
-  initials: string;
   name: string;
   onClose: () => void;
   /** Fired alongside onClose when a row navigates (closes the mobile drawer). */
@@ -42,8 +43,8 @@ export type UserMenuProps = {
 
 export function UserMenu({
   anchorEl,
+  avatarUrl,
   email,
-  initials,
   name,
   onClose,
   onNavigate,
@@ -53,6 +54,7 @@ export function UserMenu({
   const [pending, setPending] = useState(false);
   const { openPalette } = useCommandPalette();
   const { showToast } = useToast();
+  const initials = avatarInitials(name, email);
 
   function closeAfterNavigate() {
     onClose();
@@ -93,9 +95,12 @@ export function UserMenu({
       transformOrigin={{ horizontal: "right", vertical: "top" }}
     >
       <div className="flex items-center gap-2.5 px-[9px] pb-[11px] pt-[9px]">
-        <span className="grid h-[34px] w-[34px] flex-none place-items-center rounded-[9px] bg-accent-solid font-mono text-xs font-semibold text-primary-contrast">
-          {initials}
-        </span>
+        <Avatar
+          alt=""
+          className="grid h-[34px] w-[34px] flex-none place-items-center rounded-[9px] bg-accent-solid font-mono text-xs font-semibold text-primary-contrast"
+          initials={initials}
+          src={avatarUrl}
+        />
         <span className="min-w-0 flex-1">
           <span className="block text-[13px] font-semibold leading-tight">{name}</span>
           <span className="block truncate font-mono text-[10.5px] text-fg-muted">{email}</span>

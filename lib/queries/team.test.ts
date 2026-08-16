@@ -75,7 +75,14 @@ describe("team access query", () => {
       }),
     ]);
     expect(result.members).toEqual([
-      expect.objectContaining({ email: "member@example.com", id: memberPublicId }),
+      expect.objectContaining({
+        avatarUrl: expect.stringMatching(
+          /^https:\/\/www\.gravatar\.com\/avatar\/[a-f0-9]{64}\?d=404&s=68$/,
+        ),
+        email: "member@example.com",
+        id: memberPublicId,
+        initials: "ME",
+      }),
     ]);
     expect(JSON.stringify(result)).not.toContain("membership_db_1");
     expect(JSON.stringify(result)).not.toContain("invite_db_1");

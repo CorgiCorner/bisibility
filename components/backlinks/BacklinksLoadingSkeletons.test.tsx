@@ -11,8 +11,10 @@ describe("BacklinksLoadingSkeletons", () => {
   });
 
   it("exposes the result-loading state accessibly", () => {
-    render(<BacklinksResultsLoading />);
+    const { container } = render(<BacklinksResultsLoading />);
 
     expect(screen.getByLabelText("Backlinks loading")).toBeInTheDocument();
+    expect(container.querySelector(".bg-table-header-bg")).toBeInTheDocument();
+    expect(container.innerHTML).not.toContain("bg-[var(--table-header-bg)]");
   });
 });

@@ -1,3 +1,4 @@
+import { tableHeaderClassName } from "@/components/ui";
 import type { InstanceAdminDashboard } from "@/lib/queries/instance-admin";
 
 const count = new Intl.NumberFormat("en-US");
@@ -19,7 +20,7 @@ export function AdminProviderUsageTable({
     <div className="mt-4 overflow-x-auto">
       <table className="w-full min-w-[680px] text-left text-xs">
         <caption className="sr-only">SERP usage this month by provider</caption>
-        <thead className="border-b border-border text-fg-muted">
+        <thead className={`border-b border-border ${tableHeaderClassName}`}>
           <tr>
             <th className="pb-2 pr-3">Provider</th>
             <th className="pb-2 pr-3">Completed checks</th>

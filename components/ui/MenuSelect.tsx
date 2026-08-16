@@ -2,35 +2,45 @@
 
 import { MenuMultiSelectOption } from "@/components/ui/MenuMultiSelectOption";
 import { MenuSelectOptionItem, menuSelectRowSx } from "@/components/ui/MenuSelectOptionItem";
-import { toolbarControlClassName } from "@/components/ui/toolbar-control-styles";
+import {
+  filterFlatOptions,
+  filterGroupedGroups,
+  MenuSearchField,
+  type MenuSelectInput,
+  type MenuSelectOption,
+  menuSelectPaperSx,
+  menuSelectTriggerClass,
+  resolveSelectedOption,
+  selectedSummary,
+} from "@/components/ui/menu-select-support";
 import { cn } from "@/lib/ui/cn";
+import ListSubheader from "@mui/material/ListSubheader";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import { CaretDownIcon as CaretDown, CheckIcon as Check } from "@phosphor-icons/react";
-import { type ReactNode, useCallback, useState } from "react";
+import { type ReactNode, useState } from "react";
 
-export type MenuSelectOption = {
-  disabled?: boolean;
-  icon?: ReactNode;
-  label: string;
-  secondary?: string;
-  tooltip?: string;
-  value: string;
-};
+export type { MenuSelectOption, MenuSelectOptionGroup } from "@/components/ui/menu-select-support";
+export { menuSelectPaperSx } from "@/components/ui/menu-select-support";
 
-export type MenuSelectProps = {
+type MenuSelectBaseProps = {
   ariaDescribedBy?: string;
   ariaInvalid?: boolean;
   ariaLabel: string;
-  /** Optional leading "pre-icon" rendered inside the trigger, before the value. */
+  disabled?: boolean;
+  emptyMessage?: string;
   leadingIcon?: ReactNode;
+  menuWidth?: number;
+  noResultsMessage?: string;
   onChange: (value: string) => void;
-  options: readonly MenuSelectOption[];
   searchPlaceholder?: string;
   searchable?: boolean;
   triggerClassName?: string;
+  triggerTitle?: string;
   value: string;
 };
+
+export type MenuSelectProps = MenuSelectBaseProps & MenuSelectInput;
 
 export type MenuMultiSelectProps = {
   allLabel?: string;
@@ -47,97 +57,40 @@ export type MenuMultiSelectProps = {
   values: readonly string[];
 };
 
-export const menuSelectPaperSx = {
-  backgroundColor: "var(--bg-elev)",
-  border: "1px solid var(--border)",
-  borderRadius: "12px",
-  boxShadow: "none",
-  color: "var(--fg)",
-  marginTop: "6px",
-  minWidth: 180,
-  padding: "6px",
-} as const;
-
-const triggerClass = cn(
-  toolbarControlClassName,
-  "inline-flex items-center gap-1.5 px-[11px] outline-none transition-colors hover:border-accent focus-visible:border-accent focus-visible:outline-none",
-);
-
-function selectedSummary(
-  selected: readonly MenuSelectOption[],
-  placeholder: string,
-  summary?: (selected: readonly MenuSelectOption[]) => string,
-) {
-  if (summary) {
-    return summary(selected);
-  }
-  if (selected.length === 0) {
-    return placeholder;
-  }
-  if (selected.length <= 2) {
-    return selected.map((option) => option.label).join(", ");
-  }
-  return `${selected.length} selected`;
-}
-
-type MenuSearchFieldProps = {
-  onChange: (value: string) => void;
-  placeholder: string;
-  value: string;
-};
-
-function MenuSearchField({ onChange, placeholder, value }: Readonly<MenuSearchFieldProps>) {
-  const focusInput = useCallback((input: HTMLInputElement | null) => input?.focus(), []);
-
-  return (
-    <div className="px-1 pb-1">
-      <input
-        aria-label={placeholder}
-        className="min-h-8 w-full rounded-[8px] border border-border-strong bg-transparent px-2.5 text-[12.5px] text-fg outline-none placeholder:text-fg-muted focus:border-accent"
-        onChange={(event) => onChange(event.target.value)}
-        onKeyDown={(event) => {
-          if (!["ArrowDown", "ArrowUp", "Escape", "Tab"].includes(event.key)) {
-            event.stopPropagation();
-          }
-        }}
-        placeholder={placeholder}
-        ref={focusInput}
-        value={value}
-      />
-    </div>
-  );
-}
-
-// Styled MUI toolbar dropdown used instead of native select; supports a leading icon.
-// Trigger: weight 500, token colors/border, 9px radius, 34px minimum height.
 export function MenuSelect({
   ariaDescribedBy,
   ariaInvalid,
   ariaLabel,
+  disabled,
+  emptyMessage,
   leadingIcon,
+  menuWidth,
+  noResultsMessage,
   onChange,
-  options,
   searchPlaceholder = "Search...",
   searchable = false,
   triggerClassName,
+  triggerTitle,
   value,
+  ...input
 }: Readonly<MenuSelectProps>) {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [search, setSearch] = useState("");
   const open = Boolean(anchorEl);
-  const selected = options.find((option) => option.value === value);
-  const filteredOptions = search
-    ? options.filter((option) =>
-        `${option.label} ${option.secondary ?? ""}`
-          .toLowerCase()
-          .includes(search.trim().toLowerCase()),
-      )
-    : options;
+  const isGrouped = "groups" in input && input.groups != null;
+  const selected = resolveSelectedOption(input, value);
+  const flatFiltered = isGrouped ? [] : filterFlatOptions(input.options ?? [], search);
+  const groupedFiltered = isGrouped ? filterGroupedGroups(input.groups, search) : [];
+  const hasResults = isGrouped ? groupedFiltered.length > 0 : flatFiltered.length > 0;
 
   function closeMenu() {
     setAnchorEl(null);
     setSearch("");
   }
+
+  const paperSx = menuWidth
+    ? { ...menuSelectPaperSx, minWidth: menuWidth, maxWidth: menuWidth }
+    : menuSelectPaperSx;
 
   return (
     <>
@@ -147,8 +100,10 @@ export function MenuSelect({
         aria-haspopup="menu"
         aria-invalid={ariaInvalid}
         aria-label={ariaLabel}
-        className={cn(triggerClass, triggerClassName)}
+        className={cn(menuSelectTriggerClass, triggerClassName)}
+        disabled={disabled}
         onClick={(event) => setAnchorEl(event.currentTarget)}
+        title={triggerTitle}
         type="button"
       >
         {leadingIcon ? <span className="flex shrink-0 text-fg-muted">{leadingIcon}</span> : null}
@@ -163,26 +118,57 @@ export function MenuSelect({
         open={open}
         slotProps={{
           list: { "aria-label": ariaLabel, dense: true, sx: { padding: 0 } },
-          paper: { sx: menuSelectPaperSx },
+          paper: { sx: paperSx },
         }}
       >
         {searchable ? (
           <MenuSearchField onChange={setSearch} placeholder={searchPlaceholder} value={search} />
         ) : null}
-        {filteredOptions.length === 0 ? (
-          <div className="px-2 py-2 text-[12px] text-fg-muted">No results</div>
+        {!hasResults ? (
+          <div className="px-2 py-2 text-[12px] text-fg-muted">
+            {search.trim() ? (noResultsMessage ?? "No results") : (emptyMessage ?? "No results")}
+          </div>
         ) : null}
-        {filteredOptions.map((option) => (
-          <MenuSelectOptionItem
-            current={option.value === value}
-            key={option.value}
-            onSelect={() => {
-              onChange(option.value);
-              closeMenu();
-            }}
-            option={option}
-          />
-        ))}
+        {isGrouped
+          ? groupedFiltered.flatMap((group) => [
+              <ListSubheader
+                key={`${group.id}-heading`}
+                sx={{
+                  backgroundColor: "transparent",
+                  color: "var(--fg-muted)",
+                  fontSize: "11px",
+                  lineHeight: "normal",
+                  paddingX: "9px",
+                  paddingY: "4px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                }}
+              >
+                {group.label}
+              </ListSubheader>,
+              ...group.options.map((option) => (
+                <MenuSelectOptionItem
+                  current={option.value === value}
+                  key={option.value}
+                  onSelect={() => {
+                    onChange(option.value);
+                    closeMenu();
+                  }}
+                  option={option}
+                />
+              )),
+            ])
+          : flatFiltered.map((option) => (
+              <MenuSelectOptionItem
+                current={option.value === value}
+                key={option.value}
+                onSelect={() => {
+                  onChange(option.value);
+                  closeMenu();
+                }}
+                option={option}
+              />
+            ))}
       </Menu>
     </>
   );
@@ -231,9 +217,7 @@ export function MenuMultiSelect({
     const next = selectedValues.has(value)
       ? values.filter((item) => item !== value)
       : [...values, value];
-    if (next.length < minSelected) {
-      return;
-    }
+    if (next.length < minSelected) return;
     onChange(next);
   }
 
@@ -243,7 +227,7 @@ export function MenuMultiSelect({
         aria-expanded={open}
         aria-haspopup="menu"
         aria-label={ariaLabel}
-        className={cn(triggerClass, triggerClassName)}
+        className={cn(menuSelectTriggerClass, triggerClassName)}
         onClick={(event) => openMenu(event.currentTarget)}
         style={open && menuWidth ? { width: menuWidth } : undefined}
         type="button"

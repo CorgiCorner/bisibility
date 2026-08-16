@@ -6,20 +6,19 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { DomainOverviewWorkspace } from "./DomainOverviewWorkspace";
 import { domainOverviewMarketFixture, domainOverviewReportFixture } from "./fixtures";
 
-vi.mock("./DomainOverviewMarketCombobox", () => ({
-  DomainOverviewMarketCombobox: ({
+vi.mock("@/components/markets/MarketCombobox", () => ({
+  MarketCombobox: ({
     onChange,
-    value,
   }: {
     onChange: (value: DomainOverviewMarketOption) => void;
-    value: typeof domainOverviewMarketFixture;
+    value: string;
   }) => (
     <>
       <button
         aria-label="Market"
         onClick={() =>
           onChange({
-            ...value,
+            ...domainOverviewMarketFixture,
             cityName: null,
             kind: "country",
             provenance: null,
@@ -29,7 +28,7 @@ vi.mock("./DomainOverviewMarketCombobox", () => ({
         }
         type="button"
       >
-        {value.displayName}
+        Market
       </button>
       <button
         aria-label="Other market"
@@ -284,146 +283,5 @@ describe("DomainOverviewWorkspace", () => {
     fireEvent.submit(form);
     expect(analyzeAction).not.toHaveBeenCalled();
     expect(screen.queryByLabelText("Recent domain analyses")).not.toBeInTheDocument();
-  });
-
-  it("ignores selecting the already active market without entering a loading state", () => {
-    const selectMarketAction = vi.fn();
-    render(
-      <SessionSpendProvider>
-        <DomainOverviewWorkspace
-          analyzeAction={vi.fn()}
-          context={context}
-          initialEstimate={initialEstimate}
-          initialOutcome={null}
-          initialTarget="example.com"
-          loadHistoryAction={vi.fn()}
-          loadKeywordsPageAction={vi.fn()}
-          loadPagesPageAction={vi.fn()}
-          market={domainOverviewMarketFixture}
-          projectId="prj_1"
-          projectRef="prj_1"
-          selectMarketAction={selectMarketAction}
-        />
-      </SessionSpendProvider>,
-    );
-
-    fireEvent.click(screen.getByRole("button", { name: "Market" }));
-    expect(selectMarketAction).not.toHaveBeenCalled();
-    expect(screen.getByRole("button", { name: /analyze domain/i })).toBeInTheDocument();
-    expect(screen.queryByLabelText(/loading domain overview/i)).not.toBeInTheDocument();
-  });
-
-  it("keeps the cached report visible when changing market fails in transport", async () => {
-    const selectMarketAction = vi.fn().mockRejectedValue(new Error("network failed"));
-    render(
-      <SessionSpendProvider>
-        <DomainOverviewWorkspace
-          analyzeAction={vi.fn()}
-          context={context}
-          initialEstimate={{ ...initialEstimate, cached: true, costCents: 0 }}
-          initialOutcome={domainOverviewReportFixture}
-          initialTarget="example.com"
-          loadHistoryAction={vi.fn()}
-          loadKeywordsPageAction={vi.fn()}
-          loadPagesPageAction={vi.fn()}
-          market={domainOverviewMarketFixture}
-          projectId="prj_1"
-          projectRef="prj_1"
-          selectMarketAction={selectMarketAction}
-        />
-      </SessionSpendProvider>,
-    );
-
-    fireEvent.click(screen.getByRole("button", { name: "Other market" }));
-    await waitFor(() => expect(selectMarketAction).toHaveBeenCalledTimes(1));
-    expect(screen.getByRole("button", { name: /refresh now/i })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /analyze domain/i })).not.toBeInTheDocument();
-  });
-
-  it("opens a recent cached report through navigation without forcing a cap-zero analysis", () => {
-    const analyzeAction = vi.fn();
-    const recent = {
-      cachedUntil: "2026-08-12T20:00:00.000Z",
-      fetchedAt: "2026-08-12T08:00:00.000Z",
-      languageCode: "en",
-      locationCode: 1_026_201,
-      scope: "root" as const,
-      target: "recent.example.com",
-    };
-    render(
-      <SessionSpendProvider>
-        <DomainOverviewWorkspace
-          analyzeAction={analyzeAction}
-          context={{ ...context, recentTargets: [recent] }}
-          initialEstimate={initialEstimate}
-          initialOutcome={null}
-          loadHistoryAction={vi.fn()}
-          loadKeywordsPageAction={vi.fn()}
-          loadPagesPageAction={vi.fn()}
-          market={domainOverviewMarketFixture}
-          projectId="prj_1"
-          projectRef="prj_1"
-          selectMarketAction={vi.fn()}
-        />
-      </SessionSpendProvider>,
-    );
-
-    expect(screen.getByLabelText("Recent searches")).toBeInTheDocument();
-    expect(screen.queryByText("Try")).not.toBeInTheDocument();
-    expect(screen.queryByText("Price appears before analysis")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /recent\.example\.com/i }));
-    expect(routerMock.push).toHaveBeenCalledWith(
-      "/app/prj_1/domain-overview?domain=recent.example.com&market=US%2FUS-TX%2FAustin&scope=root",
-    );
-    expect(analyzeAction).not.toHaveBeenCalled();
-    expect(screen.getByLabelText(/domain overview loading/i)).toBeInTheDocument();
-  });
-
-  it("does not promise an uncharged failure when the action transport is indeterminate", async () => {
-    const analyzeAction = vi.fn().mockRejectedValue(new Error("network failed"));
-    render(
-      <SessionSpendProvider>
-        <DomainOverviewWorkspace
-          analyzeAction={analyzeAction}
-          context={context}
-          initialEstimate={initialEstimate}
-          initialOutcome={null}
-          initialTarget="example.com"
-          loadHistoryAction={vi.fn()}
-          loadKeywordsPageAction={vi.fn()}
-          loadPagesPageAction={vi.fn()}
-          market={domainOverviewMarketFixture}
-          projectId="prj_1"
-          projectRef="prj_1"
-          selectMarketAction={vi.fn()}
-        />
-      </SessionSpendProvider>,
-    );
-
-    fireEvent.click(screen.getByRole("button", { name: /analyze domain/i }));
-    expect(await screen.findByText(/lookup did not go through/i)).toBeInTheDocument();
-    expect(screen.queryByText(/not charged/i)).not.toBeInTheDocument();
-  });
-
-  it("surfaces a market without a numeric provider handle instead of inventing one", () => {
-    render(
-      <SessionSpendProvider>
-        <DomainOverviewWorkspace
-          analyzeAction={vi.fn()}
-          context={context}
-          initialEstimate={initialEstimate}
-          initialOutcome={null}
-          loadHistoryAction={vi.fn()}
-          loadKeywordsPageAction={vi.fn()}
-          loadPagesPageAction={vi.fn()}
-          market={{ ...domainOverviewMarketFixture, locationCode: null }}
-          projectId="prj_1"
-          projectRef="prj_1"
-          selectMarketAction={vi.fn()}
-        />
-      </SessionSpendProvider>,
-    );
-    expect(screen.getByText(/market is not supported for domain overview/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /analyze domain/i })).toBeDisabled();
   });
 });

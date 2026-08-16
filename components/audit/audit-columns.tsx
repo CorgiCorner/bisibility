@@ -1,4 +1,4 @@
-import { IdChip, StatusPill } from "@/components/ui";
+import { Avatar, IdChip, StatusPill } from "@/components/ui";
 import type { AuditEntry, AuditStatus } from "@/lib/queries/audit";
 import type { GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import { CaretRightIcon as CaretRight } from "@phosphor-icons/react";
@@ -17,9 +17,12 @@ const RESOURCE_TYPE_LABELS: Record<AuditEntry["resource"]["type"], string> = {
 function ActorEventCell({ row }: Readonly<GridRenderCellParams<AuditEntry>>) {
   return (
     <span className="flex h-full min-w-0 items-center gap-2.5 py-1">
-      <span className="grid h-[26px] w-[26px] shrink-0 place-items-center rounded-[7px] bg-bg-sunken font-mono text-[9.5px] font-semibold text-fg-muted">
-        {row.actor.initials}
-      </span>
+      <Avatar
+        alt=""
+        className="grid h-[26px] w-[26px] shrink-0 place-items-center rounded-[7px] bg-bg-sunken font-mono text-[9.5px] font-semibold text-fg-muted"
+        initials={row.actor.initials}
+        src={row.actor.avatarUrl}
+      />
       <span className="min-w-0">
         <span className="block truncate text-[12.5px] font-medium leading-[1.25] text-fg">
           {row.eventName}

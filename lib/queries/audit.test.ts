@@ -197,6 +197,25 @@ describe("getAuditLogView", () => {
     expect(result.truncated).toBe(true);
     expect(result.retentionDays).toBe(365);
   });
+
+  it("derives a gravatar URL for a real actor", async () => {
+    const result = await getAuditLogView(project.publicId);
+    if (!result.authorized) throw new Error("expected authorized audit view");
+
+    expect(result.entries[0]?.actor.avatarUrl).toEqual(
+      expect.stringContaining("https://www.gravatar.com/avatar/"),
+    );
+  });
+
+  it("sets avatarUrl to null for a synthetic system actor", async () => {
+    mocks.prisma.auditLog.findMany.mockResolvedValue([{ ...auditRow(), actor: null }]);
+
+    const result = await getAuditLogView(project.publicId);
+    if (!result.authorized) throw new Error("expected authorized audit view");
+
+    expect(result.entries[0]?.actor.avatarUrl).toBeNull();
+    expect(result.entries[0]?.actor.name).toBe("System");
+  });
 });
 
 describe("diffFor", () => {

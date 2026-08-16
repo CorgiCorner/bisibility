@@ -28,4 +28,18 @@ describe("SidebarUserButton", () => {
 
     expect(screen.getByRole("button", { name: "Account menu" })).toHaveClass("h-8", "w-8");
   });
+
+  it("renders the server-derived avatar URL", () => {
+    render(
+      <SidebarUserButton
+        user={{
+          avatarUrl: "https://example.com/avatar.png",
+          email: "member@example.com",
+          name: "Member Example",
+        }}
+      />,
+    );
+
+    expect(document.querySelector('img[src="https://example.com/avatar.png"]')).not.toBeNull();
+  });
 });

@@ -60,7 +60,13 @@ describe("OAuth consent page", () => {
       "http://127.0.0.1:51008/callback/request",
     );
     expect(mocks.props).toHaveBeenCalledWith({
-      account: { email: "owner@example.com", initials: "OE" },
+      account: {
+        avatarUrl: expect.stringMatching(
+          /^https:\/\/www\.gravatar\.com\/avatar\/[0-9a-f]{64}\?d=404&s=52$/,
+        ),
+        email: "owner@example.com",
+        initials: "OE",
+      },
       client: {
         dynamic: true,
         id: "client_1",

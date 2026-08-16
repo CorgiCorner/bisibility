@@ -1,9 +1,8 @@
 import { countryValueForCode } from "@/components/keywords/location-picker-data";
-import { serpLanguageCatalog } from "@/lib/serp/generated/serp-language-catalog";
+import { MARKETING_URL } from "@/lib/site/site";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { MarketPicker } from "./MarketPicker";
-import { recommendedMarketLanguages } from "./market-picker-model";
 
 vi.mock("@/components/keywords/LocationField", () => ({
   LocationField: ({ onChange }: { onChange: (value: object) => void }) => (
@@ -57,7 +56,7 @@ function languageList() {
   return within(screen.getByRole("group", { name: "Languages" }));
 }
 
-function rowLabels() {
+function _rowLabels() {
   return languageList()
     .getAllByRole("button")
     .map((row) => row.firstElementChild?.textContent ?? "");
@@ -203,5 +202,25 @@ describe("MarketPicker", () => {
       "title",
       "English: no search volume or difficulty data for this market - positions are tracked normally.",
     );
+  });
+
+  it("renders the calculator link through the shared external link with safe target and rel", () => {
+    const calculatorHref =
+      "/rank-tracking-cost-calculator?keywords=3&locations=2&devices=both&frequency=weekly&depth=100";
+    render(
+      <MarketPicker
+        calculatorHref={calculatorHref}
+        initialLocation={spain()}
+        onCommit={vi.fn()}
+        projectId="prj_test"
+        trackedCanonicalKeys={[]}
+      />,
+    );
+
+    const link = screen.getByRole("link", { name: /Estimate provider cost/ });
+    expect(link).toHaveAttribute("href", `${MARKETING_URL}${calculatorHref}`);
+    expect(link).toHaveAttribute("target", "_blank");
+    expect(link).toHaveAttribute("rel", "noreferrer noopener");
+    expect(link.querySelector("svg")).not.toBeNull();
   });
 });

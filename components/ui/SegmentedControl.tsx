@@ -133,7 +133,7 @@ export function SegmentedControl<T extends string>({
           const optionDisabled = disabled || option.disabled;
           return (
             <label
-              className={fitContent ? "flex-none" : "min-w-0"}
+              className={cn("flex", fitContent ? "flex-none" : "min-w-0")}
               key={option.value}
               title={option.tooltip}
             >
@@ -151,7 +151,7 @@ export function SegmentedControl<T extends string>({
               />
               <span
                 className={cn(
-                  "flex cursor-pointer flex-col items-center justify-center rounded-[7px] border border-transparent text-center normal-case tracking-normal transition-colors",
+                  "flex w-full cursor-pointer flex-col items-center justify-center rounded-[7px] border border-transparent text-center normal-case tracking-normal transition-colors",
                   size === "toolbar"
                     ? "h-[26px] flex-row gap-1.5 px-2.5 py-0.5 text-[12.5px] font-medium"
                     : size === "xs"

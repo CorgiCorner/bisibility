@@ -1,6 +1,7 @@
 "use client";
 
 import { DataGrid } from "@/components/keywords/grid/DataGrid";
+import { dataGridHeaderSx } from "@/components/keywords/grid/keyword-data-grid-config";
 import { Card, EmptyState } from "@/components/ui";
 import type { AuditDateRange, AuditEntry } from "@/lib/queries/audit";
 import type { GridRowParams } from "@mui/x-data-grid";
@@ -48,16 +49,7 @@ const gridSx = {
     lineHeight: "normal",
     outline: "none",
   },
-  "& .MuiDataGrid-columnHeaders": {
-    backgroundColor: "var(--bg-sunken)",
-    borderColor: "var(--border)",
-    color: "var(--fg-muted)",
-    fontFamily: "var(--font-mono), monospace",
-    fontSize: "10.5px",
-    fontWeight: 600,
-    letterSpacing: "0.6px",
-    textTransform: "uppercase",
-  },
+  "& .MuiDataGrid-columnHeaders": dataGridHeaderSx,
   "& .MuiDataGrid-footerContainer": { borderColor: "var(--border)" },
   "& .MuiDataGrid-row": { cursor: "pointer" },
   "& .MuiDataGrid-row:hover": { backgroundColor: "var(--bg-sunken)" },

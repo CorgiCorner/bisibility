@@ -14,6 +14,7 @@ import {
   locationFieldValueFromKeywordLocation,
 } from "@/components/keywords/location-field-value";
 import { TargetUrlField } from "@/components/keywords/TargetUrlField";
+import { MarketCombobox } from "@/components/markets/MarketCombobox";
 import { Button, FieldLabel, MenuSelect } from "@/components/ui";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import type { KeywordRow } from "@/lib/queries/keywords";
@@ -26,8 +27,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { type FieldErrors, useForm } from "react-hook-form";
 import { z } from "zod";
-import { DrawerMarketSelector } from "./DrawerMarketSelector";
 import { KeywordInlineEditTextField } from "./KeywordInlineEditTextField";
+import { drawerMarketOptions } from "./keyword-inline-edit-markets";
 
 type KeywordInlineEditProps = Pick<KeywordDetailActions, "updateKeywordAction"> & {
   formId?: string;
@@ -46,6 +47,8 @@ const inlineEditSchema = updateKeywordSchema.extend({
   location: z.string().optional(),
 });
 type InlineEditInput = z.infer<typeof inlineEditSchema>;
+
+const dirty = { shouldDirty: true, shouldValidate: true } as const;
 
 function tagsError(errors: FieldErrors<InlineEditInput>) {
   const error = errors.tags;
@@ -70,7 +73,7 @@ export function KeywordInlineEdit({
   onSavingChange,
   projectId,
   updateKeywordAction,
-}: KeywordInlineEditProps) {
+}: Readonly<KeywordInlineEditProps>) {
   const router = useRouter();
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionWarning, setActionWarning] = useState<string | null>(null);
@@ -105,6 +108,10 @@ export function KeywordInlineEdit({
     label: option.label,
     value: option.value,
   }));
+  const drawerMarketError =
+    errors.locationKey?.message ?? errors.location?.message ?? errors.city?.message;
+  const drawerMarketList =
+    layout === "drawer" ? drawerMarketOptions(drawerMarkets, selectedLocationKey, keyword) : [];
 
   async function save(values: InlineEditInput) {
     setActionError(null);
@@ -152,37 +159,22 @@ export function KeywordInlineEdit({
 
   function handleLocationChange(next: LocationFieldValue) {
     setLocationValue(next);
-    setValue("location", countryForLocationFieldValue(next), {
-      shouldDirty: true,
-      shouldValidate: true,
-    });
-    setValue("city", next.kind === "city" ? (next.cityName ?? null) : null, {
-      shouldDirty: true,
-      shouldValidate: true,
-    });
-    setValue("locationKey", next.kind === "city" ? next.canonicalKey : undefined, {
-      shouldDirty: true,
-      shouldValidate: true,
-    });
+    setValue("location", countryForLocationFieldValue(next), dirty);
+    setValue("city", next.kind === "city" ? (next.cityName ?? null) : null, dirty);
+    setValue("locationKey", next.kind === "city" ? next.canonicalKey : undefined, dirty);
   }
 
   function handleDrawerMarketChange(canonicalKey: string) {
-    setValue("locationKey", canonicalKey, { shouldDirty: true, shouldValidate: true });
+    setValue("locationKey", canonicalKey, dirty);
   }
 
   function handleTagsChange(value: string) {
     setTagsText(value);
-    setValue("tags", splitTagInput(value), {
-      shouldDirty: true,
-      shouldValidate: true,
-    });
+    setValue("tags", splitTagInput(value), dirty);
   }
 
   function handleDeviceChange(value: string) {
-    setValue("device", value as InlineEditInput["device"], {
-      shouldDirty: true,
-      shouldValidate: true,
-    });
+    setValue("device", value as InlineEditInput["device"], dirty);
   }
 
   return (
@@ -207,7 +199,7 @@ export function KeywordInlineEdit({
         error={errors.targetUrl?.message}
         {...register("targetUrl")}
       />
-      <div className="flex flex-col gap-1.5 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
+      <div className="flex flex-col gap-1.5 font-mono text-[11px] uppercase tracking-[0.5px] text-fg-muted">
         <FieldLabel help={FIELD_HELP.device} label="Device" />
         <input type="hidden" {...register("device")} />
         <MenuSelect
@@ -220,21 +212,25 @@ export function KeywordInlineEdit({
       </div>
       <div
         className={cn(
-          "flex flex-col gap-1.5 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted",
+          "flex flex-col gap-1.5 font-mono text-[11px] uppercase tracking-[0.5px] text-fg-muted",
           layout === "inline" && "md:col-span-3",
         )}
       >
         {layout === "drawer" ? (
-          <DrawerMarketSelector
-            currentKey={selectedLocationKey}
-            currentLabel={`${keyword.locationName} / ${keyword.location.languageLabel ?? ""}`.replace(
-              / \/ $/,
-              "",
-            )}
-            error={errors.locationKey?.message ?? errors.location?.message ?? errors.city?.message}
-            markets={drawerMarkets}
-            onChange={handleDrawerMarketChange}
-          />
+          <>
+            <span>Market</span>
+            <MarketCombobox
+              ariaLabel="Market"
+              catalogMarkets={[]}
+              onChange={handleDrawerMarketChange}
+              trackedMarkets={drawerMarketList}
+              triggerClassName="min-h-10 w-full rounded-lg px-3 text-[13px] normal-case tracking-normal"
+              value={selectedLocationKey}
+            />
+            {drawerMarketError ? (
+              <span className="normal-case tracking-normal text-red-text">{drawerMarketError}</span>
+            ) : null}
+          </>
         ) : (
           <LocationField
             error={errors.locationKey?.message ?? errors.location?.message ?? errors.city?.message}

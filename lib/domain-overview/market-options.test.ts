@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  domainOverviewCatalogMarkets,
-  domainOverviewTrackedMarkets,
-  filterDomainOverviewMarkets,
-} from "./market-options";
+import { domainOverviewCatalogMarkets, domainOverviewTrackedMarkets } from "./market-options";
 
 describe("domain overview market options", () => {
   it("degrades city registry entries to country pairs and deduplicates them", () => {
@@ -55,12 +51,5 @@ describe("domain overview market options", () => {
     );
     expect(catalog).not.toContainEqual(expect.objectContaining({ canonicalKey: "ES@en" }));
     expect(catalog.every((market) => market.locationCode != null)).toBe(true);
-  });
-
-  it("searches country and language labels and codes together", () => {
-    const catalog = domainOverviewCatalogMarkets();
-    expect(filterDomainOverviewMarkets(catalog, "polish pl")).toContainEqual(
-      expect.objectContaining({ canonicalKey: "PL", languageLabel: "Polish" }),
-    );
   });
 });

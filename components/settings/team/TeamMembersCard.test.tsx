@@ -9,6 +9,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const owner: TeamMemberData = {
   accessLabel: "Project access since 4 Feb 2025",
+  avatarUrl: null,
   canChangeRole: false,
   canRemove: false,
   canTransferOwnership: false,
@@ -25,6 +26,7 @@ const owner: TeamMemberData = {
 
 const auditor: TeamMemberData = {
   accessLabel: "Project access since 15 Jan 2026",
+  avatarUrl: null,
   canChangeRole: true,
   canRemove: true,
   canTransferOwnership: true,
@@ -69,6 +71,14 @@ function renderCard(overrides: Partial<TeamMembersCardProps> = {}) {
 
 describe("TeamMembersCard", () => {
   beforeEach(() => vi.clearAllMocks());
+
+  it("renders a member's server-derived avatar URL", () => {
+    renderCard({
+      members: [{ ...owner, avatarUrl: "https://example.com/avatar.png" }],
+    });
+
+    expect(document.querySelector('img[src="https://example.com/avatar.png"]')).not.toBeNull();
+  });
 
   it("shows an existing auditor as Viewer with audit access", () => {
     renderCard();

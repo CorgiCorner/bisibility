@@ -7,19 +7,19 @@ describe("CompetitorTile", () => {
     vi.unstubAllEnvs();
   });
 
-  it("keeps competitor initials until a full-size domain favicon is verified", () => {
+  it("keeps competitor initials until a square 32px domain favicon is verified", () => {
     const { container } = render(<CompetitorTile domain="example.org" initials="EO" />);
 
     expect(screen.getByText("EO")).toBeInTheDocument();
     expect(screen.queryByTestId("competitor-tile-favicon")).not.toBeInTheDocument();
     const probe = screen.getByTestId("competitor-tile-favicon-probe");
     Object.defineProperties(probe, {
-      naturalHeight: { configurable: true, value: 64 },
-      naturalWidth: { configurable: true, value: 64 },
+      naturalHeight: { configurable: true, value: 32 },
+      naturalWidth: { configurable: true, value: 32 },
     });
     fireEvent.load(probe);
     expect(screen.getByTestId("competitor-tile-favicon")).toHaveStyle({
-      backgroundImage: 'url("https://www.google.com/s2/favicons?domain=example.org&sz=64")',
+      backgroundImage: 'url("https://www.google.com/s2/favicons?domain=example.org&sz=32")',
       backgroundSize: "cover",
     });
     expect(container.innerHTML).not.toContain("logo.dev");

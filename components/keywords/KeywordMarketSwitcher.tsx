@@ -1,9 +1,7 @@
 "use client";
 
-import {
-  ProjectReadOnlyTooltip,
-  useProjectWriteMode,
-} from "@/components/shell/ProjectWriteModeProvider";
+import { MarketCombobox, type MarketComboboxOption } from "@/components/markets/MarketCombobox";
+import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
 import { useToast } from "@/components/ui";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
@@ -23,6 +21,10 @@ import { type ReactNode, useState } from "react";
 import { actionErrorMessage, type KeywordAction } from "./action-utils";
 
 type Market = ProjectMarketsView["markets"][number];
+
+type KeywordMarketPayload =
+  | { kind: "navigate"; target: KeywordRow }
+  | { kind: "add"; market: Market };
 
 type KeywordMarketSwitcherProps = {
   addKeywordsAction: KeywordAction<AddKeywordsInput>;
@@ -103,9 +105,8 @@ export function KeywordMarketSwitcher({
   targets,
 }: Readonly<KeywordMarketSwitcherProps>) {
   const router = useRouter();
-  const { readOnly } = useProjectWriteMode();
+  const { readOnly, readOnlyReason } = useProjectWriteMode();
   const { showToast } = useToast();
-  const [marketAnchor, setMarketAnchor] = useState<HTMLElement | null>(null);
   const [deviceAnchor, setDeviceAnchor] = useState<HTMLElement | null>(null);
   const [addingKey, setAddingKey] = useState<string | null>(null);
   const uniqueTargets = [...new Map(targets.map((target) => [target.id, target])).values()];
@@ -127,9 +128,9 @@ export function KeywordMarketSwitcher({
       !trackedMarkets.some((target) => target.location.canonicalKey === market.canonicalKey),
   );
   const currentPair = pairLabel(keyword);
+  const addDisabled = readOnly || !canCreateKeyword;
 
   function navigate(target: KeywordRow) {
-    setMarketAnchor(null);
     setDeviceAnchor(null);
     if (target.id === keyword.id) return;
     showToast(`Now showing ${pairLabel(target)} results`, { tint: "neutral" });
@@ -169,7 +170,6 @@ export function KeywordMarketSwitcher({
           }
         },
       });
-      setMarketAnchor(null);
       router.refresh();
     } catch (error) {
       showToast(actionErrorMessage(error), { tint: "red" });
@@ -178,20 +178,57 @@ export function KeywordMarketSwitcher({
     }
   }
 
-  const addDisabled = readOnly || !canCreateKeyword;
+  const trackedOptions: MarketComboboxOption<KeywordMarketPayload>[] = trackedMarkets.map(
+    (target) => ({
+      ariaLabel: `Switch to ${pairLabel(target)}`,
+      countryCode: target.location.countryCode,
+      languageCode: target.location.hl,
+      languageLabel: target.location.languageLabel ?? target.location.hl,
+      locationLabel: target.location.displayName,
+      payload: { kind: "navigate", target },
+      value: target.location.canonicalKey,
+    }),
+  );
+
+  const catalogOptions: MarketComboboxOption<KeywordMarketPayload>[] = availableMarkets.map(
+    (market) => {
+      const label = marketLabel(market);
+      const delta = `+${devices.length} ${devices.length === 1 ? "check" : "checks"} per run`;
+      return {
+        ariaLabel: `Add ${label}, ${delta}`,
+        countryCode: market.countryCode,
+        disabled: addDisabled || addingKey !== null,
+        languageCode: market.languageCode,
+        languageLabel: market.languageLabel,
+        locationLabel: market.displayName,
+        payload: { kind: "add", market },
+        secondary: delta,
+        tooltip: readOnly ? readOnlyReason : undefined,
+        value: market.canonicalKey,
+      };
+    },
+  );
+
+  function handleMarketChange(payload: KeywordMarketPayload) {
+    if (payload.kind === "navigate") navigate(payload.target);
+    else void addMarket(payload.market);
+  }
+
   return (
     <>
-      <SwitcherButton onClick={(element) => setMarketAnchor(element)}>
-        <Flag aria-hidden size={13} />
-        <span className="truncate" title={currentPair}>
-          {currentPair}
-        </span>
-        {trackedMarkets.length > 1 ? (
-          <span className="rounded-full bg-accent-soft px-1.5 text-accent-text">
-            {trackedMarkets.length}
-          </span>
-        ) : null}
-      </SwitcherButton>
+      <MarketCombobox
+        ariaLabel={currentPair}
+        catalogLabel="Add a market"
+        catalogMarkets={catalogOptions}
+        catalogSearchOnly={false}
+        leadingIcon={<Flag aria-hidden size={13} />}
+        onChange={handleMarketChange}
+        trackedLabel="Tracked markets"
+        trackedMarkets={trackedOptions}
+        triggerClassName="max-w-[290px] rounded-full border-border bg-bg-sunken py-1 pl-2.5 pr-2 font-mono text-[11px] text-fg-muted hover:text-fg focus-visible:outline-2 focus-visible:outline-accent-solid"
+        triggerTitle={currentPair}
+        value={keyword.location.canonicalKey}
+      />
       <SwitcherButton
         onClick={
           currentMarketTargets.length > 1 ? (element) => setDeviceAnchor(element) : undefined
@@ -200,65 +237,6 @@ export function KeywordMarketSwitcher({
         <DeviceIcon device={keyword.device} />
         <span className="sr-only">{keyword.device}</span>
       </SwitcherButton>
-      <Menu
-        anchorEl={marketAnchor}
-        onClose={() => setMarketAnchor(null)}
-        open={Boolean(marketAnchor)}
-        slotProps={{
-          list: { "aria-label": "Keyword markets", dense: true },
-          paper: { sx: { border: "1px solid var(--border)", maxWidth: 290, width: 290 } },
-        }}
-      >
-        <p className="m-0 px-4 pb-1 pt-2 font-mono text-[10px] uppercase tracking-[0.6px] text-fg-muted">
-          Tracked markets
-        </p>
-        {trackedMarkets.map((target) => {
-          const label = pairLabel(target);
-          const active = target.location.canonicalKey === keyword.location.canonicalKey;
-          return (
-            <MenuItem
-              aria-label={`Switch to ${label}`}
-              key={target.location.canonicalKey}
-              onClick={() => navigate(target)}
-              selected={active}
-              sx={{ gap: 1.5, minWidth: 0 }}
-            >
-              <span className="min-w-0 flex-1 truncate" title={label}>
-                {label}
-              </span>
-              {active ? <Check aria-hidden size={14} weight="bold" /> : null}
-            </MenuItem>
-          );
-        })}
-        {availableMarkets.length ? (
-          <p className="m-0 border-t border-border-soft px-4 pb-1 pt-3 font-mono text-[10px] uppercase tracking-[0.6px] text-fg-muted">
-            Add a market
-          </p>
-        ) : null}
-        {availableMarkets.map((market) => {
-          const label = marketLabel(market);
-          const delta = `+${devices.length} ${devices.length === 1 ? "check" : "checks"} per run`;
-          const item = (
-            <MenuItem
-              aria-label={`Add ${label}, ${delta}`}
-              disabled={addDisabled || addingKey !== null}
-              key={market.id}
-              onClick={() => void addMarket(market)}
-              sx={{ alignItems: "center", gap: 1.5, minWidth: 0 }}
-            >
-              <span className="min-w-0 flex-1 truncate" title={label}>
-                {label}
-              </span>
-              <span className="shrink-0 font-mono text-[10px] text-fg-muted">{delta}</span>
-            </MenuItem>
-          );
-          return readOnly ? (
-            <ProjectReadOnlyTooltip key={market.id}>{item}</ProjectReadOnlyTooltip>
-          ) : (
-            item
-          );
-        })}
-      </Menu>
       <Menu
         anchorEl={deviceAnchor}
         onClose={() => setDeviceAnchor(null)}

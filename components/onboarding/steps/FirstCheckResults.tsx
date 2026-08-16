@@ -31,10 +31,6 @@ function rankingLabel(position: number | null, rankingUrl: string | null) {
   }
 }
 
-function observedLabel(row: Extract<FirstCheckResultRow, { status: "observed" }>) {
-  return `Observed #${row.position.toFixed(1)} / ${row.clicks} clicks / ${row.impressions} impressions`;
-}
-
 function ResultIcon({ row }: Readonly<{ row: FirstCheckResultRow }>) {
   if (row.status === "pending") {
     return <CircleNotch aria-hidden className="bv-spin text-accent-text" size={16} weight="bold" />;
@@ -53,13 +49,10 @@ function resultText(row: FirstCheckResultRow) {
       return rankingLabel(row.position, row.rankingUrl);
     case "failed":
       return row.message;
-    case "observed":
-      return observedLabel(row);
   }
 }
 
 function ResultTarget({ row }: Readonly<{ row: FirstCheckResultRow }>) {
-  if (row.status === "observed") return null;
   const deviceLabel = row.device === "mobile" ? "Mobile" : "Desktop";
   const DeviceIcon = row.device === "mobile" ? DeviceMobile : Desktop;
   return (

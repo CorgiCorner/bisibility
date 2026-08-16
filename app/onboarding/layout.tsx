@@ -1,8 +1,9 @@
 import { OnboardingLogoutButton } from "@/components/onboarding/OnboardingLogoutButton";
-import { shellUserEmail, shellUserInitials } from "@/components/shell/types";
+import { shellUserEmail } from "@/components/shell/types";
 import { BrandLockup, ThemeSegments } from "@/components/ui";
 import { redirectToSetupIfFirstRun } from "@/lib/auth/first-run";
 import { requireSession } from "@/lib/auth/session";
+import { initials as avatarInitials } from "@/lib/avatar/initials";
 import { createNoindexMetadata } from "@/lib/seo/noindex";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
@@ -21,7 +22,7 @@ export default async function OnboardingLayout({ children }: Readonly<Onboarding
   const session = await requireSession();
 
   const email = shellUserEmail(session.user);
-  const initials = shellUserInitials(session.user);
+  const initials = avatarInitials(session.user.name ?? "", session.user.email);
 
   return (
     <main className="flex min-h-dvh flex-col items-center bg-bg px-4 py-[46px] pb-[120px] text-fg sm:px-6">

@@ -2,7 +2,6 @@ import { actionErrorMessage } from "@/components/onboarding/onboarding-form-util
 import type {
   FirstCheckCandidate,
   FirstCheckPreviewFailureCode,
-  ObservedPosition,
   RunFirstCheckPreviewResult,
 } from "@/lib/actions/rank-check-preview";
 
@@ -31,19 +30,11 @@ export type FirstCheckResultRow =
       publicId: string;
       status: "failed";
       text: string;
-    })
-  | {
-      clicks: number;
-      impressions: number;
-      keywordId: string;
-      position: number;
-      status: "observed";
-      text: string;
-    };
+    });
 
 export type FirstCheckRunState = {
   message: string | null;
-  mode: "observed" | "preview";
+  mode: "preview";
   rows: FirstCheckResultRow[];
   status: "completed" | "failed" | "idle" | "running";
 };
@@ -109,17 +100,6 @@ export function clientErrorRow(
     publicId: candidate.publicId,
     status: "failed",
     text: candidate.text,
-  };
-}
-
-export function observedRow(position: ObservedPosition): FirstCheckResultRow {
-  return {
-    clicks: position.clicks,
-    impressions: position.impressions,
-    keywordId: position.keywordId,
-    position: position.position,
-    status: "observed",
-    text: position.text,
   };
 }
 

@@ -3,6 +3,8 @@ import { BrandLockup, InfoTooltip } from "@/components/ui";
 import { getOAuthConsentCopy } from "@/lib/auth/oauth-consent-copy";
 import { OAUTH_AUTHORIZATION_TTL_SECONDS } from "@/lib/auth/oauth-policy";
 import { requireSession } from "@/lib/auth/session";
+import { gravatarUrl } from "@/lib/avatar/gravatar";
+import { initials as avatarInitials } from "@/lib/avatar/initials";
 import { getOAuthConsentClient } from "@/lib/queries/oauth-consent";
 import { createNoindexMetadata } from "@/lib/seo/noindex";
 import { FingerprintIcon as Fingerprint } from "@phosphor-icons/react/dist/ssr";
@@ -24,14 +26,6 @@ function scopesFromParam(value: string | string[] | undefined) {
     .split(" ")
     .map((scope) => scope.trim())
     .filter(Boolean);
-}
-
-function initials(name: string | null | undefined, email: string) {
-  const nameParts = (name ?? "").trim().split(/\s+/).filter(Boolean);
-  if (nameParts.length) {
-    return `${nameParts[0]?.[0] ?? ""}${nameParts.at(-1)?.[0] ?? ""}`.toUpperCase();
-  }
-  return email.slice(0, 2).toUpperCase();
 }
 
 function requestExpiry(value: string | string[] | undefined) {
@@ -80,8 +74,9 @@ export default async function OAuthConsentPage({ searchParams }: Readonly<Consen
       <section className="flex items-center justify-center bg-bg-sunken px-4 py-8 sm:px-6 md:py-11">
         <OAuthConsentForm
           account={{
+            avatarUrl: gravatarUrl(session.user.email, 26),
             email: session.user.email,
-            initials: initials(session.user.name, session.user.email),
+            initials: avatarInitials(session.user.name ?? "", session.user.email),
           }}
           client={client}
           expiresAt={requestExpiry(params.exp)}

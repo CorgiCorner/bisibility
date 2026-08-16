@@ -7,19 +7,19 @@ describe("WorkspaceTile", () => {
     vi.unstubAllEnvs();
   });
 
-  it("keeps its letter until a full-size domain favicon is verified", () => {
+  it("keeps its letter until a square 32px domain favicon is verified", () => {
     const { container } = render(<WorkspaceTile domain="example.com" />);
 
     expect(screen.getByText("e")).toBeInTheDocument();
     expect(screen.queryByTestId("workspace-tile-favicon")).not.toBeInTheDocument();
     const probe = screen.getByTestId("workspace-tile-favicon-probe");
     Object.defineProperties(probe, {
-      naturalHeight: { configurable: true, value: 64 },
-      naturalWidth: { configurable: true, value: 64 },
+      naturalHeight: { configurable: true, value: 32 },
+      naturalWidth: { configurable: true, value: 32 },
     });
     fireEvent.load(probe);
     expect(screen.getByTestId("workspace-tile-favicon")).toHaveStyle({
-      backgroundImage: 'url("https://www.google.com/s2/favicons?domain=example.com&sz=64")',
+      backgroundImage: 'url("https://www.google.com/s2/favicons?domain=example.com&sz=32")',
       backgroundSize: "cover",
     });
     expect(container.innerHTML).not.toContain("logo.dev");

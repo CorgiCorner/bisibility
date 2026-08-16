@@ -2,7 +2,7 @@
 
 import { Sparkline } from "@/components/charts/Sparkline";
 import { MarketChip } from "@/components/markets/MarketChip";
-import { Card, MenuSelect, MonoText, SectionTitle } from "@/components/ui";
+import { Card, MenuSelect, MonoText, SectionTitle, tableHeaderClassName } from "@/components/ui";
 import { lensHref } from "@/lib/keywords/lens-model";
 import type { OverviewDevice } from "@/lib/queries/overview-filters";
 import type { OverviewMarketRow } from "@/lib/queries/overview-markets";
@@ -102,9 +102,7 @@ export function ByMarketRollup({ device, projectRef, rows }: Readonly<ByMarketRo
         />
       </div>
       <div className="overflow-x-auto">
-        <div
-          className={`${rowGrid} border-t border-border bg-bg-sunken py-2 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted`}
-        >
+        <div className={`${rowGrid} border-t border-border py-2 ${tableHeaderClassName}`}>
           <span>Market</span>
           <span aria-hidden />
           <span className="text-right">Targets</span>

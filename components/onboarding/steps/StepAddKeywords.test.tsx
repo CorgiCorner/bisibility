@@ -1,5 +1,6 @@
 import { DeploymentModeProvider } from "@/components/shell/DeploymentModeProvider";
 import { KEYWORD_IMPORT_LIMIT_MESSAGE } from "@/lib/schemas/keyword";
+import { MARKETING_URL } from "@/lib/site/site";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { describe, expect, it, vi } from "vitest";
@@ -179,10 +180,14 @@ describe("StepAddKeywords", () => {
 
     expect(screen.getByText("≈ 60 checks/month at Top 100")).toBeInTheDocument();
     expect(screen.queryByText(/\$|monthly cost cap/)).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Estimate provider cost" })).toHaveAttribute(
+    const link = screen.getByRole("link", { name: "Estimate provider cost" });
+    expect(link).toHaveAttribute(
       "href",
-      "/rank-tracking-cost-calculator?keywords=2&locations=1&devices=desktop&frequency=daily&depth=100",
+      `${MARKETING_URL}/rank-tracking-cost-calculator?keywords=2&locations=1&devices=desktop&frequency=daily&depth=100`,
     );
+    expect(link).toHaveAttribute("target", "_blank");
+    expect(link).toHaveAttribute("rel", "noreferrer noopener");
+    expect(link.querySelector("svg")).toBeInTheDocument();
   });
 
   it("shows the selected depth without presenting a provider cost", () => {

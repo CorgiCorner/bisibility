@@ -6,7 +6,7 @@ import {
   difficultyPillStyle,
   IntentChip,
 } from "@/components/research/research-results-model";
-import { Checkbox } from "@/components/ui";
+import { Checkbox, tableHeaderClassName } from "@/components/ui";
 import { formatEstimateCents } from "@/lib/cost-estimate/project-estimate";
 import type { SavedKeywordRow } from "@/lib/saved-keywords/model";
 import { cn } from "@/lib/ui/cn";
@@ -91,7 +91,7 @@ export function SavedKeywordsTableRows({
           <col className="w-[52px]" />
         </colgroup>
         <thead>
-          <tr className="border-b border-border-strong">
+          <tr className={`border-b border-border-strong ${tableHeaderClassName}`}>
             <th className="px-4 py-[9px] text-left">
               <Checkbox
                 aria-checked={someSelected ? "mixed" : allSelected}
@@ -103,7 +103,7 @@ export function SavedKeywordsTableRows({
             {headers.map((header) => (
               <th
                 className={cn(
-                  "px-1 py-[9px] text-left font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-fg-muted",
+                  "px-1 py-[9px] text-left font-medium",
                   header === "Volume" && "text-right font-semibold text-accent-text",
                   header === "CPC" && "text-right",
                 )}

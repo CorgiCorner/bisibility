@@ -2,10 +2,20 @@
 
 import { MarketPicker, type MarketPickerChoice } from "@/components/markets/MarketPicker";
 import { DeveloperActionsMenu } from "@/components/settings/developers/DeveloperActionsMenu";
-import { AppDrawer, Button, Card, Modal, MonoText, SectionTitle, Switch } from "@/components/ui";
+import {
+  AppDrawer,
+  Button,
+  Card,
+  ExternalLink,
+  Modal,
+  MonoText,
+  SectionTitle,
+  Switch,
+} from "@/components/ui";
 import type { AddProjectMarketsResult, ProjectMarketChoice } from "@/lib/actions/project-markets";
 import { formatMoneyCents } from "@/lib/format/money";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
+import { MARKETING_URL } from "@/lib/site/site";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -198,12 +208,12 @@ export function TrackedMarketsContent({
               {activeCount} markets active / {activeCount * markets.perMarketChecks} checks per run
               / {costLabel(markets.monthlyCostCents)}
             </MonoText>
-            <a
+            <ExternalLink
               className="text-[12px] font-medium text-accent-text hover:underline"
-              href="/rank-tracking-cost-calculator"
+              href={`${MARKETING_URL}/rank-tracking-cost-calculator`}
             >
               Estimate provider cost
-            </a>
+            </ExternalLink>
           </div>
         </>
       ) : (
