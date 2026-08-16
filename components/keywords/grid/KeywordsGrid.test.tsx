@@ -1,28 +1,15 @@
-import {
-  SessionSpendProvider,
-  useSessionSpend,
-} from "@/components/cost-estimate/SessionSpendProvider";
-import { KeywordImportProvider } from "@/components/keywords/import/KeywordImportProvider";
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
 import { emptyKeywordFilters } from "@/lib/keywords/keyword-filter-model";
 import { appPath } from "@/lib/routing/app-path";
-import type { RunCheckNowInput } from "@/lib/schemas/keyword";
 import { stubBlobDownload } from "@/tests/blob-download";
 import { routerMock, setNavigationState } from "@/tests/next-navigation";
 import { stubResizeObserver } from "@/tests/observers";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { KeywordsGrid } from "./KeywordsGrid";
+import { pendingRows, renderPendingGrid } from "./KeywordsGrid.test-helpers";
 
 const mocks = vi.hoisted(() => ({ exportKeywords: vi.fn() }));
-
-// The page-level meter is gone (the header owns the only spend tracker), so tests
-// observe session spend through the provider instead of rendered meter copy.
-function SessionSpendProbe() {
-  const { sessionCents } = useSessionSpend();
-  return <output aria-label="session spend cents">{sessionCents}</output>;
-}
 
 vi.mock("@/lib/actions/keyword-import-export", () => ({ exportKeywords: mocks.exportKeywords }));
 vi.mock("@/components/keywords/import/ImportCsvWizard", () => ({
@@ -37,8 +24,6 @@ vi.mock("./DeferredDataGrid", async () => {
   };
 });
 
-type KeywordsGridProps = ComponentProps<typeof KeywordsGrid>;
-
 beforeEach(() => {
   vi.clearAllMocks();
   setNavigationState({ pathname: "/app/rank-tracker" });
@@ -52,76 +37,6 @@ beforeEach(() => {
   stubResizeObserver();
   stubBlobDownload();
 });
-
-function pendingRows(count = 2): KeywordsGridProps["rows"] {
-  return keywordRows.slice(0, count).map((row) => ({
-    ...row,
-    checkState: "never_checked",
-    hasRankData: false,
-    lastCheckAt: null,
-    lastCheckStatus: null,
-    position: 101,
-    positionHistory: [],
-    previousPosition: 101,
-    rankingPath: null,
-    rankingUrl: null,
-    rankingUrlHistory: [],
-    sparkline: [],
-  }));
-}
-
-function renderPendingGrid(overrides: Partial<KeywordsGridProps> = {}) {
-  const actions = {
-    addKeywordsAction: vi.fn().mockResolvedValue({ created: 1, keywords: [] }),
-    bulkClearTargetAction: vi.fn().mockResolvedValue({ updated: 1 }),
-    bulkDeleteAction: vi.fn().mockResolvedValue({ deleted: 1 }),
-    bulkSetFrequencyAction: vi.fn().mockResolvedValue({ updated: 1 }),
-    bulkSetTargetAction: vi.fn().mockResolvedValue({ updated: 1 }),
-    bulkTagAction: vi.fn().mockResolvedValue({ updated: 1 }),
-    canCreateKeyword: true,
-    canDeleteKeyword: true,
-    canManageProviders: true,
-    canUpdateKeyword: true,
-    deletableSavedViewIds: [],
-    getFirstCheckRunPlanAction: vi.fn().mockResolvedValue({
-      budget: { capCents: 5000, spentCents: 0 },
-      budgetExhausted: false,
-      estimatedCostPerCheckCents: 0.1,
-      isSampleProject: false,
-      providerReady: true,
-      providers: ["dataforseo"],
-      readyCount: 2,
-      scope: {
-        depth: "Top 100",
-        device: "Desktop",
-        engine: "Google",
-        frequency: "Daily",
-        location: "United States",
-      },
-    }),
-    queueFirstChecksAction: vi.fn().mockResolvedValue({ queued: 1 }),
-    updateKeywordAction: vi.fn().mockResolvedValue({ updated: 1 }),
-  };
-
-  render(
-    <SessionSpendProvider>
-      <SessionSpendProbe />
-      <KeywordImportProvider activeProjectId="project_1">
-        <KeywordsGrid
-          {...actions}
-          projectId="prj_1"
-          providerConnected={false}
-          rows={pendingRows()}
-          savedViews={[]}
-          tagSuggestions={[]}
-          {...overrides}
-        />
-      </KeywordImportProvider>
-    </SessionSpendProvider>,
-  );
-
-  return actions;
-}
 
 describe("KeywordsGrid pending state", () => {
   it("keeps the keyword table and pagination within the workspace viewport", () => {
@@ -219,128 +134,5 @@ describe("KeywordsGrid pending state", () => {
     expect(routerMock.push).toHaveBeenCalledWith(`${appPath("prj_1", "rank-tracker")}?device=all`);
     fireEvent.click(screen.getByRole("button", { name: /clear all search and filters/i }));
     expect(await screen.findByText(keywordRows[0].keyword)).toBeInTheDocument();
-  });
-
-  it("deletes a pending keyword through normal bulk actions", async () => {
-    const [row] = pendingRows(1);
-    const actions = renderPendingGrid({ rows: [row] });
-
-    const keywordRow = (await screen.findByText(row.keyword)).closest(
-      '[role="row"]',
-    ) as HTMLElement;
-    fireEvent.click(within(keywordRow).getByRole("checkbox"));
-
-    expect(screen.getByText("1 selected")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Delete" }));
-    fireEvent.click(screen.getByRole("button", { name: "Delete keywords" }));
-
-    await waitFor(() =>
-      expect(actions.bulkDeleteAction).toHaveBeenCalledWith({
-        keywordIds: [row.id],
-        projectId: "prj_1",
-      }),
-    );
-    expect(routerMock.refresh).toHaveBeenCalled();
-  });
-
-  it("exports selected keyword IDs", async () => {
-    const [row] = pendingRows(1);
-    renderPendingGrid({ rows: [row] });
-
-    const keywordRow = (await screen.findByText(row.keyword)).closest(
-      '[role="row"]',
-    ) as HTMLElement;
-    fireEvent.click(within(keywordRow).getByRole("checkbox"));
-    fireEvent.click(screen.getByRole("button", { name: /^export$/i }));
-
-    expect(
-      await screen.findByText("Export 1 selected keyword", {}, { timeout: 10_000 }),
-    ).toBeInTheDocument();
-    expect(screen.queryByText("CPC")).not.toBeInTheDocument();
-    expect(screen.queryByText("Search volume")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /export csv/i }));
-
-    await waitFor(() =>
-      expect(mocks.exportKeywords).toHaveBeenCalledWith(
-        expect.objectContaining({ keywordIds: [row.id], projectId: "prj_1" }),
-      ),
-    );
-  });
-
-  it("shows Run checks only with a selection and runs it for the selected keywords", async () => {
-    const rows = pendingRows(2);
-    let resolveCheck!: (value: unknown) => void;
-    const runCheckNowAction = vi.fn(
-      (_input: RunCheckNowInput) =>
-        new Promise((resolve) => {
-          resolveCheck = resolve;
-        }),
-    );
-    renderPendingGrid({
-      checkHealth: {
-        budget: { capCents: 5000, exhausted: false, spentCents: 1250 },
-        failed24h: { count: 0, latest: null },
-        providerRate: { overrideCents: 2, providerId: "dataforseo" },
-      },
-      rows,
-      runCheckNowAction,
-    });
-
-    await screen.findByText(rows[0].keyword);
-    expect(screen.getByLabelText("session spend cents")).toHaveTextContent("0");
-    expect(screen.queryByRole("button", { name: "Run check (Top 100)" })).not.toBeInTheDocument();
-
-    const keywordRow = screen.getByText(rows[0].keyword).closest('[role="row"]') as HTMLElement;
-    fireEvent.click(within(keywordRow).getByRole("checkbox"));
-    expect(screen.getByText("1 selected")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Run check (Top 100)" }));
-
-    expect(runCheckNowAction).toHaveBeenCalledTimes(1);
-    expect([rows[0].id, rows[1].id]).toContain(runCheckNowAction.mock.calls[0][0].keywordId);
-    expect(runCheckNowAction.mock.calls[0][0]).not.toHaveProperty("depth");
-    expect(screen.getByText(rows[0].keyword)).toBeInTheDocument();
-    expect(screen.getByText(rows[1].keyword)).toBeInTheDocument();
-    expect(screen.getByText("Running")).toBeInTheDocument();
-
-    resolveCheck({ status: "queued" });
-    await waitFor(() => expect(routerMock.refresh).toHaveBeenCalledOnce());
-    expect(screen.getByLabelText("session spend cents")).toHaveTextContent("2");
-  }, 10_000);
-
-  it("passes a selected check depth override", async () => {
-    const [row] = pendingRows(1);
-    const runCheckNowAction = vi.fn().mockResolvedValue({ status: "queued" });
-    renderPendingGrid({ rows: [row], runCheckNowAction });
-
-    const keywordRow = (await screen.findByText(row.keyword)).closest(
-      '[role="row"]',
-    ) as HTMLElement;
-    fireEvent.click(within(keywordRow).getByRole("checkbox"));
-    fireEvent.click(screen.getByRole("button", { name: "Choose check depth" }));
-    fireEvent.click(screen.getByRole("menuitem", { name: "Top 20" }));
-
-    await waitFor(() =>
-      expect(runCheckNowAction).toHaveBeenCalledWith({ depth: 20, keywordId: row.id }),
-    );
-  });
-
-  it("exports filtered keyword IDs when no rows are selected", async () => {
-    const rows = pendingRows(2);
-    renderPendingGrid({ rows });
-
-    fireEvent.change(screen.getByRole("textbox", { name: "Filter keywords" }), {
-      target: { value: rows[0].keyword },
-    });
-    await screen.findByRole("button", { name: /clear all search and filters/i });
-    fireEvent.click(screen.getByRole("button", { name: /^export$/i }));
-
-    expect(await screen.findByText("Export 1 filtered keyword")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /export csv/i }));
-
-    await waitFor(() =>
-      expect(mocks.exportKeywords).toHaveBeenCalledWith(
-        expect.objectContaining({ keywordIds: [rows[0].id], projectId: "prj_1" }),
-      ),
-    );
   });
 });

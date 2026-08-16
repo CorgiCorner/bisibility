@@ -13,7 +13,7 @@ describe("NotificationsLoading", () => {
       [...container.querySelectorAll("[data-notification-loading-frame]")].map((frame) =>
         frame.getAttribute("data-notification-loading-frame"),
       ),
-    ).toEqual(["channels", "email"]);
+    ).toEqual(["channels", "delivery"]);
   });
 
   it("uses the notifications route boundary", () => {

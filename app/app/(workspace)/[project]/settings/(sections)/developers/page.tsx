@@ -15,7 +15,7 @@ import { requireReadableProject } from "@/lib/queries/_auth";
 import { getPreferences } from "@/lib/queries/account";
 import { getIngestHooks } from "@/lib/queries/ingest-hooks";
 import { getSettings } from "@/lib/queries/settings";
-import { appPath, asProjectRef } from "@/lib/routing/app-path";
+import { asProjectRef } from "@/lib/routing/app-path";
 import { headers } from "next/headers";
 
 type DevelopersSettingsPageProps = { params: Promise<{ project: string }> };
@@ -48,7 +48,7 @@ export default async function DevelopersSettingsPage({
           createHook={createIngestHook}
           deleteHook={deleteIngestHook}
           disableHook={disableIngestHook}
-          docsHref={appPath(publicId, "docs")}
+          docsHref="/docs/quickstart"
           endpointUrl={endpointUrl}
           hooks={hooks}
           issueKey={issueApiKey}

@@ -1,6 +1,7 @@
 "use client";
 
 import { Sparkline } from "@/components/charts/Sparkline";
+import { MarketChip } from "@/components/markets/MarketChip";
 import { Card, MenuSelect, MonoText, SectionTitle } from "@/components/ui";
 import { lensHref } from "@/lib/keywords/lens-model";
 import type { OverviewDevice } from "@/lib/queries/overview-filters";
@@ -122,10 +123,7 @@ export function ByMarketRollup({ device, projectRef, rows }: Readonly<ByMarketRo
             key={row.locationId}
           >
             <span className="min-w-0 overflow-hidden">
-              <span className="inline-flex max-w-full items-baseline gap-1 overflow-hidden whitespace-nowrap rounded-full border border-border bg-bg-sunken px-[9px] py-0.5 text-xs">
-                <span className="font-semibold text-fg">{row.locationLabel}</span>
-                <span className="truncate text-fg-muted">/ {row.languageLabel}</span>
-              </span>
+              <MarketChip languageLabel={row.languageLabel} locationLabel={row.locationLabel} />
             </span>
             <span className="min-w-0">
               {!row.researchAvailable ? (

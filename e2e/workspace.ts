@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import { expect, type Page } from "@playwright/test";
 
 const otpFile = process.env.BISIBILITY_E2E_OTP_FILE;
+const wizardNavigationTimeout = 30_000;
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -44,7 +45,7 @@ async function clickWizardPrimary(page: Page, label: string, nextUrl: RegExp) {
   const button = page.getByRole("button", { name: label, exact: true });
   await expect(button).toBeEnabled();
   await button.click();
-  await expect(page).toHaveURL(nextUrl, { timeout: 10000 });
+  await expect(page).toHaveURL(nextUrl, { timeout: wizardNavigationTimeout });
 }
 
 async function clickProviderContinue(page: Page, nextUrl: RegExp) {
@@ -57,7 +58,7 @@ async function clickProviderContinue(page: Page, nextUrl: RegExp) {
       await page.waitForLoadState("networkidle");
     }
   }
-  await expect(page).toHaveURL(nextUrl, { timeout: 10000 });
+  await expect(page).toHaveURL(nextUrl, { timeout: wizardNavigationTimeout });
 }
 
 export async function testAndSaveDataForSeo(page: Page) {

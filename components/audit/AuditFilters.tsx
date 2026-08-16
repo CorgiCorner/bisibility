@@ -1,6 +1,12 @@
 "use client";
 
-import { MenuSelect, menuSelectPaperSx, toolbarControlClassName } from "@/components/ui";
+import { type RegisteredCommand, useRegisterCommands } from "@/components/shell/command-registry";
+import {
+  MenuSelect,
+  menuSelectPaperSx,
+  ToolbarSearch,
+  toolbarControlClassName,
+} from "@/components/ui";
 import { pluralize } from "@/lib/format/pluralize";
 import type { AuditEntry, AuditEventType, AuditStatus } from "@/lib/queries/audit";
 import { cn } from "@/lib/ui/cn";
@@ -13,10 +19,9 @@ import {
   ExportIcon as Export,
   FileCsvIcon as FileCsv,
   FunnelIcon as Funnel,
-  MagnifyingGlassIcon as MagnifyingGlass,
   UserIcon as User,
 } from "@phosphor-icons/react";
-import { useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { AuditExportFormat } from "./audit-export";
 import {
   type AuditDateRange,
@@ -61,6 +66,30 @@ export function AuditFilters({
 }: Readonly<AuditFiltersProps>) {
   const hasRows = visibleCount > 0;
   const [exportAnchor, setExportAnchor] = useState<null | HTMLElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const auditCommands = useMemo<RegisteredCommand[]>(() => {
+    const cmds: RegisteredCommand[] = [
+      {
+        id: "audit-filter",
+        label: "Filter",
+        scope: "audit",
+        hint: "Search audit events",
+        run: () => searchInputRef.current?.focus(),
+      },
+    ];
+    if (hasRows) {
+      cmds.push({
+        id: "audit-export",
+        label: "Export",
+        scope: "audit",
+        hint: "Download CSV",
+        run: () => onExport("csv"),
+      });
+    }
+    return cmds;
+  }, [hasRows, onExport]);
+  const auditRegisterRef = useRegisterCommands(auditCommands);
 
   function setFilter<Key extends keyof AuditFilterState>(key: Key, value: AuditFilterState[Key]) {
     onChange({ ...filters, [key]: value });
@@ -90,24 +119,15 @@ export function AuditFilters({
     <div className="border-b border-border px-4 py-[14px]">
       <div className="grid gap-3 xl:flex xl:items-center xl:justify-between">
         <div className="flex min-w-0 flex-1 flex-wrap items-center gap-[7px]">
-          <label
-            className={cn(
-              toolbarControlClassName,
-              "flex min-w-[200px] flex-1 items-center gap-2 px-[11px] transition-colors focus-within:border-accent sm:flex-none",
-            )}
-            htmlFor="audit-filter-search"
-          >
-            <MagnifyingGlass aria-hidden className="shrink-0 text-fg-muted" size={14} />
-            <input
-              aria-label="Search audit events"
-              className="min-w-0 flex-1 bg-transparent font-mono text-[12px] text-fg outline-none placeholder:text-fg-muted focus-visible:outline-none"
-              id="audit-filter-search"
-              onChange={(event) => setFilter("search", event.target.value)}
-              placeholder="Search actor, event, resource ID…"
-              type="search"
-              value={filters.search}
-            />
-          </label>
+          <ToolbarSearch
+            className="min-w-[200px] flex-1 sm:flex-none"
+            id="audit-filter-search"
+            inputRef={searchInputRef}
+            label="Search audit events"
+            onChange={(value) => setFilter("search", value)}
+            placeholder="Search actor, event, resource ID…"
+            value={filters.search}
+          />
           <MenuSelect
             ariaLabel="Date range"
             leadingIcon={<CalendarBlank aria-hidden size={14} />}
@@ -187,6 +207,7 @@ export function AuditFilters({
           </Menu>
         </div>
       </div>
+      <span aria-hidden hidden ref={auditRegisterRef} />
     </div>
   );
 }

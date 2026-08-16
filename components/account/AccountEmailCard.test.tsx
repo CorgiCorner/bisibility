@@ -1,57 +1,46 @@
-import { NotificationEmailCard } from "@/components/settings/notifications/NotificationEmailCard";
-import type { NotificationPreferencesView } from "@/lib/queries/notification-prefs";
+import { AccountEmailCard } from "@/components/account/AccountEmailCard";
 import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const preferences: NotificationPreferencesView = {
-  alertEmail: true,
-  alertInApp: true,
-  alertSlack: false,
-  alertWebhook: false,
-  checkEmail: false,
-  checkInApp: true,
-  email: "owner@example.com",
-  emailVerification: "verified",
-  importEmail: true,
-  importInApp: true,
-  inviteEmail: true,
-  inviteInApp: true,
-  projectId: "prj_1",
-  reportEmail: true,
-  slackAvailable: false,
-  webhookAvailable: false,
-};
+const defaults = { email: "owner@example.com", emailVerified: true } as const;
 
-function renderCard(props: Partial<ComponentProps<typeof NotificationEmailCard>> = {}) {
-  const result = render(<NotificationEmailCard preferences={preferences} {...props} />);
-  const card = result.container.querySelector<HTMLElement>(
-    '[data-notification-card-frame="email"]',
-  );
-  if (!card) throw new Error("Notification email card was not rendered.");
+function renderCard(props: Partial<ComponentProps<typeof AccountEmailCard>> = {}) {
+  const result = render(<AccountEmailCard {...defaults} {...props} />);
+  const card = result.container.querySelector<HTMLElement>('[data-account-card-frame="email"]');
+  if (!card) throw new Error("Account email card was not rendered.");
   return { ...result, card };
 }
 
-describe("NotificationEmailCard", () => {
+describe("AccountEmailCard", () => {
   beforeEach(() => vi.clearAllMocks());
+
+  it("renders the account email title and never uses notification email wording", () => {
+    renderCard();
+
+    expect(screen.getByRole("heading", { name: "Account email" })).toBeInTheDocument();
+    expect(screen.queryByText("Notification email")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Notification email")).not.toBeInTheDocument();
+  });
 
   it("renders verified and unverified states without a production mutation boundary", () => {
     const { unmount } = renderCard();
 
-    const emailInput = screen.getByLabelText<HTMLInputElement>("Notification email");
-    const notificationEmailLabel = emailInput.labels?.[0];
-    if (!notificationEmailLabel) throw new Error("Notification email label was not rendered.");
-    expect(notificationEmailLabel.parentElement?.parentElement).toContainElement(
+    const emailInput = screen.getByLabelText<HTMLInputElement>("Account email");
+    const accountEmailLabel = emailInput.labels?.[0];
+    if (!accountEmailLabel) throw new Error("Account email label was not rendered.");
+    expect(accountEmailLabel.parentElement?.parentElement).toContainElement(
       screen.getByText("Verified"),
     );
     expect(emailInput).toHaveAttribute("readonly");
     unmount();
-    renderCard({ preferences: { ...preferences, emailVerification: "unverified" } });
 
-    const unverifiedInput = screen.getByLabelText<HTMLInputElement>("Notification email");
+    renderCard({ emailVerified: false });
+
+    const unverifiedInput = screen.getByLabelText<HTMLInputElement>("Account email");
     const unverifiedLabel = unverifiedInput.labels?.[0];
-    if (!unverifiedLabel) throw new Error("Notification email label was not rendered.");
+    if (!unverifiedLabel) throw new Error("Account email label was not rendered.");
     expect(unverifiedLabel.parentElement?.parentElement).toContainElement(
       screen.getByText("Unverified"),
     );
@@ -73,24 +62,27 @@ describe("NotificationEmailCard", () => {
       emailVerification: "verified",
       status: "changed",
     });
-    const { card } = renderCard({ confirmAccountEmailChange, requestAccountEmailChange });
+    const { card } = renderCard({
+      confirmAccountEmailChange,
+      requestAccountEmailChange,
+    });
     const save = within(card).getByRole("button", { name: "Save" });
 
-    fireEvent.change(screen.getByLabelText("Notification email"), {
+    fireEvent.change(screen.getByLabelText("Account email"), {
       target: { value: "updated@example.com" },
     });
-    expect(save).toBeEnabled();
+    await waitFor(() => expect(save).toBeEnabled());
     fireEvent.click(save);
 
     await waitFor(() =>
       expect(requestAccountEmailChange).toHaveBeenCalledWith({ newEmail: "updated@example.com" }),
     );
     expect(await within(card).findByText("Saved")).toBeInTheDocument();
-    expect(screen.getByLabelText("Current notification email")).toHaveValue("owner@example.com");
+    expect(screen.getByLabelText("Current account email")).toHaveValue("owner@example.com");
     expect(screen.queryByText("Unverified")).not.toBeInTheDocument();
     expect(
       screen.getByText(
-        "New notification email pending confirmation: updated@example.com. Enter its code to confirm the change.",
+        "New account email pending confirmation: updated@example.com. Enter its code to confirm the change.",
       ),
     ).toBeInTheDocument();
     expect(routerMock.refresh).not.toHaveBeenCalled();
@@ -103,11 +95,11 @@ describe("NotificationEmailCard", () => {
         newEmail: "updated@example.com",
       }),
     );
-    expect(screen.getByLabelText("Notification email")).toHaveValue("updated@example.com");
+    expect(screen.getByLabelText("Account email")).toHaveValue("updated@example.com");
     expect(routerMock.refresh).toHaveBeenCalledTimes(1);
   });
 
-  it("does not request or save an invalid notification email", async () => {
+  it("does not request or save an invalid account email", async () => {
     const requestAccountEmailChange = vi.fn();
     const { card } = renderCard({
       confirmAccountEmailChange: vi.fn(),
@@ -115,13 +107,13 @@ describe("NotificationEmailCard", () => {
     });
     const save = within(card).getByRole("button", { name: "Save" });
 
-    fireEvent.change(screen.getByLabelText("Notification email"), {
+    fireEvent.change(screen.getByLabelText("Account email"), {
       target: { value: "invalid-email" },
     });
-    expect(save).toBeEnabled();
+    await waitFor(() => expect(save).toBeEnabled());
     fireEvent.click(save);
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("Enter a valid notification email.");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Enter a valid account email.");
     expect(requestAccountEmailChange).not.toHaveBeenCalled();
     expect(within(card).queryByText("Saved")).not.toBeInTheDocument();
   });
@@ -130,7 +122,7 @@ describe("NotificationEmailCard", () => {
     const confirmCurrentAccountEmailVerification = vi.fn();
     renderCard({
       confirmCurrentAccountEmailVerification,
-      preferences: { ...preferences, emailVerification: "unverified" },
+      emailVerified: false,
       requestCurrentAccountEmailVerification: vi.fn(),
     });
 
@@ -155,11 +147,8 @@ describe("NotificationEmailCard", () => {
     });
     renderCard({
       confirmCurrentAccountEmailVerification,
-      preferences: {
-        ...preferences,
-        email: "unverified@example.com",
-        emailVerification: "unverified",
-      },
+      email: "unverified@example.com",
+      emailVerified: false,
       requestCurrentAccountEmailVerification,
     });
 

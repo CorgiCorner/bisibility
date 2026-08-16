@@ -37,3 +37,19 @@ export const UnreadableCredentials: Story = {
     provider: { ...serpProviders[0], credentialIssue: "unreadable" },
   },
 };
+
+export const DisabledConnected: Story = {
+  args: {
+    canManageProviders: true,
+    canUpdateProject: true,
+    provider: { ...serpProviders[0], enabled: false },
+  },
+};
+
+export const NeedsReauth: Story = {
+  args: {
+    canManageProviders: true,
+    canUpdateProject: true,
+    provider: { ...analyticsProviders[0], enabled: true, status: "needs_reauth" },
+  },
+};

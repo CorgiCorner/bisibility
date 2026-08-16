@@ -40,14 +40,19 @@ describe("NotificationPreferences", () => {
     mocks.updateNotificationPreferences.mockImplementation(async (values) => values);
   });
 
-  it("renders settled channel and notification-email cards without the obsolete digest card", () => {
+  it("renders the channels card and the read-only delivery-address card", () => {
     const { container } = render(<NotificationPreferences canEdit preferences={preferences} />);
 
     expect(container.querySelectorAll('[data-settings-card-frame="settled"]')).toHaveLength(2);
     expect(screen.getByRole("heading", { name: "Channels" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Notification email" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Delivery address" })).toBeInTheDocument();
     expect(screen.queryByText("Digest & reports")).not.toBeInTheDocument();
-    expect(screen.getByLabelText("Notification email")).toHaveAttribute("readonly");
+    expect(screen.queryByLabelText("Notification email")).not.toBeInTheDocument();
+    expect(screen.getByText("owner@example.com")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Manage your account email" })).toHaveAttribute(
+      "href",
+      "/app/account",
+    );
   });
 
   it("renders the reference three-column matrix with Weekly report email-only", () => {
@@ -117,7 +122,7 @@ describe("NotificationPreferences", () => {
     expect(screen.getByLabelText("Check complete Email")).not.toBeChecked();
   });
 
-  it("uses the same geometry markers for settled cards and the Notifications loader", () => {
+  it("uses the same geometry marker for the channels card and its loader", () => {
     const { container } = render(
       <>
         <NotificationPreferences canEdit preferences={preferences} />
@@ -129,16 +134,9 @@ describe("NotificationPreferences", () => {
       '[data-notification-card-frame="channels"] [data-settings-card-frame="settled"]',
     );
     const channelsLoader = container.querySelector('[data-notification-loading-frame="channels"]');
-    const emailCard = container.querySelector(
-      '[data-notification-card-frame="email"] [data-settings-card-frame="settled"]',
-    );
-    const emailLoader = container.querySelector('[data-notification-loading-frame="email"]');
 
     expect(channelsCard).toHaveClass("min-h-[414px]", "sm:min-h-[380px]");
     expect(channelsLoader).toHaveClass("min-h-[414px]", "sm:min-h-[380px]");
-    expect(channelsLoader?.querySelector(".h-8.w-14")).not.toBeInTheDocument();
-    expect(emailCard).toHaveClass("min-h-[320px]", "sm:min-h-[236px]");
-    expect(emailLoader).toHaveClass("min-h-[320px]", "sm:min-h-[236px]");
   });
 
   it.each(["viewer", "auditor", "member", "admin", "owner"] satisfies Role[])(

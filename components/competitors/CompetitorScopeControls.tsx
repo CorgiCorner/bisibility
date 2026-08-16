@@ -1,13 +1,12 @@
 "use client";
 
-import { MenuSelect, SegmentedControl } from "@/components/ui";
+import { SegmentedControl } from "@/components/ui";
 import { competitorScopeHref } from "@/lib/competitors/scope-model";
 import type { CompetitorMarketOption, CompetitorsViewModel } from "@/lib/competitors/types";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
 import {
   DeviceMobileIcon as DeviceMobile,
   InfoIcon as Info,
-  MagnifyingGlassIcon as MagnifyingGlass,
   MonitorIcon as Monitor,
 } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
@@ -81,16 +80,9 @@ export function CompetitorScopeControls({
         size="toolbar"
         value={current.device}
       />
-      <MenuSelect
-        ariaLabel="Search engine"
-        leadingIcon={<MagnifyingGlass aria-hidden size={13} />}
-        onChange={() => undefined}
-        options={[{ disabled: true, label: "Google", value: "google" }]}
-        value="google"
-      />
       <span className="ml-auto flex items-center gap-1.5 font-mono text-[10.5px] text-fg-muted">
         <Info aria-hidden className="shrink-0 text-accent-text" size={13} />
-        SOV compares one market (location + language) + device + engine at a time
+        SOV compares one market (location + language) + device at a time
       </span>
     </div>
   );

@@ -4,7 +4,7 @@ import { cn } from "@/lib/ui/cn";
 import Dialog from "@mui/material/Dialog";
 import { XIcon as X } from "@phosphor-icons/react";
 import { cva } from "class-variance-authority";
-import { type ReactNode, useId } from "react";
+import { type KeyboardEvent as ReactKeyboardEvent, type ReactNode, useId } from "react";
 
 export type ModalSize = "sm" | "md" | "lg";
 
@@ -23,6 +23,8 @@ export type ModalProps = {
   initialFocus?: () => void;
   /** Exact panel width in px; overrides the `size` presets. */
   width?: number;
+  onPrimaryAction?: () => void;
+  primaryActionDisabled?: boolean;
 };
 
 const modalWidth = {
@@ -42,7 +44,9 @@ export function Modal({
   headerDivider = false,
   initialFocus,
   onClose,
+  onPrimaryAction,
   open,
+  primaryActionDisabled = false,
   showClose = true,
   size = "md",
   title,
@@ -51,14 +55,43 @@ export function Modal({
   const titleId = useId();
   const hasHeader = title || showClose;
 
+  function handleKeyDown(event: ReactKeyboardEvent<HTMLDivElement>) {
+    const composing = event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229;
+    if (composing) return;
+
+    if (event.key === "Escape") {
+      event.preventDefault();
+      event.stopPropagation();
+      onClose();
+      return;
+    }
+    if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+      event.preventDefault();
+      event.stopPropagation();
+      if (onPrimaryAction && !primaryActionDisabled) {
+        onPrimaryAction();
+      }
+    }
+  }
+
+  function handleDialogClose(event: object, reason: "backdropClick" | "escapeKeyDown") {
+    if (reason === "escapeKeyDown") {
+      const native = (event as { nativeEvent?: { isComposing?: boolean; keyCode?: number } })
+        .nativeEvent;
+      if (native?.isComposing || native?.keyCode === 229) return;
+    }
+    onClose();
+  }
+
   return (
     <Dialog
       aria-labelledby={title ? titleId : ariaLabelledBy}
-      onClose={onClose}
+      onClose={handleDialogClose}
       open={open}
       slotProps={{
         backdrop: { sx: { backgroundColor: "rgba(20,16,8,.44)" } },
         paper: {
+          onKeyDown: handleKeyDown,
           sx: {
             backgroundColor: "var(--bg-elev)",
             border: "1px solid var(--border-strong)",

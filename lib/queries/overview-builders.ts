@@ -23,7 +23,7 @@ export type OverviewMetrics = {
   visibilityDelta: number | null;
 };
 // biome-ignore format: compact query-local shapes keep this file under the line cap.
-export type HighlightRow = { delta?: { direction: "down" | "up"; title: string; value: string }; device?: string; id: string; keyword: string; marketLabel?: string; note: string; positionText: string; positionTone?: "danger" | "default" | "muted" };
+export type HighlightRow = { delta?: { direction: "down" | "up"; title: string; value: string }; device?: string; id: string; keyword: string; marketLanguageLabel?: string; marketLocationLabel?: string; note: string; positionText: string; positionTone?: "danger" | "default" | "muted" };
 // biome-ignore format: compact query-local shapes keep this file under the line cap.
 export type HighlightList = { kind: "attention" | "newTop10" | "recentlyAdded" | "wins"; rows: HighlightRow[]; subtitle: string; title: string };
 export type Snapshot = ReturnType<typeof snapshotFor>;
@@ -104,7 +104,8 @@ export function rowFor(snapshot: Snapshot, note?: string, showDelta = true): Hig
     device: snapshot.keyword.device,
     id: snapshot.keyword.publicId,
     keyword: snapshot.keyword.text,
-    marketLabel: `${snapshot.keyword.locationRef.displayName} / ${snapshot.keyword.locationRef.languageLabel}`,
+    marketLanguageLabel: snapshot.keyword.locationRef.languageLabel,
+    marketLocationLabel: snapshot.keyword.locationRef.displayName,
     note: note ?? snapshot.latest?.rankingUrl ?? "No ranking URL observed",
     positionText: snapshot.position ? `#${snapshot.position}` : observation.label,
     positionTone: snapshot.position ? "default" : "muted",

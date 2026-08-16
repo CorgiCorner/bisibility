@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { HighlightLists } from "./HighlightLists";
 
@@ -14,7 +14,8 @@ describe("HighlightLists", () => {
                 device: "desktop",
                 id: "kw_es",
                 keyword: "shared keyword",
-                marketLabel: "Spain / Spanish",
+                marketLanguageLabel: "Spanish",
+                marketLocationLabel: "Spain",
                 note: "Gained 2",
                 positionText: "#3",
               },
@@ -22,7 +23,8 @@ describe("HighlightLists", () => {
                 device: "mobile",
                 id: "kw_be",
                 keyword: "shared keyword",
-                marketLabel: "Belgium / Dutch",
+                marketLanguageLabel: "Dutch",
+                marketLocationLabel: "Belgium",
                 note: "Gained 1",
                 positionText: "#4",
               },
@@ -35,10 +37,57 @@ describe("HighlightLists", () => {
       />,
     );
 
-    expect(screen.getByText("Spain / Spanish")).toBeVisible();
-    expect(screen.getByText("Belgium / Dutch")).toBeVisible();
+    expect(screen.getByText("Spain")).toBeVisible();
+    expect(screen.getByText("/ Spanish")).toBeVisible();
+    expect(screen.getByText("Belgium")).toBeVisible();
+    expect(screen.getByText("/ Dutch")).toBeVisible();
     expect(screen.getByLabelText("Desktop")).toBeVisible();
     expect(screen.getByLabelText("Mobile")).toBeVisible();
+  });
+
+  it("keeps the row height off the chip and hides the chip without a pair", () => {
+    render(
+      <HighlightLists
+        lists={[
+          {
+            kind: "wins",
+            rows: [
+              {
+                device: "desktop",
+                id: "kw_paired",
+                keyword: "paired keyword",
+                marketLanguageLabel: "Spanish",
+                marketLocationLabel: "Spain",
+                note: "Gained 2",
+                positionText: "#3",
+              },
+              {
+                id: "kw_unpaired",
+                keyword: "unpaired keyword",
+                note: "First check pending",
+                positionText: "No data",
+              },
+            ],
+            subtitle: "Gained the most",
+            title: "Biggest wins",
+          },
+        ]}
+        projectRef="prj_1"
+      />,
+    );
+
+    // The chip is height-pinned and the row keeps its own minimum, so a chip appearing on
+    // one row cannot make it taller than a row without one.
+    expect(screen.getByText("Spain").parentElement).toHaveClass("h-[22px]");
+    for (const row of screen.getAllByRole("link")) {
+      expect(row).toHaveClass("min-h-[58px]");
+    }
+    // Not `queryByText("/ ")`: the default normalizer trims the element text, so that
+    // string can never match anything and the assertion would hold with the guard gone.
+    const [paired, unpaired] = screen.getAllByRole("link");
+    expect(within(paired).getByText("/ Spanish")).toBeVisible();
+    expect(within(unpaired).queryByText(/\//)).not.toBeInTheDocument();
+    expect(within(unpaired).getByText("unpaired keyword")).toBeVisible();
   });
 
   it("renders comparison and no-match empty states per list", () => {

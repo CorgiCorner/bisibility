@@ -37,6 +37,7 @@ export {
   type ExpiryChoiceGroupProps,
   type ExpiryChoiceOption,
 } from "./ExpiryChoiceGroup";
+export { ExternalLink, type ExternalLinkProps } from "./ExternalLink";
 export { FieldLabel, type FieldLabelProps } from "./FieldLabel";
 export { filterChipStateClassName } from "./filter-chip-styles";
 export { GithubStars, type GithubStarsProps, type GithubStarsSize } from "./GithubStars";
@@ -104,5 +105,10 @@ export {
   type ToastTint,
   useToast,
 } from "./Toast";
+export {
+  ToolbarSearch,
+  type ToolbarSearchProps,
+  type ToolbarSearchVariant,
+} from "./ToolbarSearch";
 export { toolbarControlClassName } from "./toolbar-control-styles";
 export { useBrowserTimeZone, ZonedTime, type ZonedTimeProps } from "./ZonedTime";

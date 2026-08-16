@@ -1,4 +1,5 @@
 import { DevelopersSettingsContent } from "@/components/settings/developers/DevelopersSettingsContent";
+import { DOCS_URL } from "@/lib/site/site";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
@@ -28,7 +29,7 @@ const hooks = [
 const baseProps = {
   apiKeys,
   canManage: true,
-  docsHref: "/app/prj_example/docs",
+  docsHref: "/docs/quickstart",
   endpointUrl: "https://example.com/api/ingest/deploy",
   hooks,
   projectId: "prj_example",
@@ -52,6 +53,16 @@ describe("DevelopersSettingsContent", () => {
 
     expect(screen.getByText("No keys yet")).toBeVisible();
     expect(screen.getByText("The first key is made with Create key.")).toBeVisible();
+  });
+
+  it("points the Docs quickstart link at the canonical docs URL in a new tab", () => {
+    render(<DevelopersSettingsContent {...baseProps} />);
+
+    const link = screen.getByRole("link", { name: "Docs quickstart" });
+    expect(link).toHaveAttribute("href", `${DOCS_URL}/quickstart`);
+    expect(link).toHaveAttribute("target", "_blank");
+    expect(link).toHaveAttribute("rel", "noreferrer noopener");
+    expect(link.querySelector("svg")).not.toBeNull();
   });
 
   it("keeps creation-only guidance out of persistent Developers cards", () => {

@@ -32,4 +32,57 @@ describe("commandGroups", () => {
 
     expect(push).toHaveBeenCalledWith("/app/prj_1/keyword-research");
   });
+
+  it("has exact rank tracker labels with concrete hints", () => {
+    const actions = commandGroups("prj_1", vi.fn(), vi.fn(), []).find(
+      (group) => group.title === "Actions",
+    );
+    expect(actions).toBeDefined();
+
+    const labels = actions?.items.map((i) => i.label);
+    expect(labels).toContain("Rank Tracker: Add keyword");
+    expect(labels).toContain("Rank Tracker: Import CSV");
+    expect(labels).toContain("Rank Tracker: Export keywords");
+
+    for (const item of actions?.items ?? []) {
+      if (item.label.startsWith("Rank Tracker:")) {
+        expect(item.hint).not.toBe("Action");
+        expect(item.hint.length).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it("does not include Filter, Run rank checks, or generic Action hints", () => {
+    const actions = commandGroups("prj_1", vi.fn(), vi.fn(), []).find(
+      (group) => group.title === "Actions",
+    );
+    expect(actions).toBeDefined();
+
+    const labels = actions?.items.map((i) => i.label);
+    expect(labels).not.toContain("Filter");
+    expect(labels).not.toContain("Run rank checks");
+
+    const hints = actions?.items.map((i) => i.hint);
+    expect(hints).not.toContain("Action");
+  });
+
+  it("pushes exact action hrefs for Add, Import, and Export", () => {
+    const push = vi.fn();
+    const actions = commandGroups("prj_1", push, vi.fn(), []).find(
+      (group) => group.title === "Actions",
+    );
+    expect(actions).toBeDefined();
+
+    const add = actions?.items.find((i) => i.label === "Rank Tracker: Add keyword");
+    add?.run();
+    expect(push).toHaveBeenCalledWith("/app/prj_1/rank-tracker?action=add");
+
+    const imp = actions?.items.find((i) => i.label === "Rank Tracker: Import CSV");
+    imp?.run();
+    expect(push).toHaveBeenCalledWith("/app/prj_1/rank-tracker?action=import");
+
+    const exp = actions?.items.find((i) => i.label === "Rank Tracker: Export keywords");
+    exp?.run();
+    expect(push).toHaveBeenCalledWith("/app/prj_1/rank-tracker?action=export");
+  });
 });

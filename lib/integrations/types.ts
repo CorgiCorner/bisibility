@@ -10,6 +10,11 @@ import type {
 import type { SerpDepth, SerpDevice, SerpMarketName } from "@/lib/serp/markets";
 import type { StatusKind } from "@/lib/ui/status-kind";
 
+export type ProviderStatusKind = Extract<
+  StatusKind,
+  "connected" | "needs_reauth" | "ready" | "planned" | "optional"
+>;
+
 export type ProviderIconName =
   | "chart"
   | "database"
@@ -108,7 +113,7 @@ export type IntegrationProviderData = ProviderConnectionReadState & {
     since: string;
   };
   secondaryAction?: string;
-  status: StatusKind;
+  status: ProviderStatusKind;
   tint: string;
 };
 

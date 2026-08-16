@@ -1,15 +1,14 @@
 "use client";
 
-import { NotificationEmailConfirmation } from "@/components/settings/notifications/NotificationEmailConfirmation";
-import { notificationCardGeometryClassNames } from "@/components/settings/notifications/notification-card-layout";
+import { AccountEmailConfirmation } from "@/components/account/AccountEmailConfirmation";
+import { AccountSection } from "@/components/account/AccountSection";
 import {
-  type NotificationEmailForm,
-  notificationEmailSchema,
+  type AccountEmailForm,
+  accountEmailSchema,
   type VerificationCodeForm,
   verificationCodeSchema,
-} from "@/components/settings/notifications/notification-email-form";
-import { SettingsCard } from "@/components/settings/shell/SettingsCard";
-import { SettingsField } from "@/components/settings/shell/settings-field-widths";
+} from "@/components/account/account-email-form";
+import { accentButtonClass } from "@/components/account/account-ui";
 import { FieldLabel, Input, StatusPill } from "@/components/ui";
 import type {
   AccountEmailChanged,
@@ -17,32 +16,17 @@ import type {
   CurrentAccountEmailVerificationRequested,
   CurrentAccountEmailVerified,
 } from "@/lib/actions/account-email";
-import { MAX_ALERT_DELIVERIES_PER_RULE_PER_DAY } from "@/lib/alerts/limits";
 import { zodResolver } from "@/lib/forms/zod-resolver";
-import type { NotificationPreferencesView } from "@/lib/queries/notification-prefs";
 import { actionErrorMessage } from "@/lib/ui/action-error";
-import { cn } from "@/lib/ui/cn";
 import { useRouter } from "next/navigation";
-import { type MouseEvent, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 
-export type RequestAccountEmailChangeInput = {
-  newEmail: string;
-};
-
+export type RequestAccountEmailChangeInput = { newEmail: string };
 export type RequestAccountEmailChangeResult = AccountEmailChangeRequested;
-
-export type ConfirmAccountEmailChangeInput = {
-  code: string;
-  newEmail: string;
-};
-
+export type ConfirmAccountEmailChangeInput = { code: string; newEmail: string };
 export type ConfirmAccountEmailChangeResult = AccountEmailChanged;
 
-/**
- * These server action boundaries remain injectable for Storybook and component
- * tests. A request alone must never change the address.
- */
 export type RequestAccountEmailChange = (
   input: RequestAccountEmailChangeInput,
 ) => Promise<RequestAccountEmailChangeResult>;
@@ -60,25 +44,27 @@ export type ConfirmCurrentAccountEmailVerification = (input: {
   email: string;
 }) => Promise<CurrentAccountEmailVerified>;
 
-export type NotificationEmailCardProps = {
+export type AccountEmailCardProps = {
   confirmAccountEmailChange?: ConfirmAccountEmailChange;
   confirmCurrentAccountEmailVerification?: ConfirmCurrentAccountEmailVerification;
-  preferences: NotificationPreferencesView;
+  email: string;
+  emailVerified: boolean;
   requestAccountEmailChange?: RequestAccountEmailChange;
   requestCurrentAccountEmailVerification?: RequestCurrentAccountEmailVerification;
 };
 
-export function NotificationEmailCard({
+export function AccountEmailCard({
   confirmAccountEmailChange,
   confirmCurrentAccountEmailVerification,
-  preferences,
+  email,
+  emailVerified,
   requestAccountEmailChange,
   requestCurrentAccountEmailVerification,
-}: Readonly<NotificationEmailCardProps>) {
-  const form = useForm<NotificationEmailForm>({
-    defaultValues: { email: preferences.email },
+}: Readonly<AccountEmailCardProps>) {
+  const form = useForm<AccountEmailForm>({
+    defaultValues: { email },
     mode: "onChange",
-    resolver: zodResolver(notificationEmailSchema),
+    resolver: zodResolver(accountEmailSchema),
   });
   const confirmationForm = useForm<VerificationCodeForm>({
     defaultValues: { code: "" },
@@ -86,12 +72,16 @@ export function NotificationEmailCard({
     resolver: zodResolver(verificationCodeSchema),
   });
   const router = useRouter();
-  const [emailVerification, setEmailVerification] = useState(preferences.emailVerification);
+  const [emailVerification, setEmailVerification] = useState(
+    emailVerified ? "verified" : "unverified",
+  );
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [codeRequested, setCodeRequested] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [sendingCode, setSendingCode] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
   const canChangeEmail = Boolean(requestAccountEmailChange && confirmAccountEmailChange);
   const canVerifyCurrentEmail = Boolean(
     requestCurrentAccountEmailVerification && confirmCurrentAccountEmailVerification,
@@ -100,9 +90,8 @@ export function NotificationEmailCard({
 
   async function requestChange(newEmail: string) {
     if (!requestAccountEmailChange) {
-      throw new Error("Notification email changes are not available.");
+      throw new Error("Account email changes are not available.");
     }
-
     const result = await requestAccountEmailChange({ newEmail });
     form.reset({ email: result.currentEmail });
     confirmationForm.reset({ code: "" });
@@ -110,13 +99,17 @@ export function NotificationEmailCard({
     setCodeRequested(true);
   }
 
-  async function saveEmail() {
+  async function onSave({ email: newEmail }: AccountEmailForm) {
     setErrorMessage(null);
+    setSaving(true);
     try {
-      await form.handleSubmit(async ({ email }) => requestChange(email))();
+      await requestChange(newEmail);
+      setSaved(true);
+      window.setTimeout(() => setSaved(false), 2500);
     } catch (error: unknown) {
-      setErrorMessage(actionErrorMessage(error, "Notification email could not be saved."));
-      throw error;
+      setErrorMessage(actionErrorMessage(error, "Account email could not be saved."));
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -157,7 +150,7 @@ export function NotificationEmailCard({
       const result = pendingEmail
         ? await confirmAccountEmailChange?.({ code, newEmail: pendingEmail })
         : await confirmCurrentAccountEmailVerification?.({ email: form.getValues("email"), code });
-      if (!result) throw new Error("Notification email confirmation is not available.");
+      if (!result) throw new Error("Account email confirmation is not available.");
       form.reset({ email: result.email });
       confirmationForm.reset({ code: "" });
       setEmailVerification(result.emailVerification);
@@ -165,87 +158,77 @@ export function NotificationEmailCard({
       setCodeRequested(false);
       router.refresh();
     } catch (error: unknown) {
-      setErrorMessage(actionErrorMessage(error, "Notification email could not be confirmed."));
+      setErrorMessage(actionErrorMessage(error, "Account email could not be confirmed."));
     } finally {
       setConfirming(false);
     }
   }
 
-  function preventInvalidSave(event: MouseEvent<HTMLDivElement>) {
-    const target = event.target as HTMLElement;
-    if (!target.closest("[data-settings-card-save]")) return;
-    if (notificationEmailSchema.safeParse({ email: form.getValues("email") }).success) return;
-
-    event.preventDefault();
-    event.stopPropagation();
-    void form.trigger();
-  }
-
   return (
-    <div
-      data-notification-card-frame="email"
-      data-notification-email-state={emailVerification}
-      onClickCapture={preventInvalidSave}
-    >
-      <SettingsCard
-        className={notificationCardGeometryClassNames.email}
-        description="The address the email channel delivers to. This form saves on Save."
-        onSave={saveEmail}
-        title="Notification email"
+    <div data-account-card-frame="email" data-account-email-state={emailVerification}>
+      <AccountSection
+        action={
+          <div className="flex items-center gap-3">
+            <span aria-live="polite" className="text-[12px] font-medium text-green-text">
+              {saved ? <span data-account-email-saved="">Saved</span> : null}
+            </span>
+            <button
+              className={accentButtonClass}
+              disabled={!form.formState.isDirty || saving || Boolean(pendingEmail)}
+              form="account-email-form"
+              type="submit"
+            >
+              {saving ? "Saving" : "Save"}
+            </button>
+          </div>
+        }
+        description="The email address used to sign in and receive verification codes."
+        title="Account email"
       >
-        <form id="notification-email-form" onSubmit={(event) => event.preventDefault()}>
-          <SettingsField width="field">
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-center gap-2">
-                <FieldLabel
-                  className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted"
-                  htmlFor="notification-email"
-                  label={pendingEmail ? "Current notification email" : "Notification email"}
-                />
-                <StatusPill
-                  label={currentEmailVerified ? "Verified" : "Unverified"}
-                  size="sm"
-                  status={currentEmailVerified ? "connected" : "needs_reauth"}
-                />
-              </div>
-              <div className="min-w-0">
-                <Input
-                  aria-describedby="notification-email-error"
-                  aria-invalid={Boolean(form.formState.errors.email)}
-                  className="min-w-0 flex-1"
-                  id="notification-email"
-                  readOnly={!canChangeEmail || Boolean(pendingEmail) || !currentEmailVerified}
-                  {...form.register("email")}
-                />
-              </div>
-              {form.formState.errors.email ? (
-                <p
-                  className="m-0 text-[11.5px] text-red-text"
-                  id="notification-email-error"
-                  role="alert"
-                >
-                  {form.formState.errors.email.message}
-                </p>
-              ) : null}
+        <form id="account-email-form" onSubmit={form.handleSubmit(onSave)}>
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center gap-2">
+              <FieldLabel
+                className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted"
+                htmlFor="account-email"
+                label={pendingEmail ? "Current account email" : "Account email"}
+              />
+              <StatusPill
+                label={currentEmailVerified ? "Verified" : "Unverified"}
+                size="sm"
+                status={currentEmailVerified ? "connected" : "needs_reauth"}
+              />
             </div>
-          </SettingsField>
+            <Input
+              aria-describedby="account-email-error"
+              aria-invalid={Boolean(form.formState.errors.email)}
+              id="account-email"
+              readOnly={!canChangeEmail || Boolean(pendingEmail) || !currentEmailVerified}
+              {...form.register("email")}
+            />
+            {form.formState.errors.email ? (
+              <p className="m-0 text-[11.5px] text-red-text" id="account-email-error" role="alert">
+                {form.formState.errors.email.message}
+              </p>
+            ) : null}
+          </div>
           {pendingEmail ? (
-            <NotificationEmailConfirmation
+            <AccountEmailConfirmation
               canConfirm={canChangeEmail}
               codeError={confirmationForm.formState.errors.code}
               confirming={confirming}
-              description={`New notification email pending confirmation: ${pendingEmail}. Enter its code to confirm the change.`}
+              description={`New account email pending confirmation: ${pendingEmail}. Enter its code to confirm the change.`}
               onConfirm={confirmEmail}
               onSendCode={sendCode}
               register={confirmationForm.register}
               sendingCode={sendingCode}
             />
           ) : !currentEmailVerified && canVerifyCurrentEmail ? (
-            <NotificationEmailConfirmation
+            <AccountEmailConfirmation
               canConfirm={canVerifyCurrentEmail}
               codeError={confirmationForm.formState.errors.code}
               confirming={confirming}
-              description={`Enter the code sent to ${form.getValues("email")} to verify this notification email.`}
+              description={`Enter the code sent to ${form.getValues("email")} to verify this account email.`}
               onConfirm={confirmEmail}
               onSendCode={sendCode}
               register={confirmationForm.register}
@@ -258,21 +241,18 @@ export function NotificationEmailCard({
                 : "No code has been confirmed for this address yet."}
             </p>
           )}
-          <p className="m-0 mt-2 text-[12px] leading-5 text-fg-muted">
-            Delivery is capped at {MAX_ALERT_DELIVERIES_PER_RULE_PER_DAY} batches per rule per day.
-          </p>
           {codeRequested ? (
             <p aria-live="polite" className="m-0 mt-2 text-[11.5px] text-green-text">
               If this address can be used, a verification code will arrive.
             </p>
           ) : null}
           {errorMessage ? (
-            <p aria-live="polite" className={cn("m-0 mt-2 text-[11.5px] text-red-text")}>
+            <p aria-live="polite" className="m-0 mt-2 text-[11.5px] text-red-text">
               {errorMessage}
             </p>
           ) : null}
         </form>
-      </SettingsCard>
+      </AccountSection>
     </div>
   );
 }

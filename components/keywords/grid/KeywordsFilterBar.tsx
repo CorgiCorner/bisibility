@@ -1,11 +1,9 @@
 "use client";
 
-import { Pill, toolbarControlClassName } from "@/components/ui";
+import { Pill, ToolbarSearch } from "@/components/ui";
 import type { KeywordFilterChip } from "@/lib/keywords/keyword-filter-model";
-import { cn } from "@/lib/ui/cn";
-import InputBase from "@mui/material/InputBase";
 import type { GridColumnVisibilityModel, GridDensity } from "@mui/x-data-grid";
-import { MagnifyingGlassIcon as MagnifyingGlass, XIcon as X } from "@phosphor-icons/react";
+import { XIcon as X } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
 import { KeywordsToolbarActions } from "./KeywordsToolbarActions";
 
@@ -52,47 +50,37 @@ export function KeywordsFilterBar({
 }: Readonly<KeywordsFilterBarProps>) {
   const hasChips = Boolean(scopeChip) || filterChips.length > 0;
   const hasFilters = filterCount > 0 || Boolean(searchValue.trim());
+  const hasContextControls = Boolean(scopeControl || groupingControl || savedViewControl);
   // The scope chip is mobile-only (sm:hidden), so a row holding nothing else
   // would render as bare vertical space on desktop.
   const scopeChipOnly = Boolean(scopeChip) && filterChips.length === 0 && !hasFilters;
 
   return (
     <div className="border-b border-border px-4 py-[14px]">
-      <div className="grid gap-3 xl:flex xl:items-center xl:justify-between">
-        {scopeControl ? (
-          <div className="flex min-w-0 items-center gap-2 xl:shrink-0">{scopeControl}</div>
-        ) : null}
-        {groupingControl ? <div className="flex-none">{groupingControl}</div> : null}
-        {scopeControl ? <div className="hidden h-8 w-px bg-border-strong xl:block" /> : null}
-        <div className="grid min-w-0 flex-1 gap-2 sm:grid-cols-[minmax(220px,1fr)_auto] sm:items-center">
-          <div className="flex min-w-0 items-center gap-2">
+      <div className="grid gap-3">
+        {hasContextControls ? (
+          <div
+            className="contents xl:flex xl:items-center xl:gap-2"
+            data-keywords-toolbar-context=""
+          >
+            {scopeControl ? (
+              <div className="flex min-w-0 items-center gap-2 xl:shrink-0">{scopeControl}</div>
+            ) : null}
+            {groupingControl ? <div className="flex-none">{groupingControl}</div> : null}
             {savedViewControl ? (
               <span className="hidden flex-none sm:inline-flex">{savedViewControl}</span>
             ) : null}
-            <label
-              className={cn(
-                toolbarControlClassName,
-                "flex min-w-0 flex-1 items-center gap-2 px-3 transition-colors focus-within:border-accent",
-              )}
-              htmlFor="keywords-filter"
-            >
-              <MagnifyingGlass className="shrink-0 text-fg-muted" size={15} />
-              <InputBase
-                aria-label="Filter keywords"
-                fullWidth
-                id="keywords-filter"
-                onChange={(event) => onSearchChange(event.target.value)}
-                placeholder="Filter keywords..."
-                sx={{
-                  color: "var(--fg)",
-                  fontFamily: "var(--font-mono), monospace",
-                  fontSize: "inherit",
-                  fontWeight: "inherit",
-                }}
-                value={searchValue}
-              />
-            </label>
           </div>
+        ) : null}
+        <div className="grid min-w-0 gap-2 sm:grid-cols-[minmax(220px,1fr)_auto] sm:items-center xl:grid-cols-[minmax(320px,1fr)_auto]">
+          <ToolbarSearch
+            className="min-w-0"
+            id="keywords-filter"
+            label="Filter keywords"
+            onChange={onSearchChange}
+            placeholder="Filter keywords..."
+            value={searchValue}
+          />
           <KeywordsToolbarActions
             columnVisibilityModel={columnVisibilityModel}
             density={density}

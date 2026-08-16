@@ -1,5 +1,5 @@
 import { InviteModal } from "@/components/settings/team/InviteModal";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
@@ -69,5 +69,65 @@ describe("InviteModal", () => {
     expect(screen.queryByText("Admin")).not.toBeInTheDocument();
     expect(screen.getByText("Editor")).toBeVisible();
     expect(screen.getByText("Viewer")).toBeVisible();
+  });
+
+  it("submits the invite on Cmd+Enter", async () => {
+    const inviteMember = renderInviteModal(
+      vi.fn().mockResolvedValue({ inviteLink: "https://app.example.com/invite/token" }),
+    );
+    const email = screen.getByLabelText("Email address");
+    await userEvent.type(email, "new-teammate@example.com");
+    await waitFor(() => expect(screen.getByRole("button", { name: "Send invite" })).toBeEnabled());
+    fireEvent.keyDown(email, { key: "Enter", metaKey: true });
+    await waitFor(() =>
+      expect(inviteMember).toHaveBeenCalledWith({
+        email: "new-teammate@example.com",
+        projectId: "project_1",
+        role: "member",
+      }),
+    );
+  });
+
+  it("submits the invite on Ctrl+Enter", async () => {
+    const inviteMember = renderInviteModal(
+      vi.fn().mockResolvedValue({ inviteLink: "https://app.example.com/invite/token" }),
+    );
+    const email = screen.getByLabelText("Email address");
+    await userEvent.type(email, "new-teammate@example.com");
+    await waitFor(() => expect(screen.getByRole("button", { name: "Send invite" })).toBeEnabled());
+    fireEvent.keyDown(email, { key: "Enter", ctrlKey: true });
+    await waitFor(() =>
+      expect(inviteMember).toHaveBeenCalledWith({
+        email: "new-teammate@example.com",
+        projectId: "project_1",
+        role: "member",
+      }),
+    );
+  });
+
+  it("does not submit on Cmd+Enter when the email is invalid", async () => {
+    const inviteMember = renderInviteModal();
+    const email = screen.getByLabelText("Email address");
+    await userEvent.type(email, "not-an-email");
+    fireEvent.keyDown(email, { key: "Enter", metaKey: true });
+    expect(inviteMember).not.toHaveBeenCalled();
+  });
+
+  it("closes and resets form state on Escape", async () => {
+    const onClose = vi.fn();
+    render(
+      <InviteModal
+        domain="Acme project"
+        inviteMember={vi.fn()}
+        onClose={onClose}
+        open
+        projectId="project_1"
+      />,
+    );
+    const email = screen.getByLabelText("Email address");
+    await userEvent.type(email, "new-teammate@example.com");
+    fireEvent.keyDown(email, { key: "Escape" });
+    expect(onClose).toHaveBeenCalledOnce();
+    expect(screen.getByLabelText("Email address")).toHaveValue("");
   });
 });

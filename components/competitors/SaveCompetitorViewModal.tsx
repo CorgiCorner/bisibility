@@ -105,7 +105,7 @@ export function SaveCompetitorViewModal({
           <p className="m-0 text-[12px] text-red-text">{errors.root.message}</p>
         ) : null}
         <p className="m-0 text-[12.5px] leading-5 text-fg-muted">
-          Saves this location, device, Google engine, filters, and excluded keywords.
+          Saves this location, device, filters, and excluded keywords.
         </p>
       </form>
     </Modal>

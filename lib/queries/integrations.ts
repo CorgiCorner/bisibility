@@ -15,6 +15,7 @@ import type {
   GoogleOAuthSetup,
   IntegrationCategoryData as IntegrationCategory,
   IntegrationProviderData as IntegrationProvider,
+  ProviderStatusKind,
 } from "@/lib/integrations/types";
 import { loadRecentProviderRateEntries } from "@/lib/provider-rates/connection-context";
 import { PROVIDER_RATE_FEATURES } from "@/lib/provider-rates/resolver";
@@ -25,7 +26,6 @@ import {
   providerChainOrderBy,
 } from "@/lib/rank-check/provider-chain-order";
 import { DEFAULT_SERP_DEPTH, DEFAULT_SERP_MARKET } from "@/lib/serp/markets";
-import type { StatusKind } from "@/lib/ui/status-kind";
 import { requireReadableProject } from "./_auth";
 import {
   displayedProviderLogin,
@@ -51,7 +51,7 @@ const activeIntegrationKinds = [
   "analytics",
 ] as const satisfies readonly ActiveIntegrationKind[];
 
-function statusFor(itemStatus: StatusKind, connection?: ProviderConnectionRow) {
+function statusFor(itemStatus: ProviderStatusKind, connection?: ProviderConnectionRow) {
   return connection?.status ?? itemStatus;
 }
 

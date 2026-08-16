@@ -53,7 +53,7 @@ export function ShareOfVoiceCard({
         <div className="flex min-w-0 flex-col gap-1">
           <SectionTitle>Share of voice</SectionTitle>
           <MonoText muted>
-            Visibility across {countLabel(market.trackedKeywordCount, "tracked keyword")} / Google
+            Visibility across {countLabel(market.trackedKeywordCount, "tracked keyword")}
             {" / "}
             {market.location} / {market.languageLabel} /{" "}
             {market.device === "mobile" ? "Mobile" : "Desktop"}

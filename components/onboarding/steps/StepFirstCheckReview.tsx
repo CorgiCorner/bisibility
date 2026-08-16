@@ -1,6 +1,7 @@
 "use client";
 
 import type { LocationFieldValue } from "@/components/keywords/LocationField";
+import { MarketChip } from "@/components/markets/MarketChip";
 import { trackingDefaults } from "@/components/onboarding/onboarding-form-utils";
 import { languageForLocationValue } from "@/components/onboarding/onboarding-location-field";
 import { MenuSelect } from "@/components/ui";
@@ -35,16 +36,6 @@ function nextRunLabel(frequency: ProjectDefaultsInput["frequency"] | undefined) 
   if (frequency === "monthly") return "Monthly schedule";
   if (frequency === "custom_cron") return "Custom schedule";
   return "Daily schedule";
-}
-
-function MarketChip({ value }: Readonly<{ value: LocationFieldValue }>) {
-  return (
-    <span className="inline-flex h-6 items-center gap-1.5 rounded-full border border-border bg-bg-elev px-2.5 text-[11.5px] text-fg">
-      {value.displayName}
-      <span className="font-mono text-[10px] text-fg-muted">/</span>
-      <span className="text-fg-muted">{languageForLocationValue(value)}</span>
-    </span>
-  );
 }
 
 function SummaryRow({
@@ -109,7 +100,12 @@ export function StepFirstCheckReview({
           <span className="shrink-0 text-[13px] text-fg-muted">Markets</span>
           <div className="flex flex-wrap justify-end gap-1.5">
             {markets.map((market) => (
-              <MarketChip key={market.canonicalKey} value={market} />
+              <MarketChip
+                key={market.canonicalKey}
+                languageLabel={languageForLocationValue(market)}
+                locationLabel={market.displayName}
+                size="md"
+              />
             ))}
           </div>
         </div>

@@ -106,7 +106,7 @@ type Story = StoryObj<typeof meta>;
 const commonArgs = {
   ...actions,
   canManage: true,
-  docsHref: "/app/prj_story/docs",
+  docsHref: "/docs/quickstart",
   endpointUrl: "https://example.com/api/ingest/deploy",
   hooks,
   projectId,

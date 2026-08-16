@@ -35,5 +35,5 @@ export function LastCheckedCell({
     return <CheckStatusChip kind="pending" label={label} />;
   }
 
-  return <span className="font-mono text-[12px] font-semibold text-fg-muted">{label}</span>;
+  return <CheckStatusChip kind="completed" label={label} />;
 }

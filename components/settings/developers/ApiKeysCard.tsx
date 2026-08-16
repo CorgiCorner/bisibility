@@ -10,14 +10,14 @@ import {
   developerListClassName,
   developerRowClassName,
 } from "@/components/settings/developers/developer-settings-layout";
-import { Button, ConfirmModal, MonoText, StatusPill } from "@/components/ui";
+import { Button, ConfirmModal, ExternalLink, MonoText, StatusPill } from "@/components/ui";
 import {
   type IssueApiKeyInput,
   type RegenerateApiKeyInput,
   revokeApiKeySchema,
 } from "@/lib/schemas/apiKey";
 import { actionErrorMessage } from "@/lib/ui/action-error";
-import { ArrowRightIcon as ArrowRight, PlusIcon as Plus } from "@phosphor-icons/react";
+import { PlusIcon as Plus } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import type { z } from "zod";
@@ -70,14 +70,12 @@ export function ApiKeysCard({
       description="Keys for the bisibility API, each with a scope and an expiry."
       footer={
         <>
-          <Button
-            endIcon={<ArrowRight aria-hidden size={13} />}
+          <ExternalLink
+            className="rounded-md border border-border-strong bg-bg-elev px-3 py-1.5 text-[13px] font-medium text-fg-muted transition-colors hover:bg-bg-sunken hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid"
             href={docsHref}
-            size="sm"
-            variant="secondary"
           >
             Docs quickstart
-          </Button>
+          </ExternalLink>
           {issueKey ? (
             <Button
               onClick={() => setCreateOpen(true)}

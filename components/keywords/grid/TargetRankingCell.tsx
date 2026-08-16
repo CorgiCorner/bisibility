@@ -1,3 +1,4 @@
+import { StatusPill } from "@/components/ui";
 import { hasUrlMismatch } from "@/lib/alerts/url-mismatch";
 import { marketGridParent } from "@/lib/keywords/market-grid-model";
 import { pathFromUrl } from "@/lib/queries/keyword-row-format";
@@ -26,16 +27,8 @@ function MatchStatus({ row }: Readonly<{ row: KeywordRow }>) {
     targetUrl: row.targetUrl,
   });
   return (
-    <span
-      className="inline-flex h-5 shrink-0 self-center items-center rounded-full px-2 font-mono text-[9.5px] font-semibold leading-none"
-      style={{
-        backgroundColor: mismatch
-          ? "color-mix(in srgb, var(--yellow) 14%, transparent)"
-          : "color-mix(in srgb, var(--green) 14%, transparent)",
-        color: mismatch ? "var(--yellow)" : "var(--green)",
-      }}
-    >
-      {mismatch ? "Wrong URL" : "Matches"}
+    <span className="shrink-0 self-center">
+      <StatusPill status={mismatch ? "wrong_url" : "matches"} size="sm" />
     </span>
   );
 }

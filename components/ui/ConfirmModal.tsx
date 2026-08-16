@@ -193,7 +193,9 @@ export function ConfirmModal({
       ariaLabelledBy={titleId}
       contentClassName="p-0"
       onClose={handleClose}
+      onPrimaryAction={handleConfirm}
       open={open}
+      primaryActionDisabled={disabled}
       showClose={false}
       size="sm"
     >

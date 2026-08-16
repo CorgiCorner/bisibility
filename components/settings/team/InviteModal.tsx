@@ -54,6 +54,8 @@ export function InviteModal({
     mode: "onChange",
     resolver: zodResolver(inviteSchema),
   });
+  const primaryDisabled =
+    !invitesAvailable || !form.formState.isValid || form.formState.isSubmitting || sent;
   const selectedRole = form.watch("role");
   const availableRoles = canAssignAdmin
     ? roleOptions
@@ -108,7 +110,9 @@ export function InviteModal({
         </>
       }
       onClose={handleClose}
+      onPrimaryAction={form.handleSubmit(onSubmit)}
       open={open}
+      primaryActionDisabled={primaryDisabled}
       size="md"
       initialFocus={() => form.setFocus("email")}
       title={

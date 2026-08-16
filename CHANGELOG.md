@@ -2,6 +2,26 @@
 
 ## Unreleased
 
+## [0.13.1] - 2026-08-15
+
+- Cleaned up account and settings navigation, external help links, Rank Tracker search layout, and notification email controls.
+
+- Redesigned the command palette with contextual page actions and direct Rank Tracker action routing.
+
+- Added integration-specific reauthentication guidance without showing mismatched provider copy.
+
+- Added Cmd/Ctrl+Enter primary actions and consistent Escape cancellation to shared modals.
+
+- Fixed notification links from legacy keyword payloads so they open the matching Rank Tracker keyword.
+
+- Disabled Research search until a seed keyword is entered and explained why the action is unavailable.
+
+- Unified status badges across integrations, Rank Tracker, and audit views with the shared StatusPill treatment.
+
+- Market pairs now render one shared chip everywhere, and the language picker groups, sorts and scrolls the full supported language catalog.
+
+- Fixed the market picker discarding a selected language when the language search was narrowed afterwards.
+
 ## [0.13.0] - 2026-08-14
 
 - Added project-local timezones and local wall-clock daily and weekly schedules, with editable settings and clearer check-time labels.

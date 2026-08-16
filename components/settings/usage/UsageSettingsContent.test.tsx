@@ -1,5 +1,6 @@
 import { UsageSettingsContent } from "@/components/settings/usage/UsageSettingsContent";
 import type { ProviderUsageData } from "@/lib/settings/options";
+import { DOCS_URL, MARKETING_URL } from "@/lib/site/site";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -126,12 +127,22 @@ describe("UsageSettingsContent", () => {
 
     const footer = container.querySelector("[data-provider-usage-footer]");
     expect(footer).toBeInTheDocument();
-    expect(
-      within(footer as HTMLElement).getByRole("link", { name: "How budgets work" }),
-    ).toHaveAttribute("href", "https://bisibility.com/docs/integrations#budget-cap");
-    expect(
-      within(footer as HTMLElement).getByRole("link", { name: "Estimate future cost" }),
-    ).toHaveAttribute("href", "/rank-tracking-cost-calculator");
+
+    const budgets = within(footer as HTMLElement).getByRole("link", {
+      name: "How budgets work",
+    });
+    expect(budgets).toHaveAttribute("href", `${DOCS_URL}/integrations#budget-cap`);
+    expect(budgets).toHaveAttribute("target", "_blank");
+    expect(budgets).toHaveAttribute("rel", "noreferrer noopener");
+    expect(budgets.querySelector("svg")).not.toBeNull();
+
+    const estimate = within(footer as HTMLElement).getByRole("link", {
+      name: "Estimate future cost",
+    });
+    expect(estimate).toHaveAttribute("href", `${MARKETING_URL}/rank-tracking-cost-calculator`);
+    expect(estimate).toHaveAttribute("target", "_blank");
+    expect(estimate).toHaveAttribute("rel", "noreferrer noopener");
+    expect(estimate.querySelector("svg")).not.toBeNull();
   });
 
   it("submits hosted feedback through the injected server action", async () => {

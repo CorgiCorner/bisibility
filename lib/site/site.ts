@@ -26,11 +26,31 @@ export function isDocsHref(href: string): boolean {
   );
 }
 
-export function docsLinkProps(href: string) {
-  if (!isDocsHref(href)) {
+export type DocsLinkPropsOptions = {
+  /** Request external treatment for any href, not just docs links. */
+  external?: boolean;
+};
+
+type ResolvedLinkProps = {
+  href: string;
+  rel: "noreferrer noopener";
+  target: "_blank";
+};
+
+export function docsLinkProps(href: string, options: { external: true }): ResolvedLinkProps;
+export function docsLinkProps(
+  href: string,
+  options?: DocsLinkPropsOptions,
+): Partial<ResolvedLinkProps>;
+export function docsLinkProps(
+  href: string,
+  options?: DocsLinkPropsOptions,
+): Partial<ResolvedLinkProps> {
+  const isDocs = isDocsHref(href);
+  if (!isDocs && !options?.external) {
     return {};
   }
-  const externalHref = href.startsWith("/docs") ? `${DOCS_URL}${href.slice(5)}` : href;
+  const externalHref = isDocs && href.startsWith("/docs") ? `${DOCS_URL}${href.slice(5)}` : href;
 
   return { href: externalHref, rel: "noreferrer noopener", target: "_blank" };
 }

@@ -2,7 +2,6 @@ import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CloudBackupModal } from "./CloudBackupModal";
-import { consumePendingKeywordCommandAction } from "./keyword-command-actions";
 
 const mocks = vi.hoisted(() => ({
   downloadWorkspacePackage: vi.fn(),
@@ -53,7 +52,6 @@ function includedRow(label: string) {
 describe("CloudBackupModal", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    consumePendingKeywordCommandAction();
     history.replaceState(null, "", "/app/prj_1/overview");
     mocks.exportPackage.mockResolvedValue(packageFile);
   });

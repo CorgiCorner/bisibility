@@ -1,11 +1,3 @@
-import type {
-  ConfirmAccountEmailChangeInput,
-  ConfirmAccountEmailChangeResult,
-  ConfirmCurrentAccountEmailVerification,
-  RequestAccountEmailChangeInput,
-  RequestAccountEmailChangeResult,
-  RequestCurrentAccountEmailVerification,
-} from "@/components/settings/notifications/NotificationEmailCard";
 import {
   NotificationPreferences,
   type NotificationPreferencesProps,
@@ -43,52 +35,10 @@ function NotificationPreferencesStory({
   canEdit,
   preferences: storyPreferences,
 }: Readonly<NotificationPreferencesProps>) {
-  async function requestAccountEmailChange(
-    input: RequestAccountEmailChangeInput,
-  ): Promise<RequestAccountEmailChangeResult> {
-    return {
-      currentEmail: storyPreferences.email,
-      pendingEmail: input.newEmail,
-      status: "verification_required",
-    };
-  }
-
-  async function confirmAccountEmailChange(
-    input: ConfirmAccountEmailChangeInput,
-  ): Promise<ConfirmAccountEmailChangeResult> {
-    return {
-      email: input.newEmail,
-      emailVerification: "verified",
-      status: "changed",
-    };
-  }
-
-  const requestCurrentAccountEmailVerification: RequestCurrentAccountEmailVerification = async (
-    input,
-  ) => ({
-    email: input.email,
-    status: "verification_required",
-  });
-
-  const confirmCurrentAccountEmailVerification: ConfirmCurrentAccountEmailVerification = async (
-    input,
-  ) => ({
-    email: input.email,
-    emailVerification: "verified",
-    status: "verified",
-  });
-
   return (
     <div data-notifications-story="settled">
       <SettingsShell activeSection="notifications" projectRef={projectRef}>
-        <NotificationPreferences
-          canEdit={canEdit}
-          confirmAccountEmailChange={confirmAccountEmailChange}
-          confirmCurrentAccountEmailVerification={confirmCurrentAccountEmailVerification}
-          preferences={storyPreferences}
-          requestAccountEmailChange={requestAccountEmailChange}
-          requestCurrentAccountEmailVerification={requestCurrentAccountEmailVerification}
-        />
+        <NotificationPreferences canEdit={canEdit} preferences={storyPreferences} />
       </SettingsShell>
     </div>
   );

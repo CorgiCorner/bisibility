@@ -18,6 +18,7 @@ import {
   XIcon as X,
 } from "@phosphor-icons/react";
 import type { KeyboardEvent } from "react";
+import { useId } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -35,6 +36,7 @@ const limitOptions = [100, 300, 500].map((value) => ({
   value: String(value),
 }));
 const pricingDocsHref = "/docs/api/keyword-research#research-keywords";
+const NO_SEED_HINT = "Enter a seed keyword first - the price appears here";
 
 export type ResearchEstimateView = {
   cached: boolean;
@@ -114,10 +116,15 @@ export function ResearchSearchCard({
   researching,
   seeds,
 }: Readonly<ResearchSearchCardProps>) {
-  const { getValues, handleSubmit, register, resetField } = useForm<FormValues>({
+  const { getValues, handleSubmit, register, resetField, watch } = useForm<FormValues>({
     defaultValues: { seed: "" },
     resolver: zodResolver(formSchema),
   });
+
+  const noSeedHintId = useId();
+
+  const typedSeed = watch("seed") ?? "";
+  const hasSeed = seeds.length > 0 || typedSeed.trim().length > 0;
 
   function commitSeed() {
     const seed = getValues("seed").trim();
@@ -251,16 +258,24 @@ export function ResearchSearchCard({
             >
               How is this priced?
             </a>
-            <Button
-              disabled={disabled || lookupDisabled || researching}
-              loading={researching}
-              loadingLabel={researchButtonLabel(true, estimate, fallbackCostCents)}
-              startIcon={<MagnifyingGlass size={15} weight="bold" />}
-              sx={{ minWidth: 216 }}
-              type="submit"
-            >
-              {researchButtonLabel(false, estimate, fallbackCostCents)}
-            </Button>
+            <span className="inline-flex" title={!hasSeed ? NO_SEED_HINT : undefined}>
+              <Button
+                aria-describedby={!hasSeed ? noSeedHintId : undefined}
+                disabled={disabled || lookupDisabled || researching || !hasSeed}
+                loading={researching}
+                loadingLabel={researchButtonLabel(true, estimate, fallbackCostCents)}
+                startIcon={<MagnifyingGlass size={15} weight="bold" />}
+                sx={{ minWidth: 216 }}
+                type="submit"
+              >
+                {researchButtonLabel(false, estimate, fallbackCostCents)}
+              </Button>
+              {!hasSeed ? (
+                <span className="sr-only" id={noSeedHintId}>
+                  {NO_SEED_HINT}
+                </span>
+              ) : null}
+            </span>
           </div>
         </div>
         {metricsScope ? (
