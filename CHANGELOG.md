@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## [0.13.4] - 2026-08-17
+
+- Fixed MDX syntax that prevented the Markets documentation page and two other docs pages from publishing.
+
 ## [0.13.3] - 2026-08-16
 
 - Fixed uneven provider segment fills in the cost calculator.
