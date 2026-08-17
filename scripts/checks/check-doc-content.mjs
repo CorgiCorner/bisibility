@@ -164,8 +164,8 @@ const expectedMarkets = [
 }));
 const marketSection = markedSection(
   marketsDocs,
-  "<!-- supported-market-catalog:start -->",
-  "<!-- supported-market-catalog:end -->",
+  "{/* supported-market-catalog:start */}",
+  "{/* supported-market-catalog:end */}",
   "supported market",
 );
 const documentedMarkets = [
@@ -184,8 +184,8 @@ if (JSON.stringify(documentedMarkets) !== JSON.stringify(expectedMarkets)) {
 
 const languageSection = markedSection(
   marketsDocs,
-  "<!-- supported-language-catalog:start -->",
-  "<!-- supported-language-catalog:end -->",
+  "{/* supported-language-catalog:start */}",
+  "{/* supported-language-catalog:end */}",
   "supported language",
 );
 const documentedLanguages = [
