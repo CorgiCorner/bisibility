@@ -35,13 +35,13 @@ export function SessionsSection({
       <p className="m-0 mt-[3px] text-[12.5px] leading-normal text-fg-muted">
         Devices currently signed in to your account.
       </p>
-      <div className="mt-[14px] overflow-hidden rounded-[14px] border border-border bg-bg-elev">
+      <div className="mt-3.5 overflow-hidden rounded-[14px] border border-border bg-bg-elev">
         <div className={rowListClass}>
           {sessions.map((session) => {
             const Icon = isMobile(session.device) ? DeviceMobile : Monitor;
             return (
-              <div className="flex items-center gap-[13px] px-[18px] py-[14px]" key={session.id}>
-                <span className="grid h-[34px] w-[34px] flex-none place-items-center rounded-[9px] bg-bg-sunken text-fg-muted">
+              <div className="flex items-center gap-[13px] px-4.5 py-3.5" key={session.id}>
+                <span className="grid h-8.5 w-[34px] flex-none place-items-center rounded-[9px] bg-bg-sunken text-fg-muted">
                   <Icon size={18} weight="bold" />
                 </span>
                 <span className="min-w-0 flex-1">

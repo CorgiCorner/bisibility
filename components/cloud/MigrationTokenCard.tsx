@@ -38,7 +38,7 @@ type MigrationTokenCardProps = {
 };
 
 const primaryButton =
-  "inline-flex items-center gap-2 rounded-[10px] bg-accent-solid px-[18px] py-[11px] font-semibold text-[14px] text-primary-contrast transition-colors hover:bg-accent-solid-hover disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted";
+  "inline-flex items-center gap-2 rounded-[10px] bg-accent-solid px-4.5 py-[11px] font-semibold text-[14px] text-primary-contrast transition-colors hover:bg-accent-solid-hover disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted";
 function TokenActions({
   disabled,
   onRegenerate,
@@ -54,7 +54,7 @@ function TokenActions({
   const regenerating = pendingAction === "regenerate";
 
   return (
-    <div className="mt-[18px] flex items-center gap-2.5 border-border-soft border-t pt-4">
+    <div className="mt-4.5 flex items-center gap-2.5 border-border-soft border-t pt-4">
       <Button
         disabled={disabled}
         onClick={onRevoke}
@@ -109,7 +109,7 @@ function TokenGenerateButton({
 
   return (
     <button
-      className={`mt-[18px] ${primaryButton}`}
+      className={`mt-4.5 ${primaryButton}`}
       disabled={disabled}
       onClick={onGenerate}
       type="button"
@@ -155,7 +155,7 @@ export function MigrationTokenCard({
         </div>
       </div>
 
-      <div className="p-[22px]">
+      <div className="p-5.5">
         {status === "error" ? (
           <div className="flex flex-col items-center px-4 pt-3.5 pb-1.5 text-center">
             <span className="grid h-[50px] w-[50px] place-items-center rounded-[14px] bg-red/10 text-red-text">
@@ -256,7 +256,7 @@ export function MigrationTokenCard({
               Shown once. Copy it before you leave this page.
             </div>
 
-            <div className="mt-[18px] flex items-start gap-[11px] rounded-xl border border-border bg-bg-elev p-[15px_16px]">
+            <div className="mt-4.5 flex items-start gap-[11px] rounded-xl border border-border bg-bg-elev p-[15px_16px]">
               <ArrowBendDownRight
                 aria-hidden
                 className="mt-px flex-none text-accent-text"

@@ -46,7 +46,7 @@ export function StepConnectProviderCards({
   testResults,
 }: Readonly<StepConnectProviderCardsProps>) {
   return (
-    <div className="mt-[22px]">
+    <div className="mt-5.5">
       {analyticsNotice}
       <div className="flex items-center gap-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.5px] text-fg-muted">
         Rank data / powers rank checks

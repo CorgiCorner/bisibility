@@ -1,5 +1,11 @@
 import { MenuSelect, type MenuSelectOptionGroup } from "@/components/ui/MenuSelect";
-import { render, screen } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  waitForElementToBeRemoved,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
@@ -18,7 +24,13 @@ const groupedOptions: MenuSelectOptionGroup[] = [
     searchOnly: true,
     options: [
       { label: "United Kingdom / English", value: "GB" },
-      { label: "Poland / Polish", value: "PL", disabled: true, secondary: "unavailable" },
+      {
+        label: "Poland / Polish",
+        value: "PL",
+        disabled: true,
+        secondary: "unavailable",
+        tooltip: "Outside catalog",
+      },
     ],
   },
 ];
@@ -155,7 +167,7 @@ describe("MenuSelect grouped", () => {
     expect(screen.getByRole("menuitem", { name: /United States/ })).toHaveFocus();
     await user.keyboard("{Enter}");
     expect(onChange).toHaveBeenCalledWith("US");
-    expect(screen.queryByText("Tracked markets")).not.toBeInTheDocument();
+    await waitForElementToBeRemoved(() => screen.queryByText("Tracked markets"));
 
     rerender(
       <MenuSelect
@@ -168,6 +180,59 @@ describe("MenuSelect grouped", () => {
     );
     await user.click(screen.getByRole("button", { name: "Market" }));
     await user.keyboard("{Escape}");
-    expect(screen.getByRole("button", { name: "Market" })).toHaveFocus();
+    await waitFor(() => expect(screen.getByRole("button", { name: "Market" })).toHaveFocus());
+  });
+
+  it("shows a disabled option reason via aria-describedby and never selects it", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(
+      <MenuSelect
+        ariaLabel="Market"
+        groups={groupedOptions}
+        onChange={onChange}
+        searchable
+        value="US"
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Market" }));
+    await user.type(screen.getByRole("textbox", { name: "Search..." }), "poland");
+    const item = screen.getByRole("menuitem", { name: /Poland/ });
+    expect(item).toHaveAttribute("aria-disabled", "true");
+    expect(item).not.toHaveAttribute("title");
+    const describedBy = item.getAttribute("aria-describedby");
+    expect(describedBy).not.toBeNull();
+    const desc = document.getElementById(describedBy ?? "");
+    expect(desc).toHaveTextContent("Outside catalog");
+
+    fireEvent.click(item);
+    expect(onChange).not.toHaveBeenCalled();
+
+    await user.keyboard("{Enter}");
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it("opens a visual tooltip on hover of a disabled grouped option without selecting it", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(
+      <MenuSelect
+        ariaLabel="Market"
+        groups={groupedOptions}
+        onChange={onChange}
+        searchable
+        value="US"
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Market" }));
+    await user.type(screen.getByRole("textbox", { name: "Search..." }), "poland");
+    const item = screen.getByRole("menuitem", { name: /Poland/ });
+    expect(item).toHaveAttribute("aria-disabled", "true");
+
+    await user.hover(item);
+    expect(await screen.findByRole("tooltip")).toHaveTextContent("Outside catalog");
+    expect(onChange).not.toHaveBeenCalled();
   });
 });

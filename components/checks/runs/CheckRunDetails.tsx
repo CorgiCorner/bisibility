@@ -1,5 +1,5 @@
+import { Tooltip } from "@/components/ui";
 import type { CheckAttempt, CheckRunRow } from "@/lib/checks/contract";
-import Tooltip from "@mui/material/Tooltip";
 import {
   CheckCircleIcon as CheckCircle,
   WarningCircleIcon as WarningCircle,
@@ -21,7 +21,7 @@ export const countryLevelTooltip =
 
 export function CountryLevelBadge() {
   return (
-    <Tooltip title={countryLevelTooltip}>
+    <Tooltip content={countryLevelTooltip}>
       <button
         aria-label={`country-level: ${countryLevelTooltip}`}
         className="inline-flex cursor-help rounded-full border border-dashed border-yellow/55 bg-yellow/10 px-1.5 py-0.5 font-mono text-[9.5px] font-semibold text-yellow-text"

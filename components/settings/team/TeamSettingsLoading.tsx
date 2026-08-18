@@ -18,7 +18,7 @@ const frames = [
 
 export function TeamSettingsContentLoading() {
   return (
-    <div className="space-y-[14px]" data-team-settings-content-loading="">
+    <div className="space-y-3.5" data-team-settings-content-loading="">
       {frames.map((frame) => (
         <section
           className={cn(settingsCardFrameClassName, frame.className)}
@@ -39,7 +39,7 @@ export function TeamSettingsContentLoading() {
                 key={index}
               >
                 {frame.id === "roles" ? null : (
-                  <SettingsLoadingBar className="h-[34px] w-[34px] shrink-0" />
+                  <SettingsLoadingBar className="h-8.5 w-[34px] shrink-0" />
                 )}
                 <div className="flex-1 space-y-2">
                   <SettingsLoadingBar className="h-3 w-36 max-w-full" />

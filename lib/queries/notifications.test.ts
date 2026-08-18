@@ -1,6 +1,10 @@
 import { appPath } from "@/lib/routing/app-path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getNotificationBellData, listCurrentUserNotifications } from "./notifications";
+import {
+  getNotificationBellData,
+  listCurrentUserNotifications,
+  type NotificationFeedItem,
+} from "./notifications";
 
 const NOTIFICATION_PUBLIC_ID = "ntf_abcdefghijklmnopqrstuvwx";
 const PROJECT_PUBLIC_ID = "prj_abcdefghijklmnopqrstuvwx";
@@ -154,5 +158,103 @@ describe("notification queries", () => {
       time: "now",
     });
     expect(mocks.prisma.notification.findMany).toHaveBeenCalledTimes(1);
+  });
+
+  describe("account-level welcome notifications", () => {
+    const WELCOME_PUBLIC_ID = "ntf_welcomecloud01abcdefghij";
+    const FOUNDER_PUBLIC_ID = "ntf_foundercheckin234abcdefg";
+    const WELCOME_BODY =
+      "Your first check is a baseline. Let it run for a week or two while history builds.";
+    const FOUNDER_BODY = "Quick question: what made you sign up, and what were you using before?";
+    const FIXED_NOW = new Date("2026-06-28T11:00:00.000Z");
+
+    function accountWelcomeRows() {
+      return [
+        notificationRow({
+          body: WELCOME_BODY,
+          id: "welcome_row",
+          payload: { variant: "completed" },
+          projectId: null,
+          project: null,
+          publicId: WELCOME_PUBLIC_ID,
+          title: "Welcome to bisibility Cloud",
+          type: "system",
+        }),
+        notificationRow({
+          body: FOUNDER_BODY,
+          id: "founder_row",
+          payload: null,
+          projectId: null,
+          project: null,
+          publicId: FOUNDER_PUBLIC_ID,
+          title: "A note from Ada",
+          type: "system",
+        }),
+      ];
+    }
+
+    function assertWelcomeItems(items: NotificationFeedItem[]) {
+      expect(items).toHaveLength(2);
+      expect(items[0]).toMatchObject({
+        title: "Welcome to bisibility Cloud",
+        meta: WELCOME_BODY,
+        type: "system",
+        projectId: null,
+        href: "/app",
+      });
+      expect(items[1]).toMatchObject({
+        title: "A note from Ada",
+        meta: FOUNDER_BODY,
+        type: "system",
+        projectId: null,
+        href: "/app",
+      });
+    }
+
+    it("renders both welcome rows under an active project and scopes with the OR clause", async () => {
+      mocks.prisma.notification.findMany.mockResolvedValueOnce(accountWelcomeRows());
+
+      const items = await listCurrentUserNotifications(PROJECT_PUBLIC_ID, {
+        limit: 2,
+        now: FIXED_NOW,
+      });
+
+      assertWelcomeItems(items);
+      expect(mocks.prisma.notification.findMany).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({
+          take: 2,
+          where: expect.objectContaining({
+            OR: [{ projectId: null }, { projectId: "project_1" }],
+            readAt: null,
+            userId: "user_1",
+          }),
+        }),
+      );
+      expect(mocks.prisma.notification.findMany).toHaveBeenCalledTimes(1);
+    });
+
+    it("renders the same two rows with no active project and scopes with projectId null", async () => {
+      mocks.prisma.notification.findMany.mockResolvedValueOnce(accountWelcomeRows());
+
+      const items = await listCurrentUserNotifications(null, {
+        limit: 2,
+        now: FIXED_NOW,
+      });
+
+      assertWelcomeItems(items);
+      expect(mocks.prisma.notification.findMany).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({
+          take: 2,
+          where: expect.objectContaining({
+            projectId: null,
+            readAt: null,
+            userId: "user_1",
+          }),
+        }),
+      );
+      expect(mocks.prisma.notification.findMany).toHaveBeenCalledTimes(1);
+    });
   });
 });

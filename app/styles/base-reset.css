@@ -1,0 +1,121 @@
+@layer base {
+  *,
+  ::before,
+  ::after {
+    box-sizing: border-box;
+    /* Preflight is disabled; restore its border reset so Tailwind border utilities
+     render consistently. */
+    border-width: 0;
+    border-style: solid;
+    border-color: var(--border);
+  }
+
+  /* Preflight is disabled; reset native block margins because spacing comes from
+   explicit utilities. */
+  blockquote,
+  dl,
+  dd,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  hr,
+  figure,
+  p,
+  pre {
+    margin: 0;
+  }
+
+  /* Tailwind preflight is off (layout-only), so bare <button>s would otherwise paint the
+   browser's grey ButtonFace background. Reset it; MUI and bg-* utilities still override. */
+  button {
+    background-color: transparent;
+    background-image: none;
+    /* Kill the native button border too; border-style stays solid so explicit
+     `border` utilities (e.g. on outlined buttons) still render. */
+    border-width: 0;
+    border-style: solid;
+  }
+
+  /* Preflight is disabled; remove native control borders while retaining solid
+   style for explicit border utilities. */
+  input,
+  select,
+  textarea {
+    border-width: 0;
+    border-style: solid;
+  }
+
+  /* Keep the anchor reset in the base layer so utilities such as `text-white`
+     can set the foreground of links that are presented as buttons. */
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  /* HANDOFF-19: placeholders never read bold/heavy. The prototype scoped this to
+   [data-bv]; this app has no data-bv, so apply it globally. */
+  input::placeholder,
+  textarea::placeholder {
+    font-weight: 400;
+    color: var(--fg-muted);
+  }
+
+  select {
+    appearance: none;
+    background-image: var(--select-arrow-image);
+    background-repeat: no-repeat;
+    background-position: right 11px center;
+    padding-right: 30px;
+  }
+
+  /* Legacy mockup checkbox hook. The shared Checkbox renders its own SVG tick. */
+  input[type="checkbox"].bv-cb {
+    position: relative;
+  }
+
+  input[type="checkbox"].bv-cb:checked::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 45%;
+    width: 4px;
+    height: 8px;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: translate(-50%, -50%) rotate(45deg);
+    box-sizing: border-box;
+  }
+
+  /* HANDOFF-12: global keyboard focus ring (components that opt out set outline:none).
+     --accent (#D97757) measures 2.69:1 against --bg and fails the 3:1 that WCAG 2.1
+     SC 1.4.11 / 2.4.11 require of a focus indicator. --accent-solid is the same hue at
+     4.44:1 light and 3.94:1 dark. */
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  [tabindex]:focus-visible {
+    outline: 2px solid var(--accent-solid);
+    outline-offset: 2px;
+  }
+}
+
+/* HANDOFF-12: tabular figures on mono text so IDs/metrics/counts align. */
+.font-mono,
+code,
+kbd,
+pre,
+samp {
+  font-variant-numeric: tabular-nums;
+}
+
+/* HANDOFF-12: balanced wrapping on headings. */
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}

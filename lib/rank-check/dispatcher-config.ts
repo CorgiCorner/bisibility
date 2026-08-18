@@ -18,7 +18,7 @@ export function isRankCheckDispatcherEnabled() {
 export function rankCheckDispatcherMaxKeywordsPerProject(
   env: Record<string, string | undefined> = process.env as Record<string, string | undefined>,
 ) {
-  const configured = env[MAX_KEYWORDS_PER_PROJECT_PER_PASS_KEY];
+  const configured = env.RANK_CHECK_DISPATCHER_MAX_KEYWORDS_PER_PROJECT_PER_PASS;
   if (configured === undefined) return DEFAULT_MAX_KEYWORDS_PER_PROJECT_PER_PASS;
   const raw = configured.trim();
   if (!/^[0-9]+$/.test(raw)) {

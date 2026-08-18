@@ -19,7 +19,7 @@ const groups = [
 
 function ProviderRow() {
   return (
-    <div className="rounded-[14px] border border-border bg-bg-elev px-5 py-[18px]">
+    <div className="rounded-[14px] border border-border bg-bg-elev px-5 py-4.5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-3.5">
         <div className="flex min-w-0 flex-1 items-start gap-3.5">
           <Bar className="h-[42px] w-[42px] shrink-0 rounded-xl" />
@@ -50,7 +50,7 @@ function ProviderRow() {
 export default function IntegrationsLoading() {
   return (
     <PageContent aria-hidden className="flex flex-col gap-5">
-      <div className="flex items-start gap-[11px] rounded-xl border border-border bg-bg-elev px-4 py-[14px]">
+      <div className="flex items-start gap-[11px] rounded-xl border border-border bg-bg-elev px-4 py-3.5">
         <Bar className="h-5 w-5 shrink-0 rounded-md" />
         <div className="flex min-w-0 flex-1 flex-col gap-2">
           <Bar className="h-3 w-full max-w-[520px]" />

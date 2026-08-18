@@ -35,39 +35,13 @@ curl --fail-with-body "$BISIBILITY_BASE_URL/projects" \
   -H "Authorization: Bearer $BISIBILITY_TOKEN"
 ```
 
-A successful request returns `200 OK` with a `data` array and pagination
-metadata:
-
-```json
-{
-  "data": [
-    {
-      "id": "prj_a00000000000000000000000",
-      "name": "Example",
-      "domain": "example.com",
-      "created_at": "2026-06-28T10:00:00.000Z",
-      "updated_at": "2026-06-28T10:00:00.000Z",
-      "write_mode": "active"
-    }
-  ],
-  "meta": { "next_cursor": null }
-}
-```
-
-A project API key returns its one project. A personal access token returns the
-projects available through the user's memberships.
-
-## Next steps
-
-- Use the [projects guide](/api/projects) for project operations.
-- Read the [API overview](/api/overview) for retries, pagination, and errors.
-- Browse the [GET projects API reference][api-reference-projects]
-  for the generated request and response schemas.
-- Choose an [official SDK](/sdks/overview) when Python, TypeScript, Go, or MCP
-  fits your integration.
+A successful request returns `200 OK` with a `data` array of projects and
+pagination metadata. A project API key returns its one project; a personal
+access token returns the projects available through the user's memberships.
+For the exact request and response contract, see the
+[GET projects API reference][api-reference-projects].
 
 For a rejected request, use the
-[authentication troubleshooting table](/authentication#troubleshoot-the-first-request)
-and [API error reference](/api/errors).
+[authentication troubleshooting table](/authentication#troubleshoot-the-first-request).
 
 [api-reference-projects]: /api-reference/projects/list-projects-visible-to-this-api-key

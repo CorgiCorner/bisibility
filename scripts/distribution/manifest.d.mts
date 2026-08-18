@@ -15,7 +15,8 @@ export type DistributionManifest = {
     | "composeTemporal"
     | "composeWorker"
     | "environment"
-    | "generator",
+    | "generator"
+    | "upgradeScript",
     { name: string; sha256: string }
   >;
 };
@@ -29,7 +30,8 @@ export function distributionManifest(
     | "composeTemporal"
     | "composeWorker"
     | "environment"
-    | "generator",
+    | "generator"
+    | "upgradeScript",
     string
   >,
 ): DistributionManifest;
@@ -47,7 +49,8 @@ export const distributionContract: {
     | "composeTemporal"
     | "composeWorker"
     | "environment"
-    | "generator",
+    | "generator"
+    | "upgradeScript",
     string
   >;
 };

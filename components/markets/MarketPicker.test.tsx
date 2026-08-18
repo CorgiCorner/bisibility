@@ -162,11 +162,13 @@ describe("MarketPicker", () => {
   it("states the off-catalog sentence once, under the selection", () => {
     renderPicker();
     showEnglish();
-    expect(screen.queryByText(offCatalogNote)).not.toBeInTheDocument();
+    // Before committing the off-catalog row, the full sentence is not shown as visible
+    // copy. The house Tooltip keeps a copy as a visually hidden description on the row.
+    expect(screen.queryByText(offCatalogNote, { selector: "p" })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /English.*no volume\/KD/ }));
 
-    const notes = screen.getAllByText(offCatalogNote);
+    const notes = screen.getAllByText(offCatalogNote, { selector: "p" });
     expect(notes).toHaveLength(1);
     expect(screen.getAllByText("no volume/KD").length).toBeGreaterThan(0);
 
@@ -185,7 +187,9 @@ describe("MarketPicker", () => {
     // A span inside a button never takes focus, so a suffix-anchored tooltip would be
     // pointer-only. The description belongs to the element focus actually reaches, and
     // it must stay a description: the row is still named by its language and suffix.
-    expect(row).toHaveAttribute("title", offCatalogNote);
+    // The house Tooltip expresses that relationship via aria-describedby on the row
+    // pointing at a visually hidden copy of the sentence, rather than a native title.
+    expect(row).toHaveAccessibleDescription(offCatalogNote);
     expect(screen.getByText("no volume/KD")).not.toHaveAttribute("title");
   });
 
@@ -196,12 +200,9 @@ describe("MarketPicker", () => {
     expect(row).toBeDisabled();
 
     // A disabled button emits no pointer or focus events, so the description has to hang
-    // on the wrapper MUI documents rather than on the button itself.
+    // on the wrapper the house Tooltip describes rather than on the button itself.
     expect(row).not.toHaveAttribute("title");
-    expect(row.parentElement).toHaveAttribute(
-      "title",
-      "English: no search volume or difficulty data for this market - positions are tracked normally.",
-    );
+    expect(row.parentElement).toHaveAccessibleDescription(offCatalogNote);
   });
 
   it("renders the calculator link through the shared external link with safe target and rel", () => {

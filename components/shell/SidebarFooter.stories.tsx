@@ -6,7 +6,7 @@ const meta = {
   component: SidebarFooter,
   decorators: [
     (Story) => (
-      <div className="flex h-[220px] w-[248px] flex-col bg-bg-elev p-[14px] text-fg">
+      <div className="flex h-[220px] w-[248px] flex-col bg-bg-elev p-3.5 text-fg">
         <Story />
       </div>
     ),

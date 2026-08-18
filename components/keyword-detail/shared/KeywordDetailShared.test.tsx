@@ -147,6 +147,13 @@ describe("keyword detail shared primitives", () => {
     expect(new Set([overviewPastClass, overviewCurrentClass, overviewUpcomingClass])).toHaveLength(
       3,
     );
+    for (const cls of [overviewPastClass, overviewCurrentClass, overviewUpcomingClass]) {
+      expect(cls).toContain("transition-colors");
+      expect(cls).toContain("duration-[var(--motion-tooltip)]");
+      expect(cls).toContain("ease-[ease]");
+      expect(cls).toContain("motion-reduce:transition-none");
+      expect(cls).not.toMatch(/scale|translate|rotate|animate-|delay-/);
+    }
     overview.unmount();
 
     const onboarding = render(
@@ -183,5 +190,19 @@ describe("keyword detail shared primitives", () => {
     expect(keywordDetailUpcomingClass).toContain("border-border-strong");
     expect(keywordDetailPastClass).toBe(keywordDetailUpcomingClass);
     expect(keywordDetailCurrentClass).not.toBe(keywordDetailPastClass);
+    expect(keywordDetailCurrentClass).toBe(
+      "h-1.5 w-1.5 rounded-full bg-accent-solid text-primary-contrast",
+    );
+    expect(keywordDetailPastClass).toBe(
+      "h-1.5 w-1.5 rounded-full border-[1.5px] border-border-strong bg-transparent text-fg-muted",
+    );
+    for (const cls of [
+      keywordDetailPastClass,
+      keywordDetailCurrentClass,
+      keywordDetailUpcomingClass,
+    ]) {
+      expect(cls).not.toMatch(/transition-/);
+      expect(cls).not.toMatch(/scale|translate|rotate|animate-|delay-/);
+    }
   });
 });

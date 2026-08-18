@@ -12,8 +12,8 @@ import {
   useRegisteredCommands,
 } from "@/components/shell/command-registry";
 import { useKeywordSearch } from "@/components/shell/use-keyword-search";
+import { Tooltip } from "@/components/ui";
 import { useColorScheme } from "@mui/material/styles";
-import Tooltip from "@mui/material/Tooltip";
 import {
   CursorIcon as Cursor,
   MagnifyingGlassIcon as MagnifyingGlass,
@@ -41,7 +41,7 @@ export function CommandPaletteTrigger() {
   const { openPalette } = useCommandPalette();
 
   return (
-    <Tooltip title="Search (⌘K)">
+    <Tooltip content="Search (⌘K)">
       <button
         aria-label="Search"
         className="grid h-8 w-8 flex-none place-items-center rounded-[9px] border border-border-strong bg-bg-elev text-fg-muted transition-colors hover:bg-bg-sunken hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid"

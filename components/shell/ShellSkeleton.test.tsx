@@ -62,7 +62,7 @@ describe("ShellSkeleton", () => {
 
     // The explicit margin, not mx-auto, is what keeps the icon axis identical between the
     // two rail states. Every tile except the logo (centred inside its 48px head) carries it.
-    expect(container.querySelectorAll(".ml-\\[22px\\]")).toHaveLength(rowCount() + 2);
+    expect(container.querySelectorAll(".ml-5\\.5")).toHaveLength(rowCount() + 2);
   });
 
   it("orders the rail head, nav, utility, switcher, version and shows the version collapsed", () => {

@@ -119,7 +119,7 @@ function StepDotItem({
   const done = !locked && state === "past";
   const active = state === "current";
   const className = cn(
-    "grid h-[34px] w-[34px] place-items-center rounded-full p-0 text-sm",
+    "grid h-8.5 w-[34px] place-items-center rounded-full p-0 text-sm",
     locked ? "cursor-default border-border bg-bg-sunken text-fg-muted" : "cursor-pointer",
     !locked && onboardingNavStepStateClass(state),
   );

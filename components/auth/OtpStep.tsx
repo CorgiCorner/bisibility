@@ -22,6 +22,13 @@ const linkButtonSx = {
   padding: 0,
 } as const;
 
+/**
+ * Widest label the resend control can show. The grid overlay below reserves
+ * this width so neither consecutive second ticks (tabular numerals keep digit
+ * width constant) nor the swap to "Resend code" shifts any row element.
+ */
+const resendReferenceLabel = "Resend in 1:00";
+
 type AuthStatus = "idle" | "verifying" | "error";
 
 export type OtpStepProps = {
@@ -83,11 +90,11 @@ export function OtpStep({
         Back
       </Button>
 
-      <span className="mt-[18px] grid h-[46px] w-[46px] place-items-center rounded-xl bg-accent-soft text-accent-text">
+      <span className="mt-4.5 grid h-[46px] w-[46px] place-items-center rounded-xl bg-accent-soft text-accent-text">
         <EnvelopeSimpleOpen aria-hidden size={23} weight="fill" />
       </span>
 
-      <h1 className="mt-[18px] mb-0 text-[25px] font-semibold tracking-[-0.7px] text-fg">
+      <h1 className="mt-4.5 mb-0 text-[25px] font-semibold tracking-[-0.7px] text-fg">
         Enter your code
       </h1>
       {devOtpCode ? (
@@ -167,7 +174,7 @@ export function OtpStep({
       {devOtpCode ? (
         // Above the resend row on purpose: on a demo instance without a mailer this hint is
         // the only way to learn the code, so it cannot be the least visible line on the page.
-        <p className="mt-[14px] text-center font-mono text-[12.5px] text-fg-muted">
+        <p className="mt-3.5 text-center font-mono text-[12.5px] text-fg-muted">
           Demo mode &middot; use code{" "}
           <span className="font-semibold text-accent-text">{devOtpCode}</span> to sign in
         </p>
@@ -176,7 +183,7 @@ export function OtpStep({
       {devOtpCode ? null : (
         // With the fixed demo code active no email is sent and resending cannot change the
         // code, so the resend row would only mislead; the hint above replaces it.
-        <div className="mt-[14px] flex items-center justify-center gap-1.5 text-[13px] text-fg-muted">
+        <div className="mt-3.5 flex items-center justify-center gap-1.5 text-[13px] text-fg-muted">
           Didn&apos;t get it?
           <Button
             color="inherit"
@@ -184,12 +191,30 @@ export function OtpStep({
             onClick={() => {
               void onResend();
             }}
-            sx={{ ...linkButtonSx, color: "var(--accent-text)" }}
+            sx={{
+              ...linkButtonSx,
+              color: "var(--accent-text)",
+              fontVariantNumeric: "tabular-nums",
+            }}
             type="button"
           >
-            {cooldownRemaining > 0
-              ? `Resend in ${formatCooldown(cooldownRemaining)}`
-              : "Resend code"}
+            <span style={{ display: "grid" }}>
+              <span
+                aria-hidden
+                style={{
+                  gridArea: "1 / 1",
+                  visibility: "hidden",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {resendReferenceLabel}
+              </span>
+              <span style={{ gridArea: "1 / 1", whiteSpace: "nowrap" }}>
+                {cooldownRemaining > 0
+                  ? `Resend in ${formatCooldown(cooldownRemaining)}`
+                  : "Resend code"}
+              </span>
+            </span>
           </Button>
         </div>
       )}

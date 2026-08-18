@@ -24,8 +24,8 @@ export default function AlertsLoading() {
         <Bar className="h-9 w-[104px] rounded-lg" />
       </div>
 
-      <div className="flex min-w-0 flex-col gap-[18px]">
-        <div className="flex flex-col gap-3 rounded-[14px] border border-border bg-bg-elev px-[18px] py-3.5 sm:flex-row sm:items-center">
+      <div className="flex min-w-0 flex-col gap-4.5">
+        <div className="flex flex-col gap-3 rounded-[14px] border border-border bg-bg-elev px-4.5 py-3.5 sm:flex-row sm:items-center">
           <Bar className="h-3.5 w-[100px]" />
           <div className="flex flex-wrap items-center gap-4">
             {summaryKeys.map((key) => (
@@ -40,7 +40,7 @@ export default function AlertsLoading() {
         </div>
 
         <div className="overflow-hidden rounded-[14px] border border-border bg-bg-elev">
-          <div className="flex items-center justify-between gap-3 border-b border-border px-[18px] py-3.5">
+          <div className="flex items-center justify-between gap-3 border-b border-border px-4.5 py-3.5">
             <Bar className="h-4 w-[160px]" />
             <div className="flex items-center gap-2">
               <Bar className="h-8 w-[186px]" />
@@ -48,8 +48,8 @@ export default function AlertsLoading() {
             </div>
           </div>
           {feedKeys.map((key) => (
-            <div className="flex gap-3.5 border-b border-border-soft px-[18px] py-[15px]" key={key}>
-              <Bar className="h-[34px] w-[34px] shrink-0 rounded-[9px]" />
+            <div className="flex gap-3.5 border-b border-border-soft px-4.5 py-[15px]" key={key}>
+              <Bar className="h-8.5 w-[34px] shrink-0 rounded-[9px]" />
               <div className="flex min-w-0 flex-1 flex-col gap-2">
                 <Bar className="h-3.5 w-[60%]" />
                 <Bar className="h-3 w-[42%]" />
@@ -73,13 +73,13 @@ export default function AlertsLoading() {
         </section>
 
         <div className="overflow-hidden rounded-[14px] border border-border bg-bg-elev">
-          <div className="border-b border-border px-[18px] py-3.5">
+          <div className="border-b border-border px-4.5 py-3.5">
             <Bar className="h-4 w-[110px]" />
             <Bar className="mt-2 h-3 w-full max-w-[420px]" />
           </div>
           {ruleKeys.map((key) => (
             <div
-              className="flex items-center gap-3 border-b border-border-soft px-[18px] py-[15px]"
+              className="flex items-center gap-3 border-b border-border-soft px-4.5 py-[15px]"
               key={key}
             >
               <Bar className="hidden h-[38px] w-[5px] shrink-0 rounded-full sm:block" />

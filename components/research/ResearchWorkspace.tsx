@@ -2,9 +2,9 @@
 
 import { useSessionSpend } from "@/components/cost-estimate/SessionSpendProvider";
 import type { LocationFieldValue } from "@/components/keywords/LocationField";
+import { Tooltip } from "@/components/ui";
 import type { ResearchKeywordsActionInput } from "@/lib/actions/keyword-research";
 import type { KeywordResearchMode } from "@/lib/keyword-research/types";
-import Tooltip from "@mui/material/Tooltip";
 import { useState } from "react";
 import { RecentResearchSearches } from "./RecentResearchSearches";
 import { ResearchResults } from "./ResearchResults";
@@ -29,6 +29,9 @@ import { useRecentSearches } from "./useRecentSearches";
 import { useResearchEstimate } from "./useResearchEstimate";
 import { useResearchRuns } from "./useResearchRuns";
 import { useResearchSavedKeywords } from "./useResearchSavedKeywords";
+
+const BUDGET_BLOCKED_TOOLTIP =
+  "Fresh lookups are disabled until the monthly provider budget resets. Cached recent searches remain available.";
 
 export function ResearchWorkspace({
   addKeywordsAction,
@@ -139,13 +142,7 @@ export function ResearchWorkspace({
   return (
     <section className="grid min-w-0 gap-4">
       {hasProvider ? (
-        <Tooltip
-          title={
-            budgetBlocked
-              ? "Fresh lookups are disabled until the monthly provider budget resets. Cached recent searches remain available."
-              : ""
-          }
-        >
+        <Tooltip content={budgetBlocked ? BUDGET_BLOCKED_TOOLTIP : ""}>
           <div>
             <ResearchSearchCard
               connectionId={connectionId}

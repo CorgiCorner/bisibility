@@ -13,6 +13,18 @@ import (
 const exampleID = "go-quickstart"
 const maxHistoryAttempts = 5
 
+// docs:start:method-contract
+var docsMethodContract = map[string]any{
+	"List projects":            (*bisibility.Client).ListProjects,
+	"Create a project":         (*bisibility.Client).CreateProject,
+	"Add keywords":             (*bisibility.Client).CreateKeywords,
+	"Run a rank check":         (*bisibility.Client).RunRankCheck,
+	"Read a rank-check result": (*bisibility.Client).GetRankCheckResult,
+}
+var _ = docsMethodContract
+
+// docs:end:method-contract
+
 func requiredEnv(name string) (string, error) {
 	value := os.Getenv(name)
 	if value == "" {

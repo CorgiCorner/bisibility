@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   lastExport: vi.fn(),
   listWorkspaces: vi.fn(),
   querySession: vi.fn(),
+  supportWidget: vi.fn(() => <aside data-testid="support-extension" />),
   workerLiveness: vi.fn(),
 }));
 
@@ -70,6 +71,9 @@ vi.mock("@/lib/deployment/deployment", () => ({
     return mocks.deployment.isCloud;
   },
 }));
+vi.mock("@/lib/app-extensions", () => ({
+  appExtensions: { renderMarketingSupportWidget: mocks.supportWidget },
+}));
 vi.mock("@/lib/auth/instance-admin", () => ({
   getInstanceAdminSession: mocks.adminSession,
 }));
@@ -95,7 +99,7 @@ describe("workspace layout", () => {
     vi.clearAllMocks();
     mocks.deployment.isCloud = false;
     mocks.querySession.mockResolvedValue({
-      user: { email: "admin@example.com", name: "Admin" },
+      user: { email: "admin@example.com", id: "user-1", name: "Admin" },
     });
     mocks.adminSession.mockResolvedValue(null);
     mocks.listWorkspaces.mockResolvedValue([
@@ -133,6 +137,17 @@ describe("workspace layout", () => {
     expect(markup).toContain('data-project-domain="example.com"');
     expect(mocks.querySession).toHaveBeenCalledOnce();
     expect(mocks.listWorkspaces).toHaveBeenCalledOnce();
+  });
+
+  it("does not render the marketing support extension inside the authenticated shell", async () => {
+    const result = await WorkspaceShell({
+      activeProjectId: "project_1",
+      children: <div>Workspace content</div>,
+      projectRef: "prj_f00000000000000000000000",
+    });
+
+    expect(renderToStaticMarkup(result)).not.toContain('data-testid="support-extension"');
+    expect(mocks.supportWidget).not.toHaveBeenCalled();
   });
 
   it.each([

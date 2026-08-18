@@ -12,6 +12,7 @@ const ARTIFACTS = {
   composeWorker: "compose.worker.yaml",
   environment: "bisibility.env.example",
   generator: "generate-self-host-env.mjs",
+  upgradeScript: "upgrade.sh",
 };
 
 function assertObject(value, label) {
@@ -95,6 +96,7 @@ export function parseDistributionManifest(contents) {
       "composeWorker",
       "environment",
       "generator",
+      "upgradeScript",
     ],
     "Distribution manifest artifacts",
   );

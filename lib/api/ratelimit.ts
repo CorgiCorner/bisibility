@@ -1,7 +1,9 @@
 import { randomUUID } from "node:crypto";
+import { positiveIntFromEnv } from "@/lib/env/positive-int";
 import { resolveClientIp } from "@/lib/http/client-ip";
 import { getRedisClient, redisConfigured, resetRedisClientForTests } from "@/lib/redis/redis";
 import { type ResetBucketsResult, resetScopedBuckets } from "./ratelimit-reset";
+import { REDIS_CONSUME_SCRIPT, REDIS_PEEK_SCRIPT } from "./ratelimit-scripts";
 import { errorResponse } from "./responses";
 
 const HTTP_WINDOW_SECONDS = 60;
@@ -59,68 +61,21 @@ type MemoryBucket = {
 
 const memoryBuckets = new Map<string, MemoryBucket>();
 
-const REDIS_CONSUME_SCRIPT = `
-local key = KEYS[1]
-local now = tonumber(ARGV[1])
-local window = tonumber(ARGV[2])
-local limit = tonumber(ARGV[3])
-local member = ARGV[4]
-
-redis.call("ZREMRANGEBYSCORE", key, 0, now - window)
-local count = redis.call("ZCARD", key)
-local success = 0
-
-if count < limit then
-  redis.call("ZADD", key, now, member)
-  count = count + 1
-  success = 1
-end
-
-redis.call("PEXPIRE", key, window)
-local oldest = redis.call("ZRANGE", key, 0, 0, "WITHSCORES")
-local reset_at = now + window
-if oldest[2] then
-  reset_at = tonumber(oldest[2]) + window
-end
-
-return { success, limit, math.max(0, limit - count), reset_at }
-`;
-
-const REDIS_PEEK_SCRIPT = `
-local key = KEYS[1]
-local now = tonumber(ARGV[1])
-local window = tonumber(ARGV[2])
-local limit = tonumber(ARGV[3])
-
-redis.call("ZREMRANGEBYSCORE", key, 0, now - window)
-local count = redis.call("ZCARD", key)
-local reset_at = now + window
-
-if count > 0 then
-  local oldest = redis.call("ZRANGE", key, 0, 0, "WITHSCORES")
-  if oldest[2] then
-    reset_at = tonumber(oldest[2]) + window
-  end
-  redis.call("PEXPIRE", key, window)
-end
-
-return { limit, math.max(0, limit - count), reset_at }
-`;
-
-export function envInt(name: string, fallback: number) {
-  const parsed = Number.parseInt(process.env[name] ?? "", 10);
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
-}
-
 function limitFor(kind: Identity["kind"]) {
   if (kind === "api-key") {
-    return envInt("BISIBILITY_API_KEY_RATE_LIMIT_PER_MINUTE", DEFAULT_KEY_LIMIT);
+    return positiveIntFromEnv(
+      process.env.BISIBILITY_API_KEY_RATE_LIMIT_PER_MINUTE,
+      DEFAULT_KEY_LIMIT,
+    );
   }
   if (kind === "personal-token") {
-    return envInt("BISIBILITY_PAT_RATE_LIMIT_PER_MINUTE", DEFAULT_PAT_LIMIT);
+    return positiveIntFromEnv(process.env.BISIBILITY_PAT_RATE_LIMIT_PER_MINUTE, DEFAULT_PAT_LIMIT);
   }
 
-  return envInt("BISIBILITY_API_ANON_RATE_LIMIT_PER_MINUTE", DEFAULT_ANON_LIMIT);
+  return positiveIntFromEnv(
+    process.env.BISIBILITY_API_ANON_RATE_LIMIT_PER_MINUTE,
+    DEFAULT_ANON_LIMIT,
+  );
 }
 
 // Null means no proxy header is trusted or the value was unusable; callers must

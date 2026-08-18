@@ -22,7 +22,7 @@ export function AccountSection({
   tone = "default",
 }: Readonly<AccountSectionProps>) {
   return (
-    <section className="space-y-[14px]">
+    <section className="space-y-3.5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">

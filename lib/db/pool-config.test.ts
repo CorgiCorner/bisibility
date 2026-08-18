@@ -5,7 +5,7 @@ describe("databasePoolConfig", () => {
   it("uses conservative SSR defaults", () => {
     expect(databasePoolConfig({})).toEqual({
       application_name: "bisibility-ssr",
-      connectionTimeoutMillis: 5_000,
+      connectionTimeoutMillis: 15_000,
       idleTimeoutMillis: 10_000,
       max: 3,
     });
@@ -35,7 +35,7 @@ describe("databasePoolConfig", () => {
       ),
     ).toEqual({
       application_name: "bisibility-ssr",
-      connectionTimeoutMillis: 5_000,
+      connectionTimeoutMillis: 15_000,
       idleTimeoutMillis: 10_000,
       max: 3,
       options: '-c search_path="bisibility_preview_pr_446"',

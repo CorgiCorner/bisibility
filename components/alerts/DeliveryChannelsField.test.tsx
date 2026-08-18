@@ -24,11 +24,13 @@ function FormHarness({
 }
 
 describe("DeliveryChannelsField", () => {
-  it("marks Slack disabled with the planned tooltip", () => {
+  it("marks Slack disabled with the API-only preview tooltip", () => {
     render(<FormHarness channels={[]} onSubmit={vi.fn()} />);
 
     expect(screen.getByRole("checkbox", { name: "Slack" })).toBeDisabled();
-    expect(screen.getByLabelText("Slack Planned - not available yet")).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("Slack API-only preview - dashboard setup not available"),
+    ).toBeInTheDocument();
   });
 
   it("does not change channels when the Slack checkbox is clicked", () => {

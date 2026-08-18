@@ -23,16 +23,16 @@ export default function KeywordsLoading() {
           <Bar className="mb-2 h-[26px] w-[86px]" />
         </div>
         <div className="overflow-hidden rounded-[14px] border border-border bg-bg-elev">
-          <div className="grid gap-3 border-b border-border px-4 py-[14px] xl:flex xl:items-center">
+          <div className="grid gap-3 border-b border-border px-4 py-3.5 xl:flex xl:items-center">
             <div className="flex items-center gap-2">
-              <Bar className="h-[34px] w-[126px]" />
-              <Bar className="h-[34px] w-[238px]" />
+              <Bar className="h-8.5 w-[126px]" />
+              <Bar className="h-8.5 w-[238px]" />
             </div>
             <div className="hidden h-8 w-px bg-border-strong xl:block" />
             <div className="flex min-w-0 flex-1 items-center gap-2">
-              <Bar className="hidden h-[34px] w-[140px] sm:block" />
-              <Bar className="h-[34px] min-w-[220px] flex-1" />
-              <Bar className="h-[34px] w-[190px]" />
+              <Bar className="hidden h-8.5 w-[140px] sm:block" />
+              <Bar className="h-8.5 min-w-[220px] flex-1" />
+              <Bar className="h-8.5 w-[190px]" />
             </div>
           </div>
           <SummaryStrip className="rounded-none border-b border-border" loading />

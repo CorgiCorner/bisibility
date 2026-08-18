@@ -13,7 +13,7 @@ export type OpsConfig = {
 };
 
 const DEFAULT_HEARTBEAT_CRON = "0 8 * * *";
-const DEFAULT_HEARTBEAT_TIMEZONE = "Europe/Warsaw";
+const DEFAULT_HEARTBEAT_TIMEZONE = "Etc/UTC";
 const DEFAULT_THROTTLE_MINUTES = 60;
 
 function envFlag(value: string | undefined, fallback: boolean) {

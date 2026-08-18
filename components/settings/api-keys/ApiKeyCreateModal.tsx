@@ -130,7 +130,7 @@ export function ApiKeyCreateModal({
         <ApiKeyRevealContent issuedKey={issuedKey} showProjectGuidance />
       ) : (
         <form
-          className="space-y-[18px]"
+          className="space-y-4.5"
           id="create-api-key-form"
           onSubmit={form.handleSubmit(onSubmit)}
         >

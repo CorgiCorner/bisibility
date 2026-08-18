@@ -63,7 +63,7 @@ export function TemplateStep() {
       >
         Download template.csv
       </Button>
-      <pre className="m-0 mt-[18px] overflow-x-auto rounded-[11px] bg-code-bg px-[15px] py-[13px] font-mono text-[11.5px] leading-[1.75] text-code-fg">
+      <pre className="m-0 mt-4.5 overflow-x-auto rounded-[11px] bg-code-bg px-[15px] py-[13px] font-mono text-[11.5px] leading-[1.75] text-code-fg">
         {keywordImportTemplateCsv}
       </pre>
     </div>
@@ -234,7 +234,7 @@ export function DoneStep({ result }: Readonly<{ result: ImportResultSummary }>) 
       <span className="grid h-14 w-14 place-items-center rounded-[15px] text-green-text [background:color-mix(in_srgb,var(--green)_12%,transparent)]">
         <CheckCircle size={30} weight="fill" />
       </span>
-      <h3 className="m-0 mt-[18px] text-[18px] font-semibold tracking-[-0.4px]">Import complete</h3>
+      <h3 className="m-0 mt-4.5 text-[18px] font-semibold tracking-[-0.4px]">Import complete</h3>
       <p className="m-0 mt-[7px] max-w-[340px] text-[13.5px] leading-[1.55] text-fg-muted">
         {result.created} added, {result.skipped} skipped, {result.failed} failed.
       </p>

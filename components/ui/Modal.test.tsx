@@ -1,5 +1,6 @@
-import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { MOTION_MODAL_EXIT } from "@/lib/ui/motion";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Modal } from "./Modal";
 
 function renderModal(
@@ -22,6 +23,14 @@ function renderModal(
 }
 
 describe("Modal keyboard shortcuts", () => {
+  it("gives the close button tokenized pointer-only press feedback", () => {
+    renderModal();
+
+    const close = screen.getByRole("button", { name: "Close modal" });
+    expect(close).toHaveClass("duration-[var(--motion-press)]");
+    expect(close).toHaveClass("motion-safe:active:not-focus-visible:scale-[0.97]");
+  });
+
   it("calls onClose on Escape and prevents default", () => {
     const { onClose, target } = renderModal();
     const el = target();
@@ -155,5 +164,85 @@ describe("Modal keyboard shortcuts", () => {
     target().dispatchEvent(event);
     expect(caught).toHaveBeenCalled();
     document.body.removeChild(outer);
+  });
+});
+
+describe("Modal exit lifecycle", () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
+  it("keeps content mounted during exit and fires onExited only after the transition", () => {
+    const onExited = vi.fn();
+    const onClose = vi.fn();
+    const { rerender } = render(
+      <Modal onClose={onClose} onExited={onExited} open title="Exit test">
+        <button type="button">content</button>
+      </Modal>,
+    );
+
+    expect(screen.getByText("content")).toBeInTheDocument();
+
+    rerender(
+      <Modal onClose={onClose} onExited={onExited} open={false} title="Exit test">
+        <button type="button">content</button>
+      </Modal>,
+    );
+
+    expect(screen.getByText("content")).toBeInTheDocument();
+    expect(onExited).not.toHaveBeenCalled();
+
+    act(() => {
+      vi.advanceTimersByTime(MOTION_MODAL_EXIT + 50);
+    });
+
+    expect(onExited).toHaveBeenCalledOnce();
+  });
+
+  it("does not fire onExited when open remains true", () => {
+    const onExited = vi.fn();
+    render(
+      <Modal onClose={vi.fn()} onExited={onExited} open title="Stay open">
+        <button type="button">content</button>
+      </Modal>,
+    );
+
+    act(() => {
+      vi.advanceTimersByTime(MOTION_MODAL_EXIT + 50);
+    });
+
+    expect(onExited).not.toHaveBeenCalled();
+  });
+});
+
+describe("Modal token classes", () => {
+  it("applies rounded-card-lg to the dialog paper", () => {
+    render(
+      <Modal onClose={vi.fn()} open title="Token test">
+        <p>body</p>
+      </Modal>,
+    );
+
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toHaveClass("rounded-card-lg");
+    expect(dialog).toHaveStyle({ borderRadius: "16px" });
+  });
+
+  it("uses numeric spacing utilities for header, content, and footer", () => {
+    render(
+      <Modal footer={<span>ok</span>} headerDivider onClose={vi.fn()} open title="Token test">
+        <p>body</p>
+      </Modal>,
+    );
+
+    const dialog = screen.getByRole("dialog");
+
+    const header = within(dialog).getByText("Token test").closest("header");
+    expect(header).toHaveClass("px-5.5", "py-4.5");
+
+    const content = screen.getByText("body").closest("div");
+    expect(content).toHaveClass("px-5.5", "py-4.5");
+
+    const footer = within(dialog).getByText("ok").closest("footer");
+    expect(footer).toHaveClass("px-5.5", "py-3.5", "gap-4.5");
   });
 });

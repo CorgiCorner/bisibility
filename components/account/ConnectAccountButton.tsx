@@ -1,7 +1,7 @@
 "use client";
 
+import { Tooltip } from "@/components/ui";
 import { authClient } from "@/lib/auth/client";
-import Tooltip from "@mui/material/Tooltip";
 import { useState } from "react";
 import { ghostButtonClass } from "./account-ui";
 
@@ -49,7 +49,7 @@ export function ConnectAccountButton({
 
   return (
     <span className="flex flex-none flex-col items-end gap-1">
-      <Tooltip title={tooltip}>
+      <Tooltip content={tooltip}>
         <span className="inline-flex">
           <button
             className={ghostButtonClass}

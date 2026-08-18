@@ -64,6 +64,8 @@ export function StepDots<T>({
               className={cn(
                 "h-1.5 w-1.5 rounded-full",
                 stepDotStateClass(context.state, variant),
+                variant === "onboarding" &&
+                  "transition-colors duration-[var(--motion-tooltip)] ease-[ease] motion-reduce:transition-none",
                 dotClassName,
               )}
               data-step-dot-state={context.state}

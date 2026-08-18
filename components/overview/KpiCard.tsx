@@ -13,7 +13,7 @@ export function KpiCard({ label, value, delta, deltaTone }: Readonly<KpiCardProp
   const valueClassName = value === "-" || value === "–" ? "text-fg-muted" : "text-fg";
 
   return (
-    <Card className="min-w-0 rounded-[13px] px-[18px] py-4" size="md">
+    <Card className="min-w-0 rounded-[13px] px-4.5 py-4" size="md">
       <div className="truncate font-mono text-[10.5px] uppercase tracking-[0.8px] text-fg-muted">
         {label}
       </div>

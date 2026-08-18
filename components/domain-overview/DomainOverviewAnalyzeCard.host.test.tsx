@@ -77,7 +77,12 @@ describe("DomainOverviewAnalyzeCard market combobox", () => {
 
     await user.click(screen.getByRole("button", { name: /Market:/ }));
     const provenance = screen.getByRole("menuitem", { name: /Germany \/ English/ });
-    expect(provenance).toHaveAttribute("title", provenanceMarket.provenance);
+    expect(provenance).not.toHaveAttribute("title");
+    const provenanceDescId = provenance.getAttribute("aria-describedby");
+    expect(provenanceDescId).not.toBeNull();
+    expect(document.getElementById(provenanceDescId ?? "")).toHaveTextContent(
+      provenanceMarket.provenance ?? "",
+    );
     await user.click(provenance);
     expect(onMarketChange).toHaveBeenCalledWith(provenanceMarket);
 
@@ -85,7 +90,12 @@ describe("DomainOverviewAnalyzeCard market combobox", () => {
     await user.type(screen.getByRole("textbox", { name: "Search markets..." }), "spain");
     const unavailable = screen.getByRole("menuitem", { name: /Spain \/ English/ });
     expect(unavailable).toHaveAttribute("aria-disabled", "true");
-    expect(unavailable).toHaveAttribute("title", DOMAIN_OVERVIEW_UNAVAILABLE_TOOLTIP);
+    expect(unavailable).not.toHaveAttribute("title");
+    const unavailableDescId = unavailable.getAttribute("aria-describedby");
+    expect(unavailableDescId).not.toBeNull();
+    expect(document.getElementById(unavailableDescId ?? "")).toHaveTextContent(
+      DOMAIN_OVERVIEW_UNAVAILABLE_TOOLTIP,
+    );
     expect(unavailable).toHaveTextContent("unavailable");
     fireEvent.click(unavailable);
     expect(onMarketChange).toHaveBeenCalledTimes(1);

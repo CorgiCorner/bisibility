@@ -19,15 +19,8 @@ membership role. Viewer and auditor memberships cap access at `read`; member
 caps it at `write`; admin and owner allow `admin`. Only the project owner can
 delete a project.
 
-For a route whose path does not contain a project id, select the project with:
-
-```http
-X-Bisibility-Project: prj_a00000000000000000000000
-```
-
-The `?project=prj_a00000000000000000000000` query parameter is equivalent. If the user belongs to
-exactly one project, the API can infer it. With multiple memberships, omitting
-the selector returns `400`.
+See [Authentication and project selection](/authentication#project-selection)
+for the exact path, header, query, and single-membership inference precedence.
 
 ## Create a token
 

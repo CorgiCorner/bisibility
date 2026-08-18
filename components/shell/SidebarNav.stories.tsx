@@ -7,7 +7,7 @@ const meta = {
   component: SidebarNav,
   decorators: [
     (Story) => (
-      <div className="w-[248px] bg-bg-elev p-[14px] text-fg">
+      <div className="w-[248px] bg-bg-elev p-3.5 text-fg">
         <Story />
       </div>
     ),

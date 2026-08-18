@@ -36,7 +36,10 @@ export function SummaryStrip({
     return (
       <div
         aria-hidden
-        className={cn("h-[34px] w-full animate-pulse rounded-lg bg-bg-sunken", className)}
+        className={cn(
+          "h-8.5 w-full animate-pulse motion-reduce:animate-none rounded-lg bg-bg-sunken",
+          className,
+        )}
       />
     );
   }

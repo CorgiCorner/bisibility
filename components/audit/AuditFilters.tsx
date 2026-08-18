@@ -116,7 +116,7 @@ export function AuditFilters({
   ];
 
   return (
-    <div className="border-b border-border px-4 py-[14px]">
+    <div className="border-b border-border px-4 py-3.5">
       <div className="grid gap-3 xl:flex xl:items-center xl:justify-between">
         <div className="flex min-w-0 flex-1 flex-wrap items-center gap-[7px]">
           <ToolbarSearch

@@ -31,6 +31,20 @@ describe("CTR drop alert schema", () => {
     }
   });
 
+  it("accepts slack as a delivery channel for the API-only preview", () => {
+    const uiResult = newRuleSchema.safeParse({ ...ctrRule, channels: ["slack"] });
+    const serverResult = alertRuleFormServerSchema.safeParse({ ...ctrRule, channels: ["slack"] });
+
+    expect(uiResult.success).toBe(true);
+    if (uiResult.success) {
+      expect(uiResult.data.channels).toEqual(["slack"]);
+    }
+    expect(serverResult.success).toBe(true);
+    if (serverResult.success) {
+      expect(serverResult.data.channels).toEqual(["slack"]);
+    }
+  });
+
   it("accepts the template defaults in both drawer and server schemas", () => {
     expect(ruleTemplates.ctr.defaults).toMatchObject({ changePct: 20, conditionType: "ctr_drop" });
     expect(newRuleSchema.safeParse(ctrRule).success).toBe(true);

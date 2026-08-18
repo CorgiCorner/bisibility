@@ -135,7 +135,7 @@ describe("MarketCombobox", () => {
     expect(screen.getByRole("button", { name: "Market" })).not.toHaveTextContent("Spain /");
   });
 
-  it("shows disabled tooltip and secondary text on unavailable options", async () => {
+  it("shows disabled reason via aria-describedby and secondary text on unavailable options", async () => {
     const user = userEvent.setup();
     render(
       <MarketCombobox
@@ -151,7 +151,11 @@ describe("MarketCombobox", () => {
     await user.type(screen.getByRole("textbox", { name: "Search markets..." }), "poland");
     const item = screen.getByRole("menuitem", { name: /Poland \/ Polish/ });
     expect(item).toHaveAttribute("aria-disabled", "true");
-    expect(item).toHaveAttribute("title", "Outside catalog");
+    expect(item).not.toHaveAttribute("title");
+    const describedBy = item.getAttribute("aria-describedby");
+    expect(describedBy).not.toBeNull();
+    const desc = document.getElementById(describedBy ?? "");
+    expect(desc).toHaveTextContent("Outside catalog");
     expect(item).toHaveTextContent("unavailable");
   });
 

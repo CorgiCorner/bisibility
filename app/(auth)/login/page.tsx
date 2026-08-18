@@ -76,16 +76,16 @@ export default async function LoginPage({ searchParams }: Readonly<LoginPageProp
           <div className="font-mono text-[11px] uppercase tracking-[0.6px] text-accent-text">
             Open-source SEO platform
           </div>
-          <h2 className="mt-[14px] mb-0 text-[32px] font-semibold leading-[1.2] tracking-[-1.1px]">
+          <h2 className="mt-3.5 mb-0 text-[32px] font-semibold leading-[1.2] tracking-[-1.1px]">
             Know exactly where you rank, and why.
           </h2>
-          <p className="mt-[14px] mb-0 text-[15px] leading-[1.6] text-fg-muted">
+          <p className="mt-3.5 mb-0 text-[15px] leading-[1.6] text-fg-muted">
             Daily Google positions for every keyword that matters, in a dashboard your whole team
             can read.
           </p>
 
           <div className="mt-[26px] overflow-hidden rounded-[13px] border border-border">
-            <div className="flex items-center gap-[7px] border-code-faint border-b bg-code-bg px-[14px] py-[9px]">
+            <div className="flex items-center gap-[7px] border-code-faint border-b bg-code-bg px-3.5 py-[9px]">
               <span className="h-2.5 w-2.5 rounded-full bg-red" />
               <span className="h-2.5 w-2.5 rounded-full bg-yellow" />
               <span className="h-2.5 w-2.5 rounded-full bg-green" />
@@ -110,7 +110,7 @@ export default async function LoginPage({ searchParams }: Readonly<LoginPageProp
           </div>
         </div>
 
-        <div className="flex items-center gap-[18px] font-mono text-[11.5px] text-fg-muted">
+        <div className="flex items-center gap-4.5 font-mono text-[11.5px] text-fg-muted">
           {brandStats.map(({ icon: Icon, label, tone }) => (
             <span className="inline-flex items-center gap-1.5" key={label}>
               <Icon aria-hidden className={tone} size={14} weight="fill" />

@@ -19,7 +19,6 @@ const selected = {
   marketValues: [],
   range: "Last 28 days",
   rangeValue: "28d",
-  refresh: "Daily",
   tag: "All tags",
   tagValue: null,
 } satisfies OverviewView["toolbar"];
@@ -93,22 +92,10 @@ describe("OverviewToolbar", () => {
     expect(routerMock.push).toHaveBeenLastCalledWith("/app/prj_1/dashboard");
   });
 
-  it("hides the refresh chip when the selection has mixed schedules", () => {
-    render(
-      <OverviewToolbar
-        initialSelected={{ ...selected, refresh: "Mixed schedules" }}
-        projectRef="prj_1"
-      />,
-    );
+  it("never renders the refresh chip for any schedule mix", () => {
+    render(<OverviewToolbar initialSelected={selected} projectRef="prj_1" />);
 
     expect(screen.queryByText(/Refresh:/)).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/Refresh cadence/)).not.toBeInTheDocument();
-  });
-
-  it("keeps the refresh chip when the selection has one schedule", () => {
-    render(<OverviewToolbar initialSelected={selected} projectRef="prj_1" />);
-
-    expect(screen.getByText("Refresh: Daily")).toBeInTheDocument();
-    expect(screen.getByLabelText("Refresh cadence Daily")).toBeInTheDocument();
   });
 });

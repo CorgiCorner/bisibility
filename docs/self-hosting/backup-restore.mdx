@@ -1,0 +1,94 @@
+---
+title: "Backup and restore"
+description: "Back up and restore the application database, secrets, and Temporal persistence for a self-hosted bisibility deployment."
+---
+
+[Production checklist](/self-hosting#production-checklist)
+
+## What is durable
+
+PostgreSQL is the source of truth for projects, keywords, schedules, rank
+checks, encrypted provider connections, alerts, notifications, and audit
+history. It is the primary durable application state and the primary backup
+and restore target.
+
+Valkey (or any Redis-compatible endpoint) holds rate-limit, idempotency, and
+realtime coordination data. It is shared runtime state.
+Valkey normally does not require durable backup. Keyword schedule intent
+remains in the application database; the worker can reconcile Temporal
+schedules after recovery.
+
+## Preserve secrets separately
+
+A database dump does not preserve `BETTER_AUTH_SECRET` or
+`BISIBILITY_SECRETS_KEY`. Stored provider credentials cannot be decrypted
+without the latter. Keep the matching `.env` secrets and your deployment
+manifests or image digest outside the dump and back them up independently.
+
+## Back up the application database
+
+For the Compose topology, create a custom-format application database dump
+from inside the PostgreSQL container:
+
+```bash
+docker compose --env-file .env -f compose.yaml exec -T postgres \
+  pg_dump -U bisibility -d bisibility --format=custom \
+  > bisibility.dump
+chmod 600 bisibility.dump
+docker compose --env-file .env -f compose.yaml exec -T postgres \
+  pg_restore --list \
+  < bisibility.dump \
+  > /dev/null
+```
+
+Keep the dump outside the Compose project directory if that directory is part
+of an automated cleanup.
+
+## Restore the application database
+
+Restore with the same bisibility release that created the dump, then follow
+the normal upgrade path if a newer release is required. On the restore target,
+stop both sources of application writes before replacing the database:
+
+```bash
+docker compose --env-file .env -f compose.yaml stop app
+docker compose --env-file .env -f compose.yaml -f compose.worker.yaml stop worker
+docker compose --env-file .env -f compose.yaml exec -T postgres \
+  pg_restore --exit-on-error --clean --if-exists --no-owner \
+  -U bisibility -d bisibility \
+  < bisibility.dump
+docker compose --env-file .env -f compose.yaml run --rm db-migrations
+docker compose --env-file .env -f compose.yaml up -d
+curl -fsS http://127.0.0.1:3000/api/v1/readiness
+```
+
+The worker stop command is harmless when the scheduling overlay has not been
+started. If the worker was active, restart it only after the restored app
+passes readiness.
+
+<Warning>
+`pg_restore --clean` is destructive: it drops and replaces objects in the
+target database. Confirm the target database and the backup before running
+it. Never run it against the active production database.
+</Warning>
+
+## Temporal persistence
+
+The bundled Temporal topology stores workflow state in the
+`temporal-postgres` service and its `temporal-postgres-data` volume, across
+both the `temporal` and `temporal_visibility` databases. Back up and restore
+that persistence store independently while Temporal Server and the worker are
+stopped. An application PostgreSQL dump does not protect active workflow
+history. For a self-managed cluster, back up its persistence database using
+the same discipline. See [Temporal](/self-hosting/temporal) for the bundled
+topology.
+
+## Restore rehearsal
+
+Test restores on a separate, non-production instance. Regular isolated
+restore rehearsals prove the backup is recoverable; merely creating backups
+does not. Practice the full restore-and-migrate procedure before relying on
+it during an incident, because rolling the application image back does not
+reverse Prisma migrations. If a release contains an incompatible schema
+migration, restore the pre-upgrade database backup together with the matching
+application version.

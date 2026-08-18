@@ -45,4 +45,54 @@ describe("Disclosure", () => {
     expect(heading.closest("summary")).not.toBeNull();
     expect(document.getElementById("can-i-cap-my-monthly-serp-spend")).toHaveTextContent("Yes.");
   });
+
+  it("rotates the caret on open and uses the motion-token duration", () => {
+    render(
+      <Disclosure title="Open me">
+        <p>Body</p>
+      </Disclosure>,
+    );
+
+    const caret = screen
+      .getByRole("heading", { name: "Open me" })
+      .closest("summary")
+      ?.querySelector("svg");
+    expect(caret).not.toBeNull();
+    expect(caret).toHaveClass(
+      "transition-transform",
+      "duration-[var(--motion-tooltip)]",
+      "ease-[var(--ease-in-out)]",
+      "group-open:rotate-90",
+    );
+  });
+
+  it("removes caret motion while preserving the open-state indicator", () => {
+    render(
+      <Disclosure title="Reduced">
+        <p>Body</p>
+      </Disclosure>,
+    );
+
+    const caret = screen
+      .getByRole("heading", { name: "Reduced" })
+      .closest("summary")
+      ?.querySelector("svg");
+    expect(caret).toHaveClass("group-open:rotate-90", "motion-reduce:transition-none");
+    expect(caret).not.toHaveClass("motion-reduce:rotate-0");
+    expect(caret?.className).not.toContain("duration-150");
+  });
+
+  it("does not animate the answer content", () => {
+    render(
+      <Disclosure title="Static content">
+        <p>Body</p>
+      </Disclosure>,
+    );
+
+    const answer = screen.getByText("Body").parentElement;
+    expect(answer?.className).not.toContain("transition-");
+    expect(answer?.className).not.toContain("animate-");
+    expect(answer?.className).not.toContain("opacity-");
+    expect(answer?.className).not.toContain("max-h");
+  });
 });

@@ -21,6 +21,12 @@ describe("ConclusionSubtitle", () => {
     expect(container).toBeEmptyDOMElement();
 
     rerender(<ConclusionSubtitle loading />);
-    expect(container.firstChild).toHaveClass("h-[13px]", "w-3/5");
+    const skeleton = container.firstChild as HTMLElement;
+    expect(skeleton).toHaveClass(
+      "h-[13px]",
+      "w-3/5",
+      "animate-pulse",
+      "motion-reduce:animate-none",
+    );
   });
 });

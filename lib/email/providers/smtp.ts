@@ -30,7 +30,7 @@ function toEmailSendError(error: unknown) {
   );
 }
 
-async function send({ from, to, subject, html, text }: EmailMessage) {
+async function send({ from, to, subject, html, replyTo, text }: EmailMessage) {
   const url = configuredValue(process.env.SMTP_URL);
   if (!url) {
     throw new Error("SMTP_URL is required to send email with SMTP.");
@@ -39,7 +39,7 @@ async function send({ from, to, subject, html, text }: EmailMessage) {
   try {
     const transport = createTransport(url, SMTP_TRANSPORT_OPTIONS);
     try {
-      await transport.sendMail({ from, html, subject, text, to });
+      await transport.sendMail({ from, html, replyTo, subject, text, to });
     } finally {
       transport.close();
     }

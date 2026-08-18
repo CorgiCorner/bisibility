@@ -33,7 +33,7 @@ const previewRows = [
 
 export function ImportStepper({ step }: Readonly<{ step: number }>) {
   return (
-    <div className="mt-[18px] flex items-center">
+    <div className="mt-4.5 flex items-center">
       {steps.map((label, index) => {
         const number = index + 1;
         const active = number <= step;
@@ -87,7 +87,7 @@ export function TemplateStep() {
       >
         Download template.csv
       </Button>
-      <div className="mt-[18px] overflow-hidden rounded-[11px] border border-border">
+      <div className="mt-4.5 overflow-hidden rounded-[11px] border border-border">
         <div className="flex items-center justify-between bg-code-bg px-[13px] py-2 font-mono text-[10.5px] text-code-faint">
           <span>template.csv</span>
           <span className="text-green-text">UTF-8</span>
@@ -96,7 +96,7 @@ export function TemplateStep() {
           {keywordImportTemplateCsv}
         </pre>
       </div>
-      <div className="mt-[18px] flex flex-wrap gap-1.5">
+      <div className="mt-4.5 flex flex-wrap gap-1.5">
         {keywordImportTemplateColumns.map((column) => {
           const item = column === "keyword" ? "keyword*" : column;
           return (
@@ -278,11 +278,11 @@ export function DoneStep() {
       <span className="grid h-14 w-14 place-items-center rounded-[15px] text-green-text [background:color-mix(in_srgb,var(--green)_12%,transparent)]">
         <CheckCircle size={30} weight="fill" />
       </span>
-      <h3 className="m-0 mt-[18px] text-[18px] font-semibold tracking-[-0.4px]">Import complete</h3>
+      <h3 className="m-0 mt-4.5 text-[18px] font-semibold tracking-[-0.4px]">Import complete</h3>
       <p className="m-0 mt-[7px] max-w-[340px] text-[13.5px] leading-[1.55] text-fg-muted">
         245 keywords added, 3 duplicates skipped. First positions appear after the next check.
       </p>
-      <div className="mt-[22px] flex gap-6">
+      <div className="mt-5.5 flex gap-6">
         {["245 Added", "3 Skipped", "0 Failed"].map((item) => (
           <span className="text-center" key={item}>
             <span className="block text-[22px] font-semibold">{item.split(" ")[0]}</span>

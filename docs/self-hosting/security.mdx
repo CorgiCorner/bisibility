@@ -1,0 +1,210 @@
+---
+title: "Self-hosting security"
+description: "Canonical operator security: TLS, port exposure, client IP, secrets, webhooks, OAuth origins, health probes, and admin recovery."
+---
+
+[Production checklist](/self-hosting#production-checklist)
+
+This page consolidates the security contracts a bisibility operator must own.
+Each section links back to the source configuration or procedure page for
+exact variable semantics.
+
+## TLS and reverse proxy
+
+Terminate TLS at a reverse proxy or CDN in front of the app. The production
+Compose stack publishes the app on `127.0.0.1:3000`; do not expose port 3000
+directly to the internet.
+
+Route `/api/auth/*` and `/api/v1/*` through the proxy. The public host and
+protocol must match `SITE_URL` and `BETTER_AUTH_URL` exactly, including any
+non-default port. A mismatch breaks OAuth redirects, auth callbacks, and
+absolute links.
+
+See [Required environment variables](/self-hosting/configuration#required-environment-variables)
+for the origin variables and [Production topology](/self-hosting#production-topology)
+for the service layout.
+
+## Public port exposure
+
+The default production Compose stack publishes only the app on `127.0.0.1:3000`.
+PostgreSQL and Valkey are reachable only as `postgres` and `redis` inside the
+Compose network and are never published to the host.
+
+The opt-in debug override (`docker-compose.debug.yml`) binds PostgreSQL to
+`127.0.0.1:5432` and Valkey to `127.0.0.1:6379`. These loopback bindings are for
+deliberate host-side debugging only, not for public exposure.
+
+The bundled Temporal server stays inside the Compose network. Its optional
+`temporal-ui` profile exposes the Web UI at `127.0.0.1:8233` only. Do not expose
+Temporal UI or database ports to the public internet without an authenticated
+gateway.
+
+## Trusted client IP
+
+Point `BISIBILITY_CLIENT_IP_HEADER` at a header your proxy controls. The app
+never trusts a client-controlled header by default.
+
+With nginx or Caddy in front of the app, have the proxy overwrite a dedicated
+header:
+
+```nginx
+proxy_set_header X-Real-IP $remote_addr;
+```
+
+Then set `BISIBILITY_CLIENT_IP_HEADER=x-real-ip`. Any proxy-overwritten header
+works, including a CDN header such as `cf-connecting-ip`.
+
+Behind a CDN that appends to `x-forwarded-for`:
+
+1. Set `BISIBILITY_CLIENT_IP_HEADER=x-forwarded-for`.
+2. Set `BISIBILITY_CLIENT_IP_XFF_DEPTH` to the number of entries your own
+   infrastructure appends (`1` for a single edge).
+
+The address is read from the right, so clients cannot spoof their way in.
+
+<Warning>
+A depth larger than your real chain reads a client-supplied entry.
+
+Trust `x-forwarded-for` only behind your own appending proxy. Without one,
+Next.js preserves client-supplied values. Callers could then select their own
+rate-limit bucket. Appending with `$proxy_add_x_forwarded_for` or overwriting
+`X-Real-IP` removes that control.
+</Warning>
+
+Without a trusted header, anonymous API callers share one bucket. Sign-in
+limits also share one bucket per path, and audits record no source IP. Enforce
+anonymous limits at the edge with a CDN, WAF, or nginx `limit_req`. The edge
+knows the peer address directly.
+
+See [Client IP behind a proxy](/self-hosting/operations#client-ip-behind-a-proxy)
+for the operations handoff and [Optional environment variables](/self-hosting/configuration#optional-environment-variables)
+for the exact variable rows.
+
+## Fixed OTP
+
+The demo login is intentionally insecure and disposable. It accepts a fixed
+sign-in code from anyone who can reach the app.
+
+Both `DEMO_FIXED_OTP` and `DEMO_INSTANCE_INSECURE_AUTH_ACK` must stay unset for
+real users or data. The production Docker image deliberately refuses a fixed
+OTP without the explicit acknowledgement. See
+[Optional environment variables](/self-hosting/configuration#optional-environment-variables)
+for the exact rows.
+
+## Application secrets
+
+Generate, back up, and protect two secrets for the lifetime of the instance:
+
+- `BETTER_AUTH_SECRET` signs auth state. Replacing it signs every user out.
+- `BISIBILITY_SECRETS_KEY` encrypts provider credentials. Replacing it leaves
+  stored credentials undecryptable; every connected provider must be reconnected
+  by hand.
+
+Generate each with `openssl rand -base64 32`. See
+[Required environment variables](/self-hosting/configuration#required-environment-variables)
+for the full rotation semantics, including `BETTER_AUTH_SECRETS` and
+`BISIBILITY_SECRETS_KEYS_RETIRED`.
+
+## PostgreSQL and Valkey exposure
+
+PostgreSQL is the durable application data store. It holds projects, keywords,
+rank history, audit logs, and encrypted provider credentials. Its durability
+is an operator responsibility: see [Backup and restore](/self-hosting/backup-restore).
+
+Valkey (or a Redis-compatible endpoint) holds rate-limit counters, idempotency
+keys, and realtime notification state. It is shared runtime state, not durable
+data. Valkey normally does not require a backup; a restart clears its state and
+the app repopulates counters on the next request.
+
+Neither PostgreSQL nor Valkey is published in the production Compose stack. Do
+not expose either to the public internet. If a managed database is used, apply
+network isolation and require TLS for the connection.
+
+## Webhook SSRF and private-network delivery
+
+Webhook delivery targets must be public URLs by default. Private-network and
+loopback targets are rejected to prevent SSRF.
+
+`WEBHOOK_ALLOW_PRIVATE_NETWORK=1` is an explicit override for a self-hosted
+instance that must deliver webhooks to trusted private, LAN, or loopback
+services. Set it only after reviewing the SSRF risk and never in a multi-tenant
+context.
+
+Signed delivery (HMAC-SHA256, timestamp, replay window) remains a receiver
+concern. See [Verify signatures](/api/webhooks#verify-signatures) for the
+exact verification contract.
+
+## OAuth and public origins
+
+Set `SITE_URL` and `BETTER_AUTH_URL` to the exact public origin, including any
+non-default port. Both are required and Compose fails before starting if either
+is blank.
+
+`TRUST_REQUEST_ORIGIN=true` is an escape hatch for preview deployments behind a
+trusted proxy that strips client-supplied forwarded-host headers. It defaults
+to `false`. Do not enable it without a proxy that overwrites forwarded headers.
+
+See [Optional environment variables](/self-hosting/configuration#optional-environment-variables)
+for the exact `TRUST_REQUEST_ORIGIN` semantics.
+
+## Health endpoint exposure
+
+Three health endpoints serve different roles:
+
+- `/api/v1/liveness` is the restart probe. It reports whether the process is
+  alive. Use it for container restart policy.
+- `/api/v1/readiness` is the traffic-admission probe. It reports whether the
+  app is ready to serve requests. Do not route traffic until it returns `200`.
+- `/api/v1/health` provides deeper diagnostics. It requires an API credential
+  or `INTERNAL_PROBE_TOKEN`.
+
+Anonymous liveness and readiness probes expose aggregate status only. Do not
+put `INTERNAL_PROBE_TOKEN` in URLs, query strings, or logs. Request the
+authenticated health endpoint with a Bearer header.
+
+See [Verify and troubleshoot startup](/self-hosting/docker#verify-and-troubleshoot-startup)
+for the probe commands used during startup.
+
+## Admin recovery
+
+If an account has lost its authenticator and all backup codes, an instance
+admin can perform an audited emergency two-factor reset. The operator must
+already be an instance admin.
+
+First verify the account owner's identity outside bisibility. Then run the
+audited command inside the deployed app container:
+
+```bash
+docker compose exec app node --experimental-transform-types scripts/admin/reset-two-factor.ts \
+  --operator-email operator@example.com \
+  --email locked-account@example.com \
+  --confirm-reset-2fa
+```
+
+The command removes the target 2FA factor. It revokes sessions, trusted
+devices, pending enrollment, and step-up grants. The same transaction appends
+`instance_admin.account_two_factor_reset` to the audit log. An audit failure
+rolls back the reset. The owner receives no replacement secret; they must
+enroll again and save new backup codes.
+
+See [Instance admin](/self-hosting/operations#instance-admin) for the admin
+seed command and role semantics.
+
+## Production security checklist
+
+Complete this checklist before the instance serves anyone other than you.
+
+| Check | Why it matters | Details |
+| - | - | - |
+| TLS terminates at a reverse proxy or CDN | The stack publishes the app on loopback; direct port exposure bypasses TLS | [TLS and reverse proxy](#tls-and-reverse-proxy) |
+| PostgreSQL and Valkey not published to the public internet | Both are internal services; public exposure leaks data or state | [Public port exposure](#public-port-exposure) |
+| `BISIBILITY_CLIENT_IP_HEADER` set when a proxy or CDN is in front | Without it, anonymous callers share one rate-limit bucket and audits record no source IP | [Trusted client IP](#trusted-client-ip) |
+| `DEMO_FIXED_OTP` and `DEMO_INSTANCE_INSECURE_AUTH_ACK` unset | Together they accept a fixed sign-in code from anyone | [Fixed OTP](#fixed-otp) |
+| `BETTER_AUTH_SECRET` and `BISIBILITY_SECRETS_KEY` generated and backed up | Replacing them signs out every user and leaves stored credentials undecryptable | [Application secrets](#application-secrets) |
+| `SITE_URL` and `BETTER_AUTH_URL` match the public origin | Incorrect origins break OAuth redirects and auth callbacks | [OAuth and public origins](#oauth-and-public-origins) |
+| `TRUST_REQUEST_ORIGIN` not enabled without a stripping proxy | Without a trusted proxy it trusts client-supplied forwarded-host headers | [OAuth and public origins](#oauth-and-public-origins) |
+| `WEBHOOK_ALLOW_PRIVATE_NETWORK` unset unless explicitly reviewed | Default rejects private-network targets to prevent SSRF | [Webhook SSRF](#webhook-ssrf-and-private-network-delivery) |
+| `INTERNAL_PROBE_TOKEN` not in URLs or logs | A leaked token exposes diagnostics | [Health endpoint exposure](#health-endpoint-exposure) |
+| Emergency two-factor reset uses the audited command | The command revokes sessions and writes an audit entry; no replacement secret is issued | [Admin recovery](#admin-recovery) |
+| `SELF_HOSTED_ALLOW_INDEXING` reviewed | Defaults to a restrictive `robots.txt` with `noindex`; set `true` only if the instance should appear in search results | [Optional environment variables](/self-hosting/configuration#optional-environment-variables) |
+| PostgreSQL backup running and a restore tested | Every upgrade and migration path assumes you can roll back | [Backup and restore](/self-hosting/backup-restore) |

@@ -66,14 +66,17 @@ worker pick up another installation's work.
 
 ### Worker startup troubleshooting
 
-Configure an `on-failure` or equivalent worker restart policy. The worker retries
-transient startup stages within a bounded budget. It then exits nonzero so
-persistent errors stay visible. Compose, the Railway worker config, and the Fly
-worker manifest already set this policy. Custom platforms must set it explicitly.
+Configure an `on-failure` or equivalent worker restart policy. The worker
+retries transient startup stages within a bounded budget, then exits nonzero
+so persistent errors stay visible. Compose, the Railway worker config, and
+the Fly worker manifest already set this policy. Custom platforms must set
+it explicitly.
 
-If the worker restarts in a loop, verify `TEMPORAL_ADDRESS`, `TEMPORAL_TLS`, and
-`TEMPORAL_NAMESPACE` first. The worker image contains only the bisibility
-Temporal worker; it does not contain or start a Temporal server.
+If the worker restarts in a loop, follow the canonical
+[Worker restart loops](/self-hosting/troubleshooting#worker-restart-loops)
+runbook to verify `TEMPORAL_ADDRESS`, `TEMPORAL_TLS`, namespace, task queues,
+database access, and same release/schema. The worker image contains only the
+bisibility Temporal worker; it does not contain or start a Temporal server.
 
 ## Scheduled rank checks
 

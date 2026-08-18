@@ -1,0 +1,106 @@
+/* Keyword research promo (landing): staggered entry + one looping row pulse. */
+@keyframes bvkw-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes bvkw-fadeup {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes bvkw-reveal {
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes bvkw-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  62% {
+    transform: scale(1.12);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes bvkw-rowpulse {
+  0%,
+  7%,
+  100% {
+    background: transparent;
+  }
+  2.5% {
+    background: color-mix(in srgb, var(--accent) 9%, transparent);
+  }
+}
+.bv-kw-window {
+  opacity: 0;
+  animation: bvkw-rise 0.8s cubic-bezier(0.2, 0.7, 0.3, 1) 0.05s forwards;
+  box-shadow:
+    0 30px 70px -42px color-mix(in srgb, var(--fg) 24%, transparent),
+    0 10px 24px -18px color-mix(in srgb, var(--fg) 14%, transparent);
+}
+.bv-kw-fu {
+  opacity: 0;
+  animation: bvkw-fadeup 0.7s cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+}
+.bv-kw-reveal {
+  transform: scaleX(0);
+  transform-origin: left;
+  transform-box: fill-box;
+  animation: bvkw-reveal 1.4s ease 0.7s forwards;
+}
+.bv-kw-pop {
+  opacity: 0;
+  animation: bvkw-pop 0.55s cubic-bezier(0.3, 1.4, 0.5, 1) forwards;
+  box-shadow: 0 18px 40px -16px color-mix(in srgb, var(--fg) 30%, transparent);
+}
+/* Entrance + ~11s live-refresh pulse combined, mirroring the handoff shorthand. */
+.bv-kw-rowpulse {
+  opacity: 0;
+  animation:
+    bvkw-fadeup 0.7s cubic-bezier(0.2, 0.7, 0.3, 1) 0.66s forwards,
+    bvkw-rowpulse 11s linear 3s infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .bv-kw-window,
+  .bv-kw-fu,
+  .bv-kw-pop,
+  .bv-kw-rowpulse {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .bv-kw-reveal {
+    animation: none;
+    transform: scaleX(1);
+  }
+}
+
+@keyframes bvmarquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.bv-marquee-track {
+  animation: bvmarquee 14s linear infinite;
+  will-change: transform;
+}

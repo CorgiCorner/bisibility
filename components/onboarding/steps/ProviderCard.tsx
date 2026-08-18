@@ -53,23 +53,23 @@ export function ProviderCard({
         type="radio"
         value={provider.value}
       />
-      <span className="pointer-events-none relative z-[1] flex flex-col items-start gap-2">
+      <span className="pointer-events-none relative z-1 flex flex-col items-start gap-2">
         <span className="text-sm font-semibold text-fg">{provider.label}</span>
         <span className="text-xs leading-[1.4] text-fg-muted">{provider.capability}</span>
         <StatusPill label={stateText(state)} size="sm" status={statusKind(state)} />
       </span>
-      <span className="pointer-events-none relative z-[1] mt-2 flex items-start gap-1 text-[12.5px] leading-[1.4] text-fg-muted">
+      <span className="pointer-events-none relative z-1 mt-2 flex items-start gap-1 text-[12.5px] leading-[1.4] text-fg-muted">
         <span>{provider.costCaption}</span>
         <span className="pointer-events-auto">
           <InfoTooltip text={provider.costDetail} />
         </span>
       </span>
       {state === "connected" && balance !== undefined ? (
-        <span className="pointer-events-none relative z-[1] mt-3 block font-mono text-xs text-green-text">
+        <span className="pointer-events-none relative z-1 mt-3 block font-mono text-xs text-green-text">
           Balance: {balance}
         </span>
       ) : null}
-      <span className="pointer-events-none relative z-[1] mt-auto flex flex-wrap items-baseline gap-[5px] pt-3">
+      <span className="pointer-events-none relative z-1 mt-auto flex flex-wrap items-baseline gap-[5px] pt-3">
         <a
           className="pointer-events-auto inline-flex whitespace-nowrap text-[12.5px] font-semibold text-accent-text hover:underline"
           href={provider.docsHref}

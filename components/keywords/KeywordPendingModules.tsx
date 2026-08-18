@@ -47,7 +47,7 @@ function pathLabel(value: string | null) {
 
 function SummaryCard({ children, label }: Readonly<{ children: ReactNode; label: string }>) {
   return (
-    <Card className="min-h-[148px] rounded-[14px]" size="sm" sx={{ padding: "15px 16px" }}>
+    <Card className="min-h-[148px]" size="sm" sx={{ padding: "15px 16px" }}>
       <p className="m-0 font-mono text-[10px] uppercase tracking-[0.65px] text-fg-muted">{label}</p>
       <div className="mt-2.5">{children}</div>
     </Card>
@@ -148,7 +148,7 @@ function PendingChart({
           : "text-fg-muted";
 
   return (
-    <Card className="rounded-[14px]" size="lg">
+    <Card radius="card" size="lg">
       <SectionTitle>Position history</SectionTitle>
       <div className="mt-3 grid min-h-[176px] place-items-center rounded-[12px] bg-bg-sunken px-5 text-center">
         <div>

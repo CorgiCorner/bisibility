@@ -1,7 +1,7 @@
 "use client";
 
 import { WorkspaceTile } from "@/components/shell/WorkspaceTile";
-import Tooltip from "@mui/material/Tooltip";
+import { Tooltip } from "@/components/ui";
 import { CaretUpDownIcon as CaretUpDown } from "@phosphor-icons/react";
 import type { MouseEvent } from "react";
 
@@ -47,7 +47,7 @@ export function WorkspaceSwitcherTrigger({
   // (padding plus a 28px tile, or a two-line label), so it stood 48px tall against the
   // collapsed 40px and changed height depending on whether the project had a sublabel.
   const shell = collapsed
-    ? "ml-[22px] h-11 w-9 justify-center p-0 border-transparent bg-transparent"
+    ? "ml-5.5 h-11 w-9 justify-center p-0 border-transparent bg-transparent"
     : [
         "h-11 w-full gap-2.5 px-[11px]",
         VARIANT_BORDER[variant],
@@ -56,7 +56,7 @@ export function WorkspaceSwitcherTrigger({
       ].join(" ");
 
   return (
-    <Tooltip placement="right" title={collapsed ? "Switch project" : ""}>
+    <Tooltip placement="right" content={collapsed ? "Switch project" : ""}>
       <button
         aria-controls={open ? menuId : undefined}
         aria-expanded={open}

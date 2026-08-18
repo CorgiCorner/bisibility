@@ -188,7 +188,7 @@ export function SecurityFactors({
   const copy = mode ? managementCopy(mode) : null;
   return (
     <AccountSection
-      contentClassName="px-[18px] py-4"
+      contentClassName="px-4.5 py-4"
       description="Add a second step after the email login code."
       title="Two-factor authentication"
     >

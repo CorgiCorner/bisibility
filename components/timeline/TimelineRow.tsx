@@ -69,7 +69,7 @@ export function TimelineRow({ canDelete, item, projectId }: Readonly<TimelineRow
 
   return (
     <div
-      className="flex items-start gap-[14px] border-border-soft border-b px-5 py-[13px] transition-colors hover:bg-bg-sunken last:border-b-0"
+      className="flex items-start gap-3.5 border-border-soft border-b px-5 py-[13px] transition-colors hover:bg-bg-sunken last:border-b-0"
       id={`signal-${item.id}`}
     >
       <span className="flex w-[18px] flex-none justify-center pt-2">
@@ -96,7 +96,7 @@ export function TimelineRow({ canDelete, item, projectId }: Readonly<TimelineRow
             </span>
             {item.badge ? (
               <span
-                className="inline-flex items-center rounded-full px-[8px] py-[2px] font-mono text-[10px] font-semibold"
+                className="inline-flex items-center rounded-full px-2 py-[2px] font-mono text-[10px] font-semibold"
                 style={{
                   backgroundColor: tintStyles.amber.bg,
                   color: tintStyles.amber.color,

@@ -1,5 +1,5 @@
+import { Tooltip } from "@/components/ui";
 import type { GroupedResearchRow } from "@/lib/keyword-research/grouping";
-import Tooltip from "@mui/material/Tooltip";
 import { BookmarkSimpleIcon as BookmarkSimple } from "@phosphor-icons/react";
 
 type ResearchKeywordCellProps = {
@@ -14,7 +14,7 @@ function SaveToggle({
 }: Readonly<{ onToggleSave: () => void; row: GroupedResearchRow }>) {
   const label = row.alreadySaved ? "Remove from saved" : "Save for later";
   return (
-    <Tooltip title={label}>
+    <Tooltip content={label}>
       <button
         aria-label={label}
         className={

@@ -7,6 +7,7 @@ import {
   MonoText,
   SectionTitle,
   SegmentedControl,
+  Tooltip,
 } from "@/components/ui";
 import type {
   CheckRange,
@@ -15,7 +16,6 @@ import type {
   CheckRunsCounts,
   CheckRunTriggerFilter,
 } from "@/lib/checks/contract";
-import Tooltip from "@mui/material/Tooltip";
 import { CalendarBlankIcon as CalendarBlank } from "@phosphor-icons/react/dist/ssr";
 import { useState } from "react";
 import { AsOfDatePopover } from "./AsOfDatePopover";
@@ -97,8 +97,8 @@ export function CheckRunsHeader({
             value={range}
           />
           <Tooltip
-            describeChild
-            title={`Stats cover the selected ${range} window ending on this date. The table starts with the newest check on or before it.`}
+            semantics="description"
+            content={`Stats cover the selected ${range} window ending on this date. The table starts with the newest check on or before it.`}
           >
             <Button
               aria-expanded={Boolean(dateAnchor)}

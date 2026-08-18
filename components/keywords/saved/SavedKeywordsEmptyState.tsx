@@ -17,7 +17,7 @@ const headers = [
 export function SavedKeywordsEmptyState({ projectRef }: Readonly<{ projectRef: string }>) {
   return (
     <Card className="overflow-hidden p-0" size="md">
-      <div className="grid grid-cols-[minmax(0,1.4fr)_90px_60px_70px_80px] items-center gap-2 border-b border-border px-[18px] py-2.5">
+      <div className="grid grid-cols-[minmax(0,1.4fr)_90px_60px_70px_80px] items-center gap-2 border-b border-border px-4.5 py-2.5">
         {headers.map((header) => (
           <span
             className={`font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-fg-muted ${header.className}`}
@@ -31,7 +31,7 @@ export function SavedKeywordsEmptyState({ projectRef }: Readonly<{ projectRef: s
         <span className="grid h-[54px] w-[54px] place-items-center rounded-[14px] bg-accent-soft text-accent-text">
           <BookmarkSimple size={26} weight="fill" />
         </span>
-        <h2 className="mb-0 mt-[18px] text-[18px] font-semibold tracking-[-0.4px] text-fg">
+        <h2 className="mb-0 mt-4.5 text-[18px] font-semibold tracking-[-0.4px] text-fg">
           Nothing saved yet
         </h2>
         <p className="mb-0 mt-[7px] max-w-[440px] text-[13.5px] leading-[1.55] text-fg-muted">

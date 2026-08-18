@@ -1,0 +1,148 @@
+---
+title: "Deployment options"
+description: "Compare the hosted beta, the local seeded demo, and production self-hosting: who runs what, current hosted limits, scheduling, and the safe path from demo to production."
+---
+
+bisibility runs three ways. This page is the single comparison source for the
+hosted beta, the local seeded demo, and production self-hosting. It covers who
+runs each component, the current hosted beta limits, provider billing,
+scheduling, and the safe path from a demo to a production deployment.
+
+## Choose a path
+
+| Path | Use it when | Start here |
+| - | - | - |
+| Hosted beta | You want the service operated for you and will connect your own data providers | [bisibility.com](https://bisibility.com) |
+| Local seeded demo | You want a throwaway evaluation with synthetic data and no provider account | [Quickstart](/quickstart) |
+| Production self-host | You will operate the full stack yourself on your own infrastructure | [Self-hosting](/self-hosting) |
+
+## Responsibility at a glance
+
+| | Hosted beta | Local seeded demo | Production self-host |
+| - | - | - | - |
+| PostgreSQL | Operated for you | Bundled, throwaway | You run and back it up |
+| Valkey | Operated for you | Bundled, throwaway | You run it |
+| Backups and restore testing | Platform backups | None - the demo is disposable | You run backups and test restores |
+| Provider credentials | You connect your own | None by default - no real rank data until you connect one | You connect and store your own |
+| Provider billing | Directly between you and the provider | None by default - only if you connect a provider | Directly between you and the provider |
+| Infrastructure cost | Covered by the hosted service | Your local machine | You pay for it |
+| Manual checks | Available, no Temporal needed | Available, no Temporal needed | Available, no Temporal needed |
+| Scheduled checks | Operated for you | Requires worker and Temporal overlays | Requires worker and Temporal overlays |
+
+For the demo and self-host paths, the core Compose stack runs the web app,
+migrations, PostgreSQL, and Valkey. Manual checks run without Temporal on every
+path. Scheduled checks require the worker plus Temporal; see
+[manual and scheduled checks](#manual-and-scheduled-checks).
+
+## Hosted beta
+
+The hosted beta operates the application infrastructure, PostgreSQL, Valkey,
+Temporal scheduling, and platform backups. You sign in to a managed instance
+and connect your own data providers.
+
+Provider usage is not included by bisibility. You connect your own SERP
+provider credentials, and provider billing stays directly between you and the
+provider.
+See [Integrations](/integrations) for the supported providers, credentials, and
+the per-project budget cap.
+
+See [current hosted beta limits](#current-hosted-beta-limits) below.
+
+## Local seeded demo
+
+The local seeded demo is a disposable evaluation. It boots from seeded
+synthetic data and uses an intentionally insecure fixed sign-in code, so anyone
+who reaches the app can sign in. It is not a production base.
+
+The demo ships with no SERP provider, so it produces no real rank data until
+you connect one. It is meant to be stopped and discarded. Start it with the
+[Quickstart](/quickstart) or the [local Compose demo](/self-hosting/docker#local-demo),
+and never expose it on a public address.
+
+## Production self-host
+
+A production self-host operator owns PostgreSQL, Valkey, application secrets,
+backups and restore testing, upgrades, provider credentials, provider usage,
+and infrastructure costs. The worker plus Temporal are required only for
+scheduled work, not for manual checks.
+
+Start from the [Self-hosting](/self-hosting) operator landing page. It lists
+the required components, the canonical Compose family, the production topology,
+and the production checklist. For the full environment variable reference, see
+[self-hosting configuration](/self-hosting/configuration).
+
+## Current hosted beta limits
+
+This page is the canonical public source for current hosted beta resource
+limits.
+
+- 1,000 keywords per project
+- 3 owned projects per user
+
+These are commercial limits that may change as the beta progresses. When a
+limit changes, this page is updated first.
+
+## Self-hosted resource limits
+
+Self-hosted deployments can set optional resource limits through two
+environment variables:
+
+- `BISIBILITY_MAX_KEYWORDS_PER_PROJECT` - per-project keyword cap
+- `BISIBILITY_MAX_PROJECTS_PER_USER` - cap on projects one user may own
+
+Unset or `0` means unlimited for both. The hosted beta values above do not
+apply to self-hosted installations. See
+[self-hosting configuration](/self-hosting/configuration#limits-and-networking)
+for the full variable reference.
+
+## Provider usage and billing
+
+bisibility ships without a data source. Any real provider-backed check uses
+SERP provider credentials you connect, and provider billing is directly between
+you and the provider. bisibility does not resell or include provider usage.
+
+You set a per-project monthly budget cap in **Settings > Provider
+usage** so spend has a ceiling. See [Budget cap](/integrations#budget-cap). A
+fresh demo with no provider connected incurs no provider cost and produces no
+real rank data.
+
+## Manual and scheduled checks
+
+Manual checks run inline in the app or through
+`POST /api/v1/keywords/{id}/checks` without Temporal. For the local demo and
+self-hosted deployments, the core Compose stack - web app, migrations,
+PostgreSQL, and Valkey - supports manual checks without the worker or Temporal.
+
+Scheduled checks are executed by the Temporal worker. To enable them on a
+self-hosted or demo Compose stack, add the worker and Temporal overlays:
+
+```bash
+docker compose -f compose.yaml -f compose.worker.yaml -f compose.temporal.yaml up -d
+```
+
+For the worker connection settings, scheduler modes, and maintenance
+schedules, see [Temporal and scheduled checks](/self-hosting/temporal). The
+hosted beta runs scheduling for you.
+
+## From demo to production
+
+Moving from the demo to production means starting a fresh production
+deployment with production secrets, authentication, storage, backups, and
+provider credentials. Do not promote or harden the disposable demo in place:
+its fixed sign-in code, seeded synthetic data, and generated secrets are not
+safe to keep serving.
+
+Start a new production Compose stack from the immutable release assets in an
+empty directory, then complete the [production checklist](/self-hosting#production-checklist)
+before the instance serves anyone other than you. Keep the web app and worker
+pinned to the same release, and follow
+[upgrade with a distribution manifest](/self-hosting/upgrades#upgrade-with-a-distribution-manifest)
+for every later version.
+
+## Next steps
+
+- [Quickstart](/quickstart) - run the local demo and first manual check.
+- [Self-hosting](/self-hosting) - required components, topology, and checklist.
+- [API quickstart](/api/quickstart) - authenticate and make one verified REST request.
+- [Integrations](/integrations) - connect a SERP provider and set the budget cap.
+- [Temporal and scheduled checks](/self-hosting/temporal) - enable scheduled work.

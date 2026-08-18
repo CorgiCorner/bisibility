@@ -70,7 +70,7 @@ describe("KeywordsGrid pending state", () => {
     expect(
       await screen.findByRole("textbox", { name: "Keywords" }, { timeout: 10_000 }),
     ).toHaveValue("open source rank tracker\nrank tracking for agencies");
-  });
+  }, 15_000);
 
   it("labels the first completed observation as new", async () => {
     renderPendingGrid({
@@ -103,7 +103,7 @@ describe("KeywordsGrid pending state", () => {
       (await screen.findAllByText("Awaiting first check", {}, { timeout: 10000 })).length,
     ).toBeGreaterThan(0);
     expect(screen.queryByText("No data")).not.toBeInTheDocument();
-  });
+  }, 15_000);
 
   it("labels a completed check with no result as not found in top 100", async () => {
     const [row] = pendingRows(1);

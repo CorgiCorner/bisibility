@@ -13,12 +13,12 @@ const frames = [
 
 export function DevelopersCardsLoading() {
   return (
-    <div className="max-w-[640px] space-y-[14px]">
+    <div className="max-w-[640px] space-y-3.5">
       {frames.map((frame) => (
         <section
           className={cn(
             settingsCardFrameClassName,
-            "flex flex-col gap-[18px] p-[18px_20px]",
+            "flex flex-col gap-4.5 p-[18px_20px]",
             frame.className,
           )}
           data-developer-loading-frame={frame.id}
@@ -33,8 +33,8 @@ export function DevelopersCardsLoading() {
             className={frame.id === "api-keys" ? "h-[142px] w-full" : "h-[156px] w-full"}
           />
           <div className="mt-auto flex justify-end gap-2.5">
-            {frame.id === "api-keys" ? <SettingsLoadingBar className="h-[34px] w-28" /> : null}
-            <SettingsLoadingBar className="h-[34px] w-28" />
+            {frame.id === "api-keys" ? <SettingsLoadingBar className="h-8.5 w-28" /> : null}
+            <SettingsLoadingBar className="h-8.5 w-28" />
           </div>
         </section>
       ))}

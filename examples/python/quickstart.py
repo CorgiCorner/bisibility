@@ -9,6 +9,16 @@ from bisibility import BisibilityApiError, BisibilityClient
 EXAMPLE_ID = "python-quickstart"
 MAX_HISTORY_ATTEMPTS = 5
 
+# docs:start:method-contract
+DOCS_METHOD_CONTRACT = {
+    "List projects": BisibilityClient.list_projects,
+    "Create a project": BisibilityClient.create_project,
+    "Add keywords": BisibilityClient.create_keywords,
+    "Run a rank check": BisibilityClient.run_rank_check,
+    "Read a rank-check result": BisibilityClient.get_rank_check_result,
+}
+# docs:end:method-contract
+
 
 def required_env(name: str) -> str:
     value = os.environ.get(name, "").strip()

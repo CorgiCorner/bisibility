@@ -1,4 +1,4 @@
-import { ThemeSegments } from "@/components/ui";
+import { ThemeSegments, TooltipProvider } from "@/components/ui";
 import {
   initializeThemeFromCookie,
   readTheme,
@@ -60,12 +60,14 @@ const withMuiTheme: Decorator = (Story, context) => {
           data-theme={activeTheme}
         >
           <CssBaseline />
-          <Story />
-          {context.viewMode === "story" ? (
-            <div className="fixed right-4 bottom-4 z-[1400]">
-              <ThemeSegments size="sm" />
-            </div>
-          ) : null}
+          <TooltipProvider>
+            <Story />
+            {context.viewMode === "story" ? (
+              <div className="fixed right-4 bottom-4 z-[1400]">
+                <ThemeSegments size="sm" />
+              </div>
+            ) : null}
+          </TooltipProvider>
         </div>
       </ThemeProvider>
     </StyledEngineProvider>

@@ -16,19 +16,19 @@ const rowGrid =
 
 export default function AuditLoading() {
   return (
-    <PageContent aria-hidden className="flex flex-col gap-[14px]" variant="analytics">
+    <PageContent aria-hidden className="flex flex-col gap-3.5" variant="analytics">
       <div className="overflow-hidden rounded-[14px] border border-border bg-bg-elev">
-        <div className="border-b border-border px-4 py-[14px]">
+        <div className="border-b border-border px-4 py-3.5">
           <div className="grid gap-3 xl:flex xl:items-center xl:justify-between">
             <div className="flex min-w-0 flex-1 flex-wrap items-center gap-[7px]">
-              <Bar className="h-[34px] w-full max-w-[240px] flex-1" />
+              <Bar className="h-8.5 w-full max-w-[240px] flex-1" />
               {selectKeys.map((key) => (
-                <Bar className="h-[34px] w-[118px]" key={key} />
+                <Bar className="h-8.5 w-[118px]" key={key} />
               ))}
             </div>
             <div className="flex flex-wrap items-center gap-2 xl:justify-end">
               <Bar className="h-3 w-[72px]" />
-              <Bar className="h-[34px] w-[100px]" />
+              <Bar className="h-8.5 w-[100px]" />
             </div>
           </div>
         </div>

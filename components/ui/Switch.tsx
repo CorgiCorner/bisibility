@@ -24,14 +24,14 @@ export type SwitchProps = Omit<InputHTMLAttributes<HTMLInputElement>, "role" | "
 const visualClass = "relative h-[18px] w-8 shrink-0";
 
 const trackClass =
-  "absolute inset-0 rounded-full border border-border-strong bg-transparent transition-colors " +
+  "absolute inset-0 rounded-full border border-border-strong bg-transparent transition-colors duration-[var(--motion-tooltip)] ease-[ease] " +
   "peer-checked:border-accent peer-checked:bg-accent-soft " +
   "peer-focus-visible:ring-2 peer-focus-visible:ring-accent/40 " +
   "peer-disabled:bg-bg-sunken disabled:text-fg-muted";
 
 const thumbClass =
-  "absolute left-[3px] top-[3px] h-3 w-3 rounded-full bg-fg-muted transition-transform " +
-  "peer-checked:translate-x-[14px] peer-checked:bg-accent peer-disabled:bg-bg-sunken disabled:text-fg-muted";
+  "absolute left-[3px] top-[3px] h-3 w-3 rounded-full bg-fg-muted transition-transform duration-[var(--motion-tooltip)] ease-[var(--ease-in-out)] motion-reduce:transition-none " +
+  "peer-checked:translate-x-3.5 peer-checked:bg-accent peer-disabled:bg-bg-sunken disabled:text-fg-muted";
 
 export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
   {

@@ -22,6 +22,12 @@ drops, downtrends, top-N transitions, competitor overtakes, SERP features, and
 ranking URL mismatches. Rules can target the whole project, selected keywords,
 or tags. Delivery channels depend on the integrations configured in the app.
 
+Slack tenant delivery is available as an API-only preview. Workspace
+installation and channel management are not yet exposed in the dashboard. The
+`channels` array accepts `email`, `slack`, and `webhook`; a rule with
+`channels: ["slack"]` is accepted through this API. See
+[Configure alerts](/guides/alerts) for the delivery channel contract.
+
 Email rules created through the API without `recipient_ids` default to the
 project owner. On create, an explicit empty array creates a rule with no email
 recipients and does not use that fallback. On update, omitting `recipient_ids`

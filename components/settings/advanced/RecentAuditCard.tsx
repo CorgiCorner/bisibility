@@ -38,7 +38,7 @@ export function RecentAuditCard({ entries, projectId }: Readonly<RecentAuditCard
             >
               <span
                 aria-hidden
-                className="row-span-2 grid h-[34px] w-[34px] place-items-center rounded-[9px] border border-border bg-bg-sunken font-mono text-[10px] font-semibold text-fg-muted sm:row-span-1"
+                className="row-span-2 grid h-8.5 w-[34px] place-items-center rounded-[9px] border border-border bg-bg-sunken font-mono text-[10px] font-semibold text-fg-muted sm:row-span-1"
               >
                 {entry.actor.initials}
               </span>

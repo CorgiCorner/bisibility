@@ -1,9 +1,8 @@
-import { StatusPill } from "@/components/ui";
+import { StatusPill, Tooltip } from "@/components/ui";
 import { hasUrlMismatch } from "@/lib/alerts/url-mismatch";
 import { marketGridParent } from "@/lib/keywords/market-grid-model";
 import { pathFromUrl } from "@/lib/queries/keyword-row-format";
 import type { KeywordRow } from "@/lib/queries/keywords";
-import Tooltip from "@mui/material/Tooltip";
 
 type TargetRankingCellProps = {
   row: KeywordRow;
@@ -11,7 +10,7 @@ type TargetRankingCellProps = {
 
 function UrlPath({ value }: Readonly<{ value: string }>) {
   return (
-    <Tooltip title={value}>
+    <Tooltip content={value}>
       <span className="min-w-0 truncate font-mono text-[11.5px] text-fg-muted">
         {pathFromUrl(value)}
       </span>
@@ -37,7 +36,7 @@ export function TargetRankingCell({ row }: Readonly<TargetRankingCellProps>) {
   const parent = marketGridParent(row);
   if (parent && parent.aggregate.rankingUrls.length > 1) {
     return (
-      <Tooltip title={parent.aggregate.rankingUrls.join("\n")}>
+      <Tooltip content={parent.aggregate.rankingUrls.join("\n")}>
         <span className="font-mono text-[11.5px] text-fg-muted">
           {parent.aggregate.rankingUrls.length} URLs
         </span>

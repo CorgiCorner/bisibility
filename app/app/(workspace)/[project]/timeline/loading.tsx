@@ -20,7 +20,7 @@ const groups = [
 
 function TimelineRow() {
   return (
-    <div className="flex items-start gap-[14px] border-border-soft border-b px-5 py-[13px]">
+    <div className="flex items-start gap-3.5 border-border-soft border-b px-5 py-[13px]">
       <Bar className="mt-2 h-[9px] w-[9px] shrink-0 rounded-full" />
       <div className="grid min-w-0 flex-1 gap-2 md:grid-cols-[124px_minmax(0,1fr)_56px]">
         <div className="grid gap-1.5">

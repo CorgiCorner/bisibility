@@ -112,7 +112,7 @@ export function KeywordTopQueryImport({
 
   if (!hasAnalyticsSource) {
     return (
-      <p className={`m-0 mt-[18px] ${feedbackClass} text-fg-muted`}>
+      <p className={`m-0 mt-4.5 ${feedbackClass} text-fg-muted`}>
         {awaitingPropertySelection
           ? "Select a Search Console property above, then import your queries."
           : "Connect Search Console above to import your real queries."}
@@ -121,7 +121,7 @@ export function KeywordTopQueryImport({
   }
 
   return (
-    <div className="mt-[18px] flex flex-wrap items-center gap-2">
+    <div className="mt-4.5 flex flex-wrap items-center gap-2">
       <Button
         disabled={!importTopQueriesAction}
         loading={isPending}

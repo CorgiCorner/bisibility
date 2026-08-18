@@ -1,13 +1,12 @@
 "use client";
 
-import { AlertBanner } from "@/components/ui";
+import { AlertBanner, Tooltip } from "@/components/ui";
 import {
   isProjectReadOnly,
   normalizeProjectWriteMode,
   type ProjectWriteMode,
 } from "@/lib/deployment/project-write-mode";
 import { appPath } from "@/lib/routing/app-path";
-import Tooltip from "@mui/material/Tooltip";
 import type { ReactNode } from "react";
 import { createContext, useContext, useMemo } from "react";
 
@@ -84,7 +83,7 @@ export function ProjectReadOnlyTooltip({
     return wrapped;
   }
 
-  return <Tooltip title={readOnlyReason}>{wrapped}</Tooltip>;
+  return <Tooltip content={readOnlyReason}>{wrapped}</Tooltip>;
 }
 
 export function ProjectWriteModeBanner() {

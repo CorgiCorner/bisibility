@@ -1,6 +1,5 @@
-import { MonoText } from "@/components/ui";
+import { MonoText, Tooltip } from "@/components/ui";
 import type { KeywordRow } from "@/lib/queries/keywords";
-import Tooltip from "@mui/material/Tooltip";
 import type { GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 
 const noDataClassName = "font-mono text-xs font-semibold text-fg-muted";
@@ -8,7 +7,7 @@ const trafficTooltip = "Connect Search Console to see traffic";
 
 function TrafficNoDataValue() {
   return (
-    <Tooltip title={trafficTooltip}>
+    <Tooltip content={trafficTooltip}>
       <span aria-label={trafficTooltip} className={noDataClassName}>
         -
       </span>

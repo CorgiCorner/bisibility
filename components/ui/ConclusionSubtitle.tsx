@@ -16,7 +16,7 @@ export function ConclusionSubtitle({
       <div
         aria-hidden
         className={cn(
-          "mb-3 mt-2 h-[13px] w-3/5 animate-pulse rounded-full bg-bg-sunken",
+          "mb-3 mt-2 h-[13px] w-3/5 animate-pulse motion-reduce:animate-none rounded-full bg-bg-sunken",
           className,
         )}
       />

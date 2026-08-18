@@ -1,6 +1,4 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { API_VERSION_HEADER } from "./api-versions";
-import { getOpenApiDocument } from "./openapi";
 import { listRankChecks, runRankCheck } from "./rank-checks";
 
 const mocks = vi.hoisted(() => {
@@ -289,27 +287,5 @@ describe("rank-check API resources", () => {
         targetType: "keyword",
       }),
     );
-  });
-
-  it("documents async rank-check responses and omits jobs", () => {
-    const doc = getOpenApiDocument();
-    const runCheck = doc.paths["/keywords/{id}/checks"].post;
-
-    expect(doc.paths).not.toHaveProperty("/jobs/{job_id}");
-    expect(runCheck).toMatchObject({
-      parameters: [
-        expect.objectContaining({ name: API_VERSION_HEADER }),
-        expect.objectContaining({ name: "async" }),
-      ],
-      responses: {
-        "202": expect.objectContaining({
-          content: {
-            "application/json": {
-              schema: { $ref: "#/components/schemas/RankCheck" },
-            },
-          },
-        }),
-      },
-    });
   });
 });

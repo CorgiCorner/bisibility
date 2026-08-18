@@ -25,7 +25,7 @@ function KpisLoading() {
   return (
     <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
       {six.map((key) => (
-        <div className="rounded-[13px] border border-border bg-bg-elev px-[18px] py-4" key={key}>
+        <div className="rounded-[13px] border border-border bg-bg-elev px-4.5 py-4" key={key}>
           <Bar className="h-2.5 w-[96px] bg-border" />
           <Bar className="mt-[9px] h-7 w-[120px]" />
         </div>
@@ -84,7 +84,7 @@ function TableLoading({ pages = false }: Readonly<{ pages?: boolean }>) {
 
 export function DomainOverviewResultsLoading() {
   return (
-    <div aria-busy="true" aria-label="Domain Overview loading" className="grid min-w-0 gap-[18px]">
+    <div aria-busy="true" aria-label="Domain Overview loading" className="grid min-w-0 gap-4.5">
       <ContextLoading />
       <KpisLoading />
       <ChartLoading />

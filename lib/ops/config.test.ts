@@ -16,7 +16,7 @@ describe("operator observability config", () => {
     expect(getOpsConfig()).toEqual({
       enabled: false,
       heartbeatCron: "0 8 * * *",
-      heartbeatTimezone: "Europe/Warsaw",
+      heartbeatTimezone: "Etc/UTC",
       includeNames: false,
       notifyMode: "failures",
       throttleMinutes: 60,

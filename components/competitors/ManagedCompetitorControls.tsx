@@ -1,11 +1,11 @@
 "use client";
 
+import { Tooltip } from "@/components/ui";
 import { removeManagedCompetitor, renameManagedCompetitor } from "@/lib/actions/competitors";
 import type { ManagedCompetitor, RenameManagedCompetitorInput } from "@/lib/competitors/types";
 import { renameManagedCompetitorSchema } from "@/lib/competitors/types";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { actionErrorMessage } from "@/lib/ui/action-error";
-import Tooltip from "@mui/material/Tooltip";
 import {
   CheckIcon as Check,
   PencilSimpleIcon as PencilSimple,
@@ -123,7 +123,7 @@ export function ManagedCompetitorControls({
   return (
     <span className="inline-flex items-center gap-1.5">
       {canUpdate ? (
-        <Tooltip title="Rename">
+        <Tooltip content="Rename">
           <button
             aria-label={`Rename ${competitor.label}`}
             className={iconButtonClass}
@@ -135,7 +135,7 @@ export function ManagedCompetitorControls({
         </Tooltip>
       ) : null}
       {canDelete ? (
-        <Tooltip title="Remove">
+        <Tooltip content="Remove">
           <span>
             <button
               aria-label={`Remove ${competitor.label}`}

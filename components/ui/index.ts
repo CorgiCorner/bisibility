@@ -112,6 +112,13 @@ export {
   type ToolbarSearchProps,
   type ToolbarSearchVariant,
 } from "./ToolbarSearch";
+export {
+  Tooltip,
+  type TooltipPlacement,
+  type TooltipProps,
+  TooltipProvider,
+  type TooltipSemantics,
+} from "./Tooltip";
 export { tableHeaderClassName } from "./table-header-styles";
 export { toolbarControlClassName } from "./toolbar-control-styles";
 export { useBrowserTimeZone, ZonedTime, type ZonedTimeProps } from "./ZonedTime";

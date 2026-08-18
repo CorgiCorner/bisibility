@@ -105,6 +105,21 @@ describe("sendEmail orchestration", () => {
     );
   });
 
+  it("passes an explicit reply address to the selected transport", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 202 }));
+    clearEmailEnv();
+    vi.stubEnv("EMAIL_PROVIDER", "resend");
+    vi.stubEnv("RESEND_API_KEY", "email-key");
+    vi.stubEnv("EMAIL_FROM", "bisibility <reports@example.com>");
+    vi.stubGlobal("fetch", fetchMock);
+
+    await sendEmail({ ...input, replyTo: "hello@example.com" });
+
+    expect(JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body))).toMatchObject({
+      reply_to: ["hello@example.com"],
+    });
+  });
+
   it("routes to Amazon SES when EMAIL_PROVIDER selects it", async () => {
     const fetchMock = vi.fn();
     sendMock.mockResolvedValue({});

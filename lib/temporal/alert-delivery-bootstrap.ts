@@ -26,7 +26,7 @@ export async function ensureAlertDeliverySweepSchedule(
       note: "Alert delivery recovery sweep",
       scheduleId: ALERT_DELIVERY_SWEEP_SCHEDULE_ID,
       spec: {
-        intervals: [{ every: envValue("ALERT_DELIVERY_SWEEP_INTERVAL") ?? "1 minute" }],
+        intervals: [{ every: envValue(process.env.ALERT_DELIVERY_SWEEP_INTERVAL) ?? "1 minute" }],
       },
       taskQueue: ALERT_DELIVERY_TASK_QUEUE,
       workflowType: ALERT_DELIVERY_SWEEP_WORKFLOW_TYPE,

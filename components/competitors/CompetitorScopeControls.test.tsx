@@ -159,8 +159,11 @@ describe("competitorRegistryOptions", () => {
     ]);
     const unsupported = screen.getByRole("menuitem", { name: /Belgium \/ Arabic/ });
     expect(unsupported).toHaveAttribute("aria-disabled", "true");
-    expect(unsupported).toHaveAttribute(
-      "title",
+    expect(unsupported).not.toHaveAttribute("title");
+    const describedBy = unsupported.getAttribute("aria-describedby");
+    expect(describedBy).not.toBeNull();
+    const desc = document.getElementById(describedBy ?? "");
+    expect(desc).toHaveTextContent(
       "SOV needs search volume - this pair is outside the research catalog.",
     );
   });

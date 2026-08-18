@@ -41,7 +41,7 @@ export function Disclosure({
     >
       <summary
         className={cn(
-          "flex cursor-pointer list-none items-start gap-3 rounded-[14px] px-[22px] py-5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid sm:px-7 [&::-webkit-details-marker]:hidden",
+          "flex cursor-pointer list-none items-start gap-3 rounded-[14px] px-5.5 py-5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid sm:px-7 [&::-webkit-details-marker]:hidden",
           summaryClassName,
         )}
       >
@@ -50,12 +50,12 @@ export function Disclosure({
         </Heading>
         <CaretRight
           aria-hidden="true"
-          className="mt-[3px] shrink-0 text-fg-muted transition-transform duration-150 group-open:rotate-90"
+          className="mt-[3px] shrink-0 text-fg-muted transition-transform duration-[var(--motion-tooltip)] ease-[var(--ease-in-out)] group-open:rotate-90 motion-reduce:transition-none"
           size={16}
           weight="bold"
         />
       </summary>
-      <div className={cn("scroll-mt-32 px-[22px] pb-5 sm:px-7", contentClassName)} id={anchorId}>
+      <div className={cn("scroll-mt-32 px-5.5 pb-5 sm:px-7", contentClassName)} id={anchorId}>
         {children}
       </div>
     </details>

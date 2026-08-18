@@ -1,7 +1,6 @@
 import { Toolbar } from "@/components/shell/Toolbar";
 import { Button, Pill } from "@/components/ui";
 import {
-  ArrowsClockwiseIcon as ArrowsClockwise,
   CalendarBlankIcon as CalendarBlank,
   MonitorIcon as Monitor,
   PlusIcon as Plus,
@@ -27,9 +26,6 @@ export const Filters: Story = {
     ),
     children: (
       <>
-        <Pill active>
-          <ArrowsClockwise size={15} /> Refresh: Daily
-        </Pill>
         <Pill>
           <CalendarBlank size={15} /> Last 28 days
         </Pill>

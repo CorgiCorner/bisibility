@@ -72,7 +72,7 @@ export function AlertRulesList({
   return (
     <>
       <Card className="overflow-hidden p-0" size="md">
-        <div className="border-border border-b px-[18px] py-3.5">
+        <div className="border-border border-b px-4.5 py-3.5">
           <SectionTitle>Alert rules</SectionTitle>
           <p className="m-0 mt-1 font-mono text-[11px] leading-normal text-fg-muted">
             Rules are evaluated after rank checks. Each rule allows{" "}
@@ -88,7 +88,7 @@ export function AlertRulesList({
 
           return (
             <article
-              className="flex flex-col gap-3 border-border-soft border-b px-[18px] py-[15px] sm:flex-row sm:items-center"
+              className="flex flex-col gap-3 border-border-soft border-b px-4.5 py-[15px] sm:flex-row sm:items-center"
               key={rule.id}
             >
               <span
@@ -193,7 +193,7 @@ export function AlertRulesList({
             </article>
           );
         })}
-        <p className="m-0 flex items-center gap-2 px-[18px] py-3 text-xs text-fg-muted">
+        <p className="m-0 flex items-center gap-2 px-4.5 py-3 text-xs text-fg-muted">
           <Info aria-hidden className="shrink-0 text-accent-text" size={14} />
           Trend-style rules start after enough completed checks to compare changes.
         </p>

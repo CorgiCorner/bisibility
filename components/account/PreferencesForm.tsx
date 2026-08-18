@@ -131,12 +131,12 @@ export function PreferencesForm({ defaults, updatePreferences }: Readonly<Prefer
   return (
     <form aria-busy={isPending} id="account-preferences-form">
       <AccountSection
-        contentClassName="px-5 py-[18px]"
+        contentClassName="px-5 py-4.5"
         description="Personal to you, applied on every device you sign in from."
         title="Preferences"
       >
         <div className="flex flex-col gap-4">
-          <div className="flex flex-wrap items-center justify-between gap-[14px]">
+          <div className="flex flex-wrap items-center justify-between gap-3.5">
             <div className="min-w-0">
               <div className="text-[13.5px] font-semibold text-fg">Theme</div>
               <div className="mt-px text-xs text-fg-muted">Light, dark, or follow your system</div>
@@ -150,7 +150,7 @@ export function PreferencesForm({ defaults, updatePreferences }: Readonly<Prefer
               value={theme}
             />
           </div>
-          <div className="grid gap-[14px] border-t border-border-soft pt-4 sm:grid-cols-2">
+          <div className="grid gap-3.5 border-t border-border-soft pt-4 sm:grid-cols-2">
             <div className={fieldLabelClass}>
               <span>Date format</span>
               <input type="hidden" {...register("dateFormat")} />
@@ -174,7 +174,7 @@ export function PreferencesForm({ defaults, updatePreferences }: Readonly<Prefer
               />
             </div>
           </div>
-          <div className="flex flex-wrap items-center justify-between gap-[14px] border-t border-border-soft pt-4">
+          <div className="flex flex-wrap items-center justify-between gap-3.5 border-t border-border-soft pt-4">
             <div className="min-w-0">
               <div className="text-[13.5px] font-semibold text-fg">Default table density</div>
               <div className="mt-px text-xs text-fg-muted">Row height in the keyword grid</div>

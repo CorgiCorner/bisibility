@@ -21,7 +21,7 @@ export function FilterSection({
   title: string;
 }>) {
   return (
-    <section className="border-b border-border-soft py-[18px] last:border-b-0 last:pb-1">
+    <section className="border-b border-border-soft py-4.5 last:border-b-0 last:pb-1">
       <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.6px] text-fg-muted">
         <Icon className="text-accent-text" size={14} weight="bold" />
         {title}

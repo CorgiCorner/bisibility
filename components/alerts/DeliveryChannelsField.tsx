@@ -1,10 +1,9 @@
 "use client";
 
-import { Checkbox } from "@/components/ui";
-import { PLANNED_ALERT_CHANNEL_LABEL } from "@/lib/alerts/channel-availability";
+import { Checkbox, Tooltip } from "@/components/ui";
+import { SLACK_ALERT_CHANNEL_DASHBOARD_LABEL } from "@/lib/alerts/channel-availability";
 import type { NewRuleForm } from "@/lib/alerts/new-rule-data";
 import type { AlertChannelInput } from "@/lib/alerts/schema";
-import Tooltip from "@mui/material/Tooltip";
 import {
   EnvelopeSimpleIcon as EnvelopeSimple,
   LockSimpleIcon as LockSimple,
@@ -100,9 +99,9 @@ export function DeliveryChannelsField({
             />
             <span className="flex-1 text-[13px] font-semibold">{label}</span>
             {unavailable ? (
-              <Tooltip title={PLANNED_ALERT_CHANNEL_LABEL}>
+              <Tooltip content={SLACK_ALERT_CHANNEL_DASHBOARD_LABEL}>
                 <span
-                  aria-label={`${label} ${PLANNED_ALERT_CHANNEL_LABEL}`}
+                  aria-label={`${label} ${SLACK_ALERT_CHANNEL_DASHBOARD_LABEL}`}
                   className="inline-flex text-fg-muted"
                 >
                   <LockSimple aria-hidden size={13} weight="bold" />

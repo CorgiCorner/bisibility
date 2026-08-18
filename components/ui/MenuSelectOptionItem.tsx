@@ -3,6 +3,7 @@
 import MenuItem from "@mui/material/MenuItem";
 import { CheckIcon as Check } from "@phosphor-icons/react";
 import type { MenuSelectOption } from "./menu-select-support";
+import { Tooltip } from "./Tooltip";
 
 export const menuSelectRowSx = {
   borderRadius: "9px",
@@ -28,7 +29,7 @@ export function MenuSelectOptionItem({
   onSelect,
   option,
 }: Readonly<MenuSelectOptionItemProps>) {
-  return (
+  const item = (
     <MenuItem
       aria-label={option.ariaLabel}
       data-current={current || undefined}
@@ -37,11 +38,8 @@ export function MenuSelectOptionItem({
         if (option.disabled) return;
         onSelect();
       }}
-      sx={{
-        ...menuSelectRowSx,
-        ...(option.disabled && option.tooltip ? { pointerEvents: "auto" } : {}),
-      }}
-      title={option.tooltip}
+      sx={menuSelectRowSx}
+      style={option.disabled && option.tooltip ? { pointerEvents: "auto" } : undefined}
     >
       <span className="flex min-w-0 items-center gap-2.5">
         {option.icon ? <span className="flex shrink-0 text-fg-muted">{option.icon}</span> : null}
@@ -54,5 +52,13 @@ export function MenuSelectOptionItem({
       </span>
       {current ? <Check aria-hidden className="text-accent-text" size={15} weight="bold" /> : null}
     </MenuItem>
+  );
+
+  return option.tooltip ? (
+    <Tooltip content={option.tooltip} semantics="description">
+      {item}
+    </Tooltip>
+  ) : (
+    item
   );
 }

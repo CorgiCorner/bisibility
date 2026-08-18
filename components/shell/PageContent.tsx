@@ -10,7 +10,7 @@ export function PageContent({ className, variant = "analytics", ...props }: Page
     <div
       className={cn(
         "w-full min-w-0",
-        variant === "form" ? "max-w-[780px]" : "mx-auto max-w-[1400px]",
+        variant === "form" ? "max-w-settings" : "mx-auto max-w-[1400px]",
         className,
       )}
       {...props}

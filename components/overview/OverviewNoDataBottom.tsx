@@ -24,7 +24,7 @@ export function DataSourceNoDataPanel({ health }: Readonly<{ health: DataSourceH
         </div>
         <DataSourceStatusBadge status={health.status} />
       </div>
-      <div className="mt-[18px] grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-x-[18px] gap-y-3.5">
+      <div className="mt-4.5 grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-x-4.5 gap-y-3.5">
         {health.metrics.map((metric) => (
           <div className="min-w-0" key={metric.label}>
             <div className="font-mono text-[10px] uppercase tracking-[0.6px] text-fg-muted">
@@ -54,7 +54,7 @@ export function RecentlyAddedCard({
 }: Readonly<{ projectRef: string; rows: HighlightRow[] }>) {
   return (
     <Card className="overflow-hidden" size="md" style={{ borderRadius: 14, padding: 0 }}>
-      <div className="px-[18px] pb-3 pt-[15px]">
+      <div className="px-4.5 pb-3 pt-[15px]">
         <div className="flex items-center gap-2 text-sm font-semibold leading-normal text-fg">
           <PlusCircle aria-hidden className="text-blue-text" size={16} weight="fill" />
           Recently added
@@ -65,7 +65,7 @@ export function RecentlyAddedCard({
       </div>
       {rows.map((row) => (
         <Link
-          className="flex items-center justify-between gap-2.5 border-t border-border-soft px-[18px] py-[11px] hover:bg-bg-sunken"
+          className="flex items-center justify-between gap-2.5 border-t border-border-soft px-4.5 py-[11px] hover:bg-bg-sunken"
           href={appPath(projectRef, "rank-tracker")}
           key={row.id}
         >

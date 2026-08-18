@@ -11,7 +11,7 @@ Self-host it or start with the hosted beta.
 
 [Self-hosting guide](https://bisibility.com/docs/self-hosting) ·
 [Documentation](https://bisibility.com/docs) ·
-[API reference](https://bisibility.com/docs/api/overview) ·
+[API reference][api-ref] ·
 [FAQ](https://bisibility.com/faq) ·
 [Roadmap](https://bisibility.com/roadmap)
 
@@ -50,30 +50,15 @@ encrypted in the managed service. Billing remains directly between you and the p
 
 ## Try the local demo
 
-```bash
-git clone https://github.com/CorgiCorner/bisibility.git bisibility
-cd bisibility
-./scripts/dev/bootstrap-local.sh
-docker compose -f compose.yaml up -d
-```
+The local demo is a throwaway evaluation with synthetic data and a fixed,
+intentionally insecure OTP. It is not a starting point for production. The
+default stack runs manual rank checks only; recurring schedules add the
+worker and Temporal.
 
-Open [http://localhost:3000](http://localhost:3000) and sign in with email
-`demo@acme.dev` and OTP `000000`. Compose pulls version-pinned images by default;
-add `-f compose.build.yaml --build` to build the checked-out source instead.
-
-> [!WARNING]
-> Demo authentication is intentionally insecure and is meant for a throwaway local
-> installation only. Remove both `DEMO_*` variables and configure an email provider
-> (`EMAIL_PROVIDER` with [Resend or Amazon SES](https://bisibility.com/docs/guides/email))
-> before exposing an instance to other users or real data.
-
-The default stack runs manual rank checks only. For recurring schedules, add the
-worker and bundled Temporal overlays (`--profile temporal-ui` serves the Temporal
-Web UI at [http://localhost:8233](http://localhost:8233)):
-
-```bash
-docker compose -f compose.yaml -f compose.worker.yaml -f compose.temporal.yaml up -d
-```
+For prerequisites, the exact bootstrap steps, and how to stop and clean up,
+follow the [local demo quickstart](https://bisibility.com/docs/quickstart).
+To compare the demo against hosted and production deployments, see
+[deployment options](https://bisibility.com/docs/deployment-options).
 
 ## Features
 
@@ -84,6 +69,9 @@ docker compose -f compose.yaml -f compose.worker.yaml -f compose.temporal.yaml u
 - Rank tracking: position history, trend charts, intended URL monitoring, and
   Google index status
 - Competitor benchmarking with Share of Voice
+- Domain overview: estimated organic visibility, ranked keywords, and top pages
+  for any domain (requires a bring-your-own DataForSEO connection; metered). The
+  app and REST API are available; SDK, CLI, and MCP parity is still in progress.
 - Manual, daily, weekly, monthly, and custom cron schedules
 - Rank alerts in-app and by email, plus weekly email digests
 - Keyword tags and saved views
@@ -95,9 +83,11 @@ docker compose -f compose.yaml -f compose.worker.yaml -f compose.temporal.yaml u
 - Owner, Admin, Editor, and Viewer team roles, with an audit log
 
 Everything above ships in the current early release; none of it is a stable 1.0
-contract yet. The hosted service is in open beta, and a domain overview is planned.
-Slack alert delivery, AI Overview and LLM visibility tracking, and hosted general
-availability are tracked on the [roadmap](https://bisibility.com/roadmap).
+contract yet. The hosted service is in open beta. AI Overview and LLM visibility
+tracking and hosted general availability are tracked on the
+[roadmap](https://bisibility.com/roadmap). Slack tenant delivery is available
+as an API-only preview. Workspace installation and channel management are not
+yet exposed in the dashboard.
 
 ## AI agents and MCP
 
@@ -174,9 +164,11 @@ Self-hosting remains available without an application subscription.
 
 ## Documentation
 
+- [Local demo quickstart](https://bisibility.com/docs/quickstart)
 - [Self-hosting guide](https://bisibility.com/docs/self-hosting)
-- [API quickstart](https://bisibility.com/docs/quickstart)
-- [API reference](https://bisibility.com/docs/api/overview)
+- [Deployment options](https://bisibility.com/docs/deployment-options)
+- [API quickstart](https://bisibility.com/docs/api/quickstart)
+- [API reference][api-ref]
 - [Agent documentation](https://bisibility.com/docs/agents)
 - [FAQ](https://bisibility.com/faq)
 
@@ -205,3 +197,5 @@ with that version over a network, the license requires you to offer those users 
 corresponding source code.
 
 The license text governs. This summary is not legal advice.
+
+[api-ref]: https://bisibility.com/docs/api-reference/discovery/get-api-capabilities

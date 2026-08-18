@@ -143,7 +143,7 @@ export function ProviderCard({
   return (
     <>
       <Card
-        className="grid grid-cols-1 px-5 py-[18px] sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start sm:gap-x-3.5"
+        className="grid grid-cols-1 px-5 py-4.5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start sm:gap-x-3.5"
         size="md"
         sx={{ opacity: provider.status === "planned" ? 0.92 : 1 }}
       >
@@ -156,7 +156,7 @@ export function ProviderCard({
           />
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-[7px]">
-              <SectionTitle className="text-[14.5px]" component="h3" size="md">
+              <SectionTitle component="h3" size="md">
                 {provider.name}
               </SectionTitle>
               <StatusPill size="sm" status={provider.status} />

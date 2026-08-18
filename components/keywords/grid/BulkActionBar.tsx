@@ -96,6 +96,7 @@ export function BulkActionBar({
       finishAction();
     } catch (error) {
       setActionError(actionErrorMessage(error));
+      throw error;
     } finally {
       setDeleting(false);
     }
@@ -111,6 +112,7 @@ export function BulkActionBar({
       finishAction();
     } catch (error) {
       setActionError(actionErrorMessage(error));
+      throw error;
     } finally {
       setClearingTargets(false);
     }
@@ -207,7 +209,7 @@ export function BulkActionBar({
           busy={deleting}
           kind="deleteBulk"
           onClose={() => setConfirmOpen(false)}
-          onConfirm={() => void handleDelete()}
+          onConfirm={handleDelete}
           open={confirmOpen}
         />
       ) : null}
@@ -216,7 +218,7 @@ export function BulkActionBar({
           busy={clearingTargets}
           kind="clearTargetUrls"
           onClose={() => setClearTargetsOpen(false)}
-          onConfirm={() => void handleClearTargets()}
+          onConfirm={handleClearTargets}
           open={clearTargetsOpen}
         />
       ) : null}

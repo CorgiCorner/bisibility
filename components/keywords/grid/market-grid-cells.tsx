@@ -1,10 +1,9 @@
-import { MonoText } from "@/components/ui";
+import { MonoText, Tooltip } from "@/components/ui";
 import { marketGridParent } from "@/lib/keywords/market-grid-model";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { appPath } from "@/lib/routing/app-path";
 import * as rankDepth from "@/lib/serp/rank-depth";
 import IconButton from "@mui/material/IconButton";
-import Tooltip from "@mui/material/Tooltip";
 import type { GridRenderCellParams } from "@mui/x-data-grid";
 import {
   CaretDownIcon as CaretDown,
@@ -37,7 +36,7 @@ export function NoDataValue({
   label = "No data",
 }: Readonly<{ className?: string; label?: string }>) {
   return (
-    <Tooltip title={label}>
+    <Tooltip content={label}>
       <span aria-label={label} className={[noDataClassName, className].join(" ")}>
         -
       </span>
@@ -72,7 +71,7 @@ export function MarketKeywordCell({
   }
   return (
     <span className="flex w-full min-w-0 items-center gap-1">
-      <Tooltip title="View keyword details">
+      <Tooltip content="View keyword details">
         <IconButton
           aria-label="View keyword details"
           className="h-7 min-h-0 w-7 min-w-0 shrink-0"
@@ -105,7 +104,7 @@ export function MarketPositionCell({ row }: Readonly<GridRenderCellParams<Keywor
     <span className="font-mono text-[13.5px] font-semibold text-fg">#{row.position}</span>
   );
   return parent ? (
-    <Tooltip title={`Best position across ${parent.aggregate.activeTargetCount} active targets`}>
+    <Tooltip content={`Best position across ${parent.aggregate.activeTargetCount} active targets`}>
       <span className="inline-flex items-center gap-1.5">
         {value}
         {parent.aggregate.stale ? (
@@ -149,7 +148,7 @@ export function MarketVolumeCell({ row }: Readonly<GridRenderCellParams<KeywordR
     return <NoDataValue label="No volume data for this market-language pair" />;
   return (
     <Tooltip
-      title={
+      content={
         parent
           ? "Sum over unique market-language pairs, never devices"
           : "Search volume for this market-language pair"

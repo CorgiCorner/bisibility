@@ -75,3 +75,7 @@ export {
 export { reconcileAllSchedulesActivity } from "./reconcile-activities";
 export type { SyncTrafficActivityResult } from "./traffic-activities";
 export { syncTrafficActivity } from "./traffic-activities";
+export {
+  sendWelcomeEmailActivity,
+  sendWelcomeFollowupActivity,
+} from "./welcome-email-activity";

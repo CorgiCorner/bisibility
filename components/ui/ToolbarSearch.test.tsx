@@ -174,7 +174,7 @@ describe("ToolbarSearch", () => {
       const input = screen.getByRole("searchbox", { name: "Filter saved keywords" });
       const label = input.parentElement;
       expect(label).toHaveClass(
-        "h-[34px]",
+        "h-8.5",
         "min-w-[220px]",
         "rounded-[9px]",
         "border",

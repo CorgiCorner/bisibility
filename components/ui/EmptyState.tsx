@@ -62,7 +62,7 @@ export function EmptyState({
         className={cn(
           "m-0 font-semibold tracking-[-0.4px]",
           compact ? "text-[15px]" : "text-[18px]",
-          icon ? (compact ? "mt-2.5" : "mt-[18px]") : null,
+          icon ? (compact ? "mt-2.5" : "mt-4.5") : null,
         )}
       >
         {title}
@@ -79,7 +79,7 @@ export function EmptyState({
           </ul>
         </div>
       ) : null}
-      {action ? <div className={compact ? "mt-3" : "mt-[22px]"}>{action}</div> : null}
+      {action ? <div className={compact ? "mt-3" : "mt-5.5"}>{action}</div> : null}
       {footnote != null ? (
         <div className="mt-3 font-mono text-[11px] text-fg-muted">{footnote}</div>
       ) : null}

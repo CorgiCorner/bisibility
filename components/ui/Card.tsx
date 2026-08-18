@@ -1,9 +1,11 @@
 import { cn } from "@/lib/ui/cn";
+import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import { sxArray } from "@/lib/ui/mui-sx";
 import MuiCard, { type CardProps as MuiCardProps } from "@mui/material/Card";
 import { cva } from "class-variance-authority";
 
 export type CardProps = MuiCardProps & {
+  radius?: "card" | "card-lg";
   size?: "sm" | "md" | "lg";
 };
 
@@ -15,10 +17,14 @@ const baseSx = {
 
 const cardVariants = cva("", {
   variants: {
+    radius: {
+      card: "rounded-card",
+      "card-lg": "rounded-card-lg",
+    },
     size: {
-      sm: "rounded-xl p-3",
-      md: "rounded-[14px] p-4",
-      lg: "rounded-2xl p-5",
+      sm: "p-3",
+      md: "p-4",
+      lg: "p-5",
     },
   },
   defaultVariants: {
@@ -26,15 +32,28 @@ const cardVariants = cva("", {
   },
 });
 
-export function Card({ className, size = "md", sx, variant = "outlined", ...props }: CardProps) {
+export function Card({
+  className,
+  radius,
+  size = "md",
+  sx,
+  variant = "outlined",
+  ...props
+}: CardProps) {
   const additionalSx = sxArray(sx);
+  const resolvedRadius = radius ?? (size === "lg" ? "card-lg" : "card");
+  const radiusClassName = `rounded-${resolvedRadius}`;
+  const mergedClassName = cn(cardVariants({ radius: resolvedRadius, size }), className);
+  const radiusSx = mergedClassName.split(/\s+/).includes(radiusClassName)
+    ? { borderRadius: UI_RADIUS_ROLES[resolvedRadius] }
+    : {};
 
   return (
     <MuiCard
-      className={cn(cardVariants({ size }), className)}
+      className={mergedClassName}
       elevation={0}
       variant={variant}
-      sx={[baseSx, ...additionalSx]}
+      sx={[baseSx, radiusSx, ...additionalSx]}
       {...props}
     />
   );

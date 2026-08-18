@@ -89,7 +89,7 @@ export function ProfileSection({
     >
       <AvatarField email={email} image={image} name={name} />
       <form
-        className="mt-[18px] grid gap-[14px] sm:grid-cols-2"
+        className="mt-4.5 grid gap-3.5 sm:grid-cols-2"
         id="account-profile-form"
         onSubmit={handleSubmit(onSubmit)}
       >

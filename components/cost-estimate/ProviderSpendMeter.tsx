@@ -210,7 +210,7 @@ export function ProviderSpendMeter({
     const paceCents =
       onPaceCents !== undefined ? onPaceCents : projectedMonthlySpendCents(spentCents, now);
     return (
-      <div className="rounded-xl border border-border bg-bg-elev px-5 py-[18px]">
+      <div className="rounded-xl border border-border bg-bg-elev px-5 py-4.5">
         <MeterEyebrow />
         <div className="mt-2 flex flex-wrap items-baseline gap-2 whitespace-nowrap">
           <span

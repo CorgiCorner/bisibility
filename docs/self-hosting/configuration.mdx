@@ -9,6 +9,7 @@ description: "Configure required and optional environment variables and instance
 
 | Variable | Required | Description |
 | - | :-: | - |
+| `POSTGRES_PASSWORD` | Yes | Password for the bundled PostgreSQL service. Referenced by `DATABASE_URL` and `DIRECT_URL`. Generate with `openssl rand -base64 32` or any secure random string. |
 | `DATABASE_URL` | Yes | Runtime PostgreSQL connection used by the app. |
 | `DIRECT_URL` | Yes | Direct PostgreSQL connection used by Prisma migrations. |
 | `REDIS_URL` | Yes | Valkey or another Redis-compatible connection URL for rate limiting, idempotency, and realtime notifications. |
@@ -17,6 +18,7 @@ description: "Configure required and optional environment variables and instance
 | `BETTER_AUTH_SECRET` | Yes | Secret used to sign auth state. |
 | `BISIBILITY_SECRETS_KEY` | Yes | Base64-encoded 32-byte key for encrypting provider credentials. |
 | `DEPLOYMENT_MODE` | No | Use `self-host` for self-hosted deployments. |
+| `DEPLOYMENT_ENV` | No | Deployment environment label (`development`, `production`). Defaults to `production` in the starter. |
 | `LEGAL_TERMS_URL` | No | Your terms URL, linked from the sign-in consent line. |
 | `LEGAL_PRIVACY_URL` | No | Your privacy policy URL, linked from the sign-in consent line. |
 
@@ -51,18 +53,37 @@ hand.
 | `DEMO_INSTANCE_INSECURE_AUTH_ACK` | Required acknowledgement when `DEMO_FIXED_OTP=1` runs in the production Docker image. Never set it for real users or data. |
 | `INTERNAL_PROBE_TOKEN` | Optional Bearer token for detailed `/api/v1/health` diagnostics before database-backed credentials exist. Generate at least 32 random bytes and share it only with deployment health checks. |
 | `SELF_HOSTED_ALLOW_INDEXING` | Self-hosted instances serve restrictive `robots.txt` and no `sitemap.xml` or `llms.txt` by default. Set to `true` to serve `Allow: /` and omit `X-Robots-Tag: noindex`; `false` keeps the restrictive policy. Values are case-insensitive, and missing or malformed values fail closed to the restrictive policy. |
+| `NEXT_PUBLIC_DOCS_URL` | Public documentation origin compiled into navigation and footer links. Defaults to `https://bisibility.com/docs`. Override during a custom-domain cutover. |
+| `TRUST_REQUEST_ORIGIN` | Set to `true` behind a trusted proxy that strips client-supplied forwarded-host headers (preview deployments without `SITE_URL`). Defaults to `false`. See [OAuth and public origins](/self-hosting/security#oauth-and-public-origins). |
+| `BETTER_AUTH_SECRETS` | Versioned rotation keyring, newest entry first. Keep the singular secret only as the legacy fallback until all old encrypted values are migrated. |
+| `BISIBILITY_SECRETS_KEYS_RETIRED` | Optional comma-separated prior keys used only to decrypt and rotate existing provider, webhook, and Slack secrets after changing the primary key. |
+| `LEGAL_CONTACT_EMAIL` | Optional contact email shown in legal consent and privacy surfaces. |
+| `LEGAL_OPERATOR_NAME` | Optional operator name shown in legal consent and privacy surfaces. |
+
+### Database
+
+| Variable | Purpose |
+| - | - |
+| `DATABASE_POOL_MAX` | Maximum connections in the app database pool. Defaults to `3`. |
+| `DATABASE_CONNECT_TIMEOUT_MS` | Connection and pool-wait timeout in milliseconds. Defaults to `15000`. |
+| `DATABASE_IDLE_TIMEOUT_MS` | Idle connection timeout in milliseconds. Defaults to `10000`. |
+| `DATABASE_APPLICATION_NAME` | PostgreSQL application name for connection monitoring. Defaults to `bisibility-ssr`. |
+| `BISIBILITY_WORKER_DATABASE_POOL_MAX` | Separate pool budget for Temporal workers. Defaults to `4`. |
 
 ### Email
 
 | Variable | Purpose |
 | - | - |
-| `EMAIL_PROVIDER` | Transactional email provider: `resend`, `ses`, or `smtp`. Required for any email delivery. Setup guide: [Email delivery](/guides/email). |
+| `EMAIL_PROVIDER` | Transactional email provider: `resend`, `ses`, or `smtp`. Required for any email delivery. Setup guide: [Email delivery](/self-hosting/email). |
 | `EMAIL_FROM` | Verified sender for account sign-in and notification email. |
 | `EMAIL_ALERTS_FROM` | Optional dedicated sender for ranking alerts. Falls back to `EMAIL_FROM`. |
+| `EMAIL_FOUNDER_FROM` | Optional sender identity for the Cloud-mode welcome email sequence. Falls back to `EMAIL_FROM`. |
+| `EMAIL_FOUNDER_NAME` | Optional founder name used in Cloud-mode welcome email copy and signatures. When unset, neutral team wording is used. |
 | `EMAIL_DAILY_BUDGET_TRANSACTIONAL` | Per-recipient UTC-day budget for sign-in codes, team invites, and waitlist notifications. Defaults to `1000`. |
 | `EMAIL_DAILY_BUDGET_BULK` | Independent per-recipient UTC-day budget for alert email and weekly reports. Defaults to `1000`. |
 | `RESEND_API_KEY` | Resend API key; required when `EMAIL_PROVIDER=resend`. |
-| `SES_REGION`, `SES_CONFIGURATION_SET` | Amazon SES region (falls back to `AWS_REGION`) and optional SESv2 configuration set; used when `EMAIL_PROVIDER=ses`. Credentials come from the standard AWS SDK chain. |
+| `SES_REGION`, `SES_CONFIGURATION_SET` | Amazon SES region (falls back to `AWS_REGION` or `AWS_DEFAULT_REGION`) and optional SESv2 configuration set; used when `EMAIL_PROVIDER=ses`. Credentials come from the standard AWS SDK chain. |
+| `AWS_REGION`, `AWS_DEFAULT_REGION` | Standard AWS SDK chain fallbacks for SES region when `SES_REGION` is unset. |
 | `SMTP_URL` | SMTP connection URL (`smtp://user:pass@host:port` or `smtps://...`); required when `EMAIL_PROVIDER=smtp`. |
 
 ### Temporal
@@ -77,6 +98,8 @@ hand.
 | `WORKER_SCHEMA_GUARD` | Worker/database migration guard: `enforce` (default) blocks a worker whose bundled schema is older than the database, `warn` reports drift without blocking, and `off` skips the check. |
 | `TEMPORAL_TLS` | `auto` preserves compatibility: an API key enables TLS and an address alone does not. Set `true` or `false` to override it explicitly. Legacy boolean spellings remain accepted. |
 | `TEMPORAL_NAMESPACE_RETENTION` | Retention managed by the bundled namespace job, default `24h`. External Temporal namespaces are validated but never created or mutated by the app or worker. |
+| `TEMPORAL_MAX_CONCURRENT_ACTIVITIES` | Maximum concurrent activities for the Temporal worker. Defaults to `5`. |
+| `TEMPORAL_UI_URL` | Base URL of your Temporal Web UI. When set, ops Slack messages link workflows to it. |
 
 ### Rank checks and maintenance
 
@@ -92,10 +115,15 @@ hand.
 | `SCHEDULED_MAINTENANCE_ENABLED` | Explicit worker switch for audit/session purges, rank-check raw payload and queued-ledger retention, stale checks/import jobs, migration-hold release, and the weekly digest. Set it to `1` to enable these schedules or `0` to disable them. This switch does not control alert delivery. |
 | `RANK_CHECK_RAW_RETENTION_DAYS` | Retain `rank_checks.raw` for 1-3650 days, or set `unlimited`. The self-host default is `unlimited`; the hosted service defaults to 90 days. This never changes `organicRanks` or deletes rank history rows. |
 | `RANK_CHECK_RAW_PROGRESS_FENCE_RETENTION_DAYS` | Keep completed raw-purge retry fences for 2-3650 days. Defaults to 7 days. Set it longer than the Temporal namespace's closed-workflow retention so a reset or late retry cannot reopen completed work. |
+| `ALERT_DELIVERY_SWEEP_ENABLED` | Alert delivery sweep switch. Set to `0` to disable alert delivery sweeps. Enabled by default. |
+| `ALERT_DELIVERY_WINDOW_HOURS`, `ALERT_DELIVERY_MIN_ATTEMPTS`, `ALERT_DELIVERY_FAILURE_RATE_THRESHOLD` | Alert delivery health window, minimum sample size, and failure-rate threshold. Defaults are `24`, `10`, and `0.25`. |
+| `ALERT_FIRE_SPIKE_MIN`, `ALERT_FIRE_SPIKE_MULTIPLIER` | Minimum daily alert count and trailing-average multiplier used to detect alert-fire spikes. Defaults are `20` and `3`. |
 | `ALERT_DIGEST_FLUSH_ENABLED`, `ALERT_DIGEST_FLUSH_INTERVAL` | Alert digest delivery switch and interval. Digest flushing is enabled by default and is independent of scheduled maintenance. |
 | `AUDIT_PURGE_CRON`, `RANK_CHECK_RAW_PURGE_CRON`, `QUEUED_RANK_CHECK_RETENTION_CRON`, `SESSION_PURGE_CRON`, `WEEKLY_DIGEST_CRON` | Optional cron overrides for maintenance schedules controlled by `SCHEDULED_MAINTENANCE_ENABLED`. |
 | `SITEMAP_SYNC_ENABLED`, `SITEMAP_SYNC_CRON` | Opt in to worker-owned sitemap sync and optionally override its cron expression. See [Sitemap monitoring](/guides/sitemap-monitoring). |
 | `PRESENCE_SYNC_ENABLED`, `PRESENCE_SYNC_CRON` | Opt in to worker-owned presence sync and optionally override its cron expression. |
+| `TRAFFIC_SYNC_ENABLED`, `TRAFFIC_SYNC_CRON` | Worker-owned daily analytics traffic import. The worker process must be running because its Temporal schedule is the only scheduled traffic-sync path. See [Analytics sync](/guides/analytics). |
+| `TRAFFIC_SNAPSHOT_RETENTION_DAYS` | Retain traffic snapshots for this many days. Defaults to `180`. |
 
 ### Limits and networking
 
@@ -104,13 +132,14 @@ hand.
 | `BISIBILITY_API_KEY_RATE_LIMIT_PER_MINUTE` | Per-key API limit. Defaults to `600`. |
 | `BISIBILITY_PAT_RATE_LIMIT_PER_MINUTE` | Per-personal-token API limit. Defaults to `120`. |
 | `BISIBILITY_API_ANON_RATE_LIMIT_PER_MINUTE` | Anonymous discovery limit. Defaults to `60`. |
-| `BISIBILITY_MAX_KEYWORDS_PER_PROJECT` | Optional per-project keyword cap. Unset or `0` means unlimited for self-hosted deployments. The hosted beta uses `1000`. |
-| `BISIBILITY_MAX_PROJECTS_PER_USER` | Optional cap on projects one user may own through the app or API. Unset or `0` means unlimited for self-hosted deployments. The hosted beta uses `3`. |
-| `BISIBILITY_CLIENT_IP_HEADER` | Header your proxy sets with the real client address. Unset means no header is trusted and the anonymous API limit uses one shared bucket. See [Client IP behind a proxy](/self-hosting/operations#client-ip-behind-a-proxy). |
+| `BISIBILITY_MAX_KEYWORDS_PER_PROJECT` | Optional per-project keyword cap. Unset or `0` means unlimited. See [Deployment options](/deployment-options) for current hosted beta limits. |
+| `BISIBILITY_MAX_PROJECTS_PER_USER` | Optional cap on projects one user may own through the app or API. Unset or `0` means unlimited. See [Deployment options](/deployment-options) for current hosted beta limits. |
+| `BISIBILITY_CLIENT_IP_HEADER` | Header your proxy sets with the real client address. Unset means no header is trusted and the anonymous API limit uses one shared bucket. See [Trusted client IP](/self-hosting/security#trusted-client-ip). |
 | `BISIBILITY_CLIENT_IP_XFF_DEPTH` | Only for `x-forwarded-for`: how many trailing entries your own proxies append. Defaults to `1`. |
 | `BISIBILITY_PROVIDER_RATE_LIMIT_*` | Per-provider outbound rate limit overrides. See `.env.example` for provider-specific names. |
-| `WEBHOOK_ALLOW_PRIVATE_NETWORK` | Security-sensitive webhook SSRF override. Set to `1` only when a self-hosted instance must deliver webhooks to trusted private, LAN, or loopback services. |
+| `WEBHOOK_ALLOW_PRIVATE_NETWORK` | Security-sensitive webhook SSRF override. Set to `1` only when a self-hosted instance must deliver webhooks to trusted private, LAN, or loopback services. See [Webhook SSRF and private-network delivery](/self-hosting/security#webhook-ssrf-and-private-network-delivery). |
 | `REDIS_TLS_CA_B64` | Base64-encoded PEM CA for TLS Redis endpoints using a private CA. |
+| `APP_HOST_PORT` | Host port for the app container in Compose. Defaults to `3000`. Set to map the app to a different host port. |
 
 ### Observability and integrations
 
@@ -118,14 +147,43 @@ hand.
 | - | - |
 | `NEXT_PUBLIC_DOMAIN_ICONS` | Optional domain-icon opt-out. Domain favicons are on by default; set this to `off` to suppress third-party domain icon requests for project and competitor tiles. |
 | `NEXT_PUBLIC_LOGODEV_TOKEN` | Optional logo.dev token for provider and marketing brand logos only. Project and competitor tiles do not use it. |
+| `NEXT_PUBLIC_PLAUSIBLE_URL`, `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` | Optional privacy-first site analytics. Set both values to load the tracker; the Stats API token is server-side only. |
 | `SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `NEXT_PUBLIC_SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`, `NEXT_PUBLIC_SENTRY_RELEASE`, `SENTRY_TRACES_SAMPLE_RATE`, `NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE`, `SENTRY_AUTH_TOKEN`, `SENTRY_ORG` | Optional Sentry error monitoring. The auth token and org are build-time only and enable source map uploads to the configured project slug (`bisibility` by default; change `next.config.ts` if you use a different slug). |
 | `GITHUB_API_TOKEN` | Optional server-side token for authenticated GitHub repository metadata requests. The repository link remains visible when this is unset or GitHub is unavailable. |
 | `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | GitHub social sign-in. |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google social sign-in and Google Search Console / GA4 connections. |
-| `SLACK_CLIENT_ID`, `SLACK_CLIENT_SECRET` | Slack alert channel installation (planned feature - not yet exposed in the app UI). |
-| SERP provider fallback credentials | Optional environment fallbacks for provider credentials normally connected in the app. Variable names are listed per provider in [Integrations](/integrations). |
+| `SLACK_CLIENT_ID`, `SLACK_CLIENT_SECRET` | Slack alert delivery (API-only preview; workspace installation and channel management are not yet exposed in the dashboard). |
+| `DATAFORSEO_LOGIN`, `DATAFORSEO_PASSWORD`, `SERPAPI_API_KEY` | Optional environment fallbacks for SERP provider credentials normally connected in the app. See [Integrations](/integrations). |
+| `KEYWORD_RESEARCH_CACHE_TTL_SECONDS` | Redis TTL (seconds) for cached keyword-research results. Defaults to `43200` (12h). |
+| `RANKED_KEYWORDS_CACHE_TTL_SECONDS` | Redis TTL (seconds) for cached ranked-keyword results. Defaults to `43200` (12h). |
+| `BACKLINKS_CACHE_TTL_SECONDS` | Redis TTL (seconds) for cached backlink results. Defaults to `86400` (24h). |
+| `DOMAIN_OVERVIEW_CACHE_TTL_SECONDS` | Redis TTL (seconds) for cached domain-overview results. Defaults to `43200` (12h). |
 | `AUDIT_RETENTION_DAYS`, `AUDIT_IP_HMAC_SECRET`, `APP_VERSION` | Audit retention, optional source-IP HMAC hashing, and an audit version label. |
 | `DATA_REGION` | Optional data-residency label shown in auth and onboarding surfaces. |
+
+### Operator observability
+
+| Variable | Purpose |
+| - | - |
+| `OPS_SLACK_WEBHOOK_URL` | Instance-level Slack incoming webhook. Separate from tenant Slack OAuth alerts. |
+| `OPS_SLACK_INCLUDE_NAMES` | Set to `1` to include keyword and project names in ops payloads. Defaults to `0` (identifiers and counts only). |
+| `OPS_EVENTS_ENABLED` | Defaults to enabled when `OPS_SLACK_WEBHOOK_URL` is set. Set to `0` to disable explicitly. |
+| `OPS_NOTIFY_MODE` | `failures` (default) posts failures, warnings, startup, and the daily digest; `all` adds successes. |
+| `OPS_HEARTBEAT_CRON` | Daily heartbeat cron expression. Defaults to `0 8 * * *`. |
+| `OPS_HEARTBEAT_TZ` | IANA timezone for the heartbeat schedule. Defaults to `Etc/UTC`. |
+| `OPS_THROTTLE_MINUTES` | Duplicate event suppression window in minutes. Defaults to `60`. |
+
+### Instance migration
+
+| Variable | Purpose |
+| - | - |
+| `BISIBILITY_CLOUD_URL` | Destination instance URL used by migration handoff and transfer actions. |
+| `BISIBILITY_MIGRATION_TOKEN_TTL_MINUTES` | Migration token lifetime in minutes. Defaults to `60`; clamped to `5`-`1440`. |
+| `BISIBILITY_MIGRATION_HOLD_TTL_HOURS` | Migration hold auto-release TTL in hours. Defaults to `24`. |
+| `BISIBILITY_MIGRATION_IMPORT_MAX_BODY_BYTES` | Maximum inbound migration import payload size in bytes. Defaults to 8 MiB. |
+| `BISIBILITY_MIGRATION_EXPORT_MAX_KEYWORDS` | Maximum keywords in a downloadable migration package. Defaults to `500`. |
+| `BISIBILITY_MIGRATION_MAX_KEYWORDS` | Maximum keywords allowed for chunked direct migration push. Defaults to `50000`. |
+| `BISIBILITY_MIGRATION_TARGET_ALLOWLIST` | Comma-separated hostnames allowed as migration targets. Supports `*.suffix` wildcards. Empty allows any public host. |
 
 ## Instance settings
 

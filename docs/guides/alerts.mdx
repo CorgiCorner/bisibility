@@ -50,9 +50,13 @@ muted while the state is unknown.
 
 - **In-app:** successful external delivery creates an in-app notification and
   the triggered alert remains visible in the alert feed.
-- **Email:** requires a configured [email provider](/guides/email) with a
+- **Email:** requires a configured [email provider](/self-hosting/email) with a
   verified sender (`EMAIL_FROM`). A user's alert-email preference can disable
   delivery.
+- **Slack:** Slack tenant delivery is available as an API-only preview.
+  Workspace installation and channel management are not yet exposed in the
+  dashboard. Create rules with `channels: ["slack"]` through the [alert rules
+  API](/api/alert-rules).
 - **Webhook:** sends signed JSON to every enabled project endpoint when the rule
   includes the webhook channel.
 

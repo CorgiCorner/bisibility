@@ -14,9 +14,9 @@ type MockItem = { label: string; hint?: string; icon?: unknown; id?: string; run
 type MockGroup = { items: MockItem[]; title: string };
 
 vi.mock("@mui/material/styles", () => ({ useColorScheme: () => ({ setMode: mocks.setMode }) }));
-vi.mock("@mui/material/Tooltip", () => ({
-  default: ({ children, title }: { children: ReactNode; title: string }) => (
-    <span data-tooltip={title}>{children}</span>
+vi.mock("@/components/ui/Tooltip", () => ({
+  Tooltip: ({ children, content }: { children: ReactNode; content: string }) => (
+    <span data-tooltip={content}>{children}</span>
   ),
 }));
 vi.mock("./use-keyword-search", () => ({

@@ -37,6 +37,7 @@ export function KeywordPendingDeleteButton({
       router.refresh();
     } catch (error) {
       setActionError(actionErrorMessage(error));
+      throw error;
     } finally {
       setDeleting(false);
     }
@@ -58,7 +59,7 @@ export function KeywordPendingDeleteButton({
         busy={deleting}
         kind="deleteKeyword"
         onClose={() => setConfirmOpen(false)}
-        onConfirm={() => void handleDelete()}
+        onConfirm={handleDelete}
         open={confirmOpen}
       />
       {actionError ? (

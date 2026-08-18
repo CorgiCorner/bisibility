@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/ui/cn";
+import { MOTION_PRESS } from "@/lib/ui/motion";
 import { sxArray } from "@/lib/ui/mui-sx";
 import ButtonBase, { type ButtonBaseProps } from "@mui/material/ButtonBase";
 
@@ -27,13 +28,16 @@ export function Pill({ active = false, className, size = "md", sx, ...props }: P
           border: "1px solid var(--border-strong)",
           color: active ? "var(--accent)" : "var(--fg-muted)",
           fontWeight: 600,
-          transition: "background-color .16s ease, border-color .16s ease, color .16s ease",
+          transition: `background-color .16s ease, border-color .16s ease, color .16s ease, transform ${MOTION_PRESS}ms ease`,
           "&:hover": {
             backgroundColor: active
               ? "color-mix(in srgb, var(--accent) 18%, var(--bg-elev))"
               : "var(--bg-sunken)",
             borderColor: active ? "var(--accent-hover)" : "var(--accent)",
             color: active ? "var(--accent-hover)" : "var(--accent)",
+          },
+          "@media (prefers-reduced-motion: no-preference)": {
+            "&:active:not(:focus-visible):not(.Mui-disabled)": { transform: "scale(0.98)" },
           },
         },
         sizeSx[size],

@@ -1,6 +1,8 @@
 "use client";
 
 import { cn } from "@/lib/ui/cn";
+import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
+import { MOTION_MODAL_ENTER, MOTION_MODAL_EXIT } from "@/lib/ui/motion";
 import Dialog from "@mui/material/Dialog";
 import { XIcon as X } from "@phosphor-icons/react";
 import { cva } from "class-variance-authority";
@@ -25,6 +27,7 @@ export type ModalProps = {
   width?: number;
   onPrimaryAction?: () => void;
   primaryActionDisabled?: boolean;
+  onExited?: () => void;
 };
 
 const modalWidth = {
@@ -33,7 +36,7 @@ const modalWidth = {
   sm: 440,
 } as const;
 
-const contentVariants = cva("min-h-0 flex-1 overflow-y-auto px-[22px] py-[18px]");
+const contentVariants = cva("min-h-0 flex-1 overflow-y-auto px-5.5 py-4.5");
 
 export function Modal({
   ariaLabelledBy,
@@ -44,6 +47,7 @@ export function Modal({
   headerDivider = false,
   initialFocus,
   onClose,
+  onExited,
   onPrimaryAction,
   open,
   primaryActionDisabled = false,
@@ -91,11 +95,12 @@ export function Modal({
       slotProps={{
         backdrop: { sx: { backgroundColor: "rgba(20,16,8,.44)" } },
         paper: {
+          className: "rounded-card-lg",
           onKeyDown: handleKeyDown,
           sx: {
+            "&.rounded-card-lg": { borderRadius: UI_RADIUS_ROLES["card-lg"] },
             backgroundColor: "var(--bg-elev)",
             border: "1px solid var(--border-strong)",
-            borderRadius: "16px",
             boxShadow: "none",
             color: "var(--fg)",
             margin: "24px",
@@ -105,16 +110,19 @@ export function Modal({
             width: width ?? modalWidth[size],
           },
         },
-        transition: initialFocus ? { onEntered: initialFocus } : undefined,
+        transition: {
+          ...(initialFocus ? { onEntered: initialFocus } : {}),
+          ...(onExited ? { onExited } : {}),
+        },
       }}
-      transitionDuration={{ enter: 240, exit: 200 }}
+      transitionDuration={{ enter: MOTION_MODAL_ENTER, exit: MOTION_MODAL_EXIT }}
     >
       <div className="flex max-h-[calc(100dvh-48px)] min-h-0 flex-col overflow-hidden">
         {hasHeader ? (
           <header
             className={cn(
-              "sticky top-0 z-10 flex shrink-0 items-start justify-between gap-3 bg-bg-elev px-[22px] pt-5",
-              headerDivider ? "border-b border-border py-[18px]" : "pb-0",
+              "sticky top-0 z-10 flex shrink-0 items-start justify-between gap-3 bg-bg-elev px-5.5 pt-5",
+              headerDivider ? "border-b border-border py-4.5" : "pb-0",
             )}
           >
             {title ? (
@@ -130,7 +138,7 @@ export function Modal({
             {showClose ? (
               <button
                 aria-label="Close modal"
-                className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-lg text-fg-muted outline-none transition-colors hover:bg-bg-sunken focus-visible:bg-bg-sunken"
+                className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-lg text-fg-muted outline-none transition-[color,background-color,transform] duration-[var(--motion-press)] hover:bg-bg-sunken focus-visible:bg-bg-sunken motion-safe:active:not-focus-visible:scale-[0.97]"
                 onClick={onClose}
                 type="button"
               >
@@ -143,7 +151,7 @@ export function Modal({
         {footer ? (
           <footer
             className={cn(
-              "sticky bottom-0 z-10 flex shrink-0 items-center justify-end gap-[18px] border-t border-border bg-bg-elev px-[22px] py-[14px]",
+              "sticky bottom-0 z-10 flex shrink-0 items-center justify-end gap-4.5 border-t border-border bg-bg-elev px-5.5 py-3.5",
               footerClassName,
             )}
           >

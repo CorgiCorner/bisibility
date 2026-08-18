@@ -23,4 +23,20 @@ describe("GithubStars", () => {
 
     expect(screen.getByRole("link", { name: "1.2k stars on GitHub" })).toHaveTextContent("1.2k");
   });
+
+  it("cross-fades only for fine pointers and leaves keyboard focus ring-only", () => {
+    render(<GithubStars count="1200" />);
+
+    const link = screen.getByRole("link", { name: "1.2k stars on GitHub" });
+    const glyphClasses = Array.from(link.querySelectorAll("svg"))
+      .map((glyph) => glyph.getAttribute("class") ?? "")
+      .join(" ");
+
+    expect(glyphClasses).toContain("pointer-fine:group-hover:opacity-0");
+    expect(glyphClasses).toContain("pointer-fine:group-hover:opacity-100");
+    expect(glyphClasses).toContain("duration-[var(--motion-press)]");
+    expect(glyphClasses).not.toContain("group-focus-visible");
+    expect(glyphClasses).not.toMatch(/scale-(?:90|110)/);
+    expect(link).toHaveClass("focus-visible:outline-2");
+  });
 });

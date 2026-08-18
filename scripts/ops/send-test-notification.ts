@@ -17,7 +17,7 @@ async function main() {
   const result = await sendOpsTestNotification({
     enabled: Boolean(webhookUrl),
     heartbeatCron: "0 8 * * *",
-    heartbeatTimezone: "Europe/Warsaw",
+    heartbeatTimezone: "Etc/UTC",
     includeNames: false,
     notifyMode: "failures",
     throttleMinutes: 60,

@@ -34,7 +34,7 @@ export function DomainOverviewKpiRow({
   return (
     <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
       {kpis.map((kpi) => (
-        <Card className="min-w-0 rounded-[13px] px-[18px] py-4" key={kpi.label} size="md">
+        <Card className="min-w-0 rounded-[13px] px-4.5 py-4" key={kpi.label} size="md">
           <div className="flex items-center gap-1.5 font-mono text-[10.5px] uppercase tracking-[0.8px] text-fg-muted">
             <span className="truncate">{kpi.label}</span>
             <InfoTooltip text={definition} />

@@ -41,7 +41,7 @@ export function SettingsSection({
   return (
     <section
       aria-labelledby={titleId}
-      className={cn("space-y-[14px]", className)}
+      className={cn("space-y-3.5", className)}
       id={id}
       ref={sectionRef}
       tabIndex={id ? -1 : undefined}

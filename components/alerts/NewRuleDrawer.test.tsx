@@ -65,6 +65,7 @@ vi.mock("@/components/ui", () => ({
         {footer}
       </div>
     ) : null,
+  Tooltip: ({ children }: { children: ReactNode }) => children,
 }));
 const targets: AlertTargetOptions = { keywords: [], markets: [], members: [], tags: [] };
 

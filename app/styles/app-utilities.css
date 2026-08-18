@@ -1,0 +1,172 @@
+/* The pre-paint session hint avoids auth-nav flash; specificity must outrank
+   Tailwind and MUI display classes. */
+html[data-authed="true"] .bv-anon-only {
+  display: none;
+}
+
+html:not([data-authed="true"]) .bv-authed-only {
+  display: none;
+}
+
+.bv-announcement-banner {
+  background-color: color-mix(in srgb, var(--fg) 90%, var(--bg));
+  border-color: color-mix(in srgb, var(--fg) 90%, var(--bg));
+  color: color-mix(in srgb, var(--bg-elev) 93%, var(--fg));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bv-ping,
+  .bv-countup,
+  .bv-hero-audience-phrase,
+  .bv-marquee-track {
+    animation: none;
+    transform: none;
+  }
+
+  .bv-ping::before {
+    animation: none;
+    display: none;
+  }
+
+  .bv-hero-audience-phrase {
+    opacity: 0;
+  }
+
+  .bv-hero-audience-phrase:first-child {
+    opacity: 1;
+  }
+}
+
+html {
+  min-height: 100%;
+  background: var(--bg);
+  overscroll-behavior: none;
+  /* geist/font exposes --font-geist-sans/-mono; alias to the names the theme + tailwind use */
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* Use the opt-in attribute so Next.js can suppress smooth scrolling during
+   route changes. */
+html[data-scroll-behavior="smooth"] {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-scroll-behavior="smooth"] {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  min-height: 100%;
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+::selection {
+  background: var(--accent-solid);
+  color: var(--accent-on-solid);
+}
+
+@keyframes bvpulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.8);
+  }
+}
+
+.bv-pulse {
+  animation: bvpulse 2s infinite;
+}
+
+@keyframes bvspin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes bvshake {
+  10%,
+  90% {
+    transform: translateX(-1px);
+  }
+  20%,
+  80% {
+    transform: translateX(2px);
+  }
+  30%,
+  50%,
+  70% {
+    transform: translateX(-4px);
+  }
+  40%,
+  60% {
+    transform: translateX(4px);
+  }
+}
+
+.bv-spin {
+  display: inline-block;
+  animation: bvspin 0.7s linear infinite;
+}
+
+[data-m="otp-row"] > input[data-otp] {
+  outline: none;
+  box-shadow: none;
+  appearance: none;
+}
+
+[data-m="otp-row"] > input[data-otp]:focus,
+[data-m="otp-row"] > input[data-otp]:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+[data-m="otp-row"].bv-err {
+  animation: bvshake 0.4s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bv-pulse {
+    animation: none;
+  }
+
+  [data-m="otp-row"].bv-err {
+    animation: none;
+  }
+}
+
+@media (max-width: 639px) {
+  input:not(
+    [type="button"],
+    [type="checkbox"],
+    [type="file"],
+    [type="hidden"],
+    [type="image"],
+    [type="radio"],
+    [type="range"],
+    [type="reset"],
+    [type="submit"]
+  ),
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+@utility type-label {
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}

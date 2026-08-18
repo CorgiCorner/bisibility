@@ -1,6 +1,6 @@
 import { WebMcpTools } from "@/components/integrations/WebMcpTools";
 import { KeywordImportProvider } from "@/components/keywords/import/KeywordImportProvider";
-import { ToastProvider } from "@/components/ui";
+import { ToastProvider, TooltipProvider } from "@/components/ui";
 import { appExtensions } from "@/lib/app-extensions";
 import { sessionHintInitScript } from "@/lib/auth/session-hint";
 import { rootMetadata } from "@/lib/seo/jsonld";
@@ -31,10 +31,12 @@ export default function RootLayout({ children }: Readonly<RootLayoutProps>) {
         <script>{themeInitScript}</script>
         <script>{sessionHintInitScript}</script>
         <Providers>
-          <WebMcpTools />
-          <ToastProvider>
-            <KeywordImportProvider>{children}</KeywordImportProvider>
-          </ToastProvider>
+          <TooltipProvider>
+            <WebMcpTools />
+            <ToastProvider>
+              <KeywordImportProvider>{children}</KeywordImportProvider>
+            </ToastProvider>
+          </TooltipProvider>
         </Providers>
       </body>
     </html>

@@ -28,8 +28,8 @@ export function ConnectedAccounts({ accounts }: Readonly<ConnectedAccountsProps>
         {accounts.map(({ connected, detail, provider }) => {
           const { Icon, label } = providerMeta[provider];
           return (
-            <div className="flex items-center gap-[13px] px-[18px] py-[14px]" key={provider}>
-              <span className="grid h-[34px] w-[34px] flex-none place-items-center rounded-[9px] bg-bg-sunken text-fg">
+            <div className="flex items-center gap-[13px] px-4.5 py-3.5" key={provider}>
+              <span className="grid h-8.5 w-[34px] flex-none place-items-center rounded-[9px] bg-bg-sunken text-fg">
                 <Icon size={19} weight="fill" />
               </span>
               <span className="min-w-0 flex-1">

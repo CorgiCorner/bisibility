@@ -136,7 +136,7 @@ export function TeamMembersCard(props: Readonly<TeamMembersCardProps>) {
                   <Avatar
                     alt=""
                     className={cn(
-                      "grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[9px] font-mono text-xs font-semibold",
+                      "grid h-8.5 w-[34px] shrink-0 place-items-center rounded-[9px] font-mono text-xs font-semibold",
                       avatarColors[member.color],
                     )}
                     initials={member.initials}

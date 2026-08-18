@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/ui/cn";
+import { useId } from "react";
 
 export type ExpiryChoiceOption<TDays extends number | null = number | null> = {
   days: TDays;
@@ -29,6 +30,7 @@ export function ExpiryChoiceGroup<TDays extends number | null>({
   options,
   value,
 }: Readonly<ExpiryChoiceGroupProps<TDays>>) {
+  const groupName = useId();
   return (
     <fieldset className="m-0 min-w-0 border-0 p-0">
       <legend className={labelClass}>{label}</legend>
@@ -36,20 +38,27 @@ export function ExpiryChoiceGroup<TDays extends number | null>({
         {options.map((option) => {
           const active = value === option.days;
           return (
-            <button
-              aria-pressed={active}
-              className={cn(
-                "flex-1 rounded-[9px] border-[1.5px] px-2 py-2 text-[12.5px] font-semibold",
-                active
-                  ? "border-accent bg-accent-soft text-fg"
-                  : "border-border-strong bg-bg-elev text-fg-muted",
-              )}
-              key={option.label}
-              onClick={() => onChange(option.days)}
-              type="button"
-            >
-              {option.label}
-            </button>
+            <label className="flex-1" key={option.label}>
+              <input
+                checked={active}
+                className="peer sr-only"
+                name={groupName}
+                onChange={() => onChange(option.days)}
+                type="radio"
+                value={option.days ?? ""}
+              />
+              <span
+                className={cn(
+                  "flex w-full cursor-pointer items-center justify-center rounded-[9px] border-[1.5px] px-2 py-2 text-[12.5px] font-semibold transition-colors duration-[var(--motion-press)] ease-[ease]",
+                  active
+                    ? "border-accent bg-accent-soft text-fg"
+                    : "border-border-strong bg-bg-elev text-fg-muted",
+                  "peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent-solid",
+                )}
+              >
+                {option.label}
+              </span>
+            </label>
           );
         })}
       </div>

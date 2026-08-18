@@ -138,7 +138,7 @@ export function TransferPanel({
     job.state === "receiving" || job.state === "importing" || job.state === "done";
 
   return (
-    <div className="mt-[18px] overflow-hidden rounded-[14px] border border-border bg-bg-elev">
+    <div className="mt-4.5 overflow-hidden rounded-[14px] border border-border bg-bg-elev">
       <div className="flex items-center gap-[13px] p-[16px_20px]">
         <span
           className={`grid h-[38px] w-[38px] flex-none place-items-center rounded-[10px] ${tone.tile}`}
@@ -185,7 +185,7 @@ export function TransferPanel({
             Import job {job.id}
           </span>
           <a
-            className="inline-flex flex-none items-center gap-1.5 rounded-lg bg-accent-solid px-[14px] py-2 font-semibold text-[12px] text-primary-contrast"
+            className="inline-flex flex-none items-center gap-1.5 rounded-lg bg-accent-solid px-3.5 py-2 font-semibold text-[12px] text-primary-contrast"
             href={appPath(projectRef, "dashboard")}
           >
             Open project
@@ -235,7 +235,7 @@ export function TransferPanel({
               New token
             </Button>
             <a
-              className="inline-flex flex-none items-center gap-1.5 rounded-lg border border-border-strong bg-bg-elev px-[14px] py-2 font-semibold text-[12px] text-fg"
+              className="inline-flex flex-none items-center gap-1.5 rounded-lg border border-border-strong bg-bg-elev px-3.5 py-2 font-semibold text-[12px] text-fg"
               download={`${job.id ?? "cloud-import"}-error.log`}
               href={errorLogHref(job)}
             >

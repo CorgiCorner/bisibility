@@ -146,6 +146,7 @@ export {
 // inside the same sandbox bundle.
 export { reconcileRankCheckSchedulesWorkflow } from "./reconcile-workflows";
 export { syncTrafficWorkflow } from "./traffic-workflows";
+export { welcomeFollowupWorkflow } from "./welcome-email-workflow";
 export type { RankCheckWorkflowInput, RankCheckWorkflowResult };
 
 export function classifyRankCheckExecutionSource(input: {

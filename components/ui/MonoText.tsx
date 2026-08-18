@@ -38,7 +38,7 @@ export function MonoText({ className, muted = false, size = "md", sx, ...props }
       className={cn(monoTextVariants({ size }), className)}
       sx={[
         {
-          color: muted ? "var(--fg-muted)" : "var(--fg-muted)",
+          color: muted ? "var(--fg-muted)" : "var(--fg)",
           fontFamily: "var(--font-mono), monospace",
           ...monoTextSizeSx[size],
           // MUI's Typography root sets `margin: 0`, and emotion injects its rules OUTSIDE any

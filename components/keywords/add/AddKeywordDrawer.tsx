@@ -256,7 +256,7 @@ export function AddKeywordDrawer({
       title="Add keywords"
     >
       <form
-        className="flex flex-col gap-[22px]"
+        className="flex flex-col gap-5.5"
         id="add-keyword-form"
         onSubmit={handleSubmit((values: AddKeywordDrawerForm) => void submit(values))}
       >

@@ -64,7 +64,12 @@ describe("KeywordInlineEdit drawer markets", () => {
     const paused = screen.getByRole("menuitem", { name: /Belgium \/ French/ });
     expect(paused).toHaveTextContent("paused");
     expect(paused).toHaveAttribute("aria-disabled", "true");
-    expect(paused).toHaveAttribute("title", "Enable this market in Settings before selecting it.");
+    expect(paused).not.toHaveAttribute("title");
+    const pausedDescId = paused.getAttribute("aria-describedby");
+    expect(pausedDescId).not.toBeNull();
+    expect(document.getElementById(pausedDescId ?? "")).toHaveTextContent(
+      "Enable this market in Settings before selecting it.",
+    );
     await user.click(screen.getByRole("menuitem", { name: /Spain \/ Spanish/ }));
     fireEvent.submit(screen.getByRole("button", { name: "Save" }));
 
@@ -99,8 +104,10 @@ describe("KeywordInlineEdit drawer markets", () => {
     await user.click(screen.getByRole("button", { name: "Market" }));
     const legacy = screen.getByRole("menuitem", { name: /no longer in registry/ });
     expect(legacy).toHaveAttribute("aria-disabled", "true");
-    expect(legacy).toHaveAttribute(
-      "title",
+    expect(legacy).not.toHaveAttribute("title");
+    const legacyDescId = legacy.getAttribute("aria-describedby");
+    expect(legacyDescId).not.toBeNull();
+    expect(document.getElementById(legacyDescId ?? "")).toHaveTextContent(
       "This market is no longer available in the project registry.",
     );
   });

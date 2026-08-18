@@ -1,7 +1,6 @@
 import { MarketChip } from "@/components/markets/MarketChip";
-import { Card, EmptyState, MonoText } from "@/components/ui";
+import { Card, EmptyState, MonoText, Tooltip } from "@/components/ui";
 import { appPath } from "@/lib/routing/app-path";
-import Tooltip from "@mui/material/Tooltip";
 import {
   ArrowDownIcon as ArrowDown,
   ArrowUpIcon as ArrowUp,
@@ -67,7 +66,7 @@ function Delta({ row }: Readonly<{ row: HighlightRow }>) {
   const colorClassName = row.delta.direction === "up" ? "text-green-text" : "text-red-text";
 
   return (
-    <Tooltip title={row.delta.title}>
+    <Tooltip content={row.delta.title}>
       <span
         className={`inline-flex items-center gap-0.5 font-mono text-[11px] font-semibold ${colorClassName}`}
       >
@@ -102,7 +101,7 @@ export function HighlightLists({ lists, projectRef, rowHref }: Readonly<Highligh
 
         return (
           <Card className="flex min-w-0 flex-col overflow-hidden p-0" key={list.title} size="md">
-            <div className="flex-none px-[18px] pb-3 pt-[15px]">
+            <div className="flex-none px-4.5 pb-3 pt-[15px]">
               <div className="flex items-center gap-2 text-sm font-semibold text-fg">
                 <Icon aria-hidden color={colorByKind[list.kind]} size={16} weight="fill" />
                 {list.title}
@@ -119,7 +118,7 @@ export function HighlightLists({ lists, projectRef, rowHref }: Readonly<Highligh
               ) : (
                 list.rows.map((row) => (
                   <Link
-                    className="flex min-h-[68px] items-center justify-between gap-2.5 border-t border-border-soft px-[18px] py-2.5 hover:bg-bg-sunken"
+                    className="flex min-h-[68px] items-center justify-between gap-2.5 border-t border-border-soft px-4.5 py-2.5 hover:bg-bg-sunken"
                     href={rowHref?.(row) ?? appPath(projectRef, "rank-tracker", row.id)}
                     key={row.id}
                   >

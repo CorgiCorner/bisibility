@@ -6,7 +6,6 @@ import { appPath } from "@/lib/routing/app-path";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import {
-  ArrowsClockwiseIcon as ArrowsClockwise,
   CalendarBlankIcon as CalendarBlank,
   CaretDownIcon as CaretDown,
   CheckIcon as Check,
@@ -118,7 +117,6 @@ export function OverviewToolbar({
     marketValues: [],
     range: "Last 28 days",
     rangeValue: "28d",
-    refresh: "Daily",
     tag: "All tags",
     tagValue: null,
   };
@@ -153,7 +151,7 @@ export function OverviewToolbar({
   }
 
   return (
-    <div className="-mx-4 -mt-4 mb-[22px] sm:-mx-5 lg:-mx-7 lg:-mt-[22px]">
+    <div className="-mx-4 -mt-4 mb-5.5 sm:-mx-5 lg:-mx-7 lg:-mt-5.5">
       <Toolbar
         action={
           <Button
@@ -189,12 +187,6 @@ export function OverviewToolbar({
             values={selected.marketValues}
           />
         ) : null}
-        {selected.refresh === "Mixed schedules" ? null : (
-          <Pill active aria-label={`Refresh cadence ${selected.refresh}`}>
-            <ArrowsClockwise aria-hidden className="text-accent-text" size={15} />
-            {`Refresh: ${selected.refresh}`}
-          </Pill>
-        )}
         {menus.map((menu) => {
           const open = openKey === menu.key;
           return (

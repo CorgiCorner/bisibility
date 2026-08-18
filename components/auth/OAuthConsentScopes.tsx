@@ -128,13 +128,13 @@ export function OAuthConsentScopes({
                 <span className="text-[12.5px] font-semibold text-fg">{group.title}</span>
                 <span className="text-[12px] text-fg-muted">{group.note}</span>
               </div>
-              <div className="mt-1.5 flex flex-wrap gap-1.5 pl-[22px]">
+              <div className="mt-1.5 flex flex-wrap gap-1.5 pl-5.5">
                 {group.scopes.map((scope) => (
                   <ScopeChip key={scope.value} scope={scope} />
                 ))}
               </div>
               {group.id === "credentials" && persona === "cli" ? (
-                <p className="mt-2 mb-0 pl-[22px] text-[12px] text-fg-muted">
+                <p className="mt-2 mb-0 pl-5.5 text-[12px] text-fg-muted">
                   The CLI will create one API token for this device.
                 </p>
               ) : null}

@@ -2,16 +2,6 @@ import type { WaitlistSource } from "@/lib/landing/waitlist-schema";
 
 const RESEND_CONTACTS_ENDPOINT = "https://api.resend.com/contacts";
 
-const segmentEnvBySource: Record<WaitlistSource, string> = {
-  changelog: "RESEND_SEGMENT_GENERAL",
-  cloud_pricing: "RESEND_SEGMENT_CLOUD",
-  cloud_waitlist: "RESEND_SEGMENT_CLOUD",
-  featured_company: "RESEND_SEGMENT_EARLY_ADOPTERS",
-  landing_capture: "RESEND_SEGMENT_GENERAL",
-  settings_feedback: "RESEND_SEGMENT_CLOUD",
-  settings_notify: "RESEND_SEGMENT_CLOUD",
-};
-
 type WaitlistContact = {
   cloudPrice: string | null;
   email: string;
@@ -19,7 +9,22 @@ type WaitlistContact = {
 };
 
 export function resolveWaitlistSegmentId(source: WaitlistSource) {
-  return process.env[segmentEnvBySource[source]]?.trim() || null;
+  switch (source) {
+    case "changelog":
+    case "landing_capture":
+      return process.env.RESEND_SEGMENT_GENERAL?.trim() || null;
+    case "featured_company":
+      return process.env.RESEND_SEGMENT_EARLY_ADOPTERS?.trim() || null;
+    case "cloud_waitlist":
+    case "cloud_pricing":
+    case "settings_notify":
+    case "settings_feedback":
+      return process.env.RESEND_SEGMENT_CLOUD?.trim() || null;
+    default: {
+      const exhaustive: never = source;
+      throw new Error(`Unsupported waitlist source: ${exhaustive}`);
+    }
+  }
 }
 
 export async function syncWaitlistContact(input: WaitlistContact) {

@@ -1,32 +1,63 @@
 ---
 title: "Quickstart"
-description: "Start a self-hosted bisibility project, connect a provider, and run your first rank check."
+description: "Run a throwaway local demo of bisibility with seeded data, then run your first manual rank check."
 ---
 
-This path gets a self-hosted project from an empty install to its first Google
-rank data. It assumes you run the app yourself and bring your own SERP provider
-credentials.
+This page runs a throwaway local evaluation of bisibility with synthetic seeded
+data. It is not a production installation.
 
-**Read the deployment overview:** The steps below cover the shortest supported
-self-hosting workflow.
+The demo uses a fixed sign-in code that is intentionally insecure, and the
+seeded data is synthetic. Do not expose this demo to a network or real users,
+and do not try to harden it into production. A production instance starts from
+a fresh environment on the [production self-hosting](/self-hosting) path, not
+from this demo. See [Deployment options](/deployment-options) to compare the
+hosted beta, this local demo, and production self-hosting.
 
-## 1. Start the stack
+## Prerequisites
 
-Follow [Self-hosting](/self-hosting) for Docker, required services,
-environment variables, migrations, and the optional Temporal worker.
+- **Git** to clone the repository.
+- **Docker with Compose** to run the stack.
+- **OpenSSL** to generate secrets during bootstrap.
 
-For a local Docker install, the short path is:
+## 1. Bootstrap the local demo
 
 ```bash
 git clone https://github.com/CorgiCorner/bisibility.git bisibility
 cd bisibility
 ./scripts/dev/bootstrap-local.sh
+```
+
+`bootstrap-local.sh` creates a `.env` with generated secrets, enables
+`DEMO_FIXED_OTP=1` and `DEMO_INSTANCE_INSECURE_AUTH_ACK=1`, and validates the
+Docker Compose configuration. It refuses to run when `.env` already exists, so
+it cannot overwrite a configured install.
+
+The script prints the startup commands used below.
+
+## 2. Start the stack
+
+Pick one of the two startup commands the bootstrap printed. The core stack is
+enough for this quickstart.
+
+Core stack - web app, PostgreSQL, Valkey, and migrations. Manual checks only:
+
+```bash
 docker compose -f compose.yaml up -d
 ```
 
-Open `http://localhost:3000` and sign in with the demo login.
+Scheduled stack - adds the worker and Temporal for recurring schedules, plus the
+optional Temporal Web UI:
 
-Before signing in, verify that the web process is responding:
+```bash
+docker compose -f compose.yaml -f compose.worker.yaml -f compose.temporal.yaml --profile temporal-ui up -d
+```
+
+The core stack sets `SCHEDULER_DRIVER=none` and supports manual checks. The
+scheduled stack sets `SCHEDULER_DRIVER=temporal`. Temporal and the worker are
+required for recurring schedules, not for manual checks, so you can finish this
+quickstart with the core stack alone.
+
+## 3. Verify the stack is live
 
 ```bash
 curl -fsS http://localhost:3000/api/v1/liveness
@@ -38,89 +69,96 @@ Expected response:
 { "status": "ok" }
 ```
 
-This probe confirms only that the web process can serve requests. Use
-[readiness and health](/api/discovery#liveness-and-readiness) to verify the
-database contract and the optional worker before admitting production traffic.
-
-Compose pulls version-pinned web and migration images from Docker Hub by
-default. Add `-f compose.build.yaml --build` to build the checked-out web source
-instead.
+This confirms the web process is serving requests. See
+[readiness and health](/api/discovery#liveness-and-readiness) for the readiness
+probe that also verifies the database contract.
 
 ### Demo login
 
-Setting `DEMO_FIXED_OTP=1` together with `DEMO_INSTANCE_INSECURE_AUTH_ACK=1`
-enables a fixed demo login: email `demo@acme.dev`, one-time code `000000`. The
-login screen displays both hints while demo mode is active, so you do not need
-to memorize them.
+Open `http://localhost:3000`. With `DEMO_FIXED_OTP=1` active, sign in with:
 
-This is insecure by design - anyone who knows the code can sign in. Use it only
-for throwaway local installs. Remove both variables before any real deployment
-and configure email delivery instead (see the
-[environment variables](/self-hosting/configuration#optional-environment-variables) in
-Self-hosting).
+- Email: `demo@acme.dev`
+- One-time code: `000000`
 
-## 2. Create an account and project
+The login screen displays both hints while demo mode is active. The fixed code
+is intentionally insecure: anyone who reaches the app can sign in. Keep the
+demo on `localhost` and never expose it on a public address.
 
-After signing in, complete onboarding:
+## 4. Confirm the seeded data
 
-1. Create a project with a name and domain, such as `example.com`. Your root
-   domain, `www`, and all subdomains count as yours. Matching is fixed today;
-   per-scope control is on the roadmap.
-2. Keep the default market and device unless your first tracked phrases need a
-   different country, city, desktop, or mobile target.
-
-The project domain is used to match organic Google results to your site.
-
-## 3. Connect a SERP provider
-
-Open **Integrations**, choose a SERP provider, then select **Connect**.
-
-Enter the provider's credentials and select **Test connection** before saving;
-credential-based, non-OAuth providers must pass the test. Connected SERP
-providers are tried in priority order when a fallback is needed.
-
-See [Integrations](/integrations) for the supported providers, their
-credential fields, cost estimates, fallback priority, and the monthly budget
-cap.
-
-## 4. Add search terms
-
-Open the tracking table, select the add action, and paste a short list with one
-search term per line. Choose the location and device, add a target URL when you
-know which page should rank, then select **Add & track**.
-
-For Search Console, CSV imports, and guidance on building a larger tracking set,
-see [Choose your first keywords](/guides/choose-first-keywords).
+After sign-in, open the tracking table. The seeded demo project, search terms,
+and synthetic rank history are visible. This data is not real and exists only
+so you can explore the UI without connecting a provider first.
 
 ## 5. Run the first check
 
-For the first run, open **Overview** or **Rank Tracker** and select **Run first
-check**. To rerun one keyword later, open its detail page and select **Run
-check**.
+bisibility ships without a data source, so a live rank check needs your own
+supported SERP provider credentials first.
 
-If you started the scheduling overlays, the worker runs due checks from the
-configured schedule:
+Open **Integrations**, choose a SERP provider, and select **Connect**. Enter
+the provider's credentials and select **Test connection** before saving;
+credential-based, non-OAuth providers must pass the test. Provider billing
+stays between you and the provider - see [Integrations](/integrations) for the
+supported providers, credential fields, cost estimates, and the monthly budget
+cap.
+
+With a provider connected, open **Overview** or **Rank Tracker** and select
+**Run first check**. To rerun one keyword later, open its detail page and
+select **Run check**.
+
+Manual checks run on the core stack. Scheduled checks require the worker and
+Temporal overlays from step 2.
+
+### Success
+
+You have a working local evaluation when:
+
+1. The liveness endpoint returns `{ "status": "ok" }`.
+2. Sign-in with `demo@acme.dev` and code `000000` succeeds.
+3. The seeded demo project and search terms are visible in the tracking table.
+4. After connecting your own SERP provider, a manual first check starts and
+   returns ranking data.
+
+## 6. Stop and clean up
+
+Stop the core stack, keeping the data for a later restart:
 
 ```bash
-docker compose -f compose.yaml -f compose.worker.yaml -f compose.temporal.yaml up -d
+docker compose -f compose.yaml down
 ```
 
-Manual checks can run without Temporal. Scheduled checks require Temporal and the
-worker.
+Stop the scheduled stack, keeping the data:
 
-## 6. Read results
+```bash
+docker compose -f compose.yaml -f compose.worker.yaml -f compose.temporal.yaml --profile temporal-ui down
+```
 
-Open **Overview** to confirm that the first check completed and produced ranking
-data. Open a keyword detail page when you need the recorded position and ranking
-URL.
+Delete the data volumes for a clean slate. This is destructive and cannot be
+undone. It is a local cleanup step, not a production rollback.
 
-## Automate with the API
+```bash
+docker compose -f compose.yaml down -v
+```
 
-Choose a project API key or personal access token, then start with:
+For the scheduled stack:
 
-- [API quickstart](/api/quickstart) for a verified `GET /api/v1/projects` request.
-- [API overview](/api/overview) for shared HTTP behavior.
+```bash
+docker compose -f compose.yaml -f compose.worker.yaml -f compose.temporal.yaml --profile temporal-ui down -v
+```
+
+Remove the generated `.env` to re-run `bootstrap-local.sh` from scratch.
+
+## Next steps
+
+- [Deployment options](/deployment-options) to compare the hosted beta, this
+  local demo, and production self-hosting.
+- [Self-hosting](/self-hosting) for a production installation.
+- [Integrations](/integrations) for SERP provider details.
+- [API quickstart](/api/quickstart) to authenticate and make one REST request
+  with a **project API key** or **personal access token**; see
+  [Authentication](/authentication) for the choice and secret lifecycle.
 - [API Reference][api-reference-index] for every endpoint and schema.
-- [Official client libraries](/sdks/overview) for Python, TypeScript, Go, and MCP.
+- [Official client libraries](/sdks/overview) for Python, TypeScript, Go, and
+  MCP.
 
 [api-reference-index]: /api-reference/discovery/get-api-capabilities

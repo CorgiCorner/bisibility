@@ -48,7 +48,7 @@ export function PositionTrendCard({
   const renderedTakeawayLoading = !empty && !insufficient && takeawayLoading;
 
   return (
-    <Card className="flex h-full min-w-0 flex-col px-5 py-[18px]" size="md">
+    <Card className="flex h-full min-w-0 flex-col px-5 py-4.5" size="md">
       <OverviewChartHeader
         caption={renderedTakeaway}
         captionLoading={renderedTakeawayLoading}

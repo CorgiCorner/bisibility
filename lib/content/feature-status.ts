@@ -91,7 +91,11 @@ export const featureStatus = {
     status: "shipped",
     docs: "/docs/guides/alerts",
   },
-  slackAlertDelivery: { label: "Slack alert delivery", status: "planned", docs: "/roadmap" },
+  slackAlertDelivery: {
+    label: "Slack alert delivery",
+    status: "beta",
+    docs: "/docs/guides/alerts",
+  },
   webhooks: {
     label: "outbound webhooks",
     status: "shipped",
@@ -127,11 +131,7 @@ export const featureStatus = {
     status: "shipped",
     docs: "/docs/guides/teams",
   },
-  auditLog: {
-    label: "audit log",
-    status: "shipped",
-    docs: "/docs/audit-log",
-  },
+  auditLog: { label: "audit log", status: "shipped", docs: "/docs/audit-log" },
   restApi: {
     label: "REST API v1 and OpenAPI",
     status: "shipped",
@@ -187,7 +187,11 @@ export const featureStatus = {
     status: "shipped",
     docs: "/docs/api/backlinks",
   },
-  domainOverview: { label: "domain overview", status: "planned", docs: "/roadmap" },
+  domainOverview: {
+    label: "domain overview",
+    status: "shipped",
+    docs: "/docs/api/domain-overview",
+  },
   notificationPreferences: {
     label: "advanced notification preferences",
     status: "planned",

@@ -188,9 +188,10 @@ fallbacks for local development are documented in
 After a successful check persists, the alert evaluator applies each enabled
 rule's conditions to the new result. Matching rules create a triggered alert,
 which is delivered to the configured channels - email and signed webhooks -
-with every delivery attempt recorded. Slack delivery is planned. Successful
-deliveries and completed checks also create in-app notifications, pushed live
-to the browser over SSE.
+with every delivery attempt recorded. Slack tenant delivery is available as an
+API-only preview. Workspace installation and channel management are not yet
+exposed in the dashboard. Successful deliveries and completed checks also
+create in-app notifications, pushed live to the browser over SSE.
 
 ## Operational notes
 

@@ -15,10 +15,7 @@ describe("effective keyword schedule", () => {
     );
 
     expect(schedule).toEqual({ frequency: "paused", nextCheckAt: null, runnable: false });
-    expect(summarizeEffectiveSchedules([schedule])).toEqual({
-      nextCheckAt: null,
-      refresh: "Paused",
-    });
+    expect(summarizeEffectiveSchedules([schedule])).toEqual({ nextCheckAt: null });
   });
 
   it.each(["daily", "weekly"] as const)(

@@ -145,7 +145,7 @@ export function CloudBackupModal({
       }
       width={520}
     >
-      <form className="grid gap-[18px]" id="cloud-workspace-backup" onSubmit={handleSubmit(submit)}>
+      <form className="grid gap-4.5" id="cloud-workspace-backup" onSubmit={handleSubmit(submit)}>
         <section>
           <div className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
             Format

@@ -53,6 +53,7 @@ export function PersonalTokensSection({
 }: Readonly<PersonalTokensSectionProps>) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [revokePending, setRevokePending] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [name, setName] = useState("");
   const [scope, setScope] = useState<IssuePersonalTokenInput["scope"]>("read");
@@ -84,19 +85,20 @@ export function PersonalTokensSection({
     });
   }
 
-  function onRevoke(tokenId: string) {
+  async function onRevoke(tokenId: string) {
     setMessage(null);
-    startTransition(() => {
-      void revokeToken({ tokenId })
-        .then(() => {
-          setRevokeTarget(null);
-          setMessage("Personal access token revoked.");
-          router.refresh();
-        })
-        .catch((error: unknown) =>
-          setMessage(actionErrorMessage(error, "Personal token could not be revoked.")),
-        );
-    });
+    setRevokePending(true);
+    try {
+      await revokeToken({ tokenId });
+      setRevokeTarget(null);
+      setMessage("Personal access token revoked.");
+      router.refresh();
+    } catch (error: unknown) {
+      setMessage(actionErrorMessage(error, "Personal token could not be revoked."));
+      throw error;
+    } finally {
+      setRevokePending(false);
+    }
   }
 
   return (
@@ -214,7 +216,7 @@ export function PersonalTokensSection({
         {issued ? (
           <ApiKeyRevealContent issuedKey={issued} />
         ) : (
-          <div className="space-y-[18px]">
+          <div className="space-y-4.5">
             <div>
               <label className={labelClass} htmlFor="personal-token-name">
                 Token name
@@ -287,12 +289,10 @@ export function PersonalTokensSection({
         )}
       </Modal>
       <ConfirmModal
-        busy={isPending}
+        busy={isPending || revokePending}
         kind="revokeKey"
         onClose={() => setRevokeTarget(null)}
-        onConfirm={() => {
-          if (revokeTarget) onRevoke(revokeTarget.id);
-        }}
+        onConfirm={() => (revokeTarget ? onRevoke(revokeTarget.id) : undefined)}
         open={Boolean(revokeTarget)}
       />
     </AccountSection>

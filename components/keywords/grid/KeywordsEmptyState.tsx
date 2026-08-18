@@ -125,7 +125,7 @@ export function KeywordsEmptyState({
   // Keep the table chrome + column headers; replace the body with the first-keyword prompt.
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-bg-elev">
-      <div className="grid grid-cols-[minmax(0,2.2fr)_repeat(3,1fr)_1.4fr] gap-x-2.5 border-b border-border bg-bg-sunken px-[18px] py-[11px] font-mono text-[10px] uppercase tracking-[0.6px] text-fg-muted">
+      <div className="grid grid-cols-[minmax(0,2.2fr)_repeat(3,1fr)_1.4fr] gap-x-2.5 border-b border-border bg-bg-sunken px-4.5 py-[11px] font-mono text-[10px] uppercase tracking-[0.6px] text-fg-muted">
         {EMPTY_HEADERS.map((header) => (
           <span key={header}>{header}</span>
         ))}
@@ -134,7 +134,7 @@ export function KeywordsEmptyState({
         <span className="grid h-[54px] w-[54px] place-items-center rounded-[14px] bg-accent-soft text-accent-text">
           <MagnifyingGlass size={27} weight="bold" />
         </span>
-        <h3 className="mt-[18px] text-lg font-semibold tracking-[-0.4px] text-fg">
+        <h3 className="mt-4.5 text-lg font-semibold tracking-[-0.4px] text-fg">
           Choose what to track
         </h3>
         <p className="mt-[7px] max-w-[420px] text-[13.5px] leading-[1.55] text-fg-muted">

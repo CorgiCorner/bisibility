@@ -93,7 +93,7 @@ export function DomainOverviewPagesTable({
       </header>
       <div className="max-h-[640px] overflow-auto">
         <div className="min-w-[900px]">
-          <div className="sticky top-0 z-[1] grid grid-cols-[minmax(220px,1.25fr)_104px_86px_minmax(180px,1fr)_96px_86px] items-center gap-3 border-b border-border-strong bg-bg-sunken px-4 py-2.5">
+          <div className="sticky top-0 z-1 grid grid-cols-[minmax(220px,1.25fr)_104px_86px_minmax(180px,1fr)_96px_86px] items-center gap-3 border-b border-border-strong bg-bg-sunken px-4 py-2.5">
             <SortableColumnHeader
               active={sort === "path"}
               direction={direction}

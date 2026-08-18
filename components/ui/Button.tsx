@@ -1,5 +1,6 @@
 "use client";
 
+import { MOTION_PRESS } from "@/lib/ui/motion";
 import { sxArray } from "@/lib/ui/mui-sx";
 import MuiButton, { type ButtonProps as MuiButtonProps } from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -31,12 +32,19 @@ function muiSizeFor(size: ButtonSize): "large" | "medium" | "small" {
   return "medium";
 }
 
+const pressScale = {
+  "@media (prefers-reduced-motion: no-preference)": {
+    "&:active:not(:focus-visible):not(.Mui-disabled)": { transform: "scale(0.97)" },
+  },
+} as const;
+
 const variantSx = {
   destructive: {
     backgroundColor: "var(--red)",
     border: "1px solid var(--red)",
     color: "var(--mui-palette-error-contrastText)",
     "&:hover": { backgroundColor: "var(--red)", opacity: 0.9 },
+    ...pressScale,
   },
   ghost: {
     backgroundColor: "transparent",
@@ -55,6 +63,7 @@ const variantSx = {
       backgroundColor: "var(--accent-solid-hover)",
       border: "1px solid var(--accent-solid-hover)",
     },
+    ...pressScale,
   },
   // Deliberately quieter than primary: the outline already carries the shape, so a
   // full-weight full-contrast label made secondary read as the louder of the two.
@@ -69,6 +78,7 @@ const variantSx = {
       border: "1px solid var(--border-strong)",
       color: "var(--fg)",
     },
+    ...pressScale,
   },
 } as const;
 
@@ -124,7 +134,7 @@ export function Button({
         {
           fontWeight: 600,
           textTransform: "none",
-          transition: "background-color .16s ease, border-color .16s ease",
+          transition: `background-color .16s ease, border-color .16s ease, transform ${MOTION_PRESS}ms ease`,
           "&.Mui-disabled": disabledStyle,
         },
         ...(size === "xs" ? [extraSmallSx] : []),

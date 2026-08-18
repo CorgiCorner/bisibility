@@ -2,6 +2,7 @@
 
 import { MenuMultiSelectOption } from "@/components/ui/MenuMultiSelectOption";
 import { MenuSelectOptionItem, menuSelectRowSx } from "@/components/ui/MenuSelectOptionItem";
+import { menuTransitionDuration, useMenuExitLifecycle } from "@/components/ui/menu-exit-lifecycle";
 import {
   filterFlatOptions,
   filterGroupedGroups,
@@ -19,6 +20,7 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import { CaretDownIcon as CaretDown, CheckIcon as Check } from "@phosphor-icons/react";
 import { type ReactNode, useState } from "react";
+import { Tooltip } from "./Tooltip";
 
 export type { MenuSelectOption, MenuSelectOptionGroup } from "@/components/ui/menu-select-support";
 export { menuSelectPaperSx } from "@/components/ui/menu-select-support";
@@ -74,42 +76,47 @@ export function MenuSelect({
   value,
   ...input
 }: Readonly<MenuSelectProps>) {
-  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [search, setSearch] = useState("");
-  const open = Boolean(anchorEl);
+  const { anchorEl, closeMenu, handleExited, open, openMenu } = useMenuExitLifecycle(() =>
+    setSearch(""),
+  );
   const isGrouped = "groups" in input && input.groups != null;
   const selected = resolveSelectedOption(input, value);
   const flatFiltered = isGrouped ? [] : filterFlatOptions(input.options ?? [], search);
   const groupedFiltered = isGrouped ? filterGroupedGroups(input.groups, search) : [];
   const hasResults = isGrouped ? groupedFiltered.length > 0 : flatFiltered.length > 0;
 
-  function closeMenu() {
-    setAnchorEl(null);
-    setSearch("");
-  }
-
   const paperSx = menuWidth
     ? { ...menuSelectPaperSx, minWidth: menuWidth, maxWidth: menuWidth }
     : menuSelectPaperSx;
 
+  const triggerButton = (
+    <button
+      aria-describedby={ariaDescribedBy}
+      aria-expanded={open}
+      aria-haspopup="menu"
+      aria-invalid={ariaInvalid}
+      aria-label={ariaLabel}
+      className={cn(menuSelectTriggerClass, triggerClassName)}
+      disabled={disabled}
+      onClick={(event) => openMenu(event.currentTarget)}
+      type="button"
+    >
+      {leadingIcon ? <span className="flex shrink-0 text-fg-muted">{leadingIcon}</span> : null}
+      <span className="min-w-0 truncate">{selected?.label ?? ariaLabel}</span>
+      <CaretDown aria-hidden className="shrink-0 text-fg-muted" size={11} weight="bold" />
+    </button>
+  );
+
   return (
     <>
-      <button
-        aria-describedby={ariaDescribedBy}
-        aria-expanded={open}
-        aria-haspopup="menu"
-        aria-invalid={ariaInvalid}
-        aria-label={ariaLabel}
-        className={cn(menuSelectTriggerClass, triggerClassName)}
-        disabled={disabled}
-        onClick={(event) => setAnchorEl(event.currentTarget)}
-        title={triggerTitle}
-        type="button"
-      >
-        {leadingIcon ? <span className="flex shrink-0 text-fg-muted">{leadingIcon}</span> : null}
-        <span className="min-w-0 truncate">{selected?.label ?? ariaLabel}</span>
-        <CaretDown aria-hidden className="shrink-0 text-fg-muted" size={11} weight="bold" />
-      </button>
+      {triggerTitle ? (
+        <Tooltip content={triggerTitle} semantics="description">
+          {triggerButton}
+        </Tooltip>
+      ) : (
+        triggerButton
+      )}
       <Menu
         anchorEl={anchorEl}
         autoFocus={!searchable}
@@ -119,7 +126,9 @@ export function MenuSelect({
         slotProps={{
           list: { "aria-label": ariaLabel, dense: true, sx: { padding: 0 } },
           paper: { sx: paperSx },
+          transition: { onExited: handleExited },
         }}
+        transitionDuration={menuTransitionDuration}
       >
         {searchable ? (
           <MenuSearchField onChange={setSearch} placeholder={searchPlaceholder} value={search} />
@@ -188,10 +197,12 @@ export function MenuMultiSelect({
   triggerClassName,
   values,
 }: Readonly<MenuMultiSelectProps>) {
-  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [menuWidth, setMenuWidth] = useState<number | null>(null);
   const [search, setSearch] = useState("");
-  const open = Boolean(anchorEl);
+  const { anchorEl, closeMenu, handleExited, open, openMenu } = useMenuExitLifecycle(() => {
+    setSearch("");
+    setMenuWidth(null);
+  });
   const selectedValues = new Set(values);
   const selected = options.filter((option) => selectedValues.has(option.value));
   const filteredOptions = search
@@ -202,15 +213,9 @@ export function MenuMultiSelect({
       )
     : options;
 
-  function closeMenu() {
-    setAnchorEl(null);
-    setMenuWidth(null);
-    setSearch("");
-  }
-
-  function openMenu(element: HTMLElement) {
+  function openMenuWithWidth(element: HTMLElement) {
     setMenuWidth(element.getBoundingClientRect().width);
-    setAnchorEl(element);
+    openMenu(element);
   }
 
   function toggle(value: string) {
@@ -228,7 +233,7 @@ export function MenuMultiSelect({
         aria-haspopup="menu"
         aria-label={ariaLabel}
         className={cn(menuSelectTriggerClass, triggerClassName)}
-        onClick={(event) => openMenu(event.currentTarget)}
+        onClick={(event) => openMenuWithWidth(event.currentTarget)}
         style={open && menuWidth ? { width: menuWidth } : undefined}
         type="button"
       >
@@ -245,7 +250,9 @@ export function MenuMultiSelect({
         slotProps={{
           list: { "aria-label": ariaLabel, dense: true, sx: { padding: 0 } },
           paper: { sx: { ...menuSelectPaperSx, minWidth: Math.max(menuWidth ?? 0, 180) } },
+          transition: { onExited: handleExited },
         }}
+        transitionDuration={menuTransitionDuration}
       >
         {searchable ? (
           <MenuSearchField onChange={setSearch} placeholder={searchPlaceholder} value={search} />

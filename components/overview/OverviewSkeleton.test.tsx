@@ -52,7 +52,7 @@ describe("OverviewSkeleton", () => {
 
   it("mirrors the data-source panel with metrics and note footer", () => {
     const { container } = render(<OverviewSkeleton />);
-    const panels = container.querySelectorAll(".px-5.py-\\[18px\\]");
+    const panels = container.querySelectorAll(".px-5.py-4\\.5");
     const dataSourcePanel = panels[panels.length - 1];
     expect(dataSourcePanel).not.toBeUndefined();
     const metrics = dataSourcePanel.querySelectorAll(
@@ -72,7 +72,7 @@ describe("OverviewSkeleton", () => {
     const cards = highlightGrid?.querySelectorAll(".rounded-\\[14px\\]");
     expect(cards).toHaveLength(4);
     for (const card of cards ?? []) {
-      const header = card.querySelector(".px-\\[18px\\]");
+      const header = card.querySelector(".px-4\\.5");
       expect(header).not.toBeNull();
       const rows = card.querySelectorAll(".min-h-\\[68px\\]");
       expect(rows.length).toBe(3);

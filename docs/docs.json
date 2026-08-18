@@ -19,7 +19,13 @@
         "groups": [
           {
             "group": "Get started",
-            "pages": ["index", "quickstart", "api/quickstart", "authentication"]
+            "pages": [
+              "index",
+              "quickstart",
+              "deployment-options",
+              "api/quickstart",
+              "authentication"
+            ]
           },
           {
             "group": "Build and automate",
@@ -35,10 +41,15 @@
               "self-hosting",
               "self-hosting/docker",
               "self-hosting/upgrades",
+              "self-hosting/legacy-upgrades/v0-1-to-v0-2",
               "self-hosting/railway",
               "self-hosting/temporal",
               "self-hosting/configuration",
-              "self-hosting/operations"
+              "self-hosting/email",
+              "self-hosting/security",
+              "self-hosting/backup-restore",
+              "self-hosting/operations",
+              "self-hosting/troubleshooting"
             ]
           },
           {
@@ -53,8 +64,7 @@
               "guides/analytics",
               "guides/sitemap-monitoring",
               "guides/migration",
-              "guides/operations",
-              "guides/email"
+              "guides/operations"
             ]
           },
           {
@@ -340,6 +350,10 @@
     {
       "source": "/api/resources",
       "destination": "/api/overview"
+    },
+    {
+      "source": "/guides/email",
+      "destination": "/self-hosting/email"
     }
   ],
   "seo": {

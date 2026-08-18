@@ -54,12 +54,10 @@ export default async function OAuthConsentPage({ searchParams }: Readonly<Consen
           <div className="font-mono text-[11px] uppercase tracking-[0.6px] text-accent-text">
             OAuth consent
           </div>
-          <h1 className="mt-[14px] mb-0 text-[32px] font-semibold leading-[1.2] tracking-[-1.1px]">
+          <h1 className="mt-3.5 mb-0 text-[32px] font-semibold leading-[1.2] tracking-[-1.1px]">
             {copy.heading}
           </h1>
-          <p className="mt-[14px] mb-0 text-[15px] leading-[1.6] text-fg-muted">
-            {copy.description}
-          </p>
+          <p className="mt-3.5 mb-0 text-[15px] leading-[1.6] text-fg-muted">{copy.description}</p>
         </div>
 
         <div className="font-mono text-[11px] text-fg-muted">

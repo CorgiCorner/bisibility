@@ -42,13 +42,15 @@ export function ProviderLogo({ alt, domain, fallbackIcon, tint }: Readonly<Provi
 
   return (
     <span
+      aria-label={alt}
       className="grid h-[46px] w-[46px] shrink-0 place-items-center rounded-[11px] bg-bg-sunken"
+      role="img"
       style={{ color: tint }}
     >
       {src ? (
         // biome-ignore lint/performance/noImgElement: Logo.dev URLs are dynamic and require an onError fallback.
         <img
-          alt={alt}
+          alt=""
           className="h-8 w-8 rounded-lg bg-white object-contain"
           decoding="async"
           height={32}

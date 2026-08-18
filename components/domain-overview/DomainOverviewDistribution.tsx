@@ -11,7 +11,7 @@ export function DomainOverviewDistribution({ metrics }: Readonly<{ metrics: Doma
   const max = Math.max(1, ...buckets.map((bucket) => bucket.count));
 
   return (
-    <Card className="px-[18px] py-4" size="md">
+    <Card className="px-4.5 py-4" size="md">
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <div>
           <h3 className="m-0 inline text-[14.5px] font-semibold">Position distribution</h3>

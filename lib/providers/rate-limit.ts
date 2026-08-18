@@ -3,7 +3,8 @@
 import "server-only";
 
 import { createHash } from "node:crypto";
-import { consume, envInt, type LimiterInput, peek } from "@/lib/api/ratelimit";
+import { consume, type LimiterInput, peek } from "@/lib/api/ratelimit";
+import { positiveIntFromEnv } from "@/lib/env/positive-int";
 import type { ProviderCredentials } from "./types";
 
 export { ProviderRateLimitedError } from "./rate-limit-error";
@@ -20,15 +21,44 @@ export type ProviderPolicy = { perMinute: number; windowSeconds: number };
 
 // Defaults stay below DataForSEO's 2,000/min and 30-concurrent quotas plus GSC's
 // 1,200 QPM and 2,000/day inspection quotas; SerpApi and GA4 use minute approximations.
-const DEFAULT_POLICIES: Record<string, ProviderPolicy> = {
+const DEFAULT_POLICIES = {
   dataforseo: { perMinute: 1800, windowSeconds: 60 },
   ga4: { perMinute: 60, windowSeconds: 60 },
   gsc: { perMinute: 600, windowSeconds: 60 },
   plausible: { perMinute: 10, windowSeconds: 60 },
   serpapi: { perMinute: 60, windowSeconds: 60 },
-};
+} satisfies Record<string, ProviderPolicy>;
 
 const FALLBACK_POLICY: ProviderPolicy = { perMinute: 600, windowSeconds: 60 };
+
+const PROVIDER_RATE_LIMIT_ENV = {
+  dataforseo: () => ({
+    perMinute: process.env.BISIBILITY_PROVIDER_RATE_LIMIT_DATAFORSEO_PER_MINUTE,
+    windowSeconds: process.env.BISIBILITY_PROVIDER_RATE_LIMIT_DATAFORSEO_WINDOW_SECONDS,
+  }),
+  ga4: () => ({
+    perMinute: process.env.BISIBILITY_PROVIDER_RATE_LIMIT_GA4_PER_MINUTE,
+    windowSeconds: process.env.BISIBILITY_PROVIDER_RATE_LIMIT_GA4_WINDOW_SECONDS,
+  }),
+  gsc: () => ({
+    perMinute: process.env.BISIBILITY_PROVIDER_RATE_LIMIT_GSC_PER_MINUTE,
+    windowSeconds: process.env.BISIBILITY_PROVIDER_RATE_LIMIT_GSC_WINDOW_SECONDS,
+  }),
+  plausible: () => ({
+    perMinute: process.env.BISIBILITY_PROVIDER_RATE_LIMIT_PLAUSIBLE_PER_MINUTE,
+    windowSeconds: process.env.BISIBILITY_PROVIDER_RATE_LIMIT_PLAUSIBLE_WINDOW_SECONDS,
+  }),
+  serpapi: () => ({
+    perMinute: process.env.BISIBILITY_PROVIDER_RATE_LIMIT_SERPAPI_PER_MINUTE,
+    windowSeconds: process.env.BISIBILITY_PROVIDER_RATE_LIMIT_SERPAPI_WINDOW_SECONDS,
+  }),
+} satisfies Record<
+  keyof typeof DEFAULT_POLICIES,
+  () => {
+    perMinute: string | undefined;
+    windowSeconds: string | undefined;
+  }
+>;
 
 function truthy(value: string | undefined) {
   return ["1", "true", "yes", "on"].includes(value?.toLowerCase() ?? "");
@@ -39,15 +69,17 @@ export function isProviderRateLimitDisabled() {
 }
 
 export function providerRateLimitPolicy(providerId: string): ProviderPolicy {
-  const base = DEFAULT_POLICIES[providerId] ?? FALLBACK_POLICY;
-  const key = providerId.toUpperCase().replace(/[^A-Z0-9]+/g, "_");
+  if (!isConfiguredProvider(providerId)) return FALLBACK_POLICY;
+  const base = DEFAULT_POLICIES[providerId];
+  const values = PROVIDER_RATE_LIMIT_ENV[providerId]();
   return {
-    perMinute: envInt(`BISIBILITY_PROVIDER_RATE_LIMIT_${key}_PER_MINUTE`, base.perMinute),
-    windowSeconds: envInt(
-      `BISIBILITY_PROVIDER_RATE_LIMIT_${key}_WINDOW_SECONDS`,
-      base.windowSeconds,
-    ),
+    perMinute: positiveIntFromEnv(values.perMinute, base.perMinute),
+    windowSeconds: positiveIntFromEnv(values.windowSeconds, base.windowSeconds),
   };
+}
+
+function isConfiguredProvider(providerId: string): providerId is keyof typeof DEFAULT_POLICIES {
+  return Object.hasOwn(DEFAULT_POLICIES, providerId);
 }
 
 /** Returns a deterministic, non-secret rate-limit bucket identifier. */

@@ -6,7 +6,7 @@ export function GhostKpiRow() {
   return (
     <section aria-hidden className="grid grid-cols-2 gap-4 lg:grid-cols-[repeat(4,minmax(0,1fr))]">
       {ghostLabels.map((label) => (
-        <Card className="min-w-0 px-[18px] py-4" key={label} size="md">
+        <Card className="min-w-0 px-4.5 py-4" key={label} size="md">
           <div className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
             {label}
           </div>

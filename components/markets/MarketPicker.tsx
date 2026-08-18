@@ -5,10 +5,9 @@ import {
   countryValueForCode,
   type LocationFieldValue,
 } from "@/components/keywords/location-picker-data";
-import { Button, ExternalLink, Input, MonoText } from "@/components/ui";
+import { Button, ExternalLink, Input, MonoText, Tooltip } from "@/components/ui";
 import { researchMetricsUnavailableNote } from "@/lib/serp/market-capability";
 import { MARKETING_URL } from "@/lib/site/site";
-import Tooltip from "@mui/material/Tooltip";
 import { CheckIcon as Check, MagnifyingGlassIcon as Search } from "@phosphor-icons/react";
 import { useId, useMemo, useState } from "react";
 import {
@@ -150,7 +149,7 @@ export function MarketPicker({
     if (choice.researchAvailable) return row;
 
     // The tooltip wraps the row rather than the suffix: a span inside a button never takes
-    // focus, so a suffix-anchored tooltip is reachable by pointer only. `describeChild`
+    // focus, so a suffix-anchored tooltip is reachable by pointer only. `semantics="description"`
     // keeps the sentence a description, so the row is still announced as its language plus
     // the short suffix rather than reading the whole sentence back as its name.
     // A disabled button emits no pointer or focus events, so a tracked row needs the
@@ -158,9 +157,9 @@ export function MarketPicker({
     // most the sentence can be there.
     return (
       <Tooltip
-        describeChild
+        semantics="description"
         key={language.code}
-        title={researchMetricsUnavailableNote(language.label)}
+        content={researchMetricsUnavailableNote(language.label)}
       >
         {isDisabled ? <span className="block">{row}</span> : row}
       </Tooltip>

@@ -17,7 +17,7 @@ export default async function AccountPage() {
 
   return (
     <AccountShell activeSection="profile">
-      <div className="flex flex-col gap-[22px]">
+      <div className="flex flex-col gap-5.5">
         <ProfileSection
           email={account.email}
           emailVerified={account.emailVerified}

@@ -182,7 +182,7 @@ export function KeywordInlineEdit({
       className={
         layout === "drawer"
           ? "grid gap-4"
-          : "mt-[18px] grid gap-3 border-t border-border pt-[18px] md:grid-cols-[1.2fr_1.4fr_0.8fr]"
+          : "mt-4.5 grid gap-3 border-t border-border pt-4.5 md:grid-cols-[1.2fr_1.4fr_0.8fr]"
       }
       id={formId}
       onSubmit={handleSubmit((values: InlineEditInput) => void save(values))}

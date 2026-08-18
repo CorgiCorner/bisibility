@@ -1,0 +1,200 @@
+---
+title: "Troubleshooting"
+description: "Symptom-first incident runbook for self-hosted bisibility: startup failures, health probes, auth origins, provider and worker errors, schedules, client IP, and email delivery."
+---
+
+[Production checklist](/self-hosting#production-checklist)
+
+This is the canonical symptom-first runbook for self-hosted bisibility. It
+does not duplicate configuration tables, security contracts, backup commands,
+upgrade procedures, or provider setup. Each section links the canonical owner
+for exact repair steps.
+
+## First triage and evidence
+
+Before changing anything, capture the exact state:
+
+1. Identify the bisibility release or image revision and the selected Compose
+   files (for example `compose.yaml` only, or with `compose.worker.yaml` and
+   `compose.temporal.yaml`).
+2. List every service and the one-shot migration result:
+
+   ```bash
+   docker compose --env-file .env -f compose.yaml ps --all
+   ```
+
+   Add `-f compose.worker.yaml -f compose.temporal.yaml` when scheduled checks
+   are enabled.
+3. Read scoped service logs, not broad dumps:
+
+   ```bash
+   docker compose --env-file .env -f compose.yaml logs --no-color db-migrations app
+   ```
+
+4. Never paste secrets, provider credentials, tokens, full environment
+   dumps, or private customer data into shared logs, issues, or chat. Redact
+   values before sharing.
+
+## App or migration startup failures
+
+The `db-migrations` one-shot service is the startup gate. The app container
+waits for it to exit successfully; Compose does not start the app until it
+does.
+
+| Symptom | First action |
+| - | - |
+| `db-migrations` exited nonzero | Read its first migration error from scoped logs |
+| `db-migrations` never runs | Verify PostgreSQL is healthy and reachable |
+| App starts but readiness returns `503` | See [Liveness versus readiness](#liveness-versus-readiness) |
+
+Read the first migration failure, repair its cause, then rerun the same
+selected Compose topology. Completed migration steps are skipped: Prisma
+tracks applied migrations in its ledger and data migrations skip finished
+rows. Do not route traffic or start worker-dependent work until required
+migrations and readiness pass.
+
+For upgrade failure and restore procedures, see
+[Upgrades - failure paths](/self-hosting/upgrades#failure-paths) and
+[Backup and restore](/self-hosting/backup-restore).
+
+## Liveness versus readiness
+
+| Probe | Endpoint | Role |
+| - | - | - |
+| Liveness | `/api/v1/liveness` | Process/restart probe, returns `200` when the process is up |
+| Readiness | `/api/v1/readiness` | Traffic admission, returns `503` when the database, blocking migrations, or scheduler configuration is not ready |
+| Health | `/api/v1/health` | Deeper service/migration view, requires API credentials or `INTERNAL_PROBE_TOKEN` for details |
+
+Readiness fails when the application database is degraded, blocking migrations
+are not ready, or the resolved scheduler configuration is invalid
+(`RANK_CHECK_SCHEDULER_MODE` or `SCHEDULER_DRIVER`). Worker or Temporal service
+unavailability alone does not fail readiness, because those are optional for
+manual checks. Authenticated `/api/v1/health` surfaces the degraded worker and
+Temporal state in its `services` block.
+
+Never put `INTERNAL_PROBE_TOKEN` in a URL, query string, or log. See
+[Health endpoint exposure](/self-hosting/security#health-endpoint-exposure).
+
+## Sign-in redirects or callbacks
+
+OAuth redirects and auth callbacks use `SITE_URL` and `BETTER_AUTH_URL`. Both
+must match the exact public origin, including any non-default port. A
+mismatch breaks redirect URIs and cookie scope.
+
+1. Compare both values with the public origin your browser shows.
+2. Set both to the exact origin, including the port if non-default for the
+   scheme.
+3. Recreate the app container after changing environment values.
+4. For proxy and origin details, see
+   [OAuth and public origins](/self-hosting/security#oauth-and-public-origins)
+   and [Required environment variables](/self-hosting/configuration#required-environment-variables).
+
+## Provider and rank-check failures
+
+Use the in-app check diagnostics and the check-run status to classify the
+failure:
+
+| Outcome | Meaning |
+| - | - |
+| `no_provider_connected` | No SERP provider is connected to the project |
+| `credentials_unavailable` | Provider credentials could not be decrypted |
+| `rate_limited` | Provider returned a throttle response; the keyword stays due |
+| `provider_failed` | Provider fetch failed for a non-throttle reason |
+| `deferred` | Check was skipped before submission (budget, disabled, or credentials) |
+| `budget_exhausted` | Project monthly provider budget was reached before the batch |
+
+The fallback chain tries every configured connection in order and returns
+immediately if one succeeds. Only when no connection succeeds: if every
+attempt was rate-limited, the check is deferred, not failed, so the keyword
+stays due and a later fire retries; otherwise the chain is exhausted.
+
+Do not invent retry intervals, prices, or vendor-specific fixes. See
+[Integrations](/integrations) for exact provider, fallback, and budget
+semantics.
+
+## Worker restart loops
+
+The worker is not the Temporal server. The worker image contains only the
+bisibility Temporal worker; it does not contain or start a Temporal server.
+
+Verify in order:
+
+1. `TEMPORAL_ADDRESS` points at a reachable Temporal server.
+2. `TEMPORAL_TLS` matches the endpoint (`auto` for Cloud with API key, `true`
+   for self-managed TLS, `false` for plaintext on a private network).
+3. `TEMPORAL_NAMESPACE` exists and matches the web app setting.
+4. Task queues (`TEMPORAL_TASK_QUEUE`,
+   `TEMPORAL_ALERT_DELIVERY_TASK_QUEUE`) match the web app.
+5. The worker can reach the database and has the same release/schema as the
+   web app.
+
+Startup retries are bounded: the worker retries transient stages within a
+time budget, then exits nonzero so the platform restart policy exposes the
+loop. Configure an `on-failure` or equivalent restart policy on custom
+platforms. See
+[Worker startup troubleshooting](/self-hosting/temporal#worker-startup-troubleshooting)
+for connection setup and the Temporal owner for the full mode and environment
+matrix.
+
+## Schedules not firing
+
+Manual checks work without Temporal. Scheduled checks need both the worker
+and Temporal:
+
+1. Confirm the worker and Temporal overlays are deployed (or the equivalent
+   non-Compose deployment).
+2. Verify `SCHEDULER_DRIVER=temporal` on both app and worker.
+3. Deploy the same explicit `RANK_CHECK_SCHEDULER_MODE` on app and worker.
+4. Confirm namespace and task queues match between app and worker.
+
+Use authenticated `GET /api/v1/health` for `schedulerConfiguration` status and
+inspect worker logs. See
+[Scheduled rank checks](/self-hosting/temporal#scheduled-rank-checks) for the
+owner of the full mode and environment matrix.
+
+## Wrong client IP or shared rate-limit bucket
+
+When `BISIBILITY_CLIENT_IP_HEADER` is unset, the app trusts no proxy header.
+Anonymous API callers then share one rate-limit bucket and audit entries
+record no source IP. This is the intended default.
+
+To fix, configure the trusted header and XFF depth at your proxy. See
+[Trusted client IP](/self-hosting/security#trusted-client-ip) for the exact
+header selection, XFF depth rule, and spoofing warning. Do not duplicate the
+proxy implementation here.
+
+## Email failures
+
+Distinguish three failure classes:
+
+| Class | Cause | Signal |
+| - | - | - |
+| Unconfigured transport | `EMAIL_PROVIDER` not set | Production refuses email-dependent flows; dev logs the message |
+| Provider rejection | Provider rejected the send | Error carries HTTP status and optional retry-after hint |
+| Daily anomaly brake | Per-recipient UTC-day budget reached | `EmailBudgetExceededError` for the category |
+
+Verify in order:
+
+1. `EMAIL_PROVIDER` is explicitly set (`resend`, `ses`, or `smtp`).
+2. Provider-specific credentials, region, and sender are configured.
+3. The sender address or domain is verified with the provider.
+4. Provider-specific restrictions (sandbox mode, quotas, sending limits) are
+   not blocking delivery.
+
+See [Email delivery](/self-hosting/email) for exact setup. Do not copy vendor
+plans or the full credential policy here.
+
+## Issue report checklist
+
+Include exactly these items when reporting an issue:
+
+- Exact bisibility release or image revision.
+- Deployment path and selected Compose files (or equivalent platform).
+- Failing endpoint or action and timestamp.
+- Status code and redacted error class/message.
+- Relevant redacted service logs.
+- Whether manual or scheduled work is affected.
+- Whether the issue reproduces after rerunning the canonical check.
+
+Do not include secrets, tokens, credentials, a full `.env` file, database
+dumps, or customer content.
