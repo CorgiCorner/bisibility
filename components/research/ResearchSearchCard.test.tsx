@@ -209,4 +209,13 @@ describe("ResearchSearchCard", () => {
     await waitFor(() => expect(onSubmit).toHaveBeenCalledWith(["rank tracker", "seo tool"]));
     expect(onSeedsChange).toHaveBeenLastCalledWith([]);
   });
+
+  it("wraps the compact desktop control row instead of overflowing the content column", () => {
+    render(<ResearchSearchCard {...baseProps} />);
+
+    const seedInput = screen.getByRole("textbox", { name: "Seed keyword" });
+    const controlRow = seedInput.closest('[class*="md:flex-row"]');
+    expect(controlRow).not.toBeNull();
+    expect(controlRow?.className).toMatch(/md:flex-wrap/);
+  });
 });

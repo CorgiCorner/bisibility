@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 export type DomainIconLayerProps = {
   size?: number;
@@ -11,12 +11,32 @@ export type DomainIconLayerProps = {
 const MIN_ICON_DIMENSION = 32;
 
 /**
+ * Reports whether a probe image resolved to a square icon at least as large as
+ * the minimum dimension. Shared by the ref recovery and the load handler.
+ */
+function isProbeValid(img: HTMLImageElement) {
+  return (
+    img.naturalWidth === img.naturalHeight &&
+    img.naturalWidth >= MIN_ICON_DIMENSION &&
+    img.naturalHeight >= MIN_ICON_DIMENSION
+  );
+}
+
+/**
  * Paints a verified domain icon as a background, leaving the caller's text fallback visible
  * when the icon service resolves to a smaller placeholder or an error.
  */
 export function DomainIconLayer({ src, testId }: Readonly<DomainIconLayerProps>) {
   const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
   const verifiedSrc = loadedSrc === src ? src : null;
+  const srcRef = useRef(src);
+  srcRef.current = src;
+
+  const probeRef = useCallback((img: HTMLImageElement | null) => {
+    if (img?.complete && isProbeValid(img)) {
+      setLoadedSrc(srcRef.current ?? null);
+    }
+  }, []);
 
   if (!src) {
     return null;
@@ -36,17 +56,13 @@ export function DomainIconLayer({ src, testId }: Readonly<DomainIconLayerProps>)
           height={1}
           onError={() => setLoadedSrc((current) => (current === src ? null : current))}
           onLoad={(event) => {
-            const { naturalHeight, naturalWidth } = event.currentTarget;
-            if (
-              naturalWidth === naturalHeight &&
-              naturalWidth >= MIN_ICON_DIMENSION &&
-              naturalHeight >= MIN_ICON_DIMENSION
-            ) {
+            if (isProbeValid(event.currentTarget)) {
               setLoadedSrc(src);
               return;
             }
             setLoadedSrc((current) => (current === src ? null : current));
           }}
+          ref={probeRef}
           src={src}
           width={1}
         />
