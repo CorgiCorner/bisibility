@@ -60,7 +60,7 @@ export default function AppErrorBoundary({ error, reset }: Readonly<AppErrorBoun
   return (
     <div className="py-8">
       <div className="mx-auto w-full max-w-[720px] overflow-hidden rounded-2xl border border-border bg-bg">
-        <div className="flex h-[46px] items-center justify-between gap-3 border-b border-border bg-bg-elev px-[18px]">
+        <div className="flex h-[46px] items-center justify-between gap-3 border-b border-border bg-bg-elev px-4.5">
           <div className="flex min-w-0 items-center gap-[9px] font-mono text-[11px] text-fg-muted">
             <span aria-hidden className="h-[7px] w-[7px] flex-none rounded-full bg-red" />
             <span className="truncate text-fg-muted">{viewPath}</span>
@@ -83,11 +83,7 @@ export default function AppErrorBoundary({ error, reset }: Readonly<AppErrorBoun
           >
             View error
           </MonoText>
-          <SectionTitle
-            className="mt-[14px] text-[23px] tracking-[-0.7px]"
-            component="h1"
-            size="lg"
-          >
+          <SectionTitle className="mt-3.5 text-[23px] tracking-[-0.7px]" component="h1" size="lg">
             This view stopped rendering
           </SectionTitle>
           <p className="mt-2.5 max-w-[44ch] text-[14px] leading-[1.6] text-fg-muted">
@@ -115,7 +111,7 @@ export default function AppErrorBoundary({ error, reset }: Readonly<AppErrorBoun
             )}
           </p>
 
-          <div className="mt-[22px] flex flex-wrap items-center justify-center gap-[9px]">
+          <div className="mt-5.5 flex flex-wrap items-center justify-center gap-[9px]">
             <Button
               loading={isRetrying}
               loadingLabel="Retrying"

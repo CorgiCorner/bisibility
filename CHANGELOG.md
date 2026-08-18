@@ -2,6 +2,58 @@
 
 ## Unreleased
 
+## [0.13.5] - 2026-08-18
+
+- Docs now list Domain Overview as available with a DataForSEO connection, and the v0.1.0 to v0.2.0 upgrade procedure moved to the legacy upgrades page.
+
+- The OpenAPI document now declares the `X-Bisibility-Project` header and `project` query parameter on personal-token operations that resolve a project.
+
+- The `OPS_HEARTBEAT_TZ` default is now `Etc/UTC`; set the variable explicitly to keep the ops heartbeat digest on a local timezone.
+
+- Corrected the SDK method reference: the released Python and Go SDKs add keywords with `create_keywords` and `CreateKeywords`.
+
+- `upgrade.sh` is published as a versioned, checksummed release asset covered by the distribution manifest and verified before publication.
+
+- `upgrade.sh` defaults to `compose.yaml`, supports repeatable `--compose-file` overlays, detects services from the Compose config, and stops before restart on migration failure.
+
+- Documented current hosted beta resource limits in one canonical page and kept self-host caps opt-in and unlimited by default.
+
+- Slack tenant delivery is classified as an API-only preview; workspace installation and channel management are not yet exposed in the dashboard.
+
+- Clarified routes to the local demo, deployment options, production
+  self-hosting, and the REST API quickstart and reference (CorgiCorner/bisibility#1011).
+
+- Added dedicated self-hosting guides for security, backup and restore,
+  troubleshooting, email delivery, routine operations, and safe upgrades.
+
+- Fixed monospaced text so its muted option controls foreground color instead of making every value appear muted (CorgiCorner/bisibility#1017).
+
+- Standardized motion timing and added restrained pointer press feedback while preserving instant keyboard and reduced-motion behavior (CorgiCorner/bisibility#1017).
+
+- Kept modal, sheet, and menu content mounted through exit transitions so state and focus do not reset before closing animations finish (CorgiCorner/bisibility#1017).
+
+- Improved reduced-motion support for status pulses, switches, disclosures, OTP errors, and loading skeletons without hiding state changes (CorgiCorner/bisibility#1017).
+
+- Made toasts interruptible and accessible, with paused timers on hover, focus, and hidden tabs, retained exit motion, and visible undo errors (CorgiCorner/bisibility#1017).
+
+- Made copy and confirmation feedback truthful, with success shown only after actions complete and clearer pending, error, and undo states (CorgiCorner/bisibility#1017).
+
+- Improved control accessibility, image fallback labels, keyboard radio behavior, and restrained loading reveals with reduced-motion support (CorgiCorner/bisibility#1017).
+
+- Unified tooltips with consistent delays, keyboard and touch support, reduced-motion behavior, accessible hit targets, and clearer disabled reasons (CorgiCorner/bisibility#1017).
+
+- Replaced exact arbitrary spacing and sizing values with equivalent named utilities across application and marketing surfaces.
+
+- Added named typography and geometry roles for consistent headings, body text, controls, cards, and content widths.
+
+- Increased the database connection wait timeout to reduce transient dashboard failures during brief database contention.
+
+- Fixed transparent project and competitor favicons so fallback initials no longer show through the icon.
+
+- Removed the dashboard refresh cadence chip because it could not represent per-keyword schedules truthfully.
+
+- Stabilized the sign-in code resend timer so its countdown and ready state no longer shift the surrounding row.
+
 ## [0.13.4] - 2026-08-17
 
 - Fixed MDX syntax that prevented the Markets documentation page and two other docs pages from publishing.

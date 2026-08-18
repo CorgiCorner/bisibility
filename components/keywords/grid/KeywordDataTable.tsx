@@ -16,8 +16,7 @@ import type { SerpDepth } from "@/lib/serp/markets";
 import type { GridCellParams, GridDensity, GridRowSelectionModel } from "@mui/x-data-grid";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import type { MouseEvent, ReactNode } from "react";
-import { useCallback, useMemo, useState } from "react";
+import { type MouseEvent, type ReactNode, useCallback, useMemo, useState } from "react";
 import { BulkActionBar } from "./BulkActionBar";
 import { DeferredDataGrid } from "./DeferredDataGrid";
 import { keywordColumns } from "./grid-columns";
@@ -170,6 +169,7 @@ export function KeywordDataTable({
       router.refresh();
     } catch (error) {
       setRowActionError(actionErrorMessage(error, "The keyword could not be deleted."));
+      throw error;
     } finally {
       setDeleting(false);
     }
@@ -292,7 +292,7 @@ export function KeywordDataTable({
         busy={deleting}
         kind="deleteKeyword"
         onClose={() => setDeletingKeyword(null)}
-        onConfirm={() => void handleDeleteKeyword()}
+        onConfirm={handleDeleteKeyword}
         open={Boolean(deletingKeyword)}
       />
     </Card>

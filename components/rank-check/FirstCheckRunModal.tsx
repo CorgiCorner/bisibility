@@ -122,7 +122,7 @@ function FirstCheckRunPlanBody({
   ] as const;
 
   return (
-    <div className="grid gap-[18px]">
+    <div className="grid gap-4.5">
       <p className="m-0 rounded-[10px] border border-border bg-bg px-3.5 py-3 text-[12.5px] leading-5 text-fg-muted">
         This manual run starts checks now, outside the schedule.
       </p>

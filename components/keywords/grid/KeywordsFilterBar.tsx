@@ -56,7 +56,7 @@ export function KeywordsFilterBar({
   const scopeChipOnly = Boolean(scopeChip) && filterChips.length === 0 && !hasFilters;
 
   return (
-    <div className="border-b border-border px-4 py-[14px]">
+    <div className="border-b border-border px-4 py-3.5">
       <div className="grid gap-3">
         {hasContextControls ? (
           <div

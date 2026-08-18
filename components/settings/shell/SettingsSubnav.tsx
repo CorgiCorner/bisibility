@@ -15,7 +15,7 @@ export function SettingsSubnav({ activeSection, projectRef }: Readonly<SettingsS
   return (
     <nav
       aria-label="Settings sections"
-      className="sticky top-6 hidden w-[200px] self-start flex-col gap-0.5 pl-[14px] lg:flex"
+      className="sticky top-6 hidden w-[200px] self-start flex-col gap-0.5 pl-3.5 lg:flex"
       data-settings-subnav=""
     >
       <ul className="m-0 flex list-none flex-col gap-0.5 p-0">

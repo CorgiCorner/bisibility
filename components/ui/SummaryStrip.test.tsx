@@ -20,6 +20,7 @@ describe("SummaryStrip", () => {
     expect(container).toBeEmptyDOMElement();
 
     rerender(<SummaryStrip loading />);
-    expect(container.firstChild).toHaveClass("h-[34px]", "w-full");
+    const skeleton = container.firstChild as HTMLElement;
+    expect(skeleton).toHaveClass("h-8.5", "w-full", "animate-pulse", "motion-reduce:animate-none");
   });
 });

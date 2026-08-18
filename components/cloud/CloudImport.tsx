@@ -269,7 +269,7 @@ export function CloudImport({
         projectRef={projectId}
         sourceLabel={copy.sourceLabel}
       />
-      <div className="mt-[18px] flex items-start gap-[9px] text-[12px] leading-[1.5] text-fg-muted">
+      <div className="mt-4.5 flex items-start gap-[9px] text-[12px] leading-[1.5] text-fg-muted">
         <LockSimple aria-hidden className="mt-px flex-none text-green-text" size={14} />
         <span>{copy.tokenSecurityNote}</span>
       </div>

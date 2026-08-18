@@ -103,11 +103,11 @@ export function SaveViewModal({
       }
     >
       <form
-        className="grid gap-[18px]"
+        className="grid gap-4.5"
         id="save-keyword-view"
         onSubmit={handleSubmit((values) => void submit(values))}
       >
-        <div className="flex items-center gap-2 rounded-[11px] border border-dashed border-border-strong bg-transparent px-[14px] py-3">
+        <div className="flex items-center gap-2 rounded-[11px] border border-dashed border-border-strong bg-transparent px-3.5 py-3">
           <span className="font-mono text-[9.5px] uppercase tracking-[0.5px] text-fg-muted">
             Preview
           </span>

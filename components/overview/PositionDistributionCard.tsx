@@ -69,7 +69,7 @@ function BarInteractionLayer({
 }>) {
   return (
     <div
-      className="absolute bottom-7 left-2 right-2 top-[22px] grid"
+      className="absolute bottom-7 left-2 right-2 top-5.5 grid"
       style={{ gridTemplateColumns: `repeat(${buckets.length}, minmax(0, 1fr))` }}
     >
       {buckets.map((bucket, index) => {
@@ -114,7 +114,7 @@ export function PositionDistributionCard({
 
   return (
     <Card
-      className="flex h-full min-w-0 flex-col px-5 py-[18px]"
+      className="flex h-full min-w-0 flex-col px-5 py-4.5"
       size="md"
       sx={{ containerType: "inline-size" }}
     >

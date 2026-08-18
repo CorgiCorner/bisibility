@@ -115,7 +115,7 @@ export function DeployHookCreateModal({
         <DeployHookRevealContent endpointUrl={endpointUrl} issuedHook={issuedHook} />
       ) : (
         <form
-          className="space-y-[18px]"
+          className="space-y-4.5"
           id="create-deploy-hook-form"
           onSubmit={form.handleSubmit(onSubmit)}
         >

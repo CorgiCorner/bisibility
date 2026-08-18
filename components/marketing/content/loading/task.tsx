@@ -17,13 +17,13 @@ export function LoginLoadingPage() {
         <BrandLink />
         <div className="max-w-[420px]">
           <SkeletonBlock className="h-[12px] w-[178px]" tone="accent" />
-          <SkeletonBlock className="mt-[14px] h-[38px] w-[86%] rounded-[9px]" />
+          <SkeletonBlock className="mt-3.5 h-[38px] w-[86%] rounded-[9px]" />
           <SkeletonBlock className="mt-3 h-[38px] w-[64%] rounded-[9px]" />
-          <div className="mt-[14px]">
+          <div className="mt-3.5">
             <TextStack widths={["100%", "88%", "60%"]} />
           </div>
           <div className="mt-[26px] overflow-hidden rounded-[13px] border border-border">
-            <div className="flex items-center gap-[7px] border-code-faint border-b bg-code-bg px-[14px] py-[9px]">
+            <div className="flex items-center gap-[7px] border-code-faint border-b bg-code-bg px-3.5 py-[9px]">
               <span className="h-2.5 w-2.5 rounded-full bg-red" />
               <span className="h-2.5 w-2.5 rounded-full bg-yellow" />
               <span className="h-2.5 w-2.5 rounded-full bg-green" />
@@ -36,7 +36,7 @@ export function LoginLoadingPage() {
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-[18px]">
+        <div className="flex items-center gap-4.5">
           {["68px", "76px", "96px"].map((width) => (
             <SkeletonBlock className="h-[13px]" key={width} style={{ width }} />
           ))}

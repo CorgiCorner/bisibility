@@ -2,6 +2,7 @@ import {
   createCipheriv,
   createDecipheriv,
   createHash,
+  createHmac,
   randomBytes,
   timingSafeEqual,
 } from "node:crypto";
@@ -107,6 +108,16 @@ function getSecretKeyring() {
     primary,
     byId: new Map([primary, ...retired].map((key) => [key.id, key.value])),
   };
+}
+
+export function getPurposeSecretKeys(purpose: string) {
+  if (!purpose.trim()) {
+    throw new Error("Secret-key purpose must not be empty.");
+  }
+
+  const { primary, byId } = getSecretKeyring();
+  const ordered = [primary.value, ...[...byId.values()].filter((value) => value !== primary.value)];
+  return ordered.map((value) => createHmac("sha256", value).update(purpose).digest());
 }
 
 export function encryptSecret(raw: string) {

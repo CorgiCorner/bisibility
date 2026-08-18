@@ -52,7 +52,7 @@ export function DevelopersSettingsContent({
   sendTestHook,
 }: Readonly<DevelopersSettingsContentProps>) {
   return (
-    <div className="flex max-w-[640px] flex-col gap-[14px]" data-developers-settings="">
+    <div className="flex max-w-[640px] flex-col gap-3.5" data-developers-settings="">
       <ApiKeysCard
         apiKeys={apiKeys}
         docsHref={docsHref}

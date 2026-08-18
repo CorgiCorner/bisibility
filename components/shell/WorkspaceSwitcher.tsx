@@ -92,7 +92,7 @@ export function WorkspaceSwitcher({
   return (
     // The switcher now sits at the foot of the rail, so its 18px of breathing room moved from
     // below it to above it.
-    <div className="relative mt-[18px] flex-none" ref={railRef}>
+    <div className="relative mt-4.5 flex-none" ref={railRef}>
       <WorkspaceSwitcherTrigger
         collapsed={collapsed}
         domain={active?.domain ?? ""}

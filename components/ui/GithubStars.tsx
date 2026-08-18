@@ -80,15 +80,14 @@ export function GithubStars({
         <>
           <span aria-hidden>{formattedCount}</span>
           {/* Phosphor draws each weight as its own path, so the two cannot be tweened. Both sit in
-              one grid cell and cross-fade instead, which also lets the filled one arrive slightly
-              larger without nudging the row. */}
+              one grid cell and cross-fade for fine pointers without nudging the row. */}
           <span aria-hidden className="grid text-yellow-text">
             <Star
-              className="col-start-1 row-start-1 transition-opacity duration-200 group-hover:opacity-0 group-focus-visible:opacity-0"
+              className="col-start-1 row-start-1 transition-opacity duration-[var(--motion-press)] pointer-fine:group-hover:opacity-0"
               size={glyphSize[size] - 3}
             />
             <Star
-              className="col-start-1 row-start-1 scale-90 opacity-0 transition-[opacity,transform] duration-200 group-hover:scale-110 group-hover:opacity-100 group-focus-visible:scale-110 group-focus-visible:opacity-100"
+              className="col-start-1 row-start-1 opacity-0 transition-opacity duration-[var(--motion-press)] pointer-fine:group-hover:opacity-100"
               size={glyphSize[size] - 3}
               weight="fill"
             />

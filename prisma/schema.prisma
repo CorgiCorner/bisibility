@@ -163,43 +163,44 @@ enum SignalSeverity {
 }
 
 model User {
-  id                       String                   @id @default(cuid())
-  publicId                 String                   @unique
-  name                     String
-  email                    String                   @unique
-  emailVerified            Boolean                  @default(false)
-  twoFactorEnabled         Boolean                  @default(false)
-  image                    String?
-  role                     Role                     @default(member)
-  isInstanceAdmin          Boolean                  @default(false)
-  deactivatedAt            DateTime?
-  sessions                 Session[]
-  accounts                 Account[]
-  twoFactors               TwoFactor[]
-  legacyOauthApplications  LegacyOauthApplication[]
-  legacyOauthAccessTokens  LegacyOauthAccessToken[]
-  legacyOauthConsents      LegacyOauthConsent[]
-  oauthClients             OauthClient[]
-  oauthRefreshTokens       OauthRefreshToken[]
-  oauthAccessTokens        OauthAccessToken[]
-  oauthConsents            OauthConsent[]
-  projects                 Project[]                @relation("ProjectOwner")
-  memberships              Membership[]
-  auditLogs                AuditLog[]               @relation("AuditActor")
-  notifications            Notification[]
-  notificationPreferences  NotificationPreference[]
-  sentInvites              Invite[]
-  createdAlertRules        AlertRule[]
-  alertRuleRecipients      AlertRuleRecipient[]
-  savedViews               SavedView[]
-  slackConnections         SlackConnection[]
-  createdMigrationTokens   MigrationToken[]
-  personalAccessTokens     PersonalAccessToken[]
-  writeModeChangedProjects Project[]                @relation("ProjectWriteModeChangedBy")
-  signalsCreated           Signal[]                 @relation("SignalCreator")
-  createdIngestHooks       IngestHook[]
-  createdAt                DateTime                 @default(now())
-  updatedAt                DateTime                 @updatedAt
+  id                           String                   @id @default(cuid())
+  publicId                     String                   @unique
+  name                         String
+  email                        String                   @unique
+  emailVerified                Boolean                  @default(false)
+  twoFactorEnabled             Boolean                  @default(false)
+  image                        String?
+  role                         Role                     @default(member)
+  isInstanceAdmin              Boolean                  @default(false)
+  deactivatedAt                DateTime?
+  marketingEmailUnsubscribedAt DateTime?
+  sessions                     Session[]
+  accounts                     Account[]
+  twoFactors                   TwoFactor[]
+  legacyOauthApplications      LegacyOauthApplication[]
+  legacyOauthAccessTokens      LegacyOauthAccessToken[]
+  legacyOauthConsents          LegacyOauthConsent[]
+  oauthClients                 OauthClient[]
+  oauthRefreshTokens           OauthRefreshToken[]
+  oauthAccessTokens            OauthAccessToken[]
+  oauthConsents                OauthConsent[]
+  projects                     Project[]                @relation("ProjectOwner")
+  memberships                  Membership[]
+  auditLogs                    AuditLog[]               @relation("AuditActor")
+  notifications                Notification[]
+  notificationPreferences      NotificationPreference[]
+  sentInvites                  Invite[]
+  createdAlertRules            AlertRule[]
+  alertRuleRecipients          AlertRuleRecipient[]
+  savedViews                   SavedView[]
+  slackConnections             SlackConnection[]
+  createdMigrationTokens       MigrationToken[]
+  personalAccessTokens         PersonalAccessToken[]
+  writeModeChangedProjects     Project[]                @relation("ProjectWriteModeChangedBy")
+  signalsCreated               Signal[]                 @relation("SignalCreator")
+  createdIngestHooks           IngestHook[]
+  createdAt                    DateTime                 @default(now())
+  updatedAt                    DateTime                 @updatedAt
 
   @@map("users")
 }

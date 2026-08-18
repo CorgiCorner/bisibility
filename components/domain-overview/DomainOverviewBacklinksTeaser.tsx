@@ -9,7 +9,7 @@ export function DomainOverviewBacklinksTeaser({
 }: Readonly<{ projectRef: string; target: string }>) {
   const params = new URLSearchParams({ target });
   return (
-    <section className="flex flex-col items-start gap-3 rounded-[12px] border border-border bg-bg-elev px-[18px] py-4 sm:flex-row sm:items-center">
+    <section className="flex flex-col items-start gap-3 rounded-[12px] border border-border bg-bg-elev px-4.5 py-4 sm:flex-row sm:items-center">
       <span className="grid h-[38px] w-[38px] shrink-0 place-items-center rounded-[10px] bg-bg-sunken text-fg-muted">
         <LinkSimple aria-hidden size={18} />
       </span>

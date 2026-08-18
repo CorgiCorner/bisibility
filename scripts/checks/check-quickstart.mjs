@@ -70,6 +70,43 @@ try {
   assert(result.stdout.includes("compose.temporal.yaml"), "Temporal overlay is missing from output");
   assert(result.stdout.includes("--profile temporal-ui"), "Temporal UI profile is missing from output");
 
+  const quickstart = readFileSync(path.join(root, "docs/quickstart.mdx"), "utf8");
+
+  const coreUp = "docker compose -f compose.yaml up -d";
+  const scheduledUp =
+    "docker compose -f compose.yaml -f compose.worker.yaml -f compose.temporal.yaml --profile temporal-ui up -d";
+  assert(
+    result.stdout.includes(coreUp),
+    "bootstrap output does not print the core startup command",
+  );
+  assert(
+    result.stdout.includes(scheduledUp),
+    "bootstrap output does not print the scheduled startup command",
+  );
+  assert(
+    quickstart.includes(coreUp),
+    "docs/quickstart.mdx core startup command disagrees with bootstrap-local.sh",
+  );
+  assert(
+    quickstart.includes(scheduledUp),
+    "docs/quickstart.mdx scheduled startup command disagrees with bootstrap-local.sh",
+  );
+
+  assert(
+    quickstart.includes("demo@acme.dev"),
+    "docs/quickstart.mdx is missing the demo sign-in email",
+  );
+  assert(quickstart.includes("000000"), "docs/quickstart.mdx is missing the demo OTP");
+
+  assert(
+    /#{1,6}\s*Demo login/.test(quickstart),
+    "docs/quickstart.mdx is missing the 'Demo login' heading anchor",
+  );
+  assert(
+    /#{1,6}\s*5\.\s*Run the first check/.test(quickstart),
+    "docs/quickstart.mdx is missing the '5. Run the first check' heading anchor",
+  );
+
   console.log("Public quickstart generates every required value and validates Docker Compose.");
 } finally {
   rmSync(tempRoot, { recursive: true, force: true });

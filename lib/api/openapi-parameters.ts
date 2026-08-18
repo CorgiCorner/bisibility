@@ -162,6 +162,76 @@ export const signalListParameters = [
   }),
 ];
 
+export const projectSelectionParameterComponents = {
+  ProjectHeader: {
+    description:
+      "Project public ID (prj_...) targeted by this personal-access-token request. Optional. Selection precedence is: {project_id} path parameter, X-Bisibility-Project header, project query parameter, then inference when the PAT owner belongs to exactly one project. Project API keys and paths that already carry a project ID ignore it.",
+    in: "header",
+    name: "X-Bisibility-Project",
+    required: false,
+    schema: { type: "string" },
+  },
+  ProjectQuery: {
+    description:
+      "Query-parameter equivalent of the X-Bisibility-Project header for personal-access-token project selection. Optional. Selection precedence is: {project_id} path parameter, X-Bisibility-Project header, project query parameter, then inference when the PAT owner belongs to exactly one project.",
+    in: "query",
+    name: "project",
+    required: false,
+    schema: { type: "string" },
+  },
+};
+
+const projectSelectionParameterRefs = [
+  { $ref: "#/components/parameters/ProjectHeader" },
+  { $ref: "#/components/parameters/ProjectQuery" },
+];
+
+// Account routes and the project-less location search never resolve a project;
+// paths carrying a project ID resolve it from the path instead of the header.
+const PROJECT_SELECTION_EXEMPT = /^\/(me(\/|$)|projects$|locations\/search$)|\{project_?[iI]d\}/;
+
+type ProjectSelectableOperation = { parameters?: object[]; security?: unknown };
+
+function acceptsPersonalAccessToken(operation: ProjectSelectableOperation) {
+  return (
+    Array.isArray(operation.security) &&
+    operation.security.some(
+      (requirement) =>
+        requirement && typeof requirement === "object" && "PersonalAccessToken" in requirement,
+    )
+  );
+}
+
+/**
+ * Declares the runtime project-selection contract of lib/api/personal-scope.ts
+ * on every personal-access-token operation that resolves a project at request
+ * time, so generated clients can target a project on non-project paths.
+ */
+export function withProjectSelectionParameters<T extends Record<string, Record<string, object>>>(
+  paths: T,
+): T {
+  return Object.fromEntries(
+    Object.entries(paths).map(([path, methods]) => {
+      if (PROJECT_SELECTION_EXEMPT.test(path)) return [path, methods];
+      return [
+        path,
+        Object.fromEntries(
+          Object.entries(methods).map(([method, operation]) => {
+            if (!acceptsPersonalAccessToken(operation as ProjectSelectableOperation)) {
+              return [method, operation];
+            }
+            const parameters = (operation as ProjectSelectableOperation).parameters ?? [];
+            return [
+              method,
+              { ...operation, parameters: [...parameters, ...projectSelectionParameterRefs] },
+            ];
+          }),
+        ),
+      ];
+    }),
+  ) as T;
+}
+
 export const costEstimateParameters = [
   queryParameter(
     "keywords",

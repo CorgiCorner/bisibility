@@ -5,34 +5,10 @@ description: "Protect self-hosted data, upgrade safely, verify health, and plan 
 
 ## What to back up
 
-PostgreSQL is the source of truth for projects, keywords, schedules, rank checks,
-encrypted provider connections, alerts, notifications, and audit history. Keep:
-
-- regular PostgreSQL backups with tested restore procedures;
-- the exact `BISIBILITY_SECRETS_KEY` used to encrypt provider credentials;
-- `BETTER_AUTH_SECRET` and the deployment's secret/environment inventory;
-- your deployment manifests and the application version or image digest.
-
-Valkey contains rate-limit, idempotency, and realtime coordination data
-and normally does not need durable backup. If you self-host Temporal and need to
-preserve in-flight workflow history, back up its persistence database separately.
-Keyword schedule intent remains in the application database and the worker can
-reconcile Temporal schedules after recovery.
-
-Example PostgreSQL backup:
-
-```bash
-docker compose exec -T postgres pg_dump \
-  -U bisibility -d bisibility --format=custom --no-owner \
-  > bisibility.dump
-docker compose exec -T postgres pg_restore \
-  --clean --if-exists --no-owner \
-  -U bisibility -d bisibility \
-  < bisibility.dump
-```
-
-Test restores in an isolated database. `--clean` is destructive and must never
-target the active production database.
+The canonical backup and restore procedure - application PostgreSQL,
+`BETTER_AUTH_SECRET`, `BISIBILITY_SECRETS_KEY`, Valkey, Temporal persistence,
+restore commands, and restore rehearsal - lives on the Self-host page:
+[Backup and restore](/self-hosting/backup-restore).
 
 ## Upgrade Docker Compose
 
@@ -42,75 +18,29 @@ v0.4.1 and earlier databases do not have a supported upgrade path to v0.5.0,
 and the v0.5.0 `upgrade.sh` refuses before changing Compose or the database.
 </Warning>
 
-1. Read the changelog and note schema or environment changes.
-2. Stop writes or schedule a maintenance window.
-3. Back up PostgreSQL and secrets.
-4. Fetch the target tag, review `.env.example`, and update `.env` deliberately.
-5. Run the shipped upgrade path with the exact target version:
-
-   ```bash
-   ./upgrade.sh --version vX.Y.Z
-   ```
-
-The script requires Docker with Buildx and Node.js. It reads
-`distribution-manifest.json`, refuses a version or image-metadata mismatch,
-pulls the verified web and worker pair, stops the old app and worker, runs the
-one-shot `db-migrations` service without a source-build fallback, and then starts
-the matched services. `db-migrations` executes `prisma migrate deploy` for the
-full tree and then all blocking data migrations before the web app. A failed
-verification or migration leaves the upgrade incomplete instead of continuing
-with a mismatched worker. Never enable demo OTP or demo seeding on a real
-deployment.
-
-The migration ledger distinguishes completed data work from final completion.
-If optional finalization fails, the command exits nonzero and records the
-finalization error while leaving the migration unfinished. Rerun
-`npm run db:migrate`; it retries finalization without repeating completed data
-work. Existing rows already marked `finishedAt` remain final after upgrading.
-
-After an upgrade that adds competitor organic snapshots, optionally compact the
-latest completed SERP for each keyword into the new query-friendly column:
-
-```bash
-npm run db:backfill:competitor-organics
-```
-
-Run the command with `DATABASE_URL` available. It is batched and idempotent, and
-leaves checks without a usable historical organic payload unchanged. The app
-continues to read those legacy payloads directly, so the backfill does not need
-to block the web deployment.
+The canonical upgrade procedure - prerequisites, backup as rollback, release
+asset verification, migration, restart, readiness validation, failure paths,
+and restore - lives on the Self-host page:
+[Self-hosted upgrades](/self-hosting/upgrades). Never enable demo OTP or demo
+seeding on a real deployment.
 
 ## Keep web and worker on the same version
 
 The web app and Temporal worker share one Prisma schema. For a split deployment,
-back up PostgreSQL, deploy the web app so `npm run db:migrate` applies the full
-Prisma tree and all active deploy-blocking data migrations, then immediately deploy the
-worker from the same release tag. Version skew
-commonly appears as "The column ... does not exist" errors in worker logs or as
-failing scheduled checks while the web app works.
+back up PostgreSQL, deploy the web app so migrations apply, then immediately
+deploy the worker from the same release tag. Version skew commonly appears as
+"The column ... does not exist" errors in worker logs or as failing scheduled
+checks while the web app works. For startup and version-skew diagnosis, see
+the canonical [Troubleshooting](/self-hosting/troubleshooting) runbook. Follow
+the canonical [upgrade procedure](/self-hosting/upgrades) for both services.
 
 ## Verify and roll back
 
-Check authenticated `GET /api/v1/health`, sign-in, one project read, and worker logs. Use an API
-credential or the deployment's `INTERNAL_PROBE_TOKEN` Bearer header, then confirm
-that `services.migrations` is `ready`; the endpoint returns 503 when a bundled
-Prisma migration has not been applied, an active data migration is incomplete,
-has a checksum mismatch, or cannot be read, or the public ID database contract
-is not ready. For detailed Prisma status in Docker Compose, run:
-
-```bash
-docker compose exec app npx prisma migrate status
-```
-Confirm the Temporal worker reports ready and its maintenance schedules are
-created or already exist.
-For split deployments, verify that both processes use the same release by
-following [Keep web and worker on the same version](#keep-web-and-worker-on-the-same-version).
-
-Rolling the application image back does not reverse Prisma migrations. If a
-release contains an incompatible schema migration, restore the pre-upgrade
-database backup together with the matching application version. Practice that
-procedure before relying on it during an incident.
-
-For managed platforms, use the platform database backup and rollback features,
-but keep independent exports for disaster recovery. Deployment topology is in
-[Self-hosting](/self-hosting).
+Readiness checks and rollback procedure live on the canonical Self-host pages.
+After an upgrade, validate readiness using the checks on
+[Self-hosted upgrades](/self-hosting/upgrades). Rolling the application image
+back does not reverse Prisma migrations; see
+[Backup and restore](/self-hosting/backup-restore) for the restore-and-migrate
+rollback path. For managed platforms, use the platform database backup and
+rollback features, but keep independent exports for disaster recovery.
+Deployment topology is in [Self-hosting](/self-hosting).

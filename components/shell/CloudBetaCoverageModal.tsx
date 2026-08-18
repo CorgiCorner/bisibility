@@ -105,7 +105,7 @@ export function CloudBetaCoverageModal({
       }
       width={600}
     >
-      <div className="grid gap-[18px]">
+      <div className="grid gap-4.5">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <PolicyColumn items={covered} title="Covered" tone="covered" />
           <PolicyColumn items={notYet} title="Not yet" tone="not-yet" />

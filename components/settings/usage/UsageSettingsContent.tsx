@@ -26,7 +26,7 @@ export function UsageSettingsContent({
   usage,
 }: Readonly<UsageSettingsContentProps>) {
   return (
-    <div className="flex w-full max-w-[760px] flex-col gap-[14px]" data-usage-settings="">
+    <div className="flex w-full max-w-[760px] flex-col gap-3.5" data-usage-settings="">
       <PlanCard
         canSubmitPricingFeedback={canSubmitPricingFeedback}
         deployment={deployment}

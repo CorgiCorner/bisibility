@@ -14,6 +14,7 @@ export type SendEmailInput = {
   category: EmailCategory;
   from?: string;
   html: string;
+  replyTo?: string;
   sendCounterReserved?: boolean;
   subject: string;
   text: string;
@@ -30,6 +31,7 @@ export async function sendEmail({
   to,
   subject,
   html,
+  replyTo,
   text,
   sendCounterReserved = false,
 }: SendEmailInput) {
@@ -46,6 +48,7 @@ export async function sendEmail({
   const message = {
     from: from ?? requireEmailFrom(),
     html,
+    replyTo,
     sendCounterReserved,
     subject,
     text,

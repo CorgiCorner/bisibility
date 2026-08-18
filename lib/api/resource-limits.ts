@@ -1,7 +1,7 @@
 import "server-only";
 
+import { positiveIntFromEnv } from "@/lib/env/positive-int";
 import type { Prisma } from "@/lib/generated/prisma/client";
-import { envInt } from "./ratelimit";
 
 export class KeywordLimitExceededError extends Error {
   constructor(readonly limit: number) {
@@ -34,7 +34,7 @@ export async function lockKeywordCapacity(
   client: Pick<ResourceCountClient, "$executeRaw">,
   projectId: string,
 ) {
-  const limit = envInt("BISIBILITY_MAX_KEYWORDS_PER_PROJECT", 0);
+  const limit = positiveIntFromEnv(process.env.BISIBILITY_MAX_KEYWORDS_PER_PROJECT, 0);
   await lockCapacity(client, "keyword", projectId);
   return limit;
 }
@@ -56,7 +56,7 @@ export async function assertProjectCapacity(
   client: Pick<ResourceCountClient, "$executeRaw" | "project">,
   ownerId: string,
 ) {
-  const limit = envInt("BISIBILITY_MAX_PROJECTS_PER_USER", 0);
+  const limit = positiveIntFromEnv(process.env.BISIBILITY_MAX_PROJECTS_PER_USER, 0);
   if (limit <= 0) return;
 
   await lockCapacity(client, "project", ownerId);

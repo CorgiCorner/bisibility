@@ -66,6 +66,17 @@ describe("smtp email provider", () => {
     expect(closeMock).toHaveBeenCalledOnce();
   });
 
+  it("sets Reply-To when the message requests it", async () => {
+    sendMailMock.mockResolvedValue({});
+    vi.stubEnv("SMTP_URL", "smtp://mail.example.com:1025");
+
+    await smtpEmailProvider.send({ ...message, replyTo: "hello@example.com" });
+
+    expect(sendMailMock).toHaveBeenCalledWith(
+      expect.objectContaining({ replyTo: "hello@example.com" }),
+    );
+  });
+
   it("maps SMTP response codes without leaking credentials", async () => {
     sendMailMock.mockRejectedValue({ responseCode: 550 });
     vi.stubEnv("SMTP_URL", "smtp://mail-user:secret-pass@mail.example.com:1025");

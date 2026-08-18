@@ -1,0 +1,110 @@
+:root,
+[data-theme="light"] {
+  --bg: #f2eee4;
+  --bg-elev: #fbf9f4;
+  --bg-sidebar: #ffffff;
+  --bg-sunken: #ece7db;
+  --bg-inset: #e2ddd0;
+  --table-header-bg: #ece7db;
+  --fg: #1a1813;
+  --fg-muted: #615b4d;
+  --border: #bfb7a4;
+  --border-soft: #f0eee6;
+  --border-strong: #867b68;
+  --nav-active: #edeae1;
+  --meter-track: #e2ddd0;
+  --accent: #d97757;
+  --accent-hover: #c8643f;
+  --accent-text: #9f4528;
+  --accent-soft: #f7e8e0;
+  /* Primary button pair. --accent is too light to carry a light label, so the solid
+     surface holds the brand hue/saturation at a darker lightness. Kept in sync with
+     lib/theme/tokens.ts and asserted in globals.test.ts. */
+  --accent-solid: #b74c29;
+  --accent-solid-hover: #af4927;
+  --accent-on-solid: #fff3ee;
+  --blue: #4f86e8;
+  --blue-text: #315eac;
+  --purple: #8e6fe0;
+  --green: #3c9a63;
+  --green-text: #1f6c40;
+  --red: #c8463a;
+  --yellow: #e0a93b;
+  --rank-bucket-green: #3c9a63;
+  --rank-bucket-green-muted: #7fb36b;
+  --rank-bucket-yellow: #e0a93b;
+  --rank-bucket-orange: #e08a4e;
+  --rank-bucket-red: #c8463a;
+  --yellow-text: #77580f;
+  --red-text: #b03a2e;
+  /* Embedded SVGs cannot inherit CSS custom properties, so this is kept in sync
+     with --fg-muted and asserted in globals.test.ts. */
+  --select-arrow-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 256 256' fill='%23615B4D'%3E%3Cpath d='M213.66 101.66l-80 80a8 8 0 0 1-11.32 0l-80-80A8 8 8 0 0 1 53.66 90.34L128 164.69l74.34-74.35a8 8 0 0 1 11.32 11.32Z'/%3E%3C/svg%3E");
+  --code-bg: #1c1a16;
+  --code-fg: #edeae0;
+  --code-faint: #8c887c;
+  /* Divider tone INSIDE the dark code surface: slightly lighter than --code-bg in both
+     themes, since the block stays dark on the light theme too. */
+  --code-border: #33302a;
+  /* Motion tokens - theme-independent easing and duration scale. Kept in sync
+     with lib/ui/motion.ts and asserted in lib/ui/motion.test.ts. The toast pair
+     is the settled lifecycle timing, included now so later overlay work does
+     not introduce a second timing source. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --motion-press: 140ms;
+  --motion-tooltip: 150ms;
+  --motion-menu-enter: 180ms;
+  --motion-menu-exit: 140ms;
+  --motion-modal-enter: 240ms;
+  --motion-modal-exit: 200ms;
+  --motion-drawer-enter: 340ms;
+  --motion-drawer-exit: 280ms;
+  --motion-toast-enter: 200ms;
+  --motion-toast-exit: 150ms;
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --bg: #0f0c07;
+  --bg-elev: #1b1810;
+  --bg-sidebar: #070603;
+  --bg-sunken: #15110a;
+  --bg-inset: #080704;
+  --table-header-bg: #15110a;
+  --fg: #ece7db;
+  --fg-muted: #9f998a;
+  --border: #463d2e;
+  --border-soft: #221d15;
+  --border-strong: #716653;
+  --nav-active: #231f17;
+  --meter-track: #443c29;
+  --accent: #e08a6a;
+  --accent-hover: #ec9a7c;
+  --accent-text: #f0a18a;
+  --accent-soft: #2a2018;
+  --accent-solid: #ba4f27;
+  --accent-solid-hover: #b14b25;
+  --accent-on-solid: #fff3ee;
+  --blue: #6a9bf0;
+  --blue-text: #6a9bf0;
+  --purple: #9e82e6;
+  --green: #57a77e;
+  --green-text: #79c998;
+  --red: #e0705c;
+  --yellow: #e6b452;
+  --rank-bucket-green: #57a77e;
+  --rank-bucket-green-muted: #8cc07a;
+  --rank-bucket-yellow: #e6b452;
+  --rank-bucket-orange: #ec9a63;
+  --rank-bucket-red: #e0705c;
+  --yellow-text: #eec069;
+  --red-text: #e0705c;
+  --select-arrow-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 256 256' fill='%239F998A'%3E%3Cpath d='M213.66 101.66l-80 80a8 8 0 0 1-11.32 0l-80-80A8 8 0 0 1 53.66 90.34L128 164.69l74.34-74.35a8 8 0 0 1 11.32 11.32Z'/%3E%3C/svg%3E");
+  --code-bg: #0e0d0a;
+  --code-fg: #ece7db;
+  --code-faint: #7e7a6e;
+  --code-border: #26231e;
+  color-scheme: dark;
+}

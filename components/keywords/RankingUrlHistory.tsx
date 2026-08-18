@@ -1,9 +1,8 @@
-import { Card, MonoText, SectionTitle } from "@/components/ui";
+import { Card, InfoTooltip, MonoText, SectionTitle, Tooltip } from "@/components/ui";
 import type { KeywordRow, RankingUrlEvent } from "@/lib/queries/keywords";
 import { rankObservationState } from "@/lib/serp/rank-depth";
 import {
   ArrowUpRightIcon as ArrowUpRight,
-  InfoIcon as Info,
   MinusIcon as Minus,
   WarningIcon as Warning,
 } from "@phosphor-icons/react/ssr";
@@ -76,14 +75,7 @@ export function RankingUrlHistory({ keyword }: Readonly<{ keyword: KeywordRow }>
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <SectionTitle>Ranking URL history</SectionTitle>
-            <button
-              aria-label={HISTORY_EXPLANATION}
-              className="bv-tip after:max-w-[280px] inline-grid h-4 w-4 cursor-help place-items-center border-0 bg-transparent p-0 text-fg-muted"
-              data-tip={HISTORY_EXPLANATION}
-              type="button"
-            >
-              <Info size={14} />
-            </button>
+            <InfoTooltip text={HISTORY_EXPLANATION} />
             {changeState === "diff" ? (
               <span className="inline-flex h-6 items-center gap-1 rounded-full border border-yellow px-2 font-mono text-[10.5px] font-semibold text-yellow-text">
                 <Warning size={11} weight="fill" />
@@ -106,7 +98,7 @@ export function RankingUrlHistory({ keyword }: Readonly<{ keyword: KeywordRow }>
         {timeline.length ? (
           timeline.map((event, index) => (
             <div
-              className="grid grid-cols-[18px_minmax(0,1fr)_auto] items-center gap-x-[14px] gap-y-1 border-b border-border-soft px-5 py-[13px] last:border-b-0 sm:grid-cols-[18px_108px_minmax(0,1fr)_auto]"
+              className="grid grid-cols-[18px_minmax(0,1fr)_auto] items-center gap-x-3.5 gap-y-1 border-b border-border-soft px-5 py-[13px] last:border-b-0 sm:grid-cols-[18px_108px_minmax(0,1fr)_auto]"
               data-testid="ranking-url-period"
               key={`${event.startAt}-${event.endAt}-${event.url}-${index}`}
             >
@@ -127,21 +119,22 @@ export function RankingUrlHistory({ keyword }: Readonly<{ keyword: KeywordRow }>
               </MonoText>
               <div className="col-span-2 col-start-2 row-start-2 min-w-0 sm:col-span-1 sm:col-start-3 sm:row-start-1">
                 <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5">
-                  <a
-                    className="min-w-0 flex-1 truncate font-mono text-[12.5px] text-fg hover:text-accent-text hover:underline"
-                    href={event.url}
-                    rel="noreferrer noopener"
-                    target="_blank"
-                    title="Open ranking URL in a new tab"
-                  >
-                    <span>{pathFromUrl(event.url)}</span>
-                    <ArrowUpRight
-                      aria-hidden
-                      className="ml-1 inline-block"
-                      size={12}
-                      weight="bold"
-                    />
-                  </a>
+                  <Tooltip content="Open ranking URL in a new tab" semantics="description">
+                    <a
+                      className="min-w-0 flex-1 truncate font-mono text-[12.5px] text-fg hover:text-accent-text hover:underline"
+                      href={event.url}
+                      rel="noreferrer noopener"
+                      target="_blank"
+                    >
+                      <span>{pathFromUrl(event.url)}</span>
+                      <ArrowUpRight
+                        aria-hidden
+                        className="ml-1 inline-block"
+                        size={12}
+                        weight="bold"
+                      />
+                    </a>
+                  </Tooltip>
                   {periodNote(event, index, timeline.length) ? (
                     <span className="max-w-[200px] truncate text-[11.5px] text-fg-muted">
                       {periodNote(event, index, timeline.length)}

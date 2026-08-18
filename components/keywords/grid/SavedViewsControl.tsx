@@ -1,7 +1,7 @@
 "use client";
 
 import { actionErrorMessage } from "@/components/keywords/action-utils";
-import { Button, useToast } from "@/components/ui";
+import { Button, Tooltip, useToast } from "@/components/ui";
 import {
   type CreateSavedViewInput,
   type DeleteSavedViewInput,
@@ -13,7 +13,6 @@ import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
-import Tooltip from "@mui/material/Tooltip";
 import {
   BookmarkSimpleIcon as BookmarkSimple,
   CaretDownIcon as CaretDown,
@@ -129,7 +128,7 @@ export function SavedViewsControl({
               </span>
               <span className="min-w-0 flex-1 truncate">{view.name}</span>
               {deletableSavedViewIdSet.has(view.id) ? (
-                <Tooltip title="Delete view">
+                <Tooltip content="Delete view">
                   <IconButton
                     aria-label={`Delete ${view.name}`}
                     disabled={isPending || !deleteSavedViewAction}

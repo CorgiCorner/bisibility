@@ -9,7 +9,7 @@ export function AccountSubnav({ activeSection }: Readonly<AccountSubnavProps>) {
   return (
     <nav
       aria-label="Account sections"
-      className="sticky top-6 hidden w-[200px] self-start flex-col gap-0.5 pl-[14px] lg:flex"
+      className="sticky top-6 hidden w-[200px] self-start flex-col gap-0.5 pl-3.5 lg:flex"
       data-account-subnav=""
     >
       <ul className="m-0 flex list-none flex-col gap-0.5 p-0">

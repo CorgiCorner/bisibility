@@ -13,4 +13,19 @@ describe("Input", () => {
       "placeholder:text-fg-muted",
     );
   });
+
+  it("adopts the semantic control radius and body type with preserved geometry", () => {
+    render(<Input aria-label="Search" />);
+
+    const input = screen.getByRole("textbox", { name: "Search" });
+    expect(input).toHaveClass(
+      "rounded-control",
+      "text-ui-body",
+      "font-medium",
+      "min-h-10",
+      "w-full",
+    );
+    expect(input).toHaveClass("px-" + "[13px]");
+    expect(input).toHaveClass("py-" + "[9px]");
+  });
 });

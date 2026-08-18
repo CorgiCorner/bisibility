@@ -81,7 +81,7 @@ describe("SettingsShell", () => {
     const subnav = container.querySelector("[data-settings-subnav]");
 
     expect(settingsShellGridClassName).toContain("lg:grid-cols-[200px_minmax(0,760px)]");
-    expect(subnav).toHaveClass("sticky", "top-6", "w-[200px]", "flex-col", "gap-0.5", "pl-[14px]");
+    expect(subnav).toHaveClass("sticky", "top-6", "w-[200px]", "flex-col", "gap-0.5", "pl-3.5");
     expect(screen.getByRole("link", { name: "Developers" })).toHaveAttribute(
       "aria-current",
       "page",
@@ -188,7 +188,7 @@ describe("SettingsShell", () => {
       expect(boundary?.lastElementChild).toHaveAttribute("data-settings-loading-grid", "");
       expect(
         boundary?.querySelector("[data-settings-loading-mobile-menu] [data-settings-loading-bar]"),
-      ).toHaveClass("h-[34px]", "w-full");
+      ).toHaveClass("h-8.5", "w-full");
       expect(
         boundary?.querySelector("[data-settings-loading-route-header]"),
       ).not.toBeInTheDocument();
@@ -202,7 +202,7 @@ describe("SettingsShell", () => {
         "self-start",
         "flex-col",
         "gap-0.5",
-        "pl-[14px]",
+        "pl-3.5",
         "lg:flex",
       );
       expect(rows).toHaveLength(7);

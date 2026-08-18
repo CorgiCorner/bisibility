@@ -191,7 +191,12 @@ describe("KeywordMarketSwitcher", () => {
       name: "Add Netherlands / Dutch, +1 check per run",
     });
     expect(add).toHaveAttribute("aria-disabled", "true");
-    expect(add).toHaveAttribute("title", "Read-only during migration hold");
+    expect(add).not.toHaveAttribute("title");
+    const describedBy = add.getAttribute("aria-describedby");
+    expect(describedBy).not.toBeNull();
+    expect(document.getElementById(describedBy ?? "")).toHaveTextContent(
+      "Read-only during migration hold",
+    );
 
     fireEvent.click(screen.getByRole("menuitem", { name: "Switch to Belgium / Dutch" }));
     expect(routerMock.push).toHaveBeenCalledWith("/app/prj_test/rank-tracker/kw_be");

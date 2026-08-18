@@ -424,6 +424,7 @@ jobs:
           cp docker-compose.self-host.yml "$RUNNER_TEMP/release-assets/"
           cp .env.example "$RUNNER_TEMP/release-assets/bisibility.env.example"
           cp scripts/self-host/generate-env.mjs "$RUNNER_TEMP/release-assets/generate-self-host-env.mjs"
+          cp upgrade.sh "$RUNNER_TEMP/release-assets/"
           node scripts/distribution/verify.mjs \
             --manifest distribution-manifest.json \
             --artifacts-dir "$RUNNER_TEMP/release-assets" \
@@ -458,6 +459,7 @@ jobs:
           cp docker-compose.self-host.yml "$RUNNER_TEMP/release-assets/"
           cp .env.example "$RUNNER_TEMP/release-assets/bisibility.env.example"
           cp scripts/self-host/generate-env.mjs "$RUNNER_TEMP/release-assets/generate-self-host-env.mjs"
+          cp upgrade.sh "$RUNNER_TEMP/release-assets/"
           cp distribution-manifest.json "$RUNNER_TEMP/release-assets/"
 
       - name: Publish immutable release assets
@@ -473,6 +475,7 @@ jobs:
             docker-compose.self-host.yml
             bisibility.env.example
             generate-self-host-env.mjs
+            upgrade.sh
             distribution-manifest.json
           )
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
@@ -493,6 +496,7 @@ jobs:
             "$RUNNER_TEMP/release-assets/docker-compose.self-host.yml" \
             "$RUNNER_TEMP/release-assets/bisibility.env.example" \
             "$RUNNER_TEMP/release-assets/generate-self-host-env.mjs" \
+            "$RUNNER_TEMP/release-assets/upgrade.sh" \
             "$RUNNER_TEMP/release-assets/distribution-manifest.json" \
             --verify-tag \
             --generate-notes \

@@ -91,6 +91,17 @@ describe("ses email provider", () => {
     });
   });
 
+  it("sets the monitored Reply-To address", async () => {
+    sendMock.mockResolvedValue({});
+    vi.stubEnv("SES_REGION", "eu-central-1");
+
+    await sesEmailProvider.send({ ...message, replyTo: "hello@example.com" });
+
+    expect(sendMock.mock.calls[0]?.[0]?.input).toMatchObject({
+      ReplyToAddresses: ["hello@example.com"],
+    });
+  });
+
   it("creates the client with bounded latency and no internal retries", async () => {
     sendMock.mockResolvedValue({});
     vi.stubEnv("SES_REGION", "eu-north-1");

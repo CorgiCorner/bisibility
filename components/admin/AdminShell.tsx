@@ -9,7 +9,7 @@ import type { ReactNode } from "react";
 export function AdminShell({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <div className="min-h-screen bg-bg text-fg">
-      <header className="sticky top-0 z-[80] border-b border-border bg-bg-elev/85 backdrop-blur-md">
+      <header className="sticky top-0 z-80 border-b border-border bg-bg-elev/85 backdrop-blur-md">
         <div className="flex min-h-[60px] items-center justify-between gap-3 px-4 sm:px-[26px]">
           <div className="flex min-w-0 items-center gap-2.5">
             {/* The wordmark does not fit next to the admin chrome on narrow screens, so the

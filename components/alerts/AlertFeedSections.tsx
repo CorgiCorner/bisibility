@@ -71,7 +71,7 @@ export function UnreadSummary({
   readIds: Set<string>;
 }>) {
   return (
-    <Card className="flex flex-col gap-3 px-[18px] py-3.5 sm:flex-row sm:items-center" size="md">
+    <Card className="flex flex-col gap-3 px-4.5 py-3.5 sm:flex-row sm:items-center" size="md">
       <span className="text-[13px] font-semibold">Unread alerts</span>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
         {severityOrder.map((severity) => {
@@ -117,9 +117,9 @@ export function AlertFeedRow({
   const Icon = severityIcons[alert.severity];
 
   return (
-    <article className="flex gap-3.5 border-border-soft border-b px-[18px] py-[15px]">
+    <article className="flex gap-3.5 border-border-soft border-b px-4.5 py-[15px]">
       <span
-        className="mt-0.5 grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[9px]"
+        className="mt-0.5 grid h-8.5 w-[34px] shrink-0 place-items-center rounded-[9px]"
         style={{ backgroundColor: meta.background, color: meta.color }}
       >
         <Icon aria-hidden size={17} weight="fill" />

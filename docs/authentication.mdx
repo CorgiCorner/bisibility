@@ -117,9 +117,10 @@ the project from the path. For routes without a project id, pass:
 X-Bisibility-Project: prj_a00000000000000000000000
 ```
 
-The `?project=prj_a00000000000000000000000` query parameter is equivalent. If the user belongs to
-exactly one project, the API can infer it. If the user belongs to several
-projects and no selector is present, the API returns `400 Bad Request`.
+Selection precedence is: `{project_id}` path parameter, X-Bisibility-Project header, project query parameter, then inference when the PAT owner belongs to exactly one project.
+
+If the user belongs to multiple projects and no selector is present, the API
+returns `400 Bad Request` with `projectSelectionRequired`.
 
 ## Rate limits
 

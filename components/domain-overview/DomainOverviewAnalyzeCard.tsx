@@ -102,7 +102,7 @@ export function DomainOverviewAnalyzeCard({
   if (report && !matchesReport) descriptionIds.push("domain-overview-report-target-note");
 
   return (
-    <Card className="p-[18px] sm:p-5" size="md">
+    <Card className="p-4.5 sm:p-5" size="md">
       <form
         className="grid gap-3.5"
         onSubmit={handleSubmit(({ target: next }) => {

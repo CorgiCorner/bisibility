@@ -35,7 +35,7 @@ function RailRow({ collapsed }: Readonly<{ collapsed: boolean }>) {
   // explicit 22px margin, expanded a row inset 10px that gives the same 10px back as padding.
   // The skeleton has to match, or the shell visibly resizes the moment it hydrates.
   if (collapsed) {
-    return <Block className="ml-[22px] h-9 w-9" />;
+    return <Block className="ml-5.5 h-9 w-9" />;
   }
 
   return (
@@ -53,7 +53,7 @@ function SidebarSkeleton({ collapsed }: Readonly<{ collapsed: boolean }>) {
     <div
       className={[
         "sticky top-0 z-50 hidden h-dvh min-h-dvh flex-col overflow-hidden border-r border-border bg-bg-elev lg:flex",
-        collapsed ? "px-0 py-[14px]" : "p-[14px]",
+        collapsed ? "px-0 py-3.5" : "p-3.5",
       ].join(" ")}
       data-testid="shell-skeleton-sidebar"
     >
@@ -62,7 +62,7 @@ function SidebarSkeleton({ collapsed }: Readonly<{ collapsed: boolean }>) {
         {collapsed ? (
           // The head is 48px tall in both states, so the mark's centre does not move across
           // the toggle; the 22px margin holds it on the rail's icon axis.
-          <div className="ml-[22px] grid h-12 w-9 place-items-center">
+          <div className="ml-5.5 grid h-12 w-9 place-items-center">
             <Block className="h-9 w-9" />
           </div>
         ) : (
@@ -86,9 +86,9 @@ function SidebarSkeleton({ collapsed }: Readonly<{ collapsed: boolean }>) {
           <RailRow collapsed={collapsed} key={key} />
         ))}
       </div>
-      <div className="mt-[18px] flex-none">
+      <div className="mt-4.5 flex-none">
         {collapsed ? (
-          <Block className="ml-[22px] h-11 w-9" />
+          <Block className="ml-5.5 h-11 w-9" />
         ) : (
           <div className="flex h-11 w-full items-center gap-2.5 px-[11px]">
             <Block className="h-[30px] w-[30px] flex-none" />
@@ -107,7 +107,7 @@ function SidebarSkeleton({ collapsed }: Readonly<{ collapsed: boolean }>) {
 function HeaderSkeleton() {
   return (
     <div
-      className="relative z-40 flex flex-nowrap items-center justify-between gap-2.5 border-b border-border bg-bg px-4 py-3 sm:gap-4 sm:px-5 lg:px-7 lg:py-[14px]"
+      className="relative z-40 flex flex-nowrap items-center justify-between gap-2.5 border-b border-border bg-bg px-4 py-3 sm:gap-4 sm:px-5 lg:px-7 lg:py-3.5"
       data-testid="shell-skeleton-header"
     >
       <div className="flex min-w-0 flex-1 items-center gap-3 overflow-hidden">
@@ -153,7 +153,7 @@ export function ShellSkeleton({ children, collapsed = false }: Readonly<ShellSke
       <div className="flex min-w-0 flex-col">
         <HeaderSkeleton />
         {/* A plain div, not <main>: the settled shell owns that landmark and this is inert. */}
-        <div className="min-w-0 flex-1 px-4 py-4 sm:px-5 lg:px-7 lg:py-[22px]">{children}</div>
+        <div className="min-w-0 flex-1 px-4 py-4 sm:px-5 lg:px-7 lg:py-5.5">{children}</div>
       </div>
     </div>
   );

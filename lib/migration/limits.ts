@@ -18,15 +18,15 @@ type SessionThresholdInput = {
   rankChecks: number;
 };
 
-function positiveIntegerEnv(name: string, fallback: number) {
-  const parsed = Number.parseInt(process.env[name] ?? "", 10);
+function positiveInteger(value: string | undefined, fallback: number) {
+  const parsed = Number.parseInt(value ?? "", 10);
   return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
 }
 
 export function downloadExportLimits() {
   return {
-    maxKeywords: positiveIntegerEnv(
-      "BISIBILITY_MIGRATION_EXPORT_MAX_KEYWORDS",
+    maxKeywords: positiveInteger(
+      process.env.BISIBILITY_MIGRATION_EXPORT_MAX_KEYWORDS,
       DEFAULT_DOWNLOAD_MAX_KEYWORDS,
     ),
   };
@@ -34,7 +34,10 @@ export function downloadExportLimits() {
 
 export function pushMigrationLimits() {
   return {
-    maxKeywords: positiveIntegerEnv("BISIBILITY_MIGRATION_MAX_KEYWORDS", DEFAULT_PUSH_MAX_KEYWORDS),
+    maxKeywords: positiveInteger(
+      process.env.BISIBILITY_MIGRATION_MAX_KEYWORDS,
+      DEFAULT_PUSH_MAX_KEYWORDS,
+    ),
   };
 }
 

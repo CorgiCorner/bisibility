@@ -107,7 +107,7 @@ describe("form primitives", () => {
 
     expect(visual).toHaveClass("h-[18px]", "w-8");
     expect(thumb).toHaveClass("left-[3px]", "top-[3px]", "h-3", "w-3");
-    expect(thumb?.className).toContain("peer-checked:translate-x-[14px]");
+    expect(thumb?.className).toContain("peer-checked:translate-x-3.5");
 
     for (const x of [thumbGeometry.offX, thumbGeometry.onX]) {
       expect(x).toBeGreaterThanOrEqual(0);
@@ -124,6 +124,17 @@ describe("form primitives", () => {
 
     expect(toggle).toBeDisabled();
     expect(toggle).not.toBeChecked();
+  });
+
+  it("applies motion-token duration with reduced-motion reset only on the thumb", () => {
+    render(<Switch label="Mo" name="mo" />);
+    const v = screen.getByRole("switch", { name: "Mo" }).parentElement;
+    const [t, th] = [v?.children[1], v?.lastElementChild];
+    expect(t).toHaveClass("transition-colors", "duration-[var(--motion-tooltip)]", "ease-[ease]");
+    expect(t?.className).not.toContain("motion-reduce");
+    expect(th?.className).toMatch(
+      /transition-transform.*duration-\[var\(--motion-tooltip\)\].*ease-\[var\(--ease-in-out\)\].*motion-reduce:transition-none/,
+    );
   });
 
   it("changes segmented values by click and keyboard", () => {

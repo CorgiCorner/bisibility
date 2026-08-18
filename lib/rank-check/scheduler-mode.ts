@@ -13,7 +13,10 @@ function legacyBoolean(
   key: "RANK_CHECK_DISPATCHER_ENABLED" | "RANK_CHECK_RECONCILER_ENABLED",
   defaultValue: boolean,
 ) {
-  const raw = env[key];
+  const raw =
+    key === "RANK_CHECK_DISPATCHER_ENABLED"
+      ? env.RANK_CHECK_DISPATCHER_ENABLED
+      : env.RANK_CHECK_RECONCILER_ENABLED;
   if (raw === undefined || raw === "") return defaultValue;
   const normalized = raw.trim().toLowerCase();
   if (["1", "true", "yes", "on"].includes(normalized)) return true;

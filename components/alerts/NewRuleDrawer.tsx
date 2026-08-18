@@ -196,7 +196,7 @@ export function NewRuleDrawer({
       }
     >
       <form
-        className="flex flex-col gap-[22px]"
+        className="flex flex-col gap-5.5"
         onSubmit={handleSubmit(save, (invalid) =>
           setActionError(
             Object.values(invalid).find((issue) => issue?.message)?.message ??

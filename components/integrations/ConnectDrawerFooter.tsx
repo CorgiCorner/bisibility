@@ -5,8 +5,7 @@ import {
   ProjectReadOnlyTooltip,
   useProjectWriteMode,
 } from "@/components/shell/ProjectWriteModeProvider";
-import { Button } from "@/components/ui";
-import Tooltip from "@mui/material/Tooltip";
+import { Button, Tooltip } from "@/components/ui";
 import {
   CheckCircleIcon as CheckCircle,
   CircleNotchIcon as CircleNotch,
@@ -68,7 +67,7 @@ export function ConnectDrawerFooter({
   return (
     <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
       {isManage ? (
-        <Tooltip title={readOnly ? "Read-only during migration hold" : "Disconnect"}>
+        <Tooltip content={readOnly ? "Read-only during migration hold" : "Disconnect"}>
           <span className="shrink-0">
             <Button
               aria-label="Disconnect provider"

@@ -1,7 +1,8 @@
 "use client";
 
 import { cn } from "@/lib/ui/cn";
-import { type KeyboardEvent, type ReactNode, useId } from "react";
+import { Fragment, type KeyboardEvent, type ReactNode, useId } from "react";
+import { Tooltip } from "./Tooltip";
 import { toolbarControlClassName } from "./toolbar-control-styles";
 
 export type SegmentedControlOption<T extends string> = {
@@ -131,13 +132,11 @@ export function SegmentedControl<T extends string>({
         {options.map((option, index) => {
           const active = option.value === value;
           const optionDisabled = disabled || option.disabled;
-          return (
-            <label
-              className={cn("flex", fitContent ? "flex-none" : "min-w-0")}
-              key={option.value}
-              title={option.tooltip}
-            >
+          const descriptionId = `${generatedId}-desc-${index}`;
+          const labelEl = (
+            <label className={cn("flex", fitContent ? "flex-none" : "min-w-0")} key={option.value}>
               <input
+                aria-describedby={option.tooltip ? descriptionId : undefined}
                 aria-label={option.ariaLabel}
                 checked={active}
                 className="peer sr-only"
@@ -176,6 +175,18 @@ export function SegmentedControl<T extends string>({
                 ) : null}
               </span>
             </label>
+          );
+          return option.tooltip ? (
+            <Fragment key={option.value}>
+              <Tooltip content={option.tooltip} semantics="description">
+                {labelEl}
+              </Tooltip>
+              <span className="sr-only" id={descriptionId}>
+                {option.tooltip}
+              </span>
+            </Fragment>
+          ) : (
+            labelEl
           );
         })}
       </div>

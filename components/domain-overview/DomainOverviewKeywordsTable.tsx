@@ -135,7 +135,7 @@ export function DomainOverviewKeywordsTable({
       </header>
       <div className="max-h-[640px] overflow-auto">
         <div className="min-w-[1140px]">
-          <div className="sticky top-0 z-[1] grid grid-cols-[28px_minmax(180px,1.2fr)_104px_104px_82px_62px_72px_88px_minmax(180px,1fr)_70px] items-center gap-3 border-b border-border-strong bg-bg-sunken px-4 py-2.5">
+          <div className="sticky top-0 z-1 grid grid-cols-[28px_minmax(180px,1.2fr)_104px_104px_82px_62px_72px_88px_minmax(180px,1fr)_70px] items-center gap-3 border-b border-border-strong bg-bg-sunken px-4 py-2.5">
             <Checkbox
               aria-label="Select all fetched keywords"
               checked={selection.allSelected}

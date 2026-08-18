@@ -8,7 +8,7 @@ export default async function PreferencesPage() {
 
   return (
     <AccountShell activeSection="preferences">
-      <div className="flex flex-col gap-[22px]">
+      <div className="flex flex-col gap-5.5">
         <PreferencesForm defaults={defaults} updatePreferences={updatePreferences} />
       </div>
     </AccountShell>

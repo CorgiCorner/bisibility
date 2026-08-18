@@ -52,7 +52,7 @@ export function DomainOverviewResults({
 }: Readonly<DomainOverviewResultsProps>) {
   const metrics = report.overview;
   return (
-    <div aria-live="polite" className="grid min-w-0 gap-[18px]">
+    <div aria-live="polite" className="grid min-w-0 gap-4.5">
       <DomainOverviewContextBar report={report} />
       {report.state === "no_data" || !metrics ? (
         <>

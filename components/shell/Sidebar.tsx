@@ -5,11 +5,10 @@ import type { ShellUser } from "@/components/shell/SidebarFooter";
 import { SidebarFooter } from "@/components/shell/SidebarFooter";
 import { SidebarToggleIcon } from "@/components/shell/SidebarToggleIcon";
 import { WorkspaceSwitcher } from "@/components/shell/WorkspaceSwitcher";
-import { BrandLockup } from "@/components/ui";
+import { BrandLockup, Tooltip } from "@/components/ui";
 import { navItems, RAIL_ICON_SIZE } from "@/lib/nav/nav-items";
 import type { WorkspaceSummary } from "@/lib/queries/workspaces";
 import { appPath } from "@/lib/routing/app-path";
-import Tooltip from "@mui/material/Tooltip";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -48,7 +47,7 @@ export function Sidebar({
     const Icon = item.icon;
 
     return (
-      <Tooltip key={item.href} placement="right" title={collapsed ? item.label : ""}>
+      <Tooltip key={item.href} placement="right" content={collapsed ? item.label : ""}>
         <Link
           aria-current={active ? "page" : undefined}
           // Collapsed drops the visible label, and a closed tooltip contributes no name,
@@ -62,7 +61,7 @@ export function Sidebar({
             // Collapsed, every row is the same 36px square. The explicit 22px margin (not
             // mx-auto) is what holds the icon axis at 40px from the rail edge in both states.
             collapsed
-              ? "ml-[22px] h-9 w-9 justify-center p-0"
+              ? "ml-5.5 h-9 w-9 justify-center p-0"
               : "ml-2.5 h-9 gap-2.5 pr-[11px] pl-[1px]",
             // The current page carries no fill: the row surface belongs to hover alone, and
             // the page marker is the leading dot plus the filled glyph and 600 label - the
@@ -117,7 +116,7 @@ export function Sidebar({
         "sticky top-0 z-50 hidden h-dvh min-h-dvh flex-col overflow-hidden border-r border-border bg-bg-elev lg:flex",
         // Collapsed drops the horizontal padding entirely: the 22px row margin, not the rail
         // padding, is what positions the tile column.
-        collapsed ? "px-0 py-[14px]" : "p-[14px]",
+        collapsed ? "px-0 py-3.5" : "p-3.5",
       ].join(" ")}
     >
       <div className="flex-none pb-4">
@@ -126,10 +125,10 @@ export function Sidebar({
           // control: it swaps for the expand glyph under the cursor. p-0 matters - a <button>
           // carries a UA padding of 1px 6px, which shrank the content box to 24px and pushed
           // the 26px mark 6px off the rail's 40px icon axis.
-          <Tooltip enterDelay={0} placement="right" title="Expand sidebar">
+          <Tooltip placement="right" content="Expand sidebar">
             <button
               aria-label="Expand sidebar"
-              className="group ml-[22px] grid h-12 w-9 cursor-e-resize place-items-center rounded-[9px] p-0 text-fg focus-visible:-outline-offset-2"
+              className="group ml-5.5 grid h-12 w-9 cursor-e-resize place-items-center rounded-[9px] p-0 text-fg focus-visible:-outline-offset-2"
               onClick={handleToggle}
               type="button"
             >

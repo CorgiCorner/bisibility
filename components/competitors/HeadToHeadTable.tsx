@@ -64,7 +64,7 @@ export function HeadToHeadTable({ market, onExport }: Readonly<HeadToHeadTablePr
 
   return (
     <Card className="overflow-hidden p-0" size="md">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-border border-b px-[18px] py-[15px]">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-border border-b px-4.5 py-[15px]">
         <div className="flex min-w-0 flex-col gap-1">
           <SectionTitle>Shared keywords · head-to-head</SectionTitle>
           <p className="m-0 font-mono text-[11px] text-fg-muted">
@@ -95,7 +95,7 @@ export function HeadToHeadTable({ market, onExport }: Readonly<HeadToHeadTablePr
       </div>
 
       {!hasCompetitors ? (
-        <div className="border-border-soft border-b bg-bg-sunken px-[18px] py-3 font-mono text-[10.5px] text-fg-muted">
+        <div className="border-border-soft border-b bg-bg-sunken px-4.5 py-3 font-mono text-[10.5px] text-fg-muted">
           Add at least one competitor to compare head-to-head rankings.
         </div>
       ) : null}
@@ -103,7 +103,7 @@ export function HeadToHeadTable({ market, onExport }: Readonly<HeadToHeadTablePr
       <div className="overflow-x-auto">
         <div className="min-w-[720px]">
           <div
-            className="grid gap-x-2.5 border-border border-b bg-bg-sunken px-[18px] py-2.5 font-mono text-[10px] uppercase text-fg-muted"
+            className="grid gap-x-2.5 border-border border-b bg-bg-sunken px-4.5 py-2.5 font-mono text-[10px] uppercase text-fg-muted"
             style={{ gridTemplateColumns }}
           >
             <span>Keyword</span>
@@ -116,7 +116,7 @@ export function HeadToHeadTable({ market, onExport }: Readonly<HeadToHeadTablePr
           </div>
           {rows.map((row) => (
             <div
-              className="grid items-center gap-x-2.5 border-border-soft border-b px-[18px] py-2.5"
+              className="grid items-center gap-x-2.5 border-border-soft border-b px-4.5 py-2.5"
               key={row.id}
               style={{ gridTemplateColumns }}
             >
@@ -139,10 +139,10 @@ export function HeadToHeadTable({ market, onExport }: Readonly<HeadToHeadTablePr
             </div>
           ))}
           {market.rows.length === 0 ? (
-            <div className="px-[18px] py-5 text-[13px] text-fg-muted">{emptyCopy}</div>
+            <div className="px-4.5 py-5 text-[13px] text-fg-muted">{emptyCopy}</div>
           ) : null}
           {hiddenRowCount > 0 ? (
-            <div className="flex items-center justify-between gap-3 px-[18px] py-3 text-xs text-fg-muted">
+            <div className="flex items-center justify-between gap-3 px-4.5 py-3 text-xs text-fg-muted">
               <span>
                 Showing {rows.length} of {market.rows.length} keywords
               </span>

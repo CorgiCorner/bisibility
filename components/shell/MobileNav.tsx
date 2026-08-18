@@ -66,7 +66,7 @@ export function MobileNav({
           },
         }}
       >
-        <div className="flex min-h-dvh flex-col px-[14px] py-4">
+        <div className="flex min-h-dvh flex-col px-3.5 py-4">
           {/* px-[11px] with a 2px nudge on the mark, exactly as the expanded rail: that is what
               puts the brand on the same vertical axis as the row icons below it. px-2 left it
               6px adrift, which is enough to read as a wobble on a 248px column. */}

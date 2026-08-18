@@ -58,6 +58,8 @@ x-app-env: &app-env
   EMAIL_ALERTS_FROM: ${EMAIL_ALERTS_FROM:-}
   EMAIL_DAILY_BUDGET_BULK: ${EMAIL_DAILY_BUDGET_BULK:-}
   EMAIL_DAILY_BUDGET_TRANSACTIONAL: ${EMAIL_DAILY_BUDGET_TRANSACTIONAL:-}
+  EMAIL_FOUNDER_FROM: ${EMAIL_FOUNDER_FROM:-}
+  EMAIL_FOUNDER_NAME: ${EMAIL_FOUNDER_NAME:-}
   EMAIL_FROM: ${EMAIL_FROM:-}
   EMAIL_PROVIDER: ${EMAIL_PROVIDER:-}
   GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
@@ -107,7 +109,7 @@ x-app-env: &app-env
 
 services:
   db-migrations:
-    image: ${BISIBILITY_IMAGE:-docker.io/corgicorner/bisibility:0.13.4}
+    image: ${BISIBILITY_IMAGE:-docker.io/corgicorner/bisibility:0.13.5}
     pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     build:
       <<: *app-build
@@ -121,7 +123,7 @@ services:
         condition: service_healthy
 
   app:
-    image: ${BISIBILITY_IMAGE:-docker.io/corgicorner/bisibility:0.13.4}
+    image: ${BISIBILITY_IMAGE:-docker.io/corgicorner/bisibility:0.13.5}
     pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     build: *app-build
     restart: unless-stopped
@@ -309,7 +311,7 @@ services:
       - "127.0.0.1:${TEMPORAL_UI_HOST_PORT:-8233}:8080"
 
   worker:
-    image: ${BISIBILITY_WORKER_IMAGE:-docker.io/corgicorner/bisibility-worker:0.13.4}
+    image: ${BISIBILITY_WORKER_IMAGE:-docker.io/corgicorner/bisibility-worker:0.13.5}
     pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     build:
       context: .

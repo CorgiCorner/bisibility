@@ -30,4 +30,8 @@ function renderHead(): ReactNode {
   return <script async data-domain={config.domain} src={config.src} />;
 }
 
-export const appExtensions = { renderHead };
+function renderMarketingSupportWidget(): ReactNode {
+  return null;
+}
+
+export const appExtensions = { renderHead, renderMarketingSupportWidget };

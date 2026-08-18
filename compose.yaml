@@ -50,6 +50,8 @@ x-app-env: &app-env
   EMAIL_ALERTS_FROM: ${EMAIL_ALERTS_FROM:-}
   EMAIL_DAILY_BUDGET_BULK: ${EMAIL_DAILY_BUDGET_BULK:-}
   EMAIL_DAILY_BUDGET_TRANSACTIONAL: ${EMAIL_DAILY_BUDGET_TRANSACTIONAL:-}
+  EMAIL_FOUNDER_FROM: ${EMAIL_FOUNDER_FROM:-}
+  EMAIL_FOUNDER_NAME: ${EMAIL_FOUNDER_NAME:-}
   EMAIL_FROM: ${EMAIL_FROM:-}
   EMAIL_PROVIDER: ${EMAIL_PROVIDER:-}
   GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
@@ -92,7 +94,7 @@ x-app-env: &app-env
 
 services:
   db-migrations:
-    image: ${BISIBILITY_IMAGE:-docker.io/corgicorner/bisibility:0.13.4}
+    image: ${BISIBILITY_IMAGE:-docker.io/corgicorner/bisibility:0.13.5}
     pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     command: >
       sh -c 'npm run db:migrate
@@ -103,7 +105,7 @@ services:
         condition: service_healthy
 
   app:
-    image: ${BISIBILITY_IMAGE:-docker.io/corgicorner/bisibility:0.13.4}
+    image: ${BISIBILITY_IMAGE:-docker.io/corgicorner/bisibility:0.13.5}
     pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     restart: unless-stopped
     ports:

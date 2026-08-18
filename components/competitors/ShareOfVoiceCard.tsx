@@ -48,7 +48,7 @@ export function ShareOfVoiceCard({
   }[market.dataState];
 
   return (
-    <Card className="px-5 py-[18px]" size="md">
+    <Card className="px-5 py-4.5" size="md">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex min-w-0 flex-col gap-1">
           <SectionTitle>Share of voice</SectionTitle>
@@ -70,13 +70,13 @@ export function ShareOfVoiceCard({
       {scopeControls ? <div className="mt-3.5">{scopeControls}</div> : null}
 
       {emptyCopy ? (
-        <div className="mt-[18px] rounded-[11px] border border-dashed border-border-strong bg-transparent px-3.5 py-3 text-[12.5px] leading-5 text-fg-muted">
+        <div className="mt-4.5 rounded-[11px] border border-dashed border-border-strong bg-transparent px-3.5 py-3 text-[12.5px] leading-5 text-fg-muted">
           {emptyCopy}
         </div>
       ) : null}
 
       {market.dataState === "ranked" ? (
-        <div className="mt-[18px] flex flex-col gap-[13px]">
+        <div className="mt-4.5 flex flex-col gap-[13px]">
           {market.shares.map((competitor) => {
             const kind = kindStyles[competitor.kind];
             const barWidth = `${Math.round((competitor.shareOfVoice / maxShare) * 100)}%`;

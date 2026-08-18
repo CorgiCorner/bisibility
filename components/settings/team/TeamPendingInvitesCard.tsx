@@ -2,11 +2,10 @@
 
 import { TeamReadOnlyCard } from "@/components/settings/team/TeamReadOnlyCard";
 import { teamCardGeometryClassNames } from "@/components/settings/team/team-card-layout";
-import { Button, StatusPill } from "@/components/ui";
+import { Button, StatusPill, Tooltip } from "@/components/ui";
 import type { PendingInviteData } from "@/lib/queries/team";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { cn } from "@/lib/ui/cn";
-import Tooltip from "@mui/material/Tooltip";
 import { EnvelopeSimpleIcon as EnvelopeSimple, XIcon as X } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -65,7 +64,7 @@ export function TeamPendingInvitesCard({
       <div className="divide-y divide-border-soft rounded-[10px] border border-border">
         {invites.length === 0 ? (
           <div className="flex items-center gap-3 p-3 text-[12.5px] text-fg-muted">
-            <span className="grid h-[34px] w-[34px] place-items-center rounded-[9px] border border-dashed border-border-strong">
+            <span className="grid h-8.5 w-[34px] place-items-center rounded-[9px] border border-dashed border-border-strong">
               <EnvelopeSimple aria-hidden size={16} />
             </span>
             No pending invites.
@@ -82,7 +81,7 @@ export function TeamPendingInvitesCard({
               data-expired={invite.expired}
               key={invite.id}
             >
-              <span className="grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[9px] border border-dashed border-border-strong text-fg-muted">
+              <span className="grid h-8.5 w-[34px] shrink-0 place-items-center rounded-[9px] border border-dashed border-border-strong text-fg-muted">
                 <EnvelopeSimple aria-hidden size={16} />
               </span>
               <span className="min-w-[160px] flex-1">
@@ -118,7 +117,7 @@ export function TeamPendingInvitesCard({
                 </Button>
               ) : null}
               {canManageTeam && !readOnly ? (
-                <Tooltip title={`Revoke invite for ${invite.email}`}>
+                <Tooltip content={`Revoke invite for ${invite.email}`}>
                   <button
                     aria-label={`Revoke invite for ${invite.email}`}
                     className="grid h-[30px] w-[30px] place-items-center rounded-lg border border-border-strong bg-bg-elev text-red-text hover:border-red"

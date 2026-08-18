@@ -7,8 +7,8 @@ type ActiveSection = "profile" | "preferences" | "security";
 function AccountShellFrame({ active }: Readonly<{ active: ActiveSection }>) {
   return (
     <AccountShell activeSection={active}>
-      <div className="flex flex-col gap-[22px]">
-        <section className="space-y-[14px]">
+      <div className="flex flex-col gap-5.5">
+        <section className="space-y-3.5">
           <SectionTitle>
             {active === "profile"
               ? "Profile"

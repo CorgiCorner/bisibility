@@ -4,7 +4,7 @@ import { ConfirmModal } from "@/components/ui";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { cn } from "@/lib/ui/cn";
 import { TrashIcon as Trash } from "@phosphor-icons/react";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { feedbackClass } from "./account-ui";
 
 export type DeleteAccountInput = {
@@ -22,25 +22,29 @@ const dangerButtonClass =
 export function DeleteAccount({ deleteAccount, email }: Readonly<DeleteAccountProps>) {
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const [isPending, setIsPending] = useState(false);
 
-  function onConfirm() {
+  async function onConfirm() {
     if (!deleteAccount) {
       setMessage("Delete account is not available.");
       return;
     }
     setMessage(null);
-    startTransition(() => {
-      void deleteAccount({ email }).catch((error: unknown) =>
-        setMessage(actionErrorMessage(error, "Account could not be deleted.")),
-      );
-    });
+    setIsPending(true);
+    try {
+      await deleteAccount({ email });
+    } catch (error: unknown) {
+      setMessage(actionErrorMessage(error, "Account could not be deleted."));
+      throw error;
+    } finally {
+      setIsPending(false);
+    }
   }
 
   return (
     <section>
-      <div className="rounded-[14px] border border-red bg-bg-elev px-5 py-[18px]">
-        <div className="flex flex-wrap items-center justify-between gap-[14px]">
+      <div className="rounded-[14px] border border-red bg-bg-elev px-5 py-4.5">
+        <div className="flex flex-wrap items-center justify-between gap-3.5">
           <div className="min-w-0">
             <div className="text-[14.5px] font-semibold text-red-text">Danger zone</div>
             <p className="m-0 mt-[3px] max-w-[560px] text-[12.5px] leading-normal text-fg-muted">

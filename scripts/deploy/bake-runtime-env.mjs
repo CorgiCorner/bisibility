@@ -5,7 +5,7 @@ import { chmodSync, mkdirSync, readFileSync, statSync, writeFileSync } from "nod
 import { dirname } from "node:path";
 import { pathToFileURL } from "node:url";
 
-const KEYS = [
+export const bakedRuntimeEnvKeys = [
   "APP_REVISION",
   "APP_VERSION",
   "AUDIT_IP_HMAC_SECRET",
@@ -57,6 +57,8 @@ const KEYS = [
   "EMAIL_ALERTS_FROM",
   "EMAIL_DAILY_BUDGET_BULK",
   "EMAIL_DAILY_BUDGET_TRANSACTIONAL",
+  "EMAIL_FOUNDER_FROM",
+  "EMAIL_FOUNDER_NAME",
   "EMAIL_FROM",
   "EMAIL_PROVIDER",
   "GITHUB_API_TOKEN",
@@ -127,7 +129,7 @@ function formatBakedEnv(values) {
 
 export function collectBakedEnvironment(env = process.env) {
   const baked = {};
-  for (const key of KEYS) {
+  for (const key of bakedRuntimeEnvKeys) {
     const value = env[key];
     if (value != null && value !== "") {
       baked[key] = value;

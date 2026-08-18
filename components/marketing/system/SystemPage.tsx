@@ -49,7 +49,7 @@ export function SystemPage({
 }: Readonly<SystemPageProps>) {
   return (
     <main className="flex min-h-screen flex-col bg-bg text-fg">
-      <div className="flex items-center justify-between px-5 py-[22px] sm:px-8">
+      <div className="flex items-center justify-between px-5 py-5.5 sm:px-8">
         <a className="flex min-w-0" href="/">
           <BrandLockup />
         </a>
@@ -72,7 +72,7 @@ export function SystemPage({
         <div className="mt-7 flex flex-wrap justify-center gap-[11px]">{actions}</div>
         {terminal}
         <a
-          className="mt-[22px] inline-flex items-center gap-[7px] text-[13px] text-fg-muted hover:text-accent-text"
+          className="mt-5.5 inline-flex items-center gap-[7px] text-[13px] text-fg-muted hover:text-accent-text"
           href={DOCS_URL}
           rel="noreferrer noopener"
           target="_blank"
@@ -123,7 +123,7 @@ export function TerminalBlock({ note, path, routes, status }: Readonly<TerminalB
 export function SystemLoadingPage() {
   return (
     <main className="flex min-h-screen flex-col bg-bg text-fg">
-      <div className="flex items-center justify-between px-5 py-[22px] sm:px-8">
+      <div className="flex items-center justify-between px-5 py-5.5 sm:px-8">
         <a className="flex min-w-0" href="/">
           <BrandLockup />
         </a>

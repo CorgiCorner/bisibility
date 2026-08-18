@@ -105,7 +105,7 @@ export function TwoFactorChallengeForm({
       <span className="grid h-[46px] w-[46px] place-items-center rounded-xl bg-accent-soft text-accent-text">
         <ShieldCheck aria-hidden size={23} weight="fill" />
       </span>
-      <h1 className="mt-[18px] mb-0 text-[25px] font-semibold tracking-[-0.7px] text-fg">
+      <h1 className="mt-4.5 mb-0 text-[25px] font-semibold tracking-[-0.7px] text-fg">
         Verify it&apos;s you
       </h1>
       <p className="mt-2 mb-0 text-[14px] leading-[1.5] text-fg-muted">

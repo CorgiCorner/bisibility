@@ -29,7 +29,7 @@ const footer = (
 );
 
 const formContent = (
-  <div className="flex flex-col gap-[22px]">
+  <div className="flex flex-col gap-5.5">
     <div>
       <label className="text-[12.5px] font-semibold text-fg" htmlFor="keyword-input">
         Keywords

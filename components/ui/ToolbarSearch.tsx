@@ -44,7 +44,7 @@ export function ToolbarSearch({
               "flex items-center gap-2 px-[11px] transition-colors focus-within:border-accent",
             )
           : clsx(
-              "flex h-[34px] items-center gap-2 rounded-[9px] border border-border-strong bg-transparent px-3",
+              "flex h-8.5 items-center gap-2 rounded-[9px] border border-border-strong bg-transparent px-3",
               "focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent-solid",
             ),
         className,

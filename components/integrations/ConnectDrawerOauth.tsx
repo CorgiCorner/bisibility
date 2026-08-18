@@ -170,7 +170,7 @@ export function ConnectDrawerOauth({
   }
 
   return (
-    <section className="flex flex-col gap-4 rounded-[13px] border border-border bg-bg-sunken p-[18px]">
+    <section className="flex flex-col gap-4 rounded-[13px] border border-border bg-bg-sunken p-4.5">
       <GoogleConnectionIntro
         connected={isConnected}
         needsReauth={needsReauth}

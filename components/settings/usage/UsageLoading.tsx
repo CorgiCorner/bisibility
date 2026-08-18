@@ -12,7 +12,7 @@ const frames = [
 
 export function UsageCardsLoading() {
   return (
-    <div className="flex w-full max-w-[760px] flex-col gap-[14px]">
+    <div className="flex w-full max-w-[760px] flex-col gap-3.5">
       {frames.map((frame) => (
         <section
           className={cn(settingsCardFrameClassName, frame.className)}

@@ -29,7 +29,7 @@ export function AdvancedCardFrame({
       aria-labelledby={titleId}
       className={cn(
         settingsCardFrameClassName,
-        "flex flex-col gap-[18px] p-[18px_20px]",
+        "flex flex-col gap-4.5 p-[18px_20px]",
         tone === "danger" && "border-red/55",
         className,
       )}

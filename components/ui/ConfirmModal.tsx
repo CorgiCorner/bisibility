@@ -12,7 +12,7 @@ import {
   UserPlusIcon as UserPlus,
   WarningIcon as Warning,
 } from "@phosphor-icons/react";
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
 
 export type ConfirmKind =
   | "deactivateAccount"
@@ -143,7 +143,7 @@ export type ConfirmModalProps = {
   open: boolean;
   onClose: () => void;
   kind: ConfirmKind;
-  onConfirm: () => void;
+  onConfirm: () => Promise<void> | void;
   onUndo?: () => Promise<void> | void;
   busy?: boolean;
   showConfirmationToast?: boolean;
@@ -162,30 +162,49 @@ export function ConfirmModal({
 }: Readonly<ConfirmModalProps>) {
   const titleId = useId();
   const [typed, setTyped] = useState("");
+  const [pending, setPending] = useState(false);
+  const [confirmationError, setConfirmationError] = useState<string | null>(null);
+  const pendingRef = useRef(false);
   const { showToast } = useToast();
   const config = CONFIRM[kind];
   const Icon = config.icon;
   const expectedWord = typeWord ?? config.typeWord ?? "";
   const needsType = Boolean(config.requireType);
-  const disabled = busy || (needsType && typed !== expectedWord);
+  const isBusy = busy || pending;
+  const disabled = isBusy || (needsType && typed !== expectedWord);
 
   function handleClose() {
-    setTyped("");
+    if (busy || pendingRef.current) return;
     onClose();
   }
 
-  function handleConfirm() {
-    if (disabled) {
+  async function handleConfirm() {
+    if (disabled || pendingRef.current) {
       return;
     }
-    onConfirm();
-    if (showConfirmationToast) {
-      showToast(config.toastMessage, {
-        icon: <Icon aria-hidden size={18} weight="bold" />,
-        tint: "red",
-        undo: onUndo ?? (() => undefined),
-      });
+    pendingRef.current = true;
+    setPending(true);
+    setConfirmationError(null);
+    try {
+      await onConfirm();
+      if (showConfirmationToast) {
+        showToast(config.toastMessage, {
+          icon: <Icon aria-hidden size={18} weight="bold" />,
+          tint: "red",
+          ...(onUndo ? { undo: onUndo } : {}),
+        });
+      }
+    } catch {
+      setConfirmationError("The action could not be completed. Try again.");
+    } finally {
+      pendingRef.current = false;
+      setPending(false);
     }
+  }
+
+  function handleExited() {
+    setTyped("");
+    setConfirmationError(null);
   }
 
   return (
@@ -193,13 +212,14 @@ export function ConfirmModal({
       ariaLabelledBy={titleId}
       contentClassName="p-0"
       onClose={handleClose}
+      onExited={handleExited}
       onPrimaryAction={handleConfirm}
       open={open}
       primaryActionDisabled={disabled}
       showClose={false}
       size="sm"
     >
-      <div className="px-[22px] pb-[18px] pt-[22px]">
+      <div className="px-5.5 pb-4.5 pt-5.5">
         <div className="flex items-center gap-3">
           <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[11px] text-red-text [background:color-mix(in_srgb,var(--red)_12%,transparent)]">
             <Icon aria-hidden size={21} weight="bold" />
@@ -211,7 +231,7 @@ export function ConfirmModal({
             {config.title}
           </h2>
         </div>
-        <p className="m-0 mt-[14px] text-[13.5px] leading-[1.55] text-fg-muted">{config.body}</p>
+        <p className="m-0 mt-3.5 text-[13.5px] leading-[1.55] text-fg-muted">{config.body}</p>
         {needsType ? (
           <div className="mt-4">
             <label className="mb-[7px] block text-[12px] text-fg-muted" htmlFor="confirm-type-word">
@@ -227,24 +247,29 @@ export function ConfirmModal({
             />
           </div>
         ) : null}
+        {confirmationError ? (
+          <p className="m-0 mt-3 text-[12px] font-medium text-red-text" role="alert">
+            {confirmationError}
+          </p>
+        ) : null}
       </div>
-      <div className="flex items-center justify-end gap-[18px] border-t border-border bg-bg-sunken px-[22px] py-[14px]">
+      <div className="flex items-center justify-end gap-4.5 border-t border-border bg-bg-sunken px-5.5 py-3.5">
         <button
           className="p-0 text-[13px] font-semibold text-fg-muted outline-none transition-colors hover:text-fg focus-visible:text-fg"
-          disabled={busy}
+          disabled={isBusy}
           onClick={handleClose}
           type="button"
         >
           Cancel
         </button>
         <button
-          className="inline-flex items-center gap-[7px] rounded-[9px] bg-red px-4 py-2.5 text-[13px] font-semibold text-error-contrast outline-none transition-opacity hover:opacity-90 focus-visible:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex items-center gap-[7px] rounded-[9px] bg-red px-4 py-2.5 text-[13px] font-semibold text-error-contrast outline-none transition-[opacity,transform] duration-[var(--motion-press)] hover:opacity-90 focus-visible:opacity-90 motion-safe:active:not-focus-visible:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
           disabled={disabled}
           onClick={handleConfirm}
           type="button"
         >
           <Icon aria-hidden size={15} weight="bold" />
-          {busy ? "Working..." : config.dangerLabel}
+          {isBusy ? "Working..." : config.dangerLabel}
         </button>
       </div>
     </Modal>

@@ -3,6 +3,17 @@ import { BisibilityApiError, BisibilityClient } from "@bisibility/sdk";
 const exampleId = "ts-quickstart";
 const maxHistoryAttempts = 5;
 
+// docs:start:method-contract
+const docsMethodContract = {
+  "List projects": BisibilityClient.prototype.listProjects,
+  "Create a project": BisibilityClient.prototype.createProject,
+  "Add keywords": BisibilityClient.prototype.addKeywords,
+  "Run a rank check": BisibilityClient.prototype.runRankCheck,
+  "Read a rank-check result": BisibilityClient.prototype.getRankCheckResult,
+} as const;
+void docsMethodContract;
+// docs:end:method-contract
+
 function requiredEnv(name: string) {
   const value = process.env[name]?.trim();
   if (!value) {

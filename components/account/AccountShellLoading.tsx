@@ -20,7 +20,7 @@ export function AccountLoadingBar({ className }: Readonly<AccountLoadingBarProps
 function AccountLoadingMobileMenu() {
   return (
     <div className="mb-5 lg:hidden" data-account-loading-mobile-menu="">
-      <AccountLoadingBar className="h-[34px] w-full" />
+      <AccountLoadingBar className="h-8.5 w-full" />
     </div>
   );
 }
@@ -29,7 +29,7 @@ function AccountLoadingSubnav({ activeSection }: Readonly<{ activeSection: Accou
   return (
     <nav
       aria-hidden
-      className="sticky top-6 hidden w-[200px] self-start flex-col gap-0.5 pl-[14px] lg:flex"
+      className="sticky top-6 hidden w-[200px] self-start flex-col gap-0.5 pl-3.5 lg:flex"
       data-account-loading-active-section={activeSection}
       data-account-loading-subnav=""
     >

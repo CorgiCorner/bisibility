@@ -117,7 +117,7 @@ export function HandoffPanel({
         </div>
       ) : null}
       {message ? (
-        <div className="flex items-center gap-2 border-border-soft border-t px-[18px] py-3 text-[12px] text-fg-muted">
+        <div className="flex items-center gap-2 border-border-soft border-t px-4.5 py-3 text-[12px] text-fg-muted">
           {handoff ? (
             <CheckCircle aria-hidden className="text-green-text" size={14} weight="fill" />
           ) : (
@@ -209,7 +209,7 @@ export function DoneStep({
           <WarningCircle aria-hidden size={30} weight="fill" />
         )}
       </span>
-      <h3 className="m-0 mt-[18px] text-[18px] font-semibold tracking-[-0.4px]">
+      <h3 className="m-0 mt-4.5 text-[18px] font-semibold tracking-[-0.4px]">
         {completed ? `${targetLabel} import complete` : "Awaiting external confirmation"}
       </h3>
       <p className="m-0 mt-[7px] max-w-[390px] text-[13.5px] leading-[1.55] text-fg-muted">
@@ -218,7 +218,7 @@ export function DoneStep({
           : `The package left this source flow, but ${targetLabel} has not reported a completed import here. Verify the destination before releasing read-only mode.`}
       </p>
       {completed ? <ImportCompletionSummary completion={completed} /> : null}
-      <div className="mt-[22px] flex w-full max-w-[420px] items-center gap-2 rounded-[10px] border border-border-strong bg-transparent px-3.5 py-[11px]">
+      <div className="mt-5.5 flex w-full max-w-[420px] items-center gap-2 rounded-[10px] border border-border-strong bg-transparent px-3.5 py-[11px]">
         <span className="min-w-0 flex-1 truncate font-mono text-[11.5px] text-fg-muted">
           {targetUrl ?? `Generate the ${targetLabel} handoff to copy a real URL`}
         </span>

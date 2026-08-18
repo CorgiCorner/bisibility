@@ -24,7 +24,7 @@ export const metadata: Metadata = createNoindexMetadata({
 function SetupFrame({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <main className="flex min-h-dvh items-center justify-center bg-bg px-5 py-10 text-fg">
-      <div className="flex w-full max-w-[480px] flex-col gap-[18px]">
+      <div className="flex w-full max-w-[480px] flex-col gap-4.5">
         <Link className="inline-flex justify-center no-underline" href="/">
           <BrandLockup />
         </Link>
@@ -53,7 +53,7 @@ export default async function SetupPage() {
     return (
       <SetupFrame>
         <Card className="p-7" size="lg">
-          <div className="flex flex-col gap-[22px]">
+          <div className="flex flex-col gap-5.5">
             <SetupStepper current="done" />
             <SetupSuccess mailerConfigured={isEmailConfigured()} />
           </div>

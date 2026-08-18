@@ -97,7 +97,7 @@ export function UserMenu({
       <div className="flex items-center gap-2.5 px-[9px] pb-[11px] pt-[9px]">
         <Avatar
           alt=""
-          className="grid h-[34px] w-[34px] flex-none place-items-center rounded-[9px] bg-accent-solid font-mono text-xs font-semibold text-primary-contrast"
+          className="grid h-8.5 w-[34px] flex-none place-items-center rounded-[9px] bg-accent-solid font-mono text-xs font-semibold text-primary-contrast"
           initials={initials}
           src={avatarUrl}
         />

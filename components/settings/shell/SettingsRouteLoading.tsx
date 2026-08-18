@@ -30,7 +30,7 @@ export function SettingsLoadingBar({ className }: Readonly<SettingsLoadingBarPro
 function SettingsLoadingMobileMenu() {
   return (
     <div className="mb-5 lg:hidden" data-settings-loading-mobile-menu="">
-      <SettingsLoadingBar className="h-[34px] w-full" />
+      <SettingsLoadingBar className="h-8.5 w-full" />
     </div>
   );
 }
@@ -39,7 +39,7 @@ function SettingsLoadingSubnav({ activeSection }: Readonly<{ activeSection: Sett
   return (
     <nav
       aria-hidden
-      className="sticky top-6 hidden w-[200px] self-start flex-col gap-0.5 pl-[14px] lg:flex"
+      className="sticky top-6 hidden w-[200px] self-start flex-col gap-0.5 pl-3.5 lg:flex"
       data-settings-loading-active-section={activeSection}
       data-settings-loading-subnav=""
     >

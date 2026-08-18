@@ -27,7 +27,7 @@ export function CheckStatusChip({ kind, label }: Readonly<CheckStatusChipProps>)
     >
       <span
         aria-hidden
-        className={cn("h-[6px] w-[6px] flex-none rounded-full", meta.pulse && "bv-ping")}
+        className={cn("relative h-[6px] w-[6px] flex-none rounded-full", meta.pulse && "bv-ping")}
         style={{ backgroundColor: meta.color, color: meta.color }}
       />
       {label ?? meta.label}

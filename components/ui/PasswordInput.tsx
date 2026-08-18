@@ -26,7 +26,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
         <button
           aria-label={showValue ? "Hide password" : "Show password"}
           aria-pressed={showValue}
-          className="absolute right-2 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-md border-0 bg-transparent text-fg-muted hover:bg-bg-elev hover:text-fg focus:outline-none focus:ring-2 focus:ring-accent/40 disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted"
+          className="absolute right-2 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-md border-0 bg-transparent text-fg-muted transition-[color,background-color,transform] duration-[var(--motion-press)] hover:bg-bg-elev hover:text-fg focus:outline-none focus:ring-2 focus:ring-accent/40 motion-safe:active:not-focus-visible:scale-[0.97] disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted"
           disabled={disabled}
           onClick={() => setShowValue((visible) => !visible)}
           type="button"

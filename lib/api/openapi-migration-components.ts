@@ -1,3 +1,4 @@
+import { ALERT_CHANNELS_OPENAPI_DESCRIPTION } from "@/lib/alerts/channel-availability";
 import { alertSeverities } from "@/lib/alerts/severity";
 import { CLOUD_MIGRATION_PACKAGE_VERSION } from "@/lib/migration/package-version";
 import { savedViewSurfaces } from "@/lib/saved-views/model";
@@ -37,6 +38,7 @@ export const migrationSchemas = {
     properties: {
       change_pct: { type: ["number", "null"] },
       channels: {
+        description: ALERT_CHANNELS_OPENAPI_DESCRIPTION,
         items: { enum: ["email", "slack", "webhook"], type: "string" },
         type: "array",
       },

@@ -1,0 +1,165 @@
+---
+title: "Upgrade from v0.1.0 to v0.2.0"
+description: "One-time source upgrade procedure from bisibility v0.1.0 to v0.2.0."
+---
+
+[Production checklist](/self-hosting#production-checklist)
+
+## Upgrade from v0.1.0 to v0.2.0
+
+v0.2.0 has no `upgrade.sh`, automated upgrade tooling, or automatic rollback.
+This is the last release without automated upgrade tooling. Releases after
+v0.2.0 upgrade with the
+[distribution manifest](/self-hosting/upgrades#upgrade-with-a-distribution-manifest).
+
+This is a source upgrade. The `db-migrations`, app, and worker services are
+built from the checked-out source; only third-party service images are pulled.
+
+<AccordionGroup>
+  <Accordion title="1. Back up PostgreSQL" id="1-back-up-postgresql">
+    Run the backup before fetching or replacing any source:
+
+    ```bash
+    docker compose exec -T postgres pg_dump \
+      -U bisibility -d bisibility --format=custom \
+      > bisibility-v0.1.0-before-v0.2.0.dump
+    ```
+
+    This command still works after v0.2.0 stops publishing the PostgreSQL port.
+    `docker compose exec` reaches the container through the Docker daemon, not
+    through a published network port.
+  </Accordion>
+
+  <Accordion title="2. Check the port change" id="2-check-the-port-change">
+    v0.2.0 stops exposing PostgreSQL on `5432` and Valkey on `6379` to the
+    host. Connections from another host will lose access after the upgrade. Identify
+    those clients now; apply the host-access option only after the v0.2.0 files are
+    present.
+  </Accordion>
+
+  <Accordion title="3. Fetch v0.2.0" id="3-fetch-v020">
+    For an existing Git checkout:
+
+    ```bash
+    git fetch --tags --prune
+    git checkout v0.2.0
+    ```
+
+    For a tarball install, download the v0.2.0 source tarball from the release
+    assets, preserve the old source directory for rollback, and extract the new
+    source under the same directory name:
+
+    ```bash
+    cd ..
+    curl -fL \
+      -o bisibility-v0.2.0.tar.gz \
+      https://github.com/CorgiCorner/bisibility/archive/refs/tags/v0.2.0.tar.gz
+    mv bisibility bisibility-v0.1.0
+    mkdir bisibility
+    tar -xzf bisibility-v0.2.0.tar.gz -C bisibility --strip-components=1
+    cp bisibility-v0.1.0/.env bisibility/.env
+    cd bisibility
+    ```
+
+    Keeping the `bisibility` directory name also keeps the default Compose project
+    name and its existing volumes.
+  </Accordion>
+
+  <Accordion title="4. Keep deliberate host-local database access" id="4-keep-deliberate-host-local-database-access">
+    If the Docker host must reach PostgreSQL or Valkey, use the debug overlay
+    shipped in v0.2.0 as the upgrade command:
+
+    ```bash
+    docker compose -f docker-compose.yml -f docker-compose.debug.yml up -d --build
+    ```
+
+    This binds both services to `127.0.0.1`. Use a hand-written
+    `docker-compose.override.yml` only for other requirements, and keep the
+    loopback prefix on every mapping, such as `127.0.0.1:5432:5432`. A mapping such
+    as `5432:5432` binds to all interfaces and reverses this release's protection.
+
+    If you run the overlay command above, do not run the base-only command in the
+    next step; the overlay command performs the same rebuild and startup.
+  </Accordion>
+
+  <Accordion title="5. Build and start the release" id="5-build-and-start-the-release">
+    If you do not need the debug overlay, run:
+
+    ```bash
+    docker compose up -d --build
+    ```
+
+    Migrations apply automatically: the one-shot `db-migrations` service runs
+    before the app, and the app waits for it to finish successfully. v0.2.0 includes
+    a schema migration.
+
+    `--build` performs a full Next.js build on this machine; it does not pull a
+    prebuilt bisibility image. Expect sustained CPU use, several GB of RAM or swap,
+    and free disk space for Docker layers. A small VPS can exhaust RAM and fail
+    mid-build.
+  </Accordion>
+
+  <Accordion title="6. Verify the upgrade" id="6-verify-the-upgrade">
+    ```bash
+    docker compose ps --all
+    docker compose logs --no-color db-migrations
+    curl -fsS http://127.0.0.1:3000/api/v1/health
+    docker compose exec app npx prisma migrate status
+    docker compose port postgres 5432
+    docker compose port redis 6379
+    ```
+
+    The migration service must show a successful exit, the app must be running, and
+    the health request must succeed. Prisma must report that the database schema is
+    up to date. Adjust `3000` if `APP_HOST_PORT` is set. On the base stack, both
+    `docker compose port` commands should report no published port. With the debug
+    overlay, they should report only `127.0.0.1` mappings.
+  </Accordion>
+
+  <Accordion title="7. Roll back" id="7-roll-back">
+    There is no automatic rollback. For a Git checkout, return to the old source
+    and rebuild it:
+
+    > **Security warning:** Rolling back restores the v0.1.0 Compose file, which
+    > publishes PostgreSQL `5432` and Valkey `6379` on all host interfaces by
+    > default. If v0.1.0 will remain running beyond immediate recovery, check it out
+    > without starting Compose, then remove the `ports` blocks from `postgres` and
+    > `redis` when host access is not needed. Otherwise, change the mappings to
+    > `127.0.0.1:${POSTGRES_HOST_PORT:-5432}:5432` and
+    > `127.0.0.1:${REDIS_HOST_PORT:-6379}:6379` before running
+    > `docker compose up -d --build`.
+
+    ```bash
+    git checkout v0.1.0 && docker compose up -d --build
+    ```
+
+    For the tarball path above, restore the retained source directory:
+
+    ```bash
+    cd ..
+    mv bisibility bisibility-v0.2.0-failed
+    mv bisibility-v0.1.0 bisibility
+    cd bisibility
+    ```
+
+    If the migration did not start or completed successfully, rebuild v0.1.0 now:
+
+    ```bash
+    docker compose up -d --build
+    ```
+
+    If the v0.2.0 migration applied only partially, first restore the v0.1.0 source
+    with `git checkout v0.1.0` or the tarball directory swap above. Do not start the
+    old app yet. Stop application writes, restore the backup from step 1, and then
+    rebuild v0.1.0:
+
+    ```bash
+    docker compose stop app worker
+    docker compose exec -T postgres pg_restore \
+      --clean --if-exists --no-owner \
+      -U bisibility -d bisibility \
+      < bisibility-v0.1.0-before-v0.2.0.dump
+    docker compose up -d --build
+    ```
+  </Accordion>
+</AccordionGroup>

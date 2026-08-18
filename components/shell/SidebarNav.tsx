@@ -1,9 +1,9 @@
 "use client";
 
+import { Tooltip } from "@/components/ui";
 import type { NavItem } from "@/lib/nav/nav-items";
 import { navItems, RAIL_ICON_SIZE } from "@/lib/nav/nav-items";
 import { appPath } from "@/lib/routing/app-path";
-import Tooltip from "@mui/material/Tooltip";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -31,7 +31,7 @@ export function SidebarNav({
     const Icon = item.icon;
 
     return (
-      <Tooltip key={item.href} placement="right" title={collapsed ? item.label : ""}>
+      <Tooltip key={item.href} placement="right" content={collapsed ? item.label : ""}>
         <Link
           aria-current={active ? "page" : undefined}
           aria-label={collapsed ? item.label : undefined}
@@ -43,7 +43,7 @@ export function SidebarNav({
             // stylesheet order, not by their order in this string. Expanded the row is inset 10px
             // and gives that back as padding, so the icon axis stays at 40px (see Sidebar.tsx).
             collapsed
-              ? "ml-[22px] h-9 w-9 justify-center p-0"
+              ? "ml-5.5 h-9 w-9 justify-center p-0"
               : "ml-2.5 h-9 gap-2.5 pr-[11px] pl-[1px]",
             // No fill on the current page: the row surface belongs to hover, the page
             // marker is the leading dot + filled glyph + 600 label (see Sidebar.tsx).

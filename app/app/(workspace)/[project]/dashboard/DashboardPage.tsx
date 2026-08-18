@@ -109,7 +109,7 @@ function OverviewSections({
         key={`${overview.domain}:${overview.toolbar.rangeValue}:${overview.toolbar.deviceValue}:${overview.toolbar.marketValues.join(",")}:${overview.toolbar.tagValue ?? "all"}`}
         projectRef={projectRef}
       />
-      <div className="flex min-w-0 flex-col gap-[18px]">
+      <div className="flex min-w-0 flex-col gap-4.5">
         {banner}
         {hasBanner ? (
           <CheckHealthBanners checkHealth={checkHealth} projectRef={projectRef} />
@@ -190,7 +190,7 @@ async function OverviewData({
         {overviewView.toolbar.marketOptions.length > 0 ? (
           <OverviewToolbar initialSelected={overviewView.toolbar} projectRef={projectRef} />
         ) : null}
-        <div className="flex min-w-0 flex-col gap-[18px]">
+        <div className="flex min-w-0 flex-col gap-4.5">
           {sampleBanner}
           <OverviewEmpty
             addKeywordsAction={addKeywords}
@@ -211,7 +211,7 @@ async function OverviewData({
         {overviewView.toolbar.marketOptions.length > 0 ? (
           <OverviewToolbar initialSelected={overviewView.toolbar} projectRef={projectRef} />
         ) : null}
-        <div className="flex min-w-0 flex-col gap-[18px]">
+        <div className="flex min-w-0 flex-col gap-4.5">
           {sampleBanner}
           <OverviewNoData
             budgetExhausted={checkHealth.budget.exhausted}

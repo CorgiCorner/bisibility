@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import userEvent from "@testing-library/user-event";
+import { describe, expect, it, vi } from "vitest";
 import { SegmentedControl } from "./SegmentedControl";
 
 type Mode = "a" | "b";
@@ -100,5 +101,97 @@ describe("SegmentedControl", () => {
     expect(b).toHaveAttribute("type", "radio");
     expect(a).toHaveAttribute("name", "keyboard");
     expect(b).toHaveAttribute("name", "keyboard");
+  });
+
+  it("does not put a native title on the label or input when a tooltip is supplied", () => {
+    render(
+      <SegmentedControl<Mode>
+        name="tooltip"
+        onChange={() => {}}
+        options={[
+          { label: "A", tooltip: "Reason A", value: "a" },
+          { label: "B", tooltip: "Reason B", value: "b" },
+        ]}
+        size="field"
+        value="a"
+      />,
+    );
+
+    for (const name of ["A", "B"]) {
+      const radio = screen.getByRole("radio", { name });
+      expect(radio).not.toHaveAttribute("title");
+      expect(radio.closest("label")).not.toHaveAttribute("title");
+    }
+  });
+
+  it("shows the tooltip text on focus as a description, not a replacement name", async () => {
+    const user = userEvent.setup();
+    render(
+      <SegmentedControl<Mode>
+        name="tooltip-focus"
+        onChange={() => {}}
+        options={[
+          { label: "A", tooltip: "Reason for A", value: "a" },
+          { label: "B", value: "b" },
+        ]}
+        size="field"
+        value="a"
+      />,
+    );
+
+    const radio = screen.getByRole("radio", { name: "A" });
+    await user.tab();
+    expect(radio).toHaveFocus();
+    expect(await screen.findByRole("tooltip")).toHaveTextContent("Reason for A");
+    expect(screen.getByRole("radio", { name: "A" })).toBe(radio);
+  });
+
+  it("exposes a disabled option reason via aria-describedby on the radio without making it selectable", async () => {
+    const onChange = vi.fn();
+    render(
+      <SegmentedControl<Mode>
+        name="disabled-reason"
+        onChange={onChange}
+        options={[
+          { label: "A", value: "a" },
+          { label: "B", disabled: true, tooltip: "B is unavailable", value: "b" },
+        ]}
+        size="field"
+        value="a"
+      />,
+    );
+
+    const disabledRadio = screen.getByRole("radio", { name: "B" });
+    expect(disabledRadio).toBeDisabled();
+    expect(disabledRadio).not.toHaveAttribute("title");
+    expect(disabledRadio).toHaveAttribute("aria-describedby");
+    const describedBy = disabledRadio.getAttribute("aria-describedby");
+    const desc = document.getElementById(describedBy ?? "");
+    expect(desc).toHaveTextContent("B is unavailable");
+  });
+
+  it("opens the visual house tooltip on hover of a disabled option without selecting it", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(
+      <SegmentedControl<Mode>
+        name="disabled-hover"
+        onChange={onChange}
+        options={[
+          { label: "A", value: "a" },
+          { label: "B", disabled: true, tooltip: "B is unavailable", value: "b" },
+        ]}
+        size="field"
+        value="a"
+      />,
+    );
+
+    const disabledRadio = screen.getByRole("radio", { name: "B" });
+    expect(disabledRadio).toBeDisabled();
+    const visualSurface = disabledRadio.closest("label");
+    expect(visualSurface).not.toBeNull();
+    await user.hover(visualSurface as HTMLElement);
+    expect(await screen.findByRole("tooltip")).toHaveTextContent("B is unavailable");
+    expect(onChange).not.toHaveBeenCalled();
   });
 });

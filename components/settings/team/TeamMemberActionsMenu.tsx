@@ -1,9 +1,8 @@
 "use client";
 
-import { type ConfirmKind, ConfirmModal } from "@/components/ui";
+import { type ConfirmKind, ConfirmModal, Tooltip } from "@/components/ui";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
-import Tooltip from "@mui/material/Tooltip";
 import { DotsThreeIcon as DotsThree } from "@phosphor-icons/react";
 import { useState } from "react";
 
@@ -89,7 +88,7 @@ export function TeamMemberActionsMenu({
 
   return (
     <>
-      <Tooltip title={`Actions for ${memberName}`}>
+      <Tooltip content={`Actions for ${memberName}`}>
         <button
           aria-expanded={open}
           aria-haspopup="menu"

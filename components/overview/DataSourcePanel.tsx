@@ -17,7 +17,7 @@ export function DataSourcePanel({ checkHealth, health }: Readonly<DataSourcePane
     : health.metrics;
 
   return (
-    <Card className="px-5 py-[18px]" size="md">
+    <Card className="px-5 py-4.5" size="md">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <SectionTitle>Data source</SectionTitle>
@@ -43,7 +43,7 @@ export function DataSourcePanel({ checkHealth, health }: Readonly<DataSourcePane
           ) : null}
         </div>
       </div>
-      <div className="mt-[18px] grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-x-[18px] gap-y-3.5">
+      <div className="mt-4.5 grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-x-4.5 gap-y-3.5">
         {metrics.map((metric) => (
           <div className="min-w-0" key={metric.label}>
             <div className="font-mono text-[10px] uppercase tracking-[0.6px] text-fg-muted">

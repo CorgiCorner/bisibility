@@ -1,15 +1,20 @@
 "use client";
 
 import { cn } from "@/lib/ui/cn";
+import { MOTION_PRESS } from "@/lib/ui/motion";
 import { sxArray } from "@/lib/ui/mui-sx";
 import IconButton, { type IconButtonProps } from "@mui/material/IconButton";
-import Tooltip from "@mui/material/Tooltip";
-import { CheckIcon as Check, CopyIcon as Copy } from "@phosphor-icons/react";
+import {
+  CheckIcon as Check,
+  CopyIcon as Copy,
+  WarningCircleIcon as WarningCircle,
+} from "@phosphor-icons/react";
 import { cva } from "class-variance-authority";
-import { type MouseEvent, useRef, useState } from "react";
+import { type MouseEvent, useCallback, useRef, useState } from "react";
 import { useToast } from "./Toast";
+import { Tooltip } from "./Tooltip";
 
-export type CopyButtonProps = Omit<IconButtonProps, "children" | "onClick" | "size"> & {
+export type CopyButtonProps = Omit<IconButtonProps, "children" | "onClick" | "ref" | "size"> & {
   text: string;
   label?: string;
   size?: "xs" | "sm" | "md" | "lg";
@@ -43,6 +48,10 @@ const copyIconSizeBySize = {
   lg: 16,
 } as const;
 
+type CopyState = "idle" | "copying" | "copied" | "error";
+
+const COPY_RESET_MS = 1200;
+
 export function CopyButton({
   className,
   text,
@@ -51,36 +60,87 @@ export function CopyButton({
   sx,
   ...props
 }: CopyButtonProps) {
-  const [copied, setCopied] = useState(false);
+  const [state, setState] = useState<CopyState>("idle");
   const { showToast } = useToast();
-  // Keep the copied-state reset timer deduped across rapid clicks.
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mountedRef = useRef(true);
 
-  function handleCopy(event: MouseEvent<HTMLButtonElement>) {
-    event.stopPropagation();
-    void navigator.clipboard?.writeText(text);
-    setCopied(true);
-    showToast("Copied", { icon: <Check size={18} weight="bold" />, tint: "green" });
+  const clearResetTimer = useCallback(() => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
     }
-    timeoutRef.current = setTimeout(() => setCopied(false), 1200);
+  }, []);
+
+  // Stable callback ref: React calls it with null on unmount, which clears any
+  // pending reset timer and flips the mounted flag so a late clipboard Promise
+  // cannot touch state, toast, or timers after the component is gone.
+  const setNodeRef = useCallback(
+    (node: HTMLButtonElement | null) => {
+      mountedRef.current = node !== null;
+      if (!node) {
+        clearResetTimer();
+      }
+    },
+    [clearResetTimer],
+  );
+
+  async function handleCopy(event: MouseEvent<HTMLButtonElement>) {
+    event.stopPropagation();
+    if (state === "copying") return;
+
+    clearResetTimer();
+    setState("copying");
+
+    try {
+      const clipboard = navigator.clipboard;
+      if (!clipboard?.writeText) {
+        throw new Error("Clipboard API unavailable");
+      }
+      await clipboard.writeText(text);
+      if (!mountedRef.current) return;
+      setState("copied");
+      timeoutRef.current = setTimeout(() => {
+        timeoutRef.current = null;
+        setState("idle");
+      }, COPY_RESET_MS);
+    } catch {
+      if (!mountedRef.current) return;
+      setState("error");
+      showToast("Copy failed", { tint: "red" });
+    }
   }
 
+  const copied = state === "copied";
+  const error = state === "error";
+  const tooltipTitle = copied ? "Copied!" : error ? "Copy failed" : label;
+  const color = copied ? "var(--green)" : error ? "var(--red)" : "var(--fg-muted)";
+  const hoverColor = copied ? "var(--green)" : error ? "var(--red)" : "var(--accent)";
+  const hoverBg = copied
+    ? "var(--green-soft)"
+    : error
+      ? "color-mix(in srgb, var(--red) 12%, transparent)"
+      : "var(--accent-soft)";
+
   return (
-    <Tooltip title={copied ? "Copied!" : label}>
+    <Tooltip content={tooltipTitle} semantics="label">
       <IconButton
-        aria-label={copied ? "Copied" : label}
+        aria-label={tooltipTitle}
         className={cn(copyButtonVariants({ size }), className)}
         onClick={handleCopy}
+        ref={setNodeRef}
         size={iconButtonMuiSizeBySize[size]}
         sx={[
           {
-            color: copied ? "var(--green)" : "var(--fg-muted)",
+            color,
             ...(size === "xs" ? { minHeight: 12, minWidth: 12, padding: 0 } : {}),
+            transition: `background-color ${MOTION_PRESS}ms ease, color ${MOTION_PRESS}ms ease, transform ${MOTION_PRESS}ms ease`,
             "&:hover": {
-              backgroundColor: copied ? "var(--green-soft)" : "var(--accent-soft)",
-              color: copied ? "var(--green)" : "var(--accent)",
+              backgroundColor: hoverBg,
+              color: hoverColor,
+            },
+            "@media (prefers-reduced-motion: no-preference)": {
+              "&:active:not(:focus-visible):not(.Mui-disabled)": { transform: "scale(0.97)" },
             },
           },
           ...sxArray(sx),
@@ -89,6 +149,8 @@ export function CopyButton({
       >
         {copied ? (
           <Check size={copyIconSizeBySize[size]} weight="bold" />
+        ) : error ? (
+          <WarningCircle size={copyIconSizeBySize[size]} weight="bold" />
         ) : (
           <Copy size={copyIconSizeBySize[size]} />
         )}

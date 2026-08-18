@@ -1,6 +1,6 @@
+import { Tooltip } from "@/components/ui";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import * as rankDepth from "@/lib/serp/rank-depth";
-import Tooltip from "@mui/material/Tooltip";
 import {
   ArrowDownIcon as ArrowDown,
   ArrowUpIcon as ArrowUp,
@@ -46,7 +46,7 @@ export function KeywordChangeCell({ row }: Readonly<{ row: KeywordRow }>) {
   if (!delta) return null;
   const Icon = delta.icon;
   return (
-    <Tooltip title={delta.title}>
+    <Tooltip content={delta.title}>
       <span
         aria-label={delta.title}
         className="inline-flex items-center gap-1 font-mono text-xs font-semibold"

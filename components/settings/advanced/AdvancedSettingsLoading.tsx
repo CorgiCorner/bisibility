@@ -13,11 +13,7 @@ function Frame({
 }: Readonly<{ children: React.ReactNode; className: string; id: string }>) {
   return (
     <section
-      className={cn(
-        settingsCardFrameClassName,
-        "flex flex-col gap-[18px] p-[18px_20px]",
-        className,
-      )}
+      className={cn(settingsCardFrameClassName, "flex flex-col gap-4.5 p-[18px_20px]", className)}
       data-advanced-loading-frame={id}
       data-settings-loading-frame={id}
     >
@@ -39,7 +35,7 @@ function AuditFrame() {
             className="grid grid-cols-[34px_minmax(0,1fr)] gap-x-3 gap-y-1 px-3 py-2.5 sm:grid-cols-[34px_minmax(0,1fr)_auto] sm:items-center"
             key={index}
           >
-            <SettingsLoadingBar className="row-span-2 h-[34px] w-[34px] sm:row-span-1" />
+            <SettingsLoadingBar className="row-span-2 h-8.5 w-[34px] sm:row-span-1" />
             <div className="space-y-1.5">
               <SettingsLoadingBar className="h-3 w-28" />
               <SettingsLoadingBar className="h-2.5 w-44 max-w-full" />
@@ -49,7 +45,7 @@ function AuditFrame() {
         ))}
       </div>
       <div className="mt-auto flex justify-end border-border-soft border-t pt-4">
-        <SettingsLoadingBar className="h-[34px] w-28" />
+        <SettingsLoadingBar className="h-8.5 w-28" />
       </div>
     </Frame>
   );
@@ -66,7 +62,7 @@ function BackupFrame() {
         <SettingsLoadingBar className="h-5 w-24" />
       </div>
       <div className="mt-auto flex justify-end border-border-soft border-t pt-4">
-        <SettingsLoadingBar className="h-[34px] w-32" />
+        <SettingsLoadingBar className="h-8.5 w-32" />
       </div>
     </Frame>
   );
@@ -89,7 +85,7 @@ function MigrationFrame() {
         </div>
       </div>
       <div className="mt-auto flex justify-end border-border-soft border-t pt-4">
-        <SettingsLoadingBar className="h-[34px] w-32" />
+        <SettingsLoadingBar className="h-8.5 w-32" />
       </div>
     </Frame>
   );
@@ -107,7 +103,7 @@ function DangerFrame() {
 
 export function AdvancedSettingsContentLoading() {
   return (
-    <div className="flex max-w-[760px] flex-col gap-[14px]" data-advanced-settings-loading="">
+    <div className="flex max-w-[760px] flex-col gap-3.5" data-advanced-settings-loading="">
       <AuditFrame />
       <BackupFrame />
       <MigrationFrame />

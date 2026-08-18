@@ -155,7 +155,7 @@ export function KeywordScheduleInlineForm({
       className={
         layout === "drawer"
           ? "grid gap-4"
-          : `mt-[18px] grid gap-3 border-t border-border pt-[18px] md:grid-cols-2 ${
+          : `mt-4.5 grid gap-3 border-t border-border pt-4.5 md:grid-cols-2 ${
               frequency === "custom_cron"
                 ? "xl:grid-cols-[repeat(6,minmax(0,1fr))_auto]"
                 : "xl:grid-cols-[repeat(5,minmax(0,1fr))_auto]"

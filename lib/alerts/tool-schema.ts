@@ -1,3 +1,4 @@
+import { ALERT_CHANNELS_OPENAPI_DESCRIPTION } from "./channel-availability";
 import {
   ALERT_RULE_NAME_MIN_LENGTH,
   ALERT_RULE_PERCENT_MAX,
@@ -31,6 +32,7 @@ const nullableRankSchema = {
 
 export const alertRuleToolProperties = {
   channels: {
+    description: ALERT_CHANNELS_OPENAPI_DESCRIPTION,
     items: { enum: alertChannels, type: "string" },
     type: "array",
   },

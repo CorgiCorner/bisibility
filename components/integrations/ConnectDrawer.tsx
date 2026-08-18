@@ -192,7 +192,7 @@ export function ConnectDrawer({
       onClose();
     } catch (error) {
       setNotice(providerActionErrorNotice(error));
-      setConfirmOpen(false);
+      throw error;
     } finally {
       setPendingAction(null);
     }
@@ -263,9 +263,7 @@ export function ConnectDrawer({
         busy={pendingAction === "disconnect"}
         kind="removeIntegration"
         onClose={() => setConfirmOpen(false)}
-        onConfirm={() => {
-          handleDisconnectConfirm().catch((error) => setNotice(providerActionErrorNotice(error)));
-        }}
+        onConfirm={handleDisconnectConfirm}
         open={confirmOpen}
       />
     </>

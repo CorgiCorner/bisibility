@@ -36,7 +36,7 @@ describe("ThemeSegments", () => {
     expect(document.documentElement.dataset.theme).toBe("light");
   });
 
-  it("gives each segment exactly one accessible name despite the tooltip", () => {
+  it("gives each segment exactly one accessible name and no native title while the house tooltip supplies the description", () => {
     render(<ThemeSegments />);
 
     for (const name of ["Light", "Dark", "System"] as const) {
@@ -45,7 +45,8 @@ describe("ThemeSegments", () => {
       expect(radio).not.toHaveAttribute("aria-labelledby");
       expect(radio).not.toHaveAttribute("title");
       const wrappingLabel = radio.closest("label");
-      expect(wrappingLabel).toHaveAttribute("title", name);
+      expect(wrappingLabel).not.toHaveAttribute("title");
+      expect(wrappingLabel).toHaveAttribute("aria-describedby");
     }
   });
 

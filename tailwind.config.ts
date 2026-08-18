@@ -1,5 +1,6 @@
 import type { Config } from "tailwindcss";
 import { tailwindSemanticColors } from "./lib/theme/tokens";
+import { UI_MAX_WIDTH_ROLES, UI_RADIUS_ROLES, UI_TYPE_ROLES } from "./lib/ui/design-role-tokens";
 
 const config = {
   darkMode: ["selector", '[data-theme="dark"]'],
@@ -22,6 +23,9 @@ const config = {
         sans: ["var(--font-sans)", "system-ui", "sans-serif"],
         mono: ["var(--font-mono)", "monospace"],
       },
+      fontSize: UI_TYPE_ROLES,
+      borderRadius: UI_RADIUS_ROLES,
+      maxWidth: UI_MAX_WIDTH_ROLES,
     },
   },
   plugins: [],

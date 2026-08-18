@@ -128,7 +128,7 @@ export function AlertsPageContent({
   }
 
   return (
-    <div className="flex min-w-0 flex-col gap-[18px]">
+    <div className="flex min-w-0 flex-col gap-4.5">
       <AlertsLiveToolbar
         actions={actions}
         canCreate={canCreate}
@@ -173,7 +173,7 @@ export function AlertsPageContent({
             <AlertBanner onDismiss={() => setFeedError(null)} tint="red" title={feedError} />
           ) : null}
           <Card className="overflow-hidden p-0" size="md">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-border border-b px-[18px] py-3.5">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-border border-b px-4.5 py-3.5">
               <div className="flex flex-wrap items-center gap-2.5">
                 <SectionTitle>Triggered alerts</SectionTitle>
                 <span className="rounded-full bg-bg-sunken px-2 py-0.5 font-mono text-[10.5px] font-semibold text-fg-muted">
@@ -222,11 +222,11 @@ export function AlertsPageContent({
                 />
               ))
             ) : (
-              <div className="px-[18px] py-8 text-center text-[13px] text-fg-muted">
+              <div className="px-4.5 py-8 text-center text-[13px] text-fg-muted">
                 No alerts match this filter.
               </div>
             )}
-            <div className="flex flex-wrap items-center justify-between gap-3 bg-bg-sunken px-[18px] py-3">
+            <div className="flex flex-wrap items-center justify-between gap-3 bg-bg-sunken px-4.5 py-3">
               <span className="font-mono text-[11px] text-fg-muted">
                 Showing {shownCount} of {pluralize(filteredAlerts.length, "loaded alert")}
               </span>

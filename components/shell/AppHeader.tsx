@@ -31,7 +31,7 @@ export function AppHeader({
   const activeWorkspace = workspaces.find((workspace) => workspace.id === activeProjectId);
 
   return (
-    <header className="relative z-40 flex flex-nowrap items-center justify-between gap-2.5 border-b border-border bg-bg px-4 py-3 sm:gap-4 sm:px-5 lg:px-7 lg:py-[14px]">
+    <header className="relative z-40 flex flex-nowrap items-center justify-between gap-2.5 border-b border-border bg-bg px-4 py-3 sm:gap-4 sm:px-5 lg:px-7 lg:py-3.5">
       <div className="flex min-w-0 flex-1 items-center gap-3 overflow-hidden">
         <MobileNav
           activeProjectId={activeProjectId}

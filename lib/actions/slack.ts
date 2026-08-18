@@ -1,5 +1,4 @@
 import "server-only";
-
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { decryptSecret, encryptSecret } from "@/lib/providers/crypto";
@@ -25,7 +24,6 @@ const SLACK_SCOPES = [
   "groups:read",
   "incoming-webhook",
 ];
-
 const projectIdSchema = z.string().trim().min(1).max(120);
 const returnPathSchema = z
   .string()
@@ -38,7 +36,6 @@ const slackInstallSchema = z.object({
   projectId: projectIdSchema,
   returnPath: returnPathSchema.optional(),
 });
-
 const slackStateSchema = z.object({
   actorId: projectIdSchema,
   issuedAt: z.number().int(),
@@ -46,9 +43,7 @@ const slackStateSchema = z.object({
   redirectUri: z.url(),
   returnPath: returnPathSchema,
 });
-
 type SlackState = z.infer<typeof slackStateSchema>;
-
 type SlackOAuthPayload = {
   access_token?: unknown;
   error?: unknown;
@@ -57,7 +52,6 @@ type SlackOAuthPayload = {
   scope?: unknown;
   team?: { id?: unknown; name?: unknown };
 };
-
 const slackConnectionSelect = {
   channelId: true,
   channelName: true,
@@ -70,7 +64,8 @@ const slackConnectionSelect = {
 } as const;
 
 function requiredEnv(name: "SLACK_CLIENT_ID" | "SLACK_CLIENT_SECRET") {
-  const value = process.env[name];
+  const value =
+    name === "SLACK_CLIENT_ID" ? process.env.SLACK_CLIENT_ID : process.env.SLACK_CLIENT_SECRET;
   if (!value) {
     throw new Error(`${name} is required to install Slack.`);
   }

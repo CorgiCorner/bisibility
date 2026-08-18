@@ -177,7 +177,6 @@ export async function getOverview(projectId: string, options: { dateFormat?: Dat
       marketValues: filters.marketIds,
       range: overviewRangeLabels[filters.range],
       rangeValue: filters.range,
-      refresh: scheduleSummary.refresh,
       tag: filters.tag ?? "All tags",
       tagValue: filters.tag,
     },

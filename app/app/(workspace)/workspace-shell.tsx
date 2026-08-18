@@ -120,9 +120,7 @@ export async function WorkspaceShell({
                 projectRef={projectRef}
                 projectName={active.name}
               />
-              <main className="min-w-0 flex-1 px-4 py-4 sm:px-5 lg:px-7 lg:py-[22px]">
-                {children}
-              </main>
+              <main className="min-w-0 flex-1 px-4 py-4 sm:px-5 lg:px-7 lg:py-5.5">{children}</main>
               {instanceAdminSession ? (
                 <AppFooter
                   schemaStatus={

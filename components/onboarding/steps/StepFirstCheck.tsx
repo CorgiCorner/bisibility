@@ -223,7 +223,7 @@ export function StepFirstCheck({
         timezoneError={timezoneError}
       />
       {!providerReady ? (
-        <div className="mt-5 flex flex-col items-start gap-2.5 rounded-xl border border-border-strong border-dashed bg-bg-sunken p-[18px]">
+        <div className="mt-5 flex flex-col items-start gap-2.5 rounded-xl border border-border-strong border-dashed bg-bg-sunken p-4.5">
           <span className="flex items-start gap-2 text-[13px] leading-[1.5] text-fg-muted">
             <Plug aria-hidden className="mt-0.5 shrink-0" size={16} />
             Your keywords are saved. Connect a provider to run the first check.

@@ -5,8 +5,7 @@ import type {
   OnboardingStepNumber,
 } from "@/components/onboarding/onboarding-fixtures";
 import { buildOnboardingStepHref } from "@/components/onboarding/onboarding-fixtures";
-import { Button, type StepDotState } from "@/components/ui";
-import Tooltip from "@mui/material/Tooltip";
+import { Button, type StepDotState, Tooltip } from "@/components/ui";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -37,7 +36,7 @@ export function StepDotNavigation({
 }: Readonly<StepDotNavigationProps>) {
   if (onStepChange) {
     return (
-      <Tooltip title={title}>
+      <Tooltip content={title}>
         <span className="inline-grid">
           <Button
             aria-current={active ? "step" : undefined}
@@ -66,7 +65,7 @@ export function StepDotNavigation({
   }
   if (locked)
     return (
-      <Tooltip title={title}>
+      <Tooltip content={title}>
         <span
           aria-current={active ? "step" : undefined}
           aria-disabled="true"
@@ -79,7 +78,7 @@ export function StepDotNavigation({
       </Tooltip>
     );
   return (
-    <Tooltip title={title}>
+    <Tooltip content={title}>
       <Link
         aria-current={active ? "step" : undefined}
         aria-label={accessibleName}

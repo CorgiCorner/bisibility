@@ -78,7 +78,7 @@ function LegalConsent({
   const betaEmails = includeBetaEmails ? ", and to beta emails (updates, incidents, pricing)" : "";
 
   return (
-    <p className="mt-[22px] mb-0 text-center text-xs leading-[1.6] text-fg-muted">
+    <p className="mt-5.5 mb-0 text-center text-xs leading-[1.6] text-fg-muted">
       {links.termsHref && links.privacyHref ? (
         <>
           By continuing you agree to the <ConsentLink href={links.termsHref} label="Terms" /> and{" "}

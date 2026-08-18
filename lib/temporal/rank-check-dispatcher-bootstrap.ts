@@ -17,7 +17,7 @@ const DEFAULT_DISPATCHER_INTERVAL = "1 minute";
 export { isRankCheckDispatcherEnabled };
 
 function dispatcherInterval() {
-  return envValue("RANK_CHECK_DISPATCHER_INTERVAL") ?? DEFAULT_DISPATCHER_INTERVAL;
+  return envValue(process.env.RANK_CHECK_DISPATCHER_INTERVAL) ?? DEFAULT_DISPATCHER_INTERVAL;
 }
 
 export async function ensureRankCheckDispatcherSchedule(

@@ -20,7 +20,7 @@ vi.mock("@/components/shell/WorkspaceSwitcher", () => ({
   ),
 }));
 
-vi.mock("@mui/material/Tooltip", () => import("@/tests/mui-tooltip"));
+vi.mock("@/components/ui/Tooltip", () => import("@/tests/mui-tooltip"));
 
 // Forwards the rest of the props: the row's aria-current and className are what the
 // current-page indicator is asserted through, and a href-only stub silently drops them.
@@ -109,7 +109,6 @@ describe("Sidebar", () => {
       "data-tooltip-placement",
       "right",
     );
-    expect(expandButton.closest("[data-tooltip]")).toHaveAttribute("data-tooltip-enter-delay", "0");
     expect(expandButton).toHaveClass("group");
     expect(expandButton).toHaveClass("h-12", "w-9", "cursor-e-resize");
     // Both marks share one grid cell and cross-fade on opacity. `display` toggling is banned
@@ -197,7 +196,7 @@ describe("Sidebar", () => {
     // slot) = 40. The row is inset by its margin and gives the same 10px back as a smaller
     // left padding, so the hover fill clears the current-page dot without moving the axis.
     const expanded = render(shell(false));
-    expect(expanded.container.querySelector("aside")).toHaveClass("p-[14px]");
+    expect(expanded.container.querySelector("aside")).toHaveClass("p-3.5");
     expect(expanded.getByRole("link", { name: "Dashboard" })).toHaveClass("ml-2.5", "pl-[1px]");
     expect(
       expanded.getByRole("link", { name: "Dashboard" }).querySelector(".w-\\[30px\\]"),
@@ -207,9 +206,9 @@ describe("Sidebar", () => {
     // Collapsed: 0 rail padding + 22 row margin + 18 (half the 36px tile) = 40. The margin is
     // explicit rather than mx-auto precisely so the two states cannot drift apart.
     const collapsed = render(shell(true));
-    expect(collapsed.container.querySelector("aside")).toHaveClass("px-0", "py-[14px]");
+    expect(collapsed.container.querySelector("aside")).toHaveClass("px-0", "py-3.5");
     expect(collapsed.getByRole("link", { name: "Dashboard" })).toHaveClass(
-      "ml-[22px]",
+      "ml-5.5",
       "h-9",
       "w-9",
       "p-0",

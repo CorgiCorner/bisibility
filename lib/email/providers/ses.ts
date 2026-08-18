@@ -46,7 +46,7 @@ function toEmailSendError(error: unknown) {
   return new EmailSendError(`SES send failed with status ${status}${detail}.`, status, null);
 }
 
-async function send({ from, to, subject, html, text }: EmailMessage) {
+async function send({ from, to, subject, html, replyTo, text }: EmailMessage) {
   const region = resolveSesRegion();
   if (!region) {
     throw new Error("SES_REGION or AWS_REGION is required to send email with SES.");
@@ -65,6 +65,7 @@ async function send({ from, to, subject, html, text }: EmailMessage) {
     },
     Destination: { ToAddresses: [to] },
     FromEmailAddress: from,
+    ReplyToAddresses: replyTo ? [replyTo] : undefined,
   });
 
   try {

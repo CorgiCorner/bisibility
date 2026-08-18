@@ -78,19 +78,19 @@ export function isAlertDigestFlushEnabled() {
 }
 
 function staleChecksInterval() {
-  return envValue("STALE_CHECKS_INTERVAL") ?? DEFAULT_STALE_CHECKS_INTERVAL;
+  return envValue(process.env.STALE_CHECKS_INTERVAL) ?? DEFAULT_STALE_CHECKS_INTERVAL;
 }
 
 function staleImportJobsInterval() {
-  return envValue("STALE_IMPORT_JOBS_INTERVAL") ?? DEFAULT_STALE_IMPORT_JOBS_INTERVAL;
+  return envValue(process.env.STALE_IMPORT_JOBS_INTERVAL) ?? DEFAULT_STALE_IMPORT_JOBS_INTERVAL;
 }
 
 function alertDigestFlushInterval() {
-  return envValue("ALERT_DIGEST_FLUSH_INTERVAL") ?? DEFAULT_ALERT_DIGEST_FLUSH_INTERVAL;
+  return envValue(process.env.ALERT_DIGEST_FLUSH_INTERVAL) ?? DEFAULT_ALERT_DIGEST_FLUSH_INTERVAL;
 }
 
 function alertHealthInterval() {
-  return envValue("ALERT_HEALTH_INTERVAL") ?? DEFAULT_ALERT_HEALTH_INTERVAL;
+  return envValue(process.env.ALERT_HEALTH_INTERVAL) ?? DEFAULT_ALERT_HEALTH_INTERVAL;
 }
 
 export async function ensureAlertHealthSchedule(
@@ -134,7 +134,7 @@ export async function ensureAuditPurgeSchedule(
       memo: { kind: "maintenance-audit-purge" },
       note: "Audit log retention purge",
       scheduleId: AUDIT_PURGE_SCHEDULE_ID,
-      spec: calendarSpec(DEFAULT_AUDIT_PURGE, "AUDIT_PURGE_CRON"),
+      spec: calendarSpec(DEFAULT_AUDIT_PURGE, process.env.AUDIT_PURGE_CRON),
       workflowType: AUDIT_PURGE_WORKFLOW_TYPE,
     },
     client,
@@ -150,7 +150,7 @@ export async function ensureRankCheckRawPurgeSchedule(
       memo: { kind: "maintenance-rank-check-raw-purge" },
       note: "Rank-check raw payload retention purge",
       scheduleId: RANK_CHECK_RAW_PURGE_SCHEDULE_ID,
-      spec: calendarSpec(DEFAULT_RANK_CHECK_RAW_PURGE, "RANK_CHECK_RAW_PURGE_CRON"),
+      spec: calendarSpec(DEFAULT_RANK_CHECK_RAW_PURGE, process.env.RANK_CHECK_RAW_PURGE_CRON),
       workflowType: RANK_CHECK_RAW_PURGE_WORKFLOW_TYPE,
     },
     client,
@@ -166,7 +166,10 @@ export async function ensureQueuedRankCheckRetentionSchedule(
       memo: { kind: "maintenance-queued-rank-check-retention" },
       note: "Queued rank-check ledger retention purge",
       scheduleId: QUEUED_RANK_CHECK_RETENTION_SCHEDULE_ID,
-      spec: calendarSpec(DEFAULT_QUEUED_RANK_CHECK_RETENTION, "QUEUED_RANK_CHECK_RETENTION_CRON"),
+      spec: calendarSpec(
+        DEFAULT_QUEUED_RANK_CHECK_RETENTION,
+        process.env.QUEUED_RANK_CHECK_RETENTION_CRON,
+      ),
       workflowType: QUEUED_RANK_CHECK_RETENTION_WORKFLOW_TYPE,
     },
     client,
@@ -182,7 +185,7 @@ export async function ensureSessionPurgeSchedule(
       memo: { kind: "maintenance-session-purge" },
       note: "Expired session and verification purge",
       scheduleId: SESSION_PURGE_SCHEDULE_ID,
-      spec: calendarSpec(DEFAULT_SESSION_PURGE, "SESSION_PURGE_CRON"),
+      spec: calendarSpec(DEFAULT_SESSION_PURGE, process.env.SESSION_PURGE_CRON),
       workflowType: SESSION_PURGE_WORKFLOW_TYPE,
     },
     client,
@@ -247,7 +250,7 @@ export async function ensureWeeklyDigestSchedule(
       memo: { kind: "maintenance-weekly-digest" },
       note: "Weekly report digest",
       scheduleId: WEEKLY_DIGEST_SCHEDULE_ID,
-      spec: calendarSpec(DEFAULT_WEEKLY_DIGEST, "WEEKLY_DIGEST_CRON"),
+      spec: calendarSpec(DEFAULT_WEEKLY_DIGEST, process.env.WEEKLY_DIGEST_CRON),
       workflowType: WEEKLY_DIGEST_WORKFLOW_TYPE,
     },
     client,
@@ -263,7 +266,7 @@ export async function ensureSitemapSyncSchedule(
       memo: { kind: "maintenance-sitemap-sync" },
       note: "Sitemap snapshot sync",
       scheduleId: SITEMAP_SYNC_SCHEDULE_ID,
-      spec: calendarSpec(DEFAULT_SITEMAP_SYNC, "SITEMAP_SYNC_CRON"),
+      spec: calendarSpec(DEFAULT_SITEMAP_SYNC, process.env.SITEMAP_SYNC_CRON),
       workflowType: SITEMAP_SYNC_WORKFLOW_TYPE,
     },
     client,
@@ -279,7 +282,7 @@ export async function ensurePresenceSyncSchedule(
       memo: { kind: "maintenance-presence-sync" },
       note: "URL presence sync",
       scheduleId: PRESENCE_SYNC_SCHEDULE_ID,
-      spec: calendarSpec(DEFAULT_PRESENCE_SYNC, "PRESENCE_SYNC_CRON"),
+      spec: calendarSpec(DEFAULT_PRESENCE_SYNC, process.env.PRESENCE_SYNC_CRON),
       workflowType: PRESENCE_SYNC_WORKFLOW_TYPE,
     },
     client,

@@ -69,11 +69,12 @@ describe("RankingUrlHistory", () => {
       name: /A change means Google now ranks a different page of yours/,
     });
     expect(explanation).toBeInTheDocument();
-    expect(explanation).toHaveAttribute(
-      "data-tip",
-      expect.stringContaining("The rank shown for each period"),
+    expect(explanation).toHaveAttribute("aria-describedby");
+    const descId = explanation.getAttribute("aria-describedby");
+    expect(document.getElementById(descId ?? "")).toHaveTextContent(
+      "The rank shown for each period is the position recorded at that period's last check.",
     );
-    expect(screen.getAllByTitle("Open ranking URL in a new tab")).not.toHaveLength(0);
+    expect(screen.getAllByRole("link")).not.toHaveLength(0);
     expect(screen.getByText("Current page")).toBeInTheDocument();
     expect(screen.getByText("First indexed for this query")).toBeInTheDocument();
     expect(screen.getByText("URL switched")).toBeInTheDocument();
@@ -85,9 +86,9 @@ describe("RankingUrlHistory", () => {
     const period = screen.getByTestId("ranking-url-period");
     expect(period).toHaveClass("grid-cols-[18px_minmax(0,1fr)_auto]");
     expect(screen.getByText("Jun 18 - now")).toHaveClass("col-start-2", "row-start-1");
-    expect(
-      screen.getByTitle("Open ranking URL in a new tab").parentElement?.parentElement,
-    ).toHaveClass("row-start-2", "sm:row-start-1");
+    const link = screen.getByRole("link");
+    expect(link).toHaveAttribute("aria-describedby");
+    expect(link.parentElement?.parentElement).toHaveClass("row-start-2", "sm:row-start-1");
   });
 
   it("does not present a closed newest period as current", () => {
@@ -163,7 +164,7 @@ describe("RankingUrlHistory", () => {
       />,
     );
 
-    expect(screen.getByTitle("Open ranking URL in a new tab")).toBeInTheDocument();
+    expect(screen.getByRole("link")).toBeInTheDocument();
     expect(screen.getByText("Current page")).toBeInTheDocument();
     expect(screen.queryByText("No ranking URL observed yet")).not.toBeInTheDocument();
   });

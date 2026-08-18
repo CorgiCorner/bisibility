@@ -1,5 +1,25 @@
 {
   "components": {
+    "parameters": {
+      "ProjectHeader": {
+        "description": "Project public ID (prj_...) targeted by this personal-access-token request. Optional. Selection precedence is: {project_id} path parameter, X-Bisibility-Project header, project query parameter, then inference when the PAT owner belongs to exactly one project. Project API keys and paths that already carry a project ID ignore it.",
+        "in": "header",
+        "name": "X-Bisibility-Project",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "ProjectQuery": {
+        "description": "Query-parameter equivalent of the X-Bisibility-Project header for personal-access-token project selection. Optional. Selection precedence is: {project_id} path parameter, X-Bisibility-Project header, project query parameter, then inference when the PAT owner belongs to exactly one project.",
+        "in": "query",
+        "name": "project",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      }
+    },
     "schemas": {
       "AlertRuleInput": {
         "properties": {
@@ -9,6 +29,7 @@
             "type": ["number", "null"]
           },
           "channels": {
+            "description": "Delivery channels for alert notifications. Slack tenant delivery is available as an API-only preview. Workspace installation and channel management are not yet exposed in the dashboard.",
             "items": {
               "enum": ["email", "slack", "webhook"],
               "type": "string"
@@ -476,6 +497,7 @@
             "type": ["number", "null"]
           },
           "channels": {
+            "description": "Delivery channels for alert notifications. Slack tenant delivery is available as an API-only preview. Workspace installation and channel management are not yet exposed in the dashboard.",
             "items": {
               "enum": ["email", "slack", "webhook"],
               "type": "string"
@@ -4348,6 +4370,12 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/ProjectHeader"
+          },
+          {
+            "$ref": "#/components/parameters/ProjectQuery"
           }
         ],
         "responses": {
@@ -4445,6 +4473,12 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/ProjectHeader"
+          },
+          {
+            "$ref": "#/components/parameters/ProjectQuery"
           }
         ],
         "requestBody": {
@@ -4554,6 +4588,12 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/ProjectHeader"
+          },
+          {
+            "$ref": "#/components/parameters/ProjectQuery"
           }
         ],
         "responses": {
@@ -4670,6 +4710,12 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/ProjectHeader"
+          },
+          {
+            "$ref": "#/components/parameters/ProjectQuery"
           }
         ],
         "requestBody": {
@@ -4779,6 +4825,12 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/ProjectHeader"
+          },
+          {
+            "$ref": "#/components/parameters/ProjectQuery"
           }
         ],
         "responses": {
@@ -5584,6 +5636,12 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/ProjectHeader"
+          },
+          {
+            "$ref": "#/components/parameters/ProjectQuery"
           }
         ],
         "responses": {
@@ -5906,6 +5964,12 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/ProjectHeader"
+          },
+          {
+            "$ref": "#/components/parameters/ProjectQuery"
           }
         ],
         "responses": {
@@ -6003,6 +6067,12 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/ProjectHeader"
+          },
+          {
+            "$ref": "#/components/parameters/ProjectQuery"
           }
         ],
         "responses": {
@@ -6100,6 +6170,12 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/ProjectHeader"
+          },
+          {
+            "$ref": "#/components/parameters/ProjectQuery"
           }
         ],
         "responses": {
@@ -6208,6 +6284,12 @@
             "schema": {
               "type": "boolean"
             }
+          },
+          {
+            "$ref": "#/components/parameters/ProjectHeader"
+          },
+          {
+            "$ref": "#/components/parameters/ProjectQuery"
           }
         ],
         "responses": {
@@ -6373,6 +6455,12 @@
               "format": "date-time",
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/ProjectHeader"
+          },
+          {
+            "$ref": "#/components/parameters/ProjectQuery"
           }
         ],
         "responses": {
@@ -6490,6 +6578,12 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/ProjectHeader"
+          },
+          {
+            "$ref": "#/components/parameters/ProjectQuery"
           }
         ],
         "responses": {
@@ -7320,6 +7414,12 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/ProjectHeader"
+          },
+          {
+            "$ref": "#/components/parameters/ProjectQuery"
           }
         ],
         "responses": {
@@ -15115,6 +15215,12 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/ProjectHeader"
+          },
+          {
+            "$ref": "#/components/parameters/ProjectQuery"
           }
         ],
         "responses": {
@@ -15279,6 +15385,12 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/ProjectHeader"
+          },
+          {
+            "$ref": "#/components/parameters/ProjectQuery"
           }
         ],
         "responses": {
@@ -15378,6 +15490,12 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/ProjectHeader"
+          },
+          {
+            "$ref": "#/components/parameters/ProjectQuery"
           }
         ],
         "requestBody": {
@@ -15497,6 +15615,12 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/ProjectHeader"
+          },
+          {
+            "$ref": "#/components/parameters/ProjectQuery"
           }
         ],
         "responses": {

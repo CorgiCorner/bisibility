@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const region = "client-usage";
@@ -31,6 +31,12 @@ const examples = [
     source: "examples/mcp/quickstart.mjs",
   },
 ];
+
+const exampleMethodSources = {
+  python: "examples/python/quickstart.py",
+  typescript: "examples/ts/quickstart.ts",
+  go: "examples/go/quickstart/main.go",
+};
 
 function isRegionMarker(line, kind) {
   const marker = `docs:${kind}:${region}`;
@@ -123,6 +129,96 @@ async function generatedPage(example) {
   return { generated: replaceBlock(page, example, blockFor(example, source)), page, pagePath };
 }
 
+const tableLanguages = ["python", "typescript", "go", "mcp"];
+
+const methodPatterns = {
+  go: /^\s*"([^"]+)":\s*\(\*bisibility\.Client\)\.([A-Za-z0-9_]+),\s*$/,
+  python: /^\s*"([^"]+)":\s*BisibilityClient\.([A-Za-z0-9_]+),\s*$/,
+  typescript: /^\s*"([^"]+)":\s*BisibilityClient\.prototype\.([A-Za-z0-9_]+),\s*$/,
+};
+
+function methodRegion(source, sourcePath) {
+  const start = source.indexOf("docs:start:method-contract");
+  const end = source.indexOf("docs:end:method-contract");
+  if (start === -1 || end === -1 || start >= end) {
+    throw new Error(`${sourcePath} must contain one ordered method-contract region.`);
+  }
+  return source.slice(start, end);
+}
+
+export function parseExampleMethodContract(language, source, sourcePath = language) {
+  const pattern = methodPatterns[language];
+  if (!pattern) throw new Error(`Unsupported SDK language ${language}.`);
+  const entries = new Map();
+  for (const line of methodRegion(source, sourcePath).split(/\r?\n/)) {
+    const match = line.match(pattern);
+    if (!match) continue;
+    if (entries.has(match[1])) throw new Error(`${sourcePath} repeats workflow ${match[1]}.`);
+    entries.set(match[1], match[2]);
+  }
+  if (entries.size === 0) throw new Error(`${sourcePath} has an empty method-contract region.`);
+  return entries;
+}
+
+function parseMethodsTable(content) {
+  const lines = content.split(/\r?\n/);
+  const rows = [];
+  for (const line of lines) {
+    if (!line.trim().startsWith("|")) continue;
+    const cells = line.split("|").map((c) => c.trim());
+    if (cells.length < 6) continue;
+    const workflow = cells[1];
+    if (!workflow || workflow === "Workflow") continue;
+    if (tableLanguages.every((_, i) => /^-+$/.test(cells[i + 2] ?? ""))) continue;
+    const unbacktick = (c) => c.replace(/^`|`$/g, "");
+    rows.push({
+      workflow,
+      python: unbacktick(cells[2]),
+      typescript: unbacktick(cells[3]),
+      go: unbacktick(cells[4]),
+      mcp: unbacktick(cells[5]),
+    });
+  }
+  return rows;
+}
+
+export function checkMethodParity({ methodsContent, exampleSources, mcpToolNames }) {
+  const failures = [];
+  const rows = parseMethodsTable(methodsContent);
+  for (const [lang, source] of Object.entries(exampleSources)) {
+    const contract = parseExampleMethodContract(lang, source);
+    const workflows = new Set(rows.map((row) => row.workflow));
+    for (const row of rows) {
+      const method = contract.get(row.workflow);
+      if (!method) {
+        failures.push(`${lang} example contract is missing workflow ${row.workflow}.`);
+      } else if (method !== row[lang]) {
+        failures.push(`${lang} example method ${method} != docs method ${row[lang]} for ${row.workflow}.`);
+      }
+    }
+    for (const workflow of contract.keys()) {
+      if (!workflows.has(workflow)) failures.push(`${lang} example has extra workflow ${workflow}.`);
+    }
+  }
+  for (const row of rows) {
+    if (!mcpToolNames.has(row.mcp)) failures.push(`MCP method ${row.mcp} is not canonical.`);
+  }
+  return failures;
+}
+
+async function runParityCheck() {
+  const methodsContent = await readFile(path.join(root, "docs/sdks/methods.mdx"), "utf8");
+  const exampleSources = {};
+  for (const [lang, sourcePath] of Object.entries(exampleMethodSources)) {
+    exampleSources[lang] = await readFile(path.join(root, sourcePath), "utf8");
+  }
+  const mcpContract = JSON.parse(
+    await readFile(path.join(root, "lib/mcp/canonical-contract.json"), "utf8"),
+  );
+  const mcpToolNames = new Set(mcpContract.map((tool) => tool.name));
+  return checkMethodParity({ methodsContent, exampleSources, mcpToolNames });
+}
+
 async function main() {
   const write = process.argv.includes("--write");
   const check = process.argv.includes("--check");
@@ -134,6 +230,7 @@ async function main() {
   }
 
   const stale = [];
+  const parityFailures = [];
   for (const example of examples) {
     const result = await generatedPage(example);
     if (result.page === result.generated) continue;
@@ -149,11 +246,19 @@ async function main() {
     }
   }
 
+  if (check) {
+    parityFailures.push(...(await runParityCheck()));
+  }
+
   if (stale.length > 0) {
     console.error(`${stale.join("\n")}\nRun npm run generate:docs-examples to update the pages.`);
     process.exitCode = 1;
-    return;
   }
+  if (parityFailures.length > 0) {
+    console.error(`SDK method parity failures:\n${parityFailures.join("\n")}`);
+    process.exitCode = 1;
+  }
+  if (stale.length > 0 || parityFailures.length > 0) return;
 
   if (write) {
     console.log("SDK documentation examples are current.");
@@ -162,4 +267,9 @@ async function main() {
   }
 }
 
-await main();
+const isMain = import.meta.url === pathToFileURL(process.argv[1] ?? "").href;
+if (isMain) {
+  await main();
+}
+
+export { parseMethodsTable };

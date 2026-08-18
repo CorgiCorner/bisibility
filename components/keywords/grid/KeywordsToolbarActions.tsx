@@ -4,13 +4,12 @@ import {
   ProjectReadOnlyTooltip,
   useProjectWriteMode,
 } from "@/components/shell/ProjectWriteModeProvider";
-import { Button, type ButtonProps, SegmentedControl } from "@/components/ui";
+import { Button, type ButtonProps, SegmentedControl, Tooltip } from "@/components/ui";
 import { sxArray } from "@/lib/ui/mui-sx";
 import Checkbox from "@mui/material/Checkbox";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import type { SxProps, Theme } from "@mui/material/styles";
-import Tooltip from "@mui/material/Tooltip";
 import type { GridColumnVisibilityModel, GridDensity } from "@mui/x-data-grid";
 import {
   ExportIcon as Export,
@@ -83,7 +82,7 @@ function ToolbarButton({ children, label, size = "sm", sx, ...props }: ToolbarBu
     </span>
   );
 
-  return props.disabled ? button : <Tooltip title={label}>{button}</Tooltip>;
+  return props.disabled ? button : <Tooltip content={label}>{button}</Tooltip>;
 }
 
 export function KeywordsToolbarActions({

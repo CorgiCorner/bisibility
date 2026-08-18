@@ -230,7 +230,7 @@ export function PackageTransferPanel({
   const serverExport = packageSource === "server";
 
   return (
-    <div className="mt-[18px] overflow-hidden rounded-[14px] border border-border bg-bg-elev">
+    <div className="mt-4.5 overflow-hidden rounded-[14px] border border-border bg-bg-elev">
       <div className="flex items-center gap-[13px] border-border-soft border-b p-[16px_20px]">
         <span className="grid h-[38px] w-[38px] flex-none place-items-center rounded-[10px] bg-blue/15 text-blue-text">
           <FileJs aria-hidden size={20} weight="fill" />

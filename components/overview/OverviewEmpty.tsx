@@ -33,7 +33,7 @@ export function OverviewEmpty({
     : `Welcome to ${workspaceName}`;
 
   return (
-    <div className="flex flex-col gap-[18px]">
+    <div className="flex flex-col gap-4.5">
       <Card className="relative overflow-hidden px-5 py-[30px] sm:px-8" size="md">
         {/* One measure for everything in the card; per-block max widths used to break the
             right edge several times. */}
@@ -44,7 +44,7 @@ export function OverviewEmpty({
           >
             <RocketLaunch aria-hidden size={25} weight="bold" />
           </span>
-          <h2 className="mt-[18px] text-2xl font-semibold tracking-[-0.8px] text-fg">{heading}</h2>
+          <h2 className="mt-4.5 text-2xl font-semibold tracking-[-0.8px] text-fg">{heading}</h2>
           <p className="mt-2 text-[14.5px] leading-[1.55] text-fg-muted">
             This project is empty. One step at a time gets you to your first rankings.
           </p>

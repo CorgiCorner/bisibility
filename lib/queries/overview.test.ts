@@ -410,12 +410,13 @@ describe("overview query", () => {
         deviceValue: "all",
         range: "Last 28 days",
         rangeValue: "28d",
-        refresh: "Weekly",
         tag: "All tags",
         tagValue: null,
       },
       trackedKeywordCount: 5,
     });
+    expect(result.toolbar).not.toHaveProperty("refresh");
+    expect(result.nextCheckAt).toBeInstanceOf(Date);
     expect(result.kpis).toEqual([
       {
         delta: "0 vs previous ranked check",
@@ -783,7 +784,7 @@ describe("overview query", () => {
 
     const result = await getOverview("prj_1", { now });
 
-    expect(result.toolbar.refresh).toBe("Paused");
+    expect(result.toolbar).not.toHaveProperty("refresh");
     expect(result.nextCheckAt).toBeNull();
     expect(metric(result, "Next check")).toBe("No scheduled checks");
   });

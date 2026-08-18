@@ -102,7 +102,7 @@ describe("AccountShell", () => {
       "self-start",
       "flex-col",
       "gap-0.5",
-      "pl-[14px]",
+      "pl-3.5",
       "lg:flex",
     );
   });
@@ -174,7 +174,7 @@ describe("AccountShell", () => {
         "self-start",
         "flex-col",
         "gap-0.5",
-        "pl-[14px]",
+        "pl-3.5",
         "lg:flex",
       );
 
@@ -196,7 +196,7 @@ describe("AccountShell", () => {
 
       expect(
         boundary?.querySelector("[data-account-loading-mobile-menu] [data-account-loading-bar]"),
-      ).toHaveClass("h-[34px]", "w-full");
+      ).toHaveClass("h-8.5", "w-full");
     },
   );
 });

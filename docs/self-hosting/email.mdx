@@ -1,7 +1,9 @@
 ---
 title: "Email delivery"
-description: "Choose and configure Resend, Amazon SES, or an SMTP relay for transactional email."
+description: "Choose and configure Resend, Amazon SES, or an SMTP relay for transactional email as a self-host operator."
 ---
+
+[Production checklist](/self-hosting#production-checklist)
 
 bisibility sends transactional email for sign-in codes, team invitations, ranking
 alerts, and weekly digests. Every message goes through one shared sender that
@@ -15,7 +17,9 @@ supports three interchangeable providers:
 
 Without any email configuration, production refuses to start email-dependent
 flows, while development and demo instances log the message (including sign-in
-codes and invite links) to the server console instead.
+codes and invite links) to the server console instead. For delivery failure
+diagnosis, see the canonical
+[Email failures](/self-hosting/troubleshooting#email-failures) runbook.
 
 ## Selecting a provider
 

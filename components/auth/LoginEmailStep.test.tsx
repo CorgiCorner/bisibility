@@ -106,7 +106,7 @@ describe("LoginEmailStep", () => {
 
     const terms = screen.getByRole("link", { name: "Terms" });
     const privacy = screen.getByRole("link", { name: "Privacy Policy" });
-    const consent = container.querySelector("p.mt-\\[22px\\]");
+    const consent = container.querySelector("p.mt-5\\.5");
     // No capacity means no hosted beta, so the beta-email clause is deliberately absent here.
     expect(consent).toHaveTextContent("By continuing you agree to the Terms and Privacy Policy.");
     expect(terms).toHaveAttribute("href", "/terms");

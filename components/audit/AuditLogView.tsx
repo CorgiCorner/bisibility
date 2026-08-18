@@ -104,7 +104,7 @@ export function AuditLogView({
   }
 
   return (
-    <section className="flex min-w-0 flex-col gap-[14px]">
+    <section className="flex min-w-0 flex-col gap-3.5">
       <Card className="min-w-0 overflow-hidden p-0" size="md">
         <AuditFilters
           actors={actors}

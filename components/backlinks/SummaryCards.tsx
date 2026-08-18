@@ -15,7 +15,7 @@ type SummaryCardsProps = {
   summary: BacklinksSummary;
 };
 
-const cardClass = "min-w-0 rounded-[12px] border border-border bg-bg-elev px-[18px] py-4";
+const cardClass = "min-w-0 rounded-[12px] border border-border bg-bg-elev px-4.5 py-4";
 const labelClass = "font-mono text-[10px] font-medium uppercase tracking-[.08em] text-fg-muted";
 
 function DeltaBadge({ value }: Readonly<{ value: number }>) {

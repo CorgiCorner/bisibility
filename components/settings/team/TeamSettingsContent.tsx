@@ -43,7 +43,7 @@ export function TeamSettingsContent({
   const { readOnly: contextReadOnly } = useProjectWriteMode();
   const projectReadOnly = readOnly || contextReadOnly;
   return (
-    <div className="space-y-[14px]" data-team-settings-content="">
+    <div className="space-y-3.5" data-team-settings-content="">
       <TeamMembersCard
         canAssignAdmin={team.canAssignAdmin}
         canManageTeam={team.canManageTeam}

@@ -26,6 +26,7 @@ import { resolveAuthSecret, resolveAuthSecrets } from "@/lib/auth/secret";
 import { recordSignInAudit } from "@/lib/auth/sign-in-audit";
 import { enforceGoogleSignupCapacity } from "@/lib/auth/signin-capacity";
 import { twoFactorRouteGuard } from "@/lib/auth/two-factor-route-guard";
+import { sendCloudWelcomeSequence } from "@/lib/auth/welcome-signup";
 import { prisma } from "@/lib/db/prisma";
 import {
   normalizeAuthorizationServerOrigin,
@@ -190,6 +191,7 @@ export const auth = betterAuth({
     },
     user: {
       create: {
+        after: sendCloudWelcomeSequence,
         before: prepareUserCreation,
       },
     },

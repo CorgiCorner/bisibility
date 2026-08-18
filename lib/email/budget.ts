@@ -11,11 +11,6 @@ const DEFAULT_EMAIL_DAILY_BUDGETS: Record<EmailCategory, number> = {
   transactional: 1_000,
 };
 
-const EMAIL_DAILY_BUDGET_ENV: Record<EmailCategory, string> = {
-  bulk: "EMAIL_DAILY_BUDGET_BULK",
-  transactional: "EMAIL_DAILY_BUDGET_TRANSACTIONAL",
-};
-
 type EmailBudgetClient = Pick<Prisma.TransactionClient, "emailDailyStat">;
 
 export function emailBudgetUtcDay(now: Date) {
@@ -26,7 +21,9 @@ export function resolveEmailDailyBudget(
   category: EmailCategory,
   env: Readonly<Record<string, string | undefined>> = process.env,
 ) {
-  const parsed = Number.parseInt(env[EMAIL_DAILY_BUDGET_ENV[category]] ?? "", 10);
+  const configured =
+    category === "bulk" ? env.EMAIL_DAILY_BUDGET_BULK : env.EMAIL_DAILY_BUDGET_TRANSACTIONAL;
+  const parsed = Number.parseInt(configured ?? "", 10);
   return Number.isSafeInteger(parsed) && parsed > 0
     ? parsed
     : DEFAULT_EMAIL_DAILY_BUDGETS[category];

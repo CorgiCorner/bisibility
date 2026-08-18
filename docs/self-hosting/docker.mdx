@@ -81,12 +81,11 @@ the namespace before worker startup. For source testing, add
 `-f compose.build.yaml --build`; it builds both images and runs migrations from
 the web image.
 
-Use `/api/v1/liveness` for restarts and `/api/v1/readiness` for traffic.
-Anonymous probes expose aggregate status only. An API credential or
-`INTERNAL_PROBE_TOKEN` unlocks full `/api/v1/health` diagnostics. Worker or
-Temporal failures can return `503` while web reads continue. The source-build
-argument `APP_REVISION` identifies the public commit in app and worker reports.
-Omitting it reports `"unknown"`.
+Use `/api/v1/liveness` for restarts and `/api/v1/readiness` for traffic; see
+[Health endpoint exposure](/self-hosting/security#health-endpoint-exposure).
+Worker or Temporal failures can return `503` while web reads continue. The
+`APP_REVISION` build argument identifies the public commit; omitting it
+reports `"unknown"`.
 
 ### Local demo
 
@@ -140,21 +139,17 @@ The generator refuses to overwrite `.env`. It creates independent secrets, sets
 both public origins, and sets `DEPLOYMENT_ENV=production`. Replace
 `https://rank.example.com` with the final origin, then review `.env`:
 
-1. **Secrets.** Back up `BETTER_AUTH_SECRET` and `BISIBILITY_SECRETS_KEY` before
-   starting. Replacing either later has destructive consequences; see
-   [Required environment variables](/self-hosting/configuration#required-environment-variables).
+1. **Secrets.** Back up `BETTER_AUTH_SECRET` and `BISIBILITY_SECRETS_KEY`; see
+   [Application secrets](/self-hosting/security#application-secrets).
 2. **Public URL.** Confirm `SITE_URL` and `BETTER_AUTH_URL` are the final public
    origin. The template leaves both blank and Compose fails before starting if
    the generator has not filled them.
 3. **Deployment stage.** Keep `DEPLOYMENT_ENV=production`; see
    [Operations](/guides/operations).
 4. **Email.** Set `EMAIL_PROVIDER` and `EMAIL_FROM` so sign-in
-   codes can be delivered. See [Email delivery](/guides/email).
-5. **Demo variables stay unset.** Leave `DEMO_FIXED_OTP` and
-   `DEMO_INSTANCE_INSECURE_AUTH_ACK` commented out. The production image
-   deliberately refuses a fixed OTP without the acknowledgement.
-6. **Client IP.** Add `BISIBILITY_CLIENT_IP_HEADER` if a proxy or CDN sits in
-   front of the app. See [Client IP behind a proxy](/self-hosting/operations#client-ip-behind-a-proxy).
+   codes can be delivered. See [Email delivery](/self-hosting/email).
+5. **Demo variables stay unset.** See [Fixed OTP](/self-hosting/security#fixed-otp).
+6. **Client IP.** See [Trusted client IP](/self-hosting/security#trusted-client-ip).
 
 Start the stack:
 
@@ -193,18 +188,13 @@ curl -fsS http://127.0.0.1:3000/api/v1/liveness
 curl -fsS http://127.0.0.1:3000/api/v1/readiness
 ```
 
-Add the worker and Temporal overlays to the first two commands when scheduled
-checks are enabled. Use an API credential or `INTERNAL_PROBE_TOKEN` to request
-full `/api/v1/health` diagnostics without publishing the token in logs.
+Add the worker and Temporal overlays to the first two commands when
+scheduled checks are enabled. See [Health endpoint exposure](/self-hosting/security#health-endpoint-exposure)
+for authenticated `/api/v1/health` diagnostics.
 
-| Symptom | Check | Resolution |
-| - | - | - |
-| App never starts | `db-migrations` exited nonzero | Read its first migration error, fix database connectivity or the reported migration issue, then rerun the same Compose command. Completed migration steps are skipped. |
-| Liveness succeeds but readiness returns `503` | Database, blocking migrations, or invalid scheduler configuration | Inspect authenticated `/api/v1/health`; do not route traffic until the failing required component is healthy. |
-| Sign-in redirects to the wrong origin | `SITE_URL` and `BETTER_AUTH_URL` | Set both to the exact public origin, including a non-default port, then recreate the app container. |
-| Manual checks work but schedules do not | Worker and Temporal overlays, shared namespace, and task queues | Confirm both overlays are present and web and worker use the same Temporal settings. |
-| Worker repeatedly restarts | Temporal address, TLS mode, namespace, and database access | Follow [worker startup troubleshooting](/self-hosting/temporal#worker-startup-troubleshooting); the worker does not start Temporal Server itself. |
-| Anonymous API callers unexpectedly share one rate-limit bucket | Trusted proxy header configuration | Configure [client IP behind a proxy](/self-hosting/operations#client-ip-behind-a-proxy) or enforce anonymous limits at the edge. |
+For symptom-first diagnosis of startup failures, readiness, auth redirects,
+worker loops, schedules, client IP, and email delivery, see the canonical
+[Troubleshooting](/self-hosting/troubleshooting) runbook.
 
 ### Use the CLI with this instance
 
@@ -248,17 +238,15 @@ bisibility auth status
 ```
 
 Environment variables take precedence over the CLI config file. See
-[Authentication](/authentication) for choosing between project API keys and
-personal access tokens.
+[Authentication](/authentication) for choosing between project API keys and personal access tokens.
 
 ### Access services from the host
 
-The default stack publishes only the app on `3000`. PostgreSQL and Valkey are
-reachable only as `postgres` and `redis` inside the Compose network.
-
-Core does not start the Temporal or worker overlays. The Temporal server stays
-inside the Compose network. Its optional `temporal-ui` profile exposes only the
-Web UI at `127.0.0.1:8233`.
+The default stack publishes only the app on `127.0.0.1:3000`; PostgreSQL and
+Valkey are internal to the Compose network. See
+[Public port exposure](/self-hosting/security#public-port-exposure). Core does
+not start the Temporal or worker overlays; the optional `temporal-ui` profile
+exposes the Web UI at `127.0.0.1:8233`.
 
 For deliberate PostgreSQL or Valkey access from the Docker host, apply the
 opt-in debug override:
@@ -281,7 +269,7 @@ For permanent mappings, add the same loopback-bound ports to
 `docker-compose.override.yml`.
 
 Set a new app port in `SITE_URL` and `BETTER_AUTH_URL`, such as
-`http://localhost:3100`. A mismatch breaks auth callbacks and absolute links.
+`http://localhost:3100`. A mismatch breaks auth callbacks and absolute links;
 Google sign-in and Search Console redirect URIs must use the same port.
 
 Give each local instance unique ports and a Compose project name, such as

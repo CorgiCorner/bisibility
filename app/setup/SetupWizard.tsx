@@ -132,7 +132,7 @@ export function SetupWizard({ mailerConfigured }: Readonly<{ mailerConfigured: b
   }
 
   return (
-    <div className="flex flex-col gap-[22px]">
+    <div className="flex flex-col gap-5.5">
       <SetupStepper current={step} />
 
       {step === "account" ? (

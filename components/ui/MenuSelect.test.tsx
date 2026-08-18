@@ -158,4 +158,58 @@ describe("MenuSelect", () => {
 
     expect(screen.getByRole("menuitem", { name: /Europe\/Warsaw/ })).toHaveFocus();
   });
+
+  it("exposes triggerTitle as a description via the house tooltip with no native title", () => {
+    render(
+      <MenuSelect
+        ariaLabel="Scope"
+        onChange={() => undefined}
+        options={[{ label: "All", value: "all" }]}
+        triggerTitle="Choose a scope for this project"
+        value="all"
+      />,
+    );
+
+    const trigger = screen.getByRole("button", { name: "Scope" });
+    expect(trigger).not.toHaveAttribute("title");
+    expect(trigger).toHaveAttribute("aria-describedby");
+    const describedBy = trigger.getAttribute("aria-describedby");
+    const desc = document.getElementById(describedBy ?? "");
+    expect(desc).toHaveTextContent("Choose a scope for this project");
+  });
+
+  it("opens the house tooltip visually on hover of a trigger with triggerTitle", async () => {
+    const user = userEvent.setup();
+    render(
+      <MenuSelect
+        ariaLabel="Scope"
+        onChange={() => undefined}
+        options={[{ label: "All", value: "all" }]}
+        triggerTitle="Choose a scope for this project"
+        value="all"
+      />,
+    );
+
+    const trigger = screen.getByRole("button", { name: "Scope" });
+    await user.hover(trigger);
+    expect(await screen.findByRole("tooltip")).toHaveTextContent("Choose a scope for this project");
+  });
+
+  it("opens the house tooltip visually on keyboard focus of a trigger with triggerTitle", async () => {
+    const user = userEvent.setup();
+    render(
+      <MenuSelect
+        ariaLabel="Scope"
+        onChange={() => undefined}
+        options={[{ label: "All", value: "all" }]}
+        triggerTitle="Choose a scope for this project"
+        value="all"
+      />,
+    );
+
+    const trigger = screen.getByRole("button", { name: "Scope" });
+    await user.tab();
+    expect(trigger).toHaveFocus();
+    expect(await screen.findByRole("tooltip")).toHaveTextContent("Choose a scope for this project");
+  });
 });

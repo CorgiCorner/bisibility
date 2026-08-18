@@ -14,27 +14,27 @@ export type StatusPillProps = {
   showDot?: boolean;
 };
 
-// HANDOFF-12 §5: one quiet pattern everywhere a live status shows - a neutral chip
-// (bg-sunken + thin border) with a colored status dot; the healthy dot pulses.
+// HANDOFF-12 §5: one quiet pattern everywhere a status shows - a neutral chip
+// (bg-sunken + thin border) with a colored status dot.
 const statusMeta = {
-  connected: { label: "Connected", color: "var(--green)", healthy: true },
-  needs_reauth: { label: "Reconnect required", color: "var(--red)", healthy: false },
-  ready: { label: "Ready", color: "var(--blue)", healthy: false },
-  planned: { label: "Planned", color: "var(--yellow)", healthy: false },
-  optional: { label: "Optional", color: "var(--fg-muted)", healthy: false },
-  success: { label: "Success", color: "var(--green)", healthy: false },
-  failed: { label: "Failed", color: "var(--red)", healthy: false },
-  matches: { label: "Matches", color: "var(--green)", healthy: false },
-  wrong_url: { label: "Wrong URL", color: "var(--yellow)", healthy: false },
-  primary: { label: "Primary", color: "var(--accent)", healthy: false },
-  disabled: { label: "Disabled", color: "var(--fg-muted)", healthy: false },
-  create: { label: "CREATE", color: "var(--green)", healthy: false },
-  update: { label: "UPDATE", color: "var(--yellow)", healthy: false },
-  delete: { label: "DELETE", color: "var(--red)", healthy: false },
-  import: { label: "IMPORT", color: "var(--blue)", healthy: false },
-  export: { label: "EXPORT", color: "var(--blue)", healthy: false },
-  login: { label: "LOGIN", color: "var(--purple)", healthy: false },
-} satisfies Record<StatusKind, { label: string; color: string; healthy: boolean }>;
+  connected: { label: "Connected", color: "var(--green)" },
+  needs_reauth: { label: "Reconnect required", color: "var(--red)" },
+  ready: { label: "Ready", color: "var(--blue)" },
+  planned: { label: "Planned", color: "var(--yellow)" },
+  optional: { label: "Optional", color: "var(--fg-muted)" },
+  success: { label: "Success", color: "var(--green)" },
+  failed: { label: "Failed", color: "var(--red)" },
+  matches: { label: "Matches", color: "var(--green)" },
+  wrong_url: { label: "Wrong URL", color: "var(--yellow)" },
+  primary: { label: "Primary", color: "var(--accent)" },
+  disabled: { label: "Disabled", color: "var(--fg-muted)" },
+  create: { label: "CREATE", color: "var(--green)" },
+  update: { label: "UPDATE", color: "var(--yellow)" },
+  delete: { label: "DELETE", color: "var(--red)" },
+  import: { label: "IMPORT", color: "var(--blue)" },
+  export: { label: "EXPORT", color: "var(--blue)" },
+  login: { label: "LOGIN", color: "var(--purple)" },
+} satisfies Record<StatusKind, { label: string; color: string }>;
 
 const chipVariants = cva(
   "inline-flex items-center rounded-full border border-border bg-bg-sunken font-mono font-semibold leading-none tracking-[0.3px] text-fg-muted",
@@ -50,11 +50,11 @@ const chipVariants = cva(
   },
 );
 
-function StatusDot({ color, healthy }: Readonly<{ color: string; healthy: boolean }>) {
+function StatusDot({ color }: Readonly<{ color: string }>) {
   return (
     <span
       aria-hidden
-      className={cn("h-[6px] w-[6px] flex-none rounded-full", healthy && "bv-ping")}
+      className="h-[6px] w-[6px] flex-none rounded-full"
       style={{ backgroundColor: color, color }}
     />
   );
@@ -74,12 +74,12 @@ export function StatusPill({
     <span className={cn("inline-flex items-center", size === "lg" ? "gap-2" : "gap-1.5")}>
       <span className={cn(chipVariants({ size }))}>
         {icon}
-        {shouldShowDot ? <StatusDot color={meta.color} healthy={meta.healthy} /> : null}
+        {shouldShowDot ? <StatusDot color={meta.color} /> : null}
         {label ?? meta.label}
       </span>
       {primary ? (
         <span className={cn(chipVariants({ size }))}>
-          {shouldShowDot ? <StatusDot color="var(--accent)" healthy={false} /> : null}
+          {shouldShowDot ? <StatusDot color="var(--accent)" /> : null}
           Primary
         </span>
       ) : null}

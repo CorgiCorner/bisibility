@@ -15,7 +15,7 @@ export default async function SecurityPage() {
 
   return (
     <AccountShell activeSection="security">
-      <div className="flex flex-col gap-[22px]">
+      <div className="flex flex-col gap-5.5">
         <SecurityFactors
           hasPasswordCredential={account.hasPasswordCredential}
           initiallyEnabled={account.twoFactorEnabled}

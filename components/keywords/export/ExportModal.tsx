@@ -146,7 +146,7 @@ export function ExportModal({ onClose, open, projectId, target }: Readonly<Expor
         </span>
       }
     >
-      <form className="grid gap-[18px]" id="export-keywords" onSubmit={handleSubmit(submit)}>
+      <form className="grid gap-4.5" id="export-keywords" onSubmit={handleSubmit(submit)}>
         <input type="hidden" {...register("range")} />
         <input type="hidden" {...register("granularity")} />
         <div>

@@ -34,7 +34,7 @@ const DEFAULT_CATCHUP_WINDOW = "1 hour";
  * Overlap SKIP collapses buffered catch-up actions, making a wide window safe.
  */
 export function catchupWindow() {
-  return envValue("TEMPORAL_SCHEDULE_CATCHUP_WINDOW") ?? DEFAULT_CATCHUP_WINDOW;
+  return envValue(process.env.TEMPORAL_SCHEDULE_CATCHUP_WINDOW) ?? DEFAULT_CATCHUP_WINDOW;
 }
 
 // `getHandle` is optional for create-only test mocks; existing schedule convergence
@@ -72,8 +72,8 @@ export function isFalseyFlag(raw: string | undefined) {
   return value === "0" || value === "false" || value === "no" || value === "off";
 }
 
-export function envValue(name: string) {
-  const raw = process.env[name]?.trim();
+export function envValue(value: string | undefined) {
+  const raw = value?.trim();
   return raw && raw.length > 0 ? raw : undefined;
 }
 
@@ -82,12 +82,15 @@ export function isReconcilerEnabled() {
 }
 
 function reconcilerInterval() {
-  return envValue("RANK_CHECK_RECONCILER_INTERVAL") ?? DEFAULT_INTERVAL;
+  return envValue(process.env.RANK_CHECK_RECONCILER_INTERVAL) ?? DEFAULT_INTERVAL;
 }
 
 /** Calendar spec, overridable by a single cron expression env var. */
-export function calendarSpec(defaults: CalendarDefaults, cronEnv: string): ScheduleSpec {
-  const cron = envValue(cronEnv);
+export function calendarSpec(
+  defaults: CalendarDefaults,
+  cronValue: string | undefined,
+): ScheduleSpec {
+  const cron = envValue(cronValue);
   if (cron) {
     return { cronExpressions: [cron] };
   }

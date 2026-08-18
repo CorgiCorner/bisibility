@@ -14,173 +14,169 @@ a supported upgrade path to v0.5.0. Keep those installations on their current
 release; the v0.5.0 `upgrade.sh` fails before changing Compose or PostgreSQL.
 </Warning>
 
-Releases after v0.2.0 include `distribution-manifest.json` and `upgrade.sh`.
-After backing up PostgreSQL and fetching the exact target tag, run:
+Releases whose `distribution-manifest.json` lists the `upgradeScript` artifact
+ship `upgrade.sh` as a versioned release asset alongside the manifest.
+`distribution-manifest.json` is also included in the tagged source (see
+[Production Compose](/self-hosting/docker#production-compose)). Older releases
+without that manifest entry do not ship `upgrade.sh` as a release asset; obtain
+the script from the matching tagged source tree instead. The distribution
+manifest checksums `upgrade.sh` and the other listed release assets; the
+manifest plus its listed assets are verified before publication.
+
+The procedure below is the canonical current upgrade path. Migrations are
+forward-only; there is no automatic rollback.
+
+### Prerequisites
+
+Before starting, gather the exact target release assets and plan a maintenance
+window:
+
+- Download `distribution-manifest.json` and `upgrade.sh` from the GitHub release
+  assets for the matching tag.
+- Install Docker Compose v2 and Node.js on the operator host.
+- Read the changelog for the target release and note schema or environment
+  changes. Review `.env.example` against the current `.env` and update
+  deliberately.
+- Schedule a maintenance window or stop writes before touching the database.
+- Never enable demo OTP or demo seeding on a production deployment.
+
+### Backup as rollback
+
+A tested application PostgreSQL backup, matching application secrets, and
+applicable Temporal persistence are the rollback mechanism. Create the backup
+before starting the upgrade; see
+[Backup and restore](/self-hosting/backup-restore). Migrations are forward-only;
+an image rollback does not reverse Prisma migrations.
+
+### Verify release assets
+
+When the manifest contains `upgradeScript`, the script verifies the manifest,
+target version, and listed images before it touches services or the database.
+Run the canonical invocation with the exact target version:
 
 ```bash
 ./upgrade.sh --version vX.Y.Z
 ```
 
-Requires Docker with Buildx and Node.js. The script verifies the manifest and
-both images first; any failed check stops it before it touches the database.
-Then it pulls the images, stops the old services, applies migrations, and starts
-the new pair.
+Without `--compose-file`, the script uses `compose.yaml` next to it. To layer
+overlays, pass the base file first and repeat `--compose-file` for
+`compose.worker.yaml` and `compose.temporal.yaml` in order:
+
+```bash
+./upgrade.sh --version vX.Y.Z \
+  --compose-file compose.yaml \
+  --compose-file compose.worker.yaml \
+  --compose-file compose.temporal.yaml
+```
+
+A manifest, version, or image mismatch returns nonzero and stops the upgrade
+before any service or database change.
+
+### Stop services
+
+After verification succeeds, the script pulls the selected release images and
+stops `app` and `worker` when the rendered Compose configuration includes them.
+It detects the service set from `compose config --services` rather than
+assuming a worker service always exists.
+
+### Run migrations
+
+The script runs the one-shot `db-migrations` service with
+`prisma migrate deploy` for the full Prisma tree and then all blocking data
+migrations before the web app. The migration container's exit code is
+propagated: a failed verification or migration returns nonzero and prevents
+app/worker restart.
+
+The migration ledger distinguishes completed data work from final completion.
+If optional finalization fails, the command exits nonzero and records the
+finalization error while leaving the migration unfinished. Rerun
+`npm run db:migrate`; it retries finalization without repeating completed data
+work. Existing rows already marked `finishedAt` remain final after upgrading.
+
+After an upgrade that adds competitor organic snapshots, optionally compact the
+latest completed SERP for each keyword into the new query-friendly column:
+
+```bash
+npm run db:backfill:competitor-organics
+```
+
+Run the command with `DATABASE_URL` available. It is batched and idempotent,
+and leaves checks without a usable historical organic payload unchanged. The
+app continues to read those legacy payloads directly, so the backfill does not
+need to block the web deployment.
+
+### Restart
+
+After a successful migration, the script starts the selected `app` and
+`worker` services from the matched release images. It does not perform the
+operator's post-start readiness checks; those are the next step.
+
+### Validate readiness
+
+After the script returns success, confirm the deployment is healthy:
+
+- Call authenticated `GET /api/v1/health` with an API credential or the
+  deployment's `INTERNAL_PROBE_TOKEN` Bearer header. Confirm
+  `services.migrations` is `ready`; the endpoint returns 503 when a bundled
+  Prisma migration has not been applied, an active data migration is
+  incomplete, has a checksum mismatch, or cannot be read, or the public ID
+  database contract is not ready.
+- Sign in and read one project to confirm the app serves authenticated
+  requests.
+- Check Prisma status in Docker Compose:
+
+  ```bash
+  docker compose exec app npx prisma migrate status
+  ```
+
+- Confirm the web and worker report the same release. For split deployments,
+  deploy the web app so migrations apply, then immediately deploy the worker
+  from the same release tag. Version skew commonly appears as "The column ...
+  does not exist" errors in worker logs or as failing scheduled checks while
+  the web app works.
+- When scheduled work is enabled, confirm the Temporal worker reports ready
+  and its maintenance schedules are created or already exist.
+
+`/api/v1/readiness` is the public traffic-admission (readiness) probe; it does
+not replace the authenticated health checks above. Use `/api/v1/liveness` for
+restart probes and authenticated `GET /api/v1/health` for the deeper
+service/migration contract. See
+[Backup and restore](/self-hosting/backup-restore) for its role in restore
+validation.
+
+### Failure paths
+
+A failed verification or migration returns nonzero and prevents app/worker
+restart. No success is reported. The script does not perform automatic rollback.
+Inspect the migration output before retrying or restoring. If a migration left
+the database in an intermediate state, a database restore may be required; see
+[Restore from backup](#restore-from-backup) below.
+
+### Restore from backup
+
+If the upgrade cannot complete, restore the pre-upgrade database backup with
+the matching previous release. Restoring must use the same bisibility release
+that created the dump; an image rollback alone does not reverse Prisma
+migrations. See [Backup and restore](/self-hosting/backup-restore) for the
+full restore procedure, including stopping writers, running migrations after
+restore, and readiness validation.
+
+### Legacy upgrades
+
+Older one-time source upgrades have their own pages and are kept for
+reference.
 
 <span id="upgrade-from-v010-to-v020"></span>
 
 ## Upgrade from v0.1.0 to v0.2.0
 
-v0.2.0 has no `upgrade.sh`, automated upgrade tooling, or automatic rollback.
-This is the last release without automated upgrade tooling.
+<a id="1-back-up-postgresql"></a>
+<a id="2-check-the-port-change"></a>
+<a id="3-fetch-v020"></a>
+<a id="4-keep-deliberate-host-local-database-access"></a>
+<a id="5-build-and-start-the-release"></a>
+<a id="6-verify-the-upgrade"></a>
+<a id="7-roll-back"></a>
 
-This is a source upgrade. The `db-migrations`, app, and worker services are
-built from the checked-out source; only third-party service images are pulled.
-
-<AccordionGroup>
-  <Accordion title="1. Back up PostgreSQL" id="1-back-up-postgresql">
-    Run the backup before fetching or replacing any source:
-
-    ```bash
-    docker compose exec -T postgres pg_dump \
-      -U bisibility -d bisibility --format=custom \
-      > bisibility-v0.1.0-before-v0.2.0.dump
-    ```
-
-    This command still works after v0.2.0 stops publishing the PostgreSQL port.
-    `docker compose exec` reaches the container through the Docker daemon, not
-    through a published network port.
-  </Accordion>
-
-  <Accordion title="2. Check the port change" id="2-check-the-port-change">
-    v0.2.0 stops exposing PostgreSQL on `5432` and Valkey on `6379` to the
-    host. Connections from another host will lose access after the upgrade. Identify
-    those clients now; apply the host-access option only after the v0.2.0 files are
-    present.
-  </Accordion>
-
-  <Accordion title="3. Fetch v0.2.0" id="3-fetch-v020">
-    For an existing Git checkout:
-
-    ```bash
-    git fetch --tags --prune
-    git checkout v0.2.0
-    ```
-
-    For a tarball install, download the v0.2.0 source tarball from the release
-    assets, preserve the old source directory for rollback, and extract the new
-    source under the same directory name:
-
-    ```bash
-    cd ..
-    curl -fL \
-      -o bisibility-v0.2.0.tar.gz \
-      https://github.com/CorgiCorner/bisibility/archive/refs/tags/v0.2.0.tar.gz
-    mv bisibility bisibility-v0.1.0
-    mkdir bisibility
-    tar -xzf bisibility-v0.2.0.tar.gz -C bisibility --strip-components=1
-    cp bisibility-v0.1.0/.env bisibility/.env
-    cd bisibility
-    ```
-
-    Keeping the `bisibility` directory name also keeps the default Compose project
-    name and its existing volumes.
-  </Accordion>
-
-  <Accordion title="4. Keep deliberate host-local database access" id="4-keep-deliberate-host-local-database-access">
-    If the Docker host must reach PostgreSQL or Valkey, use the debug overlay
-    shipped in v0.2.0 as the upgrade command:
-
-    ```bash
-    docker compose -f docker-compose.yml -f docker-compose.debug.yml up -d --build
-    ```
-
-    This binds both services to `127.0.0.1`. Use a hand-written
-    `docker-compose.override.yml` only for other requirements, and keep the
-    loopback prefix on every mapping, such as `127.0.0.1:5432:5432`. A mapping such
-    as `5432:5432` binds to all interfaces and reverses this release's protection.
-
-    If you run the overlay command above, do not run the base-only command in the
-    next step; the overlay command performs the same rebuild and startup.
-  </Accordion>
-
-  <Accordion title="5. Build and start the release" id="5-build-and-start-the-release">
-    If you do not need the debug overlay, run:
-
-    ```bash
-    docker compose up -d --build
-    ```
-
-    Migrations apply automatically: the one-shot `db-migrations` service runs
-    before the app, and the app waits for it to finish successfully. v0.2.0 includes
-    a schema migration.
-
-    `--build` performs a full Next.js build on this machine; it does not pull a
-    prebuilt bisibility image. Expect sustained CPU use, several GB of RAM or swap,
-    and free disk space for Docker layers. A small VPS can exhaust RAM and fail
-    mid-build.
-  </Accordion>
-
-  <Accordion title="6. Verify the upgrade" id="6-verify-the-upgrade">
-    ```bash
-    docker compose ps --all
-    docker compose logs --no-color db-migrations
-    curl -fsS http://127.0.0.1:3000/api/v1/health
-    docker compose exec app npx prisma migrate status
-    docker compose port postgres 5432
-    docker compose port redis 6379
-    ```
-
-    The migration service must show a successful exit, the app must be running, and
-    the health request must succeed. Prisma must report that the database schema is
-    up to date. Adjust `3000` if `APP_HOST_PORT` is set. On the base stack, both
-    `docker compose port` commands should report no published port. With the debug
-    overlay, they should report only `127.0.0.1` mappings.
-  </Accordion>
-
-  <Accordion title="7. Roll back" id="7-roll-back">
-    There is no automatic rollback. For a Git checkout, return to the old source
-    and rebuild it:
-
-    > **Security warning:** Rolling back restores the v0.1.0 Compose file, which
-    > publishes PostgreSQL `5432` and Valkey `6379` on all host interfaces by
-    > default. If v0.1.0 will remain running beyond immediate recovery, check it out
-    > without starting Compose, then remove the `ports` blocks from `postgres` and
-    > `redis` when host access is not needed. Otherwise, change the mappings to
-    > `127.0.0.1:${POSTGRES_HOST_PORT:-5432}:5432` and
-    > `127.0.0.1:${REDIS_HOST_PORT:-6379}:6379` before running
-    > `docker compose up -d --build`.
-
-    ```bash
-    git checkout v0.1.0 && docker compose up -d --build
-    ```
-
-    For the tarball path above, restore the retained source directory:
-
-    ```bash
-    cd ..
-    mv bisibility bisibility-v0.2.0-failed
-    mv bisibility-v0.1.0 bisibility
-    cd bisibility
-    ```
-
-    If the migration did not start or completed successfully, rebuild v0.1.0 now:
-
-    ```bash
-    docker compose up -d --build
-    ```
-
-    If the v0.2.0 migration applied only partially, first restore the v0.1.0 source
-    with `git checkout v0.1.0` or the tarball directory swap above. Do not start the
-    old app yet. Stop application writes, restore the backup from step 1, and then
-    rebuild v0.1.0:
-
-    ```bash
-    docker compose stop app worker
-    docker compose exec -T postgres pg_restore \
-      --clean --if-exists --no-owner \
-      -U bisibility -d bisibility \
-      < bisibility-v0.1.0-before-v0.2.0.dump
-    docker compose up -d --build
-    ```
-  </Accordion>
-</AccordionGroup>
+This one-time source upgrade has its own page:
+[Upgrade from v0.1.0 to v0.2.0](/self-hosting/legacy-upgrades/v0-1-to-v0-2).

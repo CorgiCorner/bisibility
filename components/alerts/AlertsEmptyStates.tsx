@@ -21,7 +21,7 @@ export function AlertsSetupEmpty({
         canCreateKeyword
           ? (action ?? (
               <Link
-                className="inline-flex min-h-10 items-center gap-[7px] rounded-[10px] bg-accent-solid px-[18px] text-[13.5px] font-semibold text-primary-contrast outline-none transition-colors hover:bg-accent-solid-hover focus-visible:bg-accent-solid-hover"
+                className="inline-flex min-h-10 items-center gap-[7px] rounded-[10px] bg-accent-solid px-4.5 text-[13.5px] font-semibold text-primary-contrast outline-none transition-colors hover:bg-accent-solid-hover focus-visible:bg-accent-solid-hover"
                 href={appPath(projectRef, "rank-tracker")}
               >
                 <Plus aria-hidden size={14} weight="bold" />

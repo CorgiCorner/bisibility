@@ -29,8 +29,8 @@ function isTruthyFlag(raw: string | undefined) {
   return value === "1" || value === "true" || value === "yes" || value === "on";
 }
 
-function envValue(name: string) {
-  const raw = process.env[name]?.trim();
+function envValue(value: string | undefined) {
+  const raw = value?.trim();
   return raw && raw.length > 0 ? raw : undefined;
 }
 
@@ -39,7 +39,7 @@ export function isTrafficSyncEnabled() {
 }
 
 function trafficSyncSpec(): ScheduleSpec {
-  const cron = envValue("TRAFFIC_SYNC_CRON");
+  const cron = envValue(process.env.TRAFFIC_SYNC_CRON);
   return cron ? { cronExpressions: [cron] } : { calendars: [DEFAULT_TRAFFIC_SYNC] };
 }
 

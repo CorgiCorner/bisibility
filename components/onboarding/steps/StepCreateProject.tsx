@@ -158,7 +158,7 @@ export function StepCreateProject({
         <DataResidencyNote className="mt-4 max-w-[440px]" message={dataResidencyMessage} />
       ) : null}
 
-      <div className="mt-[22px] flex max-w-[440px] flex-col gap-4">
+      <div className="mt-5.5 flex max-w-[440px] flex-col gap-4">
         <label className={labelClass}>
           Your website
           <input

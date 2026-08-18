@@ -15,7 +15,6 @@ const meta = {
       marketValues: [],
       range: "Last 28 days",
       rangeValue: "28d",
-      refresh: "Daily",
       tag: "All tags",
       tagValue: null,
     },
@@ -24,7 +23,7 @@ const meta = {
   component: OverviewToolbar,
   decorators: [
     (Story) => (
-      <div className="min-h-[180px] bg-bg px-7 pt-[22px]">
+      <div className="min-h-[180px] bg-bg px-7 pt-5.5">
         <Story />
       </div>
     ),

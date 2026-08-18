@@ -26,6 +26,7 @@ import { auth, preventDeactivatedSessionCreation } from "@/lib/auth/auth";
 import { emailOtpTwoFactorPlugin } from "@/lib/auth/email-otp-two-factor";
 import { recordPendingFirstRunUser, withFirstRunCreation } from "@/lib/auth/first-run-context";
 import { enforceGoogleSignupCapacity } from "@/lib/auth/signin-capacity";
+import { sendCloudWelcomeSequence } from "@/lib/auth/welcome-signup";
 
 const session = {
   createdAt: new Date("2026-07-18T00:30:00.000Z"),
@@ -53,6 +54,7 @@ describe("deactivated account session creation", () => {
       },
     });
     expect(options.databaseHooks?.account?.create?.before).toBe(enforceGoogleSignupCapacity);
+    expect(options.databaseHooks?.user?.create?.after).toBe(sendCloudWelcomeSequence);
   });
 
   it("wires the email OTP two-factor bridge before the cookie integration", () => {

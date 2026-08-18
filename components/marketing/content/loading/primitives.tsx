@@ -69,9 +69,9 @@ export function ContentHeroSkeleton({
   titleWidths?: string[];
 }>) {
   return (
-    <section className="mx-auto max-w-[1200px] px-5 pb-9 pt-[42px] sm:px-8 sm:pb-10">
+    <section className="mx-auto max-w-content px-5 pb-9 pt-[42px] sm:px-8 sm:pb-10">
       <EyebrowSkeleton />
-      <div className="mt-[18px] flex max-w-[760px] flex-col gap-3">
+      <div className="mt-4.5 flex max-w-[760px] flex-col gap-3">
         {titleWidths.map((width) => (
           <SkeletonBlock
             className="h-[42px] rounded-[10px] sm:h-[50px]"
@@ -90,7 +90,7 @@ export function ContentHeroSkeleton({
 
 export function CtaBandSkeleton() {
   return (
-    <section className="mx-auto max-w-[1200px] px-5 pb-16 pt-4 sm:px-8">
+    <section className="mx-auto max-w-content px-5 pb-16 pt-4 sm:px-8">
       <div className="flex flex-col items-start gap-4 rounded-2xl border border-border bg-bg-elev p-6 sm:p-8">
         <div className="w-full max-w-[720px]">
           <SkeletonBlock className="h-[31px] w-[72%] rounded-[8px]" />
@@ -175,9 +175,9 @@ export function DashboardPanelSkeleton() {
 
 export function FeatureCardSkeleton({ image = false }: Readonly<{ image?: boolean }>) {
   return (
-    <div className="flex min-w-0 flex-col rounded-[15px] border border-border bg-bg-elev p-[22px]">
+    <div className="flex min-w-0 flex-col rounded-[15px] border border-border bg-bg-elev p-5.5">
       {image ? (
-        <SkeletonBlock className="mx-[-22px] mt-[-22px] mb-[18px] aspect-3/2 rounded-b-none rounded-t-[15px]" />
+        <SkeletonBlock className="-mx-5.5 -mt-5.5 mb-4.5 aspect-3/2 rounded-b-none rounded-t-[15px]" />
       ) : null}
       <SkeletonBlock className="h-[42px] w-[42px] rounded-[11px]" tone="accent" />
       <SkeletonBlock className="mt-4 h-[18px] w-[74%] rounded-[6px]" />

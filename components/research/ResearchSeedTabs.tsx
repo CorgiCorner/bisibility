@@ -1,6 +1,6 @@
 "use client";
 
-import Tooltip from "@mui/material/Tooltip";
+import { Tooltip } from "@/components/ui";
 import { XIcon as X } from "@phosphor-icons/react";
 import type { ResearchTab } from "./research-workspace-model";
 
@@ -29,7 +29,7 @@ export function ResearchSeedTabs({
             className={`-mb-px flex items-center gap-1 border-b-2 px-3 transition-colors ${active ? "border-accent" : "border-transparent"}`}
             key={tab.id}
           >
-            <Tooltip title={tab.seed}>
+            <Tooltip content={tab.seed}>
               <button
                 aria-selected={active}
                 className={`max-w-[190px] truncate py-2.5 text-[13px] font-semibold transition-colors ${active ? "text-fg" : "text-fg-muted hover:text-fg"}`}
