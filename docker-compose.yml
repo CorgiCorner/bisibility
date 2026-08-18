@@ -109,7 +109,7 @@ x-app-env: &app-env
 
 services:
   db-migrations:
-    image: ${BISIBILITY_IMAGE:-docker.io/corgicorner/bisibility:0.13.5}
+    image: ${BISIBILITY_IMAGE:-docker.io/corgicorner/bisibility:0.13.6}
     pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     build:
       <<: *app-build
@@ -123,7 +123,7 @@ services:
         condition: service_healthy
 
   app:
-    image: ${BISIBILITY_IMAGE:-docker.io/corgicorner/bisibility:0.13.5}
+    image: ${BISIBILITY_IMAGE:-docker.io/corgicorner/bisibility:0.13.6}
     pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     build: *app-build
     restart: unless-stopped
@@ -311,7 +311,7 @@ services:
       - "127.0.0.1:${TEMPORAL_UI_HOST_PORT:-8233}:8080"
 
   worker:
-    image: ${BISIBILITY_WORKER_IMAGE:-docker.io/corgicorner/bisibility-worker:0.13.5}
+    image: ${BISIBILITY_WORKER_IMAGE:-docker.io/corgicorner/bisibility-worker:0.13.6}
     pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     build:
       context: .

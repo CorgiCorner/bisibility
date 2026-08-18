@@ -1,5 +1,8 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { act } from "react";
+import { hydrateRoot } from "react-dom/client";
+import { renderToString } from "react-dom/server";
+import { describe, expect, it, vi } from "vitest";
 import { DomainIconLayer } from "./DomainIconLayer";
 
 function loadProbe(image: HTMLElement, width: number, height: number) {
@@ -90,5 +93,65 @@ describe("DomainIconLayer", () => {
 
     expect(second).toBe(first);
     expect(second.className).toBe(first.className);
+  });
+
+  it("paints the layer when a hydrated probe is already complete without a load event", async () => {
+    const names = ["complete", "naturalWidth", "naturalHeight"] as const;
+    const saved = names.map(
+      (name) => [name, Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, name)] as const,
+    );
+    Object.defineProperty(HTMLImageElement.prototype, "complete", {
+      configurable: true,
+      get: () => true,
+    });
+    Object.defineProperty(HTMLImageElement.prototype, "naturalWidth", {
+      configurable: true,
+      get: () => 32,
+    });
+    Object.defineProperty(HTMLImageElement.prototype, "naturalHeight", {
+      configurable: true,
+      get: () => 32,
+    });
+
+    const container = document.createElement("div");
+    document.body.append(container);
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    let root: ReturnType<typeof hydrateRoot> | undefined;
+
+    try {
+      container.innerHTML = renderToString(
+        <DomainIconLayer src="https://icons.example.com/favicon.png" testId="domain-icon" />,
+      );
+
+      expect(container.querySelector('[data-testid="domain-icon-probe"]')).not.toBeNull();
+      expect(container.querySelector('[data-testid="domain-icon"]')).toBeNull();
+
+      root = hydrateRoot(
+        container,
+        <DomainIconLayer src="https://icons.example.com/favicon.png" testId="domain-icon" />,
+      );
+
+      await act(async () => undefined);
+
+      expect(container.querySelector('[data-testid="domain-icon"]')).not.toBeNull();
+      expect(container.querySelector('[data-testid="domain-icon"]')).toHaveStyle({
+        backgroundImage: 'url("https://icons.example.com/favicon.png")',
+      });
+      expect(consoleError).not.toHaveBeenCalled();
+    } finally {
+      if (root) {
+        const r = root;
+        await act(async () => r.unmount());
+      }
+      container.remove();
+      consoleError.mockRestore();
+      for (const [name, desc] of saved) {
+        if (desc) {
+          Object.defineProperty(HTMLImageElement.prototype, name, desc);
+        } else {
+          delete (HTMLImageElement.prototype as unknown as Record<string, unknown>)[name];
+        }
+      }
+    }
   });
 });

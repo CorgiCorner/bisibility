@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## [0.13.6] - 2026-08-18
+
+- Fixed project favicons after hydration and kept Keyword Research controls within compact dashboard widths.
+
 ## [0.13.5] - 2026-08-18
 
 - Docs now list Domain Overview as available with a DataForSEO connection, and the v0.1.0 to v0.2.0 upgrade procedure moved to the legacy upgrades page.
