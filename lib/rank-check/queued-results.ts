@@ -10,7 +10,10 @@ import {
   dataForSeoRawPayload,
   dataForSeoResponseCostCents,
 } from "@/lib/providers/serp/dataforseo-payload";
-import { fetchDataForSeoQueuedResult } from "@/lib/providers/serp/dataforseo-queued";
+import {
+  dataForSeoQueuedTaskTag,
+  fetchDataForSeoQueuedResult,
+} from "@/lib/providers/serp/dataforseo-queued";
 import { requireDeterminateOrganicResult } from "@/lib/providers/serp/payload-contract-error";
 import { trackedProjectDomain } from "@/lib/schemas/project";
 import { resolveSerpDepth } from "@/lib/serp/markets";
@@ -50,17 +53,9 @@ async function loadTask(
   id: string,
   client: Pick<Prisma.TransactionClient, "queuedRankCheckTask"> = prisma,
 ) {
+  // biome-ignore format: keep the queue persistence module under its enforced line cap.
   return client.queuedRankCheckTask.findUniqueOrThrow({
-    include: {
-      batch: { include: { connection: true } },
-      keyword: {
-        include: {
-          project: { include: { defaults: true } },
-          schedule: true,
-        },
-      },
-      rankCheck: true,
-    },
+    include: { batch: { include: { connection: true } }, keyword: { include: { project: { include: { defaults: true } }, schedule: true } }, rankCheck: true },
     where: { id },
   });
 }
@@ -91,25 +86,8 @@ async function persistProviderFailure(
   lease: QueuedPersistenceLease,
 ) {
   const previous = await loadComparablePrevious(task);
-  await persistFailedRankCheck({
-    attempts: [{ message, provider: "dataforseo" }],
-    checkedAt: new Date(),
-    connectionId: task.batch.connectionId ?? undefined,
-    error: message,
-    existingRankCheckId: task.rankCheckId,
-    keywordId: task.keyword.id,
-    keywordPublicId: task.keyword.publicId,
-    keywordText: task.keyword.text,
-    previousPosition: previous?.position ?? null,
-    persistenceFinalize: terminalizeLease(lease, "failed"),
-    persistenceGuard: (tx) => assertQueuedPersistenceLease(tx, lease),
-    projectDomain: trackedProjectDomain(task.keyword.project.domain) ?? "",
-    projectId: task.keyword.projectId,
-    provider: "dataforseo",
-    providerCostCents: costCents,
-    requestedDepth: resolveSerpDepth(task.rankCheck.requestedDepth ?? undefined),
-    transactionOptions: queuedResultTransactionOptions,
-  });
+  // biome-ignore format: keep the queue persistence module under its enforced line cap.
+  await persistFailedRankCheck({ attempts: [{ message, provider: "dataforseo" }], checkedAt: new Date(), connectionId: task.batch.connectionId ?? undefined, error: message, existingRankCheckId: task.rankCheckId, keywordId: task.keyword.id, keywordPublicId: task.keyword.publicId, keywordText: task.keyword.text, previousPosition: previous?.position ?? null, persistenceFinalize: terminalizeLease(lease, "failed"), persistenceGuard: (tx) => assertQueuedPersistenceLease(tx, lease), projectDomain: trackedProjectDomain(task.keyword.project.domain) ?? "", projectId: task.keyword.projectId, provider: "dataforseo", providerCostCents: costCents, providerRequestId: task.providerTaskId ?? undefined, providerUsage: { correlationId: task.id, source: "worker", tag: task.providerTag ?? dataForSeoQueuedTaskTag(task.id), trigger: "scheduled" }, requestedDepth: resolveSerpDepth(task.rankCheck.requestedDepth ?? undefined), transactionOptions: queuedResultTransactionOptions });
 }
 
 async function persistProviderResult(
@@ -160,22 +138,8 @@ async function persistProviderResult(
   const rawPayload = dataForSeoRawPayload(items, decision);
   const raw = rawPayload as unknown as Prisma.InputJsonObject;
   await persistRankCheck(
-    {
-      attempts: [],
-      connectionId: task.batch.connection.id,
-      existingRankCheckId: task.rankCheckId,
-      hasDefaults: Boolean(task.keyword.project.defaults),
-      hasSchedule: Boolean(task.keyword.schedule),
-      keywordId: task.keyword.id,
-      keywordPublicId: task.keyword.publicId,
-      keywordTargetUrl: task.keyword.targetUrl,
-      previousRankingUrl: previous?.rankingUrl ?? null,
-      previousRaw: previous?.raw ?? null,
-      persistenceFinalize: terminalizeLease(lease, "completed"),
-      persistenceGuard: (tx) => assertQueuedPersistenceLease(tx, lease),
-      projectId: task.keyword.projectId,
-      transactionOptions: queuedResultTransactionOptions,
-    },
+    // biome-ignore format: keep the queue persistence module under its enforced line cap.
+    { attempts: [], connectionId: task.batch.connection.id, existingRankCheckId: task.rankCheckId, hasDefaults: Boolean(task.keyword.project.defaults), hasSchedule: Boolean(task.keyword.schedule), keywordId: task.keyword.id, keywordPublicId: task.keyword.publicId, keywordTargetUrl: task.keyword.targetUrl, previousRankingUrl: previous?.rankingUrl ?? null, previousRaw: previous?.raw ?? null, persistenceFinalize: terminalizeLease(lease, "completed"), persistenceGuard: (tx) => assertQueuedPersistenceLease(tx, lease), projectId: task.keyword.projectId, providerRequestId: task.providerTaskId, providerUsage: { correlationId: task.id, source: "worker", tag: task.providerTag ?? dataForSeoQueuedTaskTag(task.id), trigger: "scheduled" }, transactionOptions: queuedResultTransactionOptions },
     {
       comparisonAllowed: previous !== null,
       providerCostCents: reportedCost > 0 ? reportedCost : undefined,

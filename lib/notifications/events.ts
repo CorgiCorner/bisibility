@@ -4,6 +4,7 @@ import type { AlertExternalDeliveryPayload } from "@/lib/alerts/alert-delivery-p
 import { prisma } from "@/lib/db/prisma";
 import { NotificationType, type Prisma } from "@/lib/generated/prisma/client";
 import { migrationImportCountSummary } from "@/lib/migration/import-counts";
+import type { ProviderErrorCode } from "@/lib/providers/provider-error-code";
 import { appPath } from "@/lib/routing/app-path";
 import { createNotification } from "./create";
 import type { NotificationPayload } from "./format";
@@ -21,7 +22,7 @@ type ProjectMemberNotificationInput = {
 };
 
 type RankFailureInput = {
-  code: string;
+  code: ProviderErrorCode;
   failedAt: Date;
   keywordId: string;
   keywordPublicId: string;
@@ -29,6 +30,7 @@ type RankFailureInput = {
   message: string;
   projectDomain: string;
   projectId: string;
+  rankCheckId: string;
 };
 
 type TriggeredAlertNotificationInput = {
@@ -181,10 +183,14 @@ export async function notifyRankCheckCompleted(input: {
   }
 }
 
+function checksHrefSegments(rankCheckId: string): string[] {
+  return [`rank-tracker?tab=checks&run=${encodeURIComponent(rankCheckId)}`];
+}
+
 export async function notifyRankCheckFailed(input: RankFailureInput) {
   await notifyProjectMembers({
     body: `${input.keywordText}: ${input.message}`,
-    hrefSegments: ["integrations"],
+    hrefSegments: checksHrefSegments(input.rankCheckId),
     idempotencyKey: `rank-check:${input.keywordId}:failed:${input.code}:${input.failedAt.toISOString()}`,
     payload: {
       errorCode: input.code,
@@ -192,6 +198,7 @@ export async function notifyRankCheckFailed(input: RankFailureInput) {
       keyword: input.keywordText,
       keywordId: input.keywordPublicId,
       meta: `${input.keywordText} on ${input.projectDomain}`,
+      rankCheckId: input.rankCheckId,
     },
     projectId: input.projectId,
     title: "Rank check failed",

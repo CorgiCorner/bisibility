@@ -1,3 +1,5 @@
+import type { WaitlistFailureCode } from "@/lib/landing/waitlist-result";
+
 export const STALE_DEPLOYMENT_MESSAGE =
   "bisibility was updated while this page was open. Refresh the app to continue. Any unsaved changes will be lost.";
 
@@ -37,4 +39,35 @@ export function actionErrorMessage(
     return `Check failed on our side (ref ${digest}). Retry in a moment.`;
   }
   return error.message || fallback;
+}
+
+const safeWaitlistMessages = new Set([
+  "Verification failed. Please try again.",
+  "Too many requests. Please try again later.",
+]);
+
+const waitlistFailureMessages: Record<WaitlistFailureCode, string> = {
+  rate_limited: "Too many requests. Please try again later.",
+  verification_failed: "Verification failed. Please try again.",
+};
+
+export function waitlistFailureMessage(code: WaitlistFailureCode): string {
+  return waitlistFailureMessages[code];
+}
+
+export function waitlistErrorMessage(error: unknown, fallback: string): string {
+  if (!(error instanceof Error)) {
+    return fallback;
+  }
+  if (safeWaitlistMessages.has(error.message)) {
+    return error.message;
+  }
+  if (isStaleDeploymentError(error)) {
+    return STALE_DEPLOYMENT_MESSAGE;
+  }
+  const digest = serverComponentDigest(error);
+  if (digest) {
+    return `Check failed on our side (ref ${digest}). Retry in a moment.`;
+  }
+  return fallback;
 }

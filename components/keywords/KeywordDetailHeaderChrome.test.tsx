@@ -77,11 +77,15 @@ describe("KeywordDetailHeaderChrome", () => {
       />,
     );
 
-    expect(screen.getByText("Topic: Product")).toBeInTheDocument();
-    expect(screen.getByText("Intent: commercial")).toBeInTheDocument();
+    expect(screen.getByText("Topic: Product")).toHaveClass(
+      "h-[27px]",
+      "min-h-[27px]",
+      "text-[11px]",
+    );
+    expect(screen.getByText("Intent: commercial")).toHaveClass("h-[27px]");
     expect(screen.queryByText("Product", { exact: true })).not.toBeInTheDocument();
     expect(screen.queryByText("commercial", { exact: true })).not.toBeInTheDocument();
-    expect(screen.getByText("Priority")).toBeInTheDocument();
+    expect(screen.getByText("Priority")).toHaveClass("h-[27px]");
   });
 
   it("removes the engine switcher and exposes the live search action in metadata", () => {
@@ -170,5 +174,22 @@ describe("KeywordDetailHeaderChrome", () => {
     expect(screen.getByLabelText("Keyword check metadata")).toHaveTextContent(
       "Last check Aug 8, 21:30",
     );
+  });
+
+  it("bolds last and next check values like ranking URL", () => {
+    render(
+      <KeywordDetailHeaderChrome
+        actions={null}
+        keyword={{
+          ...keywordRows[0],
+          lastCheckAt: null,
+          schedule: { ...keywordRows[0].schedule, next_check_at: null },
+        }}
+        timeZone="UTC"
+      />,
+    );
+
+    expect(screen.getByText("Not checked yet")).toHaveClass("font-semibold", "text-fg");
+    expect(screen.getByText("Not scheduled")).toHaveClass("font-semibold", "text-fg");
   });
 });

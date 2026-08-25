@@ -7,6 +7,8 @@ import {
   type InstanceSettingKey,
   isInstanceSettingKey,
   parseInstanceSettingValue,
+  parseProviderInstanceSlug,
+  PROVIDER_INSTANCE_SLUG_SETTING_KEY,
 } from "../../lib/instance-setting-definitions.ts";
 import { databaseConnectionConfig } from "../../lib/db/pool-config.ts";
 import pg from "pg";
@@ -20,10 +22,9 @@ type SettingDatabase = {
   ) => Promise<{ rows: Array<Record<string, unknown>> }>;
 };
 
-type SettingOptions = {
-  key: InstanceSettingKey;
-  value: number;
-};
+type SettingKey = InstanceSettingKey | typeof PROVIDER_INSTANCE_SLUG_SETTING_KEY;
+type SettingValue = number | string;
+type SettingOptions = { key: SettingKey; value: SettingValue };
 
 export type SettingUpdate = SettingOptions & {
   changed: boolean;
@@ -40,13 +41,21 @@ export function parseSettingOptions(args: string[] = process.argv.slice(2)): Set
     strict: true,
   });
   const key = parsed.values.key?.trim() ?? "";
-  if (!isInstanceSettingKey(key)) {
-    throw new Error(`--key must be one of: ${INSTANCE_SETTING_KEYS.join(", ")}.`);
+  if (!isInstanceSettingKey(key) && key !== PROVIDER_INSTANCE_SLUG_SETTING_KEY) {
+    throw new Error(
+      `--key must be one of: ${[...INSTANCE_SETTING_KEYS, PROVIDER_INSTANCE_SLUG_SETTING_KEY].join(", ")}.`,
+    );
   }
   const rawValue = parsed.values.value?.trim() ?? "";
-  const value = parseInstanceSettingValue(key, rawValue);
+  const value = isInstanceSettingKey(key)
+    ? parseInstanceSettingValue(key, rawValue)
+    : parseProviderInstanceSlug(rawValue);
   if (value === null) {
-    throw new Error("--value must be a positive safe integer.");
+    throw new Error(
+      key === PROVIDER_INSTANCE_SLUG_SETTING_KEY
+        ? "--value must be a 1-64 character instance slug."
+        : "--value must be a positive safe integer.",
+    );
   }
   return { key, value };
 }

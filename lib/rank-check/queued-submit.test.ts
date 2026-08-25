@@ -78,8 +78,8 @@ const mocks = vi.hoisted(() => {
           data,
           where,
         }: {
-          data: { state?: string };
-          where: { state?: string | { in: string[] } };
+          data: { providerTag?: string; state?: string };
+          where: { id?: string; state?: string | { in: string[] } };
         }) => {
           const matches =
             !where.state ||
@@ -168,6 +168,39 @@ describe("queued paid-call fence", () => {
     expect(mocks.prisma.queuedRankCheckBatch.updateMany.mock.invocationCallOrder[0]).toBeLessThan(
       mocks.submit.mock.invocationCallOrder[0] ?? 0,
     );
+  });
+
+  it("persists the new provider tag before an ambiguous paid submission", async () => {
+    const { DataForSeoAmbiguousSubmissionError } = await import(
+      "@/lib/providers/serp/dataforseo-queued"
+    );
+    mocks.submit.mockRejectedValueOnce(
+      new DataForSeoAmbiguousSubmissionError("acceptance is unknown"),
+    );
+
+    await expect(submitQueuedRankCheckBatch("batch_1")).resolves.toEqual({
+      state: "ambiguous",
+    });
+
+    const providerTag = mocks.submit.mock.calls[0]?.[0].tasks[0]?.tag;
+    const persistedTag = mocks.prisma.queuedRankCheckTask.updateMany.mock.calls.find(
+      ([input]) => input.data.providerTag,
+    );
+    expect(providerTag).toBeTruthy();
+    expect(persistedTag).toEqual([
+      {
+        data: {
+          providerTag,
+        },
+        where: { id: "qtask_1", state: "submitting" },
+      },
+    ]);
+    expect(
+      mocks.prisma.queuedRankCheckTask.updateMany.mock.invocationCallOrder.find(
+        (_: number, index: number) =>
+          mocks.prisma.queuedRankCheckTask.updateMany.mock.calls[index]?.[0].data.providerTag,
+      ),
+    ).toBeLessThan(mocks.submit.mock.invocationCallOrder[0] ?? 0);
   });
 
   it("blocks cutover before the lifecycle transition, limiter, and paid POST", async () => {

@@ -97,12 +97,38 @@ describe("MenuSelect", () => {
       />,
     );
 
-    expect(screen.getByRole("button", { name: "Location scope" })).toHaveClass(
+    const trigger = screen.getByRole("button", { name: "Location scope" });
+    expect(trigger).toHaveClass(
       "min-h-[34px]",
       "bg-transparent",
       "text-[12.5px]",
-      "font-medium",
+      "font-normal",
+      "text-fg",
     );
+    expect(trigger).not.toHaveClass("font-medium", "font-semibold");
+    expect(trigger.querySelector(".truncate")).toHaveClass("text-fg");
+    expect(trigger.querySelector(".truncate")).not.toHaveClass("text-fg-muted");
+  });
+
+  it("does not bold the selected option in the open menu", async () => {
+    const user = userEvent.setup();
+    render(
+      <MenuSelect
+        ariaLabel="Research mode"
+        onChange={() => undefined}
+        options={[
+          { label: "Auto", value: "auto" },
+          { label: "Related", value: "related" },
+        ]}
+        value="auto"
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Research mode" }));
+    const current = screen.getByRole("menuitem", { name: "Auto" });
+    expect(current).toHaveAttribute("data-current", "true");
+    expect(current.querySelector(".font-semibold, .font-medium")).toBeNull();
+    expect(current.querySelector(".text-fg")).toHaveTextContent("Auto");
   });
 
   it("focuses and types into search, then closes it with Escape", async () => {

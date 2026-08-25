@@ -38,9 +38,12 @@ export function useNotificationStream(
 ) {
   const [feed, setFeed] = useState(initialFeed);
   const [status, setStatus] = useState<NotificationStreamStatus>("connecting");
+  const pollingRefreshFeed = transport === "polling" ? refreshFeed : null;
 
   useEffect(() => {
     if (transport === "polling") {
+      if (!pollingRefreshFeed) return;
+      const refreshPollingFeed = pollingRefreshFeed;
       let active = true;
       let refreshing = false;
       setStatus("live");
@@ -49,7 +52,7 @@ export function useNotificationStream(
         if (refreshing) return;
         refreshing = true;
         try {
-          const nextFeed = await refreshFeed();
+          const nextFeed = await refreshPollingFeed();
           if (active) {
             setFeed(nextFeed);
             setStatus("live");
@@ -99,7 +102,7 @@ export function useNotificationStream(
     return () => {
       source.close();
     };
-  }, [projectRef, refreshFeed, transport]);
+  }, [pollingRefreshFeed, projectRef, transport]);
 
   return { feed, status };
 }

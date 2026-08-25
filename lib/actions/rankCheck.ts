@@ -1,50 +1,22 @@
 "use server";
 
-import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
+import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { parsePublicId } from "@/lib/db/public-id";
 import type { RankCheckFrequency } from "@/lib/generated/prisma/client";
 import { requireTrackedDomain } from "@/lib/projects/tracked-domain";
-import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
-import { assertBudgetAvailable, isBudgetExhaustedError } from "@/lib/rank-check/budget";
-import {
-  type BudgetExhaustedResult,
-  budgetExhaustedResult,
-} from "@/lib/rank-check/budget-contract";
-import { estimatedRankCheckCostCents } from "@/lib/rank-check/default-cost";
 import { refreshKeywordDispatchStates } from "@/lib/rank-check/dispatcher-state";
-import { loadSerpProviderChain, runKeywordCheckWithFallback } from "@/lib/rank-check/fallback";
-import { ACTIVE_QUEUED_TASK_STATES } from "@/lib/rank-check/queued-state";
+import { manualRunCheckNow, type RunCheckNowResult } from "@/lib/rank-check/manual-run";
 import { isScheduledFrequency, SCHEDULED_FREQUENCIES } from "@/lib/rank-check/schedule";
-import { SchedulerDisabledError } from "@/lib/scheduler/driver";
-import { queueFirstChecksSchema, runCheckNowSchema } from "@/lib/schemas/keyword";
-import { resolveEffectiveSerpDepth } from "@/lib/serp/markets";
-import {
-  manualRankCheckWorkflowId,
-  rankCheckSearchAttributes,
-  startRankCheckWorkflow,
-} from "@/lib/temporal/client";
+import { queueFirstChecksSchema } from "@/lib/schemas/keyword";
 import {
   getActionActor,
   parseActionInput,
-  requireKeywordScope,
   requireProjectScope,
   revalidateRankCheckViews,
 } from "./_shared";
 
-export type RunCheckNowResult =
-  | BudgetExhaustedResult
-  | { code: "check_in_progress"; message: string; status: "not_started" }
-  | { status: "running" }
-  | {
-      attempts: number;
-      billingUnits: number | null;
-      position: number | null;
-      provider: string;
-      rankCheckId: string;
-      requestedDepth: number | null;
-      status: "completed";
-    };
+export type { RunCheckNowResult };
 
 export type QueueFirstChecksResult = { queued: number } | { queued: 0; reason: "no_provider" };
 
@@ -63,14 +35,6 @@ type FirstCheckSchedule = {
   lastCheckedAt: Date | null;
   timezone: string;
 };
-
-function isTemporalUnavailable(error: unknown) {
-  if (error instanceof SchedulerDisabledError) return true;
-  const message = error instanceof Error ? `${error.name} ${error.message}` : String(error);
-  return /ECONNREFUSED|UNAVAILABLE|Unavailable|connection refused|failed to connect|No connection established|deadline exceeded/i.test(
-    message,
-  );
-}
 
 function canQueueFirstCheck(schedule: Pick<FirstCheckSchedule, "frequency"> | null) {
   return Boolean(schedule && isScheduledFrequency(schedule.frequency));
@@ -178,122 +142,8 @@ export async function queueFirstChecks(input: unknown): Promise<QueueFirstChecks
   return { queued: keywordIds.length };
 }
 
+// A direct re-export is illegal in a "use server" file (only async functions may
+// be exported), so wrap the manual-run entry point in an async function.
 export async function runCheckNow(input: unknown): Promise<RunCheckNowResult> {
-  const data = parseActionInput(runCheckNowSchema, input);
-  const actor = await getActionActor();
-  const keywordScope = await requireKeywordScope(actor, "update", data.keywordId);
-  if (keywordScope.projectIsSample) {
-    throw new Error("Sample projects don't run real checks.");
-  }
-  const budgetContext = await prisma.keyword.findUnique({
-    select: {
-      project: {
-        select: {
-          budgetCapCents: true,
-          defaults: { select: { serpDepth: true } },
-        },
-      },
-      queuedRankCheckTasks: {
-        select: { state: true },
-        take: 1,
-        where: { state: { in: ACTIVE_QUEUED_TASK_STATES } },
-      },
-      rankChecks: {
-        orderBy: [{ checkedAt: "desc" }, { id: "desc" }],
-        select: { status: true },
-        take: 1,
-      },
-      schedule: { select: { serpDepth: true } },
-    },
-    where: { id: keywordScope.id },
-  });
-  if (!budgetContext) {
-    throw new Error("Keyword not found.");
-  }
-  const auditResult = async (result: RunCheckNowResult) => {
-    await writeAudit({
-      action: "rank_check.run_now",
-      actorId: actor.id,
-      after: {
-        keywordId: keywordScope.publicId,
-        provider: data.providerId ?? ("provider" in result ? result.provider : "primary"),
-        text: keywordScope.text,
-        ...result,
-      },
-      projectId: keywordScope.projectId,
-      targetId: keywordScope.publicId,
-      targetType: "keyword",
-    });
-    revalidateRankCheckViews(keywordScope.publicId);
-  };
-  if (
-    budgetContext.queuedRankCheckTasks.length > 0 ||
-    budgetContext.rankChecks[0]?.status === "running"
-  ) {
-    const result = {
-      code: "check_in_progress",
-      message: "A rank check is already queued or running.",
-      status: "not_started",
-    } as const;
-    await auditResult(result);
-    return result;
-  }
-  const connections = await loadSerpProviderChain(keywordScope.projectId, data.providerId);
-  const depth = resolveEffectiveSerpDepth({
-    projectDepth: budgetContext.project.defaults?.serpDepth,
-    requestedDepth: data.depth,
-    scheduleDepth: budgetContext.schedule?.serpDepth,
-  });
-  try {
-    // This preflight improves feedback only; durable execution repeats the budget gate.
-    await assertBudgetAvailable(keywordScope.projectId, new Date(), {
-      capCents: budgetContext.project.budgetCapCents,
-      estimatedCostCents: estimatedRankCheckCostCents(
-        connections[0]?.provider,
-        depth,
-        connections[0]?.costPerCheckCents,
-        connections[0]?.rateContext ?? LIST_PROVIDER_RATE_CONTEXT,
-      ),
-    });
-  } catch (error) {
-    if (isBudgetExhaustedError(error)) {
-      return budgetExhaustedResult(error.message);
-    }
-    throw error;
-  }
-  let result: Exclude<RunCheckNowResult, BudgetExhaustedResult>;
-  try {
-    await startRankCheckWorkflow(
-      { depth: data.depth, keywordId: keywordScope.id, providerId: data.providerId },
-      {
-        searchAttributes: rankCheckSearchAttributes({
-          keywordId: keywordScope.id,
-          projectId: keywordScope.projectId,
-          provider: data.providerId,
-        }),
-        workflowId: manualRankCheckWorkflowId(keywordScope.id),
-      },
-    );
-    result = { status: "running" };
-  } catch (error) {
-    if (!isTemporalUnavailable(error)) throw error;
-    const fallback = await runKeywordCheckWithFallback({
-      depth: data.depth,
-      keywordId: keywordScope.id,
-      providerId: data.providerId,
-    });
-    result = {
-      attempts: fallback.attempts.length,
-      billingUnits: fallback.rankCheck.billingUnits,
-      position: fallback.rankCheck.position,
-      provider: fallback.provider,
-      rankCheckId: requiredPublicAuditId(fallback.rankCheck.publicId, "check", "Rank-check"),
-      requestedDepth: fallback.rankCheck.requestedDepth,
-      status: "completed",
-    };
-  }
-
-  await auditResult(result);
-
-  return result;
+  return manualRunCheckNow(input);
 }

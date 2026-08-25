@@ -28,6 +28,7 @@ describe("KeywordPendingModules", () => {
     expect(screen.getByText("Position")).toBeInTheDocument();
     expect(screen.getByText("Ranking URL")).toBeInTheDocument();
     expect(screen.getByText("What changed")).toBeInTheDocument();
+    expect(screen.getByText("What changed").closest(".MuiPaper-root")).toHaveTextContent("No data");
     expect(screen.getAllByRole("heading", { name: "Position history" })).toHaveLength(1);
   });
 

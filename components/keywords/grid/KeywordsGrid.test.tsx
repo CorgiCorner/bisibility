@@ -58,7 +58,7 @@ describe("KeywordsGrid pending state", () => {
       queries: ["open source rank tracker", "rank tracking for agencies"],
       suggestions: [{ query: "open source rank tracker" }, { query: "rank tracking for agencies" }],
     }));
-    renderPendingGrid({ importTopQueriesAction, rows: [] });
+    renderPendingGrid({ importTopQueriesAction, rows: [], searchConsoleConnected: true });
 
     fireEvent.click(screen.getByRole("button", { name: "Find Search Console queries" }));
 
@@ -84,7 +84,7 @@ describe("KeywordsGrid pending state", () => {
   it("renders pending keywords in the normal management grid", async () => {
     renderPendingGrid();
 
-    expect(screen.getByText("No rankings yet.")).toBeInTheDocument();
+    expect(screen.getByText("No rankings yet")).toBeInTheDocument();
     expect(screen.getByText("2 keywords are ready for the first rank check.")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /connect provider/i })).toHaveAttribute(
       "href",

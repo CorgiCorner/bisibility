@@ -21,6 +21,7 @@ export type DataForSeoQueuedTaskInput = {
   keyword: string;
   location: SerpRankLocation;
   stopOnMatch: boolean;
+  tag?: string;
 };
 
 type TaskResponse = {
@@ -45,9 +46,12 @@ export class DataForSeoAmbiguousSubmissionError extends Error {
   }
 }
 
-export function dataForSeoQueuedTaskTag(correlationId: string) {
+export function legacyDataForSeoQueuedTaskTag(correlationId: string) {
   return `bisibility:rank:${correlationId}`.slice(0, 255);
 }
+
+/** @deprecated Only for resolving submissions created before provider usage tags. */
+export const dataForSeoQueuedTaskTag = legacyDataForSeoQueuedTaskTag;
 
 export function dataForSeoAuthorization(credentials: ProviderCredentials) {
   if (!credentials.login || !credentials.password) {
@@ -67,7 +71,7 @@ function taskPayload(input: DataForSeoQueuedTaskInput, priority: DataForSeoQueue
       ? { location_name: input.location.primaryGeoName }
       : { location_code: input.location.primaryGeoCode }),
     priority: priority === "high" ? 2 : 1,
-    tag: dataForSeoQueuedTaskTag(input.correlationId),
+    tag: input.tag ?? legacyDataForSeoQueuedTaskTag(input.correlationId),
     ...(resolveSerpStopOnMatch(input.stopOnMatch)
       ? {
           find_targets_in: ["organic"],
@@ -137,7 +141,10 @@ export async function submitDataForSeoQueuedTasks(input: {
     throw new Error("DataForSEO queued submissions require between 1 and at most 100 tasks.");
   }
   const byTag = new Map(
-    input.tasks.map((task) => [dataForSeoQueuedTaskTag(task.correlationId), task.correlationId]),
+    input.tasks.map((task) => [
+      task.tag ?? legacyDataForSeoQueuedTaskTag(task.correlationId),
+      task.correlationId,
+    ]),
   );
   const data = await postTasks(
     input.credentials,
@@ -147,13 +154,20 @@ export async function submitDataForSeoQueuedTasks(input: {
     correlationId: string;
     costCents: number;
     providerTaskId: string;
+    tag: string;
   }> = [];
   const failed: Array<{ correlationId: string; costCents: number; message: string }> = [];
   for (const task of data.tasks ?? []) {
-    const correlationId = task.data?.tag ? byTag.get(task.data.tag) : undefined;
-    if (!correlationId) continue;
+    const tag = task.data?.tag;
+    const correlationId = tag ? byTag.get(tag) : undefined;
+    if (!tag || !correlationId) continue;
     if (task.status_code === CREATED_STATUS && task.id) {
-      accepted.push({ correlationId, costCents: costCents(task.cost), providerTaskId: task.id });
+      accepted.push({
+        correlationId,
+        costCents: costCents(task.cost),
+        providerTaskId: task.id,
+        tag,
+      });
     } else {
       failed.push({
         correlationId,

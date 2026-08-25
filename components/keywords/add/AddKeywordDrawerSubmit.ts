@@ -11,11 +11,12 @@ import {
   parseKeywordTargetLines,
 } from "@/lib/keywords/add-keyword-drawer-shared";
 import type { AddKeywordsInput, AddKeywordsMatrixInput } from "@/lib/schemas/keyword";
-import { buildDrawerCsvKeywordRowsForForm } from "./AddKeywordCsvRows";
+import { buildDrawerCsvKeywordRowsForForm, type DrawerCsvKeywordRow } from "./AddKeywordCsvRows";
 import { pausedSchedule } from "./AddKeywordDrawerLocation";
 
 type DrawerInputArgs = {
   activeTab: AddKeywordTab;
+  csvRows?: DrawerCsvKeywordRow[];
   csvText: string;
   devices: AddKeywordsMatrixInput["devices"];
   existingKeywords: readonly ExistingKeyword[];
@@ -64,12 +65,13 @@ function manualInput(
 }
 
 function csvInput({
+  csvRows,
   csvText,
   existingKeywords,
   locationValue,
   values,
 }: DrawerInputArgs): DrawerInputResult {
-  const rows = buildDrawerCsvKeywordRowsForForm(csvText, values, locationValue);
+  const rows = csvRows ?? buildDrawerCsvKeywordRowsForForm(csvText, values, locationValue);
   if (rows.some((row) => row.issues.length > 0)) {
     return { warning: "Fix invalid CSV rows before confirming." };
   }

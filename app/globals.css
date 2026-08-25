@@ -7,3 +7,9 @@
 @import "./styles/motion-keyword.css";
 @import "./styles/app-utilities.css";
 @config "../tailwind.config.ts";
+
+/* TW4 nests `accent` + `accent-text` and drops `text-accent` / `fill-accent`. Pin the
+   pigment so marketing icons and charts use --accent, not the AA --accent-text companion. */
+@theme inline {
+  --color-accent: var(--accent);
+}

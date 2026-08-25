@@ -17,7 +17,7 @@ const footer = (
       Cancel
     </button>
     <button
-      className="rounded-[9px] bg-accent-solid px-4.5 py-[11px] text-[13.5px] font-semibold text-white"
+      className="rounded-[9px] bg-accent-solid px-4.5 py-[11px] text-[13.5px] font-semibold text-accent-on-solid"
       type="button"
     >
       Export CSV

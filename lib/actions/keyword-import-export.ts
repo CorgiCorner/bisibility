@@ -7,15 +7,15 @@ import { isPublicIdOfType, requirePublicId } from "@/lib/db/public-id";
 import { auditKeywordExport } from "@/lib/keywords/export-audit";
 import {
   CsvParseError,
-  decodeKeywordImportCsv,
-  LEGACY_XLS_IMPORT_MESSAGE,
+  detectedKeywordImportColumnMapping,
+  keywordImportFields,
   parseKeywordImportCsvRows,
+  parseKeywordImportCsvTable,
 } from "@/lib/keywords/import-csv-parser";
 import { loadRankHistoryExport } from "@/lib/rank-history/export-service";
 import { KEYWORD_IMPORT_MAX, keywordImportFileLimitMessage } from "@/lib/schemas/keyword";
 import { denormalizedLocationLabel } from "@/lib/serp/location-label";
 import { resolveKeywordLocation } from "@/lib/serp/location-service";
-import ExcelJS from "exceljs";
 import { z } from "zod";
 import {
   getActionActor,
@@ -28,14 +28,16 @@ import { assertCloudImportPackageLimits } from "./keyword-export-limits";
 import { createKeywordBatchSet, type KeywordBatchRow } from "./keyword-helpers";
 import { keywordImportDefaults } from "./keyword-import-defaults";
 import {
+  deduplicateKeywordImportRows,
   keywordExportColumns,
   keywordExportOptions,
-  keywordImportKey,
   parseKeywordImportCsv,
   serializeKeywordExportCsv,
   serializeKeywordExportXlsx,
 } from "./keyword-import-export-helpers";
 import { keywordExportJson } from "./keyword-import-export-json";
+import { readKeywordImportInput } from "./keyword-import-input";
+import { reviewKeywordImportRows } from "./keyword-import-review";
 
 const projectIdSchema = z
   .string()
@@ -47,11 +49,8 @@ const keywordIdSchema = z
   .string()
   .refine((value) => isPublicIdOfType(value, "kw"), { message: "Keyword not found." });
 
-// 5 MB covers far more rows than the import cap while bounding decode/workbook parsing cost.
-const KEYWORD_IMPORT_MAX_FILE_BYTES = 5 * 1024 * 1024;
-
 // biome-ignore format: compact schema keeps this server action under the file line cap.
-const importSchema = z.object({ csv: z.string().trim().min(1, "Upload CSV or XLSX rows, or paste CSV rows."), projectId: projectIdSchema, refresh: z.enum(["deferred", "immediate"]).default("immediate") });
+const importSchema = z.object({ columnMapping: z.partialRecord(z.enum(keywordImportFields), z.number().int().nonnegative()).default({}), csv: z.string().trim().min(1, "Upload CSV or XLSX rows, or paste CSV rows."), projectId: projectIdSchema, refresh: z.enum(["deferred", "immediate"]).default("immediate") });
 
 // biome-ignore format: compact schema keeps this server action under the file line cap.
 const exportSchema = z.object({ columns: z.partialRecord(z.enum(keywordExportColumns), z.boolean()).default({}), format: z.enum(["csv", "json", "xlsx"]).default("csv"), granularity: z.enum(["daily", "weekly"]).default("daily"), keywordIds: z.array(keywordIdSchema).max(500).optional(), projectId: projectIdSchema, range: z.enum(["30", "90", "all"]).default("30"), scope: z.enum(["current", "history"]).default("current") });
@@ -60,82 +59,18 @@ const exportMimeTypes = { csv: "text/csv", json: "application/json", xlsx: "appl
 
 type Actor = Awaited<ReturnType<typeof getActionActor>>;
 
-// biome-ignore format: compact set keeps this server action under the file line cap.
-const spreadsheetTypes = new Set(["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"]);
-
-const isSpreadsheetUpload = (file: Blob & { name?: string }) =>
-  /\.xlsx$/i.test(file.name ?? "") || spreadsheetTypes.has(file.type);
-
-const isLegacyXlsUpload = (file: Blob & { name?: string }) =>
-  /\.xls$/i.test(file.name ?? "") ||
-  (!(file.name ?? "") && file.type === "application/vnd.ms-excel");
-
-// biome-ignore format: compact guard keeps this server action under the file line cap.
-function validateImportFile(file: Blob) { if (file.size > KEYWORD_IMPORT_MAX_FILE_BYTES) throw new Error("Keyword import files must be 5 MB or smaller."); }
-
-// biome-ignore format: compact decoder keeps this server action under the file line cap.
-async function textFileContent(file: Blob) {
-  return decodeKeywordImportCsv(await file.arrayBuffer());
-}
-
-// biome-ignore format: compact cell coercion keeps this server action under the file line cap.
-function workbookCellText(value: ExcelJS.CellValue): string {
-  if (value == null) return "";
-  if (value instanceof Date) return value.toISOString();
-  if (typeof value !== "object") return String(value);
-  if ("text" in value && typeof value.text === "string") return value.text;
-  if ("richText" in value && Array.isArray(value.richText)) return value.richText.map((part) => String(part?.text ?? "")).join("");
-  if ("result" in value) return workbookCellText(value.result as ExcelJS.CellValue);
-  return JSON.stringify(value);
-}
-
-const spreadsheetCsvCell = (value: string) =>
-  /[",\n\r]/.test(value) ? `"${value.replaceAll('"', '""')}"` : value;
-
-async function spreadsheetToCsv(file: Blob) {
-  const workbook = new ExcelJS.Workbook();
-  try {
-    // biome-ignore format: bridges ExcelJS' ArrayBuffer-like type and the Node Buffer runtime path.
-    await workbook.xlsx.load(Buffer.from(await file.arrayBuffer()) as unknown as Parameters<typeof workbook.xlsx.load>[0]);
-  } catch {
-    throw new Error("Could not read the spreadsheet import.");
-  }
-  const worksheet = workbook.worksheets[0];
-  if (!worksheet) return "";
-  const rows: string[][] = [];
-  worksheet.eachRow((row) => {
-    const values: string[] = [];
-    row.eachCell({ includeEmpty: true }, (cell, column) => {
-      values[column - 1] = workbookCellText(cell.value);
-    });
-    while (values.at(-1) === "") values.pop();
-    if (values.some(Boolean)) rows.push(values);
-  });
-  return rows.map((row) => row.map(spreadsheetCsvCell).join(",")).join("\n");
-}
-
-async function importTextFrom(value: FormDataEntryValue | null) {
-  if (!value) return "";
-  if (typeof value === "string") return value;
-  validateImportFile(value);
-  if (isLegacyXlsUpload(value)) throw new Error(LEGACY_XLS_IMPORT_MESSAGE);
-  return isSpreadsheetUpload(value) ? spreadsheetToCsv(value) : textFileContent(value);
-}
-
-// biome-ignore format: compact FormData parse keeps this server action under the file line cap.
 async function readCsvInput(input: unknown) {
-  if (typeof FormData !== "undefined" && input instanceof FormData) {
-    const projectId = input.get("projectId");
-    const refresh = input.get("refresh");
-    const csv = await importTextFrom(input.get("file") ?? input.get("csv"));
-    return importSchema.parse({ csv, projectId: typeof projectId === "string" ? projectId : undefined, refresh: typeof refresh === "string" ? refresh : undefined });
-  }
-  return importSchema.parse(input);
+  return importSchema.parse(await readKeywordImportInput(input));
 }
 
 export async function previewKeywordImportFile(input: FormData) {
   try {
-    const csv = await importTextFrom(input.get("file"));
+    const data = await readKeywordImportInput(input);
+    const csv =
+      typeof data === "object" && data !== null && "csv" in data && typeof data.csv === "string"
+        ? data.csv
+        : "";
+    const table = parseKeywordImportCsvTable(csv);
     const rows = parseKeywordImportCsvRows(csv);
     if (rows.length > KEYWORD_IMPORT_MAX) {
       return {
@@ -143,7 +78,13 @@ export async function previewKeywordImportFile(input: FormData) {
         ok: false as const,
       };
     }
-    return { ok: true as const, rows };
+    return {
+      columnMapping: detectedKeywordImportColumnMapping(table),
+      hasHeader: table.hasHeader,
+      ok: true as const,
+      rows,
+      sourceColumns: table.sourceColumns,
+    };
   } catch (error) {
     if (!(error instanceof CsvParseError)) throw error;
     return {
@@ -158,26 +99,26 @@ async function scopedProject(actor: Actor, action: "create" | "read", projectId?
   return requireProjectScope(actor, action, projectId, { type: "keyword" });
 }
 
+export async function reviewKeywordImport(input: unknown) {
+  const data = await readCsvInput(input);
+  const actor = await getActionActor();
+  const project = await scopedProject(actor, "create", data.projectId);
+  return reviewKeywordImportRows(project.id, data.csv, data.columnMapping);
+}
+
 // biome-ignore format: compact import flow keeps this server action under the file line cap.
 export async function importKeywordsFromCsv(input: unknown) {
   const data = await readCsvInput(input);
   const actor = await getActionActor();
   const project = await scopedProject(actor, "create", data.projectId);
-  const { errors, parsed, received } = parseKeywordImportCsv(data.csv, await keywordImportDefaults(project.id));
+  const { errors, parsed, received } = parseKeywordImportCsv(
+    data.csv,
+    await keywordImportDefaults(project.id),
+    data.columnMapping,
+  );
   if (received > KEYWORD_IMPORT_MAX) throw new Error(keywordImportFileLimitMessage(received));
   if (parsed.length === 0) return { created: 0, errors, failed: errors.length, parsed: 0, received, skipped: 0 };
-  const uniqueRows: typeof parsed = [];
-  const seen = new Set<string>();
-  let skipped = 0;
-
-  for (const row of parsed) {
-    const key = keywordImportKey(row);
-    if (seen.has(key)) skipped += 1;
-    else {
-      seen.add(key);
-      uniqueRows.push(row);
-    }
-  }
+  const { skipped, uniqueRows } = deduplicateKeywordImportRows(parsed);
 
   const warnings = new Set<string>();
   const registeredMarkets = await prisma.projectMarket.findMany({

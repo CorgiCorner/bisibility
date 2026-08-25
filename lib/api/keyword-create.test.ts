@@ -138,6 +138,25 @@ describe("REST keyword creation transaction", () => {
     expect(mocks.createKeywordBatchSet).toHaveBeenCalledWith(tx, "project_1", expect.any(Array));
   });
 
+  it("resolves country plus language when location_key is omitted", async () => {
+    await createKeywords(
+      context({
+        country: "Spain",
+        keyword: "rank tracker",
+        language: "en",
+        tags: [],
+      }),
+      "prj_a00000000000000000000000",
+    );
+
+    expect(mocks.resolveKeywordLocation).toHaveBeenCalledWith({
+      city: undefined,
+      country: "Spain",
+      language: "en",
+      projectId: "project_1",
+    });
+  });
+
   it("keeps same-pair duplicates skipped while creating a keyword in another language pair", async () => {
     const spanish = { ...keyword, id: "keyword_es", publicId: "kw_b00000000000000000000000" };
     const english = { ...keyword, id: "keyword_en", publicId: "kw_c00000000000000000000000" };

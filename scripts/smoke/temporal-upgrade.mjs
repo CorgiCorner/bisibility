@@ -9,6 +9,7 @@ import { ensureDockerVmFreeSpace } from "./docker-ephemeral.mjs";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const temporaryRoot = mkdtempSync(path.join(tmpdir(), "bisibility-temporal-upgrade-"));
 const oldCompose = path.join(temporaryRoot, "docker-compose.old.yml");
+const noHostPortsCompose = path.join(temporaryRoot, "docker-compose.no-host-ports.yml");
 const newCompose = path.join(root, "docker-compose.temporal.yml");
 const project = `bisibility-temporal-upgrade-${process.pid}`;
 
@@ -43,6 +44,14 @@ volumes:
 `,
 );
 
+writeFileSync(
+  noHostPortsCompose,
+  `services:
+  temporal:
+    ports: !reset []
+`,
+);
+
 function run(args, { allowFailure = false, quiet = false } = {}) {
   const result = spawnSync("docker", args, {
     cwd: root,
@@ -56,8 +65,9 @@ function run(args, { allowFailure = false, quiet = false } = {}) {
   return result;
 }
 
-function compose(file, args, options) {
-  return run(["compose", "-p", project, "-f", file, ...args], options);
+function compose(files, args, options) {
+  const composeFiles = (Array.isArray(files) ? files : [files]).flatMap((file) => ["-f", file]);
+  return run(["compose", "-p", project, ...composeFiles, ...args], options);
 }
 
 function eventually(label, callback, attempts = 90) {
@@ -85,10 +95,10 @@ try {
 
   console.log("Applying the 1.31.2 schema and server topology to the same database...");
   compose(oldCompose, ["stop", "temporal"]);
-  compose(newCompose, ["up", "-d", "temporal-namespace"]);
+  compose([newCompose, noHostPortsCompose], ["up", "-d", "temporal-namespace"]);
   eventually("Temporal 1.31.2 namespace setup", () => {
     const result = compose(
-      newCompose,
+      [newCompose, noHostPortsCompose],
       ["ps", "-a", "--format", "json", "temporal-namespace"],
       { allowFailure: true, quiet: true },
     );
@@ -103,24 +113,24 @@ try {
   });
 
   const runningImage = compose(
-    newCompose,
+    [newCompose, noHostPortsCompose],
     ["images", "--format", "json", "temporal"],
     { quiet: true },
   );
   if (!runningImage.stdout.includes("temporalio/server") || !runningImage.stdout.includes("1.31.2")) {
     throw new Error(`Unexpected Temporal image after upgrade: ${runningImage.stdout}`);
   }
-  compose(newCompose, ["run", "--rm", "--no-deps", "--entrypoint", "temporal", "temporal-namespace", "operator", "cluster", "health", "--address", "temporal:7233"]);
-  compose(newCompose, ["run", "--rm", "--no-deps", "--entrypoint", "temporal", "temporal-namespace", "operator", "namespace", "describe", "--address", "temporal:7233", "--namespace", "default"]);
+  compose([newCompose, noHostPortsCompose], ["run", "--rm", "--no-deps", "--entrypoint", "temporal", "temporal-namespace", "operator", "cluster", "health", "--address", "temporal:7233"]);
+  compose([newCompose, noHostPortsCompose], ["run", "--rm", "--no-deps", "--entrypoint", "temporal", "temporal-namespace", "operator", "namespace", "describe", "--address", "temporal:7233", "--namespace", "default"]);
   console.log("Temporal upgrade smoke passed: 1.25.2 data is served by 1.31.2.");
 } catch (error) {
   compose(
-    newCompose,
+    [newCompose, noHostPortsCompose],
     ["logs", "--no-color", "temporal-schema", "temporal", "temporal-namespace"],
     { allowFailure: true },
   );
   throw error;
 } finally {
-  compose(newCompose, ["down", "-v", "--rmi", "local", "--remove-orphans"], { allowFailure: true });
+  compose([newCompose, noHostPortsCompose], ["down", "-v", "--rmi", "local", "--remove-orphans"], { allowFailure: true });
   rmSync(temporaryRoot, { force: true, recursive: true });
 }

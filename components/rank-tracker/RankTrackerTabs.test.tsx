@@ -26,19 +26,14 @@ describe("RankTrackerTabs", () => {
     );
   });
 
-  it("fills the bookmark only while Saved is active and activates Checks independently", () => {
-    const { rerender } = render(
-      <RankTrackerTabs activeTab="saved" projectRef="prj_1" savedCount={3} trackedCount={10} />,
-    );
-
-    expect(screen.getByTestId("saved-tab-icon")).toHaveAttribute("data-weight", "fill");
-    expect(screen.getByTestId("saved-tab-icon")).toHaveClass("text-accent-text");
-
-    rerender(
+  it("marks Checks current without decorative tab icons", () => {
+    render(
       <RankTrackerTabs activeTab="checks" projectRef="prj_1" savedCount={3} trackedCount={10} />,
     );
-    expect(screen.getByTestId("saved-tab-icon")).toHaveAttribute("data-weight", "regular");
-    expect(screen.getByTestId("saved-tab-icon")).not.toHaveClass("text-accent-text");
+
     expect(screen.getByRole("link", { name: "Checks" })).toHaveAttribute("aria-current", "page");
+    expect(
+      screen.getByRole("navigation", { name: "Rank Tracker views" }).querySelector("svg"),
+    ).toBeNull();
   });
 });

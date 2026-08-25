@@ -152,7 +152,7 @@ export default async function InvitePage({ params }: Readonly<InvitePageProps>) 
     inviteAction = (
       <form action={acceptInviteAction} className="mt-5">
         <button
-          className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[9px] bg-accent-solid px-4 text-[13px] font-semibold text-primary-contrast hover:opacity-90"
+          className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[9px] bg-accent-solid px-4 text-[13px] font-semibold text-accent-on-solid hover:opacity-90"
           type="submit"
         >
           Accept invite <CaretRight aria-hidden size={15} weight="bold" />
@@ -176,7 +176,7 @@ export default async function InvitePage({ params }: Readonly<InvitePageProps>) 
   return (
     <Shell>
       <div className="mt-8">
-        <span className="grid h-12 w-12 place-items-center rounded-[13px] bg-accent-soft text-accent-text">
+        <span className="grid h-12 w-12 place-items-center rounded-[13px] bg-accent-soft text-accent-solid">
           <CheckCircle aria-hidden size={24} weight="fill" />
         </span>
         <p className="mt-5 mb-0 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">

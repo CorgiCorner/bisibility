@@ -9,17 +9,12 @@ import {
   reactivateProject,
   releaseMigrationHold,
 } from "@/lib/actions/project-write-mode";
-import {
-  rollbackSelfHostMigration,
-  startSelfHostMigration,
-} from "@/lib/actions/self-host-migration";
 import { getProjectRole } from "@/lib/auth/authorize";
 import { canProjectAction, canReadProjectAudit } from "@/lib/auth/capabilities";
 import { deploymentMode } from "@/lib/deployment/deployment";
 import { configuredMigrationTargetOrigin } from "@/lib/migration/target-origin";
 import { requireReadableProject } from "@/lib/queries/_auth";
 import { getAuditLogView } from "@/lib/queries/audit";
-import { getSelfHostMigrationState } from "@/lib/queries/self-host-migration";
 import { trackedProjectDomain } from "@/lib/schemas/project";
 
 type AdvancedSettingsPageProps = { params: Promise<{ project: string }> };
@@ -35,10 +30,7 @@ export default async function AdvancedSettingsPage({
     access.project.writeMode === "active" && canProjectAction(role, "delete", "project");
   const canReadAudit = canReadProjectAudit(role);
   const deployment = deploymentMode();
-  const [audit, migration] = await Promise.all([
-    canReadAudit ? getAuditLogView(access.project.publicId) : null,
-    deployment === "cloud" ? getSelfHostMigrationState(access.project.publicId) : null,
-  ]);
+  const audit = canReadAudit ? await getAuditLogView(access.project.publicId) : null;
   const actions = {
     cancelMigration: deployment === "self-host" && canManageMigration ? cancelMigration : undefined,
     deleteProject: canDeleteProject ? deleteWorkspace : undefined,
@@ -51,10 +43,6 @@ export default async function AdvancedSettingsPage({
       deployment === "self-host" && canManageMigration ? reactivateProject : undefined,
     releaseMigrationHold:
       deployment === "self-host" && canManageMigration ? releaseMigrationHold : undefined,
-    rollbackHostedMigration:
-      deployment === "cloud" && canManageMigration ? rollbackSelfHostMigration : undefined,
-    startHostedMigration:
-      deployment === "cloud" && canManageMigration ? startSelfHostMigration : undefined,
   };
 
   return (
@@ -69,7 +57,6 @@ export default async function AdvancedSettingsPage({
             deployment === "self-host" ? configuredMigrationTargetOrigin() : undefined
           }
           deployment={deployment}
-          migration={migration}
           project={{
             domain: trackedProjectDomain(access.project.domain) ?? "",
             name: access.project.name,

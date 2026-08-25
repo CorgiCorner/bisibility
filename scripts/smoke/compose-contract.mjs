@@ -1,10 +1,15 @@
 #!/usr/bin/env node
 import { spawnSync } from "node:child_process";
-import { ensureDockerVmFreeSpace } from "./docker-ephemeral.mjs";
+import {
+  ensureDockerVmFreeSpace,
+  reclaimDockerBuildCache,
+} from "./docker-ephemeral.mjs";
 
 const project = `bisibility-compose-contract-${process.pid}`;
 const fullRuntime = process.argv.slice(2).includes("--full");
 const buildsImages = fullRuntime && process.env.BISIBILITY_COMPOSE_E2E_SKIP_BUILD !== "1";
+const reclaimsBuildCache =
+  buildsImages && process.env.BISIBILITY_COMPOSE_E2E_RECLAIM_BUILD_CACHE === "1";
 const files = [
   "compose.yaml",
   "compose.worker.yaml",
@@ -82,6 +87,33 @@ function run(args, options = {}) {
     throw new Error(`docker ${args.join(" ")} failed: ${detail}`);
   }
   return result;
+}
+
+function reportServiceDiagnostics() {
+  for (const service of ["postgres", "redis", "temporal-postgres", "temporal"]) {
+    const ids = run(["ps", "-aq", service], { acceptFailure: true, capture: true });
+    const id = (ids.stdout ?? "").trim().split("\n").filter(Boolean).at(-1);
+    if (!id) continue;
+    const state = docker(
+      [
+        "inspect",
+        "--format",
+        "status={{.State.Status}} exit={{.State.ExitCode}} oom={{.State.OOMKilled}} restarts={{.RestartCount}} health={{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}",
+        id,
+      ],
+      { acceptFailure: true, capture: true },
+    );
+    console.error(`[diagnostics] ${service} ${(state.stdout ?? "").trim()}`);
+    const health = docker(
+      ["inspect", "--format", "{{if .State.Health}}{{json .State.Health.Log}}{{end}}", id],
+      { acceptFailure: true, capture: true },
+    );
+    const probes = (health.stdout ?? "").trim();
+    if (probes) console.error(`[diagnostics] ${service} health probes: ${probes}`);
+    const logs = run(["logs", "--tail", "80", service], { acceptFailure: true, capture: true });
+    const output = `${logs.stdout ?? ""}${logs.stderr ?? ""}`.trim();
+    if (output) console.error(`[diagnostics] ${service} logs:\n${output}`);
+  }
 }
 
 function docker(args, options = {}) {
@@ -178,8 +210,15 @@ try {
   console.log("Compose bootstrap contract passed twice.");
 
   if (fullRuntime) {
-    if (buildsImages) run(["build", "app", "worker"]);
-    run(["up", "-d", "postgres", "redis"]);
+    if (buildsImages && reclaimsBuildCache) {
+      run(["build", "app"]);
+      reclaimDockerBuildCache({ environment: env });
+      run(["build", "worker"]);
+      reclaimDockerBuildCache({ environment: env });
+    } else if (buildsImages) {
+      run(["build", "app", "worker"]);
+    }
+    run(["up", "-d", "--wait", "postgres", "redis"]);
     run(["run", "--rm", "db-migrations"]);
     run(["up", "-d", "app"]);
     const invalidTls = run(
@@ -231,6 +270,7 @@ try {
   }
 } catch (error) {
   console.error(`Compose bootstrap contract failed: ${error.message}`);
+  reportServiceDiagnostics();
   process.exitCode = 1;
 } finally {
   docker(["rm", "--force", workerContainer], { acceptFailure: true, capture: true });

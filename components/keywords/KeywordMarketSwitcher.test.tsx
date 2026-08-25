@@ -54,6 +54,94 @@ const markets = {
 } satisfies ProjectMarketsView;
 
 describe("KeywordMarketSwitcher", () => {
+  it("uses the quiet chip lg height on the market trigger", () => {
+    const current = target("kw_current");
+    render(
+      <KeywordMarketSwitcher
+        addKeywordsAction={vi.fn()}
+        bulkDeleteAction={vi.fn()}
+        canCreateKeyword
+        keyword={current}
+        projectId="prj_test"
+        projectMarkets={markets}
+        targets={[current]}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: /United States \/ English/ })).toHaveClass(
+      "h-[27px]",
+      "min-h-[27px]",
+      "hover:border-accent",
+      "hover:text-fg",
+    );
+  });
+
+  it("gives a selectable device chip the same hover chrome as the market trigger", () => {
+    const current = target("kw_current");
+    render(
+      <ToastProvider>
+        <KeywordMarketSwitcher
+          addKeywordsAction={vi.fn()}
+          bulkDeleteAction={vi.fn()}
+          canCreateKeyword
+          keyword={current}
+          projectId="prj_test"
+          projectMarkets={markets}
+          targets={[current, target("kw_mobile", "Mobile")]}
+        />
+      </ToastProvider>,
+    );
+
+    const device = screen.getByRole("button", { name: "Desktop" });
+    expect(device).toHaveAttribute("aria-haspopup", "menu");
+    expect(device).toHaveClass("hover:border-accent", "hover:text-fg", "transition-colors");
+    expect(device).toBeEnabled();
+  });
+
+  it("does not treat a lone device chip as a hoverable select", () => {
+    const current = target("kw_current");
+    render(
+      <KeywordMarketSwitcher
+        addKeywordsAction={vi.fn()}
+        bulkDeleteAction={vi.fn()}
+        canCreateKeyword
+        keyword={current}
+        projectId="prj_test"
+        projectMarkets={markets}
+        targets={[current]}
+      />,
+    );
+
+    const device = screen.getByRole("button", { name: "Desktop" });
+    expect(device).toBeDisabled();
+    expect(device).not.toHaveClass("hover:border-accent");
+  });
+
+  it("styles the device menu with the shared select paper", () => {
+    const current = target("kw_current");
+    render(
+      <ToastProvider>
+        <KeywordMarketSwitcher
+          addKeywordsAction={vi.fn()}
+          bulkDeleteAction={vi.fn()}
+          canCreateKeyword
+          keyword={current}
+          projectId="prj_test"
+          projectMarkets={markets}
+          targets={[current, target("kw_mobile", "Mobile")]}
+        />
+      </ToastProvider>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Desktop" }));
+    expect(screen.getByRole("menu", { name: "Keyword devices" })).toHaveStyle({ padding: "0px" });
+    expect(screen.getByRole("menuitem", { name: "Switch to Desktop" })).toHaveAttribute(
+      "data-current",
+    );
+    expect(screen.getByRole("menuitem", { name: "Switch to Mobile" })).not.toHaveAttribute(
+      "data-current",
+    );
+  });
   it("adds every tracked device directly and undoes only the returned targets", async () => {
     const addKeywordsAction = vi.fn(async () => ({
       keywords: [

@@ -117,8 +117,11 @@ export function AuditFilters({
 
   return (
     <div className="border-b border-border px-4 py-3.5">
-      <div className="grid gap-3 xl:flex xl:items-center xl:justify-between">
-        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-[7px]">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div
+          className="flex min-w-0 flex-1 flex-wrap items-center gap-[7px]"
+          data-testid="audit-filter-controls"
+        >
           <ToolbarSearch
             className="min-w-[200px] flex-1 sm:flex-none"
             id="audit-filter-search"
@@ -155,11 +158,6 @@ export function AuditFilters({
             options={statusOptions}
             value={filters.status}
           />
-        </div>
-        <div className="flex flex-wrap items-center gap-2 xl:justify-end">
-          <span className="font-mono text-[11px] text-fg-muted">
-            {formatCount(visibleCount, totalCount, truncated)}
-          </span>
           <button
             aria-controls={exportAnchor ? "audit-export-menu" : undefined}
             aria-expanded={exportAnchor ? "true" : undefined}
@@ -206,6 +204,9 @@ export function AuditFilters({
             </div>
           </Menu>
         </div>
+        <span className="font-mono text-[11px] text-fg-muted">
+          {formatCount(visibleCount, totalCount, truncated)}
+        </span>
       </div>
       <span aria-hidden hidden ref={auditRegisterRef} />
     </div>

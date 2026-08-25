@@ -41,4 +41,22 @@ describe("SavedViewsControl", () => {
     expect(await screen.findByRole("button", { name: "Delete Own view" })).toBeVisible();
     expect(screen.queryByRole("button", { name: "Delete Other view" })).not.toBeInTheDocument();
   });
+
+  it("uses the toolbar select trigger, not a semibold Button", () => {
+    render(
+      <SavedViewsControl
+        activeFiltersSummary="No filters"
+        activeViewId={null}
+        config={emptySavedViewConfig}
+        deletableSavedViewIds={[]}
+        projectId="project-1"
+        savedViews={savedViews}
+      />,
+    );
+
+    const trigger = screen.getByRole("button", { name: "All keywords" });
+    expect(trigger).toHaveClass("font-normal", "text-fg", "min-h-[34px]");
+    expect(trigger).not.toHaveClass("MuiButton-root");
+    expect(trigger.querySelector(".truncate")).toHaveClass("text-fg");
+  });
 });

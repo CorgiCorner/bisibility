@@ -14,7 +14,7 @@ const actions = {
 const row = keywordRows[0] as KeywordRow;
 
 describe("BulkActionBar", () => {
-  it("shows the selected depth and sends an override only from the depth menu", () => {
+  it("shows the selected depth and runs only from the main button", () => {
     const onRunChecks = vi.fn();
     render(
       <BulkActionBar
@@ -36,13 +36,35 @@ describe("BulkActionBar", () => {
     fireEvent.click(screen.getByRole("button", { name: "Choose check depth" }));
     expect(screen.getByRole("menuitem", { name: "Top 50" }).querySelector("svg")).not.toBeNull();
     fireEvent.click(screen.getByRole("menuitem", { name: "Top 20" }));
-    expect(onRunChecks).toHaveBeenLastCalledWith([row.id], 20);
+    expect(onRunChecks).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("button", { name: "Run check (Top 20)" })).toBeInTheDocument();
     expect(
       screen.getByText("This run ~ $0.10 - $37.50 left of $50.00 this month"),
     ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Run check (Top 20)" }));
+    expect(onRunChecks).toHaveBeenLastCalledWith([row.id], 20);
+  }, 15_000);
+
+  it("shares the filter-bar chrome instead of an accent fill", () => {
+    const { container } = render(
+      <BulkActionBar
+        {...actions}
+        canDeleteKeyword
+        canUpdateKeyword
+        onClear={vi.fn()}
+        projectId="prj_1"
+        selectedRows={[row]}
+      />,
+    );
+
+    const bar = container.firstElementChild;
+    expect(bar).toHaveClass("border-b", "border-border");
+    expect(bar).not.toHaveClass("bg-accent-soft");
+    expect(screen.getByText("1 selected")).toHaveClass("text-fg");
   });
 
-  it("does not highlight a depth for a mixed selection", () => {
+  it("uses the shared xs control height for every bulk action", () => {
     render(
       <BulkActionBar
         {...actions}
@@ -50,6 +72,58 @@ describe("BulkActionBar", () => {
         canUpdateKeyword
         onClear={vi.fn()}
         onRunChecks={vi.fn()}
+        projectId="prj_1"
+        selectedRows={[{ ...row, schedule: { ...row.schedule, serp_depth: 100 } }]}
+      />,
+    );
+
+    for (const name of [
+      "Run check (Top 100)",
+      "Add tag",
+      "Change target URL",
+      "Set frequency",
+      "Delete",
+      "Clear",
+    ]) {
+      expect(screen.getByRole("button", { name })).toHaveClass("min-h-[30px]");
+    }
+  });
+
+  it("offers Connect a SERP provider instead of the depth picker when disconnected", () => {
+    const onRunChecks = vi.fn();
+    render(
+      <BulkActionBar
+        {...actions}
+        canDeleteKeyword
+        canUpdateKeyword
+        onClear={vi.fn()}
+        onRunChecks={onRunChecks}
+        projectId="prj_1"
+        providerConnected={false}
+        selectedRows={[{ ...row, schedule: { ...row.schedule, serp_depth: 50 } }]}
+      />,
+    );
+
+    expect(screen.getByRole("link", { name: "Connect a SERP provider" })).toHaveAttribute(
+      "href",
+      "/app/prj_1/integrations",
+    );
+    expect(
+      screen.getByRole("link", { name: "Connect a SERP provider" }).querySelector("svg"),
+    ).not.toBeNull();
+    expect(screen.queryByRole("button", { name: "Choose check depth" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Run check/ })).not.toBeInTheDocument();
+  });
+
+  it("does not highlight a depth for a mixed selection", () => {
+    const onRunChecks = vi.fn();
+    render(
+      <BulkActionBar
+        {...actions}
+        canDeleteKeyword
+        canUpdateKeyword
+        onClear={vi.fn()}
+        onRunChecks={onRunChecks}
         projectId="prj_1"
         selectedRows={[
           { ...row, schedule: { ...row.schedule, serp_depth: 50 } },
@@ -62,5 +136,9 @@ describe("BulkActionBar", () => {
     expect(
       screen.getAllByRole("menuitem").every((item) => item.querySelector("svg") === null),
     ).toBe(true);
+
+    fireEvent.click(screen.getByRole("menuitem", { name: "Top 20" }));
+    expect(onRunChecks).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "Run checks (Top 20)" })).toBeInTheDocument();
   });
 });

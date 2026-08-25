@@ -1,5 +1,6 @@
 import "server-only";
 
+import { randomUUID } from "node:crypto";
 import type { ProviderFeatureRate } from "@/lib/cost-estimate/provider-rates";
 import { estimatedFeatureCostCents } from "@/lib/cost-estimate/provider-rates";
 import { prisma } from "@/lib/db/prisma";
@@ -9,6 +10,12 @@ import {
   type ResolveProviderRateInput,
 } from "@/lib/provider-rates/resolver";
 import { normalizedProviderUnitCostCents } from "@/lib/provider-rates/unit-cost";
+import {
+  createProviderUsage,
+  type ProviderUsage,
+  type ProviderUsageSource,
+  type ProviderUsageTrigger,
+} from "@/lib/provider-usage/tag";
 import { ProviderAuthError } from "@/lib/providers/auth-error";
 import { markProviderNeedsReauth } from "@/lib/providers/auth-state";
 import { chargedProviderCostCents } from "@/lib/providers/call-error";
@@ -86,7 +93,9 @@ async function recordProviderCost(input: {
     | "keyword_research"
     | "ranked_keywords";
   projectId: string;
+  provider: string;
   unitCostCents?: number | null;
+  usage: ProviderUsage;
 }) {
   await Promise.resolve(
     prisma.providerCostEntry.create({
@@ -97,6 +106,11 @@ async function recordProviderCost(input: {
         failed: input.failed,
         feature: input.feature,
         projectId: input.projectId,
+        provider: input.provider,
+        source: input.usage.source,
+        trigger: input.usage.trigger,
+        tag: input.usage.tag,
+        correlationId: input.usage.correlationId,
         ...(input.unitCostCents == null ? {} : { unitCostCents: input.unitCostCents }),
       },
     }),
@@ -106,7 +120,10 @@ async function recordProviderCost(input: {
 export async function paidProviderCall<T extends { costCents: number }>(input: {
   /** Cap from a project row the caller already loaded; skips the budget-gate cap query. */
   budgetCapCents?: number;
-  call: (credentials: ReturnType<typeof resolveProviderCredentials>) => Promise<T>;
+  call: (
+    credentials: ReturnType<typeof resolveProviderCredentials>,
+    usage: ProviderUsage,
+  ) => Promise<T>;
   connection: { credentialsEncrypted: string | null; id: string; provider: string };
   feature:
     | "backlinks"
@@ -120,6 +137,8 @@ export async function paidProviderCall<T extends { costCents: number }>(input: {
   provider: SerpProvider;
   rateContext?: Pick<ResolveProviderRateInput, "entries" | "manualAmountCents">;
   rate: ProviderFeatureRate | null;
+  source?: ProviderUsageSource;
+  trigger?: ProviderUsageTrigger;
 }) {
   // Backlinks bills three sub-rates per call, so it has no single measured or manual rate to
   // resolve; it prices from the list rates until the rate catalog models those sub-rates.
@@ -144,6 +163,19 @@ export async function paidProviderCall<T extends { costCents: number }>(input: {
     input.connection.provider,
     input.connection.credentialsEncrypted,
   );
+  const usage = await createProviderUsage({
+    correlationId: randomUUID(),
+    feature: input.feature,
+    projectId: input.projectId,
+    source: input.source ?? "app",
+    trigger: input.trigger ?? "manual",
+  });
+  if (!input.source || !input.trigger) {
+    console.warn("Provider call is missing explicit provider tag context.", {
+      feature: input.feature,
+      projectId: input.projectId,
+    });
+  }
   const gate = await consumeProviderLimit(input.provider.id, credentials, {
     projectId: input.projectId,
   });
@@ -152,7 +184,7 @@ export async function paidProviderCall<T extends { costCents: number }>(input: {
   }
   let result: T;
   try {
-    result = await input.call(credentials);
+    result = await input.call(credentials, usage);
   } catch (error) {
     const chargedCostCents = chargedProviderCostCents(error);
     if (chargedCostCents != null) {
@@ -162,12 +194,14 @@ export async function paidProviderCall<T extends { costCents: number }>(input: {
         failed: true,
         feature: input.feature,
         projectId: input.projectId,
+        provider: input.provider.id,
         unitCostCents: normalizedProviderUnitCostCents({
           costCents: chargedCostCents,
           includeClickstream: input.includeClickstream,
           itemCount: input.itemCount,
           rate: input.rate,
         }),
+        usage,
       });
     }
     if (error instanceof ProviderAuthError) {
@@ -199,12 +233,14 @@ export async function paidProviderCall<T extends { costCents: number }>(input: {
     failed: false,
     feature: input.feature,
     projectId: input.projectId,
+    provider: input.provider.id,
     unitCostCents: normalizedProviderUnitCostCents({
       costCents: result.costCents,
       includeClickstream: input.includeClickstream,
       itemCount: input.itemCount,
       rate: input.rate,
     }),
+    usage,
   });
   return result;
 }

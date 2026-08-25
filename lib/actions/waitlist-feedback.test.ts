@@ -7,6 +7,15 @@ const mocks = vi.hoisted(() => ({
     dailySendCounter: { upsert: vi.fn() },
     waitlist: { findUnique: vi.fn(), upsert: vi.fn() },
   },
+  protection: {
+    enforceDistinctNewEmailLimit: vi.fn().mockResolvedValue(undefined),
+    enforceHumanVerification: vi.fn().mockResolvedValue(undefined),
+    enforceWaitlistRateLimits: vi.fn().mockResolvedValue(undefined),
+    hashIdentifier: vi.fn((v: string) => `hash_${v}`),
+    resolveClientIdentity: vi
+      .fn()
+      .mockResolvedValue({ clientDigest: "client-digest", rawIp: null }),
+  },
   revalidatePath: vi.fn(),
   reserveEmailDailyBudget: vi.fn(),
   sesSend: vi.fn(),
@@ -14,6 +23,15 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
+vi.mock("@/lib/landing/waitlist-protection", () => ({
+  WAITLIST_RATE_LIMITED: "Too many requests. Please try again later.",
+  WAITLIST_VERIFICATION_FAILED: "Verification failed. Please try again.",
+  enforceDistinctNewEmailLimit: mocks.protection.enforceDistinctNewEmailLimit,
+  enforceHumanVerification: mocks.protection.enforceHumanVerification,
+  enforceWaitlistRateLimits: mocks.protection.enforceWaitlistRateLimits,
+  hashIdentifier: mocks.protection.hashIdentifier,
+  resolveClientIdentity: mocks.protection.resolveClientIdentity,
+}));
 vi.mock("@/lib/email/budget", () => ({
   reserveEmailDailyBudget: mocks.reserveEmailDailyBudget,
 }));
@@ -109,6 +127,7 @@ describe("joinWaitlist settings feedback", () => {
       hostedPrice: "$25/mo",
       hostedPriceAnsweredAt: expect.any(Date),
       lastSubmittedAt: expect.any(Date),
+      prefersUsagePricing: false,
       source: "settings_feedback",
     });
   });
@@ -142,7 +161,7 @@ describe("joinWaitlist settings feedback", () => {
     });
   });
 
-  it("preserves an existing settings-feedback row when a different non-feedback source arrives", async () => {
+  it("records a cloud_pricing opinion on a settings-feedback row without rewriting source", async () => {
     mocks.prisma.waitlist.findUnique.mockResolvedValue({ source: "settings_feedback" });
     mocks.prisma.waitlist.upsert.mockResolvedValue(
       storedWaitlist({
@@ -162,11 +181,12 @@ describe("joinWaitlist settings feedback", () => {
 
     const call = mocks.prisma.waitlist.upsert.mock.calls[0]?.[0];
     expect(call.update).not.toHaveProperty("source");
-    expect(call.update).not.toHaveProperty("cloudPrice");
     expect(call.update).not.toHaveProperty("hostedPrice");
     expect(call.update).not.toHaveProperty("hostedPriceAnsweredAt");
     expect(call.update).toEqual({
+      cloudPrice: "$19/mo",
       lastSubmittedAt: expect.any(Date),
+      prefersUsagePricing: false,
       submissions: { increment: 1 },
     });
 
@@ -181,12 +201,7 @@ describe("joinWaitlist settings feedback", () => {
     const contactsCall = vi
       .mocked(fetch)
       .mock.calls.find(([url]) => url === "https://api.resend.com/contacts");
-    expect(contactsCall).toBeDefined();
-    const contactsPayload = JSON.parse(String(contactsCall?.[1]?.body));
-    expect(contactsPayload.properties).toMatchObject({
-      cloud_price: "$19/mo",
-      source: "cloud_pricing",
-    });
+    expect(contactsCall).toBeUndefined();
   });
 
   it("refreshes cloudPrice on a same-source resubmission", async () => {
@@ -205,6 +220,7 @@ describe("joinWaitlist settings feedback", () => {
     expect(call.update).toEqual({
       cloudPrice: "$39/mo",
       lastSubmittedAt: expect.any(Date),
+      prefersUsagePricing: false,
       source: "cloud_pricing",
       submissions: { increment: 1 },
     });

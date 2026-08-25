@@ -4,9 +4,8 @@ import {
   ProjectReadOnlyTooltip,
   useProjectWriteMode,
 } from "@/components/shell/ProjectWriteModeProvider";
-import { Button, Switch } from "@/components/ui";
+import { Button, Switch, Tooltip } from "@/components/ui";
 import type { AddKeywordDrawerForm, AddKeywordTab } from "@/lib/keywords/add-keyword-drawer-shared";
-import { DatabaseIcon as Database, LightningIcon as Lightning } from "@phosphor-icons/react";
 import type { UseFormRegister } from "react-hook-form";
 
 type AddKeywordDrawerFooterProps = {
@@ -51,25 +50,20 @@ export function AddKeywordDrawerFooter({
           {keywordCount > 1 ? "" : " for this keyword"}.
         </p>
       ) : null}
-      <div className="flex items-start gap-[9px] rounded-[10px] bg-bg-sunken px-[13px] py-[11px]">
-        <span className="flex h-[18px] flex-none items-center">
-          <Database className="text-accent-text" size={15} weight="bold" />
-        </span>
-        <p className="m-0 text-[12px] leading-[1.5] text-fg-muted">
-          Rankings come from your connected SERP provider. You control cadence and pay the provider
-          directly.
-        </p>
-      </div>
       <div className="flex flex-wrap items-center gap-2.5">
         {showPauseToggle ? (
           <ProjectReadOnlyTooltip>
-            <Switch
-              checked={isPaused}
-              description="Create these targets paused. You can resume them later."
-              disabled={readOnly}
-              label="Pause new targets"
-              {...register("isPaused")}
-            />
+            <Tooltip
+              content="Create these targets paused. You can resume them later."
+              semantics="description"
+            >
+              <Switch
+                checked={isPaused}
+                disabled={readOnly}
+                label="Pause schedule"
+                {...register("isPaused")}
+              />
+            </Tooltip>
           </ProjectReadOnlyTooltip>
         ) : null}
         <ProjectReadOnlyTooltip className="inline-flex flex-1">
@@ -77,7 +71,6 @@ export function AddKeywordDrawerFooter({
             disabled={readOnly || submitDisabled}
             form={isReviewMode ? undefined : "add-keyword-form"}
             onClick={isReviewMode ? onReview : undefined}
-            startIcon={<Lightning size={14} weight="bold" />}
             sx={{ flex: 1 }}
             type={isReviewMode ? "button" : "submit"}
           >

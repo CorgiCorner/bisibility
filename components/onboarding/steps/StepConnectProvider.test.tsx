@@ -52,10 +52,13 @@ describe("StepConnectProvider", () => {
     const pricing = screen.getByText(/Plan-based - monthly search quota/).parentElement;
     expect(pricing).toHaveClass("mt-2");
 
+    expect(screen.getByLabelText("API login").closest(".grid")).toHaveClass("sm:grid-cols-2");
+
     fireEvent.click(screen.getByRole("radio", { name: /SerpApi/ }));
 
     expect(screen.getByLabelText("API key")).toBeInTheDocument();
     expect(screen.queryByLabelText("API login")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("API key").closest(".grid")).not.toHaveClass("sm:grid-cols-2");
   });
 
   it("selects from the whole radio card and then synchronizes the URL", () => {
@@ -121,7 +124,7 @@ describe("StepConnectProvider", () => {
     expect(saveButton).toHaveAccessibleName("Save SerpApi");
     expect(saveButton).toBeDisabled();
     expect(saveButton).toHaveClass("MuiButton-root");
-    expect(screen.getByText("Test the credentials, then use Save SerpApi.")).toBeInTheDocument();
+    expect(screen.getByText("Test the credentials and save.")).toBeInTheDocument();
     await clickTestConnection(testProviderConnectionAction, 2);
     expect(saveButton).toBeEnabled();
     fireEvent.click(saveButton);

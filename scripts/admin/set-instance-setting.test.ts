@@ -18,6 +18,15 @@ describe("set instance setting", () => {
     });
   });
 
+  it("parses the validated provider instance slug", () => {
+    expect(
+      parseSettingOptions(["--key", "provider_instance_slug", "--value", "white_label-1"]),
+    ).toEqual({ key: "provider_instance_slug", value: "white_label-1" });
+    expect(() =>
+      parseSettingOptions(["--key", "provider_instance_slug", "--value", "white label"]),
+    ).toThrow("instance slug");
+  });
+
   it("rejects unknown keys and invalid values", () => {
     expect(() => parseSettingOptions(["--key", "unknown", "--value", "250"])).toThrow(
       "--key must be one of",

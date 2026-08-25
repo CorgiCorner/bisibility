@@ -14,11 +14,20 @@ const dotColors: Record<AuditOperation, string> = {
   UPDATE: "var(--yellow)",
 };
 
+const labels: Record<AuditOperation, string> = {
+  CREATE: "Create",
+  DELETE: "Delete",
+  EXPORT: "Export",
+  IMPORT: "Import",
+  LOGIN: "Login",
+  UPDATE: "Update",
+};
+
 describe("OperationPill", () => {
   it("renders every operation state with the shared neutral chip border and a status dot", () => {
     for (const operation of operations) {
       const { unmount } = render(<OperationPill operation={operation} />);
-      const chip = screen.getByText(operation);
+      const chip = screen.getByText(labels[operation]);
       expect(chip).toHaveClass("bg-bg-sunken");
       expect(chip).toHaveClass("border-border");
       const dot = chip.querySelector("span[aria-hidden]");
@@ -27,10 +36,11 @@ describe("OperationPill", () => {
     }
   });
 
-  it("shows uppercase labels through the shared StatusPill defaults", () => {
+  it("shows title-case labels through the shared StatusPill defaults", () => {
     for (const operation of operations) {
       const { unmount } = render(<OperationPill operation={operation} />);
-      expect(screen.getByText(operation)).toBeInTheDocument();
+      expect(screen.getByText(labels[operation])).toBeInTheDocument();
+      expect(screen.queryByText(operation)).not.toBeInTheDocument();
       unmount();
     }
   });
@@ -38,7 +48,7 @@ describe("OperationPill", () => {
   it("colors the status dot per operation without a local color map", () => {
     for (const operation of operations) {
       const { unmount } = render(<OperationPill operation={operation} />);
-      const chip = screen.getByText(operation);
+      const chip = screen.getByText(labels[operation]);
       const dot = chip.querySelector("span[aria-hidden]");
       expect(dot).toHaveStyle({ backgroundColor: dotColors[operation] });
       unmount();

@@ -16,7 +16,8 @@ import { importTopQueries } from "@/lib/actions/keyword-suggest";
 import { getFirstCheckRunPlan } from "@/lib/actions/rank-check-preview";
 import { queueFirstChecks, runCheckNow } from "@/lib/actions/rankCheck";
 import { removeSavedKeywords } from "@/lib/actions/saved-keyword";
-import { createSavedView, deleteSavedView } from "@/lib/actions/saved-views";
+import { deleteSavedView } from "@/lib/actions/saved-views";
+import { createKeywordSavedView } from "@/lib/actions/saved-views-typed";
 import { getProjectRole } from "@/lib/auth/authorize";
 import { canProjectAction } from "@/lib/auth/capabilities";
 import { providerLabel } from "@/lib/checks/attempts";
@@ -27,6 +28,7 @@ import { getPreferences } from "@/lib/queries/account";
 import { getCheckHealth } from "@/lib/queries/check-health";
 import { getCheckRunsView, getUpcomingView } from "@/lib/queries/check-runs";
 import { getProjectCostContext } from "@/lib/queries/cost-calculator";
+import { isProviderConnected } from "@/lib/queries/integrations";
 import {
   getKeywordCount,
   getKeywordDefaultMarket,
@@ -146,6 +148,7 @@ export default async function KeywordsPage({
     savedCount,
     projectMarkets,
     preferences,
+    searchConsoleConnected,
   ] = await Promise.all([
     getKeywordRows(publicId),
     listSavedViews(publicId),
@@ -158,6 +161,7 @@ export default async function KeywordsPage({
     savedKeywordCount(publicId),
     getProjectMarkets(publicId),
     getPreferences(),
+    isProviderConnected(publicId, "gsc"),
   ]);
   // Counting only matters when the capped list may be truncated.
   const totalKeywordCount =
@@ -204,7 +208,7 @@ export default async function KeywordsPage({
           canManageProviders={canProjectAction(role, "manage", "provider_connection")}
           canUpdateKeyword={canProjectAction(role, "update", "keyword")}
           createSavedViewAction={
-            canProjectAction(role, "create", "saved_view") ? createSavedView : undefined
+            canProjectAction(role, "create", "saved_view") ? createKeywordSavedView : undefined
           }
           costContext={costContext}
           deletableSavedViewIds={deletableSavedViewIds}
@@ -221,6 +225,7 @@ export default async function KeywordsPage({
           providerConnected={checkHealth.providerConnected}
           projectId={readable.project.publicId}
           projectMarkets={projectMarkets}
+          searchConsoleConnected={searchConsoleConnected}
           queueFirstChecksAction={queueFirstChecks}
           runCheckNowAction={runCheckNow}
           rows={rows}

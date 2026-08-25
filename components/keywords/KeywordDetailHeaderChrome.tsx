@@ -171,9 +171,16 @@ export function KeywordDetailHeaderChrome({
               <ArrowUpRight aria-hidden size={10} weight="bold" />
             </a>
             <span aria-hidden className="h-[11px] w-px bg-border" />
-            <span>Last check {lastCheckLabel(keyword.lastCheckAt, timeZone)}</span>
+            <span>
+              Last check{" "}
+              <strong className="font-semibold text-fg">
+                {lastCheckLabel(keyword.lastCheckAt, timeZone)}
+              </strong>
+            </span>
             <span aria-hidden className="h-[11px] w-px bg-border" />
-            <span>Next check {nextCheck}</span>
+            <span>
+              Next check <strong className="font-semibold text-fg">{nextCheck}</strong>
+            </span>
             <span aria-hidden className="h-[11px] w-px bg-border" />
             <span>{providerLabel(providerId)}</span>
           </div>

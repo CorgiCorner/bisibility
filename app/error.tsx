@@ -6,8 +6,11 @@ import {
   SystemSecondaryAction,
   TerminalBlock,
 } from "@/components/marketing/system/SystemPage";
-import { ArrowClockwiseIcon as ArrowClockwise } from "@phosphor-icons/react";
-import * as Sentry from "@sentry/nextjs";
+import { reportAppError } from "@/lib/observability/error-reporting";
+import {
+  ArrowClockwiseIcon as ArrowClockwise,
+  ArrowLeftIcon as ArrowLeft,
+} from "@phosphor-icons/react";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 
@@ -21,18 +24,7 @@ export default function ErrorBoundary({ error, reset }: Readonly<ErrorPageProps>
   const note = error.digest ? `reference ${error.digest}` : "try the request again";
 
   useEffect(() => {
-    Sentry.withScope((scope) => {
-      scope.setContext("nextjs", {
-        digest: error.digest,
-        pathname,
-      });
-
-      if (error.digest) {
-        scope.setTag("next.digest", error.digest);
-      }
-
-      Sentry.captureException(error);
-    });
+    reportAppError(error, { digest: error.digest, pathname });
   }, [error, pathname]);
 
   return (
@@ -45,7 +37,12 @@ export default function ErrorBoundary({ error, reset }: Readonly<ErrorPageProps>
           >
             Try again
           </SystemPrimaryAction>
-          <SystemSecondaryAction href="/app">Back to dashboard</SystemSecondaryAction>
+          <SystemSecondaryAction
+            href="/app"
+            startIcon={<ArrowLeft aria-hidden size={16} weight="bold" />}
+          >
+            Back to dashboard
+          </SystemSecondaryAction>
         </>
       }
       description="The request fell outside a clean ranking run. Try again, or head back to the dashboard while we recover the route."

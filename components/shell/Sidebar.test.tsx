@@ -221,6 +221,32 @@ describe("Sidebar", () => {
     ).toHaveClass("-left-2");
   });
 
+  it("makes expanded navigation tooltip wrappers span the row only", () => {
+    function shell(collapsed: boolean) {
+      return (
+        <AppThemeRoot data-collapsed={collapsed ? "true" : "false"} defaultTheme="light">
+          <Sidebar
+            activeProjectId={mockWorkspaces[0].id}
+            canCreateWorkspace
+            projectRef={mockWorkspaces[0].publicId}
+            workspaces={mockWorkspaces}
+          />
+        </AppThemeRoot>
+      );
+    }
+
+    const expanded = render(shell(false));
+    const expandedDashboard = expanded.getByRole("link", { name: "Dashboard" });
+    expect(expandedDashboard.closest("[data-tooltip]")).toHaveClass("w-full");
+    expect(expandedDashboard).toHaveClass("w-full");
+    expanded.unmount();
+
+    const collapsed = render(shell(true));
+    const collapsedDashboard = collapsed.getByRole("link", { name: "Dashboard" });
+    expect(collapsedDashboard.closest("[data-tooltip]")).not.toHaveClass("w-full");
+    expect(collapsedDashboard).not.toHaveClass("w-full");
+  });
+
   it("keeps the switcher below the utility group and the version line last", () => {
     render(
       <AppThemeRoot data-collapsed="false" defaultTheme="light">
@@ -240,5 +266,41 @@ describe("Sidebar", () => {
 
     expect(settings.compareDocumentPosition(switcher)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
     expect(switcher.compareDocumentPosition(footer)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
+  it("uses Ranking fill on the active Rank Tracker row in both rail states", () => {
+    function shell(collapsed: boolean, segment: "dashboard" | "rank-tracker") {
+      return (
+        <AppThemeRoot data-collapsed={collapsed ? "true" : "false"} defaultTheme="light">
+          <Sidebar
+            activeHref={appPath(mockWorkspaces[0].publicId, segment)}
+            activeProjectId={mockWorkspaces[0].id}
+            canCreateWorkspace
+            projectRef={mockWorkspaces[0].publicId}
+            workspaces={mockWorkspaces}
+          />
+        </AppThemeRoot>
+      );
+    }
+
+    function rankingIcon(view: ReturnType<typeof render>) {
+      return view.getByRole("link", { name: "Rank Tracker" }).querySelector("svg");
+    }
+
+    const expandedActive = render(shell(false, "rank-tracker"));
+    expect(rankingIcon(expandedActive)).toHaveAttribute("data-nav-icon", "Rank Tracker");
+    expect(rankingIcon(expandedActive)).toHaveAttribute("data-weight", "fill");
+    expandedActive.unmount();
+
+    const expandedIdle = render(shell(false, "dashboard"));
+    expect(rankingIcon(expandedIdle)).toHaveAttribute("data-weight", "regular");
+    expandedIdle.unmount();
+
+    const collapsedActive = render(shell(true, "rank-tracker"));
+    expect(rankingIcon(collapsedActive)).toHaveAttribute("data-weight", "fill");
+    collapsedActive.unmount();
+
+    const collapsedIdle = render(shell(true, "dashboard"));
+    expect(rankingIcon(collapsedIdle)).toHaveAttribute("data-weight", "regular");
   });
 });

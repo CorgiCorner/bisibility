@@ -14,14 +14,17 @@ describe("oauthScopes", () => {
 describe("testSuccessCopy", () => {
   it("labels provider balances without inventing a usage forecast", () => {
     expect(testSuccessCopy("serpapi", { balance: 41_200, message: "Connected.", ok: true })).toBe(
-      "Connected. · 41,200 searches remaining",
+      "Connection verified. · 41,200 searches remaining",
     );
-    expect(testSuccessCopy("dataforseo", { balance: 4.5, message: "Connected.", ok: true })).toBe(
-      "Connected. · Account balance: $4.5",
+    expect(testSuccessCopy("dataforseo", { balance: 4.5, message: "Ok.", ok: true })).toBe(
+      "Connection verified. · Account balance: $4.5",
     );
   });
 
   it("uses the provider message when no balance is returned", () => {
+    expect(testSuccessCopy("dataforseo", { message: "Ok.", ok: true })).toBe(
+      "Connection verified.",
+    );
     expect(
       testSuccessCopy("plausible", { message: "Connection OK · example.com.", ok: true }),
     ).toBe("Connection OK · example.com.");

@@ -75,6 +75,7 @@ export function KeywordsGrid({
   providerConnected,
   projectId,
   projectMarkets,
+  searchConsoleConnected,
   queueFirstChecksAction,
   runCheckNowAction,
   rows,
@@ -125,9 +126,8 @@ export function KeywordsGrid({
   );
   const keywordsPath = appPath(projectId, "rank-tracker");
 
-  function openAddDrawer(keyword = "", tab: AddKeywordDraft["tab"] = "manual") {
+  const openAddDrawer = (keyword = "", tab: AddKeywordDraft["tab"] = "manual") =>
     setAddDraft({ keyword, open: true, tab });
-  }
   const closeAddDrawer = () => setAddDraft({ keyword: "", open: false, tab: "manual" });
   function openExport(selectedIds: string[]) {
     setExportTarget(
@@ -177,11 +177,12 @@ export function KeywordsGrid({
           canManageProviders={canManageProviders}
           costContext={costContext}
           importTopQueriesAction={importTopQueriesAction}
-          onAddKeyword={(keyword) => openAddDrawer(keyword)}
+          onAddKeyword={() => openAddDrawer()}
           onImportCsv={() => openKeywordImport(projectId)}
           onImportQueries={(queries) => openAddDrawer(queries.join("\n"))}
           providerConnected={providerConnected}
           projectId={projectId}
+          searchConsoleConnected={searchConsoleConnected}
         />
         {dialogs}
       </section>
@@ -255,6 +256,7 @@ export function KeywordsGrid({
         onSearchChange={setSearchValue}
         pendingCheckIds={pendingIds}
         projectId={projectId}
+        providerConnected={providerConnected}
         projectMarkets={projectMarkets}
         rows={filteredRows}
         searchValue={searchValue}

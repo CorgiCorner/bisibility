@@ -9,7 +9,6 @@ function renderActions(
   writeMode: "active" | "migration_hold" = "active",
 ) {
   const handlers = {
-    onCreateAlert: vi.fn(),
     onExport: vi.fn(),
     onRunCheck: vi.fn(),
     onToggleEdit: vi.fn(),
@@ -17,9 +16,6 @@ function renderActions(
   render(
     <ProjectWriteModeProvider projectRef="prj_1" writeMode={writeMode}>
       <KeywordHeaderActions
-        alertCreated={false}
-        alertCreating={false}
-        canCreateAlert
         canUpdateKeyword
         editing={false}
         effectiveDepth={50}
@@ -33,17 +29,17 @@ function renderActions(
 }
 
 describe("KeywordHeaderActions", () => {
-  it("keeps only the check, alert, and overflow controls on the visible action row", () => {
+  it("keeps only the check and overflow controls on the visible action row", () => {
     const handlers = renderActions();
-    fireEvent.click(screen.getByRole("button", { name: "Run check" }));
-    fireEvent.click(screen.getByRole("button", { name: "Add alert" }));
+    fireEvent.click(screen.getByRole("button", { name: "Run check (Top 50)" }));
+    expect(screen.queryByRole("button", { name: "Add alert" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Alert on" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Export CSV" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Edit" })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "More keyword actions" }));
     fireEvent.click(screen.getByRole("menuitem", { name: "Export CSV" }));
     fireEvent.click(screen.getByRole("button", { name: "More keyword actions" }));
-    fireEvent.click(screen.getByRole("menuitem", { name: "Manage markets & devices" }));
-    expect(handlers.onCreateAlert).toHaveBeenCalledOnce();
+    fireEvent.click(screen.getByRole("menuitem", { name: "Manage markets and devices" }));
     expect(handlers.onExport).toHaveBeenCalledOnce();
     expect(handlers.onToggleEdit).toHaveBeenCalledOnce();
     expect(handlers.onRunCheck).toHaveBeenCalledWith(50);
@@ -56,7 +52,7 @@ describe("KeywordHeaderActions", () => {
     fireEvent.click(screen.getByRole("menuitem", { name: "Top 20" }));
 
     expect(handlers.onRunCheck).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole("button", { name: "Run check" }));
+    fireEvent.click(screen.getByRole("button", { name: "Run check (Top 20)" }));
     expect(handlers.onRunCheck).toHaveBeenCalledWith(20);
   });
 
@@ -79,13 +75,9 @@ describe("KeywordHeaderActions", () => {
     const { rerender } = render(
       <ProjectWriteModeProvider projectRef="prj_1" writeMode="active">
         <KeywordHeaderActions
-          alertCreated={false}
-          alertCreating={false}
-          canCreateAlert
           canUpdateKeyword
           editing={false}
           effectiveDepth={100}
-          onCreateAlert={vi.fn()}
           onExport={vi.fn()}
           onRunCheck={vi.fn()}
           onToggleEdit={vi.fn()}
@@ -100,13 +92,9 @@ describe("KeywordHeaderActions", () => {
     rerender(
       <ProjectWriteModeProvider projectRef="prj_1" writeMode="active">
         <KeywordHeaderActions
-          alertCreated={false}
-          alertCreating={false}
-          canCreateAlert
           canUpdateKeyword
           editing={false}
           effectiveDepth={50}
-          onCreateAlert={vi.fn()}
           onExport={vi.fn()}
           onRunCheck={vi.fn()}
           onToggleEdit={vi.fn()}
@@ -119,13 +107,15 @@ describe("KeywordHeaderActions", () => {
     expect(screen.getByRole("button", { name: "Check top 50" })).toBeInTheDocument();
   });
 
-  it("keeps cost and depth in the split menu, never in the primary action", () => {
+  it("keeps cost in the split menu, never in the primary action", () => {
     renderActions({
       effectiveDepth: 100,
       providerRate: { overrideCents: 0, providerId: "local-sequence" },
     });
 
-    expect(screen.getByRole("button", { name: "Run check" })).toBeInTheDocument();
+    const action = screen.getByRole("button", { name: "Run check (Top 100)" });
+    expect(action).toHaveClass("min-h-[36px]", "MuiButton-outlined");
+    expect(action).not.toHaveClass("MuiButton-contained");
     expect(screen.queryByText("Top 100 · $0.00")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Choose check depth" }));
     for (const depth of [10, 20, 50, 100]) {
@@ -144,15 +134,11 @@ describe("KeywordHeaderActions", () => {
 
   it("resets a manual selection when the effective schedule depth changes", () => {
     const handlers = {
-      onCreateAlert: vi.fn(),
       onExport: vi.fn(),
       onRunCheck: vi.fn(),
       onToggleEdit: vi.fn(),
     };
     const props = {
-      alertCreated: false,
-      alertCreating: false,
-      canCreateAlert: true,
       canUpdateKeyword: true,
       editing: false,
       effectiveDepth: 50 as const,
@@ -167,7 +153,7 @@ describe("KeywordHeaderActions", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Choose check depth" }));
     fireEvent.click(screen.getByRole("menuitem", { name: "Top 20" }));
-    expect(screen.getByRole("button", { name: "Run check" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Run check (Top 20)" })).toBeInTheDocument();
 
     rerender(
       <ProjectWriteModeProvider projectRef="prj_1" writeMode="active">
@@ -175,60 +161,19 @@ describe("KeywordHeaderActions", () => {
       </ProjectWriteModeProvider>,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Run check" }));
+    fireEvent.click(screen.getByRole("button", { name: "Run check (Top 100)" }));
     expect(handlers.onRunCheck).toHaveBeenCalledWith(100);
   });
 
-  it("renders created, creating, editing, and pending states", () => {
-    const view = renderActions({ alertCreated: true, editing: true, runPending: true });
-    expect(screen.getByRole("button", { name: "Alert on" })).toBeDisabled();
+  it("shows a pending check start without an alert control", () => {
+    renderActions({ editing: true, runPending: true });
+    expect(screen.queryByRole("button", { name: "Alert on" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Starting..." })).toBeDisabled();
-    expect(view.onCreateAlert).not.toHaveBeenCalled();
-  });
-
-  it("disables alert creation while creating or unavailable", () => {
-    const { rerender } = render(
-      <ProjectWriteModeProvider projectRef="prj_1" writeMode="active">
-        <KeywordHeaderActions
-          alertCreated={false}
-          alertCreating
-          canCreateAlert
-          canUpdateKeyword
-          editing={false}
-          effectiveDepth={100}
-          onCreateAlert={vi.fn()}
-          onExport={vi.fn()}
-          onRunCheck={vi.fn()}
-          onToggleEdit={vi.fn()}
-          runPending={false}
-        />
-      </ProjectWriteModeProvider>,
-    );
-    expect(screen.getByRole("button", { name: "Adding..." })).toBeDisabled();
-    rerender(
-      <ProjectWriteModeProvider projectRef="prj_1" writeMode="active">
-        <KeywordHeaderActions
-          alertCreated={false}
-          alertCreating={false}
-          canCreateAlert={false}
-          canUpdateKeyword
-          editing={false}
-          effectiveDepth={100}
-          onCreateAlert={vi.fn()}
-          onExport={vi.fn()}
-          onRunCheck={vi.fn()}
-          onToggleEdit={vi.fn()}
-          runPending={false}
-        />
-      </ProjectWriteModeProvider>,
-    );
-    expect(screen.getByRole("button", { name: "Add alert" })).toBeDisabled();
   });
 
   it("blocks writes in migration hold but keeps exports available", () => {
     renderActions({}, "migration_hold");
-    expect(screen.getByRole("button", { name: "Add alert" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Run check" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Run check (Top 50)" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Choose check depth" })).toBeDisabled();
     fireEvent.click(screen.getByRole("button", { name: "More keyword actions" }));
     expect(screen.getByRole("menuitem", { name: "Export CSV" })).toBeEnabled();

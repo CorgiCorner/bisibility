@@ -116,7 +116,7 @@ function TimelineEmpty({
       <EmptyState
         action={
           <Link
-            className="inline-flex min-h-9 items-center rounded-lg border border-accent bg-accent-solid px-3 text-[12px] font-semibold text-primary-contrast"
+            className="inline-flex min-h-9 items-center rounded-lg border border-accent bg-accent-solid px-3 text-[12px] font-semibold text-accent-on-solid"
             href={appPath(projectRef, "timeline")}
           >
             Back to page 1

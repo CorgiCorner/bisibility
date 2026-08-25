@@ -12,9 +12,10 @@ import { zodResolver } from "@/lib/forms/zod-resolver";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { type BulkKeywordTargetInput, bulkKeywordTargetSchema } from "@/lib/schemas/keyword";
 import { useForm } from "react-hook-form";
+import { type BulkFormChrome, runBulkFormBusy } from "./bulk-form-chrome";
 import { bulkTargetView } from "./bulk-target-model";
 
-type BulkTargetFormProps = {
+type BulkTargetFormProps = BulkFormChrome & {
   action: KeywordAction<BulkKeywordTargetInput>;
   onDone: () => void;
   onError: (message: string | null) => void;
@@ -27,6 +28,9 @@ const noopUndo = () => undefined;
 
 export function BulkTargetForm({
   action,
+  formId,
+  hideSubmit = false,
+  onBusyChange,
   onDone,
   onError,
   onRequestClear,
@@ -47,19 +51,21 @@ export function BulkTargetForm({
   });
 
   async function save(values: BulkKeywordTargetInput) {
-    onError(null);
-    try {
-      const result = await action(values);
-      const count = actionResultCount(result, selectedIds.length);
-      const verb = view.hasTargets ? "changed" : "set";
-      showToast(`Target URL ${verb} for ${keywordCountLabel(count)}`, {
-        tint: "green",
-        undo: noopUndo,
-      });
-      onDone();
-    } catch (error) {
-      onError(actionErrorMessage(error));
-    }
+    await runBulkFormBusy(onBusyChange, async () => {
+      onError(null);
+      try {
+        const result = await action(values);
+        const count = actionResultCount(result, selectedIds.length);
+        const verb = view.hasTargets ? "changed" : "set";
+        showToast(`Target URL ${verb} for ${keywordCountLabel(count)}`, {
+          tint: "green",
+          undo: noopUndo,
+        });
+        onDone();
+      } catch (error) {
+        onError(actionErrorMessage(error));
+      }
+    });
   }
 
   return (
@@ -71,7 +77,8 @@ export function BulkTargetForm({
         </p>
       ) : null}
       <form
-        className="flex flex-col gap-2 sm:flex-row sm:items-end"
+        className={hideSubmit ? "grid gap-2" : "flex flex-col gap-2 sm:flex-row sm:items-end"}
+        id={formId}
         onSubmit={handleSubmit((values) => void save(values))}
       >
         <TargetUrlField
@@ -80,15 +87,17 @@ export function BulkTargetForm({
           placeholder="/features/rank-tracking"
           {...register("targetUrl")}
         />
-        <Button
-          className="w-full shrink-0 sm:w-auto sm:min-w-[140px]"
-          disabled={isSubmitting || !isDirty || !isValid}
-          size="sm"
-          sx={{ minHeight: 40 }}
-          type="submit"
-        >
-          {isSubmitting ? "Saving..." : view.submitLabel}
-        </Button>
+        {hideSubmit ? null : (
+          <Button
+            className="w-full shrink-0 sm:w-auto sm:min-w-[140px]"
+            disabled={isSubmitting || !isDirty || !isValid}
+            size="sm"
+            sx={{ minHeight: 40 }}
+            type="submit"
+          >
+            {isSubmitting ? "Saving..." : view.submitLabel}
+          </Button>
+        )}
       </form>
       {view.hasTargets ? (
         <div className="border-t border-border-soft pt-3">

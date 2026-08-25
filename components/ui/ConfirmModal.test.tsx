@@ -25,13 +25,49 @@ describe("instance-admin confirmation copy", () => {
       "Monthly spend is a rolling window and cannot be reset",
     );
   });
+
+  it("warns that migration token revoke and roll invalidate the current token", () => {
+    const warning =
+      "This invalidates the current token. Any transfer using it will no longer work.";
+    expect(CONFIRM.revokeMigrationToken.body).toBe(warning);
+    expect(CONFIRM.rollMigrationToken.body).toBe(warning);
+  });
+
+  it("describes sample-project removal without affecting other projects", () => {
+    expect(CONFIRM.removeSampleData.body).toContain("sample project");
+    expect(CONFIRM.removeSampleData.body).toContain("other projects are not affected");
+    expect(CONFIRM.removeSampleData.dangerLabel).toBe("Remove sample data");
+  });
 });
 
 describe("ConfirmModal keyboard shortcut", () => {
+  it("puts the danger glyph on the same soft well as FeatureCell", () => {
+    renderConfirmModal("deleteKeyword");
+
+    const well = screen.getByRole("dialog").querySelector("span.bg-accent-soft");
+    expect(well).toHaveClass("bg-accent-soft", "text-red-text");
+    expect(well?.className).not.toContain("color-mix");
+  });
+
+  it("uses the standard modal header and footer chrome", () => {
+    renderConfirmModal("deleteKeyword");
+
+    const dialog = screen.getByRole("dialog", { name: "Delete keyword" });
+    expect(screen.getByRole("heading", { name: "Delete keyword" }).closest("header")).toHaveClass(
+      "border-b",
+    );
+    expect(screen.getByRole("button", { name: "Close modal" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Delete keyword" }).closest("footer")).toHaveClass(
+      "border-t",
+    );
+    expect(dialog).not.toHaveClass("MuiPaper-elevation24");
+  });
+
   it("presses only the destructive action, not Cancel", () => {
     renderConfirmModal("deleteKeyword");
 
     const confirm = screen.getByRole("button", { name: "Delete keyword" });
+    expect(confirm.querySelector("svg")).toBeNull();
     expect(confirm).toHaveClass("duration-[var(--motion-press)]");
     expect(confirm).toHaveClass("motion-safe:active:not-focus-visible:scale-[0.97]");
     expect(screen.getByRole("button", { name: "Cancel" })).not.toHaveClass(

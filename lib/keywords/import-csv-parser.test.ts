@@ -132,6 +132,15 @@ describe("keyword import CSV parser", () => {
     });
   });
 
+  it("uses an explicit mapping for custom header names", () => {
+    const rows = parseKeywordImportCsvRows("Search term,Landing page\nrank tracker,/rank", {
+      hasHeader: true,
+      mapping: { keyword: 0, targetUrl: 1 },
+    });
+
+    expect(rows).toMatchObject([{ keyword: "rank tracker", targetUrl: "/rank" }]);
+  });
+
   it("keeps headerless CSVs on the five-column layout", () => {
     const rows = parseKeywordImportCsvRows("rank tracker,/rank,Core,US,desktop,Paris,FR/Paris");
 

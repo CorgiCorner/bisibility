@@ -6,15 +6,15 @@ import {
   regenerateMigrationTokenResult,
   revokeMigrationTokenResult,
 } from "@/lib/actions/cloud";
-import { exportCloudImportPackage } from "@/lib/actions/keyword-import-export";
-import { enableMigrationHold, releaseMigrationHold } from "@/lib/actions/project-write-mode";
 import { getProjectRole } from "@/lib/auth/authorize";
 import { canProjectAction } from "@/lib/auth/capabilities";
-import { isCloud } from "@/lib/deployment/deployment";
+import { deploymentMode } from "@/lib/deployment/deployment";
+import { migrationDestinationOrigin } from "@/lib/migration/destination-origin";
 import { requireReadableProject } from "@/lib/queries/_auth";
 import { getCloudImportView } from "@/lib/queries/cloud";
 import { appPath } from "@/lib/routing/app-path";
 import { ArrowLeftIcon as ArrowLeft } from "@phosphor-icons/react/dist/ssr";
+import { headers } from "next/headers";
 import Link from "next/link";
 
 export type CloudImportScreenContext = "app-settings" | "cloud-onboard" | "cloud-settings";
@@ -31,16 +31,12 @@ const cloudCopy: CloudImportCopy = {
   sourceLabel: "self-hosted instance",
   tokenSecurityNote:
     "The token grants import access to this project only, never your providers or billing. It expires automatically and can be revoked any time before use.",
-  transferInstruction:
-    "Open Migrate to hosted instance / Transfer, choose Push to hosted instance, and paste this token to start the import.",
 };
 
 const instanceCopy: CloudImportCopy = {
   sourceLabel: "source instance",
   tokenSecurityNote:
     "The token grants import access to this project only, never provider credentials. It expires automatically and can be revoked any time before use.",
-  transferInstruction:
-    "Open the migration wizard on the source instance, choose Push, and paste this token to start the import.",
 };
 
 function screenCopy(context: CloudImportScreenContext, projectRef: string): ScreenCopy {
@@ -53,7 +49,7 @@ function screenCopy(context: CloudImportScreenContext, projectRef: string): Scre
       topBar: "onboard",
     };
   }
-  if (context === "cloud-settings" || isCloud) {
+  if (context === "cloud-settings" || deploymentMode() === "cloud") {
     return {
       back: { href: appPath(projectRef, "settings"), label: "Settings" },
       copy: cloudCopy,
@@ -81,6 +77,7 @@ export async function CloudImportScreen({
   ]);
   const config = screenCopy(context, view.project.publicId);
   const role = getProjectRole(readable.actor, readable.project.id);
+  const destinationUrl = migrationDestinationOrigin(await headers(), deploymentMode());
 
   return (
     <>
@@ -92,25 +89,25 @@ export async function CloudImportScreen({
         <ArrowLeft aria-hidden size={13} weight="bold" />
         {config.back.label}
       </Link>
-      <header className="mt-4">
-        <h1 className="text-[26px] font-semibold tracking-[-0.8px]">{config.title}</h1>
-        <p className="mt-2 max-w-[520px] text-[14px] leading-[1.6] text-fg-muted">
-          {config.subtitle}
-        </p>
-      </header>
+      {config.topBar ? (
+        <header className="mt-4">
+          <h1 className="text-[26px] font-semibold tracking-[-0.8px]">{config.title}</h1>
+          <p className="mt-2 max-w-[520px] text-[14px] leading-[1.6] text-fg-muted">
+            {config.subtitle}
+          </p>
+        </header>
+      ) : null}
       <CloudImport
         activeToken={view.activeToken}
         canManage={canProjectAction(role, "manage", "migration_token")}
         copy={config.copy}
-        enableMigrationHoldAction={enableMigrationHold}
-        exportPackageAction={exportCloudImportPackage}
+        destinationUrl={destinationUrl}
         importJob={view.importJob}
         mintMigrationTokenAction={mintMigrationTokenResult}
         pollJobAction={pollCloudImportJob}
         projectReadOnly={view.project.writeMode !== "active"}
         projectId={view.project.publicId}
         regenerateMigrationTokenAction={regenerateMigrationTokenResult}
-        releaseMigrationHoldAction={releaseMigrationHold}
         revokeMigrationTokenAction={revokeMigrationTokenResult}
         workspaceName={view.project.name}
       />

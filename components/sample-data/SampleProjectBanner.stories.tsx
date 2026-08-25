@@ -1,4 +1,5 @@
 import { SampleProjectBanner } from "@/components/sample-data/SampleProjectBanner";
+import { ToastProvider } from "@/components/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 
 const meta = {
@@ -6,11 +7,13 @@ const meta = {
   component: SampleProjectBanner,
   decorators: [
     (Story) => (
-      <div className="min-h-[220px] bg-bg p-6 text-fg">
-        <div className="max-w-5xl">
-          <Story />
+      <ToastProvider>
+        <div className="min-h-[220px] bg-bg p-6 text-fg">
+          <div className="max-w-5xl">
+            <Story />
+          </div>
         </div>
-      </div>
+      </ToastProvider>
     ),
   ],
 } satisfies Meta<typeof SampleProjectBanner>;
@@ -20,5 +23,5 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: { projectId: "project_sample" },
+  args: { projectId: "prj_sample" },
 };

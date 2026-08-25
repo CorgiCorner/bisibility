@@ -1,5 +1,11 @@
 import { KeywordContextRow } from "@/components/keywords/KeywordContextRow";
-import { Card, SectionTitle } from "@/components/ui";
+import {
+  Card,
+  dangerIconWellClassName,
+  iconWellClassName,
+  iconWellSurfaceClassName,
+  SectionTitle,
+} from "@/components/ui";
 import {
   deriveKeywordDetailChangeDimensions,
   describeKeywordDetailPositionChange,
@@ -8,6 +14,7 @@ import {
   type KeywordDetailWhatChanged,
 } from "@/lib/keyword-detail/state-model";
 import type { KeywordRow } from "@/lib/queries/keywords";
+import { cn } from "@/lib/ui/cn";
 import {
   ArrowDownIcon as ArrowDown,
   ArrowUpIcon as ArrowUp,
@@ -90,15 +97,20 @@ function ChangedTile({
   const dimensions = deriveKeywordDetailChangeDimensions(keyword);
   const positionChange = describeKeywordDetailPositionChange(dimensions);
 
-  return (
-    <SummaryCard label="What changed">
-      {whatChanged === "no_change" ? (
+  if (whatChanged === "no_change") {
+    return (
+      <SummaryCard label="What changed">
         <span className="flex items-center gap-2 text-[12px] text-fg">
           <Minus className="text-fg-muted" size={13} weight="bold" />
           No changes since the previous check
         </span>
-      ) : null}
-      {whatChanged === "diff" ? (
+      </SummaryCard>
+    );
+  }
+
+  if (whatChanged === "diff") {
+    return (
+      <SummaryCard label="What changed">
         <div className="grid gap-2 text-[12px] text-fg">
           {positionChange ? (
             <span className="flex items-center gap-2">
@@ -120,9 +132,22 @@ function ChangedTile({
             <span className="text-fg-muted">No detailed change data available.</span>
           ) : null}
         </div>
-      ) : null}
+      </SummaryCard>
+    );
+  }
+
+  return (
+    <SummaryCard label="What changed">
+      <p className="m-0 text-[15px] font-semibold leading-none text-fg-muted">No data</p>
     </SummaryCard>
   );
+}
+
+function pendingChartWellClass(state: KeywordPendingModulesProps["state"]) {
+  if (state === "failed") return dangerIconWellClassName;
+  if (state === "not_ranked") return cn(iconWellSurfaceClassName, "text-yellow-text");
+  if (state === "running") return cn(iconWellSurfaceClassName, "text-blue-text");
+  return iconWellClassName;
 }
 
 function PendingChart({
@@ -138,22 +163,17 @@ function PendingChart({
         : state === "failed"
           ? WarningCircle
           : SpinnerGap;
-  const iconColor =
-    state === "failed"
-      ? "text-red-text"
-      : state === "not_ranked"
-        ? "text-yellow-text"
-        : state === "running"
-          ? "text-blue-text"
-          : "text-fg-muted";
 
   return (
     <Card radius="card" size="lg">
       <SectionTitle>Position history</SectionTitle>
-      <div className="mt-3 grid min-h-[176px] place-items-center rounded-[12px] bg-bg-sunken px-5 text-center">
+      <div className="mt-3 grid min-h-[176px] place-items-center rounded-[12px] px-5 text-center">
         <div>
           <span
-            className={`mx-auto grid h-10 w-10 place-items-center rounded-[10px] bg-bg-sunken ${iconColor}`}
+            className={cn(
+              "mx-auto grid h-10 w-10 place-items-center rounded-[10px]",
+              pendingChartWellClass(state),
+            )}
           >
             <Icon aria-hidden className={running ? "bv-spin" : undefined} size={20} weight="bold" />
           </span>

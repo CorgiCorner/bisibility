@@ -14,32 +14,28 @@ import type { TopQuerySuggestion } from "@/lib/keyword-suggest/sanitize-top-quer
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import { appPath } from "@/lib/routing/app-path";
 import { DEFAULT_SERP_DEPTH } from "@/lib/serp/markets";
-import { docsLinkProps } from "@/lib/site/site";
 import { actionErrorMessage } from "@/lib/ui/action-error";
-import {
-  ArrowLineDownIcon as ArrowLineDown,
-  MagnifyingGlassIcon as MagnifyingGlass,
-  PlusIcon as Plus,
-  UploadSimpleIcon as UploadSimple,
-} from "@phosphor-icons/react";
+import { MagnifyingGlassIcon as MagnifyingGlass } from "@phosphor-icons/react";
 import Link from "next/link";
-import { type SyntheticEvent, useState } from "react";
+import { useState } from "react";
 
 type KeywordsEmptyStateProps = {
   canCreateKeyword: boolean;
   canManageProviders: boolean;
   costContext?: ProjectCostContext;
   importTopQueriesAction?: ImportTopQueriesAction;
-  onAddKeyword: (keyword: string) => void;
+  onAddKeyword: () => void;
   onImportCsv: () => void;
   onImportQueries: (queries: string[]) => void;
   providerConnected?: boolean;
   projectId: string;
+  searchConsoleConnected?: boolean;
 };
 
 type DrawerData = { hidden: TopQuerySuggestion[]; suggestions: TopQuerySuggestion[] };
 
 const EMPTY_HEADERS = ["Keyword", "Pos", "Change", "Volume", "Tags"] as const;
+const CARD_ACTIONS = "mt-auto flex w-full flex-wrap items-center justify-end gap-2 pt-4";
 
 export function KeywordsEmptyState({
   canCreateKeyword,
@@ -51,8 +47,8 @@ export function KeywordsEmptyState({
   onImportQueries,
   providerConnected,
   projectId,
+  searchConsoleConnected = false,
 }: Readonly<KeywordsEmptyStateProps>) {
-  const [keyword, setKeyword] = useState("");
   const [importFeedback, setImportFeedback] = useState<{
     kind: "empty" | "error" | "needs_reauth" | "no_source";
     message: string;
@@ -72,14 +68,6 @@ export function KeywordsEmptyState({
     overrideCents: costContext?.costPerCheckCents ?? null,
     providerId: costContext?.providerId ?? null,
   };
-
-  function handleSubmit(event: SyntheticEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (readOnly || !canCreateKeyword) {
-      return;
-    }
-    onAddKeyword(keyword.trim());
-  }
 
   async function handleSearchConsoleImport() {
     if (!importTopQueriesAction || importPending || readOnly || !canCreateKeyword) return;
@@ -131,7 +119,7 @@ export function KeywordsEmptyState({
         ))}
       </div>
       <div className="flex flex-col items-center px-6 py-10 text-center">
-        <span className="grid h-[54px] w-[54px] place-items-center rounded-[14px] bg-accent-soft text-accent-text">
+        <span className="grid h-[54px] w-[54px] place-items-center rounded-[14px] bg-accent-soft text-accent-solid">
           <MagnifyingGlass size={27} weight="bold" />
         </span>
         <h3 className="mt-4.5 text-lg font-semibold tracking-[-0.4px] text-fg">
@@ -150,20 +138,31 @@ export function KeywordsEmptyState({
               <p className="mt-2 text-[12.5px] leading-[1.55] text-fg-muted">
                 Import observed queries live, then pick the ones to track in the review picker.
               </p>
-              <ProjectReadOnlyTooltip className="mt-auto inline-flex pt-4">
-                <Button
-                  disabled={readOnly || !importTopQueriesAction}
-                  loading={importPending}
-                  loadingLabel="Importing queries..."
-                  onClick={() => void handleSearchConsoleImport()}
-                  startIcon={<ArrowLineDown aria-hidden size={15} weight="bold" />}
-                  sx={{ minHeight: 40 }}
-                  type="button"
-                  variant="primary"
-                >
-                  Find Search Console queries
-                </Button>
-              </ProjectReadOnlyTooltip>
+              <div className={CARD_ACTIONS}>
+                {searchConsoleConnected ? (
+                  <ProjectReadOnlyTooltip>
+                    <Button
+                      disabled={readOnly || !importTopQueriesAction}
+                      loading={importPending}
+                      loadingLabel="Importing queries..."
+                      onClick={() => void handleSearchConsoleImport()}
+                      sx={{ minHeight: 40 }}
+                      type="button"
+                      variant="primary"
+                    >
+                      Find Search Console queries
+                    </Button>
+                  </ProjectReadOnlyTooltip>
+                ) : (
+                  <Button
+                    component={Link}
+                    href={appPath(projectId, "integrations")}
+                    sx={{ minHeight: 40 }}
+                  >
+                    Connect Search Console
+                  </Button>
+                )}
+              </div>
               {importFeedback ? (
                 <p
                   className={`mt-3 text-[11.5px] leading-[1.5] ${
@@ -190,41 +189,31 @@ export function KeywordsEmptyState({
             </section>
 
             <section className="flex h-full flex-col rounded-xl border border-border bg-bg-sunken p-5">
-              <h4 className="m-0 text-[14px] font-semibold text-fg">Add keywords manually</h4>
+              <h4 className="m-0 text-[14px] font-semibold text-fg">Add keywords</h4>
               <p className="mt-2 text-[12.5px] leading-[1.55] text-fg-muted">
-                Add one idea now, paste more in the drawer, or import a prepared CSV.
+                Add a focused list of your own, or import a prepared CSV.
               </p>
-              <form className="mt-auto flex items-center gap-2 pt-4" onSubmit={handleSubmit}>
-                <input
-                  aria-label="Keyword"
-                  className="min-w-0 flex-1 rounded-[10px] border border-border-strong bg-transparent px-3 py-2.5 text-[13.5px] font-medium text-fg outline-none focus:border-accent"
-                  onChange={(event) => setKeyword(event.target.value)}
-                  placeholder="e.g. headless cms"
-                  value={keyword}
-                />
+              <div className={CARD_ACTIONS}>
                 <ProjectReadOnlyTooltip>
                   <Button
                     disabled={readOnly}
-                    startIcon={<Plus size={14} weight="bold" />}
-                    sx={{ flex: "none", minHeight: 40 }}
-                    type="submit"
-                    variant="primary"
-                  >
-                    Add
-                  </Button>
-                </ProjectReadOnlyTooltip>
-              </form>
-              <div className="mt-3 flex flex-wrap items-center gap-3 text-[12px] text-fg-muted">
-                <ProjectReadOnlyTooltip>
-                  <button
-                    className="inline-flex items-center gap-1.5 font-semibold text-fg-muted outline-none hover:text-accent-text focus-visible:text-accent-text disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted"
-                    disabled={readOnly}
-                    onClick={onImportCsv}
+                    onClick={onAddKeyword}
+                    sx={{ minHeight: 40 }}
                     type="button"
                   >
-                    <UploadSimple size={15} />
+                    Add manually
+                  </Button>
+                </ProjectReadOnlyTooltip>
+                <ProjectReadOnlyTooltip>
+                  <Button
+                    disabled={readOnly}
+                    onClick={onImportCsv}
+                    sx={{ minHeight: 40 }}
+                    type="button"
+                    variant="secondary"
+                  >
                     Import CSV
-                  </button>
+                  </Button>
                 </ProjectReadOnlyTooltip>
               </div>
             </section>
@@ -244,17 +233,6 @@ export function KeywordsEmptyState({
             .
           </p>
         ) : null}
-
-        <p className="mt-5 text-[12.5px] text-fg-muted">
-          Not sure where to start? Most existing sites should begin with Search Console.{" "}
-          <Link
-            className="font-semibold text-accent-text"
-            href="/docs/guides/choose-first-keywords"
-            {...docsLinkProps("/docs/guides/choose-first-keywords")}
-          >
-            Read the first-keywords guide
-          </Link>
-        </p>
       </div>
       {drawer ? (
         <KeywordSuggestionDrawer

@@ -1,6 +1,6 @@
 "use client";
 
-import * as Sentry from "@sentry/nextjs";
+import { reportAppError } from "@/lib/observability/error-reporting";
 import NextError from "next/error";
 import { useEffect } from "react";
 
@@ -10,13 +10,7 @@ type GlobalErrorProps = {
 
 export default function GlobalError({ error }: Readonly<GlobalErrorProps>) {
   useEffect(() => {
-    Sentry.withScope((scope) => {
-      if (error.digest) {
-        scope.setTag("next.digest", error.digest);
-      }
-
-      Sentry.captureException(error);
-    });
+    reportAppError(error, { digest: error.digest });
   }, [error]);
 
   return (

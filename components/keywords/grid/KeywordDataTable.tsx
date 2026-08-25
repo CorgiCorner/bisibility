@@ -6,7 +6,6 @@ import type {
 } from "@/components/keywords/action-utils";
 import { actionErrorMessage } from "@/components/keywords/action-utils";
 import { Card, ConfirmModal, SummaryStrip } from "@/components/ui";
-import { PREFERENCE_COOKIES } from "@/lib/account/preferences-shared";
 import type { KeywordFilterChip } from "@/lib/keywords/keyword-filter-model";
 import { marketGridChild } from "@/lib/keywords/market-grid-model";
 import type { KeywordRow } from "@/lib/queries/keywords";
@@ -20,7 +19,7 @@ import { type MouseEvent, type ReactNode, useCallback, useMemo, useState } from 
 import { BulkActionBar } from "./BulkActionBar";
 import { DeferredDataGrid } from "./DeferredDataGrid";
 import { keywordColumns } from "./grid-columns";
-import { renderedRowHeightForDensity } from "./grid-density";
+import { persistKeywordGridDensity, renderedRowHeightForDensity } from "./grid-density";
 import { type CheckHealthView, KeywordGridHealthNotices } from "./KeywordGridHealthNotices";
 import { KeywordsFilterBar } from "./KeywordsFilterBar";
 import { KeywordNoRowsOverlay, type KeywordNoRowsState } from "./KeywordTableStatus";
@@ -62,6 +61,7 @@ type KeywordDataTableProps = Omit<KeywordWorkspaceActions, "addKeywordsAction"> 
     onRunChecks: (keywordIds: string[], depth?: SerpDepth) => void;
     onSearchChange: (value: string) => void;
     pendingCheckIds: ReadonlySet<string>;
+    providerConnected?: boolean;
     projectId: string;
     projectMarkets?: ProjectMarketsView;
     rows: KeywordRow[];
@@ -101,6 +101,7 @@ export function KeywordDataTable({
   onRunChecks,
   onSearchChange,
   pendingCheckIds,
+  providerConnected,
   projectId,
   projectMarkets,
   rows,
@@ -124,8 +125,7 @@ export function KeywordDataTable({
   const getRowHeight = useCallback(() => renderedRowHeightForDensity(density), [density]);
   function handleDensityChange(next: GridDensity) {
     setDensity(next);
-    // biome-ignore lint/suspicious/noDocumentCookie: density preference must be written synchronously from the user event.
-    document.cookie = `${PREFERENCE_COOKIES.density}=${next}; path=/; max-age=31536000; SameSite=Lax`;
+    persistKeywordGridDensity(next);
   }
   const [rowSelectionModel, setRowSelectionModel] = useState<GridRowSelectionModel>({
     ids: new Set(),
@@ -158,7 +158,6 @@ export function KeywordDataTable({
       ),
     [canDeleteKeyword, canUpdateKeyword, onRunChecks, pendingCheckIds, projectId],
   );
-  const gridSlots = { noRowsOverlay: KeywordNoRowsOverlay };
   async function handleDeleteKeyword() {
     if (!deletingKeyword) return;
     setDeleting(true);
@@ -209,6 +208,7 @@ export function KeywordDataTable({
         onClear={() => setRowSelectionModel({ ids: new Set(), type: "include" })}
         onRunChecks={onRunChecks}
         projectId={projectId}
+        providerConnected={providerConnected}
         providerRate={checkHealth?.providerRate}
         selectedRows={selectedRows}
       />
@@ -268,7 +268,7 @@ export function KeywordDataTable({
               sortingMode={sortingMode}
               sortModel={sortModel}
               slotProps={{ noRowsOverlay: { state: noRowsState } }}
-              slots={gridSlots}
+              slots={{ noRowsOverlay: KeywordNoRowsOverlay }}
               sx={keywordGridSx}
             />
           </div>

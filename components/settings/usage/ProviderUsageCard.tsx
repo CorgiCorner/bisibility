@@ -10,7 +10,6 @@ import { Button, ExternalLink, MonoText, StatusPill } from "@/components/ui";
 import { formatMoneyCents } from "@/lib/format/money";
 import type { ProviderConnectionUsageData, ProviderUsageData } from "@/lib/settings/options";
 import { DOCS_URL, MARKETING_URL } from "@/lib/site/site";
-import { PencilSimpleIcon as PencilSimple } from "@phosphor-icons/react";
 import { useState } from "react";
 
 type ProviderUsageCardProps = {
@@ -112,13 +111,7 @@ export function ProviderUsageCard({
         <ProviderSpendMeter
           action={
             canEditBudget ? (
-              <Button
-                onClick={() => setEditOpen(true)}
-                size="xs"
-                startIcon={<PencilSimple aria-hidden size={12} />}
-                type="button"
-                variant="secondary"
-              >
+              <Button onClick={() => setEditOpen(true)} size="xs" type="button" variant="secondary">
                 Edit budget
               </Button>
             ) : null

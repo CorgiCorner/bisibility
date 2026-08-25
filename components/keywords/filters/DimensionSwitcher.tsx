@@ -4,12 +4,14 @@ import {
   ProjectReadOnlyTooltip,
   useProjectWriteMode,
 } from "@/components/shell/ProjectWriteModeProvider";
+import { quietChipVariants } from "@/components/ui";
 import {
   DEFAULT_SERP_DEPTH,
   SERP_ENGINE,
   serpDeviceOptions,
   serpMarketOptions,
 } from "@/lib/serp/markets";
+import { cn } from "@/lib/ui/cn";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import {
@@ -113,14 +115,18 @@ export function DimensionSwitcher({
       weight="bold"
     />
   );
-  const chipShape = serpHref ? "rounded-l-full border-0" : "rounded-full border border-border";
+  const chipShape = serpHref ? "rounded-l-full border-0" : "";
 
   const chip = (
     <button
       aria-controls={open ? menuId : undefined}
       aria-expanded={open}
       aria-haspopup={canTrack ? "menu" : undefined}
-      className={`inline-flex items-center gap-1.5 ${chipShape} bg-bg-sunken py-1 pl-2.5 pr-2 font-mono text-[11px] text-fg outline-none transition-colors hover:border-border-strong hover:bg-nav-active focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted`}
+      className={cn(
+        quietChipVariants({ size: "lg" }),
+        chipShape,
+        "font-mono text-fg outline-none transition-colors hover:border-border-strong hover:bg-nav-active focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted",
+      )}
       disabled={!canTrack || readOnly}
       onClick={(event) => {
         if (canTrack && !readOnly) setAnchorEl(event.currentTarget);
@@ -189,10 +195,7 @@ export function DimensionSwitcher({
             }}
           >
             <span className="inline-flex shrink-0 items-center text-fg-muted">{icon}</span>
-            <span
-              className="min-w-0 flex-1 truncate text-[12.5px] font-semibold text-fg"
-              title={label}
-            >
+            <span className="min-w-0 flex-1 truncate text-[12.5px] text-fg" title={label}>
               {label}
             </span>
             <Check aria-hidden className="shrink-0 text-accent-text" size={13} weight="bold" />

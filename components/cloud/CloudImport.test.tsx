@@ -5,38 +5,31 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CloudImport } from "./CloudImport";
 import type { ActiveMigrationToken, IssuedMigrationToken } from "./cloud-token";
 
-const mocks = vi.hoisted(() => ({
-  refresh: vi.fn(),
-  setJob: vi.fn(),
-  writeText: vi.fn(),
-}));
+const mocks = vi.hoisted(() => {
+  const setJob = vi.fn();
+  return {
+    setJob,
+    useCloudImportJobPoll: vi.fn(() => ({
+      job: { id: "imp_abcdefghijklmnopqrstuvwx", progress: 0, state: "idle" },
+      setJob,
+    })),
+  };
+});
 
 type TokenCardMockProps = {
-  copied: boolean;
   disabled: boolean;
   errorMessage: string | null;
   errorTitle: string;
   issuedToken: IssuedMigrationToken | null;
-  onCopy: () => void;
   onGenerate: () => void;
   onRegenerate: () => void;
   onRevoke: () => void;
   status: string;
 };
-type TransferMockProps = {
-  onStatusRefresh: () => void;
-  onTransferEnd: () => Promise<void>;
-  onTransferStart: () => Promise<boolean>;
-  onTransferSuccess: () => void;
-};
-type NewTokenMockProps = { onNewToken: () => void };
+type NewTokenMockProps = { hasToken?: boolean; onNewToken: () => void };
 
 vi.mock("./use-cloud-import-job", () => ({
-  useCloudImportJobPoll: () => ({
-    job: { id: "imp_abcdefghijklmnopqrstuvwx", progress: 0, state: "idle" },
-    refresh: mocks.refresh,
-    setJob: mocks.setJob,
-  }),
+  useCloudImportJobPoll: mocks.useCloudImportJobPoll,
 }));
 vi.mock("./MigrationTokenCard", () => ({
   MigrationTokenCard: (props: TokenCardMockProps) => (
@@ -45,7 +38,6 @@ vi.mock("./MigrationTokenCard", () => ({
       <p>{props.errorTitle}</p>
       {props.errorMessage ? <p>{props.errorMessage}</p> : null}
       {props.issuedToken?.token ? <p>{props.issuedToken.token}</p> : null}
-      {props.copied ? <p>Copied</p> : null}
       <button disabled={props.disabled} onClick={props.onGenerate} type="button">
         Generate
       </button>
@@ -55,36 +47,16 @@ vi.mock("./MigrationTokenCard", () => ({
       <button disabled={props.disabled} onClick={props.onRevoke} type="button">
         Revoke
       </button>
-      <button disabled={props.disabled} onClick={props.onCopy} type="button">
-        Copy
-      </button>
-    </div>
-  ),
-}));
-vi.mock("./PackageTransferPanel", () => ({
-  PackageTransferPanel: (props: TransferMockProps) => (
-    <div>
-      <button onClick={props.onStatusRefresh} type="button">
-        Refresh status
-      </button>
-      <button onClick={props.onTransferStart} type="button">
-        Start transfer
-      </button>
-      <button onClick={props.onTransferEnd} type="button">
-        End transfer
-      </button>
-      <button onClick={props.onTransferSuccess} type="button">
-        Complete transfer
-      </button>
     </div>
   ),
 }));
 vi.mock("./TransferPanel", () => ({
-  TransferPanel: (props: NewTokenMockProps) => (
-    <button onClick={props.onNewToken} type="button">
-      New transfer token
-    </button>
-  ),
+  TransferPanel: (props: NewTokenMockProps) =>
+    props.hasToken ? (
+      <button onClick={props.onNewToken} type="button">
+        New transfer token
+      </button>
+    ) : null,
 }));
 
 const activeTokenId = "ferry_abcdefghijklmnopqrstuvwx";
@@ -121,12 +93,9 @@ const issuedToken: IssuedMigrationToken = {
 
 function renderImport(overrides: Record<string, unknown> = {}) {
   const actions = {
-    enableMigrationHoldAction: vi.fn(async () => ({})),
-    exportPackageAction: vi.fn(),
     mintMigrationTokenAction: vi.fn(async () => ({ ok: true as const, value: issuedToken })),
     pollJobAction: vi.fn(),
     regenerateMigrationTokenAction: vi.fn(async () => ({ ok: true as const, value: issuedToken })),
-    releaseMigrationHoldAction: vi.fn(async () => ({})),
     revokeMigrationTokenAction: vi.fn(async () => ({ ok: true as const, value: {} })),
   };
   const view = render(
@@ -146,10 +115,6 @@ function renderImport(overrides: Record<string, unknown> = {}) {
 describe("CloudImport", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    Object.defineProperty(navigator, "clipboard", {
-      configurable: true,
-      value: { writeText: mocks.writeText },
-    });
   });
 
   it("renders migration state without token or transfer controls below admin", () => {
@@ -159,10 +124,26 @@ describe("CloudImport", () => {
     expect(screen.queryByRole("button", { name: "Generate" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Regenerate" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Revoke" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Start transfer" })).not.toBeInTheDocument();
   });
 
-  it("mints, copies, refreshes, and revokes a migration token", async () => {
+  it("hides transfer status until a token exists", () => {
+    renderImport();
+
+    expect(screen.queryByRole("button", { name: "New transfer token" })).not.toBeInTheDocument();
+    expect(mocks.useCloudImportJobPoll).toHaveBeenCalledWith(
+      expect.objectContaining({ active: false }),
+    );
+  });
+
+  it("polls the import job while a token is waiting to receive", () => {
+    renderImport({ activeToken });
+
+    expect(mocks.useCloudImportJobPoll).toHaveBeenCalledWith(
+      expect.objectContaining({ active: true }),
+    );
+  });
+
+  it("mints and revokes a migration token", async () => {
     const actions = renderImport();
     expect(screen.getByText("Token status none")).toBeInTheDocument();
 
@@ -174,23 +155,6 @@ describe("CloudImport", () => {
     });
     expect(mocks.setJob).toHaveBeenCalledWith(issuedToken.importJob);
 
-    const copyButton = screen.getByRole("button", { name: "Copy" });
-    await waitFor(() => expect(copyButton).toBeEnabled());
-    fireEvent.click(copyButton);
-    expect(mocks.writeText).toHaveBeenCalledWith("mig_new_secret");
-    expect(screen.getByText("Copied")).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: "Refresh status" }));
-    expect(mocks.refresh).toHaveBeenCalledOnce();
-    fireEvent.click(screen.getByRole("button", { name: "Start transfer" }));
-    await waitFor(() =>
-      expect(actions.enableMigrationHoldAction).toHaveBeenCalledWith({ projectId }),
-    );
-    fireEvent.click(screen.getByRole("button", { name: "End transfer" }));
-    await waitFor(() =>
-      expect(actions.releaseMigrationHoldAction).toHaveBeenCalledWith({ projectId }),
-    );
-
     const revokeButton = screen.getByRole("button", { name: "Revoke" });
     await waitFor(() => expect(revokeButton).toBeEnabled());
     fireEvent.click(revokeButton);
@@ -200,7 +164,7 @@ describe("CloudImport", () => {
         tokenId: issuedTokenId,
       }),
     );
-    expect(routerMock.refresh).toHaveBeenCalledTimes(3);
+    expect(routerMock.refresh).toHaveBeenCalledOnce();
   });
 
   it("stops masking the token once a fresh active token arrives from the server", async () => {
@@ -236,18 +200,6 @@ describe("CloudImport", () => {
     await waitFor(() => expect(regenerateButton).toBeEnabled());
     fireEvent.click(screen.getByRole("button", { name: "New transfer token" }));
     await waitFor(() => expect(actions.regenerateMigrationTokenAction).toHaveBeenCalledTimes(2));
-  });
-
-  it("clears the issued token immediately after a successful package transfer", async () => {
-    renderImport({ activeToken });
-    fireEvent.click(screen.getByRole("button", { name: "Generate" }));
-    expect(await screen.findByText("mig_new_secret")).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: "Complete transfer" }));
-
-    expect(await screen.findByText("Token status none")).toBeInTheDocument();
-    expect(screen.queryByText("mig_new_secret")).not.toBeInTheDocument();
-    expect(routerMock.refresh).toHaveBeenCalledOnce();
   });
 
   it("shows mint and revoke failures without losing the active token", async () => {
@@ -308,27 +260,12 @@ describe("CloudImport", () => {
 
     expect(screen.getByRole("button", { name: "Generate" })).toBeDisabled();
     expect(screen.getByText(/Migration token controls are unavailable/)).toBeVisible();
-    expect(screen.getByRole("button", { name: "Start transfer" })).toBeEnabled();
   });
 
-  it("reports a hold acquisition failure and does not enter transfer mode", async () => {
-    const enableMigrationHoldAction = vi.fn(async () => {
-      throw new Error("Migration hold unavailable. Try again.");
-    });
-    const actions = renderImport({ enableMigrationHoldAction });
-
-    fireEvent.click(screen.getByRole("button", { name: "Start transfer" }));
-
-    expect(await screen.findByText("Migration hold unavailable. Try again.")).toBeInTheDocument();
-    expect(actions.releaseMigrationHoldAction).not.toHaveBeenCalled();
-  });
-
-  it("ignores copy and revoke without a token and resets invalid mint input", () => {
+  it("ignores revoke without a token and resets invalid mint input", () => {
     const actions = renderImport({ projectId: "" });
-    fireEvent.click(screen.getByRole("button", { name: "Copy" }));
     fireEvent.click(screen.getByRole("button", { name: "Revoke" }));
     fireEvent.click(screen.getByRole("button", { name: "Generate" }));
-    expect(mocks.writeText).not.toHaveBeenCalled();
     expect(actions.revokeMigrationTokenAction).not.toHaveBeenCalled();
     expect(actions.mintMigrationTokenAction).not.toHaveBeenCalled();
   });

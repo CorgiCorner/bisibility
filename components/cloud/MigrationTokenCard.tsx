@@ -1,44 +1,42 @@
 "use client";
 
-import { Button } from "@/components/ui";
+import { MigrationReachabilityHint } from "@/components/settings/migration/MigrationReachabilityHint";
+import { Button, ConfirmModal } from "@/components/ui";
 import {
-  ArrowBendDownRightIcon as ArrowBendDownRight,
   ArrowsClockwiseIcon as ArrowsClockwise,
-  CheckIcon as Check,
-  CheckCircleIcon as CheckCircle,
-  CopyIcon as Copy,
   KeyIcon as Key,
+  LockSimpleIcon as LockSimple,
   PlusIcon as Plus,
-  ProhibitIcon as Prohibit,
   WarningCircleIcon as WarningCircle,
   WarningOctagonIcon as WarningOctagon,
 } from "@phosphor-icons/react";
+import { useState } from "react";
 import type { ActiveMigrationToken, IssuedMigrationToken } from "./cloud-token";
 import { TokenMeta } from "./MigrationTokenMeta";
+import { MigrationTokenTransferDetails } from "./MigrationTokenTransferDetails";
 
 export type MigrationTokenStatus = "none" | "active" | "created" | "error";
 export type MigrationTokenPendingAction = "create" | "regenerate" | "revoke";
 
 type MigrationTokenCardProps = {
   activeToken: ActiveMigrationToken | null;
-  copied: boolean;
   disabled?: boolean;
+  destinationUrl?: string;
   errorMessage: string | null;
   errorTitle?: string;
   issuedToken: IssuedMigrationToken | null;
-  onCopy: () => void;
   onGenerate: () => void;
   onRegenerate: () => void;
   onRevoke: () => void;
   pendingAction?: MigrationTokenPendingAction | null;
   sourceLabel?: string;
   status: MigrationTokenStatus;
-  transferInstruction?: string;
+  tokenSecurityNote?: string;
   workspaceName: string;
 };
 
 const primaryButton =
-  "inline-flex items-center gap-2 rounded-[10px] bg-accent-solid px-4.5 py-[11px] font-semibold text-[14px] text-primary-contrast transition-colors hover:bg-accent-solid-hover disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted";
+  "inline-flex items-center gap-2 rounded-[10px] bg-accent-solid px-4.5 py-[11px] font-semibold text-[14px] text-accent-on-solid transition-colors hover:bg-accent-solid-hover disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted";
 function TokenActions({
   disabled,
   onRegenerate,
@@ -50,44 +48,50 @@ function TokenActions({
   onRevoke: () => void;
   pendingAction?: MigrationTokenPendingAction | null;
 }>) {
+  const [confirmKind, setConfirmKind] = useState<
+    "revokeMigrationToken" | "rollMigrationToken" | null
+  >(null);
   const revoking = pendingAction === "revoke";
   const regenerating = pendingAction === "regenerate";
 
   return (
-    <div className="mt-4.5 flex items-center gap-2.5 border-border-soft border-t pt-4">
-      <Button
-        disabled={disabled}
-        onClick={onRevoke}
-        size="sm"
-        startIcon={
-          revoking ? (
-            <ArrowsClockwise aria-hidden className="animate-spin" size={13} />
-          ) : (
-            <Prohibit aria-hidden size={13} />
-          )
-        }
-        sx={{ color: "var(--red-text)" }}
-        type="button"
-        variant="secondary"
-      >
-        {revoking ? "Revoking" : "Revoke token"}
-      </Button>
-      <Button
-        disabled={disabled}
-        onClick={onRegenerate}
-        size="sm"
-        startIcon={
-          <ArrowsClockwise
-            aria-hidden
-            className={regenerating ? "animate-spin" : undefined}
-            size={13}
-          />
-        }
-        type="button"
-        variant="ghost"
-      >
-        {regenerating ? "Regenerating" : "Regenerate"}
-      </Button>
+    <div className="mt-4.5 border-border-soft border-t pt-4">
+      <div className="flex flex-wrap items-center gap-2.5">
+        <Button
+          disabled={disabled && !revoking}
+          loading={revoking}
+          loadingLabel="Revoking"
+          onClick={() => setConfirmKind("revokeMigrationToken")}
+          size="sm"
+          sx={{ color: "var(--red-text)" }}
+          type="button"
+          variant="secondary"
+        >
+          Revoke token
+        </Button>
+        <Button
+          disabled={disabled && !regenerating}
+          loading={regenerating}
+          loadingLabel="Rolling token"
+          onClick={() => setConfirmKind("rollMigrationToken")}
+          size="sm"
+          type="button"
+          variant="ghost"
+        >
+          Roll token
+        </Button>
+      </div>
+      <ConfirmModal
+        kind={confirmKind ?? "revokeMigrationToken"}
+        onClose={() => setConfirmKind(null)}
+        onConfirm={() => {
+          if (confirmKind === "rollMigrationToken") onRegenerate();
+          else onRevoke();
+          setConfirmKind(null);
+        }}
+        open={confirmKind !== null}
+        showConfirmationToast={false}
+      />
     </div>
   );
 }
@@ -122,19 +126,18 @@ function TokenGenerateButton({
 
 export function MigrationTokenCard({
   activeToken,
-  copied,
   disabled,
+  destinationUrl,
   errorMessage,
   errorTitle = "Couldn't create token",
   issuedToken,
-  onCopy,
   onGenerate,
   onRegenerate,
   onRevoke,
   pendingAction,
   sourceLabel = "self-hosted instance",
   status,
-  transferInstruction = "Open Migrate to hosted instance / Transfer, choose Push to hosted instance, and paste this token to start the import.",
+  tokenSecurityNote,
   workspaceName,
 }: Readonly<MigrationTokenCardProps>) {
   const visibleToken = issuedToken ?? activeToken;
@@ -143,7 +146,7 @@ export function MigrationTokenCard({
   return (
     <div className="mt-7 overflow-hidden rounded-2xl border border-border bg-bg-elev">
       <div className="flex items-center gap-[13px] border-border-soft border-b p-[20px_22px]">
-        <span className="grid h-[42px] w-[42px] flex-none place-items-center rounded-[11px] bg-accent-soft text-accent-text">
+        <span className="grid h-[42px] w-[42px] flex-none place-items-center rounded-[11px] bg-accent-soft text-accent-solid">
           <Key aria-hidden size={21} weight="fill" />
         </span>
         <div className="min-w-0 flex-1">
@@ -184,9 +187,9 @@ export function MigrationTokenCard({
               <Key aria-hidden size={26} />
             </span>
             <div className="mt-3.5 text-[14.5px] font-semibold">No active token</div>
-            <p className="mt-1.5 max-w-[380px] text-[13px] leading-[1.55] text-fg-muted">
-              Create a token to start an import. It is shown once, expires automatically, and can
-              only be used a single time.
+            <p className="mt-1.5 max-w-[400px] text-[13px] leading-[1.55] text-fg-muted">
+              Create a token to start an import. It is shown once, expires in 60 minutes, and is
+              consumed after a successful import.
             </p>
             <TokenGenerateButton
               creating={creating}
@@ -198,23 +201,10 @@ export function MigrationTokenCard({
         ) : null}
         {status === "active" && visibleToken ? (
           <div>
-            <div className="mb-[9px] font-mono text-[10px] uppercase tracking-[0.6px] text-fg-muted">
-              Active migration token
-            </div>
-            <div className="rounded-xl border border-border bg-bg-sunken p-[15px_16px]">
-              <div className="flex items-start gap-2.5">
-                <CheckCircle
-                  aria-hidden
-                  className="mt-px flex-none text-green-text"
-                  size={16}
-                  weight="fill"
-                />
-                <div className="min-w-0 flex-1 text-[13px] leading-[1.55] text-fg">
-                  A token is active for this project. For security, the raw token was shown only
-                  when it was created. Regenerate it if you need to copy a new value.
-                </div>
-              </div>
-            </div>
+            <div className="text-[14.5px] font-semibold">Active token exists</div>
+            <p className="mt-1.5 text-[13px] leading-[1.55] text-fg-muted">
+              Its value is hidden. Roll the token if you need to copy one.
+            </p>
             <TokenMeta token={visibleToken} workspaceName={workspaceName} />
             <TokenActions
               disabled={disabled}
@@ -224,61 +214,33 @@ export function MigrationTokenCard({
             />
           </div>
         ) : null}
-        {status === "created" && visibleToken ? (
+        {status === "created" && issuedToken ? (
           <div>
-            <div className="mb-[9px] font-mono text-[10px] uppercase tracking-[0.6px] text-fg-muted">
-              Step 1: your migration token
-            </div>
-            <div className="flex items-center gap-3 rounded-xl border-[1.5px] border-accent bg-bg p-[15px_15px_15px_18px]">
-              <Key aria-hidden className="flex-none text-accent-text" size={19} />
-              <span className="min-w-0 flex-1 truncate font-mono text-[15px] font-semibold text-fg">
-                {issuedToken?.token}
-              </span>
-              <Button
-                disabled={disabled}
-                onClick={onCopy}
-                startIcon={
-                  copied ? (
-                    <Check aria-hidden size={14} weight="bold" />
-                  ) : (
-                    <Copy aria-hidden size={14} />
-                  )
-                }
-                sx={{ flex: "none" }}
-                type="button"
-                variant="primary"
-              >
-                Copy
-              </Button>
-            </div>
-            <div className="mt-[9px] flex items-center gap-[7px] font-mono text-[11px] font-semibold text-green-text">
-              <CheckCircle aria-hidden size={13} weight="fill" />
-              Shown once. Copy it before you leave this page.
-            </div>
-
-            <div className="mt-4.5 flex items-start gap-[11px] rounded-xl border border-border bg-bg-elev p-[15px_16px]">
-              <ArrowBendDownRight
-                aria-hidden
-                className="mt-px flex-none text-accent-text"
-                size={16}
-                weight="bold"
-              />
-              <span className="flex-1 text-[13px] leading-[1.55] text-fg">
-                <strong className="font-semibold">Step 2: paste it into the source.</strong>{" "}
-                {transferInstruction}
-              </span>
-            </div>
-
-            <TokenMeta token={visibleToken} workspaceName={workspaceName} />
+            <MigrationTokenTransferDetails
+              destinationUrl={destinationUrl}
+              token={issuedToken}
+              workspaceName={workspaceName}
+            />
             <TokenActions
               disabled={disabled}
               onRegenerate={onRegenerate}
               onRevoke={onRevoke}
               pendingAction={pendingAction}
             />
+          </div>
+        ) : null}
+        {destinationUrl && status !== "error" && status !== "created" ? (
+          <div className="mt-4.5">
+            <MigrationReachabilityHint surface="destination" targetOrigin={destinationUrl} />
           </div>
         ) : null}
       </div>
+      {tokenSecurityNote && status !== "error" && (status === "none" || !visibleToken) ? (
+        <div className="flex items-start gap-[9px] border-border-soft border-t bg-bg-sunken px-[22px] py-3.5 text-[12px] leading-[1.5] text-fg-muted">
+          <LockSimple aria-hidden className="mt-px flex-none text-green-text" size={14} />
+          <span>{tokenSecurityNote}</span>
+        </div>
+      ) : null}
     </div>
   );
 }

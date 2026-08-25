@@ -110,6 +110,35 @@ describe("BacklinksWorkspace", () => {
     );
   });
 
+  it("refetches the price when the scope changes", async () => {
+    // Exact-page scope is not billed the 12-month history, so a scope switch
+    // moves the real price. Without a refetch the button kept the site-scope
+    // number while the pricing popover showed the lower page-scope breakdown.
+    vi.useFakeTimers();
+    const analyzeAction = vi.fn(async (input: unknown) => {
+      const target = (input as { target: string }).target;
+      return snapshot(target);
+    });
+    renderWorkspace({ analyzeAction: analyzeAction as unknown as AnalyzeBacklinksAction });
+
+    const input = screen.getByRole("textbox", { name: "Backlinks target" });
+    fireEvent.change(input, { target: { value: "example.com" } });
+    await act(async () => vi.advanceTimersByTimeAsync(320));
+    analyzeAction.mockClear();
+
+    fireEvent.click(screen.getByRole("radio", { name: "Exact page" }));
+    await act(async () => vi.advanceTimersByTimeAsync(320));
+
+    expect(analyzeAction).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        estimateOnly: true,
+        includeSubdomains: false,
+        target: "example.com",
+        targetScope: "page",
+      }),
+    );
+  });
+
   it("renders the idle-state copy without suggested target shortcuts", () => {
     renderWorkspace();
 

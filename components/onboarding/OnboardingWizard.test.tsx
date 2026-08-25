@@ -10,15 +10,44 @@ describe("OnboardingWizard", () => {
     expect(screen.getByText("Enter the website you want to track.")).toBeInTheDocument();
 
     const rail = screen.getByLabelText("Onboarding steps");
-    const lockedStep = within(rail).getByRole("button", {
-      name: "First check",
-    });
-    expect(lockedStep).toBeDisabled();
-
-    fireEvent.click(lockedStep);
+    for (const name of ["Connect data", "Add keywords", "First check"]) {
+      const lockedStep = within(rail).getByRole("button", { name });
+      expect(lockedStep).toBeDisabled();
+      fireEvent.click(lockedStep);
+    }
 
     expect(screen.getByText("Enter the website you want to track.")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Connect data" })).not.toBeInTheDocument();
     expect(screen.queryByText("Run your first check")).not.toBeInTheDocument();
+  });
+
+  it("does not let the rail skip create project when a project already exists", () => {
+    renderWizard({
+      initialFlowState: { projectId: "prj_1", providerId: null },
+      initialProject: project,
+      initialStep: 1,
+    });
+
+    const rail = screen.getByLabelText("Onboarding steps");
+    const connectData = within(rail).getByRole("button", { name: "Connect data" });
+    expect(connectData).toBeDisabled();
+    fireEvent.click(connectData);
+
+    expect(screen.getByText("Enter the website you want to track.")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Connect data" })).not.toBeInTheDocument();
+  });
+
+  it("sizes sample and restore actions to the continue control", () => {
+    renderWizard();
+
+    const sample = screen.getByRole("button", { name: "Load sample project" });
+    const restore = screen.getByRole("button", { name: "Restore project" });
+    const continueButton = screen.getByRole("button", { name: /continue/i });
+    const footer = sample.closest("footer");
+
+    expect(footer).toHaveClass("items-end");
+    expect(getComputedStyle(sample).minHeight).toBe(getComputedStyle(continueButton).minHeight);
+    expect(getComputedStyle(restore).minHeight).toBe(getComputedStyle(continueButton).minHeight);
   });
 
   it("submits step 1 as one website value", async () => {
@@ -41,6 +70,7 @@ describe("OnboardingWizard", () => {
 
   it("opens data connections directly after project creation", () => {
     renderWizard({
+      gscOAuthConfigured: false,
       initialFlowState: { projectId: "prj_1", providerId: null },
       initialProject: project,
       initialStep: 2,
@@ -54,6 +84,16 @@ describe("OnboardingWizard", () => {
       screen
         .getByLabelText("API login")
         .compareDocumentPosition(screen.getByText("Your site's data / optional, free")) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    const siteHeading = screen.getByText("Your site's data / optional, free");
+    const oauthNotice = screen.getByRole("alert");
+    expect(oauthNotice).toHaveTextContent("GOOGLE_CLIENT_ID");
+    expect(
+      siteHeading.compareDocumentPosition(oauthNotice) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(
+      screen.getByText("Rank data / powers rank checks").compareDocumentPosition(oauthNotice) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
     expect(screen.queryByText("Connect from your terminal or API")).not.toBeInTheDocument();
@@ -73,6 +113,8 @@ describe("OnboardingWizard", () => {
     });
     expect(skipButton).toHaveTextContent("Skip");
     expect(skipButton).toBeEnabled();
+    expect(skipButton).toHaveClass("MuiButton-outlined");
+    expect(skipButton).not.toHaveClass("text-accent-text", "text-fg-muted");
     expect(screen.getAllByText("Skip")).toHaveLength(1);
     expect(skipButton.closest("footer")).toBeNull();
     fireEvent.click(skipButton);
@@ -191,6 +233,7 @@ describe("OnboardingWizard", () => {
     const rail = screen.getByLabelText("Onboarding steps");
     fireEvent.click(within(rail).getByRole("button", { name: "Connect data, completed" }));
 
+    expect(within(rail).getByRole("button", { name: "Add keywords" })).toBeDisabled();
     expect(screen.getByText("Connected")).toBeInTheDocument();
     expect(screen.queryByText(/Add as fallback \(optional\)/)).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("radio", { name: /SerpApi/ }));
@@ -199,7 +242,7 @@ describe("OnboardingWizard", () => {
     });
     expect(saveProviderButton).toHaveAccessibleName("Save SerpApi");
     expect(saveProviderButton).toBeDisabled();
-    expect(screen.getByText("Test the credentials, then use Save SerpApi.")).toBeInTheDocument();
+    expect(screen.getByText("Test the credentials and save.")).toBeInTheDocument();
     const continueButton = screen.getByRole("button", { name: /continue/i });
     expect(continueButton).toBeEnabled();
     expect(continueButton).toHaveAttribute("type", "submit");

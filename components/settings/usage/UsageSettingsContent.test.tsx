@@ -54,6 +54,11 @@ describe("UsageSettingsContent", () => {
     );
 
     expect(screen.getByText("Self-hosted")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Infrastructure, provider requests and optional services remain your costs.",
+      ),
+    ).toHaveClass("pt-2");
     expect(screen.queryByLabelText("What would you pay per month?")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Send feedback" })).not.toBeInTheDocument();
   });
@@ -167,6 +172,33 @@ describe("UsageSettingsContent", () => {
     expect(await screen.findByText("Thanks, your answer helps us set the price.")).toBeVisible();
   });
 
+  it.each([
+    ["rate_limited", "Too many requests. Please try again later."],
+    ["verification_failed", "Verification failed. Please try again."],
+  ] as const)("keeps feedback unanswered on %s", async (code, message) => {
+    const user = userEvent.setup();
+    const submitPricingFeedback = vi.fn().mockResolvedValue({ code, ok: false });
+    render(
+      <UsageSettingsContent
+        {...actions}
+        canEditBudget
+        canSubmitPricingFeedback
+        deployment="cloud"
+        projectId="prj_story"
+        submitPricingFeedback={submitPricingFeedback}
+        usage={usage}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Send feedback" }));
+
+    expect(await screen.findByText(message)).toBeVisible();
+    expect(
+      screen.queryByText("Thanks, your answer helps us set the price."),
+    ).not.toBeInTheDocument();
+    expect(screen.getByLabelText("What would you pay per month?")).toBeVisible();
+  });
+
   it("edits the provider budget through the injected audited action", async () => {
     const user = userEvent.setup();
     render(
@@ -180,7 +212,9 @@ describe("UsageSettingsContent", () => {
       />,
     );
 
-    await user.click(screen.getByRole("button", { name: "Edit budget" }));
+    const editBudget = screen.getByRole("button", { name: "Edit budget" });
+    expect(editBudget).toHaveClass("min-h-[30px]");
+    await user.click(editBudget);
     const input = screen.getByRole("textbox", { name: "Monthly budget in dollars" });
     await user.clear(input);
     await user.type(input, "75.00");

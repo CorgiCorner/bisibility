@@ -43,6 +43,15 @@ describe("StatusPill", () => {
     expect(dot).not.toHaveClass("bv-ping");
   });
 
+  it("shows a green static dot for ready", () => {
+    render(<StatusPill status="ready" />);
+
+    const dot = screen.getByText("Ready").querySelector("span[aria-hidden]");
+    expect(dot).not.toBeNull();
+    expect(dot).toHaveStyle({ backgroundColor: "var(--green)" });
+    expect(dot).not.toHaveClass("bv-ping");
+  });
+
   it("renders the correct default label for every existing kind", () => {
     const LABELS: Record<StatusKind, string> = {
       connected: "Connected",
@@ -56,12 +65,12 @@ describe("StatusPill", () => {
       wrong_url: "Wrong URL",
       primary: "Primary",
       disabled: "Disabled",
-      create: "CREATE",
-      update: "UPDATE",
-      delete: "DELETE",
-      import: "IMPORT",
-      export: "EXPORT",
-      login: "LOGIN",
+      create: "Create",
+      update: "Update",
+      delete: "Delete",
+      import: "Import",
+      export: "Export",
+      login: "Login",
     };
 
     for (const kind of ALL_KINDS) {

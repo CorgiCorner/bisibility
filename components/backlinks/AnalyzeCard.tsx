@@ -1,6 +1,14 @@
 "use client";
 
-import { Button, Card, InfoTooltip, MenuSelect, SegmentedControl, Switch } from "@/components/ui";
+import {
+  Button,
+  Card,
+  InfoTooltip,
+  MenuSelect,
+  pricingTriggerClassName,
+  SegmentedControl,
+  Switch,
+} from "@/components/ui";
 import { formatEstimateCents } from "@/lib/cost-estimate/project-estimate";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import type { BacklinkTargetScope } from "@/lib/providers/types";
@@ -149,7 +157,7 @@ export function AnalyzeCard({
           </span>
           <div className="flex flex-wrap items-center gap-4">
             <button
-              className="text-[12px] text-fg-muted transition-colors hover:text-fg"
+              className={pricingTriggerClassName}
               onClick={(event) => setPricingAnchor(event.currentTarget)}
               type="button"
             >
@@ -169,7 +177,12 @@ export function AnalyzeCard({
           </div>
         </div>
       </form>
-      <AnalyzePricingPopover anchor={pricingAnchor} onClose={() => setPricingAnchor(null)} />
+      <AnalyzePricingPopover
+        anchor={pricingAnchor}
+        onClose={() => setPricingAnchor(null)}
+        resultLimit={resultLimit}
+        scope={scope}
+      />
     </Card>
   );
 }

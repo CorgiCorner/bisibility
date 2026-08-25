@@ -14,7 +14,6 @@ const mocks = vi.hoisted(() => ({
   deploymentMode: vi.fn(),
   getAuditLogView: vi.fn(),
   getProjectRole: vi.fn(),
-  getSelfHostMigrationState: vi.fn(),
   requireReadableProject: vi.fn(),
 }));
 
@@ -32,10 +31,6 @@ vi.mock("@/lib/actions/project-write-mode", () => ({
   reactivateProject: vi.fn(),
   releaseMigrationHold: vi.fn(),
 }));
-vi.mock("@/lib/actions/self-host-migration", () => ({
-  rollbackSelfHostMigration: vi.fn(),
-  startSelfHostMigration: vi.fn(),
-}));
 vi.mock("@/app/app/(workspace)/[project]/settings/actions", () => ({
   deleteWorkspace: vi.fn(),
 }));
@@ -52,18 +47,8 @@ vi.mock("@/lib/queries/_auth", () => ({
   requireReadableProject: mocks.requireReadableProject,
 }));
 vi.mock("@/lib/queries/audit", () => ({ getAuditLogView: mocks.getAuditLogView }));
-vi.mock("@/lib/queries/self-host-migration", () => ({
-  getSelfHostMigrationState: mocks.getSelfHostMigrationState,
-}));
 
 import AdvancedSettingsPage from "@/app/app/(workspace)/[project]/settings/(sections)/advanced/page";
-
-const activeMigration = {
-  autoReleasesAt: null,
-  canRollback: false,
-  startedAt: null,
-  writeMode: "active",
-};
 
 describe("AdvancedSettingsPage", () => {
   beforeEach(() => {
@@ -82,36 +67,32 @@ describe("AdvancedSettingsPage", () => {
     mocks.canProjectAction.mockReturnValue(true);
     mocks.canReadProjectAudit.mockReturnValue(true);
     mocks.getAuditLogView.mockResolvedValue({ authorized: true, entries: [] });
-    mocks.getSelfHostMigrationState.mockResolvedValue(activeMigration);
   });
 
-  it("loads the hosted migration state and real server actions for an owner", async () => {
+  it("loads backup export for a hosted owner without the move-to-self-host contract", async () => {
     mocks.deploymentMode.mockReturnValue("cloud");
     render(await AdvancedSettingsPage({ params: Promise.resolve({ project: "prj_story" }) }));
 
     expect(screen.getByRole("main")).toContainElement(screen.getByText("advanced"));
-    expect(mocks.getSelfHostMigrationState).toHaveBeenCalledWith("prj_story");
     const props = mocks.advancedContent.mock.calls[0]?.[0];
     expect(props).toMatchObject({
       canDeleteProject: true,
       canManageMigration: true,
       deployment: "cloud",
-      migration: activeMigration,
     });
-    expect(props.actions.startHostedMigration).toEqual(expect.any(Function));
-    expect(props.actions.rollbackHostedMigration).toEqual(expect.any(Function));
+    expect(props.actions.exportBackup).toEqual(expect.any(Function));
+    expect(props.actions.cancelMigration).toBeUndefined();
   });
 
-  it("never loads or exposes the hosted Move contract on self-host", async () => {
+  it("wires self-host transfer actions and never loads the hosted Move contract", async () => {
     mocks.deploymentMode.mockReturnValue("self-host");
     render(await AdvancedSettingsPage({ params: Promise.resolve({ project: "prj_story" }) }));
 
-    expect(mocks.getSelfHostMigrationState).not.toHaveBeenCalled();
     const props = mocks.advancedContent.mock.calls[0]?.[0];
     expect(props.deployment).toBe("self-host");
-    expect(props.migration).toBeNull();
-    expect(props.actions.startHostedMigration).toBeUndefined();
-    expect(props.actions.rollbackHostedMigration).toBeUndefined();
+    expect(props.actions.exportBackup).toBeUndefined();
+    expect(props.actions.enableMigrationHold).toEqual(expect.any(Function));
+    expect(props.defaultMigrationTargetOrigin).toBe("https://cloud.example.com");
   });
 
   it("does not pass destructive or migration mutations to a viewer", async () => {
@@ -124,12 +105,11 @@ describe("AdvancedSettingsPage", () => {
     expect(mocks.getAuditLogView).not.toHaveBeenCalled();
     const props = mocks.advancedContent.mock.calls[0]?.[0];
     expect(props.actions.deleteProject).toBeUndefined();
-    expect(props.actions.startHostedMigration).toBeUndefined();
-    expect(props.actions.rollbackHostedMigration).toBeUndefined();
+    expect(props.actions.exportBackup).toEqual(expect.any(Function));
   });
 
   it.each(["migration_hold", "migrated"])(
-    "hides project deletion but preserves migration recovery while the project is %s",
+    "hides project deletion while the project is %s",
     async (writeMode) => {
       mocks.deploymentMode.mockReturnValue("cloud");
       mocks.requireReadableProject.mockResolvedValue({
@@ -148,7 +128,6 @@ describe("AdvancedSettingsPage", () => {
       const props = mocks.advancedContent.mock.calls[0]?.[0];
       expect(props.canDeleteProject).toBe(false);
       expect(props.actions.deleteProject).toBeUndefined();
-      expect(props.actions.rollbackHostedMigration).toEqual(expect.any(Function));
     },
   );
 });

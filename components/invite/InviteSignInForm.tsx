@@ -136,7 +136,7 @@ export function InviteSignInForm({ email }: Readonly<{ email: string }>) {
           <p className="m-0 text-[12px] font-medium text-red-text">{formError}</p>
         ) : null}
         <button
-          className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[9px] bg-accent-solid px-4 text-[13px] font-semibold text-primary-contrast hover:opacity-90 disabled:bg-bg-sunken disabled:text-fg-muted"
+          className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[9px] bg-accent-solid px-4 text-[13px] font-semibold text-accent-on-solid hover:opacity-90 disabled:bg-bg-sunken disabled:text-fg-muted"
           disabled={pending}
           type="submit"
         >
@@ -167,7 +167,7 @@ export function InviteSignInForm({ email }: Readonly<{ email: string }>) {
       ) : null}
       {formError ? <p className="m-0 text-[12px] font-medium text-red-text">{formError}</p> : null}
       <button
-        className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[9px] bg-accent-solid px-4 text-[13px] font-semibold text-primary-contrast hover:opacity-90 disabled:bg-bg-sunken disabled:text-fg-muted"
+        className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[9px] bg-accent-solid px-4 text-[13px] font-semibold text-accent-on-solid hover:opacity-90 disabled:bg-bg-sunken disabled:text-fg-muted"
         disabled={pending}
         type="submit"
       >

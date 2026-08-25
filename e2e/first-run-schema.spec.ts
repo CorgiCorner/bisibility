@@ -74,8 +74,12 @@ test("first-run setup and signed-in adminless recovery", async ({ page }) => {
   await page.getByRole("button", { name: "Verify and create account" }).click();
 
   await expect(page.getByRole("heading", { name: "You're the administrator" })).toBeVisible();
-  await page.getByRole("link", { name: "Open the admin panel" }).click();
-  await expect(page).toHaveURL(/\/app\/admin$/);
+  const [adminPage] = await Promise.all([
+    page.waitForEvent("popup"),
+    page.getByRole("link", { name: "Open the admin panel" }).click(),
+  ]);
+  await expect(adminPage).toHaveURL(/\/app\/admin$/);
+  await adminPage.close();
 
   const prisma = schemaPrisma();
   try {

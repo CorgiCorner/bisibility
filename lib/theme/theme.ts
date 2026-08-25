@@ -78,7 +78,7 @@ export const theme = createTheme({
       },
       styleOverrides: {
         root: {
-          borderRadius: 9,
+          borderRadius: 6,
           boxShadow: "none",
           fontFamily: "var(--font-sans), system-ui, sans-serif",
           fontSize: "13px",
@@ -96,7 +96,7 @@ export const theme = createTheme({
           },
         },
         sizeLarge: {
-          borderRadius: 10,
+          borderRadius: 6,
           fontSize: "14.5px",
           minHeight: 44,
           padding: "11px 18px",
@@ -112,11 +112,11 @@ export const theme = createTheme({
           props: { color: "inherit", variant: "outlined" },
           style: {
             backgroundColor: "var(--bg-elev)",
-            borderColor: "var(--border-strong)",
+            borderColor: "color-mix(in srgb, var(--border-control) 20%, transparent)",
             color: "var(--fg)",
             "&:hover": {
               backgroundColor: "var(--bg-sunken)",
-              borderColor: "var(--border-strong)",
+              borderColor: "color-mix(in srgb, var(--border-control) 20%, transparent)",
             },
           },
         },

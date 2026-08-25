@@ -169,6 +169,9 @@ function WhatChangedSummary({
 
   return (
     <SummaryCard label="What changed">
+      {state === "first_check" ? (
+        <p className="m-0 text-[15px] font-semibold leading-none text-fg-muted">No data</p>
+      ) : null}
       {state === "no_change" ? (
         <span className="flex items-center gap-2 text-[12px] text-fg">
           <Minus className="text-fg-muted" size={13} weight="bold" />

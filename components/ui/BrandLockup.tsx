@@ -12,6 +12,8 @@ export type { BrandLockupOrientation, BrandLockupSize };
 
 export type BrandLockupProps = {
   className?: string;
+  /** Explicit inline color. Overrides the selected tone. */
+  color?: string;
   /** Drops the wordmark and moves the accessible name onto the mark. */
   markOnly?: boolean;
   orientation?: BrandLockupOrientation;
@@ -21,6 +23,7 @@ export type BrandLockupProps = {
 
 export function BrandLockup({
   className,
+  color,
   markOnly = false,
   orientation = "horizontal",
   size = "md",
@@ -29,7 +32,15 @@ export function BrandLockup({
   const scale = brandLockupScale(size, orientation);
 
   if (markOnly) {
-    return <BrandMark className={className} label={BRAND_WORDMARK} size={scale.mark} tone={tone} />;
+    return (
+      <BrandMark
+        className={className}
+        color={color}
+        label={BRAND_WORDMARK}
+        size={scale.mark}
+        tone={tone}
+      />
+    );
   }
 
   const stacked = orientation === "stacked";
@@ -38,13 +49,13 @@ export function BrandLockup({
     <span
       className={cn("inline-flex items-center", stacked && "flex-col justify-center", className)}
       style={{
-        color: BRAND_TONE_COLOR[tone],
+        color: color ?? BRAND_TONE_COLOR[tone],
         columnGap: stacked ? undefined : scale.gap,
         rowGap: stacked ? scale.gap : undefined,
       }}
     >
       {/* The wordmark carries the accessible name, so the mark stays decorative. */}
-      <BrandMark size={scale.mark} tone={tone} />
+      <BrandMark color={color} size={scale.mark} tone={tone} />
       <span className="font-bold leading-none tracking-[-0.045em]" style={{ fontSize: scale.type }}>
         {BRAND_WORDMARK}
       </span>

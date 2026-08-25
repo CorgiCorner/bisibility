@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { resolveProviderCredentials } from "@/lib/providers/credentials";
 import { DataForSeoError } from "@/lib/providers/serp/dataforseo-errors";
 import {
-  dataForSeoQueuedTaskTag,
+  legacyDataForSeoQueuedTaskTag,
   readyDataForSeoQueuedTasks,
 } from "@/lib/providers/serp/dataforseo-queued";
 import { finalizeQueuedBatchState } from "./queued-lifecycle";
@@ -53,7 +53,7 @@ export async function inspectQueuedRankCheckBatch(
   const batch = await prisma.queuedRankCheckBatch.findUniqueOrThrow({
     include: {
       connection: true,
-      tasks: { orderBy: { id: "asc" }, select: { id: true, state: true } },
+      tasks: { orderBy: { id: "asc" }, select: { id: true, providerTag: true, state: true } },
     },
     where: { id: batchId },
   });
@@ -65,7 +65,7 @@ export async function inspectQueuedRankCheckBatch(
     const byTag = new Map(
       batch.tasks
         .filter((task) => ["ambiguous", "submitting", "submitted"].includes(task.state))
-        .map((task) => [dataForSeoQueuedTaskTag(task.id), task.id]),
+        .map((task) => [task.providerTag ?? legacyDataForSeoQueuedTaskTag(task.id), task.id]),
     );
     if (byTag.size > 0) {
       if (!batch.connection) {

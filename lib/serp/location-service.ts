@@ -31,6 +31,8 @@ export type LegacyKeywordLocationInput = {
   country: string;
   /** Optional granular city; when absent we resolve at country level. */
   city?: string | null;
+  /** Optional SERP UI language; default language for the country may be omitted. */
+  language?: string | null;
 };
 
 export type SelectionKeywordLocationInput = {
@@ -130,14 +132,18 @@ export async function resolveKeywordLocation(
   }
 
   const cityName = input.city?.trim() || null;
+  const languageCode = input.language?.trim() || undefined;
   // Country-only: deterministic, no provider lookup, no creds required.
   if (!cityName) {
-    return resolveLocation({ countryCode }, { store: prismaLocationStore });
+    return resolveLocation({ countryCode, languageCode }, { store: prismaLocationStore });
   }
 
   const { lookup } = await lookupForProject(input.projectId);
 
-  return resolveLocation({ cityName, countryCode }, { lookup, store: prismaLocationStore });
+  return resolveLocation(
+    { cityName, countryCode, languageCode },
+    { lookup, store: prismaLocationStore },
+  );
 }
 
 export async function suggestKeywordLocations(input: SuggestKeywordLocationsInput) {

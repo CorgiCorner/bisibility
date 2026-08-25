@@ -3,7 +3,11 @@ import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { type CreateProjectFormValues, StepCreateProject } from "./StepCreateProject";
+import {
+  type CreateProjectFormValues,
+  StepCreateProject,
+  WEBSITE_MATCHING_HINT,
+} from "./StepCreateProject";
 
 const project = {
   domain: "example.com",
@@ -44,6 +48,10 @@ describe("StepCreateProject", () => {
       "placeholder",
       "https://example.com",
     );
+    expect(screen.getByLabelText("Your website")).toHaveAttribute("required");
+    expect(screen.getByLabelText("Your website")).toHaveAttribute("aria-required", "true");
+    expect(screen.getByRole("button", { name: WEBSITE_MATCHING_HINT })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Your website" })).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Project name")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Domain")).not.toBeInTheDocument();
   });
@@ -88,6 +96,23 @@ describe("StepCreateProject", () => {
     await waitFor(() => expect(screen.queryByText("Checking website...")).not.toBeInTheDocument());
     expect(screen.queryByText("stale-name")).not.toBeInTheDocument();
     expect(website).toHaveValue("second.example.com");
+  });
+
+  it("blocks continue on an empty website and focuses the field", async () => {
+    const createProjectAction = vi.fn();
+    const onComplete = vi.fn();
+    renderCreateProjectStep({
+      createProjectAction,
+      defaultValues: { website: "" },
+      onComplete,
+    });
+
+    submitProject();
+
+    expect(await screen.findByText("Enter your website.")).toBeInTheDocument();
+    expect(screen.getByLabelText("Your website")).toHaveFocus();
+    expect(createProjectAction).not.toHaveBeenCalled();
+    expect(onComplete).not.toHaveBeenCalled();
   });
 
   it("creates the project from the website input only", async () => {

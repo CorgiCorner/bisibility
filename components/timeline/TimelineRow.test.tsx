@@ -3,6 +3,32 @@ import { describe, expect, it } from "vitest";
 import { TimelineRow } from "./TimelineRow";
 
 describe("TimelineRow", () => {
+  it("uses the full row width without a leading marker column", () => {
+    render(
+      <TimelineRow
+        canDelete={false}
+        item={{
+          date: "2026-08-14",
+          icon: "rankings",
+          id: "sig_full_width",
+          meta: "Rank tracker",
+          removable: false,
+          time: "12:40",
+          tint: "green",
+          title: "Position 12 -> 8",
+        }}
+        projectId="prj_1"
+      />,
+    );
+
+    const row = document.querySelector("#signal-sig_full_width");
+
+    expect(row).toHaveAttribute("id", "signal-sig_full_width");
+    expect(row).toHaveClass("flex");
+    expect(row?.children).toHaveLength(1);
+    expect(row?.firstElementChild).toHaveClass("grid", "min-w-0", "flex-1");
+  });
+
   it("renders the keyword market delta with an accessible device icon", () => {
     render(
       <TimelineRow

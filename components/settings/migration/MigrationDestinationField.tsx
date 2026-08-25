@@ -2,15 +2,19 @@
 
 import { useId } from "react";
 import type { MigrationDirection, MigrationTokenFormApi } from "./MigrateToCloudWizard.types";
+import { MigrationReachabilityHint } from "./MigrationReachabilityHint";
 
 export function MigrationDestinationField({
+  destinationUnreachable = false,
   direction,
   form,
 }: Readonly<{
+  destinationUnreachable?: boolean;
   direction: MigrationDirection;
   form: MigrationTokenFormApi;
 }>) {
   const inputId = useId();
+  const targetOrigin = form.watch("targetOrigin") ?? "";
   const error = form.formState.errors.targetOrigin;
   const helperId = `${inputId}-helper`;
   const errorId = `${inputId}-error`;
@@ -50,6 +54,7 @@ export function MigrationDestinationField({
           {error.message}
         </span>
       ) : null}
+      <MigrationReachabilityHint targetOrigin={targetOrigin} unreachable={destinationUnreachable} />
     </div>
   );
 }

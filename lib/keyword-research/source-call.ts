@@ -75,12 +75,13 @@ export async function callResearchSource(input: {
   if (!method) throw new ProviderLookupSignal({ ok: false, reason: "no_source" });
   return paidProviderCall({
     budgetCapCents: input.budgetCapCents,
-    call: (credentials) =>
+    call: (credentials, usage) =>
       method.call(input.selected.provider, credentials, {
         includeClickstream: input.includeClickstream,
         limit: input.limit,
         location: researchProviderRankLocation(input.location),
         seed: input.seed,
+        tag: usage?.tag,
       }),
     connection: input.selected.connection,
     feature: "keyword_research",
@@ -90,5 +91,7 @@ export async function callResearchSource(input: {
     provider: input.selected.provider,
     rateContext: input.rateContext,
     rate: sourceRate(input.selected, input.source),
+    source: "app",
+    trigger: "manual",
   });
 }

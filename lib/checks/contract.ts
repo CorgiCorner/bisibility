@@ -70,6 +70,76 @@ export type CheckRunRow = {
   finishedAt: string | null;
   durationMs: number | null;
   attempts: CheckAttempt[];
+  /** Stored search results for this run. Null for runs that did not complete. */
+  storedResults: StoredResultsSummary | null;
+};
+
+/**
+ * Stored search results kept from the moment of a check.
+ *
+ * `rank_checks.raw` holds the normalized snapshot and `rank_checks.organicRanks` the
+ * compact best-position-per-domain list. The shipped raw purge nulls `raw` after the
+ * retention window and leaves `organicRanks`, so a check degrades full -> compact -> none
+ * without losing its position history.
+ */
+export type StoredResultsTier = "full" | "compact" | "none";
+
+export type StoredResultsSummary = {
+  tier: StoredResultsTier;
+  requestedDepth: number | null;
+  /** Highest rank present in the snapshot. Ranks are not guaranteed contiguous. */
+  retrievedPositions: number | null;
+  /** ISO date the full detail expires. Null when retention is unlimited or tier is not full. */
+  fullDetailUntil: string | null;
+  /** The crawl stopped once it matched the tracked domain. Null when the tier cannot say. */
+  stoppedAtResult: boolean | null;
+};
+
+export type RetrievedRow = {
+  position: number;
+  domain: string;
+  url: string | null;
+  title: string | null;
+  tracked: boolean;
+};
+
+type RetrievedResultsBase = {
+  checkId: string;
+  checkedAt: string;
+  provider: string;
+  providerLabel: string;
+};
+
+export type RetrievedResults =
+  | (RetrievedResultsBase & {
+      tier: "full";
+      requestedDepth: number | null;
+      retrievedPositions: number;
+      trackedPosition: number | null;
+      /** The crawl stopped once it matched the tracked domain, so the tail was never requested. */
+      stoppedAtResult: boolean;
+      rows: RetrievedRow[];
+      features: string[];
+      /** Null when the check's provider cannot report AI overviews at all. */
+      aiOverview: boolean | null;
+      fullDetailUntil: string | null;
+    })
+  | (RetrievedResultsBase & {
+      tier: "compact";
+      domains: Array<{ domain: string; bestPosition: number }>;
+      expiredAt: string | null;
+    })
+  | (RetrievedResultsBase & { tier: "none" });
+
+/** One row of the stored-checks picker on keyword detail. */
+export type StoredResultsIndexEntry = StoredResultsSummary & {
+  checkId: string;
+  checkedAt: string;
+  position: number | null;
+  provider: string;
+  providerLabel: string;
+  /** The check ran at country level after a provider fallback. */
+  degradedToCountry: boolean;
 };
 
 export type CheckRunsCounts = {

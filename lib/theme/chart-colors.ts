@@ -3,7 +3,7 @@
  * Keep these synced with globals.css; rendered CSS overrides still provide dark mode.
  */
 export const chartColors = {
-  accent: "#d97757",
+  accent: "#f1511c",
   green: "#3c9a63",
   greenMuted: "#7fb36b",
   yellow: "#e0a93b",
@@ -11,7 +11,7 @@ export const chartColors = {
   blue: "#4f86e8",
   blueText: "#315eac",
   red: "#c8463a",
-  border: "#bfb7a4",
+  border: "#ddd8cc",
 } as const;
 
 /**

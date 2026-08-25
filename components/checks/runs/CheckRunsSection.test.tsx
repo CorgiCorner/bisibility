@@ -59,6 +59,7 @@ describe("CheckRunsSection", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Filter by Skipped - 28" }));
     const asOfButton = screen.getByRole("button", { name: "As of: Jul 24, 2026" });
+    expect(asOfButton).toHaveStyle({ fontWeight: "400" });
     fireEvent.mouseOver(asOfButton);
     expect(
       await screen.findByText(

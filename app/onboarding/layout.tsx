@@ -1,8 +1,9 @@
 import { OnboardingLogoutButton } from "@/components/onboarding/OnboardingLogoutButton";
 import { shellUserEmail } from "@/components/shell/types";
-import { BrandLockup, ThemeSegments } from "@/components/ui";
+import { Avatar, BrandLockup, ThemeSegments } from "@/components/ui";
 import { redirectToSetupIfFirstRun } from "@/lib/auth/first-run";
 import { requireSession } from "@/lib/auth/session";
+import { gravatarUrl } from "@/lib/avatar/gravatar";
 import { initials as avatarInitials } from "@/lib/avatar/initials";
 import { createNoindexMetadata } from "@/lib/seo/noindex";
 import type { Metadata } from "next";
@@ -22,18 +23,22 @@ export default async function OnboardingLayout({ children }: Readonly<Onboarding
   const session = await requireSession();
 
   const email = shellUserEmail(session.user);
-  const initials = avatarInitials(session.user.name ?? "", session.user.email);
+  const initials = avatarInitials(session.user.name ?? "", email);
+  const avatarSrc = gravatarUrl(email, 22);
 
   return (
-    <main className="flex min-h-dvh flex-col items-center bg-bg px-4 py-[46px] pb-[120px] text-fg sm:px-6">
+    <main className="flex min-h-dvh flex-col items-center bg-bg px-4 py-[46px] text-fg sm:px-6">
       <div className="flex w-full max-w-[940px] flex-1 flex-col">
         <header className="flex flex-wrap items-center justify-between gap-3">
           <BrandLockup />
           <div className="inline-flex items-center gap-3 text-[12.5px] text-fg-muted">
             <span className="inline-flex items-center gap-1.5">
-              <span className="grid h-[22px] w-[22px] place-items-center rounded-md bg-accent-solid font-mono text-[9px] font-semibold text-primary-contrast">
-                {initials}
-              </span>
+              <Avatar
+                alt=""
+                className="h-[22px] w-[22px] rounded-md bg-accent-solid font-mono text-[9px] font-semibold text-accent-on-solid"
+                initials={initials}
+                src={avatarSrc}
+              />
               {email}
             </span>
             <span aria-hidden className="h-4 w-px bg-border-strong" />
@@ -42,10 +47,12 @@ export default async function OnboardingLayout({ children }: Readonly<Onboarding
           </div>
         </header>
         {children}
-        <footer className="mt-14 flex flex-wrap items-center justify-between gap-3 border-border border-t pt-6 font-mono text-xs text-fg-muted">
-          <span>© 2026 bisibility</span>
-          <ThemeSegments size="sm" />
-        </footer>
+        <div className="mt-auto pt-14">
+          <footer className="flex flex-wrap items-center justify-between gap-3 border-border border-t pt-6 font-mono text-xs text-fg-muted">
+            <span>© 2026 bisibility</span>
+            <ThemeSegments size="sm" />
+          </footer>
+        </div>
       </div>
     </main>
   );

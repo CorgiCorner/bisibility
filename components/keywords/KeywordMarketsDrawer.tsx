@@ -143,7 +143,7 @@ export function KeywordMarketsDrawer({
       }
       const nextId = retained?.id ?? addedIds[0];
       setPendingAddition(null);
-      showToast("Updated markets & devices", { tint: "green" });
+      showToast("Updated markets and devices", { tint: "green" });
       onClose();
       if (currentDeleted && nextId) {
         router.push(appPath(asProjectRef(projectId), "rank-tracker", nextId));
@@ -155,7 +155,7 @@ export function KeywordMarketsDrawer({
         setError("New targets were added, but old targets could not be removed. Retry to finish.");
         router.refresh();
       } else {
-        setError(actionErrorMessage(cause, "Markets & devices could not be updated."));
+        setError(actionErrorMessage(cause, "Markets and devices could not be updated."));
       }
     } finally {
       setSaving(false);
@@ -177,7 +177,7 @@ export function KeywordMarketsDrawer({
             onClick={() => void save()}
             type="button"
           >
-            Save markets & devices
+            Save markets and devices
           </Button>
         </div>
       }
@@ -185,7 +185,7 @@ export function KeywordMarketsDrawer({
       open
       title={
         <span className="block min-w-0">
-          <span className="block">Manage markets & devices</span>
+          <span className="block">Manage markets and devices</span>
           <span className="mt-1 block truncate text-[12px] font-normal text-fg-muted">
             {keyword.keyword}
           </span>

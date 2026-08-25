@@ -94,7 +94,7 @@ describe("KeywordsGridNotices", () => {
       />,
     );
     expect(screen.queryByRole("link", { name: /connect provider/i })).not.toBeInTheDocument();
-    expect(screen.getByText("No rankings yet.")).toBeInTheDocument();
+    expect(screen.getByText("No rankings yet")).toBeInTheDocument();
     expect(screen.getByText("1 keyword is ready for the first rank check.")).toBeInTheDocument();
   });
 

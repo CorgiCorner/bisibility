@@ -7,6 +7,7 @@ import { prisma } from "@/lib/db/prisma";
 import { makePublicId } from "@/lib/db/public-id";
 import { Prisma } from "@/lib/generated/prisma/client";
 import { notifyRankCheckCompleted, notifyRankCheckFailed } from "@/lib/notifications/events";
+import type { ProviderErrorCode } from "@/lib/providers/provider-error-code";
 import { DEFAULT_SERP_DEPTH } from "@/lib/serp/markets";
 import { emitSignal } from "@/lib/signals/emit";
 import { signalsForRankCheck } from "@/lib/signals/rank-check";
@@ -14,13 +15,16 @@ import { enqueueAlertDeliveries } from "@/lib/temporal/alert-delivery-client";
 import { positiveCostCents } from "./cost";
 import { RankCheckClosedBeforePersistenceError } from "./persistence-errors";
 import { writeRankCheckProviderCostEntry } from "./provider-cost-persistence";
-import type { RankCheckFailureTarget, RankCheckPersistTarget } from "./runner-persistence-types";
-import type { RankCheckRunResult } from "./runner-result";
-
-export type {
-  RankCheckFailureTarget,
+import type {
+  RankCheckFailureTarget as BaseRankCheckFailureTarget,
   RankCheckPersistTarget,
 } from "./runner-persistence-types";
+import type { RankCheckRunResult } from "./runner-result";
+
+export type { RankCheckPersistTarget } from "./runner-persistence-types";
+export type RankCheckFailureTarget = BaseRankCheckFailureTarget & {
+  errorCode?: ProviderErrorCode;
+};
 
 type RankCheckResult = RankCheckRunResult;
 export type PersistRankCheckDependencies = {
@@ -83,7 +87,9 @@ export async function persistRankCheck(
   result: RankCheckResult,
   dependencies: PersistRankCheckDependencies = defaultDependencies,
 ) {
-  const attempts = target.attempts?.length ? target.attempts : Prisma.JsonNull;
+  const attempts = target.attempts?.length
+    ? target.attempts.map(({ message, provider }) => ({ message, provider }))
+    : Prisma.JsonNull;
   const attemptSummary = deriveCheckAttemptSummary(
     attempts,
     result.rankCheck.provider,
@@ -93,6 +99,7 @@ export async function persistRankCheck(
     ...result.rankCheck,
     ...attemptSummary,
     error: null,
+    errorCode: null,
     estimatedCostCents: result.rankCheck.estimatedCostCents ?? null,
     attempts,
     finishedAt: new Date(),
@@ -130,7 +137,11 @@ export async function persistRankCheck(
         connectionId: target.connectionId,
         costCents: result.providerCostCents,
         failed: false,
+        keywordId: target.keywordId,
+        provider: result.rankCheck.provider,
+        providerRequestId: target.providerRequestId,
         projectId: target.projectId,
+        usage: target.providerUsage ?? result.providerUsage,
       });
     }
 
@@ -210,7 +221,9 @@ export async function persistFailedRankCheckInTransaction(
   target: RankCheckFailureTarget,
 ) {
   const checkedAt = target.checkedAt ?? new Date();
-  const attempts = target.attempts?.length ? target.attempts : Prisma.JsonNull;
+  const attempts = target.attempts?.length
+    ? target.attempts.map(({ message, provider }) => ({ message, provider }))
+    : Prisma.JsonNull;
   const attemptSummary = deriveCheckAttemptSummary(attempts, target.provider, "failed");
   const data = {
     ...attemptSummary,
@@ -218,6 +231,7 @@ export async function persistFailedRankCheckInTransaction(
     checkedAt,
     costCents: positiveCostCents(target.providerCostCents) || null,
     error: target.error,
+    errorCode: target.errorCode ?? null,
     estimatedCostCents: null,
     finishedAt: new Date(),
     attempts,
@@ -243,7 +257,11 @@ export async function persistFailedRankCheckInTransaction(
     connectionId: target.connectionId,
     costCents: target.providerCostCents,
     failed: true,
+    keywordId: target.keywordId,
+    provider: target.provider,
+    providerRequestId: target.providerRequestId,
     projectId: target.projectId,
+    usage: target.providerUsage,
   });
 
   await writeRankCheckAudit(tx, {
@@ -273,7 +291,7 @@ export async function persistFailedRankCheck(target: RankCheckFailureTarget) {
   const checkedAt = target.checkedAt ?? rankCheck.checkedAt;
   if (target.projectId && target.keywordPublicId && target.keywordText && target.projectDomain) {
     await notifyRankCheckFailed({
-      code: "provider_failed",
+      code: target.errorCode ?? "provider_transient",
       failedAt: checkedAt,
       keywordId: target.keywordId,
       keywordPublicId: target.keywordPublicId,
@@ -281,6 +299,7 @@ export async function persistFailedRankCheck(target: RankCheckFailureTarget) {
       message: target.error,
       projectDomain: target.projectDomain,
       projectId: target.projectId,
+      rankCheckId: requiredPublicAuditId(rankCheck.publicId, "check", "Rank-check"),
     }).catch(() => undefined);
   }
 

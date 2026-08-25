@@ -3,6 +3,7 @@ import { checkRunRowsWhere, getCheckRunsView } from "./check-runs-view";
 
 const mocks = vi.hoisted(() => ({
   getRequestSerpProviderChain: vi.fn(),
+  storedResultsSummaries: vi.fn(async () => new Map()),
   prisma: {
     $queryRaw: vi.fn(),
     keyword: {
@@ -19,6 +20,9 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
+vi.mock("@/lib/queries/retrieved-results", () => ({
+  storedResultsSummaries: mocks.storedResultsSummaries,
+}));
 vi.mock("./_auth", () => ({ requireReadableProject: mocks.requireReadableProject }));
 vi.mock("./workspace-request-data", () => ({
   getRequestSerpProviderChain: mocks.getRequestSerpProviderChain,
@@ -242,5 +246,31 @@ describe("check runs view query", () => {
     ]);
     const distinct = new Set(pairs.map((p) => `${p.location}|${p.device}`));
     expect(distinct.size).toBe(4);
+  });
+
+  it("attaches stored-results summaries so a completed run can expand", async () => {
+    // Without this the checks table can never expand a completed run: storedResults would
+    // be undefined on every row and the whole surface would be unreachable in production.
+    mocks.storedResultsSummaries.mockResolvedValue(
+      new Map([
+        [
+          "check_1",
+          {
+            fullDetailUntil: null,
+            requestedDepth: 100,
+            retrievedPositions: 22,
+            stoppedAtResult: true,
+            tier: "full" as const,
+          },
+        ],
+      ]),
+    );
+
+    const view = await getCheckRunsView("prj_1", {});
+
+    expect(view.rows[0]?.storedResults?.tier).toBe("full");
+    expect(mocks.storedResultsSummaries).toHaveBeenCalledWith(
+      expect.objectContaining({ projectId: "project_1" }),
+    );
   });
 });

@@ -5,6 +5,7 @@ import {
 } from "@/lib/keywords/import-csv-template";
 import {
   ArrowRightIcon as ArrowRight,
+  CheckIcon as Check,
   CheckCircleIcon as CheckCircle,
   CloudArrowUpIcon as CloudArrowUp,
   DownloadSimpleIcon as DownloadSimple,
@@ -36,22 +37,27 @@ export function ImportStepper({ step }: Readonly<{ step: number }>) {
     <div className="mt-4.5 flex items-center">
       {steps.map((label, index) => {
         const number = index + 1;
-        const active = number <= step;
+        const current = number === step;
+        const completed = number < step;
         return (
           <div className="flex min-w-0 flex-1 items-center" key={label}>
             <span className="flex w-[54px] shrink-0 flex-col items-center gap-1.5">
               <span
                 className="grid h-[26px] w-[26px] place-items-center rounded-full border-[1.5px] font-mono text-[11px] font-semibold"
                 style={{
-                  backgroundColor: active ? "var(--accent)" : "var(--bg-sunken)",
-                  borderColor: number === step ? "var(--accent)" : "transparent",
-                  color: active ? "#fff" : "var(--fg-muted)",
+                  backgroundColor: current
+                    ? "var(--accent)"
+                    : completed
+                      ? "var(--accent-soft)"
+                      : "var(--bg-sunken)",
+                  borderColor: current ? "var(--accent)" : "transparent",
+                  color: current ? "#fff" : completed ? "var(--accent)" : "var(--fg-muted)",
                 }}
               >
-                {number}
+                {completed ? <Check aria-hidden size={15} weight="bold" /> : number}
               </span>
               <span
-                className="whitespace-nowrap text-[10px] font-semibold"
+                className="whitespace-nowrap text-[10px] font-normal"
                 style={{ color: number === step ? "var(--fg)" : "var(--fg-muted)" }}
               >
                 {label}
@@ -125,7 +131,7 @@ export function UploadStep() {
         CSV or XLSX. CSV must be UTF-8 and cannot contain replacement characters (�).
       </p>
       <div className="mt-4 flex flex-col items-center gap-2.5 rounded-[13px] border border-dashed border-border-strong bg-bg px-6 py-[38px] text-center">
-        <span className="grid h-[46px] w-[46px] place-items-center rounded-xl bg-accent-soft text-accent-text">
+        <span className="grid h-[46px] w-[46px] place-items-center rounded-xl bg-accent-soft text-accent-solid">
           <CloudArrowUp size={24} weight="bold" />
         </span>
         <div className="text-[13.5px] font-semibold">Drag and drop your CSV here</div>

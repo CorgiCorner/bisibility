@@ -1,6 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
+import { createProviderUsage } from "@/lib/provider-usage/tag";
 import { resolveProviderCredentials } from "@/lib/providers/credentials";
 import { consumeProviderLimit, writeCooldown } from "@/lib/providers/rate-limit";
 import { DataForSeoError } from "@/lib/providers/serp/dataforseo-errors";
@@ -71,16 +72,27 @@ async function claimSubmission(batchId: string) {
   });
 }
 
-function providerTasks(batch: Awaited<ReturnType<typeof claimSubmission>>["batch"]) {
-  return batch.tasks.map((task) => ({
-    correlationId: task.id,
-    depth: resolveSerpDepth(task.rankCheck.requestedDepth ?? undefined),
-    device: task.keyword.device as SerpDevice,
-    domain: trackedProjectDomain(batch.project.domain) ?? "",
-    keyword: task.keyword.text,
-    location: serpRankLocation(task.keyword.locationRef),
-    stopOnMatch: resolveSerpStopOnMatch(batch.project.defaults?.serpStopOnMatch),
-  }));
+async function providerTasks(batch: Awaited<ReturnType<typeof claimSubmission>>["batch"]) {
+  return Promise.all(
+    batch.tasks.map(async (task) => ({
+      correlationId: task.id,
+      depth: resolveSerpDepth(task.rankCheck.requestedDepth ?? undefined),
+      device: task.keyword.device as SerpDevice,
+      domain: trackedProjectDomain(batch.project.domain) ?? "",
+      keyword: task.keyword.text,
+      location: serpRankLocation(task.keyword.locationRef),
+      stopOnMatch: resolveSerpStopOnMatch(batch.project.defaults?.serpStopOnMatch),
+      tag: (
+        await createProviderUsage({
+          correlationId: task.id,
+          feature: "rank_check",
+          projectId: batch.projectId,
+          source: "worker",
+          trigger: "scheduled",
+        })
+      ).tag,
+    })),
+  );
 }
 
 async function markDefiniteFailure(batchId: string, message: string) {
@@ -152,10 +164,22 @@ export async function submitQueuedRankCheckBatch(batchId: string) {
   }
 
   try {
+    const tasks = await providerTasks(claimed.batch);
+    await prisma.$transaction(async (tx) => {
+      for (const task of tasks) {
+        const persisted = await tx.queuedRankCheckTask.updateMany({
+          data: { providerTag: task.tag },
+          where: { id: task.correlationId, state: "submitting" },
+        });
+        if (persisted.count !== 1) {
+          throw new Error("Queued rank-check task was no longer ready for provider submission.");
+        }
+      }
+    });
     const result = await submitDataForSeoQueuedTasks({
       credentials,
       priority: claimed.batch.priority === "normal" ? "normal" : "high",
-      tasks: providerTasks(claimed.batch),
+      tasks,
     });
     await prisma.$transaction(async (tx) => {
       for (const task of result.accepted) {
@@ -164,6 +188,7 @@ export async function submitQueuedRankCheckBatch(batchId: string) {
             costCents: task.costCents,
             error: null,
             providerTaskId: task.providerTaskId,
+            providerTag: task.tag,
             state: "submitted",
           },
           where: { id: task.correlationId, state: "submitting" },

@@ -1,7 +1,7 @@
 "use client";
 
-import { KeywordDetailFreeActionButton } from "@/components/keyword-detail/shared";
-import { useToast } from "@/components/ui";
+import { AccentCtaLink } from "@/components/ui";
+import { formatEstimateCents, runCostCents } from "@/lib/cost-estimate/project-estimate";
 import type {
   KeywordDetailKeywordContext,
   KeywordDetailRankState,
@@ -10,7 +10,6 @@ import type {
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
-import { isBudgetExhaustedResult } from "@/lib/rank-check/budget-contract";
 import type { ProjectRef } from "@/lib/routing/app-path";
 import type {
   AddKeywordsInput,
@@ -18,23 +17,19 @@ import type {
   BulkKeywordIdsInput,
 } from "@/lib/schemas/keyword";
 import type { SerpDepth } from "@/lib/serp/markets";
-import { CaretRightIcon as CaretRight, SpinnerGapIcon as SpinnerGap } from "@phosphor-icons/react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import {
-  actionErrorMessage,
-  type CreateKeywordAlertInput,
-  type KeywordAction,
-  type KeywordDetailActions,
-} from "./action-utils";
+import type { KeywordAction, KeywordDetailActions } from "./action-utils";
 import { KeywordDetailHeaderChrome } from "./KeywordDetailHeaderChrome";
+import { KeywordFirstCheckModal } from "./KeywordFirstCheckModal";
 import { KeywordHeaderActions } from "./KeywordHeaderActions";
 import { KeywordMarketSwitcher } from "./KeywordMarketSwitcher";
 import { KeywordMarketsDrawer } from "./KeywordMarketsDrawer";
 import { emptyRankCopy } from "./KeywordPendingEmptyState";
 import { KeywordPendingModules } from "./KeywordPendingModules";
 import { exportHistoryCsv } from "./keyword-history-export";
+import { useFirstCheckFlow } from "./use-first-check-flow";
+import type { RankCheckPollAction } from "./use-rank-check-poll";
 
 type KeywordPendingDetailProps = KeywordDetailActions & {
   addKeywordsAction?: KeywordAction<AddKeywordsInput>;
@@ -45,6 +40,7 @@ type KeywordPendingDetailProps = KeywordDetailActions & {
   costContext?: ProjectCostContext;
   keyword: KeywordRow;
   keywordContext?: KeywordDetailKeywordContext;
+  pollAction?: RankCheckPollAction;
   providerConnected: boolean;
   projectId: string;
   projectMarkets?: ProjectMarketsView;
@@ -54,6 +50,15 @@ type KeywordPendingDetailProps = KeywordDetailActions & {
   whatChanged?: KeywordDetailWhatChanged;
 };
 
+function checkCostLabel(depth: SerpDepth, costContext?: ProjectCostContext) {
+  if (!costContext) return null;
+  const costCents = runCostCents([depth], {
+    overrideCents: costContext.costPerCheckCents,
+    providerId: costContext.providerId,
+  });
+  return costCents == null ? null : `~${formatEstimateCents(costCents)}`;
+}
+
 export function KeywordPendingDetail({
   addKeywordsAction,
   addKeywordsMatrixAction,
@@ -61,23 +66,35 @@ export function KeywordPendingDetail({
   canCreateKeyword = false,
   canUpdateKeyword,
   costContext,
-  createKeywordAlertAction,
   keyword,
   keywordContext,
+  pollAction,
+  providerConnected,
   projectId,
   projectMarkets,
   projectRef,
-  providerConnected,
   rankState,
   runCheckNowAction,
   targets = [keyword],
   whatChanged,
 }: Readonly<KeywordPendingDetailProps>) {
   const router = useRouter();
-  const { showToast } = useToast();
-  const [alertStatus, setAlertStatus] = useState<"created" | "creating" | "idle">("idle");
   const [editing, setEditing] = useState(false);
-  const [runPending, setRunPending] = useState(false);
+  const {
+    closeCheckModal,
+    confirmRun,
+    confirming,
+    continueFromSuccess,
+    modal,
+    modalOpen,
+    openCheckModal,
+    tryAgain,
+  } = useFirstCheckFlow({
+    keywordId: keyword.id,
+    pollAction,
+    refresh: () => router.refresh(),
+    runCheckNowAction,
+  });
   const checkState =
     keyword.checkState ??
     (keyword.hasRankData
@@ -89,82 +106,36 @@ export function KeywordPendingDetail({
           : "never_checked");
   const state = rankState ?? (checkState === "ranked" ? "not_ranked" : checkState);
   const copy = emptyRankCopy(state, projectRef, keyword.trackedDepth, providerConnected);
+  const actionCopy = emptyRankCopy(
+    state === "running" ? "never_checked" : state,
+    projectRef,
+    keyword.trackedDepth,
+    providerConnected,
+  );
   const defaultDepth: SerpDepth =
     state === "not_ranked" ? 100 : keyword.trackedDepth === 100 ? 100 : 20;
-  const alertCreated = alertStatus === "created";
-  const alertCreating = alertStatus === "creating";
-  const canRunCheck = state !== "running" && providerConnected;
+  const canRunCheck = providerConnected;
   const providerRate = costContext
     ? { overrideCents: costContext.costPerCheckCents, providerId: costContext.providerId }
     : undefined;
-  const linkLabel = typeof copy.link === "function" ? copy.link(defaultDepth) : copy.link;
-
-  async function createAlert() {
-    if (!createKeywordAlertAction || alertCreated || alertCreating) return;
-    setAlertStatus("creating");
-    try {
-      await createKeywordAlertAction({
-        keywordId: keyword.id,
-        projectId,
-      } satisfies CreateKeywordAlertInput);
-      setAlertStatus("created");
-      showToast("Alert created", { tint: "green" });
-      router.refresh();
-    } catch (error) {
-      setAlertStatus("idle");
-      showToast(actionErrorMessage(error), { tint: "red" });
-    }
-  }
-
-  async function runCheck(depth: SerpDepth) {
-    setRunPending(true);
-    try {
-      const result = await runCheckNowAction({ depth, keywordId: keyword.id });
-      if (isBudgetExhaustedResult(result)) {
-        showToast(result.message, { tint: "red" });
-        return;
-      }
-      showToast("Check started", { tint: "green" });
-      router.refresh();
-    } catch (error) {
-      showToast(actionErrorMessage(error), { tint: "red" });
-    } finally {
-      setRunPending(false);
-    }
-  }
+  const linkLabel =
+    typeof actionCopy.link === "function" ? actionCopy.link(defaultDepth) : actionCopy.link;
 
   const sharedActions = {
-    alertCreated,
-    alertCreating,
-    canCreateAlert: Boolean(createKeywordAlertAction),
     canUpdateKeyword,
     editing,
     effectiveDepth: defaultDepth,
-    onCreateAlert: () => void createAlert(),
     onExport: () => exportHistoryCsv(keyword),
-    onRunCheck: (depth: SerpDepth) => void runCheck(depth),
+    onRunCheck: (depth: SerpDepth) => openCheckModal(depth),
     onToggleEdit: () => setEditing((value) => !value),
     providerRate,
-    runPending,
+    runPending: false,
   };
   const actions = canRunCheck ? (
-    <KeywordHeaderActions {...sharedActions} primaryLabel={copy.link} />
+    <KeywordHeaderActions {...sharedActions} primaryLabel={actionCopy.link} />
   ) : (
     <div className="flex flex-wrap justify-end gap-2">
-      {state === "running" ? (
-        <KeywordDetailFreeActionButton onClick={() => router.refresh()}>
-          <SpinnerGap aria-hidden className="bv-spin" size={15} weight="bold" />
-          Refresh
-        </KeywordDetailFreeActionButton>
-      ) : (
-        <Link
-          className="inline-flex items-center gap-[7px] rounded-[10px] bg-accent-solid px-4 py-2.5 text-[13px] font-semibold text-[color:var(--accent-on-solid)] hover:bg-accent-solid-hover"
-          href={copy.href}
-        >
-          {linkLabel}
-          <CaretRight size={14} weight="bold" />
-        </Link>
-      )}
+      <AccentCtaLink href={copy.href}>{linkLabel}</AccentCtaLink>
       <KeywordHeaderActions {...sharedActions} showCheck={false} />
     </div>
   );
@@ -214,6 +185,25 @@ export function KeywordPendingDetail({
         state={state}
         whatChanged={whatChanged}
       />
+      {modal ? (
+        <KeywordFirstCheckModal
+          confirmError={modal.error}
+          confirming={confirming}
+          costLabel={checkCostLabel(modal.depth, costContext)}
+          depth={modal.depth}
+          errorCode={modal.errorCode}
+          onClose={closeCheckModal}
+          onConfirm={() => void confirmRun()}
+          onContinue={continueFromSuccess}
+          onTryAgain={tryAgain}
+          open={modalOpen}
+          position={modal.position}
+          projectRef={projectRef}
+          rankCheckId={modal.rankCheckId}
+          requestedDepth={modal.requestedDepth}
+          step={modal.step}
+        />
+      ) : null}
     </>
   );
 }

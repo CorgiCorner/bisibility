@@ -48,7 +48,11 @@ import { convergeRankCheckSchedulerSingletons } from "./rank-check-scheduler-con
 import { ensureRankCheckSearchAttributes } from "./search-attribute-bootstrap";
 import { probeTemporalTransport } from "./transport-probe";
 import { maxConcurrentActivities } from "./worker-config";
-import { decideWorkerSchemaGuard, workerSchemaGuardMode } from "./worker-schema-guard";
+import {
+  decideWorkerSchemaGuard,
+  workerSchemaDriftDedupeKey,
+  workerSchemaGuardMode,
+} from "./worker-schema-guard";
 import { runWorkerStartupStage } from "./worker-startup-retry";
 
 // Worker uses the TS transform and resolve hook because parameter properties reject strip-only mode:
@@ -107,6 +111,12 @@ async function enforceWorkerSchemaGuard() {
 
   if (decision.notify) {
     await notifyOps({
+      dedupeKey: workerSchemaDriftDedupeKey({
+        appliedLatest: applied.latest,
+        bundledLatest: bundled.latest,
+        comparison,
+        release,
+      }),
       fields: {
         "Applied migration": applied.latest ?? "unknown",
         "Bundled migration": bundled.latest ?? "unknown",

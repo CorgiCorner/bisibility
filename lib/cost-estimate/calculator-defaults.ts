@@ -33,8 +33,8 @@ export type CalculatorDefaults = {
 
 export const ANONYMOUS_CALCULATOR_DEFAULTS: CalculatorDefaults = {
   inputs: {
-    depth: 100,
-    keywordCount: 50,
+    depth: 20,
+    keywordCount: 100,
     locationCount: 1,
     devices: "desktop",
     frequency: "daily",

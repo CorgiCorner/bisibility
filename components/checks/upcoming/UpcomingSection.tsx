@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, EmptyState, MonoText, SectionTitle } from "@/components/ui";
+import { Card, EmptyState, iconWellClassName, MonoText, SectionTitle } from "@/components/ui";
 import type { UpcomingView } from "@/lib/checks/contract";
 import {
   CalendarBlankIcon as CalendarBlank,
@@ -71,7 +71,9 @@ function EmptyUpcoming({
 function UpcomingHeader() {
   return (
     <div className="flex items-start gap-3 border-border border-b px-4 py-3.5">
-      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[10px] bg-bg-sunken text-accent-text">
+      <span
+        className={`grid h-9 w-9 shrink-0 place-items-center rounded-[10px] ${iconWellClassName}`}
+      >
         <CalendarCheck aria-hidden size={17} weight="fill" />
       </span>
       <div className="min-w-0">

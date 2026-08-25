@@ -193,6 +193,15 @@ describe("Tooltip description semantics", () => {
     expect(t).not.toHaveAttribute("aria-label");
   });
 
+  it("keeps description extras inside the trigger wrap", () => {
+    const t = renderSingle("More", "description");
+    const wrap = t.closest(".inline-flex");
+    const desc = document.getElementById(t.getAttribute("aria-describedby") ?? "");
+    expect(wrap).not.toBeNull();
+    expect(desc).not.toBeNull();
+    expect(wrap).toContainElement(desc);
+  });
+
   it("merges an existing description id", () => {
     render(
       <TooltipProvider>

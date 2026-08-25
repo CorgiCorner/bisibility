@@ -14,6 +14,12 @@ describe("AddKeywordCsvPanel", () => {
       />,
     );
     expect(screen.getByText("1 keyword parsed")).toBeInTheDocument();
+    expect(
+      screen.getByText("keyword, target_url, tags, country, language, device"),
+    ).toBeInTheDocument();
+    const icon = container.querySelector("svg");
+    expect(icon).toHaveClass("text-accent-solid");
+    expect(icon).not.toHaveClass("text-accent-text");
     fireEvent.change(screen.getByLabelText("Paste CSV"), { target: { value: "next" } });
     const file = new File(["keyword\nrank tracker"], "keywords.csv", { type: "text/csv" });
     Object.defineProperty(file, "text", { value: vi.fn(async () => "keyword\nrank tracker") });

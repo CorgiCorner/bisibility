@@ -8,6 +8,7 @@ import {
 } from "@/lib/checks/runs-view";
 import { prisma } from "@/lib/db/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
+import { storedResultsSummaries } from "@/lib/queries/retrieved-results";
 import { requireReadableProject } from "./_auth";
 import { loadCheckRunsSummary } from "./check-runs-stats";
 import { getRequestSerpProviderChain } from "./workspace-request-data";
@@ -108,7 +109,18 @@ export async function getCheckRunsView(projectId: string, options: CheckRunsView
     }),
   ]);
 
-  return buildCheckRunsView(rows, summary, { limit, staleCount });
+  const view = buildCheckRunsView(rows, summary, { limit, staleCount });
+  // Without this the checks table can never expand a completed run: storedResults would
+  // stay undefined on every row and the whole surface would be unreachable in production.
+  const stored = await storedResultsSummaries({
+    checkIds: view.rows.map((row) => row.id),
+    projectId: project.id,
+  });
+
+  return {
+    ...view,
+    rows: view.rows.map((row) => ({ ...row, storedResults: stored.get(row.id) ?? null })),
+  };
 }
 
 export type { CheckRunsViewOptions };

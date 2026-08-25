@@ -1,7 +1,7 @@
 "use client";
 
 import { MarketCombobox, type MarketComboboxOption } from "@/components/markets/MarketCombobox";
-import { Button, Card, Kbd } from "@/components/ui";
+import { Button, Card, Kbd, pricingTriggerClassName } from "@/components/ui";
 import { formatEstimateCents } from "@/lib/cost-estimate/project-estimate";
 import {
   DOMAIN_OVERVIEW_UNAVAILABLE_TOOLTIP,
@@ -186,7 +186,7 @@ export function DomainOverviewAnalyzeCard({
           )}
           <div className="ml-auto flex items-center gap-4">
             <button
-              className="whitespace-nowrap text-[12.5px] text-fg-muted underline decoration-border-strong underline-offset-4 hover:text-fg"
+              className={pricingTriggerClassName}
               onClick={(event) => setPricingAnchor(event.currentTarget)}
               type="button"
             >

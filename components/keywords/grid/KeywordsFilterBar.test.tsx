@@ -34,7 +34,7 @@ describe("KeywordsFilterBar", () => {
       "border-border-strong",
       "bg-transparent",
       "text-[12.5px]",
-      "font-medium",
+      "font-normal",
     );
   });
 
@@ -59,6 +59,21 @@ describe("KeywordsFilterBar", () => {
     const { container } = render(<KeywordsFilterBar {...baseProps} />);
 
     expect(container.querySelector("[data-keywords-toolbar-context]")).not.toBeInTheDocument();
+  });
+
+  it("keeps scope, grouping, and saved views in one flex row from sm", () => {
+    const { container } = render(
+      <KeywordsFilterBar
+        {...baseProps}
+        groupingControl={<span>Grouped</span>}
+        savedViewControl={<span>All keywords</span>}
+        scopeControl={<span>All locations</span>}
+      />,
+    );
+
+    const row = container.querySelector("[data-keywords-toolbar-context]");
+    expect(row).toHaveClass("flex", "sm:flex-row", "sm:flex-nowrap", "sm:items-center");
+    expect(row).not.toHaveClass("contents");
   });
 
   it("applies the wider xl search grid template (min 320px)", () => {

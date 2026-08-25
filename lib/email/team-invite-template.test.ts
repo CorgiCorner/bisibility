@@ -12,7 +12,7 @@ describe("teamInviteEmail", () => {
     });
 
     expect(html).toContain(
-      `<body style="margin:0;padding:0;background:#F2EEE4;color:#1A1813;font-family:system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;">`,
+      `<body style="margin:0;padding:0;background:#FCF7ED;color:#1A1813;font-family:system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;">`,
     );
   });
 });

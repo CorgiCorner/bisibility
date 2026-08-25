@@ -12,7 +12,7 @@ const markdownSkipPrefixes = [
   "/sitemap.xml",
 ];
 
-const markdownPaths = new Set(["/", "/roadmap", "/changelog", "/privacy", "/security", "/terms"]);
+const markdownPaths = new Set(["/", "/roadmap", "/privacy", "/security", "/terms"]);
 const binaryOrTextAsset = /\.[a-z0-9]{2,5}$/i;
 
 function qValue(part: string) {

@@ -29,5 +29,13 @@ export const Default: Story = {
     onImportCsv: () => undefined,
     onImportQueries: () => undefined,
     projectId: "prj_7Kd2Qf9m",
+    searchConsoleConnected: true,
+  },
+};
+
+export const SearchConsoleDisconnected: Story = {
+  args: {
+    ...Default.args,
+    searchConsoleConnected: false,
   },
 };

@@ -44,7 +44,7 @@ export function MenuSelectOptionItem({
       <span className="flex min-w-0 items-center gap-2.5">
         {option.icon ? <span className="flex shrink-0 text-fg-muted">{option.icon}</span> : null}
         <span className="min-w-0">
-          <span className={current ? "block font-semibold text-fg" : "block"}>{option.label}</span>
+          <span className={current ? "block text-fg" : "block"}>{option.label}</span>
           {option.secondary ? (
             <span className="block font-mono text-[11px] text-fg-muted">{option.secondary}</span>
           ) : null}

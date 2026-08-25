@@ -9,13 +9,10 @@ import {
 // so the shared lockup cannot be reused directly: the colours are literals from
 // app/globals.css (light theme) and every box is an explicit flex style.
 const MARK_COLOR = "#1a1813";
-const TAGLINE_COLOR = "#6b6657";
 
 const SCALE = brandLockupScale("hero", "horizontal");
 
-export const OG_TAGLINE = "SEO observability for developers";
-
-/** The hero lockup plus the product tagline, as both Open Graph images draw it. */
+/** The hero mark and wordmark, as both Open Graph images draw it. */
 export function OpenGraphBrandLockup() {
   return (
     <div style={{ alignItems: "center", display: "flex", gap: `${SCALE.gap}px` }}>
@@ -28,11 +25,8 @@ export function OpenGraphBrandLockup() {
       >
         <path d={brandMarkPath(SCALE.mark)} fill={MARK_COLOR} fillRule="evenodd" />
       </svg>
-      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-        <div style={{ fontSize: SCALE.type, fontWeight: 800, letterSpacing: 0 }}>
-          {BRAND_WORDMARK}
-        </div>
-        <div style={{ color: TAGLINE_COLOR, fontSize: 24 }}>{OG_TAGLINE}</div>
+      <div style={{ fontSize: SCALE.type, fontWeight: 800, letterSpacing: 0 }}>
+        {BRAND_WORDMARK}
       </div>
     </div>
   );

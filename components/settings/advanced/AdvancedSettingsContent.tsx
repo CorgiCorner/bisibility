@@ -1,6 +1,5 @@
 "use client";
 
-import { AdvancedCardFrame } from "@/components/settings/advanced/AdvancedCardFrame";
 import {
   type BackupExportAction,
   BackupExportCard,
@@ -9,17 +8,11 @@ import {
   type DeleteProjectAction,
   DeleteProjectCard,
 } from "@/components/settings/advanced/DeleteProjectCard";
-import {
-  HostedMoveCard,
-  type RollbackHostedMigrationAction,
-  type StartHostedMigrationAction,
-} from "@/components/settings/advanced/HostedMoveCard";
 import { RecentAuditCard } from "@/components/settings/advanced/RecentAuditCard";
 import {
   type ProjectMigrationAction,
   SelfHostMigrationCard,
 } from "@/components/settings/advanced/SelfHostMigrationCard";
-import type { SelfHostMigrationState } from "@/lib/deployment/project-write-mode";
 import type { AuditEntry } from "@/lib/queries/audit";
 
 type AdvancedProject = {
@@ -37,8 +30,6 @@ export type AdvancedSettingsActions = {
   markProjectMigrated?: ProjectMigrationAction;
   reactivateProject?: ProjectMigrationAction;
   releaseMigrationHold?: ProjectMigrationAction;
-  rollbackHostedMigration?: RollbackHostedMigrationAction;
-  startHostedMigration?: StartHostedMigrationAction;
 };
 
 export type AdvancedSettingsContentProps = {
@@ -48,7 +39,6 @@ export type AdvancedSettingsContentProps = {
   canManageMigration: boolean;
   defaultMigrationTargetOrigin?: string;
   deployment: "cloud" | "self-host";
-  migration: SelfHostMigrationState | null;
   project: AdvancedProject;
 };
 
@@ -59,7 +49,6 @@ export function AdvancedSettingsContent({
   canManageMigration,
   defaultMigrationTargetOrigin = "",
   deployment,
-  migration,
   project,
 }: Readonly<AdvancedSettingsContentProps>) {
   return (
@@ -68,26 +57,7 @@ export function AdvancedSettingsContent({
         <RecentAuditCard entries={auditEntries} projectId={project.projectId} />
       ) : null}
       {deployment === "cloud" ? (
-        <>
-          <BackupExportCard exportBackup={actions.exportBackup} projectId={project.projectId} />
-          {migration ? (
-            <HostedMoveCard
-              canManage={canManageMigration}
-              migration={migration}
-              projectId={project.projectId}
-              rollbackHostedMigration={actions.rollbackHostedMigration}
-              startHostedMigration={actions.startHostedMigration}
-            />
-          ) : (
-            <AdvancedCardFrame
-              description="The hosted migration state could not be loaded. Reload the page before starting a move."
-              id="hosted-move-unavailable"
-              title="Move to self-host"
-            >
-              <p className="m-0 text-[12.5px] text-fg-muted">Migration controls are unavailable.</p>
-            </AdvancedCardFrame>
-          )}
-        </>
+        <BackupExportCard exportBackup={actions.exportBackup} projectId={project.projectId} />
       ) : (
         <SelfHostMigrationCard
           actions={actions}

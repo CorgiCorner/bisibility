@@ -3,8 +3,12 @@ import { keywordRows } from "@/components/keywords/keywords-fixtures";
 import { ToastProvider } from "@/components/ui";
 import type { KeywordCheckState } from "@/lib/queries/keyword-row-types";
 import type { KeywordRow } from "@/lib/queries/keywords";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("@/lib/actions/rank-check-status", () => ({ getRankCheckStatus: vi.fn() }));
+
+const CHECK_ID = "check_abcdefghijklmnopqrstuvwx";
 
 function keyword(state: Exclude<KeywordCheckState, "ranked">): KeywordRow {
   return {
@@ -20,17 +24,48 @@ function keyword(state: Exclude<KeywordCheckState, "ranked">): KeywordRow {
   };
 }
 
+function completedPollResult(position = 12, requestedDepth = 100) {
+  return {
+    errorCode: null,
+    error: null,
+    finishedAt: "2026-08-21T12:00:00.000Z",
+    position,
+    requestedDepth,
+    status: "completed" as const,
+  };
+}
+
+function failedPollResult(errorCode = "provider_billing") {
+  return {
+    errorCode,
+    error: "fail",
+    finishedAt: "2026-08-21T12:00:00.000Z",
+    position: null,
+    requestedDepth: null,
+    status: "failed" as const,
+  };
+}
+
 function renderDetail(
   state: Exclude<KeywordCheckState, "ranked">,
   overrides: Partial<Parameters<typeof KeywordPendingDetail>[0]> = {},
 ) {
-  const runCheckNowAction = vi.fn(async () => undefined);
+  const runCheckNowAction = vi.fn(async () => ({ rankCheckId: CHECK_ID, status: "running" }));
+  const pollAction = vi.fn(async () => ({
+    errorCode: null,
+    error: null,
+    finishedAt: null,
+    position: null,
+    requestedDepth: null,
+    status: "running",
+  }));
   render(
     <ToastProvider>
       <KeywordPendingDetail
         canUpdateKeyword
         createKeywordAlertAction={vi.fn(async () => undefined)}
         keyword={keyword(state)}
+        pollAction={pollAction}
         projectId="prj_1"
         projectRef="prj_1"
         providerConnected
@@ -41,7 +76,19 @@ function renderDetail(
       />
     </ToastProvider>,
   );
-  return runCheckNowAction;
+  return { pollAction, runCheckNowAction };
+}
+
+async function flushMicrotasks() {
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(0);
+  });
+}
+
+async function advanceAndFlush(ms: number) {
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(ms);
+  });
 }
 
 describe("KeywordPendingDetail", () => {
@@ -49,11 +96,13 @@ describe("KeywordPendingDetail", () => {
 
   beforeEach(() => {
     process.env.TZ = "UTC";
+    vi.useFakeTimers();
   });
 
   afterEach(() => {
     if (originalTZ === undefined) delete process.env.TZ;
     else process.env.TZ = originalTZ;
+    vi.useRealTimers();
   });
 
   it.each([
@@ -87,6 +136,7 @@ describe("KeywordPendingDetail", () => {
           canUpdateKeyword
           createKeywordAlertAction={vi.fn(async () => undefined)}
           keyword={keyword(state)}
+          pollAction={vi.fn()}
           projectId="prj_1"
           projectRef="prj_1"
           providerConnected
@@ -99,7 +149,7 @@ describe("KeywordPendingDetail", () => {
       expect(screen.getByLabelText("Keyword check metadata")).toHaveTextContent(
         "Target /preferred",
       );
-      expect(screen.getByText(position)).toBeInTheDocument();
+      expect(screen.getAllByText(position).length).toBeGreaterThan(0);
       expect(screen.getAllByText(body)).not.toHaveLength(0);
       expect(screen.getByText(title)).toBeInTheDocument();
       expect(container.querySelector(`.${color}`)).toBeInTheDocument();
@@ -127,15 +177,34 @@ describe("KeywordPendingDetail", () => {
       expect(screen.getAllByRole("heading", { name: "Position history" })).toHaveLength(1);
       expect(screen.getAllByText(title)).toHaveLength(1);
       expect(screen.getAllByText(body)).toHaveLength(1);
-      expect(screen.getByText(title).closest(".bg-bg-sunken")).toHaveTextContent(body);
+      expect(screen.getByText(title).closest(".min-h-\\[176px\\]")).toHaveTextContent(body);
+      expect(screen.getByText(title).closest(".bg-bg-sunken")).toBeNull();
     },
   );
+
+  it.each([
+    ["never_checked", "No ranking data yet", "bg-accent-soft", "text-accent-solid"],
+    ["not_ranked", "Not ranked in the top 20", "bg-accent-soft", "text-yellow-text"],
+    ["failed", "No position from the latest check", "bg-accent-soft", "text-red-text"],
+    ["running", "Rank check in progress", "bg-accent-soft", "text-blue-text"],
+  ] as const)("puts the %s history glyph on the icon-well token", (state, title, fill, ink) => {
+    renderDetail(state);
+    const well = screen.getByText(title).previousElementSibling;
+    expect(well).toHaveClass(fill, ink);
+    expect(well).not.toHaveClass("bg-bg-sunken");
+  });
+
+  it("keeps context chips on the quiet-chip sunken token", () => {
+    renderDetail("never_checked");
+    expect(screen.getByText("CPC").parentElement).toHaveClass("bg-bg-sunken");
+  });
 
   it("keeps what changed independent from rank state", () => {
     const { rerender } = render(
       <KeywordPendingDetail
         canUpdateKeyword
         keyword={keyword("failed")}
+        pollAction={vi.fn()}
         projectId="prj_1"
         projectRef="prj_1"
         providerConnected
@@ -153,6 +222,7 @@ describe("KeywordPendingDetail", () => {
       <KeywordPendingDetail
         canUpdateKeyword
         keyword={keyword("failed")}
+        pollAction={vi.fn()}
         projectId="prj_1"
         projectRef="prj_1"
         providerConnected
@@ -188,6 +258,7 @@ describe("KeywordPendingDetail", () => {
             },
           ],
         }}
+        pollAction={vi.fn()}
         projectId="prj_1"
         projectRef="prj_1"
         providerConnected
@@ -198,7 +269,7 @@ describe("KeywordPendingDetail", () => {
       />,
     );
 
-    expect(screen.getByText("Position improved #5 → #3")).toBeInTheDocument();
+    expect(screen.getByText("Position improved #5 \u2192 #3")).toBeInTheDocument();
     expect(screen.queryByText("Ranking URL changed")).not.toBeInTheDocument();
   });
 
@@ -248,6 +319,7 @@ describe("KeywordPendingDetail", () => {
               },
             ],
           }}
+          pollAction={vi.fn()}
           projectId="prj_1"
           projectRef="prj_1"
           providerConnected
@@ -277,19 +349,202 @@ describe("KeywordPendingDetail", () => {
     expect(screen.queryByText("Check in progress")).not.toBeInTheDocument();
   });
 
-  it("runs the state-specific split CTA at its selected depth", async () => {
-    const runCheckNowAction = renderDetail("never_checked");
-    fireEvent.click(screen.getByRole("button", { name: "Run first check" }));
-    await waitFor(() =>
-      expect(runCheckNowAction).toHaveBeenCalledWith({ depth: 20, keywordId: keywordRows[0].id }),
+  it("confirms the first check, polls, then shows success with position", async () => {
+    const pollAction = vi.fn().mockResolvedValue(completedPollResult(12, 100));
+    const runCheckNowAction = vi
+      .fn()
+      .mockResolvedValue({ rankCheckId: CHECK_ID, status: "running" });
+    render(
+      <ToastProvider>
+        <KeywordPendingDetail
+          canUpdateKeyword
+          createKeywordAlertAction={vi.fn(async () => undefined)}
+          keyword={keyword("never_checked")}
+          pollAction={pollAction}
+          projectId="prj_1"
+          projectRef="prj_1"
+          providerConnected
+          rankState="never_checked"
+          runCheckNowAction={runCheckNowAction}
+          updateKeywordAction={vi.fn()}
+        />
+      </ToastProvider>,
     );
+
+    fireEvent.click(screen.getByRole("button", { name: "Run first check (Top 20)" }));
+    expect(screen.getByRole("dialog", { name: "Run first check" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Confirm and run" }));
+    await flushMicrotasks();
+    expect(runCheckNowAction).toHaveBeenCalledWith({ depth: 20, keywordId: keywordRows[0].id });
+    expect(screen.getByRole("dialog", { name: "Check running" })).toBeInTheDocument();
+
+    await advanceAndFlush(2000);
+    expect(screen.getByRole("dialog", { name: "First check complete" })).toBeInTheDocument();
+    expect(screen.getByText("Ranked #12 in the top 100.")).toBeInTheDocument();
+  });
+
+  it("keeps the header check enabled while the first check is processing", async () => {
+    let finish: ((value: { rankCheckId: string; status: "running" }) => void) | undefined;
+    const runCheckNowAction = vi.fn(
+      () =>
+        new Promise<{ rankCheckId: string; status: "running" }>((resolve) => {
+          finish = resolve;
+        }),
+    );
+    render(
+      <ToastProvider>
+        <KeywordPendingDetail
+          canUpdateKeyword
+          createKeywordAlertAction={vi.fn(async () => undefined)}
+          keyword={keyword("never_checked")}
+          pollAction={vi.fn()}
+          projectId="prj_1"
+          projectRef="prj_1"
+          providerConnected
+          rankState="never_checked"
+          runCheckNowAction={runCheckNowAction}
+          updateKeywordAction={vi.fn()}
+        />
+      </ToastProvider>,
+    );
+
+    const runButton = screen.getByRole("button", { name: "Run first check (Top 20)" });
+    fireEvent.click(runButton);
+    fireEvent.click(screen.getByRole("button", { name: "Confirm and run" }));
+    await flushMicrotasks();
+    expect(screen.getByRole("status")).toHaveTextContent("The check is processing now.");
+    expect(runButton).toBeEnabled();
+    finish?.({ rankCheckId: CHECK_ID, status: "running" });
+    await flushMicrotasks();
+    expect(screen.getByRole("dialog", { name: "Check running" })).toBeInTheDocument();
+    expect(runButton).toBeEnabled();
   });
 
   it("uses the provider connection CTA without changing the Search Console modules", () => {
-    renderDetail("never_checked", { providerConnected: false });
+    render(
+      <ToastProvider>
+        <KeywordPendingDetail
+          canUpdateKeyword
+          createKeywordAlertAction={vi.fn(async () => undefined)}
+          keyword={keyword("never_checked")}
+          pollAction={vi.fn()}
+          projectId="prj_1"
+          projectRef="prj_1"
+          providerConnected={false}
+          rankState="never_checked"
+          runCheckNowAction={vi.fn()}
+          updateKeywordAction={vi.fn()}
+        />
+      </ToastProvider>,
+    );
     expect(screen.getByRole("link", { name: /Connect a SERP provider/ })).toHaveAttribute(
       "href",
       "/app/prj_1/integrations",
     );
+  });
+
+  it("shows billing failure copy with both CTAs after a failed poll", async () => {
+    const pollAction = vi.fn().mockResolvedValue(failedPollResult("provider_billing"));
+    const runCheckNowAction = vi
+      .fn()
+      .mockResolvedValue({ rankCheckId: CHECK_ID, status: "running" });
+    render(
+      <ToastProvider>
+        <KeywordPendingDetail
+          canUpdateKeyword
+          createKeywordAlertAction={vi.fn(async () => undefined)}
+          keyword={keyword("never_checked")}
+          pollAction={pollAction}
+          projectId="prj_1"
+          projectRef="prj_1"
+          providerConnected
+          rankState="never_checked"
+          runCheckNowAction={runCheckNowAction}
+          updateKeywordAction={vi.fn()}
+        />
+      </ToastProvider>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Run first check (Top 20)" }));
+    fireEvent.click(screen.getByRole("button", { name: "Confirm and run" }));
+    await flushMicrotasks();
+    await advanceAndFlush(2000);
+    expect(screen.getByRole("dialog", { name: "Check failed" })).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "The check failed: your rank data provider account has insufficient funds. Add funds or connect a different provider, then run the check again.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open integrations" })).toHaveAttribute(
+      "href",
+      "/app/prj_1/integrations",
+    );
+    expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
+  });
+
+  it("closes while running without cancelling the poll", async () => {
+    const pollAction = vi.fn().mockResolvedValue(completedPollResult(5, 20));
+    const runCheckNowAction = vi
+      .fn()
+      .mockResolvedValue({ rankCheckId: CHECK_ID, status: "running" });
+    render(
+      <ToastProvider>
+        <KeywordPendingDetail
+          canUpdateKeyword
+          createKeywordAlertAction={vi.fn(async () => undefined)}
+          keyword={keyword("never_checked")}
+          pollAction={pollAction}
+          projectId="prj_1"
+          projectRef="prj_1"
+          providerConnected
+          rankState="never_checked"
+          runCheckNowAction={runCheckNowAction}
+          updateKeywordAction={vi.fn()}
+        />
+      </ToastProvider>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Run first check (Top 20)" }));
+    fireEvent.click(screen.getByRole("button", { name: "Confirm and run" }));
+    await flushMicrotasks();
+    expect(screen.getByRole("dialog", { name: "Check running" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Close" }));
+    await advanceAndFlush(250);
+    expect(screen.queryByRole("dialog", { name: "Check running" })).not.toBeInTheDocument();
+
+    await advanceAndFlush(2000);
+    expect(pollAction).toHaveBeenCalledTimes(1);
+  });
+
+  it("enters success immediately for a synchronous completed response", async () => {
+    const runCheckNowAction = vi.fn().mockResolvedValue({
+      rankCheckId: CHECK_ID,
+      status: "completed",
+      position: 3,
+      requestedDepth: 20,
+    });
+    render(
+      <ToastProvider>
+        <KeywordPendingDetail
+          canUpdateKeyword
+          createKeywordAlertAction={vi.fn(async () => undefined)}
+          keyword={keyword("never_checked")}
+          pollAction={vi.fn()}
+          projectId="prj_1"
+          projectRef="prj_1"
+          providerConnected
+          rankState="never_checked"
+          runCheckNowAction={runCheckNowAction}
+          updateKeywordAction={vi.fn()}
+        />
+      </ToastProvider>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Run first check (Top 20)" }));
+    fireEvent.click(screen.getByRole("button", { name: "Confirm and run" }));
+    await flushMicrotasks();
+    expect(screen.getByRole("dialog", { name: "First check complete" })).toBeInTheDocument();
+    expect(screen.getByText("Ranked #3 in the top 20.")).toBeInTheDocument();
   });
 });

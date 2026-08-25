@@ -47,7 +47,12 @@ export function Sidebar({
     const Icon = item.icon;
 
     return (
-      <Tooltip key={item.href} placement="right" content={collapsed ? item.label : ""}>
+      <Tooltip
+        key={item.href}
+        placement="right"
+        content={collapsed ? item.label : ""}
+        wrapperClassName={collapsed ? undefined : "w-full"}
+      >
         <Link
           aria-current={active ? "page" : undefined}
           // Collapsed drops the visible label, and a closed tooltip contributes no name,
@@ -62,7 +67,7 @@ export function Sidebar({
             // mx-auto) is what holds the icon axis at 40px from the rail edge in both states.
             collapsed
               ? "ml-5.5 h-9 w-9 justify-center p-0"
-              : "ml-2.5 h-9 gap-2.5 pr-[11px] pl-[1px]",
+              : "ml-2.5 h-9 w-full gap-2.5 pr-[11px] pl-[1px]",
             // The current page carries no fill: the row surface belongs to hover alone, and
             // the page marker is the leading dot plus the filled glyph and 600 label - the
             // same vocabulary as the marketing header. Hover therefore composes with the
@@ -95,6 +100,8 @@ export function Sidebar({
             <Icon
               aria-hidden
               className="text-current"
+              data-nav-icon={item.label}
+              data-weight={active ? "fill" : "regular"}
               size={RAIL_ICON_SIZE}
               weight={active ? "fill" : "regular"}
             />

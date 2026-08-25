@@ -1,4 +1,5 @@
 import type { Prisma } from "@/lib/generated/prisma/client";
+import type { ProviderUsage } from "@/lib/provider-usage/tag";
 import type { SerpDepth } from "@/lib/serp/markets";
 
 export type RankCheckAttempt = {
@@ -22,6 +23,8 @@ export type RankCheckPersistTarget = {
   hasSchedule: boolean;
   hasDefaults: boolean;
   connectionId?: string;
+  providerRequestId?: string;
+  providerUsage?: ProviderUsage;
   existingRankCheckId?: string;
   previousRaw?: Prisma.JsonValue | null;
   previousRankingUrl?: string | null;
@@ -43,7 +46,9 @@ export type RankCheckFailureTarget = {
   projectDomain?: string;
   projectId?: string;
   provider: string;
+  providerRequestId?: string;
   providerCostCents?: number;
+  providerUsage?: ProviderUsage;
   requestedDepth?: SerpDepth;
   checkedAt?: Date;
   persistenceFinalize?: RankCheckPersistenceFinalize;

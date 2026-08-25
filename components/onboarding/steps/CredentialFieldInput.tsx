@@ -28,7 +28,7 @@ export function CredentialFieldInput({
   registration,
 }: Readonly<CredentialFieldInputProps>) {
   return (
-    <label className={labelClass} htmlFor={id}>
+    <label className={`${labelClass} w-full`} htmlFor={id}>
       {label}
       {password ? (
         <PasswordInput

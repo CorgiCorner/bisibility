@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "@/lib/ui/cn";
 import MuiTooltip from "@mui/material/Tooltip";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useForkRef } from "@mui/material/utils";
@@ -43,6 +44,7 @@ export type TooltipProps = {
   placement?: TooltipPlacement;
   arrow?: boolean;
   semantics?: TooltipSemantics;
+  wrapperClassName?: string;
 };
 
 const WARM_WINDOW_MS = 800;
@@ -136,6 +138,7 @@ export function Tooltip({
   placement,
   arrow = false,
   semantics = "label",
+  wrapperClassName,
 }: Readonly<TooltipProps>) {
   const { beginClose, beginOpen } = useContext(TooltipContext);
   const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)", {
@@ -250,7 +253,7 @@ export function Tooltip({
   } = childElement.props as Record<string, unknown> & { ref?: Ref<HTMLElement> };
 
   return (
-    <>
+    <span className={cn("relative inline-flex max-w-full", wrapperClassName)}>
       <MuiTooltip
         arrow={arrow}
         disableInteractive
@@ -287,6 +290,6 @@ export function Tooltip({
       ) : null}
       {/* Callback-ref cleanup avoids an effect for timer ownership. */}
       <span hidden ref={cleanupRef} />
-    </>
+    </span>
   );
 }

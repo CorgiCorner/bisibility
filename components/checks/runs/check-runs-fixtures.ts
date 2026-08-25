@@ -46,6 +46,7 @@ export const failedRunFixture: CheckRunRow = {
   researchMetricsAvailable: true,
   startedAt: "2026-07-24T14:33:00.000Z",
   status: "failed",
+  storedResults: null,
   trigger: "scheduled",
   viaFallback: false,
 };
@@ -94,6 +95,13 @@ export const fallbackRunFixture: CheckRunRow = {
   researchMetricsAvailable: true,
   startedAt: "2026-07-24T14:19:00.000Z",
   status: "completed",
+  storedResults: {
+    tier: "full",
+    stoppedAtResult: true,
+    requestedDepth: 100,
+    retrievedPositions: 8,
+    fullDetailUntil: "2026-10-24T00:00:00.000Z",
+  },
   trigger: "scheduled",
   viaFallback: true,
 };
@@ -123,6 +131,7 @@ export const runningRunFixture: CheckRunRow = {
   researchMetricsAvailable: true,
   startedAt: "2026-07-24T14:44:18.000Z",
   status: "running",
+  storedResults: null,
   trigger: "manual",
   viaFallback: false,
 };
@@ -162,6 +171,13 @@ export const completedRunFixture: CheckRunRow = {
   researchMetricsAvailable: true,
   startedAt: "2026-07-24T13:45:00.000Z",
   status: "completed",
+  storedResults: {
+    tier: "full",
+    stoppedAtResult: true,
+    requestedDepth: 100,
+    retrievedPositions: 22,
+    fullDetailUntil: "2026-10-31T00:00:00.000Z",
+  },
   trigger: "scheduled",
   viaFallback: false,
 };
@@ -175,6 +191,13 @@ export const staleRunFixture: CheckRunRow = {
   keywordId: "keyword_stale",
   keywordPublicId: "kw_headless_cms",
   startedAt: "2026-07-21T13:45:00.000Z",
+  storedResults: {
+    tier: "compact",
+    stoppedAtResult: null,
+    requestedDepth: 100,
+    retrievedPositions: null,
+    fullDetailUntil: null,
+  },
 };
 
 export const checkRunsFixtureView: CheckRunsView = {

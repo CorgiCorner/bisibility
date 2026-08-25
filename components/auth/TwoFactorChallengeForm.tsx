@@ -36,7 +36,7 @@ type ChallengeMethod = ChallengeValues["method"];
 
 const methodButtonSx = {
   borderColor: "var(--border-strong)",
-  borderRadius: "9px",
+  borderRadius: "6px",
   color: "var(--fg-muted)",
   fontSize: "13px",
   fontWeight: 600,
@@ -102,7 +102,7 @@ export function TwoFactorChallengeForm({
 
   return (
     <div className="w-full max-w-[380px]">
-      <span className="grid h-[46px] w-[46px] place-items-center rounded-xl bg-accent-soft text-accent-text">
+      <span className="grid h-[46px] w-[46px] place-items-center rounded-xl bg-accent-soft text-accent-solid">
         <ShieldCheck aria-hidden size={23} weight="fill" />
       </span>
       <h1 className="mt-4.5 mb-0 text-[25px] font-semibold tracking-[-0.7px] text-fg">

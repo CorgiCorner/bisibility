@@ -18,7 +18,7 @@ import {
 import type { CloudImportJobData } from "./cloud-token";
 
 type TransferState = CloudImportJobData["state"];
-type Tone = "neutral" | "blue" | "green" | "red";
+type Tone = "blue" | "green" | "neutral" | "red" | "yellow";
 
 type StateConfig = {
   desc: string;
@@ -34,6 +34,7 @@ const TONES: Record<Tone, { tile: string; text: string; dot: string }> = {
   green: { tile: "bg-green/15 text-green-text", text: "text-green-text", dot: "bg-green" },
   neutral: { tile: "bg-bg-sunken text-fg-muted", text: "text-fg-muted", dot: "bg-fg-muted" },
   red: { tile: "bg-red/10 text-red-text", text: "text-red-text", dot: "bg-red" },
+  yellow: { tile: "bg-yellow/15 text-yellow-text", text: "text-yellow-text", dot: "bg-yellow" },
 };
 
 function countEntries(counts: unknown) {
@@ -49,7 +50,7 @@ function countEntries(counts: unknown) {
 function doneDescription(job: CloudImportJobData) {
   const summary = migrationImportCountSummary(job.counts);
   if (!summary.reportsKeywordCreations && summary.imported.length === 0) {
-    return "Import completed. Re-connect providers to resume checks.";
+    return "Transfer completed. Re-connect providers to resume checks.";
   }
   const imported =
     summary.imported.length > 0
@@ -59,7 +60,26 @@ function doneDescription(job: CloudImportJobData) {
   return `${imported}${skipped} Re-connect providers to resume checks.`;
 }
 
+function restoredWithNotes(job: CloudImportJobData) {
+  return job.state === "done" && migrationImportCountSummary(job.counts).skipped.length > 0;
+}
+
+function failedFollowUp(job: CloudImportJobData) {
+  const leftover = "Anything already imported stays in this project.";
+  return job.error ? `${job.error} ${leftover}` : leftover;
+}
+
 function configFor(job: CloudImportJobData, sourceLabel: string): StateConfig {
+  if (restoredWithNotes(job)) {
+    return {
+      desc: doneDescription(job),
+      icon: Warning,
+      pill: "Notes",
+      title: "Restored with notes",
+      tone: "yellow",
+      weight: "fill",
+    };
+  }
   const configs: Record<TransferState, StateConfig> = {
     done: {
       desc: doneDescription(job),
@@ -78,23 +98,23 @@ function configFor(job: CloudImportJobData, sourceLabel: string): StateConfig {
       weight: "fill",
     },
     idle: {
-      desc: `No package received yet. Once the ${sourceLabel} pushes, import progress appears here.`,
+      desc: "Share the one-time token with the source instance to start the transfer.",
       icon: CloudArrowDown,
-      pill: "Idle",
-      title: "Waiting for transfer",
+      pill: "Ready",
+      title: "Ready to receive",
       tone: "neutral",
       weight: "regular",
     },
     importing: {
-      desc: "Restoring keywords, ranking history, tags and alert rules into this project.",
+      desc: "Transferring keywords, ranking history, tags and alert rules into this project.",
       icon: Database,
-      pill: "Importing",
-      title: "Importing data",
+      pill: "Transferring",
+      title: "Transfer in progress",
       tone: "blue",
       weight: "regular",
     },
     receiving: {
-      desc: "Receiving the export package from your self-hosted instance.",
+      desc: `Receiving the export package from the ${sourceLabel}.`,
       icon: DownloadSimple,
       pill: "Receiving",
       title: "Receiving package",
@@ -118,6 +138,7 @@ function errorLogHref(job: CloudImportJobData) {
 }
 
 type TransferPanelProps = {
+  hasToken?: boolean;
   job: CloudImportJobData;
   onNewToken: () => void;
   projectRef: string;
@@ -125,11 +146,16 @@ type TransferPanelProps = {
 };
 
 export function TransferPanel({
+  hasToken = false,
   job,
   onNewToken,
   projectRef,
   sourceLabel = "self-hosted instance",
 }: Readonly<TransferPanelProps>) {
+  if (job.state === "idle" && !hasToken) {
+    return null;
+  }
+
   const cfg = configFor(job, sourceLabel);
   const tone = TONES[cfg.tone];
   const StateIcon = cfg.icon;
@@ -161,7 +187,13 @@ export function TransferPanel({
         <div className="px-5 pb-4">
           <div className="h-1.5 overflow-hidden rounded-[3px] bg-bg-sunken">
             <div
-              className={`h-full rounded-[3px] transition-[width] duration-500 ${job.state === "done" ? "bg-green" : "bg-blue"}`}
+              className={`h-full rounded-[3px] transition-[width] duration-500 ${
+                job.state === "done"
+                  ? restoredWithNotes(job)
+                    ? "bg-yellow"
+                    : "bg-green"
+                  : "bg-blue"
+              }`}
               style={{ width: `${job.progress}%` }}
             />
           </div>
@@ -185,7 +217,7 @@ export function TransferPanel({
             Import job {job.id}
           </span>
           <a
-            className="inline-flex flex-none items-center gap-1.5 rounded-lg bg-accent-solid px-3.5 py-2 font-semibold text-[12px] text-primary-contrast"
+            className="inline-flex flex-none items-center gap-1.5 rounded-lg bg-accent-solid px-3.5 py-2 font-semibold text-[12px] text-accent-on-solid"
             href={appPath(projectRef, "dashboard")}
           >
             Open project
@@ -204,10 +236,8 @@ export function TransferPanel({
               weight="fill"
             />
             <div className="min-w-0 flex-1 text-[12.5px] leading-[1.5] text-fg">
-              <strong className="font-semibold">Import stopped at {job.progress}%.</strong>{" "}
-              <span className="text-fg-muted">
-                {job.error ?? "No partial data was written and this project is unchanged."}
-              </span>
+              <strong className="font-semibold">Transfer stopped at {job.progress}%.</strong>{" "}
+              <span className="text-fg-muted">{failedFollowUp(job)}</span>
             </div>
           </div>
 

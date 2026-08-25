@@ -48,7 +48,7 @@ export function AddKeywordCsvReview({ items, onEdit }: Readonly<AddKeywordCsvRev
     <div className="grid gap-4">
       <div className="rounded-[11px] border border-border bg-bg-sunken px-4 py-3">
         <div className="flex items-start gap-3">
-          <span className="mt-0.5 grid h-8 w-8 flex-none place-items-center rounded-[9px] bg-accent-soft text-accent-text">
+          <span className="mt-0.5 grid h-8 w-8 flex-none place-items-center rounded-[9px] bg-accent-soft text-accent-solid">
             <CheckCircle size={18} weight="bold" />
           </span>
           <div className="min-w-0">

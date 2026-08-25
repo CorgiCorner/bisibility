@@ -6,6 +6,7 @@ import {
   XCircleIcon as XCircle,
 } from "@phosphor-icons/react/dist/ssr";
 import type { ReactNode } from "react";
+import { CheckRunStoredResults } from "./CheckRunStoredResults";
 import {
   formatAttemptOutcome,
   formatDuration,
@@ -133,11 +134,12 @@ function HiddenMeta({ columns, now, run }: Readonly<HiddenMetaProps>) {
 
 type DetailsProps = {
   columns: RunTableColumns;
+  keywordHref: string;
   now: Date;
   run: CheckRunRow;
 };
 
-export function CheckRunDetails({ columns, now, run }: Readonly<DetailsProps>) {
+export function CheckRunDetails({ columns, keywordHref, now, run }: Readonly<DetailsProps>) {
   const duration =
     run.status === "failed" && run.error?.toLowerCase().includes("timed out")
       ? "timed out after 15 min"
@@ -172,6 +174,7 @@ export function CheckRunDetails({ columns, now, run }: Readonly<DetailsProps>) {
           ))}
         </div>
       ) : null}
+      <CheckRunStoredResults keywordHref={keywordHref} run={run} />
     </div>
   );
 }

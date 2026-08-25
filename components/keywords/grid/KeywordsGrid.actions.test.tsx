@@ -57,6 +57,22 @@ describe("KeywordsGrid actions", () => {
       }),
     );
     expect(routerMock.refresh).toHaveBeenCalled();
+  }, 15_000);
+
+  it("replaces bulk run checks with Connect when the SERP provider is missing", async () => {
+    const [row] = pendingRows(1);
+    renderPendingGrid({ rows: [row] });
+
+    const keywordRow = (await screen.findByText(row.keyword)).closest(
+      '[role="row"]',
+    ) as HTMLElement;
+    fireEvent.click(within(keywordRow).getByRole("checkbox"));
+
+    expect(screen.getByRole("link", { name: "Connect a SERP provider" })).toHaveAttribute(
+      "href",
+      "/app/prj_1/integrations",
+    );
+    expect(screen.queryByRole("button", { name: /Run check/ })).not.toBeInTheDocument();
   });
 
   it("exports selected keyword IDs", async () => {
@@ -98,6 +114,7 @@ describe("KeywordsGrid actions", () => {
         failed24h: { count: 0, latest: null },
         providerRate: { overrideCents: 2, providerId: "dataforseo" },
       },
+      providerConnected: true,
       rows,
       runCheckNowAction,
     });
@@ -126,7 +143,7 @@ describe("KeywordsGrid actions", () => {
   it("passes a selected check depth override", async () => {
     const [row] = pendingRows(1);
     const runCheckNowAction = vi.fn().mockResolvedValue({ status: "queued" });
-    renderPendingGrid({ rows: [row], runCheckNowAction });
+    renderPendingGrid({ providerConnected: true, rows: [row], runCheckNowAction });
 
     const keywordRow = (await screen.findByText(row.keyword)).closest(
       '[role="row"]',
@@ -134,7 +151,9 @@ describe("KeywordsGrid actions", () => {
     fireEvent.click(within(keywordRow).getByRole("checkbox"));
     fireEvent.click(screen.getByRole("button", { name: "Choose check depth" }));
     fireEvent.click(screen.getByRole("menuitem", { name: "Top 20" }));
+    expect(runCheckNowAction).not.toHaveBeenCalled();
 
+    fireEvent.click(screen.getByRole("button", { name: "Run check (Top 20)" }));
     await waitFor(() =>
       expect(runCheckNowAction).toHaveBeenCalledWith({ depth: 20, keywordId: row.id }),
     );

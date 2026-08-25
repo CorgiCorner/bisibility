@@ -30,6 +30,7 @@ describe("ProjectDetailsCard", () => {
 
     const save = screen.getByRole("button", { name: "Save" });
     expect(save).toBeDisabled();
+    expect(screen.getByText("Name, domain, and ID for this project.")).toBeInTheDocument();
 
     await user.clear(screen.getByLabelText("Project name"));
     await user.type(screen.getByLabelText("Project name"), "Example Labs");

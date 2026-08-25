@@ -118,7 +118,6 @@ async function currentImportJob(projectId: string, now: Date) {
 
 export async function getCloudImportJobStatus(projectId: string): Promise<CloudImportJobView> {
   const { project } = await requireReadableProject(projectId);
-  await markStaleImportJobs({ projectId: project.id });
   const job = await latestImportJob(project.id);
 
   return job ? serializeJob(job) : idleCloudImportJob();

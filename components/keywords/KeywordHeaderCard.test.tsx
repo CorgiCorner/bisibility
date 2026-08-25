@@ -14,10 +14,7 @@ type DimensionMockProps = {
   onTrack: (kind: "device" | "engine" | "location", value: string) => void;
 };
 type HeaderActionsMockProps = {
-  alertCreated: boolean;
-  alertCreating: boolean;
   effectiveDepth: 10 | 20 | 50 | 100;
-  onCreateAlert: () => void;
   onExport: () => void;
   onRunCheck: (depth: 10 | 20 | 50 | 100) => void;
   onToggleEdit: () => void;
@@ -84,22 +81,12 @@ vi.mock("./KeywordHeaderActions", () => ({
       <button onClick={() => props.onRunCheck(props.effectiveDepth)} type="button">
         Run
       </button>
-      <button onClick={props.onCreateAlert} type="button">
-        Alert
-      </button>
       <button onClick={props.onExport} type="button">
         Export
       </button>
       <button onClick={props.onToggleEdit} type="button">
         Edit
       </button>
-      <p>
-        {props.alertCreated
-          ? "alert-created"
-          : props.alertCreating
-            ? "alert-creating"
-            : "alert-idle"}
-      </p>
     </div>
   ),
 }));
@@ -162,7 +149,7 @@ describe("KeywordHeaderCard", () => {
     else process.env.TZ = originalTZ;
   });
 
-  it("starts a check, creates an alert, exports, and opens editing", async () => {
+  it("starts a check, exports, and opens editing", async () => {
     const actions = renderCard({
       projectMarkets: {
         markets: [],
@@ -174,9 +161,6 @@ describe("KeywordHeaderCard", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "Run" }));
     expect(await screen.findByText("Check started (Top 100)")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Alert" }));
-    expect(await screen.findByText("alert-created")).toBeInTheDocument();
-    expect(screen.getByText("Alert created")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Export" }));
     expect(mocks.exportHistoryCsv).toHaveBeenCalledWith(keyword);
     fireEvent.click(screen.getByRole("button", { name: "Edit" }));
@@ -241,19 +225,13 @@ describe("KeywordHeaderCard", () => {
     expect(screen.queryByRole("button", { name: "Track device" })).not.toBeInTheDocument();
   });
 
-  it("reports check and alert failures and prevents duplicate alert requests", async () => {
+  it("reports check failures", async () => {
     const check = vi.fn(async () => {
       throw new Error("Check unavailable");
     });
-    const alert = vi.fn(async () => {
-      throw new Error("Alert unavailable");
-    });
-    renderCard({ createKeywordAlertAction: alert, runCheckNowAction: check });
+    renderCard({ runCheckNowAction: check });
     fireEvent.click(screen.getByRole("button", { name: "Run" }));
     expect(await screen.findByText("Check unavailable")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Alert" }));
-    expect(await screen.findByText("Alert unavailable")).toBeInTheDocument();
-    await waitFor(() => expect(alert).toHaveBeenCalledOnce());
   });
 
   it("treats a serialized budget rejection as a failed check", async () => {
@@ -272,9 +250,8 @@ describe("KeywordHeaderCard", () => {
     expect(routerMock.refresh).not.toHaveBeenCalled();
   });
 
-  it("works without an alert action or schedule editor", () => {
+  it("works without a schedule editor", () => {
     renderCard({
-      createKeywordAlertAction: undefined,
       projectMarkets: {
         markets: [],
         maxMarkets: 5,
@@ -284,7 +261,6 @@ describe("KeywordHeaderCard", () => {
       },
       updateKeywordScheduleAction: undefined,
     });
-    fireEvent.click(screen.getByRole("button", { name: "Alert" }));
     fireEvent.click(screen.getByRole("button", { name: "Edit" }));
     expect(screen.getByText("Markets and devices drawer")).toBeInTheDocument();
     expect(screen.queryByText(/Schedule/)).not.toBeInTheDocument();

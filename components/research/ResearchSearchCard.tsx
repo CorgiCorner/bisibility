@@ -1,26 +1,31 @@
 "use client";
 
 import { LocationField, type LocationFieldValue } from "@/components/keywords/LocationField";
-import { Button, Card, InfoTooltip, MenuSelect, Switch } from "@/components/ui";
-import { formatEstimateCents } from "@/lib/cost-estimate/project-estimate";
 import {
-  estimatedFeatureCostCents,
-  type KeywordResearchSource,
-  keywordResearchRate,
-} from "@/lib/cost-estimate/provider-rates";
+  Button,
+  Card,
+  InfoTooltip,
+  MenuSelect,
+  pricingTriggerClassName,
+  Switch,
+} from "@/components/ui";
+import { formatEstimateCents } from "@/lib/cost-estimate/project-estimate";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import type { KeywordResearchMode } from "@/lib/keyword-research/types";
-import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
-import { docsLinkProps } from "@/lib/site/site";
 import {
   GlobeSimpleIcon as GlobeSimple,
   MagnifyingGlassIcon as MagnifyingGlass,
   XIcon as X,
 } from "@phosphor-icons/react";
 import type { KeyboardEvent } from "react";
-import { useId } from "react";
+import { useId, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import {
+  ResearchPricingPopover,
+  researchFallbackCostCents,
+  researchPricingRows,
+} from "./ResearchPricingPopover";
 
 const formSchema = z.object({ seed: z.string().trim().max(80) });
 type FormValues = z.infer<typeof formSchema>;
@@ -35,7 +40,6 @@ const limitOptions = [100, 300, 500].map((value) => ({
   label: `${value} results`,
   value: String(value),
 }));
-const pricingDocsHref = "/docs/api/keyword-research#research-keywords";
 const NO_SEED_HINT = "Enter a seed keyword first - the price appears here";
 
 export type ResearchEstimateView = {
@@ -66,11 +70,6 @@ type ResearchSearchCardProps = {
   researching: boolean;
   seeds: string[];
 };
-
-function sourcesFor(mode: KeywordResearchMode): KeywordResearchSource[] {
-  if (mode === "auto") return ["related", "suggestions", "ideas"];
-  return [mode];
-}
 
 // The button always carries a price: the server estimate when one is in, otherwise
 // the provider price list computed client-side ("cost visible before every lookup").
@@ -151,27 +150,14 @@ export function ResearchSearchCard({
     resetField("seed");
   }
 
-  const pricingRows = sourcesFor(mode).map((source) => {
-    const rate = keywordResearchRate("dataforseo", source);
-    return {
-      cost: rate
-        ? estimatedFeatureCostCents(
-            rate,
-            resultLimit,
-            includeClickstream,
-            LIST_PROVIDER_RATE_CONTEXT,
-          )
-        : null,
-      source,
-    };
-  });
-  const fallbackCostCents = pricingRows.every((row) => row.cost != null)
-    ? pricingRows.reduce((sum, row) => sum + (row.cost ?? 0), 0) * Math.max(seeds.length, 1)
-    : null;
+  const [pricingAnchor, setPricingAnchor] = useState<HTMLElement | null>(null);
+
+  const pricingRows = researchPricingRows(mode, resultLimit, includeClickstream);
+  const fallbackCostCents = researchFallbackCostCents(pricingRows, seeds.length);
   const marketLabel = researchMarketLabel(location);
 
   return (
-    <Card className="p-4 sm:p-5" size="md">
+    <Card className="w-full p-4 sm:p-5" size="md">
       <form className="grid gap-3" onSubmit={handleSubmit(submit)}>
         <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-start">
           <div className="flex min-h-[34px] flex-1 flex-wrap items-center gap-1.5 rounded-[9px] border border-border-strong bg-transparent px-2.5 py-0.5 focus-within:border-accent md:min-w-[240px]">
@@ -251,13 +237,13 @@ export function ResearchSearchCard({
             <InfoTooltip text="Volumes corrected with real-user browsing data instead of Google Ads estimates alone. About twice the lookup cost." />
           </span>
           <div className="flex flex-wrap items-center gap-4">
-            <a
-              className="text-[12px] text-fg-muted underline decoration-border underline-offset-4 transition-colors hover:text-fg"
-              href={pricingDocsHref}
-              {...docsLinkProps(pricingDocsHref)}
+            <button
+              className={pricingTriggerClassName}
+              onClick={(event) => setPricingAnchor(event.currentTarget)}
+              type="button"
             >
               How is this priced?
-            </a>
+            </button>
             <span className="inline-flex" title={!hasSeed ? NO_SEED_HINT : undefined}>
               <Button
                 aria-describedby={!hasSeed ? noSeedHintId : undefined}
@@ -291,6 +277,14 @@ export function ResearchSearchCard({
           </div>
         ) : null}
       </form>
+      <ResearchPricingPopover
+        anchor={pricingAnchor}
+        includeClickstream={includeClickstream}
+        mode={mode}
+        onClose={() => setPricingAnchor(null)}
+        resultLimit={resultLimit}
+        seedCount={Math.max(seeds.length, 1)}
+      />
     </Card>
   );
 }

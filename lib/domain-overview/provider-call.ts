@@ -57,6 +57,8 @@ function paidCallInput(input: {
     feature: "domain_overview" as const,
     projectId: input.projectId,
     provider: input.source.provider,
+    source: "app" as const,
+    trigger: "manual" as const,
   };
 }
 
@@ -113,8 +115,11 @@ export function fetchDomainOverviewMetrics(
 ) {
   return paidProviderCall({
     ...paidCallInput(input),
-    call: (credentials) =>
-      input.source.provider.fetchDomainRankOverview(credentials, providerTarget(input)),
+    call: (credentials, usage) =>
+      input.source.provider.fetchDomainRankOverview(credentials, {
+        ...providerTarget(input),
+        tag: usage?.tag,
+      }),
     itemCount: 1,
     rate: domainOverviewRates(input.source.provider.id).overview,
   });
@@ -131,8 +136,11 @@ export function fetchDomainHistory(
 ) {
   return paidProviderCall({
     ...paidCallInput(input),
-    call: (credentials) =>
-      input.source.provider.fetchHistoricalRankOverview(credentials, providerTarget(input)),
+    call: (credentials, usage) =>
+      input.source.provider.fetchHistoricalRankOverview(credentials, {
+        ...providerTarget(input),
+        tag: usage?.tag,
+      }),
     itemCount: 1,
     rate: domainOverviewRates(input.source.provider.id).history,
   });
@@ -151,7 +159,7 @@ export function fetchDomainKeywords(
   const languageCode = researchProviderLanguageCode(input.countryCode ?? "", input.languageCode);
   return paidProviderCall({
     ...paidCallInput(input),
-    call: (credentials) =>
+    call: (credentials, usage) =>
       input.source.provider.fetchRankedKeywords(credentials, {
         domain: input.target,
         languageCode,
@@ -159,6 +167,7 @@ export function fetchDomainKeywords(
         location: providerLocation(input),
         locationCode: input.locationCode,
         offset: input.offset,
+        tag: usage?.tag,
       }),
     itemCount: input.limit,
     rate: rankedKeywordPageRate(input.source.provider.id),
@@ -178,11 +187,12 @@ export function fetchDomainPages(
 ) {
   return paidProviderCall({
     ...paidCallInput(input),
-    call: (credentials) =>
+    call: (credentials, usage) =>
       input.source.provider.fetchRelevantPages(credentials, {
         ...providerTarget(input),
         limit: input.limit,
         offset: input.offset,
+        tag: usage?.tag,
       }),
     itemCount: input.limit,
     rate: domainOverviewRates(input.source.provider.id).pages,

@@ -19,7 +19,6 @@ import { useForm } from "react-hook-form";
 import {
   type AddKeywordsInput,
   actionErrorMessage,
-  type CreateKeywordAlertInput,
   type KeywordAction,
   type KeywordDetailActions,
 } from "./action-utils";
@@ -50,7 +49,6 @@ export function KeywordHeaderCard({
   canCreateKeyword,
   canUpdateKeyword,
   costContext,
-  createKeywordAlertAction,
   keyword,
   projectId,
   projectMarkets,
@@ -59,7 +57,6 @@ export function KeywordHeaderCard({
 }: KeywordHeaderCardProps) {
   const router = useRouter();
   const { showToast } = useToast();
-  const [alertStatus, setAlertStatus] = useState<"created" | "creating" | "idle">("idle");
   const [editing, setEditing] = useState(false);
   const {
     formState: { isSubmitting },
@@ -69,8 +66,6 @@ export function KeywordHeaderCard({
     defaultValues: { keywordId: keyword.id },
     resolver: zodResolver(runCheckNowSchema),
   });
-  const alertCreated = alertStatus === "created";
-  const alertCreating = alertStatus === "creating";
   const effectiveDepth =
     keyword.schedule?.serp_depth ?? keyword.projectSerpDepth ?? DEFAULT_SERP_DEPTH;
   const providerRate = costContext
@@ -94,27 +89,6 @@ export function KeywordHeaderCard({
     }
   }
 
-  async function handleCreateKeywordAlert() {
-    if (!createKeywordAlertAction || alertCreated || alertCreating) {
-      return;
-    }
-
-    setAlertStatus("creating");
-    try {
-      const input: CreateKeywordAlertInput = {
-        keywordId: keyword.id,
-        projectId,
-      };
-      await createKeywordAlertAction(input);
-      setAlertStatus("created");
-      showToast("Alert created", { tint: "green" });
-      router.refresh();
-    } catch (error) {
-      setAlertStatus("idle");
-      showToast(actionErrorMessage(error), { tint: "red" });
-    }
-  }
-
   const submitRunCheck = (depth: SerpDepth) =>
     handleSubmit((values) => handleRunCheckNow({ ...values, depth }))();
 
@@ -123,13 +97,9 @@ export function KeywordHeaderCard({
       <KeywordDetailHeaderChrome
         actions={
           <KeywordHeaderActions
-            alertCreated={alertCreated}
-            alertCreating={alertCreating}
-            canCreateAlert={Boolean(createKeywordAlertAction)}
             canUpdateKeyword={canUpdateKeyword}
             editing={editing}
             effectiveDepth={effectiveDepth}
-            onCreateAlert={() => handleCreateKeywordAlert().catch(() => undefined)}
             onExport={() => exportHistoryCsv(keyword)}
             onRunCheck={(depth) => submitRunCheck(depth).catch(() => undefined)}
             onToggleEdit={() => setEditing((value) => !value)}

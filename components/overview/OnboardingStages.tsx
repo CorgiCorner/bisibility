@@ -214,7 +214,7 @@ export function OptionsFooter({
               two halves of one footer line were spaced differently. */}
           <SampleDataButton
             label="Load sample project"
-            size="small"
+            size="sm"
             sx={{
               color: "var(--fg-muted)",
               fontSize: "12.5px",
@@ -242,7 +242,7 @@ export function OptionsFooter({
                 textDecorationColor: "var(--border-strong)",
               },
             }}
-            variant="text"
+            variant="ghost"
           />
           .
         </span>

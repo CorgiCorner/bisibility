@@ -90,9 +90,9 @@
   }
 
   /* HANDOFF-12: global keyboard focus ring (components that opt out set outline:none).
-     --accent (#D97757) measures 2.69:1 against --bg and fails the 3:1 that WCAG 2.1
-     SC 1.4.11 / 2.4.11 require of a focus indicator. --accent-solid is the same hue at
-     4.44:1 light and 3.94:1 dark. */
+     Light --accent-solid (#F1511C) measures 3.31:1 against --bg, which meets the 3:1
+     WCAG 2.1 SC 1.4.11 / 2.4.11 require of a focus indicator. Dark --accent-solid
+     stays at 3.94:1 against --bg. */
   a:focus-visible,
   button:focus-visible,
   input:focus-visible,

@@ -38,6 +38,8 @@ export type SegmentedControlProps<T extends string> = {
   name?: string;
   onChange: (value: T) => void;
   optionClassName?: string;
+  /** Merged onto the selected option; use to swap the default `bg-nav-active` fill. */
+  activeClassName?: string;
   options: readonly SegmentedControlOption<T>[];
   /**
    * Extra-small matches 30px buttons; toolbar matches the shared 34px MenuSelect
@@ -71,6 +73,7 @@ export function SegmentedControl<T extends string>({
   name,
   onChange,
   optionClassName,
+  activeClassName,
   options,
   size = "default",
   value,
@@ -152,14 +155,14 @@ export function SegmentedControl<T extends string>({
                 className={cn(
                   "flex w-full cursor-pointer flex-col items-center justify-center rounded-[7px] border border-transparent text-center normal-case tracking-normal transition-colors",
                   size === "toolbar"
-                    ? "h-[26px] flex-row gap-1.5 px-2.5 py-0.5 text-[12.5px] font-medium"
+                    ? "h-[26px] flex-row gap-1.5 px-2.5 py-0.5 text-[12.5px] font-normal"
                     : size === "xs"
                       ? "h-6 flex-row gap-1 px-2.5 text-[12px] font-semibold"
                       : size === "field"
                         ? "min-h-8 px-2 py-1 text-[12.5px] font-semibold"
                         : "min-h-9 px-2 py-1.5 text-[12.5px] font-semibold",
                   active
-                    ? "border-border-strong bg-nav-active text-fg"
+                    ? cn("border-border-strong bg-nav-active text-fg", activeClassName)
                     : "text-fg-muted hover:bg-nav-active hover:text-fg",
                   optionDisabled &&
                     "cursor-not-allowed text-fg-muted hover:bg-transparent hover:text-fg-muted",

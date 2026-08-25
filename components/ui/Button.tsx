@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "@/lib/ui/cn";
 import { MOTION_PRESS } from "@/lib/ui/motion";
 import { sxArray } from "@/lib/ui/mui-sx";
 import MuiButton, { type ButtonProps as MuiButtonProps } from "@mui/material/Button";
@@ -7,6 +8,13 @@ import CircularProgress from "@mui/material/CircularProgress";
 
 export type ButtonVariant = "destructive" | "ghost" | "primary" | "secondary";
 export type ButtonSize = "lg" | "md" | "sm" | "xs";
+
+export const buttonXsSx = {
+  borderRadius: "6px",
+  fontSize: "12px",
+  minHeight: 30,
+  padding: "4px 10px",
+} as const;
 
 export type ButtonProps = Omit<MuiButtonProps, "color" | "size" | "variant"> & {
   download?: string;
@@ -19,12 +27,7 @@ export type ButtonProps = Omit<MuiButtonProps, "color" | "size" | "variant"> & {
   variant?: ButtonVariant;
 };
 
-const extraSmallSx = {
-  borderRadius: "7px",
-  fontSize: "12px",
-  minHeight: 30,
-  padding: "4px 10px",
-} as const;
+const secondaryBorder = "1px solid var(--border-strong)";
 
 function muiSizeFor(size: ButtonSize): "large" | "medium" | "small" {
   if (size === "lg") return "large";
@@ -40,6 +43,8 @@ const pressScale = {
 
 const variantSx = {
   destructive: {
+    "--variant-containedBg": "var(--red)",
+    "--variant-containedColor": "var(--mui-palette-error-contrastText)",
     backgroundColor: "var(--red)",
     border: "1px solid var(--red)",
     color: "var(--mui-palette-error-contrastText)",
@@ -52,30 +57,30 @@ const variantSx = {
     color: "var(--fg-muted)",
     "&:hover": { backgroundColor: "var(--bg-sunken)", color: "var(--fg)" },
   },
-  // The solid pair, not --accent. --accent is the light brand hue and cannot carry a light
-  // label: --accent-on-solid over --accent lands at 2.9:1, over --accent-solid at 4.7:1. See the
-  // note on the pair in globals.css and the surface assertions in lib/theme/contrast.test.ts.
+  // Brand surface with the cream --accent-on-solid label. Light pair is 3.25:1;
+  // see lib/theme/tokens.ts and the pinned ratios in contrast.test.ts.
   primary: {
+    "--variant-containedBg": "var(--accent-solid)",
+    "--variant-containedColor": "var(--accent-on-solid)",
     backgroundColor: "var(--accent-solid)",
     border: "1px solid var(--accent-solid)",
-    color: "var(--mui-palette-primary-contrastText)",
+    color: "var(--accent-on-solid)",
     "&:hover": {
+      "--variant-containedBg": "var(--accent-solid-hover)",
       backgroundColor: "var(--accent-solid-hover)",
       border: "1px solid var(--accent-solid-hover)",
     },
     ...pressScale,
   },
-  // Deliberately quieter than primary: the outline already carries the shape, so a
-  // full-weight full-contrast label made secondary read as the louder of the two.
-  // Muted still clears 4.5:1 on both surfaces, and hover restores full contrast.
+  // Elevated fill, 1px --border-strong, and --fg so secondary stays a real
+  // outline control without competing with the solid primary.
   secondary: {
     backgroundColor: "var(--bg-elev)",
-    border: "1px solid var(--border-strong)",
-    color: "var(--fg-muted)",
-    fontWeight: 500,
+    border: secondaryBorder,
+    color: "var(--fg)",
     "&:hover": {
       backgroundColor: "var(--bg-sunken)",
-      border: "1px solid var(--border-strong)",
+      border: secondaryBorder,
       color: "var(--fg)",
     },
     ...pressScale,
@@ -90,6 +95,7 @@ function muiVariantFor(variant: ButtonVariant) {
 
 export function Button({
   children,
+  className,
   disabled,
   loading = false,
   loadingLabel,
@@ -119,6 +125,7 @@ export function Button({
     <MuiButton
       {...props}
       aria-busy={loading ? true : props["aria-busy"]}
+      className={cn(size === "xs" && "min-h-[30px]", className)}
       color="inherit"
       disabled={busy}
       disableElevation
@@ -132,12 +139,13 @@ export function Button({
       }
       sx={[
         {
+          borderRadius: "6px",
           fontWeight: 600,
           textTransform: "none",
           transition: `background-color .16s ease, border-color .16s ease, transform ${MOTION_PRESS}ms ease`,
           "&.Mui-disabled": disabledStyle,
         },
-        ...(size === "xs" ? [extraSmallSx] : []),
+        ...(size === "xs" ? [buttonXsSx] : []),
         variantSx[variant],
         ...additionalSx,
       ]}

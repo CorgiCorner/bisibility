@@ -1,7 +1,7 @@
 import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { CloudImportWorkspaceButton } from "./CloudImportWorkspaceButton";
+import { CloudImportWorkspaceButton, RESTORE_PROJECT_TOOLTIP } from "./CloudImportWorkspaceButton";
 
 const createCloudImportWorkspace = vi.hoisted(() => vi.fn());
 
@@ -24,9 +24,14 @@ describe("CloudImportWorkspaceButton", () => {
     );
     render(<CloudImportWorkspaceButton />);
 
-    const button = screen.getByRole("button", { name: "Import self-hosted project" });
+    const button = screen.getByRole("button", { name: "Restore project" });
+    expect(button.closest("form")).toHaveClass("m-0", "inline-flex", "items-end");
     expect(button.closest("form")).not.toHaveClass("rounded-xl", "border", "p-4");
-    expect(button).toHaveStyle({ paddingLeft: "8px", paddingRight: "8px" });
+    expect(button).toHaveClass("MuiButton-outlined");
+    const describedBy = button.getAttribute("aria-describedby");
+    expect(describedBy).toBeTruthy();
+    expect(document.getElementById(describedBy ?? "")).toHaveTextContent(RESTORE_PROJECT_TOOLTIP);
+    expect(screen.queryByRole("button", { name: RESTORE_PROJECT_TOOLTIP })).not.toBeInTheDocument();
     fireEvent.click(button);
 
     expect(await screen.findByRole("button", { name: "Opening import..." })).toHaveAttribute(
@@ -43,7 +48,7 @@ describe("CloudImportWorkspaceButton", () => {
   it("sends the provided browser timezone to the import workspace action", async () => {
     render(<CloudImportWorkspaceButton browserTimezone="Europe/Madrid" />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Import self-hosted project" }));
+    fireEvent.click(screen.getByRole("button", { name: "Restore project" }));
 
     await waitFor(() => expect(createCloudImportWorkspace).toHaveBeenCalledOnce());
     expect(createCloudImportWorkspace).toHaveBeenCalledWith("Europe/Madrid");

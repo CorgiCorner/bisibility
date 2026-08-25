@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { prisma } from "@/lib/db/prisma";
 import { assertProjectWritable } from "@/lib/deployment/project-write-mode";
 import { requireTrackedDomain } from "@/lib/projects/tracked-domain";
@@ -6,6 +7,14 @@ import {
   providerRateContextKey,
 } from "@/lib/provider-rates/connection-context";
 import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
+import {
+  createProviderUsage,
+  type ProviderUsage,
+  type ProviderUsageSource,
+  type ProviderUsageTrigger,
+} from "@/lib/provider-usage/tag";
+import { providerErrorCodeFromError } from "@/lib/providers/call-error";
+import { dominantErrorCode, type ProviderErrorCode } from "@/lib/providers/provider-error-code";
 import { ProviderRateLimitedError } from "@/lib/providers/rate-limit";
 import { getSerpProvider } from "@/lib/providers/registry";
 import type { SerpProvider } from "@/lib/providers/types";
@@ -44,6 +53,7 @@ const FALLBACK_CODES: ReadonlySet<RankCheckRunnerErrorCode> = new Set([
 export type FallbackAttempt = {
   provider: string;
   message: string;
+  code?: ProviderErrorCode;
 };
 
 export type RunCheckChainInput = {
@@ -59,6 +69,7 @@ export type RunCheckChainInput = {
   now?: Date;
   /** Owning project id; threaded through as the provider rate-limit fallback key. */
   projectId?: string;
+  providerUsage?: ProviderUsage;
   /**
    * Enables provider-specific city degradation; false is already country-safe.
    */
@@ -76,14 +87,13 @@ export type RunCheckChainResult = {
 };
 
 export class ProviderChainError extends RankCheckRunnerError {
+  readonly dominantCode: ProviderErrorCode;
+  // biome-ignore format: keep the provider chain module under its line cap.
   constructor(readonly attempts: FallbackAttempt[]) {
-    super(
-      "provider_failed",
-      `All SERP providers failed: ${attempts
-        .map((attempt) => `${attempt.provider} (${attempt.message})`)
-        .join("; ")}`,
-    );
+    super("provider_failed",
+      `All SERP providers failed: ${attempts.map((a) => `${a.provider} (${a.message})`).join("; ")}`);
     this.name = "ProviderChainError";
+    this.dominantCode = dominantErrorCode(attempts.map((a) => a.code ?? "provider_transient"));
   }
 }
 
@@ -149,10 +159,9 @@ export async function runCheckWithFallback(
       provider = resolveProvider(connection.provider);
     } catch (error) {
       if (error instanceof RankCheckRunnerError && FALLBACK_CODES.has(error.code)) {
-        attempts.push({ message: error.message, provider: connection.provider });
-        if (error.code !== "provider_rate_limited") {
-          rateLimitedOnly = false;
-        }
+        // biome-ignore format: keep the fallback module under its line cap.
+        attempts.push({ message: error.message, provider: connection.provider, code: error.code === "provider_rate_limited" ? "provider_rate_limited" : providerErrorCodeFromError(error.cause) });
+        if (error.code !== "provider_rate_limited") rateLimitedOnly = false;
         continue;
       }
       throw error;
@@ -176,6 +185,7 @@ export async function runCheckWithFallback(
         previousPosition: input.previousPosition,
         completedCheckCount: input.completedCheckCount,
         projectId: input.projectId,
+        providerUsage: input.providerUsage,
         provider,
         schedule: input.schedule,
       });
@@ -183,10 +193,9 @@ export async function runCheckWithFallback(
       return { attempts, provider: provider.id, result };
     } catch (error) {
       if (error instanceof RankCheckRunnerError && FALLBACK_CODES.has(error.code)) {
-        attempts.push({ message: error.message, provider: connection.provider });
-        if (error.code !== "provider_rate_limited") {
-          rateLimitedOnly = false;
-        }
+        // biome-ignore format: keep the fallback module under its line cap.
+        attempts.push({ message: error.message, provider: connection.provider, code: error.code === "provider_rate_limited" ? "provider_rate_limited" : providerErrorCodeFromError(error.cause) });
+        if (error.code !== "provider_rate_limited") rateLimitedOnly = false;
         continue;
       }
 
@@ -197,11 +206,8 @@ export async function runCheckWithFallback(
   // Every provider in the chain was rate-limited: defer (not fail) so the keyword
   // stays due and the next scheduled fire retries, preserving quota.
   if (rateLimitedOnly) {
-    throw new ProviderRateLimitedError(input.connections[0].provider, {
-      message: `All SERP providers rate limited: ${attempts
-        .map((attempt) => `${attempt.provider} (${attempt.message})`)
-        .join("; ")}`,
-    });
+    const chainMsg = `All SERP providers rate limited: ${attempts.map((a) => `${a.provider} (${a.message})`).join("; ")}`;
+    throw new ProviderRateLimitedError(input.connections[0].provider, { message: chainMsg });
   }
 
   throw new ProviderChainError(attempts);
@@ -215,6 +221,8 @@ export type RunKeywordCheckWithFallbackInput = {
   now?: Date;
   /** Override for tests; defaults to the real provider registry. */
   resolveProvider?: (id: string) => SerpProvider;
+  source?: ProviderUsageSource;
+  trigger?: ProviderUsageTrigger;
 };
 
 /**
@@ -237,22 +245,15 @@ export async function runKeywordCheckWithFallback(input: RunKeywordCheckWithFall
   }
   assertProjectWritable(keyword.project);
   const projectDomain = requireTrackedDomain(keyword.project);
-  const depth = resolveEffectiveSerpDepth({
-    projectDepth: keyword.project.defaults?.serpDepth,
-    requestedDepth: input.depth,
-    scheduleDepth: keyword.schedule?.serpDepth,
-  });
+  // biome-ignore format: keep the fallback module under its line cap.
+  const depth = resolveEffectiveSerpDepth({ projectDepth: keyword.project.defaults?.serpDepth, requestedDepth: input.depth, scheduleDepth: keyword.schedule?.serpDepth });
   const stopOnMatch = resolveSerpStopOnMatch(keyword.project.defaults?.serpStopOnMatch);
   const connections = await loadSerpProviderChain(keyword.projectId, input.providerId);
   await assertBudgetAvailable(keyword.projectId, input.now ?? new Date(), {
     // The keyword query above already loaded the project row; skip the cap re-read.
     capCents: keyword.project.budgetCapCents,
-    estimatedCostCents: estimatedRankCheckCostCents(
-      connections[0]?.provider,
-      depth,
-      connections[0]?.costPerCheckCents,
-      connections[0]?.rateContext ?? LIST_PROVIDER_RATE_CONTEXT,
-    ),
+    // biome-ignore format: keep the fallback module under its line cap.
+    estimatedCostCents: estimatedRankCheckCostCents(connections[0]?.provider, depth, connections[0]?.costPerCheckCents, connections[0]?.rateContext ?? LIST_PROVIDER_RATE_CONTEXT),
     excludeRankCheckId: input.rankCheckId,
   });
 
@@ -262,6 +263,21 @@ export async function runKeywordCheckWithFallback(input: RunKeywordCheckWithFall
   });
   const comparisonAllowed = previous !== null;
   const { handles, granular } = keywordRankLocation(keyword.locationRef, keyword.location);
+  const existing =
+    input.rankCheckId && "findUnique" in prisma.rankCheck
+      ? await prisma.rankCheck.findUnique({
+          select: { trigger: true },
+          where: { id: input.rankCheckId },
+        })
+      : null;
+  const trigger = input.trigger ?? (existing?.trigger === "scheduled" ? "scheduled" : "manual");
+  const providerUsage = await createProviderUsage({
+    correlationId: input.rankCheckId ?? randomUUID(),
+    feature: "rank_check",
+    projectId: keyword.projectId,
+    source: input.source ?? "app",
+    trigger,
+  });
   const outcome = await runCheckWithFallback({
     comparisonAllowed,
     connections,
@@ -279,6 +295,7 @@ export async function runKeywordCheckWithFallback(input: RunKeywordCheckWithFall
     previousPosition: previous?.position ?? null,
     completedCheckCount: keyword._count?.rankChecks ?? 0,
     projectId: keyword.projectId,
+    providerUsage,
     resolveProvider: input.resolveProvider,
     schedule: keyword.schedule ?? keyword.project.defaults ?? fallbackSchedule(),
   });
@@ -301,6 +318,7 @@ export async function runKeywordCheckWithFallback(input: RunKeywordCheckWithFall
       previousRaw: previous?.raw ?? null,
       previousRankingUrl: previous?.rankingUrl ?? null,
       projectId: keyword.projectId,
+      providerUsage: outcome.result.providerUsage,
     },
     outcome.result,
   );

@@ -156,11 +156,17 @@ export const schemas = {
       device: serpDeviceSchema,
       intent: { type: ["string", "null"] },
       keyword: { example: "rank tracker api", type: "string" },
+      language: {
+        description:
+          "SERP UI language code. Combines with country when location_key is omitted. The country default may be omitted.",
+        example: "en",
+        type: "string",
+      },
       location: { ...serpMarketSchema, description: "Backward-compatible alias for country." },
       location_key: {
         ...locationKeySchema,
         description:
-          "Canonical country, region, or city key. Takes precedence over country/location/city.",
+          "Canonical country, region, or city key. Takes precedence over country, language, location, and city.",
       },
       schedule: scheduleInputContractSchema,
       tags: { items: { type: "string" }, type: "array" },

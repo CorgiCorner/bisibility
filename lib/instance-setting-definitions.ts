@@ -4,6 +4,8 @@ export const INSTANCE_SETTING_DEFAULTS = {
   google_signup_cap: 100,
 } as const;
 
+export const PROVIDER_INSTANCE_SLUG_SETTING_KEY = "provider_instance_slug";
+
 export type InstanceSettingKey = keyof typeof INSTANCE_SETTING_DEFAULTS;
 
 export const INSTANCE_SETTING_KEYS = Object.keys(INSTANCE_SETTING_DEFAULTS) as InstanceSettingKey[];
@@ -29,4 +31,9 @@ export function parseInstanceSettingValue(key: InstanceSettingKey, value: string
 
 export function isInstanceSettingKey(value: string): value is InstanceSettingKey {
   return Object.hasOwn(INSTANCE_SETTING_DEFAULTS, value);
+}
+
+export function parseProviderInstanceSlug(value: string) {
+  const normalized = value.trim();
+  return /^[a-z0-9][a-z0-9_-]{0,63}$/i.test(normalized) ? normalized : null;
 }

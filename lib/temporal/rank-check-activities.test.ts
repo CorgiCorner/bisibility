@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ProjectReadOnlyError } from "../deployment/project-write-mode";
 import { ProviderRateLimitedError } from "../providers/rate-limit";
 import { BudgetExhaustedError } from "../rank-check/budget";
+import { ProviderChainError } from "../rank-check/fallback";
 import { RankCheckClosedBeforePersistenceError } from "../rank-check/persistence-errors";
 import {
   AUTOMATIC_EXECUTION_DISABLED_FAILURE,
@@ -11,7 +12,10 @@ import {
   discardRankCheckActivity,
   failRankCheckActivity,
   PROJECT_READ_ONLY_FAILURE,
+  PROVIDER_AUTH_FAILURE,
+  PROVIDER_BILLING_FAILURE,
   PROVIDER_RATE_LIMITED_FAILURE,
+  RANK_CHECK_CLOSED_FAILURE,
   runRankCheckActivity,
 } from "./rank-check-activities";
 
@@ -25,7 +29,13 @@ const mocks = vi.hoisted(() => ({
     auditLog: { create: vi.fn() },
     keyword: { findUnique: vi.fn() },
     providerConnection: { findFirst: vi.fn() },
-    rankCheck: { create: vi.fn(), delete: vi.fn(), update: vi.fn() },
+    rankCheck: {
+      create: vi.fn(),
+      delete: vi.fn(),
+      findUnique: vi.fn(),
+      update: vi.fn(),
+      updateMany: vi.fn(),
+    },
   },
   runKeywordCheckWithFallback: vi.fn(),
 }));
@@ -34,12 +44,16 @@ vi.mock("../db/prisma", () => ({ prisma: mocks.prisma }));
 vi.mock("../provider-rates/connection-context", () => ({
   loadProviderRateContext: mocks.loadProviderRateContext,
 }));
-vi.mock("../rank-check/fallback", () => ({
-  runKeywordCheckWithFallback: mocks.runKeywordCheckWithFallback,
-}));
-vi.mock("../rank-check/runner", () => ({
-  persistFailedRankCheck: mocks.persistFailedRankCheck,
-}));
+vi.mock("../rank-check/fallback", async () => {
+  const actual =
+    await vi.importActual<typeof import("../rank-check/fallback")>("../rank-check/fallback");
+  return { ...actual, runKeywordCheckWithFallback: mocks.runKeywordCheckWithFallback };
+});
+vi.mock("../rank-check/runner", async () => {
+  const actual =
+    await vi.importActual<typeof import("../rank-check/runner")>("../rank-check/runner");
+  return { ...actual, persistFailedRankCheck: mocks.persistFailedRankCheck };
+});
 vi.mock("./rank-check-ops", () => ({
   notifyDeferredRankCheckOps: mocks.notifyDeferredRankCheckOps,
   notifyFailedRankCheckOps: mocks.notifyFailedRankCheckOps,
@@ -74,6 +88,8 @@ describe("rank-check activities", () => {
       publicId: "kw_a00000000000000000000000",
       schedule: null,
     });
+    mocks.prisma.rankCheck.findUnique.mockResolvedValue(null);
+    mocks.prisma.rankCheck.updateMany.mockResolvedValue({ count: 0 });
   });
 
   afterEach(() => {
@@ -441,6 +457,7 @@ describe("rank-check activities", () => {
   });
 
   it("marks the running row failed through shared failure persistence", async () => {
+    const fullChainMessage = "All SERP providers failed: primary (Payment Required)";
     mocks.prisma.keyword.findUnique.mockResolvedValue({
       id: "keyword_1",
       project: { defaults: { serpDepth: 50 }, domain: "example.com" },
@@ -450,8 +467,12 @@ describe("rank-check activities", () => {
       schedule: { serpDepth: 20 },
       text: "rank tracker",
     });
+    mocks.prisma.rankCheck.findUnique.mockResolvedValue({
+      attempts: [{ message: "Payment Required", provider: "primary" }],
+      errorCode: "provider_billing",
+    });
     mocks.persistFailedRankCheck.mockResolvedValue({
-      attempts: [{ message: "failed", provider: "serpapi" }],
+      attempts: [{ message: "Payment Required", provider: "primary" }],
       id: "rank_running_1",
       provider: "primary",
       scheduledAt: new Date("2026-01-01T06:00:00.000Z"),
@@ -460,7 +481,7 @@ describe("rank-check activities", () => {
 
     await failRankCheckActivity({
       keywordId: "keyword_1",
-      message: "provider failed",
+      message: fullChainMessage,
       rankCheckId: "rank_running_1",
     });
 
@@ -471,8 +492,14 @@ describe("rank-check activities", () => {
         }),
       }),
     );
+    expect(mocks.prisma.rankCheck.findUnique).toHaveBeenCalledWith({
+      select: { attempts: true, errorCode: true },
+      where: { id: "rank_running_1" },
+    });
     expect(mocks.persistFailedRankCheck).toHaveBeenCalledWith({
-      error: "provider failed",
+      error: fullChainMessage,
+      errorCode: "provider_billing",
+      attempts: [{ message: "Payment Required", provider: "primary" }],
       existingRankCheckId: "rank_running_1",
       keywordId: "keyword_1",
       keywordPublicId: "kw_a00000000000000000000000",
@@ -492,6 +519,7 @@ describe("rank-check activities", () => {
       scheduledAt: new Date("2026-01-01T06:00:00.000Z"),
       startedAt: new Date("2026-01-01T06:00:05.000Z"),
     });
+    expect(mocks.notifyFailedRankCheckOps).toHaveBeenCalledTimes(1);
   });
 
   it("treats a stale-sweep closed row as an already-terminal failure", async () => {
@@ -545,6 +573,7 @@ describe("rank-check activities", () => {
       keywordId: "keyword_1",
       providerId: undefined,
       rankCheckId: "rank_running_1",
+      source: "app",
     });
   });
 
@@ -598,6 +627,112 @@ describe("rank-check activities", () => {
     await expect(promise).rejects.toMatchObject({
       nonRetryable: true,
       type: PROJECT_READ_ONLY_FAILURE,
+    });
+  });
+
+  it("makes provider billing failures non-retryable and stores chain metadata", async () => {
+    const chainError = new ProviderChainError([
+      { provider: "primary", message: "Payment Required", code: "provider_billing" },
+    ]);
+    mocks.runKeywordCheckWithFallback.mockRejectedValue(chainError);
+    mocks.prisma.rankCheck.updateMany.mockResolvedValue({ count: 1 });
+
+    const promise = runRankCheckActivity({
+      keywordId: "keyword_1",
+      rankCheckId: "rank_running_1",
+      source: "manual",
+    });
+
+    await expect(promise).rejects.toMatchObject({
+      message: chainError.message,
+      nonRetryable: true,
+      type: PROVIDER_BILLING_FAILURE,
+    });
+    expect(mocks.prisma.rankCheck.updateMany).toHaveBeenCalledWith({
+      data: {
+        attempts: [{ message: "Payment Required", provider: "primary" }],
+        errorCode: "provider_billing",
+      },
+      where: { id: "rank_running_1", status: "running" },
+    });
+    expect(mocks.prisma.rankCheck.updateMany).toHaveBeenCalledTimes(1);
+  });
+
+  it("makes provider auth failures non-retryable", async () => {
+    const chainError = new ProviderChainError([
+      { provider: "primary", message: "Unauthorized", code: "provider_auth" },
+    ]);
+    mocks.runKeywordCheckWithFallback.mockRejectedValue(chainError);
+    mocks.prisma.rankCheck.updateMany.mockResolvedValue({ count: 1 });
+
+    const promise = runRankCheckActivity({
+      keywordId: "keyword_1",
+      rankCheckId: "rank_running_1",
+      source: "manual",
+    });
+
+    await expect(promise).rejects.toMatchObject({
+      nonRetryable: true,
+      type: PROVIDER_AUTH_FAILURE,
+    });
+  });
+
+  it("re-throws transient chain errors so Temporal retries them", async () => {
+    const chainError = new ProviderChainError([
+      { provider: "primary", message: "timeout", code: "provider_transient" },
+    ]);
+    mocks.runKeywordCheckWithFallback.mockRejectedValue(chainError);
+    mocks.prisma.rankCheck.updateMany.mockResolvedValue({ count: 1 });
+
+    const promise = runRankCheckActivity({
+      keywordId: "keyword_1",
+      rankCheckId: "rank_running_1",
+      source: "manual",
+    });
+
+    await expect(promise).rejects.toBe(chainError);
+    expect(mocks.prisma.rankCheck.updateMany).toHaveBeenCalledWith({
+      data: {
+        attempts: [{ message: "timeout", provider: "primary" }],
+        errorCode: "provider_transient",
+      },
+      where: { id: "rank_running_1", status: "running" },
+    });
+  });
+
+  it("propagates metadata write failure instead of swallowing it", async () => {
+    const chainError = new ProviderChainError([
+      { provider: "primary", message: "Payment Required", code: "provider_billing" },
+    ]);
+    mocks.runKeywordCheckWithFallback.mockRejectedValue(chainError);
+    mocks.prisma.rankCheck.updateMany.mockRejectedValue(new Error("connection refused"));
+
+    const promise = runRankCheckActivity({
+      keywordId: "keyword_1",
+      rankCheckId: "rank_running_1",
+      source: "manual",
+    });
+
+    await expect(promise).rejects.toThrow("connection refused");
+    expect(mocks.prisma.rankCheck.updateMany).toHaveBeenCalledTimes(1);
+  });
+
+  it("throws a non-retryable closed failure when no running row is updated", async () => {
+    const chainError = new ProviderChainError([
+      { provider: "primary", message: "Payment Required", code: "provider_billing" },
+    ]);
+    mocks.runKeywordCheckWithFallback.mockRejectedValue(chainError);
+    mocks.prisma.rankCheck.updateMany.mockResolvedValue({ count: 0 });
+
+    const promise = runRankCheckActivity({
+      keywordId: "keyword_1",
+      rankCheckId: "rank_running_1",
+      source: "manual",
+    });
+
+    await expect(promise).rejects.toMatchObject({
+      nonRetryable: true,
+      type: RANK_CHECK_CLOSED_FAILURE,
     });
   });
 });

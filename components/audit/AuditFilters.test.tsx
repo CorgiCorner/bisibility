@@ -87,4 +87,14 @@ describe("AuditFilters command registration", () => {
     expect(screen.queryByTestId("cmd-audit-export")).toBeNull();
     expect(screen.getByTestId("cmd-audit-filter")).toBeTruthy();
   });
+
+  it("keeps Export in the filter cluster so it can share a row with the controls", () => {
+    renderFilters({ visibleCount: 4 });
+
+    const cluster = screen.getByTestId("audit-filter-controls");
+    expect(cluster).toContainElement(screen.getByRole("button", { name: /Export/i }));
+    expect(
+      screen.getByText("4 of 10 events").closest("[data-testid='audit-filter-controls']"),
+    ).toBe(null);
+  });
 });

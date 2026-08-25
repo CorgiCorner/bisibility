@@ -1,5 +1,5 @@
 import { mockWorkspaces } from "@/components/shell/workspaces.mock";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 
@@ -32,6 +32,21 @@ describe("WorkspaceSwitcher", () => {
       ).toHaveAttribute("href", `/app/${mockWorkspaces[1].publicId}/dashboard`);
     },
   );
+
+  it("reserves the full available sidebar width when expanded", () => {
+    render(
+      <WorkspaceSwitcher
+        activeProjectId={mockWorkspaces[0].id}
+        canCreateWorkspace
+        workspaces={mockWorkspaces}
+      />,
+    );
+
+    const trigger = screen.getByRole("button", { name: "Switch project" });
+    const outerWrapper = trigger.closest("[data-tooltip]")?.parentElement;
+
+    expect(outerWrapper).toHaveClass("w-full");
+  });
 
   it("labels the collapsed trigger with a right-aligned tooltip", () => {
     render(
@@ -89,6 +104,37 @@ describe("WorkspaceSwitcher", () => {
     expect(trigger.className).toContain("bg-bg-elev");
   });
 
+  it("keeps the trigger workspace tile elevated in expanded and collapsed states", () => {
+    const { rerender } = render(
+      <WorkspaceSwitcher
+        activeProjectId={mockWorkspaces[0].id}
+        canCreateWorkspace
+        workspaces={mockWorkspaces}
+      />,
+    );
+
+    const expectElevatedTile = () => {
+      const trigger = screen.getByRole("button", { name: "Switch project" });
+      const tile = trigger.querySelector("[aria-hidden]");
+
+      expect(tile).toHaveClass("bg-bg-elev");
+      expect(tile).not.toHaveClass("bg-bg-sunken");
+    };
+
+    expectElevatedTile();
+
+    rerender(
+      <WorkspaceSwitcher
+        activeProjectId={mockWorkspaces[0].id}
+        canCreateWorkspace
+        collapsed
+        workspaces={mockWorkspaces}
+      />,
+    );
+
+    expectElevatedTile();
+  });
+
   it("shows the workspace tile in the trigger without encoding selection", () => {
     render(
       <WorkspaceSwitcher
@@ -102,5 +148,50 @@ describe("WorkspaceSwitcher", () => {
     const tile = trigger.querySelector("[aria-hidden]");
     expect(tile?.textContent).toBe("a");
     expect(tile?.className).not.toContain("accent");
+  });
+
+  it("shows an opaque paper instantly and lets Escape only close the menu", async () => {
+    render(
+      <WorkspaceSwitcher
+        activeProjectId={mockWorkspaces[0].id}
+        canCreateWorkspace
+        workspaces={mockWorkspaces}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Switch project" }));
+    const menu = await screen.findByRole("menu", { name: "Projects" });
+    const paper = document.querySelector<HTMLElement>(".MuiMenu-paper");
+
+    expect(paper).toHaveStyle({ backgroundColor: "var(--bg-elev)" });
+    expect(paper?.parentElement?.style.opacity).toBe("");
+    expect(paper?.parentElement?.style.transform ?? "").not.toMatch(/scale/);
+    expect(paper?.style.transition ?? "").not.toMatch(/180ms/);
+
+    fireEvent.keyDown(menu, { key: "Escape" });
+    await waitFor(() => {
+      expect(screen.queryByRole("menu", { name: "Projects" })).toBeNull();
+    });
+
+    fireEvent.keyDown(document.body, { key: "Escape" });
+    expect(screen.queryByRole("menu", { name: "Projects" })).toBeNull();
+  });
+
+  it("closes on a second trigger click instead of reopening", async () => {
+    render(
+      <WorkspaceSwitcher
+        activeProjectId={mockWorkspaces[0].id}
+        canCreateWorkspace
+        workspaces={mockWorkspaces}
+      />,
+    );
+
+    const trigger = screen.getByRole("button", { name: "Switch project" });
+    fireEvent.click(trigger);
+    await screen.findByRole("menu", { name: "Projects" });
+    fireEvent.click(trigger);
+    await waitFor(() => {
+      expect(screen.queryByRole("menu", { name: "Projects" })).toBeNull();
+    });
   });
 });

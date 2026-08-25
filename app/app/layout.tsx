@@ -1,5 +1,6 @@
 import { DeploymentModeProvider } from "@/components/shell/DeploymentModeProvider";
 import { ToastProvider } from "@/components/ui";
+import { appExtensions } from "@/lib/app-extensions";
 import { redirectToSetupIfFirstRun } from "@/lib/auth/first-run";
 import { requireSession } from "@/lib/auth/session";
 import { isCloud } from "@/lib/deployment/deployment";
@@ -16,10 +17,11 @@ type AppLayoutProps = {
 export default async function AppLayout({ children }: Readonly<AppLayoutProps>) {
   await redirectToSetupIfFirstRun();
   await requireSession();
+  const decorated = await appExtensions.renderOnboardingQuizSlot(children);
 
   return (
     <DeploymentModeProvider deploymentMode={isCloud ? "cloud" : "self-host"}>
-      <ToastProvider>{children}</ToastProvider>
+      <ToastProvider>{decorated}</ToastProvider>
     </DeploymentModeProvider>
   );
 }

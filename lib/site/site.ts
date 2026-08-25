@@ -6,6 +6,9 @@ export const MARKETING_URL =
   process.env.NEXT_PUBLIC_MARKETING_URL?.trim().replace(/\/$/, "") || "https://bisibility.com";
 export const GITHUB_URL = "https://github.com/CorgiCorner/bisibility";
 export const LINKEDIN_URL = "https://www.linkedin.com/company/bisibility";
+export const MEDIUM_URL = "https://medium.com/@bisibility_com";
+export const INSTAGRAM_URL = "https://www.instagram.com/bisibility_com";
+export const X_URL = "https://x.com/bisibility_com";
 export const CLOUD_BETA_SIGNUP_HREF = "/login";
 export const CLOUD_BETA_EMAIL_NOTICE =
   "By joining the hosted beta, you agree to receive emails about beta updates, incidents, pricing, and general availability.";

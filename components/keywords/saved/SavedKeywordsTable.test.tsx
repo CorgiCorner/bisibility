@@ -120,7 +120,7 @@ describe("SavedKeywordsTable", () => {
       "aria-pressed",
       "true",
     );
-    fireEvent.click(screen.getByRole("button", { name: "Add & track 3 keywords" }));
+    fireEvent.click(screen.getByRole("button", { name: "Add keywords" }));
 
     await waitFor(() =>
       expect(mocks.addKeywordsMatrix).toHaveBeenCalledWith(
@@ -183,7 +183,7 @@ describe("SavedKeywordsTable", () => {
     expect(es).toHaveAttribute("aria-pressed", "true");
 
     fireEvent.click(us);
-    fireEvent.click(screen.getByRole("button", { name: "Add & track 2 keywords" }));
+    fireEvent.click(screen.getByRole("button", { name: "Add keywords" }));
 
     await waitFor(() =>
       expect(mocks.addKeywordsMatrix).toHaveBeenCalledWith(

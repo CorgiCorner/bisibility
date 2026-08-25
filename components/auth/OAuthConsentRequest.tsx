@@ -117,7 +117,7 @@ export function OAuthConsentRequest({
   return (
     <Card className="w-full max-w-[520px] p-5 sm:p-6" size="lg">
       <div className="flex flex-wrap items-start gap-3">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[10px] bg-accent-soft text-accent-text">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[10px] bg-accent-soft text-accent-solid">
           <ShieldCheck aria-hidden size={21} weight="fill" />
         </span>
         <div>

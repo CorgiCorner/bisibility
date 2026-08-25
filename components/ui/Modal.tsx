@@ -96,6 +96,7 @@ export function Modal({
         backdrop: { sx: { backgroundColor: "rgba(20,16,8,.44)" } },
         paper: {
           className: "rounded-card-lg",
+          elevation: 0,
           onKeyDown: handleKeyDown,
           sx: {
             "&.rounded-card-lg": { borderRadius: UI_RADIUS_ROLES["card-lg"] },

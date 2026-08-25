@@ -39,6 +39,7 @@ type CreateMarket = {
   city: string | null | undefined;
   country: string;
   device: "desktop" | "mobile";
+  language?: string | null;
   locationKey?: string | null;
 };
 type KeywordCreateTransaction = Pick<
@@ -73,6 +74,7 @@ function createMarket(
     city?: string | null;
     country?: string;
     device?: "desktop" | "mobile";
+    language?: string | null;
     location?: string;
     location_key?: string;
   },
@@ -88,24 +90,37 @@ function createMarket(
   }
   const country = item.location ?? item.country;
   if (country) {
-    return { city: item.city, country, device: item.device ?? defaults.device };
+    return {
+      city: item.city,
+      country,
+      device: item.device ?? defaults.device,
+      language: item.language,
+    };
   }
   return {
     city: defaults.city,
     country: defaults.country,
     device: item.device ?? defaults.device,
-    locationKey: defaults.locationKey,
+    language: item.language,
+    locationKey: item.language ? undefined : defaults.locationKey,
   };
 }
 
 function locationInput(market: CreateMarket, projectId: string) {
   return market.locationKey
     ? { projectId, selection: { canonicalKey: market.locationKey, kind: "city" as const } }
-    : { city: market.city, country: market.country, projectId };
+    : {
+        city: market.city,
+        country: market.country,
+        language: market.language,
+        projectId,
+      };
 }
 
 function marketKey(market: CreateMarket) {
-  return [market.locationKey ?? "", market.country, market.city ?? ""].join("\u0000");
+  return [market.locationKey ?? "", market.country, market.city ?? "", market.language ?? ""].join(
+    "\u0000",
+  );
 }
 
 export async function createKeywords(

@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, it, after, before } from "node:test";
 import { parseStarterNames, parseDocsNames, registryPathFromArgs, validateContract } from "./public-env-contract.mjs";
-import { envClassification, primaryCategories, classifiedAllowlist, deploymentInputKeys } from "./public-env-classification.mjs";
+import { classifyVariable, envClassification, primaryCategories, classifiedAllowlist, deploymentInputKeys } from "./public-env-classification.mjs";
 import { scanRuntimeEnvNames } from "./public-env-scanner.mjs";
 
 const baseRuntime = new Set(["DATABASE_URL", "REDIS_URL", "SITE_URL", "NODE_ENV"]);
@@ -152,6 +152,14 @@ describe("deploymentInput excluded from classifiedAllowlist", () => {
         assert.equal(allow.has(key), false, `deploymentInput key ${key} should not be in classifiedAllowlist`);
       }
     }
+  });
+});
+
+describe("hosted Turnstile environment classification", () => {
+  it("keeps both keys private and does not runtime-bake the client site key", () => {
+    assert.equal(classifyVariable("NEXT_PUBLIC_TURNSTILE_SITE_KEY"), "hostedOnly");
+    assert.equal(classifyVariable("TURNSTILE_SITEVERIFY_URL"), "hostedOnly");
+    assert.equal(deploymentInputKeys().has("NEXT_PUBLIC_TURNSTILE_SITE_KEY"), false);
   });
 });
 

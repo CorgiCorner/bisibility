@@ -60,11 +60,12 @@ export function KeywordsFilterBar({
       <div className="grid gap-3">
         {hasContextControls ? (
           <div
-            className="contents xl:flex xl:items-center xl:gap-2"
+            // `contents` would leak these into the parent grid as separate rows below xl.
+            className="flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-nowrap sm:items-center sm:gap-2"
             data-keywords-toolbar-context=""
           >
             {scopeControl ? (
-              <div className="flex min-w-0 items-center gap-2 xl:shrink-0">{scopeControl}</div>
+              <div className="flex min-w-0 items-center gap-2">{scopeControl}</div>
             ) : null}
             {groupingControl ? <div className="flex-none">{groupingControl}</div> : null}
             {savedViewControl ? (

@@ -162,6 +162,12 @@ enum SignalSeverity {
   critical
 }
 
+enum OnboardingQuizStatus {
+  IN_PROGRESS
+  COMPLETED
+  SKIPPED_ALL
+}
+
 model User {
   id                           String                   @id @default(cuid())
   publicId                     String                   @unique
@@ -199,6 +205,7 @@ model User {
   writeModeChangedProjects     Project[]                @relation("ProjectWriteModeChangedBy")
   signalsCreated               Signal[]                 @relation("SignalCreator")
   createdIngestHooks           IngestHook[]
+  onboardingQuizResponses      OnboardingQuizResponse[]
   createdAt                    DateTime                 @default(now())
   updatedAt                    DateTime                 @updatedAt
 
@@ -445,6 +452,7 @@ model Waitlist {
   email                String   @unique
   source               String
   cloudPrice           String?
+  prefersUsagePricing  Boolean  @default(false)
   hostedPrice          String?
   hostedPriceAnsweredAt DateTime?
   // Lifetime count: incremented on every accepted upsert across all sources;
@@ -515,6 +523,13 @@ model ProviderCostEntry {
   project       Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
   connectionId  String
   feature       ProviderCostFeature @default(ranked_keywords)
+  provider      String?
+  keywordId     String?
+  source        String?
+  trigger       String?
+  tag           String?
+  correlationId String?
+  providerRequestId String?
   costCents     Decimal             @db.Decimal(10, 4)
   unitCostCents Decimal?            @db.Decimal(10, 4)
   cached        Boolean             @default(false)
@@ -524,6 +539,8 @@ model ProviderCostEntry {
   @@index([projectId, createdAt])
   @@index([connectionId, createdAt])
   @@index([connectionId, feature, createdAt])
+  @@index([projectId, correlationId])
+  @@index([provider, providerRequestId])
   @@map("provider_cost_entries")
 }
 
@@ -752,6 +769,7 @@ model RankCheck {
   /// Allowed values: "running", "completed", "failed", "deferred".
   status               String               @default("completed")
   error                String?
+  errorCode            String?
   checkedAt            DateTime             @default(now())
   provider             String
   /// Allowed values when set: "scheduled", "manual".
@@ -845,6 +863,7 @@ model QueuedRankCheckTask {
   rankCheckId               String               @unique
   rankCheck                 RankCheck            @relation(fields: [rankCheckId], references: [id], onDelete: Cascade)
   providerTaskId            String?              @unique
+  providerTag               String?
   state                     String
   costCents                 Decimal?             @db.Decimal(10, 4)
   error                     String?
@@ -1563,4 +1582,34 @@ model DataMigration {
   finalizationError    String?
 
   @@map("data_migrations")
+}
+
+model OnboardingQuizResponse {
+  id          String                 @id @default(cuid())
+  userId      String
+  quizVersion Int
+  status      OnboardingQuizStatus   @default(IN_PROGRESS)
+  startedAt   DateTime               @default(now())
+  finishedAt  DateTime?
+  updatedAt   DateTime               @updatedAt
+  user        User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answers     OnboardingQuizAnswer[]
+
+  @@unique([userId, quizVersion])
+  @@index([userId])
+  @@map("onboarding_quiz_responses")
+}
+
+model OnboardingQuizAnswer {
+  id         String                 @id @default(cuid())
+  responseId String
+  questionId String
+  answerIds  String[]
+  createdAt  DateTime               @default(now())
+  updatedAt  DateTime               @updatedAt
+  response   OnboardingQuizResponse @relation(fields: [responseId], references: [id], onDelete: Cascade)
+
+  @@unique([responseId, questionId])
+  @@index([responseId])
+  @@map("onboarding_quiz_answers")
 }

@@ -45,8 +45,9 @@ describe("DomainIconLayer", () => {
   it("paints an opaque layer surface so transparent favicon pixels never bleed through", () => {
     render(<DomainIconLayer src="https://icons.example.com/favicon.png" testId="domain-icon" />);
     loadProbe(screen.getByTestId("domain-icon-probe"), 32, 32);
-    expect(screen.getByTestId("domain-icon")).toHaveStyle({
-      backgroundColor: "var(--bg-sunken)",
+    const layer = screen.getByTestId("domain-icon");
+    expect(layer).toHaveClass("bg-bg-sunken");
+    expect(layer).toHaveStyle({
       backgroundImage: 'url("https://icons.example.com/favicon.png")',
       backgroundPosition: "center",
       backgroundSize: "cover",

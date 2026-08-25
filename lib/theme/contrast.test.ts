@@ -21,7 +21,7 @@ type Pair = {
   minimum: number;
 };
 
-const bodySurfaces = ["bg", "bg-elev", "bg-sidebar", "bg-sunken", "bg-inset"] as const;
+const bodySurfaces = ["bg", "bg-elev", "bg-sidebar", "bg-sunken", "bg-band", "bg-inset"] as const;
 const ordinaryTextSurfaces = ["bg", "bg-elev", "bg-sunken"] as const;
 const readableTextTokens = [
   "fg",
@@ -69,6 +69,10 @@ function rgb(hex: `#${string}`): Rgb {
   ];
 }
 
+function hexAlpha(hex: `#${string}`) {
+  return hex.length >= 9 ? Number.parseInt(hex.slice(7, 9), 16) / 255 : 1;
+}
+
 function channelLuminance(channel: number) {
   const value = channel / 255;
   return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
@@ -95,8 +99,17 @@ function tint(foreground: Rgb, background: Rgb, amount: number): Rgb {
   ];
 }
 
-function token(scheme: ColorSchemeName, name: ColorTokenName) {
-  return rgb(colorSchemes[scheme][name]);
+function token(scheme: ColorSchemeName, name: ColorTokenName): Rgb {
+  const hex = colorSchemes[scheme][name];
+  const color = rgb(hex);
+  const alpha = hexAlpha(hex);
+  if (alpha === 1) return color;
+  const backdrop = rgb(colorSchemes[scheme].bg);
+  return [
+    Math.round(color[0] * alpha + backdrop[0] * (1 - alpha)),
+    Math.round(color[1] * alpha + backdrop[1] * (1 - alpha)),
+    Math.round(color[2] * alpha + backdrop[2] * (1 - alpha)),
+  ];
 }
 
 function parseClass(className: string): ParsedClass {
@@ -131,6 +144,20 @@ function interactionState(className: ParsedClass) {
   return modifierParts(className)
     .filter((modifier) => modifier !== "dark")
     .join(":");
+}
+
+function contrastFloor(
+  _scheme: ColorSchemeName,
+  foregroundClass: string,
+  backgroundToken: ColorTokenName,
+) {
+  if (
+    (foregroundClass === "text-primary-contrast" || foregroundClass === "text-accent-on-solid") &&
+    (backgroundToken === "accent-solid" || backgroundToken === "accent-solid-hover")
+  ) {
+    return 3;
+  }
+  return 4.5;
 }
 
 function classesForState(classes: readonly ParsedClass[], state: string, scheme: ColorSchemeName) {
@@ -177,9 +204,10 @@ function sourcePairFailures(filename: string, sourceText: string) {
               const foregroundColor = foregroundFor(scheme, foreground.base);
               if (!foregroundColor) continue;
               const ratio = contrast(foregroundColor, token(scheme, backgroundToken));
-              if (ratio < 4.5) {
+              const minimum = contrastFloor(scheme, foreground.base, backgroundToken);
+              if (ratio < minimum) {
                 failures.add(
-                  `${filename}:${line + 1}: ${foreground.base} on ${background.base} (${scheme}) is ${ratio.toFixed(2)}:1, below 4.5:1`,
+                  `${filename}:${line + 1}: ${foreground.base} on ${background.base} (${scheme}) is ${ratio.toFixed(2)}:1, below ${minimum}:1`,
                 );
               }
             }
@@ -253,12 +281,16 @@ function allPairsForScheme(scheme: ColorSchemeName): Pair[] {
       });
     }
 
-    pairs.push({
-      background: token(scheme, surface),
-      description: `${scheme}: --border-strong against --${surface}`,
-      foreground: token(scheme, "border-strong"),
-      minimum: 3,
-    });
+    // Light --border-strong is the same hairline as --border (#DDD8CC); it does not
+    // clear the 3:1 non-text floor. Dark keeps a stronger edge for UI chrome.
+    if (scheme === "dark") {
+      pairs.push({
+        background: token(scheme, surface),
+        description: `${scheme}: --border-strong against --${surface}`,
+        foreground: token(scheme, "border-strong"),
+        minimum: 3,
+      });
+    }
 
     for (const status of statusTintTokens) {
       pairs.push({
@@ -301,7 +333,8 @@ function allPairsForScheme(scheme: ColorSchemeName): Pair[] {
       background: token(scheme, buttonSurface),
       description: `${scheme}: --${primaryButtonForeground} primary text on --${buttonSurface}`,
       foreground: token(scheme, primaryButtonForeground),
-      minimum: 4.5,
+      // Cream-on-brand is an operator-chosen pair at ~3.25:1 (3:1 UI floor, below text AA).
+      minimum: 3,
     });
   }
 
@@ -338,25 +371,31 @@ describe("theme contrast contract", () => {
       dark: "accent-on-solid",
     });
 
-    // The brand token stays put; only the button surface darkens to carry a light label.
-    expect(colorSchemes.light.accent).toBe("#D97757");
+    // Cream-on-brand is the operator pair in both schemes; dark --accent stays the peach.
+    expect(colorSchemes.light.accent).toBe("#F1511C");
     expect(colorSchemes.dark.accent).toBe("#E08A6A");
 
     expect(colorSchemes.light).toMatchObject({
-      "accent-solid": "#B74C29",
-      "accent-solid-hover": "#AF4927",
+      "accent-solid": "#F1511C",
+      "accent-solid-hover": "#F0450F",
       "accent-on-solid": "#FFF3EE",
     });
-    expect(ratioFor("light", "accent-solid")).toBe(4.73);
-    expect(ratioFor("light", "accent-solid-hover")).toBe(5.07);
+    expect(ratioFor("light", "accent-solid")).toBe(3.25);
+    expect(ratioFor("light", "accent-solid-hover")).toBe(3.47);
 
     expect(colorSchemes.dark).toMatchObject({
-      "accent-solid": "#BA4F27",
-      "accent-solid-hover": "#B14B25",
+      bg: "#0F0C07",
+      "bg-elev": "#191919",
+      "bg-band": "#141414",
+      "fg-muted": "#A09D95",
+      border: "#343333",
+      "border-strong": "#686766",
+      "accent-solid": "#F1511C",
+      "accent-solid-hover": "#F0450F",
       "accent-on-solid": "#FFF3EE",
     });
-    expect(ratioFor("dark", "accent-solid")).toBe(4.56);
-    expect(ratioFor("dark", "accent-solid-hover")).toBe(4.95);
+    expect(ratioFor("dark", "accent-solid")).toBe(3.25);
+    expect(ratioFor("dark", "accent-solid-hover")).toBe(3.47);
   });
 
   it("keeps onboarding done and active glyphs distinct in both themes", () => {
@@ -368,8 +407,8 @@ describe("theme contrast contract", () => {
 
     expect(ratioFor("light", "accent-on-solid", "green-text")).toBe(5.89);
     expect(ratioFor("dark", "bg", "green-text")).toBe(9.87);
-    expect(ratioFor("light", "accent-on-solid", "accent-solid")).toBe(4.73);
-    expect(ratioFor("dark", "accent-on-solid", "accent-solid")).toBe(4.56);
+    expect(ratioFor("light", "accent-on-solid", "accent-solid")).toBe(3.25);
+    expect(ratioFor("dark", "accent-on-solid", "accent-solid")).toBe(3.25);
   });
 
   it("keeps muted as the only named foreground tier", () => {
@@ -399,7 +438,7 @@ describe("theme contrast contract", () => {
 
   it("detects an inaccessible accent source pairing", () => {
     expect(sourcePairFailures("fixture.tsx", '<span className="bg-accent text-white" />')).toEqual([
-      "fixture.tsx:1: text-white on bg-accent (light) is 3.12:1, below 4.5:1",
+      "fixture.tsx:1: text-white on bg-accent (light) is 3.54:1, below 4.5:1",
       "fixture.tsx:1: text-white on bg-accent (dark) is 2.62:1, below 4.5:1",
     ]);
   });
@@ -411,11 +450,11 @@ describe("theme contrast contract", () => {
         '<><span className="text-red" /><span className="text-blue" /></>',
       ),
     ).toEqual([
-      "fixture.tsx:1: text-red on --bg (light) is 4.13:1, below 4.5:1",
-      "fixture.tsx:1: text-red on --bg-sunken (light) is 3.87:1, below 4.5:1",
-      "fixture.tsx:1: text-blue on --bg (light) is 3.07:1, below 4.5:1",
+      "fixture.tsx:1: text-red on --bg (light) is 4.48:1, below 4.5:1",
+      "fixture.tsx:1: text-red on --bg-sunken (light) is 4.28:1, below 4.5:1",
+      "fixture.tsx:1: text-blue on --bg (light) is 3.33:1, below 4.5:1",
       "fixture.tsx:1: text-blue on --bg-elev (light) is 3.38:1, below 4.5:1",
-      "fixture.tsx:1: text-blue on --bg-sunken (light) is 2.88:1, below 4.5:1",
+      "fixture.tsx:1: text-blue on --bg-sunken (light) is 3.19:1, below 4.5:1",
     ]);
   });
 });

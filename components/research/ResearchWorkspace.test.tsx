@@ -320,6 +320,17 @@ describe("ResearchWorkspace", () => {
     window.localStorage.clear();
   });
 
+  it("renders the search card tooltip wrapper at full grid width", () => {
+    renderWorkspace(vi.fn() as unknown as ResearchKeywordsAction);
+
+    const activeConnection = screen.getByLabelText("active connection");
+    const searchCardWrapper = activeConnection.parentElement?.parentElement;
+    const tooltipWrapper = searchCardWrapper?.parentElement;
+
+    expect(tooltipWrapper).toHaveClass("w-full");
+    expect(searchCardWrapper).toHaveClass("w-full");
+  });
+
   it("prefills a qualified country market from the Saved deep link", () => {
     const researchAction = vi.fn() as unknown as ResearchKeywordsAction;
     renderWorkspace(researchAction, {

@@ -72,12 +72,6 @@ export function TimelineRow({ canDelete, item, projectId }: Readonly<TimelineRow
       className="flex items-start gap-3.5 border-border-soft border-b px-5 py-[13px] transition-colors hover:bg-bg-sunken last:border-b-0"
       id={`signal-${item.id}`}
     >
-      <span className="flex w-[18px] flex-none justify-center pt-2">
-        <span
-          className="h-[9px] w-[9px] rounded-full"
-          style={{ backgroundColor: tint.color, boxShadow: `0 0 0 3px ${tint.bg}` }}
-        />
-      </span>
       <div className="grid min-w-0 flex-1 gap-2 md:grid-cols-[124px_minmax(0,1fr)_auto] md:items-start">
         <MonoText className="text-fg-muted" component="span">
           {item.date}

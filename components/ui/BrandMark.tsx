@@ -5,6 +5,8 @@ export type BrandTone = "fg" | "accent" | "inverse";
 
 export type BrandMarkProps = {
   className?: string;
+  /** Explicit inline color. Overrides the selected tone. */
+  color?: string;
   /** Accessible name. Omitted keeps the mark decorative (`aria-hidden`). */
   label?: string;
   /** Rendered edge length in CSS px. Also picks the optical cut. */
@@ -27,7 +29,7 @@ export const BRAND_TONE_COLOR: Record<BrandTone, string> = {
   inverse: "var(--bg)",
 };
 
-export function BrandMark({ className, label, size = 26, tone = "fg" }: BrandMarkProps) {
+export function BrandMark({ className, color, label, size = 26, tone = "fg" }: BrandMarkProps) {
   const named = label !== undefined;
 
   return (
@@ -39,7 +41,7 @@ export function BrandMark({ className, label, size = 26, tone = "fg" }: BrandMar
       role={named ? "img" : undefined}
       // Forced colors would repaint the whole path in one system colour and close the
       // evenodd counter, turning the mark into a solid block.
-      style={{ color: BRAND_TONE_COLOR[tone], forcedColorAdjust: "none" }}
+      style={{ color: color ?? BRAND_TONE_COLOR[tone], forcedColorAdjust: "none" }}
       viewBox={`0 0 ${BRAND_MARK_VIEW_BOX_SIZE} ${BRAND_MARK_VIEW_BOX_SIZE}`}
       width={size}
       xmlns="http://www.w3.org/2000/svg"

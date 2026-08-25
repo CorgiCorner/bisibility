@@ -94,7 +94,17 @@ describe("ProjectMarketsSelector", () => {
     renderSelector();
 
     const section = screen.getByRole("region", { name: "Markets" });
-    expect(within(section).getByText("MARKETS")).toHaveStyle({ fontSize: "10px" });
+    expect(within(section).getByText("Markets")).toHaveClass(
+      "text-[12.5px]",
+      "font-semibold",
+      "text-fg",
+    );
+    expect(within(section).getByText("Devices")).toHaveClass(
+      "text-[12.5px]",
+      "font-semibold",
+      "text-fg",
+    );
+    expect(within(section).getAllByText("Required")).toHaveLength(2);
     expect(
       within(section).queryByText("New keywords are created for every selected market and device."),
     ).not.toBeInTheDocument();
@@ -159,6 +169,22 @@ describe("ProjectMarketsSelector", () => {
       "aria-pressed",
       "true",
     );
+  });
+
+  it("points an empty project at New market instead of Settings", () => {
+    render(
+      <ProjectMarketsSelector
+        defaultDevice="desktop"
+        initialMarketKeys={[]}
+        markets={{ ...markets, markets: [] }}
+        onChange={vi.fn()}
+        projectId="prj_1"
+      />,
+    );
+
+    expect(screen.getByText("No markets yet. Add one with New market.")).toBeInTheDocument();
+    expect(screen.queryByText(/settings/i)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "New market" })).toBeEnabled();
   });
 
   it("keeps the project market limit guard on the registry action", () => {

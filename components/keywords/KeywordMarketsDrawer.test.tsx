@@ -133,14 +133,14 @@ describe("KeywordMarketsDrawer", () => {
   it("removes only deselected target IDs and routes away from a deleted current target", async () => {
     const actions = setup();
 
-    expect(screen.getByRole("heading", { name: /Manage markets & devices/ })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Manage markets and devices/ })).toBeInTheDocument();
     expect(screen.queryByText("Details")).not.toBeInTheDocument();
     expect(screen.queryByText("Schedule")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Keep Netherlands mobile" }));
     expect(screen.getByLabelText("Keyword target change")).toHaveTextContent(
       "1 markets x 1 device = 1 checks per run",
     );
-    fireEvent.click(screen.getByRole("button", { name: "Save markets & devices" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save markets and devices" }));
 
     await waitFor(() =>
       expect(actions.bulkDeleteAction).toHaveBeenCalledWith({
@@ -159,7 +159,7 @@ describe("KeywordMarketsDrawer", () => {
     ]);
 
     fireEvent.click(screen.getByRole("button", { name: "Add Netherlands" }));
-    fireEvent.click(screen.getByRole("button", { name: "Save markets & devices" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save markets and devices" }));
 
     await waitFor(() => expect(actions.addKeywordsMatrixAction).toHaveBeenCalledOnce());
     expect(actions.addKeywordsMatrixAction).toHaveBeenCalledWith(
@@ -177,7 +177,7 @@ describe("KeywordMarketsDrawer", () => {
     const actions = setup();
 
     fireEvent.click(screen.getByRole("button", { name: "Clear markets" }));
-    expect(screen.getByRole("button", { name: "Save markets & devices" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Save markets and devices" })).toBeDisabled();
     expect(screen.getByText("Select at least one market and device.")).toBeInTheDocument();
     expect(actions.addKeywordsMatrixAction).not.toHaveBeenCalled();
     expect(actions.bulkDeleteAction).not.toHaveBeenCalled();
@@ -187,7 +187,7 @@ describe("KeywordMarketsDrawer", () => {
     const actions = setup([target("kw_us_desktop", "country:US:lang:en", "Desktop")]);
 
     fireEvent.click(screen.getByRole("button", { name: "Keep Netherlands mobile" }));
-    fireEvent.click(screen.getByRole("button", { name: "Save markets & devices" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save markets and devices" }));
 
     expect(
       await screen.findByText(
@@ -219,7 +219,7 @@ describe("KeywordMarketsDrawer", () => {
     });
 
     fireEvent.click(screen.getByRole("button", { name: "Keep Netherlands mobile" }));
-    fireEvent.click(screen.getByRole("button", { name: "Save markets & devices" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save markets and devices" }));
 
     expect(
       await screen.findByText(
@@ -229,7 +229,7 @@ describe("KeywordMarketsDrawer", () => {
     expect(addKeywordsMatrixAction).toHaveBeenCalledOnce();
     expect(bulkDeleteAction).toHaveBeenCalledOnce();
 
-    fireEvent.click(screen.getByRole("button", { name: "Save markets & devices" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save markets and devices" }));
 
     await waitFor(() => expect(bulkDeleteAction).toHaveBeenCalledTimes(2));
     expect(addKeywordsMatrixAction).toHaveBeenCalledOnce();

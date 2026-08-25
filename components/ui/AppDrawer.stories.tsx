@@ -37,7 +37,7 @@ const footer = (
       Cancel
     </button>
     <button
-      className="rounded-[9px] bg-accent-solid px-4 py-2.5 text-[13px] font-semibold text-white"
+      className="rounded-[9px] bg-accent-solid px-4 py-2.5 text-[13px] font-semibold text-accent-on-solid"
       type="button"
     >
       Save
@@ -52,7 +52,7 @@ function Harness() {
     <div className="min-h-[560px] bg-bg p-6 text-fg">
       <div className="flex items-center gap-3">
         <button
-          className="rounded-[9px] bg-accent-solid px-4 py-2.5 text-[13px] font-semibold text-white"
+          className="rounded-[9px] bg-accent-solid px-4 py-2.5 text-[13px] font-semibold text-accent-on-solid"
           onClick={() => setOpen(true)}
           type="button"
         >

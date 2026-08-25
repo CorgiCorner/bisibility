@@ -19,7 +19,7 @@ export type StatusPillProps = {
 const statusMeta = {
   connected: { label: "Connected", color: "var(--green)" },
   needs_reauth: { label: "Reconnect required", color: "var(--red)" },
-  ready: { label: "Ready", color: "var(--blue)" },
+  ready: { label: "Ready", color: "var(--green)" },
   planned: { label: "Planned", color: "var(--yellow)" },
   optional: { label: "Optional", color: "var(--fg-muted)" },
   success: { label: "Success", color: "var(--green)" },
@@ -28,12 +28,12 @@ const statusMeta = {
   wrong_url: { label: "Wrong URL", color: "var(--yellow)" },
   primary: { label: "Primary", color: "var(--accent)" },
   disabled: { label: "Disabled", color: "var(--fg-muted)" },
-  create: { label: "CREATE", color: "var(--green)" },
-  update: { label: "UPDATE", color: "var(--yellow)" },
-  delete: { label: "DELETE", color: "var(--red)" },
-  import: { label: "IMPORT", color: "var(--blue)" },
-  export: { label: "EXPORT", color: "var(--blue)" },
-  login: { label: "LOGIN", color: "var(--purple)" },
+  create: { label: "Create", color: "var(--green)" },
+  update: { label: "Update", color: "var(--yellow)" },
+  delete: { label: "Delete", color: "var(--red)" },
+  import: { label: "Import", color: "var(--blue)" },
+  export: { label: "Export", color: "var(--blue)" },
+  login: { label: "Login", color: "var(--purple)" },
 } satisfies Record<StatusKind, { label: string; color: string }>;
 
 const chipVariants = cva(

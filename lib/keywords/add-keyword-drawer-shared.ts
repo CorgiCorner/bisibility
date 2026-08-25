@@ -1,4 +1,9 @@
-import { CsvParseError, parseKeywordImportCsvRows } from "@/lib/keywords/import-csv-parser";
+import {
+  CsvParseError,
+  detectedKeywordImportColumnMapping,
+  parseKeywordImportCsvRows,
+  parseKeywordImportCsvTable,
+} from "@/lib/keywords/import-csv-parser";
 import { addKeywordSchema } from "@/lib/schemas/keyword";
 import { z } from "zod";
 
@@ -6,7 +11,6 @@ export type AddKeywordTab = "api" | "csv" | "manual";
 
 export const ADD_KEYWORD_TABS: { id: AddKeywordTab; label: string }[] = [
   { id: "manual", label: "Manual" },
-  { id: "csv", label: "CSV" },
   { id: "api", label: "API" },
 ];
 
@@ -19,6 +23,9 @@ export type AddKeywordDrawerForm = z.infer<typeof addKeywordDrawerSchema>;
 
 export const fieldClass =
   "min-h-10 w-full rounded-[9px] border border-border-strong bg-transparent px-3 text-[13px] font-medium text-fg outline-none focus:border-accent";
+
+export const fieldLabelClass = "text-[12.5px] font-semibold text-fg";
+export const fieldMetaClass = "font-mono text-[10px] uppercase tracking-[0.4px] text-fg-muted";
 
 export function parseKeywordLines(value: string): string[] {
   return value
@@ -90,10 +97,26 @@ export function parseCsvKeywords(value: string) {
 
 export function parseCsvKeywordsResult(value: string) {
   try {
+    const table = parseKeywordImportCsvTable(value);
     const rows = parseKeywordImportCsvRows(value);
-    return { error: null, keywords: rows.map((row) => row.keyword).filter(Boolean), rows };
+    return {
+      columnMapping: detectedKeywordImportColumnMapping(table),
+      error: null,
+      hasHeader: table.hasHeader,
+      keywords: rows.map((row) => row.keyword).filter(Boolean),
+      rows,
+      sourceColumns: table.sourceColumns,
+    };
   } catch (error) {
-    if (error instanceof CsvParseError) return { error: error.message, keywords: [], rows: [] };
+    if (error instanceof CsvParseError)
+      return {
+        columnMapping: {},
+        error: error.message,
+        hasHeader: false,
+        keywords: [],
+        rows: [],
+        sourceColumns: [],
+      };
     throw error;
   }
 }

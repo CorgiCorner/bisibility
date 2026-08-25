@@ -9,8 +9,8 @@ import {
   GearSixIcon as GearSix,
   GlobeIcon as Globe,
   LinkIcon as Link,
-  MagnifyingGlassIcon as MagnifyingGlass,
   PuzzlePieceIcon as PuzzlePiece,
+  RankingIcon as Ranking,
   ShieldCheckIcon as ShieldCheck,
   SquaresFourIcon as SquaresFour,
   UsersThreeIcon as UsersThree,
@@ -58,16 +58,15 @@ type PrimaryNavEntry = {
   icon: Icon;
 };
 
-// Keyword research scouts the market (Binoculars); Rank Tracker is the tracked list you then
-// search and filter (MagnifyingGlass). The research label says "keyword" because the rail also
-// carries Backlinks and Competitors.
+// Keyword research scouts the market (Binoculars); Rank Tracker is the podium of tracked
+// positions (Ranking). Fill marks the current row, Regular the rest - same as every rail glyph.
 // Timeline reads the project's own history, so it belongs with the primary flow; Integrations
 // is setup you touch once, which is what utilities are for.
 export const primaryNavEntries: readonly PrimaryNavEntry[] = [
   { label: "Dashboard", segment: "dashboard", icon: SquaresFour },
   { label: "Keyword Research", segment: "keyword-research", icon: Binoculars },
   { label: "Domain Overview", segment: "domain-overview", icon: Globe },
-  { label: "Rank Tracker", segment: "rank-tracker", icon: MagnifyingGlass },
+  { label: "Rank Tracker", segment: "rank-tracker", icon: Ranking },
   { label: "Backlinks", segment: "backlinks", icon: Link },
   { label: "Competitors", segment: "competitors", icon: UsersThree },
   { label: "Timeline", segment: "timeline", icon: CalendarDots },

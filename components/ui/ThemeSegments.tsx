@@ -60,6 +60,7 @@ export function ThemeSegments({
       className={className}
       fitContent
       onChange={(value) => applyTheme(value as ThemePreference)}
+      activeClassName="bg-bg-elev"
       optionClassName={optionClassNameBySize[size]}
       options={segments.map(({ preference: mode, label, Icon }) => ({
         ariaLabel: label,

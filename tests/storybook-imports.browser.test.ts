@@ -8,7 +8,7 @@ type StoryModule = {
 };
 
 const storyModules: Array<[string, () => Promise<StoryModule>]> = Object.entries(
-  import.meta.glob<StoryModule>("../components/**/*.stories.tsx"),
+  import.meta.glob("../components/**/*.stories.tsx") as Record<string, () => Promise<StoryModule>>,
 ).sort(([left], [right]) => left.localeCompare(right));
 
 const ignoredExports = new Set(["__esModule", "default"]);

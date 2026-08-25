@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+## [0.14.0] - 2026-08-25
+
+- Improved self-hosted project transfers and imports with destination checks, clearer job states, import workspaces, and editable keyword CSV mapping.
+
+- Unified in-app provider-cost explanations across Keyword Research, Domain Overview, and Backlinks, including corrected history and row-limit rates.
+
+- Kept required onboarding steps enforceable and clarified provider selection and website setup.
+
+- Made error reporting optional, stabilized notification streams, isolated concurrent local Next.js builds, and aligned keyword dialogs with shared modal styling.
+
+- Upgraded to Next.js 16, which builds with Turbopack by default, and moved the TypeScript 6 dependency to the published `typescript` package.
+
+- Made manual rank checks show honest running, success, and failure states, surface provider billing and credential errors, avoid futile retries, and link notifications to details.
+
+- Completed checks now expose stored search results, including surrounding and missing positions, comparisons between checks, and a link to the full keyword view.
+
+- Added provider tags and cost-ledger attribution for paid lookups and rank checks.
+
 ## [0.13.6] - 2026-08-18
 
 - Fixed project favicons after hydration and kept Keyword Research controls within compact dashboard widths.

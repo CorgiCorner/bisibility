@@ -1,5 +1,6 @@
 import { cn } from "@/lib/ui/cn";
 import type { ReactNode } from "react";
+import { iconWellClassName } from "./icon-well-styles";
 
 export type EmptyStateTone = "accent" | "positive";
 
@@ -15,7 +16,7 @@ export type EmptyStateProps = {
 };
 
 const toneTileClasses = {
-  accent: "bg-accent-soft text-accent-text",
+  accent: iconWellClassName,
   positive: "text-green-text [background:color-mix(in_srgb,var(--green)_12%,transparent)]",
 } satisfies Record<EmptyStateTone, string>;
 

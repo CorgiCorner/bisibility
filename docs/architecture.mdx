@@ -128,7 +128,8 @@ fields that remain on the row.
 | Rank-check row, `position`, and `organicRanks` | Kept for the lifetime of the project. | Kept for the lifetime of the project, with no plan-based retention tier. |
 | Normalized SERP snapshot (`rank_checks.raw`) | Kept indefinitely by default. The operator can set `RANK_CHECK_RAW_RETENTION_DAYS` to 1-3650 days or `unlimited`. | Kept for 90 days. |
 
-Snapshot access is a self-hosted feature through direct PostgreSQL access to
+The dashboard reads the snapshot on the keyword detail page and in the checks
+table, and it is also available through direct PostgreSQL access to
 `rank_checks.raw`; the REST API rank-check resource does not expose this field.
 Once a configured window expires, an older check can therefore have a null
 `raw` value while its row, `position`, and `organicRanks` remain available. See

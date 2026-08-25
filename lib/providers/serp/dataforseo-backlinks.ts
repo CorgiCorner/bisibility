@@ -31,6 +31,7 @@ function commonPayload(input: Parameters<BacklinksMethods["fetchBacklinksSummary
     include_indirect_links: false,
     include_subdomains: input.includeSubdomains,
     rank_scale: "one_hundred",
+    ...(input.tag ? { tag: input.tag } : {}),
     target: input.target,
   };
 }

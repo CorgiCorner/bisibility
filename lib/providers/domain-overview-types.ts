@@ -53,6 +53,7 @@ export type DomainOverviewInput = {
   languageCode?: string;
   location: SerpRankLocation;
   locationCode?: number;
+  tag?: string;
   target: string;
 };
 

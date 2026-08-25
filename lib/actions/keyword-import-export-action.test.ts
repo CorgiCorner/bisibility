@@ -4,6 +4,7 @@ import {
   exportKeywords,
   importKeywordsFromCsv,
   previewKeywordImportFile,
+  reviewKeywordImport,
 } from "./keyword-import-export";
 import { refreshKeywordViewsAfterImport } from "./keyword-import-refresh";
 
@@ -238,6 +239,52 @@ describe("keyword workbook import action", () => {
       }),
     });
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/app/[project]/rank-tracker", "page");
+  });
+
+  it("previews validated rows after deduplicating the import file", async () => {
+    const result = await reviewKeywordImport({
+      csv: ["keyword,country,device", "rank tracker,US,desktop", "rank tracker,US,desktop"].join(
+        "\n",
+      ),
+      projectId: PROJECT_PUBLIC_ID,
+    });
+
+    expect(result).toMatchObject({ duplicateRows: 1, errors: [], received: 2 });
+    expect(result.rows).toHaveLength(1);
+    expect(result.rows[0]).toMatchObject({ keyword: "rank tracker", location: "United States" });
+    expect(mocks.prisma.projectMarket.findMany).toHaveBeenCalledOnce();
+  });
+
+  it("uses the mapping selected in the wizard for preflight", async () => {
+    const result = await reviewKeywordImport({
+      columnMapping: { keyword: 0, location: 1 },
+      csv: "Search term,Market\nrank tracker,US",
+      projectId: PROJECT_PUBLIC_ID,
+    });
+
+    expect(result).toMatchObject({ duplicateRows: 0, errors: [], received: 1 });
+    expect(result.rows).toEqual([
+      expect.objectContaining({ keyword: "rank tracker", location: "United States" }),
+    ]);
+  });
+
+  it("excludes preview rows whose market is not tracked by the project", async () => {
+    mocks.prisma.projectMarket.findMany.mockResolvedValueOnce([
+      { location: { canonicalKey: "US" }, locationId: "loc_US" },
+    ]);
+
+    const result = await reviewKeywordImport({
+      csv: "keyword,country,device\nrank tracker,GB,desktop",
+      projectId: PROJECT_PUBLIC_ID,
+    });
+
+    expect(result.rows).toEqual([]);
+    expect(result.errors).toEqual([
+      {
+        message: "Market GB is not tracked by this project. Add it in Settings > Markets first.",
+        row: 2,
+      },
+    ]);
   });
 
   it("defers wizard revalidation until the completed result is dismissed", async () => {

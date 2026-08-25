@@ -18,6 +18,7 @@ const mocks = vi.hoisted(() => ({
   getSavedView: vi.fn(),
   getRequestSerpProviderChain: vi.fn(),
   getUpcomingView: vi.fn(),
+  isProviderConnected: vi.fn(),
   listSavedKeywords: vi.fn(),
   listSavedViews: vi.fn(),
   requireReadableProject: vi.fn(),
@@ -79,6 +80,9 @@ vi.mock("@/lib/queries/check-runs", () => ({
 }));
 vi.mock("@/lib/queries/cost-calculator", () => ({
   getProjectCostContext: mocks.getProjectCostContext,
+}));
+vi.mock("@/lib/queries/integrations", () => ({
+  isProviderConnected: mocks.isProviderConnected,
 }));
 vi.mock("@/lib/queries/keywords", () => ({
   getKeywordCount: mocks.getKeywordCount,
@@ -148,6 +152,7 @@ describe("KeywordsPage tabs", () => {
       { isPrimary: true, provider: "dataforseo" },
     ]);
     mocks.getUpcomingView.mockResolvedValue(upcomingViewFixture);
+    mocks.isProviderConnected.mockResolvedValue(true);
     mocks.getPreferences.mockResolvedValue({
       dateFormat: "iso",
       density: "standard",
@@ -173,6 +178,7 @@ describe("KeywordsPage tabs", () => {
     expect(capturedInitialDensity).toBe("standard");
     expect(mocks.getKeywordRows).toHaveBeenCalledWith("prj_1");
     expect(mocks.getCheckHealth).toHaveBeenCalledWith("prj_1");
+    expect(mocks.isProviderConnected).toHaveBeenCalledWith("prj_1", "gsc");
     expect(mocks.getProjectCostContext).toHaveBeenCalledWith("prj_1");
     expect(mocks.requireReadableProject).toHaveBeenCalledWith("prj_1");
   });

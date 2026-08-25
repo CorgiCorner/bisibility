@@ -12,6 +12,7 @@ import {
   targetUrlSchema,
   topicSchema,
 } from "@/lib/schemas/keyword";
+import { resolveSerpLanguage } from "@/lib/serp/language-catalog";
 import { z } from "zod";
 
 const idSchema = z.string().trim().min(1).max(160);
@@ -21,6 +22,20 @@ export const KEYWORD_MATCH_MAX_TEXTS = 50;
 function emptyStringToUndefined(value: unknown) {
   return value === "" ? undefined : value;
 }
+
+const serpLanguageCodeSchema = z.preprocess(
+  emptyStringToUndefined,
+  z
+    .string()
+    .trim()
+    .min(2)
+    .max(12)
+    .transform((value) => value.toLowerCase())
+    .refine((value) => Boolean(resolveSerpLanguage(value)), {
+      message: "Choose a supported SERP language.",
+    })
+    .optional(),
+);
 
 function normalizeScheduleKeys(value: unknown) {
   if (!value || typeof value !== "object" || Array.isArray(value)) return value;
@@ -83,6 +98,7 @@ export const keywordCreateItemSchema = z.object({
   device: deviceSchema.optional(),
   intent: intentSchema,
   keyword: z.string().trim().min(1).max(180),
+  language: serpLanguageCodeSchema,
   location: serpMarketNameSchema.optional(),
   location_key: canonicalKeySchema.optional(),
   schedule: apiKeywordScheduleSchema.optional(),

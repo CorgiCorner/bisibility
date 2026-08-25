@@ -1,6 +1,7 @@
 import ExcelJS from "exceljs";
 
 export {
+  deduplicateKeywordImportRows,
   type KeywordImportRow,
   keywordImportKey,
   parseKeywordImportCsv,

@@ -1,10 +1,13 @@
 "use client";
 
 import { actionErrorMessage, feedbackClass } from "@/components/onboarding/onboarding-form-utils";
-import { Button } from "@/components/ui";
+import { Button, Tooltip } from "@/components/ui";
 import { createCloudImportWorkspace } from "@/lib/actions/cloud";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState, useTransition } from "react";
+
+export const RESTORE_PROJECT_TOOLTIP =
+  "Import a project package from another bisibility instance. We'll create one local project and restore its data. Provider credentials and API keys are not included.";
 
 function resolvedBrowserTimezone(): string {
   try {
@@ -37,23 +40,18 @@ export function CloudImportWorkspaceButton({
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <Button
-        loading={pending}
-        loadingLabel="Opening import..."
-        size="sm"
-        sx={{
-          color: "var(--fg-muted)",
-          fontWeight: 400,
-          paddingX: "8px",
-          textTransform: "none",
-          "&:hover": { backgroundColor: "transparent", color: "var(--accent-text)" },
-        }}
-        type="submit"
-        variant="ghost"
-      >
-        Import self-hosted project
-      </Button>
+    <form className="m-0 inline-flex items-end" onSubmit={handleSubmit}>
+      <Tooltip content={RESTORE_PROJECT_TOOLTIP} placement="top" semantics="description">
+        <Button
+          loading={pending}
+          loadingLabel="Opening import..."
+          size="lg"
+          type="submit"
+          variant="secondary"
+        >
+          Restore project
+        </Button>
+      </Tooltip>
       {error ? (
         <p className={`m-0 mt-1 ${feedbackClass} text-red-text`} role="alert">
           {error}

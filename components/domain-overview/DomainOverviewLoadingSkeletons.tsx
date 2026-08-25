@@ -102,10 +102,71 @@ export function DomainOverviewResultsLoading() {
   );
 }
 
+function AnalyzeCardLoading() {
+  return (
+    <div
+      className="rounded-[14px] border border-border bg-bg-elev p-4.5 sm:p-5"
+      data-skeleton="analyze-card"
+    >
+      <div className="grid gap-3.5">
+        <div className="flex flex-col gap-2.5 md:flex-row md:items-start">
+          <Bar
+            className="h-10 flex-1 rounded-[9px] border border-border-strong md:min-w-[320px]"
+            data-skeleton="target-control"
+          />
+          <div className="md:w-[230px]" data-skeleton="market-wrapper">
+            <Bar
+              className="h-10 w-full rounded-[9px] border border-border-strong"
+              data-skeleton="market-control"
+            />
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <Bar className="h-3.5 w-3.5 rounded-full" />
+            <Bar className="h-3 w-[320px] max-w-full" />
+          </div>
+          <div className="ml-auto flex items-center gap-4">
+            <Bar className="h-3 w-[112px]" />
+            <Bar className="h-[37px] min-w-[200px] rounded-[9px]" data-skeleton="analyze-action" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function IdlePanelLoading() {
+  return (
+    <div
+      className="flex flex-col items-center justify-center rounded-2xl border border-border bg-bg-elev px-8 py-11 text-center"
+      data-skeleton="idle-panel"
+    >
+      <Bar className="h-[54px] w-[54px] rounded-[14px]" data-skeleton="idle-icon" />
+      <Bar className="mt-4.5 h-5 w-[180px]" />
+      <div className="mt-[7px] grid gap-1.5">
+        {["provider", "cache", "keywords"].map((key, index) => (
+          <div className="flex items-center gap-2" data-skeleton="idle-bullet" key={key}>
+            <Bar className="h-1.5 w-1.5 rounded-full" />
+            <Bar className="h-3" style={{ width: `${250 + index * 28}px` }} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function DomainOverviewPageLoading() {
   return (
     <PageContent aria-hidden>
-      <DomainOverviewResultsLoading />
+      <section
+        aria-busy="true"
+        aria-label="Domain Overview page loading"
+        className="grid min-w-0 gap-4"
+      >
+        <AnalyzeCardLoading />
+        <IdlePanelLoading />
+      </section>
     </PageContent>
   );
 }

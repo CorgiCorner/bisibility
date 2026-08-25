@@ -85,9 +85,11 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
       htmlFor={inputId}
     >
       {input}
-      <span className={cn("min-w-0", labelClassName)}>
+      <span className="min-w-0">
         {label ? (
-          <span className="block text-[13.5px] font-semibold leading-5">{label}</span>
+          <span className={cn("block text-[13.5px] font-semibold leading-5", labelClassName)}>
+            {label}
+          </span>
         ) : null}
         {description ? (
           <span className="mt-1 block text-xs leading-5 text-fg-muted">{description}</span>

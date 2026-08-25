@@ -8,6 +8,7 @@ import type { AddKeywordDrawerForm, AddKeywordTab } from "@/lib/keywords/add-key
 import type { SerpDevice } from "@/lib/serp/markets";
 import { useRouter } from "next/navigation";
 import { useCallback } from "react";
+import type { DrawerCsvKeywordRow } from "./AddKeywordCsvRows";
 import { type AddKeywordDrawerProps, addedKeywordResult } from "./AddKeywordDrawerExtensions";
 import { addKeywordDrawerInput } from "./AddKeywordDrawerSubmit";
 
@@ -16,6 +17,7 @@ type UseAddKeywordDrawerSaveArgs = Pick<
   "addKeywordsAction" | "consumeSavedIds" | "onAdded"
 > & {
   activeTab: AddKeywordTab;
+  csvRows?: DrawerCsvKeywordRow[];
   csvText: string;
   devices: SerpDevice[];
   existingKeywords: readonly ExistingKeyword[];
@@ -30,6 +32,7 @@ export function useAddKeywordDrawerSave({
   activeTab,
   addKeywordsAction,
   consumeSavedIds,
+  csvRows,
   csvText,
   devices,
   existingKeywords,
@@ -47,6 +50,7 @@ export function useAddKeywordDrawerSave({
       setActionWarning(null);
       const pending = addKeywordDrawerInput({
         activeTab,
+        csvRows,
         csvText,
         devices,
         existingKeywords,
@@ -80,6 +84,7 @@ export function useAddKeywordDrawerSave({
       activeTab,
       addKeywordsAction,
       consumeSavedIds,
+      csvRows,
       csvText,
       devices,
       existingKeywords,
