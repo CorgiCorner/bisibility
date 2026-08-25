@@ -1,6 +1,5 @@
-import { ThemeSegments } from "@/components/ui";
+import { ExternalLink, ThemeSegments } from "@/components/ui";
 import { instanceAdminNavItem } from "@/lib/nav/nav-items";
-import Link from "next/link";
 
 type AppFooterProps = {
   schemaStatus: "drift" | "ok" | "unknown";
@@ -31,9 +30,12 @@ export function AppFooter(props: Readonly<AppFooterProps>) {
           className="h-1.5 w-1.5 shrink-0 rounded-full"
           style={{ backgroundColor: status.color }}
         />
-        <Link className="transition-colors hover:text-fg" href={instanceAdminNavItem.href}>
+        <ExternalLink
+          className="[&_svg]:size-[1em] transition-colors hover:text-fg"
+          href={instanceAdminNavItem.href}
+        >
           {status.label}
-        </Link>
+        </ExternalLink>
       </div>
       <ThemeSegments size="sm" />
     </footer>

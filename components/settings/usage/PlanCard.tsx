@@ -4,18 +4,19 @@ import { SettingsField } from "@/components/settings/shell/settings-field-widths
 import { UsageCard } from "@/components/settings/usage/UsageCard";
 import { Button, FieldLabel, Input, StatusPill } from "@/components/ui";
 import { zodResolver } from "@/lib/forms/zod-resolver";
+import type { WaitlistFailureResult } from "@/lib/landing/waitlist-result";
 import {
   type HostedPricingFeedbackInput,
   hostedPricingFeedbackSchema,
 } from "@/lib/schemas/usage-settings";
-import { actionErrorMessage } from "@/lib/ui/action-error";
+import { actionErrorMessage, waitlistFailureMessage } from "@/lib/ui/action-error";
 import { PaperPlaneTiltIcon as PaperPlaneTilt } from "@phosphor-icons/react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
 export type SubmitPricingFeedback = (
   input: HostedPricingFeedbackInput,
-) => Promise<{ answered: true }>;
+) => Promise<{ answered: true } | WaitlistFailureResult>;
 
 type PlanCardProps = {
   canSubmitPricingFeedback: boolean;
@@ -36,7 +37,7 @@ function SelfHostedPlan() {
         This instance runs on infrastructure you operate. Bisibility does not charge a subscription
         or per-keyword license fee for the self-hosted app.
       </p>
-      <p className="m-0 text-[12px] leading-[1.55] text-fg-muted">
+      <p className="m-0 pt-2 text-[12px] leading-[1.55] text-fg-muted">
         Infrastructure, provider requests and optional services remain your costs.
       </p>
     </div>
@@ -77,7 +78,11 @@ export function PlanCard({
   async function submit(values: HostedPricingFeedbackInput) {
     setActionError(null);
     try {
-      await submitPricingFeedback(values);
+      const result = await submitPricingFeedback(values);
+      if ("ok" in result && !result.ok) {
+        setActionError(waitlistFailureMessage(result.code));
+        return;
+      }
       setAnswered(true);
     } catch (error) {
       setActionError(actionErrorMessage(error, "Pricing feedback could not be sent."));

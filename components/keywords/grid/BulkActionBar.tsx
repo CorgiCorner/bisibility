@@ -15,15 +15,17 @@ import {
   runCostCents,
 } from "@/lib/cost-estimate/project-estimate";
 import type { KeywordRow } from "@/lib/queries/keywords";
+import { appPath } from "@/lib/routing/app-path";
 import type { SerpDepth } from "@/lib/serp/markets";
-import MuiButton from "@mui/material/Button";
 import {
+  CaretRightIcon as CaretRight,
   ClockCountdownIcon as ClockCountdown,
   LinkSimpleIcon as LinkSimple,
   TagIcon as Tag,
   TrashIcon as Trash,
   XIcon as X,
 } from "@phosphor-icons/react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { BulkActionModal, type BulkMode } from "./BulkActionModal";
@@ -39,6 +41,7 @@ type BulkActionBarProps = Omit<KeywordWorkspaceActions, "addKeywordsAction"> & {
   onClear: () => void;
   onRunChecks?: (keywordIds: string[], depth?: SerpDepth) => void;
   projectId: string;
+  providerConnected?: boolean;
   providerRate?: CostRateInfo;
   selectedRows: KeywordRow[];
 };
@@ -56,6 +59,7 @@ export function BulkActionBar({
   onClear,
   onRunChecks,
   projectId,
+  providerConnected = true,
   providerRate,
   selectedRows,
 }: BulkActionBarProps) {
@@ -69,9 +73,17 @@ export function BulkActionBar({
   const { readOnly } = useProjectWriteMode();
 
   const selectedIds = selectedRows.map((row) => row.id);
+  const selectionKey = selectedIds.join("\0");
+  const [depthOverride, setDepthOverride] = useState<{ key: string; depth: SerpDepth } | null>(
+    null,
+  );
+  const chosenDepth = depthOverride?.key === selectionKey ? depthOverride.depth : null;
   const targetView = bulkTargetView(selectedRows);
   const estimatedCost = providerRate
-    ? runCostCents(selectedRows.map(effectiveRowDepth), providerRate)
+    ? runCostCents(
+        chosenDepth ? selectedRows.map(() => chosenDepth) : selectedRows.map(effectiveRowDepth),
+        providerRate,
+      )
     : null;
 
   if (selectedRows.length === 0) {
@@ -119,18 +131,31 @@ export function BulkActionBar({
   }
 
   return (
-    <div className="grid gap-2 border-b border-border bg-accent-soft px-4 py-[11px]">
+    <div className="grid gap-2 border-b border-border px-4 py-[11px]">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="mr-1 font-mono text-[12.5px] font-semibold text-accent-text">
+        <span className="mr-1 font-mono text-[12.5px] font-semibold text-fg">
           {selectedRows.length} selected
         </span>
         {onRunChecks && canUpdateKeyword ? (
-          <RunChecksSplitButton
-            checksRunning={checksRunning}
-            onRunChecks={onRunChecks}
-            readOnly={readOnly}
-            selectedRows={selectedRows}
-          />
+          providerConnected ? (
+            <RunChecksSplitButton
+              checksRunning={checksRunning}
+              chosenDepth={chosenDepth}
+              onDepthChange={(depth) => setDepthOverride({ key: selectionKey, depth })}
+              onRunChecks={onRunChecks}
+              readOnly={readOnly}
+              selectedRows={selectedRows}
+            />
+          ) : (
+            <Button
+              component={Link}
+              endIcon={<CaretRight aria-hidden size={12} weight="bold" />}
+              href={appPath(projectId, "integrations")}
+              size="xs"
+            >
+              Connect a SERP provider
+            </Button>
+          )
         ) : null}
         {canUpdateKeyword ? (
           <ProjectReadOnlyTooltip>
@@ -173,18 +198,25 @@ export function BulkActionBar({
         ) : null}
         {canDeleteKeyword ? (
           <ProjectReadOnlyTooltip>
-            {/* Outlined destructive has no shared-Button variant yet ("destructive" is filled). */}
-            <MuiButton
-              color="error"
+            <Button
               disabled={readOnly || deleting}
               onClick={() => setConfirmOpen(true)}
-              size="small"
+              size="xs"
               startIcon={<Trash size={15} />}
-              sx={{ border: "1px solid var(--red)" }}
-              variant="outlined"
+              sx={{
+                backgroundColor: "transparent",
+                border: "1px solid var(--red)",
+                color: "var(--red)",
+                "&:hover": {
+                  backgroundColor: "color-mix(in srgb, var(--red) 12%, transparent)",
+                  border: "1px solid var(--red)",
+                  color: "var(--red)",
+                },
+              }}
+              variant="secondary"
             >
               {deleting ? "Deleting..." : "Delete"}
-            </MuiButton>
+            </Button>
           </ProjectReadOnlyTooltip>
         ) : null}
         <Button
@@ -197,7 +229,7 @@ export function BulkActionBar({
           Clear
         </Button>
       </div>
-      {onRunChecks && canUpdateKeyword ? (
+      {onRunChecks && canUpdateKeyword && providerConnected ? (
         <p className="m-0 font-mono text-[11.5px] text-fg-muted">
           {estimatedCost == null
             ? `${selectedRows.length} ${selectedRows.length === 1 ? "check" : "checks"} selected - provider rate unavailable.`

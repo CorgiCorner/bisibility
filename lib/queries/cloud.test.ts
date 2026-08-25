@@ -162,6 +162,7 @@ describe("cloud queries", () => {
     const job = await getCloudImportJobStatus("prj_1");
 
     expect(mocks.requireReadableProject).toHaveBeenCalledWith("prj_1");
+    expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
     expect(mocks.prisma.cloudImportJob.findFirst).toHaveBeenCalledWith({
       orderBy: { createdAt: "desc" },
       where: { projectId: "project_1" },

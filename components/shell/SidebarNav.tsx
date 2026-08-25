@@ -72,6 +72,8 @@ export function SidebarNav({
             <Icon
               aria-hidden
               className="text-current"
+              data-nav-icon={item.label}
+              data-weight={active ? "fill" : "regular"}
               size={RAIL_ICON_SIZE}
               weight={active ? "fill" : "regular"}
             />

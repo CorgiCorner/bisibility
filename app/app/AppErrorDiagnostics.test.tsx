@@ -75,6 +75,7 @@ describe("AppErrorDiagnostics", () => {
 
     expect(screen.getByText("err_9c41f2")).toHaveClass("text-[9px]");
     expect(screen.getByText("TypeError · 01:28:57 UTC")).toHaveClass("text-[9px]");
+    expect(document.querySelector("pre")).toHaveClass("max-h-72", "overflow-y-auto");
     expect(
       screen.getByText(
         "These details can include your project path. Review them before posting publicly.",

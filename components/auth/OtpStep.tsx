@@ -90,7 +90,7 @@ export function OtpStep({
         Back
       </Button>
 
-      <span className="mt-4.5 grid h-[46px] w-[46px] place-items-center rounded-xl bg-accent-soft text-accent-text">
+      <span className="mt-4.5 grid h-[46px] w-[46px] place-items-center rounded-xl bg-accent-soft text-accent-solid">
         <EnvelopeSimpleOpen aria-hidden size={23} weight="fill" />
       </span>
 

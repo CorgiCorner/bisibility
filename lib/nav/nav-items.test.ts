@@ -37,6 +37,9 @@ describe("navItems", () => {
     expect(items.find((item) => item.label === "Rank Tracker")?.href).toBe(
       "/app/prj_example/rank-tracker",
     );
+    expect(items.find((item) => item.label === "Rank Tracker")?.icon.displayName).toBe(
+      "RankingIcon",
+    );
     expect(items.find((item) => item.label === "Keyword Research")?.href).toBe(
       "/app/prj_example/keyword-research",
     );

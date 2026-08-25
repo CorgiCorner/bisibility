@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   previewKeywordImportFile: vi.fn(),
   refreshKeywordViewsAfterImport: vi.fn(),
   remountGrid: vi.fn(),
+  reviewKeywordImport: vi.fn(),
 }));
 
 type MockButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -37,6 +38,7 @@ type UploadMockProps = {
 vi.mock("@/lib/actions/keyword-import-export", () => ({
   importKeywordsFromCsv: mocks.importKeywordsFromCsv,
   previewKeywordImportFile: mocks.previewKeywordImportFile,
+  reviewKeywordImport: mocks.reviewKeywordImport,
 }));
 vi.mock("@/lib/actions/keyword-import-refresh", () => ({
   refreshKeywordViewsAfterImport: mocks.refreshKeywordViewsAfterImport,
@@ -86,26 +88,18 @@ vi.mock("./ImportCsvWizardPanels", () => ({
       ))}
     </div>
   ),
-  MapStep: ({
-    parsedCount,
-    parsedRows,
-  }: {
-    parsedCount: number | null;
-    parsedRows: { keyword: string }[] | null;
-  }) => (
-    <p>
-      Map {parsedCount ?? "workbook"}: {parsedRows?.map((row) => row.keyword).join(", ")}
-    </p>
+  MapStep: ({ parsedCount, isReviewing }: { parsedCount: number | null; isReviewing: boolean }) => (
+    <p>{isReviewing ? "Checking mapped rows" : `Map ${parsedCount ?? "workbook"}`}</p>
   ),
   ReviewStep: ({
     parsedCount,
-    parsedRows,
+    review,
   }: {
     parsedCount: number | null;
-    parsedRows: { keyword: string }[] | null;
+    review: { rows: { keyword: string }[] } | null;
   }) => (
     <p>
-      Review {parsedCount ?? "workbook"}: {parsedRows?.map((row) => row.keyword).join(", ")}
+      Review {parsedCount ?? "workbook"}: {review?.rows.map((row) => row.keyword).join(", ")}
     </p>
   ),
   TemplateStep: () => <p>Template instructions</p>,
@@ -208,7 +202,7 @@ async function reachReviewWithCsv() {
   await reachUpload();
   fireEvent.click(screen.getByRole("button", { name: "Paste CSV" }));
   fireEvent.click(await continueButton());
-  expect(await screen.findByText("Map 2: rank tracker, seo api")).toBeInTheDocument();
+  expect(await screen.findByText("Map 2")).toBeInTheDocument();
   fireEvent.click(await continueButton());
   expect(await screen.findByText("Review 2: rank tracker, seo api")).toBeInTheDocument();
 }
@@ -230,6 +224,15 @@ describe("ImportCsvWizard", () => {
       rows: [
         { keyword: "rank tracker", row: 2 },
         { keyword: "mobile serp", row: 3 },
+      ],
+    });
+    mocks.reviewKeywordImport.mockResolvedValue({
+      duplicateRows: 0,
+      errors: [],
+      received: 2,
+      rows: [
+        { keyword: "rank tracker", row: 1 },
+        { keyword: "seo api", row: 2 },
       ],
     });
   });
@@ -297,10 +300,11 @@ describe("ImportCsvWizard", () => {
     renderWizard();
     await reachReviewWithCsv();
 
-    fireEvent.click(screen.getByRole("button", { name: "Import 2 keywords" }));
+    fireEvent.click(screen.getByRole("button", { name: "Import keywords" }));
 
     expect(await screen.findByText("2 added, 0 skipped, 0 failed")).toBeInTheDocument();
     expect(mocks.importKeywordsFromCsv).toHaveBeenCalledWith({
+      columnMapping: {},
       csv: "rank tracker\nseo api",
       duplicateMode: "skip",
       projectId: "project_1",
@@ -314,21 +318,34 @@ describe("ImportCsvWizard", () => {
     expect(routerMock.refresh).toHaveBeenCalledOnce();
   });
 
+  it("starts a fresh import from the done step without closing the sheet", async () => {
+    renderWizard();
+    await reachReviewWithCsv();
+
+    fireEvent.click(screen.getByRole("button", { name: "Import keywords" }));
+    expect(await screen.findByText("2 added, 0 skipped, 0 failed")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Start over" }));
+
+    expect(await screen.findByText("Template instructions")).toBeInTheDocument();
+    expect(mocks.onClose).not.toHaveBeenCalled();
+  });
+
   it("submits only after the explicit Review confirmation", async () => {
     const user = userEvent.setup();
     renderWizard();
     await user.click(await continueButton());
     await user.click(screen.getByRole("button", { name: "Paste CSV" }));
     await user.click(await continueButton());
-    expect(await screen.findByText("Map 2: rank tracker, seo api")).toBeInTheDocument();
+    expect(await screen.findByText("Map 2")).toBeInTheDocument();
 
     const mapContinue = await continueButton();
     await user.click(mapContinue);
 
     expect(await screen.findByText("Review 2: rank tracker, seo api")).toBeInTheDocument();
+    expect(mocks.reviewKeywordImport).toHaveBeenCalledOnce();
     expect(mocks.importKeywordsFromCsv).not.toHaveBeenCalled();
 
-    const reviewConfirmation = screen.getByRole("button", { name: "Import 2 keywords" });
+    const reviewConfirmation = screen.getByRole("button", { name: "Import keywords" });
     expect(reviewConfirmation).not.toBe(mapContinue);
     expect(reviewConfirmation).toHaveAttribute("type", "button");
     await user.click(reviewConfirmation);
@@ -353,7 +370,7 @@ describe("ImportCsvWizard", () => {
     fireEvent.click(screen.getByRole("button", { name: "Import" }));
     await reachReviewWithCsv();
 
-    fireEvent.click(screen.getByRole("button", { name: "Import 2 keywords" }));
+    fireEvent.click(screen.getByRole("button", { name: "Import keywords" }));
 
     expect(await screen.findByText("1 added, 0 skipped, 2 failed")).toBeInTheDocument();
     expect(screen.getByText("Row 3: Unsupported device")).toBeInTheDocument();
@@ -415,13 +432,14 @@ describe("ImportCsvWizard", () => {
     fireEvent.click(screen.getByRole("button", { name: "Choose workbook" }));
     await waitFor(() => expect(mocks.previewKeywordImportFile).toHaveBeenCalledOnce());
     fireEvent.click(await continueButton());
-    expect(await screen.findByText("Map 2: rank tracker, mobile serp")).toBeInTheDocument();
+    expect(await screen.findByText("Map 2")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Back" }));
     expect(await screen.findByText("Step 2")).toBeInTheDocument();
     fireEvent.click(await continueButton());
     fireEvent.click(await continueButton());
 
-    fireEvent.click(screen.getByRole("button", { name: "Import workbook" }));
+    expect(await screen.findByText("Review 2: rank tracker, seo api")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Import keywords" }));
     await waitFor(() => expect(mocks.importKeywordsFromCsv).toHaveBeenCalledOnce());
     const input = mocks.importKeywordsFromCsv.mock.calls[0]?.[0];
     expect(input).toBeInstanceOf(FormData);
@@ -459,9 +477,7 @@ describe("ImportCsvWizard", () => {
     });
     fireEvent.click(await continueButton());
 
-    expect(
-      await screen.findByText("Map 2: new workbook one, new workbook two"),
-    ).toBeInTheDocument();
+    expect(await screen.findByText("Map 2")).toBeInTheDocument();
     expect(screen.queryByText("Stale preview error")).not.toBeInTheDocument();
   });
 
@@ -494,7 +510,7 @@ describe("ImportCsvWizard", () => {
     renderWizard();
     await reachReviewWithCsv();
 
-    fireEvent.click(screen.getByRole("button", { name: "Import 2 keywords" }));
+    fireEvent.click(screen.getByRole("button", { name: "Import keywords" }));
     expect(await screen.findByText("Import service unavailable")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Close sheet" }));
     expect(mocks.onClose).toHaveBeenCalledOnce();

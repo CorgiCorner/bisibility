@@ -71,6 +71,8 @@ function paidCallInput(input: {
     feature: "backlinks" as const,
     projectId: input.projectId,
     provider: input.source.provider,
+    source: "app" as const,
+    trigger: "manual" as const,
   };
 }
 
@@ -95,7 +97,8 @@ export async function fetchBacklinksAnalysis(input: {
   const common = paidCallInput(input);
   const summary = await paidProviderCall({
     ...common,
-    call: (credentials) => input.source.provider.fetchBacklinksSummary(credentials, target),
+    call: (credentials, usage) =>
+      input.source.provider.fetchBacklinksSummary(credentials, { ...target, tag: usage?.tag }),
     itemCount: 1,
     rate: rates.summary,
   });
@@ -103,19 +106,24 @@ export async function fetchBacklinksAnalysis(input: {
     input.scope === "site"
       ? await paidProviderCall({
           ...common,
-          call: (credentials) => input.source.provider.fetchBacklinksHistory(credentials, target),
+          call: (credentials, usage) =>
+            input.source.provider.fetchBacklinksHistory(credentials, {
+              ...target,
+              tag: usage?.tag,
+            }),
           itemCount: 1,
           rate: rates.history,
         })
       : { costCents: 0, rows: [] };
   const rows = await paidProviderCall({
     ...common,
-    call: (credentials) =>
+    call: (credentials, usage) =>
       input.source.provider.fetchBacklinksRows(credentials, {
         ...target,
         limit: input.resultLimit,
         mode: input.mode,
         offset: 0,
+        tag: usage?.tag,
       }),
     itemCount: input.resultLimit,
     rate: rates.rows,
@@ -151,12 +159,13 @@ export async function fetchMoreBacklinksRows(input: {
   const target = providerTarget(input);
   return paidProviderCall({
     ...paidCallInput(input),
-    call: (credentials) =>
+    call: (credentials, usage) =>
       input.source.provider.fetchBacklinksRows(credentials, {
         ...target,
         limit: input.limit,
         mode: input.mode,
         offset: input.offset,
+        tag: usage?.tag,
       }),
     itemCount: input.limit,
     rate: rates.rows,

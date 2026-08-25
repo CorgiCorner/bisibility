@@ -3,6 +3,7 @@ import {
   checkRunsFixtureView,
   checkRunsNow,
   checkRunsViewFor,
+  completedRunFixture,
   staleRunFixture,
 } from "@/components/checks/runs/check-runs-fixtures";
 import { appPath } from "@/lib/routing/app-path";
@@ -165,4 +166,25 @@ export const NarrowContainer: Story = {
       </div>
     ),
   ],
+};
+
+export const FullStoredResults: Story = {
+  args: {
+    initialExpandedRunIds: ["run_completed"],
+    view: { ...checkRunsFixtureView, rows: [completedRunFixture] },
+  },
+};
+
+export const CompactStoredResults: Story = {
+  args: {
+    initialExpandedRunIds: ["run_stale"],
+    view: { ...checkRunsFixtureView, rows: [staleRunFixture] },
+  },
+};
+
+export const NoStoredResultsNotExpandable: Story = {
+  args: {
+    filter: "running",
+    view: checkRunsViewFor("running"),
+  },
 };

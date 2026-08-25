@@ -248,7 +248,7 @@ export function ExportModal({ onClose, open, projectId, target }: Readonly<Expor
           </div>
           <div className="mt-[9px] grid grid-cols-2 gap-[7px]">
             <div className="inline-flex items-center gap-[9px] rounded-[9px] border border-border bg-bg px-2.5 py-2">
-              <span className="grid h-[17px] w-[17px] place-items-center rounded-[5px] bg-accent-solid text-primary-contrast">
+              <span className="grid h-[17px] w-[17px] place-items-center rounded-[5px] bg-accent-solid text-accent-on-solid">
                 <LockSimple size={10} weight="bold" />
               </span>
               <span className="flex-1 text-[12.5px] text-fg">Keyword + Pos</span>

@@ -1,6 +1,15 @@
 import type { NotificationFeed } from "@/lib/queries/notifications";
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+
+// Next 15.5.21 aliases client React to a compiled bundle that omits
+// useEffectEvent. Mirror that runtime here so any reintroduction of the
+// hook is caught before it reaches the browser.
+vi.mock("react", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("react")>();
+  return { ...actual, useEffectEvent: undefined };
+});
+
 import { useNotificationStream } from "./useNotificationStream";
 
 class MockEventSource {
@@ -79,5 +88,37 @@ describe("useNotificationStream", () => {
 
     expect(refresh).toHaveBeenCalledOnce();
     expect(result.current).toEqual({ feed: updatedFeed, status: "live" });
+  });
+
+  it("keeps one EventSource when a server-bound refresh action changes identity", () => {
+    vi.stubGlobal("EventSource", MockEventSource);
+    const firstRefresh = vi.fn(async () => initialFeed);
+    const secondRefresh = vi.fn(async () => updatedFeed);
+    const { rerender } = renderHook(
+      ({ refreshFeed }) => useNotificationStream(initialFeed, "prj_1", refreshFeed),
+      { initialProps: { refreshFeed: firstRefresh } },
+    );
+    const source = MockEventSource.instances[0];
+
+    rerender({ refreshFeed: secondRefresh });
+
+    expect(MockEventSource.instances).toHaveLength(1);
+    expect(source.close).not.toHaveBeenCalled();
+  });
+
+  it("uses the latest refresh callback when polling after navigation", async () => {
+    vi.useFakeTimers();
+    const firstRefresh = vi.fn(async () => initialFeed);
+    const secondRefresh = vi.fn(async () => updatedFeed);
+    const { rerender } = renderHook(
+      ({ refreshFeed }) => useNotificationStream(initialFeed, "prj_1", refreshFeed, "polling"),
+      { initialProps: { refreshFeed: firstRefresh } },
+    );
+
+    rerender({ refreshFeed: secondRefresh });
+    await act(async () => vi.advanceTimersByTimeAsync(4_000));
+
+    expect(firstRefresh).not.toHaveBeenCalled();
+    expect(secondRefresh).toHaveBeenCalledOnce();
   });
 });

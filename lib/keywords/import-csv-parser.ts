@@ -11,12 +11,33 @@ export type KeywordImportCsvColumns = {
   topic: number;
 };
 
+export const keywordImportFields = [
+  "city",
+  "device",
+  "intent",
+  "keyword",
+  "language",
+  "location",
+  "locationKey",
+  "tags",
+  "targetUrl",
+  "topic",
+] as const satisfies readonly (keyof KeywordImportCsvColumns)[];
+export type KeywordImportField = (typeof keywordImportFields)[number];
+export type KeywordImportColumnMapping = Partial<Record<KeywordImportField, number>>;
+export type KeywordImportParseOptions = {
+  hasHeader?: boolean;
+  mapping?: KeywordImportColumnMapping;
+};
+export type KeywordImportSourceColumn = { index: number; label: string };
+
 export type KeywordImportCsvTable = {
   columns: KeywordImportCsvColumns;
   dataRows: string[][];
   firstDataRowNumber: number;
   hasHeader: boolean;
   rows: string[][];
+  sourceColumns: KeywordImportSourceColumn[];
 };
 
 export type KeywordImportCsvRow = {
@@ -195,7 +216,10 @@ function unsupportedDelimiter(csv: string, rows: string[][]) {
   return null;
 }
 
-export function parseKeywordImportCsvTable(csv: string): KeywordImportCsvTable {
+export function parseKeywordImportCsvTable(
+  csv: string,
+  options: KeywordImportParseOptions = {},
+): KeywordImportCsvTable {
   // Treat U+FFFD as evidence of an earlier lossy decode so mojibake never reaches storage,
   // even though the replacement character can also be intentional Unicode content.
   if (csv.includes("\uFFFD")) {
@@ -215,32 +239,56 @@ export function parseKeywordImportCsvTable(csv: string): KeywordImportCsvTable {
   const recognizedHeaderCount = firstRow.filter((cell) =>
     recognizedHeaderAliases.has(headerKey(cell)),
   ).length;
-  const hasHeader = hasKeywordHeader || recognizedHeaderCount >= 2;
-  if (hasHeader && !hasKeywordHeader) {
+  const inferredHeader = hasKeywordHeader || recognizedHeaderCount >= 2;
+  const hasHeader = options.hasHeader ?? inferredHeader;
+  const header = hasHeader ? rows[0] : [];
+  const mappedKeyword = options.mapping?.keyword;
+  const keywordColumn = mappedKeyword ?? columnIndex(header, [...columnAliases.keyword], 0);
+  if (hasHeader && keywordColumn < 0) {
     throw new CsvParseError(1, {
       code: "missing_required_column",
       message: 'Missing required keyword column. Add a column named "keyword" and try again.',
     });
   }
-  const header = hasHeader ? rows[0] : [];
+  const column = (field: KeywordImportField, names: string[], fallback: number) =>
+    options.mapping?.[field] ?? columnIndex(header, names, fallback);
+  const sourceRow = header.length
+    ? header
+    : Array.from(
+        { length: Math.max(0, ...rows.map((row) => row.length)) },
+        (_, index) => `Column ${index + 1}`,
+      );
   return {
     columns: {
-      city: columnIndex(header, [...columnAliases.city], -1),
-      device: columnIndex(header, [...columnAliases.device], 4),
-      intent: columnIndex(header, [...columnAliases.intent], -1),
-      keyword: columnIndex(header, [...columnAliases.keyword], 0),
-      language: columnIndex(header, [...columnAliases.language], -1),
-      location: columnIndex(header, [...columnAliases.location], 3),
-      locationKey: columnIndex(header, [...columnAliases.locationKey], -1),
-      tags: columnIndex(header, [...columnAliases.tags], 2),
-      targetUrl: columnIndex(header, [...columnAliases.targetUrl], 1),
-      topic: columnIndex(header, [...columnAliases.topic], -1),
+      city: column("city", [...columnAliases.city], -1),
+      device: column("device", [...columnAliases.device], 4),
+      intent: column("intent", [...columnAliases.intent], -1),
+      keyword: keywordColumn,
+      language: column("language", [...columnAliases.language], -1),
+      location: column("location", [...columnAliases.location], 3),
+      locationKey: column("locationKey", [...columnAliases.locationKey], -1),
+      tags: column("tags", [...columnAliases.tags], 2),
+      targetUrl: column("targetUrl", [...columnAliases.targetUrl], 1),
+      topic: column("topic", [...columnAliases.topic], -1),
     },
     dataRows: rows.slice(hasHeader ? 1 : 0),
     firstDataRowNumber: hasHeader ? 2 : 1,
     hasHeader,
     rows,
+    sourceColumns: sourceRow.map((label, index) => ({
+      index,
+      label: label || `Column ${index + 1}`,
+    })),
   };
+}
+
+export function detectedKeywordImportColumnMapping(
+  table: Pick<KeywordImportCsvTable, "columns" | "hasHeader">,
+): KeywordImportColumnMapping {
+  if (!table.hasHeader) return {};
+  return Object.fromEntries(
+    Object.entries(table.columns).filter(([, index]) => index >= 0),
+  ) as KeywordImportColumnMapping;
 }
 
 function optionalCell(row: string[], index: number) {
@@ -249,8 +297,11 @@ function optionalCell(row: string[], index: number) {
   return value || undefined;
 }
 
-export function parseKeywordImportCsvRows(csv: string): KeywordImportCsvRow[] {
-  const table = parseKeywordImportCsvTable(csv);
+export function parseKeywordImportCsvRows(
+  csv: string,
+  options?: KeywordImportParseOptions,
+): KeywordImportCsvRow[] {
+  const table = parseKeywordImportCsvTable(csv, options);
   return table.dataRows.map((row, offset) => ({
     city: optionalCell(row, table.columns.city),
     device: optionalCell(row, table.columns.device),

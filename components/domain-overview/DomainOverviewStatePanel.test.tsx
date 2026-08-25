@@ -27,6 +27,21 @@ describe("DomainOverviewStatePanel", () => {
     expect(query).toBeInTheDocument();
   });
 
+  it("gives Connect and Reconnect DataForSEO the solid CTA with a trailing caret", () => {
+    const { rerender } = render(
+      <DomainOverviewStatePanel projectRef="prj_1" state="no_provider" />,
+    );
+    const connect = screen.getByRole("link", { name: "Connect DataForSEO" });
+    expect(connect).toHaveClass("bg-accent-solid", "rounded-[10px]");
+    expect(connect.querySelector("svg")).not.toBeNull();
+    expect(document.querySelector('[data-icon="puzzle-piece"]')).not.toBeNull();
+
+    rerender(<DomainOverviewStatePanel projectRef="prj_1" state="needs_reauth" />);
+    const reconnect = screen.getByRole("link", { name: "Reconnect DataForSEO" });
+    expect(reconnect).toHaveClass("bg-accent-solid", "rounded-[10px]");
+    expect(reconnect.querySelector("svg")).not.toBeNull();
+  });
+
   it("only makes a no-charge promise for an explicitly uncharged failure", () => {
     const { rerender } = render(
       <DomainOverviewStatePanel charged={false} projectRef="prj_1" state="lookup_failed" />,

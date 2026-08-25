@@ -20,7 +20,8 @@ describe("StepConnectProvider submission", () => {
         .getAllByRole("radio")
         .filter((radio) => radio.matches(":checked")),
     ).toEqual([dataForSeo]);
-    expect(dataForSeo.closest("section")).toHaveClass("border-accent", "bg-accent-soft");
+    expect(dataForSeo.closest("section")).toHaveClass("border-accent", "bg-transparent");
+    expect(dataForSeo.closest("section")).not.toHaveClass("bg-accent-soft");
 
     fireEvent.click(serpApi);
 
@@ -29,8 +30,10 @@ describe("StepConnectProvider submission", () => {
         .getAllByRole("radio")
         .filter((radio) => radio.matches(":checked")),
     ).toEqual([serpApi]);
-    expect(serpApi.closest("section")).toHaveClass("border-accent", "bg-accent-soft");
-    expect(dataForSeo.closest("section")).not.toHaveClass("border-accent", "bg-accent-soft");
+    expect(serpApi.closest("section")).toHaveClass("border-accent", "bg-transparent");
+    expect(serpApi.closest("section")).not.toHaveClass("bg-accent-soft");
+    expect(dataForSeo.closest("section")).toHaveClass("border-border-strong", "bg-transparent");
+    expect(dataForSeo.closest("section")).not.toHaveClass("border-accent");
   });
 
   it("keeps compact provider status pills below the title hierarchy", async () => {
@@ -42,6 +45,9 @@ describe("StepConnectProvider submission", () => {
 
     for (const status of screen.getAllByText("Not connected")) {
       expect(status.closest("span")).toHaveClass("h-5");
+      expect(status.querySelector("span[aria-hidden]")).toHaveStyle({
+        backgroundColor: "var(--fg-muted)",
+      });
     }
     await clickTestConnection(testProviderConnectionAction);
     expect((await screen.findByText("Verified")).closest("span")).toHaveClass("h-5");

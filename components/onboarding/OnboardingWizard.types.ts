@@ -19,7 +19,6 @@ export type OnboardingWizardProps = {
   initialProject: OnboardingProject | null;
   initialSerpConnections?: ConnectedProviderMap;
   initialStep: OnboardingStepNumber;
-  isCloud?: boolean;
   monthlyCapCents: number;
   providerConnected: boolean;
   rankedKeywordConnections?: RankedKeywordConnection[];

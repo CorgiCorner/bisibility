@@ -36,9 +36,11 @@ export function createDataForSeoDomainMethods(deps: Dependencies): DomainMethods
     languageCode?: string;
     location: SerpRankLocation;
     locationCode?: number;
+    tag?: string;
     target: string;
   }) => ({
     target: input.target,
+    ...(input.tag ? { tag: input.tag } : {}),
     ...(input.locationCode === undefined
       ? deps.locationParams(input.location)
       : {

@@ -9,8 +9,6 @@ import {
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-const expectedFrames = ["audit", "backup", "hosted-move", "danger"];
-
 describe("Advanced settings loading geometry", () => {
   it("uses the settled backup card as the shared loader geometry truth", () => {
     expect(advancedLoadingCardGeometryClassNames.backup).toBe(
@@ -21,13 +19,28 @@ describe("Advanced settings loading geometry", () => {
     );
   });
 
-  it("keeps one loading frame for every hosted settled card", () => {
-    const { container } = render(<AdvancedSettingsContentLoading />);
+  it("uses the settled transfer card as the self-host loader geometry", () => {
+    expect(advancedLoadingCardGeometryClassNames.migration).toBe(
+      advancedCardGeometryClassNames.migration,
+    );
+  });
+
+  it("keeps one loading frame for every self-host settled card", () => {
+    const { container } = render(<AdvancedSettingsContentLoading deployment="self-host" />);
     expect(
       [...container.querySelectorAll("[data-advanced-loading-frame]")].map((node) =>
         node.getAttribute("data-advanced-loading-frame"),
       ),
-    ).toEqual(expectedFrames);
+    ).toEqual(["audit", "self-host-migration", "danger"]);
+  });
+
+  it("keeps one loading frame for every hosted settled card", () => {
+    const { container } = render(<AdvancedSettingsContentLoading deployment="cloud" />);
+    expect(
+      [...container.querySelectorAll("[data-advanced-loading-frame]")].map((node) =>
+        node.getAttribute("data-advanced-loading-frame"),
+      ),
+    ).toEqual(["audit", "backup", "danger"]);
   });
 
   it("includes the shell geometry used by the route loading boundary", () => {
@@ -36,6 +49,6 @@ describe("Advanced settings loading geometry", () => {
       container.querySelector('[data-settings-loading-boundary="advanced"]'),
     ).toBeInTheDocument();
     expect(container.querySelectorAll("[data-settings-loading-subnav-row]")).toHaveLength(7);
-    expect(container.querySelectorAll("[data-settings-loading-frame]")).toHaveLength(4);
+    expect(container.querySelectorAll("[data-settings-loading-frame]")).toHaveLength(3);
   });
 });

@@ -81,7 +81,7 @@ export function ProjectDetailsCard({
     <>
       <SettingsCard
         className={generalSettingsCardGeometryClassNames.projectDetails}
-        description="Who this project is. What a check counts as a match is decided in Tracking."
+        description="Name, domain, and ID for this project."
         onSave={saveProjectName}
         title="Project details"
       >

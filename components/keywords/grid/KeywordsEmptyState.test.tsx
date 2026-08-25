@@ -21,6 +21,7 @@ function renderEmpty(
     onImportQueries: vi.fn(),
     projectId: "prj_1",
     providerConnected,
+    searchConsoleConnected: true,
     ...overrides,
   } satisfies EmptyStateProps;
   render(
@@ -32,33 +33,43 @@ function renderEmpty(
 }
 
 describe("KeywordsEmptyState", () => {
-  it("renders Search Console, manual, CSV, and guide paths", () => {
-    renderEmpty(true);
+  it("renders Search Console, manual, and CSV paths", () => {
+    const props = renderEmpty(true);
 
     expect(
       screen.getByRole("heading", { name: "Find opportunities in Search Console" }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Add keywords manually" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Find Search Console queries" })).toBeEnabled();
-    expect(screen.getByRole("textbox", { name: "Keyword" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Import CSV" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Read the first-keywords guide" })).toHaveAttribute(
-      "href",
-      "https://bisibility.com/docs/guides/choose-first-keywords",
-    );
+    expect(screen.getByRole("heading", { name: "Add keywords" })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "Add keywords manually" }),
+    ).not.toBeInTheDocument();
+    const findQueries = screen.getByRole("button", { name: "Find Search Console queries" });
+    expect(findQueries).toBeEnabled();
+    expect(findQueries.querySelector(".MuiButton-startIcon")).toBeNull();
+    expect(screen.queryByRole("link", { name: "Connect Search Console" })).not.toBeInTheDocument();
+    expect(findQueries.closest("div.mt-auto")).toHaveClass("justify-end");
+    expect(screen.queryByRole("textbox", { name: "Keyword" })).not.toBeInTheDocument();
+    const addManually = screen.getByRole("button", { name: "Add manually" });
+    const importCsv = screen.getByRole("button", { name: "Import CSV" });
+    expect(addManually.closest("div.mt-auto")).toHaveClass("justify-end");
+    expect(addManually).toHaveClass("MuiButton-contained");
+    expect(importCsv).toHaveClass("MuiButton-outlined");
+    expect(addManually.querySelector(".MuiButton-startIcon")).toBeNull();
+    expect(importCsv.querySelector(".MuiButton-startIcon")).toBeNull();
+    fireEvent.click(addManually);
+    fireEvent.click(importCsv);
+    expect(props.onAddKeyword).toHaveBeenCalledOnce();
+    expect(props.onImportCsv).toHaveBeenCalledOnce();
   });
 
-  it("keeps the guide readable while hiding create paths below member", () => {
+  it("hides create paths below member", () => {
     renderEmpty(false, { canCreateKeyword: false, canManageProviders: false });
 
     expect(screen.queryByText("Find opportunities in Search Console")).not.toBeInTheDocument();
-    expect(screen.queryByText("Add keywords manually")).not.toBeInTheDocument();
+    expect(screen.queryByText("Add keywords")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Add manually" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Import CSV" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /connect one/i })).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Read the first-keywords guide" })).toHaveAttribute(
-      "href",
-      "https://bisibility.com/docs/guides/choose-first-keywords",
-    );
   });
 
   it("hides the checks-consequence note when a provider is connected", () => {
@@ -80,6 +91,17 @@ describe("KeywordsEmptyState", () => {
       "href",
       "/app/prj_1/integrations",
     );
+  });
+
+  it("offers Connect to Integrations when Search Console is not connected", () => {
+    renderEmpty(true, { searchConsoleConnected: false });
+
+    const connect = screen.getByRole("link", { name: "Connect Search Console" });
+    expect(connect).toHaveAttribute("href", appPath("prj_1", "integrations"));
+    expect(connect.closest("div.mt-auto")).toHaveClass("justify-end");
+    expect(
+      screen.queryByRole("button", { name: "Find Search Console queries" }),
+    ).not.toBeInTheDocument();
   });
 
   it("opens the suggestion picker and imports the confirmed queries", async () => {
@@ -164,7 +186,7 @@ describe("KeywordsEmptyState", () => {
     const props = renderEmpty(true, {}, "migration_hold");
 
     expect(screen.getByRole("button", { name: "Find Search Console queries" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Add" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Add manually" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Import CSV" })).toBeDisabled();
     fireEvent.click(screen.getByRole("button", { name: "Find Search Console queries" }));
     await waitFor(() => expect(props.importTopQueriesAction).not.toHaveBeenCalled());

@@ -28,20 +28,6 @@ const packageFile = {
   mimeType: "application/json",
 };
 
-const activeMigration = {
-  autoReleasesAt: null,
-  canRollback: false,
-  startedAt: null,
-  writeMode: "active" as const,
-};
-
-const heldMigration = {
-  autoReleasesAt: "2026-08-10T14:30:00.000Z",
-  canRollback: true,
-  startedAt: "2026-08-09T08:30:00.000Z",
-  writeMode: "migration_hold" as const,
-};
-
 function hostedProps(): AdvancedSettingsContentProps {
   return {
     actions: {
@@ -51,17 +37,11 @@ function hostedProps(): AdvancedSettingsContentProps {
         nextProjectPublicId: null,
       })),
       exportBackup: vi.fn(async () => packageFile),
-      rollbackHostedMigration: vi.fn(async () => activeMigration),
-      startHostedMigration: vi.fn(async () => ({
-        migration: heldMigration,
-        packageFile,
-      })),
     },
     auditEntries: [],
     canDeleteProject: true,
     canManageMigration: true,
     deployment: "cloud" as const,
-    migration: activeMigration,
     project: {
       domain: "example.com",
       name: "Example project",
@@ -76,7 +56,7 @@ describe("AdvancedSettingsContent", () => {
     vi.clearAllMocks();
   });
 
-  it("keeps backup export separate from the hosted migration hold", async () => {
+  it("keeps backup export on hosted deployments without a move-to-self-host card", async () => {
     const props = hostedProps();
     render(<AdvancedSettingsContent {...props} />);
 
@@ -85,53 +65,33 @@ describe("AdvancedSettingsContent", () => {
         "Keywords, retained history, tags, competitors, alerts, saved views and notification preferences.",
       ),
     ).toBeInTheDocument();
-    expect(screen.queryByText(/project details/i)).not.toBeInTheDocument();
+    expect(screen.queryByText("Move to self-host")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Move to self-host" })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Download data export" }));
 
     await waitFor(() =>
       expect(props.actions.exportBackup).toHaveBeenCalledWith({ projectId: "prj_story" }),
     );
-    expect(props.actions.startHostedMigration).not.toHaveBeenCalled();
     expect(mocks.downloadWorkspacePackage).toHaveBeenCalledWith(packageFile);
   });
 
-  it("starts the hosted move only after confirming its read-only hold", async () => {
+  it("shows a generic transfer card on self-hosted deployments", () => {
     const props = hostedProps();
-    render(<AdvancedSettingsContent {...props} />);
+    render(<AdvancedSettingsContent {...props} deployment="self-host" />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Move to self-host" }));
-    expect(props.actions.startHostedMigration).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole("button", { name: "Make read-only and export" }));
-
-    await waitFor(() =>
-      expect(props.actions.startHostedMigration).toHaveBeenCalledWith({ projectId: "prj_story" }),
-    );
-    expect(await screen.findByText(/eligible for automatic release/i)).toHaveTextContent(
-      "Aug 10, 2026, 14:30 UTC",
-    );
-  });
-
-  it("rolls back only through the hosted rollback action", async () => {
-    const props = hostedProps();
-    props.migration = heldMigration;
-    render(<AdvancedSettingsContent {...props} />);
-
-    fireEvent.click(screen.getByRole("button", { name: "Roll back migration" }));
-    fireEvent.click(screen.getByRole("button", { name: "Resume writes" }));
-
-    await waitFor(() =>
-      expect(props.actions.rollbackHostedMigration).toHaveBeenCalledWith({
-        projectId: "prj_story",
-      }),
-    );
-    expect(props.actions.exportBackup).not.toHaveBeenCalled();
-  });
-
-  it("hides hosted-only Move and backup actions on self-hosted deployments", () => {
-    const props = hostedProps();
-    render(<AdvancedSettingsContent {...props} deployment="self-host" migration={null} />);
-
-    expect(screen.getByText("Migrate to Cloud")).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Transfer project" })).toBeInTheDocument();
+    expect(
+      screen.getByText(/Move this project to another Bisibility instance/),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("This project")).not.toBeInTheDocument();
+    expect(screen.queryByText("Active")).not.toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Provider credentials, API keys, billing information, and user passwords are not transferred/,
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Transfer project" })).toBeInTheDocument();
+    expect(screen.queryByText("Migrate to Cloud")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Move to self-host" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Download backup" })).not.toBeInTheDocument();
   });

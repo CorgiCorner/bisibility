@@ -71,7 +71,9 @@ async function expectAppPage(page: Page, path: string, assertVisible: () => Prom
 
 async function clickThroughAppPages(page: Page, keyword: string, projectRef: string) {
   await expectAppPage(page, `/app/${projectRef}/dashboard`, async () => {
-    await expect(page.getByText("Tracked keywords")).toBeVisible();
+    await expect(
+      page.getByRole("region", { name: "Overview KPIs" }).getByText("Tracked keywords"),
+    ).toBeVisible();
   });
 
   await expectAppPage(page, `/app/${projectRef}/rank-tracker`, async () => {
@@ -125,11 +127,24 @@ async function verifyWorkspaceWidths(page: Page, keywordDetailPath: string, proj
     await page.setViewportSize({ height: 1000, width });
     for (const path of analyticsPaths) {
       await page.goto(path);
-      const metrics = await page.locator("main").evaluate((main) => {
-        const content = main.firstElementChild as HTMLElement | null;
-        const style = getComputedStyle(main);
+      const main = page.locator("main:visible").last();
+      await expect(main).toBeVisible();
+      await expect
+        .poll(() => main.evaluate((node) => node.clientWidth), {
+          message: `${path} main should finish laying out at ${width}px`,
+        })
+        .toBeGreaterThan(0);
+      await expect
+        .poll(
+          () => main.evaluate((node) => node.firstElementChild?.getBoundingClientRect().width ?? 0),
+          { message: `${path} content should finish laying out at ${width}px` },
+        )
+        .toBeGreaterThan(0);
+      const metrics = await main.evaluate((node) => {
+        const content = node.firstElementChild as HTMLElement | null;
+        const style = getComputedStyle(node);
         const available =
-          main.clientWidth -
+          node.clientWidth -
           Number.parseFloat(style.paddingLeft) -
           Number.parseFloat(style.paddingRight);
         return {

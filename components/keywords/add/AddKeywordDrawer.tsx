@@ -2,7 +2,6 @@
 
 import { buildCsvKeywordReview } from "@/components/keywords/AddKeywordCsvReviewModel";
 import { splitTagInput } from "@/components/keywords/action-utils";
-import type { LocationFieldValue } from "@/components/keywords/LocationField";
 import { AppDrawer } from "@/components/ui";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import {
@@ -23,7 +22,7 @@ import {
 } from "./AddKeywordDrawerExtensions";
 import { AddKeywordDrawerFeedback } from "./AddKeywordDrawerFeedback";
 import { AddKeywordDrawerFooter } from "./AddKeywordDrawerFooter";
-import { drawerFormDefaults, drawerLocationFields } from "./AddKeywordDrawerFormDefaults";
+import { drawerFormDefaults } from "./AddKeywordDrawerFormDefaults";
 import { initialLocationValue } from "./AddKeywordDrawerLocation";
 import { AddKeywordDrawerPanels } from "./AddKeywordDrawerPanels";
 import { resetAddKeywordDrawer } from "./AddKeywordDrawerReset";
@@ -100,15 +99,10 @@ export function AddKeywordDrawer({
     resolver: zodResolver(addKeywordDrawerSchema),
   });
   const keywordsValue = watch("keywords");
-  const device = watch("device");
   const tags = watch("tags") ?? [];
   const targetUrl = watch("targetUrl");
   const isPaused = Boolean(watch("isPaused"));
-  const { handleScheduleChange, scheduleFrequency } = useAddKeywordTrackingSchedule(
-    watch,
-    setValue,
-    costContext,
-  );
+  const { scheduleFrequency } = useAddKeywordTrackingSchedule(watch, setValue, costContext);
   const effectivePaused = isPaused || scheduleFrequency === "paused";
   const parsedKeywords = useMemo(() => parseKeywordLines(keywordsValue ?? ""), [keywordsValue]);
   const csvParseResult = useMemo(() => parseCsvKeywordsResult(csvText), [csvText]);
@@ -116,46 +110,35 @@ export function AddKeywordDrawer({
   const csvRows = useMemo(
     () =>
       buildDrawerCsvKeywordRowsForTracking(csvText, {
-        device,
+        device: defaultDevice,
         locationValue,
         tags,
         targetUrl,
       }),
-    [csvText, device, locationValue, tags, targetUrl],
+    [csvText, defaultDevice, locationValue, tags, targetUrl],
   );
   const reviewItems = useMemo(
     () => buildCsvKeywordReview(csvRows, existingKeywords),
     [csvRows, existingKeywords],
   );
-  const count =
-    activeTab === "csv" ? csvRows.filter((row) => row.keyword).length : parsedKeywords.length;
+  const count = activeTab === "csv" ? csvParseResult.keywords.length : parsedKeywords.length;
   const hasCsvRowErrors = csvReviewOpen && csvRows.some((row) => row.issues.length > 0);
   const isCsvReviewButton = activeTab === "csv" && !csvReviewOpen;
   const submitDisabled =
     isSubmitting ||
     activeTab === "api" ||
+    count === 0 ||
     (activeTab === "manual" &&
       (matrixSelection.locationKeys.length === 0 || matrixSelection.devices.length === 0)) ||
     hasCsvRowErrors ||
     Boolean(activeTab === "csv" && csvParseError);
-  const ctaLabel = addKeywordDrawerCtaLabel(activeTab, csvReviewOpen, effectivePaused, count);
+  const ctaLabel = addKeywordDrawerCtaLabel(activeTab, csvReviewOpen, effectivePaused);
 
   const handleMatrixChange = useCallback(
     (next: { devices: SerpDevice[]; locationKeys: string[] }) => setMatrixSelection(next),
     [],
   );
 
-  function handleLocationChange(next: LocationFieldValue) {
-    setLocationValue(next);
-    const fields = drawerLocationFields(next);
-    setValue("location", fields.location, { shouldDirty: true, shouldValidate: true });
-    setValue("city", fields.city, { shouldDirty: true, shouldValidate: true });
-    setValue("locationKey", fields.locationKey, { shouldDirty: true, shouldValidate: true });
-  }
-
-  function handleDeviceChange(next: string) {
-    setValue("device", next as SerpDevice, { shouldDirty: true, shouldValidate: true });
-  }
   function handleExited() {
     const nextLocation = initialLocationValue(defaultLocation, defaultLocationSelection);
     setLocationValue(nextLocation);
@@ -213,6 +196,7 @@ export function AddKeywordDrawer({
     activeTab,
     addKeywordsAction,
     consumeSavedIds,
+    csvRows,
     csvText,
     devices: matrixSelection.devices,
     existingKeywords,
@@ -267,30 +251,23 @@ export function AddKeywordDrawer({
           csvReviewOpen={csvReviewOpen}
           csvText={csvText}
           csvParseError={csvParseError}
-          device={device}
           defaultDevice={defaultDevice}
           domain={domain}
           errors={errors}
-          location={locationValue}
+          initialDevices={matrixSelection.devices}
+          initialMarketKeys={matrixSelection.locationKeys}
           onAppendTag={appendTag}
           onCsvReviewEdit={() => setCsvReviewOpen(false)}
           onCsvTextChange={handleCsvTextChange}
-          onDeviceChange={handleDeviceChange}
-          onLocationChange={handleLocationChange}
           onMatrixChange={handleMatrixChange}
-          onScheduleChange={handleScheduleChange}
           onTabChange={handleTabChange}
           onTagsChange={handleTagsChange}
           projectId={projectId}
-          projectDefaultFrequency={costContext?.rawFrequency}
           projectMarkets={drawerMarkets}
-          initialMarketKeys={defaultMarketKeys}
           register={register}
           reviewItems={reviewItems}
           tagSuggestions={tagSuggestions}
           tagsText={tagsText}
-          scheduleFrequency={scheduleFrequency}
-          showSchedule={showSchedule}
         />
 
         <AddKeywordDrawerFeedback error={actionError} warning={actionWarning} />

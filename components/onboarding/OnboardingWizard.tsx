@@ -17,10 +17,12 @@ import { feedbackClass } from "@/components/onboarding/onboarding-form-utils";
 import { locationValuesForKeys } from "@/components/onboarding/onboarding-location-field";
 import {
   initialOnboardingDraft,
-  initialReachableOnboardingStep,
   projectIdFor,
 } from "@/components/onboarding/onboarding-wizard-state";
-import { SampleDataButton } from "@/components/sample-data/SampleDataButton";
+import {
+  SAMPLE_DATA_BUTTON_TOOLTIP,
+  SampleDataButton,
+} from "@/components/sample-data/SampleDataButton";
 import { useState } from "react";
 import { readCurrentProviderValues } from "./onboarding-provider-values";
 import {
@@ -43,7 +45,6 @@ export function OnboardingWizard({
   initialProject,
   initialSerpConnections,
   initialStep,
-  isCloud = false,
   monthlyCapCents,
   providerConnected,
   rankedKeywordConnections = [],
@@ -63,9 +64,7 @@ export function OnboardingWizard({
   const [serpConnections, setSerpConnections] = useState<ConnectedProviderMap>(
     initialSerpConnections ?? {},
   );
-  const [maxReachableStep, setMaxReachableStep] = useState(() =>
-    initialReachableOnboardingStep(initialStep, initialFlowState),
-  );
+  const [maxReachableStep, setMaxReachableStep] = useState(initialStep);
   const [providerContinueDisabled, setProviderContinueDisabled] = useState(
     !providerConnected && !hasAnalyticsSource,
   );
@@ -94,7 +93,7 @@ export function OnboardingWizard({
   }
 
   function goToStep(step: OnboardingStepNumber, nextFlowState = flowState) {
-    if (step > maxReachableStep) {
+    if (step > currentStep || step > maxReachableStep) {
       return;
     }
     replaceStep(step, nextFlowState);
@@ -257,24 +256,15 @@ export function OnboardingWizard({
             flowState={flowState}
             leadingAction={
               currentStep === 1 ? (
-                <div className="flex flex-wrap items-start gap-x-4 gap-y-1">
+                <div className="flex flex-wrap items-end gap-x-3">
                   <SampleDataButton
                     action={actions.installSampleDataAction}
+                    help={SAMPLE_DATA_BUTTON_TOOLTIP}
                     label="Load sample project"
-                    size="small"
-                    sx={{
-                      color: "var(--fg-muted)",
-                      fontWeight: 400,
-                      paddingX: "8px",
-                      textTransform: "none",
-                      "&:hover": {
-                        backgroundColor: "transparent",
-                        color: "var(--accent-text)",
-                      },
-                    }}
-                    variant="text"
+                    size="lg"
+                    variant="secondary"
                   />
-                  {isCloud ? <CloudImportWorkspaceButton /> : null}
+                  <CloudImportWorkspaceButton />
                 </div>
               ) : undefined
             }

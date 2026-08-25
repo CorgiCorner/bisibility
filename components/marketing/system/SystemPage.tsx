@@ -3,7 +3,6 @@ import { DOCS_URL } from "@/lib/site/site";
 import {
   ArrowUpRightIcon as ArrowUpRight,
   BinocularsIcon as Binoculars,
-  LifebuoyIcon as Lifebuoy,
 } from "@phosphor-icons/react/dist/ssr";
 import type { ReactNode } from "react";
 
@@ -23,20 +22,23 @@ type TerminalBlockProps = {
   status: "404" | "500";
 };
 
-const actionSx = {
-  borderRadius: "11px",
-  fontSize: "14.5px",
-  gap: "8px",
-  minHeight: 46,
-  padding: "12px 20px",
-};
+// The app shell reuses this file, so it stays independent of components/marketing/landing/.
+// Same metrics as the marketing body CTA; radius comes from the shared Button (6px).
+const ctaClassName = "bv-landing-cta";
+
+const ctaSx = {
+  fontSize: "14px",
+  height: 40,
+  minHeight: 40,
+  padding: "8px 16px",
+} as const;
 
 export function SystemPrimaryAction(props: ButtonProps) {
-  return <Button size="lg" sx={actionSx} variant="primary" {...props} />;
+  return <Button className={ctaClassName} sx={ctaSx} variant="primary" {...props} />;
 }
 
 export function SystemSecondaryAction(props: ButtonProps) {
-  return <Button size="lg" sx={actionSx} variant="secondary" {...props} />;
+  return <Button className={ctaClassName} sx={ctaSx} variant="secondary" {...props} />;
 }
 
 export function SystemPage({
@@ -57,12 +59,10 @@ export function SystemPage({
       </div>
 
       <section className="flex flex-1 flex-col items-center justify-center px-6 pb-[90px] pt-10 text-center">
-        <span className="grid h-16 w-16 place-items-center rounded-[17px] bg-accent-soft text-accent-text">
+        <span className="grid h-16 w-16 place-items-center rounded-[17px] bg-accent-soft text-accent-solid">
           <Binoculars aria-hidden size={34} weight="bold" />
         </span>
-        <p className="mb-0 mt-6 font-mono text-[13px] tracking-[0.5px] text-accent-text">
-          {kicker}
-        </p>
+        <p className="mb-0 mt-6 font-mono text-[13px] tracking-[0.5px] text-accent">{kicker}</p>
         <h1 className="mb-0 mt-3 max-w-[760px] text-[34px] font-semibold leading-[1.05] tracking-[-1.6px] sm:text-[44px] lg:text-[52px]">
           {title}
         </h1>
@@ -72,12 +72,11 @@ export function SystemPage({
         <div className="mt-7 flex flex-wrap justify-center gap-[11px]">{actions}</div>
         {terminal}
         <a
-          className="mt-5.5 inline-flex items-center gap-[7px] text-[13px] text-fg-muted hover:text-accent-text"
+          className="mt-5.5 inline-flex items-center gap-[7px] text-[13px] text-fg-muted hover:text-accent-solid"
           href={DOCS_URL}
           rel="noreferrer noopener"
           target="_blank"
         >
-          <Lifebuoy aria-hidden size={16} />
           Still stuck? Read the docs
           <ArrowUpRight aria-hidden size={14} weight="bold" />
         </a>
@@ -101,7 +100,7 @@ export function TerminalBlock({ note, path, routes, status }: Readonly<TerminalB
         }}
       >
         <div className="whitespace-nowrap">
-          <span className="text-accent-text">GET</span> {path}
+          <span className="text-accent">GET</span> {path}
           <span className="text-code-faint"> -&gt; </span>
           <span className="text-red-text">{status}</span>
         </div>
@@ -131,7 +130,7 @@ export function SystemLoadingPage() {
       </div>
 
       <section className="flex flex-1 flex-col items-center justify-center px-6 pb-[90px] pt-10 text-center">
-        <span className="grid h-16 w-16 place-items-center rounded-[17px] bg-accent-soft text-accent-text">
+        <span className="grid h-16 w-16 place-items-center rounded-[17px] bg-accent-soft text-accent-solid">
           <Binoculars aria-hidden size={34} weight="bold" />
         </span>
         <SkeletonBlock className="mt-6 h-[15px] w-[136px]" />

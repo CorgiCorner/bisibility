@@ -5,6 +5,7 @@ import {
   LIST_PROVIDER_RATE_CONTEXT,
   type ResolveProviderRateInput,
 } from "@/lib/provider-rates/resolver";
+import type { ProviderUsage } from "@/lib/provider-usage/tag";
 import { resolveProviderCredentials } from "@/lib/providers/credentials";
 import { consumeProviderLimit, writeCooldown } from "@/lib/providers/rate-limit";
 import { getSerpProvider } from "@/lib/providers/registry";
@@ -66,6 +67,7 @@ export type RunCheckInput = {
   now?: Date;
   /** Owning project id; only used as the provider rate-limit fallback key. */
   projectId?: string;
+  providerUsage?: ProviderUsage;
 };
 
 // Classify provider errors carrying HTTP 429 signals as cooldown deferrals, not
@@ -156,6 +158,7 @@ export async function runCheck(input: RunCheckInput): Promise<RankCheckRunResult
       domain: input.keyword.domain,
       depth: requestedDepth,
       stopOnMatch: resolveSerpStopOnMatch(input.stopOnMatch),
+      tag: input.providerUsage?.tag,
       credentials,
     });
   } catch (error) {
@@ -182,6 +185,7 @@ export async function runCheck(input: RunCheckInput): Promise<RankCheckRunResult
     comparisonAllowed: input.comparisonAllowed ?? false,
     providerCostCents:
       Number.isFinite(reportedCostCents) && reportedCostCents > 0 ? reportedCostCents : undefined,
+    providerUsage: input.providerUsage,
     rankCheck: {
       billingUnits: rank.billingUnits ?? null,
       keywordId: input.keyword.id,

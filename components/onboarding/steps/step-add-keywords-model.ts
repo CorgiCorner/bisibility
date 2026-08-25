@@ -67,3 +67,11 @@ export const addKeywordsFormSchema = z.object({
 });
 
 export type AddKeywordsForm = z.infer<typeof addKeywordsFormSchema>;
+
+export const pausedKeywordSchedule = {
+  cronExpression: null,
+  frequency: "paused",
+  jitterMinutes: 60,
+  serpDepth: null,
+  timezone: "UTC",
+} as const;

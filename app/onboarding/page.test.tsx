@@ -10,7 +10,6 @@ const mocks = vi.hoisted(() => ({
   getOnboardingProjectMarketKeys: vi.fn(),
   getProjectCostContext: vi.fn(),
   getRequestProjectDefaults: vi.fn(),
-  isCloud: true,
   listWorkspaces: vi.fn(),
   completeProjectOnboarding: vi.fn(),
   prisma: {
@@ -42,9 +41,6 @@ vi.mock("@/lib/actions/settings", () => ({ updateDefaultRankCheckSettings: vi.fn
 vi.mock("@/lib/actions/traffic-sync", () => ({ syncProjectTraffic: vi.fn() }));
 vi.mock("@/lib/deployment/deployment", () => ({
   dataResidencyMessage: () => "EU data residency",
-  get isCloud() {
-    return mocks.isCloud;
-  },
 }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 vi.mock("@/lib/providers/analytics/google-client", () => ({
@@ -96,7 +92,6 @@ describe("OnboardingPage", () => {
     redirect.mockImplementation((href: string) => {
       throw new Error(`redirect:${href}`);
     });
-    mocks.isCloud = true;
     mocks.listWorkspaces.mockResolvedValue([{ publicId: "prj_1" }]);
     mocks.requireReadableProject.mockResolvedValue({ project });
     mocks.getIntegrationCategories.mockResolvedValue([]);
@@ -137,6 +132,43 @@ describe("OnboardingPage", () => {
       }),
     );
     expect(mocks.getOnboardingProjectMarketKeys).not.toHaveBeenCalled();
+  });
+
+  it("stays on create-project when the first workspace has no domain yet", async () => {
+    mocks.requireReadableProject.mockResolvedValue({
+      project: { ...project, domain: null },
+    });
+    mocks.getKeywordCount.mockResolvedValue(0);
+
+    const page = await OnboardingPage({
+      searchParams: Promise.resolve({}),
+    });
+    render(page);
+
+    expect(redirect).not.toHaveBeenCalled();
+    expect(mocks.wizard).toHaveBeenCalledWith(
+      expect.objectContaining({
+        initialProject: expect.objectContaining({ domain: null }),
+        initialStep: 1,
+      }),
+    );
+  });
+
+  it("sends a domain-less project back to create-project from later steps", async () => {
+    mocks.requireReadableProject.mockResolvedValue({
+      project: { ...project, domain: null },
+    });
+    mocks.getKeywordCount.mockResolvedValue(0);
+
+    await expect(
+      OnboardingPage({
+        searchParams: Promise.resolve({ projectId: "prj_1", step: "2" }),
+      }),
+    ).rejects.toThrow("redirect:/onboarding?step=1");
+
+    expect(redirect).toHaveBeenCalledWith(
+      "/onboarding?step=1&projectId=prj_1&loc=US&device=desktop",
+    );
   });
 
   it("hydrates resumed market defaults from the active and paused registry", async () => {
@@ -318,7 +350,6 @@ describe("OnboardingPage", () => {
         rankedKeywordConnections: [
           expect.objectContaining({ id: "conn_a00000000000000000000000" }),
         ],
-        isCloud: true,
       }),
     );
   });

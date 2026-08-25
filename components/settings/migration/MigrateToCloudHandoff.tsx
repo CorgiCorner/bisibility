@@ -70,7 +70,7 @@ export function HandoffPanel({
   return (
     <div className="mt-4 overflow-hidden rounded-[14px] border border-border bg-bg-elev">
       <div className="flex items-center gap-[13px] border-border-soft border-b p-[16px_18px]">
-        <span className="grid h-[38px] w-[38px] flex-none place-items-center rounded-[10px] bg-accent-soft text-accent-text">
+        <span className="grid h-[38px] w-[38px] flex-none place-items-center rounded-[10px] bg-accent-soft text-accent-solid">
           <CloudArrowUp aria-hidden size={20} weight="fill" />
         </span>
         <div className="min-w-0 flex-1">

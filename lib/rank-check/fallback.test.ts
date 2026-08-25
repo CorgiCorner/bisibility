@@ -1,4 +1,5 @@
 import { resetRateLimitStateForTests } from "@/lib/api/ratelimit";
+import { ProviderCallError } from "@/lib/providers/call-error";
 import { encryptSecret } from "@/lib/providers/crypto";
 import { clearProviderRateLimitState, ProviderRateLimitedError } from "@/lib/providers/rate-limit";
 import { dataForSeoProvider } from "@/lib/providers/serp/dataforseo";
@@ -128,7 +129,9 @@ describe("runCheckWithFallback", () => {
 
     expect(outcome.provider).toBe("secondary");
     expect(outcome.result.rankCheck.position).toBe(4);
-    expect(outcome.attempts).toEqual([{ provider: "primary", message: "network down" }]);
+    expect(outcome.attempts).toEqual([
+      { provider: "primary", message: "network down", code: "provider_transient" },
+    ]);
     expect(callOrder).toEqual(["primary", "secondary"]);
     expect(secondary.fetchRank).toHaveBeenCalledTimes(1);
     expect(unused.fetchRank).not.toHaveBeenCalled();
@@ -208,8 +211,8 @@ describe("runCheckWithFallback", () => {
     await expect(promise).rejects.toBeInstanceOf(ProviderChainError);
     await promise.catch((error: ProviderChainError) => {
       expect(error.attempts).toEqual([
-        { provider: "primary", message: "quota exceeded" },
-        { provider: "secondary", message: "parse error" },
+        { provider: "primary", message: "quota exceeded", code: "provider_transient" },
+        { provider: "secondary", message: "parse error", code: "provider_transient" },
       ]);
       expect(error.code).toBe("provider_failed");
       expect(error.message).toContain("quota exceeded");
@@ -248,7 +251,7 @@ describe("runCheckWithFallback", () => {
     expect(outcome.provider).toBe("secondary");
     expect(outcome.result.rankCheck.position).toBe(7);
     expect(outcome.attempts).toEqual([
-      { message: "HTTP 429 too many requests", provider: "primary" },
+      { message: "HTTP 429 too many requests", provider: "primary", code: "provider_rate_limited" },
     ]);
   });
 
@@ -273,6 +276,55 @@ describe("runCheckWithFallback", () => {
 
     await expect(promise).rejects.toBeInstanceOf(ProviderRateLimitedError);
     await expect(promise).rejects.not.toBeInstanceOf(ProviderChainError);
+  });
+
+  it("classifies the dominant provider error code on the chain error", async () => {
+    const billingError = new ProviderCallError("Payment Required", null, "provider_billing");
+    const transientError = new ProviderCallError("timeout", null, "provider_transient");
+    const providers: Record<string, SerpProvider> = {
+      primary: provider("primary", vi.fn().mockRejectedValue(billingError)),
+      secondary: provider("secondary", vi.fn().mockRejectedValue(transientError)),
+    };
+
+    const promise = runCheckWithFallback({
+      keyword: KEYWORD,
+      schedule: { frequency: "manual" },
+      connections: [
+        { provider: "primary", credentials: { apiKey: "a" } },
+        { provider: "secondary", credentials: { apiKey: "b" } },
+      ],
+      resolveProvider: (id) => providers[id],
+    });
+
+    await expect(promise).rejects.toBeInstanceOf(ProviderChainError);
+    await promise.catch((error: ProviderChainError) => {
+      expect(error.dominantCode).toBe("provider_billing");
+      expect(error.attempts[0].code).toBe("provider_billing");
+      expect(error.attempts[1].code).toBe("provider_transient");
+    });
+  });
+
+  it("picks auth over rate_limited and transient for the dominant code", async () => {
+    const authError = new ProviderCallError("Unauthorized", null, "provider_auth");
+    const rateLimitedError = new ProviderCallError("429", null, "provider_rate_limited");
+    const providers: Record<string, SerpProvider> = {
+      primary: provider("primary", vi.fn().mockRejectedValue(rateLimitedError)),
+      secondary: provider("secondary", vi.fn().mockRejectedValue(authError)),
+    };
+
+    const promise = runCheckWithFallback({
+      keyword: KEYWORD,
+      schedule: { frequency: "manual" },
+      connections: [
+        { provider: "primary", credentials: { apiKey: "a" } },
+        { provider: "secondary", credentials: { apiKey: "b" } },
+      ],
+      resolveProvider: (id) => providers[id],
+    });
+
+    await promise.catch((error: ProviderChainError) => {
+      expect(error.dominantCode).toBe("provider_auth");
+    });
   });
 });
 
@@ -775,7 +827,9 @@ describe("runKeywordCheckWithFallback", () => {
     });
 
     expect(outcome.provider).toBe("secondary");
-    expect(outcome.attempts).toEqual([{ message: "quota exceeded", provider: "primary" }]);
+    expect(outcome.attempts).toEqual([
+      { message: "quota exceeded", provider: "primary", code: "provider_transient" },
+    ]);
     expect(mocks.prisma.rankCheck.create).toHaveBeenCalledWith({
       data: expect.objectContaining({ position: 4, previousPosition: 8, provider: "secondary" }),
     });

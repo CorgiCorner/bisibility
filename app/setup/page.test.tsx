@@ -15,6 +15,9 @@ vi.mock("@/components/ui", () => ({
   BrandLockup: () => <span data-testid="brand-lockup">bisibility</span>,
   Button: ({ children }: { children: ReactNode }) => <button type="submit">{children}</button>,
   Card: ({ children }: { children: ReactNode }) => <section>{children}</section>,
+  ExternalLink: ({ children, href }: { children: ReactNode; href: string }) => (
+    <a href={href}>{children}</a>
+  ),
 }));
 vi.mock("@/lib/auth/first-run", () => ({
   isFirstRun: mocks.firstRun,
@@ -105,9 +108,7 @@ describe("administrator setup page", () => {
 
     expect(markup).toContain("You&#x27;re the administrator");
     expect(markup).toContain("Open the admin panel");
-    expect(markup).toContain(
-      "If you ever need to reassign administration, the server operator can do it from the command line.",
-    );
+    expect(markup).not.toContain("reassign administration");
     expect(redirect).not.toHaveBeenCalled();
   });
 });

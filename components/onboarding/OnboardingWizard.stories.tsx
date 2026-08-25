@@ -16,7 +16,7 @@ import {
   StepCreateProject,
 } from "@/components/onboarding/steps/StepCreateProject";
 import { StepFirstCheck } from "@/components/onboarding/steps/StepFirstCheck";
-import { BrandLockup, Button } from "@/components/ui";
+import { Avatar, BrandLockup, Button } from "@/components/ui";
 import { SignOutIcon as SignOut } from "@phosphor-icons/react/dist/ssr";
 import type { Meta, StoryObj } from "@storybook/react";
 import type { ReactNode } from "react";
@@ -210,9 +210,12 @@ function OnboardingStory({
           <BrandLockup />
           <div className="inline-flex items-center gap-2 text-[12.5px] text-fg-muted">
             <span className="inline-flex items-center gap-1.5">
-              <span className="grid h-[22px] w-[22px] place-items-center rounded-md bg-accent-solid font-mono text-[9px] font-semibold text-white">
-                AK
-              </span>
+              <Avatar
+                alt=""
+                className="h-[22px] w-[22px] rounded-md bg-accent-solid font-mono text-[9px] font-semibold text-accent-on-solid"
+                initials="AK"
+                src={null}
+              />
               demo@acme.dev
             </span>
             <span aria-hidden className="h-4 w-px bg-border-strong" />

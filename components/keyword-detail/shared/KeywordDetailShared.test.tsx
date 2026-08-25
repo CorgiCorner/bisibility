@@ -164,10 +164,10 @@ describe("keyword detail shared primitives", () => {
 
     expect(screen.getByText("Step 2 of 4")).toBeVisible();
     expect(screen.getByLabelText("Onboarding steps")).toBeVisible();
-    expect(stepDotClass(onboarding.container, "past")).toContain("bg-green");
+    expect(stepDotClass(onboarding.container, "past")).toContain("bg-accent-soft");
     expect(stepDotClass(onboarding.container, "current")).toContain("bg-accent-solid");
     expect(stepDotClass(onboarding.container, "upcoming")).toContain("border-border");
-    expect(stepDotClass(onboarding.container, "upcoming")).toContain("bg-bg-sunken");
+    expect(stepDotClass(onboarding.container, "upcoming")).toContain("bg-transparent");
     onboarding.unmount();
 
     const keywordDetail = render(
@@ -191,7 +191,7 @@ describe("keyword detail shared primitives", () => {
     expect(keywordDetailPastClass).toBe(keywordDetailUpcomingClass);
     expect(keywordDetailCurrentClass).not.toBe(keywordDetailPastClass);
     expect(keywordDetailCurrentClass).toBe(
-      "h-1.5 w-1.5 rounded-full bg-accent-solid text-primary-contrast",
+      "h-1.5 w-1.5 rounded-full bg-accent-solid text-accent-on-solid",
     );
     expect(keywordDetailPastClass).toBe(
       "h-1.5 w-1.5 rounded-full border-[1.5px] border-border-strong bg-transparent text-fg-muted",

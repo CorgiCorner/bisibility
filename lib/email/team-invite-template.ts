@@ -48,14 +48,14 @@ export function teamInviteEmail(input: TeamInviteEmailInput) {
 
   const html = `<!doctype html>
 <html lang="en">
-<body style="margin:0;padding:0;background:#F2EEE4;color:#1A1813;font-family:system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;background:#F2EEE4;">
+<body style="margin:0;padding:0;background:#FCF7ED;color:#1A1813;font-family:system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;background:#FCF7ED;">
     <tr>
       <td align="center" style="padding:24px 12px;">
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="width:100%;max-width:560px;border-collapse:separate;background:#FBF9F4;border:1px solid #D9D4C7;border-radius:16px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="width:100%;max-width:560px;border-collapse:separate;background:#FBF9F4;border:1px solid #DDD8CC;border-radius:16px;">
           <tr>
-            <td style="padding:22px 24px;border-bottom:1px solid #E8E4D9;">
-              <span style="display:inline-block;width:32px;height:32px;line-height:32px;text-align:center;border-radius:9px;background:#D97757;color:#1A1813;font-size:18px;font-weight:700;">B</span>
+            <td style="padding:22px 24px;border-bottom:1px solid #DDD8CC;">
+              <span style="display:inline-block;width:32px;height:32px;line-height:32px;text-align:center;border-radius:9px;background:#F1511C;color:#1A1813;font-size:18px;font-weight:700;">B</span>
               <span style="display:inline-block;margin-left:10px;font-size:18px;font-weight:700;vertical-align:9px;">bisibility</span>
             </td>
           </tr>
@@ -82,7 +82,7 @@ export function teamInviteEmail(input: TeamInviteEmailInput) {
             </td>
           </tr>
           <tr>
-            <td style="padding:18px 24px;border-top:1px solid #E8E4D9;font-size:12px;line-height:18px;color:#6B6657;">You received this email because ${safe.inviter} invited you to bisibility. If you did not expect it, you can ignore this message.</td>
+            <td style="padding:18px 24px;border-top:1px solid #DDD8CC;font-size:12px;line-height:18px;color:#6B6657;">You received this email because ${safe.inviter} invited you to bisibility. If you did not expect it, you can ignore this message.</td>
           </tr>
         </table>
       </td>

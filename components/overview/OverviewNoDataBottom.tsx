@@ -1,3 +1,5 @@
+"use client";
+
 import { Button, Card } from "@/components/ui";
 import { appPath } from "@/lib/routing/app-path";
 import {

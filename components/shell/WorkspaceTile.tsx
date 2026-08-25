@@ -31,7 +31,7 @@ export function WorkspaceTile({
   return (
     <span
       aria-hidden
-      className={`relative grid h-7 w-7 flex-none place-items-center overflow-hidden border border-border-strong bg-bg-sunken font-mono text-[12px] font-semibold leading-none text-fg-muted ${className}`}
+      className={`relative grid h-7 w-7 flex-none place-items-center overflow-hidden border border-border-strong bg-bg-elev font-mono text-[12px] font-semibold leading-none text-fg-muted ${className}`}
       style={{ borderRadius: `${radius}px` }}
     >
       {workspaceTileLetter(domain)}

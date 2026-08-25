@@ -29,7 +29,7 @@ import { installSampleData } from "@/lib/actions/sample-data";
 import { updateDefaultRankCheckSettings } from "@/lib/actions/settings";
 import { syncProjectTraffic } from "@/lib/actions/traffic-sync";
 import { requireApiPublicId } from "@/lib/api/public-id";
-import { dataResidencyMessage, isCloud } from "@/lib/deployment/deployment";
+import { dataResidencyMessage } from "@/lib/deployment/deployment";
 import { googleOAuthErrorCopy } from "@/lib/integrations/google-oauth-copy";
 import { isGoogleOAuthConfigured } from "@/lib/providers/analytics/google-client";
 import { getPendingGoogleOAuthSetup } from "@/lib/providers/analytics/google-oauth-pending";
@@ -186,17 +186,22 @@ export default async function OnboardingPage({ searchParams }: Readonly<Onboardi
     ? { ...project, timezone: projectDefaults?.timezone ?? "UTC" }
     : null;
 
-  if (project && currentStep === 1 && !requestedStep) {
+  // A workspace row can exist before the user names a domain. Skipping to
+  // Connect data would hide the required website field.
+  if (project?.domain && currentStep === 1 && !requestedStep) {
     redirect(buildOnboardingStepHref(2, flowState));
   }
 
-  if (!project && currentStep > 1) {
-    redirect(buildOnboardingStepHref(1));
+  if (!project?.domain && currentStep > 1) {
+    redirect(buildOnboardingStepHref(1, project ? flowState : undefined));
   }
 
   const supportedStep = clampOnboardingStep(
     currentStep,
-    maxSupportedOnboardingStep({ keywordCount, projectId }),
+    maxSupportedOnboardingStep({
+      keywordCount,
+      projectId: project?.domain ? projectId : null,
+    }),
   );
 
   if (supportedStep !== currentStep) {
@@ -250,7 +255,6 @@ export default async function OnboardingPage({ searchParams }: Readonly<Onboardi
         initialProject={initialProject}
         initialSerpConnections={providerState.serpConnections}
         initialStep={currentStep}
-        isCloud={isCloud}
         monthlyCapCents={project?.budgetCapCents ?? DEFAULT_MONTHLY_COST_CAP_CENTS}
         providerConnected={providerState.providerConnected}
         rankedKeywordConnections={providerState.rankedKeywordConnections}

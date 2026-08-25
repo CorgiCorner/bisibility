@@ -74,7 +74,20 @@ describe("ThemeSegments", () => {
   it("marks the active segment with the unified neutral treatment, not accent", () => {
     render(<ThemeSegments defaultPreference="light" />);
 
-    expect(segment("Light").nextElementSibling).toHaveClass("bg-nav-active");
+    expect(segment("Light").nextElementSibling).toHaveClass("bg-bg-elev");
+    expect(segment("Light").nextElementSibling).not.toHaveClass("bg-nav-active");
     expect(segment("Light").nextElementSibling?.className).not.toContain("bg-accent");
+  });
+
+  it("uses the control-border token, not the layout hairline", () => {
+    render(<ThemeSegments defaultPreference="light" />);
+
+    const selected = segment("Light");
+    // Tooltip wraps its trigger, so reach the control by its border rather than by a
+    // fixed number of parent hops.
+    const control = selected.closest(".border-border-strong");
+    expect(control).toHaveClass("border-border-strong");
+    expect(control).not.toHaveClass("border-border");
+    expect(selected.nextElementSibling).toHaveClass("border-border-strong");
   });
 });

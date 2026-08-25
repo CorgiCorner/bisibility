@@ -46,6 +46,34 @@ describe("Disclosure", () => {
     expect(document.getElementById("can-i-cap-my-monthly-serp-spend")).toHaveTextContent("Yes.");
   });
 
+  it("renders one down caret that rotates up when open", () => {
+    const { rerender } = render(
+      <Disclosure title="Closed">
+        <p>Body</p>
+      </Disclosure>,
+    );
+
+    const closedCaret = screen
+      .getByRole("heading", { name: "Closed" })
+      .closest("summary")
+      ?.querySelector("svg");
+    expect(closedCaret).not.toBeNull();
+    expect(closedCaret).toHaveClass("group-open:rotate-180");
+
+    rerender(
+      <Disclosure defaultOpen title="Open">
+        <p>Body</p>
+      </Disclosure>,
+    );
+
+    const openCaret = screen
+      .getByRole("heading", { name: "Open" })
+      .closest("summary")
+      ?.querySelector("svg");
+    expect(openCaret).not.toBeNull();
+    expect(openCaret).toHaveClass("group-open:rotate-180");
+  });
+
   it("rotates the caret on open and uses the motion-token duration", () => {
     render(
       <Disclosure title="Open me">
@@ -62,7 +90,7 @@ describe("Disclosure", () => {
       "transition-transform",
       "duration-[var(--motion-tooltip)]",
       "ease-[var(--ease-in-out)]",
-      "group-open:rotate-90",
+      "group-open:rotate-180",
     );
   });
 
@@ -77,7 +105,7 @@ describe("Disclosure", () => {
       .getByRole("heading", { name: "Reduced" })
       .closest("summary")
       ?.querySelector("svg");
-    expect(caret).toHaveClass("group-open:rotate-90", "motion-reduce:transition-none");
+    expect(caret).toHaveClass("group-open:rotate-180", "motion-reduce:transition-none");
     expect(caret).not.toHaveClass("motion-reduce:rotate-0");
     expect(caret?.className).not.toContain("duration-150");
   });

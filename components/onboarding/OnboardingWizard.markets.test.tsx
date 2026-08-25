@@ -43,7 +43,11 @@ it("keeps draft markets across navigation and persists them on submit", async ()
   expect(saveMarketsAction).not.toHaveBeenCalled();
   const rail = screen.getByLabelText("Onboarding steps");
   fireEvent.click(within(rail).getByRole("button", { name: /Connect data/ }));
-  fireEvent.click(within(rail).getByRole("button", { name: /Add keywords/ }));
+  // The rail no longer jumps forward past the current step, so returning to the keywords
+  // step goes through this step's own Skip, which is the path a user has.
+  fireEvent.click(
+    screen.getByRole("button", { name: "Skip provider connection and add keywords as paused" }),
+  );
   fireEvent.change(screen.getByPlaceholderText("One keyword per line"), {
     target: { value: "rank tracker" },
   });

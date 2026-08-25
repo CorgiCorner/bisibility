@@ -1,4 +1,8 @@
-import { FirstCheckBanner, FirstCheckBannerLink } from "@/components/rank-check/FirstCheckBanner";
+import {
+  FirstCheckBanner,
+  FirstCheckBannerLink,
+  keywordReadinessSubject,
+} from "@/components/rank-check/FirstCheckBanner";
 import {
   FirstCheckBannerAction,
   type GetFirstCheckRunPlanAction,
@@ -8,7 +12,6 @@ import {
 import { Card } from "@/components/ui";
 import type { ProjectRef } from "@/lib/routing/app-path";
 import { appPath, rankTrackerTabPath } from "@/lib/routing/app-path";
-import { ClockCountdownIcon as ClockCountdown } from "@phosphor-icons/react/dist/ssr";
 import { PositionDistributionCard } from "./PositionDistributionCard";
 import { PositionTrendCard } from "./PositionTrendCard";
 import type { DistributionBucket, OverviewView, TrendPoint } from "./types";
@@ -27,13 +30,8 @@ export type NoDataBannerState =
   | "ready"
   | "running";
 
-function keywordLabel(keywordCount: number) {
-  const label = `${keywordCount} keyword${keywordCount === 1 ? "" : "s"}`;
-  return `${label} ${keywordCount === 1 ? "is" : "are"}`;
-}
-
 function bannerText(state: Exclude<NoDataBannerState, "ready">, keywordCount: number) {
-  const keywords = keywordLabel(keywordCount);
+  const keywords = keywordReadinessSubject(keywordCount);
   if (state === "migration_hold") {
     return {
       detail: "This project is on migration hold. Rank tracking will resume when the hold ends.",
@@ -42,8 +40,8 @@ function bannerText(state: Exclude<NoDataBannerState, "ready">, keywordCount: nu
   }
   if (state === "missing") {
     return {
-      detail: `${keywords} ready. Connect DataForSEO or SerpApi to start rank tracking.`,
-      title: "SERP provider required.",
+      detail: "Connect DataForSEO or SerpApi to start rank tracking.",
+      title: "SERP provider required",
     };
   }
   if (state === "needs_attention") {
@@ -78,6 +76,7 @@ export function NoDataBanner({
   state: NoDataBannerState;
 }>) {
   if (state === "ready") {
+    const needsKeywords = !keywordId && keywordCount === 0;
     const action = keywordId ? (
       <FirstCheckBannerAction
         getFirstCheckRunPlanAction={getFirstCheckRunPlanAction}
@@ -88,9 +87,18 @@ export function NoDataBanner({
         runCheckNowAction={runCheckNowAction}
       />
     ) : (
-      <FirstCheckBannerLink href={appPath(projectRef, "rank-tracker")} label="View keywords" />
+      <FirstCheckBannerLink
+        href={appPath(projectRef, needsKeywords ? "rank-tracker?add=1" : "rank-tracker")}
+        label={needsKeywords ? "Add keywords" : "View keywords"}
+      />
     );
-    return <FirstCheckBanner action={action} keywordCount={keywordCount} />;
+    return (
+      <FirstCheckBanner
+        action={action}
+        icon={needsKeywords ? "ranking" : "puzzle"}
+        keywordCount={keywordCount}
+      />
+    );
   }
 
   const copy = bannerText(state, keywordCount);
@@ -120,17 +128,7 @@ export function NoDataBanner({
     );
   }
 
-  // Same "toast" variant as the roadmap-preview SoonBanner: accent border + soft fill.
-  return (
-    <section className="flex flex-col gap-3 rounded-xl border border-accent bg-accent-soft px-4 py-[13px] text-fg sm:flex-row sm:items-center sm:gap-3">
-      <ClockCountdown aria-hidden className="shrink-0 text-accent-text" size={17} weight="fill" />
-      <p className="m-0 min-w-0 flex-1 text-[13px] leading-[1.5]">
-        <strong className="font-semibold">{copy.title}</strong>{" "}
-        <span className="text-fg-muted">{copy.detail}</span>
-      </p>
-      {action}
-    </section>
-  );
+  return <FirstCheckBanner action={action} detail={copy.detail} title={copy.title} />;
 }
 
 type NoDataKpiRowProps = {

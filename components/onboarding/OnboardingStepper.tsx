@@ -7,8 +7,7 @@ import {
   onboardingSteps,
   totalOnboardingSteps,
 } from "@/components/onboarding/onboarding-fixtures";
-import { StepDotNavigation } from "@/components/onboarding/StepDotNavigation";
-import { Button, type StepDotState, StepDots } from "@/components/ui";
+import { Button, type StepDotState } from "@/components/ui";
 import { cn } from "@/lib/ui/cn";
 import { CheckIcon as Check } from "@phosphor-icons/react";
 import Link from "next/link";
@@ -27,9 +26,9 @@ function stepAccessibleName(title: string, done: boolean) {
 }
 
 function onboardingNavStepStateClass(state: StepDotState) {
-  if (state === "current") return "bg-accent-solid text-primary-contrast";
-  if (state === "past") return "bg-green-text text-accent-on-solid dark:text-bg";
-  return "border border-border-strong bg-bg-sunken text-fg-muted";
+  if (state === "current") return "bg-accent-solid text-accent-on-solid";
+  if (state === "past") return "bg-accent-soft text-accent-solid";
+  return "border border-border bg-transparent text-fg-muted";
 }
 
 export function OnboardingStepper({
@@ -44,14 +43,9 @@ export function OnboardingStepper({
 
   return (
     <div className="mt-6">
-      <div className="flex items-center justify-between">
-        <span className="font-mono text-xs text-fg-muted">
-          Step {currentStep} of {totalOnboardingSteps}
-        </span>
-        <span className="font-mono text-[10px] uppercase tracking-[0.09em] text-fg-muted">
-          Project setup
-        </span>
-      </div>
+      <span className="font-mono text-xs text-fg-muted">
+        Step {currentStep} of {totalOnboardingSteps}
+      </span>
       <div
         aria-label="Onboarding progress"
         aria-valuemax={totalOnboardingSteps}
@@ -68,23 +62,9 @@ export function OnboardingStepper({
 
       <div className="mt-7 grid items-start gap-6 lg:grid-cols-[248px_minmax(0,1fr)]">
         <div className="lg:hidden">
-          <StepDots
-            className="flex items-center justify-between gap-1.5"
-            currentIndex={currentStep - 1}
-            items={onboardingSteps}
-            renderItem={({ item: step, state }) => (
-              <StepDotItem
-                flowState={flowState}
-                maxReachableStep={maxReachableStep}
-                onStepChange={onStepChange}
-                state={state}
-                step={step}
-              />
-            )}
-          />
-          <h2 className="m-0 mt-3.5 text-lg font-semibold tracking-[-0.4px]">{activeStep.title}</h2>
+          <h2 className="m-0 text-lg font-semibold tracking-[-0.4px]">{activeStep.title}</h2>
         </div>
-        <nav aria-label="Onboarding steps" className="hidden flex-col gap-[3px] lg:flex">
+        <nav aria-label="Onboarding steps" className="hidden flex-col gap-2 lg:flex">
           {onboardingSteps.map((step) => (
             <StepRailItem
               currentStep={currentStep}
@@ -102,50 +82,6 @@ export function OnboardingStepper({
   );
 }
 
-function StepDotItem({
-  flowState,
-  maxReachableStep,
-  onStepChange,
-  state,
-  step,
-}: Readonly<{
-  flowState?: OnboardingFlowState;
-  maxReachableStep: OnboardingStepNumber;
-  onStepChange?: (step: OnboardingStepNumber) => void;
-  state: StepDotState;
-  step: (typeof onboardingSteps)[number];
-}>) {
-  const locked = step.n > maxReachableStep;
-  const done = !locked && state === "past";
-  const active = state === "current";
-  const className = cn(
-    "grid h-8.5 w-[34px] place-items-center rounded-full p-0 text-sm",
-    locked ? "cursor-default border-border bg-bg-sunken text-fg-muted" : "cursor-pointer",
-    !locked && onboardingNavStepStateClass(state),
-  );
-  const icon = done ? (
-    <Check aria-hidden size={15} weight="bold" />
-  ) : (
-    <span aria-hidden className="font-mono text-[12px] font-semibold">
-      {step.n}
-    </span>
-  );
-  return (
-    <StepDotNavigation
-      accessibleName={stepAccessibleName(step.title, done)}
-      active={active}
-      className={className}
-      flowState={flowState}
-      icon={icon}
-      locked={locked}
-      onStepChange={onStepChange}
-      state={state}
-      step={step.n}
-      title={locked ? `${step.title} - complete the previous step first` : step.title}
-    />
-  );
-}
-
 function StepRailItem({
   currentStep,
   flowState,
@@ -159,25 +95,24 @@ function StepRailItem({
   onStepChange?: (step: OnboardingStepNumber) => void;
   step: (typeof onboardingSteps)[number];
 }>) {
-  const locked = step.n > maxReachableStep;
+  // Forward rail jumps skip the current step's Continue / Skip, including
+  // required ones. Only completed steps (and the current one) stay clickable.
+  const locked = step.n > currentStep || step.n > maxReachableStep;
   const done = !locked && currentStep > step.n;
   const active = currentStep === step.n;
   const state: StepDotState = done ? "past" : active ? "current" : "upcoming";
-  const status = done ? "Complete" : active ? "Current" : locked ? "Next" : "Next";
 
   const className = cn(
-    "flex w-full items-center gap-3 rounded-[11px] border-0 bg-transparent px-3 py-[11px] text-left",
-    locked ? "cursor-default" : "cursor-pointer hover:bg-nav-active",
-    active && "border border-accent bg-nav-active",
+    "flex w-full items-center gap-3 rounded-[11px] border border-transparent bg-transparent px-0 py-[11px] text-left",
+    locked ? "cursor-default" : "cursor-pointer",
+    active && "border-accent",
   );
   const content = (
     <>
       <span
         className={cn(
           "grid h-[30px] w-[30px] shrink-0 place-items-center rounded-[9px] text-[15px]",
-          locked
-            ? "border border-border bg-bg-sunken text-fg-muted"
-            : onboardingNavStepStateClass(state),
+          onboardingNavStepStateClass(state),
         )}
         data-step-dot-state={state}
       >
@@ -189,7 +124,7 @@ function StepRailItem({
           </span>
         )}
       </span>
-      <span className="min-w-0">
+      <span className="flex min-w-0 flex-col gap-1">
         <span
           className={cn(
             "block text-[13px] leading-tight",
@@ -199,14 +134,8 @@ function StepRailItem({
         >
           {step.title}
         </span>
-        <span className="mt-0.5 block font-mono text-[10px] text-fg-muted">{step.desc}</span>
-        <span
-          className={cn(
-            "mt-1 block text-[10.5px] leading-tight",
-            active ? "font-medium text-accent-text" : "text-fg-muted",
-          )}
-        >
-          {status}
+        <span className="block font-mono text-[10px] font-normal leading-snug text-fg-muted">
+          {step.desc}
         </span>
       </span>
     </>
@@ -258,9 +187,18 @@ function StepRailNavigation({
         sx={{
           justifyContent: "flex-start",
           minHeight: 0,
-          padding: "11px 12px",
+          padding: "11px 0",
           textAlign: "left",
-          "&.Mui-disabled": { border: 0 },
+          backgroundColor: "transparent",
+          "&:hover": {
+            backgroundColor: "transparent",
+          },
+          "&.Mui-disabled": {
+            backgroundColor: "transparent",
+            border: "1px solid transparent",
+            color: "inherit",
+          },
+          "&.Mui-disabled:hover": { backgroundColor: "transparent" },
         }}
         type="button"
         variant="ghost"

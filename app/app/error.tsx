@@ -2,13 +2,9 @@
 
 import { useDeploymentMode } from "@/components/shell/DeploymentModeProvider";
 import { Button, MonoText, SectionTitle } from "@/components/ui";
+import { reportAppError } from "@/lib/observability/error-reporting";
 import { FEEDBACK_URL, GITHUB_ISSUES_URL } from "@/lib/site/site";
-import {
-  ArrowClockwiseIcon as ArrowClockwise,
-  LifebuoyIcon as Lifebuoy,
-  WarningCircleIcon as WarningCircle,
-} from "@phosphor-icons/react";
-import * as Sentry from "@sentry/nextjs";
+import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
@@ -20,24 +16,13 @@ type AppErrorBoundaryProps = {
 };
 
 /**
- * Sentry is an external system, so reporting the caught error is genuine
+ * The error sink is an external system, so reporting the caught error is genuine
  * synchronization rather than derived state.
  */
 function useReportViewError(error: Error & { digest?: string }, pathname: string) {
   useEffect(() => {
     console.error("[app-shell] route error", error);
-    Sentry.withScope((scope) => {
-      scope.setContext("nextjs", {
-        digest: error.digest,
-        pathname,
-      });
-
-      if (error.digest) {
-        scope.setTag("next.digest", error.digest);
-      }
-
-      Sentry.captureException(error);
-    });
+    reportAppError(error, { digest: error.digest, pathname });
   }, [error, pathname]);
 }
 
@@ -117,18 +102,11 @@ export default function AppErrorBoundary({ error, reset }: Readonly<AppErrorBoun
               loadingLabel="Retrying"
               onClick={() => startRetry(() => reset())}
               size="lg"
-              startIcon={<ArrowClockwise size={16} weight="bold" />}
               type="button"
             >
               Try again
             </Button>
-            <Button
-              component={Link}
-              href="/app"
-              size="lg"
-              startIcon={<Lifebuoy size={15} weight="bold" />}
-              variant="secondary"
-            >
+            <Button component={Link} href="/app" size="lg" variant="secondary">
               Go to Overview
             </Button>
           </div>

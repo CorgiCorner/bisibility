@@ -151,7 +151,7 @@ export function FullCapacityCard({
       </div>
       <div className="mt-1 flex w-full flex-col gap-[9px]">
         <a
-          className="flex items-center justify-center gap-2 rounded-[10px] bg-accent-solid p-3 text-[14px] font-semibold text-primary-contrast no-underline hover:bg-accent-solid-hover"
+          className="flex items-center justify-center gap-2 rounded-[10px] bg-accent-solid p-3 text-[14px] font-semibold text-accent-on-solid no-underline hover:bg-accent-solid-hover"
           href={SELF_HOSTING_URL}
           rel="noreferrer noopener"
           target="_blank"

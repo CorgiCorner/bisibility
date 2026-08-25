@@ -2,16 +2,22 @@
 
 import { actionWarningMessage } from "@/components/keywords/action-utils";
 import { LocationActionWarning } from "@/components/keywords/LocationActionWarning";
-import { Button, tableHeaderClassName } from "@/components/ui";
-import type { KeywordImportCsvRow } from "@/lib/keywords/import-csv-parser";
+import { Button, CopyButton } from "@/components/ui";
+import type {
+  KeywordImportColumnMapping,
+  KeywordImportField,
+  KeywordImportSourceColumn,
+} from "@/lib/keywords/import-csv-parser";
 import { keywordImportTemplateCsv } from "@/lib/keywords/import-csv-template";
 import { downloadTextFile } from "@/lib/ui/download";
 import {
   CheckCircleIcon as CheckCircle,
+  CircleNotchIcon as CircleNotch,
   DownloadSimpleIcon as DownloadSimple,
-  TableIcon as Table,
 } from "@phosphor-icons/react";
+import { ImportColumnMapping } from "./ImportColumnMapping";
 import { KeywordImportDropzone } from "./KeywordImportDropzone";
+import { type KeywordImportPreviewRow, ParsedRowsPreview } from "./ParsedRowsPreview";
 
 type ParsedCount = number | null;
 type ImportResultSummary = {
@@ -37,6 +43,14 @@ const csvExample = `keyword,target_url,tags,country,language,device
 open source analytics,/vs/ga,"Comparison",US,en,desktop
 self hosted seo tool,/self-host,"Product",ES,es,desktop`;
 
+const codeDarkCopy = {
+  color: "var(--code-faint)",
+  "&:hover": {
+    backgroundColor: "color-mix(in srgb, var(--code-fg) 8%, transparent)",
+    color: "var(--code-fg)",
+  },
+} as const;
+
 function downloadTemplate() {
   downloadTextFile(
     keywordImportTemplateCsv,
@@ -55,17 +69,35 @@ export function TemplateStep() {
       </p>
       <Button
         onClick={downloadTemplate}
-        size="lg"
-        startIcon={<DownloadSimple size={16} weight="bold" />}
+        startIcon={<DownloadSimple size={15} weight="bold" />}
         sx={{ marginTop: "16px" }}
         type="button"
-        variant="primary"
+        variant="secondary"
       >
         Download template.csv
       </Button>
-      <pre className="m-0 mt-4.5 overflow-x-auto rounded-[11px] bg-code-bg px-[15px] py-[13px] font-mono text-[11.5px] leading-[1.75] text-code-fg">
-        {keywordImportTemplateCsv}
-      </pre>
+      <div className="mt-4.5 min-w-0 overflow-hidden rounded-[11px] border border-code-border bg-code-bg">
+        <div className="flex items-center justify-between gap-2 border-b border-code-border px-3 pt-2">
+          <div
+            className="rounded-t-lg px-3 py-1.5 font-mono text-[11.5px]"
+            style={{
+              backgroundColor: "color-mix(in srgb, var(--code-bg) 92%, var(--code-fg))",
+              color: "var(--code-fg)",
+            }}
+          >
+            csv
+          </div>
+          <CopyButton
+            label="Copy template"
+            size="sm"
+            sx={codeDarkCopy}
+            text={keywordImportTemplateCsv}
+          />
+        </div>
+        <pre className="m-0 overflow-x-auto px-[15px] py-[13px] font-mono text-[11.5px] leading-[1.75] text-code-fg">
+          {keywordImportTemplateCsv}
+        </pre>
+      </div>
     </div>
   );
 }
@@ -115,111 +147,95 @@ export function UploadStep({
 }
 
 export function MapStep({
+  hasHeader,
+  isReviewing,
+  mapping,
+  onMappingChange,
   parsedCount,
-  parsedRows,
-}: Readonly<{ parsedCount: ParsedCount; parsedRows: KeywordImportCsvRow[] | null }>) {
-  const rows = [
-    ["keyword", "Keyword", "required"],
-    ["target_url", "Target URL", "optional"],
-    ["tags", "Tags", "optional"],
-    ["country", "Country", "optional"],
-    ["language", "Language", "optional"],
-    ["city", "City", "optional"],
-    ["location_key", "Location key", "optional"],
-    ["device", "Device", "optional"],
-  ] as const;
+  sourceColumns,
+}: Readonly<{
+  hasHeader: boolean;
+  isReviewing: boolean;
+  mapping: KeywordImportColumnMapping;
+  onMappingChange: (sourceIndex: number, destination: KeywordImportField | null) => void;
+  parsedCount: ParsedCount;
+  sourceColumns: readonly KeywordImportSourceColumn[];
+}>) {
   const keywordNoun = parsedCount === 1 ? "keyword" : "keywords";
   const label =
     parsedCount === null
-      ? "Workbook selected. Known columns are matched automatically on import."
-      : `${parsedCount} ${keywordNoun} found. Known columns are matched automatically.`;
+      ? "Workbook selected. Check where each column should be saved."
+      : `${parsedCount} ${keywordNoun} found. Check where each column should be saved.`;
   return (
     <div>
       <h3 className="m-0 text-[15px] font-semibold">Map columns</h3>
       <p className="m-0 mt-1.5 text-[13px] text-fg-muted">{label}</p>
-      <div className="mt-4 overflow-hidden rounded-xl border border-border">
-        {rows.map(([csv, field, state]) => (
-          <div
-            className="grid grid-cols-[1fr_1fr_78px] items-center gap-2 border-t border-border-soft px-[15px] py-[11px] first:border-t-0"
-            key={csv}
-          >
-            <span className="inline-flex min-w-0 items-center gap-[7px] font-mono text-[12.5px]">
-              <Table className="shrink-0 text-fg-muted" size={14} />
-              <span className="truncate">{csv}</span>
-            </span>
-            <span className="truncate text-[12.5px] font-semibold text-fg">{field}</span>
-            <span className="font-mono text-[10px] uppercase tracking-[0.4px] text-fg-muted">
-              {state}
-            </span>
-          </div>
-        ))}
-      </div>
-      <ParsedRowsPreview rows={parsedRows} />
-    </div>
-  );
-}
-
-function previewLocation(row: KeywordImportCsvRow) {
-  return (
-    [row.locationKey ?? row.location, row.language, row.city].filter(Boolean).join(" / ") || "-"
-  );
-}
-
-function ParsedRowsPreview({ rows }: Readonly<{ rows: KeywordImportCsvRow[] | null }>) {
-  if (!rows?.length) return null;
-  return (
-    <div className="mt-4 overflow-x-auto rounded-xl border border-border">
-      <table className="w-full min-w-[640px] border-collapse text-left text-[12px]">
-        <thead className={tableHeaderClassName}>
-          <tr>
-            {["Keyword", "Target URL", "Tags", "Market", "Device"].map((label) => (
-              <th className="px-3 py-2 font-medium" key={label}>
-                {label}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr className="border-t border-border-soft" key={row.row}>
-              <td className="px-3 py-2.5 font-semibold text-fg">{row.keyword || "-"}</td>
-              <td className="px-3 py-2.5 text-fg-muted">{row.targetUrl ?? "-"}</td>
-              <td className="px-3 py-2.5 text-fg-muted">{row.tags?.join(", ") || "-"}</td>
-              <td className="px-3 py-2.5 text-fg-muted">{previewLocation(row)}</td>
-              <td className="px-3 py-2.5 text-fg-muted">{row.device ?? "-"}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <p className="m-0 mt-2 text-[12px] leading-[1.5] text-fg-muted">
+        Only Keyword is required. Optional tracking fields use your project defaults when omitted;
+        other optional fields stay empty.
+      </p>
+      {hasHeader ? (
+        <ImportColumnMapping
+          mapping={mapping}
+          onChange={onMappingChange}
+          sourceColumns={sourceColumns}
+        />
+      ) : (
+        <p className="mt-4 rounded-xl border border-border bg-bg-sunken px-4 py-3 text-[12px] leading-[1.5] text-fg-muted">
+          This file has no header row, so its standard column order is used. Add a header row to map
+          columns yourself.
+        </p>
+      )}
+      <p className="m-0 mt-3 text-[12px] leading-[1.5] text-fg-muted">
+        <span className="font-medium text-fg">Location fields:</span> Country tracks a country; add
+        City for local tracking, or use Location key for an exact saved location. Location key takes
+        priority over Country and City. Language sets the search-result language.
+      </p>
+      {isReviewing ? (
+        <p
+          aria-live="polite"
+          className="mt-4 flex items-center gap-2 text-[12px] text-fg-muted"
+          role="status"
+        >
+          <CircleNotch aria-hidden className="animate-spin" size={15} />
+          Checking mapped rows and project markets...
+        </p>
+      ) : null}
     </div>
   );
 }
 
 export function ReviewStep({
   parsedCount,
-  parsedRows,
-}: Readonly<{ parsedCount: ParsedCount; parsedRows: KeywordImportCsvRow[] | null }>) {
-  const rowNoun = parsedCount === 1 ? "row" : "rows";
+  review,
+}: Readonly<{
+  parsedCount: ParsedCount;
+  review: {
+    duplicateRows: number;
+    errors: { message: string; row: number }[];
+    received: number;
+    rows: KeywordImportPreviewRow[];
+  } | null;
+}>) {
+  const rowNoun = (review?.rows.length ?? parsedCount) === 1 ? "row" : "rows";
   const label =
-    parsedCount === null
-      ? "Workbook ready for server validation."
-      : `${parsedCount} ${rowNoun} ready for server validation.`;
+    review === null
+      ? "Checking rows before import."
+      : `${review.rows.length} valid ${rowNoun} ready after removing ${review.duplicateRows} duplicate${review.duplicateRows === 1 ? "" : "s"} from this file.`;
   return (
     <div>
       <h3 className="m-0 text-[15px] font-semibold">Review and confirm</h3>
-      <div className="mt-3.5 rounded-[11px] border border-border bg-bg px-3.5 py-3">
-        <div className="font-mono text-[11px] uppercase tracking-[0.5px] text-fg-muted">
-          Duplicate handling
-        </div>
-        <div className="mt-2 inline-flex rounded-[9px] bg-accent-solid px-[13px] py-1.5 text-[12px] font-semibold text-primary-contrast">
-          Skip existing keywords
-        </div>
-      </div>
-      <p className="m-0 mt-3.5 text-[13px] leading-[1.55] text-fg-muted">
-        Import will validate every row, skip duplicates in the file and project, and create the
-        remaining keywords with their target URLs, tags, country, language, and device.
+      <p className="m-0 mt-1.5 text-[13px] leading-[1.55] text-fg-muted">
+        This list has passed column and market validation and removes duplicates within this file.
+        Existing project duplicates are checked again when you confirm.
       </p>
-      <ParsedRowsPreview rows={parsedRows} />
+      <ParsedRowsPreview rows={review?.rows ?? []} />
+      {review?.errors.length ? (
+        <div className="mt-4 rounded-xl border border-border bg-bg-sunken px-4 py-3 text-[12px] leading-[1.5] text-red-text">
+          {review.errors.length} {review.errors.length === 1 ? "row was" : "rows were"} excluded
+          during validation. Fix the file or its project markets, then go back to include them.
+        </div>
+      ) : null}
       <div className="mt-4 rounded-xl border border-border bg-bg-sunken px-4 py-3 font-mono text-[12px] text-fg-muted">
         {label}
       </div>

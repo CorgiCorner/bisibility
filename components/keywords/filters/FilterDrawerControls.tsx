@@ -87,7 +87,7 @@ export function FilterSegment<T extends string>({
         const active = option.id === value;
         return (
           <button
-            className="flex-1 rounded-[7px] px-2 py-1.5 text-[12px] font-semibold outline-none transition-colors focus-visible:bg-accent-solid focus-visible:text-primary-contrast"
+            className="flex-1 rounded-[7px] px-2 py-1.5 text-[12px] font-semibold outline-none transition-colors focus-visible:bg-accent-solid focus-visible:text-accent-on-solid"
             key={option.id}
             onClick={() => onChange(option.id)}
             style={{

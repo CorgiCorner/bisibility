@@ -65,5 +65,7 @@ describe("DeploymentModeProvider around the app error boundary", () => {
       "https://github.com/CorgiCorner/bisibility/issues/new",
     );
     expect(screen.queryByRole("link", { name: /^support$/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Try again" }).querySelector("svg")).toBeNull();
+    expect(screen.getByRole("link", { name: "Go to Overview" }).querySelector("svg")).toBeNull();
   });
 });

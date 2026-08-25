@@ -82,6 +82,19 @@ describe("usage settings actions", () => {
     });
   });
 
+  it.each(["rate_limited", "verification_failed"] as const)(
+    "returns the typed %s failure without a success audit",
+    async (code) => {
+      mocks.joinWaitlist.mockResolvedValue({ code, ok: false });
+
+      await expect(
+        submitHostedPricingFeedback({ monthlyPrice: "25", projectId: project.publicId }),
+      ).resolves.toEqual({ code, ok: false });
+
+      expect(mocks.writeAudit).not.toHaveBeenCalled();
+    },
+  );
+
   it("rejects the WTP action on self-host without persistence or audit", async () => {
     mocks.deploymentMode.mockReturnValue("self-host");
 

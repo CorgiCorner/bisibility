@@ -191,7 +191,7 @@ export function Calendar({
               className={cn(
                 "grid h-8 w-full place-items-center rounded-lg text-[12.5px] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-solid",
                 selected
-                  ? "bg-accent-solid font-semibold text-primary-contrast"
+                  ? "bg-accent-solid font-semibold text-accent-on-solid"
                   : "hover:bg-bg-sunken text-fg",
                 !inMonth && !selected && "text-fg-muted",
                 iso === today && !selected && "ring-1 ring-border-strong",

@@ -1,4 +1,6 @@
 import { normalizeDomain } from "@/lib/domains/normalize";
+import { ProviderCallError } from "@/lib/providers/call-error";
+import type { ProviderErrorCode } from "@/lib/providers/provider-error-code";
 import type {
   ProviderCredentials,
   ProviderTestResult,
@@ -20,6 +22,7 @@ import {
 } from "./dataforseo-client";
 import { createDataForSeoDomainMethods } from "./dataforseo-domain";
 import {
+  DataForSeoBillingError,
   DataForSeoError,
   DataForSeoUnsupportedLocationError,
   messageWithSentParameters,
@@ -46,6 +49,26 @@ const SERP_REQUEST_TIMEOUT_MS = 30_000;
 
 export { DataForSeoUnsupportedLocationError } from "./dataforseo-errors";
 
+function classifyDataForSeoError(error: unknown): ProviderErrorCode {
+  if (error instanceof DataForSeoBillingError) return "provider_billing";
+  if (error instanceof DataForSeoError) {
+    const status = error.httpStatus;
+    if (status === 402) return "provider_billing";
+    if (status === 401 || status === 403) return "provider_auth";
+    if (status === 429) return "provider_rate_limited";
+    const message = error.message.toLowerCase();
+    if (/payment required|negative balance|insufficient funds?/.test(message)) {
+      return "provider_billing";
+    }
+  }
+  return "provider_transient";
+}
+
+function withProviderErrorCode<T extends ProviderCallError>(error: T): T {
+  error.code = classifyDataForSeoError(error);
+  return error;
+}
+
 const { request: requestLabs, requestStatus: requestLabsStatus } = createDataForSeoLabsClient({
   envelopeMessage,
   envelopeOk,
@@ -61,6 +84,68 @@ const domainMethods = createDataForSeoDomainMethods({
   request: requestLabs,
   requestStatus: requestLabsStatus,
 });
+
+async function fetchDataForSeoRank(input: SerpRankInput) {
+  const credentials = input.credentials ?? {};
+  const requestParams = dataForSeoGoogleParams({
+    depth: input.depth,
+    location: input.location,
+  });
+  const stopTarget = normalizeDomain(input.domain) ?? input.domain;
+  const payload = {
+    ...requestParams,
+    keyword: input.keyword,
+    device: input.device,
+    ...(input.tag ? { tag: input.tag } : {}),
+    ...(resolveSerpStopOnMatch(input.stopOnMatch)
+      ? {
+          find_targets_in: ["organic"],
+          stop_crawl_on_match: [{ match_type: "with_subdomains", match_value: stopTarget }],
+        }
+      : {}),
+  };
+  const data = await requestEnvelope(
+    SERP_URL,
+    {
+      method: "POST",
+      headers: {
+        Authorization: requireDataForSeoLogin(credentials),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify([payload]),
+    },
+    credentials,
+    SERP_REQUEST_TIMEOUT_MS,
+  );
+  const task = data.tasks?.[0];
+
+  if (!task || !envelopeOk(data)) {
+    const rawMessage = envelopeMessage(data);
+    throw new DataForSeoError(
+      validationFailure(rawMessage)
+        ? messageWithSentParameters(rawMessage, payload, credentials)
+        : redactedMessage(rawMessage, credentials),
+      false,
+      undefined,
+      dataForSeoResponseCostCents(data),
+    );
+  }
+
+  const items = Array.isArray(task.result)
+    ? task.result.flatMap((result) => result.items ?? [])
+    : [null];
+  // biome-ignore format: keep the provider module under its enforced line cap.
+  const decision = requireDeterminateOrganicResult("DataForSEO", dataForSeoOrganicDecision(items, input.domain, requestParams.depth));
+
+  return {
+    billingUnits: 1,
+    checkedAt: new Date(),
+    costCents: dataForSeoResponseCostCents(data),
+    position: decision.position,
+    rankingUrl: decision.rankingUrl,
+    raw: dataForSeoRawPayload(items, decision),
+  };
+}
 
 export const dataForSeoProvider: SerpProvider = {
   id: "dataforseo",
@@ -91,64 +176,12 @@ export const dataForSeoProvider: SerpProvider = {
   },
 
   async fetchRank(input: SerpRankInput) {
-    const credentials = input.credentials ?? {};
-    const requestParams = dataForSeoGoogleParams({
-      depth: input.depth,
-      location: input.location,
-    });
-    const stopTarget = normalizeDomain(input.domain) ?? input.domain;
-    const payload = {
-      ...requestParams,
-      keyword: input.keyword,
-      device: input.device,
-      ...(resolveSerpStopOnMatch(input.stopOnMatch)
-        ? {
-            find_targets_in: ["organic"],
-            stop_crawl_on_match: [{ match_type: "with_subdomains", match_value: stopTarget }],
-          }
-        : {}),
-    };
-    const data = await requestEnvelope(
-      SERP_URL,
-      {
-        method: "POST",
-        headers: {
-          Authorization: requireDataForSeoLogin(credentials),
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify([payload]),
-      },
-      credentials,
-      SERP_REQUEST_TIMEOUT_MS,
-    );
-    const task = data.tasks?.[0];
-
-    if (!task || !envelopeOk(data)) {
-      const rawMessage = envelopeMessage(data);
-      throw new DataForSeoError(
-        validationFailure(rawMessage)
-          ? messageWithSentParameters(rawMessage, payload, credentials)
-          : redactedMessage(rawMessage, credentials),
-        false,
-        undefined,
-        dataForSeoResponseCostCents(data),
-      );
+    try {
+      return await fetchDataForSeoRank(input);
+    } catch (error) {
+      if (error instanceof ProviderCallError) throw withProviderErrorCode(error);
+      throw error;
     }
-
-    const items = Array.isArray(task.result)
-      ? task.result.flatMap((result) => result.items ?? [])
-      : [null];
-    // biome-ignore format: keep the provider module under its enforced line cap.
-    const decision = requireDeterminateOrganicResult("DataForSEO", dataForSeoOrganicDecision(items, input.domain, requestParams.depth));
-
-    return {
-      billingUnits: 1,
-      checkedAt: new Date(),
-      costCents: dataForSeoResponseCostCents(data),
-      position: decision.position,
-      rankingUrl: decision.rankingUrl,
-      raw: dataForSeoRawPayload(items, decision),
-    };
   },
 
   async fetchRankedKeywords(credentials, input) {
@@ -166,6 +199,7 @@ export const dataForSeoProvider: SerpProvider = {
       limit: Math.min(input.limit, 1_000),
       offset: input.offset,
       order_by: ["ranked_serp_element.serp_item.etv,desc"],
+      ...(input.tag ? { tag: input.tag } : {}),
       target: domain,
     });
     return dataForSeoRankedKeywordsPage(data);

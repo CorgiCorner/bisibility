@@ -38,7 +38,7 @@ export function buildAlternativeJsonLd(competitor: CompetitorContent) {
         {
           "@type": "ListItem",
           position: 2,
-          name: "Compare",
+          name: "Alternatives",
           item: absoluteSiteUrl("/alternatives"),
         },
         {

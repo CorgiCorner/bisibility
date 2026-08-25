@@ -36,55 +36,6 @@
   animation: bvcountup 0.5s ease-out both;
 }
 
-.bv-hero-audience {
-  display: inline-flex;
-  align-items: baseline;
-  white-space: nowrap;
-  vertical-align: top;
-}
-
-.bv-hero-audience-prefix {
-  flex: none;
-}
-
-.bv-hero-audience-slot {
-  display: inline-grid;
-  overflow: clip;
-}
-
-.bv-hero-audience-phrase {
-  grid-area: 1 / 1;
-  width: max-content;
-  /* One shared cycle; each phrase enters via a negative delay of index * (duration / count). */
-  animation-name: bvhero-audience-cycle;
-  animation-duration: 16s;
-  animation-iteration-count: infinite;
-  animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
-  color: currentColor;
-  will-change: opacity, transform;
-}
-
-@keyframes bvhero-audience-cycle {
-  0%,
-  19% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  25% {
-    opacity: 0;
-    transform: translateY(-115%);
-  }
-  26%,
-  93% {
-    opacity: 0;
-    transform: translateY(115%);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 /* ---- RankWindowCard (bv-rw-*): animated hero product window ---- */
 @property --bv-rw-a {
   syntax: "<integer>";

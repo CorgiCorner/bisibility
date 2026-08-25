@@ -70,20 +70,8 @@ function BackupFrame() {
 
 function MigrationFrame() {
   return (
-    <Frame className={advancedLoadingCardGeometryClassNames.migration} id="hosted-move">
-      <div className="divide-y divide-border-soft overflow-hidden rounded-[11px] border border-border">
-        <div className="flex items-center justify-between gap-3 px-3.5 py-3">
-          <div className="flex-1 space-y-2">
-            <SettingsLoadingBar className="h-3 w-28" />
-            <SettingsLoadingBar className="h-2.5 w-52 max-w-full" />
-          </div>
-          <SettingsLoadingBar className="h-5 w-16" />
-        </div>
-        <div className="px-3.5 py-3">
-          <SettingsLoadingBar className="h-2.5 w-full" />
-          <SettingsLoadingBar className="mt-2 h-2.5 w-4/5" />
-        </div>
-      </div>
+    <Frame className={advancedLoadingCardGeometryClassNames.migration} id="self-host-migration">
+      <SettingsLoadingBar className="h-2.5 w-full max-w-[520px]" />
       <div className="mt-auto flex justify-end border-border-soft border-t pt-4">
         <SettingsLoadingBar className="h-8.5 w-32" />
       </div>
@@ -101,21 +89,24 @@ function DangerFrame() {
   );
 }
 
-export function AdvancedSettingsContentLoading() {
+export function AdvancedSettingsContentLoading({
+  deployment = "self-host",
+}: Readonly<{ deployment?: "cloud" | "self-host" }>) {
   return (
     <div className="flex max-w-[760px] flex-col gap-3.5" data-advanced-settings-loading="">
       <AuditFrame />
-      <BackupFrame />
-      <MigrationFrame />
+      {deployment === "cloud" ? <BackupFrame /> : <MigrationFrame />}
       <DangerFrame />
     </div>
   );
 }
 
-export function AdvancedSettingsLoading() {
+export function AdvancedSettingsLoading({
+  deployment = "self-host",
+}: Readonly<{ deployment?: "cloud" | "self-host" }>) {
   return (
     <SettingsRouteLoading activeSection="advanced">
-      <AdvancedSettingsContentLoading />
+      <AdvancedSettingsContentLoading deployment={deployment} />
     </SettingsRouteLoading>
   );
 }

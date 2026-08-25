@@ -4,6 +4,7 @@ import {
   notifyCloudImportDone,
   notifyProjectMembers,
   notifyRankCheckCompleted,
+  notifyRankCheckFailed,
   notifyTriggeredAlertDelivered,
 } from "./events";
 
@@ -118,6 +119,37 @@ describe("notification event producers", () => {
       "rank tracker is #4.",
       expect.objectContaining({ idempotencyKey: "rank-check:rc_1:complete" }),
       "rank-check:rc_1:complete",
+    );
+  });
+
+  it("notifyRankCheckFailed stores the reason body, checks href with run reference, and unchanged idempotency key", async () => {
+    await notifyRankCheckFailed({
+      code: "provider_billing",
+      failedAt: new Date("2026-08-21T00:00:00.000Z"),
+      keywordId: "keyword_1",
+      keywordPublicId: "kw_public_1",
+      keywordText: "rank tracker",
+      message: "rank data provider unavailable",
+      projectDomain: "example.com",
+      projectId: "project_1",
+      rankCheckId: "check_abcdefghijklmnopqrstuvwx",
+    });
+
+    const expectedKey = "rank-check:keyword_1:failed:provider_billing:2026-08-21T00:00:00.000Z";
+    expect(mocks.createNotification).toHaveBeenCalledTimes(2);
+    expect(mocks.createNotification).toHaveBeenCalledWith(
+      expect.any(String),
+      "project_1",
+      NotificationType.check_failed,
+      "Rank check failed",
+      "rank tracker: rank data provider unavailable",
+      expect.objectContaining({
+        errorCode: "provider_billing",
+        href: "/app/prj_1/rank-tracker?tab=checks&run=check_abcdefghijklmnopqrstuvwx",
+        idempotencyKey: expectedKey,
+        rankCheckId: "check_abcdefghijklmnopqrstuvwx",
+      }),
+      expectedKey,
     );
   });
 

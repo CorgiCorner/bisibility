@@ -4,12 +4,14 @@ import { KeywordPendingDetail } from "@/components/keywords/KeywordPendingDetail
 import { KeywordTrafficCard } from "@/components/keywords/KeywordTrafficCard";
 import { PositionHistoryCard } from "@/components/keywords/PositionHistoryCard";
 import { RankingUrlHistory } from "@/components/keywords/RankingUrlHistory";
+import { RetrievedResultsCard } from "@/components/keywords/RetrievedResultsCard";
 import { PageContent } from "@/components/shell/PageContent";
 import { createKeywordAlertRule } from "@/lib/actions/alerts";
 import { addKeywords, addKeywordsMatrix, updateKeyword } from "@/lib/actions/keyword";
 import { bulkDeleteKeywords } from "@/lib/actions/keyword-bulk";
 import { updateKeywordSchedule } from "@/lib/actions/keyword-schedule";
 import { runCheckNow } from "@/lib/actions/rankCheck";
+import { loadRetrievedResults } from "@/lib/actions/retrieved-results";
 import { getProjectRole } from "@/lib/auth/authorize";
 import { canProjectAction } from "@/lib/auth/capabilities";
 import { deriveKeywordDetailState } from "@/lib/keyword-detail/state-model";
@@ -18,6 +20,8 @@ import { getProjectCostContext } from "@/lib/queries/cost-calculator";
 import { getKeywordMarketTargets } from "@/lib/queries/keyword-market-targets";
 import { getKeywordDetail, getKeywordTagSuggestions } from "@/lib/queries/keywords";
 import { getProjectMarkets } from "@/lib/queries/project-markets";
+import { loadRetrievedResultsForChecks, storedResultsIndex } from "@/lib/queries/retrieved-results";
+import { getRankCheckRawRetentionDays } from "@/lib/rank-check/raw-retention";
 import { appPath, asProjectRef } from "@/lib/routing/app-path";
 import { ArrowLeftIcon as ArrowLeft } from "@phosphor-icons/react/ssr";
 import Link from "next/link";
@@ -43,6 +47,18 @@ export default async function KeywordDetailPage({ params }: Readonly<KeywordDeta
     notFound();
   }
   const marketTargets = await getKeywordMarketTargets(publicId, keyword.id);
+  const storedChecks = await storedResultsIndex({
+    keywordPublicId: id,
+    projectId: readable.project.id,
+  });
+  // The card has no mount effect, so the newest check is loaded here rather than leaving
+  // the body claiming it is loading while nothing is in flight.
+  const [newestResults = null] = storedChecks[0]
+    ? await loadRetrievedResultsForChecks({
+        checkIds: [storedChecks[0].checkId],
+        projectId: readable.project.id,
+      })
+    : [];
   const role = getProjectRole(readable.actor, readable.project.id);
   const canCreateKeyword = canProjectAction(role, "create", "keyword");
   const canUpdateKeyword = canProjectAction(role, "update", "keyword");
@@ -130,6 +146,17 @@ export default async function KeywordDetailPage({ params }: Readonly<KeywordDeta
         projectRef={publicId}
         traffic={keyword.traffic}
         trafficState={detailState.trafficState}
+      />
+      <RetrievedResultsCard
+        entries={storedChecks}
+        initialResults={newestResults}
+        loadResults={async (checkIds) => {
+          "use server";
+          return loadRetrievedResults({ checkIds, projectId: publicId });
+        }}
+        rankingUrl={keyword.rankingUrl ?? null}
+        retentionDays={getRankCheckRawRetentionDays()}
+        timeZone={costContext?.timezone ?? "UTC"}
       />
       <RankingUrlHistory keyword={keyword} />
     </PageContent>

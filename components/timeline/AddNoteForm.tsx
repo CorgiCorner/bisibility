@@ -82,7 +82,7 @@ function AddNoteFormControls({ projectId }: Readonly<{ projectId: string }>) {
   return (
     <>
       <button
-        className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-accent bg-accent-solid px-3 text-[12px] font-semibold text-primary-contrast outline-none transition-opacity hover:opacity-90 focus-visible:opacity-90"
+        className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-accent bg-accent-solid px-3 text-[12px] font-semibold text-accent-on-solid outline-none transition-opacity hover:opacity-90 focus-visible:opacity-90"
         onClick={() => setOpen(true)}
         type="button"
       >
@@ -102,7 +102,7 @@ function AddNoteFormControls({ projectId }: Readonly<{ projectId: string }>) {
               Cancel
             </button>
             <button
-              className="inline-flex h-9 items-center gap-1 rounded-lg border border-accent bg-accent-solid px-3 text-[12px] font-semibold text-primary-contrast hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted"
+              className="inline-flex h-9 items-center gap-1 rounded-lg border border-accent bg-accent-solid px-3 text-[12px] font-semibold text-accent-on-solid hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted"
               disabled={isPending}
               form={FORM_ID}
               type="submit"

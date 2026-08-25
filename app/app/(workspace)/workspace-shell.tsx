@@ -15,6 +15,7 @@ import { appVersion } from "@/lib/app-version";
 import { getInstanceAdminSession } from "@/lib/auth/instance-admin";
 import { gravatarUrl } from "@/lib/avatar/gravatar";
 import { isCloud } from "@/lib/deployment/deployment";
+import { workspaceRoleLine } from "@/lib/format/workspace-role-line";
 import { getWorkerLivenessDetails } from "@/lib/ops/liveness";
 import { getQuerySession } from "@/lib/queries/_auth";
 import { getLatestCloudPackageExport } from "@/lib/queries/cloud-beta-export";
@@ -63,7 +64,7 @@ export async function WorkspaceShell({
   );
 
   // Header meta + user role line follow the active workspace.
-  const roleLine = `${active.role[0].toUpperCase()}${active.role.slice(1)} in ${active.name}`;
+  const roleLine = workspaceRoleLine(active.role, active.name, active.domain);
   const user = {
     avatarUrl: gravatarUrl(session.user.email, 34),
     email: session.user.email,

@@ -3,6 +3,7 @@ import {
   actionErrorMessage,
   isStaleDeploymentError,
   STALE_DEPLOYMENT_MESSAGE,
+  waitlistErrorMessage,
 } from "./action-error";
 
 describe("actionErrorMessage", () => {
@@ -78,5 +79,44 @@ describe("actionErrorMessage", () => {
     expect(actionErrorMessage("boom")).toBe("The action could not be completed.");
     expect(actionErrorMessage(null, "Could not save.")).toBe("Could not save.");
     expect(actionErrorMessage(new Error(""), "Could not save.")).toBe("Could not save.");
+  });
+});
+
+describe("waitlistErrorMessage", () => {
+  it("maps verification failures to the stable neutral message", () => {
+    expect(
+      waitlistErrorMessage(new Error("Verification failed. Please try again."), "Fallback"),
+    ).toBe("Verification failed. Please try again.");
+  });
+
+  it("maps rate-limit failures to the stable neutral message", () => {
+    expect(
+      waitlistErrorMessage(new Error("Too many requests. Please try again later."), "Fallback"),
+    ).toBe("Too many requests. Please try again later.");
+  });
+
+  it("maps stale deployment errors to the refresh message", () => {
+    expect(
+      waitlistErrorMessage(
+        new Error(
+          'Failed to find Server Action "abc". This request might be from an older or newer deployment.',
+        ),
+        "Fallback",
+      ),
+    ).toBe(STALE_DEPLOYMENT_MESSAGE);
+  });
+
+  it("returns the fallback for unknown infrastructure errors without exposing raw details", () => {
+    expect(
+      waitlistErrorMessage(
+        new Error("fetch failed at https://internal.example.com/api"),
+        "Unable to submit right now.",
+      ),
+    ).toBe("Unable to submit right now.");
+  });
+
+  it("returns the fallback for non-Error values", () => {
+    expect(waitlistErrorMessage("boom", "Unable to submit.")).toBe("Unable to submit.");
+    expect(waitlistErrorMessage(null, "Unable to submit.")).toBe("Unable to submit.");
   });
 });

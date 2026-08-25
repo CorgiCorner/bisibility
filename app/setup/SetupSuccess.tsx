@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui";
+import { Button, ExternalLink } from "@/components/ui";
 import { appRootPath } from "@/lib/routing/app-path";
 import {
   CaretRightIcon as CaretRight,
@@ -33,21 +33,17 @@ export function SetupSuccess({ mailerConfigured }: Readonly<{ mailerConfigured: 
       >
         Go to your project
       </Button>
-      <Link
-        className="text-center text-[12.5px] font-medium text-fg-muted underline-offset-4 transition-colors hover:text-fg hover:underline"
+      <ExternalLink
+        className="justify-center text-[12.5px] font-medium text-fg-muted underline-offset-4 transition-colors hover:text-fg hover:underline"
         href={appRootPath("admin")}
       >
         Open the admin panel
-      </Link>
-      <p className="m-0 text-center text-[12.5px] text-fg-muted">
-        If you ever need to reassign administration, the server operator can do it from the command
-        line.
-      </p>
+      </ExternalLink>
       {!mailerConfigured ? (
         <div className="flex items-start gap-2.5 rounded-[10px] border border-border bg-bg p-[11px_13px]">
           <EnvelopeSimple aria-hidden className="mt-px shrink-0 text-[#a06b2a]" size={16} />
           <p className="m-0 text-[12.5px] leading-[1.5] text-fg-muted">
-            <strong className="font-semibold text-fg">Next: configure email delivery.</strong>{" "}
+            <strong className="block font-semibold text-fg">Next: configure email delivery.</strong>
             Sign-in codes for other users need a working email provider - add one to your server
             configuration before inviting anyone.
           </p>

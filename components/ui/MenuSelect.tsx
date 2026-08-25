@@ -23,7 +23,7 @@ import { type ReactNode, useState } from "react";
 import { Tooltip } from "./Tooltip";
 
 export type { MenuSelectOption, MenuSelectOptionGroup } from "@/components/ui/menu-select-support";
-export { menuSelectPaperSx } from "@/components/ui/menu-select-support";
+export { menuSelectPaperSx, menuSelectTriggerClass } from "@/components/ui/menu-select-support";
 
 type MenuSelectBaseProps = {
   ariaDescribedBy?: string;
@@ -103,7 +103,7 @@ export function MenuSelect({
       type="button"
     >
       {leadingIcon ? <span className="flex shrink-0 text-fg-muted">{leadingIcon}</span> : null}
-      <span className="min-w-0 truncate">{selected?.label ?? ariaLabel}</span>
+      <span className="min-w-0 truncate text-fg">{selected?.label ?? ariaLabel}</span>
       <CaretDown aria-hidden className="shrink-0 text-fg-muted" size={11} weight="bold" />
     </button>
   );
@@ -238,7 +238,9 @@ export function MenuMultiSelect({
         type="button"
       >
         {leadingIcon ? <span className="flex shrink-0 text-fg-muted">{leadingIcon}</span> : null}
-        <span className="min-w-0 truncate">{selectedSummary(selected, placeholder, summary)}</span>
+        <span className="min-w-0 truncate text-fg">
+          {selectedSummary(selected, placeholder, summary)}
+        </span>
         <CaretDown aria-hidden className="shrink-0 text-fg-muted" size={11} weight="bold" />
       </button>
       <Menu
@@ -264,9 +266,7 @@ export function MenuMultiSelect({
             role="menuitemradio"
             sx={menuSelectRowSx}
           >
-            <span className={values.length === 0 ? "font-semibold text-fg" : undefined}>
-              {allLabel}
-            </span>
+            <span className={values.length === 0 ? "text-fg" : undefined}>{allLabel}</span>
             {values.length === 0 ? (
               <Check aria-hidden className="text-accent-text" size={15} weight="bold" />
             ) : null}

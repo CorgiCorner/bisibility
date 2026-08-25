@@ -2,6 +2,7 @@ import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
 import { PROJECT_WRITE_MODE_MIGRATION_HOLD } from "@/lib/deployment/project-write-mode";
+import type { Prisma } from "@/lib/generated/prisma/client";
 import { releaseMigrationHoldsForProjects } from "./stale-holds";
 
 export const IMPORT_TIMED_OUT_ERROR = "Import timed out.";
@@ -22,24 +23,34 @@ function staleWindowMinutes(input?: number) {
   return input;
 }
 
+function staleJobWhere(
+  projectId: string | undefined,
+  cutoff: Date,
+): Prisma.CloudImportJobWhereInput {
+  return {
+    ...(projectId ? { projectId } : {}),
+    OR: [
+      { state: { in: ["receiving" as const, "importing" as const] } },
+      { project: { writeMode: PROJECT_WRITE_MODE_MIGRATION_HOLD }, state: "idle" as const },
+    ],
+    updatedAt: { lt: cutoff },
+  };
+}
+
 export async function markStaleImportJobs(
   options: MarkStaleImportJobsOptions = {},
 ): Promise<number> {
   const olderThanMinutes = staleWindowMinutes(options.olderThanMinutes);
   const now = new Date();
   const cutoff = new Date(now.getTime() - olderThanMinutes * 60_000);
+  const where = staleJobWhere(options.projectId, cutoff);
+  const candidate = await prisma.cloudImportJob.findFirst({ select: { id: true }, where });
+  if (!candidate) return 0;
   return prisma.$transaction(async (tx) => {
     const jobs = await tx.cloudImportJob.updateManyAndReturn({
       data: { error: IMPORT_TIMED_OUT_ERROR, finishedAt: now, state: "failed" },
       select: { id: true, projectId: true },
-      where: {
-        ...(options.projectId ? { projectId: options.projectId } : {}),
-        OR: [
-          { state: { in: ["receiving", "importing"] } },
-          { project: { writeMode: PROJECT_WRITE_MODE_MIGRATION_HOLD }, state: "idle" },
-        ],
-        updatedAt: { lt: cutoff },
-      },
+      where,
     });
     if (jobs.length === 0) return 0;
     const jobIds = jobs.map((job) => job.id);

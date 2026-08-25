@@ -24,7 +24,7 @@ export function MenuMultiSelectOption({
       role="menuitemcheckbox"
       sx={menuSelectRowSx}
     >
-      <span className={current ? "font-semibold text-fg" : undefined}>
+      <span className={current ? "text-fg" : undefined}>
         {option.label}
         {option.secondary ? (
           <span className="ml-1 font-normal text-fg-muted">/ {option.secondary}</span>

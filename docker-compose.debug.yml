@@ -7,3 +7,7 @@ services:
   redis:
     ports:
       - "127.0.0.1:${REDIS_HOST_PORT:-6379}:6379"
+
+  temporal:
+    ports:
+      - "127.0.0.1:${TEMPORAL_HOST_PORT:-7233}:7233"

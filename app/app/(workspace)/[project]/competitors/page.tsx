@@ -1,7 +1,8 @@
 import { CompetitorsWorkspace } from "@/components/competitors/CompetitorsWorkspace";
 import { PageContent } from "@/components/shell/PageContent";
 import { addKeywords } from "@/lib/actions/keyword";
-import { createSavedView, deleteSavedView } from "@/lib/actions/saved-views";
+import { deleteSavedView } from "@/lib/actions/saved-views";
+import { createProjectSavedView } from "@/lib/actions/saved-views-typed";
 import { canProjectAction } from "@/lib/auth/capabilities";
 import { emptyCompetitorFilter } from "@/lib/competitors/competitor-market-model";
 import { parseCompetitorScope } from "@/lib/competitors/scope-model";
@@ -68,7 +69,7 @@ export default async function CompetitorsPage({
         canDelete={canDelete}
         canUpdate={canUpdate}
         createSavedViewAction={
-          canProjectAction(active.role, "create", "saved_view") ? createSavedView : undefined
+          canProjectAction(active.role, "create", "saved_view") ? createProjectSavedView : undefined
         }
         deletableSavedViewIds={deletableSavedViewIds}
         deleteSavedViewAction={deletableSavedViewIds.length > 0 ? deleteSavedView : undefined}

@@ -14,7 +14,7 @@ type ProviderCardProps = {
 };
 
 function stateClass(selected: boolean) {
-  if (selected) return "border-accent bg-accent-soft ring-1 ring-inset ring-accent";
+  if (selected) return "border-accent bg-transparent";
   return "border-border-strong bg-transparent";
 }
 
@@ -29,7 +29,8 @@ function stateText(state: ProviderCardState) {
 function statusKind(state: ProviderCardState): StatusKind {
   if (state === "connected" || state === "tested") return "connected";
   if (state === "failed") return "needs_reauth";
-  return "ready";
+  if (state === "dirty") return "update";
+  return "disabled";
 }
 
 export function ProviderCard({

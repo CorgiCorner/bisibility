@@ -142,8 +142,8 @@ export function ResearchWorkspace({
   return (
     <section className="grid min-w-0 gap-4">
       {hasProvider ? (
-        <Tooltip content={budgetBlocked ? BUDGET_BLOCKED_TOOLTIP : ""}>
-          <div>
+        <Tooltip content={budgetBlocked ? BUDGET_BLOCKED_TOOLTIP : ""} wrapperClassName="w-full">
+          <div className="w-full">
             <ResearchSearchCard
               connectionId={connectionId}
               connectionOptions={connectionOptions}

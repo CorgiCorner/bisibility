@@ -15,4 +15,10 @@ describe("project loading boundaries", () => {
     );
     expect(existsSync(resolve(import.meta.dirname, "backlinks", "loading.tsx"))).toBe(false);
   });
+
+  it("keeps the instance-import fallback inside the import route", () => {
+    expect(
+      existsSync(resolve(import.meta.dirname, "[project]", "settings", "import", "loading.tsx")),
+    ).toBe(true);
+  });
 });

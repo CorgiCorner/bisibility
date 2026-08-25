@@ -1,8 +1,6 @@
 "use client";
 
-import { USAGE_BILLING_TARGET } from "@/components/settings/SettingsSection";
 import { Button, Modal } from "@/components/ui";
-import { appPath } from "@/lib/routing/app-path";
 import {
   CheckIcon as Check,
   CloudIcon as Cloud,
@@ -10,7 +8,6 @@ import {
   HardDrivesIcon as HardDrives,
   XIcon as X,
 } from "@phosphor-icons/react";
-import Link from "next/link";
 
 type CloudBetaCoverageModalProps = {
   onClose: () => void;
@@ -74,7 +71,6 @@ export function CloudBetaCoverageModal({
   onClose,
   onExport,
   open,
-  projectRef,
 }: Readonly<CloudBetaCoverageModalProps>) {
   return (
     <Modal
@@ -158,15 +154,7 @@ export function CloudBetaCoverageModal({
             <Cloud aria-hidden className="mt-0.5 shrink-0 text-fg-muted" size={17} weight="fill" />
             <p className="m-0 text-[11.5px] leading-[1.5] text-fg-muted">
               30 days notice before pricing. Nothing charged without your confirmation. Self-host
-              stays available.{" "}
-              <Link
-                className="font-semibold text-accent-text hover:text-accent-text"
-                href={`${appPath(projectRef, "settings")}#${USAGE_BILLING_TARGET.id}`}
-                onClick={onClose}
-              >
-                See plan and billing
-              </Link>
-              .
+              stays available.
             </p>
           </div>
         </section>

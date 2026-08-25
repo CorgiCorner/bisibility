@@ -18,7 +18,7 @@ export function AvatarField({ email, image, name }: Readonly<AvatarFieldProps>) 
       <div className="flex items-center gap-3.5">
         <Avatar
           alt=""
-          className="grid h-[54px] w-[54px] flex-none place-items-center rounded-[14px] bg-accent-solid font-mono text-lg font-semibold text-primary-contrast"
+          className="grid h-[54px] w-[54px] flex-none place-items-center rounded-[14px] bg-accent-solid font-mono text-lg font-semibold text-accent-on-solid"
           initials={avatarInitials(name, email)}
           src={image}
         />

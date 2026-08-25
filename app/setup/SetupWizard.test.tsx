@@ -105,10 +105,10 @@ describe("SetupWizard", () => {
     );
     expect(screen.getByRole("heading", { name: "You're the administrator" })).toBeInTheDocument();
     expect(
-      screen.getByText(
+      screen.queryByText(
         "If you ever need to reassign administration, the server operator can do it from the command line.",
       ),
-    ).toBeInTheDocument();
+    ).not.toBeInTheDocument();
     expect(screen.getByText("Next: configure email delivery.")).toBeInTheDocument();
     expect(
       screen.getByText(/add one to your server configuration before inviting anyone/),

@@ -6,6 +6,14 @@ import { isEmailConfigured } from "@/lib/email/registry";
 import { syncWaitlistContact } from "@/lib/email/resend-contacts";
 import { sendEmail } from "@/lib/email/send";
 import {
+  enforceDistinctNewEmailLimit,
+  enforceHumanVerification,
+  enforceWaitlistRateLimits,
+  hashIdentifier,
+  resolveClientIdentity,
+} from "@/lib/landing/waitlist-protection";
+import { type WaitlistActionResult, waitlistFailureResult } from "@/lib/landing/waitlist-result";
+import {
   type WaitlistFormValues,
   type WaitlistSource,
   waitlistSchema,
@@ -31,6 +39,12 @@ const htmlEscapes: Record<string, string> = {
 
 const settingsFeedbackSources = new Set<WaitlistSource>(["settings_feedback"]);
 
+// Sources whose submissions skip marketing contact sync. Settings feedback
+// is a product-internal answer, not a signup that belongs in Resend; a pricing
+// vote is covered by a narrower promise on the page ("one email when pricing
+// is announced"), so it must not be added to a marketing contact list either.
+const contactSyncExcludedSources = new Set<WaitlistSource>(["cloud_pricing", "settings_feedback"]);
+
 function inputFromFormData(input: unknown) {
   if (!(input instanceof FormData)) {
     return input;
@@ -53,6 +67,13 @@ function cloudPriceLabel(input: WaitlistFormValues) {
   return input.cloudPrice === "custom"
     ? `$${input.cloudPriceCustom}/mo`
     : `$${input.cloudPrice}/mo`;
+}
+
+// Checkbox semantics: an absent field means unchecked and persists false
+// (latest opinion wins). This differs from cloudPrice on purpose: for a
+// select, absence means unanswered and the stored value is kept.
+function usagePricingPreference(input: WaitlistFormValues) {
+  return input.source === "cloud_pricing" ? (input.prefersUsagePricing ?? false) : null;
 }
 
 function resolveNotifyEmail() {
@@ -107,26 +128,60 @@ async function notifyOwner(input: StoredWaitlist) {
   });
 }
 
-export async function joinWaitlist(input: unknown) {
+async function runWaitlistProtection(check: () => Promise<void>) {
+  try {
+    await check();
+    return null;
+  } catch (error) {
+    const failure = waitlistFailureResult(error);
+    if (failure) {
+      return failure;
+    }
+    throw error;
+  }
+}
+
+export async function joinWaitlist(input: unknown): Promise<WaitlistActionResult> {
   const parsed = waitlistSchema.parse(inputFromFormData(input));
   const email = normalizeWaitlistEmail(parsed.email);
   const cloudPrice = cloudPriceLabel(parsed);
+  const prefersUsagePricing = usagePricingPreference(parsed);
   const isFeedback = settingsFeedbackSources.has(parsed.source);
   const lastSubmittedAt = new Date();
 
-  // submissions is a lifetime count incremented on every accepted upsert
-  // across all sources and is not a per-source feedback counter; it is never
-  // reset. See the matching comment on the Waitlist model in schema.prisma.
-  //
-  // R0.d: an existing row's source and cloudPrice are not overwritten when
-  // the incoming submission is from a different source. Look up the existing
-  // row's source to detect cross-source transitions; a same-source
-  // resubmission may still refresh its own price. Settings feedback always
-  // preserves source and cloudPrice and only moves the hosted fields.
+  const { clientDigest, rawIp } = await resolveClientIdentity();
+  const emailDigest = hashIdentifier(email);
+  const requestFailure = await runWaitlistProtection(async () => {
+    await enforceHumanVerification(parsed.source, parsed.verificationToken, rawIp, clientDigest);
+    await enforceWaitlistRateLimits(clientDigest, emailDigest);
+  });
+  if (requestFailure) {
+    return requestFailure;
+  }
+
   const existing = await prisma.waitlist.findUnique({
-    select: { source: true },
+    select: { cloudPrice: true, prefersUsagePricing: true, source: true },
     where: { email },
   });
+
+  if (!existing) {
+    const distinctEmailFailure = await runWaitlistProtection(() =>
+      enforceDistinctNewEmailLimit(clientDigest),
+    );
+    if (distinctEmailFailure) {
+      return distinctEmailFailure;
+    }
+  }
+
+  if (
+    parsed.source === "cloud_pricing" &&
+    existing &&
+    cloudPrice === existing.cloudPrice &&
+    prefersUsagePricing === existing.prefersUsagePricing
+  ) {
+    return { changed: false, email, ok: true };
+  }
+
   const isCrossSource = existing !== null && existing.source !== parsed.source;
 
   const persisted = await prisma.waitlist.upsert({
@@ -136,6 +191,7 @@ export async function joinWaitlist(input: unknown) {
       hostedPrice: isFeedback ? cloudPrice : null,
       hostedPriceAnsweredAt: isFeedback ? lastSubmittedAt : null,
       lastSubmittedAt,
+      prefersUsagePricing: prefersUsagePricing ?? false,
       source: parsed.source,
     },
     select: {
@@ -155,15 +211,31 @@ export async function joinWaitlist(input: unknown) {
           submissions: { increment: 1 },
         }
       : isCrossSource
-        ? {
-            // Different non-feedback source: preserve the existing row's
-            // source and cloudPrice; only the bookkeeping columns move.
-            lastSubmittedAt,
-            submissions: { increment: 1 },
-          }
+        ? parsed.source === "cloud_pricing"
+          ? {
+              // Narrow exception to the cross-source rule above: a
+              // cloud_pricing vote arriving on a
+              // row owned by another source still records the price and the
+              // usage-preference opinion. Unlike source, these two fields are
+              // not first-contact attribution - they are an answer to one
+              // question, and a beta user already on the waitlist is the most
+              // informed opinion this page can collect. source is left
+              // untouched; submissions and lastSubmittedAt move as usual.
+              cloudPrice: cloudPrice ?? undefined,
+              lastSubmittedAt,
+              prefersUsagePricing: prefersUsagePricing ?? undefined,
+              submissions: { increment: 1 },
+            }
+          : {
+              // Different non-feedback source: preserve the existing row's
+              // source and cloudPrice; only the bookkeeping columns move.
+              lastSubmittedAt,
+              submissions: { increment: 1 },
+            }
         : {
             cloudPrice: cloudPrice ?? undefined,
             lastSubmittedAt,
+            prefersUsagePricing: prefersUsagePricing ?? undefined,
             source: parsed.source,
             submissions: { increment: 1 },
           },
@@ -178,9 +250,10 @@ export async function joinWaitlist(input: unknown) {
     source: parsed.source,
   };
 
-  // Settings feedback skips marketing contact sync; it is a product-internal
-  // answer, not a landing-page or cloud-pricing signup that belongs in Resend.
-  if (!isFeedback) {
+  // Settings feedback and cloud_pricing skip marketing contact sync: feedback
+  // is a product-internal answer, and a pricing vote is covered by a narrower
+  // promise on the page. Other sources still sync to Resend.
+  if (!contactSyncExcludedSources.has(parsed.source)) {
     await syncWaitlistContact(submission);
   }
 
@@ -189,5 +262,5 @@ export async function joinWaitlist(input: unknown) {
   }
   revalidatePath("/");
 
-  return { email, ok: true };
+  return { changed: true, email, ok: true };
 }

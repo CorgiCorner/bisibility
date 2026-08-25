@@ -7,7 +7,6 @@ import {
   DeleteProjectConfirmation,
 } from "@/components/settings/advanced/DeleteProjectConfirmation";
 import { Button } from "@/components/ui";
-import { TrashIcon as Trash } from "@phosphor-icons/react";
 import { useState } from "react";
 
 export type { DeleteProjectAction } from "@/components/settings/advanced/DeleteProjectConfirmation";
@@ -34,7 +33,6 @@ export function DeleteProjectCard({
           <Button
             aria-haspopup="dialog"
             onClick={() => setConfirmationOpen(true)}
-            startIcon={<Trash aria-hidden size={14} weight="bold" />}
             type="button"
             variant="destructive"
           >

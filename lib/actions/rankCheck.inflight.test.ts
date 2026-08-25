@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const KEYWORD_PUBLIC_ID = "kw_abcdefghijklmnopqrstuvwx";
 const PROJECT_PUBLIC_ID = "prj_abcdefghijklmnopqrstuvwx";
+const RANK_CHECK_PUBLIC_ID = "check_abcdefghijklmnopqrstuvwx";
 const IN_FLIGHT_RESULT = {
   code: "check_in_progress",
   message: "A rank check is already queued or running.",
@@ -42,6 +43,7 @@ const mocks = vi.hoisted(() => {
     manualRankCheckWorkflowId: vi.fn((keywordId: string) => `rank-check-${keywordId}-manual`),
     prisma: {
       keyword: { findFirst: vi.fn(), findUnique: vi.fn() },
+      rankCheck: { create: vi.fn(), delete: vi.fn() },
       user: { findUnique: vi.fn() },
     },
     rankCheckSearchAttributes: vi.fn(
@@ -120,6 +122,10 @@ describe("runCheckNow in-flight guard", () => {
       text: "rank tracker",
     });
     mocks.prisma.keyword.findUnique.mockResolvedValue(rankCheckContext());
+    mocks.prisma.rankCheck.create.mockResolvedValue({
+      id: "rank_running_1",
+      publicId: RANK_CHECK_PUBLIC_ID,
+    });
     mocks.loadSerpProviderChain.mockResolvedValue([
       { costPerCheckCents: 0.75, credentialsEncrypted: "secret", provider: "dataforseo" },
     ]);
@@ -129,6 +135,7 @@ describe("runCheckNow in-flight guard", () => {
 
   it("proceeds when the selected state has no in-flight work", async () => {
     await expect(runCheckNow({ keywordId: KEYWORD_PUBLIC_ID })).resolves.toEqual({
+      rankCheckId: RANK_CHECK_PUBLIC_ID,
       status: "running",
     });
 
@@ -161,6 +168,7 @@ describe("runCheckNow in-flight guard", () => {
     expect(mocks.assertBudgetAvailable).not.toHaveBeenCalled();
     expect(mocks.loadSerpProviderChain).not.toHaveBeenCalled();
     expect(mocks.startRankCheckWorkflow).not.toHaveBeenCalled();
+    expect(mocks.prisma.rankCheck.create).not.toHaveBeenCalled();
   });
 
   it("refuses when the latest rank check is running", async () => {
@@ -172,6 +180,7 @@ describe("runCheckNow in-flight guard", () => {
 
     expect(mocks.assertBudgetAvailable).not.toHaveBeenCalled();
     expect(mocks.startRankCheckWorkflow).not.toHaveBeenCalled();
+    expect(mocks.prisma.rankCheck.create).not.toHaveBeenCalled();
   });
 
   it("proceeds when a terminal queued task is filtered out by the selected active states", async () => {
@@ -188,6 +197,7 @@ describe("runCheckNow in-flight guard", () => {
     );
 
     await expect(runCheckNow({ keywordId: KEYWORD_PUBLIC_ID })).resolves.toEqual({
+      rankCheckId: RANK_CHECK_PUBLIC_ID,
       status: "running",
     });
 
@@ -226,11 +236,13 @@ describe("runCheckNow in-flight guard", () => {
       mocks.AuthorizationError,
     );
     expect(mocks.startRankCheckWorkflow).not.toHaveBeenCalled();
+    expect(mocks.prisma.rankCheck.create).not.toHaveBeenCalled();
   });
 
   it("rejects raw keyword IDs before they can reach Temporal", async () => {
     await expect(runCheckNow({ keywordId: "keyword_1" })).rejects.toThrow("Keyword not found.");
     expect(mocks.prisma.keyword.findFirst).not.toHaveBeenCalled();
     expect(mocks.startRankCheckWorkflow).not.toHaveBeenCalled();
+    expect(mocks.prisma.rankCheck.create).not.toHaveBeenCalled();
   });
 });

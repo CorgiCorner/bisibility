@@ -1,6 +1,5 @@
 import {
   type OnboardingFlowState,
-  type OnboardingStepNumber,
   onboardingDefaults,
 } from "@/components/onboarding/onboarding-fixtures";
 import type { AddKeywordsForm } from "@/components/onboarding/steps/StepAddKeywords";
@@ -31,13 +30,6 @@ export type OnboardingDraft = {
 
 export function projectIdFor(project: OnboardingProject | null, flowState: OnboardingFlowState) {
   return project?.publicId ?? flowState.projectId ?? "";
-}
-
-export function initialReachableOnboardingStep(
-  initialStep: OnboardingStepNumber,
-  flowState: OnboardingFlowState,
-): OnboardingStepNumber {
-  return flowState.projectId && initialStep < 2 ? 2 : initialStep;
 }
 
 export function initialOnboardingDraft(

@@ -36,12 +36,15 @@ export async function submitHostedPricingFeedback(input: unknown) {
     return { answered: true as const };
   }
 
-  await joinWaitlist({
+  const result = await joinWaitlist({
     cloudPrice: "custom",
     cloudPriceCustom: data.monthlyPrice,
     email: session.user.email,
     source: "settings_feedback",
   });
+  if (!result.ok) {
+    return result;
+  }
   await writeAudit({
     action: "settings.hosted_pricing_feedback.submit",
     actorId: actor.id,

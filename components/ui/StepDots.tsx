@@ -22,7 +22,7 @@ export type StepDotsProps<T> = {
 };
 
 export function stepDotStateClass(state: StepDotState, variant: StepDotsVariant = "onboarding") {
-  if (state === "current") return "bg-accent-solid text-primary-contrast";
+  if (state === "current") return "bg-accent-solid text-accent-on-solid";
   if (variant === "onboarding" && state === "past")
     return "bg-green-text text-accent-on-solid dark:text-bg";
   return variant === "keyword-detail"

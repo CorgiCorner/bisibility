@@ -182,7 +182,7 @@ export function NotificationBellClient({
       >
         <Bell aria-hidden size={17} />
         {unreadCount > 0 ? (
-          <span className="absolute right-1.5 top-[5px] grid h-[15px] min-w-[15px] place-items-center rounded-full border-[1.5px] border-bg bg-accent-solid px-[3px] font-mono text-[9px] font-semibold leading-none text-white">
+          <span className="absolute right-1.5 top-[5px] grid h-[15px] min-w-[15px] place-items-center rounded-full border-[1.5px] border-bg bg-accent-solid px-[3px] font-mono text-[9px] font-semibold leading-none text-accent-on-solid">
             {unreadCount}
           </span>
         ) : null}
@@ -193,7 +193,7 @@ export function NotificationBellClient({
         id="notification-bell-menu"
         onClose={close}
         open={open}
-        slotProps={{ paper: { sx: POPOVER_SX } }}
+        slotProps={{ paper: { elevation: 0, sx: POPOVER_SX } }}
         transformOrigin={{ horizontal: "right", vertical: "top" }}
       >
         <div className="flex items-center justify-between gap-2.5 border-b border-border px-4 py-[13px]">
@@ -249,7 +249,7 @@ export function NotificationBellClient({
           )}
         </div>
         <Link
-          className="flex w-full items-center justify-center gap-1.5 border-t border-border-soft bg-transparent px-3 py-2.5 text-xs font-medium text-fg-muted transition-colors hover:text-accent-text"
+          className="flex w-full items-center justify-center gap-1.5 border-t border-border bg-transparent px-3 py-2.5 text-xs font-medium text-fg-muted transition-colors hover:text-accent-text"
           href={appPath(projectRef, "settings", "audit")}
           onClick={close}
         >
@@ -270,10 +270,11 @@ type NotificationRowProps = {
 function NotificationRow({ item, onNavigate, unread }: Readonly<NotificationRowProps>) {
   const Icon = iconForType[item.type] ?? ChartLineUp;
   const tint = tintForKind[kindForType[item.type] ?? "rank"];
+  const detail = item.type === "check_failed" && item.body ? item.body : item.meta;
 
   return (
     <Link
-      className="flex w-full items-start gap-[11px] border-b border-border-soft px-4 py-3 text-left transition-colors last:border-b-0 hover:bg-bg-sunken"
+      className="flex w-full items-start gap-[11px] border-b border-border px-4 py-3 text-left transition-colors last:border-b-0 hover:bg-bg-sunken"
       href={item.href}
       onClick={onNavigate}
     >
@@ -285,7 +286,7 @@ function NotificationRow({ item, onNavigate, unread }: Readonly<NotificationRowP
       </span>
       <span className="min-w-0 flex-1">
         <span className="block text-[13px] font-medium leading-[1.35] text-fg">{item.title}</span>
-        <span className="mt-0.5 block font-mono text-[11px] text-fg-muted">{item.meta}</span>
+        <span className="mt-0.5 block font-mono text-[11px] text-fg-muted">{detail}</span>
       </span>
       <span className="flex flex-none flex-col items-end gap-[5px]">
         <span className="font-mono text-[10.5px] text-fg-muted">{item.time}</span>

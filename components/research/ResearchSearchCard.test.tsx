@@ -38,6 +38,12 @@ afterEach(() => {
 });
 
 describe("ResearchSearchCard", () => {
+  it("fills the full-width tooltip wrapper", () => {
+    const { container } = render(<ResearchSearchCard {...baseProps} />);
+
+    expect(container.querySelector(".MuiCard-root")).toHaveClass("w-full");
+  });
+
   it("portals the market listbox outside the card and keeps options selectable", async () => {
     fetchMock.mockResolvedValue({
       ok: true,
@@ -123,14 +129,23 @@ describe("ResearchSearchCard", () => {
     );
   });
 
-  it("links pricing guidance to the provider docs", () => {
+  it("opens a pricing popover with source rows and an in-popover docs link", () => {
     render(<ResearchSearchCard {...baseProps} />);
 
-    expect(screen.getByRole("link", { name: "How is this priced?" })).toHaveAttribute(
+    const trigger = screen.getByRole("button", { name: "How is this priced?" });
+    fireEvent.click(trigger);
+
+    expect(screen.queryByRole("link", { name: "How is this priced?" })).toBeNull();
+
+    expect(screen.getByText("Related keywords")).toBeInTheDocument();
+    expect(screen.getByText("Keyword suggestions")).toBeInTheDocument();
+    expect(screen.getByText("Keyword ideas")).toBeInTheDocument();
+    expect(screen.getByText("Repeat within 12 hours")).toBeInTheDocument();
+
+    expect(screen.getByRole("link", { name: "Read the pricing docs" })).toHaveAttribute(
       "href",
       "https://bisibility.com/docs/api/keyword-research#research-keywords",
     );
-    expect(screen.queryByText("Estimated DataForSEO cost")).not.toBeInTheDocument();
   });
 
   it("disables the submit button and shows a hover-reachable hint when no seed is committed or typed", () => {

@@ -1,10 +1,9 @@
 "use client";
 
 import { Button } from "@/components/ui";
+import { cn } from "@/lib/ui/cn";
 import {
   CheckCircleIcon as CheckCircle,
-  PlugIcon as Plug,
-  PlusCircleIcon as PlusCircle,
   WarningCircleIcon as WarningCircle,
 } from "@phosphor-icons/react";
 import type { UseFormRegisterReturn } from "react-hook-form";
@@ -93,10 +92,10 @@ export function ProviderCredentialForm({
   testResult,
   testing,
 }: Readonly<ProviderCredentialFormProps>) {
-  const saveHint = `Test the credentials, then use Save ${providerLabel}.`;
+  const saveHint = "Test the credentials and save.";
   return (
     <section className="mt-4 rounded-[14px] border border-border bg-bg-elev p-4">
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className={cn("grid gap-4", fields.length > 1 && "sm:grid-cols-2")}>
         {fields.map((field) => (
           <CredentialFieldInput
             disabled={busy}
@@ -115,7 +114,6 @@ export function ProviderCredentialForm({
           disabled={busy || testDisabled}
           loading={testing}
           onClick={onTest}
-          startIcon={<Plug aria-hidden size={15} />}
           sx={{ fontWeight: 400 }}
           type="button"
           variant="secondary"
@@ -125,7 +123,6 @@ export function ProviderCredentialForm({
         <Button
           disabled={busy || saveDisabled}
           onClick={onSave}
-          startIcon={<PlusCircle aria-hidden size={15} weight="bold" />}
           sx={{ fontWeight: 400 }}
           type="button"
           variant="primary"

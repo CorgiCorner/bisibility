@@ -1,8 +1,9 @@
 import { PageContent } from "@/components/shell/PageContent";
 import { cn } from "@/lib/ui/cn";
+import type { ComponentPropsWithoutRef } from "react";
 
-function Bar({ className }: Readonly<{ className?: string }>) {
-  return <div className={cn("animate-pulse rounded-[8px] bg-bg-sunken", className)} />;
+function Bar({ className, ...props }: Readonly<ComponentPropsWithoutRef<"div">>) {
+  return <div className={cn("animate-pulse rounded-[8px] bg-bg-sunken", className)} {...props} />;
 }
 
 const summaryKeys = ["authority", "backlinks", "domains", "spam"] as const;
@@ -11,20 +12,25 @@ const tableRowKeys = ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8"] as const;
 
 function AnalyzeCardLoading() {
   return (
-    <div className="rounded-[14px] border border-border bg-bg-elev p-4 sm:p-5">
-      <div className="flex flex-col gap-3 md:flex-row md:items-start">
-        <Bar className="h-10 flex-1 rounded-[9px] md:min-w-[240px]" />
-        <Bar className="h-10 md:w-[196px]" />
-        <Bar className="h-10 md:w-[132px]" />
-      </div>
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <Bar className="h-5 w-9 rounded-full" />
-          <Bar className="h-3 w-[164px]" />
+    <div
+      className="rounded-[14px] border border-border bg-bg-elev p-4 sm:p-5"
+      data-testid="backlinks-analyze-loading"
+    >
+      <div className="grid gap-3">
+        <div className="flex flex-col gap-3 md:flex-row md:items-start">
+          <Bar className="h-[38px] flex-1 rounded-[9px] border border-border-strong md:min-w-[240px]" />
+          <Bar className="h-[38px] md:w-[196px]" />
+          <Bar className="min-h-[38px] lg:w-[132px]" />
         </div>
-        <div className="flex items-center gap-4">
-          <Bar className="h-3 w-[112px]" />
-          <Bar className="h-9 w-[216px]" />
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <Bar className="h-5 w-9 rounded-full" />
+            <Bar className="h-3 w-[164px]" />
+          </div>
+          <div className="flex flex-wrap items-center gap-4">
+            <Bar className="h-3 w-[112px]" />
+            <Bar className="h-9 min-w-[216px]" />
+          </div>
         </div>
       </div>
     </div>
@@ -33,13 +39,18 @@ function AnalyzeCardLoading() {
 
 function IdleStateLoading() {
   return (
-    <div className="flex min-h-[420px] flex-col items-center justify-center">
-      <Bar className="size-16 rounded-full" />
-      <Bar className="mt-5 h-5 w-[210px]" />
-      <div className="mt-5 grid w-full max-w-[420px] gap-2">
-        <Bar className="mx-auto h-3 w-full" />
-        <Bar className="mx-auto h-3 w-[88%]" />
-        <Bar className="mx-auto h-3 w-[76%]" />
+    <div
+      className="flex flex-col items-center justify-center rounded-2xl border border-border bg-bg-elev px-8 py-11 text-center"
+      data-testid="backlinks-idle-loading"
+    >
+      <Bar className="h-[54px] w-[54px] rounded-[14px]" data-testid="backlinks-idle-icon-loading" />
+      <Bar className="mt-4.5 h-5 w-[210px]" />
+      <div className="m-0 mt-[7px] w-full max-w-[430px]" data-testid="backlinks-idle-copy-loading">
+        <div className="mx-auto grid w-fit gap-1.5" data-testid="backlinks-idle-bullets-loading">
+          <Bar className="h-3 w-[402px] max-w-full" />
+          <Bar className="h-3 w-[378px] max-w-full" />
+          <Bar className="h-3 w-[424px] max-w-full" />
+        </div>
       </div>
     </div>
   );
@@ -101,9 +112,11 @@ export function BacklinksResultsLoading() {
 
 export function BacklinksPageLoading() {
   return (
-    <PageContent aria-hidden className="grid gap-4">
-      <AnalyzeCardLoading />
-      <IdleStateLoading />
+    <PageContent aria-hidden>
+      <section className="grid min-w-0 gap-4" data-testid="backlinks-workspace-loading">
+        <AnalyzeCardLoading />
+        <IdleStateLoading />
+      </section>
     </PageContent>
   );
 }

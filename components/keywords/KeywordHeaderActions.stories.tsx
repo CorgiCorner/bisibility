@@ -12,13 +12,9 @@ const meta = {
     ),
   ],
   args: {
-    alertCreated: false,
-    alertCreating: false,
-    canCreateAlert: true,
     canUpdateKeyword: true,
     editing: false,
     effectiveDepth: 50,
-    onCreateAlert: () => undefined,
     onExport: () => undefined,
     onRunCheck: () => undefined,
     onToggleEdit: () => undefined,

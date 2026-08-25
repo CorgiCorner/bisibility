@@ -198,14 +198,17 @@ describe("ranked-keyword service", () => {
     expect(mocks.withCache).toHaveBeenCalledWith(expect.objectContaining({ fresh: true }));
     expect(mocks.fetchPage).toHaveBeenCalledOnce();
     expect(mocks.prisma.providerCostEntry.create).toHaveBeenCalledWith({
-      data: {
+      data: expect.objectContaining({
         cached: false,
         connectionId: "connection_1",
         costCents: 2,
         failed: false,
         feature: "ranked_keywords",
         projectId: "project_1",
-      },
+        provider: "dataforseo",
+        source: "app",
+        trigger: "manual",
+      }),
     });
   });
 

@@ -44,7 +44,7 @@ type StepConnectGscCardProps = {
 export function StepConnectGscSetupNotice({ configured }: Readonly<{ configured: boolean }>) {
   if (configured) return null;
   return (
-    <InlineCallout className="mb-3 w-full" tint="yellow">
+    <InlineCallout className="mt-2 w-full" tint="yellow">
       Search Console OAuth is not configured on this instance. Set{" "}
       <InlineCode>GOOGLE_CLIENT_ID</InlineCode> and <InlineCode>GOOGLE_CLIENT_SECRET</InlineCode>.
       See the{" "}

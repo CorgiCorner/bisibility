@@ -159,7 +159,7 @@ export function KeywordsToolbarActions({
         variant="secondary"
       >
         {hasFilters ? (
-          <span className="ml-1 grid h-[17px] min-w-[17px] place-items-center rounded-full bg-accent-solid px-1 font-mono text-[11px] text-primary-contrast">
+          <span className="ml-1 grid h-[17px] min-w-[17px] place-items-center rounded-full bg-accent-solid px-1 font-mono text-[11px] text-accent-on-solid">
             {filterCount}
           </span>
         ) : null}

@@ -61,6 +61,7 @@ export type SerpRankInput = {
   domain: string;
   depth?: SerpDepth;
   stopOnMatch?: boolean;
+  tag?: string;
   credentials?: ProviderCredentials;
 };
 
@@ -167,6 +168,7 @@ export type BacklinkRow = {
 
 export type BacklinkTargetInput = {
   includeSubdomains: boolean;
+  tag?: string;
   target: string;
   targetScope: BacklinkTargetScope;
 };
@@ -184,6 +186,7 @@ export type KeywordResearchInput = {
   limit: number;
   location: SerpRankLocation;
   seed: string;
+  tag?: string;
 };
 
 export type SerpProvider = {
@@ -200,6 +203,7 @@ export type SerpProvider = {
       location: SerpRankLocation;
       locationCode?: number;
       offset: number;
+      tag?: string;
     },
   ): Promise<RankedKeywordsPage>;
   fetchRelatedKeywords?(
@@ -220,6 +224,7 @@ export type SerpProvider = {
       includeClickstream: boolean;
       keywords: string[];
       location: SerpRankLocation;
+      tag?: string;
     },
   ): Promise<ResearchPage>;
   fetchBacklinksSummary?(

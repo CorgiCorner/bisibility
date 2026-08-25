@@ -62,9 +62,24 @@ async function clickProviderContinue(page: Page, nextUrl: RegExp) {
 }
 
 export async function testAndSaveDataForSeo(page: Page) {
-  await page.getByRole("button", { name: "Test connection", exact: true }).click();
+  const status = page.getByRole("status");
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
+    await page.getByLabel("API login").fill("fake-login");
+    await page.getByRole("textbox", { name: /API password/ }).fill("fake-secret");
+    await page.getByRole("button", { name: "Test connection", exact: true }).click();
+    try {
+      await expect(status).toContainText("DataForSEO verified", { timeout: 10_000 });
+      break;
+    } catch (error) {
+      if (attempt === 1) throw error;
+      // The first Next 16 dev compilation can reload the route after the idempotent
+      // connection test, dropping its client result. Refill and retry once after hydration.
+      await page.waitForLoadState("networkidle");
+    }
+  }
   const saveButton = page.getByRole("button", { name: "Save DataForSEO", exact: true });
-  await expect(saveButton).toBeEnabled({ timeout: 15000 });
+  await expect(saveButton).toBeEnabled();
   await saveButton.click();
   await expect(page.getByRole("status")).toContainText("DataForSEO connected", {
     timeout: 15000,
@@ -82,8 +97,6 @@ export async function completeOnboarding(page: Page, suffix: string) {
   await website.fill(domain);
   await clickWizardPrimary(page, "Continue", /[?&]step=2(?:&|$)/);
 
-  await page.getByLabel("API login").fill("fake-login");
-  await page.getByRole("textbox", { name: /API password/ }).fill("fake-secret");
   await testAndSaveDataForSeo(page);
   await clickProviderContinue(page, /[?&]step=3(?:&|$)/);
 

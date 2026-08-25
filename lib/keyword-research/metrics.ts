@@ -204,11 +204,12 @@ export async function fetchKeywordMetrics(input: {
       }
       const page = await paidProviderCall({
         budgetCapCents: project.budgetCapCents,
-        call: (credentials) =>
+        call: (credentials, usage) =>
           selected.provider.fetchKeywordMetrics?.(credentials, {
             includeClickstream: input.includeClickstream,
             keywords: chunk.map((item) => item.keyword),
             location: researchProviderRankLocation(location.value),
+            tag: usage?.tag,
           }) ?? Promise.resolve({ costCents: 0, rows: [] }),
         connection: selected.connection,
         feature: "keyword_metrics",
@@ -218,6 +219,8 @@ export async function fetchKeywordMetrics(input: {
         provider: selected.provider,
         rateContext,
         rate: keywordMetricsRate(selected.provider.id),
+        source: "app",
+        trigger: "manual",
       });
       costCents += page.costCents;
       const returned = new Map(

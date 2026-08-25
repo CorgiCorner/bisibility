@@ -1,5 +1,7 @@
-export const metadataChipClassName =
-  "rounded-full border border-border bg-bg-sunken px-2.5 py-1 text-[11px] font-medium text-fg";
+import { quietChipVariants } from "@/components/ui";
+import { cn } from "@/lib/ui/cn";
+
+export const metadataChipClassName = cn(quietChipVariants({ size: "lg" }), "text-fg");
 
 export function deviceValue(value: string): "desktop" | "mobile" {
   return value.toLowerCase() === "mobile" ? "mobile" : "desktop";

@@ -21,18 +21,6 @@ const packageFile = {
   filename: "example-project.json",
   mimeType: "application/json",
 };
-const activeMigration = {
-  autoReleasesAt: null,
-  canRollback: false,
-  startedAt: null,
-  writeMode: "active" as const,
-};
-const heldMigration = {
-  autoReleasesAt: "2026-08-10T14:30:00.000Z",
-  canRollback: true,
-  startedAt: "2026-08-09T08:30:00.000Z",
-  writeMode: "migration_hold" as const,
-};
 
 function auditEntry(index: number): AuditEntry {
   const timestamp = `2026-08-09T0${index + 1}:30:00.000Z`;
@@ -82,8 +70,6 @@ const actions = {
   markProjectMigrated: async () => ({ writeMode: "migrated" }),
   reactivateProject: async () => ({ writeMode: "active" }),
   releaseMigrationHold: async () => ({ writeMode: "active" }),
-  rollbackHostedMigration: async () => activeMigration,
-  startHostedMigration: async () => ({ migration: heldMigration, packageFile }),
 };
 const commonArgs = {
   actions,
@@ -122,7 +108,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const StateSelfHostedInstance: Story = {
-  args: { ...commonArgs, deployment: "self-host", migration: null },
+  args: { ...commonArgs, deployment: "self-host" },
   name: "STATE · self-hosted instance",
 };
 
@@ -130,14 +116,13 @@ export const StateHostedBetaAccount: Story = {
   args: {
     ...commonArgs,
     deployment: "cloud",
-    migration: heldMigration,
     project: { ...commonArgs.project, writeMode: "migration_hold" },
   },
   name: "STATE · hosted beta account",
 };
 
 export const StateDomainSet: Story = {
-  args: { ...commonArgs, deployment: "cloud", migration: activeMigration },
+  args: { ...commonArgs, deployment: "cloud" },
   name: "STATE · domain set",
 };
 
@@ -145,20 +130,19 @@ export const StateNoDomain: Story = {
   args: {
     ...commonArgs,
     deployment: "cloud",
-    migration: activeMigration,
     project: { ...commonArgs.project, domain: "" },
   },
   name: "STATE · no domain",
 };
 
 export const Loading: Story = {
-  args: { ...commonArgs, deployment: "cloud", migration: activeMigration },
-  render: () => <AdvancedSettingsContentLoading />,
+  args: { ...commonArgs, deployment: "self-host" },
+  render: () => <AdvancedSettingsContentLoading deployment="self-host" />,
 };
 
 export const RouteLoading: Story = {
-  args: { ...commonArgs, deployment: "cloud", migration: activeMigration },
+  args: { ...commonArgs, deployment: "self-host" },
   name: "Route loading",
   parameters: { settingsRouteLoading: true },
-  render: () => <AdvancedSettingsLoading />,
+  render: () => <AdvancedSettingsLoading deployment="self-host" />,
 };

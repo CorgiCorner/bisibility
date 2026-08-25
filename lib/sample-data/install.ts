@@ -86,7 +86,7 @@ async function installSampleDatasetInTransaction(
       defaults: { create: manualSchedule() },
       domain: "acme.dev",
       members: { create: { publicId: makePublicId("mbr"), role: Role.owner, userId: ownerId } },
-      name: "Sample project - acme.dev",
+      name: "Sample project",
       onboardingCompletedAt: new Date(),
       ownerId,
       isSample: true,

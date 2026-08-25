@@ -21,6 +21,7 @@ export const initialKeywordGridState = {
 
 /** Canonical MUI DataGrid column-header sx, shared by every DataGrid surface. */
 export const dataGridHeaderSx = {
+  "--DataGrid-rowBorderColor": "var(--border)",
   backgroundColor: "var(--table-header-bg)",
   borderColor: "var(--border)",
   borderRadius: 0,
@@ -45,9 +46,16 @@ export const keywordGridSx = {
     outline: "none",
   },
   "& .MuiDataGrid-columnHeaders": dataGridHeaderSx,
+  "& .MuiDataGrid-container--top": {
+    "--DataGrid-rowBorderColor": "var(--border)",
+  },
+  "& .MuiDataGrid-container--top .MuiDataGrid-row--borderBottom": {
+    "& .MuiDataGrid-columnHeader, & .MuiDataGrid-filler, & .MuiDataGrid-scrollbarFiller": {
+      borderBottomColor: "var(--border)",
+    },
+  },
   "& .MuiDataGrid-footerContainer": { borderColor: "var(--border)" },
   "& .MuiDataGrid-row": { cursor: "pointer" },
-  "& .MuiDataGrid-row:hover": { backgroundColor: "var(--bg-sunken)" },
   "& .MuiDataGrid-row:hover .bv-keyword-title": {
     color: "var(--accent-text)",
     textDecoration: "underline",

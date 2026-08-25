@@ -3,7 +3,7 @@ import {
   CaretRightIcon as CaretRight,
   GaugeIcon as Gauge,
   PauseIcon as Pause,
-  PlugsConnectedIcon as PlugsConnected,
+  PuzzlePieceIcon as PuzzlePiece,
   WarningCircleIcon as WarningCircle,
 } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
@@ -43,7 +43,7 @@ const reasonMeta: Record<
   no_provider: {
     cta: "Connect provider",
     description: "These will never run until a provider connection is assigned.",
-    icon: PlugsConnected,
+    icon: PuzzlePiece,
     link: "connectProviderHref",
     title: "No provider assigned",
   },

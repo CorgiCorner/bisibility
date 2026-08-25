@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { mintMigrationTokenFormSchema, revokeMigrationTokenFormSchema } from "./cloud-token";
+import {
+  mintMigrationTokenFormSchema,
+  remainingMinutesLabel,
+  revokeMigrationTokenFormSchema,
+} from "./cloud-token";
 
 const projectId = "prj_abcdefghijklmnopqrstuvwx";
 const tokenId = "ferry_abcdefghijklmnopqrstuvwx";
@@ -23,5 +27,17 @@ describe("cloud migration token form IDs", () => {
     expect(
       revokeMigrationTokenFormSchema.safeParse({ projectId, tokenId: "token_1" }).success,
     ).toBe(false);
+  });
+});
+
+describe("remainingMinutesLabel", () => {
+  it("describes remaining lifetime in minutes", () => {
+    expect(remainingMinutesLabel(new Date(Date.now() + 58 * 60_000).toISOString())).toBe(
+      "58 minutes remaining",
+    );
+    expect(remainingMinutesLabel(new Date(Date.now() + 45_000).toISOString())).toBe(
+      "1 minute remaining",
+    );
+    expect(remainingMinutesLabel(new Date(Date.now() - 1_000).toISOString())).toBe("expires now");
   });
 });

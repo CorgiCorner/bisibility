@@ -184,12 +184,13 @@ export async function fetchRankedKeywords(input: {
       load: async () => {
         const page = await paidProviderCall({
           budgetCapCents: project.budgetCapCents,
-          call: (credentials) =>
+          call: (credentials, usage) =>
             selected.provider.fetchRankedKeywords(credentials, {
               domain,
               limit: input.limit,
               location: location.value,
               offset: input.offset,
+              tag: usage?.tag,
             }),
           connection: selected.connection,
           feature: "ranked_keywords",
@@ -197,6 +198,8 @@ export async function fetchRankedKeywords(input: {
           projectId: project.id,
           provider: selected.provider,
           rate: rankedKeywordPageRate(selected.provider.id),
+          source: "app",
+          trigger: "manual",
         });
         const entry = { ...page, fetchedAt: new Date().toISOString() };
         return entry;

@@ -20,7 +20,7 @@ const footer = (
       Cancel
     </button>
     <button
-      className="flex-1 rounded-[9px] bg-accent-solid px-4 py-2.5 text-[13px] font-semibold text-white"
+      className="flex-1 rounded-[9px] bg-accent-solid px-4 py-2.5 text-[13px] font-semibold text-accent-on-solid"
       type="button"
     >
       Save changes

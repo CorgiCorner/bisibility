@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { dirname, extname, join, relative, resolve } from "node:path";
+import { extname, join, relative } from "node:path";
+import { classifyDocsHref } from "./doc-link-helpers.mjs";
 import {
   analyzeDocsNavigation,
   docsNavigationExclusions,
@@ -28,44 +29,16 @@ function docsPageExists(page) {
   ].some(existsSync);
 }
 
-function deploymentDocsPath(href) {
-  if (href === "/docs" || href.startsWith("/docs/")) return href.slice("/docs".length);
-  if (href === "https://bisibility.com/docs" || href.startsWith("https://bisibility.com/docs/")) {
-    return href.slice("https://bisibility.com/docs".length);
-  }
-}
-
 function checkDocsHref(source, href) {
-  const withoutAnchor = href.split("#", 1)[0].split("?", 1)[0];
-  if (!withoutAnchor || withoutAnchor.startsWith("mailto:")) return;
-  const sourceRelativeToDocs = relative(DOCS_ROOT, source);
-  const isDocsContent = sourceRelativeToDocs !== "" && !sourceRelativeToDocs.startsWith("..");
-  const docsPath = deploymentDocsPath(withoutAnchor);
-  if (isDocsContent && docsPath !== undefined) {
-    failures.push(
-      `${relative(ROOT, source)}: docs links must omit the deployment prefix ${href}`,
-    );
-    return;
-  }
-
-  if (docsPath !== undefined) {
-    if (!docsPageExists(docsPath)) failures.push(`${relative(ROOT, source)}: missing docs page ${href}`);
-    return;
-  }
-
-  if (isDocsContent && withoutAnchor.startsWith("/")) {
-    if (docsPageExists(withoutAnchor)) return;
-    const message = withoutAnchor.startsWith("/api/")
-      ? `application API links must use an absolute URL when docs are mounted at /docs ${href}`
-      : `missing docs page ${href}`;
-    failures.push(`${relative(ROOT, source)}: ${message}`);
-    return;
-  }
-
-  if (/^[a-z][a-z0-9+.-]*:/i.test(withoutAnchor) || withoutAnchor.startsWith("/")) return;
-
-  const target = resolve(dirname(source), withoutAnchor);
-  if (!existsSync(target)) failures.push(`${relative(ROOT, source)}: missing file ${href}`);
+  const failure = classifyDocsHref({
+    source,
+    href,
+    root: ROOT,
+    docsRoot: DOCS_ROOT,
+    docsPageExists,
+    fileExists: existsSync,
+  });
+  if (failure) failures.push(failure);
 }
 
 const contentFiles = [join(ROOT, "README.md"), ...walk(DOCS_ROOT)].filter((file) =>

@@ -114,6 +114,8 @@ function rowFor(source: CheckRunSource): CheckRunRow | null {
       : parseCheckAttempts(source.attempts);
 
   return {
+    // The query layer attaches the real summary; a pure row cannot know it.
+    storedResults: null,
     attemptCount: source.attemptCount,
     attempts,
     checkedAt: source.checkedAt.toISOString(),

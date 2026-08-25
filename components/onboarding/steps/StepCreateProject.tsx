@@ -8,10 +8,9 @@ import {
   actionErrorMessage,
   feedbackClass,
   inputClass,
-  labelClass,
   onboardingFormId,
 } from "@/components/onboarding/onboarding-form-utils";
-import { DataResidencyNote } from "@/components/ui";
+import { DataResidencyNote, FieldLabel } from "@/components/ui";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import {
   type OnboardingWebsiteInput,
@@ -22,6 +21,9 @@ import { useRouter } from "next/navigation";
 import { type FocusEvent, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
+
+export const WEBSITE_MATCHING_HINT =
+  "www and every subdomain of your domain count as yours - matching is fixed today, per-scope control is on the roadmap.";
 
 export type CreateProjectFormValues = z.infer<typeof onboardingWebsiteSchema>;
 
@@ -83,6 +85,7 @@ export function StepCreateProject({
     handleSubmit,
     register,
     setError,
+    setFocus,
     trigger,
   } = useForm<CreateProjectFormValues>({
     defaultValues: defaultValues ?? { website: initialProject?.domain ?? "" },
@@ -151,7 +154,13 @@ export function StepCreateProject({
   }
 
   return (
-    <form id={onboardingFormId} onSubmit={handleSubmit(onSubmit)}>
+    <form
+      id={onboardingFormId}
+      noValidate
+      onSubmit={handleSubmit(onSubmit, () => {
+        setFocus("website");
+      })}
+    >
       <div className="text-lg font-semibold tracking-[-0.4px]">Create project</div>
       <div className="mt-1 text-[13px] text-fg-muted">Enter the website you want to track.</div>
       {dataResidencyMessage ? (
@@ -159,11 +168,21 @@ export function StepCreateProject({
       ) : null}
 
       <div className="mt-5.5 flex max-w-[440px] flex-col gap-4">
-        <label className={labelClass}>
-          Your website
+        <div className="flex flex-col gap-[7px]">
+          <FieldLabel
+            className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted"
+            help={WEBSITE_MATCHING_HINT}
+            htmlFor="onboarding-website"
+            label="Your website"
+          />
           <input
+            aria-describedby={errors.website ? "onboarding-website-error" : undefined}
+            aria-invalid={errors.website ? true : undefined}
+            aria-required="true"
             className={`${inputClass} font-mono text-sm`}
+            id="onboarding-website"
             placeholder="https://example.com"
+            required
             {...websiteField}
             onBlur={deriveWebsite}
             onChange={(event) => {
@@ -174,9 +193,11 @@ export function StepCreateProject({
             }}
           />
           {errors.website ? (
-            <span className={`${feedbackClass} text-red-text`}>{errors.website.message}</span>
+            <span className={`${feedbackClass} text-red-text`} id="onboarding-website-error">
+              {errors.website.message}
+            </span>
           ) : null}
-        </label>
+        </div>
         <p aria-live="polite" className="m-0 text-[12.5px] leading-[1.5] text-fg-muted">
           {isDeriving ? "Checking website..." : null}
           {!isDeriving && identity ? (
@@ -184,11 +205,7 @@ export function StepCreateProject({
               Project name: <span className="font-medium text-fg">{identity.name}</span>
             </>
           ) : null}
-          {!isDeriving && !identity ? "Your project name will be derived from the website." : null}
-        </p>
-        <p className="m-0 text-[12.5px] leading-[1.5] text-fg-muted">
-          www and every subdomain of your domain count as yours - matching is fixed today, per-scope
-          control is on the roadmap.
+          {!isDeriving && !identity ? "We'll use the website as the project name." : null}
         </p>
       </div>
 

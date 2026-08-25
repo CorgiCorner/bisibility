@@ -33,8 +33,16 @@ export function oauthScopes(provider: IntegrationProviderData): readonly string[
   ];
 }
 
+function successLead(message: string | undefined) {
+  const trimmed = message?.trim() ?? "";
+  if (!trimmed || /^(ok|okay|connected|connection ok)\.?$/i.test(trimmed)) {
+    return "Connection verified.";
+  }
+  return trimmed;
+}
+
 export function testSuccessCopy(providerId: string, result: ProviderTestResult | null) {
-  const message = result?.message.trim() || "Connection verified.";
+  const message = successLead(result?.message);
   if (typeof result?.balance !== "number") return message;
 
   if (providerId === "dataforseo") {

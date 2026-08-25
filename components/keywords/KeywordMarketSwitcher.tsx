@@ -2,16 +2,20 @@
 
 import { MarketCombobox, type MarketComboboxOption } from "@/components/markets/MarketCombobox";
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
-import { useToast } from "@/components/ui";
+import {
+  MenuSelectOptionItem,
+  menuSelectPaperSx,
+  quietChipVariants,
+  useToast,
+} from "@/components/ui";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
 import { appPath, asProjectRef } from "@/lib/routing/app-path";
 import type { AddKeywordsInput, BulkKeywordIdsInput } from "@/lib/schemas/keyword";
+import { cn } from "@/lib/ui/cn";
 import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
 import {
   CaretDownIcon as CaretDown,
-  CheckIcon as Check,
   DeviceMobileIcon as DeviceMobile,
   FlagIcon as Flag,
   MonitorIcon as Monitor,
@@ -74,6 +78,12 @@ function DeviceIcon({ device }: Readonly<{ device: string }>) {
   );
 }
 
+const headerChipClassName = quietChipVariants({ size: "lg" });
+const headerChipSelectClassName = cn(
+  headerChipClassName,
+  "font-mono text-fg-muted outline-none transition-colors hover:border-accent hover:text-fg focus-visible:border-accent focus-visible:outline-2 focus-visible:outline-accent-solid disabled:cursor-default",
+);
+
 function SwitcherButton({
   children,
   onClick,
@@ -84,7 +94,9 @@ function SwitcherButton({
   return (
     <button
       aria-haspopup={onClick ? "menu" : undefined}
-      className="inline-flex max-w-[290px] items-center gap-1.5 rounded-full border border-border bg-bg-sunken py-1 pl-2.5 pr-2 font-mono text-[11px] text-fg-muted outline-none hover:text-fg focus-visible:outline-2 focus-visible:outline-accent-solid disabled:cursor-default"
+      className={
+        onClick ? headerChipSelectClassName : cn(headerChipClassName, "font-mono text-fg-muted")
+      }
       disabled={!onClick}
       onClick={onClick ? (event) => onClick(event.currentTarget) : undefined}
       type="button"
@@ -225,7 +237,7 @@ export function KeywordMarketSwitcher({
         onChange={handleMarketChange}
         trackedLabel="Tracked markets"
         trackedMarkets={trackedOptions}
-        triggerClassName="max-w-[290px] rounded-full border-border bg-bg-sunken py-1 pl-2.5 pr-2 font-mono text-[11px] text-fg-muted hover:text-fg focus-visible:outline-2 focus-visible:outline-accent-solid"
+        triggerClassName={cn(headerChipSelectClassName, "max-w-[290px]")}
         triggerTitle={currentPair}
         value={keyword.location.canonicalKey}
       />
@@ -241,20 +253,23 @@ export function KeywordMarketSwitcher({
         anchorEl={deviceAnchor}
         onClose={() => setDeviceAnchor(null)}
         open={Boolean(deviceAnchor)}
-        slotProps={{ list: { "aria-label": "Keyword devices", dense: true } }}
+        slotProps={{
+          list: { "aria-label": "Keyword devices", dense: true, sx: { padding: 0 } },
+          paper: { sx: menuSelectPaperSx },
+        }}
       >
         {currentMarketTargets.map((target) => (
-          <MenuItem
-            aria-label={`Switch to ${target.device}`}
+          <MenuSelectOptionItem
+            current={target.id === keyword.id}
             key={target.id}
-            onClick={() => navigate(target)}
-            selected={target.id === keyword.id}
-            sx={{ gap: 1.5 }}
-          >
-            <DeviceIcon device={target.device} />
-            {target.device}
-            {target.id === keyword.id ? <Check aria-hidden size={14} weight="bold" /> : null}
-          </MenuItem>
+            onSelect={() => navigate(target)}
+            option={{
+              ariaLabel: `Switch to ${target.device}`,
+              icon: <DeviceIcon device={target.device} />,
+              label: target.device,
+              value: target.id,
+            }}
+          />
         ))}
       </Menu>
     </>

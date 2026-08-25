@@ -194,7 +194,11 @@ function RunTableBody({
   return (
     <tbody className="divide-y divide-border-soft">
       {rows.map((run) => {
-        const expandable = run.status === "failed" || run.viaFallback || hiddenColumns;
+        const storedResultsAvailable = Boolean(
+          run.storedResults && run.storedResults.tier !== "none",
+        );
+        const expandable =
+          run.status === "failed" || run.viaFallback || hiddenColumns || storedResultsAvailable;
         const expanded = expandable && expandedRunIds.has(run.id);
         return (
           <Fragment key={run.id}>
@@ -221,7 +225,12 @@ function RunTableBody({
             {expanded ? (
               <tr>
                 <td colSpan={columnCount} className="p-0">
-                  <CheckRunDetails columns={columns} now={now} run={run} />
+                  <CheckRunDetails
+                    columns={columns}
+                    keywordHref={keywordHref(run.keywordPublicId)}
+                    now={now}
+                    run={run}
+                  />
                 </td>
               </tr>
             ) : null}

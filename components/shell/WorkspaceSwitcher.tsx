@@ -80,6 +80,16 @@ export function WorkspaceSwitcher({
     setAnchorEl(null);
   }
 
+  function onTriggerClick(event: React.MouseEvent<HTMLButtonElement>) {
+    // Same-tick backdropClick already scheduled close(); stale `anchorEl` still
+    // looks open, so treating this as a toggle closes instead of opening again.
+    if (anchorEl) {
+      close();
+      return;
+    }
+    openMenu(event);
+  }
+
   function measureMenu(node: HTMLElement | null) {
     if (node) {
       menuHeightRef.current = node.offsetHeight;
@@ -92,13 +102,13 @@ export function WorkspaceSwitcher({
   return (
     // The switcher now sits at the foot of the rail, so its 18px of breathing room moved from
     // below it to above it.
-    <div className="relative mt-4.5 flex-none" ref={railRef}>
+    <div className="relative mt-4.5 w-full flex-none" ref={railRef}>
       <WorkspaceSwitcherTrigger
         collapsed={collapsed}
         domain={active?.domain ?? ""}
         menuId={MENU_ID}
         name={active?.name ?? "Project"}
-        onOpen={openMenu}
+        onOpen={onTriggerClick}
         open={open}
         sublabel={sublabel}
         variant={variant}
@@ -117,6 +127,8 @@ export function WorkspaceSwitcher({
           paper: { ref: measureMenu, sx: { ...PAPER_SX, ...offset } },
         }}
         transformOrigin={transformOrigin}
+        // Instant: Slide/Grow reads as the menu flying out of the rail.
+        transitionDuration={0}
       >
         <div className="px-[9px] pb-[7px] pt-[10px] font-mono text-[9.5px] uppercase tracking-[0.6px] text-fg-muted">
           Projects

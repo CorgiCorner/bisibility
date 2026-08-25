@@ -31,7 +31,7 @@ vi.mock("@/lib/providers/rate-limit", () => ({
   writeCooldown: mocks.writeCooldown,
 }));
 vi.mock("@/lib/providers/serp/dataforseo-queued", () => ({
-  dataForSeoQueuedTaskTag: (id: string) => `bisibility:rank:${id}`,
+  legacyDataForSeoQueuedTaskTag: (id: string) => `bisibility:rank:${id}`,
   readyDataForSeoQueuedTasks: mocks.ready,
 }));
 vi.mock("./queued-lifecycle", () => ({

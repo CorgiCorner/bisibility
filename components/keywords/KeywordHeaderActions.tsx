@@ -11,28 +11,15 @@ import {
   runCostCents,
 } from "@/lib/cost-estimate/project-estimate";
 import type { SerpDepth } from "@/lib/serp/markets";
-import { serpDepthValues } from "@/lib/serp/markets";
-// ButtonGroup children must stay MUI Buttons so the group keeps its joined corners.
-import MuiButton from "@mui/material/Button";
-import ButtonGroup from "@mui/material/ButtonGroup";
 import Menu from "@mui/material/Menu";
-import {
-  ArrowsClockwiseIcon as ArrowsClockwise,
-  BellIcon as Bell,
-  BellRingingIcon as BellRinging,
-  CaretDownIcon as CaretDown,
-  DotsThreeIcon as DotsThree,
-} from "@phosphor-icons/react";
+import { DotsThreeIcon as DotsThree } from "@phosphor-icons/react";
 import { useState } from "react";
+import { CheckDepthSplitButton } from "./CheckDepthSplitButton";
 
 type KeywordHeaderActionsProps = {
-  alertCreated: boolean;
-  alertCreating: boolean;
-  canCreateAlert: boolean;
   canUpdateKeyword: boolean;
   editing: boolean;
   effectiveDepth: SerpDepth;
-  onCreateAlert: () => void;
   onExport: () => void;
   onRunCheck: (depth: SerpDepth) => void;
   onToggleEdit: () => void;
@@ -41,16 +28,6 @@ type KeywordHeaderActionsProps = {
   runPending: boolean;
   showCheck?: boolean;
 };
-
-const checkActionSx = {
-  backgroundColor: "var(--accent-solid)",
-  borderColor: "var(--accent-solid)",
-  color: "var(--accent-on-solid)",
-  "&:hover": {
-    backgroundColor: "var(--accent-solid-hover)",
-    borderColor: "var(--accent-solid-hover)",
-  },
-} as const;
 
 function checkCost(depth: SerpDepth, providerRate?: CostRateInfo) {
   if (!providerRate) return null;
@@ -63,14 +40,20 @@ function depthOptionLabel(depth: SerpDepth, providerRate?: CostRateInfo) {
   return `Top ${depth}${cost ? ` · ${cost}` : ""}`;
 }
 
+function runCheckActionLabel(
+  pending: boolean,
+  primaryLabel: string | ((depth: SerpDepth) => string),
+  selectedDepth: SerpDepth,
+) {
+  if (pending) return "Starting...";
+  if (typeof primaryLabel === "function") return primaryLabel(selectedDepth);
+  return `${primaryLabel} (Top ${selectedDepth})`;
+}
+
 export function KeywordHeaderActions({
-  alertCreated,
-  alertCreating,
-  canCreateAlert,
   canUpdateKeyword,
   editing,
   effectiveDepth,
-  onCreateAlert,
   onExport,
   onRunCheck,
   onToggleEdit,
@@ -79,7 +62,6 @@ export function KeywordHeaderActions({
   runPending,
   showCheck = true,
 }: Readonly<KeywordHeaderActionsProps>) {
-  const [depthMenuAnchor, setDepthMenuAnchor] = useState<HTMLElement | null>(null);
   const [actionsMenuAnchor, setActionsMenuAnchor] = useState<HTMLElement | null>(null);
   const [depthSelection, setDepthSelection] = useState(() => ({
     effectiveDepth,
@@ -89,59 +71,21 @@ export function KeywordHeaderActions({
     setDepthSelection({ effectiveDepth, selectedDepth: effectiveDepth });
   }
   const selectedDepth = depthSelection.selectedDepth;
-  const resolvedPrimaryLabel =
-    typeof primaryLabel === "function" ? primaryLabel(selectedDepth) : primaryLabel;
-  let alertLabel = "Add alert";
-  if (alertCreating) alertLabel = "Adding...";
-  else if (alertCreated) alertLabel = "Alert on";
   const { readOnly } = useProjectWriteMode();
-  const AlertIcon = alertCreated ? BellRinging : Bell;
 
   return (
     <div className="flex flex-wrap justify-end gap-2">
       {canUpdateKeyword && showCheck ? (
         <ProjectReadOnlyTooltip>
-          <ButtonGroup size="small" variant="contained">
-            <MuiButton
-              disabled={readOnly || runPending}
-              onClick={() => onRunCheck(selectedDepth)}
-              startIcon={<ArrowsClockwise size={15} weight="bold" />}
-              sx={{ ...checkActionSx, minHeight: 40 }}
-            >
-              {runPending ? "Starting..." : resolvedPrimaryLabel}
-            </MuiButton>
-            <MuiButton
-              aria-label="Choose check depth"
-              disabled={readOnly || runPending}
-              onClick={(event) => setDepthMenuAnchor(event.currentTarget)}
-              sx={{
-                ...checkActionSx,
-                borderLeft: "1px solid color-mix(in srgb, var(--accent-on-solid) 32%, transparent)",
-                minHeight: 40,
-                minWidth: 34,
-                paddingX: 0.75,
-              }}
-            >
-              <CaretDown aria-hidden size={13} weight="bold" />
-            </MuiButton>
-          </ButtonGroup>
-        </ProjectReadOnlyTooltip>
-      ) : null}
-      {canUpdateKeyword ? (
-        <ProjectReadOnlyTooltip>
-          <Button
-            disabled={readOnly || !canCreateAlert || alertCreating || alertCreated}
-            onClick={onCreateAlert}
-            startIcon={<AlertIcon size={15} weight={alertCreated ? "fill" : "bold"} />}
-            sx={
-              alertCreated
-                ? { border: "1px solid var(--accent-solid)", color: "var(--accent-text)" }
-                : { color: "var(--fg-muted)" }
-            }
-            variant="secondary"
-          >
-            {alertLabel}
-          </Button>
+          <CheckDepthSplitButton
+            actionLabel={runCheckActionLabel(runPending, primaryLabel, selectedDepth)}
+            currentDepth={selectedDepth}
+            disabled={readOnly || runPending}
+            onAction={() => onRunCheck(selectedDepth)}
+            onDepthChange={(depth) => setDepthSelection({ effectiveDepth, selectedDepth: depth })}
+            optionLabel={(depth) => depthOptionLabel(depth, providerRate)}
+            spinning={runPending}
+          />
         </ProjectReadOnlyTooltip>
       ) : null}
       <Button
@@ -154,29 +98,6 @@ export function KeywordHeaderActions({
       >
         <DotsThree aria-hidden size={17} weight="bold" />
       </Button>
-      {canUpdateKeyword && showCheck ? (
-        <Menu
-          anchorEl={depthMenuAnchor}
-          onClose={() => setDepthMenuAnchor(null)}
-          open={Boolean(depthMenuAnchor)}
-          slotProps={{
-            list: { "aria-label": "Check depth", dense: true, sx: { padding: 0 } },
-            paper: { sx: menuSelectPaperSx },
-          }}
-        >
-          {serpDepthValues.map((depth) => (
-            <MenuSelectOptionItem
-              current={depth === selectedDepth}
-              key={depth}
-              onSelect={() => {
-                setDepthSelection({ effectiveDepth, selectedDepth: depth });
-                setDepthMenuAnchor(null);
-              }}
-              option={{ label: depthOptionLabel(depth, providerRate), value: String(depth) }}
-            />
-          ))}
-        </Menu>
-      ) : null}
       <Menu
         anchorEl={actionsMenuAnchor}
         onClose={() => setActionsMenuAnchor(null)}
@@ -194,7 +115,7 @@ export function KeywordHeaderActions({
               onToggleEdit();
             }}
             option={{
-              label: editing ? "Close markets & devices" : "Manage markets & devices",
+              label: editing ? "Close markets and devices" : "Manage markets and devices",
               value: "edit",
             }}
           />

@@ -9,6 +9,7 @@ const now = new Date("2026-07-24T14:45:00.000Z");
 function marketRow(overrides: Partial<CheckRunRow> = {}): CheckRunRow {
   return {
     attemptCount: 1,
+    storedResults: null,
     attempts: [
       {
         costCents: 0.35,
@@ -199,5 +200,45 @@ describe("CheckRunsTable", () => {
 
     const keywordLinks = within(table).getAllByRole("link", { name: "ai meeting notes" });
     expect(keywordLinks).toHaveLength(2);
+  });
+
+  it("expands a completed run that has stored results", () => {
+    stubResizeObserver();
+    stubIntersectionObserver();
+
+    const rows = [
+      marketRow({
+        id: "run_stored",
+        keywordPublicId: "kw_stored",
+        storedResults: {
+          tier: "full",
+          stoppedAtResult: true,
+          requestedDepth: 100,
+          retrievedPositions: 22,
+          fullDetailUntil: "2026-10-31T00:00:00.000Z",
+        },
+      }),
+    ];
+
+    render(<CheckRunsTable {...tableProps(viewFor(rows))} />);
+
+    expect(screen.getByRole("button", { name: /Expand ai meeting notes run/ })).toBeInTheDocument();
+  });
+
+  it("does not expand a completed run whose storedResults is null", () => {
+    stubResizeObserver();
+    stubIntersectionObserver();
+
+    const rows = [
+      marketRow({
+        id: "run_no_stored",
+        keywordPublicId: "kw_no_stored",
+        storedResults: null,
+      }),
+    ];
+
+    render(<CheckRunsTable {...tableProps(viewFor(rows))} />);
+
+    expect(screen.queryByRole("button", { name: /Expand ai meeting notes run/ })).toBeNull();
   });
 });

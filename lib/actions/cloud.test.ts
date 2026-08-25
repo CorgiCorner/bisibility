@@ -478,13 +478,17 @@ describe("cloud migration actions", () => {
     });
   });
 
-  it("rejects import project creation on self-hosted deployments", async () => {
+  it("returns a settings import destination on self-hosted deployments", async () => {
     mocks.isCloud = false;
+    mocks.createProject.mockResolvedValue({
+      id: "project_new",
+      publicId: "prj_bbcdefghijklmnopqrstuvwx",
+    });
 
-    await expect(createCloudImportWorkspace("Europe/Madrid")).rejects.toThrow(
-      "Instance import projects are available only on hosted deployments.",
+    await expect(createCloudImportWorkspace("Europe/Madrid")).resolves.toBe(
+      "/app/prj_bbcdefghijklmnopqrstuvwx/settings/import",
     );
 
-    expect(mocks.createProject).not.toHaveBeenCalled();
+    expect(mocks.createProject).toHaveBeenCalledTimes(1);
   });
 });

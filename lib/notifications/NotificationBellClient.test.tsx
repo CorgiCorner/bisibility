@@ -1,4 +1,4 @@
-import type { NotificationFeed } from "@/lib/queries/notifications";
+import type { NotificationFeed, NotificationFeedItem } from "@/lib/queries/notifications";
 import { dateFromFrozenNow, isoFromFrozenNow } from "@/tests/clock";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -9,6 +9,20 @@ const preventNavigation = (event: Event) => event.preventDefault();
 vi.mock("./useNotificationStream", () => ({
   useNotificationStream: (feed: NotificationFeed) => ({ feed, status: mocks.status }),
 }));
+
+const checkFailedItem: NotificationFeedItem = {
+  body: "rank tracker: rank data provider unavailable",
+  createdAt: isoFromFrozenNow({ hours: 12 }),
+  href: "/app/prj_1/rank-tracker?tab=checks&run=check_abcdefghijklmnopqrstuvwx",
+  id: "ntf_checkfailedabcdefghijklmnopqrs",
+  meta: "rank tracker on example.com",
+  payload: null,
+  projectId: "prj_abcdefghijklmnopqrstuvwx",
+  readAt: null,
+  time: "now",
+  title: "Rank check failed",
+  type: "check_failed",
+};
 
 const feed: NotificationFeed = {
   items: [
@@ -92,6 +106,27 @@ describe("NotificationBellClient", () => {
     expect(screen.getByRole("button", { name: "Mark all read" })).toBeDisabled();
   });
 
+  it("renders a check_failed row with the reason body and a checks href targeting the run", async () => {
+    render(
+      <NotificationBellClient
+        defaultOpen
+        feed={{ items: [checkFailedItem], unreadCount: 1 }}
+        markAllNotificationsRead={vi.fn(async () => ({ updated: 0 }))}
+        markNotificationRead={vi.fn(async () => ({ updated: 1 }))}
+        projectRef="prj_1"
+        refreshNotificationFeed={vi.fn(async () => ({ items: [checkFailedItem], unreadCount: 1 }))}
+      />,
+    );
+
+    const row = screen.getByRole("link", { name: /Rank check failed/ });
+    expect(row).toHaveAttribute(
+      "href",
+      "/app/prj_1/rank-tracker?tab=checks&run=check_abcdefghijklmnopqrstuvwx",
+    );
+    expect(screen.getByText("rank tracker: rank data provider unavailable")).toBeInTheDocument();
+    expect(screen.queryByText("rank tracker on example.com")).not.toBeInTheDocument();
+  });
+
   it("renders an empty syncing feed and closes from the activity link", () => {
     mocks.status = "syncing";
     render(
@@ -107,6 +142,10 @@ describe("NotificationBellClient", () => {
     expect(screen.getByText("Syncing")).toBeInTheDocument();
     expect(screen.getByText("No notifications")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Mark all read" })).toBeDisabled();
+    expect(screen.getByRole("link", { name: /View audit log/ })).toHaveClass("border-border");
+    expect(screen.getByRole("link", { name: /View audit log/ })).not.toHaveClass(
+      "border-border-soft",
+    );
     fireEvent.click(screen.getByRole("link", { name: /View audit log/ }));
   });
 });

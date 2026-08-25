@@ -2165,6 +2165,11 @@
             "example": "rank tracker api",
             "type": "string"
           },
+          "language": {
+            "description": "SERP UI language code. Combines with country when location_key is omitted. The country default may be omitted.",
+            "example": "en",
+            "type": "string"
+          },
           "location": {
             "description": "Backward-compatible alias for country.",
             "enum": [
@@ -2200,7 +2205,7 @@
             "type": "string"
           },
           "location_key": {
-            "description": "Canonical country, region, or city key. Takes precedence over country/location/city.",
+            "description": "Canonical country, region, or city key. Takes precedence over country, language, location, and city.",
             "example": "ES/Andalusia/Malaga@en",
             "type": "string"
           },

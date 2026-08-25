@@ -149,7 +149,7 @@ export function AppErrorDiagnostics({
         <p className="m-0 border-b border-code-border px-3.5 py-2 text-[11px] leading-[1.5] text-code-faint">
           These details can include your project path. Review them before posting publicly.
         </p>
-        <pre className="m-0 whitespace-pre-wrap break-words px-3.5 pb-3.5 pt-3 font-mono text-[11px] leading-[1.7] text-code-fg">
+        <pre className="m-0 max-h-72 overflow-y-auto whitespace-pre-wrap break-words px-3.5 pb-3.5 pt-3 font-mono text-[11px] leading-[1.7] text-code-fg">
           {visibleTrace}
         </pre>
       </div>

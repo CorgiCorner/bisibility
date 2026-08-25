@@ -9,6 +9,13 @@ export type WorkerSchemaGuardDecision = {
   notify: boolean;
 };
 
+type WorkerSchemaDriftDedupeInput = {
+  appliedLatest: string | null;
+  bundledLatest: string | null;
+  comparison: MigrationComparison;
+  release: string;
+};
+
 export function workerSchemaGuardMode(value: string | undefined): WorkerSchemaGuardMode {
   return value === "off" || value === "warn" || value === "enforce" ? value : "enforce";
 }
@@ -37,4 +44,14 @@ export function decideWorkerSchemaGuard(
     };
   }
   return { block: false, check: true, logLevel: "info", notify: false };
+}
+
+export function workerSchemaDriftDedupeKey(input: WorkerSchemaDriftDedupeInput): string {
+  return [
+    "worker_schema_drift",
+    input.comparison,
+    input.appliedLatest ?? "unknown",
+    input.bundledLatest ?? "unknown",
+    input.release,
+  ].join(":");
 }

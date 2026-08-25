@@ -52,6 +52,19 @@ describe("ResearchStatePanel", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("gives Connect and Reconnect DataForSEO the solid CTA with a trailing caret", () => {
+    const { rerender } = render(<ResearchStatePanel projectRef="prj_1" state="no_provider" />);
+    const connect = screen.getByRole("link", { name: "Connect DataForSEO" });
+    expect(connect).toHaveClass("bg-accent-solid", "rounded-[10px]");
+    expect(connect.querySelector("svg")).not.toBeNull();
+    expect(document.querySelector('[data-icon="puzzle-piece"]')).not.toBeNull();
+
+    rerender(<ResearchStatePanel projectRef="prj_1" state="needs_reauth" />);
+    const reconnect = screen.getByRole("link", { name: "Reconnect DataForSEO" });
+    expect(reconnect).toHaveClass("bg-accent-solid", "rounded-[10px]");
+    expect(reconnect.querySelector("svg")).not.toBeNull();
+  });
+
   it("offers Auto as an empty-state recovery only for specific modes", () => {
     const { rerender } = render(
       <ResearchStatePanel mode="ideas" projectRef="prj_1" state="empty" />,

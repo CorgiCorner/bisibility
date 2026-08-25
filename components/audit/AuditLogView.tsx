@@ -52,7 +52,6 @@ const gridSx = {
   "& .MuiDataGrid-columnHeaders": dataGridHeaderSx,
   "& .MuiDataGrid-footerContainer": { borderColor: "var(--border)" },
   "& .MuiDataGrid-row": { cursor: "pointer" },
-  "& .MuiDataGrid-row:hover": { backgroundColor: "var(--bg-sunken)" },
 };
 
 function AuditNoRowsOverlay() {

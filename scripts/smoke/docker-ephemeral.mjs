@@ -76,6 +76,20 @@ export function pruneEphemeralImages({ environment = process.env, run = dockerRe
   );
 }
 
+export function reclaimDockerBuildCache({
+  environment = process.env,
+  run = dockerResult,
+} = {}) {
+  if (environment.BISIBILITY_COMPOSE_E2E_RECLAIM_BUILD_CACHE !== "1") {
+    return { reclaimed: false };
+  }
+  if (environment.GITHUB_ACTIONS !== "true") {
+    throw new Error("BuildKit cache reclaim is only supported on GitHub Actions runners.");
+  }
+  runDocker(["builder", "prune", "--all", "--force"], environment, run);
+  return { reclaimed: true };
+}
+
 export function ensureDockerVmFreeSpace({
   environment = process.env,
   log = console.log,

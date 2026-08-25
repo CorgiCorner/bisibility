@@ -28,7 +28,7 @@ export function createContentOpenGraphImage({ description, label, title }: Conte
     <div
       style={{
         alignItems: "center",
-        background: "#f2eee4",
+        background: "#fcf7ed",
         color: "#1a1813",
         display: "flex",
         height: "100%",
@@ -39,7 +39,7 @@ export function createContentOpenGraphImage({ description, label, title }: Conte
     >
       <div
         style={{
-          border: "2px solid #d9d4c7",
+          border: "2px solid #ddd8cc",
           borderRadius: "28px",
           display: "flex",
           flexDirection: "column",
@@ -55,9 +55,9 @@ export function createContentOpenGraphImage({ description, label, title }: Conte
           <div
             style={{
               background: "#fff8ee",
-              border: "2px solid #d9d4c7",
+              border: "2px solid #ddd8cc",
               borderRadius: "999px",
-              color: "#d97757",
+              color: "#f1511c",
               display: "flex",
               fontSize: 22,
               fontWeight: 800,
@@ -99,9 +99,9 @@ export function createContentOpenGraphImage({ description, label, title }: Conte
           }}
         >
           <span>{LICENSE}</span>
-          <span style={{ color: "#d97757" }}>|</span>
+          <span style={{ color: "#f1511c" }}>|</span>
           <span>Signals timeline</span>
-          <span style={{ color: "#d97757" }}>|</span>
+          <span style={{ color: "#f1511c" }}>|</span>
           <span>BYO SERP provider</span>
         </div>
       </div>

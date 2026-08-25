@@ -71,3 +71,15 @@ export function expiresInLabel(expiresAt: string) {
   }
   return `Expires in ${minutes} min`;
 }
+
+export function remainingMinutesLabel(expiresAt: string) {
+  const minutes = Math.max(0, Math.ceil((Date.parse(expiresAt) - Date.now()) / 60_000));
+
+  if (minutes === 0) {
+    return "expires now";
+  }
+  if (minutes === 1) {
+    return "1 minute remaining";
+  }
+  return `${minutes} minutes remaining`;
+}

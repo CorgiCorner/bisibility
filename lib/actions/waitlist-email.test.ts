@@ -7,6 +7,15 @@ const mocks = vi.hoisted(() => ({
     dailySendCounter: { upsert: vi.fn() },
     waitlist: { findUnique: vi.fn(), upsert: vi.fn() },
   },
+  protection: {
+    enforceDistinctNewEmailLimit: vi.fn().mockResolvedValue(undefined),
+    enforceHumanVerification: vi.fn().mockResolvedValue(undefined),
+    enforceWaitlistRateLimits: vi.fn().mockResolvedValue(undefined),
+    hashIdentifier: vi.fn((v: string) => `hash_${v}`),
+    resolveClientIdentity: vi
+      .fn()
+      .mockResolvedValue({ clientDigest: "client-digest", rawIp: null }),
+  },
   revalidatePath: vi.fn(),
   reserveEmailDailyBudget: vi.fn(),
   sesSend: vi.fn(),
@@ -14,6 +23,15 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
+vi.mock("@/lib/landing/waitlist-protection", () => ({
+  WAITLIST_RATE_LIMITED: "Too many requests. Please try again later.",
+  WAITLIST_VERIFICATION_FAILED: "Verification failed. Please try again.",
+  enforceDistinctNewEmailLimit: mocks.protection.enforceDistinctNewEmailLimit,
+  enforceHumanVerification: mocks.protection.enforceHumanVerification,
+  enforceWaitlistRateLimits: mocks.protection.enforceWaitlistRateLimits,
+  hashIdentifier: mocks.protection.hashIdentifier,
+  resolveClientIdentity: mocks.protection.resolveClientIdentity,
+}));
 vi.mock("@/lib/email/budget", () => ({
   reserveEmailDailyBudget: mocks.reserveEmailDailyBudget,
 }));
@@ -122,11 +140,15 @@ describe("joinWaitlist email delivery", () => {
       storedWaitlist({
         cloudPrice: "$19/mo",
         email: "person@example.com",
-        source: "cloud_pricing",
+        source: "settings_notify",
       }),
     );
 
-    await joinWaitlist({ cloudPrice: "19", email: "person@example.com", source: "cloud_pricing" });
+    await joinWaitlist({
+      cloudPrice: "19",
+      email: "person@example.com",
+      source: "settings_notify",
+    });
 
     const contactsCall = vi
       .mocked(fetch)
@@ -151,16 +173,15 @@ describe("joinWaitlist email delivery", () => {
     expect(JSON.parse(String(notifyCall?.[1]?.body)).to).toEqual(["notifications@example.com"]);
   });
 
-  it("keeps contact sync for non-feedback sources", async () => {
+  it("keeps contact sync for landing_capture", async () => {
     mocks.prisma.waitlist.upsert.mockResolvedValue(
       storedWaitlist({
-        cloudPrice: "$19/mo",
         email: "user@example.com",
-        source: "cloud_pricing",
+        source: "landing_capture",
       }),
     );
 
-    await joinWaitlist({ cloudPrice: "19", email: "user@example.com", source: "cloud_pricing" });
+    await joinWaitlist({ email: "user@example.com", source: "landing_capture" });
 
     expect(
       vi.mocked(fetch).mock.calls.some(([url]) => url === "https://api.resend.com/contacts"),

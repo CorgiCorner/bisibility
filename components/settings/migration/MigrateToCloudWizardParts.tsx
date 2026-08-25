@@ -21,7 +21,7 @@ export function MigrateStepper({ step }: Readonly<{ step: number }>) {
                 className={cn(
                   "grid h-[26px] w-[26px] place-items-center rounded-full border-[1.5px] font-mono text-[11px] font-semibold",
                   active
-                    ? "border-accent bg-accent-solid text-primary-contrast"
+                    ? "border-accent bg-accent-solid text-accent-on-solid"
                     : "border-border-strong text-fg-muted",
                 )}
               >

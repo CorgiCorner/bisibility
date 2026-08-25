@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, EmptyState } from "@/components/ui";
+import { AccentCtaLink, Button, EmptyState } from "@/components/ui";
 import { appPath } from "@/lib/routing/app-path";
 import { docsLinkProps } from "@/lib/site/site";
 import {
@@ -8,7 +8,7 @@ import {
   BinocularsIcon as Binoculars,
   CheckCircleIcon as CheckCircle,
   MagnifyingGlassMinusIcon as MagnifyingGlassMinus,
-  PlugsConnectedIcon as PlugsConnected,
+  PuzzlePieceIcon as PuzzlePiece,
 } from "@phosphor-icons/react";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -60,20 +60,16 @@ function NoProviderState({ projectRef }: Readonly<{ projectRef: string }>) {
     <EmptyState
       action={
         <div className="grid justify-items-center gap-3">
-          <Button
-            component={Link}
-            href={appPath(projectRef, "integrations")}
-            startIcon={<PlugsConnected size={15} />}
-          >
+          <AccentCtaLink href={appPath(projectRef, "integrations")}>
             Connect DataForSEO
-          </Button>
+          </AccentCtaLink>
           <span className="text-fg-muted">
             Other providers do not offer research endpoints, so they cannot power this page.
           </span>
         </div>
       }
       description="Lookups run on your own key and are billed by DataForSEO to your own account. Connect it in this project's integrations."
-      icon={<PlugsConnected size={28} />}
+      icon={<PuzzlePiece aria-hidden data-icon="puzzle-piece" size={28} />}
       title="Keyword research needs a provider"
     />
   );
@@ -237,9 +233,9 @@ export function ResearchStatePanel({
     return (
       <MessageState
         action={
-          <Button component={Link} href={appPath(projectRef, "integrations")}>
+          <AccentCtaLink href={appPath(projectRef, "integrations")}>
             Reconnect DataForSEO
-          </Button>
+          </AccentCtaLink>
         }
         description="Reconnect the project's DataForSEO credentials to resume research lookups."
         title="DataForSEO needs to be reconnected"

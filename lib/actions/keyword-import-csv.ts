@@ -1,5 +1,6 @@
 import {
   CsvParseError,
+  type KeywordImportColumnMapping,
   parseKeywordImportCsvTable,
   splitKeywordImportTags,
 } from "@/lib/keywords/import-csv-parser";
@@ -52,10 +53,14 @@ export function parseKeywordImportCsv(
     ProjectDefaultMarket,
     "city" | "country" | "device" | "locationKey"
   > = fallbackImportDefaults,
+  mapping?: KeywordImportColumnMapping,
 ) {
   let table: ReturnType<typeof parseKeywordImportCsvTable>;
   try {
-    table = parseKeywordImportCsvTable(csv);
+    table = parseKeywordImportCsvTable(
+      csv,
+      mapping && Object.keys(mapping).length ? { hasHeader: true, mapping } : undefined,
+    );
   } catch (error) {
     if (error instanceof CsvParseError)
       return { errors: [{ message: error.message, row: error.row }], parsed: [], received: 0 };
@@ -114,4 +119,19 @@ export function keywordImportKey(
     row.locationKey?.trim() ||
     [importLocationKey(row.location), city].filter(Boolean).join("\u0000");
   return `${row.keyword}\u0000${locationKey}\u0000${row.device}`;
+}
+
+export function deduplicateKeywordImportRows(rows: readonly KeywordImportRow[]) {
+  const seen = new Set<string>();
+  const uniqueRows: KeywordImportRow[] = [];
+  let skipped = 0;
+  for (const row of rows) {
+    const key = keywordImportKey(row);
+    if (seen.has(key)) skipped += 1;
+    else {
+      seen.add(key);
+      uniqueRows.push(row);
+    }
+  }
+  return { skipped, uniqueRows };
 }

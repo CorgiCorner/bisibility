@@ -1,8 +1,5 @@
 import { z } from "zod";
 
-export const cloudWaitlistAnchor = "cloud-waitlist";
-export const cloudWaitlistHref = `/#${cloudWaitlistAnchor}`;
-
 export const waitlistSources = [
   "featured_company",
   "landing_capture",
@@ -17,8 +14,28 @@ export const waitlistCloudPrices = ["9", "19", "39", "custom"] as const;
 export type WaitlistSource = (typeof waitlistSources)[number];
 export type WaitlistCloudPrice = (typeof waitlistCloudPrices)[number];
 
-const emailSchema = z.string().trim().pipe(z.email("Enter a valid email address."));
+export const emailSchema = z
+  .string()
+  .trim()
+  .max(254, "Enter an email address under 255 characters.")
+  .pipe(z.email("Enter a valid email address."));
+
+export const verificationTokenSchema = z
+  .string()
+  .trim()
+  .min(1, "Verification token must not be empty.")
+  .max(2048, "Verification token is too long.")
+  .optional();
+
 const cloudPriceSchema = z.union([z.enum(waitlistCloudPrices), z.literal("")]).optional();
+
+// Whole dollars from 1 through 9999: first digit 1-9, then up to three more
+// digits. Exported so the widget cannot accept a value the server will reject
+// (a custom amount must round-trip through one rule).
+export const cloudPriceCustomSchema = z
+  .string()
+  .trim()
+  .regex(/^[1-9]\d{0,3}$/, "Enter a whole dollar amount from 1 to 9999.");
 
 const freeEmailDomains = new Set([
   "gmail.com",
@@ -53,13 +70,16 @@ export function isCompanyEmail(email: string) {
 export const waitlistSchema = z
   .object({
     cloudPrice: cloudPriceSchema,
-    cloudPriceCustom: z
-      .string()
-      .trim()
-      .regex(/^\d{0,4}$/)
-      .optional(),
+    cloudPriceCustom: cloudPriceCustomSchema.optional(),
     email: emailSchema,
+    prefersUsagePricing: z
+      .preprocess(
+        (value) => value === true || value === "on" || value === "true" || value === "1",
+        z.boolean(),
+      )
+      .optional(),
     source: z.enum(waitlistSources),
+    verificationToken: verificationTokenSchema,
   })
   .superRefine((value, context) => {
     if (value.source === "featured_company" && !isCompanyEmail(value.email)) {

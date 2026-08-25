@@ -3,6 +3,7 @@
 import { MarketPicker, type MarketPickerChoice } from "@/components/markets/MarketPicker";
 import { Button, MonoText } from "@/components/ui";
 import { addProjectMarkets, type ProjectMarketChoice } from "@/lib/actions/project-markets";
+import { fieldLabelClass, fieldMetaClass } from "@/lib/keywords/add-keyword-drawer-shared";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
 import { type SerpDevice, serpDeviceOptions } from "@/lib/serp/markets";
 import { actionErrorMessage } from "@/lib/ui/action-error";
@@ -30,6 +31,15 @@ function marketChoice(choice: MarketPickerChoice): ProjectMarketChoice {
 
 function label(market: ProjectMarketsView["markets"][number]) {
   return `${market.displayName} / ${market.languageLabel}`;
+}
+
+function SectionLabel({ children }: Readonly<{ children: string }>) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className={fieldLabelClass}>{children}</span>
+      <span className={fieldMetaClass}>Required</span>
+    </div>
+  );
 }
 
 export function ProjectMarketsSelector({
@@ -101,9 +111,7 @@ export function ProjectMarketsSelector({
   return (
     <section aria-label="Markets" className="grid gap-3">
       <div>
-        <MonoText component="p" muted size="md">
-          MARKETS
-        </MonoText>
+        <SectionLabel>Markets</SectionLabel>
         {description ? <p className="m-0 mt-1 text-[11.5px] text-fg-muted">{description}</p> : null}
       </div>
       {visibleMarkets.length > 0 ? (
@@ -145,9 +153,7 @@ export function ProjectMarketsSelector({
           })}
         </div>
       ) : (
-        <p className="m-0 text-[12px] text-fg-muted">
-          No enabled markets. Enable or add one in Settings &gt; Markets.
-        </p>
+        <p className="m-0 text-[12px] text-fg-muted">No markets yet. Add one with New market.</p>
       )}
       <Button
         disabled={visibleMarkets.length >= markets.maxMarkets}
@@ -189,9 +195,7 @@ export function ProjectMarketsSelector({
         />
       ) : null}
       <div>
-        <MonoText component="p" muted size="md">
-          DEVICES
-        </MonoText>
+        <SectionLabel>Devices</SectionLabel>
         <div className="mt-2 flex gap-2">
           {serpDeviceOptions.map((option) => (
             <button

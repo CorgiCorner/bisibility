@@ -147,6 +147,8 @@ describe("rank-check persistence update path", () => {
         costCents: 0.04,
         failed: false,
         feature: "rank_check",
+        keywordId: "keyword_1",
+        provider: "dataforseo",
         projectId: "project_1",
       },
     });
@@ -244,6 +246,7 @@ describe("rank-check persistence update path", () => {
         attemptCount: 1,
         degradedToCountry: false,
         error: null,
+        errorCode: null,
         position: 4,
         requestedDepth: 50,
         status: "completed",
@@ -266,6 +269,50 @@ describe("rank-check persistence update path", () => {
       }),
     });
     expect(rankCheck.id).toBe("rank_running_1");
+  });
+
+  it("clears errorCode on the completed create path after a transient retry", async () => {
+    mocks.prisma.rankCheck.create.mockImplementation(({ data }) =>
+      Promise.resolve({ id: "rank_new_1", publicId: RANK_CHECK_PUBLIC_ID, ...data }),
+    );
+
+    await persistRankCheck(
+      {
+        hasDefaults: false,
+        hasSchedule: false,
+        keywordId: "keyword_1",
+        keywordPublicId: KEYWORD_PUBLIC_ID,
+        projectId: "project_1",
+      },
+      {
+        comparisonAllowed: true,
+        rankCheck: {
+          billingUnits: null,
+          checkedAt,
+          costCents: 0.06,
+          estimatedCostCents: null,
+          keywordId: "keyword_1",
+          normalizationVersion: "v1",
+          organicRanks: null,
+          position: 4,
+          previousPosition: 8,
+          provider: "primary",
+          rankingUrl: null,
+          raw: null,
+          requestedDepth: 20,
+        },
+        scheduleUpdate: { lastCheckedAt: checkedAt, nextCheckAt: null },
+      },
+    );
+
+    expect(mocks.prisma.rankCheck.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        error: null,
+        errorCode: null,
+        publicId: expect.stringMatching(/^check_/),
+        status: "completed",
+      }),
+    });
   });
 
   it("enqueues queued delivery for evaluated alerts", async () => {
@@ -479,6 +526,7 @@ describe("rank-check persistence update path", () => {
   it("marks an existing running row failed when a rank check id is supplied", async () => {
     const rankCheck = await persistFailedRankCheck({
       checkedAt,
+      errorCode: "provider_billing",
       error: "provider unavailable",
       existingRankCheckId: "rank_running_1",
       keywordId: "keyword_1",
@@ -496,6 +544,7 @@ describe("rank-check persistence update path", () => {
         attemptCount: 0,
         degradedToCountry: false,
         error: "provider unavailable",
+        errorCode: "provider_billing",
         finishedAt: expect.any(Date),
         requestedDepth: 10,
         status: "failed",
@@ -505,8 +554,10 @@ describe("rank-check persistence update path", () => {
     });
     expect(mocks.notifyRankCheckFailed).toHaveBeenCalledWith(
       expect.objectContaining({
+        code: "provider_billing",
         keywordPublicId: KEYWORD_PUBLIC_ID,
         message: "provider unavailable",
+        rankCheckId: RANK_CHECK_PUBLIC_ID,
       }),
     );
     expect(rankCheck.id).toBe("rank_running_1");
@@ -538,6 +589,7 @@ describe("rank-check persistence update path", () => {
         { message: "backup parse failed", provider: "serpapi" },
       ],
       checkedAt,
+      errorCode: "provider_billing",
       error: "provider unavailable",
       existingRankCheckId: "rank_running_1",
       connectionId: "connection_1",
@@ -557,6 +609,7 @@ describe("rank-check persistence update path", () => {
           { message: "primary timeout", provider: "dataforseo" },
           { message: "backup parse failed", provider: "serpapi" },
         ],
+        errorCode: "provider_billing",
         degradedToCountry: false,
         error: "provider unavailable",
         costCents: 1.2,
@@ -575,6 +628,8 @@ describe("rank-check persistence update path", () => {
         costCents: 1.2,
         failed: true,
         feature: "rank_check",
+        keywordId: "keyword_1",
+        provider: "serpapi",
         projectId: "project_1",
       },
     });

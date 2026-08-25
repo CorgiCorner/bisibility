@@ -37,6 +37,7 @@ export type KeywordsGridProps = KeywordActions.KeywordWorkspaceActions & {
   lens?: ActiveLens;
   providerConnected?: boolean;
   projectId: string;
+  searchConsoleConnected?: boolean;
   projectMarkets?: ProjectMarketsView;
   queueFirstChecksAction: FirstCheckActions.QueueFirstChecksAction;
   rows: KeywordRow[];

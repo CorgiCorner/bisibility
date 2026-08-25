@@ -106,6 +106,7 @@ export function CheckRunsHeader({
               onClick={(event) => setDateAnchor(event.currentTarget)}
               size="sm"
               startIcon={<CalendarBlank aria-hidden size={15} />}
+              sx={{ fontWeight: 400 }}
               variant="secondary"
             >
               As of: {asOfDateLabel(asOfDate)}

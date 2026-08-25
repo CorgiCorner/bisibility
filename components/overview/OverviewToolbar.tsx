@@ -228,9 +228,7 @@ export function OverviewToolbar({
                 onClick={() => setOpenKey(null)}
                 sx={ROW_SX}
               >
-                <span className={current ? "font-semibold text-fg" : undefined}>
-                  {option.label}
-                </span>
+                <span className={current ? "text-fg" : undefined}>{option.label}</span>
                 {current ? (
                   <Check aria-hidden className="text-accent-text" size={15} weight="bold" />
                 ) : null}

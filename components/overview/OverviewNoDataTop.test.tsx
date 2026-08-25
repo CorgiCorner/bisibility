@@ -31,12 +31,14 @@ function renderBanner(
     excludeKeywordIds?: string[];
     projectId: string;
   }) => Promise<unknown> = vi.fn().mockResolvedValue({ queued: 1 }),
+  keywordCount = 2,
+  keywordId: string | null = "kw_pending",
 ) {
   render(
     <NoDataBanner
       getFirstCheckRunPlanAction={vi.fn().mockResolvedValue(readyPlan)}
-      keywordCount={2}
-      keywordId="kw_pending"
+      keywordCount={keywordCount}
+      keywordId={keywordId}
       projectId="prj_1"
       projectRef="prj_1"
       queueFirstChecksAction={queueFirstChecksAction}
@@ -50,12 +52,26 @@ describe("NoDataBanner", () => {
   it("offers SERP setup only when no SERP provider exists", () => {
     renderBanner("missing");
 
-    expect(screen.getByText("SERP provider required.")).toBeInTheDocument();
+    expect(screen.getByText("SERP provider required")).toBeInTheDocument();
+    expect(screen.getByTestId("first-check-banner-icon")).toHaveAttribute(
+      "data-icon",
+      "puzzle-piece",
+    );
+    expect(screen.getByTestId("first-check-banner-icon")).toHaveAttribute("data-weight", "bold");
     expect(screen.getByRole("link", { name: "Connect SERP provider" })).toHaveAttribute(
       "href",
       "/app/prj_1/integrations#all-providers",
     );
     expect(screen.queryByText(/queued/i)).not.toBeInTheDocument();
+  });
+
+  it("omits keyword readiness when a SERP provider is missing", () => {
+    renderBanner("missing", vi.fn(), vi.fn().mockResolvedValue({ queued: 1 }), 0);
+
+    expect(
+      screen.getByText("Connect DataForSEO or SerpApi to start rank tracking."),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/keywords are ready/i)).not.toBeInTheDocument();
   });
 
   it("directs an existing broken provider to management", () => {
@@ -94,6 +110,21 @@ describe("NoDataBanner", () => {
       "href",
       "/app/prj_1/rank-tracker?tab=checks",
     );
+    expect(screen.queryByRole("button", { name: "Run first check" })).not.toBeInTheDocument();
+  });
+
+  it("sends a project with no keywords to add them instead of viewing an empty list", () => {
+    renderBanner("ready", vi.fn(), vi.fn().mockResolvedValue({ queued: 1 }), 0, null);
+
+    expect(screen.getByText("No rankings yet")).toBeInTheDocument();
+    expect(screen.getByText("Add keywords to start rank tracking.")).toBeInTheDocument();
+    expect(screen.queryByText(/keywords are ready/i)).not.toBeInTheDocument();
+    expect(screen.getByTestId("first-check-banner-icon")).toHaveAttribute("data-icon", "ranking");
+    expect(screen.getByRole("link", { name: "Add keywords" })).toHaveAttribute(
+      "href",
+      "/app/prj_1/rank-tracker?add=1",
+    );
+    expect(screen.queryByRole("link", { name: "View keywords" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Run first check" })).not.toBeInTheDocument();
   });
 

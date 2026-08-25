@@ -77,6 +77,16 @@ describe("form primitives", () => {
     );
   });
 
+  it("lets labelClassName override the default semibold title", () => {
+    render(
+      <Checkbox label="Usage pricing" labelClassName="font-normal text-fg-muted" name="usage" />,
+    );
+
+    const title = screen.getByText("Usage pricing");
+    expect(title).toHaveClass("font-normal", "text-fg-muted");
+    expect(title).not.toHaveClass("font-semibold");
+  });
+
   it("keeps disabled checkboxes unchanged", () => {
     render(<Checkbox disabled label="URL prefix only" />);
 
@@ -173,6 +183,7 @@ describe("form primitives", () => {
       "bg-nav-active",
       "border-border-strong",
       "text-fg",
+      "font-normal",
     );
     expect(daily.nextElementSibling?.className).not.toContain("shadow-");
     expect(daily.nextElementSibling?.className).not.toContain("bg-accent");
@@ -248,7 +259,7 @@ describe("form primitives", () => {
     expect(button).toBeDisabled();
     expect(button).toHaveAttribute("aria-busy", "true");
     expect(button).toHaveStyle({
-      color: "var(--fg-muted)",
+      color: "var(--fg)",
       opacity: "0.65",
     });
   });
@@ -258,7 +269,11 @@ describe("form primitives", () => {
 
     const link = screen.getByRole("link", { name: "Connect free" });
     expect(link).toHaveClass("MuiButton-sizeMedium");
-    expect(link).toHaveStyle({ color: "var(--mui-palette-primary-contrasttext)" });
+    expect(link).toHaveStyle({
+      backgroundColor: "var(--accent-solid)",
+      color: "var(--accent-on-solid)",
+      "--variant-containedBg": "var(--accent-solid)",
+    });
   });
 
   it("forwards download attributes to link buttons", () => {

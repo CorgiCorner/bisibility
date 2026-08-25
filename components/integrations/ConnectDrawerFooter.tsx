@@ -9,7 +9,6 @@ import { Button, Tooltip } from "@/components/ui";
 import {
   CheckCircleIcon as CheckCircle,
   CircleNotchIcon as CircleNotch,
-  LightningIcon as Lightning,
   PlugsIcon as Plugs,
 } from "@phosphor-icons/react";
 
@@ -28,8 +27,8 @@ type ConnectDrawerFooterProps = {
 
 function testButtonPresentation(state: ConnectDrawerFooterProps["testState"]) {
   if (state === "testing") return { Icon: CircleNotch, label: "Testing…" };
-  if (state === "ok") return { Icon: CheckCircle, label: "Connected" };
-  return { Icon: Lightning, label: "Test connection" };
+  if (state === "ok") return { Icon: CheckCircle, label: "Verified" };
+  return { Icon: null, label: "Test connection" };
 }
 
 export function ConnectDrawerFooter({
@@ -46,7 +45,6 @@ export function ConnectDrawerFooter({
 }: Readonly<ConnectDrawerFooterProps>) {
   const { readOnly } = useProjectWriteMode();
   const { Icon: TestIcon, label: testButtonLabel } = testButtonPresentation(testState);
-  const testIconWeight = testState === "idle" ? "regular" : "fill";
 
   if (oauthOnly) {
     return isManage ? (
@@ -93,12 +91,14 @@ export function ConnectDrawerFooter({
           disabled={readOnly || busy || testDisabled}
           onClick={onTest}
           startIcon={
-            <TestIcon
-              aria-hidden
-              className={testState === "testing" ? "animate-spin" : undefined}
-              size={16}
-              weight={testIconWeight}
-            />
+            TestIcon ? (
+              <TestIcon
+                aria-hidden
+                className={testState === "testing" ? "animate-spin" : undefined}
+                size={16}
+                weight="fill"
+              />
+            ) : undefined
           }
           type="button"
           variant="secondary"

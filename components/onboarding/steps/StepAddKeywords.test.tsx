@@ -48,6 +48,23 @@ describe("StepAddKeywords", () => {
     expect(screen.getByText("2 unique keywords · 1 duplicate line ignored")).toBeInTheDocument();
   });
 
+  it("blocks continue on an empty keyword list and focuses the field", async () => {
+    const addKeywordsAction = vi.fn();
+    const onComplete = vi.fn();
+    renderStep(
+      { addKeywordsAction, defaultValues: keywordDefaults(), onComplete },
+      { withContinue: true },
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+
+    expect(await screen.findByText("Add at least one keyword.")).toBeInTheDocument();
+    expect(keywordBox()).toHaveFocus();
+    expect(keywordBox()).toHaveAttribute("required");
+    expect(addKeywordsAction).not.toHaveBeenCalled();
+    expect(onComplete).not.toHaveBeenCalled();
+  });
+
   it("shows the long-line limit warning exactly once, before and after submit", () => {
     const message = "1 line exceeds the 180-character keyword limit.";
     renderStep({ defaultValues: keywordDefaults("a".repeat(181)) }, { withContinue: true });

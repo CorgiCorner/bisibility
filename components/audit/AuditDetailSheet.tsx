@@ -111,7 +111,7 @@ export function AuditDetailSheet({ entry, onClose }: Readonly<AuditDetailSheetPr
             Close
           </button>
           <button
-            className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-[9px] bg-accent-solid px-4 text-[13px] font-semibold text-primary-contrast hover:bg-accent-solid-hover"
+            className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-[9px] bg-accent-solid px-4 text-[13px] font-semibold text-accent-on-solid hover:bg-accent-solid-hover"
             onClick={() => downloadAuditEntries([entry], "json", entry.metadata.event_id)}
             type="button"
           >

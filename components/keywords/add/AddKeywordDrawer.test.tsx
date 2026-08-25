@@ -64,13 +64,55 @@ function addKeywordForm() {
 }
 
 describe("AddKeywordDrawer", () => {
+  it("uses the toolbar SegmentedControl for Manual and API", () => {
+    renderDrawer();
+    const selected = screen.getByRole("radio", { name: "Manual" });
+    expect(selected).toBeChecked();
+    expect(selected.parentElement?.parentElement).toHaveClass(
+      "inline-flex",
+      "min-h-[34px]",
+      "bg-transparent",
+      "text-[12.5px]",
+    );
+    expect(selected.nextElementSibling).toHaveClass("bg-nav-active", "border-border-strong");
+    expect(screen.queryByRole("radio", { name: "CSV" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("radio", { name: "API" }));
+    expect(screen.getByRole("radio", { name: "API" })).toBeChecked();
+  });
+
+  it("keeps add disabled until at least one keyword is entered", () => {
+    renderDrawer();
+    const submit = screen.getByRole("button", { name: "Add keywords" });
+    expect(submit).toBeDisabled();
+    fireEvent.click(submit);
+    expect(addKeywordsMatrix).not.toHaveBeenCalled();
+
+    fireEvent.change(screen.getByLabelText("Keywords"), { target: { value: "   \n  " } });
+    expect(submit).toBeDisabled();
+
+    fireEvent.change(screen.getByLabelText("Keywords"), { target: { value: "rank tracker" } });
+    expect(submit).toBeEnabled();
+  });
+
+  it("marks required fields instead of optional ones", () => {
+    renderDrawer();
+
+    expect(screen.getAllByText("Required")).toHaveLength(3);
+    expect(screen.getByText("Keywords").nextElementSibling).toHaveTextContent("Required");
+    expect(screen.getByText("Markets").nextElementSibling).toHaveTextContent("Required");
+    expect(screen.getByText("Devices").nextElementSibling).toHaveTextContent("Required");
+    expect(screen.queryByText("Optional")).not.toBeInTheDocument();
+  });
+
   it("shows target-matrix math and a paused switch without a cost estimate", () => {
     renderDrawer();
     expect(
       screen.getByText("0 keywords x 1 market x 1 device = 0 checks per run for this keyword."),
     ).toBeInTheDocument();
     expect(screen.queryByText(/\$/)).not.toBeInTheDocument();
-    expect(screen.getByRole("switch", { name: /pause new targets/i })).toBeInTheDocument();
+    expect(screen.getByRole("switch", { name: "Pause schedule" })).toHaveAccessibleDescription(
+      "Create these targets paused. You can resume them later.",
+    );
   });
 
   it("blocks manual submission until at least one active market is selected", () => {
@@ -78,7 +120,7 @@ describe("AddKeywordDrawer", () => {
     fireEvent.change(screen.getByLabelText("Keywords"), {
       target: { value: "rank tracker" },
     });
-    const submit = screen.getByRole("button", { name: "Add & track" });
+    const submit = screen.getByRole("button", { name: "Add keywords" });
     expect(submit).toBeEnabled();
 
     fireEvent.click(screen.getByRole("button", { name: "United States / English" }));
@@ -88,28 +130,29 @@ describe("AddKeywordDrawer", () => {
     expect(addKeywordsMatrix).not.toHaveBeenCalled();
   });
 
-  it("appends suggested project tags", () => {
+  it("appends existing project tags", () => {
     renderDrawer({ tagSuggestions: ["Product", "Docs"] });
 
+    expect(screen.getByText("In project")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Product" }));
 
     expect(screen.getByLabelText("Tags")).toHaveValue("Product");
   });
 
-  it("hides tag suggestions when the project has no tags", () => {
+  it("hides project tags when the project has none", () => {
     renderDrawer();
 
-    expect(screen.queryByText("Suggested")).not.toBeInTheDocument();
+    expect(screen.queryByText("In project")).not.toBeInTheDocument();
   });
 
-  it("updates plural tracking and paused CTA labels", () => {
+  it("keeps a stable CTA and switches to paused copy", () => {
     renderDrawer();
     fireEvent.change(screen.getByLabelText("Keywords"), {
       target: { value: "first keyword\nsecond keyword" },
     });
-    expect(screen.getByRole("button", { name: "Add & track 2 keywords" })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("switch", { name: /pause new targets/i }));
-    expect(screen.getByRole("button", { name: "Add 2 paused" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Add keywords" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("switch", { name: /pause schedule/i }));
+    expect(screen.getByRole("button", { name: "Add paused keywords" })).toBeInTheDocument();
   });
 
   it("opens duplicate-aware CSV review from the CTA before submitting", async () => {
@@ -229,9 +272,6 @@ describe("AddKeywordDrawer", () => {
     expect(screen.getByText("0 keywords parsed")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /review keywords/i })).toBeDisabled();
 
-    fireEvent.click(screen.getByRole("button", { name: "Manual" }));
-    fireEvent.change(screen.getByLabelText("Keywords"), { target: { value: "rank tracker" } });
-    fireEvent.click(screen.getByRole("button", { name: "CSV" }));
     fireEvent.submit(addKeywordForm());
 
     await act(async () => {
@@ -248,45 +288,28 @@ describe("AddKeywordDrawer", () => {
     });
     expect(screen.getByRole("button", { name: /review keywords/i })).toBeDisabled();
 
-    fireEvent.click(screen.getByRole("button", { name: "Manual" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Manual" }));
     fireEvent.change(screen.getByLabelText("Keywords"), { target: { value: "rank tracker" } });
-    const submit = screen.getByRole("button", { name: "Add & track" });
+    const submit = screen.getByRole("button", { name: "Add keywords" });
     expect(submit).toBeEnabled();
     fireEvent.click(submit);
 
     await waitFor(() => expect(addKeywordsMatrix).toHaveBeenCalledOnce());
   });
 
-  it("offers city results in the CSV drawer tracking section", async () => {
-    fetchMock.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
-        data: [
-          {
-            canonical_key: "US/Texas/Austin",
-            city_name: "Austin",
-            country_code: "US",
-            display_name: "Austin, Texas, United States",
-            id: "location:US/Texas/Austin",
-            kind: "city",
-            region_name: "Texas",
-          },
-        ],
-      }),
-    } as Response);
-
+  it("keeps CSV self-contained without extra market or device controls", () => {
     renderDrawer({ initialTab: "csv" });
-    fireEvent.change(screen.getByRole("combobox", { name: /location/i }), {
-      target: { value: "aus" },
-    });
 
-    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
-    expect(await screen.findByText("Cities")).toBeInTheDocument();
-
-    fireEvent.click(screen.getByText("Austin"));
-    expect(screen.getByRole("combobox", { name: /location/i })).toHaveDisplayValue(
-      "Austin, Texas, United States",
-    );
+    expect(
+      screen.getByText("keyword, target_url, tags, country, language, device"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Markets")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Desktop" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Mobile" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("combobox", { name: /location/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("0 keywords x 1 market x 1 device = 0 checks per run for this keyword."),
+    ).not.toBeInTheDocument();
   });
 
   it("reports created keywords when the action also returns a warning", async () => {
@@ -301,7 +324,7 @@ describe("AddKeywordDrawer", () => {
       warning: "Austin was not found; tracking United States instead.",
     } as never);
 
-    fireEvent.click(screen.getByRole("button", { name: "Add & track" }));
+    fireEvent.click(screen.getByRole("button", { name: "Add keywords" }));
 
     await waitFor(() => expect(addKeywordsMatrix).toHaveBeenCalledOnce());
     expect(onAdded).toHaveBeenCalledWith([{ publicId: "kw_1", text: "rank tracker" }], {

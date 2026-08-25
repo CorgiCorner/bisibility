@@ -32,6 +32,12 @@ vi.mock("@/components/keywords/PositionHistoryCard", () => ({
     return <div data-testid="position-history" />;
   },
 }));
+vi.mock("@/components/keywords/RetrievedResultsCard", () => ({
+  RetrievedResultsCard: () => <div data-testid="retrieved-results" />,
+}));
+vi.mock("@/lib/actions/retrieved-results", () => ({ loadRetrievedResults: vi.fn() }));
+vi.mock("@/lib/queries/retrieved-results", () => ({ storedResultsIndex: vi.fn(async () => []) }));
+vi.mock("@/lib/rank-check/raw-retention", () => ({ getRankCheckRawRetentionDays: () => 90 }));
 vi.mock("@/components/keywords/RankingUrlHistory", () => ({
   RankingUrlHistory: () => <div data-testid="ranking-history" />,
 }));
@@ -142,10 +148,14 @@ describe("KeywordDetailPage", () => {
     const chart = screen.getByTestId("position-history");
     const traffic = screen.getByTestId("traffic-card");
     const history = screen.getByTestId("ranking-history");
+    // Retrieved results sits directly above the ranking URL history: both are per-check
+    // records of what Google did, and "who was around me" reads before "which of my pages".
+    const retrieved = screen.getByTestId("retrieved-results");
     expect(header.nextElementSibling).toBe(summary);
     expect(summary.nextElementSibling).toBe(chart);
     expect(chart.nextElementSibling).toBe(traffic);
-    expect(traffic.nextElementSibling).toBe(history);
+    expect(traffic.nextElementSibling).toBe(retrieved);
+    expect(retrieved.nextElementSibling).toBe(history);
   });
 
   it("passes costContext.timezone to PositionHistoryCard", async () => {

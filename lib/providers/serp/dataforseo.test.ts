@@ -1,5 +1,6 @@
 import type { SerpRankLocation } from "@/lib/serp/location";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { ProviderCallError } from "../call-error";
 import { dataForSeoProvider } from "./dataforseo";
 
 function jsonResponse(body: unknown, status = 200) {
@@ -38,6 +39,7 @@ function rankInput(
     location?: SerpRankLocation;
     password?: string;
     stopOnMatch?: boolean;
+    tag?: string;
   } = {},
 ) {
   return {
@@ -48,6 +50,7 @@ function rankInput(
     keyword: "rank tracker",
     location: input.location ?? location(),
     stopOnMatch: input.stopOnMatch,
+    tag: input.tag,
   };
 }
 
@@ -86,6 +89,17 @@ describe("dataForSeoProvider", () => {
     expect(fetchMock.mock.calls[0]?.[0]).toBe(
       "https://api.dataforseo.com/v3/serp/google/organic/live/advanced",
     );
+  });
+
+  it("forwards the provider usage tag on Live requests", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(serpEnvelope([])));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await dataForSeoProvider.fetchRank(rankInput({ tag: "app=white-label;c=check_123" }));
+
+    expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body))).toEqual([
+      expect.objectContaining({ tag: "app=white-label;c=check_123" }),
+    ]);
   });
 
   it("parses the matching organic result position and ranking URL", async () => {
@@ -1045,5 +1059,112 @@ describe("dataForSeoProvider", () => {
         { includeClickstream: false, keywords: ["rank tracker"], location: location() },
       ),
     ).rejects.toMatchObject({ name: "ProviderAuthError", providerId: "dataforseo" });
+  });
+});
+
+describe("dataForSeoProvider error classification", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("maps HTTP 402 to provider_billing with a single non-retryable fetch", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(new Response('{"status_message":"Payment Required"}', { status: 402 }));
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(dataForSeoProvider.fetchRank(rankInput())).rejects.toMatchObject({
+      code: "provider_billing",
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("maps HTTP 401 to provider_auth", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(new Response('{"status_message":"Unauthorized"}', { status: 401 })),
+    );
+    await expect(dataForSeoProvider.fetchRank(rankInput())).rejects.toMatchObject({
+      code: "provider_auth",
+    });
+  });
+
+  it("maps HTTP 403 to provider_auth", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(new Response('{"status_message":"Forbidden"}', { status: 403 })),
+    );
+    await expect(dataForSeoProvider.fetchRank(rankInput())).rejects.toMatchObject({
+      code: "provider_auth",
+    });
+  });
+
+  it("maps HTTP 429 to provider_rate_limited", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(new Response('{"status_message":"Too Many Requests"}', { status: 429 })),
+    );
+    await expect(dataForSeoProvider.fetchRank(rankInput())).rejects.toMatchObject({
+      code: "provider_rate_limited",
+    });
+  });
+
+  it("maps HTTP 500 to provider_transient", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(
+          new Response('{"status_message":"Internal Server Error"}', { status: 500 }),
+        ),
+    );
+    await expect(dataForSeoProvider.fetchRank(rankInput())).rejects.toMatchObject({
+      code: "provider_transient",
+    });
+  });
+
+  it("maps a status message containing 'Payment Required' to provider_billing", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(
+          jsonResponse({ status_code: 40000, status_message: "Payment Required for this request" }),
+        ),
+    );
+    await expect(dataForSeoProvider.fetchRank(rankInput())).rejects.toMatchObject({
+      code: "provider_billing",
+    });
+  });
+
+  it("maps a negative-balance task error to provider_billing", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse({
+          status_code: 40000,
+          status_message: "Insufficient funds",
+          tasks: [{ status_code: 40102, status_message: "Your account has a negative balance" }],
+        }),
+      ),
+    );
+    const error = await dataForSeoProvider.fetchRank(rankInput()).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(ProviderCallError);
+    expect((error as ProviderCallError).code).toBe("provider_billing");
+  });
+
+  it("maps a generic envelope failure to provider_transient", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse({
+          status_code: 40000,
+          status_message: "Unknown error",
+          tasks: [{ status_code: 40102, status_message: "Task failed" }],
+        }),
+      ),
+    );
+    await expect(dataForSeoProvider.fetchRank(rankInput())).rejects.toMatchObject({
+      code: "provider_transient",
+    });
   });
 });

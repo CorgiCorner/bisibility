@@ -156,6 +156,7 @@ describe("ConnectDrawer", () => {
 
     const testButton = screen.getByRole("button", { name: "Test connection" });
     expect(testButton).toBeDisabled();
+    expect(testButton.querySelector('[data-icon="lightning"]')).toBeNull();
 
     fireEvent.click(testButton);
     expect(actions.testProviderConnection).not.toHaveBeenCalled();
@@ -198,7 +199,8 @@ describe("ConnectDrawer", () => {
 
     await waitFor(() => expect(actions.testProviderConnection).toHaveBeenCalledTimes(1));
     expect(saveButton).toBeEnabled();
-    expect(screen.getByRole("button", { name: "Connected" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Verified" })).toBeInTheDocument();
+    expect(screen.getByText("Connection verified.")).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText("API password"), { target: { value: "changed" } });
 

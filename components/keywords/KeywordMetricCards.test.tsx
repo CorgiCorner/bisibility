@@ -64,6 +64,7 @@ describe("KeywordMetricCards", () => {
         whatChanged="first_check"
       />,
     );
+    expect(screen.getByText("No data")).toBeInTheDocument();
     expect(screen.queryByText("First check collected.")).not.toBeInTheDocument();
     expect(screen.queryByText(/Compared with the check/)).not.toBeInTheDocument();
   });

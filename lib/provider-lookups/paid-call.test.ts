@@ -119,14 +119,17 @@ describe("paid provider lookup", () => {
     expect((validationError as Error).message).toContain('"keyword":"rank tracker"');
     expect((validationError as Error).message).toContain('"limit":100');
     expect(mocks.prisma.providerCostEntry.create).toHaveBeenCalledWith({
-      data: {
+      data: expect.objectContaining({
         cached: false,
         connectionId: "connection_1",
         costCents: 1,
         failed: true,
         feature: "keyword_research",
         projectId: "project_1",
-      },
+        provider: "dataforseo",
+        source: "app",
+        trigger: "manual",
+      }),
     });
     await expect(monthlySpendCents("project_1")).resolves.toBe(1);
   });

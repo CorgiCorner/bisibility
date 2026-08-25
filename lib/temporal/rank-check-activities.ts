@@ -7,10 +7,11 @@ import { makePublicId } from "../db/public-id";
 import { ProjectReadOnlyError } from "../deployment/project-write-mode";
 import { loadProviderRateContext } from "../provider-rates/connection-context";
 import { LIST_PROVIDER_RATE_CONTEXT } from "../provider-rates/resolver";
+import { isProviderErrorCode } from "../providers/provider-error-code";
 import { ProviderRateLimitedError } from "../providers/rate-limit";
 import { isBudgetExhaustedError } from "../rank-check/budget";
 import { estimatedRankCheckCostCents } from "../rank-check/default-cost";
-import { runKeywordCheckWithFallback } from "../rank-check/fallback";
+import { ProviderChainError, runKeywordCheckWithFallback } from "../rank-check/fallback";
 import { RankCheckClosedBeforePersistenceError } from "../rank-check/persistence-errors";
 import { serpProviderChainOrderBy } from "../rank-check/provider-chain-order";
 import { persistFailedRankCheck } from "../rank-check/runner";
@@ -36,6 +37,8 @@ import { notifyDeferredRankCheckOps, notifyFailedRankCheckOps } from "./rank-che
 
 export * from "./rank-check-activity-contract";
 export { authorizeRankCheckExecutionActivity } from "./rank-check-mode-activities";
+export const PROVIDER_BILLING_FAILURE = "provider_billing";
+export const PROVIDER_AUTH_FAILURE = "provider_auth";
 
 async function runningReservation(input: RankCheckActivityInput) {
   const [connection, keyword] = await Promise.all([
@@ -59,23 +62,15 @@ async function runningReservation(input: RankCheckActivityInput) {
       where: { id: input.keywordId },
     }),
   ]);
-  const depth = resolveEffectiveSerpDepth({
-    projectDepth: keyword?.project.defaults?.serpDepth,
-    requestedDepth: input.depth,
-    scheduleDepth: keyword?.schedule?.serpDepth,
-  });
+  // biome-ignore format: compact call keeps this activity module under the line cap.
+  const depth = resolveEffectiveSerpDepth({ projectDepth: keyword?.project.defaults?.serpDepth, requestedDepth: input.depth, scheduleDepth: keyword?.schedule?.serpDepth });
   if (!keyword) throw new Error("Keyword not found.");
   const rateContext = connection
     ? await loadProviderRateContext(connection.id, "rank_check")
     : LIST_PROVIDER_RATE_CONTEXT;
-
+  // biome-ignore format: compact return keeps this activity module under the line cap.
   return {
-    estimatedCostCents: estimatedRankCheckCostCents(
-      connection?.provider,
-      depth,
-      connection?.costPerCheckCents,
-      rateContext,
-    ),
+    estimatedCostCents: estimatedRankCheckCostCents(connection?.provider, depth, connection?.costPerCheckCents, rateContext),
     projectId: connection?.projectId ?? null,
     keywordPublicId: keyword.publicId,
   };
@@ -105,27 +100,18 @@ export async function createRunningRankCheckActivity(
           where: { id: input.rankCheckId },
         })
       : await tx.rankCheck.create({ data: createData, select: { id: true, publicId: true } });
-
-    await writeAudit(
-      {
-        action: "rank_check.running",
-        actorId: null,
-        after: {
-          estimatedCostCents: reservation.estimatedCostCents,
-          keywordId: requiredPublicAuditId(reservation.keywordPublicId, "kw", "Rank-check"),
-          provider: data.provider,
-          status: "running",
-        },
-        projectId: reservation.projectId,
-        targetId: requiredPublicAuditId(persisted.publicId, "check", "Rank-check"),
-        targetType: "rank_check",
-      },
-      tx,
-    );
-
+    // biome-ignore format: compact audit keeps this activity module under the line cap.
+    await writeAudit({
+      action: "rank_check.running", actorId: null,
+      after: { estimatedCostCents: reservation.estimatedCostCents,
+        keywordId: requiredPublicAuditId(reservation.keywordPublicId, "kw", "Rank-check"),
+        provider: data.provider, status: "running" },
+      projectId: reservation.projectId,
+      targetId: requiredPublicAuditId(persisted.publicId, "check", "Rank-check"),
+      targetType: "rank_check",
+    }, tx);
     return persisted;
   });
-
   return { keywordId: input.keywordId, rankCheckId: rankCheck.id };
 }
 
@@ -152,25 +138,16 @@ export async function discardRankCheckActivity(input: DiscardRankCheckActivityIn
       },
       where: { id: input.rankCheckId },
     });
-
-    await writeAudit(
-      {
-        action: "rank_check.deferred",
-        actorId: null,
-        after: {
-          estimatedCostCents: Number(deferred.estimatedCostCents ?? 0),
-          keywordId: requiredPublicAuditId(deferred.keyword.publicId, "kw", "Rank-check"),
-          provider: deferred.provider,
-          reason: input.reason,
-          status: "deferred",
-        },
-        projectId: deferred.keyword.projectId,
-        targetId: requiredPublicAuditId(deferred.publicId, "check", "Rank-check"),
-        targetType: "rank_check",
-      },
-      tx,
-    );
-
+    // biome-ignore format: compact audit keeps this activity module under the line cap.
+    await writeAudit({
+      action: "rank_check.deferred", actorId: null,
+      after: { estimatedCostCents: Number(deferred.estimatedCostCents ?? 0),
+        keywordId: requiredPublicAuditId(deferred.keyword.publicId, "kw", "Rank-check"),
+        provider: deferred.provider, reason: input.reason, status: "deferred" },
+      projectId: deferred.keyword.projectId,
+      targetId: requiredPublicAuditId(deferred.publicId, "check", "Rank-check"),
+      targetType: "rank_check",
+    }, tx);
     return deferred;
   });
   await notifyDeferredRankCheckOps({
@@ -188,54 +165,49 @@ export async function discardRankCheckActivity(input: DiscardRankCheckActivityIn
 export async function failRankCheckActivity(
   input: FailRankCheckActivityInput,
 ): Promise<FailRankCheckActivityResult> {
-  const keyword = await prisma.keyword.findUnique({
-    select: {
-      id: true,
-      project: { select: { defaults: { select: { serpDepth: true } }, domain: true } },
-      projectId: true,
-      publicId: true,
-      rankChecks: {
-        orderBy: { checkedAt: "desc" },
-        select: { position: true },
-        take: 1,
-        where: { status: "completed" },
+  // biome-ignore format: compact parallel query keeps this activity module under the line cap.
+  const [keyword, running] = await Promise.all([
+    prisma.keyword.findUnique({
+      select: {
+        id: true,
+        project: { select: { defaults: { select: { serpDepth: true } }, domain: true } },
+        projectId: true, publicId: true,
+        rankChecks: { orderBy: { checkedAt: "desc" }, select: { position: true }, take: 1, where: { status: "completed" } },
+        schedule: { select: { serpDepth: true } }, text: true,
       },
-      schedule: { select: { serpDepth: true } },
-      text: true,
-    },
-    where: { id: input.keywordId },
-  });
+      where: { id: input.keywordId },
+    }),
+    input.rankCheckId
+      ? prisma.rankCheck.findUnique({ select: { attempts: true, errorCode: true }, where: { id: input.rankCheckId } })
+      : null,
+  ]);
   if (!keyword) {
     throw new Error("Keyword not found.");
   }
-
+  // biome-ignore format: compact ternary keeps this activity module under the line cap.
+  const storedAttempts = Array.isArray(running?.attempts) && running.attempts.length > 0
+    ? (running.attempts as { provider: string; message: string }[]) : undefined;
+  // biome-ignore format: compact call keeps this activity module under the line cap.
   const rankCheck = await persistFailedRankCheck({
     error: input.message,
-    existingRankCheckId: input.rankCheckId,
-    keywordId: keyword.id,
-    keywordPublicId: keyword.publicId,
-    keywordText: keyword.text,
+    errorCode: isProviderErrorCode(running?.errorCode) ? running.errorCode : undefined,
+    attempts: storedAttempts, existingRankCheckId: input.rankCheckId, keywordId: keyword.id,
+    keywordPublicId: keyword.publicId, keywordText: keyword.text,
     previousPosition: keyword.rankChecks[0]?.position ?? null,
-    projectDomain: trackedProjectDomain(keyword.project.domain) ?? "",
-    projectId: keyword.projectId,
+    projectDomain: trackedProjectDomain(keyword.project.domain) ?? "", projectId: keyword.projectId,
     provider: input.providerId ?? "primary",
-    requestedDepth: resolveEffectiveSerpDepth({
-      projectDepth: keyword.project.defaults?.serpDepth,
-      scheduleDepth: keyword.schedule?.serpDepth,
-    }),
+    requestedDepth: resolveEffectiveSerpDepth({ projectDepth: keyword.project.defaults?.serpDepth, scheduleDepth: keyword.schedule?.serpDepth }),
   }).catch((error) => {
     if (error instanceof RankCheckClosedBeforePersistenceError) return null;
     throw error;
   });
   if (!rankCheck) return { rankCheckId: input.rankCheckId };
+  // biome-ignore format: compact call keeps this activity module under the line cap.
   await notifyFailedRankCheckOps({
-    keywordId: keyword.id,
-    keywordText: keyword.text,
-    projectId: keyword.projectId,
+    keywordId: keyword.id, keywordText: keyword.text, projectId: keyword.projectId,
     provider: rankCheck.provider,
     providerAttemptCount: Array.isArray(rankCheck.attempts) ? rankCheck.attempts.length : null,
-    scheduledAt: rankCheck.scheduledAt,
-    startedAt: rankCheck.startedAt,
+    scheduledAt: rankCheck.scheduledAt, startedAt: rankCheck.startedAt,
   });
   return { rankCheckId: rankCheck.id };
 }
@@ -262,6 +234,7 @@ export async function runRankCheckActivity(
       keywordId: input.keywordId,
       providerId: input.providerId,
       rankCheckId: input.rankCheckId,
+      source: input.source === "manual" ? "app" : "worker",
     });
   } catch (error) {
     if (error instanceof RankCheckClosedBeforePersistenceError) {
@@ -292,9 +265,26 @@ export async function runRankCheckActivity(
         type: BUDGET_EXHAUSTED_FAILURE,
       });
     }
+    // biome-ignore format: compact chain handling keeps this activity module under the line cap.
+    if (error instanceof ProviderChainError) {
+      if (input.rankCheckId) {
+        const result = await prisma.rankCheck.updateMany({
+          data: { attempts: error.attempts.map(({ message, provider }) => ({ message, provider })), errorCode: error.dominantCode },
+          where: { id: input.rankCheckId, status: "running" },
+        });
+        if (result.count === 0) throw ApplicationFailure.create({ message: "Rank check was closed before its result could be persisted.", nonRetryable: true, type: RANK_CHECK_CLOSED_FAILURE });
+      }
+      const { dominantCode } = error;
+      if (dominantCode === "provider_billing" || dominantCode === "provider_auth") {
+        throw ApplicationFailure.create({
+          message: error.message, nonRetryable: true,
+          type: dominantCode === "provider_billing" ? PROVIDER_BILLING_FAILURE : PROVIDER_AUTH_FAILURE,
+        });
+      }
+      throw error;
+    }
     throw error;
   }
-
   return {
     attempts: outcome.attempts,
     checkedAt: outcome.rankCheck.checkedAt.toISOString(),

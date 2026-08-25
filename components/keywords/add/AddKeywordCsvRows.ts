@@ -2,7 +2,7 @@ import type { LocationFieldValue } from "@/components/keywords/LocationField";
 import type { AddKeywordDrawerForm } from "@/lib/keywords/add-keyword-drawer-shared";
 import { CsvParseError, parseKeywordImportCsvRows } from "@/lib/keywords/import-csv-parser";
 import { type AddKeywordsRowInput, addKeywordsRowSchema } from "@/lib/schemas/keyword";
-import { countryCodeForMarketName } from "@/lib/serp/location";
+import { canonicalKey, countryCodeForMarketName } from "@/lib/serp/location";
 import type { SerpDevice } from "@/lib/serp/markets";
 import { countryForSelection } from "./AddKeywordDrawerLocation";
 
@@ -58,6 +58,23 @@ function countryTrackingKey(location: string, fallback: string) {
   return countryCodeForMarketName(location) ?? fallback;
 }
 
+function csvMarketKey(
+  raw: { language?: string; location?: string; locationKey?: string },
+  fallbackLocation: string,
+): { error?: string; locationKey?: string } {
+  if (raw.locationKey) return { locationKey: raw.locationKey };
+  if (!raw.location && !raw.language) return {};
+  const countryCode = countryCodeForMarketName(raw.location ?? fallbackLocation);
+  if (!countryCode) return {};
+  try {
+    return { locationKey: canonicalKey({ countryCode, languageCode: raw.language }) };
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "Use a supported language code.",
+    };
+  }
+}
+
 function fallbackRow(
   input: AddKeywordsRowInput,
   defaults: CsvKeywordDefaults,
@@ -92,63 +109,68 @@ function malformedCsvRow(error: CsvParseError, defaults: CsvKeywordDefaults): Dr
   };
 }
 
+function csvKeywordRowFromRaw(
+  raw: ReturnType<typeof parseKeywordImportCsvRows>[number],
+  defaults: CsvKeywordDefaults,
+): DrawerCsvKeywordRow {
+  const hasOwnLocation = Boolean(raw.city || raw.location);
+  const hasRowLocation = Boolean(hasOwnLocation || raw.locationKey);
+  const market = raw.city ? {} : csvMarketKey(raw, defaults.location);
+  const input = {
+    city: raw.city ?? (hasRowLocation ? null : (defaults.city ?? null)),
+    device: raw.device ?? defaults.device,
+    intent: raw.intent,
+    keyword: raw.keyword,
+    location: raw.location ?? defaults.location,
+    locationKey: market.locationKey ?? (hasOwnLocation ? undefined : defaults.locationKey),
+    tags: raw.tags ?? defaults.tags,
+    targetUrl: targetUrl(raw.targetUrl, defaults.targetUrl),
+    topic: raw.topic,
+  };
+  const extraIssues = market.error ? [{ message: market.error, row: raw.row }] : [];
+  const result = addKeywordsRowSchema.safeParse(input);
+  if (result.success) {
+    return {
+      ...result.data,
+      issues: extraIssues,
+      locationLabel:
+        raw.locationKey ?? (hasOwnLocation ? result.data.location : defaults.locationLabel),
+      row: raw.row,
+      trackingLocationKey:
+        result.data.locationKey ??
+        (hasOwnLocation
+          ? [countryTrackingKey(result.data.location, raw.location ?? ""), result.data.city?.trim()]
+              .filter(Boolean)
+              .join("\u0000")
+          : defaults.trackingLocationKey),
+    };
+  }
+  return fallbackRow(
+    {
+      ...input,
+      device: normalizeDevice(raw.device, defaults.device),
+      location: defaults.location,
+    },
+    defaults,
+    raw.row,
+    raw.locationKey ?? raw.location ?? defaults.locationLabel,
+    [
+      ...extraIssues,
+      ...result.error.issues.map((issue) => ({ message: issueMessage(issue), row: raw.row })),
+    ],
+  );
+}
+
 export function buildDrawerCsvKeywordRows(
   csv: string,
   defaults: CsvKeywordDefaults,
 ): DrawerCsvKeywordRow[] {
-  let rows: ReturnType<typeof parseKeywordImportCsvRows>;
   try {
-    rows = parseKeywordImportCsvRows(csv);
+    return parseKeywordImportCsvRows(csv).map((raw) => csvKeywordRowFromRaw(raw, defaults));
   } catch (error) {
     if (error instanceof CsvParseError) return [malformedCsvRow(error, defaults)];
     throw error;
   }
-  return rows.map((raw) => {
-    const hasOwnLocation = Boolean(raw.city || raw.location);
-    const hasRowLocation = Boolean(hasOwnLocation || raw.locationKey);
-    const input = {
-      city: raw.city ?? (hasRowLocation ? null : (defaults.city ?? null)),
-      device: raw.device ?? defaults.device,
-      intent: raw.intent,
-      keyword: raw.keyword,
-      location: raw.location ?? defaults.location,
-      locationKey: raw.locationKey ?? (hasOwnLocation ? undefined : defaults.locationKey),
-      tags: raw.tags ?? defaults.tags,
-      targetUrl: targetUrl(raw.targetUrl, defaults.targetUrl),
-      topic: raw.topic,
-    };
-    const result = addKeywordsRowSchema.safeParse(input);
-    if (result.success) {
-      return {
-        ...result.data,
-        issues: [],
-        locationLabel:
-          raw.locationKey ?? (hasOwnLocation ? result.data.location : defaults.locationLabel),
-        row: raw.row,
-        trackingLocationKey:
-          result.data.locationKey ??
-          (hasOwnLocation
-            ? [
-                countryTrackingKey(result.data.location, raw.location ?? ""),
-                result.data.city?.trim(),
-              ]
-                .filter(Boolean)
-                .join("\u0000")
-            : defaults.trackingLocationKey),
-      };
-    }
-    return fallbackRow(
-      {
-        ...input,
-        device: normalizeDevice(raw.device, defaults.device),
-        location: defaults.location,
-      },
-      defaults,
-      raw.row,
-      raw.locationKey ?? raw.location ?? defaults.locationLabel,
-      result.error.issues.map((issue) => ({ message: issueMessage(issue), row: raw.row })),
-    );
-  });
 }
 
 function defaultsFromTracking({

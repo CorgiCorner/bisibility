@@ -1,6 +1,6 @@
 import { IntegrationCategory } from "@/components/integrations/IntegrationCategory";
+import { IntegrationsByoNote } from "@/components/integrations/IntegrationsByoNote";
 import { PageContent } from "@/components/shell/PageContent";
-import { Card } from "@/components/ui";
 import {
   completeGooglePropertySelection,
   connectProvider,
@@ -20,7 +20,6 @@ import type { GoogleOAuthSetup, ProviderActionHandlers } from "@/lib/integration
 import { getPendingGoogleOAuthSetup } from "@/lib/providers/analytics/google-oauth-pending";
 import { requireReadableProject, resolveProjectAccess } from "@/lib/queries/_auth";
 import { getIntegrationsView } from "@/lib/queries/integrations";
-import { KeyIcon as Key } from "@phosphor-icons/react/dist/ssr";
 
 type IntegrationsProviderActions = ProviderActionHandlers &
   Required<Pick<ProviderActionHandlers, "completeGooglePropertySelection">>;
@@ -86,16 +85,7 @@ export default async function IntegrationsPage({
 
   return (
     <PageContent className="flex flex-col gap-5">
-      <Card className="flex items-start gap-[11px] rounded-xl px-4 py-3.5" size="md">
-        <span className="flex h-5 shrink-0 items-center text-accent-text">
-          <Key aria-hidden size={17} weight="fill" />
-        </span>
-        <p className="m-0 text-[13px] leading-[1.5] text-fg-muted">
-          <strong className="font-semibold text-fg">Bring your own providers.</strong> In
-          self-hosted bisibility you connect your own accounts. Credentials stay in your instance
-          and provider usage is billed directly between you and each provider.
-        </p>
-      </Card>
+      <IntegrationsByoNote />
 
       <div className="flex flex-col gap-5 scroll-mt-6" id="all-providers">
         {categories.map((category) => (

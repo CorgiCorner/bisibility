@@ -6,7 +6,7 @@ import {
 } from "@/components/marketing/system/SystemPage";
 import { deploymentMode } from "@/lib/deployment/deployment";
 import { appRootPath } from "@/lib/routing/app-path";
-import { SquaresFourIcon as SquaresFour } from "@phosphor-icons/react/dist/ssr";
+import { ArrowLeftIcon as ArrowLeft } from "@phosphor-icons/react/dist/ssr";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -27,7 +27,7 @@ export default function NotFound() {
         <>
           <SystemPrimaryAction
             href={appRootPath()}
-            startIcon={<SquaresFour size={16} weight="bold" />}
+            startIcon={<ArrowLeft aria-hidden size={16} weight="bold" />}
           >
             Back to dashboard
           </SystemPrimaryAction>

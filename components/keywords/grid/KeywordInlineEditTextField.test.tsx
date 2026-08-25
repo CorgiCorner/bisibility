@@ -15,8 +15,6 @@ describe("KeywordInlineEditTextField", () => {
       "bg-transparent",
       "border-border-strong",
     );
-    expect(keywordGridSx["& .MuiDataGrid-row:hover"]).toEqual({
-      backgroundColor: "var(--bg-sunken)",
-    });
+    expect(keywordGridSx).not.toHaveProperty("& .MuiDataGrid-row:hover");
   });
 });

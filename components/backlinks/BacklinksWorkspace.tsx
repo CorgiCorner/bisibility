@@ -177,7 +177,14 @@ export function BacklinksWorkspace({
         }}
         onScopeChange={(nextScope) => {
           setScope(nextScope);
+          const nextIncludeSubdomains = nextScope === "page" ? false : includeSubdomains;
           if (nextScope === "page") setIncludeSubdomains(false);
+          // Exact-page scope is not billed the 12-month history, so the button
+          // price has to be refetched the way a limit change refetches it.
+          scheduleEstimate(target, {
+            includeSubdomains: nextIncludeSubdomains,
+            targetScope: nextScope,
+          });
         }}
         onSubmit={() => void analyze()}
         onTargetChange={updateTarget}

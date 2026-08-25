@@ -4,13 +4,8 @@ import { writeAudit } from "@/lib/auth/audit";
 import { authorize } from "@/lib/auth/authorize";
 import { prisma } from "@/lib/db/prisma";
 import { isPublicIdOfType, makePublicId } from "@/lib/db/public-id";
+import { deleteSavedViewSchema } from "@/lib/keywords/saved-view-model";
 import {
-  type CreateSavedViewInput,
-  deleteSavedViewSchema,
-  type KeywordSavedView,
-} from "@/lib/keywords/saved-view-model";
-import {
-  type CreateProjectSavedViewInput,
   createProjectSavedViewSchema,
   mapSavedViewRecord,
   type SavedViewResource,
@@ -22,9 +17,6 @@ import {
   revalidateKeywordViews,
 } from "./_shared";
 
-export function createSavedView(input: CreateSavedViewInput): Promise<KeywordSavedView>;
-export function createSavedView(input: CreateProjectSavedViewInput): Promise<SavedViewResource>;
-export function createSavedView(input: unknown): Promise<SavedViewResource>;
 export async function createSavedView(input: unknown): Promise<SavedViewResource> {
   const data = parseActionInput(createProjectSavedViewSchema, input);
   const actor = await getActionActor();

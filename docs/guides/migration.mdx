@@ -17,7 +17,10 @@ of the package.
    prefilled from the source instance configuration and can be changed before
    the check. The checked URL is also used for the transfer. Then push directly
    with the destination token, or export the package and upload it on the
-   destination import page.
+   destination import page. A self-hosted source shows a temporary public-URL
+   command only when that destination is a loopback host (`localhost`,
+   `127.0.0.1`, `0.0.0.0`, or `::1`). Private LAN addresses are left alone
+   unless the connection check fails.
 4. Review keyword and rank-check counts, start the transfer, and wait for the job
    to reach `done`.
 5. Compare projects, keywords, schedules, and history on the destination before

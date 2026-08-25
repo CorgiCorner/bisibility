@@ -159,7 +159,7 @@ export function CloudBackupModal({
               }`}
             >
               <input className="sr-only" type="radio" value="package" {...register("format")} />
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[9px] bg-accent-soft text-accent-text">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[9px] bg-accent-soft text-accent-solid">
                 <FileZip aria-hidden size={19} weight="fill" />
               </span>
               <span className="min-w-0 flex-1">

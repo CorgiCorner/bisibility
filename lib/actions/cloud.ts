@@ -162,13 +162,13 @@ async function createCloudImportWorkspaceDestination(timezone?: string) {
     name: "New project",
     defaults: { frequency: "daily", timezone: normalizedTimezone },
   });
-  return `/cloud/import?ctx=onboard&project=${encodeURIComponent(project.publicId)}`;
+  if (isCloud) {
+    return `/cloud/import?ctx=onboard&project=${encodeURIComponent(project.publicId)}`;
+  }
+  return appPath(project.publicId, "settings", "import");
 }
 
 export async function createCloudImportWorkspace(timezone?: string) {
-  if (!isCloud) {
-    throw new Error("Instance import projects are available only on hosted deployments.");
-  }
   return createCloudImportWorkspaceDestination(timezone);
 }
 

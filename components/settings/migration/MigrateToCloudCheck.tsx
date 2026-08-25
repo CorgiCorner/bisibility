@@ -1,20 +1,19 @@
 "use client";
 
-import { Button } from "@/components/ui";
+import { Button, InfoTooltip } from "@/components/ui";
 import { unwrapActionFailureResult } from "@/lib/actions/action-result";
 import { getCloudMigrationCompatibility, preflightMigrationTarget } from "@/lib/actions/cloud";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import {
-  ArrowsClockwiseIcon as ArrowsClockwise,
   ArrowUpRightIcon as ArrowUpRight,
   CaretDownIcon as CaretDown,
   CheckCircleIcon as CheckCircle,
-  ClockIcon as Clock,
+  CircleIcon as Circle,
   InfoIcon as Info,
   LockSimpleIcon as LockSimple,
   WarningCircleIcon as WarningCircle,
 } from "@phosphor-icons/react";
-import { type ReactNode, useState } from "react";
+import { useState } from "react";
 import {
   compatibilityBlockers,
   MIGRATION_ERROR_CODES_URL,
@@ -42,6 +41,9 @@ type CheckStepProps = {
   onCompatibilityChange: (result: MigrationCompatibilityResult | null) => void;
   projectId?: string;
 };
+
+const PREFLIGHT_AGAIN_HINT =
+  "Transfer runs the destination preflight again, so a target changed after this check is still rejected before import.";
 
 function isInvalidMigrationTarget(error: unknown) {
   return error instanceof Error && "code" in error && error.code === "invalid_migration_target";
@@ -112,9 +114,14 @@ export function CheckStep({
     <>
       <StepHeading
         body="Make sure the destination instance can accept this project before anything is paused or transferred."
+        hint={PREFLIGHT_AGAIN_HINT}
         title="Check compatibility"
       />
-      <MigrationDestinationField direction={direction} form={form} />
+      <MigrationDestinationField
+        destinationUnreachable={compatibility?.target.reachable === false}
+        direction={direction}
+        form={form}
+      />
       <div className="mt-4 flex flex-col gap-2.5">
         {message ? (
           <StatusRow
@@ -133,13 +140,7 @@ export function CheckStep({
         ))}
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-3">
-        <Button
-          disabled={busy}
-          onClick={runCheck}
-          startIcon={<ArrowsClockwise aria-hidden size={14} />}
-          type="button"
-          variant="primary"
-        >
+        <Button disabled={busy} onClick={runCheck} type="button" variant="primary">
           {checkLabel}
         </Button>
         <a
@@ -174,7 +175,7 @@ export function CheckStep({
           aria-hidden
           className={migrationHold ? "mt-1 text-green-text" : "mt-1 text-yellow-text"}
           size={16}
-          weight="fill"
+          weight="regular"
         />
         <span className="min-w-0 flex-1 text-[12.5px] leading-5 text-fg-muted">
           <span className="block font-semibold text-fg">{holdTitle}</span>
@@ -184,18 +185,21 @@ export function CheckStep({
         </span>
       </div>
       {holdMessage ? <p className="m-0 mt-2.5 text-[12px] text-red-text">{holdMessage}</p> : null}
-      <InfoBox>
-        Transfer runs the destination preflight again, so a target changed after this check is still
-        rejected before import.
-      </InfoBox>
     </>
   );
 }
 
-function StepHeading({ body, title }: Readonly<{ body: string; title: string }>) {
+function StepHeading({
+  body,
+  hint,
+  title,
+}: Readonly<{ body: string; hint?: string; title: string }>) {
   return (
     <>
-      <h3 className="m-0 text-[15px] font-semibold">{title}</h3>
+      <h3 className="m-0 flex items-center gap-1 text-[15px] font-semibold">
+        {title}
+        {hint ? <InfoTooltip text={hint} /> : null}
+      </h3>
       <p className="m-0 mt-1.5 text-[13px] leading-[1.55] text-fg-muted">{body}</p>
     </>
   );
@@ -203,15 +207,35 @@ function StepHeading({ body, title }: Readonly<{ body: string; title: string }>)
 
 function StatusRow({ data }: Readonly<{ data: StatusRowData }>) {
   const tone = {
-    fail: { icon: WarningCircle, status: "text-red-text", symbol: "text-red-text" },
-    info: { icon: Info, status: "text-blue-text", symbol: "text-blue-text" },
-    ok: { icon: CheckCircle, status: "text-green-text", symbol: "text-green-text" },
-    pending: { icon: Clock, status: "text-blue-text", symbol: "text-blue-text" },
+    fail: {
+      icon: WarningCircle,
+      status: "text-red-text",
+      symbol: "text-red-text",
+      weight: "fill" as const,
+    },
+    info: {
+      icon: Info,
+      status: "text-fg-muted",
+      symbol: "text-fg-muted",
+      weight: "regular" as const,
+    },
+    ok: {
+      icon: CheckCircle,
+      status: "text-green-text",
+      symbol: "text-green-text",
+      weight: "fill" as const,
+    },
+    pending: {
+      icon: Circle,
+      status: "text-fg-muted",
+      symbol: "text-fg-muted",
+      weight: "regular" as const,
+    },
   }[data.tone];
   const Icon = tone.icon;
   return (
-    <div className="flex items-center gap-3 rounded-[11px] border border-border bg-bg px-[15px] py-[13px]">
-      <Icon aria-hidden className={tone.symbol} size={19} weight="fill" />
+    <div className="flex min-h-11 items-center gap-3 rounded-[9px] border border-border-strong bg-transparent px-[13px] py-3">
+      <Icon aria-hidden className={tone.symbol} size={19} weight={tone.weight} />
       <span className="min-w-0 flex-1">
         <span className="block text-[13px] font-semibold">{data.title}</span>
         <span className="block wrap-break-word text-[12px] leading-5 text-fg-muted">
@@ -221,15 +245,6 @@ function StatusRow({ data }: Readonly<{ data: StatusRowData }>) {
       {data.variant === "status" ? (
         <span className={`font-mono text-[11px] font-semibold ${tone.status}`}>{data.status}</span>
       ) : null}
-    </div>
-  );
-}
-
-function InfoBox({ children }: Readonly<{ children: ReactNode }>) {
-  return (
-    <div className="mt-4 flex items-start gap-[9px] rounded-[11px] border border-dashed border-border-strong bg-transparent px-3.5 py-3 text-xs leading-5 text-fg-muted">
-      <Info aria-hidden className="mt-0.5 text-accent-text" size={15} />
-      <span>{children}</span>
     </div>
   );
 }

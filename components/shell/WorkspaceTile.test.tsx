@@ -37,8 +37,8 @@ describe("WorkspaceTile", () => {
     fireEvent.load(probe);
 
     const layer = screen.getByTestId("workspace-tile-favicon");
+    expect(layer).toHaveClass("bg-bg-sunken");
     expect(layer).toHaveStyle({
-      backgroundColor: "var(--bg-sunken)",
       backgroundImage: 'url("https://www.google.com/s2/favicons?domain=example.com&sz=32")',
       backgroundSize: "cover",
     });

@@ -121,6 +121,14 @@ describe("AlertsPageContent optimistic rollback", () => {
     mocks.muteTriggeredAlert.mockResolvedValue({ muted: true });
   });
 
+  it("does not show the live evaluation caption", () => {
+    renderAlerts();
+
+    expect(
+      screen.queryByText(/rules evaluated after each completed rank check/i),
+    ).not.toBeInTheDocument();
+  });
+
   it("rolls back mark-all-read state and surfaces the failure", async () => {
     mocks.markProjectAlertsRead.mockRejectedValueOnce(new Error("failed"));
     renderAlerts();

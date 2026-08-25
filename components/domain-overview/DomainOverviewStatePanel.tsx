@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Card, EmptyState } from "@/components/ui";
+import { AccentCtaLink, Button, Card, EmptyState } from "@/components/ui";
 import { appPath } from "@/lib/routing/app-path";
 import {
   ArrowsClockwiseIcon as ArrowsClockwise,
@@ -8,7 +8,7 @@ import {
   CheckCircleIcon as CheckCircle,
   GlobeIcon as Globe,
   MagnifyingGlassMinusIcon as MagnifyingGlassMinus,
-  PlugsConnectedIcon as PlugsConnected,
+  PuzzlePieceIcon as PuzzlePiece,
 } from "@phosphor-icons/react";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -56,13 +56,7 @@ export function DomainOverviewNoDataCard({
 
 function ProviderAction({ projectRef }: Readonly<{ projectRef: string }>) {
   return (
-    <Button
-      component={Link}
-      href={appPath(projectRef, "integrations")}
-      startIcon={<PlugsConnected size={15} />}
-    >
-      Connect DataForSEO
-    </Button>
+    <AccentCtaLink href={appPath(projectRef, "integrations")}>Connect DataForSEO</AccentCtaLink>
   );
 }
 
@@ -96,7 +90,7 @@ export function DomainOverviewStatePanel({
       <EmptyState
         action={<ProviderAction projectRef={projectRef} />}
         description="Domain Overview requires a provider with domain intelligence support. Lookups run on your own key."
-        icon={<PlugsConnected size={28} />}
+        icon={<PuzzlePiece aria-hidden data-icon="puzzle-piece" size={28} />}
         title="Connect DataForSEO to analyze domains"
       />
     );
@@ -105,12 +99,12 @@ export function DomainOverviewStatePanel({
     return (
       <EmptyState
         action={
-          <Button component={Link} href={appPath(projectRef, "integrations")}>
+          <AccentCtaLink href={appPath(projectRef, "integrations")}>
             Reconnect DataForSEO
-          </Button>
+          </AccentCtaLink>
         }
         description="Reconnect this project's DataForSEO credentials to resume domain analysis."
-        icon={<PlugsConnected size={28} />}
+        icon={<PuzzlePiece aria-hidden data-icon="puzzle-piece" size={28} />}
         title="DataForSEO needs to be reconnected"
       />
     );

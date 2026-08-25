@@ -1,5 +1,5 @@
 import { cn } from "@/lib/ui/cn";
-import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/ssr";
+import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/ssr";
 import type { ReactNode } from "react";
 
 export type DisclosureHeadingLevel = "h2" | "h3" | "h4" | "h5" | "h6";
@@ -48,9 +48,9 @@ export function Disclosure({
         <Heading className="m-0 min-w-0 flex-1 wrap-break-word text-[17px] font-semibold leading-[1.3]">
           {title}
         </Heading>
-        <CaretRight
+        <CaretDown
           aria-hidden="true"
-          className="mt-[3px] shrink-0 text-fg-muted transition-transform duration-[var(--motion-tooltip)] ease-[var(--ease-in-out)] group-open:rotate-90 motion-reduce:transition-none"
+          className="mt-[3px] shrink-0 text-fg-muted transition-transform duration-[var(--motion-tooltip)] ease-[var(--ease-in-out)] group-open:rotate-180 motion-reduce:transition-none"
           size={16}
           weight="bold"
         />

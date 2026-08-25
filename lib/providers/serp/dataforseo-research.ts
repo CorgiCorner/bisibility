@@ -39,6 +39,7 @@ export function createDataForSeoResearchMethods(deps: Dependencies): ResearchMet
       ...deps.locationParams(input.location),
       include_clickstream_data: input.includeClickstream,
       limit: input.limit,
+      ...(input.tag ? { tag: input.tag } : {}),
       ...payload,
     });
 
@@ -70,6 +71,7 @@ export function createDataForSeoResearchMethods(deps: Dependencies): ResearchMet
         ...deps.locationParams(input.location),
         include_clickstream_data: input.includeClickstream,
         keywords: input.keywords,
+        ...(input.tag ? { tag: input.tag } : {}),
       });
       return dataForSeoKeywordMetricsPage(data);
     },

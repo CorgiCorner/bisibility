@@ -237,7 +237,6 @@ export function StepConnectProvider({
         <StepConnectProviderSkip flowState={flowState} getValues={getValues} onSkip={onSkip} />
       </div>
       <StepConnectProviderCards
-        analyticsNotice={analyticsNotice}
         connections={connections}
         dirtyProviders={dirtyProviders}
         onSelect={selectProvider}
@@ -273,6 +272,7 @@ export function StepConnectProvider({
             Your site&apos;s data / optional, free
             <InfoTooltip text="Search Console shows the queries your site already ranks for. Free import for keyword suggestions; it cannot check rankings." />
           </div>
+          {analyticsNotice}
           <div className="mt-2 grid items-stretch gap-3 sm:grid-cols-2">{analyticsOption}</div>
         </div>
       ) : null}

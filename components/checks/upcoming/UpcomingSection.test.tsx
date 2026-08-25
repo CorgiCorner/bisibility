@@ -41,6 +41,9 @@ describe("UpcomingSection", () => {
 
     expect(screen.getByText("Upcoming")).toBeInTheDocument();
     expect(screen.getByText("Forecast")).toBeInTheDocument();
+    const iconWell = screen.getByText("Upcoming").closest("div")?.previousElementSibling;
+    expect(iconWell).toHaveClass("bg-accent-soft", "text-accent-solid");
+    expect(iconWell).not.toHaveClass("bg-bg-sunken", "text-accent-text");
     expect(screen.getByText("214 checks")).toBeInTheDocument();
     expect(screen.getByText("~$0.45 est.")).toBeInTheDocument();
     expect(screen.getByText("flow dictation app")).toBeInTheDocument();

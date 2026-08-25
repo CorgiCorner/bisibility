@@ -66,9 +66,9 @@ export function OnboardingNav({
   }
 
   return (
-    <footer className="mt-7 flex items-center justify-between gap-3 border-border border-t pt-5">
+    <footer className="mt-7 flex items-end justify-between gap-3 border-border border-t pt-5">
       {backAction}
-      <div className="flex items-center gap-3">
+      <div className="flex items-end gap-3">
         {secondaryAction}
         <Button
           disabled={continueDisabled}
@@ -76,7 +76,6 @@ export function OnboardingNav({
           form={onContinue ? undefined : onboardingFormId}
           onClick={onContinue}
           size="lg"
-          sx={{ fontWeight: 500 }}
           type={onContinue ? "button" : "submit"}
           variant="primary"
         >

@@ -69,10 +69,9 @@ export function DomainIconLayer({ src, testId }: Readonly<DomainIconLayerProps>)
       }
       {verifiedSrc ? (
         <span
-          className="absolute inset-0 opacity-100 starting:opacity-0 transition-opacity duration-[var(--motion-tooltip)] ease-[ease] motion-reduce:transition-none"
+          className="absolute inset-0 bg-bg-sunken opacity-100 starting:opacity-0 transition-opacity duration-[var(--motion-tooltip)] ease-[ease] motion-reduce:transition-none"
           data-testid={testId}
           style={{
-            backgroundColor: "var(--bg-sunken)",
             backgroundImage: `url("${verifiedSrc}")`,
             backgroundPosition: "center",
             backgroundSize: "cover",

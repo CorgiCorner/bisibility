@@ -1,3 +1,4 @@
+import { quietChipVariants } from "@/components/ui";
 import type { KeywordDetailKeywordContext } from "@/lib/keyword-detail/state-model";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import type { ReactNode } from "react";
@@ -9,7 +10,7 @@ const unavailableCopy =
 
 function ContextChip({ children, label }: Readonly<ContextChipProps>) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-bg-sunken px-2.5 py-1">
+    <span className={quietChipVariants({ size: "lg" })}>
       <span className="font-mono text-[9.5px] uppercase tracking-[0.5px] text-fg-muted">
         {label}
       </span>

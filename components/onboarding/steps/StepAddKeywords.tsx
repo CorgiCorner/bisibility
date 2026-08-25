@@ -39,6 +39,7 @@ import {
   keywordDraftMessage,
   keywordDraftPreview,
   longKeywordMessage,
+  pausedKeywordSchedule,
 } from "./step-add-keywords-model";
 import {
   completedTrackingDefaults,
@@ -82,14 +83,6 @@ type StepAddKeywordsProps = {
   updateProjectDefaultsAction?: (input: ProjectDefaultsInput) => Promise<unknown>;
 };
 
-const pausedSchedule = {
-  cronExpression: null,
-  frequency: "paused",
-  jitterMinutes: 60,
-  serpDepth: null,
-  timezone: "UTC",
-} satisfies AddKeywordsMatrixInput["schedule"];
-
 export function StepAddKeywords({
   addKeywordsAction,
   awaitingPropertySelection = false,
@@ -128,6 +121,7 @@ export function StepAddKeywords({
     formState: { errors, isSubmitting },
     handleSubmit,
     register,
+    setFocus,
     setValue,
     watch,
   } = useForm<KeywordSetupForm>({
@@ -182,7 +176,7 @@ export function StepAddKeywords({
           keywords: submitted.uniqueKeywords,
           locations: values.locations.map(locationSelectionInputForKey),
           projectId: values.projectId,
-          schedule: flowState?.providerId ? undefined : pausedSchedule,
+          schedule: flowState?.providerId ? undefined : pausedKeywordSchedule,
           tags: [],
           targetUrl: null,
         });
@@ -204,7 +198,11 @@ export function StepAddKeywords({
   }
 
   return (
-    <form id={onboardingFormId} onSubmit={handleSubmit(onSubmit)}>
+    <form
+      id={onboardingFormId}
+      noValidate
+      onSubmit={handleSubmit(onSubmit, () => setFocus("keywords"))}
+    >
       <input type="hidden" {...register("projectId")} />
       <input type="hidden" {...register("device")} />
       <input type="hidden" {...register("cronExpression")} />
@@ -234,12 +232,18 @@ export function StepAddKeywords({
         projectId={projectId}
       />
       <textarea
+        aria-describedby={errors.keywords ? "onboarding-keywords-error" : undefined}
+        aria-invalid={errors.keywords ? true : undefined}
+        aria-required="true"
         className="mt-3 min-h-[150px] w-full resize-y rounded-[11px] border border-border-strong bg-transparent px-3.5 py-3 font-mono text-[13px] leading-[1.7] text-fg outline-none focus:border-accent"
         placeholder="One keyword per line"
         {...register("keywords", { onChange: (event) => onKeywordsChange?.(event.target.value) })}
+        required
       />
       {errors.keywords && errors.keywords.message !== longWarning ? (
-        <p className={`m-0 mt-2 ${feedbackClass} text-red-text`}>{errors.keywords.message}</p>
+        <p className={`m-0 mt-2 ${feedbackClass} text-red-text`} id="onboarding-keywords-error">
+          {errors.keywords.message}
+        </p>
       ) : null}
       <p className={`m-0 mt-2 ${feedbackClass} text-fg-muted`}>{keywordDraftMessage(preview)}</p>
       {longWarning ? (
@@ -269,10 +273,7 @@ export function StepAddKeywords({
         onLocationsChange={(next) => {
           const locationKeys = next.map((item) => item.canonicalKey);
           setSelectedLocations(next);
-          setValue("locations", locationKeys, {
-            shouldDirty: true,
-            shouldValidate: true,
-          });
+          setValue("locations", locationKeys, { shouldDirty: true, shouldValidate: true });
           onMarketsChange?.(locationKeys);
         }}
         serpDepth={serpDepth}

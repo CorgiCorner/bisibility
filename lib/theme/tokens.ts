@@ -3,6 +3,7 @@ export const colorTokenNames = [
   "bg-elev",
   "bg-sidebar",
   "bg-sunken",
+  "bg-band",
   "bg-inset",
   "table-header-bg",
   "fg",
@@ -10,6 +11,7 @@ export const colorTokenNames = [
   "border",
   "border-soft",
   "border-strong",
+  "border-control",
   "nav-active",
   "meter-track",
   "accent",
@@ -43,10 +45,9 @@ export type ColorTokenName = (typeof colorTokenNames)[number];
 export type ColorSchemeName = "light" | "dark";
 
 /**
- * The primary button carries a light label, so its surface cannot be the brand --accent
- * (#D97757 reaches only ~3.0:1 against a near-white label). --accent-solid is the same hue
- * and saturation held at a darker lightness, which is the smallest move that clears AA;
- * --accent keeps its original value for tints, borders and decorative fills.
+ * Primary buttons use the brand fill (#F1511C) in both schemes, with the cream
+ * --accent-on-solid label (#FFF3EE). That pair is 3.25:1: above the 3:1 UI-component
+ * floor and below 4.5:1 text AA. Dark decorative --accent stays the lighter peach.
  */
 export const primaryButtonForegroundTokens = {
   light: "accent-on-solid",
@@ -60,31 +61,35 @@ export const errorButtonForegroundTokens = {
 
 export const colorSchemes = {
   light: {
-    bg: "#F2EEE4",
+    bg: "#FCF7ED",
     "bg-elev": "#FBF9F4",
     "bg-sidebar": "#FFFFFF",
-    "bg-sunken": "#ECE7DB",
+    // 30% of #ECE7DB so chips and chrome pick up the parent surface.
+    "bg-sunken": "#ECE7DB4D",
+    "bg-band": "#F3EEE3",
     "bg-inset": "#E2DDD0",
     "table-header-bg": "#ECE7DB",
     fg: "#1A1813",
     "fg-muted": "#615B4D",
-    border: "#BFB7A4",
+    border: "#DDD8CC",
     "border-soft": "#F0EEE6",
-    "border-strong": "#867B68",
+    "border-strong": "#DDD8CC",
+    // Pigment for the 20% secondary-button outline; not the 1px chrome hairline.
+    "border-control": "#867B68",
     "nav-active": "#EDEAE1",
     // Meter/progress tracks need contrast against the surface they sit on, not depth.
     // Recessed fills (--bg-sunken, --bg-inset) go darker than --bg in dark mode, which
     // makes a track on the page background invisible; this token stays on the visible
     // side of the surface in both schemes. Light shares --bg-inset's value.
     "meter-track": "#E2DDD0",
-    accent: "#D97757",
-    "accent-hover": "#C8643F",
-    "accent-text": "#9F4528",
-    "accent-soft": "#F7E8E0",
-    // hsl(15 63% 44%) - brand hue/saturation, 16 lightness points below --accent.
-    "accent-solid": "#B74C29",
-    // hsl(15 63% 42%) - one step darker again.
-    "accent-solid-hover": "#AF4927",
+    accent: "#F1511C",
+    "accent-hover": "#F0450F",
+    "accent-text": "#AC3A15",
+    "accent-soft": "#FAE5DA",
+    // Same as --accent in light; the cream --accent-on-solid label is the light pair.
+    "accent-solid": "#F1511C",
+    // One step darker; cream label is 3.47:1.
+    "accent-solid-hover": "#F0450F",
     "accent-on-solid": "#FFF3EE",
     blue: "#4F86E8",
     "blue-text": "#315EAC",
@@ -107,31 +112,31 @@ export const colorSchemes = {
   },
   dark: {
     bg: "#0F0C07",
-    "bg-elev": "#1B1810",
+    "bg-elev": "#191919",
     "bg-sidebar": "#070603",
     "bg-sunken": "#15110A",
+    "bg-band": "#141414",
     "bg-inset": "#080704",
     "table-header-bg": "#15110A",
     fg: "#ECE7DB",
-    "fg-muted": "#9F998A",
-    border: "#463D2E",
+    "fg-muted": "#A09D95",
+    // Controls keep the old layout hairline. --border stays the darker step
+    // (~half of --border-strong), the same ratio #686766 had to #CECECE.
+    border: "#343333",
     "border-soft": "#221D15",
-    "border-strong": "#716653",
+    "border-strong": "#686766",
+    "border-control": "#716653",
     "nav-active": "#231F17",
-    // Sits in --border's band (1.8:1 against --bg, matching the hairlines the dark theme
-    // already renders as visible), so the track separates from --bg (#0F0C07) and
-    // --bg-elev (#1B1810) alike instead of vanishing the way recessed fills do.
+    // Sits in the dark hairline band so the track separates from --bg (#0F0C07) and
+    // --bg-elev (#191919) alike instead of vanishing the way recessed fills do.
     "meter-track": "#443C29",
     accent: "#E08A6A",
     "accent-hover": "#EC9A7C",
     "accent-text": "#F0A18A",
     "accent-soft": "#2A2018",
-    // hsl(16 66% 44%) - dark-accent hue/saturation. Measured against #FFF3EE, 44% is the
-    // lightest step that clears AA (45% lands at 4.42:1) while the surface still separates
-    // from --bg at 3.94:1.
-    "accent-solid": "#BA4F27",
-    // hsl(16 66% 42%) - one step darker again.
-    "accent-solid-hover": "#B14B25",
+    // Same brand fill as light. Cream-on-brand is 3.25:1, below text AA.
+    "accent-solid": "#F1511C",
+    "accent-solid-hover": "#F0450F",
     "accent-on-solid": "#FFF3EE",
     blue: "#6A9BF0",
     "blue-text": "#6A9BF0",

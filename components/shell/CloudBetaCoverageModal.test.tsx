@@ -1,4 +1,3 @@
-import { USAGE_BILLING_TARGET } from "@/components/settings/SettingsSection";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { CloudBetaCoverageModal } from "./CloudBetaCoverageModal";
@@ -22,12 +21,9 @@ describe("CloudBetaCoverageModal", () => {
       "Nightly snapshots are kept for 7 days",
     );
     expect(screen.getByText("On yours").parentElement).toHaveTextContent("Keep a recent export.");
-    expect(screen.getByRole("link", { name: "See plan and billing" })).toHaveAttribute(
-      "href",
-      `/app/prj_1/settings#${USAGE_BILLING_TARGET.id}`,
-    );
-    fireEvent.click(screen.getByRole("link", { name: "See plan and billing" }));
-    expect(onClose).toHaveBeenCalledOnce();
+    const betaEnds = screen.getByRole("heading", { name: "When the beta ends" }).parentElement;
+    expect(betaEnds).toHaveTextContent(/Self-host stays available\.$/);
+    expect(screen.queryByRole("link", { name: "See plan and billing" })).not.toBeInTheDocument();
   });
 
   it("opens the project export from its footer CTA", () => {

@@ -17,6 +17,7 @@ export const envClassification = {
     "NODE_ENV",
     "NEXT_RUNTIME",
     "NEXT_PHASE",
+    "NEXT_DIST_DIR",
     "PORT",
   ],
   internal: [
@@ -30,8 +31,10 @@ export const envClassification = {
     "BISIBILITY_ENV",
     "INDEXNOW_KEY",
     "NEXT_PUBLIC_MARKETING_URL",
+    "NEXT_PUBLIC_TURNSTILE_SITE_KEY",
     "NOTIFICATION_TRANSPORT",
     "RAILWAY_TEMPLATE_URL",
+    "TURNSTILE_SITEVERIFY_URL",
     "WAITLIST_NOTIFY_EMAIL",
     "RESEND_CONTACTS_API_KEY",
     "RESEND_SEGMENT_CLOUD",

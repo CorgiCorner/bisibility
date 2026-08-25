@@ -1,7 +1,7 @@
 "use client";
 
 import { actionErrorMessage } from "@/components/keywords/action-utils";
-import { Button, Tooltip, useToast } from "@/components/ui";
+import { menuSelectTriggerClass, Tooltip, useToast } from "@/components/ui";
 import {
   type CreateSavedViewInput,
   type DeleteSavedViewInput,
@@ -9,6 +9,7 @@ import {
   type SavedViewConfig,
   savedViewHref,
 } from "@/lib/keywords/saved-view-model";
+import { cn } from "@/lib/ui/cn";
 import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
 import Menu from "@mui/material/Menu";
@@ -83,22 +84,20 @@ export function SavedViewsControl({
 
   return (
     <>
-      <Button
+      <button
         aria-controls={open ? "keyword-saved-views-menu" : undefined}
         aria-expanded={open ? "true" : undefined}
         aria-haspopup="menu"
+        className={cn(menuSelectTriggerClass, "max-w-[190px]")}
         onClick={(event) => setAnchorEl(event.currentTarget)}
-        size="sm"
-        startIcon={<BookmarkSimple size={15} />}
-        sx={{
-          color: activeView ? "var(--accent)" : "var(--fg-muted)",
-          maxWidth: 190,
-        }}
-        variant="secondary"
+        type="button"
       >
-        <span className="min-w-0 truncate">{activeView?.name ?? "All keywords"}</span>
-        <CaretDown className="ml-1 shrink-0" size={12} />
-      </Button>
+        <span className="flex shrink-0 text-fg-muted">
+          <BookmarkSimple aria-hidden size={15} />
+        </span>
+        <span className="min-w-0 truncate text-fg">{activeView?.name ?? "All keywords"}</span>
+        <CaretDown aria-hidden className="shrink-0 text-fg-muted" size={11} weight="bold" />
+      </button>
       <Menu
         anchorEl={anchorEl}
         id="keyword-saved-views-menu"

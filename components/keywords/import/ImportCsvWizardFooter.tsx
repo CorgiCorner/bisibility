@@ -4,9 +4,10 @@ import { ArrowLeftIcon as ArrowLeft, ArrowRightIcon as ArrowRight } from "@phosp
 type ImportCsvWizardFooterProps = {
   canImport: boolean;
   confirmImport: () => Promise<void>;
+  isReviewing: boolean;
   isSubmitting: boolean;
   next: () => Promise<void>;
-  primaryLabel: string;
+  startOver: () => void;
   setStep: (updater: (value: number) => number) => void;
   step: number;
 };
@@ -14,17 +15,31 @@ type ImportCsvWizardFooterProps = {
 export function ImportCsvWizardFooter({
   canImport,
   confirmImport,
+  isReviewing,
   isSubmitting,
   next,
-  primaryLabel,
+  startOver,
   setStep,
   step,
 }: Readonly<ImportCsvWizardFooterProps>) {
+  if (step === 5) {
+    return (
+      <div className="flex items-center gap-2.5">
+        <Button disabled={isSubmitting} onClick={startOver} type="button" variant="secondary">
+          Start over
+        </Button>
+        <Button disabled={isSubmitting} onClick={() => void next()} sx={{ flex: 1 }} type="button">
+          Done
+        </Button>
+      </div>
+    );
+  }
+  const primaryLabel = step === 4 ? "Import keywords" : "Continue";
   return (
     <div className="flex items-center gap-2.5">
       {step > 1 && step < 5 ? (
         <Button
-          disabled={isSubmitting}
+          disabled={isSubmitting || isReviewing}
           onClick={() => setStep((value) => Math.max(1, value - 1))}
           startIcon={<ArrowLeft size={14} weight="bold" />}
           type="button"
@@ -35,8 +50,7 @@ export function ImportCsvWizardFooter({
       ) : null}
       {step === 4 ? (
         <Button
-          disabled={isSubmitting || !canImport}
-          endIcon={<ArrowRight size={14} weight="bold" />}
+          disabled={isSubmitting || isReviewing || !canImport}
           key="review-confirmation"
           onClick={() => void confirmImport()}
           sx={{ flex: 1 }}
@@ -46,14 +60,14 @@ export function ImportCsvWizardFooter({
         </Button>
       ) : (
         <Button
-          disabled={isSubmitting}
+          disabled={isSubmitting || isReviewing || (step === 3 && !canImport)}
           endIcon={<ArrowRight size={14} weight="bold" />}
           key="step-navigation"
           onClick={() => void next()}
           sx={{ flex: 1 }}
           type="button"
         >
-          {isSubmitting ? "Importing..." : primaryLabel}
+          {isReviewing ? "Checking..." : isSubmitting ? "Importing..." : primaryLabel}
         </Button>
       )}
     </div>

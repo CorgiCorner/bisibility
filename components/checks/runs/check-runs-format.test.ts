@@ -16,6 +16,7 @@ const prismaError =
 function failedRun(error: string | null): CheckRunRow {
   return {
     attemptCount: 1,
+    storedResults: null,
     attempts: [],
     checkedAt: now.toISOString(),
     costCents: null,

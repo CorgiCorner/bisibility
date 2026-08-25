@@ -51,6 +51,23 @@ describe("resolveKeywordLocation", () => {
     expect(mocks.createCityLocationLookup).not.toHaveBeenCalled();
   });
 
+  it("country plus language resolves a qualified market without provider lookup", async () => {
+    const result = await resolveKeywordLocation({
+      country: "Spain",
+      language: "en",
+      projectId: "p1",
+    });
+
+    expect(result.location).toMatchObject({
+      canonicalKey: "ES@en",
+      countryCode: "ES",
+      displayName: "Spain",
+      kind: "country",
+      languageCode: "en",
+    });
+    expect(mocks.prisma.providerConnection.findMany).not.toHaveBeenCalled();
+  });
+
   it("selection country resolves by ISO code without any provider lookup", async () => {
     const result = await resolveKeywordLocation({
       projectId: "p1",

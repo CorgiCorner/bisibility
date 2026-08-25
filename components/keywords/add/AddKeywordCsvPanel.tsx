@@ -1,6 +1,7 @@
 "use client";
 
 import { Textarea } from "@/components/ui";
+import { keywordImportTemplateCsv } from "@/lib/keywords/import-csv-template";
 import { UploadSimpleIcon as UploadSimple } from "@phosphor-icons/react";
 
 type AddKeywordCsvPanelProps = {
@@ -10,9 +11,7 @@ type AddKeywordCsvPanelProps = {
   parsedCount: number;
 };
 
-const csvExample = `keyword,target_url,tags,country,device
-open source analytics,/vs/ga,"Comparison",US,desktop
-self hosted seo tool,/self-host,"Product",US,desktop`;
+const csvColumnsHint = "keyword, target_url, tags, country, language, device";
 
 function handleDragOver(event: React.DragEvent<HTMLLabelElement>) {
   event.preventDefault();
@@ -53,11 +52,9 @@ export function AddKeywordCsvPanel({
         onDragOver={handleDragOver}
         onDrop={(event) => void handleDrop(event)}
       >
-        <UploadSimple className="text-accent-text" size={26} />
+        <UploadSimple className="text-accent-solid" size={26} />
         <span className="text-[13.5px] font-semibold text-fg">Drop a CSV or click to upload</span>
-        <span className="text-[11.5px] text-fg-muted">
-          keyword, target_url, tags, country, device
-        </span>
+        <span className="text-[11.5px] text-fg-muted">{csvColumnsHint}</span>
         <input
           accept=".csv,text/csv"
           className="sr-only"
@@ -79,7 +76,7 @@ export function AddKeywordCsvPanel({
           className="mt-2 min-h-[122px] text-[12px]"
           id="add-csv-input"
           onChange={(event) => onCsvTextChange(event.target.value)}
-          placeholder={csvExample}
+          placeholder={keywordImportTemplateCsv}
           value={csvText}
         />
         {errorMessage ? (
@@ -88,7 +85,7 @@ export function AddKeywordCsvPanel({
       </div>
 
       <pre className="m-0 overflow-x-auto rounded-[10px] bg-code-bg p-3.5 font-mono text-[11.5px] leading-[1.7] text-code-fg">
-        {csvExample}
+        {keywordImportTemplateCsv}
       </pre>
     </div>
   );

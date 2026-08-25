@@ -55,11 +55,10 @@ export function addKeywordDrawerCtaLabel(
   activeTab: AddKeywordTab,
   csvReviewOpen: boolean,
   isPaused: boolean,
-  count: number,
 ) {
   if (activeTab === "csv") return csvReviewOpen ? "Confirm" : "Review keywords";
-  if (isPaused) return count > 1 ? `Add ${count} paused` : "Add paused";
-  return count > 1 ? `Add & track ${count} keywords` : "Add & track";
+  if (isPaused) return "Add paused keywords";
+  return "Add keywords";
 }
 
 export function useAddKeywordTrackingSchedule(

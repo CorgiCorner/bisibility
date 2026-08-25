@@ -34,4 +34,12 @@ function renderMarketingSupportWidget(): ReactNode {
   return null;
 }
 
-export const appExtensions = { renderHead, renderMarketingSupportWidget };
+async function renderOnboardingQuizSlot(children: ReactNode): Promise<ReactNode> {
+  return children;
+}
+
+export const appExtensions = {
+  renderHead,
+  renderMarketingSupportWidget,
+  renderOnboardingQuizSlot,
+};

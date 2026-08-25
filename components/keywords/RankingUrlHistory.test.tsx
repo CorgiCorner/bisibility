@@ -88,7 +88,9 @@ describe("RankingUrlHistory", () => {
     expect(screen.getByText("Jun 18 - now")).toHaveClass("col-start-2", "row-start-1");
     const link = screen.getByRole("link");
     expect(link).toHaveAttribute("aria-describedby");
-    expect(link.parentElement?.parentElement).toHaveClass("row-start-2", "sm:row-start-1");
+    // The grid item is the ancestor carrying the placement classes; Tooltip adds a wrap
+    // between it and the link.
+    expect(link.closest(".row-start-2")).toHaveClass("row-start-2", "sm:row-start-1");
   });
 
   it("does not present a closed newest period as current", () => {

@@ -1,4 +1,9 @@
-import { type FeatureKey, type FeatureStatusEntry, featureStatus } from "./feature-status";
+import {
+  type FeatureKey,
+  type FeatureStatus,
+  type FeatureStatusEntry,
+  featureStatus,
+} from "./feature-status";
 
 export type CompareStatus = "yes" | "no" | "free" | "paid" | "addon" | "conditional" | "na";
 
@@ -17,36 +22,18 @@ export const COMPARE_GROUPS = [
 export type CompareGroup = (typeof COMPARE_GROUPS)[number];
 
 export const COMPARE_CRITERIA = {
-  selfHosting: { label: "Can you self-host it?", group: "Hosting and ownership" },
-  customerDatabase: {
-    label: "Can you host the database yourself?",
-    group: "Hosting and ownership",
-  },
-  directSql: { label: "Can you query rank data with SQL?", group: "Hosting and ownership" },
-  fullHistoryExport: {
-    label: "Can you export all historical rankings?",
-    group: "Data access and export",
-  },
-  rawSerpPayload: {
-    label: "Can you access the original SERP response?",
-    group: "Data access and export",
-  },
-  api: { label: "Which plans include API access?", group: "Automation and integrations" },
-  providerPortability: {
-    label: "Can you switch SERP data providers?",
-    group: "Automation and integrations",
-  },
-  selfHostedLicense: {
-    label: "What does the self-hosted license cost?",
-    group: "Hosting and ownership",
-  },
-  serpData: { label: "Who bills you for SERP data?", group: "Data access and export" },
-  infrastructure: {
-    label: "Who operates the infrastructure?",
-    group: "Hosting and ownership",
-  },
-  hostedPlan: { label: "Is a hosted plan available?", group: "Hosting and ownership" },
-  seats: { label: "How are team seats priced?", group: "Automation and integrations" },
+  selfHosting: { label: "Self-hosting", group: "Hosting and ownership" },
+  customerDatabase: { label: "Database you operate", group: "Hosting and ownership" },
+  directSql: { label: "Direct SQL access", group: "Hosting and ownership" },
+  fullHistoryExport: { label: "Full history export", group: "Data access and export" },
+  rawSerpPayload: { label: "Raw SERP payload", group: "Data access and export" },
+  api: { label: "API access", group: "Automation and integrations" },
+  providerPortability: { label: "SERP provider choice", group: "Automation and integrations" },
+  selfHostedLicense: { label: "Self-hosted license", group: "Hosting and ownership" },
+  serpData: { label: "SERP data billing", group: "Data access and export" },
+  infrastructure: { label: "Infrastructure operator", group: "Hosting and ownership" },
+  hostedPlan: { label: "Hosted plan", group: "Hosting and ownership" },
+  seats: { label: "Team seats", group: "Automation and integrations" },
 } as const satisfies Record<string, { group: CompareGroup; label: string }>;
 
 export const ALTERNATIVES_SUMMARY_SECTIONS = [
@@ -146,15 +133,25 @@ export type CompetitorContent = {
 
 export const cell = (status: CompareStatus, label?: string): CompareCell => ({ status, label });
 
+const STATUS_LABEL: Record<FeatureStatus, string> = {
+  shipped: "Yes",
+  beta: "Beta",
+  "open-beta": "Open beta",
+  building: "In development",
+  planned: "Planned",
+  exploring: "On the roadmap",
+  "cloud-only": "Hosted only",
+  "not-planned": "Not planned",
+};
+
 export function featureCell(key: FeatureKey, label?: string): CompareCell {
   const feature: FeatureStatusEntry = featureStatus[key];
   const status = feature.status;
   if (status === "shipped") {
-    const cellLabel = feature.scope === "self-host" ? "Yes - self-hosted" : label;
-    return cell("yes", cellLabel);
+    return cell("yes", feature.scope === "self-host" ? "Yes - self-hosted" : label);
   }
-  if (status === "planned") return cell("conditional", label ?? "Planned");
-  return cell("conditional", label ?? status);
+  if (status === "planned") return cell("conditional", label ?? STATUS_LABEL.planned);
+  return cell("conditional", label ?? STATUS_LABEL[status]);
 }
 
 export function compareRows(opts: {
@@ -191,7 +188,7 @@ export function compareRows(opts: {
     },
     {
       ...COMPARE_CRITERIA.fullHistoryExport,
-      bisibility: featureCell("fullHistoryExport"),
+      bisibility: featureCell("fullHistoryExport", "Project package, CSV, and REST API"),
       competitor: opts.fullHistoryExport ?? cell("conditional", "Plan-dependent"),
     },
     {
@@ -201,12 +198,12 @@ export function compareRows(opts: {
     },
     {
       ...COMPARE_CRITERIA.api,
-      bisibility: featureCell("restApi"),
+      bisibility: featureCell("restApi", "REST API v1, OpenAPI, SDKs, CLI, MCP"),
       competitor: opts.api,
     },
     {
       ...COMPARE_CRITERIA.providerPortability,
-      bisibility: featureCell("providerPortability"),
+      bisibility: featureCell("providerPortability", "DataForSEO or SerpApi, with fallback"),
       competitor: opts.providerPortability ?? cell("no", "Bundled provider"),
     },
     {
@@ -221,7 +218,7 @@ export function compareRows(opts: {
     },
     {
       ...COMPARE_CRITERIA.infrastructure,
-      bisibility: cell("paid", "Customer-operated"),
+      bisibility: cell("paid", "You, or bisibility on the hosted beta"),
       competitor: opts.infrastructure ?? cell("paid", "Managed"),
     },
     {
@@ -231,7 +228,7 @@ export function compareRows(opts: {
     },
     {
       ...COMPARE_CRITERIA.seats,
-      bisibility: featureCell("teamRoles"),
+      bisibility: featureCell("teamRoles", "Owner, Admin, Editor, Viewer"),
       competitor: opts.seats,
     },
     ...(opts.extras ?? []).map((row) => ({
