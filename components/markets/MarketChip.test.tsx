@@ -48,7 +48,26 @@ describe("MarketChip", () => {
 
     const icon = screen.getByLabelText("Mobile");
     expect(icon).toBeVisible();
+    expect(icon).toHaveClass("block");
     expect(icon.parentElement).toHaveAttribute("title", "Mobile");
+    expect(icon.parentElement).toHaveClass(
+      "grid",
+      "shrink-0",
+      "place-items-center",
+      "leading-none",
+      "size-3",
+    );
+  });
+
+  it("keeps the md device icon inside its 13px alignment well", () => {
+    render(
+      <MarketChip device="desktop" languageLabel="Arabic" locationLabel="Belgium" size="md" />,
+    );
+
+    const icon = screen.getByLabelText("Desktop");
+    expect(icon).toHaveAttribute("width", "13");
+    expect(icon).toHaveAttribute("height", "13");
+    expect(icon.parentElement).toHaveClass("size-[13px]");
   });
 
   it("omits the device icon when no device applies", () => {

@@ -11,9 +11,8 @@ const typeRoles = [
 ] as const;
 
 const radiusRoles = [
-  { role: "rounded-control", label: "Control", px: "9px" },
-  { role: "rounded-card", label: "Card", px: "14px" },
-  { role: "rounded-card-lg", label: "Card LG", px: "16px" },
+  { role: "rounded-control", label: "Control", px: "6px" },
+  { role: "rounded-card", label: "Card", px: "12px" },
 ] as const;
 
 function DesignTokens() {

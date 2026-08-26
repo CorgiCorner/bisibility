@@ -57,10 +57,10 @@ export function Sheet({
       // Use the same 1024px breakpoint for anchor and dimensions; MUI lg defaults to
       // 1200px and misstyles widths from 1024-1199px.
       backgroundColor: "var(--bg-elev)",
-      borderColor: "var(--border-strong)",
-      borderLeft: isDesktop ? "1px solid var(--border-strong)" : "none",
+      borderColor: "var(--border)",
+      borderLeft: isDesktop ? "1px solid var(--border)" : "none",
       borderRadius: isDesktop ? 0 : "18px 18px 0 0",
-      borderTop: isDesktop ? "none" : "1px solid var(--border-strong)",
+      borderTop: isDesktop ? "none" : "1px solid var(--border)",
       boxShadow: "none",
       color: "var(--fg)",
       display: "flex",
@@ -101,7 +101,7 @@ export function Sheet({
             {headerAction}
             <button
               aria-label="Close sheet"
-              className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-fg-muted outline-none transition-[color,background-color,transform] duration-[var(--motion-press)] hover:bg-bg-sunken focus-visible:bg-bg-sunken motion-safe:active:not-focus-visible:scale-[0.97]"
+              className="grid h-8 w-8 shrink-0 place-items-center rounded-control text-fg-muted outline-none transition-[color,background-color,transform] duration-[var(--motion-press)] hover:bg-bg-sunken focus-visible:bg-bg-sunken motion-safe:active:not-focus-visible:scale-[0.97]"
               onClick={onClose}
               type="button"
             >

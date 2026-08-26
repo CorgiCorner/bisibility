@@ -115,7 +115,7 @@ export function KeywordHeaderActions({
               onToggleEdit();
             }}
             option={{
-              label: editing ? "Close markets and devices" : "Manage markets and devices",
+              label: editing ? "Close editor" : "Edit",
               value: "edit",
             }}
           />

@@ -176,7 +176,12 @@ describe("database seed", () => {
     await seed();
 
     expect(mocks.prisma.project.upsert).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { publicId: seededProjectId } }),
+      expect.objectContaining({
+        where: { publicId: seededProjectId },
+      }),
+    );
+    expect(mocks.prisma.project.upsert.mock.calls[0][0].create).not.toHaveProperty(
+      "providerAllocationsInitializedAt",
     );
   });
 

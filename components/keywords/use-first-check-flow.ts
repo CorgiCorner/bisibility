@@ -151,11 +151,21 @@ export function useFirstCheckFlow({
       const result = await runCheckNowAction({ depth: modal.depth, keywordId });
       const outcome = keywordRunCheckOutcome(result);
       if (outcome === "blocked") {
+        const message = keywordRunCheckBlockMessage(result, "The rank check could not be started.");
+        const code =
+          result &&
+          typeof result === "object" &&
+          "code" in result &&
+          typeof result.code === "string"
+            ? result.code
+            : null;
         setModal((prev) =>
           prev
             ? {
                 ...prev,
-                error: keywordRunCheckBlockMessage(result, "The rank check could not be started."),
+                error: message,
+                errorCode: code,
+                step: code === "sample_project" ? "failed" : "confirm",
               }
             : prev,
         );
@@ -191,7 +201,9 @@ export function useFirstCheckFlow({
         prev
           ? {
               ...prev,
-              error: actionErrorMessage(error, "The first rank check could not be started."),
+              error: actionErrorMessage(error, "The rank check could not be started."),
+              errorCode: null,
+              step: "failed",
             }
           : prev,
       );

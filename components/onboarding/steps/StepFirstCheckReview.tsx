@@ -84,18 +84,20 @@ export function StepFirstCheckReview({
 }: Readonly<StepFirstCheckReviewProps>) {
   const marketLabel = markets.length === 1 ? "market" : "markets";
   const deviceLabel = devices.length === 1 ? "device" : "devices";
+  const scopeSummary = [
+    trackingDefaults.engine,
+    `${markets.length} ${marketLabel}`,
+    `${devices.length} ${deviceLabel}`,
+    frequencyLabel,
+  ].join(" · ");
   const selectedKeyword = keywordOptions.find((option) => option.value === sampleKeyword)?.label;
 
   return (
-    <div className="mt-5 rounded-xl border border-border">
+    <div className="mt-5 rounded-card border border-border">
       <SummaryRow index={0} label="Project" value={projectLabel} />
       <SummaryRow index={1} label="Provider" value={providerLabel} />
       <SummaryRow index={2} label="Keywords" value={String(keywordCount)} />
-      <SummaryRow
-        index={3}
-        label="Scope"
-        value={`${trackingDefaults.engine} / ${markets.length} ${marketLabel} / ${devices.length} ${deviceLabel} / ${frequencyLabel}`}
-      >
+      <SummaryRow index={3} label="Scope" value={scopeSummary}>
         <div className="flex items-center justify-between gap-4 px-4 pb-[13px]">
           <span className="shrink-0 text-[13px] text-fg-muted">Markets</span>
           <div className="flex flex-wrap justify-end gap-1.5">
@@ -119,7 +121,7 @@ export function StepFirstCheckReview({
               ariaLabel="Keyword used for the sample checks"
               onChange={onSampleKeywordChange}
               options={keywordOptions}
-              triggerClassName="min-h-[34px] w-[260px] max-w-full justify-between rounded-lg bg-bg-elev px-2.5 text-[12.5px] font-medium"
+              triggerClassName="min-h-[34px] w-[260px] max-w-full justify-between rounded-control bg-bg-elev px-2.5 text-[12.5px] font-medium"
               value={sampleKeyword}
             />
           ) : (
@@ -140,7 +142,7 @@ export function StepFirstCheckReview({
                 {nextRunLabel(frequency)}
               </span>
               <span aria-hidden className="text-border-strong">
-                /
+                ·
               </span>
               <MenuSelect
                 ariaLabel="Project timezone"

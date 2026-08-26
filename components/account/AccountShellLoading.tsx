@@ -11,7 +11,7 @@ type AccountLoadingBarProps = { className?: string };
 export function AccountLoadingBar({ className }: Readonly<AccountLoadingBarProps>) {
   return (
     <div
-      className={cn("animate-pulse rounded-[6px] bg-bg-sunken", className)}
+      className={cn("animate-pulse rounded-control bg-bg-sunken", className)}
       data-account-loading-bar=""
     />
   );
@@ -39,7 +39,7 @@ function AccountLoadingSubnav({ activeSection }: Readonly<{ activeSection: Accou
           return (
             <li key={section.id}>
               <div
-                className="relative flex h-10 items-center gap-2.5 rounded-[9px] px-[11px]"
+                className="relative flex h-10 items-center gap-2.5 rounded-control px-[11px]"
                 data-account-loading-subnav-active={current ? "true" : "false"}
                 data-account-loading-subnav-row={section.id}
               >

@@ -187,7 +187,7 @@ export function SerpFallbackOrder({
               >
                 <button
                   aria-label={`Move ${provider.name} up`}
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border-strong text-fg-muted transition-colors hover:border-accent hover:text-accent-text disabled:cursor-not-allowed disabled:opacity-35"
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-border-control text-fg-muted transition-colors hover:border-accent hover:text-accent-text disabled:cursor-not-allowed disabled:opacity-35"
                   disabled={!canManage || activeIndex === 0}
                   onClick={() => move(provider.id, -1)}
                   type="button"
@@ -196,7 +196,7 @@ export function SerpFallbackOrder({
                 </button>
                 <button
                   aria-label={`Move ${provider.name} down`}
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border-strong text-fg-muted transition-colors hover:border-accent hover:text-accent-text disabled:cursor-not-allowed disabled:opacity-35"
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-border-control text-fg-muted transition-colors hover:border-accent hover:text-accent-text disabled:cursor-not-allowed disabled:opacity-35"
                   disabled={!canManage || activeIndex === active.length - 1}
                   onClick={() => move(provider.id, 1)}
                   type="button"

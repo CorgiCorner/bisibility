@@ -1,24 +1,20 @@
 "use client";
 
-import { MenuMultiSelectOption } from "@/components/ui/MenuMultiSelectOption";
-import { MenuSelectOptionItem, menuSelectRowSx } from "@/components/ui/MenuSelectOptionItem";
+import { MenuSelectOptionItem } from "@/components/ui/MenuSelectOptionItem";
 import { menuTransitionDuration, useMenuExitLifecycle } from "@/components/ui/menu-exit-lifecycle";
 import {
   filterFlatOptions,
   filterGroupedGroups,
   MenuSearchField,
   type MenuSelectInput,
-  type MenuSelectOption,
   menuSelectPaperSx,
   menuSelectTriggerClass,
   resolveSelectedOption,
-  selectedSummary,
 } from "@/components/ui/menu-select-support";
 import { cn } from "@/lib/ui/cn";
 import ListSubheader from "@mui/material/ListSubheader";
 import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
-import { CaretDownIcon as CaretDown, CheckIcon as Check } from "@phosphor-icons/react";
+import { CaretDownIcon as CaretDown } from "@phosphor-icons/react";
 import { type ReactNode, useState } from "react";
 import { Tooltip } from "./Tooltip";
 
@@ -29,50 +25,43 @@ type MenuSelectBaseProps = {
   ariaDescribedBy?: string;
   ariaInvalid?: boolean;
   ariaLabel: string;
+  compact?: boolean;
   disabled?: boolean;
   emptyMessage?: string;
   leadingIcon?: ReactNode;
+  leadingLabel?: ReactNode;
   menuWidth?: number;
   noResultsMessage?: string;
   onChange: (value: string) => void;
+  pinCaret?: boolean;
   searchPlaceholder?: string;
   searchable?: boolean;
   triggerClassName?: string;
   triggerTitle?: string;
+  triggerWrapperClassName?: string;
   value: string;
 };
 
 export type MenuSelectProps = MenuSelectBaseProps & MenuSelectInput;
 
-export type MenuMultiSelectProps = {
-  allLabel?: string;
-  ariaLabel: string;
-  leadingIcon?: ReactNode;
-  minSelected?: number;
-  onChange: (values: string[]) => void;
-  options: readonly MenuSelectOption[];
-  placeholder?: string;
-  searchPlaceholder?: string;
-  searchable?: boolean;
-  summary?: (selected: readonly MenuSelectOption[]) => string;
-  triggerClassName?: string;
-  values: readonly string[];
-};
-
 export function MenuSelect({
   ariaDescribedBy,
   ariaInvalid,
   ariaLabel,
+  compact = false,
   disabled,
   emptyMessage,
   leadingIcon,
+  leadingLabel,
   menuWidth,
   noResultsMessage,
   onChange,
+  pinCaret = false,
   searchPlaceholder = "Search...",
   searchable = false,
   triggerClassName,
   triggerTitle,
+  triggerWrapperClassName,
   value,
   ...input
 }: Readonly<MenuSelectProps>) {
@@ -97,21 +86,45 @@ export function MenuSelect({
       aria-haspopup="menu"
       aria-invalid={ariaInvalid}
       aria-label={ariaLabel}
-      className={cn(menuSelectTriggerClass, triggerClassName)}
+      className={cn(menuSelectTriggerClass, compact && "text-[12px] leading-4", triggerClassName)}
       disabled={disabled}
       onClick={(event) => openMenu(event.currentTarget)}
       type="button"
     >
-      {leadingIcon ? <span className="flex shrink-0 text-fg-muted">{leadingIcon}</span> : null}
-      <span className="min-w-0 truncate text-fg">{selected?.label ?? ariaLabel}</span>
-      <CaretDown aria-hidden className="shrink-0 text-fg-muted" size={11} weight="bold" />
+      {leadingLabel ? (
+        <span className="flex min-w-0 items-center gap-1.5" data-menu-select-content>
+          <span className="shrink-0 text-fg-muted">{leadingLabel}</span>
+          <span className={cn("min-w-0 truncate text-fg", compact && "text-[12px] leading-4")}>
+            {selected?.label ?? ariaLabel}
+          </span>
+        </span>
+      ) : (
+        <>
+          {leadingIcon ? <span className="flex shrink-0 text-fg-muted">{leadingIcon}</span> : null}
+          <span className={cn("min-w-0 truncate text-fg", compact && "text-[12px] leading-4")}>
+            {selected?.label ?? ariaLabel}
+          </span>
+        </>
+      )}
+      <CaretDown
+        aria-hidden
+        className={cn("shrink-0 text-fg-muted", pinCaret && "ml-auto")}
+        data-menu-select-caret
+        data-pinned={pinCaret || undefined}
+        size={11}
+        weight="bold"
+      />
     </button>
   );
 
   return (
     <>
       {triggerTitle ? (
-        <Tooltip content={triggerTitle} semantics="description">
+        <Tooltip
+          content={triggerTitle}
+          semantics="description"
+          wrapperClassName={triggerWrapperClassName}
+        >
           {triggerButton}
         </Tooltip>
       ) : (
@@ -183,108 +196,4 @@ export function MenuSelect({
   );
 }
 
-export function MenuMultiSelect({
-  allLabel,
-  ariaLabel,
-  leadingIcon,
-  minSelected = 1,
-  onChange,
-  options,
-  placeholder = ariaLabel,
-  searchPlaceholder = "Search...",
-  searchable = false,
-  summary,
-  triggerClassName,
-  values,
-}: Readonly<MenuMultiSelectProps>) {
-  const [menuWidth, setMenuWidth] = useState<number | null>(null);
-  const [search, setSearch] = useState("");
-  const { anchorEl, closeMenu, handleExited, open, openMenu } = useMenuExitLifecycle(() => {
-    setSearch("");
-    setMenuWidth(null);
-  });
-  const selectedValues = new Set(values);
-  const selected = options.filter((option) => selectedValues.has(option.value));
-  const filteredOptions = search
-    ? options.filter((option) =>
-        `${option.label} ${option.secondary ?? ""}`
-          .toLowerCase()
-          .includes(search.trim().toLowerCase()),
-      )
-    : options;
-
-  function openMenuWithWidth(element: HTMLElement) {
-    setMenuWidth(element.getBoundingClientRect().width);
-    openMenu(element);
-  }
-
-  function toggle(value: string) {
-    const next = selectedValues.has(value)
-      ? values.filter((item) => item !== value)
-      : [...values, value];
-    if (next.length < minSelected) return;
-    onChange(next);
-  }
-
-  return (
-    <>
-      <button
-        aria-expanded={open}
-        aria-haspopup="menu"
-        aria-label={ariaLabel}
-        className={cn(menuSelectTriggerClass, triggerClassName)}
-        onClick={(event) => openMenuWithWidth(event.currentTarget)}
-        style={open && menuWidth ? { width: menuWidth } : undefined}
-        type="button"
-      >
-        {leadingIcon ? <span className="flex shrink-0 text-fg-muted">{leadingIcon}</span> : null}
-        <span className="min-w-0 truncate text-fg">
-          {selectedSummary(selected, placeholder, summary)}
-        </span>
-        <CaretDown aria-hidden className="shrink-0 text-fg-muted" size={11} weight="bold" />
-      </button>
-      <Menu
-        anchorEl={anchorEl}
-        autoFocus={!searchable}
-        disableAutoFocusItem={searchable}
-        onClose={closeMenu}
-        open={open}
-        slotProps={{
-          list: { "aria-label": ariaLabel, dense: true, sx: { padding: 0 } },
-          paper: { sx: { ...menuSelectPaperSx, minWidth: Math.max(menuWidth ?? 0, 180) } },
-          transition: { onExited: handleExited },
-        }}
-        transitionDuration={menuTransitionDuration}
-      >
-        {searchable ? (
-          <MenuSearchField onChange={setSearch} placeholder={searchPlaceholder} value={search} />
-        ) : null}
-        {allLabel ? (
-          <MenuItem
-            aria-checked={values.length === 0}
-            onClick={() => onChange([])}
-            role="menuitemradio"
-            sx={menuSelectRowSx}
-          >
-            <span className={values.length === 0 ? "text-fg" : undefined}>{allLabel}</span>
-            {values.length === 0 ? (
-              <Check aria-hidden className="text-accent-text" size={15} weight="bold" />
-            ) : null}
-          </MenuItem>
-        ) : null}
-        {filteredOptions.length === 0 ? (
-          <div className="px-2 py-2 text-[12px] text-fg-muted">No results</div>
-        ) : null}
-        {filteredOptions.map((option) => (
-          <MenuMultiSelectOption
-            current={selectedValues.has(option.value)}
-            disabled={selectedValues.has(option.value) && values.length <= minSelected}
-            key={option.value}
-            onSelect={() => toggle(option.value)}
-            option={option}
-          />
-        ))}
-      </Menu>
-    </>
-  );
-}
+export { MenuMultiSelect, type MenuMultiSelectProps } from "./MenuMultiSelect";

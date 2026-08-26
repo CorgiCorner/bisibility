@@ -47,7 +47,7 @@ export function KeywordPendingDeleteButton({
     <span className="grid gap-2">
       <button
         aria-label={`Delete ${keywordLabel}`}
-        className="inline-flex flex-none items-center justify-center gap-[7px] rounded-[10px] border border-red px-4 py-2.5 text-[13px] font-semibold text-red-text outline-none hover:bg-bg-sunken focus-visible:bg-bg-sunken disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted"
+        className="inline-flex flex-none items-center justify-center gap-[7px] rounded-control border border-red px-4 py-2.5 text-[13px] font-semibold text-red-text outline-none hover:bg-bg-sunken focus-visible:bg-bg-sunken disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted"
         disabled={deleting}
         onClick={() => setConfirmOpen(true)}
         type="button"

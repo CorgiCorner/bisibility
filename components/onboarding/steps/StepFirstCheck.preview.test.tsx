@@ -126,7 +126,7 @@ describe("StepFirstCheck", () => {
       status: "completed";
     }>();
     const runFirstCheckPreviewAction = vi.fn((input: { keywordId: string }) =>
-      input.keywordId === "keyword_1" ? first.promise : second.promise,
+      input.keywordId === "kw_keyword_1" ? first.promise : second.promise,
     );
     const queueFirstChecksAction = vi.fn();
     const legacyQueueAction = { queueFirstChecksAction };
@@ -136,7 +136,7 @@ describe("StepFirstCheck", () => {
 
     await waitFor(() => expect(screen.getAllByText("Checking...")).toHaveLength(2));
     await waitFor(() => expect(runFirstCheckPreviewAction).toHaveBeenCalledTimes(1));
-    expect(runFirstCheckPreviewAction).toHaveBeenLastCalledWith({ keywordId: "keyword_1" });
+    expect(runFirstCheckPreviewAction).toHaveBeenLastCalledWith({ keywordId: "kw_keyword_1" });
     expect(screen.getByLabelText("Desktop device")).toBeInTheDocument();
     expect(screen.getByLabelText("Mobile device")).toBeInTheDocument();
     expect(screen.getAllByText("United States")).toHaveLength(3);
@@ -150,7 +150,7 @@ describe("StepFirstCheck", () => {
 
     await waitFor(() => expect(screen.getByText("Not in top 100")).toBeInTheDocument());
     await waitFor(() => expect(runFirstCheckPreviewAction).toHaveBeenCalledTimes(2));
-    expect(runFirstCheckPreviewAction).toHaveBeenLastCalledWith({ keywordId: "keyword_2" });
+    expect(runFirstCheckPreviewAction).toHaveBeenLastCalledWith({ keywordId: "kw_keyword_2" });
 
     second.resolve({
       position: 4,
@@ -160,15 +160,43 @@ describe("StepFirstCheck", () => {
     });
     expect(await screen.findByText("#4 / example.com/page")).toBeInTheDocument();
     expect(
-      screen.getByText("Sample done. Every keyword follows your daily schedule from here."),
+      screen.getByText(
+        "Sample checks finished. Every keyword follows your daily schedule from here.",
+      ),
     ).toBeInTheDocument();
     expect(queueFirstChecksAction).not.toHaveBeenCalled();
+  });
+
+  it("uses natural failure copy when the only sample check fails", async () => {
+    renderReadyStep({
+      listFirstCheckCandidatesAction: vi.fn(async () => ({
+        candidates: [candidate("keyword_1", "rank tracker")],
+        hasAnalyticsSource: false,
+        isSampleProject: false,
+        providerReady: true,
+      })),
+      runFirstCheckPreviewAction: vi.fn(async () => ({
+        code: "failed" as const,
+        message: "The provider could not complete this check.",
+        status: "failed" as const,
+      })),
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Run 1 sample check" }));
+
+    expect(await screen.findByText("The sample check failed. Retry it below.")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "The sample check finished with an issue. You can retry the failed check below. Every keyword still follows your daily schedule.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("1 of 1 checks failed")).not.toBeInTheDocument();
   });
 
   it("retries only failed sample targets and keeps successful results", async () => {
     let failedAttempts = 0;
     const runFirstCheckPreviewAction = vi.fn(async (input: { keywordId: string }) => {
-      if (input.keywordId === "keyword_2" && failedAttempts++ === 0) {
+      if (input.keywordId === "kw_keyword_2" && failedAttempts++ === 0) {
         return {
           code: "budget_exhausted" as const,
           message: "Monthly rank-check budget reached.",
@@ -176,9 +204,9 @@ describe("StepFirstCheck", () => {
         };
       }
       return {
-        position: input.keywordId === "keyword_1" ? 2 : 4,
+        position: input.keywordId === "kw_keyword_1" ? 2 : 4,
         provider: "dataforseo",
-        rankingUrl: `https://example.com/${input.keywordId}`,
+        rankingUrl: `https://example.com/${input.keywordId.replace("kw_", "")}`,
         status: "completed" as const,
       };
     });
@@ -196,7 +224,7 @@ describe("StepFirstCheck", () => {
 
     expect(await screen.findByText("#4 / example.com/keyword_2")).toBeInTheDocument();
     expect(runFirstCheckPreviewAction).toHaveBeenCalledTimes(3);
-    expect(runFirstCheckPreviewAction).toHaveBeenLastCalledWith({ keywordId: "keyword_2" });
+    expect(runFirstCheckPreviewAction).toHaveBeenLastCalledWith({ keywordId: "kw_keyword_2" });
     expect(screen.queryByText("Monthly rank-check budget reached.")).not.toBeInTheDocument();
   });
 });

@@ -39,7 +39,7 @@ export function ConnectDrawerOauthSelection({
   const selectedProperty = propertyOptions.find((option) => option.value === property);
 
   return (
-    <div className="flex flex-col gap-3 rounded-[11px] border border-border-strong bg-bg-elev p-3.5">
+    <div className="flex flex-col gap-3 rounded-control border border-border bg-bg-elev p-3.5">
       <div>
         <p className="m-0 text-[12.5px] font-semibold text-fg">
           {isGa4 ? "Select a Google Analytics 4 property" : "Select a verified property"}
@@ -64,7 +64,7 @@ export function ConnectDrawerOauthSelection({
             value={property}
           />
           {selectedProperty ? (
-            <div className="rounded-[9px] bg-bg-sunken px-3 py-2.5 text-[11.5px] leading-5 text-fg-muted">
+            <div className="rounded-control bg-bg-sunken px-3 py-2.5 text-[11.5px] leading-5 text-fg-muted">
               <span className="block break-all font-mono text-[12px] text-fg">
                 {selectedProperty.value}
               </span>
@@ -90,7 +90,7 @@ export function ConnectDrawerOauthSelection({
           ) : null}
         </>
       ) : (
-        <div className="flex gap-2 rounded-[9px] bg-bg-sunken px-3 py-2.5 text-[12px] leading-5 text-fg-muted">
+        <div className="flex gap-2 rounded-control bg-bg-sunken px-3 py-2.5 text-[12px] leading-5 text-fg-muted">
           <WarningCircle aria-hidden className="mt-0.5 shrink-0 text-yellow-text" size={15} />
           <span>
             {setup.error ??

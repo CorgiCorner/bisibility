@@ -12,6 +12,7 @@ import type {
   KeywordSchedule,
   KeywordTrafficSummary,
   LastCheckStatus,
+  LatestAttemptHealth,
   UrlPresenceView,
 } from "@/lib/queries/keyword-row-types";
 import { ACTIVE_QUEUED_TASK_STATES } from "@/lib/rank-check/queued-state";
@@ -24,6 +25,7 @@ export type {
   KeywordSchedule,
   KeywordTrafficSummary,
   LastCheckStatus,
+  LatestAttemptHealth,
   PositionPoint,
   RankingUrlEvent,
   UrlPresenceView,
@@ -80,9 +82,11 @@ type KeywordRowInput = {
   rankChecks: {
     checkedAt: Date;
     degradedToCountry?: boolean;
+    errorCode: string | null;
     id: string;
     normalizationVersion: string | null;
     position: number | null;
+    provider: string;
     previousPosition: number | null;
     rankingUrl: string | null;
     requestedDepth: number | null;
@@ -151,6 +155,15 @@ export function latestStatus(check: { status?: string } | null): LastCheckStatus
   return check.status === undefined || check.status === "completed" ? "completed" : null;
 }
 
+export function latestAttemptHealth(
+  check: { status?: string } | null,
+  queuedTasks: ReadonlyArray<{ state: string }>,
+): LatestAttemptHealth {
+  if (check?.status === "running") return "running";
+  if (queuedTasks.some((task) => ACTIVE_QUEUED_TASK_STATES.includes(task.state))) return "running";
+  return check?.status === "failed" ? "failed" : "ok";
+}
+
 export function keywordCheckState(
   check: { position: number | null; status?: string } | null,
   queuedTasks: ReadonlyArray<{ state: string }>,
@@ -208,6 +221,8 @@ export function mapKeyword(
     cpc: metrics.cpc === null ? "0.00" : metrics.cpc.toFixed(2),
     cpcKnown: metrics.cpc !== null,
     createdAt: row.createdAt.toISOString(),
+    dataAsOfAt: iso(latest?.checkedAt),
+    dataProvider: latest?.provider ?? null,
     ctr: traffic?.ctr ?? null,
     device: deviceLabel(row.device),
     difficulty: metrics.difficulty ?? 0,
@@ -225,7 +240,9 @@ export function mapKeyword(
     impressions: traffic?.impressions ?? null,
     keyword: row.text,
     lastCheckAt: iso(latestAttempt?.checkedAt) ?? schedule.last_checked_at,
+    lastCheckErrorCode: latestAttempt?.errorCode ?? null,
     lastCheckStatus: latestStatus(latestAttempt),
+    latestAttemptHealth: latestAttemptHealth(latestAttempt, row.queuedRankCheckTasks ?? []),
     location: locationView(row),
     locationName: row.location,
     position,

@@ -215,7 +215,7 @@ describe("Modal exit lifecycle", () => {
 });
 
 describe("Modal token classes", () => {
-  it("applies rounded-card-lg to the dialog paper", () => {
+  it("applies rounded-card to the dialog paper", () => {
     render(
       <Modal onClose={vi.fn()} open title="Token test">
         <p>body</p>
@@ -223,8 +223,8 @@ describe("Modal token classes", () => {
     );
 
     const dialog = screen.getByRole("dialog");
-    expect(dialog).toHaveClass("rounded-card-lg");
-    expect(dialog).toHaveStyle({ borderRadius: "16px" });
+    expect(dialog).toHaveClass("rounded-card");
+    expect(dialog).toHaveStyle({ borderRadius: "12px" });
   });
 
   it("uses numeric spacing utilities for header, content, and footer", () => {

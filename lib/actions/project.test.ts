@@ -143,6 +143,9 @@ describe("project actions", () => {
         }),
       }),
     );
+    expect(mocks.prisma.project.create.mock.calls[0][0].data).not.toHaveProperty(
+      "providerAllocationsInitializedAt",
+    );
     expect(result).toMatchObject({ trackingScope: "country" });
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({

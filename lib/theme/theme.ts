@@ -1,3 +1,4 @@
+import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import { createTheme, type PaletteOptions, type Shadows } from "@mui/material/styles";
 import {
   type ColorSchemeName,
@@ -53,7 +54,7 @@ export const theme = createTheme({
   },
   palette: paletteFor("light"),
   shape: {
-    borderRadius: 9,
+    borderRadius: Number.parseInt(UI_RADIUS_ROLES.control, 10),
   },
   shadows: flatShadows,
   typography: {
@@ -78,7 +79,7 @@ export const theme = createTheme({
       },
       styleOverrides: {
         root: {
-          borderRadius: 6,
+          borderRadius: UI_RADIUS_ROLES.control,
           boxShadow: "none",
           fontFamily: "var(--font-sans), system-ui, sans-serif",
           fontSize: "13px",
@@ -90,13 +91,13 @@ export const theme = createTheme({
           "&:hover": { boxShadow: "none" },
           "&.Mui-disabled": {
             backgroundColor: "var(--bg-sunken)",
-            borderColor: "var(--border-strong)",
+            borderColor: "var(--border)",
             color: "var(--fg-muted)",
             opacity: 1,
           },
         },
         sizeLarge: {
-          borderRadius: 6,
+          borderRadius: UI_RADIUS_ROLES.control,
           fontSize: "14.5px",
           minHeight: 44,
           padding: "11px 18px",
@@ -112,11 +113,11 @@ export const theme = createTheme({
           props: { color: "inherit", variant: "outlined" },
           style: {
             backgroundColor: "var(--bg-elev)",
-            borderColor: "color-mix(in srgb, var(--border-control) 20%, transparent)",
+            borderColor: "var(--border-control)",
             color: "var(--fg)",
             "&:hover": {
               backgroundColor: "var(--bg-sunken)",
-              borderColor: "color-mix(in srgb, var(--border-control) 20%, transparent)",
+              borderColor: "var(--border-control)",
             },
           },
         },
@@ -142,7 +143,7 @@ export const theme = createTheme({
       styleOverrides: {
         root: {
           border: "1px solid var(--border)",
-          borderRadius: 14,
+          borderRadius: UI_RADIUS_ROLES.card,
           boxShadow: "none",
         },
       },

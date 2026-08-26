@@ -4,11 +4,12 @@ import {
   trailingExternalIcon as ExternalIcon,
   type UserMenuLink,
 } from "@/components/shell/user-menu-items";
+import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import MenuItem from "@mui/material/MenuItem";
 import Link from "next/link";
 
 const ROW_SX = {
-  borderRadius: "9px",
+  borderRadius: UI_RADIUS_ROLES.control,
   color: "var(--fg)",
   fontSize: "13px",
   gap: "10px",

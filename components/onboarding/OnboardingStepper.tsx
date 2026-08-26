@@ -51,7 +51,7 @@ export function OnboardingStepper({
         aria-valuemax={totalOnboardingSteps}
         aria-valuemin={1}
         aria-valuenow={currentStep}
-        className="mt-2 h-[5px] overflow-hidden rounded-[3px] bg-bg-sunken"
+        className="mt-2 h-[5px] overflow-hidden rounded-control bg-bg-sunken"
         role="progressbar"
       >
         <div
@@ -103,7 +103,7 @@ function StepRailItem({
   const state: StepDotState = done ? "past" : active ? "current" : "upcoming";
 
   const className = cn(
-    "flex w-full items-center gap-3 rounded-[11px] border border-transparent bg-transparent px-0 py-[11px] text-left",
+    "flex w-full items-center gap-3 rounded-control border border-transparent bg-transparent px-0 py-[11px] text-left",
     locked ? "cursor-default" : "cursor-pointer",
     active && "border-accent",
   );
@@ -111,7 +111,7 @@ function StepRailItem({
     <>
       <span
         className={cn(
-          "grid h-[30px] w-[30px] shrink-0 place-items-center rounded-[9px] text-[15px]",
+          "grid h-[30px] w-[30px] shrink-0 place-items-center rounded-control text-[15px]",
           onboardingNavStepStateClass(state),
         )}
         data-step-dot-state={state}

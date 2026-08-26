@@ -125,7 +125,7 @@ export function TagsSegmentsCard({
               {canDelete ? (
                 <button
                   aria-label={`Remove ${tag.label}`}
-                  className="grid h-4 w-4 place-items-center rounded-full text-fg-muted outline-none transition-colors hover:bg-bg-elev hover:text-fg focus-visible:bg-bg-elev focus-visible:text-fg"
+                  className="inline-flex h-4 w-4 items-center justify-center rounded-full p-0 leading-none text-fg-muted outline-none transition-colors hover:bg-bg-elev hover:text-fg focus-visible:bg-bg-elev focus-visible:text-fg"
                   onClick={() => {
                     setDraftTags((current) =>
                       current.filter((candidate) => tagKey(candidate.label) !== tagKey(tag.label)),
@@ -134,7 +134,7 @@ export function TagsSegmentsCard({
                   }}
                   type="button"
                 >
-                  <X aria-hidden size={11} weight="bold" />
+                  <X aria-hidden className="block shrink-0" size={10} weight="bold" />
                 </button>
               ) : null}
             </span>
@@ -172,7 +172,7 @@ export function TagsSegmentsCard({
           ) : canCreate ? (
             <button
               aria-label="Add tag"
-              className="inline-flex h-7 items-center rounded-full border border-border bg-bg-sidebar px-3 text-[12.5px] font-semibold text-fg outline-none transition-colors hover:bg-nav-active focus-visible:bg-nav-active"
+              className="inline-flex h-7 items-center rounded-full border border-border bg-bg-sidebar px-3 text-[12.5px] font-medium text-fg outline-none transition-colors hover:bg-nav-active focus-visible:bg-nav-active"
               onClick={() => setIsAdding(true)}
               type="button"
             >

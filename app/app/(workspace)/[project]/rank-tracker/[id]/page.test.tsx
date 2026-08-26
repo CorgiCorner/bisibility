@@ -25,6 +25,24 @@ vi.mock("@/components/keywords/KeywordTrafficCard", () => ({
   KeywordTrafficCard: () => <div data-testid="traffic-card" />,
 }));
 const positionHistoryProps = vi.fn();
+const normalDetailState = {
+  checkState: "ranked" as const,
+  completedComparableChecks: [
+    {
+      checkedAt: "2026-08-09T10:00:00.000Z",
+      position: 4,
+      rankingUrl: "https://example.com/old",
+    },
+    {
+      checkedAt: "2026-08-10T10:00:00.000Z",
+      position: 3,
+      rankingUrl: "https://example.com/new",
+    },
+  ],
+  hasRankData: true,
+  latestAttemptHealth: "ok" as const,
+  position: 3,
+};
 
 vi.mock("@/components/keywords/PositionHistoryCard", () => ({
   PositionHistoryCard: (props: { chartState?: unknown; keyword: unknown; timeZone: string }) => {
@@ -120,10 +138,9 @@ describe("KeywordDetailPage", () => {
 
   it("uses the normal-detail composition order from the reference", async () => {
     mocks.getKeywordDetail.mockResolvedValue({
-      checkState: "ranked",
+      ...normalDetailState,
       cpcKnown: true,
       difficultyKnown: true,
-      hasRankData: true,
       positionHistory: [
         { checkedAt: "2026-08-09T10:00:00.000Z", label: "Yesterday", position: 4 },
         { checkedAt: "2026-08-10T10:00:00.000Z", label: "Today", position: 3 },
@@ -164,8 +181,7 @@ describe("KeywordDetailPage", () => {
       timezone: "Europe/Madrid",
     });
     mocks.getKeywordDetail.mockResolvedValue({
-      checkState: "ranked",
-      hasRankData: true,
+      ...normalDetailState,
       positionHistory: [
         { checkedAt: "2026-08-09T10:00:00.000Z", label: "Yesterday", position: 4 },
         { checkedAt: "2026-08-10T10:00:00.000Z", label: "Today", position: 3 },
@@ -188,8 +204,7 @@ describe("KeywordDetailPage", () => {
   it("falls back to UTC when costContext lacks a timezone", async () => {
     mocks.getProjectCostContext.mockResolvedValue({ costPerCheckCents: null });
     mocks.getKeywordDetail.mockResolvedValue({
-      checkState: "ranked",
-      hasRankData: true,
+      ...normalDetailState,
       positionHistory: [
         { checkedAt: "2026-08-09T10:00:00.000Z", label: "Yesterday", position: 4 },
         { checkedAt: "2026-08-10T10:00:00.000Z", label: "Today", position: 3 },

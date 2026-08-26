@@ -25,7 +25,7 @@ export function Pill({ active = false, className, size = "md", sx, ...props }: P
       sx={[
         {
           backgroundColor: active ? "var(--accent-soft)" : "var(--bg-elev)",
-          border: "1px solid var(--border-strong)",
+          border: "1px solid var(--border-control)",
           color: active ? "var(--accent)" : "var(--fg-muted)",
           fontWeight: 600,
           transition: `background-color .16s ease, border-color .16s ease, color .16s ease, transform ${MOTION_PRESS}ms ease`,

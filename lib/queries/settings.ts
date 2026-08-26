@@ -35,6 +35,8 @@ import { resolveSerpDepth, resolveSerpStopOnMatch, type SerpDepth } from "@/lib/
 import type { ProviderUsageData } from "@/lib/settings/options";
 import { requireReadableProject } from "./_auth";
 import { apiKeyExpiryLabel } from "./api-key-settings";
+import { loadProviderAvailability } from "./provider-availability";
+import { loadProjectProviderSpend, type ProjectProviderSpend } from "./provider-spend";
 import { initials, memberColor, roleLabel } from "./settings-members";
 import {
   type SettingsProviderSummary,
@@ -100,11 +102,33 @@ export type SettingsView = {
     role: "Editor" | "Owner" | "Viewer";
     userId: string;
   }[];
-  usage: ProviderUsageData;
+  usage: { providerSpend: ProjectProviderSpend } & ProviderUsageData;
 };
 
 function iso(date: Date | null | undefined) {
   return date ? date.toISOString() : null;
+}
+
+function usagePeriod(now: Date, dateFormat: DateFormatPreference = "iso") {
+  const dateTime = createUserDateTimeFormatter({ dateFormat, timezone: "UTC" });
+  const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+  const reset = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
+  const end = new Date(reset.getTime() - 1);
+  const resetDays = Math.max(0, Math.floor((reset.getTime() - now.getTime()) / 86_400_000));
+  return {
+    dateFormat,
+    endAt: reset.toISOString(),
+    endLabel: dateTime.formatDate(end),
+    label: dateTime.formatMonthYear(start),
+    now: now.toISOString(),
+    resetsLabel:
+      resetDays === 0
+        ? "resets today"
+        : resetDays === 1
+          ? "resets in 1 day"
+          : `resets in ${resetDays} days`,
+    timezone: dateTime.timezone,
+  };
 }
 
 function requiredPublicId(value: string | null, prefix: "key" | "mbr" | "usr", resource: string) {
@@ -126,7 +150,7 @@ function labelFromDate(prefix: string, date: Date | null | undefined, dateTime: 
 export async function getSettings(projectId: string, options: { dateFormat?: DateFormatPreference; now?: Date } = {}): Promise<SettingsView> {
   const { project } = await requireReadableProject(projectId);
   const now = options.now ?? new Date();
-  const [fullProject, monthChecks, spentCents, connectionLookups] = await Promise.all([
+  const [fullProject, monthChecks, spentCents, connectionLookups, providerSpend] = await Promise.all([
     prisma.project.findUnique({
       include: {
         // Every key the user may still act on: expired keys stay listed as a state of their
@@ -151,13 +175,17 @@ export async function getSettings(projectId: string, options: { dateFormat?: Dat
     }),
     monthlySpendCents(project.id, now),
     monthlyLookupSpendByConnection(project.id, now),
-    ]);
+    loadProjectProviderSpend({ catalog: PROVIDER_CATALOG, now, projectId: project.id }),
+  ]);
   if (!fullProject) throw new Error("Project not found.");
-  const rateContexts = await loadProviderRateContexts(
-    fullProject.providerConnections.map((connection) => connection.id),
-    ["rank_check"],
-    now,
-  );
+  const [rateContexts, providerAvailability] = await Promise.all([
+    loadProviderRateContexts(
+      fullProject.providerConnections.map((connection) => connection.id),
+      ["rank_check"],
+      now,
+    ),
+    loadProviderAvailability(fullProject.providerConnections),
+  ]);
 
   const primarySerp = primaryProviderConnection(fullProject.providerConnections, "serp");
   const schedule = fullProject.defaults ?? {
@@ -262,9 +290,12 @@ export async function getSettings(projectId: string, options: { dateFormat?: Dat
         connectionLookups,
         serpDepth,
         rateContexts,
+        providerAvailability,
       ),
+      providerSpend,
       hasProvider: primarySerp != null,
       onPaceCents: projectedMonthlySpendCents(spentCents, now),
+      period: usagePeriod(now, options.dateFormat),
       primaryProvider: primarySerp
         ? (PROVIDER_CATALOG.find((entry) => entry.id === primarySerp.provider)?.label ??
           primarySerp.provider)

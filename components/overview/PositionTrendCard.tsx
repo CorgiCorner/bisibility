@@ -61,7 +61,7 @@ export function PositionTrendCard({
               empty || insufficient ? "invisible" : ""
             }`}
           >
-            <span className="h-[9px] w-[9px] rounded-sm bg-accent" aria-hidden />
+            <span className="h-[9px] w-[9px] rounded-control bg-accent" aria-hidden />
             {seriesLabel}
           </span>
         }

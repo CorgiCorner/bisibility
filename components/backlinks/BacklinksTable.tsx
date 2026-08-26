@@ -155,7 +155,7 @@ export function BacklinksTable({
 
   return (
     <>
-      <section className="min-w-0 overflow-hidden rounded-[12px] border border-border bg-bg-elev">
+      <section className="min-w-0 overflow-hidden rounded-card border border-border bg-bg-elev">
         <BacklinksTableToolbar
           counts={counts}
           filter={filter}
@@ -209,7 +209,7 @@ export function BacklinksTable({
             )}
           </div>
         </div>
-        <footer className="flex flex-wrap items-center gap-3 border-t border-border-strong px-4 py-2.5">
+        <footer className="flex flex-wrap items-center gap-3 border-t border-border px-4 py-2.5">
           <span className="text-[12.5px] text-fg-muted">
             Fetched {currentFetchedCount.toLocaleString("en-US")} of{" "}
             {currentTotalAvailable.toLocaleString("en-US")} links

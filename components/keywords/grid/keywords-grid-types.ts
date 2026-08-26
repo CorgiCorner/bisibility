@@ -1,8 +1,12 @@
 import type * as KeywordActions from "@/components/keywords/action-utils";
 import type { ImportTopQueriesAction } from "@/components/onboarding/steps/KeywordTopQueryImport";
 import type * as FirstCheckActions from "@/components/rank-check/FirstCheckBannerAction";
-import type { ActiveLens } from "@/lib/keywords/lens-model";
+import type { ActiveLens, LensLocationOption } from "@/lib/keywords/lens-model";
 import type { RankTrackerAction } from "@/lib/keywords/rank-tracker-command";
+import type {
+  RankTrackerListFacets,
+  RankTrackerQueryState,
+} from "@/lib/keywords/rank-tracker-query-types";
 import type {
   CreateSavedViewInput,
   DeleteSavedViewInput,
@@ -27,6 +31,7 @@ export type KeywordsGridProps = KeywordActions.KeywordWorkspaceActions & {
   createSavedViewAction?: (input: CreateSavedViewInput) => Promise<KeywordSavedView>;
   deletableSavedViewIds: readonly string[];
   deleteSavedViewAction?: (input: DeleteSavedViewInput) => Promise<unknown>;
+  facets?: RankTrackerListFacets;
   getFirstCheckRunPlanAction: FirstCheckActions.GetFirstCheckRunPlanAction;
   initialAction?: RankTrackerAction | null;
   initialDensity?: GridDensity;
@@ -35,15 +40,23 @@ export type KeywordsGridProps = KeywordActions.KeywordWorkspaceActions & {
   importTopQueriesAction?: ImportTopQueriesAction;
   keywordDefaults?: ProjectDefaultMarket;
   lens?: ActiveLens;
+  listMode?: "flat-server" | "grouped-client";
+  locations?: LensLocationOption[];
+  matchedTargetCount?: number;
+  page?: number;
+  pageCount?: number;
+  pageSize?: RankTrackerQueryState["pageSize"];
   providerConnected?: boolean;
   projectId: string;
   searchConsoleConnected?: boolean;
   projectMarkets?: ProjectMarketsView;
+  query?: RankTrackerQueryState;
   queueFirstChecksAction: FirstCheckActions.QueueFirstChecksAction;
   rows: KeywordRow[];
   runCheckNowAction?: KeywordActions.KeywordDetailActions["runCheckNowAction"];
   savedViews?: KeywordSavedView[];
   tagSuggestions?: readonly string[];
+  totalCount?: number;
   totalKeywordCount?: number;
   updateKeywordAction: KeywordActions.KeywordDetailActions["updateKeywordAction"];
   updateKeywordScheduleAction?: KeywordActions.KeywordDetailActions["updateKeywordScheduleAction"];

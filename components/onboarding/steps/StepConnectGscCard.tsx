@@ -138,7 +138,7 @@ export function StepConnectGscCard({
   }
 
   return (
-    <section className="flex h-full flex-col rounded-[14px] border border-border-strong bg-transparent p-4">
+    <section className="flex h-full w-full flex-col rounded-card border border-border-strong bg-transparent p-4">
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <span className="flex flex-col items-start gap-2">
@@ -218,13 +218,13 @@ export function StepConnectGscCard({
                 value={property}
               />
               {selected ? (
-                <span className="break-all rounded-[9px] bg-bg-sunken px-3 py-2 font-mono text-[12px] text-fg">
+                <span className="break-all rounded-control bg-bg-sunken px-3 py-2 font-mono text-[12px] text-fg">
                   {selected.value}
                 </span>
               ) : null}
             </div>
           ) : (
-            <p className="m-0 flex gap-2 rounded-[9px] bg-bg-sunken px-3 py-2.5 text-[12px] leading-5 text-fg-muted">
+            <p className="m-0 flex gap-2 rounded-control bg-bg-sunken px-3 py-2.5 text-[12px] leading-5 text-fg-muted">
               <WarningCircle aria-hidden className="mt-0.5 shrink-0 text-yellow-text" size={15} />
               {setup.error ??
                 "This account has no verified Search Console properties. Verify one or connect a different Google account."}

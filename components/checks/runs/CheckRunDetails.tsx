@@ -34,8 +34,11 @@ export function CountryLevelBadge() {
   );
 }
 
-function AttemptTone({ attempt }: Readonly<{ attempt: CheckAttempt }>) {
-  if (attempt.outcome === "ok") {
+function AttemptTone({
+  attempt,
+  failedRun,
+}: Readonly<{ attempt: CheckAttempt; failedRun: boolean }>) {
+  if (attempt.outcome === "ok" && !failedRun) {
     return <CheckCircle aria-hidden className="text-green-text" size={15} weight="fill" />;
   }
   if (attempt.outcome === "rate_limited") {
@@ -76,16 +79,19 @@ function AttemptRow({
   index,
   run,
 }: Readonly<{ attempt: CheckAttempt; index: number; run: CheckRunRow }>) {
-  const outcome =
-    fallbackOutcome(run, index) ??
-    (attempt.outcome === "ok" && typeof run.position === "number"
-      ? `${formatAttemptOutcome(attempt)} · #${run.position}${
-          typeof run.requestedDepth === "number" ? ` of top ${run.requestedDepth}` : ""
-        }`
-      : formatAttemptOutcome(attempt));
+  const failedRun = run.status === "failed";
+  const attemptOutcome = formatAttemptOutcome(attempt, failedRun);
+  const outcome = failedRun
+    ? attemptOutcome
+    : (fallbackOutcome(run, index) ??
+      (attempt.outcome === "ok" && typeof run.position === "number"
+        ? `${attemptOutcome} · #${run.position}${
+            typeof run.requestedDepth === "number" ? ` of top ${run.requestedDepth}` : ""
+          }`
+        : attemptOutcome));
   return (
     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 py-1.5 text-[11.5px]">
-      <AttemptTone attempt={attempt} />
+      <AttemptTone attempt={attempt} failedRun={failedRun} />
       <span className="w-[clamp(76px,16vw,140px)] truncate font-semibold text-fg">
         {attempt.providerLabel}
       </span>
@@ -141,8 +147,8 @@ type DetailsProps = {
 
 export function CheckRunDetails({ columns, keywordHref, now, run }: Readonly<DetailsProps>) {
   const duration =
-    run.status === "failed" && run.error?.toLowerCase().includes("timed out")
-      ? "timed out after 15 min"
+    run.status === "failed" && /timed out|stale running/i.test(run.error ?? "")
+      ? "Timed out after 15 min"
       : formatDuration(run.durationMs);
   return (
     <div className="bg-bg-sunken px-4 py-3">
@@ -151,12 +157,13 @@ export function CheckRunDetails({ columns, keywordHref, now, run }: Readonly<Det
           {run.attempts.length > 0 ? "Provider chain" : "Run details"}
         </strong>
         {run.trigger ? <span className="capitalize">· {run.trigger}</span> : null}
+        {run.status === "failed" ? <span>· All providers failed</span> : null}
         {duration ? <span>· {duration}</span> : null}
       </div>
       <HiddenMeta columns={columns} now={now} run={run} />
       {run.status === "failed" && run.error && isInternalErrorString(run.error) ? (
         <p
-          className="mt-2 line-clamp-3 whitespace-pre-wrap break-words rounded-lg bg-bg-inset px-2.5 py-2 font-mono text-[10.5px] leading-relaxed text-fg-muted"
+          className="mt-2 line-clamp-3 whitespace-pre-wrap break-words rounded-control bg-bg-inset px-2.5 py-2 font-mono text-[10.5px] leading-relaxed text-fg-muted"
           title={run.error}
         >
           {run.error}

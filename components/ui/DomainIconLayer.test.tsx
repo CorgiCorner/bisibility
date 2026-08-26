@@ -42,11 +42,11 @@ describe("DomainIconLayer", () => {
     });
   });
 
-  it("paints an opaque layer surface so transparent favicon pixels never bleed through", () => {
+  it("paints a fixed white surface so transparent favicon pixels never reveal fallback text", () => {
     render(<DomainIconLayer src="https://icons.example.com/favicon.png" testId="domain-icon" />);
     loadProbe(screen.getByTestId("domain-icon-probe"), 32, 32);
     const layer = screen.getByTestId("domain-icon");
-    expect(layer).toHaveClass("bg-bg-sunken");
+    expect(layer).toHaveClass("bg-white");
     expect(layer).toHaveStyle({
       backgroundImage: 'url("https://icons.example.com/favicon.png")',
       backgroundPosition: "center",

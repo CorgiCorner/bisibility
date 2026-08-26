@@ -94,7 +94,7 @@ function rankCheckContext({
   rankChecks?: Array<{ status: string }>;
 } = {}) {
   return {
-    project: { budgetCapCents: 5_000, defaults: { serpDepth: 100 } },
+    project: { budgetCapCents: 5_000, defaults: { serpDepth: 100 }, domain: "example.com" },
     queuedRankCheckTasks,
     rankChecks,
     schedule: null,

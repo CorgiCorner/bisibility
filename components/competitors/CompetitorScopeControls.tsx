@@ -65,7 +65,7 @@ export function CompetitorScopeControls({
   const options = competitorRegistryOptions(markets, current.device, projectMarkets);
 
   return (
-    <div className="flex flex-wrap items-center gap-2 rounded-[11px] border border-border bg-bg-sunken px-3 py-2.5">
+    <div className="flex flex-wrap items-center gap-2 rounded-control border border-border bg-bg-sunken px-3 py-2.5">
       <span className="font-mono text-[11px] uppercase tracking-[0.5px] text-fg-muted">Market</span>
       <MarketCombobox
         ariaLabel="Competitor market"

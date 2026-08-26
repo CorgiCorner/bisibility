@@ -25,7 +25,7 @@ export function localRankPosition(keyword: string, completedCheckCount = 0) {
 
 export const localSequenceProvider: SerpProvider = {
   id: "local-sequence",
-  label: "Local sequence (dev-only)",
+  label: "Local rank test",
 
   async testConnection() {
     return {

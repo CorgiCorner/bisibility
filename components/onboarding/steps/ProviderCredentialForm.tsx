@@ -94,7 +94,7 @@ export function ProviderCredentialForm({
 }: Readonly<ProviderCredentialFormProps>) {
   const saveHint = "Test the credentials and save.";
   return (
-    <section className="mt-4 rounded-[14px] border border-border bg-bg-elev p-4">
+    <section className="mt-4 rounded-card border border-border bg-bg-elev p-4">
       <div className={cn("grid gap-4", fields.length > 1 && "sm:grid-cols-2")}>
         {fields.map((field) => (
           <CredentialFieldInput

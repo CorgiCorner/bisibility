@@ -32,7 +32,7 @@ export function MigrationDestinationField({
       </label>
       <input
         aria-describedby={describedBy || undefined}
-        className="min-h-11 rounded-[9px] border border-border-strong bg-transparent px-[13px] font-sans text-[13px] font-medium text-fg outline-none focus:border-accent"
+        className="min-h-11 rounded-control border border-border-control bg-transparent px-[13px] font-sans text-[13px] font-medium text-fg outline-none placeholder:text-[12px] placeholder:leading-4 focus:border-accent"
         id={inputId}
         placeholder="https://rank.example.com"
         {...form.register("targetOrigin")}

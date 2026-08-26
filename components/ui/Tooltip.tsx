@@ -10,12 +10,15 @@ import {
   createContext,
   forwardRef,
   type HTMLAttributes,
+  isValidElement,
   type ReactElement,
   type ReactNode,
   type TouchEvent as ReactTouchEvent,
   type Ref,
+  type RefObject,
   useCallback,
   useContext,
+  useEffect,
   useId,
   useMemo,
   useRef,
@@ -39,7 +42,7 @@ export type TooltipPlacement =
   | "top-start";
 
 export type TooltipProps = {
-  children: ReactElement;
+  children: ReactNode;
   content: string | number;
   placement?: TooltipPlacement;
   arrow?: boolean;
@@ -64,6 +67,20 @@ const fallbackContext: TooltipContextValue = {
 };
 
 const TooltipContext = createContext<TooltipContextValue>(fallbackContext);
+
+function useTooltipProviderCooldownCleanup(
+  cooldownTimerRef: RefObject<ReturnType<typeof setTimeout> | undefined>,
+) {
+  // Synchronizes timer ownership with the browser lifecycle on provider unmount.
+  useEffect(() => {
+    return () => {
+      if (cooldownTimerRef.current !== undefined) {
+        clearTimeout(cooldownTimerRef.current);
+        cooldownTimerRef.current = undefined;
+      }
+    };
+  }, [cooldownTimerRef]);
+}
 
 type TooltipTriggerProps = HTMLAttributes<HTMLElement> & {
   child: ReactElement<Record<string, unknown>>;
@@ -115,21 +132,9 @@ export function TooltipProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo(() => ({ beginClose, beginOpen }), [beginClose, beginOpen]);
 
-  const cleanupRef = useCallback((_: HTMLSpanElement | null) => {
-    return () => {
-      if (cooldownTimerRef.current !== undefined) {
-        clearTimeout(cooldownTimerRef.current);
-        cooldownTimerRef.current = undefined;
-      }
-    };
-  }, []);
+  useTooltipProviderCooldownCleanup(cooldownTimerRef);
 
-  return (
-    <TooltipContext.Provider value={value}>
-      <span hidden ref={cleanupRef} />
-      {children}
-    </TooltipContext.Provider>
-  );
+  return <TooltipContext.Provider value={value}>{children}</TooltipContext.Provider>;
 }
 
 export function Tooltip({
@@ -202,19 +207,19 @@ export function Tooltip({
     }
   }, [beginClose, clearTouchOpenTimer]);
 
-  const cleanupRef = useCallback(
-    (_: HTMLSpanElement | null) => {
-      return () => {
-        clearTouchOpenTimer();
-        clearTouchLeaveTimer();
-        touchActiveRef.current = false;
-        touchOpenedRef.current = false;
-      };
-    },
-    [clearTouchLeaveTimer, clearTouchOpenTimer],
-  );
+  useEffect(() => {
+    return () => {
+      clearTouchOpenTimer();
+      clearTouchLeaveTimer();
+      touchActiveRef.current = false;
+      touchOpenedRef.current = false;
+    };
+  }, [clearTouchLeaveTimer, clearTouchOpenTimer]);
 
-  const childProps = children.props as {
+  if (!isValidElement(children)) return children;
+
+  const child = children as ReactElement<Record<string, unknown>>;
+  const childProps = (child.props ?? {}) as {
     "aria-describedby"?: string;
     "aria-label"?: string;
     "aria-labelledby"?: string;
@@ -223,7 +228,7 @@ export function Tooltip({
     onTouchCancel?: (e: ReactTouchEvent<Element>) => void;
   };
 
-  let childElement = cloneElement(children as ReactElement<Record<string, unknown>>, {
+  let childElement = cloneElement(child, {
     onTouchStart: (e: ReactTouchEvent<Element>) => {
       childProps.onTouchStart?.(e);
       handleTouchStart();
@@ -288,8 +293,6 @@ export function Tooltip({
           {content}
         </span>
       ) : null}
-      {/* Callback-ref cleanup avoids an effect for timer ownership. */}
-      <span hidden ref={cleanupRef} />
     </span>
   );
 }

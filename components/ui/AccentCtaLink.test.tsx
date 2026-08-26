@@ -8,7 +8,7 @@ describe("AccentCtaLink", () => {
 
     const link = screen.getByRole("link", { name: "Connect DataForSEO" });
     expect(link).toHaveAttribute("href", "/app/prj_1/integrations");
-    expect(link).toHaveClass("bg-accent-solid", "rounded-[10px]", "gap-[7px]", "py-2.5");
+    expect(link).toHaveClass("bg-accent-solid", "rounded-control", "gap-[7px]", "py-2.5");
     const icon = link.querySelector("svg");
     expect(icon).not.toBeNull();
     expect(icon).toHaveAttribute("aria-hidden", "true");

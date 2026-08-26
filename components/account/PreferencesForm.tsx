@@ -33,7 +33,7 @@ export type PreferencesFormProps = {
 };
 
 const selectTriggerClass =
-  "min-h-10 w-full justify-between rounded-lg border-border-strong bg-transparent px-3 text-[13px] font-medium normal-case tracking-normal";
+  "min-h-10 w-full justify-between rounded-control border-border-control bg-transparent px-3 text-[13px] font-medium normal-case tracking-normal";
 
 function themeIcon(value: UserPreferences["theme"]) {
   if (value === "light") {

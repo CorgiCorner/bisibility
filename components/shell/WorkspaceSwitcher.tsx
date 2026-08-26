@@ -14,6 +14,7 @@ import {
   workspaceMenuOrigins,
 } from "@/components/shell/workspace-menu-placement";
 import type { WorkspaceSummary } from "@/lib/queries/workspaces";
+import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import Divider from "@mui/material/Divider";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
@@ -26,7 +27,7 @@ const MENU_ID = "workspace-switcher-menu";
 const PAPER_SX = {
   backgroundColor: "var(--bg-elev)",
   border: "1px solid var(--border)",
-  borderRadius: "12px",
+  borderRadius: UI_RADIUS_ROLES.card,
   boxShadow: "0 14px 38px rgba(20, 16, 8, 0.16)",
   color: "var(--fg)",
   padding: "6px",
@@ -146,7 +147,7 @@ export function WorkspaceSwitcher({
         {canCreateWorkspace ? <Divider sx={DIVIDER_SX} /> : null}
         {canCreateWorkspace ? (
           <MenuItem component={Link} href="/onboarding?new=1" onClick={close} sx={MENU_ROW_SX}>
-            <span className="grid h-[30px] w-[30px] flex-none place-items-center rounded-lg border border-dashed border-border-strong text-fg-muted">
+            <span className="grid h-[30px] w-[30px] flex-none place-items-center rounded-control border border-dashed border-border text-fg-muted">
               <Plus aria-hidden size={14} weight="bold" />
             </span>
             <span className="text-fg">Create project</span>

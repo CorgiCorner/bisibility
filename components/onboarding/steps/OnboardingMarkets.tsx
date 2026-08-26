@@ -73,7 +73,7 @@ export function OnboardingMarkets({
               onClick={() => removeMarket(value.canonicalKey)}
               size="xs"
               sx={{
-                borderRadius: "999px",
+                borderRadius: "9999px",
                 height: 20,
                 minHeight: 20,
                 minWidth: 20,
@@ -93,7 +93,7 @@ export function OnboardingMarkets({
             onClick={() => setPickerOpen(true)}
             size="xs"
             startIcon={<Plus aria-hidden size={12} weight="bold" />}
-            sx={{ borderRadius: "999px", borderStyle: "dashed", minHeight: 30 }}
+            sx={{ borderRadius: "9999px", borderStyle: "dashed", minHeight: 30 }}
             type="button"
             variant="secondary"
           >

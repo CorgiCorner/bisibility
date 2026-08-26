@@ -70,7 +70,7 @@ export function UrlInspectionCard({
             />
             <input
               aria-invalid={Boolean(form.formState.errors.inspectionDailyLimit)}
-              className="mt-1.5 min-h-10 w-full rounded-lg border border-border-strong bg-transparent px-3 text-[13px] font-medium text-fg outline-none focus:border-accent"
+              className="mt-1.5 min-h-10 w-full rounded-control border border-border-control bg-transparent px-3 text-[13px] font-medium text-fg outline-none focus:border-accent"
               id="inspection-daily-limit"
               max={1000}
               min={0}

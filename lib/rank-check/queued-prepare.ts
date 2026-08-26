@@ -157,7 +157,7 @@ export async function prepareQueuedRankCheckBatch(
       ? "Queued DataForSEO rank checks were disabled before batch preparation."
       : (context.eligibilityReason ??
         (allScheduled ? null : "Keyword schedule no longer permits automatic work."));
-    if (!deferredReason) {
+    if (!deferredReason && !context.project.providerAllocationsInitializedAt) {
       try {
         await assertBudgetAvailable(input.projectId, now, {
           capCents: context.project.budgetCapCents,

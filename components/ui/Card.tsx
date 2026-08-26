@@ -5,7 +5,7 @@ import MuiCard, { type CardProps as MuiCardProps } from "@mui/material/Card";
 import { cva } from "class-variance-authority";
 
 export type CardProps = MuiCardProps & {
-  radius?: "card" | "card-lg";
+  radius?: "card";
   size?: "sm" | "md" | "lg";
 };
 
@@ -19,7 +19,6 @@ const cardVariants = cva("", {
   variants: {
     radius: {
       card: "rounded-card",
-      "card-lg": "rounded-card-lg",
     },
     size: {
       sm: "p-3",
@@ -41,7 +40,7 @@ export function Card({
   ...props
 }: CardProps) {
   const additionalSx = sxArray(sx);
-  const resolvedRadius = radius ?? (size === "lg" ? "card-lg" : "card");
+  const resolvedRadius = radius ?? "card";
   const radiusClassName = `rounded-${resolvedRadius}`;
   const mergedClassName = cn(cardVariants({ radius: resolvedRadius, size }), className);
   const radiusSx = mergedClassName.split(/\s+/).includes(radiusClassName)

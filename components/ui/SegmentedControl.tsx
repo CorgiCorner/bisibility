@@ -121,10 +121,10 @@ export function SegmentedControl<T extends string>({
           size === "toolbar"
             ? cn(toolbarControlClassName, "gap-0.5 p-[3px]")
             : size === "xs"
-              ? "min-h-[30px] gap-0.5 rounded-[8px] border border-border-strong bg-transparent p-[2px]"
+              ? "min-h-[30px] gap-0.5 rounded-control border border-border-control bg-transparent p-[2px]"
               : size === "field"
-                ? "min-h-10 gap-1 rounded-[9px] border border-border-strong bg-transparent p-[3px]"
-                : "gap-1 rounded-[10px] border border-border-strong bg-transparent p-1",
+                ? "min-h-10 gap-1 rounded-control border border-border-control bg-transparent p-[3px]"
+                : "gap-1 rounded-control border border-border-control bg-transparent p-1",
         )}
         style={
           fitContent
@@ -153,7 +153,7 @@ export function SegmentedControl<T extends string>({
               />
               <span
                 className={cn(
-                  "flex w-full cursor-pointer flex-col items-center justify-center rounded-[7px] border border-transparent text-center normal-case tracking-normal transition-colors",
+                  "flex w-full cursor-pointer flex-col items-center justify-center rounded-control border border-transparent text-center normal-case tracking-normal transition-colors",
                   size === "toolbar"
                     ? "h-[26px] flex-row gap-1.5 px-2.5 py-0.5 text-[12.5px] font-normal"
                     : size === "xs"
@@ -162,7 +162,7 @@ export function SegmentedControl<T extends string>({
                         ? "min-h-8 px-2 py-1 text-[12.5px] font-semibold"
                         : "min-h-9 px-2 py-1.5 text-[12.5px] font-semibold",
                   active
-                    ? cn("border-border-strong bg-nav-active text-fg", activeClassName)
+                    ? cn("border-border-control bg-nav-active text-fg", activeClassName)
                     : "text-fg-muted hover:bg-nav-active hover:text-fg",
                   optionDisabled &&
                     "cursor-not-allowed text-fg-muted hover:bg-transparent hover:text-fg-muted",

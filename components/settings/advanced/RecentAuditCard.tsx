@@ -30,7 +30,7 @@ export function RecentAuditCard({ entries, projectId }: Readonly<RecentAuditCard
       title="Audit log"
     >
       {entries.length ? (
-        <div className="divide-y divide-border-soft overflow-hidden rounded-[11px] border border-border">
+        <div className="divide-y divide-border-soft overflow-hidden rounded-control border border-border">
           {entries.slice(0, 5).map((entry) => (
             <div
               className="grid grid-cols-[34px_minmax(0,1fr)] gap-x-3 gap-y-1 px-3 py-2.5 sm:grid-cols-[34px_minmax(0,1fr)_auto] sm:items-center"
@@ -38,7 +38,7 @@ export function RecentAuditCard({ entries, projectId }: Readonly<RecentAuditCard
             >
               <span
                 aria-hidden
-                className="row-span-2 grid h-8.5 w-[34px] place-items-center rounded-[9px] border border-border bg-bg-sunken font-mono text-[10px] font-semibold text-fg-muted sm:row-span-1"
+                className="row-span-2 grid h-8.5 w-[34px] place-items-center rounded-control border border-border bg-bg-sunken font-mono text-[10px] font-semibold text-fg-muted sm:row-span-1"
               >
                 {entry.actor.initials}
               </span>
@@ -66,7 +66,7 @@ export function RecentAuditCard({ entries, projectId }: Readonly<RecentAuditCard
           ))}
         </div>
       ) : (
-        <p className="m-0 rounded-[11px] border border-border bg-bg-sunken px-3 py-4 text-[12.5px] text-fg-muted">
+        <p className="m-0 rounded-control border border-border bg-bg-sunken px-3 py-4 text-[12.5px] text-fg-muted">
           No audit entries yet.
         </p>
       )}

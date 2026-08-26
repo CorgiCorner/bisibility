@@ -17,7 +17,7 @@ export type KeywordDetailStatePillProps = {
 
 const stateMeta = {
   failed: { className: "border-red text-red-text", label: "Check failed" },
-  never_checked: { className: "border-border-strong text-fg-muted", label: "Not checked" },
+  never_checked: { className: "border-border-control text-fg-muted", label: "Not checked" },
   not_ranked: { className: "border-yellow text-yellow-text", label: "Not ranked" },
   ranked: { className: "border-green text-green-text", label: "Ranked" },
   running: { className: "border-blue text-blue-text", label: "Check in progress" },

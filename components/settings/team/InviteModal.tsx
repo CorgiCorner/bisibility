@@ -126,14 +126,14 @@ export function InviteModal({
     >
       {sent ? (
         <div className="flex flex-col items-center px-2 pb-1.5 pt-3.5 text-center">
-          <span className="grid h-12 w-12 place-items-center rounded-[13px] bg-green/10 text-green-text">
+          <span className="grid h-12 w-12 place-items-center rounded-card bg-green/10 text-green-text">
             <PaperPlaneTilt aria-hidden size={24} weight="fill" />
           </span>
           <div className="mt-3.5 text-[15px] font-semibold text-fg">Invitation sent</div>
           <p className="m-0 mt-1.5 max-w-[300px] text-[13px] text-fg-muted">
             We emailed an invite to {sentEmail}. You can also share this link directly.
           </p>
-          <div className="mt-4 flex w-full items-center gap-2 rounded-[9px] border border-border-strong bg-transparent px-3 py-[9px]">
+          <div className="mt-4 flex w-full items-center gap-2 rounded-control border border-border bg-transparent px-3 py-[9px]">
             <span className="min-w-0 flex-1 truncate font-mono text-[11.5px] text-fg-muted">
               {inviteLink}
             </span>
@@ -151,7 +151,7 @@ export function InviteModal({
           <input
             aria-describedby={form.formState.errors.email ? "invite-email-error" : undefined}
             aria-invalid={Boolean(form.formState.errors.email)}
-            className="mt-[7px] min-h-11 w-full rounded-[9px] border border-border-strong bg-transparent px-[13px] font-mono text-[13.5px] font-medium text-fg outline-none focus:border-accent"
+            className="mt-[7px] min-h-11 w-full rounded-control border border-border-control bg-transparent px-[13px] font-mono text-[13.5px] font-medium text-fg outline-none placeholder:text-[12px] placeholder:leading-4 focus:border-accent"
             id="invite-email"
             inputMode="email"
             placeholder="teammate@acme.dev"
@@ -172,8 +172,8 @@ export function InviteModal({
               return (
                 <label
                   className={cn(
-                    "flex cursor-pointer items-center gap-3 rounded-[11px] border-[1.5px] px-[13px] py-[11px]",
-                    active ? "border-accent bg-accent-soft" : "border-border-strong bg-bg-elev",
+                    "flex cursor-pointer items-center gap-3 rounded-control border-[1.5px] px-[13px] py-[11px]",
+                    active ? "border-accent bg-accent-soft" : "border-border-control bg-bg-elev",
                   )}
                   key={role.value}
                 >
@@ -190,7 +190,7 @@ export function InviteModal({
                   <span
                     className={cn(
                       "grid h-[18px] w-[18px] flex-none place-items-center rounded-full border-[1.5px]",
-                      active ? "border-accent" : "border-border-strong",
+                      active ? "border-accent" : "border-border",
                     )}
                   >
                     <span

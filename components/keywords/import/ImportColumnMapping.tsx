@@ -38,7 +38,7 @@ export function ImportColumnMapping({
   sourceColumns: readonly KeywordImportSourceColumn[];
 }>) {
   return (
-    <div className="mt-4 overflow-hidden rounded-xl border border-border">
+    <div className="mt-4 overflow-hidden rounded-card border border-border">
       <div className="grid grid-cols-[minmax(0,1fr)_20px_minmax(0,1fr)] items-center gap-2 bg-bg-sunken px-[15px] py-2 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
         <span>In your file</span>
         <span />

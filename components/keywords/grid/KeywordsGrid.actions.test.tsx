@@ -9,7 +9,7 @@ import { pendingRows, renderPendingGrid } from "./KeywordsGrid.test-helpers";
 
 const mocks = vi.hoisted(() => ({ exportKeywords: vi.fn() }));
 
-vi.mock("@/lib/actions/keyword-import-export", () => ({ exportKeywords: mocks.exportKeywords }));
+vi.mock("@/lib/actions/keyword-export-action", () => ({ exportKeywords: mocks.exportKeywords }));
 vi.mock("@/components/keywords/import/ImportCsvWizard", () => ({
   ImportCsvWizard: () => null,
 }));
@@ -93,9 +93,23 @@ describe("KeywordsGrid actions", () => {
     fireEvent.click(screen.getByRole("button", { name: /export csv/i }));
 
     await waitFor(() =>
-      expect(mocks.exportKeywords).toHaveBeenCalledWith(
-        expect.objectContaining({ keywordIds: [row.id], projectId: "prj_1" }),
-      ),
+      expect(mocks.exportKeywords).toHaveBeenCalledWith({
+        columns: {
+          change: false,
+          country: true,
+          device: true,
+          intent: true,
+          tags: true,
+          topic: true,
+          url: true,
+        },
+        format: "csv",
+        granularity: "daily",
+        projectId: "prj_1",
+        range: "30",
+        scope: "current",
+        selection: { keywordIds: [row.id], mode: "selected" },
+      }),
     );
   }, 15_000);
 
@@ -128,6 +142,13 @@ describe("KeywordsGrid actions", () => {
     expect(screen.getByText("1 selected")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Run check (Top 100)" }));
 
+    expect(runCheckNowAction).not.toHaveBeenCalled();
+    expect(screen.getByRole("dialog", { name: "Run rank check" })).toBeInTheDocument();
+    expect(screen.getByText("1 keyword")).toBeInTheDocument();
+    expect(screen.getByText("Top 100")).toBeInTheDocument();
+    expect(screen.getByText("~$0.02")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Confirm & run" }));
+
     expect(runCheckNowAction).toHaveBeenCalledTimes(1);
     expect([rows[0].id, rows[1].id]).toContain(runCheckNowAction.mock.calls[0][0].keywordId);
     expect(runCheckNowAction.mock.calls[0][0]).not.toHaveProperty("depth");
@@ -142,7 +163,10 @@ describe("KeywordsGrid actions", () => {
 
   it("passes a selected check depth override", async () => {
     const [row] = pendingRows(1);
-    const runCheckNowAction = vi.fn().mockResolvedValue({ status: "queued" });
+    const runCheckNowAction = vi.fn().mockResolvedValue({
+      rankCheckId: "check_abcdefghijklmnopqrstuvwx",
+      status: "running",
+    });
     renderPendingGrid({ providerConnected: true, rows: [row], runCheckNowAction });
 
     const keywordRow = (await screen.findByText(row.keyword)).closest(
@@ -154,28 +178,92 @@ describe("KeywordsGrid actions", () => {
     expect(runCheckNowAction).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByRole("button", { name: "Run check (Top 20)" }));
+    expect(runCheckNowAction).not.toHaveBeenCalled();
+    expect(screen.getByRole("dialog", { name: "Run rank check" })).toBeInTheDocument();
+    expect(screen.getAllByText("Top 20")).toHaveLength(2);
+    fireEvent.click(screen.getByRole("button", { name: "Confirm & run" }));
     await waitFor(() =>
       expect(runCheckNowAction).toHaveBeenCalledWith({ depth: 20, keywordId: row.id }),
     );
+    expect(screen.getByRole("dialog", { name: "Check running" })).toBeInTheDocument();
   });
 
-  it("exports filtered keyword IDs when no rows are selected", async () => {
+  it("shows sample-project refusal as a final failed modal state", async () => {
+    const [row] = pendingRows(1);
+    const runCheckNowAction = vi.fn().mockResolvedValue({
+      code: "sample_project",
+      message: "Sample projects don't run real checks.",
+      status: "not_started",
+    });
+    renderPendingGrid({ providerConnected: true, rows: [row], runCheckNowAction });
+
+    const keywordRow = (await screen.findByText(row.keyword)).closest(
+      '[role="row"]',
+    ) as HTMLElement;
+    fireEvent.click(within(keywordRow).getByRole("checkbox"));
+    fireEvent.click(screen.getByRole("button", { name: "Run check (Top 100)" }));
+    fireEvent.click(screen.getByRole("button", { name: "Confirm & run" }));
+
+    expect(await screen.findByRole("dialog", { name: "Check failed" })).toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent("Sample projects don't run real checks.");
+    expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
+  });
+
+  it("opens the same confirmation modal from Retry", async () => {
+    const rows = pendingRows(2);
+    const runCheckNowAction = vi.fn().mockResolvedValue({ status: "queued" });
+    renderPendingGrid({
+      checkHealth: {
+        budget: { capCents: 5000, exhausted: false, spentCents: 1250 },
+        failed24h: { count: 1, latest: null },
+        providerRate: { overrideCents: 2, providerId: "dataforseo" },
+      },
+      providerConnected: true,
+      rows,
+      runCheckNowAction,
+    });
+
+    await screen.findByText(rows[0].keyword);
+    fireEvent.click(screen.getByRole("button", { name: "Retry" }));
+
+    expect(runCheckNowAction).not.toHaveBeenCalled();
+    expect(screen.getByRole("dialog", { name: "Run rank checks" })).toBeInTheDocument();
+    expect(screen.getByText("2 keywords")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Confirm & run" }));
+    await waitFor(() => expect(runCheckNowAction).toHaveBeenCalledTimes(2));
+  });
+
+  it("exports locally filtered rows as an ID-scoped selection", async () => {
     const rows = pendingRows(2);
     renderPendingGrid({ rows });
 
-    fireEvent.change(screen.getByRole("searchbox", { name: "Filter keywords" }), {
+    fireEvent.change(screen.getByRole("searchbox", { name: "Search keywords" }), {
       target: { value: rows[0].keyword },
     });
     await screen.findByRole("button", { name: /clear all search and filters/i });
     fireEvent.click(screen.getByRole("button", { name: /^export$/i }));
 
-    expect(await screen.findByText("Export 1 filtered keyword")).toBeInTheDocument();
+    expect(await screen.findByText("Export 1 selected keyword")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /export csv/i }));
 
     await waitFor(() =>
-      expect(mocks.exportKeywords).toHaveBeenCalledWith(
-        expect.objectContaining({ keywordIds: [rows[0].id], projectId: "prj_1" }),
-      ),
+      expect(mocks.exportKeywords).toHaveBeenCalledWith({
+        columns: {
+          change: false,
+          country: true,
+          device: true,
+          intent: true,
+          tags: true,
+          topic: true,
+          url: true,
+        },
+        format: "csv",
+        granularity: "daily",
+        projectId: "prj_1",
+        range: "30",
+        scope: "current",
+        selection: { keywordIds: [rows[0].id], mode: "selected" },
+      }),
     );
   }, 15_000);
 });

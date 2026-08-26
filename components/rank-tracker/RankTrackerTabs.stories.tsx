@@ -13,6 +13,7 @@ const meta = {
   ],
   args: {
     activeTab: "checks",
+    checksCount: 12_480,
     projectRef: "prj_story",
     savedCount: 36,
     trackedCount: 248,

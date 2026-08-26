@@ -45,7 +45,7 @@ export type ProviderCostEntryRow = ProviderRateEntry & {
 
 export function providerDescription(item: (typeof PROVIDER_CATALOG)[number]) {
   if (item.id === "local-sequence") {
-    return "Development-only deterministic ranks. Add [seq:5,15,15,4] to keyword text to stage transitions.";
+    return "Add [seq:5,15,15,4] to choose the ranks returned for a keyword.";
   }
   return item.kind === "serp"
     ? `${item.label} rank-data provider. You pay the provider directly.`

@@ -2,15 +2,16 @@ import { parsePublicId } from "@/lib/db/public-id";
 import { centsToDollars } from "@/lib/format/currency";
 import { providerIcon } from "@/lib/integrations/provider-icon";
 import type { ProviderIconName } from "@/lib/integrations/types";
+import { PROVIDER_USAGE_LABELS } from "@/lib/provider-rates/catalog";
 import {
   type ProviderRateContextMap,
   providerRateContextKey,
 } from "@/lib/provider-rates/connection-context";
 import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
 import {
-  getSerpProvider,
   PROVIDER_CATALOG,
   type ProviderTint,
+  serpProviderCapabilities,
   tintFor,
 } from "@/lib/providers/registry";
 import type { ProviderKind } from "@/lib/providers/types";
@@ -21,7 +22,12 @@ import {
 } from "@/lib/rank-check/observed-usage";
 import { primaryProviderConnection } from "@/lib/rank-check/provider-chain-order";
 import type { SerpDepth } from "@/lib/serp/markets";
-import type { ProviderConnectionUsageData } from "@/lib/settings/options";
+import type {
+  ProviderAvailabilityData,
+  ProviderConnectionUsageData,
+  ProviderUsageFeature,
+  ProviderUsageStat,
+} from "@/lib/settings/options";
 import type { StatusKind } from "@/lib/ui/status-kind";
 
 export type SettingsProviderSummary = {
@@ -91,6 +97,7 @@ type ConnectionLookupSpendInput = {
   connectionId: string;
   costCents: number;
   entryCount: number;
+  feature: Exclude<ProviderUsageFeature, "rank_check">;
 };
 
 type RecordedProviderCheckCost = ObservedProviderCheckCost & {
@@ -149,19 +156,49 @@ function connectionCostPerCheck(
     : "-";
 }
 
-// Whether the provider can serve keyword research at all; unsupported providers
-// render "not supported" instead of a zero lookup count (HANDOFF-35 section 4).
-function supportsKeywordLookups(providerId: string) {
-  try {
-    const provider = getSerpProvider(providerId);
-    return (
-      typeof provider.fetchRelatedKeywords === "function" ||
-      typeof provider.fetchKeywordSuggestions === "function" ||
-      typeof provider.fetchKeywordIdeas === "function"
+const FEATURE_ORDER = [
+  "rank_check",
+  "keyword_research",
+  "keyword_metrics",
+  "ranked_keywords",
+  "backlinks",
+  "domain_overview",
+] as const satisfies readonly ProviderUsageFeature[];
+
+function supportedFeatures(providerId: string): readonly ProviderUsageFeature[] {
+  const capabilities = serpProviderCapabilities(providerId);
+  if (!capabilities) return [];
+  return FEATURE_ORDER.filter((feature) => {
+    if (feature === "rank_check") return capabilities.rankCheck;
+    if (feature === "keyword_research") return capabilities.keywordResearch;
+    if (feature === "keyword_metrics") return capabilities.keywordMetrics;
+    if (feature === "ranked_keywords") return capabilities.rankedKeywords;
+    if (feature === "backlinks") return capabilities.backlinks;
+    return capabilities.domainOverview;
+  });
+}
+
+function connectionFeatures(
+  connection: ConnectionUsageInput,
+  checks: readonly RecordedProviderCheckCost[],
+  lookups: readonly ConnectionLookupSpendInput[],
+  primaryConnectionId: string | null,
+): ProviderUsageStat[] {
+  const rankChecks = connectionRankChecks(connection, checks, primaryConnectionId);
+  return supportedFeatures(connection.provider).map((feature) => {
+    if (feature === "rank_check") {
+      return { ...rankChecks, feature, label: PROVIDER_USAGE_LABELS[feature] };
+    }
+    const rows = lookups.filter(
+      (row) => row.connectionId === connection.id && row.feature === feature,
     );
-  } catch {
-    return false;
-  }
+    return {
+      costCents: rows.reduce((total, row) => total + row.costCents, 0),
+      count: rows.reduce((total, row) => total + row.entryCount, 0),
+      feature,
+      label: PROVIDER_USAGE_LABELS[feature],
+    };
+  });
 }
 
 export function settingsConnectionUsage(
@@ -170,16 +207,16 @@ export function settingsConnectionUsage(
   lookups: readonly ConnectionLookupSpendInput[],
   serpDepth: SerpDepth,
   rateContexts: ProviderRateContextMap,
+  availability: ReadonlyMap<string, ProviderAvailabilityData | null> = new Map(),
 ): ProviderConnectionUsageData[] {
   const primaryConnectionId = primaryProviderConnection(connections, "serp")?.id ?? null;
   return connections
     .filter((connection) => connection.kind === "serp")
     .map((connection) => {
       const observed = aggregateObservedUsageForProvider(checks, connection.provider);
-      const connectionLookups = lookups.filter((row) => row.connectionId === connection.id);
-      const lookupCostCents = connectionLookups.reduce((total, row) => total + row.costCents, 0);
-      const lookupCount = connectionLookups.reduce((total, row) => total + row.entryCount, 0);
+      const availableAtProvider = availability.get(connection.id);
       return {
+        ...(availableAtProvider == null ? {} : { availableAtProvider }),
         connectionId: requiredConnectionPublicId(connection.publicId),
         costPerCheck: connectionCostPerCheck(
           connection,
@@ -187,14 +224,12 @@ export function settingsConnectionUsage(
           serpDepth,
           rateContexts,
         ),
-        lookups: supportsKeywordLookups(connection.provider)
-          ? { costCents: lookupCostCents, count: lookupCount }
-          : null,
+        features: connectionFeatures(connection, checks, lookups, primaryConnectionId),
         primary: connection.id === primaryConnectionId,
         provider:
           PROVIDER_CATALOG.find((entry) => entry.id === connection.provider)?.label ??
           connection.provider,
-        rankChecks: connectionRankChecks(connection, checks, primaryConnectionId),
+        providerId: connection.provider,
       };
     });
 }

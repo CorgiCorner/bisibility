@@ -12,6 +12,7 @@ import {
   serpMarketOptions,
 } from "@/lib/serp/markets";
 import { cn } from "@/lib/ui/cn";
+import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import {
@@ -125,7 +126,7 @@ export function DimensionSwitcher({
       className={cn(
         quietChipVariants({ size: "lg" }),
         chipShape,
-        "font-mono text-fg outline-none transition-colors hover:border-border-strong hover:bg-nav-active focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted",
+        "font-mono text-fg outline-none transition-colors hover:border-border-control hover:bg-nav-active focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted",
       )}
       disabled={!canTrack || readOnly}
       onClick={(event) => {
@@ -185,7 +186,7 @@ export function DimensionSwitcher({
             onClick={() => setAnchorEl(null)}
             selected
             sx={{
-              borderRadius: "8px",
+              borderRadius: UI_RADIUS_ROLES.control,
               gap: 1.125,
               marginX: "5px",
               minHeight: "36px",
@@ -214,7 +215,7 @@ export function DimensionSwitcher({
               onClick={() => handleTrack(item)}
               title={`Add ${item}`}
               sx={{
-                borderRadius: "8px",
+                borderRadius: UI_RADIUS_ROLES.control,
                 gap: 1.125,
                 justifyContent: "space-between",
                 marginX: "5px",

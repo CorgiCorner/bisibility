@@ -26,9 +26,9 @@ export function SampleProjectBanner({ projectId, projectRef }: Readonly<SamplePr
   }
 
   return (
-    <section className="rounded-[14px] border border-border bg-bg-elev px-4 py-3.5 sm:flex sm:items-center sm:gap-4">
+    <section className="rounded-card border border-border bg-bg-elev px-4 py-3.5 sm:flex sm:items-center sm:gap-4">
       <span
-        className={`mb-3 grid h-9 w-9 place-items-center rounded-[10px] sm:mb-0 ${iconWellClassName}`}
+        className={`mb-3 grid h-9 w-9 place-items-center rounded-control sm:mb-0 ${iconWellClassName}`}
       >
         <Database aria-hidden size={19} weight="bold" />
       </span>
@@ -47,7 +47,7 @@ export function SampleProjectBanner({ projectId, projectRef }: Readonly<SamplePr
           href="/onboarding?new=1"
           size="small"
           sx={{
-            borderColor: "var(--border-strong)",
+            borderColor: "var(--border)",
             color: "var(--fg)",
             minHeight: 34,
             whiteSpace: "nowrap",

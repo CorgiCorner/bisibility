@@ -52,7 +52,6 @@ function paidCallInput(input: {
   source: DomainOverviewSource;
 }) {
   return {
-    budgetCapCents: input.budgetCapCents,
     connection: input.source.connection,
     feature: "domain_overview" as const,
     projectId: input.projectId,
@@ -98,8 +97,11 @@ export function domainOverviewCostReservation(maxCostCents: number | undefined) 
 
 export function preflightDomainOverview(input: {
   budgetCapCents: number;
+  connectionId: string;
   estimatedCostCents: number;
+  estimatedUsageQuantity?: number;
   projectId: string;
+  provider: string;
 }) {
   return preflightProviderBudget(input);
 }
@@ -118,6 +120,7 @@ export function fetchDomainOverviewMetrics(
     call: (credentials, usage) =>
       input.source.provider.fetchDomainRankOverview(credentials, {
         ...providerTarget(input),
+        attribution: usage,
         tag: usage?.tag,
       }),
     itemCount: 1,
@@ -139,6 +142,7 @@ export function fetchDomainHistory(
     call: (credentials, usage) =>
       input.source.provider.fetchHistoricalRankOverview(credentials, {
         ...providerTarget(input),
+        attribution: usage,
         tag: usage?.tag,
       }),
     itemCount: 1,
@@ -167,6 +171,7 @@ export function fetchDomainKeywords(
         location: providerLocation(input),
         locationCode: input.locationCode,
         offset: input.offset,
+        attribution: usage,
         tag: usage?.tag,
       }),
     itemCount: input.limit,
@@ -192,6 +197,7 @@ export function fetchDomainPages(
         ...providerTarget(input),
         limit: input.limit,
         offset: input.offset,
+        attribution: usage,
         tag: usage?.tag,
       }),
     itemCount: input.limit,

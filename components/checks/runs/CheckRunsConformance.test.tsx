@@ -112,7 +112,7 @@ describe("Checks visual conformance", () => {
     expect(screen.queryByText(/0 checks/)).not.toBeInTheDocument();
   });
 
-  it("shows stale and failed retry shells without inventing an action", () => {
+  it("shows retry actions only when handlers are available", () => {
     const onRetryStale = vi.fn();
     const staleView = {
       ...checkRunsFixtureView,
@@ -161,7 +161,13 @@ describe("Checks visual conformance", () => {
         "2 of 96 checks failed. Successful checks in the same run kept their results.",
       ),
     ).toBeVisible();
-    expect(screen.getByRole("button", { name: "Retry failed" })).toBeDisabled();
+    expect(screen.queryByRole("button", { name: "Retry failed" })).not.toBeInTheDocument();
+
+    rerender(<CheckRunsStatusBands {...bands({ onRetryFailed: vi.fn(), view: failedView })} />);
+    expect(screen.getByRole("button", { name: "Retry failed" })).toBeEnabled();
+
+    rerender(<CheckRunsStatusBands {...bands({ view: staleView })} />);
+    expect(screen.queryByRole("button", { name: "Retry stale" })).not.toBeInTheDocument();
   });
 
   it("states the delivery verdict and closes the rate-limit arithmetic", () => {

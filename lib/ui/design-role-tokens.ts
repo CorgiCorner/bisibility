@@ -7,10 +7,10 @@ export const UI_TYPE_ROLES = {
   "ui-micro": ["10px", { lineHeight: "1.4" }],
 } as const;
 
+// Two steps only. Anything fully round uses rounded-full, which is a shape, not a size.
 export const UI_RADIUS_ROLES = {
-  control: "9px",
-  card: "14px",
-  "card-lg": "16px",
+  control: "6px",
+  card: "12px",
 } as const;
 
 export const UI_MAX_WIDTH_ROLES = {

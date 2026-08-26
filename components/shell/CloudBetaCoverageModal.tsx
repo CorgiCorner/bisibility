@@ -41,7 +41,7 @@ function PolicyColumn({
 }>) {
   const coveredTone = tone === "covered";
   return (
-    <section className="min-w-0 rounded-[12px] border border-border bg-bg-elev p-3.5">
+    <section className="min-w-0 rounded-card border border-border bg-bg-elev p-3.5">
       <h3 className="m-0 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
         {title}
       </h3>
@@ -49,7 +49,7 @@ function PolicyColumn({
         {items.map((item) => (
           <li className="flex items-start gap-2 text-[12px] leading-[1.45]" key={item}>
             <span
-              className={`mt-0.5 grid h-[17px] w-[17px] shrink-0 place-items-center rounded-[5px] ${
+              className={`mt-0.5 grid h-[17px] w-[17px] shrink-0 place-items-center rounded-control ${
                 coveredTone ? "bg-green/10 text-green-text" : "bg-red/10 text-red-text"
               }`}
             >
@@ -112,7 +112,7 @@ export function CloudBetaCoverageModal({
             Who does what
           </h3>
           <div className="mt-2 grid gap-2">
-            <div className="flex items-start gap-3 rounded-[11px] border border-border px-3.5 py-3">
+            <div className="flex items-start gap-3 rounded-control border border-border px-3.5 py-3">
               <HardDrives
                 aria-hidden
                 className="mt-0.5 shrink-0 text-fg-muted"
@@ -128,7 +128,7 @@ export function CloudBetaCoverageModal({
                 </p>
               </div>
             </div>
-            <div className="flex items-start gap-3 rounded-[11px] border border-accent bg-accent-soft px-3.5 py-3">
+            <div className="flex items-start gap-3 rounded-control border border-accent bg-accent-soft px-3.5 py-3">
               <DownloadSimple
                 aria-hidden
                 className="mt-0.5 shrink-0 text-accent-text"
@@ -150,7 +150,7 @@ export function CloudBetaCoverageModal({
           <h3 className="m-0 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
             When the beta ends
           </h3>
-          <div className="mt-2 flex items-start gap-3 rounded-[11px] border border-border bg-bg-sunken px-3.5 py-3">
+          <div className="mt-2 flex items-start gap-3 rounded-control border border-border bg-bg-sunken px-3.5 py-3">
             <Cloud aria-hidden className="mt-0.5 shrink-0 text-fg-muted" size={17} weight="fill" />
             <p className="m-0 text-[11.5px] leading-[1.5] text-fg-muted">
               30 days notice before pricing. Nothing charged without your confirmation. Self-host

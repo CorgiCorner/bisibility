@@ -28,6 +28,11 @@ const deviceIconSize = {
   md: 13,
 } satisfies Record<MarketChipSize, number>;
 
+const deviceIconWellSize = {
+  sm: "size-3",
+  md: "size-[13px]",
+} satisfies Record<MarketChipSize, string>;
+
 export function MarketChip({
   className,
   device = null,
@@ -46,8 +51,19 @@ export function MarketChip({
       <span className="min-w-0 shrink-[999] truncate font-semibold text-fg">{locationLabel}</span>
       <span className="min-w-0 truncate text-fg-muted">/ {languageLabel}</span>
       {deviceIcon ? (
-        <span className="shrink-0 text-fg-muted" title={deviceIcon.label}>
-          <deviceIcon.Icon aria-label={deviceIcon.label} role="img" size={deviceIconSize[size]} />
+        <span
+          className={cn(
+            "grid shrink-0 place-items-center leading-none text-fg-muted",
+            deviceIconWellSize[size],
+          )}
+          title={deviceIcon.label}
+        >
+          <deviceIcon.Icon
+            aria-label={deviceIcon.label}
+            className="block"
+            role="img"
+            size={deviceIconSize[size]}
+          />
         </span>
       ) : null}
     </span>

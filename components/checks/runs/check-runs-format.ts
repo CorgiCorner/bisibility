@@ -85,26 +85,25 @@ export function presentCheckError(error: string): string {
 
 export function formatResult(run: CheckRunRow, now: Date) {
   if (run.status === "running") return formatElapsed(run.startedAt, now);
-  if (run.status === "failed") {
-    if (
-      run.error &&
-      (/\bstale\b/i.test(run.error) || /time(?:d)?\s*out|timeout/i.test(run.error))
-    ) {
-      return "Timed out after 15 min";
-    }
-    return run.error ? presentCheckError(run.error) : "All providers failed";
-  }
+  if (run.status === "failed") return "All providers failed";
   return typeof run.position === "number" ? `#${run.position}` : "No position";
 }
 
-export function formatAttemptOutcome(attempt: CheckAttempt) {
+function claimsAttemptSuccess(detail: string) {
+  return /^(?:ok|completed|success|successful|succeeded)[.!]?$/i.test(detail.trim());
+}
+
+export function formatAttemptOutcome(attempt: CheckAttempt, failedRun = false) {
+  if (failedRun && attempt.outcome === "ok") return "Provider error";
   const fallback = {
     credentials_unavailable: "Credentials unavailable",
     ok: "Completed",
     provider_failed: "Provider error",
     rate_limited: "Rate limited",
   }[attempt.outcome];
-  if (!attempt.detail) return fallback;
+  if (!attempt.detail || (attempt.outcome !== "ok" && claimsAttemptSuccess(attempt.detail))) {
+    return fallback;
+  }
   const code = attempt.detail.match(/\b[1-5]\d{2}\b/)?.[0];
   const withoutCode = attempt.detail
     .replace(/\s*\(?[1-5]\d{2}\)?\s*/g, " ")

@@ -35,6 +35,7 @@ describe("check health query", () => {
         failedCount: 0,
         latestCheckedAt: null,
         latestError: null,
+        latestErrorCode: null,
         latestKeyword: null,
         latestProvider: null,
         runningCount: 0,
@@ -50,6 +51,7 @@ describe("check health query", () => {
         failedCount: 2,
         latestCheckedAt: new Date("2026-07-14T11:30:00.000Z"),
         latestError: "Provider request failed.",
+        latestErrorCode: "provider_billing",
         latestKeyword: "headless cms",
         latestProvider: "dataforseo",
         runningCount: 1,
@@ -66,6 +68,7 @@ describe("check health query", () => {
         latest: {
           checkedAt: "2026-07-14T11:30:00.000Z",
           error: "Provider request failed.",
+          errorCode: "provider_billing",
           keyword: "headless cms",
           provider: "dataforseo",
         },
@@ -85,6 +88,7 @@ describe("check health query", () => {
       }),
     );
     expect(mocks.prisma.$queryRaw).toHaveBeenCalledOnce();
+    expect(mocks.prisma.$queryRaw.mock.calls[0]?.[0].join(" ")).toContain('rc."errorCode"');
     expect(mocks.prisma.$queryRaw.mock.calls[0]?.slice(1)).toEqual([
       "project_1",
       new Date("2026-07-13T12:00:00.000Z"),

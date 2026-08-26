@@ -233,7 +233,7 @@ export function AlertsPageContent({
               <div className="flex flex-wrap items-center gap-2.5">
                 {canReadAudit ? (
                   <Link
-                    className="inline-flex min-h-8 items-center gap-1.5 rounded-lg bg-transparent px-3 text-xs font-semibold text-fg-muted outline-none transition-colors hover:text-accent-text focus-visible:text-accent-text"
+                    className="inline-flex min-h-8 items-center gap-1.5 rounded-control bg-transparent px-3 text-xs font-semibold text-fg-muted outline-none transition-colors hover:text-accent-text focus-visible:text-accent-text"
                     href={appPath(projectRef, "settings", "audit")}
                   >
                     <ListMagnifyingGlass aria-hidden size={13} />

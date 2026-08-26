@@ -154,7 +154,7 @@ export function DomainChangeConfirmation({
             </p>
           ) : null}
         </div>
-        <div className="rounded-[9px] border border-dashed border-border-strong px-3 py-2.5">
+        <div className="rounded-control border border-dashed border-border px-3 py-2.5">
           <p className="m-0 font-mono text-[9.5px] uppercase tracking-[1.1px] text-fg-muted">
             After you confirm
           </p>

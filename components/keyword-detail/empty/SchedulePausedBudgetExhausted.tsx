@@ -14,11 +14,11 @@ export function SchedulePausedBudgetExhausted({
 }: Readonly<SchedulePausedBudgetExhaustedProps>) {
   return (
     <EmptyModuleCard>
-      <div className="flex flex-wrap items-center gap-3 rounded-[11px] border border-border-strong bg-bg-elev px-4 py-3">
+      <div className="flex flex-wrap items-center gap-3 rounded-control border border-border bg-bg-elev px-4 py-3">
         <div className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2 gap-y-1">
           <EmptyModuleLabel>Next check</EmptyModuleLabel>
           <span className="text-[13px] font-semibold text-fg">Paused</span>
-          <span aria-hidden className="h-3 border-l border-border-strong" />
+          <span aria-hidden className="h-3 border-l border-border" />
           <span className="font-mono text-[10.5px] text-fg-muted">{pauseReason}</span>
         </div>
         <Button disabled size="sm" type="button" variant="secondary">
@@ -27,7 +27,7 @@ export function SchedulePausedBudgetExhausted({
       </div>
       <div
         aria-label="Provider budget exhausted"
-        className="mt-3 flex items-start gap-3 rounded-[11px] border border-border-strong bg-bg-elev px-4 py-3"
+        className="mt-3 flex items-start gap-3 rounded-control border border-border bg-bg-elev px-4 py-3"
         data-persistent-inline-banner
         role="alert"
       >

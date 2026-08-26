@@ -71,7 +71,7 @@ export function ApiKeysCard({
       footer={
         <>
           <ExternalLink
-            className="rounded-md border border-border-strong bg-bg-elev px-3 py-1.5 text-[13px] font-medium text-fg-muted transition-colors hover:bg-bg-sunken hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid"
+            className="rounded-control border border-border-control bg-bg-elev px-3 py-1.5 text-[13px] font-medium text-fg-muted transition-colors hover:bg-bg-sunken hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid"
             href={docsHref}
           >
             Docs quickstart

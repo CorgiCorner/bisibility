@@ -20,9 +20,9 @@ const mocks = vi.hoisted(() => {
     $transaction: vi.fn(async (callback: (tx: unknown) => unknown) => callback(prisma)),
     auditLog: { create: vi.fn(async () => ({ id: "audit_1" })) },
     providerCostEntry: {
-      create: vi.fn(async () => {
+      createMany: vi.fn(async () => {
         state.evidenceEntries += 1;
-        return { id: `cost_${state.evidenceEntries}` };
+        return { count: 1 };
       }),
     },
     queuedRankCheckBatch: {

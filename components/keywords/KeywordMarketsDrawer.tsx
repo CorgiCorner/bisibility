@@ -17,6 +17,7 @@ type KeywordMarketsDrawerProps = {
   canCreateKeyword: boolean;
   keyword: KeywordRow;
   onClose: () => void;
+  open: boolean;
   projectId: string;
   projectMarkets: ProjectMarketsView;
   targets: readonly KeywordRow[];
@@ -71,6 +72,7 @@ export function KeywordMarketsDrawer({
   canCreateKeyword,
   keyword,
   onClose,
+  open,
   projectId,
   projectMarkets,
   targets,
@@ -182,10 +184,10 @@ export function KeywordMarketsDrawer({
         </div>
       }
       onClose={onClose}
-      open
+      open={open}
       title={
         <span className="block min-w-0">
-          <span className="block">Manage markets and devices</span>
+          <span className="block">Edit</span>
           <span className="mt-1 block truncate text-[12px] font-normal text-fg-muted">
             {keyword.keyword}
           </span>
@@ -203,7 +205,7 @@ export function KeywordMarketsDrawer({
       />
       <div
         aria-label="Keyword target change"
-        className="mt-5 rounded-[10px] border border-border bg-bg-sunken px-3.5 py-3"
+        className="mt-5 rounded-control border border-border bg-bg-sunken px-3.5 py-3"
       >
         <p className="m-0 font-mono text-[11px] text-fg">
           {selection.locationKeys.length} markets x {selection.devices.length}{" "}

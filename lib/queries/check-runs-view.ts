@@ -48,6 +48,11 @@ export function checkRunRowsWhere(
   };
 }
 
+export async function getCheckRunCount(projectId: string) {
+  const { project } = await requireReadableProject(projectId);
+  return prisma.rankCheck.count({ where: { keyword: { projectId: project.id } } });
+}
+
 export async function getCheckRunsView(projectId: string, options: CheckRunsViewOptions = {}) {
   const now = options.now ?? new Date();
   const range = options.range ?? "7d";

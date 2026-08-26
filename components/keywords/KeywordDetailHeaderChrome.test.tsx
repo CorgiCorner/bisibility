@@ -24,7 +24,7 @@ describe("KeywordDetailHeaderChrome", () => {
     const copyButton = screen.getByRole("button", { name: "Copy ID" });
 
     expect(id).toHaveClass("text-[11px]", "leading-normal");
-    expect(chip).toHaveClass("h-[22px]", "gap-[5px]", "rounded-[7px]", "px-2", "py-[3px]");
+    expect(chip).toHaveClass("h-[22px]", "gap-[5px]", "rounded-control", "px-2", "py-[3px]");
     expect(copyButton).toHaveClass("min-h-3", "min-w-3", "p-0");
     expect(copyButton).toHaveStyle({ minHeight: "12px", minWidth: "12px", padding: "0px" });
     expect(copyButton.querySelector("svg")).toHaveAttribute("width", "12");
@@ -99,7 +99,7 @@ describe("KeywordDetailHeaderChrome", () => {
     );
 
     expect(screen.queryByRole("button", { name: "Google" })).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Open live search results" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "View SERP" })).toHaveAttribute(
       "href",
       expect.stringContaining("gl=us&hl=en"),
     );

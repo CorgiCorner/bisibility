@@ -46,7 +46,7 @@ export function SidebarUserButton({
         aria-haspopup="menu"
         aria-label="Account menu"
         className={[
-          "group flex items-center rounded-[9px] text-left text-fg transition-colors",
+          "group flex items-center rounded-control text-left text-fg transition-colors",
           collapsed ? "" : "hover:bg-bg-sunken",
           // Expanded reads as a card; collapsed is a 32px icon button matching the search and
           // bell beside it, so its hover box is not the largest thing in the cluster.
@@ -59,12 +59,12 @@ export function SidebarUserButton({
         type="button"
       >
         {/* Same tile spec as the search and bell buttons beside it (bg-bg-elev on
-            border-border-strong, hover to bg-bg-sunken); the accent initials alone carry
+            border-border-control, hover to bg-bg-sunken); the accent initials alone carry
             the identity signal, so the cluster reads as one family of controls. */}
         <Avatar
           alt=""
           className={cn(
-            "grid flex-none place-items-center rounded-[9px] border border-border-strong bg-bg-elev font-mono font-semibold text-accent-text transition-colors",
+            "grid flex-none place-items-center rounded-control border border-border-control bg-bg-elev font-mono font-semibold text-accent-text transition-colors",
             collapsed ? "h-8 w-8 text-[10.5px] group-hover:bg-bg-sunken" : "h-8 w-8 text-xs",
             collapsed && open ? "bg-bg-sunken" : "",
           )}
@@ -81,7 +81,7 @@ export function SidebarUserButton({
                 <span className="block truncate text-[11px] text-fg-muted">{email}</span>
               ) : null}
             </span>
-            <span className="grid h-[30px] w-[30px] flex-none place-items-center rounded-lg text-fg-muted">
+            <span className="grid h-[30px] w-[30px] flex-none place-items-center rounded-control text-fg-muted">
               <DotsThreeVertical aria-hidden size={19} weight="bold" />
             </span>
           </>

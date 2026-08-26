@@ -1,3 +1,4 @@
+import { parseCheckAttempts } from "@/lib/checks/attempts";
 import type { CheckRunRow, CheckRunsView } from "@/lib/checks/contract";
 import { stubIntersectionObserver, stubResizeObserver } from "@/tests/observers";
 import { render, screen, within } from "@testing-library/react";
@@ -240,5 +241,37 @@ describe("CheckRunsTable", () => {
     render(<CheckRunsTable {...tableProps(viewFor(rows))} />);
 
     expect(screen.queryByRole("button", { name: /Expand ai meeting notes run/ })).toBeNull();
+  });
+  it("renders a failed run's legacy Ok attempt as the safe terminal failure", () => {
+    stubResizeObserver();
+    stubIntersectionObserver();
+    const rawError = "All SERP providers failed: dataforseo (Ok.)";
+    const failedRun = marketRow({
+      attempts: parseCheckAttempts([{ message: "Ok.", provider: "dataforseo" }]),
+      error: rawError,
+      id: "run_failed_after_ok",
+      position: null,
+      status: "failed",
+    });
+
+    render(
+      <CheckRunsTable
+        {...tableProps(viewFor([failedRun]))}
+        expandedRunIds={new Set([failedRun.id])}
+      />,
+    );
+
+    const table = screen.getByRole("table", { name: "Check runs" });
+    const compactResult = within(within(table).getAllByRole("row")[1]).getByTitle(
+      "All providers failed",
+    );
+    const details = screen.getByText("Provider chain").parentElement?.parentElement;
+    expect(compactResult).toHaveTextContent("All providers failed");
+    expect(details).toHaveTextContent("All providers failed");
+    expect(details).not.toHaveTextContent(rawError);
+    expect(details?.querySelector(".text-green-text")).toBeNull();
+    expect(details?.querySelector(".text-red-text")).not.toBeNull();
+    expect(details).not.toHaveTextContent("Ok.");
+    expect(details).not.toHaveTextContent("Completed");
   });
 });

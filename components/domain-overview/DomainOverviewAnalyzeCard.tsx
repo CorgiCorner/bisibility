@@ -1,7 +1,7 @@
 "use client";
 
 import { MarketCombobox, type MarketComboboxOption } from "@/components/markets/MarketCombobox";
-import { Button, Card, Kbd, pricingTriggerClassName } from "@/components/ui";
+import { Button, Card, compactInputClassName, Kbd, pricingTriggerClassName } from "@/components/ui";
 import { formatEstimateCents } from "@/lib/cost-estimate/project-estimate";
 import {
   DOMAIN_OVERVIEW_UNAVAILABLE_TOOLTIP,
@@ -111,7 +111,7 @@ export function DomainOverviewAnalyzeCard({
       >
         <div className="flex flex-col gap-2.5 md:flex-row md:items-start">
           <div
-            className={`${domainOverviewControlHeight()} flex flex-1 items-center gap-2 rounded-[9px] border border-border-strong px-3 focus-within:border-accent md:min-w-[320px]`}
+            className={`${domainOverviewControlHeight()} flex flex-1 items-center gap-2 rounded-control border border-border-control px-3 focus-within:border-accent md:min-w-[320px]`}
           >
             <Globe aria-hidden className="shrink-0 text-fg-muted" size={15} />
             <input
@@ -120,13 +120,13 @@ export function DomainOverviewAnalyzeCard({
               aria-label="Domain or subdomain"
               autoCapitalize="none"
               autoCorrect="off"
-              className="min-w-0 flex-1 bg-transparent py-2 text-[13px] text-fg outline-none placeholder:text-fg-muted"
+              className={`${compactInputClassName} h-full min-h-0 min-w-0 flex-1 bg-transparent text-fg outline-none`}
               disabled={submitting}
               onChange={(event) => {
                 targetField.onChange(event);
                 onTargetChange(event.currentTarget.value);
               }}
-              placeholder="Enter any domain or subdomain, e.g. blog.deskhaus.com"
+              placeholder="Enter any domain or subdomain, e.g. blog.acme.example.com"
               spellCheck={false}
             />
             {valid ? (
@@ -143,13 +143,14 @@ export function DomainOverviewAnalyzeCard({
               catalogSearchOnly
               disabled={submitting}
               emptyMessage="Type to search the catalog."
-              leadingIcon={<Globe aria-hidden className="shrink-0 text-fg-muted" size={14} />}
               menuWidth={340}
               noResultsMessage="No market matches this search."
               onChange={onMarketChange}
+              selectedCountryCode={market.countryCode}
               trackedMarkets={trackedMarkets.map(toMarketOption)}
               triggerClassName={`${domainOverviewControlHeight()} w-full bg-bg-elev px-3 text-[13px] disabled:opacity-55`}
               triggerTitle="Change market - location and language"
+              triggerWrapperClassName="w-full"
               value={market.canonicalKey}
             />
           </div>

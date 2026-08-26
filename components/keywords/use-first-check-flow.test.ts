@@ -250,6 +250,23 @@ describe("useFirstCheckFlow", () => {
     expect(runCheckNowAction).toHaveBeenCalledTimes(1);
   });
 
+  it("shows sample-project refusal as a final failed state", async () => {
+    const runCheckNowAction = vi.fn().mockResolvedValue({
+      code: "sample_project",
+      message: "Sample projects don't run real checks.",
+      status: "not_started",
+    });
+    const { result } = renderFlow({ runCheckNowAction });
+
+    act(() => result.current.openCheckModal(20));
+    await act(async () => {
+      await result.current.confirmRun();
+    });
+    expect(result.current.modal?.step).toBe("failed");
+    expect(result.current.modal?.error).toBe("Sample projects don't run real checks.");
+    expect(result.current.modal?.errorCode).toBe("sample_project");
+  });
+
   it("blocked action stays in confirm with the block message", async () => {
     const runCheckNowAction = vi.fn().mockResolvedValue({
       code: "check_in_progress",

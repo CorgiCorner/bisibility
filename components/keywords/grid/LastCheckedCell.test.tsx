@@ -58,16 +58,12 @@ describe("LastCheckedCell", () => {
     expect(screen.getByText("Failed")).toHaveClass("inline-flex", "rounded-full", "font-mono");
   });
 
-  it("renders an awaiting-first-check chip when no check has run", () => {
+  it("renders a not-checked chip when no check has run", () => {
     render(<LastCheckedCell lastCheckAt={null} now={now} status={null} />, {
       wrapper: withProvider(),
     });
 
-    expect(screen.getByText("Awaiting first check")).toHaveClass(
-      "inline-flex",
-      "rounded-full",
-      "font-mono",
-    );
+    expect(screen.getByText("Not checked")).toHaveClass("inline-flex", "rounded-full", "font-mono");
   });
 
   it("renders a paused chip in read-only mode", () => {

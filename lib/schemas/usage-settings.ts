@@ -1,3 +1,4 @@
+import { MAX_ALLOCATION_AMOUNT } from "@/lib/provider-allocations/types";
 import { z } from "zod";
 
 const projectId = z.string().trim().min(1).max(120);
@@ -14,23 +15,38 @@ export const hostedPricingFeedbackSchema = z.object({
   projectId,
 });
 
-export const usageBudgetSchema = z
-  .object({
-    budgetDollars: moneyInput,
-    projectId,
-  })
-  .refine((value) => Number(value.budgetDollars) > 0, {
-    message: "Enter a positive monthly budget.",
-    path: ["budgetDollars"],
-  })
-  .refine((value) => Number(value.budgetDollars) <= 1_000_000, {
-    message: "Monthly budget must be $1,000,000 or less.",
-    path: ["budgetDollars"],
-  });
-
 export type HostedPricingFeedbackInput = z.infer<typeof hostedPricingFeedbackSchema>;
-export type UsageBudgetInput = z.infer<typeof usageBudgetSchema>;
 
-export function budgetInputToCents(value: UsageBudgetInput) {
+export function budgetInputToCents(value: { budgetDollars: string }) {
   return Math.round(Number(value.budgetDollars) * 100);
 }
+
+const providerConnectionId = z
+  .string()
+  .trim()
+  .regex(/^conn_[a-z0-9]+$/, "Invalid provider connection.");
+const providerAllocationDollars = moneyInput
+  .refine((value) => Number(value) > 0, {
+    message: "Enter a positive monthly budget.",
+  })
+  .refine((value) => budgetInputToCents({ budgetDollars: value }) <= MAX_ALLOCATION_AMOUNT, {
+    message: "Monthly budget is too large.",
+  });
+
+export const providerAllocationSchema = z.object({
+  allocation: z.union([
+    z.null(),
+    z.object({ amountDollars: providerAllocationDollars, unit: z.literal("cents") }),
+    z.object({
+      amount: z.coerce
+        .number()
+        .int("Enter a whole number of units.")
+        .min(1, "Enter a positive number of units.")
+        .max(MAX_ALLOCATION_AMOUNT, "Monthly allocation is too large."),
+      unit: z.literal("units"),
+    }),
+  ]),
+  connectionId: providerConnectionId,
+});
+
+export type ProviderAllocationInput = z.infer<typeof providerAllocationSchema>;

@@ -13,7 +13,7 @@ export function DataResidencyNote({ className, message }: Readonly<DataResidency
   return (
     <p
       className={cn(
-        "m-0 flex items-start gap-2 rounded-[10px] border border-border bg-bg-sunken px-3 py-2.5 text-[12.5px] leading-[1.5] text-fg-muted",
+        "m-0 flex items-start gap-2 rounded-control border border-border bg-bg-sunken px-3 py-2.5 text-[12.5px] leading-[1.5] text-fg-muted",
         className,
       )}
     >

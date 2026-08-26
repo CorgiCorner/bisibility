@@ -38,7 +38,7 @@ const segmentedSizeByThemeSize: Record<ThemeSegmentsSize, SegmentedControlSize> 
 };
 
 const optionClassNameBySize: Record<ThemeSegmentsSize, string> = {
-  sm: "w-[26px] px-0 rounded-md",
+  sm: "w-[26px] px-0 rounded-control",
   md: "h-7 min-h-0 w-8 px-0 py-0",
 };
 

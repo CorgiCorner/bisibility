@@ -84,7 +84,7 @@ export function EmailCapacityPanel({
   return (
     <>
       {justMissed ? (
-        <div className="mb-2.5 flex items-start gap-2.5 rounded-[11px] border border-red/25 bg-accent-soft px-3.5 py-3">
+        <div className="mb-2.5 flex items-start gap-2.5 rounded-control border border-red/25 bg-accent-soft px-3.5 py-3">
           <HourglassLow
             aria-hidden
             className="mt-px shrink-0 text-red-text"
@@ -97,7 +97,7 @@ export function EmailCapacityPanel({
           </p>
         </div>
       ) : null}
-      <div className="flex flex-col gap-3.5 rounded-xl border border-border bg-bg-sunken px-4 py-4.5">
+      <div className="flex flex-col gap-3.5 rounded-card border border-border bg-bg-sunken px-4 py-4.5">
         <div className="flex items-start gap-[11px]">
           <MoonStars
             aria-hidden
@@ -117,7 +117,7 @@ export function EmailCapacityPanel({
           </p>
         </div>
         <a
-          className="flex items-center justify-center gap-2 rounded-[10px] border border-border-strong bg-bg-elev p-[11px] text-[13.5px] font-semibold text-fg no-underline hover:border-fg-muted"
+          className="flex items-center justify-center gap-2 rounded-control border border-border-control bg-bg-elev p-[11px] text-[13.5px] font-semibold text-fg no-underline hover:border-fg-muted"
           href={SELF_HOSTING_URL}
           rel="noreferrer noopener"
           target="_blank"
@@ -151,7 +151,7 @@ export function FullCapacityCard({
       </div>
       <div className="mt-1 flex w-full flex-col gap-[9px]">
         <a
-          className="flex items-center justify-center gap-2 rounded-[10px] bg-accent-solid p-3 text-[14px] font-semibold text-accent-on-solid no-underline hover:bg-accent-solid-hover"
+          className="flex items-center justify-center gap-2 rounded-control bg-accent-solid p-3 text-[14px] font-semibold text-accent-on-solid no-underline hover:bg-accent-solid-hover"
           href={SELF_HOSTING_URL}
           rel="noreferrer noopener"
           target="_blank"
@@ -160,7 +160,7 @@ export function FullCapacityCard({
           Self-host bisibility - it&apos;s open source
         </a>
         <a
-          className="flex items-center justify-center rounded-[10px] border border-border-strong bg-transparent p-[11px] text-[13.5px] font-semibold text-fg-muted no-underline hover:bg-bg-sunken"
+          className="flex items-center justify-center rounded-control border border-border-control bg-transparent p-[11px] text-[13.5px] font-semibold text-fg-muted no-underline hover:bg-bg-sunken"
           href="/login"
         >
           Come back later

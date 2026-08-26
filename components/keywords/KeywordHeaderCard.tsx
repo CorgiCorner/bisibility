@@ -123,13 +123,14 @@ export function KeywordHeaderCard({
         timeZone={costContext?.timezone ?? "UTC"}
       />
       <input type="hidden" {...register("keywordId")} />
-      {canUpdateKeyword && editing && projectMarkets && addKeywordsMatrixAction ? (
+      {canUpdateKeyword && projectMarkets && addKeywordsMatrixAction ? (
         <KeywordMarketsDrawer
           addKeywordsMatrixAction={addKeywordsMatrixAction}
           bulkDeleteAction={bulkDeleteAction}
           canCreateKeyword={canCreateKeyword}
           keyword={keyword}
           onClose={() => setEditing(false)}
+          open={editing}
           projectId={projectId}
           projectMarkets={projectMarkets}
           targets={targets}

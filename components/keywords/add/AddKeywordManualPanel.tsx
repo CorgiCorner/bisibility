@@ -71,10 +71,10 @@ export function AddKeywordManualPanel({
         <label className={fieldLabelClass} htmlFor="add-target-input">
           Target URL
         </label>
-        <div className="mt-2 flex items-center gap-2 rounded-[9px] border border-border-strong bg-transparent px-3 transition-colors focus-within:border-accent">
+        <div className="mt-2 flex items-center gap-2 rounded-control border border-border-control bg-transparent px-3 transition-colors focus-within:border-accent">
           {domain ? <span className="font-mono text-[13px] text-fg-muted">{domain}</span> : null}
           <input
-            className="min-w-0 flex-1 border-none bg-transparent py-2.5 font-mono text-[13px] text-fg outline-none focus-visible:outline-none"
+            className="min-w-0 flex-1 border-none bg-transparent py-2.5 font-mono text-[13px] text-fg outline-none placeholder:text-[12px] placeholder:leading-4 placeholder:text-fg-muted focus-visible:outline-none"
             id="add-target-input"
             placeholder="/page"
             {...register("targetUrl")}

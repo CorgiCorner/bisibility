@@ -8,7 +8,15 @@ const twoProviders = [
 ] as const;
 
 const meta = {
-  args: { capCents: 5000, docsHref, spentCents: 1240, variant: "header" },
+  args: {
+    capCents: null,
+    docsHref,
+    recorded: { cents: 1240, units: 28 },
+    spentCents: 1240,
+    tightest: { provider: "SerpApi", usedPercent: 86 },
+    usedPercent: 86,
+    variant: "header",
+  },
   argTypes: {
     capCents: { control: "number", name: "cap" },
     providers: { control: "object" },
@@ -36,13 +44,18 @@ export const HeaderNormal: Story = {
 };
 
 export const HeaderWarning80: Story = {
-  args: { spentCents: 4300 },
+  args: { tightest: { provider: "SerpApi", usedPercent: 86 }, usedPercent: 86 },
   name: "Header/Warning80",
 };
 
 export const HeaderExhausted: Story = {
-  args: { spentCents: 5000 },
+  args: { tightest: { provider: "SerpApi", usedPercent: 100 }, usedPercent: 100 },
   name: "Header/Exhausted",
+};
+
+export const HeaderNoBudget: Story = {
+  args: { tightest: null, usedPercent: null },
+  name: "Header/No budget set",
 };
 
 // The header bar stays a single-color aggregate even with multiple providers.

@@ -18,7 +18,7 @@ type FirstCheckCardProps = {
 
 function FirstCheckCard({ children, label }: Readonly<FirstCheckCardProps>) {
   return (
-    <section className="flex min-h-[118px] min-w-0 flex-col rounded-[12px] border border-border-strong bg-bg-elev p-4">
+    <section className="flex min-h-[118px] min-w-0 flex-col rounded-card border border-border bg-bg-elev p-4">
       <EmptyModuleLabel>{label}</EmptyModuleLabel>
       {children}
     </section>

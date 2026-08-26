@@ -240,7 +240,6 @@ describe("KeywordMetricCards", () => {
     const positionCard = screen.getByText("Position").closest(".rounded-card");
     expect(positionCard).not.toBeNull();
     expect(positionCard).toHaveClass("rounded-card");
-    expect(positionCard).not.toHaveClass("rounded-" + "[14px]");
     expect(positionCard).toHaveStyle({ padding: "15px 16px" });
   });
 });

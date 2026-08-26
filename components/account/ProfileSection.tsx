@@ -117,7 +117,7 @@ export function ProfileSection({
         </div>
         <div className={cn(fieldLabelClass, "sm:col-span-2 sm:max-w-[50%]")}>
           {"User ID "}
-          <span className="flex min-h-10 items-center gap-2 rounded-lg border border-border-strong bg-transparent px-3 normal-case tracking-normal text-fg">
+          <span className="flex min-h-10 items-center gap-2 rounded-control border border-border bg-transparent px-3 normal-case tracking-normal text-fg">
             <MonoText
               className="min-w-0 flex-1 truncate text-fg"
               size="lg"

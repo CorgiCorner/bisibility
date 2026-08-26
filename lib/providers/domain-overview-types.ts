@@ -1,3 +1,4 @@
+import type { ProviderRequestAttribution } from "@/lib/provider-usage/tag";
 import type { SerpRankLocation } from "@/lib/serp/location";
 
 export type DomainRankMetrics = {
@@ -49,6 +50,7 @@ export type RelevantPagesResult = {
 };
 
 export type DomainOverviewInput = {
+  attribution?: ProviderRequestAttribution;
   includeSubdomains: boolean;
   languageCode?: string;
   location: SerpRankLocation;

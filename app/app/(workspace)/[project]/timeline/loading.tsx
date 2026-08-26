@@ -2,7 +2,7 @@ import { PageContent } from "@/components/shell/PageContent";
 import { cn } from "@/lib/ui/cn";
 
 function Bar({ className }: Readonly<{ className?: string }>) {
-  return <div className={cn("animate-pulse rounded-[10px] bg-bg-sunken", className)} />;
+  return <div className={cn("animate-pulse rounded-control bg-bg-sunken", className)} />;
 }
 
 const filterWidths = [
@@ -53,14 +53,14 @@ export default function TimelineLoading() {
 
       <div className="flex min-w-0 flex-wrap gap-[7px]">
         {filterWidths.map((filter) => (
-          <Bar className={cn("h-8 rounded-lg", filter.width)} key={filter.key} />
+          <Bar className={cn("h-8 rounded-control", filter.width)} key={filter.key} />
         ))}
       </div>
 
       {groups.map((group) => (
         <section key={group.key}>
           <Bar className="mb-[9px] h-2.5 w-[80px]" />
-          <div className="overflow-hidden rounded-[14px] border border-border bg-bg-elev">
+          <div className="overflow-hidden rounded-card border border-border bg-bg-elev">
             {group.rows.map((key) => (
               <TimelineRow key={key} />
             ))}

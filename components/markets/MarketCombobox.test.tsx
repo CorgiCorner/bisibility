@@ -62,6 +62,29 @@ describe("MarketCombobox", () => {
     expect(screen.queryByText("Catalog")).not.toBeInTheDocument();
   });
 
+  it("uses the selected country flag for the trigger and menu options", async () => {
+    const user = userEvent.setup();
+    render(
+      <MarketCombobox
+        ariaLabel="Market"
+        catalogMarkets={catalog}
+        onChange={vi.fn()}
+        selectedCountryCode="US"
+        trackedMarkets={tracked}
+        value="US"
+      />,
+    );
+
+    const trigger = screen.getByRole("button", { name: "Market" });
+    expect(trigger.querySelector("[data-country-flag='US']")).toBeInTheDocument();
+    await user.click(trigger);
+    expect(
+      screen
+        .getByRole("menuitem", { name: /United States \/ English/ })
+        .querySelector("[data-country-flag='US']"),
+    ).toBeInTheDocument();
+  });
+
   it("searches by country and language codes", async () => {
     const user = userEvent.setup();
     render(

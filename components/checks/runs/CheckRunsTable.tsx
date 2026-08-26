@@ -144,7 +144,7 @@ function RunCells({
           <Tooltip content={RESEARCH_METRICS_UNAVAILABLE_TOOLTIP}>
             <button
               aria-label={`no volume/KD: ${RESEARCH_METRICS_UNAVAILABLE_TOOLTIP}`}
-              className="mt-1 inline-flex cursor-help rounded-full border border-dashed border-border-strong bg-bg-sunken px-1.5 py-0.5 font-mono text-[9.5px] font-semibold text-fg-muted"
+              className="mt-1 inline-flex cursor-help rounded-full border border-dashed border-border-control bg-bg-sunken px-1.5 py-0.5 font-mono text-[9.5px] font-semibold text-fg-muted"
               type="button"
             >
               no volume/KD
@@ -209,7 +209,7 @@ function RunTableBody({
                   <button
                     aria-expanded={expanded}
                     aria-label={`${expanded ? "Collapse" : "Expand"} ${run.keyword} run`}
-                    className="inline-grid h-7 w-7 place-items-center rounded-lg text-fg-muted hover:bg-bg-inset hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-solid"
+                    className="inline-grid h-7 w-7 place-items-center rounded-control text-fg-muted hover:bg-bg-inset hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-solid"
                     onClick={() => onToggleRun(run.id)}
                     type="button"
                   >

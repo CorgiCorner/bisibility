@@ -43,7 +43,7 @@ export function MobileNav({
             right and read as the page's primary action. */}
         <button
           aria-label="Menu"
-          className="grid h-8 w-8 flex-none place-items-center rounded-[9px] border border-border-strong bg-bg-elev text-fg-muted transition-colors hover:bg-bg-sunken hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid"
+          className="grid h-8 w-8 flex-none place-items-center rounded-control border border-border-control bg-bg-elev text-fg-muted transition-colors hover:bg-bg-sunken hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid"
           onClick={() => setOpen(true)}
           type="button"
         >

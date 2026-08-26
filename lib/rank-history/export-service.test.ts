@@ -112,6 +112,39 @@ describe("rank-history export core", () => {
     );
   });
 
+  it("preserves resolved membership order for history exports", async () => {
+    const secondId = "kw_bbcdefghijklmnopqrstuvwx";
+    const rows = [
+      {
+        createdAt: new Date(),
+        publicId: KEYWORD_PUBLIC_ID,
+        rankChecks: [],
+        tags: [],
+        text: "first",
+      },
+      {
+        createdAt: new Date(),
+        publicId: secondId,
+        rankChecks: [],
+        tags: [],
+        text: "second",
+      },
+    ];
+    mocks.prisma.keyword.findMany.mockResolvedValueOnce(rows);
+    const loaded = await loadRankHistoryExport({
+      actor,
+      format: "csv",
+      granularity: "daily",
+      keywordIds: [secondId, KEYWORD_PUBLIC_ID],
+      projectId: PROJECT_PUBLIC_ID,
+      range: "all",
+    });
+    expect(loaded.keywords.map((keyword) => keyword.publicId)).toEqual([
+      secondId,
+      KEYWORD_PUBLIC_ID,
+    ]);
+  });
+
   it("supports daily and weekly rows plus CSV escaping", async () => {
     const loaded = await loadRankHistoryExport({
       actor,

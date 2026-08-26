@@ -7,7 +7,7 @@ import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
 
 const boxClass =
-  "flex items-center justify-between gap-2 rounded-[9px] border border-border-strong bg-transparent px-[13px] py-[11px] transition-colors";
+  "flex items-center justify-between gap-2 rounded-control border border-border-control bg-transparent px-[13px] py-[11px] transition-colors";
 const labelClass = "font-mono text-[10px] uppercase tracking-[0.4px] text-fg-muted";
 const depthOptions = serpDepthValues.map((depth) => ({
   label: `Top ${depth}`,

@@ -97,7 +97,7 @@ export function KeywordDetailHeaderChrome({
   );
 
   return (
-    <Card className="rounded-[14px]" size="lg">
+    <Card className="rounded-card" size="lg">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="flex min-w-0 flex-wrap items-center gap-2.5">
@@ -165,9 +165,9 @@ export function KeywordDetailHeaderChrome({
               href={liveSerpHref}
               rel="noreferrer noopener"
               target="_blank"
-              title="Open live search results in a new tab"
+              title="View SERP in a new tab"
             >
-              Open live search results
+              View SERP
               <ArrowUpRight aria-hidden size={10} weight="bold" />
             </a>
             <span aria-hidden className="h-[11px] w-px bg-border" />

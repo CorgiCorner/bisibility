@@ -106,8 +106,8 @@ export function DomainOverviewKeywordsTable({
   }
 
   return (
-    <section className="min-w-0 overflow-hidden rounded-[12px] border border-border bg-bg-elev">
-      <header className="flex flex-wrap items-center gap-2.5 border-b border-border-strong px-4 py-3">
+    <section className="min-w-0 overflow-hidden rounded-card border border-border bg-bg-elev">
+      <header className="flex flex-wrap items-center gap-2.5 border-b border-border px-4 py-3">
         <h3 className="m-0 text-[14.5px] font-semibold">Top organic keywords</h3>
         <span className="ml-auto text-[12px] text-fg-muted">Preview of fetched rows</span>
         <Button
@@ -135,7 +135,7 @@ export function DomainOverviewKeywordsTable({
       </header>
       <div className="max-h-[640px] overflow-auto">
         <div className="min-w-[1140px]">
-          <div className="sticky top-0 z-1 grid grid-cols-[28px_minmax(180px,1.2fr)_104px_104px_82px_62px_72px_88px_minmax(180px,1fr)_70px] items-center gap-3 border-b border-border-strong bg-bg-sunken px-4 py-2.5">
+          <div className="sticky top-0 z-1 grid grid-cols-[28px_minmax(180px,1.2fr)_104px_104px_82px_62px_72px_88px_minmax(180px,1fr)_70px] items-center gap-3 border-b border-border bg-bg-sunken px-4 py-2.5">
             <Checkbox
               aria-label="Select all fetched keywords"
               checked={selection.allSelected}
@@ -286,7 +286,7 @@ export function DomainOverviewKeywordsTable({
           {selection.savingMessage}
         </div>
       ) : null}
-      <footer className="flex flex-wrap items-center gap-3 border-t border-border-strong px-4 py-2.5 text-[12px] text-fg-muted">
+      <footer className="flex flex-wrap items-center gap-3 border-t border-border px-4 py-2.5 text-[12px] text-fg-muted">
         {fetchedRowsSummary(providerFetchedCount, page.totalCount, "keywords")}
         <span className="ml-auto">Sorting the fetched rows is free</span>
       </footer>

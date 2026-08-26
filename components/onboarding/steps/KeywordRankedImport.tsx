@@ -105,7 +105,7 @@ export function KeywordRankedImport({
 
   if (connections.length === 0) return null;
   return (
-    <section className="mt-4 rounded-xl border border-border bg-bg-sunken p-4">
+    <section className="mt-4 rounded-card border border-border bg-bg-sunken p-4">
       <h3 className="m-0 text-[13.5px] font-semibold">Import keywords {domain} ranks for</h3>
       <p className="m-0 mt-1 text-[12.5px] leading-5 text-fg-muted">
         Uses your DataForSEO account. Results are cached for 12 hours.

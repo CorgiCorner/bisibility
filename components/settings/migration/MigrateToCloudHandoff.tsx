@@ -68,9 +68,9 @@ export function HandoffPanel({
   }
 
   return (
-    <div className="mt-4 overflow-hidden rounded-[14px] border border-border bg-bg-elev">
+    <div className="mt-4 overflow-hidden rounded-card border border-border bg-bg-elev">
       <div className="flex items-center gap-[13px] border-border-soft border-b p-[16px_18px]">
-        <span className="grid h-[38px] w-[38px] flex-none place-items-center rounded-[10px] bg-accent-soft text-accent-solid">
+        <span className="grid h-[38px] w-[38px] flex-none place-items-center rounded-control bg-accent-soft text-accent-solid">
           <CloudArrowUp aria-hidden size={20} weight="fill" />
         </span>
         <div className="min-w-0 flex-1">
@@ -94,7 +94,7 @@ export function HandoffPanel({
         <div className="flex flex-col gap-3 p-[16px_18px]">
           <HandoffRow label="Import page" value={handoff.cloudImportUrl} />
           <HandoffRow label="Import API" value={handoff.apiImportUrl} />
-          <div className="rounded-[11px] border border-border bg-bg-sunken px-3.5 py-3">
+          <div className="rounded-control border border-border bg-bg-sunken px-3.5 py-3">
             <div className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
               REST handoff
             </div>
@@ -135,7 +135,7 @@ function ImportCompletionSummary({
 }: Readonly<{ completion: Extract<MigrationOutcome, { kind: "completed" }>["completion"] }>) {
   const countEntries = Object.entries(completion.counts ?? {}).filter(([, value]) => value > 0);
   return (
-    <div className="mt-4 w-full max-w-[420px] rounded-[11px] border border-border bg-bg-sunken px-3.5 py-3 text-left">
+    <div className="mt-4 w-full max-w-[420px] rounded-control border border-border bg-bg-sunken px-3.5 py-3 text-left">
       <div className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
         Import job {completion.jobId}
       </div>
@@ -143,7 +143,7 @@ function ImportCompletionSummary({
         {countEntries.length > 0 ? (
           countEntries.map(([label, value]) => (
             <span
-              className="rounded-full border border-border-strong bg-bg-elev px-2.5 py-1 font-mono text-[10.5px] text-fg-muted"
+              className="rounded-full border border-border bg-bg-elev px-2.5 py-1 font-mono text-[10.5px] text-fg-muted"
               key={label}
             >
               {label.replaceAll("_", " ")}: {value}
@@ -201,7 +201,7 @@ export function DoneStep({
   return (
     <div className="flex flex-col items-center px-4 py-6 text-center">
       <span
-        className={`grid h-14 w-14 place-items-center rounded-[15px] ${completed ? "bg-green/10 text-green-text" : "bg-yellow/10 text-yellow-text"}`}
+        className={`grid h-14 w-14 place-items-center rounded-card ${completed ? "bg-green/10 text-green-text" : "bg-yellow/10 text-yellow-text"}`}
       >
         {completed ? (
           <CloudCheck aria-hidden size={30} weight="fill" />
@@ -218,7 +218,7 @@ export function DoneStep({
           : `The package left this source flow, but ${targetLabel} has not reported a completed import here. Verify the destination before releasing read-only mode.`}
       </p>
       {completed ? <ImportCompletionSummary completion={completed} /> : null}
-      <div className="mt-5.5 flex w-full max-w-[420px] items-center gap-2 rounded-[10px] border border-border-strong bg-transparent px-3.5 py-[11px]">
+      <div className="mt-5.5 flex w-full max-w-[420px] items-center gap-2 rounded-control border border-border bg-transparent px-3.5 py-[11px]">
         <span className="min-w-0 flex-1 truncate font-mono text-[11.5px] text-fg-muted">
           {targetUrl ?? `Generate the ${targetLabel} handoff to copy a real URL`}
         </span>
@@ -240,7 +240,7 @@ export function DoneStep({
       <p className="m-0 mt-3 font-mono text-[11px] text-fg-muted">
         Re-connect SERP and analytics providers on the destination before resuming scheduled checks.
       </p>
-      <div className="mt-5 w-full max-w-[420px] rounded-[12px] border border-border bg-bg px-3.5 py-3 text-left">
+      <div className="mt-5 w-full max-w-[420px] rounded-card border border-border bg-bg px-3.5 py-3 text-left">
         <div className="text-[13px] font-semibold text-fg">Source project</div>
         <p className="m-0 mt-1 text-xs leading-5 text-fg-muted">
           {migrationHold
@@ -289,7 +289,7 @@ export function DoneStep({
 
 function HandoffRow({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
-    <div className="flex items-center gap-2 rounded-[11px] border border-border bg-bg-sunken px-3.5 py-3">
+    <div className="flex items-center gap-2 rounded-control border border-border bg-bg-sunken px-3.5 py-3">
       <span className="min-w-0 flex-1">
         <span className="block font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
           {label}

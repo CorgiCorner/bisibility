@@ -1,10 +1,8 @@
 "use server";
 
 import { writeAudit } from "@/lib/auth/audit";
-import { whereCompletedChecks } from "@/lib/checks/status";
 import { prisma } from "@/lib/db/prisma";
 import { isPublicIdOfType, requirePublicId } from "@/lib/db/public-id";
-import { auditKeywordExport } from "@/lib/keywords/export-audit";
 import {
   CsvParseError,
   detectedKeywordImportColumnMapping,
@@ -12,30 +10,18 @@ import {
   parseKeywordImportCsvRows,
   parseKeywordImportCsvTable,
 } from "@/lib/keywords/import-csv-parser";
-import { loadRankHistoryExport } from "@/lib/rank-history/export-service";
 import { KEYWORD_IMPORT_MAX, keywordImportFileLimitMessage } from "@/lib/schemas/keyword";
 import { denormalizedLocationLabel } from "@/lib/serp/location-label";
 import { resolveKeywordLocation } from "@/lib/serp/location-service";
 import { z } from "zod";
-import {
-  getActionActor,
-  parseActionInput,
-  requireProjectScope,
-  revalidateKeywordViews,
-} from "./_shared";
+import { getActionActor, requireProjectScope, revalidateKeywordViews } from "./_shared";
 import { exportCloudImportPackage as exportCloudPackage } from "./keyword-cloud-package";
-import { assertCloudImportPackageLimits } from "./keyword-export-limits";
 import { createKeywordBatchSet, type KeywordBatchRow } from "./keyword-helpers";
 import { keywordImportDefaults } from "./keyword-import-defaults";
 import {
   deduplicateKeywordImportRows,
-  keywordExportColumns,
-  keywordExportOptions,
   parseKeywordImportCsv,
-  serializeKeywordExportCsv,
-  serializeKeywordExportXlsx,
 } from "./keyword-import-export-helpers";
-import { keywordExportJson } from "./keyword-import-export-json";
 import { readKeywordImportInput } from "./keyword-import-input";
 import { reviewKeywordImportRows } from "./keyword-import-review";
 
@@ -45,17 +31,8 @@ const projectIdSchema = z
     message: "Expected a strict prj_ v3 public ID.",
   })
   .optional();
-const keywordIdSchema = z
-  .string()
-  .refine((value) => isPublicIdOfType(value, "kw"), { message: "Keyword not found." });
-
 // biome-ignore format: compact schema keeps this server action under the file line cap.
 const importSchema = z.object({ columnMapping: z.partialRecord(z.enum(keywordImportFields), z.number().int().nonnegative()).default({}), csv: z.string().trim().min(1, "Upload CSV or XLSX rows, or paste CSV rows."), projectId: projectIdSchema, refresh: z.enum(["deferred", "immediate"]).default("immediate") });
-
-// biome-ignore format: compact schema keeps this server action under the file line cap.
-const exportSchema = z.object({ columns: z.partialRecord(z.enum(keywordExportColumns), z.boolean()).default({}), format: z.enum(["csv", "json", "xlsx"]).default("csv"), granularity: z.enum(["daily", "weekly"]).default("daily"), keywordIds: z.array(keywordIdSchema).max(500).optional(), projectId: projectIdSchema, range: z.enum(["30", "90", "all"]).default("30"), scope: z.enum(["current", "history"]).default("current") });
-// biome-ignore format: compact map keeps this server action under the file line cap.
-const exportMimeTypes = { csv: "text/csv", json: "application/json", xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" } as const;
 
 type Actor = Awaited<ReturnType<typeof getActionActor>>;
 
@@ -187,51 +164,6 @@ export async function importKeywordsFromCsv(input: unknown) {
   return { created: created.keywords.length, errors, failed: errors.length, parsed: parsed.length, received, skipped: created.skipped, warning: created.warnings[0] ?? null, warnings: created.warnings };
 }
 
-async function loadExportKeywords(projectId: string, keywordIds?: string[]) {
-  if (keywordIds?.length === 0) return [];
-  // biome-ignore format: compact Prisma shape keeps this server action under the file line cap.
-  return prisma.keyword.findMany({
-    include: { rankChecks: { orderBy: { checkedAt: "desc" }, where: whereCompletedChecks() }, tags: { include: { tag: true } } }, orderBy: { createdAt: "desc" }, where: { projectId, ...(keywordIds?.length ? { publicId: { in: keywordIds } } : {}) },
-  });
-}
-
 export async function exportCloudImportPackage(input: unknown) {
   return exportCloudPackage(input);
-}
-
-export async function exportKeywords(input: unknown) {
-  const data = parseActionInput(exportSchema, input);
-  const actor = await getActionActor();
-  const project = await scopedProject(actor, "read", data.projectId);
-  // biome-ignore format: compact history delegation keeps this server action under the file line cap.
-  const keywords = data.scope === "history" ? (await loadRankHistoryExport({ actor, format: data.format, granularity: data.granularity, keywordIds: data.keywordIds, projectId: project.id, range: data.range })).keywords : await loadExportKeywords(project.id, data.keywordIds);
-  // Current-scope exports load full rank-check histories and can exhaust memory, so reuse
-  // the cloud package cap; history exports are already bounded separately.
-  if (data.scope !== "history") assertCloudImportPackageLimits(keywords);
-  const options = keywordExportOptions(data);
-  let content: string;
-  if (data.format === "json") {
-    content = JSON.stringify(keywordExportJson(keywords, options, project.publicId), null, 2);
-  } else if (data.format === "xlsx") {
-    content = await serializeKeywordExportXlsx(keywords, options);
-  } else {
-    content = serializeKeywordExportCsv(keywords, options);
-  }
-  if (data.scope !== "history")
-    await auditKeywordExport(
-      actor.id,
-      project.id,
-      requirePublicId(project.publicId, "prj"),
-      keywords.length,
-      data.format,
-      data.scope,
-    );
-
-  return {
-    content,
-    count: keywords.length,
-    encoding: data.format === "xlsx" ? "base64" : "utf8",
-    filename: `bisibility-keywords-${project.publicId}-${data.scope}.${data.format}`,
-    mimeType: exportMimeTypes[data.format],
-  };
 }

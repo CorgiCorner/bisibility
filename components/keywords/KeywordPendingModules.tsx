@@ -167,11 +167,11 @@ function PendingChart({
   return (
     <Card radius="card" size="lg">
       <SectionTitle>Position history</SectionTitle>
-      <div className="mt-3 grid min-h-[176px] place-items-center rounded-[12px] px-5 text-center">
+      <div className="mt-3 grid min-h-[176px] place-items-center rounded-card px-5 text-center">
         <div>
           <span
             className={cn(
-              "mx-auto grid h-10 w-10 place-items-center rounded-[10px]",
+              "mx-auto grid h-10 w-10 place-items-center rounded-control",
               pendingChartWellClass(state),
             )}
           >

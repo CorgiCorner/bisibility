@@ -38,7 +38,7 @@ export function RecentResearchSearches({
       <div className="flex gap-2 overflow-x-auto pb-1">
         {searches.map((search) => (
           <div
-            className="flex shrink-0 items-center gap-2 rounded-full border border-border-strong bg-bg-elev px-3 py-1.5 transition-colors hover:border-accent"
+            className="flex shrink-0 items-center gap-2 rounded-full border border-border-control bg-bg-elev px-3 py-1.5 transition-colors hover:border-accent"
             key={`${search.createdAt}-${search.seed}`}
           >
             <button

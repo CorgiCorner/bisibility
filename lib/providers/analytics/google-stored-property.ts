@@ -4,6 +4,7 @@ import { verifyProviderConnectionBeforeSave } from "@/lib/api/provider-verificat
 import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import type { GoogleOAuthSetup, GooglePropertySaveResult } from "@/lib/integrations/types";
+import { lockProjectForProviderMutation } from "@/lib/provider-allocations/project-lock";
 import { ProviderAuthError } from "@/lib/providers/auth-error";
 import { decryptProviderCredentials, encryptSecret } from "@/lib/providers/crypto";
 import { PROVIDER_CATALOG } from "@/lib/providers/registry";
@@ -135,9 +136,12 @@ export async function saveStoredGoogleProperty(
   }
 
   await prisma.$transaction(async (tx) => {
+    await lockProjectForProviderMutation(tx, context.projectId);
     const current = await tx.providerConnection.findUnique({
-      select: { credentialsEncrypted: true, publicId: true },
-      where: { id: connection.id },
+      select: { credentialsEncrypted: true, id: true, publicId: true },
+      where: {
+        projectId_provider: { projectId: context.projectId, provider: context.provider },
+      },
     });
     if (!current || current.credentialsEncrypted !== connection.credentialsEncrypted) {
       throw new Error("The connection changed. Load properties again.");
@@ -147,7 +151,7 @@ export async function saveStoredGoogleProperty(
         credentialsEncrypted: encryptSecret(JSON.stringify(updatedCredentials)),
         status: "connected",
       },
-      where: { id: connection.id },
+      where: { id: current.id },
     });
     await writeAudit(
       {
@@ -160,8 +164,8 @@ export async function saveStoredGoogleProperty(
           provider: context.provider,
         },
         before: {
-          hasCredentials: Boolean(connection.credentialsEncrypted),
-          property: credentials.login ?? null,
+          hasCredentials: Boolean(current.credentialsEncrypted),
+          property: readCredentials(current)?.login ?? null,
           provider: context.provider,
         },
         projectId: context.projectId,

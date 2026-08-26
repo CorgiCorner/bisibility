@@ -21,7 +21,7 @@ describe("BacklinksLoadingSkeletons", () => {
     expect(workspace).toHaveClass("grid", "min-w-0", "gap-4");
     expect(workspace?.tagName).toBe("SECTION");
     expect(analyzeCard).toHaveClass(
-      "rounded-[14px]",
+      "rounded-card",
       "border",
       "border-border",
       "bg-bg-elev",
@@ -33,9 +33,9 @@ describe("BacklinksLoadingSkeletons", () => {
     expect(target).toHaveClass(
       "h-[38px]",
       "flex-1",
-      "rounded-[9px]",
+      "rounded-control",
       "border",
-      "border-border-strong",
+      "border-border",
       "md:min-w-[240px]",
     );
     expect(scope).toHaveClass("h-[38px]", "md:w-[196px]");
@@ -61,7 +61,7 @@ describe("BacklinksLoadingSkeletons", () => {
         "items-center",
         "justify-center",
         "text-center",
-        "rounded-2xl",
+        "rounded-card",
         "border",
         "border-border",
         "bg-bg-elev",
@@ -69,7 +69,7 @@ describe("BacklinksLoadingSkeletons", () => {
         "py-11",
       );
     expect.soft(idleSurface).not.toHaveClass("min-h-[420px]");
-    expect.soft(iconWell).toHaveClass("h-[54px]", "w-[54px]", "rounded-[14px]");
+    expect.soft(iconWell).toHaveClass("h-[54px]", "w-[54px]", "rounded-card");
     expect.soft(iconWell).not.toHaveClass("size-16", "rounded-full");
     expect.soft(title).toHaveClass("mt-4.5", "h-5", "w-[210px]");
     expect.soft(copy).toHaveClass("mt-[7px]", "max-w-[430px]");

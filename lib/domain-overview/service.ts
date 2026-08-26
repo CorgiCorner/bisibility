@@ -97,8 +97,11 @@ export async function analyzeDomainOverview(
     if (estimatedCostCents > 0) {
       await preflightDomainOverview({
         budgetCapCents: project.budgetCapCents,
+        connectionId: source.connection.id,
         estimatedCostCents,
+        estimatedUsageQuantity: 1 + Number(!keywordsCached) + Number(!pagesCached),
         projectId: project.id,
+        provider: source.provider.id,
       });
     }
     const overview = await resolveDomainOverviewSnapshot({

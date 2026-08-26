@@ -13,6 +13,10 @@ import {
   serpFeatures,
 } from "@/lib/keywords/keyword-filter-model";
 import type { ActiveLens, LensLocationOption } from "@/lib/keywords/lens-model";
+import type {
+  RankTrackerListFacets,
+  RankTrackerQueryState,
+} from "@/lib/keywords/rank-tracker-query-types";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import Slider from "@mui/material/Slider";
 import {
@@ -42,13 +46,16 @@ import { UrlFilterToggle } from "./UrlFilterToggle";
 
 type FiltersDrawerProps = {
   basePath: string;
+  facets?: RankTrackerListFacets;
   filters: KeywordFilters;
   lens?: ActiveLens;
   locationOptions?: LensLocationOption[];
+  onApply?: (filters: KeywordFilters) => void;
   onChange: (filters: KeywordFilters) => void;
   onClose: () => void;
   open: boolean;
   rows: KeywordRow[];
+  query?: RankTrackerQueryState;
   viewId?: string | null;
 };
 
@@ -63,16 +70,19 @@ const serpIcons: Record<string, FilterIcon> = {
 
 export function FiltersDrawer({
   basePath,
+  facets: serverFacets,
   filters,
   lens,
   locationOptions = [],
+  onApply,
   onChange,
   onClose,
   open,
   rows,
+  query,
   viewId = null,
 }: Readonly<FiltersDrawerProps>) {
-  const facets = getFilterFacets(rows);
+  const facets = serverFacets ?? getFilterFacets(rows);
   const activeCount =
     filters.position.length +
     (filters.change === "any" ? 0 : 1) +
@@ -97,7 +107,11 @@ export function FiltersDrawer({
           <Button onClick={() => onChange(emptyKeywordFilters)} type="button" variant="secondary">
             Reset
           </Button>
-          <Button onClick={onClose} sx={{ flex: 1 }} type="button">
+          <Button
+            onClick={() => (onApply ? onApply(filters) : onClose())}
+            sx={{ flex: 1 }}
+            type="button"
+          >
             Show results
           </Button>
         </div>
@@ -106,18 +120,20 @@ export function FiltersDrawer({
       onClose={onClose}
       open={open}
       title={
-        <span className="inline-flex items-center gap-2">
-          {"Filters "}
-          <span className="grid h-[19px] min-w-[19px] place-items-center rounded-full bg-accent-soft px-1.5 font-mono text-[10.5px] font-semibold text-accent-text">
-            {activeCount}
-          </span>
+        <span className="inline-flex items-baseline gap-2">
+          <span>Filters</span>
+          {activeCount > 0 ? (
+            <span className="font-mono text-[11px] font-medium text-fg-muted">
+              {activeCount} active
+            </span>
+          ) : null}
         </span>
       }
       widthVariant="filters"
     >
       <div className="-mt-1">
         {lens ? (
-          <div className="sm:hidden">
+          <div className="lg:hidden">
             <FilterSection icon={MapPin} title="Scope">
               <div className="mt-[13px]">
                 <KeywordsScopeLocationSelect
@@ -125,6 +141,7 @@ export function FiltersDrawer({
                   lens={lens}
                   locationOptions={locationOptions}
                   triggerClassName="w-full justify-between bg-transparent"
+                  query={query}
                   viewId={viewId}
                 />
               </div>
@@ -188,7 +205,7 @@ export function FiltersDrawer({
           <label className="mt-4 block text-[12px] text-fg-muted" htmlFor="keyword-contains">
             Keyword contains
           </label>
-          <div className="mt-2 flex items-center gap-2 rounded-[9px] border border-border-strong bg-transparent px-[11px] py-2 transition-colors focus-within:border-accent">
+          <div className="mt-2 flex items-center gap-2 rounded-control border border-border-control bg-transparent px-[11px] py-2 transition-colors focus-within:border-accent">
             <TextAa className="text-fg-muted" size={14} />
             <input
               className="min-w-0 flex-1 bg-transparent font-mono text-[12.5px] text-fg outline-none focus-visible:outline-none"

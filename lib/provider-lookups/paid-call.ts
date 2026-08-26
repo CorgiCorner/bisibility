@@ -11,16 +11,22 @@ import {
 } from "@/lib/provider-rates/resolver";
 import { normalizedProviderUnitCostCents } from "@/lib/provider-rates/unit-cost";
 import {
-  createProviderUsage,
-  type ProviderUsage,
-  type ProviderUsageSource,
-  type ProviderUsageTrigger,
+  assertProviderAllocationAvailable,
+  ProviderAllocationExhaustedError,
+} from "@/lib/provider-usage/enforcement";
+import { recordProviderUsage } from "@/lib/provider-usage/recorder";
+import {
+  createProviderRequestAttribution,
+  type ProviderRequestAttribution,
+  type ProviderRequestSource,
+  type ProviderRequestTrigger,
 } from "@/lib/provider-usage/tag";
 import { ProviderAuthError } from "@/lib/providers/auth-error";
 import { markProviderNeedsReauth } from "@/lib/providers/auth-state";
 import { chargedProviderCostCents } from "@/lib/providers/call-error";
 import { resolveProviderCredentials } from "@/lib/providers/credentials";
 import { consumeProviderLimit } from "@/lib/providers/rate-limit";
+import { PROVIDER_CATALOG } from "@/lib/providers/registry";
 import { DataForSeoUnsupportedLocationError } from "@/lib/providers/serp/dataforseo";
 import type { SerpProvider } from "@/lib/providers/types";
 import { assertBudgetAvailable, isBudgetExhaustedError } from "@/lib/rank-check/budget";
@@ -64,7 +70,17 @@ export function requiredEstimatedCostCents(input: {
   return amountCents;
 }
 
-export async function preflightProviderBudget(input: {
+type PreflightProviderBudgetInput = {
+  budgetCapCents?: number;
+  estimatedCostCents: number;
+  estimatedUsageQuantity?: number;
+  projectId: string;
+} & (
+  | { connectionId: string; provider: string }
+  | { connectionId?: undefined; provider?: undefined }
+);
+
+async function assertLegacyProviderBudget(input: {
   budgetCapCents?: number;
   estimatedCostCents: number;
   projectId: string;
@@ -82,47 +98,42 @@ export async function preflightProviderBudget(input: {
   }
 }
 
-async function recordProviderCost(input: {
-  connectionId: string;
-  costCents: number;
-  failed: boolean;
-  feature:
-    | "backlinks"
-    | "domain_overview"
-    | "keyword_metrics"
-    | "keyword_research"
-    | "ranked_keywords";
-  projectId: string;
-  provider: string;
-  unitCostCents?: number | null;
-  usage: ProviderUsage;
-}) {
-  await Promise.resolve(
-    prisma.providerCostEntry.create({
-      data: {
-        cached: false,
+export async function preflightProviderBudget(input: PreflightProviderBudgetInput) {
+  if (!input.connectionId || !input.provider) {
+    return assertLegacyProviderBudget(input);
+  }
+  try {
+    await assertProviderAllocationAvailable(
+      {
+        catalog: PROVIDER_CATALOG,
         connectionId: input.connectionId,
-        costCents: input.costCents,
-        failed: input.failed,
-        feature: input.feature,
+        estimatedCostCents: input.estimatedCostCents,
+        estimatedUsageQuantity: input.estimatedUsageQuantity,
+        legacyBudgetCheck: (capCents, estimate) =>
+          assertLegacyProviderBudget({
+            budgetCapCents: capCents,
+            estimatedCostCents: estimate,
+            projectId: input.projectId,
+          }),
         projectId: input.projectId,
         provider: input.provider,
-        source: input.usage.source,
-        trigger: input.usage.trigger,
-        tag: input.usage.tag,
-        correlationId: input.usage.correlationId,
-        ...(input.unitCostCents == null ? {} : { unitCostCents: input.unitCostCents }),
       },
-    }),
-  ).catch(() => undefined);
+      prisma,
+    );
+  } catch (error) {
+    if (error instanceof ProviderAllocationExhaustedError) {
+      throw new ProviderLookupSignal({ ok: false, reason: "budget_exhausted" });
+    }
+    throw error;
+  }
 }
 
-export async function paidProviderCall<T extends { costCents: number }>(input: {
-  /** Cap from a project row the caller already loaded; skips the budget-gate cap query. */
-  budgetCapCents?: number;
+export async function paidProviderCall<
+  T extends { costCents: number; providerRequestId?: string; usageQuantity?: number },
+>(input: {
   call: (
     credentials: ReturnType<typeof resolveProviderCredentials>,
-    usage: ProviderUsage,
+    usage: ProviderRequestAttribution,
   ) => Promise<T>;
   connection: { credentialsEncrypted: string | null; id: string; provider: string };
   feature:
@@ -137,8 +148,8 @@ export async function paidProviderCall<T extends { costCents: number }>(input: {
   provider: SerpProvider;
   rateContext?: Pick<ResolveProviderRateInput, "entries" | "manualAmountCents">;
   rate: ProviderFeatureRate | null;
-  source?: ProviderUsageSource;
-  trigger?: ProviderUsageTrigger;
+  source: ProviderRequestSource;
+  trigger: ProviderRequestTrigger;
 }) {
   // Backlinks bills three sub-rates per call, so it has no single measured or manual rate to
   // resolve; it prices from the list rates until the rate catalog models those sub-rates.
@@ -154,28 +165,38 @@ export async function paidProviderCall<T extends { costCents: number }>(input: {
     providerId: input.provider.id,
     rate: input.rate,
   });
-  await preflightProviderBudget({
-    budgetCapCents: input.budgetCapCents,
-    estimatedCostCents,
-    projectId: input.projectId,
+  await assertProviderAllocationAvailable(
+    {
+      catalog: PROVIDER_CATALOG,
+      connectionId: input.connection.id,
+      estimatedCostCents,
+      projectId: input.projectId,
+      provider: input.provider.id,
+      legacyBudgetCheck: async (capCents, estimate) =>
+        preflightProviderBudget({
+          budgetCapCents: capCents,
+          estimatedCostCents: estimate,
+          projectId: input.projectId,
+        }),
+    },
+    prisma,
+  ).catch((error) => {
+    if (error instanceof ProviderAllocationExhaustedError) {
+      throw new ProviderLookupSignal({ ok: false, reason: "budget_exhausted" });
+    }
+    throw error;
   });
   const credentials = resolveProviderCredentials(
     input.connection.provider,
     input.connection.credentialsEncrypted,
   );
-  const usage = await createProviderUsage({
+  const usage = await createProviderRequestAttribution({
     correlationId: randomUUID(),
     feature: input.feature,
     projectId: input.projectId,
-    source: input.source ?? "app",
-    trigger: input.trigger ?? "manual",
+    source: input.source,
+    trigger: input.trigger,
   });
-  if (!input.source || !input.trigger) {
-    console.warn("Provider call is missing explicit provider tag context.", {
-      feature: input.feature,
-      projectId: input.projectId,
-    });
-  }
   const gate = await consumeProviderLimit(input.provider.id, credentials, {
     projectId: input.projectId,
   });
@@ -187,24 +208,28 @@ export async function paidProviderCall<T extends { costCents: number }>(input: {
     result = await input.call(credentials, usage);
   } catch (error) {
     const chargedCostCents = chargedProviderCostCents(error);
+    const isAuthError = error instanceof ProviderAuthError;
     if (chargedCostCents != null) {
-      await recordProviderCost({
-        connectionId: input.connection.id,
-        costCents: chargedCostCents,
-        failed: true,
-        feature: input.feature,
-        projectId: input.projectId,
-        provider: input.provider.id,
-        unitCostCents: normalizedProviderUnitCostCents({
+      try {
+        await recordProviderUsage(prisma, {
+          attribution: usage,
+          connectionId: input.connection.id,
           costCents: chargedCostCents,
-          includeClickstream: input.includeClickstream,
-          itemCount: input.itemCount,
-          rate: input.rate,
-        }),
-        usage,
-      });
+          failed: true,
+          projectId: input.projectId,
+          provider: input.provider.id,
+          unitCostCents: normalizedProviderUnitCostCents({
+            costCents: chargedCostCents,
+            includeClickstream: input.includeClickstream,
+            itemCount: input.itemCount,
+            rate: input.rate,
+          }),
+        });
+      } catch (recorderError) {
+        if (!isAuthError) throw recorderError;
+      }
     }
-    if (error instanceof ProviderAuthError) {
+    if (isAuthError) {
       await Promise.resolve(
         markProviderNeedsReauth({
           connectionId: input.connection.id,
@@ -227,20 +252,26 @@ export async function paidProviderCall<T extends { costCents: number }>(input: {
     }
     throw error;
   }
-  await recordProviderCost({
-    connectionId: input.connection.id,
-    costCents: result.costCents,
-    failed: false,
-    feature: input.feature,
-    projectId: input.projectId,
-    provider: input.provider.id,
-    unitCostCents: normalizedProviderUnitCostCents({
+  // The provider call already succeeded and has already been charged. A ledger
+  // write that fails here must not cost the caller the results they paid for,
+  // so this stays best-effort, as the pre-allocation code path was.
+  await Promise.resolve(
+    recordProviderUsage(prisma, {
+      attribution: usage,
+      connectionId: input.connection.id,
       costCents: result.costCents,
-      includeClickstream: input.includeClickstream,
-      itemCount: input.itemCount,
-      rate: input.rate,
+      failed: false,
+      projectId: input.projectId,
+      provider: input.provider.id,
+      providerRequestId: result.providerRequestId,
+      unitCostCents: normalizedProviderUnitCostCents({
+        costCents: result.costCents,
+        includeClickstream: input.includeClickstream,
+        itemCount: input.itemCount,
+        rate: input.rate,
+      }),
+      usageQuantity: result.usageQuantity,
     }),
-    usage,
-  });
+  ).catch(() => undefined);
   return result;
 }

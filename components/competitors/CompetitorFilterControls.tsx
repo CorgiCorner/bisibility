@@ -12,7 +12,7 @@ type CompetitorFilterControlsProps = {
 };
 
 const bucketButtonClass =
-  "rounded-lg border px-[11px] py-[5px] text-[11.5px] font-semibold outline-none transition-colors";
+  "rounded-control border px-[11px] py-[5px] text-[11.5px] font-semibold outline-none transition-colors";
 
 export function CompetitorFilterControls({
   filter,
@@ -52,7 +52,7 @@ export function CompetitorFilterControls({
           {filter.tag ? (
             <button
               aria-label="Remove tag filter"
-              className="grid h-7 w-7 place-items-center rounded-lg border border-border-strong bg-bg-elev text-fg-muted outline-none transition-colors hover:border-accent hover:text-accent-text focus-visible:border-accent focus-visible:text-accent-text"
+              className="grid h-7 w-7 place-items-center rounded-control border border-border-control bg-bg-elev text-fg-muted outline-none transition-colors hover:border-accent hover:text-accent-text focus-visible:border-accent focus-visible:text-accent-text"
               onClick={() => onFilterChange({ ...filter, tag: null })}
               type="button"
             >

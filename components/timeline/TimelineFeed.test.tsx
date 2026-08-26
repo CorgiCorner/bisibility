@@ -6,8 +6,12 @@ import { describe, expect, it, vi } from "vitest";
 import { TimelineFeed } from "./TimelineFeed";
 
 vi.mock("@/components/timeline/AddNoteForm", () => ({
-  AddNoteForm: ({ canCreate }: { canCreate: boolean }) =>
-    canCreate ? <button type="button">Add note</button> : null,
+  AddNoteForm: ({ canCreate, compact }: { canCreate: boolean; compact?: boolean }) =>
+    canCreate ? (
+      <button className={compact ? "h-[34px]" : undefined} type="button">
+        Add note
+      </button>
+    ) : null,
 }));
 vi.mock("@/components/timeline/RemoveNoteAction", () => ({
   RemoveNoteAction: ({ signalId }: { signalId: string }) => (
@@ -55,11 +59,29 @@ describe("TimelineFeed empty state", () => {
     );
 
     expect(screen.queryByText("Newest project signals first")).not.toBeInTheDocument();
+    const controls = screen.getByTestId("timeline-controls");
     const search = screen.getByRole("button", { name: "Search" });
     const addNote = screen.getByRole("button", { name: "Add note" });
+    const allFilter = screen.getByRole("link", { name: /all\s*selected/i });
+    const filterRegion = allFilter.parentElement;
     expect(search.closest("form")).not.toContainElement(addNote);
-    expect(search.closest("form")?.parentElement).toContainElement(addNote);
+    expect(controls).toContainElement(search);
+    expect(controls).toContainElement(addNote);
+    expect(controls).toContainElement(allFilter);
+    expect(filterRegion).toHaveClass("border-t", "border-border", "pt-3");
+    expect(search).toHaveClass("h-[34px]");
+    expect(addNote).toHaveClass("h-[34px]");
     expect(search.compareDocumentPosition(addNote) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    const timelineInput = screen.getByRole("searchbox", { name: "Search timeline" });
+    expect(timelineInput.closest("label")).toHaveClass("h-[34px]");
+    expect(timelineInput).toHaveClass(
+      "compact-text-12",
+      "text-[12px]",
+      "leading-4",
+      "placeholder:text-[12px]",
+      "placeholder:leading-4",
+    );
+    expect(timelineInput.className).not.toContain("Attempted to call");
   });
 
   it("identifies an out-of-range page and links back to page one", () => {

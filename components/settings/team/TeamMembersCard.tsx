@@ -124,7 +124,7 @@ export function TeamMembersCard(props: Readonly<TeamMembersCardProps>) {
         title="Members"
       >
         <div>
-          <div className="divide-y divide-border-soft rounded-[10px] border border-border">
+          <div className="divide-y divide-border-soft rounded-control border border-border">
             {members.map((member) => {
               const actionPending = pendingAction?.endsWith(member.id);
               const rolePending = pendingAction === `role:${member.id}`;
@@ -136,7 +136,7 @@ export function TeamMembersCard(props: Readonly<TeamMembersCardProps>) {
                   <Avatar
                     alt=""
                     className={cn(
-                      "grid h-8.5 w-[34px] shrink-0 place-items-center rounded-[9px] font-mono text-xs font-semibold",
+                      "grid h-8.5 w-[34px] shrink-0 place-items-center rounded-control font-mono text-xs font-semibold",
                       avatarColors[member.color],
                     )}
                     initials={member.initials}

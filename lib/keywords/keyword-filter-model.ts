@@ -3,7 +3,7 @@ import type { KeywordRow } from "@/lib/queries/keywords";
 
 export type PositionBucketId = "top3" | "top10" | "11-50" | "51-100";
 export type ChangeFilter = "any" | "up" | "down" | "new" | "lost";
-export type LastCheckFilter = "any" | "completed" | "failed" | "running";
+export type LastCheckFilter = "any" | "completed" | "failed" | "not_checked" | "running";
 
 export type KeywordFilters = {
   position: PositionBucketId[];
@@ -63,6 +63,7 @@ export const lastCheckOptions = [
   { id: "failed", label: "Failed" },
   { id: "running", label: "Running" },
   { id: "completed", label: "Completed" },
+  { id: "not_checked", label: "Not checked" },
 ] as const;
 
 export const serpFeatures = [
@@ -149,7 +150,10 @@ export function applyKeywordFilters(rows: KeywordRow[], filters: KeywordFilters)
       filters.serp.every((feature) =>
         (serpAliases[feature] ?? [feature]).some((alias) => rowSerp.has(alias)),
       ) &&
-      (filters.lastCheck === "any" || row.lastCheckStatus === filters.lastCheck) &&
+      (filters.lastCheck === "any" ||
+        (filters.lastCheck === "not_checked"
+          ? row.lastCheckStatus === null
+          : row.lastCheckStatus === filters.lastCheck)) &&
       (!filters.wrongUrl ||
         hasUrlMismatch({
           position: row.hasRankData ? row.position : null,

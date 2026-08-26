@@ -43,13 +43,33 @@ describe("LocationField", () => {
     const { rerender } = render(<LocationField onChange={vi.fn()} value={country()} />);
     expect(screen.getByRole("combobox", { name: /location/i })).toHaveClass(
       "bg-transparent",
-      "border-border-strong",
+      "border-border-control",
     );
     rerender(<LocationField onChange={vi.fn()} value={country()} variant="toolbar" />);
     expect(screen.getByRole("combobox", { name: /location/i })).toHaveClass(
       "bg-transparent",
-      "border-border-strong",
+      "border-border-control",
     );
+  });
+
+  it("renders the research variant as a compact market control with a right caret", () => {
+    render(<LocationField onChange={vi.fn()} value={country()} variant="research" />);
+
+    const input = screen.getByRole("combobox", { name: /location/i });
+    expect(input).toHaveClass(
+      "min-h-[34px]",
+      "w-full",
+      "bg-bg-elev",
+      "px-9",
+      "py-1",
+      "compact-text-13",
+      "text-[13px]",
+      "font-normal",
+      "tracking-normal",
+    );
+    expect(input).not.toHaveClass("h-10", "min-h-10", "font-medium");
+    expect(screen.getByTestId("location-field-caret")).toHaveClass("right-3");
+    expect(input.parentElement?.querySelector("[data-country-flag='US']")).toBeInTheDocument();
   });
 
   it("queries mixed suggestions and preserves the selected city key", async () => {
@@ -86,6 +106,10 @@ describe("LocationField", () => {
     expect(url).toContain("project=prj_1");
     expect(await screen.findByText("Countries")).toBeInTheDocument();
     expect(await screen.findByText("Cities")).toBeInTheDocument();
+    const countryOption = screen.getByRole("option", { name: "Australia" });
+    const cityOption = screen.getByRole("option", { name: /Austin/ });
+    expect(countryOption.querySelector("[data-country-flag='AU']")).toBeInTheDocument();
+    expect(cityOption.querySelector("[data-city-location-pin]")).toBeInTheDocument();
     fireEvent.click(screen.getByText("Austin"));
     expect(screen.getByTestId("kind")).toHaveTextContent("city");
     expect(screen.getByTestId("display")).toHaveTextContent("Austin, Texas, United States");

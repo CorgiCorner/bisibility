@@ -9,11 +9,7 @@ import {
   useProjectWriteMode,
 } from "@/components/shell/ProjectWriteModeProvider";
 import { Button, ConfirmModal } from "@/components/ui";
-import {
-  type CostRateInfo,
-  formatEstimateCents,
-  runCostCents,
-} from "@/lib/cost-estimate/project-estimate";
+import type { CostRateInfo } from "@/lib/cost-estimate/project-estimate";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { appPath } from "@/lib/routing/app-path";
 import type { SerpDepth } from "@/lib/serp/markets";
@@ -31,10 +27,8 @@ import { useState } from "react";
 import { BulkActionModal, type BulkMode } from "./BulkActionModal";
 import { bulkTargetView } from "./bulk-target-model";
 import { RunChecksSplitButton } from "./RunChecksSplitButton";
-import { effectiveRowDepth } from "./run-check-depth";
 
 type BulkActionBarProps = Omit<KeywordWorkspaceActions, "addKeywordsAction"> & {
-  budget?: { capCents: number; spentCents: number };
   checksRunning?: boolean;
   canDeleteKeyword: boolean;
   canUpdateKeyword: boolean;
@@ -47,7 +41,6 @@ type BulkActionBarProps = Omit<KeywordWorkspaceActions, "addKeywordsAction"> & {
 };
 
 export function BulkActionBar({
-  budget,
   bulkClearTargetAction,
   bulkDeleteAction,
   bulkSetFrequencyAction,
@@ -79,12 +72,6 @@ export function BulkActionBar({
   );
   const chosenDepth = depthOverride?.key === selectionKey ? depthOverride.depth : null;
   const targetView = bulkTargetView(selectedRows);
-  const estimatedCost = providerRate
-    ? runCostCents(
-        chosenDepth ? selectedRows.map(() => chosenDepth) : selectedRows.map(effectiveRowDepth),
-        providerRate,
-      )
-    : null;
 
   if (selectedRows.length === 0) {
     return null;
@@ -229,13 +216,6 @@ export function BulkActionBar({
           Clear
         </Button>
       </div>
-      {onRunChecks && canUpdateKeyword && providerConnected ? (
-        <p className="m-0 font-mono text-[11.5px] text-fg-muted">
-          {estimatedCost == null
-            ? `${selectedRows.length} ${selectedRows.length === 1 ? "check" : "checks"} selected - provider rate unavailable.`
-            : `This run ~ ${formatEstimateCents(estimatedCost)}${budget ? ` - ${formatEstimateCents(Math.max(0, budget.capCents - budget.spentCents))} left of ${formatEstimateCents(budget.capCents)} this month` : ""}`}
-        </p>
-      ) : null}
       {canDeleteKeyword ? (
         <ConfirmModal
           busy={deleting}

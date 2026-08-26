@@ -28,7 +28,7 @@ export function SavedKeywordsEmptyState({ projectRef }: Readonly<{ projectRef: s
         ))}
       </div>
       <div className="flex flex-col items-center px-8 pb-14 pt-[52px] text-center">
-        <span className="grid h-[54px] w-[54px] place-items-center rounded-[14px] bg-accent-soft text-accent-solid">
+        <span className="grid h-[54px] w-[54px] place-items-center rounded-card bg-accent-soft text-accent-solid">
           <BookmarkSimple size={26} weight="fill" />
         </span>
         <h2 className="mb-0 mt-4.5 text-[18px] font-semibold tracking-[-0.4px] text-fg">

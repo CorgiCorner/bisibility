@@ -12,6 +12,7 @@ import { useForm } from "react-hook-form";
 
 type AddNoteFormProps = {
   canCreate: boolean;
+  compact?: boolean;
   projectId: string;
 };
 
@@ -25,7 +26,7 @@ const severityOptions = [
 
 const labelClass = "font-mono text-[10.5px] font-semibold uppercase tracking-[0.5px] text-fg-muted";
 const severityTriggerClass =
-  "min-h-9 w-full justify-between rounded-lg border-border-strong bg-transparent px-3 font-sans text-[12px] font-semibold normal-case tracking-normal";
+  "min-h-9 w-full justify-between rounded-control border-border-control bg-transparent px-3 font-sans text-[12px] font-semibold normal-case tracking-normal";
 
 const defaultValues = (projectId: string): CreateSignalNoteInput => ({
   note: "",
@@ -34,12 +35,15 @@ const defaultValues = (projectId: string): CreateSignalNoteInput => ({
   url: "",
 });
 
-export function AddNoteForm({ canCreate, projectId }: Readonly<AddNoteFormProps>) {
+export function AddNoteForm({ canCreate, compact = false, projectId }: Readonly<AddNoteFormProps>) {
   if (!canCreate) return null;
-  return <AddNoteFormControls projectId={projectId} />;
+  return <AddNoteFormControls compact={compact} projectId={projectId} />;
 }
 
-function AddNoteFormControls({ projectId }: Readonly<{ projectId: string }>) {
+function AddNoteFormControls({
+  compact,
+  projectId,
+}: Readonly<{ compact: boolean; projectId: string }>) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -82,7 +86,7 @@ function AddNoteFormControls({ projectId }: Readonly<{ projectId: string }>) {
   return (
     <>
       <button
-        className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-accent bg-accent-solid px-3 text-[12px] font-semibold text-accent-on-solid outline-none transition-opacity hover:opacity-90 focus-visible:opacity-90"
+        className={`inline-flex ${compact ? "h-[34px]" : "min-h-9"} shrink-0 items-center justify-center gap-1.5 rounded-control border border-accent bg-accent-solid px-3 text-[12px] font-semibold text-accent-on-solid outline-none transition-opacity hover:opacity-90 focus-visible:opacity-90`}
         onClick={() => setOpen(true)}
         type="button"
       >
@@ -94,7 +98,7 @@ function AddNoteFormControls({ projectId }: Readonly<{ projectId: string }>) {
         footer={
           <div className="flex items-center justify-end gap-1.5">
             <button
-              className="inline-flex h-9 items-center gap-1 rounded-lg border border-border-strong bg-bg-elev px-3 text-[12px] font-semibold text-fg-muted hover:border-accent hover:text-accent-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid"
+              className="inline-flex h-9 items-center gap-1 rounded-control border border-border-control bg-bg-elev px-3 text-[12px] font-semibold text-fg-muted hover:border-accent hover:text-accent-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid"
               onClick={close}
               type="button"
             >
@@ -102,7 +106,7 @@ function AddNoteFormControls({ projectId }: Readonly<{ projectId: string }>) {
               Cancel
             </button>
             <button
-              className="inline-flex h-9 items-center gap-1 rounded-lg border border-accent bg-accent-solid px-3 text-[12px] font-semibold text-accent-on-solid hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted"
+              className="inline-flex h-9 items-center gap-1 rounded-control border border-accent bg-accent-solid px-3 text-[12px] font-semibold text-accent-on-solid hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted"
               disabled={isPending}
               form={FORM_ID}
               type="submit"
@@ -133,7 +137,7 @@ function AddNoteFormControls({ projectId }: Readonly<{ projectId: string }>) {
             <label className="grid gap-1.5">
               <span className={labelClass}>URL</span>
               <input
-                className="h-9 min-w-0 rounded-lg border border-border-strong bg-transparent px-3 font-mono text-[12px] text-fg outline-none focus:border-accent"
+                className="h-9 min-w-0 rounded-control border border-border-control bg-transparent px-3 font-mono text-[12px] text-fg outline-none focus:border-accent"
                 placeholder="https://example.com/page"
                 type="url"
                 {...register("url")}

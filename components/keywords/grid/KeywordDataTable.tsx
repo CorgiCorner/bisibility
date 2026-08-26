@@ -1,128 +1,69 @@
 "use client";
-
-import type {
-  KeywordDetailActions,
-  KeywordWorkspaceActions,
-} from "@/components/keywords/action-utils";
 import { actionErrorMessage } from "@/components/keywords/action-utils";
 import { Card, ConfirmModal, SummaryStrip } from "@/components/ui";
-import type { KeywordFilterChip } from "@/lib/keywords/keyword-filter-model";
-import { marketGridChild } from "@/lib/keywords/market-grid-model";
+import {
+  rankTrackerMutationPresence,
+  rankTrackerNavigationHref,
+  rankTrackerSortFromGrid,
+  resetRankTrackerPage,
+} from "@/lib/keywords/rank-tracker-navigation";
+import type {
+  RankTrackerQueryField,
+  RankTrackerQueryState,
+} from "@/lib/keywords/rank-tracker-query-types";
 import type { KeywordRow } from "@/lib/queries/keywords";
-import type { ProjectMarketsView } from "@/lib/queries/project-markets";
 import { appPath } from "@/lib/routing/app-path";
-import type { SerpDepth } from "@/lib/serp/markets";
-import type { GridCellParams, GridDensity, GridRowSelectionModel } from "@mui/x-data-grid";
+import type {
+  GridDensity,
+  GridPaginationModel,
+  GridRowSelectionModel,
+  GridSortModel,
+} from "@mui/x-data-grid";
 import dynamic from "next/dynamic";
-import { useRouter } from "next/navigation";
-import { type MouseEvent, type ReactNode, useCallback, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useMemo, useState } from "react";
 import { BulkActionBar } from "./BulkActionBar";
-import { DeferredDataGrid } from "./DeferredDataGrid";
 import { keywordColumns } from "./grid-columns";
 import { persistKeywordGridDensity, renderedRowHeightForDensity } from "./grid-density";
-import { type CheckHealthView, KeywordGridHealthNotices } from "./KeywordGridHealthNotices";
+import { KeywordGridHealthNotices } from "./KeywordGridHealthNotices";
+import { KeywordGridViewport } from "./KeywordGridViewport";
 import { KeywordsFilterBar } from "./KeywordsFilterBar";
-import { KeywordNoRowsOverlay, type KeywordNoRowsState } from "./KeywordTableStatus";
 import {
   defaultKeywordColumnVisibility,
   initialKeywordGridState,
-  keywordGridSx,
   keywordTableCardSx,
 } from "./keyword-data-grid-config";
+import type { KeywordDataTableProps } from "./keyword-data-table-types";
 import { buildKeywordWeeklySummary } from "./keyword-weekly-summary";
 import { useMarketGridView } from "./use-market-grid-view";
 
-const GRID_CHECKBOX_SELECTION_FIELD = "__check__";
 const KeywordEditDrawer = dynamic(
   () => import("@/components/keywords/KeywordEditDrawer").then((mod) => mod.KeywordEditDrawer),
   { ssr: false },
 );
-declare module "@mui/x-data-grid" {
-  interface NoRowsOverlayPropsOverrides {
-    state?: KeywordNoRowsState;
-  }
-}
-type KeywordDataTableProps = Omit<KeywordWorkspaceActions, "addKeywordsAction"> &
-  Pick<KeywordDetailActions, "updateKeywordAction" | "updateKeywordScheduleAction"> & {
-    canDeleteKeyword: boolean;
-    canUpdateKeyword: boolean;
-    checkFailed: boolean;
-    checkHealth?: CheckHealthView;
-    filterChips: KeywordFilterChip[];
-    filterCount: number;
-    initialDensity?: GridDensity;
-    onAddKeyword?: () => void;
-    onClearFilters: () => void;
-    onDismissFailure: () => void;
-    onImportCsv?: () => void;
-    onOpenExport: (selectedIds: string[]) => void;
-    onOpenFilters: () => void;
-    onRemoveFilter: (key: string) => void;
-    onRunChecks: (keywordIds: string[], depth?: SerpDepth) => void;
-    onSearchChange: (value: string) => void;
-    pendingCheckIds: ReadonlySet<string>;
-    providerConnected?: boolean;
-    projectId: string;
-    projectMarkets?: ProjectMarketsView;
-    rows: KeywordRow[];
-    noRowsState?: KeywordNoRowsState;
-    searchValue: string;
-    savedViewControl?: ReactNode;
-    scopeChip?: ReactNode;
-    scopeControl?: ReactNode;
-  };
-
-function handleCellClick(params: GridCellParams, event: MouseEvent) {
-  if (params.field === GRID_CHECKBOX_SELECTION_FIELD || params.field === "actions") {
-    event.stopPropagation();
-  }
-}
-
-export function KeywordDataTable({
-  bulkClearTargetAction,
-  bulkDeleteAction,
-  bulkSetFrequencyAction,
-  bulkSetTargetAction,
-  bulkTagAction,
-  canDeleteKeyword,
-  canUpdateKeyword,
-  checkFailed,
-  checkHealth,
-  filterChips,
-  filterCount,
-  initialDensity,
-  onAddKeyword,
-  onClearFilters,
-  onDismissFailure,
-  onImportCsv,
-  onOpenExport,
-  onOpenFilters,
-  onRemoveFilter,
-  onRunChecks,
-  onSearchChange,
-  pendingCheckIds,
-  providerConnected,
-  projectId,
-  projectMarkets,
-  rows,
-  noRowsState,
-  savedViewControl,
-  searchValue,
-  scopeChip,
-  scopeControl,
-  updateKeywordAction,
-  updateKeywordScheduleAction,
-}: KeywordDataTableProps) {
+// biome-ignore format: Compact parameter destructuring keeps this production module within 300 lines.
+export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulkSetFrequencyAction, bulkSetTargetAction, bulkTagAction, canDeleteKeyword, canUpdateKeyword, checkFailed, checkHealth, filterChips, filterCount, initialDensity, listMode = "grouped-client", matchedTargetCount, page, pageSize, query, onAddKeyword, onClearFilters, onDismissFailure, onImportCsv, onOpenExport, onOpenFilters, onQueryNavigation, onRemoveFilter, onRunChecks, onSearchChange, onSearchCommit, pendingCheckIds, providerConnected, projectId, projectMarkets, rows, noRowsState, savedViewControl, searchValue, scopeChip, scopeControl, updateKeywordAction, updateKeywordScheduleAction }: KeywordDataTableProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const flatServer = listMode === "flat-server" && query !== undefined;
   const [columnVisibilityModel, setColumnVisibilityModel] = useState(
     defaultKeywordColumnVisibility,
   );
   const [density, setDensity] = useState<GridDensity>(initialDensity ?? "standard");
+  const [clientPaginationModel, setClientPaginationModel] = useState<GridPaginationModel>({
+    page: 0,
+    ...initialKeywordGridState.pagination.paginationModel,
+  });
+  const paginationModel = flatServer
+    ? { page: Math.max(0, (page ?? query.page) - 1), pageSize: pageSize ?? query.pageSize }
+    : clientPaginationModel;
+  // biome-ignore format: Compact to preserve the production source line limit.
   const [deletingKeyword, setDeletingKeyword] = useState<KeywordRow | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [editing, setEditing] = useState<{ focusTargetUrl: boolean; row: KeywordRow } | null>(null);
   const [rowActionError, setRowActionError] = useState<string | null>(null);
   const getRowHeight = useCallback(() => renderedRowHeightForDensity(density), [density]);
+  const onRefreshData = useCallback(() => router.refresh(), [router]);
   function handleDensityChange(next: GridDensity) {
     setDensity(next);
     persistKeywordGridDensity(next);
@@ -131,6 +72,18 @@ export function KeywordDataTable({
     ids: new Set(),
     type: "include",
   });
+  const navigate = (next: RankTrackerQueryState, present: RankTrackerQueryField[]) => {
+    onQueryNavigation?.();
+    const rebased = query && searchValue !== query.search ? { ...next, search: searchValue } : next;
+    router.push(
+      rankTrackerNavigationHref({
+        basePath: appPath(projectId, "rank-tracker"),
+        current: searchParams,
+        present: rankTrackerMutationPresence(query ?? rebased, rebased, present),
+        query: rebased,
+      }),
+    );
+  };
   const {
     groupingControl,
     selectedTargetIds,
@@ -139,7 +92,17 @@ export function KeywordDataTable({
     sortingMode,
     toggleParent,
     viewRows,
-  } = useMarketGridView(rows);
+  } = useMarketGridView(
+    rows,
+    flatServer ? query.grouped : undefined,
+    flatServer
+      ? (grouped) => navigate(resetRankTrackerPage({ ...query, grouped }), ["grouped", "page"])
+      : undefined,
+  );
+  const effectiveRows = flatServer ? rows : viewRows;
+  const effectiveSortModel: GridSortModel = flatServer
+    ? [{ field: query.sort.field, sort: query.sort.direction }]
+    : sortModel;
   const selectedIds = selectedTargetIds(new Set([...rowSelectionModel.ids].map(String)));
   const selectedRows = rows.filter((row) => selectedIds.includes(row.id));
   const weeklySummary = useMemo(() => buildKeywordWeeklySummary(rows), [rows]);
@@ -188,15 +151,16 @@ export function KeywordDataTable({
         onImportCsv={onImportCsv}
         onOpenExport={() => onOpenExport(selectedIds)}
         onOpenFilters={onOpenFilters}
+        onRefresh={onRefreshData}
         onRemoveFilter={onRemoveFilter}
         onSearchChange={onSearchChange}
+        onSearchCommit={onSearchCommit}
         savedViewControl={savedViewControl}
         searchValue={searchValue}
         scopeChip={scopeChip}
         scopeControl={scopeControl}
       />
       <BulkActionBar
-        budget={checkHealth?.budget}
         bulkClearTargetAction={bulkClearTargetAction}
         bulkDeleteAction={bulkDeleteAction}
         bulkSetFrequencyAction={bulkSetFrequencyAction}
@@ -212,68 +176,72 @@ export function KeywordDataTable({
         providerRate={checkHealth?.providerRate}
         selectedRows={selectedRows}
       />
-      <KeywordGridHealthNotices
-        checkFailed={checkFailed}
-        checkHealth={checkHealth}
-        onDismissFailure={onDismissFailure}
-        onRunChecks={onRunChecks}
-        projectRef={projectId}
-        rows={rows}
-      />
+      {flatServer ? null : (
+        <KeywordGridHealthNotices
+          checkFailed={checkFailed}
+          checkHealth={checkHealth}
+          onDismissFailure={onDismissFailure}
+          onRunChecks={onRunChecks}
+          projectRef={projectId}
+          rows={rows}
+        />
+      )}
       {rowActionError ? (
         <p className="m-0 border-b border-border px-4 py-2 font-mono text-[11.5px] text-red-text">
           {rowActionError}
         </p>
       ) : null}
-      {weeklySummary ? (
+      {!flatServer && weeklySummary ? (
         <SummaryStrip
           className="rounded-none border-b border-border px-4"
           sentence={weeklySummary.sentence}
           tone={weeklySummary.tone}
         />
       ) : null}
-      <div className="min-w-0 overflow-hidden">
-        <div className="min-w-0 overflow-x-auto">
-          <div
-            className="h-[650px] min-h-[420px] max-h-[calc(100dvh-200px)] min-w-[1080px]"
-            data-testid="keywords-grid-viewport"
-          >
-            <DeferredDataGrid
-              checkboxSelection
-              columnHeaderHeight={42}
-              columnVisibilityModel={columnVisibilityModel}
-              columns={columns}
-              density={density}
-              disableRowSelectionExcludeModel
-              disableRowSelectionOnClick
-              getRowHeight={getRowHeight}
-              initialState={initialKeywordGridState}
-              onCellClick={handleCellClick}
-              onColumnVisibilityModelChange={setColumnVisibilityModel}
-              onDensityChange={handleDensityChange}
-              getRowClassName={(params) =>
-                marketGridChild(params.row) ? "bv-market-grid-child" : ""
-              }
-              onRowClick={(params) => {
-                if (!toggleParent(params.row)) {
-                  router.push(appPath(projectId, "rank-tracker", params.row.id));
-                }
-              }}
-              onRowSelectionModelChange={setRowSelectionModel}
-              onSortModelChange={setSortModel}
-              pageSizeOptions={[10, 25, 50]}
-              pagination
-              rowSelectionModel={rowSelectionModel}
-              rows={viewRows}
-              sortingMode={sortingMode}
-              sortModel={sortModel}
-              slotProps={{ noRowsOverlay: { state: noRowsState } }}
-              slots={{ noRowsOverlay: KeywordNoRowsOverlay }}
-              sx={keywordGridSx}
-            />
-          </div>
-        </div>
-      </div>
+      <KeywordGridViewport
+        columnVisibilityModel={columnVisibilityModel}
+        columns={columns}
+        density={density}
+        getRowHeight={getRowHeight}
+        noRowsState={noRowsState}
+        onColumnVisibilityModelChange={setColumnVisibilityModel}
+        onDensityChange={handleDensityChange}
+        onNavigate={(keywordId) => router.push(appPath(projectId, "rank-tracker", keywordId))}
+        onPaginationModelChange={(model) => {
+          if (
+            flatServer &&
+            (model.page !== paginationModel.page || model.pageSize !== paginationModel.pageSize)
+          )
+            navigate(
+              {
+                ...query,
+                page: model.page + 1,
+                pageSize: model.pageSize as RankTrackerQueryState["pageSize"],
+              },
+              ["page", "pageSize"],
+            );
+          else setClientPaginationModel(model);
+        }}
+        onRowSelectionModelChange={setRowSelectionModel}
+        onSortModelChange={(model) => {
+          if (flatServer) {
+            const sort = rankTrackerSortFromGrid(model[0]);
+            if (sort.field === query.sort.field && sort.direction === query.sort.direction) return;
+            navigate(
+              resetRankTrackerPage({ ...query, sort }),
+              ["sort", "direction", "page"],
+            );
+          } else setSortModel(model);
+        }}
+        paginationModel={paginationModel}
+        rowSelectionModel={rowSelectionModel}
+        paginationMode={flatServer ? "server" : "client"}
+        rowCount={flatServer ? matchedTargetCount : undefined}
+        rows={effectiveRows}
+        sortingMode={flatServer ? "server" : sortingMode}
+        sortModel={effectiveSortModel}
+        toggleParent={toggleParent}
+      />
       {canUpdateKeyword && editing ? (
         <KeywordEditDrawer
           focusTargetUrl={editing.focusTargetUrl}

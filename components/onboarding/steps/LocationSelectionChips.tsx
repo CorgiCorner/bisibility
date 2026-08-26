@@ -85,7 +85,7 @@ export function LocationSelectionChips({
               onClick={() => removeLocation(value.canonicalKey)}
               size="xs"
               sx={{
-                borderRadius: "999px",
+                borderRadius: "9999px",
                 height: 20,
                 minHeight: 20,
                 minWidth: 20,
@@ -109,7 +109,7 @@ export function LocationSelectionChips({
             onClick={() => setAdding(true)}
             size="xs"
             startIcon={<Plus aria-hidden size={13} weight="bold" />}
-            sx={{ borderRadius: "999px", borderStyle: "dashed" }}
+            sx={{ borderRadius: "9999px", borderStyle: "dashed" }}
             type="button"
             variant="secondary"
           >
@@ -141,7 +141,7 @@ export function LocationSelectionChips({
               size="xs"
               startIcon={<X aria-hidden size={12} weight="bold" />}
               sx={{
-                borderRadius: "999px",
+                borderRadius: "9999px",
                 "&:hover": {
                   borderColor: "var(--red)",
                   color: "var(--red-text)",

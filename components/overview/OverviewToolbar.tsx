@@ -3,6 +3,7 @@
 import { Toolbar } from "@/components/shell/Toolbar";
 import { Button, MenuMultiSelect, Pill } from "@/components/ui";
 import { appPath } from "@/lib/routing/app-path";
+import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import {
@@ -79,7 +80,7 @@ function filterMenus(selected: SelectedFilters): readonly FilterMenu[] {
 const PAPER_SX = {
   backgroundColor: "var(--bg-elev)",
   border: "1px solid var(--border)",
-  borderRadius: "12px",
+  borderRadius: UI_RADIUS_ROLES.card,
   boxShadow: "none",
   color: "var(--fg)",
   marginTop: "6px",
@@ -88,7 +89,7 @@ const PAPER_SX = {
 } as const;
 
 const ROW_SX = {
-  borderRadius: "9px",
+  borderRadius: UI_RADIUS_ROLES.control,
   color: "var(--fg-muted)",
   fontSize: "13px",
   gap: "12px",

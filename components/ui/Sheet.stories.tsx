@@ -14,13 +14,13 @@ type Story = StoryObj<typeof meta>;
 const footer = (
   <div className="flex items-center gap-2.5">
     <button
-      className="rounded-[9px] border border-border-strong bg-bg-elev px-4 py-2.5 text-[13px] font-semibold text-fg-muted"
+      className="rounded-control border border-border-control bg-bg-elev px-4 py-2.5 text-[13px] font-semibold text-fg-muted"
       type="button"
     >
       Cancel
     </button>
     <button
-      className="flex-1 rounded-[9px] bg-accent-solid px-4 py-2.5 text-[13px] font-semibold text-accent-on-solid"
+      className="flex-1 rounded-control bg-accent-solid px-4 py-2.5 text-[13px] font-semibold text-accent-on-solid"
       type="button"
     >
       Save changes
@@ -35,7 +35,7 @@ const formContent = (
         Keywords
       </label>
       <textarea
-        className="mt-2 min-h-32 w-full resize-y rounded-[10px] border border-border-strong bg-transparent px-[13px] py-3 font-mono text-[13px] leading-[1.7] text-fg outline-none"
+        className="mt-2 min-h-32 w-full resize-y rounded-control border border-border-control bg-transparent px-[13px] py-3 font-mono text-[13px] leading-[1.7] text-fg outline-none"
         defaultValue={"open source analytics\nself hosted seo tool"}
         id="keyword-input"
       />
@@ -46,7 +46,7 @@ const formContent = (
     <div className="grid grid-cols-2 gap-2.5">
       {["Engine", "Country", "Device", "Frequency"].map((label) => (
         <div
-          className="flex items-center justify-between gap-2 rounded-[9px] border border-border-strong bg-bg-sunken px-3 py-[9px]"
+          className="flex items-center justify-between gap-2 rounded-control border border-border bg-bg-sunken px-3 py-[9px]"
           key={label}
         >
           <span className="font-mono text-[10px] uppercase tracking-[0.4px] text-fg-muted">
@@ -85,13 +85,13 @@ export const FiltersOpen: Story = {
             </h3>
             <div className="mt-3 grid grid-cols-2 gap-[7px]">
               <button
-                className="rounded-[9px] border border-border-strong bg-bg-elev px-3 py-[9px] text-left text-[12.5px] font-medium text-fg"
+                className="rounded-control border border-border-control bg-bg-elev px-3 py-[9px] text-left text-[12.5px] font-medium text-fg"
                 type="button"
               >
                 Top 10
               </button>
               <button
-                className="rounded-[9px] border border-border-strong bg-bg-elev px-3 py-[9px] text-left text-[12.5px] font-medium text-fg"
+                className="rounded-control border border-border-control bg-bg-elev px-3 py-[9px] text-left text-[12.5px] font-medium text-fg"
                 type="button"
               >
                 Dropped

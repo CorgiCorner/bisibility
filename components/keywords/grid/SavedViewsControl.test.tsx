@@ -1,4 +1,5 @@
 import { emptySavedViewConfig, type KeywordSavedView } from "@/lib/keywords/saved-view-model";
+import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { SavedViewsControl } from "./SavedViewsControl";
@@ -58,5 +59,22 @@ describe("SavedViewsControl", () => {
     expect(trigger).toHaveClass("font-normal", "text-fg", "min-h-[34px]");
     expect(trigger).not.toHaveClass("MuiButton-root");
     expect(trigger.querySelector(".truncate")).toHaveClass("text-fg");
+  });
+
+  it("pushes saved-view selections into browser history", async () => {
+    render(
+      <SavedViewsControl
+        activeFiltersSummary="No filters"
+        activeViewId={null}
+        config={emptySavedViewConfig}
+        deletableSavedViewIds={[]}
+        projectId="prj_1"
+        savedViews={savedViews}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "All keywords" }));
+    fireEvent.click(await screen.findByRole("menuitem", { name: /Own view/ }));
+    expect(routerMock.push).toHaveBeenCalledWith(expect.stringContaining("view=viw_"));
+    expect(routerMock.replace).not.toHaveBeenCalled();
   });
 });

@@ -3,6 +3,7 @@
 import {
   Button,
   Card,
+  compactInputClassName,
   InfoTooltip,
   MenuSelect,
   pricingTriggerClassName,
@@ -35,6 +36,8 @@ const limitOptions = [100, 300, 500, 1000].map((value) => ({
   label: `Top ${value} links`,
   value: String(value),
 }));
+
+const analyzeControlHeightClassName = "h-[34px]";
 
 type AnalyzeCardProps = {
   disabled?: boolean;
@@ -90,10 +93,12 @@ export function AnalyzeCard({
     <Card className="p-4 sm:p-5" size="md">
       <form className="grid gap-3" onSubmit={handleSubmit(onSubmit)}>
         <div className="flex flex-col gap-3 md:flex-row md:items-start">
-          <div className="flex h-[38px] flex-1 items-center gap-2 rounded-[9px] border border-border-strong bg-transparent px-2.5 text-[13px] focus-within:border-accent md:min-w-[240px]">
+          <div
+            className={`flex ${analyzeControlHeightClassName} flex-1 items-center gap-2 rounded-control border border-border-control bg-transparent px-2.5 text-[13px] focus-within:border-accent md:min-w-[240px]`}
+          >
             <GlobeSimple aria-hidden className="shrink-0 text-fg-muted" size={15} />
             {targetIsSet ? (
-              <span className="inline-flex min-w-0 items-center gap-1.5 rounded-[6px] bg-bg-sunken px-2 py-1 font-medium">
+              <span className="inline-flex min-w-0 items-center gap-1.5 rounded-control bg-bg-sunken px-2 py-1 font-medium">
                 <span className="truncate">{target}</span>
                 <button
                   aria-label={`Remove ${target}`}
@@ -113,7 +118,7 @@ export function AnalyzeCard({
                   {...targetField}
                   autoCapitalize="none"
                   autoCorrect="off"
-                  className="min-w-0 flex-1 bg-transparent py-2 text-[13px] text-fg outline-none placeholder:text-fg-muted"
+                  className={`${compactInputClassName} h-full min-h-0 min-w-0 flex-1 bg-transparent text-fg outline-none`}
                   id="backlinks-target"
                   onChange={(event) => {
                     targetField.onChange(event);
@@ -127,19 +132,19 @@ export function AnalyzeCard({
           </div>
           <SegmentedControl
             ariaLabel="Backlinks target scope"
-            className="shrink-0 [&>div]:!min-h-[38px]"
+            className="shrink-0"
             fitContent
             onChange={onScopeChange}
-            optionClassName="min-w-[92px] !min-h-[30px]"
+            optionClassName="min-w-[92px]"
             options={scopeOptions}
-            size="field"
+            size="toolbar"
             value={scope}
           />
           <MenuSelect
             ariaLabel="Backlinks limit"
             onChange={(value) => onLimitChange(Number(value) as BacklinksLimit)}
             options={limitOptions}
-            triggerClassName="min-h-[38px] justify-between lg:w-[132px]"
+            triggerClassName={`${analyzeControlHeightClassName} min-h-0 justify-between lg:w-[132px]`}
             value={String(resultLimit)}
           />
         </div>
@@ -155,7 +160,7 @@ export function AnalyzeCard({
             />
             <InfoTooltip text="Counts links to blog.acme-store.com and other subdomains as part of the profile. Does not change the price." />
           </span>
-          <div className="flex flex-wrap items-center gap-4">
+          <div className="ml-auto flex items-center gap-4">
             <button
               className={pricingTriggerClassName}
               onClick={(event) => setPricingAnchor(event.currentTarget)}

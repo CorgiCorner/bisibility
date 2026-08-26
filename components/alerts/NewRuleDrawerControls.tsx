@@ -13,9 +13,9 @@ import type {
 
 const labelClass =
   "flex flex-col gap-[7px] font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted";
-const fieldClass = `${inputClassName} rounded-[9px] px-3 py-2.5 text-[13px] font-medium`;
+const fieldClass = `${inputClassName} rounded-control px-3 py-2.5 text-[13px] font-medium`;
 const selectTriggerClass =
-  "min-h-10 w-full justify-between rounded-[9px] border-border-strong bg-transparent px-3 text-[13px] font-medium normal-case tracking-normal";
+  "min-h-10 w-full justify-between rounded-control border-border-control bg-transparent px-3 text-[13px] font-medium normal-case tracking-normal";
 const scopeOptions = [
   { label: "All keywords", value: "all" },
   { label: "Keyword", value: "keyword" },

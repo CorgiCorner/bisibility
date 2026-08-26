@@ -1,5 +1,5 @@
 function Block({ className }: Readonly<{ className: string }>) {
-  return <div className={`animate-pulse rounded-xl bg-bg-sunken ${className}`} />;
+  return <div className={`animate-pulse rounded-card bg-bg-sunken ${className}`} />;
 }
 
 export default function InstanceAdminLoading() {
@@ -7,7 +7,7 @@ export default function InstanceAdminLoading() {
     <div aria-hidden className="flex w-full flex-col gap-4">
       {Array.from({ length: 6 }, (_, index) => (
         <div
-          className="rounded-2xl border border-border bg-bg-elev p-5"
+          className="rounded-card border border-border bg-bg-elev p-5"
           key={`admin-loading-${index}`}
         >
           <Block className="h-5 w-40" />

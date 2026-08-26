@@ -48,7 +48,7 @@ export function AppDrawer({
           role: "dialog",
           sx: {
             backgroundColor: "var(--bg-elev)",
-            borderLeft: "1px solid var(--border-strong)",
+            borderLeft: "1px solid var(--border)",
             boxShadow: "none",
             color: "var(--fg)",
             maxWidth: "94vw",

@@ -66,7 +66,6 @@ function paidCallInput(input: {
   source: BacklinksSource;
 }) {
   return {
-    budgetCapCents: input.budgetCapCents,
     connection: input.source.connection,
     feature: "backlinks" as const,
     projectId: input.projectId,
@@ -89,16 +88,22 @@ export async function fetchBacklinksAnalysis(input: {
   const rates = backlinksRates(input.source.provider.id);
   const estimate = backlinksEstimate(input);
   await preflightProviderBudget({
-    budgetCapCents: input.budgetCapCents,
+    connectionId: input.source.connection.id,
     estimatedCostCents: estimate.total,
+    estimatedUsageQuantity: input.scope === "site" ? 3 : 2,
     projectId: input.projectId,
+    provider: input.source.provider.id,
   });
   const target = providerTarget(input);
   const common = paidCallInput(input);
   const summary = await paidProviderCall({
     ...common,
     call: (credentials, usage) =>
-      input.source.provider.fetchBacklinksSummary(credentials, { ...target, tag: usage?.tag }),
+      input.source.provider.fetchBacklinksSummary(credentials, {
+        ...target,
+        attribution: usage,
+        tag: usage?.tag,
+      }),
     itemCount: 1,
     rate: rates.summary,
   });
@@ -109,6 +114,7 @@ export async function fetchBacklinksAnalysis(input: {
           call: (credentials, usage) =>
             input.source.provider.fetchBacklinksHistory(credentials, {
               ...target,
+              attribution: usage,
               tag: usage?.tag,
             }),
           itemCount: 1,
@@ -123,6 +129,7 @@ export async function fetchBacklinksAnalysis(input: {
         limit: input.resultLimit,
         mode: input.mode,
         offset: 0,
+        attribution: usage,
         tag: usage?.tag,
       }),
     itemCount: input.resultLimit,
@@ -165,6 +172,7 @@ export async function fetchMoreBacklinksRows(input: {
         limit: input.limit,
         mode: input.mode,
         offset: input.offset,
+        attribution: usage,
         tag: usage?.tag,
       }),
     itemCount: input.limit,

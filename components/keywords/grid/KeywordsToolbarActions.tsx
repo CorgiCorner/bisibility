@@ -10,9 +10,10 @@ import Checkbox from "@mui/material/Checkbox";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import type { SxProps, Theme } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import type { GridColumnVisibilityModel, GridDensity } from "@mui/x-data-grid";
 import {
-  ExportIcon as Export,
+  DownloadSimpleIcon as DownloadSimple,
   EyeIcon as Eye,
   FunnelIcon as Funnel,
   ListIcon as List,
@@ -39,7 +40,7 @@ const toggleableColumns = [
 const menuRowSx = { alignItems: "center", display: "flex", gap: "10px", minHeight: 36 };
 
 const mobileIconOnlyButtonSx = {
-  "@media (max-width:1536px)": {
+  "@media (max-width:1023px)": {
     minWidth: 40,
     "& .MuiButton-startIcon": {
       marginLeft: 0,
@@ -68,21 +69,40 @@ type KeywordsToolbarActionsProps = {
 
 type ToolbarButtonProps = Omit<ButtonProps, "sx"> & {
   label: string;
+  mobileTooltip: boolean;
   sx?: SxProps<Theme>;
 };
 
-function ToolbarButton({ children, label, size = "sm", sx, ...props }: ToolbarButtonProps) {
+function ToolbarButton({
+  children,
+  label,
+  mobileTooltip,
+  size = "sm",
+  sx,
+  ...props
+}: ToolbarButtonProps) {
   const buttonSx = sxArray(sx);
   const button = (
-    <span className="inline-flex">
-      <Button aria-label={label} size={size} sx={[mobileIconOnlyButtonSx, ...buttonSx]} {...props}>
-        <span className="max-[1536px]:hidden">{label}</span>
+    <span className="inline-flex shrink-0">
+      <Button
+        aria-label={label}
+        className="shrink-0 whitespace-nowrap"
+        size={size}
+        sx={[mobileIconOnlyButtonSx, ...buttonSx]}
+        {...props}
+      >
+        <span className="hidden lg:inline">{label}</span>
         {children}
       </Button>
     </span>
   );
 
-  return props.disabled ? button : <Tooltip content={label}>{button}</Tooltip>;
+  if (props.disabled || !mobileTooltip) return button;
+  return (
+    <span className="inline-flex shrink-0" data-toolbar-tooltip>
+      <Tooltip content={label}>{button}</Tooltip>
+    </span>
+  );
 }
 
 export function KeywordsToolbarActions({
@@ -97,7 +117,9 @@ export function KeywordsToolbarActions({
   onOpenFilters,
 }: Readonly<KeywordsToolbarActionsProps>) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [transferAnchor, setTransferAnchor] = useState<null | HTMLElement>(null);
   const { readOnly } = useProjectWriteMode();
+  const mobileTooltips = useMediaQuery("(max-width:1023px)");
   const hasFilters = filterCount > 0;
 
   function toggleColumn(field: keyof typeof columnVisibilityModel) {
@@ -108,9 +130,10 @@ export function KeywordsToolbarActions({
   }
 
   return (
-    <div className="flex flex-nowrap items-center justify-end gap-1.5">
-      <span className="hidden sm:inline-flex">
+    <div className="flex shrink-0 flex-nowrap items-center justify-end gap-1.5">
+      <span className="hidden lg:inline-flex">
         <ToolbarButton
+          mobileTooltip={mobileTooltips}
           aria-controls={anchorEl ? "keyword-columns-menu" : undefined}
           aria-expanded={anchorEl ? "true" : undefined}
           aria-haspopup="menu"
@@ -149,6 +172,7 @@ export function KeywordsToolbarActions({
         ))}
       </Menu>
       <ToolbarButton
+        mobileTooltip={mobileTooltips}
         label="Filters"
         onClick={onOpenFilters}
         startIcon={<Funnel size={15} />}
@@ -164,7 +188,7 @@ export function KeywordsToolbarActions({
           </span>
         ) : null}
       </ToolbarButton>
-      <span className="hidden sm:inline-flex">
+      <span className="hidden lg:inline-flex">
         <SegmentedControl
           activeVariant="neutral"
           ariaLabel="Table density"
@@ -184,23 +208,69 @@ export function KeywordsToolbarActions({
           value={density}
         />
       </span>
-      <span className="hidden sm:inline-flex">
+      <span className="inline-flex lg:hidden">
         <ToolbarButton
+          mobileTooltip={mobileTooltips}
+          aria-controls={transferAnchor ? "keyword-transfer-menu" : undefined}
+          aria-expanded={transferAnchor ? "true" : undefined}
+          aria-haspopup="menu"
+          label="Import or export"
+          onClick={(event) => setTransferAnchor(event.currentTarget)}
+          startIcon={<UploadSimple size={15} />}
+          sx={{ color: "var(--fg-muted)" }}
+          variant="secondary"
+        />
+      </span>
+      <Menu
+        anchorEl={transferAnchor}
+        id="keyword-transfer-menu"
+        onClose={() => setTransferAnchor(null)}
+        open={Boolean(transferAnchor)}
+        slotProps={{ paper: { sx: { border: "1px solid var(--border)", minWidth: 190 } } }}
+      >
+        <MenuItem
+          onClick={() => {
+            setTransferAnchor(null);
+            onOpenExport();
+          }}
+          sx={menuRowSx}
+        >
+          <UploadSimple aria-hidden size={15} />
+          Export keywords
+        </MenuItem>
+        {onImportCsv ? (
+          <MenuItem
+            disabled={readOnly}
+            onClick={() => {
+              setTransferAnchor(null);
+              onImportCsv();
+            }}
+            sx={menuRowSx}
+          >
+            <DownloadSimple aria-hidden size={15} />
+            Import keywords
+          </MenuItem>
+        ) : null}
+      </Menu>
+      <span className="hidden lg:inline-flex">
+        <ToolbarButton
+          mobileTooltip={mobileTooltips}
           label="Export"
           onClick={onOpenExport}
-          startIcon={<Export size={15} />}
+          startIcon={<UploadSimple size={15} />}
           sx={{ color: "var(--fg-muted)" }}
           variant="secondary"
         />
       </span>
       {onImportCsv ? (
-        <span className="hidden sm:inline-flex">
+        <span className="hidden lg:inline-flex">
           <ProjectReadOnlyTooltip>
             <ToolbarButton
+              mobileTooltip={mobileTooltips}
               disabled={readOnly}
               label="Import"
               onClick={onImportCsv}
-              startIcon={<UploadSimple size={15} />}
+              startIcon={<DownloadSimple size={15} />}
               sx={{ color: "var(--fg-muted)" }}
               variant="secondary"
             />
@@ -210,6 +280,7 @@ export function KeywordsToolbarActions({
       {onAddKeyword ? (
         <ProjectReadOnlyTooltip>
           <ToolbarButton
+            mobileTooltip={mobileTooltips}
             disabled={readOnly}
             label="Add keyword"
             onClick={onAddKeyword}

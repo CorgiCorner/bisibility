@@ -43,12 +43,16 @@ export type KeywordRow = RawKeyword & {
   clicks: number | null;
   id: string;
   createdAt: string;
+  dataAsOfAt: string | null;
+  dataProvider: string | null;
   ctr: number | null;
   checkState: KeywordCheckState;
   hasRankData: boolean;
   impressions: number | null;
   lastCheckAt: string | null;
+  lastCheckErrorCode: string | null;
   lastCheckStatus: LastCheckStatus;
+  latestAttemptHealth: "failed" | "ok" | "running";
   rankingUrl: string;
   location: KeywordLocation;
   locationName: string;
@@ -260,6 +264,9 @@ function decorateKeyword(row: RawKeyword): KeywordRow {
     clicks: Math.round(row.volume * (row.traffic / 100)),
     id: shortKeywordId(row.idNumber),
     createdAt: "2026-06-12T08:00:00.000Z",
+    // biome-ignore format: compact fixture keeps this file under the line cap.
+    dataAsOfAt: freshness?.hasRankData === false ? null : (freshness?.at ?? "2026-07-03T10:00:00.000Z"),
+    dataProvider: freshness?.hasRankData === false ? null : "primary",
     ctr: row.traffic / 100,
     checkState:
       freshness?.status === "running"
@@ -272,7 +279,10 @@ function decorateKeyword(row: RawKeyword): KeywordRow {
     hasRankData: freshness?.hasRankData ?? true,
     impressions: Math.round(row.volume * 0.42),
     lastCheckAt: freshness?.at ?? "2026-07-03T10:00:00.000Z",
+    lastCheckErrorCode: freshness?.status === "failed" ? "request_failed" : null,
     lastCheckStatus: freshness?.status ?? "completed",
+    // biome-ignore format: compact fixture keeps this file under the line cap.
+    latestAttemptHealth: freshness?.status === "failed" ? "failed" : freshness?.status === "running" ? "running" : "ok",
     rankingUrl: `https://acme.dev${row.rankingPath}`,
     targetPosition: row.idNumber === 3 ? 3 : null,
     targetUrl: `https://acme.dev${row.rankingPath}`,

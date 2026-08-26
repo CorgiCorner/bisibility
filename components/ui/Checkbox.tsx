@@ -13,11 +13,11 @@ export type CheckboxProps = Omit<InputHTMLAttributes<HTMLInputElement>, "size" |
 };
 
 const inputClass =
-  "peer col-start-1 row-start-1 m-0 size-full cursor-pointer appearance-none rounded-[5px] " +
-  "border-[1.5px] border-border-strong bg-transparent transition-colors " +
+  "peer col-start-1 row-start-1 m-0 size-full cursor-pointer appearance-none rounded-control " +
+  "border-[1.5px] border-border-control bg-transparent transition-colors " +
   "hover:border-accent checked:border-accent-solid checked:bg-accent-solid focus-visible:outline focus-visible:outline-2 " +
   "focus-visible:outline-offset-2 focus-visible:outline-accent-solid disabled:cursor-not-allowed " +
-  "disabled:hover:border-border-strong";
+  "disabled:hover:border-border-control";
 
 export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Checkbox(
   {

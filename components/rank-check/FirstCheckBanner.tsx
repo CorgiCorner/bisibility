@@ -30,7 +30,7 @@ function defaultFirstCheckDetail(keywordCount: number) {
 export function FirstCheckBannerLink({ href, label }: Readonly<{ href: string; label: string }>) {
   return (
     <Link
-      className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-accent-solid px-[13px] py-2 text-[12.5px] font-semibold text-accent-on-solid outline-none transition-colors hover:bg-accent-solid-hover focus-visible:bg-accent-solid-hover"
+      className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-control bg-accent-solid px-[13px] py-2 text-[12.5px] font-semibold text-accent-on-solid outline-none transition-colors hover:bg-accent-solid-hover focus-visible:bg-accent-solid-hover"
       href={href}
       {...docsLinkProps(href)}
     >
@@ -57,9 +57,9 @@ export function FirstCheckBanner({
   const resolvedDetail = detail ?? defaultFirstCheckDetail(keywordCount ?? 0);
 
   return (
-    <section className="flex flex-col gap-3 rounded-xl border border-accent bg-accent-soft px-4 py-[13px] text-fg sm:flex-row sm:items-center sm:gap-3">
+    <section className="flex flex-col gap-3 rounded-card border border-accent bg-accent-soft px-4 py-[13px] text-fg sm:flex-row sm:items-center sm:gap-3">
       <span
-        className={`grid h-9 w-9 shrink-0 place-items-center rounded-[10px] ${iconWellClassName}`}
+        className={`grid h-9 w-9 shrink-0 place-items-center rounded-control ${iconWellClassName}`}
       >
         <Glyph
           aria-hidden

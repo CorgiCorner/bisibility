@@ -699,7 +699,7 @@ describe("dataForSeoProvider", () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(
-        jsonResponse({ status_code: 20000, tasks: [{ result: [{ money: 4.5 }] }] }),
+        jsonResponse({ status_code: 20000, tasks: [{ result: [{ money: { balance: 4.5 } }] }] }),
       )
       .mockResolvedValueOnce(jsonResponse({ balance: 2, status_code: 40000 }));
     vi.stubGlobal("fetch", fetchMock);
@@ -1120,6 +1120,56 @@ describe("dataForSeoProvider error classification", () => {
     await expect(dataForSeoProvider.fetchRank(rankInput())).rejects.toMatchObject({
       code: "provider_transient",
     });
+  });
+
+  it("maps an internal insufficient-funds task code to provider_billing", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse({
+          status_code: 20000,
+          status_message: "Ok.",
+          tasks: [{ status_code: 40210, status_message: "Insufficient Funds." }],
+        }),
+      ),
+    );
+
+    await expect(dataForSeoProvider.fetchRank(rankInput())).rejects.toMatchObject({
+      code: "provider_billing",
+      message: "Insufficient Funds.",
+    });
+  });
+
+  it("maps internal payment-required status 40200 to provider_billing", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(
+          jsonResponse({ status_code: 40200, status_message: "Payment Required.", tasks: [] }),
+        ),
+    );
+
+    await expect(dataForSeoProvider.fetchRank(rankInput())).rejects.toMatchObject({
+      code: "provider_billing",
+      message: "Payment Required.",
+    });
+  });
+
+  it("uses a neutral failure when an Ok envelope has no task", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(jsonResponse({ status_code: 20000, status_message: "Ok.", tasks: [] })),
+    );
+
+    const error = await dataForSeoProvider.fetchRank(rankInput()).catch((cause: unknown) => cause);
+    expect(error).toMatchObject({
+      code: "provider_transient",
+      message: "DataForSEO SERP response did not include a task.",
+    });
+    expect((error as Error).message).not.toBe("Ok.");
   });
 
   it("maps a status message containing 'Payment Required' to provider_billing", async () => {

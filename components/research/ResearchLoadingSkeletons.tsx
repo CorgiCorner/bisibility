@@ -2,7 +2,7 @@ import { PageContent } from "@/components/shell/PageContent";
 import { cn } from "@/lib/ui/cn";
 
 function Bar({ className }: Readonly<{ className?: string }>) {
-  return <div className={cn("animate-pulse rounded-[8px] bg-bg-sunken", className)} />;
+  return <div className={cn("animate-pulse rounded-control bg-bg-sunken", className)} />;
 }
 
 const tableHeaderKeys = [
@@ -21,9 +21,9 @@ const tableGrid =
 
 function SearchCardLoading() {
   return (
-    <div className="rounded-[14px] border border-border bg-bg-elev p-4 sm:p-5">
+    <div className="rounded-card border border-border bg-bg-elev p-4 sm:p-5">
       <div className="flex flex-col gap-3 md:flex-row md:items-start">
-        <Bar className="h-10 flex-1 rounded-[9px] md:min-w-[240px]" />
+        <Bar className="h-10 flex-1 rounded-control md:min-w-[240px]" />
         <Bar className="h-10 md:w-[230px]" />
         <Bar className="h-10 md:w-[132px]" />
         <Bar className="h-10 md:w-[132px]" />
@@ -45,7 +45,7 @@ function SearchCardLoading() {
 
 function IdleStateLoading() {
   return (
-    <div className="flex min-h-[258px] flex-col items-center justify-center rounded-[14px] border border-border bg-bg-elev p-8">
+    <div className="flex min-h-[258px] flex-col items-center justify-center rounded-card border border-border bg-bg-elev p-8">
       <Bar className="mb-4 size-7 rounded-full bg-accent-soft" />
       <Bar className="h-4 w-[190px]" />
       <div className="mt-2.5 grid w-full max-w-[320px] gap-2">
@@ -61,7 +61,7 @@ function IdleStateLoading() {
 
 function ResultsTableLoading() {
   return (
-    <div className="min-w-0 overflow-hidden rounded-[14px] border border-border bg-bg-elev">
+    <div className="min-w-0 overflow-hidden rounded-card border border-border bg-bg-elev">
       <div className="flex flex-wrap items-center gap-2.5 border-b border-border px-4 py-3">
         <Bar className="h-8 w-[86px]" />
         <Bar className="h-3 w-[210px]" />
@@ -100,7 +100,7 @@ function ResultsTableLoading() {
 
 function ResultsDetailLoading() {
   return (
-    <div className="min-w-0 rounded-[14px] border border-border bg-bg-elev p-5 lg:self-start">
+    <div className="min-w-0 rounded-card border border-border bg-bg-elev p-5 lg:self-start">
       <Bar className="h-2.5 w-[92px]" />
       <Bar className="mt-2 h-5 w-[210px]" />
       <Bar className="mt-4 h-3 w-[76%]" />

@@ -73,7 +73,7 @@ export function AddKeywordApiPanel({ projectId }: Readonly<AddKeywordApiPanelPro
       <p className="m-0 text-[12.5px] text-fg-muted">
         Batch-add keywords from your own scripts or CI. Authenticate with a project API key.
       </p>
-      <div className="min-w-0 overflow-hidden rounded-[11px] border border-code-border bg-code-bg">
+      <div className="min-w-0 overflow-hidden rounded-control border border-code-border bg-code-bg">
         <div className="flex items-center justify-between gap-2 border-b border-code-border px-3 pt-2">
           <div
             className="rounded-t-lg px-3 py-1.5 font-mono text-[11.5px]"

@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { exportCloudImportPackage, exportKeywords } from "./keyword-import-export";
+import { exportKeywords } from "./keyword-export-action";
+import { exportCloudImportPackage } from "./keyword-import-export";
 
 const mocks = vi.hoisted(() => ({
   authorize: vi.fn(),
@@ -261,13 +262,15 @@ describe("keyword export packages", () => {
         format: "json",
         projectId: "project_1",
         scope: "current",
+
+        selection: { mode: "all" },
       }),
     ).rejects.toThrow("Expected a strict prj_ v3 public ID.");
     await expect(
       exportKeywords({
         columns: {},
         format: "json",
-        keywordIds: ["keyword_1"],
+        selection: { keywordIds: ["keyword_1"], mode: "selected" },
         projectId: ids.project,
         scope: "current",
       }),
@@ -281,6 +284,8 @@ describe("keyword export packages", () => {
       format: "csv",
       projectId: ids.project,
       scope: "current",
+
+      selection: { mode: "all" },
     });
 
     expect(result.filename).toBe(`bisibility-keywords-${ids.project}-current.csv`);
@@ -297,7 +302,7 @@ describe("keyword export packages", () => {
   it("exports an explicitly empty keyword selection as JSON", async () => {
     const result = await exportKeywords({
       format: "json",
-      keywordIds: [],
+      selection: { keywordIds: [], mode: "selected" },
       projectId: ids.project,
       scope: "current",
     });

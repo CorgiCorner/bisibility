@@ -143,7 +143,7 @@ describe("keyword detail shared primitives", () => {
 
     expect(overviewPastClass).toContain("bg-green");
     expect(overviewCurrentClass).toContain("bg-accent-solid");
-    expect(overviewUpcomingClass).toContain("border-border-strong");
+    expect(overviewUpcomingClass).toContain("border-border");
     expect(new Set([overviewPastClass, overviewCurrentClass, overviewUpcomingClass])).toHaveLength(
       3,
     );
@@ -184,17 +184,17 @@ describe("keyword detail shared primitives", () => {
     const keywordDetailCurrentClass = stepDotClass(keywordDetail.container, "current");
     const keywordDetailUpcomingClass = stepDotClass(keywordDetail.container, "upcoming");
 
-    expect(keywordDetailPastClass).toContain("border-border-strong");
+    expect(keywordDetailPastClass).toContain("border-border");
     expect(keywordDetailPastClass).toContain("border-[1.5px]");
     expect(keywordDetailCurrentClass).toContain("bg-accent-solid");
-    expect(keywordDetailUpcomingClass).toContain("border-border-strong");
+    expect(keywordDetailUpcomingClass).toContain("border-border");
     expect(keywordDetailPastClass).toBe(keywordDetailUpcomingClass);
     expect(keywordDetailCurrentClass).not.toBe(keywordDetailPastClass);
     expect(keywordDetailCurrentClass).toBe(
       "h-1.5 w-1.5 rounded-full bg-accent-solid text-accent-on-solid",
     );
     expect(keywordDetailPastClass).toBe(
-      "h-1.5 w-1.5 rounded-full border-[1.5px] border-border-strong bg-transparent text-fg-muted",
+      "h-1.5 w-1.5 rounded-full border-[1.5px] border-border bg-transparent text-fg-muted",
     );
     for (const cls of [
       keywordDetailPastClass,

@@ -9,7 +9,7 @@ function Bar({ className }: Readonly<{ className: string }>) {
   return (
     <div
       aria-hidden
-      className={`animate-pulse rounded-[8px] bg-bg-sunken ${className}`}
+      className={`animate-pulse rounded-control bg-bg-sunken ${className}`}
       data-keyword-detail-skeleton-bar
     />
   );
@@ -17,7 +17,7 @@ function Bar({ className }: Readonly<{ className: string }>) {
 
 function Panel({ children, className }: Readonly<{ children: ReactNode; className: string }>) {
   return (
-    <div className={`rounded-[14px] border border-border bg-bg-elev ${className}`}>{children}</div>
+    <div className={`rounded-card border border-border bg-bg-elev ${className}`}>{children}</div>
   );
 }
 
@@ -42,7 +42,7 @@ function ChartPanel() {
         </div>
         <Bar className="h-8 w-32" />
       </div>
-      <Bar className="mt-4 h-[216px] w-full rounded-[10px]" />
+      <Bar className="mt-4 h-[216px] w-full rounded-control" />
     </Panel>
   );
 }
@@ -67,7 +67,7 @@ function LandingPagePanel() {
     <Panel className="h-[204px] p-4">
       <Bar className="h-4 w-44" />
       <Bar className="mt-2 h-3 w-64" />
-      <div className="mt-4 rounded-[10px] border border-border p-3">
+      <div className="mt-4 rounded-control border border-border p-3">
         <Bar className="h-4 w-32" />
         <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-5">
           {["sessions", "visitors", "bounce", "duration", "scroll"].map((key) => (

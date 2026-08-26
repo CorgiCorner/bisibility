@@ -46,7 +46,7 @@ function DeliveryStatus({ alert }: Readonly<{ alert: TriggeredAlertView }>) {
   const meta = deliveryStateMeta[alert.deliveryState];
 
   return (
-    <div className="mt-2 rounded-lg border border-border-soft bg-bg-sunken px-2.5 py-2 font-mono text-[10.5px]">
+    <div className="mt-2 rounded-control border border-border-soft bg-bg-sunken px-2.5 py-2 font-mono text-[10.5px]">
       <div className={`font-semibold ${meta.className}`}>Delivery: {meta.label}</div>
       {alert.deliveryAttempts.map((attempt, index) => (
         <div className="mt-1 text-fg-muted" key={`${attempt.when}:${attempt.channel}:${index}`}>
@@ -84,7 +84,7 @@ export function UnreadSummary({
           return (
             <span className="inline-flex items-center gap-2" key={severity}>
               <span
-                className="grid h-[26px] w-[26px] place-items-center rounded-lg"
+                className="grid h-[26px] w-[26px] place-items-center rounded-control"
                 style={{ backgroundColor: meta.background, color: meta.color }}
               >
                 <Icon aria-hidden size={14} weight="fill" />
@@ -119,7 +119,7 @@ export function AlertFeedRow({
   return (
     <article className="flex gap-3.5 border-border-soft border-b px-4.5 py-[15px]">
       <span
-        className="mt-0.5 grid h-8.5 w-[34px] shrink-0 place-items-center rounded-[9px]"
+        className="mt-0.5 grid h-8.5 w-[34px] shrink-0 place-items-center rounded-control"
         style={{ backgroundColor: meta.background, color: meta.color }}
       >
         <Icon aria-hidden size={17} weight="fill" />

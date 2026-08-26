@@ -195,12 +195,12 @@ describe("StepAddKeywords", () => {
     });
     fireEvent.change(keywordBox(), { target: { value: "rank tracker\nseo api" } });
 
-    expect(screen.getByText("≈ 60 checks/month at Top 100")).toBeInTheDocument();
+    expect(screen.getByText("≈ 60 checks/month at Top 20")).toBeInTheDocument();
     expect(screen.queryByText(/\$|monthly cost cap/)).not.toBeInTheDocument();
     const link = screen.getByRole("link", { name: "Estimate provider cost" });
     expect(link).toHaveAttribute(
       "href",
-      `${MARKETING_URL}/rank-tracking-cost-calculator?keywords=2&locations=1&devices=desktop&frequency=daily&depth=100`,
+      `${MARKETING_URL}/rank-tracking-cost-calculator?keywords=2&locations=1&devices=desktop&frequency=daily&depth=20`,
     );
     expect(link).toHaveAttribute("target", "_blank");
     expect(link).toHaveAttribute("rel", "noreferrer noopener");

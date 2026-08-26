@@ -18,7 +18,7 @@ export function ResearchDetailSaveAction({
   if (row.alreadySaved) {
     return (
       <Link
-        className="mt-3 flex items-center justify-center gap-2 rounded-[9px] border border-border bg-bg-sunken px-3 py-2.5 text-[12.5px] font-semibold text-accent-text hover:border-border-strong"
+        className="mt-3 flex items-center justify-center gap-2 rounded-control border border-border-control bg-bg-sunken px-3 py-2.5 text-[12.5px] font-semibold text-accent-text hover:border-border-control"
         href={rankTrackerTabPath(projectRef, "saved")}
       >
         <BookmarkSimple aria-hidden size={14} weight="fill" />

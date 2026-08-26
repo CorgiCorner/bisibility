@@ -86,6 +86,15 @@ export async function loadRankHistoryExport(input: RankHistoryExportOptions) {
           },
         });
 
+  if (input.keywordIds) {
+    const order = new Map(input.keywordIds.map((id, index) => [id, index]));
+    keywords.sort(
+      (left, right) =>
+        (order.get(left.publicId) ?? Number.MAX_SAFE_INTEGER) -
+        (order.get(right.publicId) ?? Number.MAX_SAFE_INTEGER),
+    );
+  }
+
   await auditKeywordExport(
     auditActorId(input),
     project.id,

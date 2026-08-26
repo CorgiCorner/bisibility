@@ -585,6 +585,23 @@ describe("rankCheckWorkflow", () => {
     expect(mocks.activities.failRankCheckActivity).not.toHaveBeenCalled();
   });
 
+  it("persists the actionable missing-domain message before ending the workflow", async () => {
+    const message =
+      "This project has no domain yet. Open Settings > Project details, set the domain bisibility should track, and try again.";
+    const error = activityFailure("project_domain_required", message);
+    mocks.activities.runRankCheckActivity.mockRejectedValue(error);
+
+    await expect(rankCheckWorkflow({ keywordId: "keyword_1" })).rejects.toThrow(error);
+
+    expect(mocks.activities.failRankCheckActivity).toHaveBeenCalledWith({
+      keywordId: "keyword_1",
+      message,
+      providerId: undefined,
+      rankCheckId: "rank_running_1",
+    });
+    expect(mocks.activities.discardRankCheckActivity).not.toHaveBeenCalled();
+  });
+
   it("marks the running row failed before rethrowing unexpected failures", async () => {
     const error = new Error("provider failed");
     mocks.activities.runRankCheckActivity.mockRejectedValue(error);

@@ -4,6 +4,12 @@ import {
   type SpendSegment,
 } from "@/components/cost-estimate/provider-spend-segments";
 import { SpendMeterDocsInfo } from "@/components/cost-estimate/SpendMeterDocsInfo";
+import {
+  type SpendTone,
+  spendFillClass,
+  spendTone,
+  spendToneTextClass,
+} from "@/components/cost-estimate/spend-tone";
 import { projectedMonthlySpendCents } from "@/lib/cost-estimate/spend-pace";
 import { formatMoneyCents } from "@/lib/format/money";
 import { docsLinkProps } from "@/lib/site/site";
@@ -23,12 +29,13 @@ export type ProviderSpendMeterProps = {
   /** Card only: explicit month-end projection; when omitted it is computed from `now`. */
   onPaceCents?: number | null;
   providers?: readonly ProviderSpendInput[];
+  recorded?: { cents: number; units: number };
   sessionCents?: number;
   spentCents: number;
+  tightest?: { provider: string; usedPercent: number } | null;
+  usedPercent?: number | null;
   variant: "card" | "header" | "segmented";
 };
-
-type Tone = "exhausted" | "normal" | "warning";
 
 function spendPercent(spentCents: number, capCents: number | null) {
   if (capCents == null || capCents <= 0) {
@@ -37,26 +44,8 @@ function spendPercent(spentCents: number, capCents: number | null) {
   return Math.min(100, Math.max(0, (spentCents / capCents) * 100));
 }
 
-function spendTone(percent: number, capCents: number | null): Tone {
-  if (capCents == null || capCents <= 0) return "normal";
-  if (percent >= 100) return "exhausted";
-  if (percent >= 80) return "warning";
-  return "normal";
-}
-
-const fillClass: Record<Tone, string> = {
-  exhausted: "bg-red",
-  normal: "bg-accent",
-  warning: "bg-yellow",
-};
-
-const toneTextClass: Record<Exclude<Tone, "normal">, string> = {
-  exhausted: "text-red-text",
-  warning: "text-yellow-text",
-};
-
 /** Threshold recolors win over segmentation: bar and legend go single-color. */
-const toneSegmentColor: Record<Exclude<Tone, "normal">, string> = {
+const toneSegmentColor: Record<Exclude<SpendTone, "normal">, string> = {
   exhausted: "var(--red)",
   warning: "var(--yellow)",
 };
@@ -66,12 +55,6 @@ function amountsText(spentCents: number, capCents: number | null) {
     return `${formatMoneyCents(spentCents)} this month`;
   }
   return `${formatMoneyCents(spentCents)} / ${formatMoneyCents(capCents)}`;
-}
-
-function metaText(tone: Tone, percent: number) {
-  if (tone === "exhausted") return "cap reached";
-  if (tone === "warning") return `${Math.round(percent)}% of cap`;
-  return null;
 }
 
 function meterAria(spentCents: number, capCents: number, sessionCents: number | undefined) {
@@ -112,12 +95,16 @@ function MeterBar({
   heightClass: string;
   percent: number;
   segments: SpendSegment[] | null;
-  tone: Tone;
+  tone: SpendTone;
 }>) {
   const segmented = segments != null && tone === "normal";
   return (
     <div
-      className={cn("w-full overflow-hidden rounded-full bg-meter-track", heightClass)}
+      className={cn(
+        "w-full overflow-hidden rounded-full",
+        percent === 0 ? "border border-border-strong bg-transparent" : "bg-meter-track",
+        heightClass,
+      )}
       {...aria}
     >
       {segmented ? (
@@ -136,7 +123,7 @@ function MeterBar({
         </div>
       ) : (
         <div
-          className={cn("h-full rounded-full transition-[width]", fillClass[tone])}
+          className={cn("h-full rounded-full transition-[width]", spendFillClass[tone])}
           style={{ width: `${percent}%` }}
         />
       )}
@@ -148,14 +135,14 @@ function totalSpend(segments: readonly SpendSegment[]) {
   return segments.reduce((total, segment) => total + segment.spentCents, 0) || 1;
 }
 
-function Legend({ segments, tone }: Readonly<{ segments: SpendSegment[]; tone: Tone }>) {
+function Legend({ segments, tone }: Readonly<{ segments: SpendSegment[]; tone: SpendTone }>) {
   return (
     <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1">
       {segments.map((segment) => (
         <span className="flex items-center gap-[5px] whitespace-nowrap" key={segment.label}>
           <span
             aria-hidden
-            className="h-[7px] w-[7px] flex-none rounded-[2px]"
+            className="h-[7px] w-[7px] flex-none rounded-control"
             style={{
               backgroundColor: tone === "normal" ? segment.color : toneSegmentColor[tone],
             }}
@@ -169,10 +156,10 @@ function Legend({ segments, tone }: Readonly<{ segments: SpendSegment[]; tone: T
   );
 }
 
-function MeterEyebrow() {
+function MeterEyebrow({ header = false }: Readonly<{ header?: boolean }>) {
   return (
     <span className="font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-fg-muted">
-      PROVIDER SPEND
+      {header ? "BUDGET" : "MONTHLY BUDGET"}
     </span>
   );
 }
@@ -185,32 +172,38 @@ export function ProviderSpendMeter({
   now = new Date(),
   onPaceCents,
   providers,
+  recorded,
   sessionCents,
   spentCents,
+  tightest,
+  usedPercent,
   variant,
 }: Readonly<ProviderSpendMeterProps>) {
   const cap = capCents ?? 0;
-  const percent = spendPercent(spentCents, capCents);
-  const tone = spendTone(percent, capCents);
-  const hasCap = cap > 0;
+  const percent =
+    variant === "header" && usedPercent != null ? usedPercent : spendPercent(spentCents, capCents);
+  const hasCap = variant === "header" ? usedPercent != null : cap > 0;
+  const tone = spendTone(percent, hasCap);
   // The cap is per project: always one aggregate bar. Segments and legend render
   // only outside the compact header, and only with more than one provider.
   const segments =
     variant !== "header" && providers != null && providers.length > 1
       ? buildSpendSegments(providers, cap)
       : null;
-  const aria = hasCap ? meterAria(spentCents, cap, sessionCents) : undefined;
-  const amounts = amountsText(spentCents, capCents);
-  const meta = metaText(tone, percent);
-  const amountToneClass = tone === "normal" ? null : toneTextClass[tone];
-  const metaToneClass = tone === "normal" ? "text-fg-muted" : toneTextClass[tone];
+  const aria = hasCap && cap > 0 ? meterAria(spentCents, cap, sessionCents) : undefined;
+  const amounts =
+    variant === "segmented" && hasCap
+      ? `${formatMoneyCents(spentCents)} of ${formatMoneyCents(cap)} used`
+      : amountsText(spentCents, capCents);
+  const remaining = Math.max(0, cap - spentCents);
+  const amountToneClass = tone === "normal" ? null : spendToneTextClass[tone];
   const meterProps = { aria, percent, tone };
 
   if (variant === "card") {
     const paceCents =
       onPaceCents !== undefined ? onPaceCents : projectedMonthlySpendCents(spentCents, now);
     return (
-      <div className="rounded-xl border border-border bg-bg-elev px-5 py-4.5">
+      <div className="rounded-card border border-border bg-bg-elev px-5 py-4.5">
         <MeterEyebrow />
         <div className="mt-2 flex flex-wrap items-baseline gap-2 whitespace-nowrap">
           <span
@@ -238,7 +231,7 @@ export function ProviderSpendMeter({
         <div className="mt-2.5 flex flex-col gap-1 font-mono text-xs tabular-nums">
           {tone === "exhausted" ? <span className="text-red-text">cap reached</span> : null}
           {sessionCents == null ? null : (
-            <span className={cn(tone === "normal" ? "text-fg-muted" : toneTextClass[tone])}>
+            <span className={cn(tone === "normal" ? "text-fg-muted" : spendToneTextClass[tone])}>
               {formatMoneyCents(sessionCents)} this session
             </span>
           )}
@@ -261,39 +254,46 @@ export function ProviderSpendMeter({
               {amounts}
             </span>
             {action}
-            <DocsLink href={docsHref} />
           </span>
         </div>
         {hasCap ? <MeterBar {...meterProps} heightClass="h-1" segments={segments} /> : null}
+        {hasCap ? (
+          <div className="flex justify-end">
+            <span className="font-mono text-[10px] text-fg-muted tabular-nums">
+              {formatMoneyCents(remaining)} left
+            </span>
+          </div>
+        ) : null}
         {segments == null ? null : <Legend segments={segments} tone={tone} />}
       </div>
     );
   }
 
+  const metered = (recorded?.cents ?? spentCents) + (sessionCents ?? 0);
+  const title = recorded?.units
+    ? `${formatMoneyCents(metered)} + ${recorded.units.toLocaleString("en-US")} searches recorded this month`
+    : `${formatMoneyCents(metered)} recorded this month`;
   return (
-    <div className="flex flex-col gap-[5px]">
+    <div className="flex flex-col gap-[5px]" title={title}>
       <div className="flex items-baseline justify-between gap-2.5 whitespace-nowrap">
         <span className="inline-flex items-center gap-1">
-          <MeterEyebrow />
-          <SpendMeterDocsInfo
-            docsHref={docsHref}
-            editBudgetHref={editBudgetHref}
-            sessionCents={sessionCents}
-          />
+          <MeterEyebrow header />
+          <SpendMeterDocsInfo editBudgetHref={editBudgetHref} sessionCents={sessionCents} />
         </span>
-        <span
-          className={cn(
-            "font-mono text-[10px] tracking-[0.04em] tabular-nums",
-            amountToneClass ?? "text-fg-muted",
-          )}
-        >
-          {amounts}
+        <span className="font-mono text-[10px] tracking-[0.04em] text-fg-muted tabular-nums">
+          {tightest
+            ? `${tightest.provider} ${Math.round(tightest.usedPercent)}% used`
+            : "No budget set"}
         </span>
       </div>
-      {hasCap ? <MeterBar {...meterProps} heightClass="h-1" segments={null} /> : null}
-      {meta == null ? null : (
-        <span className={cn("font-mono text-[11px] tabular-nums", metaToneClass)}>{meta}</span>
-      )}
+      {hasCap ? (
+        <MeterBar
+          heightClass="h-1"
+          percent={percent}
+          segments={null}
+          tone={spendTone(percent, true)}
+        />
+      ) : null}
     </div>
   );
 }

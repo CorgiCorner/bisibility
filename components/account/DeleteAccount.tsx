@@ -17,7 +17,7 @@ export type DeleteAccountProps = {
 };
 
 const dangerButtonClass =
-  "inline-flex min-h-9 items-center gap-2 rounded-[9px] border border-red bg-bg-elev px-3.5 text-[13px] font-semibold text-red-text hover:bg-red hover:text-error-contrast disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted";
+  "inline-flex min-h-9 items-center gap-2 rounded-control border border-red bg-bg-elev px-3.5 text-[13px] font-semibold text-red-text hover:bg-red hover:text-error-contrast disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted";
 
 export function DeleteAccount({ deleteAccount, email }: Readonly<DeleteAccountProps>) {
   const [open, setOpen] = useState(false);
@@ -43,7 +43,7 @@ export function DeleteAccount({ deleteAccount, email }: Readonly<DeleteAccountPr
 
   return (
     <section>
-      <div className="rounded-[14px] border border-red bg-bg-elev px-5 py-4.5">
+      <div className="rounded-card border border-red bg-bg-elev px-5 py-4.5">
         <div className="flex flex-wrap items-center justify-between gap-3.5">
           <div className="min-w-0">
             <div className="text-[14.5px] font-semibold text-red-text">Danger zone</div>

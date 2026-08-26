@@ -30,13 +30,12 @@ describe("KeywordFirstCheckModal", () => {
       />,
     );
 
-    expect(screen.getByRole("dialog", { name: "Run first check" })).toBeInTheDocument();
-    expect(
-      screen.getByText("This manual run starts a Top 100 check now, outside the schedule."),
-    ).toBeInTheDocument();
-    expect(screen.getByText("Estimated cost ~$0.02")).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "Run rank check" })).toBeInTheDocument();
+    expect(screen.getByText("1 keyword")).toBeInTheDocument();
+    expect(screen.getByText("Top 100")).toBeInTheDocument();
+    expect(screen.getByText("~$0.02")).toBeInTheDocument();
     expect(onConfirm).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole("button", { name: "Confirm and run" }));
+    fireEvent.click(screen.getByRole("button", { name: "Confirm & run" }));
     expect(onConfirm).toHaveBeenCalledOnce();
   });
 
@@ -117,7 +116,7 @@ describe("KeywordFirstCheckModal", () => {
       />,
     );
 
-    expect(screen.getByRole("dialog", { name: "First check complete" })).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "Check complete" })).toBeInTheDocument();
     expect(screen.getByText("Ranked #12 in the top 100.")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(onContinue).toHaveBeenCalledOnce();
@@ -173,10 +172,15 @@ describe("KeywordFirstCheckModal", () => {
       />,
     );
 
-    expect(screen.getByRole("dialog", { name: "Check failed" })).toBeInTheDocument();
+    const failedDialog = screen.getByRole("dialog", { name: "Check failed" });
+    expect(failedDialog).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Check failed" }).querySelector("svg"),
+    ).not.toBeNull();
+    expect(failedDialog.querySelector('[class*="h-10"]')).toBeNull();
     expect(
       screen.getByText(
-        "The check failed: your rank data provider account has insufficient funds. Add funds or connect a different provider, then run the check again.",
+        "The rank check could not run because the provider account has insufficient funds. Add funds or connect a different provider, then try again.",
       ),
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Open integrations" })).toHaveAttribute(
@@ -202,12 +206,12 @@ describe("KeywordFirstCheckModal", () => {
 
     expect(
       screen.getByText(
-        "The check failed: the rank data provider rejected the credentials. Reconnect the provider and run the check again.",
+        "The rank check could not run because the provider credentials were rejected. Reconnect the provider, then try again.",
       ),
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Open integrations" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Try again" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "View check details" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "View check details" })).toBeInTheDocument();
   });
 
   it("renders transient failure copy with Try again and View check details CTAs", () => {
@@ -227,7 +231,7 @@ describe("KeywordFirstCheckModal", () => {
 
     expect(
       screen.getByText(
-        "The check failed after several attempts. This is usually temporary - try again in a few minutes.",
+        "The rank check could not run because the provider is temporarily rate limited. Try again in a few minutes.",
       ),
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
@@ -236,6 +240,24 @@ describe("KeywordFirstCheckModal", () => {
       "href",
       "/app/prj_demo/rank-tracker?tab=checks&run=check_abcdefghijklmnopqrstuvwx",
     );
+  });
+
+  it("never renders a raw provider failure message", () => {
+    render(
+      <KeywordFirstCheckModal
+        {...baseProps}
+        confirmError="Provider secret account detail"
+        confirming={false}
+        costLabel={null}
+        depth={20}
+        errorCode="provider_transient"
+        open
+        step="failed"
+      />,
+    );
+
+    expect(screen.queryByText("Provider secret account detail")).not.toBeInTheDocument();
+    expect(screen.getByText(/provider is temporarily unavailable/)).toBeInTheDocument();
   });
 
   it("treats null error code as transient failure copy", () => {
@@ -254,7 +276,7 @@ describe("KeywordFirstCheckModal", () => {
 
     expect(
       screen.getByText(
-        "The check failed after several attempts. This is usually temporary - try again in a few minutes.",
+        "The rank check could not run because of a provider error. Try again, or view check details for more information.",
       ),
     ).toBeInTheDocument();
   });

@@ -46,6 +46,7 @@ export async function oldestEligibleDueAt(tx: DispatchTransaction, now: Date) {
     WHERE state."nextCheckAt" <= ${now}
       AND owner."deactivatedAt" IS NULL
       AND p."writeMode" = 'active'
+      AND NULLIF(BTRIM(p.domain), '') IS NOT NULL
       AND ${automaticFrequencyFilter}
     ORDER BY state."nextCheckAt", state."keywordId"
     LIMIT 1
@@ -78,6 +79,7 @@ export function fairDueStatesSql(now: Date, pageSize: number, perProjectCap: num
       LEFT JOIN "project_defaults" pd ON pd."projectId" = k."projectId"
       WHERE owner."deactivatedAt" IS NULL
         AND p."writeMode" = 'active'
+        AND NULLIF(BTRIM(p.domain), '') IS NOT NULL
         AND ${automaticFrequencyFilter}
     ),
     fair_candidates AS MATERIALIZED (

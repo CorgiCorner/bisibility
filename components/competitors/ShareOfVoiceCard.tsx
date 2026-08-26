@@ -70,7 +70,7 @@ export function ShareOfVoiceCard({
       {scopeControls ? <div className="mt-3.5">{scopeControls}</div> : null}
 
       {emptyCopy ? (
-        <div className="mt-4.5 rounded-[11px] border border-dashed border-border-strong bg-transparent px-3.5 py-3 text-[12.5px] leading-5 text-fg-muted">
+        <div className="mt-4.5 rounded-control border border-dashed border-border bg-transparent px-3.5 py-3 text-[12.5px] leading-5 text-fg-muted">
           {emptyCopy}
         </div>
       ) : null}

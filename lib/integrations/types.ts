@@ -129,6 +129,7 @@ export type ProviderTestResult = {
   ok: boolean;
   message: string;
   balance?: number;
+  availabilityTotal?: number;
 };
 
 export type ProviderTrafficSyncResult = {

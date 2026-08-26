@@ -57,8 +57,8 @@ function initialFor(name: string) {
 
 function WorkspaceChrome({ workspaceName }: Readonly<{ workspaceName: string }>) {
   return (
-    <span className="inline-flex items-center gap-[7px] rounded-[9px] border border-border-strong bg-bg-elev px-[11px] py-1.5 text-[13px] font-semibold">
-      <span className="grid h-[18px] w-[18px] place-items-center rounded-[5px] bg-accent-solid text-[9px] font-bold text-accent-on-solid">
+    <span className="inline-flex items-center gap-[7px] rounded-control border border-border bg-bg-elev px-[11px] py-1.5 text-[13px] font-semibold">
+      <span className="grid h-[18px] w-[18px] place-items-center rounded-control bg-accent-solid text-[9px] font-bold text-accent-on-solid">
         {initialFor(workspaceName)}
       </span>
       <span className="max-w-[150px] truncate">{workspaceName}</span>

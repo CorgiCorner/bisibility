@@ -5,6 +5,7 @@ import { loginErrorReturnTo, returnToOrDefault } from "@/lib/auth/return-to";
 import { SIGNED_IN_HOME_PATH } from "@/lib/auth/two-factor-routes";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { cn } from "@/lib/ui/cn";
+import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import Button from "@mui/material/Button";
 import {
   CaretRightIcon as CaretRight,
@@ -35,8 +36,8 @@ type ChallengeValues = z.infer<typeof challengeSchema>;
 type ChallengeMethod = ChallengeValues["method"];
 
 const methodButtonSx = {
-  borderColor: "var(--border-strong)",
-  borderRadius: "6px",
+  borderColor: "var(--border-control)",
+  borderRadius: UI_RADIUS_ROLES.control,
   color: "var(--fg-muted)",
   fontSize: "13px",
   fontWeight: 600,
@@ -102,7 +103,7 @@ export function TwoFactorChallengeForm({
 
   return (
     <div className="w-full max-w-[380px]">
-      <span className="grid h-[46px] w-[46px] place-items-center rounded-xl bg-accent-soft text-accent-solid">
+      <span className="grid h-[46px] w-[46px] place-items-center rounded-card bg-accent-soft text-accent-solid">
         <ShieldCheck aria-hidden size={23} weight="fill" />
       </span>
       <h1 className="mt-4.5 mb-0 text-[25px] font-semibold tracking-[-0.7px] text-fg">
@@ -148,7 +149,7 @@ export function TwoFactorChallengeForm({
         <input
           autoComplete={method === "totp" ? "one-time-code" : "off"}
           className={cn(
-            "mt-[7px] box-border w-full rounded-[10px] border border-border-strong bg-transparent px-[13px] py-3 font-mono text-[14.5px] font-medium text-fg outline-none focus:border-accent",
+            "mt-[7px] box-border w-full rounded-control border border-border-control bg-transparent px-[13px] py-3 font-mono text-[14.5px] font-medium text-fg outline-none focus:border-accent",
             form.formState.errors.code && "border-red focus:border-red",
           )}
           id="two-factor-code"
@@ -182,7 +183,7 @@ export function TwoFactorChallengeForm({
           fullWidth
           onClick={() => void submitChallenge()}
           sx={{
-            borderRadius: "10px",
+            borderRadius: UI_RADIUS_ROLES.control,
             fontSize: "14.5px",
             fontWeight: 600,
             marginTop: "16px",

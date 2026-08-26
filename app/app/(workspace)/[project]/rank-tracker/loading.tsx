@@ -6,7 +6,7 @@ import { SummaryStrip } from "@/components/ui";
 import { cn } from "@/lib/ui/cn";
 
 function Bar({ className }: Readonly<{ className?: string }>) {
-  return <div className={cn("animate-pulse rounded-[10px] bg-bg-sunken", className)} />;
+  return <div className={cn("animate-pulse rounded-control bg-bg-sunken", className)} />;
 }
 
 const headerKeys = ["c1", "c2", "c3", "c4", "c5", "c6", "c7"] as const;
@@ -17,18 +17,18 @@ export default function KeywordsLoading() {
   return (
     <PageContent aria-hidden>
       <div className="grid gap-4">
-        <div className="flex gap-1 border-b border-border-strong">
+        <div className="flex gap-1 border-b border-border">
           <Bar className="mb-2 h-[26px] w-[118px]" />
           <Bar className="mb-2 h-[26px] w-[104px]" />
           <Bar className="mb-2 h-[26px] w-[86px]" />
         </div>
-        <div className="overflow-hidden rounded-[14px] border border-border bg-bg-elev">
+        <div className="overflow-hidden rounded-card border border-border bg-bg-elev">
           <div className="grid gap-3 border-b border-border px-4 py-3.5 xl:flex xl:items-center">
             <div className="flex items-center gap-2">
               <Bar className="h-8.5 w-[126px]" />
               <Bar className="h-8.5 w-[238px]" />
             </div>
-            <div className="hidden h-8 w-px bg-border-strong xl:block" />
+            <div className="hidden h-8 w-px bg-border xl:block" />
             <div className="flex min-w-0 flex-1 items-center gap-2">
               <Bar className="hidden h-8.5 w-[140px] sm:block" />
               <Bar className="h-8.5 min-w-[220px] flex-1" />
@@ -49,7 +49,7 @@ export default function KeywordsLoading() {
                   <Bar className="h-3.5 w-[72%]" />
                   <Bar className="h-3.5 w-10" />
                   <Bar className="h-3.5 w-12" />
-                  <Bar className="h-5 w-16 rounded-md" />
+                  <Bar className="h-5 w-16 rounded-control" />
                   <Bar className="h-3.5 w-12" />
                   <Bar className="h-3.5 w-14" />
                 </div>

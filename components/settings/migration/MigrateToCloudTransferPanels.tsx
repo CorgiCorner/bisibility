@@ -156,7 +156,7 @@ function PushTransferPanel({
         <label className="flex flex-col gap-[7px] font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
           {"Migration token "}
           <input
-            className="min-h-11 rounded-[9px] border border-accent bg-transparent px-[13px] font-mono text-[13px] font-medium text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid"
+            className="min-h-11 rounded-control border border-accent bg-transparent px-[13px] font-mono text-[13px] font-medium text-fg placeholder:text-[12px] placeholder:leading-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid"
             placeholder="mig_************"
             {...form.register("token")}
           />
@@ -237,7 +237,7 @@ function DownloadTransferPanel({
         <InfoBox>A project is required before a package can be exported.</InfoBox>
       )}
       <StepLabel index={3} title="Upload it on the destination" />
-      <div className="mt-2 rounded-[11px] border border-border bg-bg-sunken px-3.5 py-3">
+      <div className="mt-2 rounded-control border border-border bg-bg-sunken px-3.5 py-3">
         <a
           className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-accent-text"
           href={handoff?.cloudImportUrl ?? importUrl}
@@ -255,7 +255,7 @@ function DownloadTransferPanel({
       </div>
       <Checkbox
         checked={confirmed}
-        containerClassName="mt-4 rounded-[11px] border border-border bg-bg px-3.5 py-3"
+        containerClassName="mt-4 rounded-control border border-border bg-bg px-3.5 py-3"
         description={
           canConfirm
             ? "Confirm only after the destination import page accepts the uploaded package."

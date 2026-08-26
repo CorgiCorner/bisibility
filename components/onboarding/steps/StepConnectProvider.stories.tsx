@@ -13,7 +13,7 @@ function ConnectProviderStory({ theme, verified }: Readonly<StoryProps>) {
   return (
     <main className="min-h-dvh bg-bg p-4 text-fg sm:p-8" data-theme={theme}>
       <h1 className="sr-only">Connect a SERP provider</h1>
-      <section className="mx-auto max-w-3xl rounded-2xl border border-border bg-bg-elev p-6">
+      <section className="mx-auto max-w-3xl rounded-card border border-border bg-bg-elev p-6">
         <StepConnectProvider
           defaultValues={
             verified

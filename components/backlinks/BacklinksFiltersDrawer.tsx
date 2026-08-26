@@ -94,7 +94,7 @@ function TextFilter({
   return (
     <label className="mt-3 block text-[12px] text-fg-muted">
       {label}
-      <span className="mt-2 flex items-center gap-2 rounded-[9px] border border-border-strong bg-transparent px-[11px] py-2 focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent-solid">
+      <span className="mt-2 flex items-center gap-2 rounded-control border border-border-control bg-transparent px-[11px] py-2 focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent-solid">
         <span aria-hidden className="text-fg-muted">
           {icon}
         </span>
@@ -149,7 +149,7 @@ export function BacklinksFiltersDrawer({
       }
       headerAction={
         <button
-          className="rounded-md border-0 bg-transparent px-2.5 py-1.5 text-[12.5px] font-semibold text-fg-muted outline-none hover:text-accent-text focus-visible:text-accent-text"
+          className="rounded-control border-0 bg-transparent px-2.5 py-1.5 text-[12.5px] font-semibold text-fg-muted outline-none hover:text-accent-text focus-visible:text-accent-text"
           onClick={() => onChange({ ...emptyBacklinksFilters })}
           type="button"
         >
@@ -173,7 +173,7 @@ export function BacklinksFiltersDrawer({
         <div className="mt-3 grid grid-cols-2 gap-[7px]">
           {backlinksLinkTypeOptions.map((option) => (
             <label
-              className="flex cursor-pointer items-center gap-[9px] rounded-[9px] border border-border-strong bg-bg-elev px-[11px] py-[9px] hover:border-accent focus-within:border-accent"
+              className="flex cursor-pointer items-center gap-[9px] rounded-control border border-border-control bg-bg-elev px-[11px] py-[9px] hover:border-accent focus-within:border-accent"
               htmlFor={`backlinks-link-type-${option.id}`}
               key={option.id}
             >
@@ -210,12 +210,12 @@ export function BacklinksFiltersDrawer({
         />
       </FilterSection>
       <FilterSection icon={CalendarBlank} title="First seen">
-        <fieldset className="mt-3 flex rounded-[8px] border-0 bg-bg-sunken p-[3px]">
+        <fieldset className="mt-3 flex rounded-control border-0 bg-bg-sunken p-[3px]">
           <legend className="sr-only">First seen</legend>
           {firstSeenOptions.map((option) => (
             <button
               aria-pressed={draft.firstSeen === option.id}
-              className="flex-1 rounded-[6px] px-2 py-1.5 text-[12px] font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-solid"
+              className="flex-1 rounded-control px-2 py-1.5 text-[12px] font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-solid"
               key={option.id}
               onClick={() => patch({ firstSeen: option.id })}
               style={{

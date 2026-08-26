@@ -15,9 +15,9 @@ const mocks = vi.hoisted(() => ({
   markReauth: vi.fn(),
   prisma: {
     $queryRaw: vi.fn(),
-    project: { findFirst: vi.fn() },
+    project: { findFirst: vi.fn(), findUnique: vi.fn() },
     providerConnectionRate: { findMany: vi.fn() },
-    providerCostEntry: { create: vi.fn() },
+    providerCostEntry: { createMany: vi.fn() },
   },
   readCache: vi.fn(),
   redisConfigured: vi.fn(),
@@ -34,7 +34,10 @@ vi.mock("@/lib/providers/credentials", () => ({
   resolveProviderCredentials: () => ({ login: "user", password: "secret" }),
 }));
 vi.mock("@/lib/providers/rate-limit", () => ({ consumeProviderLimit: mocks.consumeLimit }));
-vi.mock("@/lib/providers/registry", () => ({ getSerpProvider: mocks.getProvider }));
+vi.mock("@/lib/providers/registry", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/providers/registry")>()),
+  getSerpProvider: mocks.getProvider,
+}));
 vi.mock("@/lib/rank-check/budget", () => ({
   assertBudgetAvailable: mocks.assertBudget,
   isBudgetExhaustedError: (error: unknown) =>
@@ -106,7 +109,7 @@ describe("ranked-keyword service", () => {
     mocks.assertBudget.mockReset();
     mocks.fetchPage.mockReset();
     mocks.prisma.$queryRaw.mockReset();
-    mocks.prisma.providerCostEntry.create.mockReset();
+    mocks.prisma.providerCostEntry.createMany.mockReset();
     mocks.prisma.providerConnectionRate.findMany.mockReset();
     mocks.readCache.mockReset();
     mocks.releaseLock.mockReset();
@@ -114,6 +117,13 @@ describe("ranked-keyword service", () => {
     mocks.withCache.mockReset();
     mocks.writeCache.mockReset();
     mocks.prisma.project.findFirst.mockResolvedValue(project);
+    // Allocation enforcement reads the project before every paid call. An
+    // uninitialized allocation keeps these cases on the legacy budget path,
+    // which is what assertBudgetAvailable below asserts against.
+    mocks.prisma.project.findUnique.mockResolvedValue({
+      budgetCapCents: project.budgetCapCents,
+      providerAllocationsInitializedAt: null,
+    });
     mocks.getProvider.mockReturnValue({
       id: "dataforseo",
       label: "DataForSEO",
@@ -127,7 +137,7 @@ describe("ranked-keyword service", () => {
     mocks.consumeLimit.mockResolvedValue({ resetAt: Date.now() + 60_000, success: true });
     mocks.fetchPage.mockResolvedValue(cacheEntry);
     mocks.prisma.$queryRaw.mockResolvedValue([]);
-    mocks.prisma.providerCostEntry.create.mockResolvedValue({ id: "cost_1" });
+    mocks.prisma.providerCostEntry.createMany.mockResolvedValue({ count: 1 });
     mocks.prisma.providerConnectionRate.findMany.mockResolvedValue([]);
     mocks.releaseLock.mockResolvedValue(undefined);
     mocks.writeCache.mockResolvedValue(true);
@@ -150,7 +160,7 @@ describe("ranked-keyword service", () => {
     expect(mocks.assertBudget).not.toHaveBeenCalled();
     expect(mocks.consumeLimit).not.toHaveBeenCalled();
     expect(mocks.fetchPage).not.toHaveBeenCalled();
-    expect(mocks.prisma.providerCostEntry.create).not.toHaveBeenCalled();
+    expect(mocks.prisma.providerCostEntry.createMany).not.toHaveBeenCalled();
   });
 
   it("selects and returns only the public connection ID", async () => {
@@ -174,7 +184,7 @@ describe("ranked-keyword service", () => {
     mocks.withCache.mockResolvedValue({ cached: true, status: "success", value: cacheEntry });
     await expect(run()).resolves.toMatchObject({ cached: true, ok: true });
     expect(mocks.withCache).toHaveBeenCalledWith(expect.objectContaining({ key: "rk:key" }));
-    expect(mocks.prisma.providerCostEntry.create).not.toHaveBeenCalled();
+    expect(mocks.prisma.providerCostEntry.createMany).not.toHaveBeenCalled();
   });
 
   it("checks the cache again after acquiring the lock to avoid duplicate spend", async () => {
@@ -197,18 +207,23 @@ describe("ranked-keyword service", () => {
     await expect(run({ fresh: true })).resolves.toMatchObject({ cached: false, ok: true });
     expect(mocks.withCache).toHaveBeenCalledWith(expect.objectContaining({ fresh: true }));
     expect(mocks.fetchPage).toHaveBeenCalledOnce();
-    expect(mocks.prisma.providerCostEntry.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({
-        cached: false,
-        connectionId: "connection_1",
-        costCents: 2,
-        failed: false,
-        feature: "ranked_keywords",
-        projectId: "project_1",
-        provider: "dataforseo",
-        source: "app",
-        trigger: "manual",
-      }),
+    // The ledger write is idempotent now: one row through createMany with
+    // skipDuplicates, so a retried call cannot double-charge.
+    expect(mocks.prisma.providerCostEntry.createMany).toHaveBeenCalledWith({
+      data: [
+        expect.objectContaining({
+          cached: false,
+          connectionId: "connection_1",
+          costCents: 2,
+          failed: false,
+          feature: "ranked_keywords",
+          projectId: "project_1",
+          provider: "dataforseo",
+          source: "app",
+          trigger: "manual",
+        }),
+      ],
+      skipDuplicates: true,
     });
   });
 
@@ -271,7 +286,7 @@ describe("ranked-keyword service", () => {
   });
 
   it("returns paid results when ledger, cache, or lock cleanup fails after the provider call", async () => {
-    mocks.prisma.providerCostEntry.create.mockRejectedValue(new Error("database unavailable"));
+    mocks.prisma.providerCostEntry.createMany.mockRejectedValue(new Error("database unavailable"));
 
     await expect(run()).resolves.toMatchObject({ cached: false, costCents: 2, ok: true });
     expect(mocks.fetchPage).toHaveBeenCalledOnce();
@@ -325,7 +340,7 @@ describe("ranked-keyword service", () => {
     if (reason === "budget_exhausted") mocks.assertBudget.mockRejectedValue(error);
     else mocks.fetchPage.mockRejectedValue(error);
     await expect(run()).resolves.toMatchObject({ ok: false, reason });
-    expect(mocks.prisma.providerCostEntry.create).not.toHaveBeenCalled();
+    expect(mocks.prisma.providerCostEntry.createMany).not.toHaveBeenCalled();
   });
 
   it("maps provider rate limits before the lookup", async () => {

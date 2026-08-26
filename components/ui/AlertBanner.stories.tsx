@@ -1,4 +1,4 @@
-import { AlertBanner } from "@/components/ui/AlertBanner";
+import { AlertBanner, AlertBannerStack } from "@/components/ui";
 import { rankTrackerTabPath } from "@/lib/routing/app-path";
 import type { Meta, StoryObj } from "@storybook/react";
 
@@ -8,9 +8,9 @@ const meta = {
   decorators: [
     (Story) => (
       <div className="min-h-[220px] bg-bg p-6 text-fg">
-        <div className="overflow-hidden rounded-[14px] border border-border bg-bg-elev">
+        <AlertBannerStack>
           <Story />
-        </div>
+        </AlertBannerStack>
       </div>
     ),
   ],

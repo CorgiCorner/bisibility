@@ -89,10 +89,21 @@ describe("ResearchSearchCard", () => {
     expect(screen.getByRole("button", { name: "Research free, cached" })).toBeInTheDocument();
   });
 
-  it("keeps the market language visible in the control", () => {
+  it("keeps the market label visible in the compact research control", () => {
     render(<ResearchSearchCard {...baseProps} />);
 
-    expect(screen.getByRole("combobox", { name: "Market" })).toHaveValue("United States / English");
+    const market = screen.getByRole("combobox", { name: "Market" });
+    expect(market).toHaveValue("United States / English");
+    expect(market).toHaveClass(
+      "min-h-[34px]",
+      "py-1",
+      "compact-text-13",
+      "text-[13px]",
+      "font-normal",
+      "bg-bg-elev",
+    );
+    expect(market).not.toHaveClass("h-10", "min-h-10", "text-[12px]", "font-medium");
+    expect(screen.getByTestId("location-field-caret")).toHaveClass("right-3");
   });
 
   it("disables provider work for an unsupported pair but keeps the market editable", () => {
@@ -127,6 +138,56 @@ describe("ResearchSearchCard", () => {
     expect(screen.getByRole("button", { name: "Data provider connection" })).toHaveTextContent(
       "Provider:DataForSEO",
     );
+  });
+
+  it("pins compact provider and mode carets after their left content clusters", () => {
+    render(<ResearchSearchCard {...baseProps} />);
+
+    for (const name of ["Data provider connection", "Research mode"]) {
+      const trigger = screen.getByRole("button", { name });
+      expect(trigger).toHaveClass("text-[12px]", "leading-4");
+      expect(trigger.querySelector("[data-menu-select-content]")).toHaveClass("min-w-0");
+      expect(trigger.querySelector("[data-menu-select-caret]")).toHaveClass("ml-auto");
+    }
+    expect(screen.getByRole("button", { name: "Results limit" })).toHaveClass("justify-between");
+  });
+
+  it("keeps the embedded seed wrapper at compact control height", () => {
+    render(<ResearchSearchCard {...baseProps} />);
+
+    const seed = screen.getByRole("textbox", { name: "Seed keyword" });
+    expect(seed.parentElement).toHaveClass("min-h-[34px]", "py-0.5");
+    expect(seed).toHaveClass(
+      "compact-text-12",
+      "text-[12px]",
+      "leading-4",
+      "placeholder:text-[12px]",
+      "placeholder:leading-4",
+    );
+    expect(seed).not.toHaveClass("min-h-[34px]", "py-1");
+  });
+
+  it("matches the Domain Overview pricing action layout", () => {
+    render(<ResearchSearchCard {...baseProps} />);
+
+    const pricing = screen.getByRole("button", { name: "How is this priced?" });
+    const actions = pricing.parentElement;
+    const submitWrapper = screen.getByRole("button", { name: "Research ~$0.03" }).parentElement;
+
+    expect(actions).toHaveClass("ml-auto", "flex", "items-center", "gap-4");
+    expect(actions).not.toHaveClass(
+      "w-full",
+      "flex-col",
+      "flex-wrap",
+      "flex-row",
+      "justify-between",
+    );
+    expect(
+      pricing.compareDocumentPosition(submitWrapper as HTMLSpanElement) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(pricing).not.toHaveClass("min-w-0", "shrink", "text-left", "order-2", "self-end");
+    expect(submitWrapper).not.toHaveClass("shrink-0", "order-1", "self-end");
   });
 
   it("opens a pricing popover with source rows and an in-popover docs link", () => {
@@ -223,6 +284,19 @@ describe("ResearchSearchCard", () => {
     fireEvent.click(screen.getByRole("button", { name: "Research ~$0.03" }));
     await waitFor(() => expect(onSubmit).toHaveBeenCalledWith(["rank tracker", "seo tool"]));
     expect(onSeedsChange).toHaveBeenLastCalledWith([]);
+  });
+
+  it("uses compact tokenizer tokens rather than full pill seed chips", () => {
+    render(<ResearchSearchCard {...baseProps} seeds={["rank tracker"]} />);
+
+    const token = screen.getByText("rank tracker").parentElement;
+    const dismiss = screen.getByRole("button", { name: "Remove rank tracker" });
+    expect(token).toHaveClass("h-[26px]", "rounded-control", "bg-bg-elev", "border-border");
+    expect(token).not.toHaveClass("rounded-full");
+    expect(dismiss).toHaveAttribute("type", "button");
+    expect(dismiss).toHaveClass("size-4", "items-center", "justify-center", "rounded-[4px]");
+    expect(dismiss).not.toHaveClass("rounded-full");
+    expect(dismiss.querySelector("svg")).toHaveAttribute("width", "14");
   });
 
   it("wraps the compact desktop control row instead of overflowing the content column", () => {

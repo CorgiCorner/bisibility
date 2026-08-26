@@ -1,7 +1,7 @@
-import type { UpdateUsageBudget } from "@/components/settings/usage/BudgetEditModal";
 import type { SubmitPricingFeedback } from "@/components/settings/usage/PlanCard";
 import { PlanCard } from "@/components/settings/usage/PlanCard";
 import { ProviderUsageCard } from "@/components/settings/usage/ProviderUsageCard";
+import type { updateProviderConnectionAllocationAction } from "@/lib/actions/provider-allocation";
 import type { ProviderUsageData } from "@/lib/settings/options";
 
 export type UsageSettingsContentProps = {
@@ -10,9 +10,12 @@ export type UsageSettingsContentProps = {
   deployment: "cloud" | "self-host";
   initialPricingFeedbackAnswered?: boolean;
   projectId: string;
+  projectRef: string;
   submitPricingFeedback: SubmitPricingFeedback;
-  updateBudget: UpdateUsageBudget;
-  usage: ProviderUsageData;
+  updateProviderAllocation: typeof updateProviderConnectionAllocationAction;
+  usage: ProviderUsageData & {
+    providerSpend: import("@/lib/queries/provider-spend").ProjectProviderSpend;
+  };
 };
 
 export function UsageSettingsContent({
@@ -21,8 +24,9 @@ export function UsageSettingsContent({
   deployment,
   initialPricingFeedbackAnswered,
   projectId,
+  projectRef,
   submitPricingFeedback,
-  updateBudget,
+  updateProviderAllocation,
   usage,
 }: Readonly<UsageSettingsContentProps>) {
   return (
@@ -37,7 +41,8 @@ export function UsageSettingsContent({
       <ProviderUsageCard
         canEditBudget={canEditBudget}
         projectId={projectId}
-        updateBudget={updateBudget}
+        projectRef={projectRef}
+        updateProviderAllocation={updateProviderAllocation}
         usage={usage}
       />
     </div>

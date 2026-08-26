@@ -107,11 +107,11 @@ export function SaveViewModal({
         id="save-keyword-view"
         onSubmit={handleSubmit((values) => void submit(values))}
       >
-        <div className="flex items-center gap-2 rounded-[11px] border border-dashed border-border-strong bg-transparent px-3.5 py-3">
+        <div className="flex items-center gap-2 rounded-control border border-dashed border-border bg-transparent px-3.5 py-3">
           <span className="font-mono text-[9.5px] uppercase tracking-[0.5px] text-fg-muted">
             Preview
           </span>
-          <span className="inline-flex min-w-0 items-center gap-1.5 truncate rounded-lg border border-border-strong bg-accent-soft px-3 py-1.5 text-[12px] font-semibold text-accent-text">
+          <span className="inline-flex min-w-0 items-center gap-1.5 truncate rounded-control border border-border bg-accent-soft px-3 py-1.5 text-[12px] font-semibold text-accent-text">
             <BookmarkSimple className="shrink-0" size={13} weight="fill" />
             <span className="truncate">{previewName}</span>
           </span>
@@ -120,7 +120,7 @@ export function SaveViewModal({
         <label className="grid gap-[7px] font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
           {"View name "}
           <input
-            className="rounded-[9px] border border-border-strong bg-transparent px-3 py-2.5 font-sans text-[13.5px] font-medium normal-case tracking-normal text-fg outline-none focus:border-accent"
+            className="rounded-control border border-border-control bg-transparent px-3 py-2.5 font-sans text-[13.5px] font-medium normal-case tracking-normal text-fg outline-none placeholder:text-[12px] placeholder:leading-4 focus:border-accent"
             placeholder="e.g. Product pages down"
             {...register("name")}
           />
@@ -129,7 +129,7 @@ export function SaveViewModal({
           ) : null}
         </label>
 
-        <div className="flex items-start gap-2 rounded-[10px] border border-border bg-bg px-[13px] py-[11px]">
+        <div className="flex items-start gap-2 rounded-control border border-border bg-bg px-[13px] py-[11px]">
           <span className="flex h-[17px] shrink-0 items-center">
             <FunnelSimple className="text-accent-text" size={14} />
           </span>

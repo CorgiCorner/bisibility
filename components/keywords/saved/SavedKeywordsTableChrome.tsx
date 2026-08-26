@@ -173,7 +173,7 @@ export function SavedKeywordsFooter({
   const hasPrevious = page > 0;
   const hasNext = end < total;
   return (
-    <div className="flex flex-wrap items-center justify-between gap-5 border-t border-border-strong px-4 py-3">
+    <div className="flex flex-wrap items-center justify-between gap-5 border-t border-border px-4 py-3">
       <span className="font-mono text-[11px] text-fg-muted">
         Metrics are a snapshot from the research run / saving is free, nothing is checked until you
         track
@@ -192,7 +192,7 @@ export function SavedKeywordsFooter({
         <div className="flex gap-1">
           <button
             aria-label="Previous page"
-            className="grid h-[30px] w-[30px] place-items-center rounded-full border border-border-strong bg-transparent text-fg disabled:cursor-not-allowed disabled:text-fg-muted"
+            className="grid h-[30px] w-[30px] place-items-center rounded-full border border-border-control bg-transparent text-fg disabled:cursor-not-allowed disabled:text-fg-muted"
             disabled={!hasPrevious}
             onClick={() => onPageChange(page - 1)}
             type="button"
@@ -201,7 +201,7 @@ export function SavedKeywordsFooter({
           </button>
           <button
             aria-label="Next page"
-            className="grid h-[30px] w-[30px] place-items-center rounded-full border border-border-strong bg-transparent text-fg disabled:cursor-not-allowed disabled:text-fg-muted"
+            className="grid h-[30px] w-[30px] place-items-center rounded-full border border-border-control bg-transparent text-fg disabled:cursor-not-allowed disabled:text-fg-muted"
             disabled={!hasNext}
             onClick={() => onPageChange(page + 1)}
             type="button"

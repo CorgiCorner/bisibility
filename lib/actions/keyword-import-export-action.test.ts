@@ -1,7 +1,7 @@
 import ExcelJS from "exceljs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { exportKeywords } from "./keyword-export-action";
 import {
-  exportKeywords,
   importKeywordsFromCsv,
   previewKeywordImportFile,
   reviewKeywordImport,
@@ -655,6 +655,8 @@ describe("keyword workbook import action", () => {
       format: "xlsx",
       projectId: PROJECT_PUBLIC_ID,
       scope: "current",
+
+      selection: { mode: "all" },
     });
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(
@@ -698,7 +700,12 @@ describe("keyword workbook import action", () => {
     );
 
     await expect(
-      exportKeywords({ format: "csv", projectId: PROJECT_PUBLIC_ID, scope: "current" }),
+      exportKeywords({
+        format: "csv",
+        projectId: PROJECT_PUBLIC_ID,
+        scope: "current",
+        selection: { mode: "all" },
+      }),
     ).rejects.toThrow("up to 500 keywords");
   });
 
@@ -706,7 +713,7 @@ describe("keyword workbook import action", () => {
     await expect(
       exportKeywords({
         format: "csv",
-        keywordIds: ["keyword_1"],
+        selection: { keywordIds: ["keyword_1"], mode: "selected" },
         projectId: PROJECT_PUBLIC_ID,
         scope: "current",
       }),
@@ -721,7 +728,7 @@ describe("keyword workbook import action", () => {
 
     await exportKeywords({
       format: "csv",
-      keywordIds: [KEYWORD_PUBLIC_ID],
+      selection: { keywordIds: [KEYWORD_PUBLIC_ID], mode: "selected" },
       projectId: PROJECT_PUBLIC_ID,
       scope: "current",
     });

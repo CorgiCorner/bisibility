@@ -6,7 +6,7 @@ import {
   keywordExportTargetLabel,
 } from "@/components/keywords/export-target-model";
 import { Button, MenuSelect, Modal } from "@/components/ui";
-import { exportKeywords } from "@/lib/actions/keyword-import-export";
+import { exportKeywords } from "@/lib/actions/keyword-export-action";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { downloadBlob } from "@/lib/ui/download";
 import {
@@ -58,7 +58,7 @@ const granularityOptions = [
 ] as const;
 
 const historySelectClass =
-  "min-h-9 flex-1 justify-between rounded-lg border-border-strong bg-bg-elev px-3 text-[12.5px] font-normal";
+  "min-h-9 flex-1 justify-between rounded-control border-border-control bg-bg-elev px-3 text-[12.5px] font-normal";
 
 function exportContent(file: ExportFile) {
   if (file.encoding !== "base64") return file.content;
@@ -105,7 +105,7 @@ export function ExportModal({ onClose, open, projectId, target }: Readonly<Expor
     try {
       const file = await exportKeywords({
         ...formValues,
-        keywordIds: target.keywordIds,
+        selection: target.selection,
         projectId,
       });
       downloadExport(file);
@@ -164,7 +164,7 @@ export function ExportModal({ onClose, open, projectId, target }: Readonly<Expor
                   onClick={() => setValue("format", option.id)}
                 >
                   <span
-                    className="grid h-9 w-9 shrink-0 place-items-center rounded-[9px]"
+                    className="grid h-9 w-9 shrink-0 place-items-center rounded-control"
                     style={{
                       backgroundColor: `color-mix(in srgb, var(--${option.tint}) 13%, transparent)`,
                       color: `var(--${option.tint})`,
@@ -175,7 +175,7 @@ export function ExportModal({ onClose, open, projectId, target }: Readonly<Expor
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-[7px]">
                       <span className="text-[13.5px] font-semibold text-fg">{option.name}</span>
-                      <span className="rounded-[5px] bg-bg-sunken px-1.5 py-px font-mono text-[10px] text-fg-muted">
+                      <span className="rounded-control bg-bg-sunken px-1.5 py-px font-mono text-[10px] text-fg-muted">
                         {option.ext}
                       </span>
                     </span>
@@ -247,8 +247,8 @@ export function ExportModal({ onClose, open, projectId, target }: Readonly<Expor
             Columns
           </div>
           <div className="mt-[9px] grid grid-cols-2 gap-[7px]">
-            <div className="inline-flex items-center gap-[9px] rounded-[9px] border border-border bg-bg px-2.5 py-2">
-              <span className="grid h-[17px] w-[17px] place-items-center rounded-[5px] bg-accent-solid text-accent-on-solid">
+            <div className="inline-flex items-center gap-[9px] rounded-control border border-border bg-bg px-2.5 py-2">
+              <span className="grid h-[17px] w-[17px] place-items-center rounded-control bg-accent-solid text-accent-on-solid">
                 <LockSimple size={10} weight="bold" />
               </span>
               <span className="flex-1 text-[12.5px] text-fg">Keyword + Pos</span>
@@ -260,16 +260,16 @@ export function ExportModal({ onClose, open, projectId, target }: Readonly<Expor
               const active = values.columns[column];
               return (
                 <button
-                  className="inline-flex items-center gap-[9px] rounded-[9px] border border-border bg-bg-elev px-2.5 py-2 text-left outline-none hover:border-accent focus-visible:border-accent"
+                  className="inline-flex items-center gap-[9px] rounded-control border border-border bg-bg-elev px-2.5 py-2 text-left outline-none hover:border-accent focus-visible:border-accent"
                   key={column}
                   onClick={() => setValue(`columns.${column}`, !active)}
                   type="button"
                 >
                   <span
-                    className="grid h-[17px] w-[17px] place-items-center rounded-[5px] border-[1.5px]"
+                    className="grid h-[17px] w-[17px] place-items-center rounded-control border-[1.5px]"
                     style={{
                       backgroundColor: active ? "var(--accent)" : "var(--bg-elev)",
-                      borderColor: active ? "var(--accent)" : "var(--border-strong)",
+                      borderColor: active ? "var(--accent)" : "var(--border)",
                     }}
                   >
                     {active ? <Check className="text-white" size={11} weight="bold" /> : null}
@@ -281,7 +281,7 @@ export function ExportModal({ onClose, open, projectId, target }: Readonly<Expor
           </div>
         </div>
 
-        <div className="flex items-center gap-[9px] rounded-[10px] border border-dashed border-border-strong bg-transparent px-[13px] py-[11px]">
+        <div className="flex items-center gap-[9px] rounded-control border border-dashed border-border bg-transparent px-[13px] py-[11px]">
           <ArrowsClockwise className="shrink-0 text-accent-text" size={15} />
           <span className="text-[11.5px] leading-[1.45] text-fg-muted">
             CSV and XLSX keep import-friendly columns. JSON includes ranking history for each

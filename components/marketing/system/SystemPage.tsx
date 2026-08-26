@@ -59,7 +59,7 @@ export function SystemPage({
       </div>
 
       <section className="flex flex-1 flex-col items-center justify-center px-6 pb-[90px] pt-10 text-center">
-        <span className="grid h-16 w-16 place-items-center rounded-[17px] bg-accent-soft text-accent-solid">
+        <span className="grid h-16 w-16 place-items-center rounded-card bg-accent-soft text-accent-solid">
           <Binoculars aria-hidden size={34} weight="bold" />
         </span>
         <p className="mb-0 mt-6 font-mono text-[13px] tracking-[0.5px] text-accent">{kicker}</p>
@@ -87,8 +87,8 @@ export function SystemPage({
 
 export function TerminalBlock({ note, path, routes, status }: Readonly<TerminalBlockProps>) {
   return (
-    <div className="mt-[34px] w-full max-w-[430px] overflow-hidden rounded-xl border border-border text-left">
-      <div className="flex items-center gap-[7px] border-code-faint border-b bg-code-bg px-[13px] py-[9px]">
+    <div className="mt-[34px] w-full max-w-[430px] overflow-hidden rounded-card border border-code-border text-left">
+      <div className="flex items-center gap-[7px] border-code-border border-b bg-code-bg px-[13px] py-[9px]">
         <span className="h-[9px] w-[9px] rounded-full bg-red" />
         <span className="h-[9px] w-[9px] rounded-full bg-yellow" />
         <span className="h-[9px] w-[9px] rounded-full bg-green" />
@@ -130,18 +130,18 @@ export function SystemLoadingPage() {
       </div>
 
       <section className="flex flex-1 flex-col items-center justify-center px-6 pb-[90px] pt-10 text-center">
-        <span className="grid h-16 w-16 place-items-center rounded-[17px] bg-accent-soft text-accent-solid">
+        <span className="grid h-16 w-16 place-items-center rounded-card bg-accent-soft text-accent-solid">
           <Binoculars aria-hidden size={34} weight="bold" />
         </span>
         <SkeletonBlock className="mt-6 h-[15px] w-[136px]" />
         <SkeletonBlock className="mt-4 h-[52px] w-full max-w-[520px]" />
         <SkeletonBlock className="mt-4 h-[48px] w-full max-w-[440px]" />
         <div className="mt-7 flex flex-wrap justify-center gap-[11px]">
-          <SkeletonBlock className="h-[46px] w-[172px] rounded-[11px]" />
-          <SkeletonBlock className="h-[46px] w-[154px] rounded-[11px]" />
+          <SkeletonBlock className="h-[46px] w-[172px] rounded-control" />
+          <SkeletonBlock className="h-[46px] w-[154px] rounded-control" />
         </div>
-        <div className="mt-[34px] w-full max-w-[430px] overflow-hidden rounded-xl border border-border">
-          <div className="flex items-center gap-[7px] border-code-faint border-b bg-code-bg px-[13px] py-[9px]">
+        <div className="mt-[34px] w-full max-w-[430px] overflow-hidden rounded-card border border-code-border">
+          <div className="flex items-center gap-[7px] border-code-border border-b bg-code-bg px-[13px] py-[9px]">
             <span className="h-[9px] w-[9px] rounded-full bg-red" />
             <span className="h-[9px] w-[9px] rounded-full bg-yellow" />
             <span className="h-[9px] w-[9px] rounded-full bg-green" />

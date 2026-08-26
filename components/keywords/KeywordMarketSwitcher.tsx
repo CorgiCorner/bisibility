@@ -17,7 +17,6 @@ import Menu from "@mui/material/Menu";
 import {
   CaretDownIcon as CaretDown,
   DeviceMobileIcon as DeviceMobile,
-  FlagIcon as Flag,
   MonitorIcon as Monitor,
 } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
@@ -233,8 +232,8 @@ export function KeywordMarketSwitcher({
         catalogLabel="Add a market"
         catalogMarkets={catalogOptions}
         catalogSearchOnly={false}
-        leadingIcon={<Flag aria-hidden size={13} />}
         onChange={handleMarketChange}
+        selectedCountryCode={keyword.location.countryCode}
         trackedLabel="Tracked markets"
         trackedMarkets={trackedOptions}
         triggerClassName={cn(headerChipSelectClassName, "max-w-[290px]")}

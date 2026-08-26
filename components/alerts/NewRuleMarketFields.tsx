@@ -32,7 +32,7 @@ export function NewRuleMarketFields({
       <div className="flex flex-wrap gap-[7px]">
         <button
           aria-pressed={marketIds.length === 0}
-          className={`${chipClass} ${marketIds.length === 0 ? "border-accent bg-accent-soft text-fg" : "border-border-strong bg-transparent text-fg"}`}
+          className={`${chipClass} ${marketIds.length === 0 ? "border-accent bg-accent-soft text-fg" : "border-border-control bg-transparent text-fg"}`}
           onClick={() => setValue("marketIds", [], { shouldDirty: true })}
           type="button"
         >
@@ -44,7 +44,7 @@ export function NewRuleMarketFields({
           return (
             <button
               aria-pressed={selected}
-              className={`${chipClass} ${selected ? "border-accent bg-accent-soft text-fg" : "border-border-strong bg-transparent text-fg"}`}
+              className={`${chipClass} ${selected ? "border-accent bg-accent-soft text-fg" : "border-border-control bg-transparent text-fg"}`}
               key={market.id}
               onClick={() => toggle(market.id)}
               title={market.canonicalKey}
@@ -69,7 +69,7 @@ export function RulePreview({ children }: Readonly<{ children: string }>) {
       <div className="mb-[9px] font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
         Preview
       </div>
-      <div className="rounded-[11px] border border-border bg-bg-sunken px-[15px] py-3.5 text-[13.5px] leading-[1.55]">
+      <div className="rounded-control border border-border bg-bg-sunken px-[15px] py-3.5 text-[13.5px] leading-[1.55]">
         {children}
       </div>
     </section>

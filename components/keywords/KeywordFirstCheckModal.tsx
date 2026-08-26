@@ -1,13 +1,11 @@
 "use client";
 
-import { Button, Modal } from "@/components/ui";
+import { RankCheckRunModal } from "@/components/keywords/RankCheckRunModal";
+import { Button } from "@/components/ui";
+import { providerFailurePresentation } from "@/lib/rank-check/failure-presentation";
 import type { ProjectRef } from "@/lib/routing/app-path";
 import { appPath } from "@/lib/routing/app-path";
 import type { SerpDepth } from "@/lib/serp/markets";
-import {
-  CheckCircleIcon as CheckCircle,
-  WarningCircleIcon as WarningCircle,
-} from "@phosphor-icons/react";
 
 export type KeywordFirstCheckModalStep = "confirm" | "running" | "success" | "failed";
 
@@ -39,18 +37,18 @@ type FailureCopy = {
 function failureCopy(errorCode: string | null): FailureCopy {
   if (errorCode === "provider_billing") {
     return {
-      body: "The check failed: your rank data provider account has insufficient funds. Add funds or connect a different provider, then run the check again.",
+      body: "Your rank data provider account has insufficient funds. Add funds or connect a different provider, then run the check again.",
       showOpenIntegrations: true,
       showTryAgain: true,
-      showViewCheckDetails: false,
+      showViewCheckDetails: true,
     };
   }
   if (errorCode === "provider_auth") {
     return {
-      body: "The check failed: the rank data provider rejected the credentials. Reconnect the provider and run the check again.",
+      body: "The rank data provider rejected the credentials. Reconnect the provider and run the check again.",
       showOpenIntegrations: true,
       showTryAgain: false,
-      showViewCheckDetails: false,
+      showViewCheckDetails: true,
     };
   }
   return {
@@ -74,14 +72,27 @@ function ConfirmBody({
     );
   }
 
+  const rows = [
+    { label: "Keywords", value: "1 keyword" },
+    { label: "Depth", value: `Top ${depth}` },
+    { label: "Estimated cost", value: costLabel ?? "Unavailable" },
+  ];
   return (
-    <div className="grid gap-3">
-      <p className="m-0 text-[13px] leading-5 text-fg-muted">
-        This manual run starts a Top {depth} check now, outside the schedule.
+    <div className="grid gap-4">
+      <p className="m-0 text-[12.5px] leading-5 text-fg-muted">
+        Confirm this manual run before it is sent to the provider.
       </p>
-      {costLabel ? (
-        <p className="m-0 text-[13px] leading-5 text-fg">Estimated cost {costLabel}</p>
-      ) : null}
+      <div className="overflow-hidden rounded-card border border-border">
+        {rows.map((row, index) => (
+          <div
+            className={`flex items-center justify-between gap-4 px-4 py-3 ${index % 2 === 0 ? "bg-bg-sunken" : "bg-bg-elev"}`}
+            key={row.label}
+          >
+            <span className="text-[13px] text-fg-muted">{row.label}</span>
+            <span className="font-mono text-[13px] font-semibold text-fg">{row.value}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -98,10 +109,7 @@ function RunningBody() {
 function SuccessBody({ depth, position }: Readonly<{ depth: number; position: number | null }>) {
   const ranked = position != null && position > 0;
   return (
-    <div className="grid justify-items-start gap-3">
-      <span className="grid h-10 w-10 place-items-center rounded-[10px] text-green-text [background:color-mix(in_srgb,var(--green)_12%,transparent)]">
-        <CheckCircle aria-hidden size={20} weight="bold" />
-      </span>
+    <div>
       <p className="m-0 text-[13px] leading-5 text-fg-muted">
         {ranked
           ? `Ranked #${position} in the top ${depth}.`
@@ -111,46 +119,23 @@ function SuccessBody({ depth, position }: Readonly<{ depth: number; position: nu
   );
 }
 
+const SAFE_IMMEDIATE_BLOCK_CODES = new Set([
+  "budget_exhausted",
+  "check_in_progress",
+  "sample_project",
+]);
+
 function FailedBody({
   errorCode,
-  onTryAgain,
-  projectRef,
-  rankCheckId,
-}: Readonly<
-  Pick<KeywordFirstCheckModalProps, "errorCode" | "onTryAgain" | "projectRef" | "rankCheckId">
->) {
-  const copy = failureCopy(errorCode);
-  const checksHref = rankCheckId
-    ? `${appPath(projectRef, "rank-tracker")}?tab=checks&run=${encodeURIComponent(rankCheckId)}`
-    : `${appPath(projectRef, "rank-tracker")}?tab=checks`;
-  const integrationsHref = appPath(projectRef, "integrations");
+  message,
+}: Readonly<{ errorCode: string | null; message: string | null }>) {
+  const safeMessage =
+    message && SAFE_IMMEDIATE_BLOCK_CODES.has(errorCode ?? "")
+      ? message
+      : providerFailurePresentation(errorCode).message;
   return (
-    <div className="grid justify-items-start gap-3">
-      <span className="grid h-10 w-10 place-items-center rounded-[10px] text-red-text [background:color-mix(in_srgb,var(--red)_12%,transparent)]">
-        <WarningCircle aria-hidden size={20} weight="bold" />
-      </span>
-      <p className="m-0 text-[13px] leading-5 text-fg-muted">{copy.body}</p>
-      <div className="flex flex-wrap items-center justify-end gap-2">
-        {copy.showOpenIntegrations ? (
-          <Button
-            href={integrationsHref}
-            type="button"
-            variant={copy.showTryAgain ? "secondary" : "primary"}
-          >
-            Open integrations
-          </Button>
-        ) : null}
-        {copy.showTryAgain ? (
-          <Button onClick={onTryAgain} type="button">
-            Try again
-          </Button>
-        ) : null}
-        {copy.showViewCheckDetails ? (
-          <Button href={checksHref} type="button" variant="secondary">
-            View check details
-          </Button>
-        ) : null}
-      </div>
+    <div role="alert">
+      <p className="m-0 text-[13px] leading-5 text-fg-muted">{safeMessage}</p>
     </div>
   );
 }
@@ -177,6 +162,10 @@ export function KeywordFirstCheckModal({
   const isFailed = step === "failed";
   const isConfirm = step === "confirm";
   const modalOnClose = step === "success" ? onContinue : onClose;
+  const failedCopy = failureCopy(errorCode);
+  const checksHref = rankCheckId
+    ? `${appPath(projectRef, "rank-tracker")}?tab=checks&run=${encodeURIComponent(rankCheckId)}`
+    : `${appPath(projectRef, "rank-tracker")}?tab=checks`;
 
   let footer: React.ReactNode;
   if (isConfirm) {
@@ -191,7 +180,7 @@ export function KeywordFirstCheckModal({
           Cancel
         </Button>
         <Button loading={confirming} loadingLabel="Starting..." onClick={onConfirm} type="button">
-          Confirm and run
+          Confirm &amp; run
         </Button>
       </div>
     );
@@ -204,7 +193,25 @@ export function KeywordFirstCheckModal({
       </div>
     );
   } else if (isFailed) {
-    footer = null;
+    footer = (
+      <div className="flex w-full flex-wrap items-center justify-end gap-2">
+        {failedCopy.showViewCheckDetails ? (
+          <Button href={checksHref} type="button" variant="secondary">
+            View check details
+          </Button>
+        ) : null}
+        {failedCopy.showTryAgain ? (
+          <Button onClick={onTryAgain} type="button" variant="secondary">
+            Try again
+          </Button>
+        ) : null}
+        {failedCopy.showOpenIntegrations ? (
+          <Button href={appPath(projectRef, "integrations")} type="button">
+            Open integrations
+          </Button>
+        ) : null}
+      </div>
+    );
   } else {
     footer = (
       <div className="flex w-full flex-wrap items-center justify-end gap-2">
@@ -216,11 +223,11 @@ export function KeywordFirstCheckModal({
   }
 
   const title = isConfirm
-    ? "Run first check"
+    ? "Run rank check"
     : isRunning
       ? "Check running"
       : step === "success"
-        ? "First check complete"
+        ? "Check complete"
         : "Check failed";
 
   let body: React.ReactNode;
@@ -229,21 +236,21 @@ export function KeywordFirstCheckModal({
   } else if (isRunning) {
     body = <RunningBody />;
   } else if (isFailed) {
-    body = (
-      <FailedBody
-        errorCode={errorCode}
-        onTryAgain={onTryAgain}
-        projectRef={projectRef}
-        rankCheckId={rankCheckId}
-      />
-    );
+    body = <FailedBody errorCode={errorCode} message={confirmError} />;
   } else {
     body = <SuccessBody depth={successDepth} position={position} />;
   }
 
   return (
-    <Modal footer={footer} onClose={modalOnClose} open={open} size="sm" title={title}>
+    <RankCheckRunModal
+      footer={footer}
+      onClose={modalOnClose}
+      open={open}
+      size="sm"
+      step={confirming ? "starting" : step}
+      title={title}
+    >
       {body}
-    </Modal>
+    </RankCheckRunModal>
   );
 }

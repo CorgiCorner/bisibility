@@ -13,7 +13,7 @@ export function GhostKpiRow() {
           <div className="mt-2 text-[26px] font-semibold leading-none tracking-[-1px] text-fg-muted">
             &ndash;
           </div>
-          <div className="mt-1.5 h-1.5 w-3/5 rounded-[3px] bg-bg-sunken" />
+          <div className="mt-1.5 h-1.5 w-3/5 rounded-control bg-bg-sunken" />
         </Card>
       ))}
     </section>

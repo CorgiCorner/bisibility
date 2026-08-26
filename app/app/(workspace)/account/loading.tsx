@@ -15,9 +15,9 @@ export default function AccountLoading() {
             </div>
             <AccountLoadingBar className="h-8 w-[60px] shrink-0" />
           </div>
-          <div className="rounded-[14px] border border-border bg-bg-elev p-5">
+          <div className="rounded-card border border-border bg-bg-elev p-5">
             <div className="flex items-center gap-3.5">
-              <AccountLoadingBar className="h-[54px] w-[54px] shrink-0 rounded-[14px]" />
+              <AccountLoadingBar className="h-[54px] w-[54px] shrink-0 rounded-card" />
               <div className="flex min-w-0 flex-1 flex-col gap-2">
                 <AccountLoadingBar className="h-4 w-[150px]" />
                 <AccountLoadingBar className="h-3 w-[200px]" />
@@ -44,13 +44,13 @@ export default function AccountLoading() {
             <AccountLoadingBar className="h-4 w-[170px]" />
             <AccountLoadingBar className="h-3 w-[320px]" />
           </div>
-          <div className="overflow-hidden rounded-[14px] border border-border bg-bg-elev">
+          <div className="overflow-hidden rounded-card border border-border bg-bg-elev">
             {accountKeys.map((key) => (
               <div
                 className="flex items-center gap-[13px] border-b border-border-soft px-4.5 py-3.5 last:border-b-0"
                 key={key}
               >
-                <AccountLoadingBar className="h-8.5 w-[34px] shrink-0 rounded-[9px]" />
+                <AccountLoadingBar className="h-8.5 w-[34px] shrink-0 rounded-control" />
                 <div className="flex min-w-0 flex-1 flex-col gap-1.5">
                   <AccountLoadingBar className="h-3.5 w-[90px]" />
                   <AccountLoadingBar className="h-3 w-[180px]" />
@@ -61,7 +61,7 @@ export default function AccountLoading() {
           </div>
         </section>
 
-        <div className="rounded-[14px] border border-red bg-bg-elev px-5 py-4.5">
+        <div className="rounded-card border border-red bg-bg-elev px-5 py-4.5">
           <div className="flex flex-wrap items-center justify-between gap-3.5">
             <div className="flex min-w-0 flex-col gap-2">
               <AccountLoadingBar className="h-4 w-[110px]" />

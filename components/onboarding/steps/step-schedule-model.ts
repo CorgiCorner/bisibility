@@ -12,14 +12,16 @@ import {
 import { canonicalKeySchema, deviceSchema, keywordScheduleBaseSchema } from "@/lib/schemas/keyword";
 import type { ProjectDefaultsInput } from "@/lib/schemas/project";
 import { serpDepthSchema } from "@/lib/schemas/serp-depth";
-import { DEFAULT_SERP_DEPTH, DEFAULT_SERP_DEVICE, type SerpDevice } from "@/lib/serp/markets";
+import { DEFAULT_SERP_DEVICE, type SerpDepth, type SerpDevice } from "@/lib/serp/markets";
 import { z } from "zod";
+
+export const DEFAULT_ONBOARDING_SERP_DEPTH: SerpDepth = 20;
 
 export const onboardingTrackingDefaultsSchema = keywordScheduleBaseSchema.extend({
   devices: z.array(deviceSchema).min(1),
   locations: z.array(canonicalKeySchema).min(1).max(MAX_ONBOARDING_LOCATIONS),
   projectId: z.string().trim().min(1).max(120),
-  serpDepth: serpDepthSchema.default(DEFAULT_SERP_DEPTH),
+  serpDepth: serpDepthSchema.default(DEFAULT_ONBOARDING_SERP_DEPTH),
 });
 
 export type TrackingDefaultsForm = z.infer<typeof onboardingTrackingDefaultsSchema>;
@@ -60,7 +62,7 @@ export function withTrackingDefaults(
     jitterMinutes: values?.jitterMinutes ?? 60,
     locations,
     projectId: values?.projectId ?? flowState?.projectId ?? "",
-    serpDepth: values?.serpDepth ?? flowState?.serpDepth ?? DEFAULT_SERP_DEPTH,
+    serpDepth: values?.serpDepth ?? flowState?.serpDepth ?? DEFAULT_ONBOARDING_SERP_DEPTH,
     timezone: values?.timezone ?? "UTC",
   };
 }

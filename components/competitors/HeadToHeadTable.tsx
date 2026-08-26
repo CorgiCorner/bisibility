@@ -2,7 +2,7 @@
 
 import { Card, SectionTitle } from "@/components/ui";
 import type { CompetitorMarket } from "@/lib/competitors/types";
-import { ExportIcon as Export } from "@phosphor-icons/react";
+import { UploadSimpleIcon as UploadSimple } from "@phosphor-icons/react";
 import { useState } from "react";
 
 type HeadToHeadTableProps = {
@@ -76,7 +76,7 @@ export function HeadToHeadTable({ market, onExport }: Readonly<HeadToHeadTablePr
         <div className="flex items-center gap-2">
           {hiddenCount > 0 ? (
             <button
-              className="inline-flex min-h-8 items-center rounded-lg border border-border-strong bg-bg-elev px-3 text-xs font-semibold text-fg-muted hover:border-accent hover:text-accent-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid"
+              className="inline-flex min-h-8 items-center rounded-control border border-border-control bg-bg-elev px-3 text-xs font-semibold text-fg-muted hover:border-accent hover:text-accent-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid"
               onClick={() => setExpanded((value) => !value)}
               type="button"
             >
@@ -84,18 +84,18 @@ export function HeadToHeadTable({ market, onExport }: Readonly<HeadToHeadTablePr
             </button>
           ) : null}
           <button
-            className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-border-strong bg-bg-elev px-3 text-xs font-semibold text-fg-muted outline-none transition-colors hover:border-accent hover:text-accent-text focus-visible:border-accent focus-visible:text-accent-text"
+            className="inline-flex min-h-8 items-center gap-1.5 rounded-control border border-border-control bg-bg-elev px-3 text-xs font-semibold text-fg-muted outline-none transition-colors hover:border-accent hover:text-accent-text focus-visible:border-accent focus-visible:text-accent-text"
             onClick={onExport}
             type="button"
           >
-            <Export aria-hidden size={13} />
+            <UploadSimple aria-hidden size={13} />
             Export
           </button>
         </div>
       </div>
 
       {!hasCompetitors ? (
-        <div className="border-border-soft border-b bg-bg-sunken px-4.5 py-3 font-mono text-[10.5px] text-fg-muted">
+        <div className="bg-bg-sunken px-4.5 py-3 font-mono text-[10.5px] text-fg-muted">
           Add at least one competitor to compare head-to-head rankings.
         </div>
       ) : null}
@@ -114,9 +114,11 @@ export function HeadToHeadTable({ market, onExport }: Readonly<HeadToHeadTablePr
             ))}
             <span className="text-right">Gap</span>
           </div>
-          {rows.map((row) => (
+          {rows.map((row, index) => (
             <div
-              className="grid items-center gap-x-2.5 border-border-soft border-b px-4.5 py-2.5"
+              className={`grid items-center gap-x-2.5 border-border-soft px-4.5 py-2.5 ${
+                index === rows.length - 1 ? "" : "border-b"
+              }`}
               key={row.id}
               style={{ gridTemplateColumns }}
             >
@@ -147,7 +149,7 @@ export function HeadToHeadTable({ market, onExport }: Readonly<HeadToHeadTablePr
                 Showing {rows.length} of {market.rows.length} keywords
               </span>
               <button
-                className="inline-flex min-h-8 items-center rounded-lg border border-border-strong bg-bg-elev px-3 font-semibold text-fg-muted hover:border-accent hover:text-accent-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid"
+                className="inline-flex min-h-8 items-center rounded-control border border-border-control bg-bg-elev px-3 font-semibold text-fg-muted hover:border-accent hover:text-accent-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid"
                 onClick={() => setVisibleRows((count) => count + ROW_PAGE_SIZE)}
                 type="button"
               >

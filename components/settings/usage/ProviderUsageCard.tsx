@@ -1,71 +1,27 @@
 "use client";
 
-import { ProviderSpendMeter } from "@/components/cost-estimate/ProviderSpendMeter";
-import {
-  BudgetEditModal,
-  type UpdateUsageBudget,
-} from "@/components/settings/usage/BudgetEditModal";
+import { SpendBar } from "@/components/cost-estimate/SpendBar";
+import { spendTone } from "@/components/cost-estimate/spend-tone";
+import { BudgetEditModal } from "@/components/settings/usage/BudgetEditModal";
+import { ProviderUsageRow } from "@/components/settings/usage/ProviderUsageRow";
 import { UsageCard } from "@/components/settings/usage/UsageCard";
-import { Button, ExternalLink, MonoText, StatusPill } from "@/components/ui";
+import { Button, ExternalLink, MonoText } from "@/components/ui";
+import type { updateProviderConnectionAllocationAction } from "@/lib/actions/provider-allocation";
 import { formatMoneyCents } from "@/lib/format/money";
-import type { ProviderConnectionUsageData, ProviderUsageData } from "@/lib/settings/options";
-import { DOCS_URL, MARKETING_URL } from "@/lib/site/site";
+import { createUserDateTimeFormatter } from "@/lib/format/user-datetime";
+import type { ProjectProviderSpend } from "@/lib/queries/provider-spend";
+import type { ProviderUsageData } from "@/lib/settings/options";
+import { MARKETING_URL } from "@/lib/site/site";
+import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react";
 import { useState } from "react";
 
 type ProviderUsageCardProps = {
   canEditBudget: boolean;
   projectId: string;
-  updateBudget: UpdateUsageBudget;
-  usage: ProviderUsageData;
+  projectRef: string;
+  updateProviderAllocation: typeof updateProviderConnectionAllocationAction;
+  usage: ProviderUsageData & { providerSpend: ProjectProviderSpend };
 };
-
-function connectionSpendCents(connection: ProviderConnectionUsageData) {
-  return connection.rankChecks.costCents + (connection.lookups?.costCents ?? 0);
-}
-
-function UsageStat({
-  label,
-  value,
-}: Readonly<{
-  label: string;
-  value: { costCents: number; count: number } | null;
-}>) {
-  return (
-    <div>
-      <MonoText className="tracking-[0.05em] uppercase" muted size="sm">
-        {label}
-      </MonoText>
-      {value ? (
-        <p className="m-0 mt-[5px] text-[13.5px] font-semibold text-fg tabular-nums">
-          {value.count.toLocaleString("en-US")}
-          <span className="font-mono text-[11px] font-normal text-fg-muted">
-            {" "}
-            · {formatMoneyCents(value.costCents)}
-          </span>
-        </p>
-      ) : (
-        <p className="m-0 mt-[5px] text-[12px] italic text-fg-muted">not supported</p>
-      )}
-    </div>
-  );
-}
-
-function ConnectionUsage({ connection }: Readonly<{ connection: ProviderConnectionUsageData }>) {
-  return (
-    <li className="border-t border-border-soft pt-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-[13.5px] font-semibold text-fg">{connection.provider}</span>
-        {connection.primary ? (
-          <StatusPill label="Primary" showDot={false} size="sm" status="optional" />
-        ) : null}
-      </div>
-      <div className="mt-3 grid gap-4 sm:grid-cols-2">
-        <UsageStat label="Rank checks (mo)" value={connection.rankChecks} />
-        <UsageStat label="Keyword lookups (mo)" value={connection.lookups} />
-      </div>
-    </li>
-  );
-}
 
 function Kpi({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
@@ -78,78 +34,160 @@ function Kpi({ label, value }: Readonly<{ label: string; value: string }>) {
   );
 }
 
+function recordedSpend(recorded: ProjectProviderSpend["summary"]["recorded"]) {
+  const values = [];
+  if (recorded.cents) values.push(formatMoneyCents(recorded.cents));
+  if (recorded.units) values.push(`${recorded.units.toLocaleString("en-US")} searches`);
+  return values.length ? values.join(" + ") : "$0.00";
+}
+
+function periodLine(usage: ProviderUsageCardProps["usage"]) {
+  const period = usage.providerSpend.summary.period;
+  const formatter = createUserDateTimeFormatter({
+    dateFormat: usage.period.dateFormat,
+    timezone: "UTC",
+  });
+  const start = new Date(period.startsAt);
+  const end = new Date(period.endsAt);
+  const calendarMonth = start.getUTCDate() === 1 && end.getUTCDate() === 1;
+  const range = calendarMonth
+    ? formatter.formatMonthYear(start)
+    : `${formatter.formatDate(start)} - ${formatter.formatDate(end)}`;
+  const reset =
+    period.daysUntilReset === 1 ? "resets in 1 day" : `resets in ${period.daysUntilReset} days`;
+  return `${range} (UTC) · ${reset}`;
+}
+
+function projectionExplanation(usage: ProviderUsageCardProps["usage"]) {
+  const projected = usage.providerSpend.summary.projected;
+  if (projected.kind === "no_usage") return "No usage yet";
+  if (projected.kind === "within_limits") return "within budgets";
+  const formatter = createUserDateTimeFormatter({
+    dateFormat: usage.period.dateFormat,
+    timezone: "UTC",
+  });
+  const otherBelow = usage.providerSpend.connections
+    .filter((item) => item.provider !== projected.provider)
+    .every((item) => (item.usedPercent ?? 0) < 40);
+  return `on pace to hit ${projected.provider} budget ${formatter.formatDate(new Date(projected.at))}${otherBelow ? " · other providers below 40%" : ""}`;
+}
+
+function projectionKpi(usage: ProviderUsageCardProps["usage"]) {
+  const projected = usage.providerSpend.summary.projected;
+  if (projected.kind === "no_usage") return "No usage yet";
+  if (projected.kind === "within_limits") return "within budgets";
+  const formatter = createUserDateTimeFormatter({
+    dateFormat: usage.period.dateFormat,
+    timezone: "UTC",
+  });
+  return `${projected.provider} budget by ${formatter.formatDate(new Date(projected.at))}`;
+}
+
+function attentionCopy(usage: ProviderUsageCardProps["usage"]) {
+  const connections = usage.providerSpend.connections.filter((item) =>
+    usage.providerSpend.summary.attention.includes(item.connectionId),
+  );
+  if (connections.length > 1)
+    return `${connections.length} providers need attention. Check the provider settings.`;
+  const connection = connections[0];
+  if (!connection) return null;
+  if (connection.state === "fallback_active") {
+    const fallback = usage.providerSpend.connections.find(
+      (item) =>
+        item.connectionId !== connection.connectionId && item.enabled && item.state !== "capped",
+    );
+    return `${connection.provider} hit its budget - checks are falling back to ${fallback?.provider ?? "another provider"}.`;
+  }
+  if (connection.state === "top_up_required")
+    return `${connection.provider} needs a top up before checks can continue.`;
+  return `${connection.provider} hit its budget - checks are paused.`;
+}
+
 export function ProviderUsageCard({
   canEditBudget,
   projectId,
-  updateBudget,
+  projectRef,
+  updateProviderAllocation,
   usage,
 }: Readonly<ProviderUsageCardProps>) {
   const [editOpen, setEditOpen] = useState(false);
-  const [savedCapCents, setSavedCapCents] = useState<number | null>(null);
-  const capCents = savedCapCents ?? usage.budget.capCents;
-  const ordered = [...usage.connections].sort((left, right) => {
-    if (left.primary !== right.primary) return left.primary ? -1 : 1;
-    return connectionSpendCents(right) - connectionSpendCents(left);
-  });
-  const providers = ordered.map((connection) => ({
-    label: connection.provider,
-    spentCents: connectionSpendCents(connection),
-  }));
-  const onPace =
-    usage.onPaceCents == null
-      ? "Available after day 2"
-      : `~${formatMoneyCents(usage.onPaceCents)}/mo`;
-
+  const { connections, summary } = usage.providerSpend;
+  const banner = summary.attention.length ? attentionCopy(usage) : null;
+  const summaryTone = spendTone(summary.maxUsedPercent ?? 0, summary.maxUsedPercent != null);
   return (
     <UsageCard
-      className="min-h-[510px]"
-      description="SERP checks this month across connected providers. Provider invoices remain authoritative."
+      action={
+        canEditBudget ? (
+          <Button onClick={() => setEditOpen(true)} size="sm" type="button" variant="secondary">
+            Edit budget
+          </Button>
+        ) : null
+      }
+      className="min-h-[610px]"
+      description="Monthly budget and provider spend for this project. Checks pause once the budget is spent."
       id="provider-usage"
-      title="Provider usage"
+      title="Provider spend"
     >
-      <div className="[&>div>div:first-child>span:last-child]:min-w-0 [&>div>div:first-child>span:last-child]:w-full [&>div>div:first-child>span:last-child]:flex-wrap [&>div>div:first-child>span:last-child]:justify-start [&>div>div:first-child>span:last-child]:whitespace-normal [&>div>div:first-child>span:last-child>a]:hidden sm:[&>div>div:first-child>span:last-child]:w-auto sm:[&>div>div:first-child>span:last-child]:flex-nowrap sm:[&>div>div:first-child>span:last-child]:justify-end sm:[&>div>div:first-child>span:last-child]:whitespace-nowrap">
-        <ProviderSpendMeter
-          action={
-            canEditBudget ? (
-              <Button onClick={() => setEditOpen(true)} size="xs" type="button" variant="secondary">
-                Edit budget
-              </Button>
-            ) : null
-          }
-          capCents={capCents}
-          docsHref={`${DOCS_URL}/integrations#budget-cap`}
-          providers={providers}
-          spentCents={usage.budget.spentCents}
-          variant="segmented"
-        />
+      <p className="m-0 text-[12px] text-fg-muted">{periodLine(usage)}</p>
+      {banner ? (
+        <div className="mt-4 flex items-start gap-2.5 rounded-control border border-red/30 bg-[color-mix(in_srgb,var(--red)_8%,transparent)] px-3.5 py-3 text-[12.5px] leading-5 text-red-text">
+          <WarningCircle aria-hidden className="mt-0.5 shrink-0" size={16} weight="fill" />
+          <span>
+            <strong>{banner}</strong>{" "}
+            <a className="font-medium underline hover:no-underline" href="#provider-connections">
+              Connection settings
+            </a>
+          </span>
+        </div>
+      ) : null}
+      <section className="mt-4" aria-label="Budget used">
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+          <MonoText className="tracking-[0.08em] uppercase" muted size="sm">
+            Budget used
+          </MonoText>
+          {summary.tightest ? (
+            <span className="font-mono text-[11px] text-fg-muted">
+              tightest: {summary.tightest.provider} · {Math.round(summary.tightest.usedPercent)}%
+              used
+            </span>
+          ) : (
+            <span className="font-mono text-[11px] text-fg-muted">No budget set</span>
+          )}
+        </div>
+        {summary.maxUsedPercent == null ? null : (
+          <SpendBar
+            ariaLabel="Budget used"
+            className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-meter-track"
+            percent={summary.maxUsedPercent}
+            roundedFill
+            tone={summaryTone}
+          />
+        )}
+        <p className="m-0 mt-2 font-mono text-[11px] text-fg-muted">
+          {projectionExplanation(usage)}
+        </p>
+      </section>
+      <div className="mt-4 grid grid-cols-2 gap-4 border-t border-border-soft pt-4 sm:grid-cols-3">
+        <Kpi label="Recorded spend" value={recordedSpend(summary.recorded)} />
+        <Kpi label="Provider requests (mo)" value={summary.requestCount.toLocaleString("en-US")} />
+        <Kpi label="Projected spend" value={projectionKpi(usage)} />
       </div>
-      <div className="mt-4 grid grid-cols-2 gap-4 border-t border-border-soft pt-4 sm:grid-cols-4">
-        <Kpi label="SERP checks (mo)" value={usage.serpChecksMonth} />
-        <Kpi label="Recorded spend" value={formatMoneyCents(usage.budget.spentCents)} />
-        <Kpi label="Primary provider" value={usage.primaryProvider} />
-        <Kpi label="On pace" value={onPace} />
-      </div>
-      {ordered.length ? (
-        <ul className="m-0 mt-4 grid list-none gap-4 p-0">
-          {ordered.map((connection) => (
-            <ConnectionUsage connection={connection} key={connection.connectionId} />
+      {connections.length ? (
+        <ul className="m-0 mt-4 list-none border-y border-border-soft p-0">
+          {connections.map((connection) => (
+            <ProviderUsageRow
+              connection={connection}
+              key={connection.connectionId}
+              now={usage.period.now}
+            />
           ))}
         </ul>
       ) : (
         <p className="m-0 mt-4 border-t border-border-soft pt-4 text-[12px] text-fg-muted">
-          Usage appears once a SERP provider is connected.
+          Usage appears once a provider is connected.
         </p>
       )}
-      <div
-        className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border-soft pt-4"
-        data-provider-usage-footer=""
-      >
-        <ExternalLink
-          className="text-[12px] font-medium text-accent-text hover:underline"
-          href="/docs/integrations#budget-cap"
-        >
-          How budgets work
-        </ExternalLink>
+      <div className="mt-5 border-t border-border-soft pt-4">
         <ExternalLink
           className="text-[12px] font-medium text-accent-text hover:underline"
           href={`${MARKETING_URL}/rank-tracking-cost-calculator`}
@@ -159,14 +197,12 @@ export function ProviderUsageCard({
       </div>
       {editOpen ? (
         <BudgetEditModal
-          capCents={capCents}
+          connections={connections}
           onClose={() => setEditOpen(false)}
-          onSaved={(nextCapCents) => {
-            setSavedCapCents(nextCapCents);
-            setEditOpen(false);
-          }}
+          onSaved={() => setEditOpen(false)}
           projectId={projectId}
-          updateBudget={updateBudget}
+          projectRef={projectRef}
+          updateProviderAllocation={updateProviderAllocation}
         />
       ) : null}
     </UsageCard>

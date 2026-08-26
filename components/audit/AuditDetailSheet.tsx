@@ -35,7 +35,7 @@ function DetailField({ children, label }: Readonly<{ children: ReactNode; label:
 
 function DiffRows({ diff }: Readonly<{ diff: readonly AuditDiff[] }>) {
   return (
-    <div className="overflow-hidden rounded-[11px] border border-border font-mono text-xs">
+    <div className="overflow-hidden rounded-control border border-border font-mono text-xs">
       {diff.map((item) => (
         <div className="border-border-soft border-b last:border-b-0" key={item.field}>
           {item.before !== null ? (
@@ -104,14 +104,14 @@ export function AuditDetailSheet({ entry, onClose }: Readonly<AuditDetailSheetPr
       footer={
         <div className="flex items-center gap-2.5">
           <button
-            className="min-h-10 shrink-0 rounded-[9px] px-3 text-[13px] font-semibold text-fg-muted transition-colors hover:bg-bg-sunken hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid"
+            className="min-h-10 shrink-0 rounded-control px-3 text-[13px] font-semibold text-fg-muted transition-colors hover:bg-bg-sunken hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid"
             onClick={onClose}
             type="button"
           >
             Close
           </button>
           <button
-            className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-[9px] bg-accent-solid px-4 text-[13px] font-semibold text-accent-on-solid hover:bg-accent-solid-hover"
+            className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-control bg-accent-solid px-4 text-[13px] font-semibold text-accent-on-solid hover:bg-accent-solid-hover"
             onClick={() => downloadAuditEntries([entry], "json", entry.metadata.event_id)}
             type="button"
           >
@@ -162,7 +162,7 @@ export function AuditDetailSheet({ entry, onClose }: Readonly<AuditDetailSheetPr
           </DetailField>
         </div>
         {entry.statusReason ? (
-          <div className="rounded-[11px] border border-red px-[15px] py-3 text-[12.5px] text-red-text">
+          <div className="rounded-control border border-red px-[15px] py-3 text-[12.5px] text-red-text">
             {entry.statusReason}
           </div>
         ) : null}
@@ -174,7 +174,7 @@ export function AuditDetailSheet({ entry, onClose }: Readonly<AuditDetailSheetPr
             </div>
           </div>
         ) : null}
-        <div className="flex flex-col gap-2 rounded-[11px] border border-border px-[15px] py-[13px] font-mono text-[11.5px]">
+        <div className="flex flex-col gap-2 rounded-control border border-border px-[15px] py-[13px] font-mono text-[11.5px]">
           <MetadataRow copyable label="event_id" value={entry.metadata.event_id} />
           <MetadataRow copyable label="correlation_id" value={entry.metadata.correlation_id} />
           <MetadataRow label="app_version" value={entry.metadata.app_version} />

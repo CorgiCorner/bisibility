@@ -103,7 +103,7 @@ describe("SettingsShell", () => {
       "bg-accent-solid",
     );
     expect(subnav?.querySelectorAll(".rounded-full")).toHaveLength(1);
-    expect(subnav?.querySelector(".bg-border-strong")).not.toBeInTheDocument();
+    expect(subnav?.querySelector(".bg-border")).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Developers" })).toHaveClass("font-semibold");
     expect(screen.getByRole("link", { name: "Developers" })).not.toHaveClass("bg-nav-active");
   });
@@ -156,7 +156,7 @@ describe("SettingsShell", () => {
     expect(settled).toHaveClass(
       "max-w-[760px]",
       "min-h-[376px]",
-      "rounded-2xl",
+      "rounded-card",
       "p-5",
       "lg:min-h-0",
       "lg:h-[324px]",
@@ -164,7 +164,7 @@ describe("SettingsShell", () => {
     expect(frames[0]).toHaveClass(
       "max-w-[760px]",
       "min-h-[376px]",
-      "rounded-2xl",
+      "rounded-card",
       "p-5",
       "lg:min-h-0",
       "lg:h-[324px]",
@@ -218,7 +218,7 @@ describe("SettingsShell", () => {
       );
 
       for (const row of rows ?? []) {
-        expect(row).toHaveClass("h-10", "gap-2.5", "rounded-[9px]", "px-[11px]");
+        expect(row).toHaveClass("h-10", "gap-2.5", "rounded-control", "px-[11px]");
       }
       for (const iconSlot of subnav?.querySelectorAll("[data-settings-loading-subnav-icon-slot]") ??
         []) {

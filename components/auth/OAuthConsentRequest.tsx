@@ -30,7 +30,7 @@ const API_TOKEN_EXPIRY_LABEL = `${API_KEY_EXPIRY_DAYS.join(", ")} days, or never
 
 function ClientBox({ client }: Readonly<{ client: OAuthConsentClient }>) {
   return (
-    <div className="mt-4 rounded-[11px] bg-bg-inset px-[13px] py-[11px]">
+    <div className="mt-4 rounded-control bg-bg-inset px-[13px] py-[11px]">
       <div className="flex items-center gap-2">
         <span className="font-mono text-[10.5px] uppercase tracking-[0.5px] text-fg-muted">
           Client
@@ -117,7 +117,7 @@ export function OAuthConsentRequest({
   return (
     <Card className="w-full max-w-[520px] p-5 sm:p-6" size="lg">
       <div className="flex flex-wrap items-start gap-3">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[10px] bg-accent-soft text-accent-solid">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-control bg-accent-soft text-accent-solid">
           <ShieldCheck aria-hidden size={21} weight="fill" />
         </span>
         <div>
@@ -130,7 +130,7 @@ export function OAuthConsentRequest({
         </div>
         <span
           className={`ml-auto inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-[11px] font-semibold ${
-            expiring ? "border-red/40 text-red-text" : "border-border-strong text-fg-muted"
+            expiring ? "border-red/40 text-red-text" : "border-border text-fg-muted"
           }`}
         >
           <Clock aria-hidden size={13} />

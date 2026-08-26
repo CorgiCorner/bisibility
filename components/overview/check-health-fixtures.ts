@@ -11,6 +11,7 @@ export const exhaustedCheckHealthFixture = {
     latest: {
       checkedAt: "2026-06-28T10:00:00.000Z",
       error: "Provider request failed.",
+      errorCode: "provider_transient",
       keyword: "headless cms",
       provider: "dataforseo",
     },

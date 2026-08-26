@@ -70,7 +70,7 @@ export function RankingUrlHistory({ keyword }: Readonly<{ keyword: KeywordRow }>
   const changeState = timeline.length < 2 ? "first_check" : urlChanges > 0 ? "diff" : "no_change";
 
   return (
-    <Card className="overflow-visible rounded-[14px] p-0" size="lg">
+    <Card className="overflow-visible rounded-card p-0" size="lg">
       <div className="border-b border-border px-5 py-4">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
@@ -107,7 +107,7 @@ export function RankingUrlHistory({ keyword }: Readonly<{ keyword: KeywordRow }>
                   className={`h-[9px] w-[9px] rounded-full ${
                     event.isCurrent
                       ? "bg-accent-solid"
-                      : "border-[1.5px] border-border-strong bg-transparent"
+                      : "border-[1.5px] border-border bg-transparent"
                   }`}
                 />
               </span>

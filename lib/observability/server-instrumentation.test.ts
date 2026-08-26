@@ -5,6 +5,7 @@ const sentry = vi.hoisted(() => ({
 }));
 const serverConfigLoaded = vi.hoisted(() => vi.fn());
 const edgeConfigLoaded = vi.hoisted(() => vi.fn());
+const bakedRuntimeEnv = vi.hoisted(() => ({ sentryDsn: undefined as string | undefined }));
 
 vi.mock("@sentry/nextjs", () => sentry);
 vi.mock("../../sentry.server.config", () => {
@@ -21,7 +22,10 @@ vi.mock("../../lib/deployment/canonical-mcp-origin", () => ({
 vi.mock("../../lib/deployment/deprecated-inspection-budget", () => ({
   warnDeprecatedInspectionDailyBudget: vi.fn(),
 }));
-vi.mock("../../lib/deployment/runtime-env.generated", () => ({}));
+vi.mock("../../lib/deployment/runtime-env.generated", () => {
+  if (bakedRuntimeEnv.sentryDsn) process.env.SENTRY_DSN = bakedRuntimeEnv.sentryDsn;
+  return {};
+});
 vi.mock("../../lib/data-migrations/startup", () => ({
   enforceMigrationsAtStartup: vi.fn(async () => {}),
 }));
@@ -39,13 +43,17 @@ function reregisterModuleMocks() {
     edgeConfigLoaded();
     return {};
   });
-  vi.doMock("../../lib/deployment/runtime-env.generated", () => ({}));
+  vi.doMock("../../lib/deployment/runtime-env.generated", () => {
+    if (bakedRuntimeEnv.sentryDsn) process.env.SENTRY_DSN = bakedRuntimeEnv.sentryDsn;
+    return {};
+  });
 }
 
 describe("server instrumentation", () => {
   let snapshots: Record<string, string | undefined>;
 
   beforeEach(() => {
+    bakedRuntimeEnv.sentryDsn = undefined;
     snapshots = Object.fromEntries(ENV_KEYS.map((key) => [key, process.env[key]]));
     for (const key of ENV_KEYS) {
       delete process.env[key];
@@ -81,11 +89,9 @@ describe("server instrumentation", () => {
 
     // Platforms that expose env at build time only deliver the DSN through this module, so
     // a decision taken before it loads would silently disable reporting.
-    vi.doMock("../../lib/deployment/runtime-env.generated", () => {
-      process.env.SENTRY_DSN = "https://public@example.ingest.sentry.io/1";
-      return {};
-    });
+    bakedRuntimeEnv.sentryDsn = "https://public@example.ingest.sentry.io/1";
     vi.resetModules();
+    reregisterModuleMocks();
 
     const instrumentation = await import("../../instrumentation");
     await instrumentation.register();

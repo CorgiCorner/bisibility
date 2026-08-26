@@ -97,7 +97,7 @@ export function RetrievedResultsLadder({ onJump, results }: Readonly<LadderProps
           without tabbing through every result link. A section carries the role natively. */}
       <section
         aria-label="Retrieved results"
-        className="max-h-[420px] overflow-y-auto rounded-[10px] border border-border"
+        className="max-h-[420px] overflow-y-auto rounded-control border border-border"
         key={results.checkId}
         ref={openAtTracked}
         // biome-ignore lint/a11y/noNoninteractiveTabindex: a scrollable region has to be a tab stop, otherwise the only way through a hundred results is tabbing every link in turn
@@ -109,7 +109,7 @@ export function RetrievedResultsLadder({ onJump, results }: Readonly<LadderProps
           ))}
         </ol>
         {gap ? (
-          <div className="m-3 rounded-[10px] border border-dashed border-border bg-bg-sunken p-3">
+          <div className="m-3 rounded-control border border-dashed border-border bg-bg-sunken p-3">
             <p className="m-0 font-mono text-[11px] font-medium uppercase tracking-[0.06em] text-fg-muted">
               {gap.heading}
             </p>
@@ -120,7 +120,7 @@ export function RetrievedResultsLadder({ onJump, results }: Readonly<LadderProps
       </section>
       {trackedIndex >= JUMP_THRESHOLD && onJump ? (
         <button
-          className="justify-self-start text-[12.5px] text-fg-muted underline decoration-border-strong underline-offset-4 transition-colors hover:text-fg"
+          className="justify-self-start text-[12.5px] text-fg-muted underline decoration-border-control underline-offset-4 transition-colors hover:text-fg"
           onClick={() => {
             const scroller = scrollerRef.current;
             const tracked = scroller?.querySelector<HTMLElement>('[data-tracked="true"] a');

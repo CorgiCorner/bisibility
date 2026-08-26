@@ -8,12 +8,7 @@ import { displayProvider, onboardingFormId } from "@/components/onboarding/onboa
 import { locationValuesForKeys } from "@/components/onboarding/onboarding-location-field";
 import { Button } from "@/components/ui";
 import type { ProjectDefaultsInput } from "@/lib/schemas/project";
-import {
-  ArrowLeftIcon as ArrowLeft,
-  ArrowRightIcon as ArrowRight,
-  PlayIcon as Play,
-  PlugIcon as Plug,
-} from "@phosphor-icons/react";
+import { ArrowLeftIcon as ArrowLeft, PlugIcon as Plug } from "@phosphor-icons/react";
 import { useState } from "react";
 import { FirstCheckErrors } from "./FirstCheckErrors";
 import { FirstCheckQueueMessage } from "./FirstCheckQueueMessage";
@@ -135,6 +130,7 @@ export function StepFirstCheck({
     : !providerReady
       ? "Paused until a provider is connected"
       : `${sampleCount} sample ${sampleCount === 1 ? "check" : "checks"} - one per market and device`;
+  const hasFailedSampleChecks = state.rows.some((row) => row.status === "failed");
   const queueMessage = sampleProject
     ? "Sample projects keep their synthetic ranking history."
     : !providerReady
@@ -144,7 +140,9 @@ export function StepFirstCheck({
         : state.status === "running"
           ? "Sample checks are running. You can open the dashboard while they finish."
           : state.status === "completed"
-            ? `Sample done. Every keyword follows your ${frequencyLabel.toLowerCase()} schedule from here.`
+            ? hasFailedSampleChecks
+              ? `The sample ${state.rows.length === 1 ? "check" : "checks"} finished with an issue. You can retry the failed ${state.rows.length === 1 ? "check" : "checks"} below. Every keyword still follows your ${frequencyLabel.toLowerCase()} schedule.`
+              : `Sample ${state.rows.length === 1 ? "check" : "checks"} finished. Every keyword follows your ${frequencyLabel.toLowerCase()} schedule from here.`
             : `${sampleCount} ${sampleCount === 1 ? "check" : "checks"} run once now so you can see it working. Everything else follows your ${frequencyLabel.toLowerCase()} schedule.`;
 
   function onPreviewClick() {
@@ -223,7 +221,7 @@ export function StepFirstCheck({
         timezoneError={timezoneError}
       />
       {!providerReady ? (
-        <div className="mt-5 flex flex-col items-start gap-2.5 rounded-xl border border-border-strong border-dashed bg-bg-sunken p-4.5">
+        <div className="mt-5 flex flex-col items-start gap-2.5 rounded-card border border-border border-dashed bg-bg-sunken p-4.5">
           <span className="flex items-start gap-2 text-[13px] leading-[1.5] text-fg-muted">
             <Plug aria-hidden className="mt-0.5 shrink-0" size={16} />
             Your keywords are saved. Connect a provider to run the first check.
@@ -245,7 +243,6 @@ export function StepFirstCheck({
         <div className="flex flex-wrap items-center justify-end gap-3">
           <Button
             disabled={submitting}
-            endIcon={<ArrowRight aria-hidden size={13} weight="bold" />}
             size="lg"
             sx={{ color: "var(--fg-muted)", fontSize: 13, paddingX: "8px" }}
             type="submit"
@@ -260,7 +257,6 @@ export function StepFirstCheck({
               loadingLabel={`Running ${sampleCount} sample ${sampleCount === 1 ? "check" : "checks"}`}
               onClick={onPreviewClick}
               size="lg"
-              startIcon={<Play aria-hidden size={14} weight="fill" />}
               type="button"
               variant="primary"
             >

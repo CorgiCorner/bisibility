@@ -15,7 +15,7 @@ type SummaryCardsProps = {
   summary: BacklinksSummary;
 };
 
-const cardClass = "min-w-0 rounded-[12px] border border-border bg-bg-elev px-4.5 py-4";
+const cardClass = "min-w-0 rounded-card border border-border bg-bg-elev px-4.5 py-4";
 const labelClass = "font-mono text-[10px] font-medium uppercase tracking-[.08em] text-fg-muted";
 
 function DeltaBadge({ value }: Readonly<{ value: number }>) {
@@ -75,7 +75,7 @@ function MonthlyBars({ history }: Readonly<{ history: BacklinksHistoryMonth[] }>
     >
       {history.map((month) => (
         <div className="grid h-[128px] grid-rows-2" key={month.month}>
-          <span className="flex items-end justify-center border-b border-border-strong">
+          <span className="flex items-end justify-center border-b border-border">
             <span
               className="w-[18px] rounded-t-[2px] bg-green/70"
               style={{ height: `${Math.max(3, (month.newLinks / maximum) * 58)}px` }}
@@ -101,10 +101,10 @@ function NewLostCard({ history }: Readonly<{ history: BacklinksHistoryMonth[] }>
         <span className={labelClass}>New vs lost, monthly</span>
         <span className="flex gap-3.5 text-[11.5px] text-fg-muted">
           <span className="inline-flex items-center gap-1.5">
-            <span className="h-[9px] w-[9px] rounded-[3px] bg-green/75" /> New
+            <span className="h-[9px] w-[9px] rounded-control bg-green/75" /> New
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <span className="h-[9px] w-[9px] rounded-[3px] bg-red/70" /> Lost
+            <span className="h-[9px] w-[9px] rounded-control bg-red/70" /> Lost
           </span>
         </span>
       </div>

@@ -10,6 +10,7 @@ import {
 import { DataResidencyNote } from "@/components/ui";
 import type { SignInCapacity, SignInCapacityMiss } from "@/lib/auth/signin-capacity-types";
 import type { LegalConsentLinks } from "@/lib/deployment/legal";
+import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import Button from "@mui/material/Button";
 import {
   CaretRightIcon as CaretRight,
@@ -169,8 +170,8 @@ export function LoginEmailStep({
                   startIcon={<Icon size={18} weight="fill" />}
                   sx={{
                     backgroundColor: "var(--bg-elev)",
-                    borderColor: "var(--border-strong)",
-                    borderRadius: "10px",
+                    borderColor: "var(--border)",
+                    borderRadius: UI_RADIUS_ROLES.control,
                     color: "var(--fg)",
                     fontSize: "14px",
                     fontWeight: 600,
@@ -229,7 +230,7 @@ export function LoginEmailStep({
             </label>
             <input
               autoComplete="email"
-              className="mt-[7px] box-border w-full rounded-[10px] border border-border-strong bg-transparent px-[13px] py-3 font-mono text-[14.5px] font-medium text-fg outline-none focus:border-accent"
+              className="mt-[7px] box-border w-full rounded-control border border-border-control bg-transparent px-[13px] py-3 font-mono text-[14.5px] font-medium text-fg outline-none focus:border-accent"
               disabled={isSubmitting}
               id="login-email"
               inputMode="email"
@@ -247,7 +248,7 @@ export function LoginEmailStep({
               endIcon={<CaretRight size={16} weight="bold" />}
               fullWidth
               sx={{
-                borderRadius: "10px",
+                borderRadius: UI_RADIUS_ROLES.control,
                 fontSize: "14.5px",
                 fontWeight: 600,
                 marginTop: "14px",

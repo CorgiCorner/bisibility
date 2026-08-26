@@ -1,36 +1,65 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { HeaderProviderSpend } from "./HeaderProviderSpend";
-import { SessionSpendProvider } from "./SessionSpendProvider";
+import { SessionSpendProvider, useSessionSpend } from "./SessionSpendProvider";
+
+function AddSessionSpend() {
+  const { addSpend } = useSessionSpend();
+  return (
+    <button onClick={() => addSpend(2)} type="button">
+      Add session spend
+    </button>
+  );
+}
 
 describe("HeaderProviderSpend", () => {
-  it("renders truthful spend values when the summary is available", async () => {
-    render(
+  it("shows the tightest allocation and no prohibited copy", () => {
+    const { container } = render(
       <SessionSpendProvider>
-        <HeaderProviderSpend capCents={5_000} projectRef="prj_example" spentCents={1_240} />
+        <HeaderProviderSpend
+          projectRef="prj_example"
+          recorded={{ cents: 1240, units: 28 }}
+          tightest={{ provider: "SerpApi", usedPercent: 100 }}
+          usedPercent={100}
+        />
       </SessionSpendProvider>,
     );
-
-    expect(screen.getByText("$12.40 / $50.00")).toBeInTheDocument();
-    expect(screen.queryByText("$0.00 this session")).not.toBeInTheDocument();
-    screen.getByRole("button", { name: "About provider spend" }).click();
-    expect(await screen.findByText("$0.00 this session")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Edit budget" })).toHaveAttribute(
-      "href",
-      "/app/prj_example/settings#provider-usage",
-    );
+    expect(screen.getByText("BUDGET")).toBeInTheDocument();
+    expect(screen.getByText("SerpApi 100% used")).toBeInTheDocument();
+    expect(container.textContent).not.toMatch(/utili(?:zation|sation)/i);
   });
-
-  it("renders an explicit unknown state instead of inventing zero spend", () => {
+  it("keeps the explicit unavailable state", () => {
     render(
       <SessionSpendProvider>
-        <HeaderProviderSpend capCents={null} projectRef="prj_example" spentCents={null} />
+        <HeaderProviderSpend
+          projectRef="prj_example"
+          recorded={null}
+          tightest={null}
+          usedPercent={null}
+        />
+      </SessionSpendProvider>,
+    );
+    expect(screen.getByText("Temporarily unavailable")).toBeInTheDocument();
+  });
+  it("does not mix client session spend into the server budget figures", () => {
+    const { container } = render(
+      <SessionSpendProvider>
+        <HeaderProviderSpend
+          projectRef="prj_example"
+          recorded={{ cents: 1240, units: 28 }}
+          tightest={{ provider: "SerpApi", usedPercent: 86 }}
+          usedPercent={86}
+        />
+        <AddSessionSpend />
       </SessionSpendProvider>,
     );
 
-    expect(screen.getByLabelText("Provider spend temporarily unavailable")).toBeInTheDocument();
-    expect(screen.getByText("Temporarily unavailable")).toBeInTheDocument();
-    expect(screen.queryByText("$0.00")).not.toBeInTheDocument();
-    expect(screen.queryByRole("meter")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Add session spend" }));
+
+    expect(container.querySelector("[title]")).toHaveAttribute(
+      "title",
+      "$12.40 + 28 searches recorded this month",
+    );
+    expect(screen.getByText("SerpApi 86% used")).toBeInTheDocument();
   });
 });

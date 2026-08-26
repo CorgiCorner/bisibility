@@ -11,6 +11,7 @@ export type SettingsCardState = {
 };
 
 type SettingsCardProps = {
+  action?: ReactNode;
   children: ReactNode | ((state: SettingsCardState) => ReactNode);
   className?: string;
   description?: string;
@@ -27,6 +28,7 @@ function cardContents(
 }
 
 export function SettingsCard({
+  action,
   children,
   className,
   description,
@@ -79,20 +81,23 @@ export function SettingsCard({
             <p className="m-0 mt-1 text-[12.5px] leading-[1.55] text-fg-muted">{description}</p>
           ) : null}
         </div>
-        {showSave ? (
-          <div className="flex min-h-9 items-center gap-3">
+        {showSave || action ? (
+          <div className="flex min-h-9 items-center gap-3" data-settings-card-actions="">
             <span aria-live="polite" className="text-[12px] font-medium text-green-text">
               {saved ? <span data-settings-card-saved="">Saved</span> : null}
             </span>
-            <Button
-              data-settings-card-save=""
-              disabled={!dirty}
-              loading={saving}
-              onClick={save}
-              size="sm"
-            >
-              Save
-            </Button>
+            {action}
+            {showSave ? (
+              <Button
+                data-settings-card-save=""
+                disabled={!dirty}
+                loading={saving}
+                onClick={save}
+                size="sm"
+              >
+                Save
+              </Button>
+            ) : null}
           </div>
         ) : null}
       </div>

@@ -180,6 +180,10 @@ describe("sample-data actions", () => {
     expect(mocks.tx.project.create.mock.calls[0][0].data.onboardingCompletedAt).toBeInstanceOf(
       Date,
     );
+    // The project cap stays authoritative until an explicit connection allocation is saved.
+    expect(mocks.tx.project.create.mock.calls[0][0].data).not.toHaveProperty(
+      "providerAllocationsInitializedAt",
+    );
     for (const call of mocks.tx.keyword.create.mock.calls) {
       expect(call[0].data.schedule.create).toMatchObject({
         frequency: "manual",

@@ -44,7 +44,7 @@ export function RateLimitBanner({ onFilterChange, range, view }: Readonly<Banner
   const affected = skipped + completedViaFallback;
 
   return (
-    <div className="mx-4 mt-3 flex items-start gap-2.5 rounded-xl border border-yellow/35 bg-yellow/10 px-3.5 py-3 text-[12.5px] text-fg">
+    <div className="mx-4 mt-3 flex items-start gap-2.5 rounded-card border border-yellow/35 bg-yellow/10 px-3.5 py-3 text-[12.5px] text-fg">
       <WarningCircle
         aria-hidden
         className="mt-0.5 shrink-0 text-yellow-text"
@@ -138,7 +138,7 @@ export function ProviderHealth({
   return (
     <section
       aria-label={`Check delivery, ${rangeCopy[range].caption}`}
-      className="mx-4 mt-3 rounded-xl border border-border bg-bg-sunken px-3.5 py-3"
+      className="mx-4 mt-3 rounded-card border border-border bg-bg-sunken px-3.5 py-3"
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="m-0 font-mono text-[10.5px] font-semibold uppercase tracking-[.05em] text-fg-muted">

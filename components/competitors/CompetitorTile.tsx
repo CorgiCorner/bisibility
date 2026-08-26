@@ -14,7 +14,7 @@ export function CompetitorTile({ domain, initials }: Readonly<CompetitorTileProp
   const src = buildDomainIconUrl({ domain, size: 64 });
 
   return (
-    <span className="relative grid h-[30px] w-[30px] shrink-0 place-items-center overflow-hidden rounded-lg bg-bg-sunken font-mono text-[11px] font-semibold text-fg-muted">
+    <span className="relative grid h-[30px] w-[30px] shrink-0 place-items-center overflow-hidden rounded-control bg-bg-sunken font-mono text-[11px] font-semibold text-fg-muted">
       {initials}
       <DomainIconLayer size={64} src={src} testId="competitor-tile-favicon" />
     </span>

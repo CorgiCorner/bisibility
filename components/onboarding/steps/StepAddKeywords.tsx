@@ -235,7 +235,7 @@ export function StepAddKeywords({
         aria-describedby={errors.keywords ? "onboarding-keywords-error" : undefined}
         aria-invalid={errors.keywords ? true : undefined}
         aria-required="true"
-        className="mt-3 min-h-[150px] w-full resize-y rounded-[11px] border border-border-strong bg-transparent px-3.5 py-3 font-mono text-[13px] leading-[1.7] text-fg outline-none focus:border-accent"
+        className="mt-3 min-h-[150px] w-full resize-y rounded-control border border-border-control bg-transparent px-3.5 py-3 font-mono text-[13px] leading-[1.7] text-fg outline-none placeholder:text-[12px] placeholder:leading-4 focus:border-accent"
         placeholder="One keyword per line"
         {...register("keywords", { onChange: (event) => onKeywordsChange?.(event.target.value) })}
         required

@@ -3,11 +3,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { loadStoredGoogleProperties, saveStoredGoogleProperty } from "./google-stored-property";
 
 const mocks = vi.hoisted(() => ({
+  backfillLegacyProjectAllocationInLockedTransaction: vi.fn(),
   decryptProviderCredentials: vi.fn(),
   encryptSecret: vi.fn(),
   listGa4Properties: vi.fn(),
   listGoogleSites: vi.fn(),
   prisma: {
+    $queryRaw: vi.fn(),
     $transaction: vi.fn(),
     auditLog: { create: vi.fn() },
     providerConnection: {
@@ -28,6 +30,10 @@ vi.mock("@/lib/auth/audit", () => ({
   writeAudit: mocks.writeAudit,
 }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
+vi.mock("@/lib/provider-allocations/legacy-backfill", () => ({
+  backfillLegacyProjectAllocationInLockedTransaction:
+    mocks.backfillLegacyProjectAllocationInLockedTransaction,
+}));
 vi.mock("@/lib/providers/crypto", () => ({
   decryptProviderCredentials: mocks.decryptProviderCredentials,
   encryptSecret: mocks.encryptSecret,
@@ -53,6 +59,10 @@ const connection = {
 describe("stored Google property selection", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.backfillLegacyProjectAllocationInLockedTransaction.mockResolvedValue({
+      internalPrimaryConnectionId: null,
+      status: "already_backfilled",
+    });
     mocks.decryptProviderCredentials.mockReturnValue({
       apiKey: "refresh_secret",
       login: "sc-domain:old.example.com",
@@ -153,6 +163,46 @@ describe("stored Google property selection", () => {
       mocks.prisma,
     );
     expect(JSON.stringify(mocks.writeAudit.mock.calls)).not.toContain("refresh_secret");
+  });
+
+  it("does not mutate or audit when the locked stable identity was deleted", async () => {
+    mocks.prisma.providerConnection.findUnique
+      .mockResolvedValueOnce(connection)
+      .mockResolvedValueOnce(null);
+
+    await expect(
+      saveStoredGoogleProperty({
+        actorId: "user_1",
+        projectId: "project_1",
+        property: "sc-domain:example.com",
+        provider: "gsc",
+      }),
+    ).rejects.toThrow("connection changed");
+
+    expect(mocks.prisma.providerConnection.update).not.toHaveBeenCalled();
+    expect(mocks.writeAudit).not.toHaveBeenCalled();
+  });
+
+  it("rejects a locked replacement whose credentials differ from verified credentials", async () => {
+    mocks.prisma.providerConnection.findUnique
+      .mockResolvedValueOnce(connection)
+      .mockResolvedValueOnce({
+        ...connection,
+        credentialsEncrypted: "replacement_credentials",
+        id: "replacement_connection",
+        publicId: "conn_b00000000000000000000000",
+      });
+
+    await expect(
+      saveStoredGoogleProperty({
+        actorId: "user_1",
+        projectId: "project_1",
+        property: "sc-domain:example.com",
+        provider: "gsc",
+      }),
+    ).rejects.toThrow("connection changed");
+    expect(mocks.prisma.providerConnection.update).not.toHaveBeenCalled();
+    expect(mocks.writeAudit).not.toHaveBeenCalled();
   });
 
   it("normalizes and revalidates a stored Analytics property against the live account", async () => {

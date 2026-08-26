@@ -85,9 +85,9 @@ describe("ThemeSegments", () => {
     const selected = segment("Light");
     // Tooltip wraps its trigger, so reach the control by its border rather than by a
     // fixed number of parent hops.
-    const control = selected.closest(".border-border-strong");
-    expect(control).toHaveClass("border-border-strong");
+    const control = selected.closest(".border-border-control");
+    expect(control).toHaveClass("border-border-control");
     expect(control).not.toHaveClass("border-border");
-    expect(selected.nextElementSibling).toHaveClass("border-border-strong");
+    expect(selected.nextElementSibling).toHaveClass("border-border-control");
   });
 });

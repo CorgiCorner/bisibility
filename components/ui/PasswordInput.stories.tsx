@@ -21,7 +21,7 @@ export const Default: Story = {
   args: {
     "aria-label": "API password",
     className:
-      "rounded-[9px] border border-border-strong bg-transparent px-[13px] py-[11px] font-mono text-[13px] font-medium text-fg outline-none placeholder:text-fg-muted focus-visible:border-accent",
+      "rounded-control border border-border-control bg-transparent px-[13px] py-[11px] font-mono text-[13px] font-medium text-fg outline-none placeholder:text-fg-muted focus-visible:border-accent",
     defaultValue: "plausible-secret-token",
     placeholder: "••••••••",
   },

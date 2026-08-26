@@ -15,9 +15,14 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/components/shell/AppFooter", () => ({
-  AppFooter: (props: { schemaStatus: string; workerStatus: string }) => (
+  AppFooter: (props: {
+    schemaStatus?: string;
+    showInstanceAdmin: boolean;
+    workerStatus?: string;
+  }) => (
     <footer
       data-schema-status={props.schemaStatus}
+      data-show-instance-admin={props.showInstanceAdmin}
       data-testid="app-footer"
       data-worker-status={props.workerStatus}
     />
@@ -173,13 +178,16 @@ describe("workspace layout", () => {
     },
   );
 
-  it("renders worker state in the footer only for instance admins", async () => {
+  it("keeps the footer mounted while limiting instance details to instance admins", async () => {
     const regularResult = await WorkspaceShell({
       activeProjectId: "project_1",
       children: <div>Regular workspace</div>,
       projectRef: "prj_f00000000000000000000000",
     });
-    expect(renderToStaticMarkup(regularResult)).not.toContain('data-testid="app-footer"');
+    const regularMarkup = renderToStaticMarkup(regularResult);
+    expect(regularMarkup).toContain('data-testid="app-footer"');
+    expect(regularMarkup).toContain('data-show-instance-admin="false"');
+    expect(mocks.workerLiveness).not.toHaveBeenCalled();
 
     mocks.adminSession.mockResolvedValueOnce({ user: { id: "user_admin" } });
     mocks.workerLiveness.mockResolvedValueOnce({
@@ -195,6 +203,7 @@ describe("workspace layout", () => {
     const markup = renderToStaticMarkup(adminResult);
 
     expect(markup).toContain('data-testid="app-footer"');
+    expect(markup).toContain('data-show-instance-admin="true"');
     expect(markup).toContain('data-schema-status="drift"');
     expect(markup).toContain('data-worker-status="stale"');
   });

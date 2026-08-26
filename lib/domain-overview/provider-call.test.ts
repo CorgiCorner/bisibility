@@ -6,6 +6,7 @@ import {
   domainOverviewEstimate,
   fetchDomainKeywords,
   fetchDomainOverviewMetrics,
+  preflightDomainOverview,
 } from "./provider-call";
 
 const mocks = vi.hoisted(() => ({
@@ -85,6 +86,26 @@ describe("domain overview provider calls", () => {
     expect(() => reserve(2)).toThrow(ProviderLookupSignal);
   });
 
+  it("keeps the aggregate preflight as a thin connection-aware wrapper", async () => {
+    await preflightDomainOverview({
+      budgetCapCents: 500,
+      connectionId: "connection_1",
+      estimatedCostCents: 6,
+      estimatedUsageQuantity: 3,
+      projectId: "project_1",
+      provider: "dataforseo",
+    });
+
+    expect(mocks.preflightBudget).toHaveBeenCalledWith({
+      budgetCapCents: 500,
+      connectionId: "connection_1",
+      estimatedCostCents: 6,
+      estimatedUsageQuantity: 3,
+      projectId: "project_1",
+      provider: "dataforseo",
+    });
+  });
+
   it("charges domain_overview and forwards the direct numeric market", async () => {
     provider.fetchDomainRankOverview.mockResolvedValue({
       costCents: 1.2,
@@ -103,7 +124,6 @@ describe("domain overview provider calls", () => {
 
     expect(mocks.paidCall).toHaveBeenCalledWith(
       expect.objectContaining({
-        budgetCapCents: 500,
         connection: source.connection,
         feature: "domain_overview",
         itemCount: 1,

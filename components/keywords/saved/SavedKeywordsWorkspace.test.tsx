@@ -17,6 +17,7 @@ describe("SavedKeywordsWorkspace", () => {
         addKeywordsAction={vi.fn()}
         canCreateKeyword
         canDeleteKeyword
+        checksCount={1_240}
         costContext={{} as never}
         defaultDevice="desktop"
         initialSavedCount={3}

@@ -4,7 +4,7 @@ import { PageContent } from "@/components/shell/PageContent";
 import { cn } from "@/lib/ui/cn";
 
 function Bar({ className }: Readonly<{ className?: string }>) {
-  return <div className={cn("animate-pulse rounded-[10px] bg-bg-sunken", className)} />;
+  return <div className={cn("animate-pulse rounded-control bg-bg-sunken", className)} />;
 }
 
 const sovRows = [
@@ -25,20 +25,20 @@ export default function CompetitorsLoading() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Bar className="h-3.5 w-full max-w-[420px]" />
         <div className="flex gap-2">
-          <Bar className="h-9 w-[86px] rounded-lg" />
-          <Bar className="h-9 w-[134px] rounded-lg" />
+          <Bar className="h-9 w-[86px] rounded-control" />
+          <Bar className="h-9 w-[134px] rounded-control" />
         </div>
       </div>
 
       <div className="flex min-w-0 flex-col gap-4.5">
-        <div className="rounded-[14px] border border-border bg-bg-elev px-5 py-4.5">
+        <div className="rounded-card border border-border bg-bg-elev px-5 py-4.5">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
             <div className="flex min-w-0 flex-col gap-2">
               <Bar className="h-4 w-[150px]" />
               <Bar className="h-3 w-[260px]" />
             </div>
           </div>
-          <div className="mt-3.5 flex flex-wrap gap-2 rounded-[11px] border border-border bg-bg-sunken px-3 py-2.5">
+          <div className="mt-3.5 flex flex-wrap gap-2 rounded-control border border-border bg-bg-sunken px-3 py-2.5">
             <Bar className="h-8 w-[128px]" />
             <Bar className="h-8 w-[96px]" />
             <Bar className="h-8 w-[84px]" />
@@ -50,7 +50,7 @@ export default function CompetitorsLoading() {
                 className="flex flex-wrap items-center gap-x-3 gap-y-2 sm:flex-nowrap"
                 key={row.key}
               >
-                <Bar className="h-[30px] w-[30px] shrink-0 rounded-lg" />
+                <Bar className="h-[30px] w-[30px] shrink-0 rounded-control" />
                 <Bar className="h-3.5 min-w-0 flex-1 sm:w-[150px] sm:flex-none" />
                 <span className="h-2.5 min-w-[120px] flex-1 overflow-hidden rounded-full bg-bg-sunken">
                   <span
@@ -67,7 +67,7 @@ export default function CompetitorsLoading() {
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-[14px] border border-border bg-bg-elev">
+        <div className="overflow-hidden rounded-card border border-border bg-bg-elev">
           <div className="flex items-center justify-between gap-3 border-b border-border px-4.5 py-[15px]">
             <Bar className="h-3.5 w-[210px]" />
             <Bar className="h-8 w-[88px]" />

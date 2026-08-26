@@ -118,12 +118,12 @@ describe("HighlightLists", () => {
     const row = screen.getByRole("link");
     // The row must reserve enough height for all three lines (keyword, chip, note).
     expect(row).toHaveClass("min-h-[68px]");
-    // The chip wrapper and the note each use the same mt-1 rhythm token so neither
-    // can collapse into the other at any URL or label length.
-    const chipWrapper = screen.getByText("Malaga, Spain").closest("span[class*='mt-1']");
+    // Title-to-market spacing stays at mt-1.5 (6px), while the 22px centered chip needs
+    // an mt-2 (8px) note gap for the intended optical separation.
+    const chipWrapper = screen.getByText("Malaga, Spain").closest("span[class*='mt-1.5']");
     expect(chipWrapper).not.toBeNull();
     const note = screen.getByText("Gained 2 positions since last check");
-    expect(note).toHaveClass("mt-1");
+    expect(note).toHaveClass("mt-2");
     // All three lines are block-level so they stack vertically, never inline.
     expect(screen.getByText("a very long keyword that stretches the row width")).toHaveClass(
       "block",

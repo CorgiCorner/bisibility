@@ -80,10 +80,10 @@ export function MatchingScopeFields<T extends FieldValues>({
         return (
           <label
             className={cn(
-              "flex cursor-pointer items-start gap-3 rounded-[11px] border p-3.5",
+              "flex cursor-pointer items-start gap-3 rounded-control border p-3.5",
               selected
                 ? "border-accent bg-accent-soft"
-                : "border-border-strong bg-bg-elev hover:border-accent",
+                : "border-border-control bg-bg-elev hover:border-accent",
             )}
             htmlFor={inputId}
             key={option.field}

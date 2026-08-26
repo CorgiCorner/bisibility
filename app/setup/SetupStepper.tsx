@@ -33,8 +33,8 @@ export function SetupStepper({ current }: Readonly<{ current: SetupStep }>) {
             {index < steps.length - 1 ? (
               <span
                 aria-hidden
-                className={`h-0.5 w-[26px] rounded-sm ${
-                  index < currentIndex ? "bg-border-strong" : "bg-border"
+                className={`h-0.5 w-[26px] rounded-control ${
+                  index < currentIndex ? "bg-border" : "bg-border"
                 }`}
               />
             ) : null}

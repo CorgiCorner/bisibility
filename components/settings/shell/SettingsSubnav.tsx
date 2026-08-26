@@ -26,7 +26,7 @@ export function SettingsSubnav({ activeSection, projectRef }: Readonly<SettingsS
             <li key={section.id}>
               <Link
                 aria-current={current ? "page" : undefined}
-                className={`relative flex h-10 items-center gap-2.5 rounded-[9px] px-[11px] text-[13.5px] no-underline outline-none transition-colors duration-150 hover:bg-nav-active hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-solid ${
+                className={`relative flex h-10 items-center gap-2.5 rounded-control px-[11px] text-[13.5px] no-underline outline-none transition-colors duration-150 hover:bg-nav-active hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-solid ${
                   current ? "font-semibold text-fg" : "font-medium text-fg-muted"
                 }`}
                 data-settings-subnav-link={section.id}

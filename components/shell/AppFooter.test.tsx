@@ -26,21 +26,23 @@ function expectAdminLink(name: string) {
 
 describe("AppFooter", () => {
   it("prioritizes schema drift with a red status", () => {
-    render(<AppFooter schemaStatus="drift" workerStatus="ok" />);
+    render(<AppFooter schemaStatus="drift" showInstanceAdmin workerStatus="ok" />);
 
     expectAdminLink("Instance admin · Schema drift");
     expect(document.querySelector('[style*="var(--red)"]')).toBeInTheDocument();
   });
 
   it("shows a stale worker as down with a yellow status", () => {
-    render(<AppFooter schemaStatus="ok" workerStatus="stale" />);
+    render(<AppFooter schemaStatus="ok" showInstanceAdmin workerStatus="stale" />);
 
     expectAdminLink("Instance admin · Worker down");
     expect(document.querySelector('[style*="var(--yellow)"]')).toBeInTheDocument();
   });
 
   it("shows unknown liveness as calm manual mode", () => {
-    const { container } = render(<AppFooter schemaStatus="unknown" workerStatus="unknown" />);
+    const { container } = render(
+      <AppFooter schemaStatus="unknown" showInstanceAdmin workerStatus="unknown" />,
+    );
 
     expectAdminLink("Instance admin · Manual mode");
     expect(container.querySelector('[role="alert"]')).not.toBeInTheDocument();
@@ -50,15 +52,24 @@ describe("AppFooter", () => {
   });
 
   it("shows a healthy worker with a green status", () => {
-    render(<AppFooter schemaStatus="ok" workerStatus="ok" />);
+    render(<AppFooter schemaStatus="ok" showInstanceAdmin workerStatus="ok" />);
 
     expectAdminLink("Instance admin");
     expect(document.querySelector('[style*="var(--green)"]')).toBeInTheDocument();
   });
 
-  it("mounts the theme switch beside the instance status", () => {
-    render(<AppFooter schemaStatus="ok" workerStatus="ok" />);
+  it("keeps the theme switch visible without exposing instance admin details", () => {
+    render(<AppFooter showInstanceAdmin={false} />);
 
     expect(screen.getByTestId("theme-segments")).toHaveAttribute("data-size", "sm");
+    expect(screen.queryByRole("link", { name: /Instance admin/ })).not.toBeInTheDocument();
+    expect(document.querySelector('[style*="var(--green)"]')).not.toBeInTheDocument();
+  });
+
+  it("mounts the theme switch beside the instance status for instance admins", () => {
+    render(<AppFooter schemaStatus="ok" showInstanceAdmin workerStatus="ok" />);
+
+    expect(screen.getByTestId("theme-segments")).toHaveAttribute("data-size", "sm");
+    expectAdminLink("Instance admin");
   });
 });

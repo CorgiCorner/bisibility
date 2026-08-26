@@ -20,3 +20,14 @@ export function dataSourceStatusTextColor(status: string) {
   if (/missing|migration hold|paused/i.test(status)) return "var(--yellow-text)";
   return "var(--green-text)";
 }
+
+const statusLabels: Record<string, string> = {
+  "Provider failed": "Failed",
+  "Provider healthy": "Healthy",
+  "Provider needs attention": "Needs attention",
+  "Provider not connected": "Not connected",
+};
+
+export function dataSourceStatusLabel(status: string) {
+  return statusLabels[status] ?? status;
+}

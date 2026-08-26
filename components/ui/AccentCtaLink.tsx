@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 export const accentCtaLinkClassName =
-  "inline-flex items-center gap-[7px] rounded-[10px] bg-accent-solid px-4 py-2.5 text-[13px] font-semibold text-accent-on-solid hover:bg-accent-solid-hover";
+  "inline-flex items-center gap-[7px] rounded-control bg-accent-solid px-4 py-2.5 text-[13px] font-semibold text-accent-on-solid hover:bg-accent-solid-hover";
 
 export type AccentCtaLinkProps = {
   children: ReactNode;

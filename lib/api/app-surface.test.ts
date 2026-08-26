@@ -100,9 +100,14 @@ vi.mock("./provider-service", async (importOriginal) => {
     connectProviderConnection: mocks.providerService.connectProviderConnection,
     disconnectProviderConnection: mocks.providerService.disconnectProviderConnection,
     setProviderSettings: mocks.providerService.setProviderSettings,
-    testProviderConnection: mocks.providerService.testProviderConnection,
   };
 });
+// testProviderConnection moved out of provider-service. Mocking it there is a
+// no-op that silently lets the real implementation reach the database.
+vi.mock("./provider-test-service", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./provider-test-service")>()),
+  testProviderConnection: mocks.providerService.testProviderConnection,
+}));
 vi.mock("./provider-list", () => ({
   listProviderCategories: mocks.providerList.listProviderCategories,
 }));

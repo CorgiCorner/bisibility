@@ -78,7 +78,7 @@ function TransferStatus({
   return (
     <>
       {file ? (
-        <div className="mx-5 mb-4 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-[11px] border border-border bg-bg-sunken px-3.5 py-3">
+        <div className="mx-5 mb-4 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-control border border-border bg-bg-sunken px-3.5 py-3">
           <CheckCircle aria-hidden className="text-green-text" size={15} weight="fill" />
           <span className="min-w-0 flex-1 truncate font-mono text-[11.5px] text-fg-muted">
             {displayedFilename ?? file.filename}
@@ -87,7 +87,7 @@ function TransferStatus({
         </div>
       ) : null}
       {progress ? (
-        <div className="mx-5 mb-4 rounded-[11px] border border-border bg-bg px-3.5 py-3">
+        <div className="mx-5 mb-4 rounded-control border border-border bg-bg px-3.5 py-3">
           <div className="flex items-center justify-between gap-3 text-[12px]">
             <span className="font-medium text-fg-muted">{progress.message}</span>
             {progress.totalChunks > 0 ? (
@@ -99,7 +99,7 @@ function TransferStatus({
         </div>
       ) : null}
       {!hasToken ? (
-        <div className="mx-5 mb-4 flex items-start gap-2.5 rounded-[11px] border border-border bg-bg px-3.5 py-3 text-[12.5px] leading-5 text-fg-muted">
+        <div className="mx-5 mb-4 flex items-start gap-2.5 rounded-control border border-border bg-bg px-3.5 py-3 text-[12.5px] leading-5 text-fg-muted">
           <WarningCircle aria-hidden className="mt-px flex-none text-accent-text" size={15} />
           {missingTokenMessage}
         </div>
@@ -230,9 +230,9 @@ export function PackageTransferPanel({
   const serverExport = packageSource === "server";
 
   return (
-    <div className="mt-4.5 overflow-hidden rounded-[14px] border border-border bg-bg-elev">
+    <div className="mt-4.5 overflow-hidden rounded-card border border-border bg-bg-elev">
       <div className="flex items-center gap-[13px] border-border-soft border-b p-[16px_20px]">
-        <span className="grid h-[38px] w-[38px] flex-none place-items-center rounded-[10px] bg-blue/15 text-blue-text">
+        <span className="grid h-[38px] w-[38px] flex-none place-items-center rounded-control bg-blue/15 text-blue-text">
           <FileJs aria-hidden size={20} weight="fill" />
         </span>
         <div className="min-w-0 flex-1">
@@ -263,7 +263,7 @@ export function PackageTransferPanel({
               Export package
             </Button>
             <label
-              className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-[10px] border border-border-strong bg-bg-elev px-3.5 font-medium text-[13px] text-fg-muted transition-colors hover:bg-bg-sunken hover:text-fg focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent-solid ${
+              className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-control border border-border-control bg-bg-elev px-3.5 font-medium text-[13px] text-fg-muted transition-colors hover:bg-bg-sunken hover:text-fg focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent-solid ${
                 isBusy ? "cursor-not-allowed text-fg-muted" : "cursor-pointer"
               }`}
             >

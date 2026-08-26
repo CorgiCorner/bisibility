@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { featurePaths, featurePresenceKeys, metricPaths } from "./keyword-metrics";
+import { metricPaths } from "./keyword-metrics";
 import {
   fetchKeywordMetrics,
+  fetchKeywordMetricsByIds,
   fetchProjectKeywordMetrics,
   fetchProjectKeywordVolumes,
 } from "./keyword-metrics-query";
@@ -35,23 +36,14 @@ function renderSql(strings: readonly string[], values: readonly unknown[]): stri
 }
 
 function lastQuerySql(): string {
-  const [strings, ...values] = mocks.prisma.$queryRaw.mock.calls.at(-1) ?? [];
-  return Array.isArray(strings) ? renderSql(strings, values) : "";
+  const [query, ...values] = mocks.prisma.$queryRaw.mock.calls.at(-1) ?? [];
+  if (Array.isArray(query)) return renderSql(query, values);
+  return isSqlFragment(query) ? renderSql(query.strings, query.values) : "";
 }
 
 function pathSqlFragment(path: readonly string[]) {
   return path.length === 1 ? `->'${path[0]}'` : `#>'{${path.join(",")}}'`;
 }
-
-const projectionCases = [
-  ...Object.entries(metricPaths).flatMap(([metric, paths]) =>
-    paths.map((path) => [`metric ${metric}: ${path.join(".")}`, pathSqlFragment(path)] as const),
-  ),
-  ...featurePaths.map(
-    (path) => [`feature path: ${path.join(".")}`, pathSqlFragment(path)] as const,
-  ),
-  ...[...featurePresenceKeys].map((key) => [`presence key: ${key}`, key] as const),
-];
 
 describe("keyword metrics raw query", () => {
   beforeEach(() => {
@@ -180,9 +172,47 @@ describe("keyword metrics raw query", () => {
     expect(lastQuerySql()).not.toContain("serpFeatures");
   });
 
-  it.each(projectionCases)("projects %s in the SQL projection", async (_label, key) => {
-    await fetchProjectKeywordMetrics("project_1", 1);
+  it("passes raw checks to the bounded canonical metrics walker", async () => {
+    await fetchKeywordMetricsByIds(["keyword_1"]);
 
-    expect(lastQuerySql()).toContain(key);
+    expect(lastQuerySql()).toContain('SELECT rc."checkedAt", rc.id, rc.raw AS projection');
+    expect(lastQuerySql()).toContain('ORDER BY rc."checkedAt" DESC, rc.id DESC');
+    expect(lastQuerySql()).not.toContain("jsonb_path_query_array");
+  });
+
+  it("ignores arbitrary nested type values outside supported containers", async () => {
+    mocks.prisma.$queryRaw.mockResolvedValue([
+      {
+        checks: [{ metadata: { type: "video" }, payload: { nested: { type: "answer_box" } } }],
+        keywordId: "keyword_1",
+      },
+    ]);
+
+    expect((await fetchKeywordMetricsByIds(["keyword_1"])).get("keyword_1")?.serpFeatures).toEqual(
+      [],
+    );
+  });
+
+  it("recognizes supported nested provider feature containers", async () => {
+    mocks.prisma.$queryRaw.mockResolvedValue([
+      {
+        checks: [
+          {
+            result: [
+              {
+                items: [{ type: "answer_box" }, { type: "images" }],
+                organic_results: [{ type: "video_results" }],
+              },
+            ],
+            tasks: [{ result: [{ related_questions: [{}], type: "ai_overview" }] }],
+          },
+        ],
+        keywordId: "keyword_1",
+      },
+    ]);
+
+    expect(
+      (await fetchKeywordMetricsByIds(["keyword_1"])).get("keyword_1")?.serpFeatures.sort(),
+    ).toEqual(["ai", "featured", "image", "paa", "video"]);
   });
 });

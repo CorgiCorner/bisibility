@@ -16,7 +16,7 @@ function AccountShellFrame({ active }: Readonly<{ active: ActiveSection }>) {
                 ? "Preferences"
                 : "Security"}
           </SectionTitle>
-          <Card className="rounded-[14px] p-5" size="md">
+          <Card className="rounded-card p-5" size="md">
             <p className="m-0 text-[13px] leading-normal text-fg-muted">
               Representative account section body rendered inside the new account shell at desktop
               width, mirroring the SettingsShell sidebar and grid geometry.

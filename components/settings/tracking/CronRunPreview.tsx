@@ -17,7 +17,7 @@ export function CronRunPreview({
     return (
       <div
         aria-live="polite"
-        className="mt-3 flex items-start gap-2 rounded-[9px] border border-yellow-border bg-yellow-soft px-3 py-2.5 text-[12px] text-yellow-text"
+        className="mt-3 flex items-start gap-2 rounded-control border border-yellow-border bg-yellow-soft px-3 py-2.5 text-[12px] text-yellow-text"
       >
         <Warning aria-hidden className="mt-0.5 shrink-0" size={15} weight="fill" />
         {preview.message}
@@ -30,7 +30,7 @@ export function CronRunPreview({
   return (
     <div
       aria-live="polite"
-      className="mt-3 rounded-[9px] border border-border-soft bg-bg-sunken p-3"
+      className="mt-3 rounded-control border border-border-soft bg-bg-sunken p-3"
     >
       <div className="flex items-center gap-2 text-[12px] font-semibold text-fg">
         <CheckCircle aria-hidden className="text-green-text" size={15} weight="fill" />

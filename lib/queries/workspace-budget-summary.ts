@@ -1,12 +1,18 @@
 import "server-only";
 
 import { Prisma } from "@/lib/generated/prisma/client";
+import { PROVIDER_CATALOG } from "@/lib/providers/registry";
 import { projectBudgetCapCents } from "@/lib/rank-check/budget";
+import { loadProjectProviderSpend } from "./provider-spend";
 import { getRequestMonthlySpendCents } from "./workspace-request-data";
 
 export type WorkspaceBudgetSummary = {
   capCents: number;
+  hasAllocation: boolean;
+  maxUsedPercent: number | null;
+  recorded: { cents: number; units: number };
   spentCents: number;
+  tightest: { connectionId: string; provider: string; usedPercent: number } | null;
 };
 
 // Only Prisma 7 connectivity and pool errors may hide the spend widget;
@@ -37,7 +43,19 @@ export async function loadWorkspaceBudgetSummary(
   try {
     const spentCents = await getRequestMonthlySpendCents(projectId, now);
     const capCents = await projectBudgetCapCents(projectId);
-    return { capCents, spentCents };
+    const providerSpend = await loadProjectProviderSpend({
+      catalog: PROVIDER_CATALOG,
+      now,
+      projectId,
+    });
+    return {
+      capCents,
+      hasAllocation: providerSpend.summary.maxUsedPercent !== null,
+      maxUsedPercent: providerSpend.summary.maxUsedPercent,
+      recorded: providerSpend.summary.recorded,
+      spentCents,
+      tightest: providerSpend.summary.tightest,
+    };
   } catch (error) {
     const code = connectionErrorCode(error);
     if (code) {

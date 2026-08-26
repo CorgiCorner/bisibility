@@ -1,10 +1,9 @@
 "use client";
 
 import type { NotificationFeed, NotificationFeedItem } from "@/lib/queries/notifications";
-import { appPath } from "@/lib/routing/app-path";
+import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import Popover from "@mui/material/Popover";
 import {
-  ArrowRightIcon as ArrowRight,
   BellIcon as Bell,
   ChartLineUpIcon as ChartLineUp,
   FlagCheckeredIcon as FlagCheckered,
@@ -14,11 +13,7 @@ import {
 import type { Icon } from "@phosphor-icons/react/lib";
 import Link from "next/link";
 import { useState, useTransition } from "react";
-import {
-  type NotificationStreamStatus,
-  type NotificationTransport,
-  useNotificationStream,
-} from "./useNotificationStream";
+import { type NotificationTransport, useNotificationStream } from "./useNotificationStream";
 
 type NotificationKind = "check" | "error" | "rank" | "system" | "team";
 
@@ -80,7 +75,7 @@ const kindForType: Record<NotificationFeedItem["type"], NotificationKind> = {
 const POPOVER_SX = {
   backgroundColor: "var(--bg-elev)",
   border: "1px solid var(--border)",
-  borderRadius: "13px",
+  borderRadius: UI_RADIUS_ROLES.card,
   boxShadow: "none",
   color: "var(--fg)",
   marginTop: "8px",
@@ -114,12 +109,6 @@ function unreadCountForFeed(
   return Math.max(0, feed.unreadCount - localReadCount);
 }
 
-function statusLabel(status: NotificationStreamStatus) {
-  if (status === "live") return "Live";
-  if (status === "offline") return "Offline";
-  return "Syncing";
-}
-
 export function NotificationBellClient({
   defaultOpen = false,
   feed,
@@ -129,7 +118,7 @@ export function NotificationBellClient({
   refreshNotificationFeed,
   transport = "stream",
 }: Readonly<NotificationBellClientProps>) {
-  const { feed: liveFeed, status } = useNotificationStream(
+  const { feed: liveFeed } = useNotificationStream(
     feed,
     projectRef,
     refreshNotificationFeed,
@@ -139,7 +128,6 @@ export function NotificationBellClient({
   const [readIds, setReadIds] = useState<Set<string>>(() => new Set());
   const [allReadAt, setAllReadAt] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const isLive = status === "live";
   const open = Boolean(anchorEl) || defaultOpen;
   const unreadCount = unreadCountForFeed(liveFeed, readIds, allReadAt);
 
@@ -173,7 +161,7 @@ export function NotificationBellClient({
         aria-haspopup="dialog"
         aria-label="Notifications"
         className={[
-          "grid h-8 w-8 place-items-center rounded-[9px] border border-border-strong bg-bg-elev text-fg-muted transition-colors hover:bg-bg-sunken hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid",
+          "grid h-8 w-8 place-items-center rounded-control border border-border-control bg-bg-elev text-fg-muted transition-colors hover:bg-bg-sunken hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid",
           open ? "bg-bg-sunken" : "bg-bg-elev",
         ].join(" ")}
         onClick={(event) => setAnchorEl(event.currentTarget)}
@@ -199,28 +187,6 @@ export function NotificationBellClient({
         <div className="flex items-center justify-between gap-2.5 border-b border-border px-4 py-[13px]">
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold">Notifications</span>
-            <span
-              className={[
-                "inline-flex items-center gap-1.5 rounded-full bg-bg-sunken px-2 py-0.5 font-mono text-[9.5px] font-semibold uppercase tracking-[0.4px]",
-                isLive ? "text-green-text" : "text-fg-muted",
-              ].join(" ")}
-            >
-              <span className="relative grid h-[7px] w-[7px] place-items-center">
-                <span
-                  className={[
-                    "absolute h-[7px] w-[7px] rounded-full",
-                    isLive ? "bv-ping bg-green" : "bg-fg-muted",
-                  ].join(" ")}
-                />
-                <span
-                  className={[
-                    "h-[5px] w-[5px] rounded-full",
-                    isLive ? "bg-green" : "bg-fg-muted",
-                  ].join(" ")}
-                />
-              </span>
-              {statusLabel(status)}
-            </span>
           </div>
           <button
             className="p-0 text-xs font-semibold text-accent-text disabled:text-fg-muted"
@@ -248,14 +214,6 @@ export function NotificationBellClient({
             <div className="px-4 py-8 text-center text-xs text-fg-muted">No notifications</div>
           )}
         </div>
-        <Link
-          className="flex w-full items-center justify-center gap-1.5 border-t border-border bg-transparent px-3 py-2.5 text-xs font-medium text-fg-muted transition-colors hover:text-accent-text"
-          href={appPath(projectRef, "settings", "audit")}
-          onClick={close}
-        >
-          View audit log
-          <ArrowRight aria-hidden size={12} />
-        </Link>
       </Popover>
     </span>
   );
@@ -279,7 +237,7 @@ function NotificationRow({ item, onNavigate, unread }: Readonly<NotificationRowP
       onClick={onNavigate}
     >
       <span
-        className="grid h-8 w-8 flex-none place-items-center rounded-[9px]"
+        className="grid h-8 w-8 flex-none place-items-center rounded-control"
         style={{ background: tint.bg, color: tint.fg }}
       >
         <Icon aria-hidden size={16} />

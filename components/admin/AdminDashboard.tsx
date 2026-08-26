@@ -162,18 +162,18 @@ export function AdminDashboard({ data }: Readonly<{ data: InstanceAdminDashboard
           />
         </div>
         {data.temporal.status === "unavailable" ? (
-          <p className="mt-3 rounded-xl bg-yellow/10 p-3 text-xs text-yellow-text">
+          <p className="mt-3 rounded-card bg-yellow/10 p-3 text-xs text-yellow-text">
             Snapshot unavailable {"-"} worker has not published Temporal data. Values above are
             unknown, not zero.
           </p>
         ) : null}
         {data.temporal.status === "disabled" ? (
-          <p className="mt-3 rounded-xl bg-bg-sunken p-3 text-xs text-fg-muted">
+          <p className="mt-3 rounded-card bg-bg-sunken p-3 text-xs text-fg-muted">
             Temporal scheduling is disabled for this topology.
           </p>
         ) : null}
         {temporalIssues.length > 0 ? (
-          <ul className="mt-3 space-y-1 rounded-xl bg-bg-sunken p-3 font-mono text-[11px] text-fg-muted">
+          <ul className="mt-3 space-y-1 rounded-card bg-bg-sunken p-3 font-mono text-[11px] text-fg-muted">
             {temporalIssues.map((issue) => (
               <li key={issue}>{issue}</li>
             ))}

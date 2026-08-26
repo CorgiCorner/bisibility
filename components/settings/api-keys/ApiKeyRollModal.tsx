@@ -84,7 +84,7 @@ export function ApiKeyRollModal({
     >
       {issuedKey ? (
         <div className="space-y-4">
-          <div className="rounded-[12px] border border-red bg-red/10 px-3.5 py-3 text-[12.5px] font-semibold text-fg">
+          <div className="rounded-card border border-red bg-red/10 px-3.5 py-3 text-[12.5px] font-semibold text-fg">
             The old key was revoked and now returns 401.
           </div>
           <ApiKeyRevealContent issuedKey={issuedKey} showProjectGuidance />
@@ -105,7 +105,7 @@ export function ApiKeyRollModal({
             <dt className="text-fg-muted">Expiry</dt>
             <dd className="m-0">{apiKey.expiresLabel}</dd>
           </dl>
-          <div className="mt-6 rounded-[12px] border border-red bg-red/10 px-3.5 py-3">
+          <div className="mt-6 rounded-card border border-red bg-red/10 px-3.5 py-3">
             <p className="m-0 text-[13px] font-semibold text-fg">
               The old key stops working immediately and returns 401.
             </p>

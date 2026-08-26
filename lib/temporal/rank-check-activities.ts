@@ -5,6 +5,7 @@ import { requiredPublicAuditId, writeAudit } from "../auth/audit";
 import { prisma } from "../db/prisma";
 import { makePublicId } from "../db/public-id";
 import { ProjectReadOnlyError } from "../deployment/project-write-mode";
+import { ProjectDomainRequiredError } from "../projects/tracked-domain";
 import { loadProviderRateContext } from "../provider-rates/connection-context";
 import { LIST_PROVIDER_RATE_CONTEXT } from "../provider-rates/resolver";
 import { isProviderErrorCode } from "../providers/provider-error-code";
@@ -24,6 +25,7 @@ import {
   type DiscardRankCheckActivityInput,
   type FailRankCheckActivityInput,
   type FailRankCheckActivityResult,
+  PROJECT_DOMAIN_REQUIRED_FAILURE,
   PROJECT_READ_ONLY_FAILURE,
   PROVIDER_RATE_LIMITED_FAILURE,
   RANK_CHECK_CLOSED_FAILURE,
@@ -251,6 +253,13 @@ export async function runRankCheckActivity(
         type: PROVIDER_RATE_LIMITED_FAILURE,
       });
     }
+    if (error instanceof ProjectDomainRequiredError) {
+      throw ApplicationFailure.create({
+        message: error.message,
+        nonRetryable: true,
+        type: PROJECT_DOMAIN_REQUIRED_FAILURE,
+      });
+    }
     if (error instanceof ProjectReadOnlyError) {
       throw ApplicationFailure.create({
         message: error.message,
@@ -273,6 +282,16 @@ export async function runRankCheckActivity(
           where: { id: input.rankCheckId, status: "running" },
         });
         if (result.count === 0) throw ApplicationFailure.create({ message: "Rank check was closed before its result could be persisted.", nonRetryable: true, type: RANK_CHECK_CLOSED_FAILURE });
+      }
+      const allocationExhausted =
+        error.attempts.length > 0 &&
+        error.attempts.every((attempt) => attempt.reason === "allocation_exhausted");
+      if (allocationExhausted) {
+        throw ApplicationFailure.create({
+          message: error.message,
+          nonRetryable: true,
+          type: BUDGET_EXHAUSTED_FAILURE,
+        });
       }
       const { dominantCode } = error;
       if (dominantCode === "provider_billing" || dominantCode === "provider_auth") {

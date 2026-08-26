@@ -13,7 +13,7 @@ export function DomainOverviewContextBar({ report }: Readonly<DomainOverviewCont
   const hours = cacheHoursRemaining(report.cachedUntil, now);
 
   return (
-    <div className="flex min-w-0 flex-wrap items-center gap-1.5 rounded-[11px] border border-border bg-bg-elev px-3.5 py-2.5 font-mono text-[11px] text-fg-muted">
+    <div className="flex min-w-0 flex-wrap items-center gap-1.5 rounded-control border border-border bg-bg-elev px-3.5 py-2.5 font-mono text-[11px] text-fg-muted">
       <span>DataForSEO</span>
       <span aria-hidden className="opacity-50">
         ·

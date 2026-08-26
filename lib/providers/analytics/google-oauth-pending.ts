@@ -10,6 +10,7 @@ import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { makePublicId } from "@/lib/db/public-id";
 import type { GoogleOAuthSetup } from "@/lib/integrations/types";
+import { lockProjectForProviderMutation } from "@/lib/provider-allocations/project-lock";
 import { decryptProviderCredentials, decryptSecret, encryptSecret } from "@/lib/providers/crypto";
 import { PROVIDER_CATALOG } from "@/lib/providers/registry";
 import { cookies } from "next/headers";
@@ -149,42 +150,47 @@ export async function completePendingGooglePropertySelection(input: {
   });
 
   const where = { projectId_provider: { projectId: context.project.id, provider } };
-  const before = await prisma.providerConnection.findUnique({ where });
-  const previousProperty = decryptProviderCredentials(before?.credentialsEncrypted).login ?? null;
-  const publicId = before?.publicId ?? makePublicId("conn");
-  const data = {
-    credentialsEncrypted: encryptSecret(JSON.stringify(credentials)),
-    enabled: true,
-    kind: "analytics" as const,
-    publicId,
-    status: "connected" as const,
-  };
-  const connection = await prisma.providerConnection.upsert({
-    create: { ...data, priority: 100, projectId: context.project.id, provider },
-    select: { id: true, publicId: true },
-    update: data,
-    where,
-  });
-
-  await writeAudit({
-    action: before ? "provider.update" : "provider.connect",
-    actorId: context.actor.id,
-    after: {
-      hasCredentials: true,
-      ...(permissionLevel ? { permissionLevel } : {}),
-      property,
-      provider,
-    },
-    before: before
-      ? {
-          hasCredentials: Boolean(before.credentialsEncrypted),
-          property: previousProperty,
+  await prisma.$transaction(async (tx) => {
+    await lockProjectForProviderMutation(tx, context.project.id);
+    const before = await tx.providerConnection.findUnique({ where });
+    const previousProperty = decryptProviderCredentials(before?.credentialsEncrypted).login ?? null;
+    const data = {
+      credentialsEncrypted: encryptSecret(JSON.stringify(credentials)),
+      enabled: true,
+      kind: "analytics" as const,
+      publicId: before?.publicId ?? makePublicId("conn"),
+      status: "connected" as const,
+    };
+    const saved = await tx.providerConnection.upsert({
+      create: { ...data, priority: 100, projectId: context.project.id, provider },
+      select: { id: true, publicId: true },
+      update: data,
+      where,
+    });
+    await writeAudit(
+      {
+        action: before ? "provider.update" : "provider.connect",
+        actorId: context.actor.id,
+        after: {
+          hasCredentials: true,
+          ...(permissionLevel ? { permissionLevel } : {}),
+          property,
           provider,
-        }
-      : null,
-    projectId: context.project.id,
-    targetId: requiredPublicAuditId(connection.publicId, "conn", "Provider connection"),
-    targetType: "provider_connection",
+        },
+        before: before
+          ? {
+              hasCredentials: Boolean(before.credentialsEncrypted),
+              property: previousProperty,
+              provider,
+            }
+          : null,
+        projectId: context.project.id,
+        targetId: requiredPublicAuditId(saved.publicId, "conn", "Provider connection"),
+        targetType: "provider_connection",
+      },
+      tx,
+    );
+    return saved;
   });
   context.cookieStore.delete(GOOGLE_OAUTH_PENDING_COOKIE);
   revalidateProviderViews();

@@ -1,6 +1,6 @@
 import { dailyPositionPoints } from "@/lib/keywords/position-history";
+import type { KeywordRow, LatestAttemptHealth } from "@/lib/queries/keyword-row";
 import type { KeywordTrafficDetail } from "@/lib/queries/keyword-traffic";
-import type { KeywordRow } from "@/lib/queries/keywords";
 
 export type KeywordDetailRankState =
   | "normal"
@@ -27,6 +27,7 @@ export type KeywordDetailPositionChange = {
 };
 
 export type KeywordDetailState = {
+  latestAttemptHealth: LatestAttemptHealth;
   chartState: KeywordDetailChartState;
   keywordContext: KeywordDetailKeywordContext;
   rankState: KeywordDetailRankState;
@@ -34,12 +35,16 @@ export type KeywordDetailState = {
   whatChanged: KeywordDetailWhatChanged;
 };
 
+function attemptHealth(keyword: KeywordRow): LatestAttemptHealth {
+  return keyword.latestAttemptHealth;
+}
+
 function rankState(keyword: KeywordRow): KeywordDetailRankState {
-  if (keyword.hasRankData && keyword.checkState === "ranked") return "normal";
-  if (keyword.checkState === "failed") return "failed";
-  if (keyword.checkState === "running") return "running";
-  if (keyword.checkState === "not_ranked") return "not_ranked";
-  return "never_checked";
+  if (keyword.hasRankData) return keyword.position <= 100 ? "normal" : "not_ranked";
+  const health = attemptHealth(keyword);
+  if (health === "failed") return "failed";
+  if (health === "running") return "running";
+  return keyword.checkState === "not_ranked" ? "not_ranked" : "never_checked";
 }
 
 function keywordContext(keyword: KeywordRow): KeywordDetailKeywordContext {
@@ -136,6 +141,7 @@ export function deriveKeywordDetailState(
         ? "one_check"
         : "normal",
     keywordContext: keywordContext(keyword),
+    latestAttemptHealth: attemptHealth(keyword),
     rankState: currentRankState,
     trafficState: trafficState(traffic),
     whatChanged: deriveKeywordDetailWhatChanged(keyword),

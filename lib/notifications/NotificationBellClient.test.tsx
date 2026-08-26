@@ -77,7 +77,7 @@ describe("NotificationBellClient", () => {
     );
     expect(screen.getByRole("button", { name: "Notifications" })).toHaveTextContent("1");
     fireEvent.click(screen.getByRole("button", { name: "Notifications" }));
-    expect(screen.getByText("Live")).toBeInTheDocument();
+    expect(screen.queryByText("Live")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("link", { name: /Import complete/ }));
     await waitFor(() =>
       expect(markOne).toHaveBeenCalledWith({
@@ -100,7 +100,7 @@ describe("NotificationBellClient", () => {
         refreshNotificationFeed={vi.fn(async () => feed)}
       />,
     );
-    expect(screen.getByText("Offline")).toBeInTheDocument();
+    expect(screen.queryByText("Offline")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Mark all read" }));
     await waitFor(() => expect(markAll).toHaveBeenCalledOnce());
     expect(screen.getByRole("button", { name: "Mark all read" })).toBeDisabled();
@@ -127,7 +127,7 @@ describe("NotificationBellClient", () => {
     expect(screen.queryByText("rank tracker on example.com")).not.toBeInTheDocument();
   });
 
-  it("renders an empty syncing feed and closes from the activity link", () => {
+  it("renders an empty syncing feed without an audit-log footer", () => {
     mocks.status = "syncing";
     render(
       <NotificationBellClient
@@ -139,13 +139,9 @@ describe("NotificationBellClient", () => {
         refreshNotificationFeed={vi.fn(async () => ({ items: [], unreadCount: 0 }))}
       />,
     );
-    expect(screen.getByText("Syncing")).toBeInTheDocument();
+    expect(screen.queryByText("Syncing")).not.toBeInTheDocument();
     expect(screen.getByText("No notifications")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Mark all read" })).toBeDisabled();
-    expect(screen.getByRole("link", { name: /View audit log/ })).toHaveClass("border-border");
-    expect(screen.getByRole("link", { name: /View audit log/ })).not.toHaveClass(
-      "border-border-soft",
-    );
-    fireEvent.click(screen.getByRole("link", { name: /View audit log/ }));
+    expect(screen.queryByRole("link", { name: /View audit log/ })).not.toBeInTheDocument();
   });
 });

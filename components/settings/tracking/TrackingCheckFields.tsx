@@ -14,7 +14,7 @@ import { Controller } from "react-hook-form";
 
 const labelClass = "font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted";
 const triggerClass =
-  "min-h-10 w-full justify-between rounded-[9px] border-border-strong bg-transparent px-3 text-[13px] font-medium normal-case tracking-normal";
+  "min-h-10 w-full justify-between rounded-control border-border-control bg-transparent px-3 text-[13px] font-medium normal-case tracking-normal";
 const deviceOptions = serpDeviceOptions.map((option) => ({ ...option }));
 const depthOptions = serpDepthValues.map((depth) => ({
   label: `Top ${depth}`,

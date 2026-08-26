@@ -39,7 +39,7 @@ describe("KeywordHeaderActions", () => {
     fireEvent.click(screen.getByRole("button", { name: "More keyword actions" }));
     fireEvent.click(screen.getByRole("menuitem", { name: "Export CSV" }));
     fireEvent.click(screen.getByRole("button", { name: "More keyword actions" }));
-    fireEvent.click(screen.getByRole("menuitem", { name: "Manage markets and devices" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Edit" }));
     expect(handlers.onExport).toHaveBeenCalledOnce();
     expect(handlers.onToggleEdit).toHaveBeenCalledOnce();
     expect(handlers.onRunCheck).toHaveBeenCalledWith(50);

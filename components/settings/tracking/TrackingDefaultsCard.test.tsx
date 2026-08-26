@@ -34,14 +34,17 @@ const readyPreview: CronPreviewResult = {
   status: "ready",
 };
 
-function renderCard(overrides: Partial<DefaultsData> = {}) {
+function renderCard(
+  overrides: Partial<DefaultsData> = {},
+  initialCronPreview: CronPreviewResult = readyPreview,
+) {
   const updateDefaults = vi.fn(async () => ({}));
   const previewCron = vi.fn(async () => readyPreview);
   render(
     <TrackingDefaultsCard
       canEdit
       defaults={{ ...defaults, ...overrides }}
-      initialCronPreview={readyPreview}
+      initialCronPreview={initialCronPreview}
       previewCron={previewCron}
       projectId="prj_1"
       updateDefaults={updateDefaults}
@@ -131,6 +134,60 @@ describe("TrackingDefaultsCard", () => {
     ).toBeInTheDocument();
     expect(screen.queryByText("Next three runs")).not.toBeInTheDocument();
     expect(screen.queryByText(/cost\/check/i)).not.toBeInTheDocument();
+  });
+
+  it("keeps the ready cron preview inside the cron field before timezone", () => {
+    renderCard({
+      schedule: {
+        ...defaults.schedule,
+        cron_expression: "0 6 * * *",
+        frequency: "custom_cron",
+      },
+    });
+
+    const cronInput = screen.getByLabelText("Cron expression");
+    const preview = screen.getByText("Next three cron anchors");
+    const timezone = screen.getByRole("button", { name: "Timezone" });
+    const cronField = cronInput.closest("[data-settings-field-width]");
+    const timezoneField = timezone.closest("[data-settings-field-width]");
+
+    expect(cronField).not.toBeNull();
+    expect(timezoneField).not.toBeNull();
+    expect(cronField).not.toBe(timezoneField);
+    expect(cronField).toContainElement(preview);
+    expect(timezoneField).not.toContainElement(preview);
+    expect(cronField?.compareDocumentPosition(timezoneField as Node)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+  });
+
+  it("keeps an invalid cron preview inside the cron field", () => {
+    const invalidPreview: CronPreviewResult = {
+      message: "Cron expression could not be parsed.",
+      runs: [],
+      status: "invalid",
+    };
+    renderCard(
+      {
+        schedule: {
+          ...defaults.schedule,
+          cron_expression: "invalid",
+          frequency: "custom_cron",
+        },
+      },
+      invalidPreview,
+    );
+
+    const cronField = screen
+      .getByLabelText("Cron expression")
+      .closest("[data-settings-field-width]");
+    const invalidMessage = screen.getByText(invalidPreview.message);
+    const timezoneField = screen
+      .getByRole("button", { name: "Timezone" })
+      .closest("[data-settings-field-width]");
+
+    expect(cronField).toContainElement(invalidMessage);
+    expect(timezoneField).not.toContainElement(invalidMessage);
   });
 
   it("warns when depth is lowered and submits through the injected audited action", async () => {

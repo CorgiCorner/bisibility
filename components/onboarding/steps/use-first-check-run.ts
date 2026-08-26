@@ -42,7 +42,7 @@ export function useFirstCheckRun(actions: FirstCheckRunActions) {
     if (!actions.runFirstCheckPreviewAction) return;
     for (const candidate of candidates) {
       try {
-        const result = await actions.runFirstCheckPreviewAction({ keywordId: candidate.id });
+        const result = await actions.runFirstCheckPreviewAction({ keywordId: candidate.publicId });
         setState((current) => ({
           ...current,
           rows: current.rows.map((row) =>

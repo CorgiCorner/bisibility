@@ -95,8 +95,7 @@ export function AlertBanner({
   }, []);
 
   const actionClass =
-    "inline-flex items-center gap-1.5 rounded-lg border bg-bg-elev px-3 py-1.5 text-[12px] font-semibold";
-  const actionStyle = { borderColor: style.color, color: "var(--fg)" };
+    "inline-flex items-center gap-1.5 rounded-control border border-border-strong bg-bg-elev px-3 py-1.5 text-[12px] font-semibold text-fg hover:bg-bg-sunken focus-visible:bg-bg-sunken";
   const actionContent = action ? (
     <>
       <ActionIcon icon={action.icon} />
@@ -133,7 +132,7 @@ export function AlertBanner({
 
   return (
     <output
-      className={`flex flex-wrap items-center gap-3 border-b border-border px-4 py-[11px] transition-opacity duration-[var(--motion-menu-exit)] ease-[ease] ${
+      className={`flex flex-wrap items-center gap-3 px-4 py-[11px] transition-opacity duration-[var(--motion-menu-exit)] ease-[ease] ${
         exiting ? "pointer-events-none opacity-0" : ""
       } ${tint === "red" ? "bg-red/[0.07]" : ""}`}
       onTransitionEnd={handleTransitionEnd}
@@ -142,33 +141,29 @@ export function AlertBanner({
     >
       <WarningCircle className="shrink-0" size={17} style={{ color: style.color }} weight="fill" />
       <span className="min-w-[220px] flex-1 text-[12.5px] text-fg">
-        <strong className="font-semibold">{title}</strong>
         {detail ? (
           <>
-            {" "}
-            <span>{detail}</span>
+            <strong className="block font-semibold">{title}</strong>
+            <span className="block">{detail}</span>
           </>
-        ) : null}
+        ) : (
+          <strong className="font-semibold">{title}</strong>
+        )}
       </span>
       {action?.href ? (
-        <Link
-          className={actionClass}
-          href={action.href}
-          style={actionStyle}
-          {...docsLinkProps(action.href)}
-        >
+        <Link className={actionClass} href={action.href} {...docsLinkProps(action.href)}>
           {actionContent}
         </Link>
       ) : null}
       {action && !action.href ? (
-        <button className={actionClass} onClick={action.onClick} style={actionStyle} type="button">
+        <button className={actionClass} onClick={action.onClick} type="button">
           {actionContent}
         </button>
       ) : null}
       {onDismiss ? (
         <button
           aria-label="Dismiss alert"
-          className="grid h-7 w-7 place-items-center rounded-[7px] text-fg-muted hover:bg-[var(--alert-dismiss-hover)] focus-visible:bg-[var(--alert-dismiss-hover)]"
+          className="grid h-7 w-7 place-items-center rounded-control text-fg-muted hover:bg-[var(--alert-dismiss-hover)] focus-visible:bg-[var(--alert-dismiss-hover)]"
           onClick={handleDismiss}
           style={{ "--alert-dismiss-hover": style.hover } as CSSProperties}
           type="button"

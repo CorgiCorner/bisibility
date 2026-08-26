@@ -217,11 +217,11 @@ export function KeywordSuggestionDrawer({
       </div>
 
       {decorated.length > FILTER_THRESHOLD ? (
-        <label className="mt-3 flex items-center gap-2 rounded-[9px] border border-border-strong bg-transparent px-2.5 py-1.5 focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent-solid">
+        <label className="mt-3 flex items-center gap-2 rounded-control border border-border-control bg-transparent px-2.5 py-1.5 focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent-solid">
           <MagnifyingGlass aria-hidden className="shrink-0 text-fg-muted" size={14} />
           <input
             aria-label="Filter suggestions"
-            className="min-w-0 flex-1 bg-transparent text-[13px] text-fg outline-none"
+            className="min-w-0 flex-1 bg-transparent text-[13px] text-fg outline-none placeholder:text-[12px] placeholder:leading-4"
             onChange={(event) => setTerm(event.target.value)}
             placeholder="Filter queries"
             value={term}
@@ -229,7 +229,7 @@ export function KeywordSuggestionDrawer({
         </label>
       ) : null}
 
-      <div className="mt-3 flex items-center gap-3 border-b border-border-strong px-1 pb-1.5 font-mono text-[9.5px] uppercase tracking-[0.3px] text-fg-muted">
+      <div className="mt-3 flex items-center gap-3 border-b border-border px-1 pb-1.5 font-mono text-[9.5px] uppercase tracking-[0.3px] text-fg-muted">
         <span className="w-4 shrink-0" />
         <span className="min-w-0 flex-1">Query</span>
         <span className="w-16 shrink-0 text-right">Clicks</span>

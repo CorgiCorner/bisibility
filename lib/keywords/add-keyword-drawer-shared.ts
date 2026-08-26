@@ -22,7 +22,7 @@ export const addKeywordDrawerSchema = addKeywordSchema.omit({ keyword: true }).e
 export type AddKeywordDrawerForm = z.infer<typeof addKeywordDrawerSchema>;
 
 export const fieldClass =
-  "min-h-10 w-full rounded-[9px] border border-border-strong bg-transparent px-3 text-[13px] font-medium text-fg outline-none focus:border-accent";
+  "min-h-10 w-full rounded-control border border-border-control bg-transparent px-3 text-[13px] font-medium text-fg outline-none placeholder:text-[12px] placeholder:leading-4 placeholder:text-fg-muted focus:border-accent";
 
 export const fieldLabelClass = "text-[12.5px] font-semibold text-fg";
 export const fieldMetaClass = "font-mono text-[10px] uppercase tracking-[0.4px] text-fg-muted";

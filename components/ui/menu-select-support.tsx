@@ -1,7 +1,9 @@
 "use client";
 
+import { compactInputClassName } from "@/components/ui/input-styles";
 import { toolbarControlClassName } from "@/components/ui/toolbar-control-styles";
 import { cn } from "@/lib/ui/cn";
+import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import { type ReactNode, useCallback } from "react";
 
 export type MenuSelectOption = {
@@ -37,7 +39,7 @@ export type MenuSelectInput = FlatInput | GroupedInput;
 export const menuSelectPaperSx = {
   backgroundColor: "var(--bg-elev)",
   border: "1px solid var(--border)",
-  borderRadius: "12px",
+  borderRadius: UI_RADIUS_ROLES.card,
   boxShadow: "none",
   color: "var(--fg)",
   marginTop: "6px",
@@ -121,7 +123,10 @@ export function MenuSearchField({ onChange, placeholder, value }: Readonly<MenuS
     <div className="px-1 pb-1">
       <input
         aria-label={placeholder}
-        className="min-h-8 w-full rounded-[8px] border border-border-strong bg-transparent px-2.5 text-[12.5px] text-fg outline-none placeholder:text-fg-muted focus:border-accent"
+        className={cn(
+          compactInputClassName,
+          "min-h-8 w-full rounded-control border border-border-control bg-transparent px-2.5 text-fg outline-none focus:border-accent",
+        )}
         onChange={(event) => onChange(event.target.value)}
         onKeyDown={(event) => {
           if (!["ArrowDown", "ArrowUp", "Escape", "Tab"].includes(event.key)) {

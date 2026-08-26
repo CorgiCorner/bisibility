@@ -38,9 +38,9 @@ type KeywordScheduleInlineFormProps = {
 
 const labelClass =
   "flex flex-col gap-1.5 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted";
-const inputClass = `${inputClassName} min-h-10 rounded-lg px-3 font-sans text-[13px] font-medium normal-case tracking-normal`;
+const inputClass = `${inputClassName} min-h-10 rounded-control px-3 font-sans text-[13px] font-medium normal-case tracking-normal`;
 const triggerClass =
-  "min-h-10 w-full justify-between rounded-lg border-border-strong bg-transparent px-3 text-[13px] font-medium normal-case tracking-normal";
+  "min-h-10 w-full justify-between rounded-control border-border-control bg-transparent px-3 text-[13px] font-medium normal-case tracking-normal";
 const depthOptions = (projectDepth: SerpDepth) => [
   { label: `Inherit (Top ${projectDepth})`, value: "inherit" },
   ...serpDepthValues.map((depth) => ({
@@ -231,7 +231,7 @@ export function KeywordScheduleInlineForm({
       {providerRate ? (
         <div className={labelClass}>
           <span>Estimated provider cost</span>
-          <span className="flex min-h-10 items-center rounded-lg bg-bg-sunken px-3 font-mono text-[12px] text-fg">
+          <span className="flex min-h-10 items-center rounded-control bg-bg-sunken px-3 font-mono text-[12px] text-fg">
             {projectedCostCents == null
               ? "Unavailable"
               : `~ ${formatEstimateCents(projectedCostCents)}/month`}

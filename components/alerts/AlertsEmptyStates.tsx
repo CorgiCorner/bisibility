@@ -21,7 +21,7 @@ export function AlertsSetupEmpty({
         canCreateKeyword
           ? (action ?? (
               <Link
-                className="inline-flex min-h-10 items-center gap-[7px] rounded-[10px] bg-accent-solid px-4.5 text-[13.5px] font-semibold text-accent-on-solid outline-none transition-colors hover:bg-accent-solid-hover focus-visible:bg-accent-solid-hover"
+                className="inline-flex min-h-10 items-center gap-[7px] rounded-control bg-accent-solid px-4.5 text-[13.5px] font-semibold text-accent-on-solid outline-none transition-colors hover:bg-accent-solid-hover focus-visible:bg-accent-solid-hover"
                 href={appPath(projectRef, "rank-tracker")}
               >
                 <Plus aria-hidden size={14} weight="bold" />
@@ -60,7 +60,7 @@ export function AlertsAllClear({
             <CheckCircle aria-hidden className="text-green-text" size={13} weight="fill" />
             {pluralize(activeRuleCount, "active rule")}
           </span>
-          <span className="h-[11px] w-px bg-border-strong" />
+          <span className="h-[11px] w-px bg-border" />
           <span>Nothing fired in 48h</span>
         </span>
       }

@@ -2,7 +2,7 @@
 
 import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
-import { useRef, useState } from "react";
+import { type ReactNode, useRef, useState } from "react";
 import { CONFIRM, type ConfirmKind } from "./confirm-copy";
 import { dangerIconWellClassName } from "./icon-well-styles";
 
@@ -15,12 +15,14 @@ export type ConfirmModalProps = {
   onConfirm: () => Promise<void> | void;
   onUndo?: () => Promise<void> | void;
   busy?: boolean;
+  failureDetail?: ReactNode;
   showConfirmationToast?: boolean;
   typeWord?: string;
 };
 
 export function ConfirmModal({
   busy = false,
+  failureDetail,
   kind,
   onClose,
   onConfirm,
@@ -88,7 +90,7 @@ export function ConfirmModal({
             Cancel
           </button>
           <button
-            className="rounded-[9px] bg-red px-4 py-2.5 text-[13px] font-semibold text-error-contrast outline-none transition-[opacity,transform] duration-[var(--motion-press)] hover:opacity-90 focus-visible:opacity-90 motion-safe:active:not-focus-visible:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-control bg-red px-4 py-2.5 text-[13px] font-semibold text-error-contrast outline-none transition-[opacity,transform] duration-[var(--motion-press)] hover:opacity-90 focus-visible:opacity-90 motion-safe:active:not-focus-visible:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
             disabled={disabled}
             onClick={handleConfirm}
             type="button"
@@ -108,7 +110,7 @@ export function ConfirmModal({
     >
       <div className="flex items-center gap-3">
         <span
-          className={`grid h-10 w-10 shrink-0 place-items-center rounded-[11px] ${dangerIconWellClassName}`}
+          className={`grid h-10 w-10 shrink-0 place-items-center rounded-control ${dangerIconWellClassName}`}
         >
           <Icon aria-hidden size={21} weight="bold" />
         </span>
@@ -121,7 +123,7 @@ export function ConfirmModal({
             confirm
           </label>
           <input
-            className="w-full rounded-[9px] border border-border-strong bg-transparent px-3 py-2.5 font-mono text-[13px] font-medium text-fg outline-none transition-colors focus:border-red"
+            className="w-full rounded-control border border-border-control bg-transparent px-3 py-2.5 font-mono text-[13px] font-medium text-fg outline-none transition-colors placeholder:text-[12px] placeholder:leading-4 focus:border-red"
             id="confirm-type-word"
             onChange={(event) => setTyped(event.target.value)}
             placeholder={expectedWord}
@@ -130,9 +132,13 @@ export function ConfirmModal({
         </div>
       ) : null}
       {confirmationError ? (
-        <p className="m-0 mt-3 text-[12px] font-medium text-red-text" role="alert">
-          {confirmationError}
-        </p>
+        failureDetail ? (
+          <div className="mt-3">{failureDetail}</div>
+        ) : (
+          <p className="m-0 mt-3 text-[12px] font-medium text-red-text" role="alert">
+            {confirmationError}
+          </p>
+        )
       ) : null}
     </Modal>
   );

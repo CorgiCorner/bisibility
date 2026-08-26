@@ -54,7 +54,7 @@ export function ParsedRowsPreview({
     <div className="mt-4">
       <section
         aria-label="Imported rows preview"
-        className="max-h-[456px] overflow-auto rounded-xl border border-border"
+        className="max-h-[456px] overflow-auto rounded-card border border-border"
         onScroll={(event) => setScrollTop(event.currentTarget.scrollTop)}
       >
         <table className="w-full min-w-[1100px] border-collapse text-left text-[12px]">

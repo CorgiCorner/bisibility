@@ -3,7 +3,7 @@ import { KeyIcon as Key } from "@phosphor-icons/react/dist/ssr";
 
 export function IntegrationsByoNote() {
   return (
-    <Card className="flex items-start gap-[11px] rounded-xl px-4 py-3.5" size="md">
+    <Card className="flex items-start gap-[11px] rounded-card px-4 py-3.5" size="md">
       <span className="flex h-5 shrink-0 items-center">
         <Key aria-hidden className="text-accent-solid" size={17} weight="fill" />
       </span>

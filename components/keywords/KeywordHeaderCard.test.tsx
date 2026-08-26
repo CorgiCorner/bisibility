@@ -34,7 +34,9 @@ vi.mock("./KeywordIndexStatus", () => ({
   KeywordIndexStatus: () => <p>Index status</p>,
 }));
 vi.mock("./KeywordMarketsDrawer", () => ({
-  KeywordMarketsDrawer: () => <p>Markets and devices drawer</p>,
+  KeywordMarketsDrawer: ({ open }: { open: boolean }) => (
+    <p data-open={open ? "true" : "false"}>Markets and devices drawer</p>
+  ),
 }));
 vi.mock("@/components/keywords/add/AddKeywordDrawer", () => ({
   AddKeywordDrawer: ({
@@ -163,8 +165,10 @@ describe("KeywordHeaderCard", () => {
     expect(await screen.findByText("Check started (Top 100)")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Export" }));
     expect(mocks.exportHistoryCsv).toHaveBeenCalledWith(keyword);
+    const drawer = screen.getByText("Markets and devices drawer");
+    expect(drawer).toHaveAttribute("data-open", "false");
     fireEvent.click(screen.getByRole("button", { name: "Edit" }));
-    expect(screen.getByText("Markets and devices drawer")).toBeInTheDocument();
+    expect(drawer).toHaveAttribute("data-open", "true");
     expect(screen.queryByText(/Edit drawer/)).not.toBeInTheDocument();
     expect(actions.runCheckNowAction).toHaveBeenCalledWith({
       depth: 100,
@@ -212,7 +216,7 @@ describe("KeywordHeaderCard", () => {
     renderCard();
 
     expect(screen.queryByTestId("dimension-engine")).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Open live search results" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "View SERP" })).toHaveAttribute(
       "href",
       expect.stringContaining("gl=us&hl=en"),
     );
@@ -261,8 +265,10 @@ describe("KeywordHeaderCard", () => {
       },
       updateKeywordScheduleAction: undefined,
     });
+    const drawer = screen.getByText("Markets and devices drawer");
+    expect(drawer).toHaveAttribute("data-open", "false");
     fireEvent.click(screen.getByRole("button", { name: "Edit" }));
-    expect(screen.getByText("Markets and devices drawer")).toBeInTheDocument();
+    expect(drawer).toHaveAttribute("data-open", "true");
     expect(screen.queryByText(/Schedule/)).not.toBeInTheDocument();
   });
 });

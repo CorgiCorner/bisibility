@@ -17,7 +17,7 @@ const footer = (
       Cancel
     </button>
     <button
-      className="rounded-[9px] bg-accent-solid px-4.5 py-[11px] text-[13.5px] font-semibold text-accent-on-solid"
+      className="rounded-control bg-accent-solid px-4.5 py-[11px] text-[13.5px] font-semibold text-accent-on-solid"
       type="button"
     >
       Export CSV
@@ -36,7 +36,7 @@ export const Open: Story = {
           <div className="mt-[9px] flex flex-col gap-[7px]">
             {["CSV", "JSON", "Google Sheet"].map((format) => (
               <button
-                className="flex items-center gap-3 rounded-[11px] border border-border bg-bg-elev px-[13px] py-[11px] text-left text-[13.5px] font-semibold text-fg"
+                className="flex items-center gap-3 rounded-control border border-border bg-bg-elev px-[13px] py-[11px] text-left text-[13.5px] font-semibold text-fg"
                 key={format}
                 type="button"
               >
@@ -45,7 +45,7 @@ export const Open: Story = {
             ))}
           </div>
         </div>
-        <div className="rounded-[10px] border border-border bg-bg px-[13px] py-[11px] text-[11.5px] leading-[1.45] text-fg-muted">
+        <div className="rounded-control border border-border bg-bg px-[13px] py-[11px] text-[11.5px] leading-[1.45] text-fg-muted">
           Exports honor the current filters and saved view.
         </div>
       </div>

@@ -1,7 +1,8 @@
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
-import { createProviderUsage } from "@/lib/provider-usage/tag";
+import { ProviderAllocationExhaustedError } from "@/lib/provider-usage/enforcement";
+import { createProviderRequestAttribution } from "@/lib/provider-usage/tag";
 import { resolveProviderCredentials } from "@/lib/providers/credentials";
 import { consumeProviderLimit, writeCooldown } from "@/lib/providers/rate-limit";
 import { DataForSeoError } from "@/lib/providers/serp/dataforseo-errors";
@@ -13,6 +14,7 @@ import type { SerpDevice } from "@/lib/providers/types";
 import { trackedProjectDomain } from "@/lib/schemas/project";
 import { serpRankLocation } from "@/lib/serp/location";
 import { resolveSerpDepth, resolveSerpStopOnMatch } from "@/lib/serp/markets";
+import { assertQueuedRankCheckBatchAllocation } from "./allocation-enforcement";
 import { queuedRankCheckConfig } from "./queued-config";
 import { deferQueuedRankCheckBatch } from "./queued-lifecycle";
 import { queuedRankCheckModeAuthorization } from "./queued-mode";
@@ -59,6 +61,20 @@ async function claimSubmission(batchId: string) {
     });
     if (batch.state === "submitting") return { batch, claimed: false };
     if (batch.state !== "prepared") return { batch, claimed: false };
+    const connection = batch.connection;
+    if (connection) {
+      await assertQueuedRankCheckBatchAllocation(
+        {
+          connection,
+          priority: batch.priority === "normal" ? "normal" : "high",
+          projectId: batch.projectId,
+          tasks: batch.tasks.map((task) => ({
+            depth: resolveSerpDepth(task.rankCheck.requestedDepth ?? undefined),
+          })),
+        },
+        tx,
+      );
+    }
     const claimed = await tx.queuedRankCheckBatch.updateMany({
       data: { state: "submitting" },
       where: { id: batchId, state: "prepared" },
@@ -74,24 +90,26 @@ async function claimSubmission(batchId: string) {
 
 async function providerTasks(batch: Awaited<ReturnType<typeof claimSubmission>>["batch"]) {
   return Promise.all(
-    batch.tasks.map(async (task) => ({
-      correlationId: task.id,
-      depth: resolveSerpDepth(task.rankCheck.requestedDepth ?? undefined),
-      device: task.keyword.device as SerpDevice,
-      domain: trackedProjectDomain(batch.project.domain) ?? "",
-      keyword: task.keyword.text,
-      location: serpRankLocation(task.keyword.locationRef),
-      stopOnMatch: resolveSerpStopOnMatch(batch.project.defaults?.serpStopOnMatch),
-      tag: (
-        await createProviderUsage({
-          correlationId: task.id,
-          feature: "rank_check",
-          projectId: batch.projectId,
-          source: "worker",
-          trigger: "scheduled",
-        })
-      ).tag,
-    })),
+    batch.tasks.map(async (task) => {
+      const attribution = await createProviderRequestAttribution({
+        correlationId: task.id,
+        feature: "rank_check",
+        projectId: batch.projectId,
+        source: "worker",
+        trigger: "scheduled",
+      });
+      return {
+        correlationId: task.id,
+        depth: resolveSerpDepth(task.rankCheck.requestedDepth ?? undefined),
+        device: task.keyword.device as SerpDevice,
+        domain: trackedProjectDomain(batch.project.domain) ?? "",
+        keyword: task.keyword.text,
+        location: serpRankLocation(task.keyword.locationRef),
+        stopOnMatch: resolveSerpStopOnMatch(batch.project.defaults?.serpStopOnMatch),
+        attribution,
+        tag: attribution.tag,
+      };
+    }),
   );
 }
 
@@ -128,7 +146,17 @@ export async function submitQueuedRankCheckBatch(batchId: string) {
     );
     return { state: progress.state };
   }
-  const claimed = await claimSubmission(batchId);
+  let claimed: Awaited<ReturnType<typeof claimSubmission>>;
+  try {
+    claimed = await claimSubmission(batchId);
+  } catch (error) {
+    if (!(error instanceof ProviderAllocationExhaustedError)) throw error;
+    const progress = await deferQueuedRankCheckBatch(
+      batchId,
+      "Queued provider allocation reached; deferring this batch.",
+    );
+    return { state: progress.state };
+  }
   if (TERMINAL_STATES.has(claimed.batch.state)) return { state: claimed.batch.state };
   if (!claimed.claimed) {
     return claimed.batch.state === "submitting"

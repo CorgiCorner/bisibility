@@ -55,7 +55,7 @@ describe("OnboardingStepper", () => {
     expect(nextSteps).toHaveLength(2);
     for (const nextStep of nextSteps) {
       expect(nextStep).toHaveClass("border-border", "bg-transparent");
-      expect(nextStep).not.toHaveClass("border-border-strong");
+      expect(nextStep).not.toHaveClass("border-border-control");
       expect(nextStep).not.toHaveClass("bg-bg-sunken");
     }
     const currentRailItem = rail.querySelector('[aria-current="step"]');

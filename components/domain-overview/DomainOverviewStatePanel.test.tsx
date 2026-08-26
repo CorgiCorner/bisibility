@@ -32,13 +32,13 @@ describe("DomainOverviewStatePanel", () => {
       <DomainOverviewStatePanel projectRef="prj_1" state="no_provider" />,
     );
     const connect = screen.getByRole("link", { name: "Connect DataForSEO" });
-    expect(connect).toHaveClass("bg-accent-solid", "rounded-[10px]");
+    expect(connect).toHaveClass("bg-accent-solid", "rounded-control");
     expect(connect.querySelector("svg")).not.toBeNull();
     expect(document.querySelector('[data-icon="puzzle-piece"]')).not.toBeNull();
 
     rerender(<DomainOverviewStatePanel projectRef="prj_1" state="needs_reauth" />);
     const reconnect = screen.getByRole("link", { name: "Reconnect DataForSEO" });
-    expect(reconnect).toHaveClass("bg-accent-solid", "rounded-[10px]");
+    expect(reconnect).toHaveClass("bg-accent-solid", "rounded-control");
     expect(reconnect.querySelector("svg")).not.toBeNull();
   });
 

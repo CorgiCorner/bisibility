@@ -43,7 +43,7 @@ const expiryOptions = [
   { days: 365, label: "1 year" },
   { days: null, label: "No expiry" },
 ] as const;
-const inputClass = `${inputClassName} mt-[7px] min-h-11 w-full rounded-[9px] px-[13px] font-mono text-[13.5px] font-medium`;
+const inputClass = `${inputClassName} mt-[7px] min-h-11 w-full rounded-control px-[13px] font-mono text-[13.5px] font-medium`;
 const labelClass = "font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted";
 export function PersonalTokensSection({
   dateFormat,
@@ -118,13 +118,13 @@ export function PersonalTokensSection({
       title="Personal access tokens"
     >
       {tokens.length > 0 ? (
-        <div className="divide-y divide-border-soft rounded-[10px] border border-border bg-bg-elev">
+        <div className="divide-y divide-border-soft rounded-control border border-border bg-bg-elev">
           {tokens.map((token) => (
             <div className="flex items-center gap-3 p-3" key={token.id}>
               <span className="min-w-0 flex-1">
                 <span className="block text-[13px] font-semibold">
                   {token.name}
-                  <span className="ml-2 rounded-[7px] border border-border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
+                  <span className="ml-2 rounded-control border border-border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
                     {apiKeyScopeLabel(token.scope)}
                   </span>
                 </span>
@@ -137,7 +137,7 @@ export function PersonalTokensSection({
               </span>
               <button
                 aria-label={`Revoke ${token.name} token`}
-                className="grid h-[30px] w-[30px] flex-none place-items-center rounded-lg border border-border-strong bg-bg-elev text-red-text hover:border-red disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted"
+                className="grid h-[30px] w-[30px] flex-none place-items-center rounded-control border border-border-control bg-bg-elev text-red-text hover:border-red disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted"
                 disabled={isPending}
                 onClick={() => setRevokeTarget(token)}
                 type="button"
@@ -148,8 +148,8 @@ export function PersonalTokensSection({
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center rounded-[14px] border border-border bg-bg-elev px-6 py-8 text-center">
-          <span className="grid h-12 w-12 place-items-center rounded-[13px] bg-bg-sunken text-fg-muted">
+        <div className="flex flex-col items-center rounded-card border border-border bg-bg-elev px-6 py-8 text-center">
+          <span className="grid h-12 w-12 place-items-center rounded-card bg-bg-sunken text-fg-muted">
             <UserGear aria-hidden size={23} />
           </span>
           <div className="mt-3 text-[14.5px] font-semibold">No personal tokens yet</div>
@@ -238,8 +238,10 @@ export function PersonalTokensSection({
                   return (
                     <label
                       className={cn(
-                        "flex cursor-pointer items-center gap-3 rounded-[11px] border-[1.5px] px-[13px] py-[11px]",
-                        active ? "border-accent bg-accent-soft" : "border-border-strong bg-bg-elev",
+                        "flex cursor-pointer items-center gap-3 rounded-control border-[1.5px] px-[13px] py-[11px]",
+                        active
+                          ? "border-accent bg-accent-soft"
+                          : "border-border-control bg-bg-elev",
                       )}
                       key={option.value}
                     >
@@ -262,7 +264,7 @@ export function PersonalTokensSection({
                       <span
                         className={cn(
                           "grid h-[18px] w-[18px] flex-none place-items-center rounded-full border-[1.5px]",
-                          active ? "border-accent" : "border-border-strong",
+                          active ? "border-accent" : "border-border",
                         )}
                       >
                         <span

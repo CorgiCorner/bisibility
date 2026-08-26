@@ -150,7 +150,7 @@ export function SetupWizard({ mailerConfigured }: Readonly<{ mailerConfigured: b
               <input
                 aria-invalid={Boolean(errors.name)}
                 autoComplete="name"
-                className="min-h-11 rounded-[10px] border border-border-strong bg-transparent px-3.5 font-sans text-[14.5px] font-normal normal-case tracking-normal text-fg outline-none focus:border-accent"
+                className="min-h-11 rounded-control border border-border-control bg-transparent px-3.5 font-sans text-[14.5px] font-normal normal-case tracking-normal text-fg outline-none focus:border-accent"
                 {...form.register("name")}
               />
             </label>
@@ -162,7 +162,7 @@ export function SetupWizard({ mailerConfigured }: Readonly<{ mailerConfigured: b
               <input
                 aria-invalid={Boolean(errors.email)}
                 autoComplete="email"
-                className="min-h-11 rounded-[10px] border border-border-strong bg-transparent px-3.5 font-sans text-[14.5px] font-normal normal-case tracking-normal text-fg outline-none focus:border-accent"
+                className="min-h-11 rounded-control border border-border-control bg-transparent px-3.5 font-sans text-[14.5px] font-normal normal-case tracking-normal text-fg outline-none focus:border-accent"
                 inputMode="email"
                 type="email"
                 {...form.register("email")}
@@ -205,7 +205,7 @@ export function SetupWizard({ mailerConfigured }: Readonly<{ mailerConfigured: b
             ) : null}
           </div>
           {!mailerConfigured ? (
-            <div className="flex flex-col gap-2.5 rounded-[11px] border border-[#ecd9b8] bg-[#f7ead8] p-[13px_15px]">
+            <div className="flex flex-col gap-2.5 rounded-control border border-[#ecd9b8] bg-[#f7ead8] p-[13px_15px]">
               <div className="flex items-start gap-2.5">
                 <TerminalWindow
                   aria-hidden
@@ -218,7 +218,7 @@ export function SetupWizard({ mailerConfigured }: Readonly<{ mailerConfigured: b
                   logs. Reading it there confirms you control this server.
                 </p>
               </div>
-              <code className="overflow-x-auto whitespace-nowrap rounded-lg bg-[#1a1813] p-2.5 font-mono text-[11.5px] text-[#e8e4d9]">
+              <code className="overflow-x-auto whitespace-nowrap rounded-control bg-[#1a1813] p-2.5 font-mono text-[11.5px] text-[#e8e4d9]">
                 [auth] setup code for {email}: ******
               </code>
             </div>

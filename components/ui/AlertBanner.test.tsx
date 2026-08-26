@@ -46,6 +46,36 @@ const BASE_PROPS = {
   title: "2 rank checks failed in the last 24 hours.",
 };
 
+describe("AlertBanner", () => {
+  it("has no implicit bottom border when rendered standalone", () => {
+    render(<AlertBanner {...BASE_PROPS} />);
+
+    expect(document.querySelector("output")).not.toHaveClass("border-b");
+  });
+
+  it("renders a semibold block title above block detail content", () => {
+    render(<AlertBanner {...BASE_PROPS} />);
+
+    const title = screen.getByText(BASE_PROPS.title);
+    const detail = screen.getByText(BASE_PROPS.detail);
+    expect(title.tagName).toBe("STRONG");
+    expect(title).toHaveClass("block", "font-semibold");
+    expect(detail.tagName).toBe("SPAN");
+    expect(detail).toHaveClass("block");
+    expect(title.compareDocumentPosition(detail)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
+  it("keeps title-only alerts compact", () => {
+    const { container } = render(<AlertBanner tint="red" title="Rank checks failed." />);
+
+    const title = screen.getByText("Rank checks failed.");
+    expect(title.tagName).toBe("STRONG");
+    expect(title).toHaveClass("font-semibold");
+    expect(title).not.toHaveClass("block");
+    expect(container.querySelector("strong + span")).toBeNull();
+  });
+});
+
 describe("AlertBanner dismiss", () => {
   beforeEach(() => {
     setReducedMotion(false);
@@ -63,6 +93,13 @@ describe("AlertBanner dismiss", () => {
     const button = dismissButton();
     expect(button.className).toContain("hover:bg-[var(--alert-dismiss-hover)]");
     expect(button.className).toContain("focus-visible:bg-[var(--alert-dismiss-hover)]");
+  });
+
+  it("uses the normal neutral border for actions", () => {
+    render(<AlertBanner {...BASE_PROPS} action={{ label: "Retry", onClick: vi.fn() }} />);
+    const action = screen.getByRole("button", { name: "Retry" });
+    expect(action).toHaveClass("border-border-strong");
+    expect(action.style.borderColor).toBe("");
   });
 
   it("does not mutate inline style on mouse enter/leave", () => {

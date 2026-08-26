@@ -13,7 +13,6 @@ import type { FirstCheckRunPlan } from "@/lib/actions/rank-check-preview";
 import { isBudgetExhaustedResult } from "@/lib/rank-check/budget-contract";
 import { asProjectRef, type ProjectRef } from "@/lib/routing/app-path";
 import { actionErrorMessage } from "@/lib/ui/action-error";
-import { ArrowsClockwiseIcon as ArrowsClockwise } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
@@ -100,13 +99,7 @@ export function FirstCheckBannerAction({
     <>
       <div className="flex shrink-0 flex-col items-start gap-1.5 sm:items-end">
         <ProjectReadOnlyTooltip>
-          <Button
-            disabled={readOnly}
-            onClick={openModal}
-            size="sm"
-            startIcon={<ArrowsClockwise aria-hidden size={14} weight="bold" />}
-            type="button"
-          >
+          <Button disabled={readOnly} onClick={openModal} size="sm" type="button">
             Run first check
           </Button>
         </ProjectReadOnlyTooltip>

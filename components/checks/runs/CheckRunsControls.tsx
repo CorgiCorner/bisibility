@@ -160,10 +160,10 @@ export function CheckRunStats({ counts, filter, onFilterChange }: Readonly<Filte
           <button
             aria-label={`Filter by ${tile.label} - ${counts[tile.count].toLocaleString("en-US")}`}
             aria-pressed={active}
-            className={`min-w-0 rounded-xl border px-3 py-3 text-left transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-solid ${
+            className={`min-w-0 rounded-card border px-3 py-3 text-left transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-solid ${
               active
                 ? "border-accent bg-accent-soft"
-                : "border-border bg-bg-elev hover:border-border-strong hover:bg-bg-sunken"
+                : "border-border-control bg-bg-elev hover:border-border-control hover:bg-bg-sunken"
             }`}
             key={tile.filter}
             onClick={() => onFilterChange(tile.filter)}
@@ -221,7 +221,7 @@ export function CheckRunFilters({ counts, filter, onFilterChange }: Readonly<Fil
         return (
           <button
             aria-pressed={selected}
-            className={`inline-flex min-h-8 items-center gap-1.5 rounded-lg border px-2.5 text-[11.5px] font-semibold outline-none transition-colors ${filterChipStateClassName(
+            className={`inline-flex min-h-8 items-center gap-1.5 rounded-control border px-2.5 text-[11.5px] font-semibold outline-none transition-colors ${filterChipStateClassName(
               selected,
             )}`}
             key={item.id}

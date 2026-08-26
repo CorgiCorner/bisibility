@@ -36,7 +36,7 @@ export function SidebarNav({
           aria-current={active ? "page" : undefined}
           aria-label={collapsed ? item.label : undefined}
           className={[
-            "relative flex items-center rounded-[9px] text-[13.5px] font-medium transition-colors duration-150",
+            "relative flex items-center rounded-control text-[13.5px] font-medium transition-colors duration-150",
             // Inset ring: full-bleed rows in a narrow column clip an outset one.
             "focus-visible:-outline-offset-2",
             // Height lives in the branches, not the base: two competing h-* utilities resolve by
@@ -44,7 +44,7 @@ export function SidebarNav({
             // and gives that back as padding, so the icon axis stays at 40px (see Sidebar.tsx).
             collapsed
               ? "ml-5.5 h-9 w-9 justify-center p-0"
-              : "ml-2.5 h-9 gap-2.5 pr-[11px] pl-[1px]",
+              : "ml-2.5 h-9 w-full gap-2.5 pr-[11px] pl-[1px]",
             // No fill on the current page: the row surface belongs to hover, the page
             // marker is the leading dot + filled glyph + 600 label (see Sidebar.tsx).
             active ? "font-semibold text-fg" : "text-fg-muted hover:text-fg",
@@ -82,7 +82,7 @@ export function SidebarNav({
             <>
               <span className="min-w-0 flex-1 truncate">{item.label}</span>
               {item.badge ? (
-                <span className="rounded-full border border-border-strong bg-bg-elev px-[7px] py-0.5 font-mono text-[9px] uppercase tracking-[0.6px] text-fg-muted">
+                <span className="rounded-full border border-border bg-bg-elev px-[7px] py-0.5 font-mono text-[9px] uppercase tracking-[0.6px] text-fg-muted">
                   {item.badge}
                 </span>
               ) : null}

@@ -15,7 +15,7 @@ type ProviderCardProps = {
 
 function stateClass(selected: boolean) {
   if (selected) return "border-accent bg-transparent";
-  return "border-border-strong bg-transparent";
+  return "border-border bg-transparent";
 }
 
 function stateText(state: ProviderCardState) {
@@ -42,13 +42,13 @@ export function ProviderCard({
 }: Readonly<ProviderCardProps>) {
   return (
     <section
-      className={`relative flex h-full flex-col rounded-[14px] border p-4 transition-colors ${stateClass(selected)}`}
+      className={`relative flex h-full flex-col rounded-card border p-4 transition-colors ${stateClass(selected)}`}
     >
       <input
         aria-checked={selected}
         aria-label={provider.label}
         checked={selected}
-        className="absolute inset-0 z-0 m-0 size-full cursor-pointer appearance-none rounded-[14px] border-0 bg-transparent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid"
+        className="absolute inset-0 z-0 m-0 size-full cursor-pointer appearance-none rounded-card border-0 bg-transparent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid"
         name="onboarding-serp-provider"
         onChange={() => onSelect(provider.value)}
         type="radio"

@@ -11,7 +11,7 @@ describe("Avatar", () => {
     render(
       <Avatar
         alt=""
-        className="h-8 w-8 rounded-lg"
+        className="h-8 w-8 rounded-control"
         initials="JD"
         src="https://example.com/avatar.png"
       />,
@@ -21,20 +21,20 @@ describe("Avatar", () => {
   });
 
   it("renders initials when src is null", () => {
-    render(<Avatar alt="" className="h-8 w-8 rounded-lg" initials="JD" src={null} />);
+    render(<Avatar alt="" className="h-8 w-8 rounded-control" initials="JD" src={null} />);
 
     expect(screen.getByText("JD")).toBeInTheDocument();
     expect(queryImg()).toBeNull();
   });
 
   it("renders initials when src is empty", () => {
-    render(<Avatar alt="" className="h-8 w-8 rounded-lg" initials="JD" src="" />);
+    render(<Avatar alt="" className="h-8 w-8 rounded-control" initials="JD" src="" />);
 
     expect(screen.getByText("JD")).toBeInTheDocument();
   });
 
   it("renders initials when src is undefined", () => {
-    render(<Avatar alt="" className="h-8 w-8 rounded-lg" initials="JD" />);
+    render(<Avatar alt="" className="h-8 w-8 rounded-control" initials="JD" />);
 
     expect(screen.getByText("JD")).toBeInTheDocument();
   });
@@ -43,7 +43,7 @@ describe("Avatar", () => {
     render(
       <Avatar
         alt=""
-        className="h-8 w-8 rounded-lg"
+        className="h-8 w-8 rounded-control"
         initials="JD"
         src="https://example.com/missing.png"
       />,
@@ -63,7 +63,7 @@ describe("Avatar", () => {
     const { rerender } = render(
       <Avatar
         alt=""
-        className="h-8 w-8 rounded-lg"
+        className="h-8 w-8 rounded-control"
         initials="JD"
         src="https://example.com/missing.png"
       />,
@@ -81,7 +81,7 @@ describe("Avatar", () => {
     rerender(
       <Avatar
         alt=""
-        className="h-8 w-8 rounded-lg"
+        className="h-8 w-8 rounded-control"
         initials="JD"
         src="https://example.com/valid.png"
       />,
@@ -95,26 +95,31 @@ describe("Avatar", () => {
     const { rerender } = render(
       <Avatar
         alt=""
-        className="h-8 w-8 rounded-lg bg-accent-solid"
+        className="h-8 w-8 rounded-control bg-accent-solid"
         initials="JD"
         src="https://example.com/a.png"
       />,
     );
 
-    expect(queryImg()).toHaveClass("h-8", "w-8", "rounded-lg", "bg-accent-solid");
+    expect(queryImg()).toHaveClass("h-8", "w-8", "rounded-control", "bg-accent-solid");
 
     rerender(
-      <Avatar alt="" className="h-8 w-8 rounded-lg bg-accent-solid" initials="JD" src={null} />,
+      <Avatar
+        alt=""
+        className="h-8 w-8 rounded-control bg-accent-solid"
+        initials="JD"
+        src={null}
+      />,
     );
 
-    expect(screen.getByText("JD")).toHaveClass("h-8", "w-8", "rounded-lg", "bg-accent-solid");
+    expect(screen.getByText("JD")).toHaveClass("h-8", "w-8", "rounded-control", "bg-accent-solid");
   });
 
   it("adds object-cover to the image element", () => {
     render(
       <Avatar
         alt=""
-        className="h-8 w-8 rounded-lg"
+        className="h-8 w-8 rounded-control"
         initials="JD"
         src="https://example.com/a.png"
       />,

@@ -95,13 +95,13 @@ export function Modal({
       slotProps={{
         backdrop: { sx: { backgroundColor: "rgba(20,16,8,.44)" } },
         paper: {
-          className: "rounded-card-lg",
+          className: "rounded-card",
           elevation: 0,
           onKeyDown: handleKeyDown,
           sx: {
-            "&.rounded-card-lg": { borderRadius: UI_RADIUS_ROLES["card-lg"] },
+            "&.rounded-card": { borderRadius: UI_RADIUS_ROLES.card },
             backgroundColor: "var(--bg-elev)",
-            border: "1px solid var(--border-strong)",
+            border: "1px solid var(--border)",
             boxShadow: "none",
             color: "var(--fg)",
             margin: "24px",
@@ -139,7 +139,7 @@ export function Modal({
             {showClose ? (
               <button
                 aria-label="Close modal"
-                className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-lg text-fg-muted outline-none transition-[color,background-color,transform] duration-[var(--motion-press)] hover:bg-bg-sunken focus-visible:bg-bg-sunken motion-safe:active:not-focus-visible:scale-[0.97]"
+                className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-control text-fg-muted outline-none transition-[color,background-color,transform] duration-[var(--motion-press)] hover:bg-bg-sunken focus-visible:bg-bg-sunken motion-safe:active:not-focus-visible:scale-[0.97]"
                 onClick={onClose}
                 type="button"
               >

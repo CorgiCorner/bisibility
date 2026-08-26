@@ -107,6 +107,18 @@ describe("login page runtime rendering", () => {
     expect(dynamic).toBe("force-dynamic");
   });
 
+  it("uses the dark code-surface hairline for the loaded terminal chrome", async () => {
+    const { html } = await renderLoginPage({});
+    const terminalStart = html.indexOf('class="mt-[26px]');
+    const terminalEnd = html.indexOf("</pre>", terminalStart);
+    const terminalHtml = html.slice(terminalStart, terminalEnd);
+
+    expect(terminalHtml).toContain("border border-code-border");
+    expect(terminalHtml).toContain("border-code-border border-b bg-code-bg");
+    expect(terminalHtml).not.toContain("border border-border");
+    expect(terminalHtml).not.toContain("border-code-faint");
+  });
+
   it("summarizes Compose progress around the app and scheduled worker", async () => {
     const { html } = await renderLoginPage({});
 

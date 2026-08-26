@@ -27,8 +27,8 @@ import type {
 } from "@/lib/saved-views/model";
 import {
   CaretRightIcon as CaretRight,
-  ExportIcon as Export,
   FunnelSimpleIcon as FunnelSimple,
+  UploadSimpleIcon as UploadSimple,
   UsersThreeIcon as UsersThree,
 } from "@phosphor-icons/react";
 import Link from "next/link";
@@ -116,7 +116,7 @@ export function CompetitorsWorkspace({
       <EmptyState
         action={
           <Link
-            className="inline-flex min-h-10 items-center gap-2 rounded-[10px] border border-border-strong bg-bg-elev px-4.5 text-[13.5px] font-semibold text-fg hover:border-accent hover:text-accent-text"
+            className="inline-flex min-h-10 items-center gap-2 rounded-control border border-border-control bg-bg-elev px-4.5 text-[13.5px] font-semibold text-fg hover:border-accent hover:text-accent-text"
             href={appPath(projectRef, "rank-tracker")}
           >
             Add keywords first
@@ -226,7 +226,7 @@ export function CompetitorsWorkspace({
           <Button
             onClick={() => downloadCompetitorMarketCsv(market)}
             size="sm"
-            startIcon={<Export aria-hidden size={13} />}
+            startIcon={<UploadSimple aria-hidden size={13} />}
             variant="secondary"
           >
             Export

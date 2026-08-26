@@ -67,7 +67,7 @@ export function UpcomingDayRollups({
         <div className="grid grid-cols-2 gap-2">
           {days.map((day) => (
             <article
-              className="flex min-w-0 items-center gap-3 rounded-xl border border-border bg-bg-elev px-3.5 py-3"
+              className="flex min-w-0 items-center gap-3 rounded-card border border-border bg-bg-elev px-3.5 py-3"
               key={day.key}
             >
               <DaySummary day={day} />
@@ -89,7 +89,7 @@ export function UpcomingDayRollups({
         const detailsId = `upcoming-day-${day.key}`;
         return (
           <article
-            className="overflow-hidden rounded-xl border border-border bg-bg-elev"
+            className="overflow-hidden rounded-card border border-border bg-bg-elev"
             key={day.key}
           >
             <button

@@ -30,7 +30,7 @@ export const savedViewFiltersSchema = z.preprocess(
       change: z.enum(["any", "up", "down", "new", "lost"]).default("any"),
       contains: z.string().trim().max(80).default(""),
       intents: z.array(z.string().trim().min(1).max(80)).max(20).default([]),
-      lastCheck: z.enum(["any", "completed", "failed", "running"]).default("any"),
+      lastCheck: z.enum(["any", "completed", "failed", "not_checked", "running"]).default("any"),
       position: z
         .array(z.enum(["top3", "top10", "11-50", "51-100"]))
         .max(4)

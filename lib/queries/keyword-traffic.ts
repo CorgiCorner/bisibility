@@ -82,12 +82,13 @@ function selectNewestQuerySnapshot<T extends KeywordTrafficSnapshotRow>(
   return selected ?? null;
 }
 
-export async function fetchProjectKeywordTraffic(projectId: string) {
+export async function fetchProjectKeywordTraffic(projectId: string, keywordIds?: string[]) {
   const latest = await prisma.keywordTrafficSnapshot.aggregate({
     _max: { date: true },
     where: { keyword: { projectId } },
   });
-  if (!latest._max.date) return new Map<string, KeywordTrafficSummary>();
+  if (!latest._max.date || keywordIds?.length === 0)
+    return new Map<string, KeywordTrafficSummary>();
 
   // A seven-day window from the project maximum tolerates provider lag without
   // scanning full retention history for every grid render.
@@ -106,7 +107,11 @@ export async function fetchProjectKeywordTraffic(projectId: string) {
         position: true,
         provider: true,
       },
-      where: { date: { gte: cutoff }, keyword: { projectId } },
+      where: {
+        date: { gte: cutoff },
+        ...(keywordIds ? { keywordId: { in: keywordIds } } : {}),
+        keyword: { projectId },
+      },
     }),
     loadProviderContext(projectId),
   ]);

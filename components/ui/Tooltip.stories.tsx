@@ -17,7 +17,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const triggerClass = "rounded-lg border border-border px-3 py-2 text-sm";
+const triggerClass = "rounded-control border border-border px-3 py-2 text-sm";
 
 export const Default: Story = {
   args: {
@@ -61,7 +61,10 @@ export const OverflowHost: Story = {
     children: <span />,
   },
   render: () => (
-    <div className="overflow-hidden rounded-lg border border-border p-4" style={{ height: 60 }}>
+    <div
+      className="overflow-hidden rounded-control border border-border p-4"
+      style={{ height: 60 }}
+    >
       <Tooltip content="I escape the overflow-hidden container">
         <button className={triggerClass} type="button">
           Hover

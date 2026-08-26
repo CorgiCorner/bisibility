@@ -83,7 +83,7 @@ describe("CheckRunsSection", () => {
     for (const filterName of [/^Skipped28$/, /^Fallback19$/]) {
       const filter = screen.getByRole("button", { name: filterName });
 
-      expect(filter).toHaveClass("border-border-strong", "bg-bg-elev", "text-fg-muted");
+      expect(filter).toHaveClass("border-border-control", "bg-bg-elev", "text-fg-muted");
       expect(filter).not.toHaveClass("border-dashed");
     }
   });
@@ -114,6 +114,7 @@ describe("CheckRunsSection", () => {
     );
 
     expect(screen.getByText("2 providers")).toBeInTheDocument();
+    expect(screen.getByText("All providers failed")).toBeInTheDocument();
     expect(screen.getByText("Rate limited (429)")).toBeInTheDocument();
     expect(screen.getByText("Provider error (500)")).toBeInTheDocument();
     expect(screen.getByLabelText("Not billed - no attempt completed")).toBeInTheDocument();
@@ -125,6 +126,7 @@ describe("CheckRunsSection", () => {
       <CheckRunsSection
         {...props({
           filter: "failed",
+          initialExpandedRunIds: ["run_failed"],
           view: {
             ...failed,
             rows: failed.rows.map((run) => ({ ...run, error: "stale running check" })),
@@ -133,7 +135,7 @@ describe("CheckRunsSection", () => {
       />,
     );
 
-    expect(screen.getByText("Timed out after 15 min")).toBeInTheDocument();
+    expect(screen.getByText(/Timed out after 15 min/)).toBeInTheDocument();
     expect(screen.queryByText(/stale/i)).not.toBeInTheDocument();
   });
 

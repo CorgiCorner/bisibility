@@ -95,11 +95,11 @@ describe("PositionHistoryCard", () => {
     );
 
     expect(screen.getByText("Current #3 | Next check Paused")).toBeInTheDocument();
-    expect(screen.getByLabelText("Single rank check point")).toHaveClass("top-[36.8%]");
-    expect(screen.getByTestId("line-chart")).toHaveAttribute("data-positions", "[]");
-    expect(screen.getByLabelText("Single rank check point").nextElementSibling).toHaveClass(
-      "left-[12.33%]",
-    );
+    expect(screen.queryByLabelText("Single rank check point")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("line-chart")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("region", { name: /not enough history to chart yet/i }),
+    ).toBeInTheDocument();
   });
 
   it("formats the latest check date in the project timezone", () => {
@@ -169,10 +169,14 @@ describe("PositionHistoryCard", () => {
       />,
     );
 
-    expect(screen.getByTestId("line-chart")).toHaveAttribute("data-positions", "[]");
+    expect(screen.queryByTestId("line-chart")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Single rank check point")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("region", { name: /no checks in the last 30 days/i }),
+    ).toBeInTheDocument();
     expect(screen.queryByText("No checks in this range")).not.toBeInTheDocument();
     expect(screen.getByText("No checks in the last 30 days.")).toBeInTheDocument();
-    expect(screen.getByText("Latest #6 | Next check Paused")).toBeInTheDocument();
+    expect(screen.getByText("Current #6 | Next check Paused")).toBeInTheDocument();
     expect(screen.queryByText("One check so far.", { exact: false })).not.toBeInTheDocument();
   });
 

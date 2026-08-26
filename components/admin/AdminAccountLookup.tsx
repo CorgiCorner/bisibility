@@ -36,7 +36,7 @@ const money = new Intl.NumberFormat("en-US", { currency: "USD", style: "currency
 
 function MetadataTile({ label, value }: Readonly<{ label: string; value: React.ReactNode }>) {
   return (
-    <div className="flex min-w-0 flex-col rounded-xl border border-border-soft bg-bg-elev px-3 py-2.5">
+    <div className="flex min-w-0 flex-col rounded-card border border-border-soft bg-bg-elev px-3 py-2.5">
       <div className="font-mono text-[9.5px] uppercase tracking-[0.4px] text-fg-muted">{label}</div>
       <div className="mt-auto pt-1 text-[13px] font-semibold text-fg">{value}</div>
     </div>
@@ -51,10 +51,10 @@ function AccountMetadata({
   onStatusChange: (status: FoundAccount["status"]) => void;
 }>) {
   return (
-    <div className="mt-4 rounded-[13px] border border-border bg-bg-sunken px-4 py-4">
+    <div className="mt-4 rounded-card border border-border bg-bg-sunken px-4 py-4">
       <div className="flex flex-wrap items-center gap-2.5">
         <span className="font-mono text-[12.5px] font-bold">{account.id}</span>
-        <span aria-hidden className="h-3 w-px bg-border-strong" />
+        <span aria-hidden className="h-3 w-px bg-border" />
         <span className="font-mono text-[11.5px] text-fg-muted">{account.email}</span>
         <span className="inline-flex rounded-full bg-green/10 px-2.5 py-1 font-mono text-[10px] font-bold uppercase text-green-text">
           {account.status}
@@ -109,7 +109,7 @@ function LookupOutcome({
 
   if (result.status === "not_found") {
     return (
-      <div className="mt-4 flex items-center gap-2.5 rounded-[13px] border border-border-strong border-dashed bg-bg-sunken px-4 py-3.5">
+      <div className="mt-4 flex items-center gap-2.5 rounded-card border border-border border-dashed bg-bg-sunken px-4 py-3.5">
         <User aria-hidden className="text-fg-muted" size={16} />
         <span className="text-[12.5px] text-fg-muted">No account matches this identifier.</span>
       </div>
@@ -171,7 +171,7 @@ export function AdminAccountLookup() {
           Exact email or user ID
         </label>
         <div className="mt-1.5 flex flex-wrap items-start gap-2.5">
-          <span className="flex min-h-10 min-w-[240px] max-w-[420px] flex-1 items-center gap-2 rounded-[10px] border border-border-strong bg-transparent px-3 focus-within:border-accent">
+          <span className="flex min-h-10 min-w-[240px] max-w-[420px] flex-1 items-center gap-2 rounded-control border border-border-control bg-transparent px-3 focus-within:border-accent">
             <MagnifyingGlass aria-hidden className="shrink-0 text-fg-muted" size={14} />
             <input
               aria-invalid={errors.identifier ? "true" : undefined}

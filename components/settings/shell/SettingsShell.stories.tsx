@@ -106,10 +106,10 @@ export const FieldWidths: Story = {
   render: () => (
     <div className="space-y-4" data-settings-shell-story="field-widths">
       <h1 className="sr-only">Settings field widths</h1>
-      <SettingsField className="rounded-[9px] border border-border bg-bg-elev p-3" width="field">
+      <SettingsField className="rounded-control border border-border bg-bg-elev p-3" width="field">
         Field - 340px, every labelled input
       </SettingsField>
-      <SettingsField className="rounded-[9px] border border-border bg-bg-elev p-3" width="full">
+      <SettingsField className="rounded-control border border-border bg-bg-elev p-3" width="full">
         Full - 640px, a switch or a table that owns the card row
       </SettingsField>
     </div>

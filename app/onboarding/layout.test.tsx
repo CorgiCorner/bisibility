@@ -59,7 +59,7 @@ describe("onboarding setup-first gate", () => {
     expect(markup).toContain("flex min-h-dvh flex-col items-center bg-bg px-4 py-[46px] text-fg");
     expect(markup).not.toContain("pb-[120px]");
     expect(markup).toContain("w-full max-w-[940px] flex-1 flex-col");
-    expect(markup).toContain('aria-hidden="true" class="h-4 w-px bg-border-strong"');
+    expect(markup).toContain('aria-hidden="true" class="h-4 w-px bg-border"');
     expect(markup).not.toContain("·");
     expect(markup).toMatch(/admin@example\.com[\s\S]*Not you\?[\s\S]*data-testid="logout-button"/);
     expect(markup).toContain(

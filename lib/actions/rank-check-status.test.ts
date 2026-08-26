@@ -1,4 +1,4 @@
-import { getRankCheckStatus } from "@/lib/actions/rank-check-status";
+import { getRankCheckStatus, getRankCheckStatuses } from "@/lib/actions/rank-check-status";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const CHECK_PUBLIC_ID = "check_abcdefghijklmnopqrstuvwx";
@@ -19,7 +19,8 @@ const mocks = vi.hoisted(() => {
     authorize: vi.fn(),
     prisma: {
       keyword: { findFirst: vi.fn() },
-      rankCheck: { findUnique: vi.fn() },
+      project: { findFirst: vi.fn() },
+      rankCheck: { findMany: vi.fn(), findUnique: vi.fn() },
       user: { findUnique: vi.fn() },
     },
     requireSession: vi.fn(),
@@ -40,6 +41,16 @@ describe("getRankCheckStatus", () => {
     mocks.prisma.user.findUnique.mockResolvedValue({
       memberships: [{ projectId: "project_1", role: "admin" }],
       role: "member",
+    });
+    mocks.prisma.project.findFirst.mockResolvedValue({
+      domain: "example.com",
+      id: "project_1",
+      isSample: false,
+      ownerId: "user_1",
+      publicId: PROJECT_PUBLIC_ID,
+      writeMode: "active",
+      writeModeChangedAt: null,
+      writeModeChangedById: null,
     });
     mocks.prisma.keyword.findFirst.mockResolvedValue({
       id: "keyword_1",
@@ -174,5 +185,171 @@ describe("getRankCheckStatus", () => {
       requestedDepth: 50,
       status: "running",
     });
+  });
+});
+
+describe("getRankCheckStatuses", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.requireSession.mockResolvedValue({ user: { id: "user_1" } });
+    mocks.prisma.user.findUnique.mockResolvedValue({
+      memberships: [{ projectId: "project_1", role: "admin" }],
+      role: "member",
+    });
+    mocks.prisma.project.findFirst.mockResolvedValue({
+      id: "project_1",
+      publicId: PROJECT_PUBLIC_ID,
+      writeMode: "active",
+    });
+    mocks.authorize.mockReturnValue(undefined);
+  });
+
+  it("returns mixed running and terminal statuses through one project-scoped query", async () => {
+    mocks.prisma.rankCheck.findMany.mockResolvedValueOnce([
+      {
+        error: null,
+        errorCode: null,
+        finishedAt: null,
+        position: null,
+        publicId: CHECK_PUBLIC_ID,
+        requestedDepth: 100,
+        status: "running",
+      },
+      {
+        error: null,
+        errorCode: null,
+        finishedAt: new Date("2026-08-21T12:00:00.000Z"),
+        position: 4,
+        publicId: "check_zyxwvutsrqponmlkjihgfedc",
+        requestedDepth: 50,
+        status: "completed",
+      },
+    ]);
+
+    const result = await getRankCheckStatuses({
+      projectId: PROJECT_PUBLIC_ID,
+      rankCheckIds: [CHECK_PUBLIC_ID, "check_zyxwvutsrqponmlkjihgfedc"],
+    });
+
+    expect(result).toEqual([
+      expect.objectContaining({ rankCheckId: CHECK_PUBLIC_ID, status: "running" }),
+      expect.objectContaining({
+        rankCheckId: "check_zyxwvutsrqponmlkjihgfedc",
+        status: "completed",
+      }),
+    ]);
+    expect(mocks.prisma.rankCheck.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          keyword: { projectId: "project_1" },
+          publicId: { in: [CHECK_PUBLIC_ID, "check_zyxwvutsrqponmlkjihgfedc"] },
+        },
+      }),
+    );
+  });
+
+  it("returns terminal statuses for 100 ids through one project-scoped query", async () => {
+    const rankCheckIds = Array.from(
+      { length: 100 },
+      (_, index) => `check_a${index.toString(36).padStart(23, "a")}`,
+    );
+    mocks.prisma.rankCheck.findMany.mockImplementation(async ({ where }) =>
+      where.publicId.in.map((publicId: string) => ({
+        error: null,
+        errorCode: null,
+        finishedAt: new Date("2026-08-21T12:00:00.000Z"),
+        position: 1,
+        publicId,
+        requestedDepth: 100,
+        status: "completed",
+      })),
+    );
+    const result = await getRankCheckStatuses({ projectId: PROJECT_PUBLIC_ID, rankCheckIds });
+    expect(result).toHaveLength(100);
+    expect(mocks.prisma.rankCheck.findMany).toHaveBeenCalledOnce();
+    expect(mocks.authorize).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not query check ids when project authorization fails", async () => {
+    mocks.authorize.mockImplementationOnce(() => {
+      throw new mocks.AuthorizationError("forbidden");
+    });
+
+    await expect(
+      getRankCheckStatuses({ projectId: PROJECT_PUBLIC_ID, rankCheckIds: [CHECK_PUBLIC_ID] }),
+    ).rejects.toThrow();
+    expect(mocks.prisma.rankCheck.findMany).not.toHaveBeenCalled();
+  });
+  it("accepts and deduplicates exactly 100 ids", async () => {
+    const rankCheckIds = Array.from(
+      { length: 100 },
+      (_, index) => `check_${index.toString(36).padStart(24, "a")}`,
+    );
+    mocks.prisma.rankCheck.findMany.mockResolvedValueOnce([]);
+    await getRankCheckStatuses({
+      projectId: PROJECT_PUBLIC_ID,
+      rankCheckIds: [...rankCheckIds, rankCheckIds[0]].slice(0, 100),
+    });
+    expect(mocks.prisma.rankCheck.findMany).toHaveBeenCalledOnce();
+    expect(mocks.prisma.rankCheck.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { keyword: { projectId: "project_1" }, publicId: { in: expect.any(Array) } },
+      }),
+    );
+  });
+
+  it("rejects 101 ids neutrally before auth or database access", async () => {
+    const rankCheckIds = Array.from(
+      { length: 101 },
+      (_, index) => `check_${index.toString(36).padStart(24, "a")}`,
+    );
+    await expect(
+      getRankCheckStatuses({ projectId: PROJECT_PUBLIC_ID, rankCheckIds }),
+    ).rejects.toThrow("Rank checks not found.");
+    expect(mocks.requireSession).not.toHaveBeenCalled();
+    expect(mocks.prisma.project.findFirst).not.toHaveBeenCalled();
+    expect(mocks.prisma.rankCheck.findMany).not.toHaveBeenCalled();
+  });
+
+  it("rejects an invalid check id neutrally before auth or database access", async () => {
+    await expect(
+      getRankCheckStatuses({ projectId: PROJECT_PUBLIC_ID, rankCheckIds: [KEYWORD_PUBLIC_ID] }),
+    ).rejects.toThrow("Rank checks not found.");
+    expect(mocks.requireSession).not.toHaveBeenCalled();
+    expect(mocks.prisma.rankCheck.findMany).not.toHaveBeenCalled();
+  });
+
+  it("maps a malformed project id to the neutral response", async () => {
+    await expect(
+      getRankCheckStatuses({ projectId: "project_1", rankCheckIds: [CHECK_PUBLIC_ID] }),
+    ).rejects.toThrow("Rank checks not found.");
+    expect(mocks.prisma.rankCheck.findMany).not.toHaveBeenCalled();
+  });
+
+  it("maps a well-formed missing project to the neutral response", async () => {
+    mocks.prisma.project.findFirst.mockResolvedValueOnce(null);
+    await expect(
+      getRankCheckStatuses({ projectId: PROJECT_PUBLIC_ID, rankCheckIds: [CHECK_PUBLIC_ID] }),
+    ).rejects.toThrow("Rank checks not found.");
+    expect(mocks.prisma.rankCheck.findMany).not.toHaveBeenCalled();
+  });
+
+  it("passes project lookup infrastructure failures through unchanged", async () => {
+    const infrastructureError = new Error("Database connection unavailable.");
+    mocks.prisma.project.findFirst.mockRejectedValueOnce(infrastructureError);
+    await expect(
+      getRankCheckStatuses({ projectId: PROJECT_PUBLIC_ID, rankCheckIds: [CHECK_PUBLIC_ID] }),
+    ).rejects.toBe(infrastructureError);
+    expect(mocks.prisma.rankCheck.findMany).not.toHaveBeenCalled();
+  });
+
+  it("maps exact authorization failures to the neutral response", async () => {
+    mocks.authorize.mockImplementationOnce(() => {
+      throw new mocks.AuthorizationError("forbidden");
+    });
+    await expect(
+      getRankCheckStatuses({ projectId: PROJECT_PUBLIC_ID, rankCheckIds: [CHECK_PUBLIC_ID] }),
+    ).rejects.toThrow("Rank checks not found.");
+    expect(mocks.prisma.rankCheck.findMany).not.toHaveBeenCalled();
   });
 });

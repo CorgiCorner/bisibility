@@ -84,8 +84,8 @@ export default async function LoginPage({ searchParams }: Readonly<LoginPageProp
             can read.
           </p>
 
-          <div className="mt-[26px] overflow-hidden rounded-[13px] border border-border">
-            <div className="flex items-center gap-[7px] border-code-faint border-b bg-code-bg px-3.5 py-[9px]">
+          <div className="mt-[26px] overflow-hidden rounded-card border border-code-border">
+            <div className="flex items-center gap-[7px] border-code-border border-b bg-code-bg px-3.5 py-[9px]">
               <span className="h-2.5 w-2.5 rounded-full bg-red" />
               <span className="h-2.5 w-2.5 rounded-full bg-yellow" />
               <span className="h-2.5 w-2.5 rounded-full bg-green" />

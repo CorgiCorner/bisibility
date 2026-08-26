@@ -372,14 +372,14 @@ describe("KeywordPendingDetail", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Run first check (Top 20)" }));
-    expect(screen.getByRole("dialog", { name: "Run first check" })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Confirm and run" }));
+    expect(screen.getByRole("dialog", { name: "Run rank check" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Confirm & run" }));
     await flushMicrotasks();
     expect(runCheckNowAction).toHaveBeenCalledWith({ depth: 20, keywordId: keywordRows[0].id });
     expect(screen.getByRole("dialog", { name: "Check running" })).toBeInTheDocument();
 
     await advanceAndFlush(2000);
-    expect(screen.getByRole("dialog", { name: "First check complete" })).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "Check complete" })).toBeInTheDocument();
     expect(screen.getByText("Ranked #12 in the top 100.")).toBeInTheDocument();
   });
 
@@ -410,7 +410,7 @@ describe("KeywordPendingDetail", () => {
 
     const runButton = screen.getByRole("button", { name: "Run first check (Top 20)" });
     fireEvent.click(runButton);
-    fireEvent.click(screen.getByRole("button", { name: "Confirm and run" }));
+    fireEvent.click(screen.getByRole("button", { name: "Confirm & run" }));
     await flushMicrotasks();
     expect(screen.getByRole("status")).toHaveTextContent("The check is processing now.");
     expect(runButton).toBeEnabled();
@@ -466,13 +466,13 @@ describe("KeywordPendingDetail", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Run first check (Top 20)" }));
-    fireEvent.click(screen.getByRole("button", { name: "Confirm and run" }));
+    fireEvent.click(screen.getByRole("button", { name: "Confirm & run" }));
     await flushMicrotasks();
     await advanceAndFlush(2000);
     expect(screen.getByRole("dialog", { name: "Check failed" })).toBeInTheDocument();
     expect(
       screen.getByText(
-        "The check failed: your rank data provider account has insufficient funds. Add funds or connect a different provider, then run the check again.",
+        "The rank check could not run because the provider account has insufficient funds. Add funds or connect a different provider, then try again.",
       ),
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Open integrations" })).toHaveAttribute(
@@ -505,7 +505,7 @@ describe("KeywordPendingDetail", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Run first check (Top 20)" }));
-    fireEvent.click(screen.getByRole("button", { name: "Confirm and run" }));
+    fireEvent.click(screen.getByRole("button", { name: "Confirm & run" }));
     await flushMicrotasks();
     expect(screen.getByRole("dialog", { name: "Check running" })).toBeInTheDocument();
 
@@ -542,9 +542,9 @@ describe("KeywordPendingDetail", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Run first check (Top 20)" }));
-    fireEvent.click(screen.getByRole("button", { name: "Confirm and run" }));
+    fireEvent.click(screen.getByRole("button", { name: "Confirm & run" }));
     await flushMicrotasks();
-    expect(screen.getByRole("dialog", { name: "First check complete" })).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "Check complete" })).toBeInTheDocument();
     expect(screen.getByText("Ranked #3 in the top 20.")).toBeInTheDocument();
   });
 });

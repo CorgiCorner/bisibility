@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   listWorkspaces: vi.fn(),
+  resolveProjectAccess: vi.fn(),
 }));
 
 vi.mock("@/app/app/(workspace)/workspace-shell", () => ({
@@ -25,6 +26,9 @@ vi.mock("@/app/app/(workspace)/workspace-shell", () => ({
 vi.mock("@/lib/queries/workspaces", () => ({
   listWorkspaces: mocks.listWorkspaces,
 }));
+vi.mock("@/lib/queries/_auth", () => ({
+  resolveProjectAccess: mocks.resolveProjectAccess,
+}));
 
 import AccountLayout from "./layout";
 
@@ -33,11 +37,17 @@ describe("account layout", () => {
     vi.clearAllMocks();
     mocks.listWorkspaces.mockResolvedValue([
       {
-        id: "project_1",
+        id: "prj_example",
         onboardingCompletedAt: new Date("2026-08-01T07:30:00.000Z"),
         publicId: "prj_example",
       },
     ]);
+    mocks.resolveProjectAccess.mockResolvedValue({
+      isSample: false,
+      mode: "member",
+      projectId: "project_1",
+      publicId: "prj_example",
+    });
   });
 
   it("keeps account pages inside the workspace shell", async () => {
@@ -48,6 +58,7 @@ describe("account layout", () => {
     expect(markup).toContain('data-active-project-id="project_1"');
     expect(markup).toContain('data-project-ref="prj_example"');
     expect(markup).toContain("Account content");
+    expect(mocks.resolveProjectAccess).toHaveBeenCalledWith("prj_example");
   });
 
   it("sends project-less accounts through onboarding", async () => {

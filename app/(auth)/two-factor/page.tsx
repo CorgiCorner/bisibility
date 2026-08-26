@@ -24,7 +24,7 @@ export default async function TwoFactorPage({ searchParams }: Readonly<TwoFactor
 
   return (
     <main className="grid min-h-dvh place-items-center bg-bg px-6 py-11 text-fg">
-      <section className="w-full max-w-[430px] rounded-[16px] border border-border bg-bg-sidebar p-6 sm:p-8">
+      <section className="w-full max-w-[430px] rounded-card border border-border bg-bg-sidebar p-6 sm:p-8">
         <Link className="mb-8 inline-flex w-fit no-underline" href="/">
           <BrandLockup />
         </Link>

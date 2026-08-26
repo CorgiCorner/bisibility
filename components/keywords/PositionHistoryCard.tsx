@@ -75,8 +75,16 @@ export function PositionHistoryCard({
   const maxPosition = Math.max(20, ...(allMarkets ? comparisonPositions : positions), target ?? 1);
   const rangeEmpty = positions.length === 0;
   const notEnough = chartState === "one_check" || (!chartState && positions.length < 2);
-  const chartLabels = allMarkets ? comparison.labels : notEnough ? [] : labels;
-  const chartPositions = notEnough ? [] : positions;
+  const chartLabels = allMarkets ? comparison.labels : labels;
+  const chartPositions = positions;
+  const emptyStateTitle = rangeEmpty
+    ? `No checks in the last ${activeRange.days} days.`
+    : "Not enough history to chart yet.";
+  const chartRegionLabel = notEnough
+    ? `${keyword.keyword}: ${emptyStateTitle}`
+    : allMarkets
+      ? comparisonAriaLabel(visibleMarkets)
+      : positionHistoryAriaLabel(keyword.keyword, positions.at(-1), target);
   const chartSeries = allMarkets
     ? comparison.values.map((series, index) => ({
         color: marketPositionPalette[index % marketPositionPalette.length],
@@ -120,7 +128,7 @@ export function PositionHistoryCard({
   );
 
   return (
-    <Card className="rounded-[14px]" size="lg">
+    <Card className="rounded-card" size="lg">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <SectionTitle>Position history</SectionTitle>
@@ -165,120 +173,95 @@ export function PositionHistoryCard({
           />
         </div>
       </div>
-      <ChartRegion
-        className="relative mt-3 h-[280px]"
-        label={
-          allMarkets
-            ? comparisonAriaLabel(visibleMarkets)
-            : positionHistoryAriaLabel(keyword.keyword, positions.at(-1), target)
-        }
-      >
-        <LineChart
-          grid={{ horizontal: true }}
-          height={280}
-          hideLegend
-          margin={{ top: 18, right: 18, bottom: 28, left: 42 }}
-          series={chartSeries}
-          skipAnimation
-          sx={{
-            "& .MuiAreaElement-root": { fill: "var(--accent)", fillOpacity: 0.1 },
-            "& .MuiChartsGrid-line": { stroke: "var(--border)" },
-            "& .MuiChartsAxis-tickLabel": axisTextStyle,
-            "& .MuiLineElement-root": {
-              ...(allMarkets ? {} : { stroke: "var(--accent)" }),
-              strokeLinecap: "round",
-              strokeLinejoin: "round",
-              strokeWidth: 2.8,
-            },
-          }}
-          xAxis={[
-            {
-              data: chartLabels,
-              disableLine: true,
-              disableTicks: true,
-              scaleType: "point",
-              tickLabelStyle: axisTextStyle,
-            },
-          ]}
-          yAxis={[
-            {
-              disableLine: true,
-              disableTicks: true,
-              domainLimit: "strict",
-              max: maxPosition,
-              min: 1,
-              reverse: true,
-              tickInterval: [1, 10, 20],
-              tickLabelStyle: axisTextStyle,
-              valueFormatter: (value: number) => `#${value}`,
-            },
-          ]}
-        >
-          {!allMarkets && target !== null && !rangeEmpty && !notEnough ? (
-            <TargetReferenceLine target={target} />
-          ) : null}
-          {!allMarkets && target !== null && !rangeEmpty && !notEnough ? (
-            <LatestPositionAnnotation labels={labels} positions={positions} target={target} />
-          ) : null}
-          {allMarkets ? (
-            comparison.values.map((series, index) => (
-              <DegradedPositionMarkers
-                color={
-                  marketPositionPalette[index % marketPositionPalette.length] ?? chartColors.accent
-                }
-                key={series.target.id}
-                location={series.target.location}
-                points={series.points}
-              />
-            ))
-          ) : (
-            <DegradedPositionMarkers
-              color={chartColors.accent}
-              location={keyword.location}
-              points={history}
-            />
-          )}
-        </LineChart>
-        {!allMarkets && notEnough && !rangeEmpty ? (
-          <>
-            <span
-              aria-label="Single rank check point"
-              className="absolute left-[12.33%] top-[36.8%] z-10 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-bg-elev"
-            />
-            <span
-              aria-hidden
-              className="absolute left-[12.33%] top-[36.8%] z-10 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent-solid"
-            />
-          </>
-        ) : null}
-        {!allMarkets && notEnough ? (
-          <div
-            className="absolute inset-0 grid place-items-center rounded-[12px]"
-            style={{ background: "color-mix(in srgb, var(--bg-elev) 72%, transparent)" }}
-          >
-            <div className="flex flex-col items-center gap-2 rounded-[12px] border border-border-strong bg-bg-elev px-5 py-4 text-center">
-              <p className="m-0 text-[13px] font-semibold text-fg">
-                {rangeEmpty
-                  ? `No checks in the last ${activeRange.days} days.`
-                  : "Not enough history to chart yet."}
-              </p>
+      <ChartRegion className="relative mt-3 h-[280px]" label={chartRegionLabel}>
+        {notEnough ? (
+          <div className="grid h-full place-items-center rounded-card">
+            <div className="flex flex-col items-center gap-2 rounded-card border border-border bg-bg-elev px-5 py-4 text-center">
+              <p className="m-0 text-[13px] font-semibold text-fg">{emptyStateTitle}</p>
               {displayedPosition !== null ? (
                 <span className="inline-flex items-center gap-2 rounded-full bg-bg-sunken px-3 py-1 font-mono text-[11px] text-fg-muted">
-                  {rangeEmpty ? "Latest" : "Current"} #{displayedPosition} | Next check{" "}
-                  {nextCheckLabel}
+                  Current #{displayedPosition} | Next check {nextCheckLabel}
                 </span>
               ) : null}
             </div>
           </div>
-        ) : null}
+        ) : (
+          <LineChart
+            grid={{ horizontal: true }}
+            height={280}
+            hideLegend
+            margin={{ top: 18, right: 18, bottom: 28, left: 42 }}
+            series={chartSeries}
+            skipAnimation
+            sx={{
+              "& .MuiAreaElement-root": { fill: "var(--accent)", fillOpacity: 0.1 },
+              "& .MuiChartsGrid-line": { stroke: "var(--border)" },
+              "& .MuiChartsAxis-tickLabel": axisTextStyle,
+              "& .MuiLineElement-root": {
+                ...(allMarkets ? {} : { stroke: "var(--accent)" }),
+                strokeLinecap: "round",
+                strokeLinejoin: "round",
+                strokeWidth: 2.8,
+              },
+            }}
+            xAxis={[
+              {
+                data: chartLabels,
+                disableLine: true,
+                disableTicks: true,
+                scaleType: "point",
+                tickLabelStyle: axisTextStyle,
+              },
+            ]}
+            yAxis={[
+              {
+                disableLine: true,
+                disableTicks: true,
+                domainLimit: "strict",
+                max: maxPosition,
+                min: 1,
+                reverse: true,
+                tickInterval: [1, 10, 20],
+                tickLabelStyle: axisTextStyle,
+                valueFormatter: (value: number) => `#${value}`,
+              },
+            ]}
+          >
+            {!allMarkets && target !== null ? <TargetReferenceLine target={target} /> : null}
+            {!allMarkets && target !== null ? (
+              <LatestPositionAnnotation labels={labels} positions={positions} target={target} />
+            ) : null}
+            {allMarkets ? (
+              comparison.values.map((series, index) => (
+                <DegradedPositionMarkers
+                  color={
+                    marketPositionPalette[index % marketPositionPalette.length] ??
+                    chartColors.accent
+                  }
+                  key={series.target.id}
+                  location={series.target.location}
+                  points={series.points}
+                />
+              ))
+            ) : (
+              <DegradedPositionMarkers
+                color={chartColors.accent}
+                location={keyword.location}
+                points={history}
+              />
+            )}
+          </LineChart>
+        )}
       </ChartRegion>
-      <PositionHistoryMarketLegend
-        allMarkets={allMarkets}
-        comparisonPoints={comparison.values.map((series) => series.points)}
-        history={history}
-        markets={markets}
-        visibleMarkets={visibleMarkets}
-      />
+      {!notEnough ? (
+        <PositionHistoryMarketLegend
+          allMarkets={allMarkets}
+          comparisonPoints={comparison.values.map((series) => series.points)}
+          history={history}
+          markets={markets}
+          visibleMarkets={visibleMarkets}
+        />
+      ) : null}
     </Card>
   );
 }

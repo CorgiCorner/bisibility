@@ -8,7 +8,13 @@ import { AUTH_URL, auth, MCP_RESOURCE_URL } from "./auth";
 
 type OauthProviderPlugin = {
   id?: string;
-  options?: { validAudiences?: string[] };
+  options?: {
+    silenceWarnings?: {
+      oauthAuthServerConfig?: boolean;
+      openidConfig?: boolean;
+    };
+    validAudiences?: string[];
+  };
 };
 
 function oauthProviderOptions() {
@@ -21,6 +27,13 @@ function oauthProviderOptions() {
 describe("OAuth provider audiences", () => {
   it("accepts exactly one resource, so a grant cannot be redeemed for another audience", () => {
     expect(oauthProviderOptions().validAudiences).toEqual([MCP_RESOURCE_URL]);
+  });
+
+  it("silences exactly the discovery warnings covered by application routes", () => {
+    expect(oauthProviderOptions().silenceWarnings).toEqual({
+      oauthAuthServerConfig: true,
+      openidConfig: true,
+    });
   });
 
   it("does not accept the authorization server itself as a resource", () => {

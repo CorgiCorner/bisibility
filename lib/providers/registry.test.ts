@@ -6,9 +6,44 @@ import {
   providerLogoDomain,
   tintFor,
 } from "./registry";
+import type { ProviderCatalogEntry } from "./types";
+
+const catalogBase = {
+  defaultStatus: "ready",
+  id: "provider-test",
+  kind: "serp",
+  label: "Provider test",
+} as const;
+
+const contradictoryCatalogItem: ProviderCatalogEntry = {
+  ...catalogBase,
+  // @ts-expect-error Metered providers cannot declare quota units.
+  allocation: { allocationUnit: "units", billing: "metered", kind: "billable", quotaReset: "none" },
+};
+
+const incompleteCatalogItem: ProviderCatalogEntry = {
+  ...catalogBase,
+  // @ts-expect-error Billable metadata must include every required property.
+  allocation: { billing: "quota", kind: "billable" },
+};
+
+void contradictoryCatalogItem;
+void incompleteCatalogItem;
 
 afterEach(() => {
   vi.unstubAllEnvs();
+});
+
+describe("provider allocation catalog", () => {
+  it.each([
+    ["dataforseo", "metered", "cents", "none"],
+    ["serpapi", "quota", "units", "billing_cycle"],
+  ] as const)("declares %s native allocation semantics", async (id, billing, unit, quotaReset) => {
+    const { PROVIDER_CATALOG } = await import("./registry");
+    expect(PROVIDER_CATALOG.find((provider) => provider.id === id)).toMatchObject({
+      allocation: { allocationUnit: unit, billing, kind: "billable", quotaReset },
+    });
+  });
 });
 
 describe("provider logo domains", () => {

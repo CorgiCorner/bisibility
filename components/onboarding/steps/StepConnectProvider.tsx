@@ -273,7 +273,7 @@ export function StepConnectProvider({
             <InfoTooltip text="Search Console shows the queries your site already ranks for. Free import for keyword suggestions; it cannot check rankings." />
           </div>
           {analyticsNotice}
-          <div className="mt-2 grid items-stretch gap-3 sm:grid-cols-2">{analyticsOption}</div>
+          <div className="mt-2 grid grid-cols-1 items-stretch gap-3">{analyticsOption}</div>
         </div>
       ) : null}
     </form>

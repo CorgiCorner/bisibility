@@ -1,6 +1,11 @@
 import { AddNoteForm } from "@/components/timeline/AddNoteForm";
 import { TimelineRow } from "@/components/timeline/TimelineRow";
-import { Card, EmptyState, filterChipStateClassName } from "@/components/ui";
+import {
+  Card,
+  compactInputTypographyClassName,
+  EmptyState,
+  filterChipStateClassName,
+} from "@/components/ui";
 import type { DateFormatPreference } from "@/lib/format/user-datetime";
 import type { TimelineFilterKey, TimelineView } from "@/lib/queries/timeline";
 import { appPath } from "@/lib/routing/app-path";
@@ -74,7 +79,7 @@ function FilterChip({
   return (
     <Link
       aria-current={selected ? "page" : undefined}
-      className={`inline-flex min-h-8 items-center gap-1.5 whitespace-nowrap rounded-lg border px-3 text-[12.5px] font-semibold outline-none transition-colors ${filterChipStateClassName(
+      className={`inline-flex min-h-8 items-center gap-1.5 whitespace-nowrap rounded-control border px-3 text-[12.5px] font-semibold outline-none transition-colors ${filterChipStateClassName(
         selected,
       )}`}
       href={timelineHref({ filter: filter.key, projectRef, search })}
@@ -116,7 +121,7 @@ function TimelineEmpty({
       <EmptyState
         action={
           <Link
-            className="inline-flex min-h-9 items-center rounded-lg border border-accent bg-accent-solid px-3 text-[12px] font-semibold text-accent-on-solid"
+            className="inline-flex min-h-9 items-center rounded-control border border-accent bg-accent-solid px-3 text-[12px] font-semibold text-accent-on-solid"
             href={appPath(projectRef, "timeline")}
           >
             Back to page 1
@@ -155,7 +160,7 @@ function Pagination({ projectRef, view }: Readonly<{ projectRef: string; view: T
     <nav className="flex items-center justify-between gap-3" aria-label="Timeline pages">
       {view.hasPreviousPage ? (
         <Link
-          className="inline-flex min-h-8 items-center rounded-lg border border-border-strong bg-bg-elev px-3 text-[12px] font-semibold text-fg-muted hover:border-accent hover:text-accent-text"
+          className="inline-flex min-h-8 items-center rounded-control border border-border-control bg-bg-elev px-3 text-[12px] font-semibold text-fg-muted hover:border-accent hover:text-accent-text"
           href={timelineHref({
             filter: view.filter,
             page: view.page - 1,
@@ -172,7 +177,7 @@ function Pagination({ projectRef, view }: Readonly<{ projectRef: string; view: T
       <span className="font-mono text-[11px] text-fg-muted">Page {view.page}</span>
       {view.hasNextPage ? (
         <Link
-          className="inline-flex min-h-8 items-center rounded-lg border border-border-strong bg-bg-elev px-3 text-[12px] font-semibold text-fg-muted hover:border-accent hover:text-accent-text"
+          className="inline-flex min-h-8 items-center rounded-control border border-border-control bg-bg-elev px-3 text-[12px] font-semibold text-fg-muted hover:border-accent hover:text-accent-text"
           href={timelineHref({
             filter: view.filter,
             page: view.page + 1,
@@ -206,43 +211,48 @@ export function TimelineFeed({
 
   return (
     <div className="flex w-full min-w-0 flex-col gap-4">
-      <div className="flex min-h-10 items-center gap-2">
-        <form
-          action={appPath(projectRef, "timeline")}
-          className="flex min-w-0 flex-1 items-center gap-2"
-          method="get"
-        >
-          {view.filter !== "all" ? <input name="filter" type="hidden" value={view.filter} /> : null}
-          <label className="flex min-h-10 min-w-0 flex-1 items-center gap-2 rounded-[10px] border border-border-strong bg-transparent px-3 transition-colors focus-within:border-accent">
-            <MagnifyingGlass aria-hidden className="shrink-0 text-fg-muted" size={15} />
-            <input
-              className="min-w-0 flex-1 bg-transparent font-mono text-[12.5px] text-fg outline-none focus-visible:outline-none placeholder:text-fg-muted"
-              defaultValue={view.search}
-              name="q"
-              placeholder="Search timeline (type, URL, note)..."
-              type="search"
-            />
-          </label>
-          <button
-            className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-lg border border-border-strong bg-bg-elev px-3 text-[12px] font-semibold text-fg-muted outline-none transition-colors hover:border-accent hover:text-accent-text focus-visible:border-accent focus-visible:text-accent-text"
-            type="submit"
+      <Card className="grid gap-3 p-4 sm:p-5" data-testid="timeline-controls">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <form
+            action={appPath(projectRef, "timeline")}
+            className="flex min-w-0 flex-1 items-center gap-2"
+            method="get"
           >
-            Search
-          </button>
-        </form>
-        <AddNoteForm canCreate={canCreate} projectId={projectId} />
-      </div>
+            {view.filter !== "all" ? (
+              <input name="filter" type="hidden" value={view.filter} />
+            ) : null}
+            <label className="flex h-[34px] min-w-0 flex-1 items-center gap-2 rounded-control border border-border-control bg-transparent px-3 transition-colors focus-within:border-accent">
+              <MagnifyingGlass aria-hidden className="shrink-0 text-fg-muted" size={15} />
+              <input
+                aria-label="Search timeline"
+                className={`${compactInputTypographyClassName} min-w-0 flex-1 bg-transparent font-mono text-fg outline-none focus-visible:outline-none`}
+                defaultValue={view.search}
+                name="q"
+                placeholder="Search timeline (type, URL, note)..."
+                type="search"
+              />
+            </label>
+            <button
+              className="inline-flex h-[34px] shrink-0 items-center justify-center rounded-control border border-border-control bg-bg-elev px-3 text-[12px] font-semibold text-fg-muted outline-none transition-colors hover:border-accent hover:text-accent-text focus-visible:border-accent focus-visible:text-accent-text"
+              type="submit"
+            >
+              Search
+            </button>
+          </form>
+          <AddNoteForm canCreate={canCreate} compact projectId={projectId} />
+        </div>
 
-      <div className="flex min-w-0 flex-wrap gap-[7px]">
-        {filters.map((filter) => (
-          <FilterChip
-            filter={filter}
-            key={filter.key}
-            projectRef={projectRef}
-            search={view.search}
-          />
-        ))}
-      </div>
+        <div className="flex min-w-0 flex-wrap gap-[7px] border-t border-border pt-3">
+          {filters.map((filter) => (
+            <FilterChip
+              filter={filter}
+              key={filter.key}
+              projectRef={projectRef}
+              search={view.search}
+            />
+          ))}
+        </div>
+      </Card>
 
       {groups.length > 0 ? (
         groups.map((group) => (

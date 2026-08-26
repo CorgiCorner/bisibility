@@ -18,9 +18,9 @@ const googleOauthConsoleUrl = "https://console.cloud.google.com/apis/credentials
 // The underline cannot be dropped: these links sit in --fg-muted copy and are themselves
 // --fg-muted, so colour carries no signal at all (1.08:1 against the surrounding text, and no
 // colour in the palette reaches the 3:1 that would let the underline go). It is instead kept
-// quiet by default - a hairline in --border-strong - and only wakes up under the pointer.
+// quiet by default - a hairline in --border - and only wakes up under the pointer.
 const quietLinkClass =
-  "font-semibold text-fg-muted underline decoration-border-strong underline-offset-2 transition-colors hover:text-fg hover:decoration-accent-text";
+  "font-semibold text-fg-muted underline decoration-border underline-offset-2 transition-colors hover:text-fg hover:decoration-accent-text";
 
 export function StagePanel({
   action,
@@ -224,13 +224,13 @@ export function OptionsFooter({
               py: 0,
               verticalAlign: "baseline",
               textDecoration: "underline",
-              textDecorationColor: "var(--border-strong)",
+              textDecorationColor: "var(--border)",
               textUnderlineOffset: "2px",
               "&:hover": {
                 backgroundColor: "transparent",
                 color: "var(--fg)",
                 textDecoration: "underline",
-                textDecorationColor: "var(--border-strong)",
+                textDecorationColor: "var(--border)",
               },
               // While the action runs the button is disabled, and MUI repaints a disabled
               // button in its own grey - which dropped this link out of the sentence it sits
@@ -239,7 +239,7 @@ export function OptionsFooter({
                 color: "var(--fg-muted)",
                 opacity: 0.6,
                 textDecoration: "underline",
-                textDecorationColor: "var(--border-strong)",
+                textDecorationColor: "var(--border)",
               },
             }}
             variant="ghost"

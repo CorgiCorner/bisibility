@@ -27,6 +27,8 @@ function keyword(overrides: Partial<KeywordRow> = {}): KeywordRow {
     checkState: "ranked",
     clicks: null,
     createdAt: "2026-01-01T00:00:00.000Z",
+    dataAsOfAt: "2026-01-01T00:00:00.000Z",
+    dataProvider: "primary",
     ctr: null,
     device: "Desktop",
     difficulty: 0,
@@ -36,7 +38,9 @@ function keyword(overrides: Partial<KeywordRow> = {}): KeywordRow {
     impressions: null,
     keyword: "rank tracker",
     lastCheckAt: null,
+    lastCheckErrorCode: null,
     lastCheckStatus: null,
+    latestAttemptHealth: "ok",
     location: {
       canonicalKey: "US",
       cityName: null,

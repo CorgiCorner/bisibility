@@ -70,7 +70,7 @@ export function SaveCompetitorViewModal({
             Cancel
           </button>
           <button
-            className="inline-flex items-center gap-2 rounded-[9px] bg-accent-solid px-4 py-2.5 text-[13px] font-semibold text-accent-on-solid disabled:bg-bg-sunken disabled:text-fg-muted"
+            className="inline-flex items-center gap-2 rounded-control bg-accent-solid px-4 py-2.5 text-[13px] font-semibold text-accent-on-solid disabled:bg-bg-sunken disabled:text-fg-muted"
             disabled={isSubmitting || !createSavedViewAction}
             form="save-competitor-view"
             type="submit"
@@ -93,7 +93,7 @@ export function SaveCompetitorViewModal({
         <label className="grid gap-2 font-mono text-[10px] uppercase text-fg-muted">
           View name
           <input
-            className="rounded-[9px] border border-border-strong bg-transparent px-3 py-2.5 font-sans text-[13.5px] normal-case text-fg outline-none focus:border-accent"
+            className="rounded-control border border-border-control bg-transparent px-3 py-2.5 font-sans text-[13.5px] normal-case text-fg outline-none focus:border-accent"
             placeholder="e.g. US mobile core set"
             {...register("name")}
           />

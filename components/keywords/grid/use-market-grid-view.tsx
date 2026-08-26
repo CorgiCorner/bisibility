@@ -11,8 +11,13 @@ import type { KeywordRow } from "@/lib/queries/keywords";
 import type { GridSortModel } from "@mui/x-data-grid";
 import { useMemo, useState } from "react";
 
-export function useMarketGridView(rows: readonly KeywordRow[]) {
-  const [grouped, setGrouped] = useState(() => marketGridDefaultsToGrouped(rows));
+export function useMarketGridView(
+  rows: readonly KeywordRow[],
+  controlledGrouped?: boolean,
+  onGroupedChange?: (grouped: boolean) => void,
+) {
+  const [localGrouped, setGrouped] = useState(() => marketGridDefaultsToGrouped(rows));
+  const grouped = controlledGrouped ?? localGrouped;
   const [expandedParentIds, setExpandedParentIds] = useState<Set<string>>(() => new Set());
   const [sortModel, setSortModel] = useState<GridSortModel>([{ field: "position", sort: "asc" }]);
   const viewRows = useMemo(
@@ -43,7 +48,11 @@ export function useMarketGridView(rows: readonly KeywordRow[]) {
         activeVariant="neutral"
         ariaLabel="Keyword grouping"
         fitContent
-        onChange={(value) => setGrouped(value === "grouped")}
+        onChange={(value) => {
+          const next = value === "grouped";
+          if (onGroupedChange) onGroupedChange(next);
+          else setGrouped(next);
+        }}
         options={[
           { label: "Grouped", value: "grouped" },
           { label: "Flat", value: "flat" },

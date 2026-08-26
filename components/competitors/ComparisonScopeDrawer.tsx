@@ -59,7 +59,7 @@ export function ComparisonScopeDrawer({
             ["Completed", completed],
             ["Pending", included.length - completed],
           ].map(([label, value]) => (
-            <span className="rounded-[10px] border border-border bg-bg-sunken p-3" key={label}>
+            <span className="rounded-control border border-border bg-bg-sunken p-3" key={label}>
               <span className="block font-mono text-[9px] uppercase text-fg-muted">{label}</span>
               <span className="mt-1 block font-mono text-lg font-semibold">{value}</span>
             </span>
@@ -75,7 +75,7 @@ export function ComparisonScopeDrawer({
             />
             <input
               aria-label="Search comparison keywords"
-              className="min-h-9 w-full rounded-[9px] border border-border-strong bg-transparent pl-9 pr-3 text-[13px] outline-none focus:border-accent"
+              className="min-h-9 w-full rounded-control border border-border-control bg-transparent pl-9 pr-3 text-[13px] outline-none focus:border-accent"
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search keywords or tags"
               value={search}
@@ -93,7 +93,7 @@ export function ComparisonScopeDrawer({
           </Button>
         </div>
 
-        <div className="overflow-hidden rounded-[11px] border border-border">
+        <div className="overflow-hidden rounded-control border border-border">
           {visible.map((observation) => {
             const checked = !excluded.has(observation.id);
             return (

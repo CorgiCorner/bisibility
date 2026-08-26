@@ -1,245 +1,238 @@
-import { UsageSettingsContent } from "@/components/settings/usage/UsageSettingsContent";
-import type { ProviderUsageData } from "@/lib/settings/options";
-import { DOCS_URL, MARKETING_URL } from "@/lib/site/site";
-import { render, screen, within } from "@testing-library/react";
+import {
+  UsageSettingsContent,
+  type UsageSettingsContentProps,
+} from "@/components/settings/usage/UsageSettingsContent";
+import { appPath } from "@/lib/routing/app-path";
+import { routerMock } from "@/tests/next-navigation";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
-const usage: ProviderUsageData = {
-  budget: { capCents: 5_000, spentCents: 1_240 },
-  connections: [
-    {
-      connectionId: "conn_primary",
-      costPerCheck: "$0.0006",
-      lookups: { costCents: 494, count: 4_120 },
-      primary: true,
-      provider: "Primary provider",
-      rankChecks: { costCents: 446, count: 7_440 },
-    },
-    {
-      connectionId: "conn_secondary",
-      costPerCheck: "$0.0150",
-      lookups: { costCents: 297, count: 1_485 },
-      primary: false,
-      provider: "Secondary provider",
-      rankChecks: { costCents: 3, count: 2 },
-    },
-  ],
+const usage = {
+  budget: { capCents: 5000, spentCents: 10 },
+  connections: [],
   hasProvider: true,
-  onPaceCents: 1_750,
-  primaryProvider: "Primary provider",
-  serpChecksMonth: "7,442",
-};
-
+  onPaceCents: null,
+  period: {
+    dateFormat: "long",
+    endAt: "2026-09-01T00:00:00.000Z",
+    endLabel: "Aug 31, 2026",
+    label: "August 2026",
+    now: "2026-08-24T17:03:00.000Z",
+    resetsLabel: "resets in 8 days",
+    timezone: "UTC",
+  },
+  primaryProvider: "SerpApi",
+  serpChecksMonth: "0",
+  providerSpend: {
+    connections: [
+      {
+        allocation: { amountPerMonth: 100, unit: "units" },
+        allocationSource: "legacy_project",
+        billing: "quota",
+        connectionId: "conn_serp",
+        enabled: true,
+        features: [{ costCents: 0, count: 0, feature: "rank_check", label: "Rank checks" }],
+        primary: true,
+        projectedExhaustionAt: null,
+        provider: "SerpApi",
+        providerId: "serpapi",
+        quotaReset: "billing_cycle",
+        remaining: 0,
+        requestCount: 28,
+        state: "fallback_active",
+        status: "connected",
+        unit: "units",
+        used: 100,
+        usedPercent: 100,
+        availableAtProvider: {
+          amount: 222,
+          checkedAt: "2026-08-24T17:03:00.000Z",
+          status: "available",
+          unit: "searches",
+        },
+      },
+      {
+        allocation: { amountPerMonth: 3000, unit: "cents" },
+        allocationSource: "connection",
+        billing: "metered",
+        connectionId: "conn_data",
+        enabled: true,
+        features: [{ costCents: 10, count: 1, feature: "rank_check", label: "Rank checks" }],
+        primary: false,
+        projectedExhaustionAt: null,
+        provider: "DataForSEO",
+        providerId: "dataforseo",
+        quotaReset: "none",
+        remaining: 2990,
+        requestCount: 1,
+        state: "ok",
+        status: "connected",
+        unit: "cents",
+        used: 10,
+        usedPercent: 0.33,
+        availableAtProvider: {
+          amount: 12.4,
+          checkedAt: "2026-08-24T17:03:00.000Z",
+          status: "available",
+          unit: "usd",
+        },
+      },
+    ],
+    summary: {
+      attention: ["conn_serp"],
+      maxUsedPercent: 100,
+      period: {
+        daysUntilReset: 8,
+        endsAt: "2026-09-01T00:00:00.000Z",
+        monthLabel: "August 2026",
+        startsAt: "2026-08-01T00:00:00.000Z",
+      },
+      projected: { at: "2026-08-27T00:00:00.000Z", kind: "cap_by", provider: "SerpApi" },
+      recorded: { cents: 10, units: 28 },
+      requestCount: 29,
+      tightest: { connectionId: "conn_serp", provider: "SerpApi", usedPercent: 100 },
+    },
+  },
+} as unknown as UsageSettingsContentProps["usage"];
 const actions = {
   submitPricingFeedback: vi.fn(async () => ({ answered: true as const })),
-  updateBudget: vi.fn(async () => ({ capCents: 7_500 })),
+  updateProviderAllocation: vi.fn(async () => usage.providerSpend.connections[0]),
 };
+function renderUsage(next = usage) {
+  return render(
+    <UsageSettingsContent
+      {...actions}
+      canEditBudget
+      canSubmitPricingFeedback
+      deployment="cloud"
+      projectId="prj_story"
+      projectRef="prj_story"
+      usage={next}
+    />,
+  );
+}
 
 describe("UsageSettingsContent", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it("keeps WTP out of self-hosted installs", () => {
-    render(
-      <UsageSettingsContent
-        {...actions}
-        canEditBudget
-        canSubmitPricingFeedback
-        deployment="self-host"
-        projectId="prj_story"
-        usage={usage}
-      />,
-    );
-
-    expect(screen.getByText("Self-hosted")).toBeInTheDocument();
+  it("renders allocation data, fallback attention, and no prohibited copy", () => {
+    const { container } = renderUsage();
+    expect(screen.getByText("$0.10 + 28 searches")).toBeInTheDocument();
     expect(
-      screen.getByText(
-        "Infrastructure, provider requests and optional services remain your costs.",
-      ),
-    ).toHaveClass("pt-2");
-    expect(screen.queryByLabelText("What would you pay per month?")).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Send feedback" })).not.toBeInTheDocument();
+      screen.getByText(/SerpApi hit its budget - checks are falling back to DataForSEO/),
+    ).toBeInTheDocument();
+    expect(screen.getByText("100 of 100 searches used")).toBeInTheDocument();
+    expect(
+      screen.getByText(/222 left at provider \(just now\).*resets at billing cycle/),
+    ).toBeInTheDocument();
+    expect(container.textContent).not.toMatch(/utili(?:zation|sation)/i);
   });
-
-  it("renders hosted pricing feedback only for the hosted beta", () => {
-    render(
-      <UsageSettingsContent
-        {...actions}
-        canEditBudget
-        canSubmitPricingFeedback
-        deployment="cloud"
-        projectId="prj_story"
-        usage={usage}
-      />,
-    );
-
-    expect(screen.getByText("Hosted plan")).toBeInTheDocument();
-    expect(screen.getByText("Free beta")).toBeInTheDocument();
-    expect(screen.getByLabelText("What would you pay per month?")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Send feedback" })).toBeInTheDocument();
+  it("keeps risk order and puts the metrics below the badge group", () => {
+    const { container } = renderUsage();
+    const rows = container.querySelectorAll("#provider-usage summary");
+    expect(rows[0]).toHaveTextContent("SerpApi");
+    expect(rows[0].querySelector('[role="meter"]')).not.toBeNull();
+    expect(rows[0].querySelector(".shrink-0")).not.toBeNull();
   });
-
-  it("renders the literal answered state without a second form", () => {
-    render(
-      <UsageSettingsContent
-        {...actions}
-        canEditBudget
-        canSubmitPricingFeedback
-        deployment="cloud"
-        initialPricingFeedbackAnswered
-        projectId="prj_story"
-        usage={usage}
-      />,
-    );
-
-    expect(screen.getByText("Thanks, your answer helps us set the price.")).toBeInTheDocument();
-    expect(screen.queryByLabelText("What would you pay per month?")).not.toBeInTheDocument();
-  });
-
-  it("uses a segmented provider meter and omits every cost-per-check stat", () => {
-    render(
-      <UsageSettingsContent
-        {...actions}
-        canEditBudget
-        canSubmitPricingFeedback
-        deployment="cloud"
-        projectId="prj_story"
-        usage={usage}
-      />,
-    );
-
-    expect(screen.getByRole("meter", { name: /Provider spend/ })).toBeInTheDocument();
-    expect(screen.getByText("Primary provider $9.40")).toBeInTheDocument();
-    expect(screen.getByText("Secondary provider $3.00")).toBeInTheDocument();
-    expect(screen.queryByText(/cost \/ check/i)).not.toBeInTheDocument();
-    expect(screen.queryByText("$0.0006")).not.toBeInTheDocument();
-    expect(screen.queryByText("$0.0150")).not.toBeInTheDocument();
-  });
-
-  it("keeps provider-usage help and estimation actions in the card footer", () => {
-    const { container } = render(
-      <UsageSettingsContent
-        {...actions}
-        canEditBudget
-        canSubmitPricingFeedback
-        deployment="cloud"
-        projectId="prj_story"
-        usage={usage}
-      />,
-    );
-
-    const footer = container.querySelector("[data-provider-usage-footer]");
-    expect(footer).toBeInTheDocument();
-
-    const budgets = within(footer as HTMLElement).getByRole("link", {
-      name: "How budgets work",
-    });
-    expect(budgets).toHaveAttribute("href", `${DOCS_URL}/integrations#budget-cap`);
-    expect(budgets).toHaveAttribute("target", "_blank");
-    expect(budgets).toHaveAttribute("rel", "noreferrer noopener");
-    expect(budgets.querySelector("svg")).not.toBeNull();
-
-    const estimate = within(footer as HTMLElement).getByRole("link", {
-      name: "Estimate future cost",
-    });
-    expect(estimate).toHaveAttribute("href", `${MARKETING_URL}/rank-tracking-cost-calculator`);
-    expect(estimate).toHaveAttribute("target", "_blank");
-    expect(estimate).toHaveAttribute("rel", "noreferrer noopener");
-    expect(estimate.querySelector("svg")).not.toBeNull();
-  });
-
-  it("submits hosted feedback through the injected server action", async () => {
-    const user = userEvent.setup();
-    render(
-      <UsageSettingsContent
-        {...actions}
-        canEditBudget
-        canSubmitPricingFeedback
-        deployment="cloud"
-        projectId="prj_story"
-        usage={usage}
-      />,
-    );
-
-    await user.click(screen.getByRole("button", { name: "Send feedback" }));
-
-    expect(actions.submitPricingFeedback).toHaveBeenCalledWith({
-      monthlyPrice: "20",
-      projectId: "prj_story",
-    });
-    expect(await screen.findByText("Thanks, your answer helps us set the price.")).toBeVisible();
-  });
-
   it.each([
-    ["rate_limited", "Too many requests. Please try again later."],
-    ["verification_failed", "Verification failed. Please try again."],
-  ] as const)("keeps feedback unanswered on %s", async (code, message) => {
-    const user = userEvent.setup();
-    const submitPricingFeedback = vi.fn().mockResolvedValue({ code, ok: false });
-    render(
-      <UsageSettingsContent
-        {...actions}
-        canEditBudget
-        canSubmitPricingFeedback
-        deployment="cloud"
-        projectId="prj_story"
-        submitPricingFeedback={submitPricingFeedback}
-        usage={usage}
-      />,
+    [28, "bg-accent", null],
+    [80, "bg-yellow", "text-yellow-text"],
+    [100, "bg-red", "text-red-text"],
+  ])("tones summary and provider bars at %i%%", (percent, fillClass, textClass) => {
+    const next = structuredClone(usage) as UsageSettingsContentProps["usage"];
+    const connection = next.providerSpend.connections[0];
+    connection.used = percent;
+    connection.usedPercent = percent;
+    next.providerSpend.summary.maxUsedPercent = percent;
+    next.providerSpend.summary.tightest = {
+      connectionId: "conn_serp",
+      provider: "SerpApi",
+      usedPercent: percent,
+    };
+    const { container } = renderUsage(next);
+
+    const summaryFill = container.querySelector('[role="meter"][aria-label="Budget used"] span');
+    const rowFill = container.querySelector(
+      '[role="meter"][aria-label="SerpApi budget used"] span',
     );
-
-    await user.click(screen.getByRole("button", { name: "Send feedback" }));
-
-    expect(await screen.findByText(message)).toBeVisible();
-    expect(
-      screen.queryByText("Thanks, your answer helps us set the price."),
-    ).not.toBeInTheDocument();
-    expect(screen.getByLabelText("What would you pay per month?")).toBeVisible();
+    const allocation = screen.getByText(`${percent} of 100 searches used`);
+    expect(summaryFill).toHaveClass(fillClass);
+    expect(rowFill).toHaveClass(fillClass);
+    if (textClass) expect(allocation).toHaveClass(textClass);
+    else expect(allocation).toHaveClass("text-fg-muted");
   });
-
-  it("edits the provider budget through the injected audited action", async () => {
-    const user = userEvent.setup();
-    render(
-      <UsageSettingsContent
-        {...actions}
-        canEditBudget
-        canSubmitPricingFeedback
-        deployment="cloud"
-        projectId="prj_story"
-        usage={usage}
-      />,
-    );
-
-    const editBudget = screen.getByRole("button", { name: "Edit budget" });
-    expect(editBudget).toHaveClass("min-h-[30px]");
-    await user.click(editBudget);
-    const input = screen.getByRole("textbox", { name: "Monthly budget in dollars" });
-    await user.clear(input);
-    await user.type(input, "75.00");
-    await user.click(screen.getByRole("button", { name: "Save budget" }));
-
-    expect(actions.updateBudget).toHaveBeenCalledWith({
-      budgetDollars: "75.00",
-      projectId: "prj_story",
+  it("keeps projected KPI copy concise while the explanation remains below the bar", () => {
+    renderUsage();
+    expect(screen.getByText("SerpApi budget by Aug 27, 2026")).toBeInTheDocument();
+    expect(screen.getByText(/on pace to hit SerpApi budget Aug 27, 2026/)).toBeInTheDocument();
+  });
+  it("shows no budget and no usage states without a banner", () => {
+    const next = structuredClone(usage) as UsageSettingsContentProps["usage"];
+    next.providerSpend.connections.forEach((connection) => {
+      connection.allocation = null;
+      connection.usedPercent = null;
+      connection.state = "no_allocation";
+      connection.used = 0;
     });
-    expect(await screen.findByRole("meter", { name: /\$12\.40 of \$75\.00/ })).toBeVisible();
+    next.providerSpend.summary = {
+      ...next.providerSpend.summary,
+      attention: [],
+      maxUsedPercent: null,
+      projected: { kind: "no_usage" },
+      tightest: null,
+    };
+    renderUsage(next);
+    expect(screen.getByText("No budget set")).toBeInTheDocument();
+    expect(screen.getAllByText("No usage yet").length).toBeGreaterThan(0);
+    expect(screen.queryByText("Connection settings")).not.toBeInTheDocument();
   });
+  it("explains how to connect a provider when the allocation editor is empty", async () => {
+    const user = userEvent.setup();
+    const next = structuredClone(usage) as UsageSettingsContentProps["usage"];
+    next.providerSpend.connections = [];
+    next.providerSpend.summary = {
+      ...next.providerSpend.summary,
+      attention: [],
+      maxUsedPercent: null,
+      projected: { kind: "no_usage" },
+      tightest: null,
+    };
+    renderUsage(next);
 
-  it("hides budget editing when the server-derived capability is false", () => {
-    render(
-      <UsageSettingsContent
-        {...actions}
-        canEditBudget={false}
-        canSubmitPricingFeedback={false}
-        deployment="cloud"
-        projectId="prj_story"
-        usage={usage}
-      />,
+    await user.click(screen.getByRole("button", { name: "Edit budget" }));
+
+    expect(screen.getByRole("dialog")).toHaveTextContent(
+      "No provider connected yet. Connect a provider to set a monthly budget for it.",
     );
+    expect(screen.getByRole("link", { name: "Connect a provider" })).toHaveAttribute(
+      "href",
+      appPath("prj_story", "integrations"),
+    );
+    expect(screen.queryByRole("button", { name: "Save budget" })).not.toBeInTheDocument();
+  });
+  it("keeps allocation editor rows available for a connected provider", async () => {
+    const user = userEvent.setup();
+    const next = structuredClone(usage) as UsageSettingsContentProps["usage"];
+    next.providerSpend.connections = [next.providerSpend.connections[0]];
+    renderUsage(next);
 
-    expect(screen.queryByRole("button", { name: "Edit budget" })).not.toBeInTheDocument();
-    expect(screen.getByText("Only the project owner can send pricing feedback.")).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Edit budget" }));
+
+    expect(screen.getByLabelText("SerpApi monthly budget")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Save budget" })).toBeEnabled();
+  });
+  it("validates and saves changed per-provider budget payloads", async () => {
+    const user = userEvent.setup();
+    renderUsage();
+    await user.click(screen.getByRole("button", { name: "Edit budget" }));
+    const input = screen.getByLabelText("DataForSEO monthly budget");
+    await user.clear(input);
+    await user.type(input, "40.50");
+    await user.click(screen.getByRole("button", { name: "Save budget" }));
+    expect(actions.updateProviderAllocation).toHaveBeenCalledWith("prj_story", {
+      allocation: { amountDollars: "40.50", unit: "cents" },
+      connectionId: "conn_data",
+    });
+    expect(routerMock.refresh).toHaveBeenCalledOnce();
+    fireEvent.click(screen.getByRole("button", { name: "Edit budget" }));
   });
 });

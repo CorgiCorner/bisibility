@@ -4,6 +4,7 @@ import { WorkspaceTile } from "@/components/shell/WorkspaceTile";
 import { workspaceRowMeta } from "@/components/shell/workspace-labels";
 import type { WorkspaceSummary } from "@/lib/queries/workspaces";
 import { appPath } from "@/lib/routing/app-path";
+import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import MenuItem from "@mui/material/MenuItem";
 import { CheckIcon as Check } from "@phosphor-icons/react";
 import Link from "next/link";
@@ -11,7 +12,7 @@ import Link from "next/link";
 /** Shared by workspace rows and the settings/create actions below the separator. */
 export const MENU_ROW_SX = {
   alignItems: "center",
-  borderRadius: "9px",
+  borderRadius: UI_RADIUS_ROLES.control,
   fontSize: "13px",
   fontWeight: 500,
   gap: "10px",
@@ -49,7 +50,7 @@ export function WorkspaceRow({ workspace, active, onSelect }: Readonly<Workspace
         <span className="flex min-w-0 items-center gap-1.5 text-[13px] font-medium leading-tight text-fg">
           <span className="truncate">{workspace.name}</span>
           {workspace.isSample ? (
-            <span className="rounded-full border border-border-strong px-1.5 py-px font-mono text-[9px] uppercase text-fg-muted">
+            <span className="rounded-full border border-border px-1.5 py-px font-mono text-[9px] uppercase text-fg-muted">
               Sample
             </span>
           ) : null}

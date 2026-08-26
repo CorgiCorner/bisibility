@@ -9,11 +9,12 @@ import { PositionDistributionCard } from "@/components/overview/PositionDistribu
 import { PositionTrendCard } from "@/components/overview/PositionTrendCard";
 import type { OverviewView } from "@/components/overview/types";
 import { SampleProjectBanner } from "@/components/sample-data/SampleProjectBanner";
-import { AlertBanner } from "@/components/ui";
+import { AlertBanner, AlertBannerStack } from "@/components/ui";
 import { getFirstCheckRunPlan } from "@/lib/actions/rank-check-preview";
 import { queueFirstChecks, runCheckNow } from "@/lib/actions/rankCheck";
 import { pluralize } from "@/lib/format/pluralize";
 import type { CheckHealth } from "@/lib/queries/check-health";
+import { providerFailurePresentation } from "@/lib/rank-check/failure-presentation";
 import { appPath, rankTrackerTabPath } from "@/lib/routing/app-path";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -30,11 +31,11 @@ function CheckHealthBanners({
 }: Readonly<{ checkHealth: CheckHealth; projectRef: string }>) {
   const latest = checkHealth.failed24h.latest;
   const failureDetail = latest
-    ? `${latest.keyword} · ${latest.provider}: ${latest.error ?? "No error details recorded."}`
+    ? `${latest.keyword}: ${providerFailurePresentation(latest.errorCode).message}`
     : null;
 
   return (
-    <div className="overflow-hidden rounded-[14px] border border-border bg-bg-elev">
+    <AlertBannerStack>
       {checkHealth.failed24h.count > 0 ? (
         <AlertBanner
           detail={failureDetail}
@@ -65,7 +66,7 @@ function CheckHealthBanners({
           title="Rank checks paused - monthly budget reached."
         />
       ) : null}
-    </div>
+    </AlertBannerStack>
   );
 }
 

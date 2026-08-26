@@ -29,7 +29,7 @@ function Frame({
 function AuditFrame() {
   return (
     <Frame className={advancedLoadingCardGeometryClassNames.audit} id="audit">
-      <div className="divide-y divide-border-soft overflow-hidden rounded-[11px] border border-border">
+      <div className="divide-y divide-border-soft overflow-hidden rounded-control border border-border">
         {Array.from({ length: 5 }, (_, index) => (
           <div
             className="grid grid-cols-[34px_minmax(0,1fr)] gap-x-3 gap-y-1 px-3 py-2.5 sm:grid-cols-[34px_minmax(0,1fr)_auto] sm:items-center"
@@ -54,7 +54,7 @@ function AuditFrame() {
 function BackupFrame() {
   return (
     <Frame className={advancedLoadingCardGeometryClassNames.backup} id="backup">
-      <div className="flex items-center justify-between gap-3 rounded-[11px] border border-border px-3.5 py-3">
+      <div className="flex items-center justify-between gap-3 rounded-control border border-border px-3.5 py-3">
         <div className="flex-1 space-y-2">
           <SettingsLoadingBar className="h-3 w-28" />
           <SettingsLoadingBar className="h-2.5 w-64 max-w-full" />

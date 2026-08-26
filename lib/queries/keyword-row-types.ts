@@ -31,6 +31,7 @@ export type RankingUrlEvent = {
   url: string;
 };
 export type LastCheckStatus = "completed" | "failed" | "running" | null;
+export type LatestAttemptHealth = "failed" | "ok" | "running";
 export type KeywordCheckState = "failed" | "never_checked" | "not_ranked" | "ranked" | "running";
 type ScheduleOrigin = "fallback" | "keyword" | "project";
 export type KeywordTrafficSummary = {
@@ -55,6 +56,8 @@ export type KeywordRow = {
   cpc: string;
   cpcKnown?: boolean;
   createdAt: string;
+  dataAsOfAt: string | null;
+  dataProvider: string | null;
   ctr: number | null;
   device: string;
   difficulty: number;
@@ -68,7 +71,9 @@ export type KeywordRow = {
   impressions: number | null;
   keyword: string;
   lastCheckAt: string | null;
+  lastCheckErrorCode: string | null;
   lastCheckStatus: LastCheckStatus;
+  latestAttemptHealth: LatestAttemptHealth;
   location: KeywordLocation;
   locationName: string;
   position: number;

@@ -28,6 +28,26 @@ export function keywordScopeSummary(lens: ActiveLens, options: LensLocationOptio
   return `Scope: ${activeLocationLabel(lens, options)}, ${deviceLabels[lens.device]}`;
 }
 
+export function capturedKeywordFiltersSummary({
+  filterChips,
+  lens,
+  options,
+  search,
+}: {
+  filterChips: KeywordFilterChip[];
+  lens: ActiveLens;
+  options: LensLocationOption[];
+  search: string;
+}) {
+  return [
+    keywordScopeSummary(lens, options),
+    search ? `Search: "${search}"` : null,
+    ...filterChips.map((chip) => chip.label),
+  ]
+    .filter(Boolean)
+    .join(" / ");
+}
+
 function keywordFiltersNeedRankData(chips: KeywordFilterChip[]) {
   return chips.some((chip) => rankDataFilterKeys.has(chip.key) || chip.key.startsWith("serp:"));
 }
@@ -106,4 +126,31 @@ export function keywordNoRowsState({
     }),
     onResetScope: hasActiveKeywordScope(lens) ? onResetScope : undefined,
   };
+}
+
+export function flatKeywordNoRowsState(input: {
+  activeLens: ActiveLens;
+  filterChips: KeywordFilterChip[];
+  flatServer: boolean;
+  hasNoRankData: boolean;
+  locationOptions: LensLocationOption[];
+  onResetScope: () => void;
+  page?: number;
+  rowsEmpty: boolean;
+  searchValue: string;
+}) {
+  if (input.flatServer && input.page && input.page > 1 && input.rowsEmpty)
+    return {
+      description: "This page is beyond the available filtered results.",
+      title: "Page no longer available",
+    };
+  if (!input.rowsEmpty) return undefined;
+  return keywordNoRowsState({
+    filterChips: input.filterChips,
+    hasNoRankData: input.hasNoRankData,
+    hasSearch: Boolean(input.searchValue.trim()),
+    lens: input.activeLens,
+    onResetScope: input.onResetScope,
+    options: input.locationOptions,
+  });
 }

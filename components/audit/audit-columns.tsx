@@ -19,7 +19,7 @@ function ActorEventCell({ row }: Readonly<GridRenderCellParams<AuditEntry>>) {
     <span className="flex h-full min-w-0 items-center gap-2.5 py-1">
       <Avatar
         alt=""
-        className="grid h-[26px] w-[26px] shrink-0 place-items-center rounded-[7px] bg-bg-sunken font-mono text-[9.5px] font-semibold text-fg-muted"
+        className="grid h-[26px] w-[26px] shrink-0 place-items-center rounded-control bg-bg-sunken font-mono text-[9.5px] font-semibold text-fg-muted"
         initials={row.actor.initials}
         src={row.actor.avatarUrl}
       />

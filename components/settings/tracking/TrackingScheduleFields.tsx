@@ -9,7 +9,7 @@ import type { UseFormReturn } from "react-hook-form";
 
 const labelClass = "font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted";
 const triggerClass =
-  "min-h-10 w-full justify-between rounded-[9px] border-border-strong bg-transparent px-3 text-[13px] font-medium normal-case tracking-normal";
+  "min-h-10 w-full justify-between rounded-control border-border-control bg-transparent px-3 text-[13px] font-medium normal-case tracking-normal";
 const frequencyMenuOptions = frequencyOptions.map((option) => ({
   label: option.label,
   value: option.value,
@@ -72,6 +72,7 @@ export function TrackingScheduleFields({
           <p className="m-0 mt-1.5 text-[11.5px] leading-5 text-fg-muted" id="tracking-cron-help">
             Five fields, standard syntax. Schedules must run at least one hour apart.
           </p>
+          <CronRunPreview pending={previewPending} preview={preview} />
         </SettingsField>
       ) : null}
 
@@ -107,7 +108,6 @@ export function TrackingScheduleFields({
         ) : null}
       </SettingsField>
 
-      {showCron ? <CronRunPreview pending={previewPending} preview={preview} /> : null}
       <input type="hidden" {...form.register("jitterMinutes", { valueAsNumber: true })} />
     </div>
   );

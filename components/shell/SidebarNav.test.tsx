@@ -16,6 +16,13 @@ vi.mock("next/link", () => ({
 }));
 
 describe("SidebarNav", () => {
+  it("makes expanded navigation links span the drawer width", () => {
+    setNavigationState({ pathname: appPath("prj_1", "dashboard") });
+    render(<SidebarNav projectRef="prj_1" />);
+
+    expect(screen.getByRole("link", { name: "Dashboard" })).toHaveClass("w-full");
+  });
+
   it("uses Ranking fill on the active Rank Tracker row", () => {
     setNavigationState({ pathname: appPath("prj_1", "rank-tracker") });
     render(<SidebarNav projectRef="prj_1" />);
