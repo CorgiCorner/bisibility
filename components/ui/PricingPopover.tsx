@@ -1,5 +1,6 @@
 "use client";
 
+import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import Popover from "@mui/material/Popover";
 import type { ReactNode } from "react";
 
@@ -30,8 +31,8 @@ export function PricingPopover({
         paper: {
           sx: {
             backgroundColor: "var(--bg-elev)",
-            border: "1px solid var(--border-strong)",
-            borderRadius: "10px",
+            border: "1px solid var(--border)",
+            borderRadius: UI_RADIUS_ROLES.control,
             boxShadow: "none",
             marginTop: "10px",
           },
@@ -67,4 +68,4 @@ export function PricingPopover({
 }
 
 export const pricingTriggerClassName =
-  "whitespace-nowrap text-[12.5px] text-fg-muted underline decoration-border-strong underline-offset-4 transition-colors hover:text-fg";
+  "whitespace-nowrap text-[12.5px] text-fg-muted underline decoration-border-control underline-offset-4 transition-colors hover:text-fg";

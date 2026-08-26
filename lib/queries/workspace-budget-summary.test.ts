@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   monthlySpend: vi.fn(),
+  providerSpend: vi.fn(),
   projectBudgetCap: vi.fn(),
 }));
 
@@ -12,6 +13,9 @@ vi.mock("@/lib/rank-check/budget", () => ({
 }));
 vi.mock("./workspace-request-data", () => ({
   getRequestMonthlySpendCents: mocks.monthlySpend,
+}));
+vi.mock("./provider-spend", () => ({
+  loadProjectProviderSpend: mocks.providerSpend,
 }));
 
 import { loadWorkspaceBudgetSummary } from "./workspace-budget-summary";
@@ -41,6 +45,17 @@ describe("workspace budget summary", () => {
     vi.clearAllMocks();
     mocks.monthlySpend.mockResolvedValue(1_240);
     mocks.projectBudgetCap.mockResolvedValue(5_000);
+    mocks.providerSpend.mockResolvedValue({
+      summary: {
+        maxUsedPercent: 80,
+        recorded: { cents: 1_240, units: 10 },
+        tightest: {
+          connectionId: "conn_abcdefghijklmnopqrstuvwx",
+          provider: "Metered",
+          usedPercent: 80,
+        },
+      },
+    });
     warnSpy = vi.spyOn(console, "warn").mockImplementation(() => undefined);
   });
 
@@ -51,7 +66,18 @@ describe("workspace budget summary", () => {
   it("loads truthful spend and cap values without concurrent pool fan-out", async () => {
     await expect(
       loadWorkspaceBudgetSummary("project_1", new Date("2026-07-23T12:00:00.000Z")),
-    ).resolves.toEqual({ capCents: 5_000, spentCents: 1_240 });
+    ).resolves.toEqual({
+      capCents: 5_000,
+      hasAllocation: true,
+      maxUsedPercent: 80,
+      recorded: { cents: 1_240, units: 10 },
+      spentCents: 1_240,
+      tightest: {
+        connectionId: "conn_abcdefghijklmnopqrstuvwx",
+        provider: "Metered",
+        usedPercent: 80,
+      },
+    });
 
     expect(mocks.monthlySpend.mock.invocationCallOrder[0]).toBeLessThan(
       mocks.projectBudgetCap.mock.invocationCallOrder[0],

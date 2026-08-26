@@ -3,7 +3,7 @@ import { DEFAULT_SERP_DEPTH, languageForSerpMarket, SERP_ENGINE } from "@/lib/se
 
 export const onboardingFormId = "onboarding-step-form";
 
-export const inputClass = `${inputClassName} rounded-[9px] px-[13px] py-[11px] font-medium`;
+export const inputClass = `${inputClassName} rounded-control px-[13px] py-[11px] font-medium`;
 
 export const labelClass =
   "flex flex-col gap-[7px] font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted";

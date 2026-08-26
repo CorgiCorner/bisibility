@@ -23,6 +23,16 @@ function location(): SerpRankLocation {
 
 function tasks(count: number) {
   return Array.from({ length: count }, (_, index) => ({
+    attribution: {
+      context: {
+        correlationId: `correlation_${index + 1}`,
+        feature: "rank_check" as const,
+        projectId: "project_1",
+        source: "worker" as const,
+        trigger: "scheduled" as const,
+      },
+      tag: `app=bisibility;stage=dev;src=worker;trg=scheduled;f=rank_check;p=project_1;c=correlation_${index + 1}`,
+    },
     correlationId: `correlation_${index + 1}`,
     depth: 100 as const,
     device: "desktop" as const,
@@ -39,7 +49,9 @@ function createdEnvelope(count: number) {
     status_code: 20000,
     tasks: Array.from({ length: count }, (_, index) => ({
       cost: 0.012,
-      data: { tag: dataForSeoQueuedTaskTag(`correlation_${index + 1}`) },
+      data: {
+        tag: `app=bisibility;stage=dev;src=worker;trg=scheduled;f=rank_check;p=project_1;c=correlation_${index + 1}`,
+      },
       id: `provider_${index + 1}`,
       status_code: 20100,
       status_message: "Task Created.",
@@ -73,7 +85,7 @@ describe("DataForSEO queued tasks", () => {
     expect(body[0]).toMatchObject({
       depth: 100,
       priority: 2,
-      tag: "bisibility:rank:correlation_1",
+      tag: "app=bisibility;stage=dev;src=worker;trg=scheduled;f=rank_check;p=project_1;c=correlation_1",
     });
   });
 

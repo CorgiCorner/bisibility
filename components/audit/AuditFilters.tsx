@@ -16,9 +16,9 @@ import {
   BracketsCurlyIcon as BracketsCurly,
   CalendarBlankIcon as CalendarBlank,
   CaretDownIcon as CaretDown,
-  ExportIcon as Export,
   FileCsvIcon as FileCsv,
   FunnelIcon as Funnel,
+  UploadSimpleIcon as UploadSimple,
   UserIcon as User,
 } from "@phosphor-icons/react";
 import { useMemo, useRef, useState } from "react";
@@ -42,7 +42,7 @@ export type AuditFiltersProps = {
 };
 
 // One spec shared by every button in the toolbar cluster (HANDOFF-25 §0):
-// weight 500, --fg, 1px --border-strong, --bg-elev, radius 9, padding 7px 11px.
+// weight 500, --fg, 1px --border-control, --bg-elev, radius 9, padding 7px 11px.
 const toolbarButtonClass = cn(
   toolbarControlClassName,
   "inline-flex items-center gap-1.5 px-[11px] py-[7px] outline-none transition-colors hover:border-accent focus:border-accent",
@@ -167,7 +167,7 @@ export function AuditFilters({
             onClick={(event) => setExportAnchor(event.currentTarget)}
             type="button"
           >
-            <Export aria-hidden size={14} />
+            <UploadSimple aria-hidden size={14} />
             Export
             <CaretDown aria-hidden size={12} />
           </button>

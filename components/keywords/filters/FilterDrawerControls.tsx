@@ -13,7 +13,6 @@ export function toggleFilterValue<T extends string>(values: T[], value: T) {
 
 export function FilterSection({
   children,
-  icon: Icon,
   title,
 }: Readonly<{
   children: ReactNode;
@@ -22,10 +21,7 @@ export function FilterSection({
 }>) {
   return (
     <section className="border-b border-border-soft py-4.5 last:border-b-0 last:pb-1">
-      <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.6px] text-fg-muted">
-        <Icon className="text-accent-text" size={14} weight="bold" />
-        {title}
-      </div>
+      <div className="font-mono text-[11px] uppercase tracking-[0.6px] text-fg-muted">{title}</div>
       {children}
     </section>
   );
@@ -46,7 +42,7 @@ export function FilterCheckTile({
 }>) {
   return (
     <button
-      className="flex items-center gap-[9px] rounded-[9px] border bg-bg-elev px-[11px] py-[9px] text-left outline-none transition-colors hover:border-accent focus-visible:border-accent"
+      className="flex items-center gap-[9px] rounded-control border bg-bg-elev px-[11px] py-[9px] text-left outline-none transition-colors hover:border-accent focus-visible:border-accent"
       onClick={onClick}
       style={{
         backgroundColor: active ? "var(--accent-soft)" : "var(--bg-elev)",
@@ -55,7 +51,7 @@ export function FilterCheckTile({
       type="button"
     >
       <span
-        className="grid h-[17px] w-[17px] shrink-0 place-items-center rounded-[5px] border-[1.5px]"
+        className="grid h-[17px] w-[17px] shrink-0 place-items-center rounded-control border-[1.5px]"
         style={{
           backgroundColor: active ? "var(--accent)" : "var(--bg-elev)",
           borderColor: active ? "var(--accent)" : "var(--border-strong)",
@@ -82,12 +78,16 @@ export function FilterSegment<T extends string>({
   value: T;
 }>) {
   return (
-    <div className="flex flex-wrap items-center gap-0.5 rounded-[9px] border border-border-strong bg-transparent p-[3px]">
+    <div
+      className={`grid items-center gap-0.5 rounded-control border border-border-strong bg-transparent p-[3px] ${
+        options.length > 4 ? "grid-cols-3" : "grid-flow-col auto-cols-fr"
+      }`}
+    >
       {options.map((option) => {
         const active = option.id === value;
         return (
           <button
-            className="flex-1 rounded-[7px] px-2 py-1.5 text-[12px] font-semibold outline-none transition-colors focus-visible:bg-accent-solid focus-visible:text-accent-on-solid"
+            className="min-w-0 whitespace-nowrap rounded-control px-2 py-1.5 text-[12px] font-semibold outline-none transition-colors focus-visible:bg-accent-solid focus-visible:text-accent-on-solid"
             key={option.id}
             onClick={() => onChange(option.id)}
             style={{

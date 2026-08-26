@@ -15,7 +15,7 @@ type WebhookEndpointRowProps = {
   upsertAction: EndpointAction;
 };
 
-const fieldClass = `${inputClassName} min-h-10 w-full rounded-[9px] px-3 py-2 text-[13px]`;
+const fieldClass = `${inputClassName} min-h-10 w-full rounded-control px-3 py-2 text-[13px]`;
 
 function actionResponse(result: unknown) {
   return result && typeof result === "object" ? (result as Record<string, unknown>) : {};
@@ -144,7 +144,7 @@ export function WebhookEndpointRow({
   }
 
   return (
-    <li className="grid min-w-0 gap-2 rounded-[9px] border border-border bg-bg-elev p-2.5">
+    <li className="grid min-w-0 gap-2 rounded-control border border-border bg-bg-elev p-2.5">
       <div className="flex min-w-0 flex-wrap items-center gap-2">
         <span className="min-w-0 flex-1 truncate">{endpoint.url}</span>
         <span className={endpoint.enabled ? "text-green-text" : "text-fg-muted"}>

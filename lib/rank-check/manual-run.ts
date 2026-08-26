@@ -9,6 +9,7 @@ import {
 import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { makePublicId } from "@/lib/db/public-id";
+import { requireTrackedDomain } from "@/lib/projects/tracked-domain";
 import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
 import { assertBudgetAvailable, isBudgetExhaustedError } from "@/lib/rank-check/budget";
 import {
@@ -35,7 +36,7 @@ import {
 
 export type RunCheckNowResult =
   | BudgetExhaustedResult
-  | { code: "check_in_progress"; message: string; status: "not_started" }
+  | { code: "check_in_progress" | "sample_project"; message: string; status: "not_started" }
   | { rankCheckId: string; status: "running" }
   | {
       attempts: number;
@@ -60,13 +61,18 @@ export async function manualRunCheckNow(input: unknown): Promise<RunCheckNowResu
   const actor = await getActionActor();
   const keywordScope = await requireKeywordScope(actor, "update", data.keywordId);
   if (keywordScope.projectIsSample) {
-    throw new Error("Sample projects don't run real checks.");
+    return {
+      code: "sample_project",
+      message: "Sample projects don't run real checks.",
+      status: "not_started",
+    };
   }
   const budgetContext = await prisma.keyword.findUnique({
     select: {
       project: {
         select: {
           budgetCapCents: true,
+          providerAllocationsInitializedAt: true,
           defaults: { select: { serpDepth: true } },
           domain: true,
         },
@@ -88,6 +94,7 @@ export async function manualRunCheckNow(input: unknown): Promise<RunCheckNowResu
   if (!budgetContext) {
     throw new Error("Keyword not found.");
   }
+  requireTrackedDomain(budgetContext.project);
   const auditResult = async (result: RunCheckNowResult) => {
     await writeAudit({
       action: "rank_check.run_now",
@@ -128,16 +135,18 @@ export async function manualRunCheckNow(input: unknown): Promise<RunCheckNowResu
     connections[0]?.costPerCheckCents,
     connections[0]?.rateContext ?? LIST_PROVIDER_RATE_CONTEXT,
   );
-  try {
-    await assertBudgetAvailable(keywordScope.projectId, new Date(), {
-      capCents: budgetContext.project.budgetCapCents,
-      estimatedCostCents,
-    });
-  } catch (error) {
-    if (isBudgetExhaustedError(error)) {
-      return budgetExhaustedResult(error.message);
+  if (!budgetContext.project.providerAllocationsInitializedAt) {
+    try {
+      await assertBudgetAvailable(keywordScope.projectId, new Date(), {
+        capCents: budgetContext.project.budgetCapCents,
+        estimatedCostCents,
+      });
+    } catch (error) {
+      if (isBudgetExhaustedError(error)) {
+        return budgetExhaustedResult(error.message);
+      }
+      throw error;
     }
-    throw error;
   }
   // Pre-create the running row so a public id is available immediately for
   // status polling. The workflow activity claims this row by its internal id.

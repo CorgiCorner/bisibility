@@ -24,7 +24,6 @@ export function DataSourcePanel({ checkHealth, health }: Readonly<DataSourcePane
           <MonoText muted>{health.description}</MonoText>
         </div>
         <div className="flex flex-wrap justify-end gap-2">
-          <DataSourceStatusBadge status={health.status} />
           {checkHealth?.budget.exhausted ? (
             <span
               className="inline-flex flex-none items-center gap-[7px] rounded-full px-[11px] py-1.5 font-mono text-[11.5px] font-semibold"
@@ -49,7 +48,12 @@ export function DataSourcePanel({ checkHealth, health }: Readonly<DataSourcePane
             <div className="font-mono text-[10px] uppercase tracking-[0.6px] text-fg-muted">
               {metric.label}
             </div>
-            <div className="mt-[5px] truncate text-sm font-semibold text-fg">{metric.value}</div>
+            <div className="mt-[5px] flex min-w-0 items-center gap-1.5">
+              <span className="truncate text-sm font-semibold text-fg">{metric.value}</span>
+              {metric.label === "Primary provider" ? (
+                <DataSourceStatusBadge status={health.status} />
+              ) : null}
+            </div>
           </div>
         ))}
       </div>

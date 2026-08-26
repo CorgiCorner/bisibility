@@ -2,6 +2,7 @@
 
 import { ZonedTime } from "@/components/ui";
 import type { UpcomingBlockedGroup, UpcomingDayGroup } from "@/lib/checks/contract";
+import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import Drawer from "@mui/material/Drawer";
 import {
   CaretRightIcon as CaretRight,
@@ -46,7 +47,7 @@ export function UpcomingStrip({
             className={`inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-full border px-3 text-xs font-semibold ${
               hasNeverRun
                 ? "border-red/30 bg-red/8 text-red-text"
-                : "border-border-strong bg-bg-elev text-fg-muted"
+                : "border-border bg-bg-elev text-fg-muted"
             }`}
           >
             <WarningCircle
@@ -63,7 +64,7 @@ export function UpcomingStrip({
             aria-label={`${day.label}, ${formatCheckCount(day.count)}, about ${formatEstimatedCost(
               day.estimatedCostCents,
             )}`}
-            className="inline-flex min-h-10 shrink-0 items-center rounded-full border border-border-strong bg-bg-elev px-3 text-xs font-semibold text-fg outline-none transition-colors hover:border-accent hover:text-accent-text focus-visible:border-accent focus-visible:text-accent-text"
+            className="inline-flex min-h-10 shrink-0 items-center rounded-full border border-border-control bg-bg-elev px-3 text-xs font-semibold text-fg outline-none transition-colors hover:border-accent hover:text-accent-text focus-visible:border-accent focus-visible:text-accent-text"
             key={day.key}
             onClick={() => setOpenDayKey(day.key)}
             type="button"
@@ -88,9 +89,9 @@ export function UpcomingStrip({
             role: "dialog",
             sx: {
               backgroundColor: "var(--bg-elev)",
-              borderColor: "var(--border-strong)",
-              borderRadius: "18px 18px 0 0",
-              borderTop: "1px solid var(--border-strong)",
+              borderColor: "var(--border)",
+              borderRadius: `${UI_RADIUS_ROLES.card} ${UI_RADIUS_ROLES.card} 0 0`,
+              borderTop: "1px solid var(--border)",
               boxShadow: "none",
               color: "var(--fg)",
               height: "min(76vh, 420px)",
@@ -103,7 +104,7 @@ export function UpcomingStrip({
         {openDay ? (
           <div className="flex min-h-0 flex-1 flex-col">
             <div aria-hidden className="flex justify-center pb-0.5 pt-2">
-              <span className="h-1 w-[38px] rounded-sm bg-border-strong" />
+              <span className="h-1 w-[38px] rounded-control bg-border" />
             </div>
             <header className="flex items-start justify-between gap-3 border-border border-b px-5 pb-4 pt-3">
               <div className="min-w-0">
@@ -117,7 +118,7 @@ export function UpcomingStrip({
               </div>
               <button
                 aria-label="Close sheet"
-                className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-fg-muted outline-none transition-colors hover:bg-bg-sunken focus-visible:bg-bg-sunken"
+                className="grid h-9 w-9 shrink-0 place-items-center rounded-control text-fg-muted outline-none transition-colors hover:bg-bg-sunken focus-visible:bg-bg-sunken"
                 onClick={() => setOpenDayKey(null)}
                 type="button"
               >

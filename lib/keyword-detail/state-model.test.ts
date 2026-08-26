@@ -55,12 +55,31 @@ describe("deriveKeywordDetailState", () => {
         keyword({
           checkState,
           hasRankData: checkState === "ranked",
+          latestAttemptHealth:
+            checkState === "failed" ? "failed" : checkState === "running" ? "running" : "ok",
           position: checkState === "ranked" ? 3 : 101,
         }),
         traffic(),
       ).rankState,
     ).toBe(rankState);
   });
+
+  it.each([
+    [48, true, "failed", "normal"],
+    [101, true, "failed", "not_ranked"],
+    [101, false, "failed", "failed"],
+    [48, true, "running", "normal"],
+  ] as const)(
+    "derives completed position %s with data %s and %s attempt health as %s",
+    (position, hasRankData, latestAttemptHealth, expectedRankState) => {
+      expect(
+        deriveKeywordDetailState(
+          keyword({ hasRankData, latestAttemptHealth, position }),
+          traffic(),
+        ),
+      ).toMatchObject({ latestAttemptHealth, rankState: expectedRankState });
+    },
+  );
 
   it("keeps chart, context, traffic, and first-check state independent", () => {
     const state = deriveKeywordDetailState(

@@ -5,19 +5,14 @@ import {
   ProjectReadOnlyTooltip,
   useProjectWriteMode,
 } from "@/components/shell/ProjectWriteModeProvider";
-import { Button, Tooltip } from "@/components/ui";
-import {
-  CheckCircleIcon as CheckCircle,
-  CircleNotchIcon as CircleNotch,
-  PlugsIcon as Plugs,
-} from "@phosphor-icons/react";
+import { Button } from "@/components/ui";
+import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react";
 
 type ConnectDrawerFooterProps = {
   busy: boolean;
   formId: string;
   isManage: boolean;
   oauthOnly?: boolean;
-  onDisconnect: () => void;
   onTest: () => void;
   pendingAction: PendingAction | null;
   saveDisabled?: boolean;
@@ -26,7 +21,6 @@ type ConnectDrawerFooterProps = {
 };
 
 function testButtonPresentation(state: ConnectDrawerFooterProps["testState"]) {
-  if (state === "testing") return { Icon: CircleNotch, label: "Testing…" };
   if (state === "ok") return { Icon: CheckCircle, label: "Verified" };
   return { Icon: null, label: "Test connection" };
 }
@@ -36,7 +30,6 @@ export function ConnectDrawerFooter({
   formId,
   isManage,
   oauthOnly = false,
-  onDisconnect,
   onTest,
   pendingAction,
   saveDisabled = false,
@@ -46,60 +39,17 @@ export function ConnectDrawerFooter({
   const { readOnly } = useProjectWriteMode();
   const { Icon: TestIcon, label: testButtonLabel } = testButtonPresentation(testState);
 
-  if (oauthOnly) {
-    return isManage ? (
-      <ProjectReadOnlyTooltip>
-        <Button
-          disabled={readOnly || busy}
-          onClick={onDisconnect}
-          startIcon={<Plugs aria-hidden size={17} />}
-          type="button"
-          variant="secondary"
-        >
-          Disconnect
-        </Button>
-      </ProjectReadOnlyTooltip>
-    ) : null;
-  }
+  if (oauthOnly) return null;
 
   return (
     <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
-      {isManage ? (
-        <Tooltip content={readOnly ? "Read-only during migration hold" : "Disconnect"}>
-          <span className="shrink-0">
-            <Button
-              aria-label="Disconnect provider"
-              disabled={readOnly || busy}
-              onClick={onDisconnect}
-              sx={{
-                color: "var(--red)",
-                minHeight: 42,
-                minWidth: 42,
-                padding: 0,
-                "&:hover": { borderColor: "var(--red)", color: "var(--red)" },
-              }}
-              type="button"
-              variant="secondary"
-            >
-              <Plugs aria-hidden size={17} />
-            </Button>
-          </span>
-        </Tooltip>
-      ) : null}
       <ProjectReadOnlyTooltip>
         <Button
           disabled={readOnly || busy || testDisabled}
+          loading={testState === "testing"}
+          loadingLabel="Testing…"
           onClick={onTest}
-          startIcon={
-            TestIcon ? (
-              <TestIcon
-                aria-hidden
-                className={testState === "testing" ? "animate-spin" : undefined}
-                size={16}
-                weight="fill"
-              />
-            ) : undefined
-          }
+          startIcon={TestIcon ? <TestIcon aria-hidden size={16} weight="fill" /> : undefined}
           type="button"
           variant="secondary"
         >

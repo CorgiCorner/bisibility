@@ -181,7 +181,7 @@ describe("form primitives", () => {
     expect(daily.nextElementSibling).toHaveClass(
       "h-[26px]",
       "bg-nav-active",
-      "border-border-strong",
+      "border-border-control",
       "text-fg",
       "font-normal",
     );
@@ -215,7 +215,7 @@ describe("form primitives", () => {
   });
 
   it("ignores the deprecated activeVariant prop and uses one canonical active style", () => {
-    const CANONICAL = ["border-border-strong", "bg-nav-active", "text-fg"];
+    const CANONICAL = ["border-border-control", "bg-nav-active", "text-fg"];
 
     function VariantHarness({ activeVariant }: { activeVariant: "accent" | "neutral" }) {
       const [value, setValue] = useState<Frequency>("daily");
@@ -305,11 +305,25 @@ describe("form primitives", () => {
     });
   });
 
-  it("renders textarea states", () => {
-    render(<Textarea aria-label="Keywords" defaultValue="rank tracker" disabled />);
+  it("renders textarea states with the shared placeholder typography", () => {
+    render(
+      <Textarea
+        aria-label="Keywords"
+        defaultValue="rank tracker"
+        disabled
+        placeholder="Add one keyword per line"
+      />,
+    );
 
     const textarea = screen.getByRole("textbox", { name: "Keywords" });
     expect(textarea).toHaveValue("rank tracker");
     expect(textarea).toBeDisabled();
+    expect(textarea).toHaveClass(
+      "text-[13px]",
+      "leading-[1.7]",
+      "placeholder:text-[12px]",
+      "placeholder:leading-4",
+      "placeholder:text-fg-muted",
+    );
   });
 });

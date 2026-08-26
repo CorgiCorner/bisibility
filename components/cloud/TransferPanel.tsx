@@ -164,10 +164,10 @@ export function TransferPanel({
     job.state === "receiving" || job.state === "importing" || job.state === "done";
 
   return (
-    <div className="mt-4.5 overflow-hidden rounded-[14px] border border-border bg-bg-elev">
+    <div className="mt-4.5 overflow-hidden rounded-card border border-border bg-bg-elev">
       <div className="flex items-center gap-[13px] p-[16px_20px]">
         <span
-          className={`grid h-[38px] w-[38px] flex-none place-items-center rounded-[10px] ${tone.tile}`}
+          className={`grid h-[38px] w-[38px] flex-none place-items-center rounded-control ${tone.tile}`}
         >
           <StateIcon aria-hidden size={19} weight={cfg.weight} />
         </span>
@@ -185,9 +185,9 @@ export function TransferPanel({
 
       {showProgress ? (
         <div className="px-5 pb-4">
-          <div className="h-1.5 overflow-hidden rounded-[3px] bg-bg-sunken">
+          <div className="h-1.5 overflow-hidden rounded-control bg-bg-sunken">
             <div
-              className={`h-full rounded-[3px] transition-[width] duration-500 ${
+              className={`h-full rounded-control transition-[width] duration-500 ${
                 job.state === "done"
                   ? restoredWithNotes(job)
                     ? "bg-yellow"
@@ -203,7 +203,10 @@ export function TransferPanel({
       {counts.length > 0 ? (
         <div className="grid gap-2 border-border-soft border-t px-5 py-3 sm:grid-cols-3">
           {counts.map((item) => (
-            <div className="rounded-[10px] bg-bg-sunken px-3 py-2 font-mono text-[11px]" key={item}>
+            <div
+              className="rounded-control bg-bg-sunken px-3 py-2 font-mono text-[11px]"
+              key={item}
+            >
               {item}
             </div>
           ))}
@@ -217,7 +220,7 @@ export function TransferPanel({
             Import job {job.id}
           </span>
           <a
-            className="inline-flex flex-none items-center gap-1.5 rounded-lg bg-accent-solid px-3.5 py-2 font-semibold text-[12px] text-accent-on-solid"
+            className="inline-flex flex-none items-center gap-1.5 rounded-control bg-accent-solid px-3.5 py-2 font-semibold text-[12px] text-accent-on-solid"
             href={appPath(projectRef, "dashboard")}
           >
             Open project
@@ -228,7 +231,7 @@ export function TransferPanel({
 
       {job.state === "failed" ? (
         <div className="flex flex-col gap-3 border-border-soft border-t p-[14px_20px]">
-          <div className="flex items-start gap-2.5 rounded-[11px] border border-red bg-red/10 px-3.5 py-3">
+          <div className="flex items-start gap-2.5 rounded-control border border-red bg-red/10 px-3.5 py-3">
             <WarningOctagon
               aria-hidden
               className="mt-px flex-none text-red-text"
@@ -243,11 +246,11 @@ export function TransferPanel({
 
           <div className="flex flex-wrap items-center gap-x-[11px] gap-y-2 font-mono text-[11px] text-fg-muted">
             <span className="text-red-text">failed</span>
-            <span className="h-2.5 w-px bg-border-strong" />
+            <span className="h-2.5 w-px bg-border" />
             <span>transfer_id {job.id ?? "pending"}</span>
             {job.finishedAt ? (
               <>
-                <span className="h-2.5 w-px bg-border-strong" />
+                <span className="h-2.5 w-px bg-border" />
                 <span>{new Date(job.finishedAt).toLocaleString()}</span>
               </>
             ) : null}
@@ -265,7 +268,7 @@ export function TransferPanel({
               New token
             </Button>
             <a
-              className="inline-flex flex-none items-center gap-1.5 rounded-lg border border-border-strong bg-bg-elev px-3.5 py-2 font-semibold text-[12px] text-fg"
+              className="inline-flex flex-none items-center gap-1.5 rounded-control border border-border-control bg-bg-elev px-3.5 py-2 font-semibold text-[12px] text-fg"
               download={`${job.id ?? "cloud-import"}-error.log`}
               href={errorLogHref(job)}
             >

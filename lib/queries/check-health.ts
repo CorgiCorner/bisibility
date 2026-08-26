@@ -20,6 +20,7 @@ type CheckHealthStatsRow = {
   failedCount: number;
   latestCheckedAt: Date | null;
   latestError: string | null;
+  latestErrorCode: string | null;
   latestKeyword: string | null;
   latestProvider: string | null;
   runningCount: number;
@@ -28,7 +29,7 @@ type CheckHealthStatsRow = {
 export async function loadCheckHealthStats(projectId: string, since: Date) {
   const [row] = await prisma.$queryRaw<CheckHealthStatsRow[]>`
     WITH scoped_checks AS (
-      SELECT rc."checkedAt", rc.error, rc.provider, rc.status, k.text AS keyword
+      SELECT rc."checkedAt", rc.error, rc."errorCode", rc.provider, rc.status, k.text AS keyword
       FROM "rank_checks" rc
       JOIN "keywords" k ON k.id = rc."keywordId"
       WHERE k."projectId" = ${projectId}
@@ -37,12 +38,13 @@ export async function loadCheckHealthStats(projectId: string, since: Date) {
       (SELECT COUNT(*)::int FROM scoped_checks WHERE status = 'failed' AND "checkedAt" >= ${since}) AS "failedCount",
       latest."checkedAt" AS "latestCheckedAt",
       latest.error AS "latestError",
+      latest."errorCode" AS "latestErrorCode",
       latest.keyword AS "latestKeyword",
       latest.provider AS "latestProvider",
       (SELECT COUNT(*)::int FROM scoped_checks WHERE status = 'running') AS "runningCount"
     FROM (VALUES (1)) AS seed(value)
     LEFT JOIN LATERAL (
-      SELECT "checkedAt", error, keyword, provider
+      SELECT "checkedAt", error, "errorCode", keyword, provider
       FROM scoped_checks
       WHERE status = 'failed' AND "checkedAt" >= ${since}
       ORDER BY "checkedAt" DESC
@@ -54,6 +56,7 @@ export async function loadCheckHealthStats(projectId: string, since: Date) {
       failedCount: 0,
       latestCheckedAt: null,
       latestError: null,
+      latestErrorCode: null,
       latestKeyword: null,
       latestProvider: null,
       runningCount: 0,
@@ -93,6 +96,7 @@ export async function getCheckHealth(projectId: string, options: { now?: Date } 
         ? {
             checkedAt: iso(stats.latestCheckedAt),
             error: stats.latestError,
+            errorCode: stats.latestErrorCode,
             keyword: stats.latestKeyword ?? "Unknown keyword",
             provider: stats.latestProvider ?? "unknown",
           }

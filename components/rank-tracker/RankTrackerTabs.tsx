@@ -4,13 +4,23 @@ import Link from "next/link";
 
 type RankTrackerTabsProps = {
   activeTab: RankTrackerTab;
+  checksCount: number;
   projectRef: string;
   savedCount: number;
   trackedCount: number;
 };
 
+const compactCount = new Intl.NumberFormat("en-US", {
+  maximumFractionDigits: 1,
+  notation: "compact",
+});
+
+function formatCount(value: number) {
+  return compactCount.format(value).toLowerCase();
+}
+
 function countChip() {
-  return "rounded-md bg-bg-sunken px-[7px] py-0.5 font-mono text-[11px] text-fg-muted";
+  return "rounded-control bg-bg-sunken px-[7px] py-0.5 font-mono text-[11px] text-fg-muted";
 }
 
 function tabClass(active: boolean) {
@@ -24,6 +34,7 @@ function tabClass(active: boolean) {
 
 export function RankTrackerTabs({
   activeTab,
+  checksCount,
   projectRef,
   savedCount,
   trackedCount,
@@ -33,7 +44,7 @@ export function RankTrackerTabs({
   const checksActive = activeTab === "checks";
 
   return (
-    <nav aria-label="Rank Tracker views" className="flex gap-1 border-b border-border-strong">
+    <nav aria-label="Rank Tracker views" className="flex gap-1 border-b border-border">
       <Link
         aria-current={trackedActive ? "page" : undefined}
         aria-label={`Tracked ${trackedCount}`}
@@ -54,10 +65,12 @@ export function RankTrackerTabs({
       </Link>
       <Link
         aria-current={checksActive ? "page" : undefined}
+        aria-label={`Checks ${checksCount}`}
         className={tabClass(checksActive)}
         href={rankTrackerTabPath(projectRef, "checks")}
       >
         <span>Checks</span>
+        <span className={countChip()}>{formatCount(checksCount)}</span>
       </Link>
     </nav>
   );

@@ -125,7 +125,7 @@ export function MarketPicker({
     const row = (
       <button
         aria-pressed={isSelected || isTracked}
-        className={`flex min-h-10 w-full items-center gap-2 rounded-[9px] px-3 py-2 text-left transition-colors hover:bg-bg-sunken ${
+        className={`flex min-h-10 w-full items-center gap-2 rounded-control px-3 py-2 text-left transition-colors hover:bg-bg-sunken ${
           isSelected || isTracked ? "bg-accent-soft text-fg" : "text-fg-muted"
         }`}
         disabled={isDisabled}
@@ -189,10 +189,7 @@ export function MarketPicker({
   }
 
   return (
-    <section
-      aria-label="Add markets"
-      className="rounded-[12px] border border-border bg-bg-elev p-4"
-    >
+    <section aria-label="Add markets" className="rounded-card border border-border bg-bg-elev p-4">
       <LocationField
         disabled={submitting}
         label="Location"
@@ -208,7 +205,7 @@ export function MarketPicker({
           <button
             aria-controls={listId}
             aria-expanded={showMore}
-            className="inline-flex min-h-[26px] items-center rounded-[7px] border border-border bg-bg-elev px-2 text-[11.5px] font-semibold text-fg-muted outline-offset-2 transition-colors hover:border-border-strong hover:bg-bg-sunken hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-solid"
+            className="inline-flex min-h-[26px] items-center rounded-control border border-border-control bg-bg-elev px-2 text-[11.5px] font-semibold text-fg-muted outline-offset-2 transition-colors hover:border-border-control hover:bg-bg-sunken hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-solid"
             onClick={toggleExpanded}
             type="button"
           >
@@ -219,7 +216,7 @@ export function MarketPicker({
             and the dialog must not grow past the viewport in either case. */}
         <fieldset
           aria-label="Languages"
-          className="m-0 mt-2 max-h-[min(60vh,520px)] min-w-0 overflow-y-auto rounded-[10px] border border-border-soft p-0"
+          className="m-0 mt-2 max-h-[min(60vh,520px)] min-w-0 overflow-y-auto rounded-control border border-border-soft p-0"
           id={listId}
         >
           {showMore ? (

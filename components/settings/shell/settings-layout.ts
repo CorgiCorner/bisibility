@@ -4,7 +4,7 @@ export const settingsShellGridClassName =
 export const settingsContentColumnClassName = "min-w-0 w-full max-w-[760px]";
 
 export const settingsCardFrameClassName =
-  "min-h-[184px] w-full max-w-[760px] rounded-2xl border border-border bg-bg-elev p-5";
+  "min-h-[184px] w-full max-w-[760px] rounded-card border border-border bg-bg-elev p-5";
 
 export const settingsCardGeometryClassNames = {
   compact: "h-[219px] lg:h-[226px]",

@@ -194,7 +194,7 @@ export function SecurityFactors({
     >
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-[13px]">
-          <span className="grid h-9 w-9 flex-none place-items-center rounded-[10px] bg-bg-sunken text-fg-muted">
+          <span className="grid h-9 w-9 flex-none place-items-center rounded-control bg-bg-sunken text-fg-muted">
             {enabled ? <ShieldCheck size={18} /> : <DeviceMobile size={18} />}
           </span>
           <span className="min-w-0 flex-1">
@@ -251,7 +251,7 @@ export function SecurityFactors({
                 // biome-ignore lint/performance/noImgElement: The generated QR code is an in-memory data URI.
                 <img
                   alt="Authenticator app QR code"
-                  className="h-[180px] w-[180px] rounded-[12px] border border-border-strong bg-white p-2"
+                  className="h-[180px] w-[180px] rounded-card border border-border bg-white p-2"
                   src={setup.qrDataUrl}
                 />
               ) : (

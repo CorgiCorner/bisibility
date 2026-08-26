@@ -20,10 +20,10 @@ describe("set instance setting", () => {
 
   it("parses the validated provider instance slug", () => {
     expect(
-      parseSettingOptions(["--key", "provider_instance_slug", "--value", "white_label-1"]),
-    ).toEqual({ key: "provider_instance_slug", value: "white_label-1" });
+      parseSettingOptions(["--key", "instance_slug", "--value", "white-label-1"]),
+    ).toEqual({ key: "instance_slug", value: "white-label-1" });
     expect(() =>
-      parseSettingOptions(["--key", "provider_instance_slug", "--value", "white label"]),
+      parseSettingOptions(["--key", "instance_slug", "--value", "white label"]),
     ).toThrow("instance slug");
   });
 

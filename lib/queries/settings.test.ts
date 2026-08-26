@@ -1,4 +1,4 @@
-import { dateFromFrozenNow } from "@/tests/clock";
+import { dateFromFrozenNow, FROZEN_NOW_ISO } from "@/tests/clock";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getSettings } from "./settings";
 
@@ -21,6 +21,35 @@ vi.mock("./_auth", () => ({
 vi.mock("@/lib/providers/registry", () => ({
   getSerpProvider: (id: string) =>
     id === "dataforseo" ? { fetchRelatedKeywords: async () => ({ costCents: 0, rows: [] }) } : {},
+  serpProviderCapabilities: (id: string) =>
+    id === "dataforseo"
+      ? {
+          backlinks: true,
+          domainOverview: true,
+          keywordMetrics: true,
+          keywordResearch: true,
+          rankCheck: true,
+          rankedKeywords: true,
+        }
+      : id === "local-sequence"
+        ? {
+            backlinks: false,
+            domainOverview: false,
+            keywordMetrics: false,
+            keywordResearch: false,
+            rankCheck: true,
+            rankedKeywords: false,
+          }
+        : id === "serpapi"
+          ? {
+              backlinks: false,
+              domainOverview: false,
+              keywordMetrics: false,
+              keywordResearch: false,
+              rankCheck: true,
+              rankedKeywords: false,
+            }
+          : null,
   PROVIDER_CATALOG: [
     {
       id: "dataforseo",
@@ -277,12 +306,23 @@ describe("settings queries", () => {
     });
     expect(result.usage.connections).toEqual([
       {
+        availableAtProvider: {
+          checkedAt: FROZEN_NOW_ISO,
+          status: "unreachable",
+        },
         connectionId: "conn_abcdefghijklmnopqrstuvwx",
         costPerCheck: "$0.0006",
-        lookups: { costCents: 0, count: 0 },
+        features: [
+          { costCents: 75, count: 2, feature: "rank_check", label: "Rank checks" },
+          { costCents: 0, count: 0, feature: "keyword_research", label: "Keyword research" },
+          { costCents: 0, count: 0, feature: "keyword_metrics", label: "Keyword metrics" },
+          { costCents: 0, count: 0, feature: "ranked_keywords", label: "Ranked keywords" },
+          { costCents: 0, count: 0, feature: "backlinks", label: "Backlinks" },
+          { costCents: 0, count: 0, feature: "domain_overview", label: "Domain overview" },
+        ],
         primary: true,
         provider: "DataForSEO",
-        rankChecks: { costCents: 75, count: 2 },
+        providerId: "dataforseo",
       },
     ]);
   });
@@ -465,20 +505,35 @@ describe("settings queries", () => {
     });
     expect(result.usage.connections).toEqual([
       {
+        availableAtProvider: {
+          checkedAt: FROZEN_NOW_ISO,
+          status: "unreachable",
+        },
         connectionId: "conn_abcdefghijklmnopqrstuvwx",
         costPerCheck: "$0.0006",
-        lookups: { costCents: 200, count: 4 },
+        features: [
+          { costCents: 75, count: 2, feature: "rank_check", label: "Rank checks" },
+          { costCents: 150.5, count: 3, feature: "keyword_research", label: "Keyword research" },
+          { costCents: 49.5, count: 1, feature: "keyword_metrics", label: "Keyword metrics" },
+          { costCents: 0, count: 0, feature: "ranked_keywords", label: "Ranked keywords" },
+          { costCents: 0, count: 0, feature: "backlinks", label: "Backlinks" },
+          { costCents: 0, count: 0, feature: "domain_overview", label: "Domain overview" },
+        ],
         primary: true,
         provider: "DataForSEO",
-        rankChecks: { costCents: 75, count: 2 },
+        providerId: "dataforseo",
       },
       {
+        availableAtProvider: {
+          checkedAt: FROZEN_NOW_ISO,
+          status: "unreachable",
+        },
         connectionId: "conn_bbcdefghijklmnopqrstuvwx",
         costPerCheck: "$0.0100",
-        lookups: null,
+        features: [{ costCents: 400, count: 1, feature: "rank_check", label: "Rank checks" }],
         primary: false,
         provider: "SerpApi",
-        rankChecks: { costCents: 400, count: 1 },
+        providerId: "serpapi",
       },
     ]);
     expect(result.usage.primaryProvider).toBe("DataForSEO");
@@ -526,7 +581,7 @@ describe("settings queries", () => {
     expect(result.usage.connections).toEqual([
       expect.objectContaining({
         connectionId: "conn_abcdefghijklmnopqrstuvwx",
-        rankChecks: { costCents: 165, count: 1 },
+        features: [{ costCents: 165, count: 1, feature: "rank_check", label: "Rank checks" }],
       }),
     ]);
     expect(result.usage.serpChecksMonth).toBe("1");

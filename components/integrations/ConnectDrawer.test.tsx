@@ -1,10 +1,10 @@
 import { providerCredentialFieldsFor } from "@/lib/integrations/credential-fields";
 import type { IntegrationProviderData, ProviderActionHandlers } from "@/lib/integrations/types";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ConnectDrawer } from "./ConnectDrawer";
-import { ActionNotice, ActivityList, ConnectionOkBanner, EnvHint } from "./ConnectDrawerControls";
+import { ActionNotice, ActivityList, ConnectionOkBanner } from "./ConnectDrawerControls";
 import { integrationCategories } from "./integrations-fixtures";
 
 const actions = {
@@ -100,12 +100,11 @@ describe("ConnectDrawer", () => {
     vi.clearAllMocks();
   });
 
-  it("renders activity, environment hints, and positive or negative action notices", () => {
+  it("renders activity and positive or negative action notices", () => {
     const provider = connectableDataForSeo();
     const { rerender } = render(
       <>
         <ActivityList provider={provider} />
-        <EnvHint provider={provider} />
         <ConnectionOkBanner message="Connection ready" />
         <ActionNotice
           notice={{ balance: 1.23456, message: "Credentials work", ok: true, title: "Passed" }}
@@ -113,9 +112,6 @@ describe("ConnectDrawer", () => {
       </>,
     );
     expect(screen.getByText("Recent activity")).toBeInTheDocument();
-    expect(
-      screen.getByText("Credentials can also be configured through environment variables."),
-    ).toBeInTheDocument();
     expect(screen.getByText("Connection ready")).toBeInTheDocument();
     expect(screen.getByText("Balance: $1.2346")).toBeInTheDocument();
 
@@ -140,11 +136,8 @@ describe("ConnectDrawer", () => {
     expect(screen.getByRole("button", { name: "Refresh app" })).toHaveAttribute("type", "button");
   });
 
-  it("hides operator environment hints when the view does not expose one", () => {
-    const provider = connectableDataForSeo();
-    render(
-      <EnvHint provider={{ ...provider, drawer: { ...provider.drawer, envHint: undefined } }} />,
-    );
+  it("does not render environment-variable credential guidance", () => {
+    renderDrawer();
 
     expect(
       screen.queryByText("Credentials can also be configured through environment variables."),
@@ -166,6 +159,37 @@ describe("ConnectDrawer", () => {
 
     fireEvent.change(screen.getByLabelText("API password"), { target: { value: "password" } });
     expect(testButton).toBeEnabled();
+  });
+
+  it("places a failed key-auth connection notice immediately after all credential fields", async () => {
+    actions.testProviderConnection.mockResolvedValueOnce({
+      message: "Credentials were rejected",
+      ok: false,
+    });
+    renderDrawer();
+
+    const loginInput = screen.getByLabelText("API login");
+    const passwordInput = screen.getByLabelText("API password");
+    const credentialFields = loginInput.closest("label")?.parentElement;
+    expect(credentialFields).toBe(passwordInput.closest("label")?.parentElement);
+    if (!credentialFields) throw new Error("Expected the credential-fields grid");
+
+    fireEvent.change(loginInput, { target: { value: "login" } });
+    fireEvent.change(passwordInput, { target: { value: "password" } });
+    fireEvent.click(screen.getByRole("button", { name: "Test connection" }));
+
+    const alert = await screen.findByRole("alert");
+    const providerRates = screen.getByText("Provider rates").closest("section");
+    const recentActivity = screen.getByText("Recent activity").closest("section");
+
+    expect(credentialFields.nextElementSibling).toBe(alert);
+    expect(alert.compareDocumentPosition(providerRates as Node)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+    expect(alert.compareDocumentPosition(recentActivity as Node)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+    expect(screen.getAllByRole("alert")).toHaveLength(1);
   });
 
   it("keeps fallback controls out of individual provider drawers", () => {
@@ -210,6 +234,28 @@ describe("ConnectDrawer", () => {
     fireEvent.submit(saveForm);
     expect(await screen.findByText("Test connection before saving.")).toBeInTheDocument();
     expect(actions.connectProvider).not.toHaveBeenCalled();
+  });
+
+  it("uses the standard button loader while testing a connection", async () => {
+    let finishTest: ((result: { message: string; ok: true }) => void) | undefined;
+    actions.testProviderConnection.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finishTest = resolve;
+        }),
+    );
+    renderDrawer();
+
+    fireEvent.change(screen.getByLabelText("API login"), { target: { value: "login" } });
+    fireEvent.change(screen.getByLabelText("API password"), { target: { value: "password" } });
+    fireEvent.click(screen.getByRole("button", { name: "Test connection" }));
+
+    const testingButton = await screen.findByRole("button", { name: "Testing…" });
+    expect(testingButton).toHaveAttribute("aria-busy", "true");
+    expect(testingButton.querySelector(".MuiCircularProgress-root")).toBeInTheDocument();
+
+    finishTest?.({ message: "ok", ok: true });
+    expect(await screen.findByRole("button", { name: "Verified" })).toBeInTheDocument();
   });
 
   it("closes the drawer and clears the secret after a successful save", async () => {
@@ -365,14 +411,5 @@ describe("ConnectDrawer", () => {
     expect(
       screen.queryByText("Credentials can also be configured through environment variables."),
     ).not.toBeInTheDocument();
-  });
-
-  it("disconnects an already configured provider after confirmation", async () => {
-    const { onClose } = renderDrawer({ ...connectableDataForSeo(), status: "connected" });
-    fireEvent.click(screen.getByRole("button", { name: "Disconnect provider" }));
-    const dialog = screen.getByRole("dialog", { name: "Disconnect provider" });
-    fireEvent.click(within(dialog).getByRole("button", { name: "Disconnect provider" }));
-    await waitFor(() => expect(actions.disconnectProvider).toHaveBeenCalledTimes(1));
-    expect(onClose).toHaveBeenCalledOnce();
   });
 });

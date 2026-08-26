@@ -18,6 +18,7 @@ const mocks = vi.hoisted(() => ({
     keywordSchedule: { update: vi.fn() },
     projectDefaults: { update: vi.fn() },
     providerConnection: { update: vi.fn() },
+    providerCostEntry: { create: vi.fn(), createMany: vi.fn() },
     rankCheck: { create: vi.fn() },
     signal: { create: vi.fn() },
   },

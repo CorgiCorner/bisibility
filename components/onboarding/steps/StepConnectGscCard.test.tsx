@@ -16,6 +16,9 @@ describe("StepConnectGscCard", () => {
     expect(screen.queryByText("free", { exact: true })).not.toBeInTheDocument();
     expect(screen.getByRole("alert")).toHaveTextContent("GOOGLE_CLIENT_SECRET");
     expect(screen.getByRole("alert").querySelector("span.min-w-0")).toHaveClass("break-words");
+    const inlineCode = screen.getByText("GOOGLE_CLIENT_SECRET");
+    expect(inlineCode).toHaveClass("whitespace-nowrap");
+    expect(inlineCode).not.toHaveClass("break-all");
     expect(container.querySelector('section [role="alert"]')).not.toBeInTheDocument();
     expect(container.querySelector('section svg[aria-hidden="true"]')).not.toBeInTheDocument();
   });

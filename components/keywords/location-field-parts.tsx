@@ -1,9 +1,10 @@
-import { inputClassName } from "@/components/ui";
+import { compactInputClassName, inputClassName } from "@/components/ui";
 import { XIcon as X } from "@phosphor-icons/react";
 
 export const locationFieldClassByVariant = {
-  form: `${inputClassName} min-h-10 w-full rounded-[9px] px-9 text-[13px] font-medium`,
-  toolbar: `${inputClassName} min-h-[34px] w-full rounded-[9px] px-9 text-[12.5px] font-medium`,
+  form: `${inputClassName} min-h-10 w-full rounded-control px-9 text-[13px] font-medium`,
+  toolbar: `${inputClassName} ${compactInputClassName} w-full rounded-control px-9 font-medium`,
+  research: `${inputClassName} min-h-[34px] w-full rounded-control bg-bg-elev px-9 py-1 compact-text-13 text-[13px] font-normal`,
 } as const;
 
 export const locationFieldLabelClass =

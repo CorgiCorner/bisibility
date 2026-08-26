@@ -1,6 +1,7 @@
 "use client";
 
 import { type ConfirmKind, ConfirmModal, Tooltip } from "@/components/ui";
+import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import { DotsThreeIcon as DotsThree } from "@phosphor-icons/react";
@@ -32,7 +33,7 @@ type MenuView = "actions" | "roles";
 const memberMenuPaperSx = {
   backgroundColor: "var(--color-bg-elev)",
   border: "1px solid var(--color-border)",
-  borderRadius: "12px",
+  borderRadius: UI_RADIUS_ROLES.card,
   boxShadow: "none",
   color: "var(--color-fg)",
   marginTop: "6px",
@@ -41,7 +42,7 @@ const memberMenuPaperSx = {
 };
 
 const memberMenuRowSx = {
-  borderRadius: "7px",
+  borderRadius: UI_RADIUS_ROLES.control,
   fontSize: "12.5px",
   minHeight: 34,
   "&.Mui-focusVisible, &:hover": { backgroundColor: "var(--color-bg-hover)" },
@@ -93,7 +94,7 @@ export function TeamMemberActionsMenu({
           aria-expanded={open}
           aria-haspopup="menu"
           aria-label={`Actions for ${memberName}`}
-          className="grid h-[30px] w-[30px] place-items-center rounded-lg border border-border-strong bg-bg-elev text-fg-muted hover:border-accent hover:text-accent-text disabled:cursor-wait disabled:opacity-60"
+          className="grid h-[30px] w-[30px] place-items-center rounded-control border border-border-control bg-bg-elev text-fg-muted hover:border-accent hover:text-accent-text disabled:cursor-wait disabled:opacity-60"
           disabled={pending}
           onClick={(event) => setAnchor(event.currentTarget)}
           type="button"

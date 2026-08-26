@@ -3,30 +3,30 @@
 import { appPath, type ProjectRef } from "@/lib/routing/app-path";
 import { DOCS_URL } from "@/lib/site/site";
 import { ProviderSpendMeter } from "./ProviderSpendMeter";
-import { useSessionSpend } from "./SessionSpendProvider";
 
 export type HeaderProviderSpendProps = {
-  capCents: number | null;
+  recorded: { cents: number; units: number } | null;
   projectRef: ProjectRef;
-  spentCents: number | null;
+  tightest: { provider: string; usedPercent: number } | null;
+  usedPercent: number | null;
 };
 
-// Compact provider-spend meter for the app header. The monthly figures come from
-// the server render; session spend accrues client-side as paid lookups run.
+// Compact provider-spend meter for the app header. Its figures are the server
+// read model, so the displayed amount and allocation percentage always agree.
 export function HeaderProviderSpend({
-  capCents,
+  recorded,
   projectRef,
-  spentCents,
+  tightest,
+  usedPercent,
 }: Readonly<HeaderProviderSpendProps>) {
-  const { sessionCents } = useSessionSpend();
-  if (spentCents == null) {
+  if (recorded == null) {
     return (
       <div
         aria-label="Provider spend temporarily unavailable"
         className="hidden min-w-[210px] flex-none pt-[3px] md:block"
       >
         <span className="block font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-fg-muted">
-          PROVIDER SPEND
+          BUDGET
         </span>
         <span className="mt-1 block font-mono text-xs text-fg-muted">Temporarily unavailable</span>
       </div>
@@ -36,11 +36,13 @@ export function HeaderProviderSpend({
   return (
     <div className="hidden min-w-[210px] flex-none pt-[3px] md:block">
       <ProviderSpendMeter
-        capCents={capCents}
+        capCents={null}
         docsHref={`${DOCS_URL}/integrations#budget-cap`}
-        editBudgetHref={`${appPath(projectRef, "settings")}#provider-usage`}
-        sessionCents={sessionCents}
-        spentCents={spentCents}
+        editBudgetHref={appPath(projectRef, "settings", "usage")}
+        recorded={recorded}
+        spentCents={recorded.cents}
+        tightest={tightest}
+        usedPercent={usedPercent}
         variant="header"
       />
     </div>

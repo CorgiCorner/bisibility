@@ -7,7 +7,6 @@ const mocks = vi.hoisted(() => ({
   joinWaitlist: vi.fn(),
   requireProjectScope: vi.fn(),
   requireSession: vi.fn(),
-  updateProjectBudgetAction: vi.fn(),
   writeAudit: vi.fn(),
 }));
 
@@ -16,9 +15,6 @@ vi.mock("@/lib/actions/_shared", () => ({
   parseActionInput: (schema: { parse: (input: unknown) => unknown }, input: unknown) =>
     schema.parse(input),
   requireProjectScope: mocks.requireProjectScope,
-}));
-vi.mock("@/lib/actions/budget", () => ({
-  updateProjectBudgetAction: mocks.updateProjectBudgetAction,
 }));
 vi.mock("@/lib/actions/waitlist", () => ({
   joinWaitlist: mocks.joinWaitlist,
@@ -33,10 +29,7 @@ vi.mock("@/lib/queries/waitlist", () => ({
   getPricingFeedbackRow: mocks.getPricingFeedbackRow,
 }));
 
-import {
-  submitHostedPricingFeedback,
-  updateUsageBudget,
-} from "@/app/app/(workspace)/[project]/settings/(sections)/usage/actions";
+import { submitHostedPricingFeedback } from "@/app/app/(workspace)/[project]/settings/(sections)/usage/actions";
 
 const project = {
   id: "project_internal_1",
@@ -54,7 +47,6 @@ describe("usage settings actions", () => {
     mocks.requireProjectScope.mockResolvedValue(project);
     mocks.requireSession.mockResolvedValue(session);
     mocks.joinWaitlist.mockResolvedValue({ email: "owner@example.com", ok: true });
-    mocks.updateProjectBudgetAction.mockResolvedValue({ capCents: 7_500 });
   });
 
   it("binds hosted pricing feedback to the authenticated session email", async () => {
@@ -172,16 +164,5 @@ describe("usage settings actions", () => {
 
     expect(mocks.getPricingFeedbackRow).toHaveBeenCalledWith("owner@example.com");
     expect(mocks.joinWaitlist).not.toHaveBeenCalled();
-  });
-
-  it("validates and converts the shared budget form before the audited budget action", async () => {
-    await expect(
-      updateUsageBudget({ budgetDollars: "75.00", projectId: project.publicId }),
-    ).resolves.toEqual({ capCents: 7_500 });
-
-    expect(mocks.updateProjectBudgetAction).toHaveBeenCalledWith({
-      capCents: 7_500,
-      projectId: project.publicId,
-    });
   });
 });

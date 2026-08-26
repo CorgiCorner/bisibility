@@ -5,7 +5,7 @@ import { PageContent } from "@/components/shell/PageContent";
 import { cn } from "@/lib/ui/cn";
 
 function Bar({ className }: Readonly<{ className?: string }>) {
-  return <div className={cn("animate-pulse rounded-[10px] bg-bg-sunken", className)} />;
+  return <div className={cn("animate-pulse rounded-control bg-bg-sunken", className)} />;
 }
 
 const summaryKeys = ["info", "warning", "urgent"] as const;
@@ -21,16 +21,16 @@ export default function AlertsLoading() {
           <Bar className="h-2 w-2 rounded-full" />
           <Bar className="h-3 w-[310px]" />
         </div>
-        <Bar className="h-9 w-[104px] rounded-lg" />
+        <Bar className="h-9 w-[104px] rounded-control" />
       </div>
 
       <div className="flex min-w-0 flex-col gap-4.5">
-        <div className="flex flex-col gap-3 rounded-[14px] border border-border bg-bg-elev px-4.5 py-3.5 sm:flex-row sm:items-center">
+        <div className="flex flex-col gap-3 rounded-card border border-border bg-bg-elev px-4.5 py-3.5 sm:flex-row sm:items-center">
           <Bar className="h-3.5 w-[100px]" />
           <div className="flex flex-wrap items-center gap-4">
             {summaryKeys.map((key) => (
               <div className="flex items-center gap-2" key={key}>
-                <Bar className="h-[26px] w-[26px] rounded-lg" />
+                <Bar className="h-[26px] w-[26px] rounded-control" />
                 <Bar className="h-4 w-6" />
                 <Bar className="h-3 w-[60px]" />
               </div>
@@ -39,7 +39,7 @@ export default function AlertsLoading() {
           <Bar className="h-3 w-[60px] sm:ml-auto" />
         </div>
 
-        <div className="overflow-hidden rounded-[14px] border border-border bg-bg-elev">
+        <div className="overflow-hidden rounded-card border border-border bg-bg-elev">
           <div className="flex items-center justify-between gap-3 border-b border-border px-4.5 py-3.5">
             <Bar className="h-4 w-[160px]" />
             <div className="flex items-center gap-2">
@@ -49,7 +49,7 @@ export default function AlertsLoading() {
           </div>
           {feedKeys.map((key) => (
             <div className="flex gap-3.5 border-b border-border-soft px-4.5 py-[15px]" key={key}>
-              <Bar className="h-8.5 w-[34px] shrink-0 rounded-[9px]" />
+              <Bar className="h-8.5 w-[34px] shrink-0 rounded-control" />
               <div className="flex min-w-0 flex-1 flex-col gap-2">
                 <Bar className="h-3.5 w-[60%]" />
                 <Bar className="h-3 w-[42%]" />
@@ -72,7 +72,7 @@ export default function AlertsLoading() {
           </div>
         </section>
 
-        <div className="overflow-hidden rounded-[14px] border border-border bg-bg-elev">
+        <div className="overflow-hidden rounded-card border border-border bg-bg-elev">
           <div className="border-b border-border px-4.5 py-3.5">
             <Bar className="h-4 w-[110px]" />
             <Bar className="mt-2 h-3 w-full max-w-[420px]" />

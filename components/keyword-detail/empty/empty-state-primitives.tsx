@@ -9,7 +9,7 @@ type EmptyModuleCardProps = {
 };
 
 export function EmptyModuleCard({ children, className }: Readonly<EmptyModuleCardProps>) {
-  return <Card className={`rounded-[14px] ${className ?? ""}`}>{children}</Card>;
+  return <Card className={`rounded-card ${className ?? ""}`}>{children}</Card>;
 }
 
 export function EmptyModuleLabel({ children }: Readonly<{ children: ReactNode }>) {
@@ -59,17 +59,14 @@ export function EmptyChartShell({
       </div>
       <div
         aria-label="Position history empty chart"
-        className={`relative mt-4 overflow-hidden rounded-[12px] border border-border bg-bg-elev ${
+        className={`relative mt-4 overflow-hidden rounded-card border border-border bg-bg-elev ${
           height === 180 ? "h-[180px]" : "h-[280px]"
         }`}
         data-chart-height={height}
       >
-        <div aria-hidden className="absolute inset-x-5 top-[30%] border-t border-border-strong" />
-        <div aria-hidden className="absolute inset-x-5 top-1/2 border-t border-border-strong" />
-        <div
-          aria-hidden
-          className="absolute inset-x-5 bottom-[18%] border-t border-border-strong"
-        />
+        <div aria-hidden className="absolute inset-x-5 top-[30%] border-t border-border" />
+        <div aria-hidden className="absolute inset-x-5 top-1/2 border-t border-border" />
+        <div aria-hidden className="absolute inset-x-5 bottom-[18%] border-t border-border" />
         <div className="absolute inset-0 grid place-items-center px-5">{children}</div>
       </div>
     </EmptyModuleCard>
@@ -88,7 +85,7 @@ export function ChartEmptyMessage({
   title,
 }: Readonly<ChartEmptyMessageProps>) {
   return (
-    <div className="max-w-full rounded-[12px] border border-border-strong bg-bg-elev px-5 py-4 text-center">
+    <div className="max-w-full rounded-card border border-border bg-bg-elev px-5 py-4 text-center">
       <p className="m-0 text-[13px] font-semibold text-fg">{title}</p>
       {description ? (
         <p className="m-0 mt-1 text-[12px] leading-[1.5] text-fg-muted">{description}</p>

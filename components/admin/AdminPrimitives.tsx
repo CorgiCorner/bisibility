@@ -48,7 +48,7 @@ export function Badge({ children, status }: Readonly<{ children?: ReactNode; sta
 
 export function Metric({ label, value }: Readonly<{ label: string; value: ReactNode }>) {
   return (
-    <div className="min-w-0 rounded-xl border border-border-soft bg-bg-sunken px-3 py-2.5">
+    <div className="min-w-0 rounded-card border border-border-soft bg-bg-sunken px-3 py-2.5">
       <div className="text-[11px] font-medium text-fg-muted">{label}</div>
       <div className="mt-1 text-lg font-semibold text-fg">{value}</div>
     </div>

@@ -5,9 +5,9 @@ const lateUtc = new Date("2026-06-19T23:30:00.000Z");
 
 describe("user date/time formatter", () => {
   it("formats project dates in the supplied timezone", () => {
-    expect(
-      createUserDateTimeFormatter({ dateFormat: "iso", timezone: "UTC" }).formatDate(lateUtc),
-    ).toBe("2026-06-19");
+    const formatter = createUserDateTimeFormatter({ dateFormat: "iso", timezone: "UTC" });
+    expect(formatter.formatDate(lateUtc)).toBe("2026-06-19");
+    expect(formatter.formatMonthYear(lateUtc)).toBe("June 2026");
 
     expect(
       createUserDateTimeFormatter({

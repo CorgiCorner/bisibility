@@ -41,7 +41,7 @@ describe("KeywordsDeviceScope", () => {
       "text-[12.5px]",
     );
     expect(selected.parentElement).toHaveClass("flex-none");
-    expect(selected.nextElementSibling).toHaveClass("bg-nav-active", "border-border-strong");
+    expect(selected.nextElementSibling).toHaveClass("bg-nav-active", "border-border-control");
     expect(selected.nextElementSibling).toHaveClass("font-normal", "text-fg");
     expect(selected.nextElementSibling?.className).not.toContain("shadow-");
     expect(selected.nextElementSibling).not.toHaveClass("bg-accent");

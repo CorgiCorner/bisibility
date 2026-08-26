@@ -8,6 +8,42 @@ import { describe, expect, it, vi } from "vitest";
 import { HeadToHeadTable } from "./HeadToHeadTable";
 
 describe("HeadToHeadTable", () => {
+  it("keeps one separator between the header, no-competitors notice, and table header", () => {
+    const market = buildCompetitorMarket(
+      {
+        allColumns: [{ domain: "example.com", kind: "You" as const, label: "You" }],
+        competitorCount: 0,
+        device: "desktop",
+        engine: "google",
+        key: "location_us::desktop::google",
+        languageLabel: "English",
+        location: "United States",
+        locationId: "location_us",
+        locationKind: "country",
+        observations: [],
+        tags: [],
+        trackedKeywordCount: 0,
+      } satisfies CompetitorMarketData,
+      emptyCompetitorFilter,
+    );
+
+    const { container } = render(<HeadToHeadTable market={market} onExport={vi.fn()} />);
+
+    const card = container.firstElementChild;
+    const header = screen
+      .getByText("Shared keywords · head-to-head")
+      .closest("div[class*='min-w-0']")?.parentElement;
+    const notice = screen.getByText(
+      "Add at least one competitor to compare head-to-head rankings.",
+    );
+    const tableHeader = screen.getByText("Keyword").parentElement;
+
+    expect(card).toHaveClass("MuiPaper-outlined");
+    expect(header).toHaveClass("border-b", "border-border");
+    expect(notice).not.toHaveClass("border-b", "border-t");
+    expect(tableHeader).toHaveClass("border-b", "border-border");
+  });
+
   it("shows You plus top three competitors and expands the remaining columns explicitly", () => {
     const columns = [
       { domain: "example.com", kind: "You" as const, label: "You" },
@@ -88,6 +124,8 @@ describe("HeadToHeadTable", () => {
 
     expect(screen.getByText("keyword 99")).toBeInTheDocument();
     expect(screen.queryByText("keyword 100")).not.toBeInTheDocument();
+    expect(screen.getByText("keyword 98").closest("div[class]")).toHaveClass("border-b");
+    expect(screen.getByText("keyword 99").closest("div[class]")).not.toHaveClass("border-b");
     fireEvent.click(screen.getByRole("button", { name: "Show 100 more" }));
     expect(screen.getByText("keyword 199")).toBeInTheDocument();
     expect(screen.queryByText("keyword 200")).not.toBeInTheDocument();

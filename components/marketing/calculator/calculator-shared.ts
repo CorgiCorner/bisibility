@@ -19,6 +19,7 @@ import {
 } from "@/lib/cost-estimate/calculator-defaults";
 import type { ProviderRate } from "@/lib/cost-estimate/estimate";
 import { centsToDollars } from "@/lib/format/currency";
+import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import { createElement, Fragment } from "react";
 
 export const sliderSx = {
@@ -28,7 +29,7 @@ export const sliderSx = {
   py: "18px",
   "&.MuiSlider-marked": { marginBottom: 0 },
   "& .MuiSlider-rail": {
-    borderRadius: 999,
+    borderRadius: "9999px",
     color: "var(--meter-track)",
     height: 8,
     opacity: 1,
@@ -36,12 +37,12 @@ export const sliderSx = {
   "& .MuiSlider-track": {
     backgroundColor: "var(--accent-solid)",
     border: "none",
-    borderRadius: 999,
+    borderRadius: "9999px",
     height: 8,
   },
   "& .MuiSlider-mark": {
-    backgroundColor: "var(--border-strong)",
-    borderRadius: 999,
+    backgroundColor: "var(--border)",
+    borderRadius: "9999px",
     height: 8,
     width: 2,
   },
@@ -79,10 +80,10 @@ export const numberFieldSx = {
     padding: "9px 10px",
     textAlign: "right",
   },
-  "& .MuiOutlinedInput-notchedOutline": { borderColor: "var(--border-strong)" },
+  "& .MuiOutlinedInput-notchedOutline": { borderColor: "var(--border)" },
   "& .MuiOutlinedInput-root": {
     backgroundColor: "transparent",
-    borderRadius: "10px",
+    borderRadius: UI_RADIUS_ROLES.control,
   },
   "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
     borderColor: "var(--accent)",

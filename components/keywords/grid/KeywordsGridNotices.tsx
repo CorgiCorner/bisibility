@@ -7,7 +7,7 @@ import {
   type RunFirstCheckAction,
 } from "@/components/rank-check/FirstCheckBannerAction";
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
-import { AlertBanner } from "@/components/ui";
+import { AlertBanner, AlertBannerStack } from "@/components/ui";
 import type { KeywordCheckState } from "@/lib/queries/keyword-row";
 import { appPath, rankTrackerTabPath } from "@/lib/routing/app-path";
 import Link from "next/link";
@@ -34,7 +34,7 @@ type EmptyRankNotice =
       kind: "first-check";
     }
   | {
-      action?: { href: string; icon: "arrow"; label: string };
+      action?: { href: string; icon?: "arrow"; label: string };
       detail: ReactNode;
       kind: "alert";
       tint: "red" | "yellow";
@@ -91,10 +91,9 @@ function emptyRankNotice({
     return {
       action: {
         href: rankTrackerTabPath(projectRef, "checks"),
-        icon: "arrow",
         label: "Review check runs",
       },
-      detail: "At least one latest rank check failed before producing a position.",
+      detail: "Some keyword positions could not be updated.",
       kind: "alert",
       tint: "red",
       title: "Rank checks failed to produce ranking data.",
@@ -159,13 +158,13 @@ export function KeywordsGridNotices({
   });
   const truncationNotice =
     totalKeywordCount !== undefined && totalKeywordCount > rowCount ? (
-      <div className="overflow-hidden rounded-[14px] border border-border bg-bg-elev">
+      <AlertBannerStack>
         <AlertBanner
           detail={`This project tracks ${keywordCountLabel(totalKeywordCount)}. Search, filters, and export apply to the loaded set.`}
           tint="yellow"
           title={`Showing the ${rowCount.toLocaleString("en-US")} most recently added keywords`}
         />
-      </div>
+      </AlertBannerStack>
     ) : null;
 
   return (
@@ -192,14 +191,14 @@ export function KeywordsGridNotices({
         />
       ) : null}
       {rankNotice?.kind === "alert" ? (
-        <div className="overflow-hidden rounded-[14px] border border-border bg-bg-elev">
+        <AlertBannerStack>
           <AlertBanner
             action={rankNotice.action}
             detail={rankNotice.detail}
             tint={rankNotice.tint}
             title={rankNotice.title}
           />
-        </div>
+        </AlertBannerStack>
       ) : null}
       {truncationNotice}
     </>

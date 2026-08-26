@@ -11,6 +11,7 @@ import { resolveSerpStopOnMatch } from "@/lib/serp/markets";
 import { createDataForSeoBacklinksMethods } from "./dataforseo-backlinks";
 import {
   DATA_FOR_SEO_OK_STATUS,
+  dataForSeoBillingStatusCode,
   dataForSeoGoogleParams,
   dataForSeoLabsLocationParams,
   envelopeMessage,
@@ -120,15 +121,17 @@ async function fetchDataForSeoRank(input: SerpRankInput) {
   const task = data.tasks?.[0];
 
   if (!task || !envelopeOk(data)) {
-    const rawMessage = envelopeMessage(data);
-    throw new DataForSeoError(
-      validationFailure(rawMessage)
-        ? messageWithSentParameters(rawMessage, payload, credentials)
-        : redactedMessage(rawMessage, credentials),
-      false,
-      undefined,
-      dataForSeoResponseCostCents(data),
-    );
+    const billingStatusCode = dataForSeoBillingStatusCode(data);
+    const rawMessage =
+      !task && data.status_code === DATA_FOR_SEO_OK_STATUS
+        ? "DataForSEO SERP response did not include a task."
+        : envelopeMessage(data);
+    const message = validationFailure(rawMessage)
+      ? messageWithSentParameters(rawMessage, payload, credentials)
+      : redactedMessage(rawMessage, credentials);
+    const costCents = dataForSeoResponseCostCents(data);
+    if (billingStatusCode !== undefined) throw new DataForSeoBillingError(message, costCents);
+    throw new DataForSeoError(message, false, undefined, costCents);
   }
 
   const items = Array.isArray(task.result)

@@ -1,2 +1,2 @@
 export const toolbarControlClassName =
-  "min-h-[34px] rounded-[9px] border border-border-strong bg-transparent text-[12.5px] font-normal text-fg";
+  "min-h-[34px] rounded-control border border-border-control bg-transparent text-[12.5px] font-normal text-fg";

@@ -9,7 +9,7 @@ import type { ReactNode } from "react";
  * shown inside a callout. Exported so other env-var alerts reuse the same chip.
  */
 export const inlineCalloutCodeClass =
-  "break-all rounded bg-bg-sunken px-1.5 py-0.5 font-mono text-[11px] text-fg";
+  "whitespace-nowrap rounded bg-bg-sunken px-1.5 py-0.5 font-mono text-[11px] text-fg";
 
 export function InlineCode({ children }: Readonly<{ children: ReactNode }>) {
   return <code className={inlineCalloutCodeClass}>{children}</code>;
@@ -44,7 +44,7 @@ export function InlineCallout({ children, className, tint }: Readonly<InlineCall
   return (
     <p
       className={cn(
-        "m-0 flex items-start gap-2 rounded-[10px] border px-3 py-2.5 text-[12.5px] leading-[1.5] text-fg-muted",
+        "m-0 flex items-start gap-2 rounded-control border px-3 py-2.5 text-[12.5px] leading-[1.5] text-fg-muted",
         style.border,
         style.background,
         className,

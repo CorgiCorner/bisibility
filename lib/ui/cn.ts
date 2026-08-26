@@ -4,7 +4,7 @@ import { extendTailwindMerge } from "tailwind-merge";
 const mergeClasses = extendTailwindMerge({
   extend: {
     theme: {
-      radius: ["control", "card", "card-lg"],
+      radius: ["control", "card"],
       text: ["ui-h1", "ui-section", "ui-body", "ui-body-relaxed", "ui-caption", "ui-micro"],
     },
     classGroups: {

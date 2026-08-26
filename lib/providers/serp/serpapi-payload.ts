@@ -12,9 +12,11 @@ export type SerpApiOrganicResult = {
 
 export type SerpApiResponse = {
   error?: string;
+  extra_credits?: number;
   organic_results?: unknown[];
-  total_searches_left?: number;
   plan_searches_left?: number;
+  searches_per_month?: number;
+  total_searches_left?: number;
 };
 
 function featureLabel(value: string) {

@@ -76,7 +76,7 @@ export function TemplateStep() {
       >
         Download template.csv
       </Button>
-      <div className="mt-4.5 min-w-0 overflow-hidden rounded-[11px] border border-code-border bg-code-bg">
+      <div className="mt-4.5 min-w-0 overflow-hidden rounded-control border border-code-border bg-code-bg">
         <div className="flex items-center justify-between gap-2 border-b border-code-border px-3 pt-2">
           <div
             className="rounded-t-lg px-3 py-1.5 font-mono text-[11.5px]"
@@ -132,7 +132,7 @@ export function UploadStep({
           </span>
         </div>
         <textarea
-          className="mt-2 min-h-[122px] w-full resize-y rounded-[10px] border border-border-strong bg-transparent px-[13px] py-3 font-mono text-[12px] leading-[1.7] text-fg outline-none focus:border-accent"
+          className="mt-2 min-h-[122px] w-full resize-y rounded-control border border-border-control bg-transparent px-[13px] py-3 font-mono text-[12px] leading-[1.7] text-fg outline-none focus:border-accent"
           id="import-csv-input"
           onChange={(event) => onCsvTextChange(event.target.value)}
           placeholder={csvExample}
@@ -181,7 +181,7 @@ export function MapStep({
           sourceColumns={sourceColumns}
         />
       ) : (
-        <p className="mt-4 rounded-xl border border-border bg-bg-sunken px-4 py-3 text-[12px] leading-[1.5] text-fg-muted">
+        <p className="mt-4 rounded-card border border-border bg-bg-sunken px-4 py-3 text-[12px] leading-[1.5] text-fg-muted">
           This file has no header row, so its standard column order is used. Add a header row to map
           columns yourself.
         </p>
@@ -231,12 +231,12 @@ export function ReviewStep({
       </p>
       <ParsedRowsPreview rows={review?.rows ?? []} />
       {review?.errors.length ? (
-        <div className="mt-4 rounded-xl border border-border bg-bg-sunken px-4 py-3 text-[12px] leading-[1.5] text-red-text">
+        <div className="mt-4 rounded-card border border-border bg-bg-sunken px-4 py-3 text-[12px] leading-[1.5] text-red-text">
           {review.errors.length} {review.errors.length === 1 ? "row was" : "rows were"} excluded
           during validation. Fix the file or its project markets, then go back to include them.
         </div>
       ) : null}
-      <div className="mt-4 rounded-xl border border-border bg-bg-sunken px-4 py-3 font-mono text-[12px] text-fg-muted">
+      <div className="mt-4 rounded-card border border-border bg-bg-sunken px-4 py-3 font-mono text-[12px] text-fg-muted">
         {label}
       </div>
     </div>
@@ -247,7 +247,7 @@ export function DoneStep({ result }: Readonly<{ result: ImportResultSummary }>) 
   const warning = actionWarningMessage(result);
   return (
     <div className="flex flex-col items-center px-4 py-[30px] text-center">
-      <span className="grid h-14 w-14 place-items-center rounded-[15px] text-green-text [background:color-mix(in_srgb,var(--green)_12%,transparent)]">
+      <span className="grid h-14 w-14 place-items-center rounded-card text-green-text [background:color-mix(in_srgb,var(--green)_12%,transparent)]">
         <CheckCircle size={30} weight="fill" />
       </span>
       <h3 className="m-0 mt-4.5 text-[18px] font-semibold tracking-[-0.4px]">Import complete</h3>
@@ -256,7 +256,7 @@ export function DoneStep({ result }: Readonly<{ result: ImportResultSummary }>) 
       </p>
       <LocationActionWarning message={warning} />
       {result.errors.length ? (
-        <div className="mt-4 max-h-32 w-full overflow-auto rounded-[10px] bg-bg-sunken p-3 text-left font-mono text-[11px] text-red-text">
+        <div className="mt-4 max-h-32 w-full overflow-auto rounded-control bg-bg-sunken p-3 text-left font-mono text-[11px] text-red-text">
           {result.errors.slice(0, 6).map((error) => (
             <div key={`${error.row}-${error.message}`}>
               Row {error.row}: {error.message}

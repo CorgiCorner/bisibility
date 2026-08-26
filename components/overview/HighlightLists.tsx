@@ -1,14 +1,7 @@
 import { MarketChip } from "@/components/markets/MarketChip";
 import { Card, EmptyState, MonoText, Tooltip } from "@/components/ui";
 import { appPath } from "@/lib/routing/app-path";
-import {
-  ArrowDownIcon as ArrowDown,
-  ArrowUpIcon as ArrowUp,
-  PlusCircleIcon as PlusCircle,
-  StarIcon as Star,
-  TrendUpIcon as TrendUp,
-  WarningIcon as Warning,
-} from "@phosphor-icons/react/dist/ssr";
+import { ArrowDownIcon as ArrowDown, ArrowUpIcon as ArrowUp } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import type { HighlightList, HighlightRow } from "./types";
 
@@ -17,20 +10,6 @@ export type HighlightListsProps = {
   projectRef: string;
   rowHref?: (row: HighlightRow) => string;
 };
-
-const iconByKind = {
-  wins: TrendUp,
-  attention: Warning,
-  newTop10: Star,
-  recentlyAdded: PlusCircle,
-} satisfies Record<HighlightList["kind"], typeof TrendUp>;
-
-const colorByKind = {
-  wins: "var(--green)",
-  attention: "var(--yellow)",
-  newTop10: "var(--accent)",
-  recentlyAdded: "var(--blue)",
-} satisfies Record<HighlightList["kind"], string>;
 
 const positionToneClassName = {
   danger: "text-red-text",
@@ -82,7 +61,7 @@ function MarketIdentity({ row }: Readonly<{ row: HighlightRow }>) {
   if (!row.marketLocationLabel || !row.marketLanguageLabel) return null;
 
   return (
-    <span className="mt-1 flex min-w-0 items-center">
+    <span className="mt-1.5 flex min-w-0 items-center">
       <MarketChip
         className="max-w-[208px]"
         device={row.device === "mobile" || row.device === "desktop" ? row.device : null}
@@ -97,15 +76,10 @@ export function HighlightLists({ lists, projectRef, rowHref }: Readonly<Highligh
   return (
     <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-4">
       {lists.map((list) => {
-        const Icon = iconByKind[list.kind];
-
         return (
           <Card className="flex min-w-0 flex-col overflow-hidden p-0" key={list.title} size="md">
             <div className="flex-none px-4.5 pb-3 pt-[15px]">
-              <div className="flex items-center gap-2 text-sm font-semibold text-fg">
-                <Icon aria-hidden color={colorByKind[list.kind]} size={16} weight="fill" />
-                {list.title}
-              </div>
+              <div className="flex items-center text-sm font-semibold text-fg">{list.title}</div>
               <MonoText className="mt-[3px] block min-h-[2lh]" muted size="sm">
                 {list.subtitle}
               </MonoText>
@@ -127,7 +101,7 @@ export function HighlightLists({ lists, projectRef, rowHref }: Readonly<Highligh
                         {row.keyword}
                       </span>
                       <MarketIdentity row={row} />
-                      <span className="mt-1 block truncate font-mono text-[10.5px] text-fg-muted">
+                      <span className="mt-2 block truncate font-mono text-[10.5px] text-fg-muted">
                         {row.note}
                       </span>
                     </span>

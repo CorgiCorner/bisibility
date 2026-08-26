@@ -1,17 +1,13 @@
 "use server";
 
 import { getActionActor, parseActionInput, requireProjectScope } from "@/lib/actions/_shared";
-import { updateProjectBudgetAction } from "@/lib/actions/budget";
+import { updateProviderConnectionAllocationAction } from "@/lib/actions/provider-allocation";
 import { joinWaitlist } from "@/lib/actions/waitlist";
 import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
 import { requireSession } from "@/lib/auth/session";
 import { deploymentMode } from "@/lib/deployment/deployment";
 import { getPricingFeedbackRow } from "@/lib/queries/waitlist";
-import {
-  budgetInputToCents,
-  hostedPricingFeedbackSchema,
-  usageBudgetSchema,
-} from "@/lib/schemas/usage-settings";
+import { hostedPricingFeedbackSchema } from "@/lib/schemas/usage-settings";
 
 export async function submitHostedPricingFeedback(input: unknown) {
   const data = parseActionInput(hostedPricingFeedbackSchema, input);
@@ -57,10 +53,4 @@ export async function submitHostedPricingFeedback(input: unknown) {
   return { answered: true as const };
 }
 
-export async function updateUsageBudget(input: unknown) {
-  const data = parseActionInput(usageBudgetSchema, input);
-  return updateProjectBudgetAction({
-    capCents: budgetInputToCents(data),
-    projectId: data.projectId,
-  });
-}
+export const updateProviderAllocation = updateProviderConnectionAllocationAction;

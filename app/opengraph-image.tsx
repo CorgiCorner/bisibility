@@ -1,4 +1,5 @@
 import { OpenGraphBrandLockup } from "@/lib/seo/og-brand-lockup";
+import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import { ImageResponse } from "next/og";
 
 export const alt = "Open-source SEO platform";
@@ -59,7 +60,7 @@ export default function Image() {
       <div
         style={{
           border: "2px solid #ddd8cc",
-          borderRadius: "28px",
+          borderRadius: UI_RADIUS_ROLES.card,
           display: "flex",
           flexDirection: "column",
           gap: "28px",

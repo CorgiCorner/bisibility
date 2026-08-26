@@ -16,9 +16,10 @@ export class ProviderCallError extends Error {
 }
 
 export function chargedProviderCostCents(error: unknown): number | null {
-  if (!(error instanceof ProviderCallError)) return null;
-  return error.costCents != null && Number.isFinite(error.costCents) && error.costCents > 0
-    ? error.costCents
+  if (!(error instanceof ProviderCallError) && !(error instanceof ProviderAuthError)) return null;
+  const costCents = (error as { costCents?: unknown }).costCents;
+  return typeof costCents === "number" && Number.isFinite(costCents) && costCents > 0
+    ? costCents
     : null;
 }
 

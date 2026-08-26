@@ -1,6 +1,7 @@
 import { AlertBanner } from "@/components/ui";
 import type { CostRateInfo } from "@/lib/cost-estimate/project-estimate";
 import type { KeywordRow } from "@/lib/queries/keywords";
+import { providerFailurePresentation } from "@/lib/rank-check/failure-presentation";
 import { appPath, rankTrackerTabPath } from "@/lib/routing/app-path";
 import Link from "next/link";
 
@@ -8,7 +9,12 @@ export type CheckHealthView = {
   budget: { capCents: number; exhausted: boolean; spentCents: number };
   failed24h: {
     count: number;
-    latest: { error: string | null; keyword: string; provider: string } | null;
+    latest: {
+      error: string | null;
+      errorCode: string | null;
+      keyword: string;
+      provider: string;
+    } | null;
   };
   providerRate: CostRateInfo;
 };
@@ -34,8 +40,7 @@ function failureTitle(checkFailed: boolean, count: number) {
 function failureDetail(checkFailed: boolean, health?: CheckHealthView) {
   const latest = health?.failed24h.latest;
   if (latest) {
-    const error = latest.error ?? "No error details recorded.";
-    return `${latest.keyword} / ${latest.provider}: ${error}`;
+    return `${latest.keyword}: ${providerFailurePresentation(latest.errorCode).message}`;
   }
   return checkFailed ? "Retry the filtered keywords to start the remaining checks." : null;
 }

@@ -24,7 +24,7 @@ export function ApiKeyRevealContent({
   const expirySummary = issuedKey.expiresInDays === null ? "never expires" : `Expires: ${expiry}`;
   return (
     <div className="space-y-4">
-      <div className="rounded-[12px] border border-yellow bg-yellow/10 px-3.5 py-3">
+      <div className="rounded-card border border-yellow bg-yellow/10 px-3.5 py-3">
         <div className="flex items-start gap-2.5">
           <Key aria-hidden className="mt-0.5 flex-none text-yellow-text" size={17} weight="fill" />
           <div className="min-w-0">
@@ -42,11 +42,11 @@ export function ApiKeyRevealContent({
           <div className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
             API key
           </div>
-          <span className="rounded-[7px] border border-border px-2 py-1 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
+          <span className="rounded-control border border-border px-2 py-1 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
             Revealed once
           </span>
         </div>
-        <div className="mt-[7px] flex items-center gap-2 rounded-[10px] border border-border-strong bg-transparent px-3 py-2.5">
+        <div className="mt-[7px] flex items-center gap-2 rounded-control border border-border bg-transparent px-3 py-2.5">
           <MonoText className="min-w-0 flex-1 truncate" size="lg">
             {issuedKey.raw}
           </MonoText>

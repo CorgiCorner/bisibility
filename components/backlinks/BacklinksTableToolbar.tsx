@@ -70,7 +70,7 @@ export function BacklinksTableToolbar({
 
   return (
     <>
-      <div className="flex flex-wrap items-center gap-1 border-b border-border-strong px-4">
+      <div className="flex flex-wrap items-center gap-1 border-b border-border px-4">
         <div
           aria-label="Backlinks views"
           className="flex w-full min-w-0 flex-wrap sm:w-auto"
@@ -113,7 +113,7 @@ export function BacklinksTableToolbar({
       <div className="flex flex-wrap items-center gap-2.5 border-b border-border px-4 py-2.5">
         <button
           aria-label={`Filters ${filterCount}`}
-          className={`inline-flex h-[30px] cursor-pointer items-center gap-1.5 rounded-[7px] border border-border-strong bg-transparent px-3 text-[13px] font-medium text-fg hover:border-fg-muted ${focusClass}`}
+          className={`inline-flex h-[30px] cursor-pointer items-center gap-1.5 rounded-control border border-border-control bg-transparent px-3 text-[13px] font-medium text-fg hover:border-fg-muted ${focusClass}`}
           onClick={onOpenFilters}
           type="button"
         >
@@ -131,7 +131,7 @@ export function BacklinksTableToolbar({
             aria-pressed={filter === item.id}
             className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1 text-[12.5px] hover:border-fg-muted ${focusClass} ${
               filter === item.id
-                ? "border-border-strong bg-transparent font-semibold text-fg"
+                ? "border-border-control bg-transparent font-semibold text-fg"
                 : "border-border bg-transparent text-fg-muted"
             }`}
             key={item.id}

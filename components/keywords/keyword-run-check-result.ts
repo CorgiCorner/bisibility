@@ -18,7 +18,11 @@ function resultMessage(result: unknown) {
 }
 
 export function keywordRunCheckOutcome(result: unknown): KeywordRunCheckOutcome {
-  if (isBudgetExhaustedResult(result) || resultCode(result) === "check_in_progress") {
+  if (
+    isBudgetExhaustedResult(result) ||
+    resultStatus(result) === "not_started" ||
+    resultCode(result) === "check_in_progress"
+  ) {
     return "blocked";
   }
   return resultStatus(result) === "completed" ? "completed" : "running";

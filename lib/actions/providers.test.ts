@@ -32,6 +32,7 @@ const mocks = vi.hoisted(() => {
   return {
     actor: { id: "user_1" },
     analyticsProvider,
+    backfillLegacyProjectAllocationInLockedTransaction: vi.fn(),
     getActionActor: vi.fn(),
     loadStoredGoogleProperties: vi.fn(),
     provider,
@@ -65,6 +66,10 @@ const mocks = vi.hoisted(() => {
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
 vi.mock("@/lib/auth/audit", () => ({ writeAudit: mocks.writeAudit }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
+vi.mock("@/lib/provider-allocations/legacy-backfill", () => ({
+  backfillLegacyProjectAllocationInLockedTransaction:
+    mocks.backfillLegacyProjectAllocationInLockedTransaction,
+}));
 vi.mock("@/lib/providers/registry", () => ({
   getAnalyticsProvider: vi.fn(() => mocks.analyticsProvider),
   getSerpProvider: vi.fn(() => mocks.provider),
@@ -159,6 +164,10 @@ function nonPlainConnection(overrides: Record<string, unknown> = {}) {
 describe("provider actions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.backfillLegacyProjectAllocationInLockedTransaction.mockResolvedValue({
+      internalPrimaryConnectionId: null,
+      status: "already_backfilled",
+    });
     resetRateLimitStateForTests();
     clearProviderRateLimitState();
     process.env.REDIS_URL = "";
@@ -265,6 +274,7 @@ describe("provider actions", () => {
       }),
     );
     expect(result).toEqual({ ok: true });
+    expect(mocks.backfillLegacyProjectAllocationInLockedTransaction).not.toHaveBeenCalled();
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({
         after: expect.objectContaining({ costPerCheck: 0.0123 }),
@@ -272,6 +282,25 @@ describe("provider actions", () => {
       mocks.prisma,
     );
     expect(JSON.stringify(mocks.writeAudit.mock.calls)).not.toContain("password");
+  });
+
+  it("aborts connect when the locked stable identity replaced the verified row", async () => {
+    const preliminary = connection({ id: "stale_connection" });
+    const replacement = connection({ id: "replacement_connection" });
+    mocks.prisma.providerConnection.findUnique
+      .mockResolvedValueOnce(preliminary)
+      .mockResolvedValueOnce(replacement);
+
+    await expect(
+      connectProvider({
+        projectId: "prj_a00000000000000000000000",
+        providerId: "serpapi",
+        secret: "api-key",
+      }),
+    ).rejects.toThrow("changed during verification");
+
+    expect(mocks.prisma.providerConnection.upsert).not.toHaveBeenCalled();
+    expect(mocks.writeAudit).not.toHaveBeenCalled();
   });
 
   it("stores an unset cost per check as null instead of a zero rate", async () => {
@@ -432,8 +461,11 @@ describe("provider actions", () => {
       { priority: 1, provider: "serpapi" },
     ]);
     const settingsTransaction = {
+      $queryRaw: mocks.prisma.$queryRaw,
+      project: mocks.prisma.project,
       providerConnection: {
         findMany: mocks.prisma.providerConnection.findMany,
+        findUnique: mocks.prisma.providerConnection.findUnique,
         update: mocks.prisma.providerConnection.update,
       },
     };
@@ -457,7 +489,7 @@ describe("provider actions", () => {
       where: { id: "conn_1" },
     });
     expect(mocks.prisma.$transaction).toHaveBeenCalledTimes(3);
-    expect(mocks.prisma.$queryRaw).toHaveBeenCalledTimes(2);
+    expect(mocks.prisma.$queryRaw).toHaveBeenCalledTimes(3);
     expect(mocks.writeAudit).toHaveBeenLastCalledWith(
       expect.objectContaining({ action: "provider.set_settings" }),
       settingsTransaction,
@@ -560,6 +592,8 @@ describe("provider actions", () => {
   it("tests a connection with stored encrypted credentials", async () => {
     mocks.prisma.providerConnection.findUnique.mockResolvedValue({
       credentialsEncrypted: encryptSecret(JSON.stringify({ apiKey: "stored-key" })),
+      id: "connection_1",
+      status: "needs_reauth",
     });
     mocks.provider.testConnection.mockResolvedValue({ message: "ok", ok: true });
 
@@ -572,11 +606,7 @@ describe("provider actions", () => {
     expect(mocks.provider.testConnection).toHaveBeenCalledWith({ apiKey: "stored-key" });
     expect(mocks.prisma.providerConnection.updateMany).toHaveBeenCalledWith({
       data: { status: "connected" },
-      where: {
-        projectId: "project_1",
-        provider: "serpapi",
-        status: "needs_reauth",
-      },
+      where: { id: "connection_1", status: "needs_reauth" },
     });
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({ action: "provider.test" }),
@@ -629,6 +659,90 @@ describe("provider actions", () => {
       rateLimited: true,
     });
     expect(mocks.provider.testConnection).not.toHaveBeenCalled();
+  });
+
+  it("settings mutate the locked stable-identity replacement, not a stale preliminary row", async () => {
+    const replacement = connection({
+      id: "conn_replacement",
+      publicId: "conn_b00000000000000000000000",
+    });
+    const tx = {
+      $queryRaw: vi.fn(),
+      project: mocks.prisma.project,
+      providerConnection: {
+        findMany: mocks.prisma.providerConnection.findMany,
+        findUnique: vi.fn().mockResolvedValue(replacement),
+        update: mocks.prisma.providerConnection.update,
+      },
+    };
+    mocks.prisma.$transaction.mockImplementationOnce((callback) => callback(tx));
+    mocks.prisma.providerConnection.update.mockResolvedValue({ ...replacement, enabled: false });
+
+    await updateProviderSettings({
+      enabled: false,
+      projectId: "prj_a00000000000000000000000",
+      providerId: "serpapi",
+    });
+
+    expect(tx.providerConnection.update).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: "conn_replacement" } }),
+    );
+    expect(mocks.writeAudit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        before: expect.objectContaining({ id: "conn_b00000000000000000000000" }),
+        targetId: "conn_b00000000000000000000000",
+      }),
+      tx,
+    );
+  });
+
+  it("disconnect does not delete or audit after the locked stable identity disappears", async () => {
+    const tx = {
+      $queryRaw: vi.fn(),
+      providerConnection: {
+        delete: mocks.prisma.providerConnection.delete,
+        findUnique: vi.fn().mockResolvedValue(null),
+      },
+    };
+    mocks.prisma.$transaction.mockImplementationOnce((callback) => callback(tx));
+
+    await expect(
+      disconnectProvider({
+        projectId: "prj_a00000000000000000000000",
+        providerId: "serpapi",
+      }),
+    ).resolves.toBeNull();
+    expect(tx.providerConnection.delete).not.toHaveBeenCalled();
+    expect(mocks.writeAudit).not.toHaveBeenCalled();
+  });
+
+  it("locks before settings eligibility mutation", async () => {
+    mocks.prisma.providerConnection.findUnique.mockResolvedValue(connection({ id: "conn_2" }));
+    mocks.prisma.providerConnection.update.mockResolvedValue(connection({ id: "conn_2" }));
+
+    await updateProviderSettings({
+      enabled: false,
+      projectId: "prj_a00000000000000000000000",
+      providerId: "serpapi",
+    });
+
+    expect(mocks.prisma.$queryRaw.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.prisma.providerConnection.update.mock.invocationCallOrder[0] ?? 0,
+    );
+  });
+
+  it("locks before disconnect deletion", async () => {
+    mocks.prisma.providerConnection.findUnique.mockResolvedValue(connection({ id: "conn_2" }));
+    mocks.prisma.providerConnection.delete.mockResolvedValue(connection({ id: "conn_2" }));
+
+    await disconnectProvider({
+      projectId: "prj_a00000000000000000000000",
+      providerId: "serpapi",
+    });
+
+    expect(mocks.prisma.$queryRaw.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.prisma.providerConnection.delete.mock.invocationCallOrder[0] ?? 0,
+    );
   });
 
   it("updates settings without promoting a nonzero priority", async () => {

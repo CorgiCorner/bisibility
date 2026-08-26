@@ -1,4 +1,5 @@
 import { WorkspaceShell } from "@/app/app/(workspace)/workspace-shell";
+import { resolveProjectAccess } from "@/lib/queries/_auth";
 import { listWorkspaces } from "@/lib/queries/workspaces";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
@@ -14,9 +15,10 @@ export default async function AccountLayout({ children }: Readonly<AccountLayout
   if (!activeWorkspace) {
     redirect("/onboarding");
   }
+  const access = await resolveProjectAccess(activeWorkspace.publicId);
 
   return (
-    <WorkspaceShell activeProjectId={activeWorkspace.id} projectRef={activeWorkspace.publicId}>
+    <WorkspaceShell activeProjectId={access.projectId} projectRef={activeWorkspace.publicId}>
       {children}
     </WorkspaceShell>
   );

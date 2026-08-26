@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+## [0.15.0] - 2026-08-26
+
+- Gave interactive edges their own colour token, so inputs, buttons, and chips no longer share the hairline used by separators and card outlines.
+
+- Rounded corners now follow one two-step scale, so controls and cards look consistent everywhere instead of drifting between ten similar values.
+
+- Fixed backlinks and domain overview aggregate preflights to enforce provider connection allocations after allocation initialization.
+
+- Added provider-native allocation persistence and compatibility migration for legacy project spend caps.
+
+- Paid provider requests now carry consistent attribution and record idempotent cost and native usage for per-connection allocation enforcement.
+
+- Redesigned provider spend around per-provider budgets, native-unit spend, and the tightest budget in the app header.
+
+- Added allocation-aware provider spend data, including native-unit usage, provider availability, and per-connection budget updates.
+
+- Refined compact research, market, timeline, backlinks, and tracking controls for more consistent responsive interactions.
+
 ## [0.14.0] - 2026-08-25
 
 - Improved self-hosted project transfers and imports with destination checks, clearer job states, import workspaces, and editable keyword CSV mapping.

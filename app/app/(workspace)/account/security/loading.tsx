@@ -12,13 +12,13 @@ export default function SecurityLoading() {
             <AccountLoadingBar className="h-4 w-[130px]" />
             <AccountLoadingBar className="h-3 w-[310px]" />
           </div>
-          <div className="overflow-hidden rounded-[14px] border border-border bg-bg-elev">
+          <div className="overflow-hidden rounded-card border border-border bg-bg-elev">
             {factorKeys.map((key) => (
               <div
                 className="flex items-center gap-[13px] border-b border-border-soft px-4.5 py-3.5 last:border-b-0"
                 key={key}
               >
-                <AccountLoadingBar className="h-8.5 w-[34px] shrink-0 rounded-[9px]" />
+                <AccountLoadingBar className="h-8.5 w-[34px] shrink-0 rounded-control" />
                 <div className="flex min-w-0 flex-1 flex-col gap-1.5">
                   <AccountLoadingBar className="h-3.5 w-[110px]" />
                   <AccountLoadingBar className="h-3 w-[220px]" />
@@ -37,13 +37,13 @@ export default function SecurityLoading() {
             </div>
             <AccountLoadingBar className="h-8 w-[150px] shrink-0" />
           </div>
-          <div className="overflow-hidden rounded-[14px] border border-border bg-bg-elev">
+          <div className="overflow-hidden rounded-card border border-border bg-bg-elev">
             {sessionKeys.map((key) => (
               <div
                 className="flex items-center gap-[13px] border-b border-border-soft px-4.5 py-3.5 last:border-b-0"
                 key={key}
               >
-                <AccountLoadingBar className="h-8.5 w-[34px] shrink-0 rounded-[9px]" />
+                <AccountLoadingBar className="h-8.5 w-[34px] shrink-0 rounded-control" />
                 <div className="flex min-w-0 flex-1 flex-col gap-1.5">
                   <AccountLoadingBar className="h-3.5 w-[160px]" />
                   <AccountLoadingBar className="h-3 w-[240px]" />

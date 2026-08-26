@@ -203,12 +203,12 @@ export async function fetchKeywordMetrics(input: {
         throw new ProviderLookupSignal({ ok: false, reason: "cost_limit_exceeded" });
       }
       const page = await paidProviderCall({
-        budgetCapCents: project.budgetCapCents,
         call: (credentials, usage) =>
           selected.provider.fetchKeywordMetrics?.(credentials, {
             includeClickstream: input.includeClickstream,
             keywords: chunk.map((item) => item.keyword),
             location: researchProviderRankLocation(location.value),
+            attribution: usage,
             tag: usage?.tag,
           }) ?? Promise.resolve({ costCents: 0, rows: [] }),
         connection: selected.connection,

@@ -27,7 +27,7 @@ const utilityRowKeys = railRows
   .map((_, index) => `utility-${index}`);
 
 function Block({ className }: Readonly<{ className?: string }>) {
-  return <div className={`animate-pulse rounded-[9px] bg-bg-sunken ${className ?? ""}`} />;
+  return <div className={`animate-pulse rounded-control bg-bg-sunken ${className ?? ""}`} />;
 }
 
 function RailRow({ collapsed }: Readonly<{ collapsed: boolean }>) {
@@ -41,7 +41,7 @@ function RailRow({ collapsed }: Readonly<{ collapsed: boolean }>) {
   return (
     <div className="ml-2.5 flex h-9 items-center gap-2.5 pr-[11px] pl-[1px]">
       <div className="grid h-[30px] w-[30px] flex-none place-items-center">
-        <Block className="h-[18px] w-[18px] rounded-[5px]" />
+        <Block className="h-[18px] w-[18px] rounded-control" />
       </div>
       <Block className="h-3.5 w-[92px] max-w-full" />
     </div>
@@ -68,10 +68,10 @@ function SidebarSkeleton({ collapsed }: Readonly<{ collapsed: boolean }>) {
         ) : (
           <div className="flex h-12 w-full items-center gap-2.5 px-[11px]">
             <div className="flex h-[30px] flex-none items-center pl-[2px]">
-              <Block className="h-[26px] w-[26px] rounded-[7px]" />
+              <Block className="h-[26px] w-[26px] rounded-control" />
             </div>
             <Block className="h-4 w-[84px]" />
-            <Block className="ml-auto h-[30px] w-[30px] flex-none rounded-[9px]" />
+            <Block className="ml-auto h-[30px] w-[30px] flex-none rounded-control" />
           </div>
         )}
       </div>
@@ -93,12 +93,12 @@ function SidebarSkeleton({ collapsed }: Readonly<{ collapsed: boolean }>) {
           <div className="flex h-11 w-full items-center gap-2.5 px-[11px]">
             <Block className="h-[30px] w-[30px] flex-none" />
             <Block className="h-3.5 min-w-0 flex-1" />
-            <Block className="h-3 w-3 flex-none rounded-[4px]" />
+            <Block className="h-3 w-3 flex-none rounded-control" />
           </div>
         )}
       </div>
       <div className={`flex flex-none pt-2 ${collapsed ? "justify-center" : "justify-end pr-1"}`}>
-        <Block className="h-2.5 w-9 rounded-[4px]" />
+        <Block className="h-2.5 w-9 rounded-control" />
       </div>
     </div>
   );
@@ -111,7 +111,7 @@ function HeaderSkeleton() {
       data-testid="shell-skeleton-header"
     >
       <div className="flex min-w-0 flex-1 items-center gap-3 overflow-hidden">
-        <Block className="h-[42px] w-[42px] flex-none rounded-xl lg:hidden" />
+        <Block className="h-[42px] w-[42px] flex-none rounded-card lg:hidden" />
         <div className="min-w-0 flex-1">
           <Block className="h-[22px] w-[180px] max-w-full sm:h-[26px]" />
           <Block className="mt-1 hidden h-[15px] w-[260px] max-w-full sm:block" />
@@ -120,8 +120,8 @@ function HeaderSkeleton() {
       {/* Right cluster order matches AppHeader: [actions] [search][bell][account]. */}
       <div className="flex flex-none items-center gap-6">
         <div className="hidden min-w-[210px] flex-none pt-[3px] md:block">
-          <Block className="h-2.5 w-[104px] rounded-[4px]" />
-          <Block className="mt-1 h-3 w-[150px] rounded-[4px]" />
+          <Block className="h-2.5 w-[104px] rounded-control" />
+          <Block className="mt-1 h-3 w-[150px] rounded-control" />
         </div>
         <div className="flex items-center gap-2">
           <Block className="h-8 w-8" />

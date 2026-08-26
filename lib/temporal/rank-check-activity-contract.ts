@@ -2,6 +2,7 @@ import type { RankCheckSchedulerMode } from "../rank-check/scheduler-mode";
 import type { SerpDepth } from "../serp/markets";
 
 export const PROVIDER_RATE_LIMITED_FAILURE = "provider_rate_limited";
+export const PROJECT_DOMAIN_REQUIRED_FAILURE = "project_domain_required";
 export const PROJECT_READ_ONLY_FAILURE = "project_read_only";
 export const BUDGET_EXHAUSTED_FAILURE = "budget_exhausted";
 export const AUTOMATIC_EXECUTION_DISABLED_FAILURE = "automatic_execution_disabled";

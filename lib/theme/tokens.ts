@@ -10,7 +10,6 @@ export const colorTokenNames = [
   "fg-muted",
   "border",
   "border-soft",
-  "border-strong",
   "border-control",
   "nav-active",
   "meter-track",
@@ -73,9 +72,9 @@ export const colorSchemes = {
     "fg-muted": "#615B4D",
     border: "#DDD8CC",
     "border-soft": "#F0EEE6",
-    "border-strong": "#DDD8CC",
-    // Pigment for the 20% secondary-button outline; not the 1px chrome hairline.
-    "border-control": "#867B68",
+    // Control boundary: inputs, buttons, chips. Deliberately lighter than the
+    // 3:1 non-text floor (2.03 on --bg); the exemption is asserted in contrast.test.ts.
+    "border-control": "#B1A99A",
     "nav-active": "#EDEAE1",
     // Meter/progress tracks need contrast against the surface they sit on, not depth.
     // Recessed fills (--bg-sunken, --bg-inset) go darker than --bg in dark mode, which
@@ -120,11 +119,10 @@ export const colorSchemes = {
     "table-header-bg": "#15110A",
     fg: "#ECE7DB",
     "fg-muted": "#A09D95",
-    // Controls keep the old layout hairline. --border stays the darker step
-    // (~half of --border-strong), the same ratio #686766 had to #CECECE.
+    // --border is the hairline for chrome and decoration; --border-control carries
+    // the interactive edge and clears 3:1 on every dark surface.
     border: "#343333",
     "border-soft": "#221D15",
-    "border-strong": "#686766",
     "border-control": "#716653",
     "nav-active": "#231F17",
     // Sits in the dark hairline band so the track separates from --bg (#0F0C07) and

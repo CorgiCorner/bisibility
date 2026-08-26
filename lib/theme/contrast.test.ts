@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { relative, resolve } from "node:path";
 import * as ts from "typescript";
 import { describe, expect, it } from "vitest";
@@ -60,6 +60,28 @@ type SourceFileGroup = {
 };
 
 const maxSourceFilesPerGroup = 100;
+
+const interactiveBoundarySourcePaths = [
+  "components/admin/AdminAccountLookup.tsx",
+  "components/backlinks/AnalyzeCard.tsx",
+  "components/backlinks/BacklinksFiltersDrawer.tsx",
+  "components/backlinks/RecentTargets.tsx",
+  "components/checks/runs/CheckRunsControls.tsx",
+  "components/domain-overview/DomainOverviewAnalyzeCard.tsx",
+  "components/keywords/add/AddKeywordManualPanel.tsx",
+  "components/keywords/filters/FiltersDrawer.tsx",
+  "components/marketing/calculator/EstimateBreakdown.tsx",
+  "components/marketing/calculator/PlanLadder.tsx",
+  "components/markets/MarketPicker.tsx",
+  "components/research/RecentResearchSearches.tsx",
+  "components/research/ResearchDetailSaveAction.tsx",
+  "components/research/ResearchSearchCard.tsx",
+  "components/shell/CloudBackupModal.tsx",
+  "components/shell/CommandPalette.tsx",
+] as const;
+
+const subtleInteractiveBoundary =
+  /\bborder-border(?!-)[^"'`\n]*(?:focus-within|hover:border-(?:accent|border-control))/g;
 
 function rgb(hex: `#${string}`): Rgb {
   return [
@@ -281,14 +303,20 @@ function allPairsForScheme(scheme: ColorSchemeName): Pair[] {
       });
     }
 
-    // Light --border-strong is the same hairline as --border (#DDD8CC); it does not
-    // clear the 3:1 non-text floor. Dark keeps a stronger edge for UI chrome.
-    if (scheme === "dark") {
+    // --border-control draws every interactive edge: inputs, buttons, chips, switches.
+    // Dark clears the 3:1 non-text floor of WCAG 1.4.11. Light deliberately sits below
+    // it: the cream palette cannot carry both a hairline for chrome and a 3:1 control
+    // edge, and the lighter edge was chosen knowingly. The floor is asserted rather
+    // than skipped, so a further lightening of the palette fails here instead of
+    // slipping through the way #DDD8CC did. --bg-inset is excluded because it is a
+    // momentary :active fill and a meter track, never a resting surface under a
+    // bordered control.
+    if (surface !== "bg-inset") {
       pairs.push({
         background: token(scheme, surface),
-        description: `${scheme}: --border-strong against --${surface}`,
-        foreground: token(scheme, "border-strong"),
-        minimum: 3,
+        description: `${scheme}: --border-control against --${surface}`,
+        foreground: token(scheme, "border-control"),
+        minimum: scheme === "dark" ? 3 : 2,
       });
     }
 
@@ -352,6 +380,19 @@ function allPairsForScheme(scheme: ColorSchemeName): Pair[] {
 describe("theme contrast contract", () => {
   const root = resolve(import.meta.dirname, "../..");
   const staticSourceGroups = sourceFileGroups(root, ["components", "app"]);
+  const availableInteractiveBoundarySourcePaths = interactiveBoundarySourcePaths.filter((path) =>
+    existsSync(resolve(root, path)),
+  );
+
+  if (existsSync(resolve(root, "components/marketing/calculator/EstimateBreakdown.tsx"))) {
+    it("keeps every declared interactive boundary source present in the private tree", () => {
+      expect(availableInteractiveBoundarySourcePaths).toEqual(interactiveBoundarySourcePaths);
+    });
+  }
+
+  it("keeps the interactive boundary contract active in transformed snapshots", () => {
+    expect(availableInteractiveBoundarySourcePaths.length).toBeGreaterThan(0);
+  });
 
   it("maps semantic Tailwind foregrounds to the theme contrast colors", () => {
     expect(tailwindSemanticColors).toMatchObject({
@@ -389,7 +430,7 @@ describe("theme contrast contract", () => {
       "bg-band": "#141414",
       "fg-muted": "#A09D95",
       border: "#343333",
-      "border-strong": "#686766",
+      "border-control": "#716653",
       "accent-solid": "#F1511C",
       "accent-solid-hover": "#F0450F",
       "accent-on-solid": "#FFF3EE",
@@ -414,6 +455,15 @@ describe("theme contrast contract", () => {
   it("keeps muted as the only named foreground tier", () => {
     expect(colorTokenNames.filter((name) => name.startsWith("fg-"))).toEqual(["fg-muted"]);
   });
+
+  it.each(availableInteractiveBoundarySourcePaths)(
+    "keeps interactive boundaries on --border-control in %s",
+    (path) => {
+      const source = readFileSync(resolve(root, path), "utf8");
+      expect(source.match(subtleInteractiveBoundary) ?? []).toEqual([]);
+    },
+  );
+
   it("keeps all token pairs used by text, status chips, alerts, buttons, and fields above WCAG limits", () => {
     const failures = (["light", "dark"] as const).flatMap(allPairsForScheme).flatMap((pair) => {
       const ratio = contrast(pair.foreground, pair.background);

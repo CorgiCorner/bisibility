@@ -28,7 +28,7 @@ export function LastCheckedCell({
   if (status === "failed") return <CheckStatusChip kind="failed" label="Failed" />;
 
   const date = parsedDate(lastCheckAt);
-  if (!date) return <CheckStatusChip kind="pending" label="Awaiting first check" />;
+  if (!date) return <CheckStatusChip kind="pending" label="Not checked" />;
 
   const label = relativePast(date, now);
   if (now.getTime() - date.getTime() > staleAfterMs) {

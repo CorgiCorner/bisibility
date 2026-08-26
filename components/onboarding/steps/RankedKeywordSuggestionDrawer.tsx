@@ -141,7 +141,7 @@ export function RankedKeywordSuggestionDrawer({
           className="w-full min-w-[560px] border-collapse text-left text-[12px]"
         >
           <thead>
-            <tr className="border-b border-border-strong font-mono text-[10px] uppercase text-fg-muted">
+            <tr className="border-b border-border font-mono text-[10px] uppercase text-fg-muted">
               <th className="w-10" />
               <th className="py-2">Keyword</th>
               <th>Position</th>

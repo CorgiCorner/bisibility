@@ -24,7 +24,7 @@ export type SwitchProps = Omit<InputHTMLAttributes<HTMLInputElement>, "role" | "
 const visualClass = "relative h-[18px] w-8 shrink-0";
 
 const trackClass =
-  "absolute inset-0 rounded-full border border-border-strong bg-transparent transition-colors duration-[var(--motion-tooltip)] ease-[ease] " +
+  "absolute inset-0 rounded-full border border-border-control bg-transparent transition-colors duration-[var(--motion-tooltip)] ease-[ease] " +
   "peer-checked:border-accent peer-checked:bg-accent-soft " +
   "peer-focus-visible:ring-2 peer-focus-visible:ring-accent/40 " +
   "peer-disabled:bg-bg-sunken disabled:text-fg-muted";
@@ -68,7 +68,7 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
   return (
     <label
       className={cn(
-        "inline-flex items-center gap-2 rounded-[9px] border border-border-strong bg-bg-elev px-3 py-2 text-[12.5px] font-semibold text-fg-muted",
+        "inline-flex items-center gap-2 rounded-control border border-border-control bg-bg-elev px-3 py-2 text-[12.5px] font-semibold text-fg-muted",
         description && "items-start",
         disabled ? "cursor-not-allowed text-fg-muted" : "cursor-pointer",
         className,

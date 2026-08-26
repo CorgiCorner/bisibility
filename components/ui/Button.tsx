@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/ui/cn";
+import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import { MOTION_PRESS } from "@/lib/ui/motion";
 import { sxArray } from "@/lib/ui/mui-sx";
 import MuiButton, { type ButtonProps as MuiButtonProps } from "@mui/material/Button";
@@ -10,7 +11,7 @@ export type ButtonVariant = "destructive" | "ghost" | "primary" | "secondary";
 export type ButtonSize = "lg" | "md" | "sm" | "xs";
 
 export const buttonXsSx = {
-  borderRadius: "6px",
+  borderRadius: UI_RADIUS_ROLES.control,
   fontSize: "12px",
   minHeight: 30,
   padding: "4px 10px",
@@ -27,7 +28,7 @@ export type ButtonProps = Omit<MuiButtonProps, "color" | "size" | "variant"> & {
   variant?: ButtonVariant;
 };
 
-const secondaryBorder = "1px solid var(--border-strong)";
+const secondaryBorder = "1px solid var(--border-control)";
 
 function muiSizeFor(size: ButtonSize): "large" | "medium" | "small" {
   if (size === "lg") return "large";
@@ -72,7 +73,7 @@ const variantSx = {
     },
     ...pressScale,
   },
-  // Elevated fill, 1px --border-strong, and --fg so secondary stays a real
+  // Elevated fill, 1px --border-control, and --fg so secondary stays a real
   // outline control without competing with the solid primary.
   secondary: {
     backgroundColor: "var(--bg-elev)",
@@ -116,7 +117,7 @@ export function Button({
       }
     : {
         backgroundColor: "var(--bg-sunken)",
-        border: "1px solid var(--border-strong)",
+        border: "1px solid var(--border-control)",
         color: "var(--fg-muted)",
         opacity: 1,
       };
@@ -139,7 +140,7 @@ export function Button({
       }
       sx={[
         {
-          borderRadius: "6px",
+          borderRadius: UI_RADIUS_ROLES.control,
           fontWeight: 600,
           textTransform: "none",
           transition: `background-color .16s ease, border-color .16s ease, transform ${MOTION_PRESS}ms ease`,

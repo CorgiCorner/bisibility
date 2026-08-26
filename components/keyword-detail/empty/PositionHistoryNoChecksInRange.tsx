@@ -23,7 +23,7 @@ export function PositionHistoryNoChecksInRange({
         footer={
           <>
             <ChartFooterItem>Latest {latestRankLabel(latestPosition)}</ChartFooterItem>
-            <span aria-hidden className="h-3 border-l border-border-strong" />
+            <span aria-hidden className="h-3 border-l border-border" />
             <ChartFooterItem>Paused</ChartFooterItem>
           </>
         }

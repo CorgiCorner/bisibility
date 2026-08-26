@@ -53,7 +53,7 @@ const tintStyles = {
     soft: "color-mix(in srgb, var(--green) 12%, transparent)",
   },
   neutral: {
-    border: "var(--border-strong)",
+    border: "var(--border)",
     color: "var(--fg-muted)",
     soft: "var(--bg-sunken)",
   },
@@ -182,7 +182,7 @@ export function ToastItem({
 
   return (
     <output
-      className="pointer-events-auto flex w-full max-w-[calc(100vw-32px)] items-center gap-3 rounded-[14px] border bg-bg-elev px-3.5 py-3 text-fg sm:max-w-none"
+      className="pointer-events-auto flex w-full max-w-[calc(100vw-32px)] items-center gap-3 rounded-card border bg-bg-elev px-3.5 py-3 text-fg sm:max-w-none"
       onBlurCapture={handleBlurCapture}
       onFocusCapture={handleFocusCapture}
       onMouseEnter={handleMouseEnter}
@@ -191,7 +191,7 @@ export function ToastItem({
       style={{ borderColor: style.border }}
     >
       <span
-        className="grid h-8 w-8 shrink-0 place-items-center rounded-[9px]"
+        className="grid h-8 w-8 shrink-0 place-items-center rounded-control"
         style={{ backgroundColor: style.soft, color: style.color }}
       >
         {toast.icon}
@@ -201,7 +201,7 @@ export function ToastItem({
       </p>
       {toast.undo ? (
         <button
-          className="shrink-0 rounded-[8px] px-2.5 py-1.5 text-[12.5px] font-semibold outline-none transition-colors hover:bg-bg-sunken focus-visible:bg-bg-sunken"
+          className="shrink-0 rounded-control px-2.5 py-1.5 text-[12.5px] font-semibold outline-none transition-colors hover:bg-bg-sunken focus-visible:bg-bg-sunken"
           disabled={toast.undoPending}
           onClick={() => onUndoClick(toast.id)}
           style={{ color: style.color }}

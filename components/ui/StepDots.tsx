@@ -26,8 +26,8 @@ export function stepDotStateClass(state: StepDotState, variant: StepDotsVariant 
   if (variant === "onboarding" && state === "past")
     return "bg-green-text text-accent-on-solid dark:text-bg";
   return variant === "keyword-detail"
-    ? "border-[1.5px] border-border-strong bg-transparent text-fg-muted"
-    : "border border-border-strong bg-transparent text-fg-muted";
+    ? "border-[1.5px] border-border bg-transparent text-fg-muted"
+    : "border border-border bg-transparent text-fg-muted";
 }
 
 function stateFor(index: number, currentIndex: number): StepDotState {

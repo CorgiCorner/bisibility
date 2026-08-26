@@ -1,5 +1,7 @@
+import type { ProviderRequestAttribution } from "@/lib/provider-usage/tag";
 import type { SerpRankLocation } from "@/lib/serp/location";
 import type { SerpDepth } from "@/lib/serp/markets";
+import type { ProviderAllocationCatalog } from "./allocation-catalog";
 import type {
   AnalyticsQueryStatsInput,
   AnalyticsTopQuery,
@@ -51,9 +53,11 @@ export type ProviderTestResult = {
   ok: boolean;
   message: string;
   balance?: number;
+  availabilityTotal?: number;
 };
 
 export type SerpRankInput = {
+  attribution?: ProviderRequestAttribution;
   keyword: string;
   completedCheckCount?: number;
   location: SerpRankLocation;
@@ -167,6 +171,7 @@ export type BacklinkRow = {
 };
 
 export type BacklinkTargetInput = {
+  attribution?: ProviderRequestAttribution;
   includeSubdomains: boolean;
   tag?: string;
   target: string;
@@ -182,6 +187,7 @@ export type BacklinkRowsResult = {
 };
 
 export type KeywordResearchInput = {
+  attribution?: ProviderRequestAttribution;
   includeClickstream: boolean;
   limit: number;
   location: SerpRankLocation;
@@ -197,6 +203,7 @@ export type SerpProvider = {
   fetchRankedKeywords?(
     credentials: ProviderCredentials,
     input: {
+      attribution?: ProviderRequestAttribution;
       domain: string;
       languageCode?: string;
       limit: number;
@@ -221,6 +228,7 @@ export type SerpProvider = {
   fetchKeywordMetrics?(
     credentials: ProviderCredentials,
     input: {
+      attribution?: ProviderRequestAttribution;
       includeClickstream: boolean;
       keywords: string[];
       location: SerpRankLocation;
@@ -275,11 +283,16 @@ export type AnalyticsProvider = {
   ): Promise<PageStatRow[]>;
 };
 
-export type ProviderCatalogItem = {
+type ProviderCatalogItemBase = {
   id: string;
   label: string;
   kind: ProviderKind;
   defaultStatus: ProviderStatus;
   requiredCredentials?: readonly ProviderCredentialRequirement[];
   logoDomain?: string;
+};
+
+export type ProviderCatalogItem = ProviderCatalogItemBase;
+export type ProviderCatalogEntry = ProviderCatalogItemBase & {
+  allocation: ProviderAllocationCatalog;
 };

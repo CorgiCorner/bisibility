@@ -1,5 +1,6 @@
 export { AccentCtaLink, type AccentCtaLinkProps, accentCtaLinkClassName } from "./AccentCtaLink";
 export { AlertBanner, type AlertBannerAction, type AlertBannerProps } from "./AlertBanner";
+export { AlertBannerStack, type AlertBannerStackProps } from "./AlertBannerStack";
 export { AppDrawer, type AppDrawerProps } from "./AppDrawer";
 export { Avatar, type AvatarProps } from "./Avatar";
 export {
@@ -58,12 +59,19 @@ export {
   InlineCode,
   inlineCalloutCodeClass,
 } from "./InlineCallout";
-export { Input, type InputProps, inputClassName } from "./Input";
+export { InlineToken, type InlineTokenProps } from "./InlineToken";
+export { Input, type InputProps } from "./Input";
 export {
   dangerIconWellClassName,
   iconWellClassName,
   iconWellSurfaceClassName,
 } from "./icon-well-styles";
+export {
+  compactInputClassName,
+  compactInputGeometryClassName,
+  compactInputTypographyClassName,
+  inputClassName,
+} from "./input-styles";
 export { Kbd, type KbdProps } from "./Kbd";
 export {
   MenuMultiSelect,

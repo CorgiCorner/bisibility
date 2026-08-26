@@ -19,7 +19,7 @@ describe("DomainOverviewLoadingSkeletons", () => {
     expect(route).toHaveAttribute("aria-busy", "true");
     expect(route).toHaveClass("grid", "min-w-0", "gap-4");
     expect(analyzeCard).toHaveClass(
-      "rounded-[14px]",
+      "rounded-card",
       "border",
       "border-border",
       "bg-bg-elev",
@@ -27,17 +27,17 @@ describe("DomainOverviewLoadingSkeletons", () => {
       "sm:p-5",
     );
     expect(target).toHaveClass(
-      "h-10",
+      "h-[34px]",
       "flex-1",
-      "rounded-[9px]",
-      "border-border-strong",
+      "rounded-control",
+      "border-border",
       "md:min-w-[320px]",
     );
     expect(marketWrapper).toHaveClass("md:w-[230px]");
-    expect(market).toHaveClass("h-10", "w-full", "rounded-[9px]", "border-border-strong");
+    expect(market).toHaveClass("h-[34px]", "w-full", "rounded-control", "border-border");
     expect(action).toHaveClass("h-[37px]", "min-w-[200px]");
     expect(idlePanel).toHaveClass(
-      "rounded-2xl",
+      "rounded-card",
       "border",
       "border-border",
       "bg-bg-elev",
@@ -51,7 +51,8 @@ describe("DomainOverviewLoadingSkeletons", () => {
     );
     expect(idlePanel?.querySelectorAll('[data-skeleton="idle-bullet"]')).toHaveLength(3);
 
-    expect(container.querySelectorAll('[class~="rounded-[13px]"]')).toHaveLength(0);
+    // Radius collapsed to two roles, so these panels now share the card step.
+    expect(container.querySelectorAll('[class~="rounded-card"]')).toHaveLength(3);
     expect(
       container.querySelectorAll('[class~="min-w-[1180px]"], [class~="min-w-[900px]"]'),
     ).toHaveLength(0);
@@ -62,7 +63,7 @@ describe("DomainOverviewLoadingSkeletons", () => {
 
     expect(screen.getByLabelText("Domain Overview loading")).toHaveAttribute("aria-busy", "true");
     expect(container.querySelectorAll(".animate-pulse").length).toBeGreaterThan(30);
-    expect(container.querySelectorAll('[class~="rounded-[13px]"]')).toHaveLength(6);
+    expect(container.querySelectorAll('[class~="rounded-card"]')).toHaveLength(11);
     expect(
       container.querySelectorAll('[class~="min-w-[1180px]"], [class~="min-w-[900px]"]'),
     ).toHaveLength(2);

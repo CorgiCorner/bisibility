@@ -1,4 +1,5 @@
 import { runCheckNow } from "@/lib/actions/rankCheck";
+import { PROJECT_DOMAIN_REQUIRED_MESSAGE } from "@/lib/projects/tracked-domain";
 import { appPath } from "@/lib/routing/app-path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -225,6 +226,27 @@ describe("runCheckNow", () => {
     });
     expect(result).toEqual({ rankCheckId: RANK_CHECK_PUBLIC_ID, status: "running" });
   });
+  it("rejects a missing project domain before reserving or dispatching a manual check", async () => {
+    mocks.prisma.keyword.findUnique.mockResolvedValueOnce({
+      project: {
+        budgetCapCents: 5_000,
+        defaults: { serpDepth: 100 },
+        domain: null,
+      },
+      queuedRankCheckTasks: [],
+      rankChecks: [],
+      schedule: null,
+    });
+
+    await expect(runCheckNow({ keywordId: KEYWORD_PUBLIC_ID })).rejects.toThrow(
+      PROJECT_DOMAIN_REQUIRED_MESSAGE,
+    );
+    expect(mocks.loadSerpProviderChain).not.toHaveBeenCalled();
+    expect(mocks.assertBudgetAvailable).not.toHaveBeenCalled();
+    expect(mocks.prisma.rankCheck.create).not.toHaveBeenCalled();
+    expect(mocks.startRankCheckWorkflow).not.toHaveBeenCalled();
+  });
+
   it("serializes an exhausted budget before starting a workflow or fallback check", async () => {
     const error = Object.assign(new Error("Rank check monthly budget reached."), {
       code: "budget_exhausted",
@@ -401,9 +423,11 @@ describe("runCheckNow", () => {
       publicId: KEYWORD_PUBLIC_ID,
       text: "rank tracker",
     });
-    await expect(runCheckNow({ keywordId: KEYWORD_PUBLIC_ID })).rejects.toThrow(
-      "Sample projects don't run real checks.",
-    );
+    await expect(runCheckNow({ keywordId: KEYWORD_PUBLIC_ID })).resolves.toEqual({
+      code: "sample_project",
+      message: "Sample projects don't run real checks.",
+      status: "not_started",
+    });
     expect(mocks.startRankCheckWorkflow).not.toHaveBeenCalled();
     expect(mocks.runKeywordCheckWithFallback).not.toHaveBeenCalled();
     expect(mocks.prisma.rankCheck.create).not.toHaveBeenCalled();

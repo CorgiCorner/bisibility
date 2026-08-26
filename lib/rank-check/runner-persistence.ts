@@ -142,6 +142,7 @@ export async function persistRankCheck(
         providerRequestId: target.providerRequestId,
         projectId: target.projectId,
         usage: target.providerUsage ?? result.providerUsage,
+        usageQuantity: result.rankCheck.billingUnits,
       });
     }
 

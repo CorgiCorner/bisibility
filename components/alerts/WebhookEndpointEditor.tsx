@@ -16,7 +16,7 @@ type WebhookEndpointEditorProps = {
   testAction?: (input: unknown) => Promise<unknown>;
 };
 
-const fieldClass = `${inputClassName} min-h-10 w-full rounded-[9px] px-3 py-2 text-[13px]`;
+const fieldClass = `${inputClassName} min-h-10 w-full rounded-control px-3 py-2 text-[13px]`;
 const labelClass =
   "flex flex-col gap-1.5 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted";
 
@@ -67,7 +67,7 @@ export function WebhookEndpointEditor({
   }
 
   return (
-    <div className="mt-3 rounded-[10px] border border-border-strong bg-transparent p-3">
+    <div className="mt-3 rounded-control border border-border bg-transparent p-3">
       <p className="m-0 text-[12px] leading-relaxed text-fg-muted">
         Events: alert.fired, alert.digest, and alert.daily_cap_reached. Every enabled endpoint in
         this project receives every webhook-channel alert. The HMAC secret is encrypted at rest,

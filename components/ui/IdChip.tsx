@@ -14,10 +14,10 @@ export type IdChipProps = {
 const idChipVariants = cva("inline-flex items-center", {
   variants: {
     size: {
-      xs: "h-[22px] gap-[5px] rounded-[7px] px-2 py-[3px]",
-      sm: "h-7 gap-1 rounded-md px-1.5",
-      md: "h-8 gap-1 rounded-[7px] px-2",
-      lg: "h-9 gap-1.5 rounded-lg px-2.5",
+      xs: "h-[22px] gap-[5px] rounded-control px-2 py-[3px]",
+      sm: "h-7 gap-1 rounded-control px-1.5",
+      md: "h-8 gap-1 rounded-control px-2",
+      lg: "h-9 gap-1.5 rounded-control px-2.5",
     },
   },
   defaultVariants: {

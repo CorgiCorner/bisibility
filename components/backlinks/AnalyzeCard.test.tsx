@@ -31,18 +31,42 @@ function ScopeHarness() {
 }
 
 describe("AnalyzeCard", () => {
-  it("keeps the domain field the same 38px height as the adjacent selects", () => {
+  it("keeps the first control row at an exact 34px height", () => {
     render(<AnalyzeCard {...baseProps} />);
 
     expect(screen.getByPlaceholderText("Enter a domain or URL").parentElement).toHaveClass(
-      "h-[38px]",
+      "h-[34px]",
     );
-    expect(screen.getByRole("button", { name: "Backlinks limit" })).toHaveClass("min-h-[38px]");
-    expect(screen.getByRole("group", { name: "Backlinks target scope" })).toHaveClass(
-      "[&>div]:!min-h-[38px]",
+    expect(screen.getByRole("button", { name: "Backlinks limit" })).toHaveClass(
+      "h-[34px]",
+      "min-h-0",
     );
-    expect(screen.getByRole("radio", { name: "Whole site" }).nextElementSibling).toHaveClass(
-      "!min-h-[30px]",
+    const scopeGroup = screen.getByRole("group", { name: "Backlinks target scope" });
+    const wholeSite = screen.getByRole("radio", { name: "Whole site" });
+
+    expect(scopeGroup).toHaveClass("shrink-0");
+    expect(scopeGroup).not.toHaveClass("[&>div]:!h-[34px]", "[&>div]:!min-h-[34px]");
+    expect(wholeSite.parentElement?.parentElement).toHaveClass(
+      "min-h-[34px]",
+      "bg-transparent",
+      "text-[12.5px]",
+    );
+    expect(wholeSite.nextElementSibling).toHaveClass("h-[26px]", "min-w-[92px]");
+    expect(wholeSite.nextElementSibling?.className).not.toContain("!");
+  });
+
+  it("uses shared compact typography for its target input", () => {
+    render(<AnalyzeCard {...baseProps} />);
+
+    expect(screen.getByRole("textbox", { name: "Backlinks target" })).toHaveClass(
+      "h-full",
+      "min-h-0",
+      "py-1",
+      "compact-text-12",
+      "text-[12px]",
+      "leading-4",
+      "placeholder:text-[12px]",
+      "placeholder:leading-4",
     );
   });
 
@@ -59,6 +83,26 @@ describe("AnalyzeCard", () => {
     );
 
     expect(screen.getByRole("button", { name: "Analyze ~$0.05" })).toBeEnabled();
+  });
+
+  it("keeps pricing before the primary action in the shared action wrapper", () => {
+    render(<AnalyzeCard {...baseProps} />);
+
+    const pricing = screen.getByRole("button", { name: "How is this priced?" });
+    const actions = pricing.parentElement;
+    const submit = screen.getByRole("button", { name: "Analyze" });
+
+    expect(actions).toHaveClass("ml-auto", "flex", "items-center", "gap-4");
+    expect(actions).not.toHaveClass(
+      "w-full",
+      "flex-col",
+      "flex-wrap",
+      "flex-row",
+      "justify-between",
+    );
+    expect(pricing.compareDocumentPosition(submit) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(pricing).not.toHaveClass("min-w-0", "shrink", "text-left", "order-2", "self-end");
+    expect(submit).not.toHaveClass("shrink-0", "order-1", "self-end");
   });
 
   it("opens pricing and dismisses it with Escape and click-outside", async () => {

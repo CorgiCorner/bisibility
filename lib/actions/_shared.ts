@@ -21,6 +21,13 @@ export type ProjectScope = {
   writeModeChangedById?: string | null;
 };
 
+export class ProjectNotFoundError extends Error {
+  constructor() {
+    super("Project not found.");
+    this.name = "ProjectNotFoundError";
+  }
+}
+
 export type KeywordScope = {
   id: string;
   projectId: string;
@@ -103,7 +110,7 @@ export async function requireProjectScope(
 ) {
   const project = await findProjectScope(projectId);
   if (!project) {
-    throw new Error("Project not found.");
+    throw new ProjectNotFoundError();
   }
 
   authorize(actor, action, { ...resource, projectId: project.id });

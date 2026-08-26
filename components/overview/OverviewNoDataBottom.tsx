@@ -2,11 +2,8 @@
 
 import { Button, Card } from "@/components/ui";
 import { appPath } from "@/lib/routing/app-path";
-import {
-  CaretRightIcon as CaretRight,
-  InfoIcon as Info,
-  PlusCircleIcon as PlusCircle,
-} from "@phosphor-icons/react/dist/ssr";
+import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
+import { CaretRightIcon as CaretRight, InfoIcon as Info } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import { DataSourceStatusBadge } from "./DataSourceStatusBadge";
 import type { DataSourceHealth, HighlightRow } from "./types";
@@ -16,7 +13,7 @@ const mutedValue = /^(not connected|never|not scheduled)$/i;
 
 export function DataSourceNoDataPanel({ health }: Readonly<{ health: DataSourceHealth }>) {
   return (
-    <Card size="md" style={{ borderRadius: 14, padding: "18px 20px" }}>
+    <Card size="md" style={{ borderRadius: UI_RADIUS_ROLES.card, padding: "18px 20px" }}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="text-[14.5px] font-semibold leading-normal text-fg">Data source</div>
@@ -55,10 +52,13 @@ export function RecentlyAddedCard({
   rows,
 }: Readonly<{ projectRef: string; rows: HighlightRow[] }>) {
   return (
-    <Card className="overflow-hidden" size="md" style={{ borderRadius: 14, padding: 0 }}>
+    <Card
+      className="overflow-hidden"
+      size="md"
+      style={{ borderRadius: UI_RADIUS_ROLES.card, padding: 0 }}
+    >
       <div className="px-4.5 pb-3 pt-[15px]">
-        <div className="flex items-center gap-2 text-sm font-semibold leading-normal text-fg">
-          <PlusCircle aria-hidden className="text-blue-text" size={16} weight="fill" />
+        <div className="flex items-center text-sm font-semibold leading-normal text-fg">
           Recently added
         </div>
         <div className="mt-[3px] font-mono text-[10.5px] leading-normal text-fg-muted">
@@ -91,7 +91,7 @@ export function RecentlyAddedCard({
 export function ViewAllKeywordsButton({ projectRef }: Readonly<{ projectRef: string }>) {
   return (
     <Button
-      component={Link}
+      component="a"
       endIcon={<CaretRight size={15} weight="bold" />}
       href={appPath(projectRef, "rank-tracker")}
       sx={{

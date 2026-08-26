@@ -87,7 +87,7 @@ function BarInteractionLayer({
             type="button"
           >
             {isHovered ? (
-              <span className="pointer-events-none absolute left-1/2 top-0 z-10 flex -translate-x-1/2 flex-col items-center gap-px whitespace-nowrap rounded-lg bg-code-bg px-[9px] py-1.5 text-code-fg">
+              <span className="pointer-events-none absolute left-1/2 top-0 z-10 flex -translate-x-1/2 flex-col items-center gap-px whitespace-nowrap rounded-control bg-code-bg px-[9px] py-1.5 text-code-fg">
                 <span className="font-mono text-[11px] font-semibold">
                   {keywordCountLabel(bucket.count)}
                 </span>

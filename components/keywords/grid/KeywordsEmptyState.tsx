@@ -112,14 +112,14 @@ export function KeywordsEmptyState({
 
   // Keep the table chrome + column headers; replace the body with the first-keyword prompt.
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-bg-elev">
+    <div className="overflow-hidden rounded-card border border-border bg-bg-elev">
       <div className="grid grid-cols-[minmax(0,2.2fr)_repeat(3,1fr)_1.4fr] gap-x-2.5 border-b border-border bg-bg-sunken px-4.5 py-[11px] font-mono text-[10px] uppercase tracking-[0.6px] text-fg-muted">
         {EMPTY_HEADERS.map((header) => (
           <span key={header}>{header}</span>
         ))}
       </div>
       <div className="flex flex-col items-center px-6 py-10 text-center">
-        <span className="grid h-[54px] w-[54px] place-items-center rounded-[14px] bg-accent-soft text-accent-solid">
+        <span className="grid h-[54px] w-[54px] place-items-center rounded-card bg-accent-soft text-accent-solid">
           <MagnifyingGlass size={27} weight="bold" />
         </span>
         <h3 className="mt-4.5 text-lg font-semibold tracking-[-0.4px] text-fg">
@@ -131,7 +131,7 @@ export function KeywordsEmptyState({
 
         {canCreateKeyword ? (
           <div className="mt-6 grid w-full max-w-[780px] items-stretch gap-3 text-left md:grid-cols-2">
-            <section className="flex h-full flex-col rounded-xl border border-border bg-bg-sunken p-5">
+            <section className="flex h-full flex-col rounded-card border border-border bg-bg-sunken p-5">
               <h4 className="m-0 text-[14px] font-semibold text-fg">
                 Find opportunities in Search Console
               </h4>
@@ -188,7 +188,7 @@ export function KeywordsEmptyState({
               ) : null}
             </section>
 
-            <section className="flex h-full flex-col rounded-xl border border-border bg-bg-sunken p-5">
+            <section className="flex h-full flex-col rounded-card border border-border bg-bg-sunken p-5">
               <h4 className="m-0 text-[14px] font-semibold text-fg">Add keywords</h4>
               <p className="mt-2 text-[12.5px] leading-[1.55] text-fg-muted">
                 Add a focused list of your own, or import a prepared CSV.

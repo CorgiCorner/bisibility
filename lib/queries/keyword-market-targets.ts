@@ -38,9 +38,11 @@ const include = {
     select: {
       checkedAt: true,
       degradedToCountry: true,
+      errorCode: true,
       id: true,
       normalizationVersion: true,
       position: true,
+      provider: true,
       previousPosition: true,
       rankingUrl: true,
       requestedDepth: true,

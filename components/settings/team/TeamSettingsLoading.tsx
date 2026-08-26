@@ -32,7 +32,7 @@ export function TeamSettingsContentLoading() {
               <SettingsLoadingBar className="h-3 w-64 max-w-full" />
             </div>
           </div>
-          <div className="mt-5 overflow-hidden rounded-[10px] border border-border">
+          <div className="mt-5 overflow-hidden rounded-control border border-border">
             {Array.from({ length: frame.rows }, (_, index) => (
               <div
                 className="flex min-h-[42px] items-center gap-3 border-b border-border-soft p-3 last:border-b-0"

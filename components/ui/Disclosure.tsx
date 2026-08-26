@@ -36,12 +36,12 @@ export function Disclosure({
 }: Readonly<DisclosureProps>) {
   return (
     <details
-      className={cn("group min-w-0 rounded-[14px] border border-border bg-bg-elev", className)}
+      className={cn("group min-w-0 rounded-card border border-border bg-bg-elev", className)}
       open={defaultOpen}
     >
       <summary
         className={cn(
-          "flex cursor-pointer list-none items-start gap-3 rounded-[14px] px-5.5 py-5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid sm:px-7 [&::-webkit-details-marker]:hidden",
+          "flex cursor-pointer list-none items-start gap-3 rounded-card px-5.5 py-5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid sm:px-7 [&::-webkit-details-marker]:hidden",
           summaryClassName,
         )}
       >

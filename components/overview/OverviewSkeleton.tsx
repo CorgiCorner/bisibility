@@ -11,7 +11,7 @@ import { cn } from "@/lib/ui/cn";
 // and in-page data resolution look identical.
 
 function Bar({ className }: Readonly<{ className?: string }>) {
-  return <div className={cn("animate-pulse rounded-[10px] bg-bg-sunken", className)} />;
+  return <div className={cn("animate-pulse rounded-control bg-bg-sunken", className)} />;
 }
 
 const kpiKeys = ["k1", "k2", "k3", "k4"] as const;
@@ -28,7 +28,7 @@ const distBars = [
   { height: "h-[24%]", key: "d6" },
 ] as const;
 
-const chartCardClass = "rounded-[14px] border border-border bg-bg-elev px-5 py-4.5";
+const chartCardClass = "rounded-card border border-border bg-bg-elev px-5 py-4.5";
 const marketGrid =
   "grid min-w-[772px] grid-cols-[200px_96px_92px_168px_88px_72px_16px] items-center gap-3 px-5";
 
@@ -53,7 +53,7 @@ export function OverviewSkeleton() {
         >
           {kpiKeys.map((key) => (
             <div
-              className="min-w-0 rounded-[13px] border border-border bg-bg-elev px-4.5 py-4"
+              className="min-w-0 rounded-card border border-border bg-bg-elev px-4.5 py-4"
               key={key}
             >
               <Bar className="h-2.5 w-[68px]" />
@@ -75,7 +75,7 @@ export function OverviewSkeleton() {
               </div>
               <Bar className="h-3 w-[92px] flex-none" />
             </div>
-            <Bar className="mt-3 h-[250px] w-full rounded-xl" />
+            <Bar className="mt-3 h-[250px] w-full rounded-card" />
           </div>
 
           <div className={cn(chartCardClass, "flex min-w-0 flex-col")}>
@@ -83,7 +83,7 @@ export function OverviewSkeleton() {
             <Bar className="mt-2 h-3 w-[180px]" />
             <div className="mt-4.5 flex h-[190px] items-end gap-2.5 px-1">
               {distBars.map((bar) => (
-                <Bar className={cn("w-full rounded-md", bar.height)} key={bar.key} />
+                <Bar className={cn("w-full rounded-control", bar.height)} key={bar.key} />
               ))}
             </div>
           </div>
@@ -91,7 +91,7 @@ export function OverviewSkeleton() {
 
         <div
           data-testid="by-market-rollup"
-          className="min-w-0 overflow-hidden rounded-[14px] border border-border bg-bg-elev p-0"
+          className="min-w-0 overflow-hidden rounded-card border border-border bg-bg-elev p-0"
         >
           <div className="flex flex-wrap items-start justify-between gap-3 px-5 pb-3.5 pt-4.5">
             <div className="min-w-0">
@@ -144,7 +144,7 @@ export function OverviewSkeleton() {
             ))}
           </div>
           <div className="mt-4 flex items-start gap-[9px] border-t border-border-soft pt-3.5">
-            <Bar className="h-5 w-5 shrink-0 rounded-md" />
+            <Bar className="h-5 w-5 shrink-0 rounded-control" />
             <Bar className="h-3 w-full max-w-[440px]" />
           </div>
         </div>
@@ -152,12 +152,12 @@ export function OverviewSkeleton() {
         <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-4">
           {highlightKeys.map((key) => (
             <div
-              className="flex min-w-0 flex-col overflow-hidden rounded-[14px] border border-border bg-bg-elev p-0"
+              className="flex min-w-0 flex-col overflow-hidden rounded-card border border-border bg-bg-elev p-0"
               key={key}
             >
               <div className="flex-none px-4.5 pb-3 pt-[15px]">
                 <div className="flex items-center gap-2">
-                  <Bar className="h-4 w-4 rounded-md" />
+                  <Bar className="h-4 w-4 rounded-control" />
                   <Bar className="h-4 w-[120px]" />
                 </div>
                 <Bar className="mt-[3px] h-3 w-[160px]" />

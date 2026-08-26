@@ -25,6 +25,9 @@ describe("TimelineRow", () => {
 
     expect(row).toHaveAttribute("id", "signal-sig_full_width");
     expect(row).toHaveClass("flex");
+    expect(row).not.toHaveClass("transition-colors", "hover:bg-bg-sunken");
+    expect(row).not.toHaveAttribute("role", "button");
+    expect(row).not.toHaveAttribute("tabindex");
     expect(row?.children).toHaveLength(1);
     expect(row?.firstElementChild).toHaveClass("grid", "min-w-0", "flex-1");
   });

@@ -69,7 +69,7 @@ export function TimelineRow({ canDelete, item, projectId }: Readonly<TimelineRow
 
   return (
     <div
-      className="flex items-start gap-3.5 border-border-soft border-b px-5 py-[13px] transition-colors hover:bg-bg-sunken last:border-b-0"
+      className="flex items-start gap-3.5 border-border-soft border-b px-5 py-[13px] last:border-b-0"
       id={`signal-${item.id}`}
     >
       <div className="grid min-w-0 flex-1 gap-2 md:grid-cols-[124px_minmax(0,1fr)_auto] md:items-start">
@@ -80,7 +80,7 @@ export function TimelineRow({ canDelete, item, projectId }: Readonly<TimelineRow
         <div className="min-w-0">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <span
-              className="inline-grid h-[22px] w-[22px] place-items-center rounded-md"
+              className="inline-grid h-[22px] w-[22px] place-items-center rounded-control"
               style={{ backgroundColor: tint.bg, color: tint.color }}
             >
               <Icon aria-hidden size={12} weight="fill" />
@@ -121,7 +121,7 @@ export function TimelineRow({ canDelete, item, projectId }: Readonly<TimelineRow
             <dl className="m-0 mt-2 flex flex-wrap gap-1.5">
               {item.details.map((detail) => (
                 <div
-                  className="flex min-w-0 items-baseline gap-1 rounded-md border border-border bg-bg-sunken px-2 py-1"
+                  className="flex min-w-0 items-baseline gap-1 rounded-control border border-border bg-bg-sunken px-2 py-1"
                   key={detail.label}
                 >
                   <dt className="font-mono text-[9.5px] uppercase tracking-[0.4px] text-fg-muted">

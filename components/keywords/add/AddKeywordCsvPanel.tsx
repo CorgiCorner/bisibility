@@ -48,7 +48,7 @@ export function AddKeywordCsvPanel({
   return (
     <div className="flex flex-col gap-3.5">
       <label
-        className="flex cursor-pointer flex-col items-center gap-2 rounded-[12px] border border-dashed border-border-strong bg-transparent px-4 py-8 text-center hover:border-accent focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent-solid"
+        className="flex cursor-pointer flex-col items-center gap-2 rounded-card border border-dashed border-border-control bg-transparent px-4 py-8 text-center hover:border-accent focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent-solid"
         onDragOver={handleDragOver}
         onDrop={(event) => void handleDrop(event)}
       >
@@ -84,7 +84,7 @@ export function AddKeywordCsvPanel({
         ) : null}
       </div>
 
-      <pre className="m-0 overflow-x-auto rounded-[10px] bg-code-bg p-3.5 font-mono text-[11.5px] leading-[1.7] text-code-fg">
+      <pre className="m-0 overflow-x-auto rounded-control bg-code-bg p-3.5 font-mono text-[11.5px] leading-[1.7] text-code-fg">
         {keywordImportTemplateCsv}
       </pre>
     </div>

@@ -35,9 +35,9 @@ const chipSx: Record<CompareState, { bg: string; fg: string; border: string }> =
     fg: "var(--red-text)",
     border: "var(--red)",
   },
-  entered: { bg: "var(--bg-sunken)", fg: "var(--fg-muted)", border: "var(--border-strong)" },
-  unchanged: { bg: "var(--bg-sunken)", fg: "var(--fg-muted)", border: "var(--border-strong)" },
-  dropped_out: { bg: "var(--bg-sunken)", fg: "var(--fg-muted)", border: "var(--border-strong)" },
+  entered: { bg: "var(--bg-sunken)", fg: "var(--fg-muted)", border: "var(--border)" },
+  unchanged: { bg: "var(--bg-sunken)", fg: "var(--fg-muted)", border: "var(--border)" },
+  dropped_out: { bg: "var(--bg-sunken)", fg: "var(--fg-muted)", border: "var(--border)" },
 };
 
 function makeDateFormatter(timeZone: string): (iso: string) => string {
@@ -126,7 +126,7 @@ function RefusedResult({
   const showButton = fullPair && onPickFullPair;
   return (
     <div
-      className="flex flex-col gap-2 rounded-[12px] border border-dashed border-border-strong p-4"
+      className="flex flex-col gap-2 rounded-card border border-dashed border-border p-4"
       style={{ backgroundColor: "var(--bg-sunken)" }}
     >
       <MonoText muted size="md">

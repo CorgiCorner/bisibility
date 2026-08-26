@@ -269,6 +269,10 @@ export const auth = betterAuth({
       refreshTokenExpiresIn: OAUTH_REFRESH_TOKEN_TTL_SECONDS,
       allowDynamicClientRegistration: true,
       allowUnauthenticatedClientRegistration: true,
+      silenceWarnings: {
+        oauthAuthServerConfig: true,
+        openidConfig: true,
+      },
       scopes: [...oidcScopes],
       // GHSA-p2fr-6hmx-4528: on this provider line a grant or refresh token bound to one
       // allowed audience can be exchanged for a token addressed to another allowed audience.

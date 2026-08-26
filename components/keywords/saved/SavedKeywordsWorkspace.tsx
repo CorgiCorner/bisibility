@@ -5,11 +5,13 @@ import { useState } from "react";
 import { SavedKeywordsTable, type SavedKeywordsTableProps } from "./SavedKeywordsTable";
 
 type SavedKeywordsWorkspaceProps = Omit<SavedKeywordsTableProps, "onCountChange" | "total"> & {
+  checksCount: number;
   initialSavedCount: number;
   trackedCount: number;
 };
 
 export function SavedKeywordsWorkspace({
+  checksCount,
   initialSavedCount,
   trackedCount,
   ...tableProps
@@ -19,6 +21,7 @@ export function SavedKeywordsWorkspace({
     <section className="grid min-w-0 gap-4">
       <RankTrackerTabs
         activeTab="saved"
+        checksCount={checksCount}
         projectRef={tableProps.projectId}
         savedCount={savedCount}
         trackedCount={trackedCount}

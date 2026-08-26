@@ -71,6 +71,50 @@ function renderCard(
 }
 
 describe("DomainOverviewAnalyzeCard market combobox", () => {
+  it("fills the desktop market wrapper through the tooltip trigger", () => {
+    renderCard([currentMarket]);
+
+    const trigger = screen.getByRole("button", { name: /Market:/ });
+    expect(trigger).toHaveClass("h-[34px]", "min-h-[34px]", "w-full");
+    expect(trigger).not.toHaveClass("h-10", "min-h-10");
+    expect(trigger.parentElement).toHaveClass("w-full");
+    expect(trigger.parentElement?.parentElement).toHaveClass("md:w-[230px]");
+  });
+
+  it("shows the selected country flag in the market trigger", () => {
+    renderCard([currentMarket]);
+
+    expect(
+      screen.getByRole("button", { name: /Market:/ }).querySelector("[data-country-flag='US']"),
+    ).toBeInTheDocument();
+  });
+
+  it("keeps the domain target within the exact compact control height", () => {
+    renderCard([currentMarket]);
+
+    const target = screen.getByRole("textbox", { name: "Domain or subdomain" });
+    expect(target.parentElement).toHaveClass("h-[34px]", "min-h-[34px]");
+    expect(target).toHaveClass(
+      "h-full",
+      "min-h-0",
+      "py-1",
+      "compact-text-12",
+      "text-[12px]",
+      "leading-4",
+      "placeholder:text-[12px]",
+      "placeholder:leading-4",
+    );
+    expect(target).not.toHaveClass("h-10", "min-h-10");
+  });
+
+  it("uses the neutral subdomain example in the domain placeholder", () => {
+    renderCard([currentMarket]);
+
+    expect(screen.getByRole("textbox", { name: "Domain or subdomain" })).toHaveAttribute(
+      "placeholder",
+      "Enter any domain or subdomain, e.g. blog.acme.example.com",
+    );
+  });
   it("preserves tracked payloads and exposes provenance and unavailable reasons", async () => {
     const user = userEvent.setup();
     const onMarketChange = renderCard([currentMarket, provenanceMarket]);

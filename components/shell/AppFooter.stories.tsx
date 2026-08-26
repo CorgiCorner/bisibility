@@ -6,6 +6,7 @@ const meta = {
   component: AppFooter,
   args: {
     schemaStatus: "ok",
+    showInstanceAdmin: true,
     workerStatus: "ok",
   },
   parameters: { layout: "fullscreen" },

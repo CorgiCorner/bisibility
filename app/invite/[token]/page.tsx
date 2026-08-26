@@ -99,7 +99,7 @@ function formatInviteDate(date: Date) {
 function Shell({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <main className="flex min-h-dvh items-center justify-center bg-bg px-5 py-10 text-fg">
-      <div className="w-full max-w-[470px] rounded-[16px] border border-border bg-bg-elev p-6">
+      <div className="w-full max-w-[470px] rounded-card border border-border bg-bg-elev p-6">
         <Link className="inline-flex w-fit no-underline" href="/">
           <BrandLockup />
         </Link>
@@ -114,13 +114,13 @@ function InvalidInvite({ status }: Readonly<{ status: InviteStatus }>) {
   return (
     <Shell>
       <div className="mt-8">
-        <span className="grid h-12 w-12 place-items-center rounded-[13px] bg-red/10 text-red-text">
+        <span className="grid h-12 w-12 place-items-center rounded-card bg-red/10 text-red-text">
           <WarningCircle aria-hidden size={24} weight="fill" />
         </span>
         <h1 className="mt-4 mb-0 text-[24px] font-semibold leading-tight">{copy.title}</h1>
         <p className="mt-2 mb-0 text-[14px] leading-relaxed text-fg-muted">{copy.body}</p>
         <Link
-          className="mt-5 inline-flex min-h-10 items-center gap-2 rounded-[9px] border border-border-strong bg-bg-elev px-4 text-[13px] font-semibold text-fg hover:border-accent hover:text-accent-text"
+          className="mt-5 inline-flex min-h-10 items-center gap-2 rounded-control border border-border-control bg-bg-elev px-4 text-[13px] font-semibold text-fg hover:border-accent hover:text-accent-text"
           href="/login"
         >
           Go to sign in
@@ -152,7 +152,7 @@ export default async function InvitePage({ params }: Readonly<InvitePageProps>) 
     inviteAction = (
       <form action={acceptInviteAction} className="mt-5">
         <button
-          className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[9px] bg-accent-solid px-4 text-[13px] font-semibold text-accent-on-solid hover:opacity-90"
+          className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-control bg-accent-solid px-4 text-[13px] font-semibold text-accent-on-solid hover:opacity-90"
           type="submit"
         >
           Accept invite <CaretRight aria-hidden size={15} weight="bold" />
@@ -161,7 +161,7 @@ export default async function InvitePage({ params }: Readonly<InvitePageProps>) 
     );
   } else if (session) {
     inviteAction = (
-      <div className="mt-5 rounded-[12px] border border-red bg-bg-sunken p-4">
+      <div className="mt-5 rounded-card border border-red bg-bg-sunken p-4">
         <p className="m-0 text-[13px] leading-relaxed text-fg-muted">
           You are signed in as <span className="font-mono text-fg">{session.user.email}</span>. Sign
           in as <span className="font-mono text-fg">{invite.email}</span> to accept this invite.
@@ -176,7 +176,7 @@ export default async function InvitePage({ params }: Readonly<InvitePageProps>) 
   return (
     <Shell>
       <div className="mt-8">
-        <span className="grid h-12 w-12 place-items-center rounded-[13px] bg-accent-soft text-accent-solid">
+        <span className="grid h-12 w-12 place-items-center rounded-card bg-accent-soft text-accent-solid">
           <CheckCircle aria-hidden size={24} weight="fill" />
         </span>
         <p className="mt-5 mb-0 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
@@ -185,7 +185,7 @@ export default async function InvitePage({ params }: Readonly<InvitePageProps>) 
         <h1 className="mt-2 mb-0 text-[25px] font-semibold leading-tight">
           Join {invite.projectName}
         </h1>
-        <div className="mt-4 grid gap-2 rounded-[12px] border border-border bg-bg-sunken p-4">
+        <div className="mt-4 grid gap-2 rounded-card border border-border bg-bg-sunken p-4">
           <div className="flex items-center justify-between gap-3 text-[13px]">
             <span className="text-fg-muted">Role</span>
             <span className="font-semibold text-fg">{invite.roleLabel}</span>

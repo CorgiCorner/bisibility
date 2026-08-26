@@ -144,6 +144,12 @@ body {
   }
 }
 
+.compact-text-12,
+.compact-text-13 {
+  -webkit-text-size-adjust: none;
+  text-size-adjust: none;
+}
+
 @media (max-width: 639px) {
   input:not(
     [type="button"],
@@ -159,6 +165,14 @@ body {
   select,
   textarea {
     font-size: 16px;
+  }
+
+  input.compact-text-12 {
+    font-size: 12px;
+  }
+
+  input.compact-text-13 {
+    font-size: 13px;
   }
 }
 

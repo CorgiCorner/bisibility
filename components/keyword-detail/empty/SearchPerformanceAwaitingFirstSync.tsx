@@ -28,7 +28,7 @@ export function SearchPerformanceAwaitingFirstSync() {
         </span>
       </div>
       <p className="m-0 mt-1 text-[12px] text-fg-muted">Trailing 28 days</p>
-      <div className="mt-4 rounded-[11px] border border-dashed border-border-strong bg-bg-sunken px-4 py-5">
+      <div className="mt-4 rounded-control border border-dashed border-border bg-bg-sunken px-4 py-5">
         <p className="m-0 text-[13px] font-medium text-fg">Awaiting first traffic sync.</p>
         <p className="m-0 mt-2 text-[12px] leading-[1.5] text-fg-muted">
           Search Console data arrives with an approximately 3-day reporting lag.

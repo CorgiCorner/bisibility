@@ -28,7 +28,7 @@ export const Sizes: Story = {
 
 export const MenuRow: Story = {
   render: () => (
-    <div className="w-[248px] rounded-[13px] border border-border bg-bg-elev p-1.5">
+    <div className="w-[248px] rounded-card border border-border bg-bg-elev p-1.5">
       <ThemeSegmentsRow />
     </div>
   ),

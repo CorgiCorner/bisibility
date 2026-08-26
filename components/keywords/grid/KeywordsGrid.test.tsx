@@ -11,7 +11,7 @@ import { pendingRows, renderPendingGrid } from "./KeywordsGrid.test-helpers";
 
 const mocks = vi.hoisted(() => ({ exportKeywords: vi.fn() }));
 
-vi.mock("@/lib/actions/keyword-import-export", () => ({ exportKeywords: mocks.exportKeywords }));
+vi.mock("@/lib/actions/keyword-export-action", () => ({ exportKeywords: mocks.exportKeywords }));
 vi.mock("@/components/keywords/import/ImportCsvWizard", () => ({
   ImportCsvWizard: () => null,
 }));
@@ -94,14 +94,14 @@ describe("KeywordsGrid pending state", () => {
     expect(screen.getByRole("button", { name: /all keywords/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /columns/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /filters/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /import/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Import$/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /add keyword/i })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: /device/i })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: /frequency/i })).toBeInTheDocument();
     expect(await screen.findByText(keywordRows[0].keyword)).toBeInTheDocument();
     expect(
-      (await screen.findAllByText("Awaiting first check", {}, { timeout: 10000 })).length,
-    ).toBeGreaterThan(0);
+      await screen.findAllByRole("gridcell", { name: "Not checked" }, { timeout: 10_000 }),
+    ).toHaveLength(2);
     expect(screen.queryByText("No data")).not.toBeInTheDocument();
   }, 15_000);
 
@@ -138,6 +138,19 @@ describe("KeywordsGrid pending state", () => {
     expect(await screen.findByText(keywordRows[0].keyword)).toBeInTheDocument();
   });
 
+  it("refreshes RSC data without navigating or clearing table search state", () => {
+    renderPendingGrid();
+
+    const search = screen.getByRole("searchbox", { name: "Search keywords" });
+    fireEvent.change(search, { target: { value: "rank tracker" } });
+    fireEvent.click(screen.getByRole("button", { name: "Refresh table" }));
+
+    expect(routerMock.refresh).toHaveBeenCalledOnce();
+    expect(routerMock.push).not.toHaveBeenCalled();
+    expect(routerMock.replace).not.toHaveBeenCalled();
+    expect(search).toHaveValue("rank tracker");
+  });
+
   it("passes the supplied initial density to the grid", () => {
     renderPendingGrid({ initialDensity: "compact" });
 
@@ -152,5 +165,100 @@ describe("KeywordsGrid pending state", () => {
 
     expect(document.cookie).toContain("pref_density=compact");
     expect(screen.getByRole("radio", { name: "Compact" })).toBeChecked();
+  });
+
+  it("commits flat search on Enter without navigating on each keystroke", () => {
+    renderPendingGrid({
+      listMode: "flat-server",
+      matchedTargetCount: 100,
+      page: 3,
+      pageCount: 3,
+      pageSize: 25,
+      query: {
+        filters: { ...emptyKeywordFilters },
+        grouped: false,
+        lens: { device: "desktop", locationId: null },
+        page: 3,
+        pageSize: 25,
+        savedViewId: null,
+        search: "",
+        sort: { direction: "asc", field: "position" },
+      },
+      totalCount: 2,
+    });
+    const search = screen.getByRole("searchbox", { name: "Search keywords" });
+    fireEvent.change(search, { target: { value: "rank" } });
+    expect(routerMock.push).not.toHaveBeenCalledWith(expect.stringContaining("q=rank"));
+    fireEvent.click(screen.getByRole("radio", { name: /mobile device scope/i }));
+    expect(routerMock.push).toHaveBeenLastCalledWith(
+      expect.stringMatching(/q=rank.*device=mobile.*page=1/),
+    );
+    const callsAfterScope = routerMock.push.mock.calls.length;
+    fireEvent.keyDown(search, { key: "Enter" });
+    expect(routerMock.push).toHaveBeenCalledTimes(callsAfterScope);
+  });
+
+  it("submits the canonical flat query instead of current-page IDs", async () => {
+    const query = {
+      filters: { ...emptyKeywordFilters, wrongUrl: true },
+      grouped: false,
+      lens: { device: "desktop" as const, locationId: null },
+      page: 3,
+      pageSize: 25 as const,
+      savedViewId: null,
+      search: "rank",
+      sort: { direction: "asc" as const, field: "position" as const },
+    };
+    renderPendingGrid({
+      listMode: "flat-server",
+      matchedTargetCount: 80,
+      page: 3,
+      pageCount: 4,
+      pageSize: 25,
+      query,
+      totalCount: 100,
+    });
+    fireEvent.click(screen.getByRole("button", { name: /^Export$/i }));
+    expect(await screen.findByText("Export 80 filtered keywords")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Export CSV" }));
+    await waitFor(() =>
+      expect(mocks.exportKeywords).toHaveBeenCalledWith(
+        expect.objectContaining({
+          projectId: "prj_1",
+          selection: { mode: "query", query },
+        }),
+      ),
+    );
+    expect(mocks.exportKeywords.mock.calls[0]?.[0]).not.toHaveProperty("keywordIds");
+  });
+
+  it("pushes consecutive deliberate search and lens transitions", () => {
+    renderPendingGrid({
+      listMode: "flat-server",
+      matchedTargetCount: 100,
+      page: 3,
+      pageCount: 4,
+      pageSize: 25,
+      totalCount: 100,
+      query: {
+        filters: { ...emptyKeywordFilters },
+        grouped: false,
+        lens: { device: "desktop", locationId: null },
+        page: 3,
+        pageSize: 25,
+        savedViewId: null,
+        search: "",
+        sort: { direction: "asc", field: "position" },
+      },
+    });
+    const search = screen.getByRole("searchbox", { name: "Search keywords" });
+    fireEvent.change(search, { target: { value: "first" } });
+    fireEvent.keyDown(search, { key: "Enter" });
+    fireEvent.click(screen.getByRole("radio", { name: /mobile device scope/i }));
+
+    expect(routerMock.push).toHaveBeenCalledTimes(2);
+    expect(routerMock.push.mock.calls[0]?.[0]).toContain("q=first");
+    expect(routerMock.push.mock.calls[1]?.[0]).toContain("device=mobile");
+    expect(routerMock.replace).not.toHaveBeenCalled();
   });
 });

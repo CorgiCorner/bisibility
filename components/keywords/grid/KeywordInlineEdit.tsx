@@ -206,7 +206,7 @@ export function KeywordInlineEdit({
           ariaLabel="Device"
           onChange={handleDeviceChange}
           options={deviceOptions}
-          triggerClassName="min-h-10 w-full justify-between rounded-lg border-border-strong bg-transparent px-3 text-[13px] font-medium normal-case tracking-normal"
+          triggerClassName="min-h-10 w-full justify-between rounded-control border-border-control bg-transparent px-3 text-[13px] font-medium normal-case tracking-normal"
           value={selectedDevice}
         />
       </div>
@@ -224,7 +224,7 @@ export function KeywordInlineEdit({
               catalogMarkets={[]}
               onChange={handleDrawerMarketChange}
               trackedMarkets={drawerMarketList}
-              triggerClassName="min-h-10 w-full rounded-lg px-3 text-[13px] normal-case tracking-normal"
+              triggerClassName="min-h-10 w-full rounded-control px-3 text-[13px] normal-case tracking-normal"
               value={selectedLocationKey}
             />
             {drawerMarketError ? (

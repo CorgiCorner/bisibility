@@ -24,7 +24,7 @@ type AddCompetitorDrawerProps = {
 
 const labelClass =
   "flex flex-col gap-[7px] font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted";
-const fieldClass = `${inputClassName} rounded-[9px] px-[13px] py-[11px] text-[14px] font-medium`;
+const fieldClass = `${inputClassName} rounded-control px-[13px] py-[11px] text-[14px] font-medium`;
 
 function labelFromDomain(domain: string) {
   return domain.split(".")[0] ?? domain;
@@ -149,7 +149,7 @@ export function AddCompetitorDrawer({
           </span>
         </label>
 
-        <section className="overflow-hidden rounded-xl border border-border">
+        <section className="overflow-hidden rounded-card border border-border">
           <div className="bg-bg-sunken px-[15px] py-3 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
             Observed in your SERPs
           </div>
@@ -159,7 +159,7 @@ export function AddCompetitorDrawer({
                 className="flex items-center gap-3 border-border-soft border-t px-[15px] py-3"
                 key={suggestion.domain}
               >
-                <span className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-lg bg-bg-sunken font-mono text-[11px] font-semibold text-fg-muted">
+                <span className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-control bg-bg-sunken font-mono text-[11px] font-semibold text-fg-muted">
                   {suggestion.initials}
                 </span>
                 <span className="min-w-0 flex-1">
@@ -169,7 +169,7 @@ export function AddCompetitorDrawer({
                   </span>
                 </span>
                 <button
-                  className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-border-strong bg-bg-elev px-3 py-1.5 text-xs font-semibold text-fg outline-none transition-colors hover:border-accent hover:text-accent-text focus-visible:border-accent focus-visible:text-accent-text"
+                  className="inline-flex shrink-0 items-center gap-1 rounded-control border border-border-control bg-bg-elev px-3 py-1.5 text-xs font-semibold text-fg outline-none transition-colors hover:border-accent hover:text-accent-text focus-visible:border-accent focus-visible:text-accent-text"
                   disabled={isSubmitting}
                   onClick={() => pickSuggestion(suggestion.domain)}
                   type="button"
@@ -186,7 +186,7 @@ export function AddCompetitorDrawer({
           )}
         </section>
 
-        <div className="flex items-start gap-[9px] rounded-[11px] border border-dashed border-border-strong bg-transparent px-3.5 py-3 text-xs leading-5 text-fg-muted">
+        <div className="flex items-start gap-[9px] rounded-control border border-dashed border-border bg-transparent px-3.5 py-3 text-xs leading-5 text-fg-muted">
           <span className="flex h-5 shrink-0 items-center">
             <Info aria-hidden className="text-accent-text" size={15} />
           </span>

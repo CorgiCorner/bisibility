@@ -1,4 +1,3 @@
-import { MARKETING_URL } from "@/lib/site/site";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { TrackedMarketsContent } from "./TrackedMarketsContent";
@@ -124,13 +123,12 @@ describe("TrackedMarketsContent", () => {
     expect(screen.getByRole("button", { name: "Add market" })).toBeDisabled();
   });
 
-  it("links the calculator through the shared external link with safe target and rel", () => {
+  it("keeps the cost summary without showing a provider cost calculator link", () => {
     renderContent();
 
-    const link = screen.getByRole("link", { name: /Estimate provider cost/ });
-    expect(link).toHaveAttribute("href", `${MARKETING_URL}/rank-tracking-cost-calculator`);
-    expect(link).toHaveAttribute("target", "_blank");
-    expect(link).toHaveAttribute("rel", "noreferrer noopener");
-    expect(link.querySelector("svg")).not.toBeNull();
+    expect(
+      screen.getByText(/1 markets active \/ 24 checks per run \/ ~ \$11\.00\/month/),
+    ).toBeVisible();
+    expect(screen.queryByRole("link", { name: /Estimate provider cost/ })).not.toBeInTheDocument();
   });
 });

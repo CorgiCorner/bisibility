@@ -21,7 +21,7 @@ describe("OverviewSkeleton", () => {
   it("mirrors four KPI cards with label, value, and delta internals", () => {
     render(<OverviewSkeleton />);
     const kpiSection = screen.getByTestId("overview-kpis");
-    const kpiCards = kpiSection.querySelectorAll(".rounded-\\[13px\\]");
+    const kpiCards = kpiSection.querySelectorAll(".rounded-card");
     expect(kpiCards).toHaveLength(4);
     for (const card of kpiCards) {
       const bars = card.querySelectorAll(".animate-pulse");
@@ -35,7 +35,7 @@ describe("OverviewSkeleton", () => {
       ".lg\\:grid-cols-\\[minmax\\(0\\,1\\.85fr\\)_minmax\\(0\\,1fr\\)\\]",
     );
     expect(chartSection).not.toBeNull();
-    const chartCards = chartSection?.querySelectorAll(".rounded-\\[14px\\]");
+    const chartCards = chartSection?.querySelectorAll(":scope > .rounded-card");
     expect(chartCards).toHaveLength(2);
     const trendChart = chartCards?.[0]?.querySelector(".h-\\[250px\\]");
     expect(trendChart).not.toBeNull();
@@ -69,7 +69,7 @@ describe("OverviewSkeleton", () => {
       ".grid-cols-\\[repeat\\(auto-fit\\,minmax\\(300px\\,1fr\\)\\)\\]",
     );
     expect(highlightGrid).not.toBeNull();
-    const cards = highlightGrid?.querySelectorAll(".rounded-\\[14px\\]");
+    const cards = highlightGrid?.querySelectorAll(".rounded-card");
     expect(cards).toHaveLength(4);
     for (const card of cards ?? []) {
       const header = card.querySelector(".px-4\\.5");
@@ -92,12 +92,10 @@ describe("OverviewSkeleton", () => {
 
   it("uses a consistent bar radius across the skeleton", () => {
     const { container } = render(<OverviewSkeleton />);
-    const rounded10 = container.querySelectorAll(".rounded-\\[10px\\]");
-    expect(rounded10.length).toBeGreaterThan(0);
-    const rounded8 = container.querySelectorAll(".rounded-\\[8px\\]");
-    expect(rounded8).toHaveLength(0);
-    const rounded9 = container.querySelectorAll(".rounded-\\[9px\\]");
-    expect(rounded9).toHaveLength(0);
+    expect(container.querySelectorAll(".rounded-control").length).toBeGreaterThan(0);
+    // The scale has two steps, so a skeleton bar may only wear a role class.
+    const strays = container.querySelectorAll('[class*="rounded-["]');
+    expect(strays).toHaveLength(0);
   });
 });
 

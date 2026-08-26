@@ -43,7 +43,7 @@ export function DeliveryChannelsField({
   return (
     <div className="flex flex-col gap-2">
       <label
-        className="flex cursor-default items-center gap-[11px] rounded-[10px] border border-accent bg-accent-soft px-[13px] py-[11px]"
+        className="flex cursor-default items-center gap-[11px] rounded-control border border-accent bg-accent-soft px-[13px] py-[11px]"
         htmlFor="delivery-channel-feed"
       >
         <Checkbox
@@ -62,12 +62,12 @@ export function DeliveryChannelsField({
 
         return (
           <label
-            className={`flex items-center gap-[11px] rounded-[10px] border px-[13px] py-[11px] transition-colors ${
+            className={`flex items-center gap-[11px] rounded-control border px-[13px] py-[11px] transition-colors ${
               unavailable
-                ? "cursor-not-allowed border-border-strong bg-transparent text-fg-muted"
+                ? "cursor-not-allowed border-border-control bg-transparent text-fg-muted"
                 : checked
                   ? "border-accent bg-accent-soft"
-                  : "cursor-pointer border-border-strong bg-bg-elev hover:border-accent"
+                  : "cursor-pointer border-border-control bg-bg-elev hover:border-accent"
             }`}
             htmlFor={`delivery-channel-${name}`}
             key={name}

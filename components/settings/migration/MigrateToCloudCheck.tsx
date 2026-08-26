@@ -156,7 +156,7 @@ export function CheckStep({
         </a>
       </div>
       {compatibility ? (
-        <details className="mt-4 rounded-[11px] border border-border bg-bg-sunken px-3.5 py-3">
+        <details className="mt-4 rounded-control border border-border bg-bg-sunken px-3.5 py-3">
           <summary className="flex cursor-pointer list-none items-center gap-1.5 text-[12px] font-semibold text-fg-muted [&::-webkit-details-marker]:hidden">
             <CaretDown aria-hidden className="transition-transform" size={12} weight="bold" />
             Technical details
@@ -170,7 +170,7 @@ export function CheckStep({
           </div>
         </details>
       ) : null}
-      <div className="mt-4 flex items-start gap-2.5 rounded-[11px] border border-border bg-bg-sunken px-3.5 py-3">
+      <div className="mt-4 flex items-start gap-2.5 rounded-control border border-border bg-bg-sunken px-3.5 py-3">
         <LockSimple
           aria-hidden
           className={migrationHold ? "mt-1 text-green-text" : "mt-1 text-yellow-text"}
@@ -234,7 +234,7 @@ function StatusRow({ data }: Readonly<{ data: StatusRowData }>) {
   }[data.tone];
   const Icon = tone.icon;
   return (
-    <div className="flex min-h-11 items-center gap-3 rounded-[9px] border border-border-strong bg-transparent px-[13px] py-3">
+    <div className="flex min-h-11 items-center gap-3 rounded-control border border-border bg-transparent px-[13px] py-3">
       <Icon aria-hidden className={tone.symbol} size={19} weight={tone.weight} />
       <span className="min-w-0 flex-1">
         <span className="block text-[13px] font-semibold">{data.title}</span>

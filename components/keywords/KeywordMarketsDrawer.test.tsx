@@ -117,6 +117,7 @@ function setup(
       canCreateKeyword
       keyword={targets[0]}
       onClose={vi.fn()}
+      open
       projectId="prj_test"
       projectMarkets={projectMarkets as never}
       targets={targets}
@@ -133,7 +134,7 @@ describe("KeywordMarketsDrawer", () => {
   it("removes only deselected target IDs and routes away from a deleted current target", async () => {
     const actions = setup();
 
-    expect(screen.getByRole("heading", { name: /Manage markets and devices/ })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Edit/ })).toBeInTheDocument();
     expect(screen.queryByText("Details")).not.toBeInTheDocument();
     expect(screen.queryByText("Schedule")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Keep Netherlands mobile" }));

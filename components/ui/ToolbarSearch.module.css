@@ -1,0 +1,4 @@
+.searchInput::-webkit-search-cancel-button {
+  appearance: none;
+  display: none;
+}

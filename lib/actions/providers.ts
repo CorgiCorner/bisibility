@@ -10,8 +10,8 @@ import {
   disconnectProviderConnection,
   providerSettingsSchema,
   setProviderSettings,
-  testProviderConnection,
 } from "@/lib/api/provider-service";
+import { testProviderConnection } from "@/lib/api/provider-test-service";
 import { completePendingGooglePropertySelection } from "@/lib/providers/analytics/google-oauth-pending";
 import {
   loadStoredGoogleProperties as loadStoredGooglePropertiesService,

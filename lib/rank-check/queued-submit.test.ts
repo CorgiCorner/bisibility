@@ -94,6 +94,7 @@ const mocks = vi.hoisted(() => {
     },
   };
   return {
+    assertQueuedRankCheckBatchAllocation: vi.fn(),
     consumeProviderLimit: vi.fn(),
     deferQueuedRankCheckBatch: vi.fn(),
     prisma,
@@ -105,6 +106,9 @@ const mocks = vi.hoisted(() => {
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
+vi.mock("./allocation-enforcement", () => ({
+  assertQueuedRankCheckBatchAllocation: mocks.assertQueuedRankCheckBatchAllocation,
+}));
 vi.mock("@/lib/providers/credentials", () => ({
   resolveProviderCredentials: mocks.resolveProviderCredentials,
 }));
@@ -134,6 +138,7 @@ describe("queued paid-call fence", () => {
       login: "login",
       password: "password",
     });
+    mocks.assertQueuedRankCheckBatchAllocation.mockResolvedValue(undefined);
     mocks.consumeProviderLimit.mockResolvedValue({
       accountKey: "dataforseo:account",
       success: true,
@@ -154,6 +159,43 @@ describe("queued paid-call fence", () => {
       ],
       failed: [],
     });
+  });
+
+  it("leaves an allocation preflight infrastructure failure retryable", async () => {
+    const preflightFailure = new Error("allocation query unavailable");
+    mocks.assertQueuedRankCheckBatchAllocation.mockRejectedValueOnce(preflightFailure);
+
+    await expect(submitQueuedRankCheckBatch("batch_1")).rejects.toBe(preflightFailure);
+
+    expect(mocks.state.batch).toBe("prepared");
+    expect(mocks.state.task).toBe("prepared");
+    expect(mocks.consumeProviderLimit).not.toHaveBeenCalled();
+    expect(mocks.submit).not.toHaveBeenCalled();
+  });
+
+  it("defers the whole batch when its allocation estimate is exhausted", async () => {
+    const { ProviderAllocationExhaustedError } = await import("@/lib/provider-usage/enforcement");
+    mocks.assertQueuedRankCheckBatchAllocation.mockRejectedValueOnce(
+      new ProviderAllocationExhaustedError("connection_1"),
+    );
+
+    await expect(submitQueuedRankCheckBatch("batch_1")).resolves.toEqual({ state: "deferred" });
+
+    expect(mocks.assertQueuedRankCheckBatchAllocation).toHaveBeenCalledWith(
+      expect.objectContaining({
+        connection: expect.objectContaining({ id: "connection_1" }),
+        priority: "high",
+        projectId: "project_1",
+        tasks: [{ depth: 100 }],
+      }),
+      mocks.prisma,
+    );
+    expect(mocks.deferQueuedRankCheckBatch).toHaveBeenCalledWith(
+      "batch_1",
+      "Queued provider allocation reached; deferring this batch.",
+    );
+    expect(mocks.consumeProviderLimit).not.toHaveBeenCalled();
+    expect(mocks.submit).not.toHaveBeenCalled();
   });
 
   it("posts only after durably moving the ledger to submitting", async () => {
@@ -186,7 +228,16 @@ describe("queued paid-call fence", () => {
     const persistedTag = mocks.prisma.queuedRankCheckTask.updateMany.mock.calls.find(
       ([input]) => input.data.providerTag,
     );
-    expect(providerTag).toBeTruthy();
+    expect(providerTag).toMatch(
+      /^app=bisibility;stage=dev;src=worker;trg=scheduled;f=rank_check;p=project_1;c=qtask_1$/,
+    );
+    expect(mocks.submit.mock.calls[0]?.[0].tasks[0]?.attribution.context).toEqual({
+      correlationId: "qtask_1",
+      feature: "rank_check",
+      projectId: "project_1",
+      source: "worker",
+      trigger: "scheduled",
+    });
     expect(persistedTag).toEqual([
       {
         data: {

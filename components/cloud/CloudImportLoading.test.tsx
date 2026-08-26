@@ -22,7 +22,7 @@ describe("CloudImportSettingsLoading", () => {
       </>,
     );
 
-    const settled = container.querySelector(".mt-7.overflow-hidden.rounded-2xl");
+    const settled = container.querySelector(".mt-7.overflow-hidden.rounded-card");
     const loading = container.querySelector('[data-cloud-import-loading-frame="token-card"]');
 
     expect(container.querySelector("[data-settings-loading-subnav]")).not.toBeInTheDocument();
@@ -30,6 +30,6 @@ describe("CloudImportSettingsLoading", () => {
     expect(container.querySelector('[data-cloud-import-loading-frame="back"]')).toBeInTheDocument();
     expect(settled).toBeInTheDocument();
     expect(loading).toBeInTheDocument();
-    expect(loading).toHaveClass("mt-7", "overflow-hidden", "rounded-2xl", "border", "bg-bg-elev");
+    expect(loading).toHaveClass("mt-7", "overflow-hidden", "rounded-card", "border", "bg-bg-elev");
   });
 });

@@ -22,7 +22,7 @@ export function MigrateStepper({ step }: Readonly<{ step: number }>) {
                   "grid h-[26px] w-[26px] place-items-center rounded-full border-[1.5px] font-mono text-[11px] font-semibold",
                   active
                     ? "border-accent bg-accent-solid text-accent-on-solid"
-                    : "border-border-strong text-fg-muted",
+                    : "border-border text-fg-muted",
                 )}
               >
                 {number}
@@ -32,8 +32,8 @@ export function MigrateStepper({ step }: Readonly<{ step: number }>) {
             {number < steps.length ? (
               <span
                 className={cn(
-                  "mb-5 h-0.5 flex-1 rounded-sm",
-                  step > number ? "bg-accent" : "bg-border-strong",
+                  "mb-5 h-0.5 flex-1 rounded-control",
+                  step > number ? "bg-accent" : "bg-border",
                 )}
               />
             ) : null}
@@ -52,7 +52,7 @@ export function ReadOnlyBanner({
   pending?: boolean;
 }>) {
   return (
-    <div className="mt-3.5 flex items-center gap-2 rounded-[9px] border border-yellow bg-yellow/10 px-[13px] py-[9px] text-xs font-medium text-yellow-text">
+    <div className="mt-3.5 flex items-center gap-2 rounded-control border border-yellow bg-yellow/10 px-[13px] py-[9px] text-xs font-medium text-yellow-text">
       <LockSimple aria-hidden className="flex-none" size={15} weight="fill" />
       <span className="min-w-0 flex-1">
         Read-only mode is on. Writes and rank checks stay paused while this migration is in
@@ -61,7 +61,7 @@ export function ReadOnlyBanner({
       </span>
       {onCancelMigration ? (
         <button
-          className="flex-none rounded-md border border-yellow/40 bg-bg-elev px-2 py-1 font-semibold text-yellow-text disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted"
+          className="flex-none rounded-control border border-yellow/40 bg-bg-elev px-2 py-1 font-semibold text-yellow-text disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted"
           disabled={pending}
           onClick={onCancelMigration}
           type="button"

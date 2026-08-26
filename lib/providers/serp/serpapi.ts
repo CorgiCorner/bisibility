@@ -90,6 +90,15 @@ function safeErrorMessage(data: SerpApiResponse | null, fallback: string) {
   return typeof data?.error === "string" && data.error.trim() ? data.error : fallback;
 }
 
+function nonnegativeFinite(value: unknown) {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : undefined;
+}
+
+function finiteSum(left: number, right: number) {
+  const sum = left + right;
+  return Number.isFinite(sum) && sum >= 0 ? sum : undefined;
+}
+
 async function readResponse(response: Response, creds: ProviderCredentials) {
   let data: SerpApiResponse | null = null;
 
@@ -224,12 +233,23 @@ export const serpApiProvider: SerpProvider = {
     try {
       const apiKey = requireApiKey(creds);
       const data = await requestJson(`${ACCOUNT_URL}?api_key=${encodeURIComponent(apiKey)}`, creds);
-      const balance = data.total_searches_left ?? data.plan_searches_left;
+      const usesTotalBalance = nonnegativeFinite(data.total_searches_left) !== undefined;
+      const balance = usesTotalBalance
+        ? nonnegativeFinite(data.total_searches_left)
+        : nonnegativeFinite(data.plan_searches_left);
+      const monthlyCapacity = nonnegativeFinite(data.searches_per_month);
+      const extraCredits = nonnegativeFinite(data.extra_credits);
+      const validExtraCredits = data.extra_credits === undefined || extraCredits !== undefined;
+      const availabilityTotal =
+        usesTotalBalance && monthlyCapacity !== undefined && validExtraCredits
+          ? finiteSum(monthlyCapacity, extraCredits ?? 0)
+          : undefined;
 
       return {
         ok: true,
         message: "Connected.",
-        balance: typeof balance === "number" ? balance : undefined,
+        ...(balance === undefined ? {} : { balance }),
+        ...(availabilityTotal === undefined ? {} : { availabilityTotal }),
       };
     } catch (error) {
       return {

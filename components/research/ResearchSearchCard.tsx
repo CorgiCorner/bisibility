@@ -4,7 +4,9 @@ import { LocationField, type LocationFieldValue } from "@/components/keywords/Lo
 import {
   Button,
   Card,
+  compactInputTypographyClassName,
   InfoTooltip,
+  InlineToken,
   MenuSelect,
   pricingTriggerClassName,
   Switch,
@@ -15,7 +17,6 @@ import type { KeywordResearchMode } from "@/lib/keyword-research/types";
 import {
   GlobeSimpleIcon as GlobeSimple,
   MagnifyingGlassIcon as MagnifyingGlass,
-  XIcon as X,
 } from "@phosphor-icons/react";
 import type { KeyboardEvent } from "react";
 import { useId, useState } from "react";
@@ -160,27 +161,19 @@ export function ResearchSearchCard({
     <Card className="w-full p-4 sm:p-5" size="md">
       <form className="grid gap-3" onSubmit={handleSubmit(submit)}>
         <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-start">
-          <div className="flex min-h-[34px] flex-1 flex-wrap items-center gap-1.5 rounded-[9px] border border-border-strong bg-transparent px-2.5 py-0.5 focus-within:border-accent md:min-w-[240px]">
+          <div className="flex min-h-[34px] flex-1 flex-wrap items-center gap-1.5 rounded-control border border-border-control bg-transparent px-2.5 py-0.5 focus-within:border-accent md:min-w-[240px]">
             {seeds.map((seed) => (
-              <span
-                className="inline-flex items-center gap-1 rounded-full border border-border bg-bg-elev px-2.5 py-1 text-[12px] font-medium"
+              <InlineToken
+                dismissLabel={`Remove ${seed}`}
                 key={seed}
-              >
-                {seed}
-                <button
-                  aria-label={`Remove ${seed}`}
-                  className="text-fg-muted hover:text-fg"
-                  onClick={() => onSeedsChange(seeds.filter((item) => item !== seed))}
-                  type="button"
-                >
-                  <X size={11} weight="bold" />
-                </button>
-              </span>
+                onDismiss={() => onSeedsChange(seeds.filter((item) => item !== seed))}
+                value={seed}
+              />
             ))}
             <input
               {...register("seed")}
               aria-label="Seed keyword"
-              className="min-w-[160px] flex-1 bg-transparent px-1 py-1 text-[12.5px] font-medium text-fg outline-none placeholder:text-fg-muted"
+              className={`${compactInputTypographyClassName} min-w-[160px] flex-1 bg-transparent px-1 font-medium text-fg outline-none`}
               disabled={disabled || researching || seeds.length >= 5}
               id="research-seed"
               onKeyDown={handleSeedKeyDown}
@@ -190,7 +183,7 @@ export function ResearchSearchCard({
           <div className="md:w-[230px]">
             <LocationField
               disabled={disabled || researching}
-              variant="toolbar"
+              variant="research"
               help="Defaults to the project market."
               idPrefix="research"
               label="Market"
@@ -202,10 +195,12 @@ export function ResearchSearchCard({
           </div>
           <MenuSelect
             ariaLabel="Data provider connection"
-            leadingIcon={<span>Provider:</span>}
+            compact
+            leadingLabel="Provider:"
             onChange={onConnectionChange}
+            pinCaret
             options={connectionOptions}
-            triggerClassName="justify-between md:w-[160px]"
+            triggerClassName="md:w-[160px]"
             value={connectionId}
           />
           <MenuSelect
@@ -217,10 +212,12 @@ export function ResearchSearchCard({
           />
           <MenuSelect
             ariaLabel="Research mode"
-            leadingIcon={<span>Mode:</span>}
+            compact
+            leadingLabel="Mode:"
             onChange={(value) => onModeChange(value as KeywordResearchMode)}
+            pinCaret
             options={modeOptions}
-            triggerClassName="justify-between md:w-auto md:min-w-[132px]"
+            triggerClassName="md:w-auto md:min-w-[132px]"
             value={mode}
           />
         </div>
@@ -236,7 +233,7 @@ export function ResearchSearchCard({
             />
             <InfoTooltip text="Volumes corrected with real-user browsing data instead of Google Ads estimates alone. About twice the lookup cost." />
           </span>
-          <div className="flex flex-wrap items-center gap-4">
+          <div className="ml-auto flex items-center gap-4">
             <button
               className={pricingTriggerClassName}
               onClick={(event) => setPricingAnchor(event.currentTarget)}

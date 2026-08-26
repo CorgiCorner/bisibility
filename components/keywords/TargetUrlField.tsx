@@ -28,7 +28,7 @@ export const TargetUrlField = forwardRef<HTMLInputElement, TargetUrlFieldProps>(
         <FieldLabel help={help} htmlFor={inputId} label={label} />
         <Input
           aria-label={label}
-          className="min-h-10 w-full rounded-lg px-3 font-mono text-[13px] font-medium normal-case tracking-normal"
+          className="min-h-10 w-full rounded-control px-3 font-mono text-[13px] font-medium normal-case tracking-normal"
           {...inputProps}
           id={inputId}
           ref={ref}

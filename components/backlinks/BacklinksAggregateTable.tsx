@@ -34,7 +34,7 @@ export function BacklinksAggregateTable({
         {labels[view]} view within fetched rows ({fetchedCount.toLocaleString("en-US")} of{" "}
         {totalCount.toLocaleString("en-US")})
       </p>
-      <div className="grid grid-cols-[minmax(260px,1fr)_190px_60px_60px_70px_120px] gap-3 border-b border-border-strong px-4 py-2 font-mono text-[10px] uppercase tracking-[.08em] text-fg-muted">
+      <div className="grid grid-cols-[minmax(260px,1fr)_190px_60px_60px_70px_120px] gap-3 border-b border-border px-4 py-2 font-mono text-[10px] uppercase tracking-[.08em] text-fg-muted">
         <span>{labels[view]}</span>
         <span>Coverage</span>
         <span className="text-right">DA</span>

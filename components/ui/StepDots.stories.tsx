@@ -9,7 +9,7 @@ const meta = {
     (Story) => (
       <div className="grid gap-4 p-4 sm:grid-cols-2">
         {themes.map((theme) => (
-          <section className="rounded-[14px] bg-bg p-5 text-fg" data-theme={theme} key={theme}>
+          <section className="rounded-card bg-bg p-5 text-fg" data-theme={theme} key={theme}>
             <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.6px] text-fg-muted">
               {theme} theme
             </p>

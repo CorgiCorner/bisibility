@@ -1,7 +1,5 @@
-import {
-  GlobeHemisphereWestIcon as GlobeHemisphereWest,
-  MapPinIcon as MapPin,
-} from "@phosphor-icons/react";
+import { MapPinIcon as MapPin } from "@phosphor-icons/react";
+import { CountryFlag } from "./CountryFlag";
 import { countryNameForCode, type LocationSuggestion } from "./location-picker-data";
 
 const optionId = (option: LocationSuggestion) => option.id || option.canonicalKey;
@@ -39,7 +37,7 @@ export function LocationResults({
   if (!visible) return null;
   return (
     <div
-      className="max-h-64 overflow-auto rounded-[9px] border border-border bg-bg-elev py-1 shadow-lg"
+      className="max-h-64 overflow-auto rounded-control border border-border bg-bg-elev py-1 shadow-lg"
       id={listId}
       role="listbox"
       tabIndex={-1}
@@ -100,7 +98,6 @@ function LocationGroup({
       </span>
       {options.map((option, index) => {
         const selected = activeOption ? optionId(activeOption) === optionId(option) : false;
-        const Icon = option.kind === "country" ? GlobeHemisphereWest : MapPin;
         return (
           <button
             aria-selected={selected}
@@ -114,7 +111,20 @@ function LocationGroup({
             role="option"
             type="button"
           >
-            <Icon className="mt-0.5 flex-none text-accent-text" size={14} weight="bold" />
+            {option.kind === "country" ? (
+              <CountryFlag
+                className="mt-0.5 h-3 w-4 flex-none rounded-[2px] shadow-sm"
+                code={option.countryCode}
+                fallback="globe"
+              />
+            ) : (
+              <MapPin
+                className="mt-0.5 flex-none text-accent-text"
+                data-city-location-pin
+                size={14}
+                weight="bold"
+              />
+            )}
             <span className="min-w-0">
               <span className="block truncate text-[12.5px] font-semibold">
                 {option.kind === "city" ? option.cityName : option.displayName}

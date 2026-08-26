@@ -76,6 +76,27 @@ describe("KeywordMarketSwitcher", () => {
     );
   });
 
+  it("shows the keyword country flag in the market trigger", () => {
+    const current = target("kw_current");
+    render(
+      <KeywordMarketSwitcher
+        addKeywordsAction={vi.fn()}
+        bulkDeleteAction={vi.fn()}
+        canCreateKeyword
+        keyword={current}
+        projectId="prj_test"
+        projectMarkets={markets}
+        targets={[current]}
+      />,
+    );
+
+    expect(
+      screen
+        .getByRole("button", { name: /United States \/ English/ })
+        .querySelector("[data-country-flag='US']"),
+    ).toBeInTheDocument();
+  });
+
   it("gives a selectable device chip the same hover chrome as the market trigger", () => {
     const current = target("kw_current");
     render(

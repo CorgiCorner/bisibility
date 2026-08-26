@@ -12,11 +12,20 @@ import { DEFAULT_SERP_DEPTH, type SerpDepth } from "@/lib/serp/markets";
 import type { ProviderRateFeature } from "./resolver";
 import { LIST_PROVIDER_RATE_CONTEXT } from "./resolver";
 
-export const PROVIDER_RATE_LABELS = {
+export const PROVIDER_USAGE_LABELS = {
+  backlinks: "Backlinks",
+  domain_overview: "Domain overview",
   keyword_metrics: "Keyword metrics",
   keyword_research: "Keyword research",
-  rank_check: "Rank check",
+  rank_check: "Rank checks",
   ranked_keywords: "Ranked keywords",
+} as const;
+
+export const PROVIDER_RATE_LABELS = {
+  keyword_metrics: PROVIDER_USAGE_LABELS.keyword_metrics,
+  keyword_research: PROVIDER_USAGE_LABELS.keyword_research,
+  rank_check: PROVIDER_USAGE_LABELS.rank_check,
+  ranked_keywords: PROVIDER_USAGE_LABELS.ranked_keywords,
 } as const satisfies Record<ProviderRateFeature, string>;
 
 export const PROVIDER_RATE_UNITS = {

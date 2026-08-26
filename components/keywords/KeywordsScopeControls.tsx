@@ -8,6 +8,11 @@ import {
   lensHref,
 } from "@/lib/keywords/lens-model";
 import {
+  rankTrackerNavigationHref,
+  resetRankTrackerPage,
+} from "@/lib/keywords/rank-tracker-navigation";
+import type { RankTrackerQueryState } from "@/lib/keywords/rank-tracker-query-types";
+import {
   DeviceMobileIcon as DeviceMobile,
   DevicesIcon as Devices,
   GlobeHemisphereWestIcon as GlobeHemisphereWest,
@@ -15,13 +20,15 @@ import {
   MonitorIcon as Monitor,
   XIcon as X,
 } from "@phosphor-icons/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 const ALL_LOCATIONS = "__all__";
 type ScopeNavigationProps = {
   basePath: string;
   lens: ActiveLens;
   viewId?: string | null;
+  query?: RankTrackerQueryState;
+  onQueryNavigation?: () => void;
 };
 
 type LocationSelectProps = ScopeNavigationProps & {
@@ -55,9 +62,26 @@ function locationMenuOptions(locationOptions: LensLocationOption[]): MenuSelectO
   ];
 }
 
-function useScopeNavigation({ basePath, viewId = null }: ScopeNavigationProps) {
+function useScopeNavigation({
+  basePath,
+  onQueryNavigation,
+  query,
+  viewId = null,
+}: ScopeNavigationProps) {
   const router = useRouter();
-  return (next: ActiveLens) => router.push(lensHref(basePath, next, viewId));
+  const searchParams = useSearchParams();
+  return (next: ActiveLens) => {
+    if (!query) return router.push(lensHref(basePath, next, viewId));
+    onQueryNavigation?.();
+    return router.push(
+      rankTrackerNavigationHref({
+        basePath,
+        current: searchParams,
+        present: ["device", "location", "page"],
+        query: resetRankTrackerPage({ ...query, lens: next }),
+      }),
+    );
+  };
 }
 
 function locationLabel(lens: ActiveLens, locationOptions: LensLocationOption[]) {
@@ -71,10 +95,12 @@ export function KeywordsScopeLocationSelect({
   basePath,
   lens,
   locationOptions,
+  onQueryNavigation,
   triggerClassName,
   viewId,
+  query,
 }: LocationSelectProps) {
-  const go = useScopeNavigation({ basePath, lens, viewId });
+  const go = useScopeNavigation({ basePath, lens, onQueryNavigation, query, viewId });
 
   return (
     <MenuSelect
@@ -88,8 +114,14 @@ export function KeywordsScopeLocationSelect({
   );
 }
 
-export function KeywordsDeviceScope({ basePath, lens, viewId }: Readonly<ScopeNavigationProps>) {
-  const go = useScopeNavigation({ basePath, lens, viewId });
+export function KeywordsDeviceScope({
+  basePath,
+  lens,
+  onQueryNavigation,
+  query,
+  viewId,
+}: Readonly<ScopeNavigationProps>) {
+  const go = useScopeNavigation({ basePath, lens, onQueryNavigation, query, viewId });
 
   return (
     <SegmentedControl
@@ -123,20 +155,30 @@ export function KeywordsScopeControls({
   basePath,
   lens,
   locationOptions,
+  onQueryNavigation,
   viewId,
+  query,
 }: KeywordsScopeControlsProps) {
   return (
     <div className="flex min-w-0 items-center gap-2">
-      <div className="hidden min-w-0 sm:block">
+      <div className="hidden min-w-0 lg:block">
         <KeywordsScopeLocationSelect
           basePath={basePath}
           lens={lens}
           locationOptions={locationOptions}
+          onQueryNavigation={onQueryNavigation}
           triggerClassName="max-w-[260px]"
           viewId={viewId}
+          query={query}
         />
       </div>
-      <KeywordsDeviceScope basePath={basePath} lens={lens} viewId={viewId} />
+      <KeywordsDeviceScope
+        basePath={basePath}
+        lens={lens}
+        onQueryNavigation={onQueryNavigation}
+        query={query}
+        viewId={viewId}
+      />
     </div>
   );
 }
@@ -145,9 +187,11 @@ export function KeywordsScopeLocationChip({
   basePath,
   lens,
   locationOptions,
+  onQueryNavigation,
   viewId,
+  query,
 }: KeywordsScopeControlsProps) {
-  const go = useScopeNavigation({ basePath, lens, viewId });
+  const go = useScopeNavigation({ basePath, lens, onQueryNavigation, query, viewId });
   const label = locationLabel(lens, locationOptions);
 
   if (!label) {
@@ -155,7 +199,7 @@ export function KeywordsScopeLocationChip({
   }
 
   return (
-    <Pill active className="sm:hidden" onClick={() => go({ ...lens, locationId: null })} size="sm">
+    <Pill active className="lg:hidden" onClick={() => go({ ...lens, locationId: null })} size="sm">
       Scope: {label}
       <X size={11} weight="bold" />
     </Pill>

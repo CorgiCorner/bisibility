@@ -52,16 +52,20 @@ describe("type role tokens", () => {
 });
 
 describe("radius role tokens", () => {
-  it("defines control at 9px", () => {
-    expect(borderRadius.control).toBe("9px");
+  it("defines control at 6px", () => {
+    expect(borderRadius.control).toBe("6px");
   });
 
-  it("defines card at 14px", () => {
-    expect(borderRadius.card).toBe("14px");
+  it("defines card at 12px", () => {
+    expect(borderRadius.card).toBe("12px");
   });
 
-  it("defines card-lg at 16px", () => {
-    expect(borderRadius["card-lg"]).toBe("16px");
+  it("keeps the scale to two steps, so a size swap stays a one-line change", () => {
+    expect(Object.keys(borderRadius)).toEqual(["control", "card"]);
+  });
+
+  it("does not name a pill radius; fully round is a shape, not a size", () => {
+    expect(borderRadius).not.toHaveProperty("pill");
   });
 
   it("does not add a 20px or 7px global radius", () => {
@@ -141,7 +145,7 @@ describe("DesignTokens story exercises every role and geometry token", () => {
     "text-ui-caption",
     "text-ui-micro",
   ];
-  const radiusRoles = ["rounded-control", "rounded-card", "rounded-card-lg"];
+  const radiusRoles = ["rounded-control", "rounded-card"];
   const maxWRoles = ["max-w-content", "max-w-settings"];
   const typeRoleBlock = storySource.match(/const typeRoles = \[([\s\S]*?)\] as const;/)?.[1] ?? "";
   const radiusRoleBlock =

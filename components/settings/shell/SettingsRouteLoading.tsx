@@ -21,7 +21,7 @@ type SettingsRouteLoadingProps = {
 export function SettingsLoadingBar({ className }: Readonly<SettingsLoadingBarProps>) {
   return (
     <div
-      className={cn("animate-pulse rounded-[6px] bg-bg-sunken", className)}
+      className={cn("animate-pulse rounded-control bg-bg-sunken", className)}
       data-settings-loading-bar=""
     />
   );
@@ -50,7 +50,7 @@ function SettingsLoadingSubnav({ activeSection }: Readonly<{ activeSection: Sett
           return (
             <li key={section.id}>
               <div
-                className="relative flex h-10 items-center gap-2.5 rounded-[9px] px-[11px]"
+                className="relative flex h-10 items-center gap-2.5 rounded-control px-[11px]"
                 data-settings-loading-subnav-active={current ? "true" : "false"}
                 data-settings-loading-subnav-row={section.id}
               >

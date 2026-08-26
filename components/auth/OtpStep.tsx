@@ -2,6 +2,7 @@
 
 import { OtpInput } from "@/components/auth/OtpInput";
 import { DataResidencyNote } from "@/components/ui";
+import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import Button from "@mui/material/Button";
 import {
   ArrowLeftIcon as ArrowLeft,
@@ -90,7 +91,7 @@ export function OtpStep({
         Back
       </Button>
 
-      <span className="mt-4.5 grid h-[46px] w-[46px] place-items-center rounded-xl bg-accent-soft text-accent-solid">
+      <span className="mt-4.5 grid h-[46px] w-[46px] place-items-center rounded-card bg-accent-soft text-accent-solid">
         <EnvelopeSimpleOpen aria-hidden size={23} weight="fill" />
       </span>
 
@@ -133,7 +134,7 @@ export function OtpStep({
         {showOtpError ? (
           <div
             aria-live="polite"
-            className="mt-[13px] flex items-center gap-2 rounded-[10px] border border-red bg-[color-mix(in_srgb,var(--red)_7%,transparent)] px-3 py-2.5 text-[12.5px] font-medium text-red-text"
+            className="mt-[13px] flex items-center gap-2 rounded-control border border-red bg-[color-mix(in_srgb,var(--red)_7%,transparent)] px-3 py-2.5 text-[12.5px] font-medium text-red-text"
           >
             <WarningCircle aria-hidden className="shrink-0" size={16} weight="fill" />
             <span>{authErrorMessage}</span>
@@ -152,14 +153,14 @@ export function OtpStep({
             )
           }
           sx={{
-            borderRadius: "10px",
+            borderRadius: UI_RADIUS_ROLES.control,
             fontSize: "14.5px",
             fontWeight: 600,
             marginTop: "16px",
             padding: "12px",
             "&.Mui-disabled": {
               backgroundColor: "var(--bg-sunken)",
-              borderColor: "var(--border-strong)",
+              borderColor: "var(--border)",
               color: "var(--fg-muted)",
               opacity: 1,
             },
@@ -193,12 +194,25 @@ export function OtpStep({
             }}
             sx={{
               ...linkButtonSx,
-              color: "var(--accent-text)",
               fontVariantNumeric: "tabular-nums",
+              minHeight: "36px",
+              "&.Mui-disabled": {
+                color: "var(--fg-muted)",
+                opacity: 1,
+              },
             }}
             type="button"
           >
-            <span style={{ display: "grid" }}>
+            <span
+              style={{
+                backgroundColor: resendDisabled ? "var(--bg-sunken)" : "var(--accent-soft)",
+                borderRadius: "8px",
+                color: resendDisabled ? "var(--fg-muted)" : "var(--accent-text)",
+                display: "grid",
+                paddingBlock: "6px",
+                paddingInline: "11px",
+              }}
+            >
               <span
                 aria-hidden
                 style={{

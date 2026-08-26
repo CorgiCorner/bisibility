@@ -43,9 +43,8 @@ describe("WorkspaceSwitcher", () => {
     );
 
     const trigger = screen.getByRole("button", { name: "Switch project" });
-    const outerWrapper = trigger.closest("[data-tooltip]")?.parentElement;
 
-    expect(outerWrapper).toHaveClass("w-full");
+    expect(trigger.closest("[data-tooltip]")).toHaveClass("w-full");
   });
 
   it("labels the collapsed trigger with a right-aligned tooltip", () => {
@@ -100,11 +99,11 @@ describe("WorkspaceSwitcher", () => {
     );
 
     const trigger = screen.getByRole("button", { name: "Switch project" });
-    expect(trigger.className).toContain("border-border-strong");
+    expect(trigger.className).toContain("border-border-control");
     expect(trigger.className).toContain("bg-bg-elev");
   });
 
-  it("keeps the trigger workspace tile elevated in expanded and collapsed states", () => {
+  it("keeps the trigger workspace tile on a fixed white surface in expanded and collapsed states", () => {
     const { rerender } = render(
       <WorkspaceSwitcher
         activeProjectId={mockWorkspaces[0].id}
@@ -117,7 +116,7 @@ describe("WorkspaceSwitcher", () => {
       const trigger = screen.getByRole("button", { name: "Switch project" });
       const tile = trigger.querySelector("[aria-hidden]");
 
-      expect(tile).toHaveClass("bg-bg-elev");
+      expect(tile).toHaveClass("bg-white");
       expect(tile).not.toHaveClass("bg-bg-sunken");
     };
 

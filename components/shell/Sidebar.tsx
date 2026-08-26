@@ -59,7 +59,7 @@ export function Sidebar({
           // so without this a screen reader announces a bare "link" for every tile.
           aria-label={collapsed ? item.label : undefined}
           className={[
-            "relative flex items-center rounded-[9px] text-[13.5px] font-medium transition-colors duration-150",
+            "relative flex items-center rounded-control text-[13.5px] font-medium transition-colors duration-150",
             // The rows are full-bleed in a narrow column, so an outset ring is clipped against
             // the rail edge. Inset keeps the whole indicator on screen.
             "focus-visible:-outline-offset-2",
@@ -135,7 +135,7 @@ export function Sidebar({
           <Tooltip placement="right" content="Expand sidebar">
             <button
               aria-label="Expand sidebar"
-              className="group ml-5.5 grid h-12 w-9 cursor-e-resize place-items-center rounded-[9px] p-0 text-fg focus-visible:-outline-offset-2"
+              className="group ml-5.5 grid h-12 w-9 cursor-e-resize place-items-center rounded-control p-0 text-fg focus-visible:-outline-offset-2"
               onClick={handleToggle}
               type="button"
             >
@@ -150,7 +150,7 @@ export function Sidebar({
                   <BrandLockup markOnly />
                 </span>
                 <span
-                  className="col-start-1 row-start-1 grid h-9 w-9 place-items-center rounded-[9px] bg-nav-active text-fg-muted opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100"
+                  className="col-start-1 row-start-1 grid h-9 w-9 place-items-center rounded-control bg-nav-active text-fg-muted opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100"
                   data-testid="sidebar-expand-mark"
                 >
                   <SidebarToggleIcon aria-hidden data-testid="sidebar-expand-icon" />
@@ -173,7 +173,7 @@ export function Sidebar({
             </span>
             <button
               aria-label="Collapse sidebar"
-              className="ml-auto grid h-[30px] w-[30px] flex-none cursor-w-resize place-items-center rounded-[9px] p-0 text-fg-muted transition-colors hover:bg-nav-active hover:text-fg focus-visible:-outline-offset-2"
+              className="ml-auto grid h-[30px] w-[30px] flex-none cursor-w-resize place-items-center rounded-control p-0 text-fg-muted transition-colors hover:bg-nav-active hover:text-fg focus-visible:-outline-offset-2"
               onClick={handleToggle}
               type="button"
             >
@@ -185,7 +185,7 @@ export function Sidebar({
       {/* The nav region is the only part of the column allowed to give: on a short viewport it
           scrolls and everything around it keeps its size, so the brand, the switcher and the
           version line stay where the user reaches for them. */}
-      <nav className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto overflow-x-hidden overscroll-contain [scrollbar-color:var(--border-strong)_transparent] [scrollbar-width:thin]">
+      <nav className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto overflow-x-hidden overscroll-contain [scrollbar-color:var(--border)_transparent] [scrollbar-width:thin]">
         {items.map(renderItem)}
       </nav>
       {/* Utilities live at the foot of the rail. Distance does the separating - a rule here just

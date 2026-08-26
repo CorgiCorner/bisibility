@@ -22,13 +22,13 @@ export function UrlFilterToggle({
         <span className="mt-0.5 block text-[11.5px] text-fg-muted">{description}</span>
       </span>
       <span
-        className="flex h-[22px] w-[38px] shrink-0 items-center rounded-full p-0.5"
+        className="flex h-[18px] w-8 shrink-0 items-center rounded-full p-0.5"
         style={{
-          backgroundColor: active ? "var(--accent)" : "var(--border-strong)",
+          backgroundColor: active ? "var(--accent)" : "var(--border)",
           justifyContent: active ? "flex-end" : "flex-start",
         }}
       >
-        <span className="h-[18px] w-[18px] rounded-full bg-white" />
+        <span className="h-3.5 w-3.5 rounded-full bg-white" />
       </span>
     </button>
   );

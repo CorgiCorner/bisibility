@@ -36,7 +36,7 @@ type MigrationTokenCardProps = {
 };
 
 const primaryButton =
-  "inline-flex items-center gap-2 rounded-[10px] bg-accent-solid px-4.5 py-[11px] font-semibold text-[14px] text-accent-on-solid transition-colors hover:bg-accent-solid-hover disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted";
+  "inline-flex items-center gap-2 rounded-control bg-accent-solid px-4.5 py-[11px] font-semibold text-[14px] text-accent-on-solid transition-colors hover:bg-accent-solid-hover disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted";
 function TokenActions({
   disabled,
   onRegenerate,
@@ -144,9 +144,9 @@ export function MigrationTokenCard({
   const creating = pendingAction === "create";
 
   return (
-    <div className="mt-7 overflow-hidden rounded-2xl border border-border bg-bg-elev">
+    <div className="mt-7 overflow-hidden rounded-card border border-border bg-bg-elev">
       <div className="flex items-center gap-[13px] border-border-soft border-b p-[20px_22px]">
-        <span className="grid h-[42px] w-[42px] flex-none place-items-center rounded-[11px] bg-accent-soft text-accent-solid">
+        <span className="grid h-[42px] w-[42px] flex-none place-items-center rounded-control bg-accent-soft text-accent-solid">
           <Key aria-hidden size={21} weight="fill" />
         </span>
         <div className="min-w-0 flex-1">
@@ -161,14 +161,14 @@ export function MigrationTokenCard({
       <div className="p-5.5">
         {status === "error" ? (
           <div className="flex flex-col items-center px-4 pt-3.5 pb-1.5 text-center">
-            <span className="grid h-[50px] w-[50px] place-items-center rounded-[14px] bg-red/10 text-red-text">
+            <span className="grid h-[50px] w-[50px] place-items-center rounded-card bg-red/10 text-red-text">
               <WarningOctagon aria-hidden size={26} weight="fill" />
             </span>
             <div className="mt-3.5 text-[14.5px] font-semibold">{errorTitle}</div>
             <p className="mt-1.5 max-w-[400px] text-[13px] leading-[1.55] text-fg-muted">
               {errorMessage ?? "No token was issued. Nothing was exposed."}
             </p>
-            <div className="mt-3.5 inline-flex items-center gap-[7px] rounded-lg bg-bg-sunken px-[11px] py-[5px] font-mono text-[11px] text-fg-muted">
+            <div className="mt-3.5 inline-flex items-center gap-[7px] rounded-control bg-bg-sunken px-[11px] py-[5px] font-mono text-[11px] text-fg-muted">
               <WarningCircle aria-hidden className="text-red-text" size={13} />
               token_action_failed
             </div>
@@ -183,7 +183,7 @@ export function MigrationTokenCard({
         ) : null}
         {status !== "error" && (status === "none" || !visibleToken) ? (
           <div className="flex flex-col items-center px-4 pt-3.5 pb-1.5 text-center">
-            <span className="grid h-[50px] w-[50px] place-items-center rounded-[14px] bg-bg-sunken text-fg-muted">
+            <span className="grid h-[50px] w-[50px] place-items-center rounded-card bg-bg-sunken text-fg-muted">
               <Key aria-hidden size={26} />
             </span>
             <div className="mt-3.5 text-[14.5px] font-semibold">No active token</div>

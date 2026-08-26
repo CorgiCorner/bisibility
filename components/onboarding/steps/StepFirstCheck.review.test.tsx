@@ -48,9 +48,17 @@ describe("StepFirstCheck", () => {
       screen.getByRole("button", { name: "Keyword used for the sample checks" }),
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Project timezone" })).toBeInTheDocument();
+    expect(screen.getByText("Google · 1 market · 2 devices · Daily")).toBeInTheDocument();
+    expect(screen.queryByText("Google / 1 market / 2 devices / Daily")).toBeNull();
     expect(screen.getByText("Daily schedule")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Open dashboard" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Run 2 sample checks" })).toBeInTheDocument();
+    expect(screen.getByText("·")).toBeInTheDocument();
+    expect(screen.queryByText("/")).toBeNull();
+    const openDashboardButton = screen.getByRole("button", { name: "Open dashboard" });
+    const runSampleChecksButton = screen.getByRole("button", { name: "Run 2 sample checks" });
+    expect(openDashboardButton).toBeInTheDocument();
+    expect(openDashboardButton.querySelector("svg")).toBeNull();
+    expect(runSampleChecksButton).toBeInTheDocument();
+    expect(runSampleChecksButton.querySelector("svg")).toBeNull();
   });
 
   // This case opens the timezone menu, which renders the full IANA zone list. It measures ~800ms

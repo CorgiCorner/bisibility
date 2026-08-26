@@ -42,6 +42,9 @@ describe("KeywordsGridNotices", () => {
 
     expect(screen.getByText("Showing the 1,000 most recently added keywords")).toBeInTheDocument();
     expect(screen.getByText(/This project tracks 1,001 keywords/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/This project tracks 1,001 keywords/).closest("output")?.parentElement,
+    ).not.toHaveClass("border-b");
   });
 
   it("does not render the truncation banner when the total count equals loaded rows", () => {
@@ -62,7 +65,12 @@ describe("KeywordsGridNotices", () => {
         budget: { capCents: 1000, exhausted: false, spentCents: 100 },
         failed24h: {
           count: 1,
-          latest: { error: "Provider timeout", keyword: "rank tracker", provider: "serpapi" },
+          latest: {
+            error: "Provider timeout",
+            errorCode: "provider_transient",
+            keyword: "rank tracker",
+            provider: "serpapi",
+          },
         },
         providerRate: { overrideCents: 0.1, providerId: "dataforseo" },
       },
@@ -70,7 +78,12 @@ describe("KeywordsGridNotices", () => {
       providerConnected: true,
     });
 
-    expect(screen.getByText("Rank checks failed to produce ranking data.")).toBeInTheDocument();
+    const title = screen.getByText("Rank checks failed to produce ranking data.");
+    expect(title).toBeInTheDocument();
+    expect(title.closest("output")?.parentElement).not.toHaveClass("border-b");
+    expect(screen.getByText("Some keyword positions could not be updated.")).toBeInTheDocument();
+    const reviewLink = screen.getByRole("link", { name: "Review check runs" });
+    expect(reviewLink.querySelector("svg")).not.toBeInTheDocument();
     expect(screen.queryByText(/connect a serp provider/i)).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /connect provider/i })).not.toBeInTheDocument();
   });

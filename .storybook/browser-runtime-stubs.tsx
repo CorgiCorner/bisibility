@@ -585,6 +585,7 @@ export const disconnectProvider = asyncNoop;
 export const exportKeywords = asyncNoop;
 export const getActionActor = asyncNoop;
 export const getRankCheckStatus = asyncNoop;
+export const getRankCheckStatuses = asyncNoop;
 export const importKeywordsFromCsv = asyncNoop;
 export const inviteMember = asyncNoop;
 export const issueApiKey = asyncNoop;

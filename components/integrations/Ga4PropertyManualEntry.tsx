@@ -19,7 +19,7 @@ type Ga4PropertyManualEntryProps = {
 const labelClass =
   "flex flex-col gap-[7px] font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted";
 
-const inputClass = `${inputClassName} rounded-[9px] px-[13px] py-[11px] font-mono text-[13px] font-medium`;
+const inputClass = `${inputClassName} rounded-control px-[13px] py-[11px] font-mono text-[13px] font-medium`;
 
 export function Ga4PropertyManualEntry({
   hasOptions,

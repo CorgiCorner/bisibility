@@ -218,8 +218,11 @@ describe("domain overview service", () => {
     });
     expect(mocks.preflight).toHaveBeenCalledWith({
       budgetCapCents: 500,
+      connectionId: "connection_1",
       estimatedCostCents: 6,
+      estimatedUsageQuantity: 3,
       projectId: "project_1",
+      provider: "dataforseo",
     });
     expect(mocks.fetchKeywords).toHaveBeenCalledOnce();
     expect(mocks.fetchPages).toHaveBeenCalledOnce();
@@ -291,6 +294,7 @@ describe("domain overview service", () => {
     });
     expect(mocks.resolveSnapshot).not.toHaveBeenCalled();
     expect(mocks.loadModule).not.toHaveBeenCalled();
+    expect(mocks.preflight).not.toHaveBeenCalled();
   });
 
   it("reopens a durable report as a free partial result when Redis and table copies are absent", async () => {
@@ -538,6 +542,14 @@ describe("domain overview service", () => {
     });
     expect(mocks.resolveSnapshot).not.toHaveBeenCalled();
     expect(mocks.loadModule).not.toHaveBeenCalled();
+    expect(mocks.preflight).toHaveBeenCalledWith({
+      budgetCapCents: 500,
+      connectionId: "connection_1",
+      estimatedCostCents: 6,
+      estimatedUsageQuantity: 3,
+      projectId: "project_1",
+      provider: "dataforseo",
+    });
   });
 
   it("propagates a provider reauthentication signal", async () => {

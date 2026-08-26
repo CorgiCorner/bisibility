@@ -8,7 +8,7 @@ describe("SummaryStrip", () => {
     render(<SummaryStrip sentence={sentence} tone="improved" />);
 
     expect(screen.getByRole("status", { name: sentence })).toHaveClass(
-      "rounded-lg",
+      "rounded-control",
       "bg-bg-sunken",
       "text-[13px]",
     );

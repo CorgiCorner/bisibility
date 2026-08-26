@@ -25,9 +25,9 @@ const starsVariants = cva(
       },
       variant: {
         // Its own control: an edge, an elevated fill, and a hover that darkens it.
-        chip: "rounded-full border border-border-strong bg-bg-elev text-fg-muted hover:bg-bg-sunken hover:text-fg",
+        chip: "rounded-full border border-border-control bg-bg-elev text-fg-muted hover:bg-bg-sunken hover:text-fg",
         // One of the nav links: no edge, no fill, and the same pill on hover they use.
-        nav: "rounded-lg text-fg-muted hover:bg-bg-sunken hover:text-fg",
+        nav: "rounded-control text-fg-muted hover:bg-bg-sunken hover:text-fg",
       },
     },
     compoundVariants: [

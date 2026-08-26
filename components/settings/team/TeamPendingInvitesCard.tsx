@@ -61,10 +61,10 @@ export function TeamPendingInvitesCard({
       frameId="pending-invites"
       title="Pending invites"
     >
-      <div className="divide-y divide-border-soft rounded-[10px] border border-border">
+      <div className="divide-y divide-border-soft rounded-control border border-border">
         {invites.length === 0 ? (
           <div className="flex items-center gap-3 p-3 text-[12.5px] text-fg-muted">
-            <span className="grid h-8.5 w-[34px] place-items-center rounded-[9px] border border-dashed border-border-strong">
+            <span className="grid h-8.5 w-[34px] place-items-center rounded-control border border-dashed border-border">
               <EnvelopeSimple aria-hidden size={16} />
             </span>
             No pending invites.
@@ -81,7 +81,7 @@ export function TeamPendingInvitesCard({
               data-expired={invite.expired}
               key={invite.id}
             >
-              <span className="grid h-8.5 w-[34px] shrink-0 place-items-center rounded-[9px] border border-dashed border-border-strong text-fg-muted">
+              <span className="grid h-8.5 w-[34px] shrink-0 place-items-center rounded-control border border-dashed border-border text-fg-muted">
                 <EnvelopeSimple aria-hidden size={16} />
               </span>
               <span className="min-w-[160px] flex-1">
@@ -120,7 +120,7 @@ export function TeamPendingInvitesCard({
                 <Tooltip content={`Revoke invite for ${invite.email}`}>
                   <button
                     aria-label={`Revoke invite for ${invite.email}`}
-                    className="grid h-[30px] w-[30px] place-items-center rounded-lg border border-border-strong bg-bg-elev text-red-text hover:border-red"
+                    className="grid h-[30px] w-[30px] place-items-center rounded-control border border-border-control bg-bg-elev text-red-text hover:border-red"
                     disabled={Boolean(pending)}
                     onClick={() =>
                       void runInviteAction(`revoke:${invite.id}`, revokeInvite, invite)

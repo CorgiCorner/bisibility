@@ -18,7 +18,7 @@ describe("OtpInput", () => {
 
     const [filled, empty] = boxes();
     expect(filled).toHaveClass("bg-accent-soft", "border-accent");
-    expect(empty).toHaveClass("bg-transparent", "border-border-strong");
+    expect(empty).toHaveClass("bg-transparent", "border-border-control");
   });
 
   it("does not swallow Cmd/Ctrl+V so keyboard paste can fire", () => {

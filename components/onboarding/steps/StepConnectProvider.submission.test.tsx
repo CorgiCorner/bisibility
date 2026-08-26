@@ -32,7 +32,7 @@ describe("StepConnectProvider submission", () => {
     ).toEqual([serpApi]);
     expect(serpApi.closest("section")).toHaveClass("border-accent", "bg-transparent");
     expect(serpApi.closest("section")).not.toHaveClass("bg-accent-soft");
-    expect(dataForSeo.closest("section")).toHaveClass("border-border-strong", "bg-transparent");
+    expect(dataForSeo.closest("section")).toHaveClass("border-border", "bg-transparent");
     expect(dataForSeo.closest("section")).not.toHaveClass("border-accent");
   });
 

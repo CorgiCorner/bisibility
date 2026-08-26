@@ -19,7 +19,6 @@ describe("BulkActionBar", () => {
     render(
       <BulkActionBar
         {...actions}
-        budget={{ capCents: 5000, spentCents: 1250 }}
         canDeleteKeyword
         canUpdateKeyword
         onClear={vi.fn()}
@@ -38,9 +37,7 @@ describe("BulkActionBar", () => {
     fireEvent.click(screen.getByRole("menuitem", { name: "Top 20" }));
     expect(onRunChecks).toHaveBeenCalledTimes(1);
     expect(screen.getByRole("button", { name: "Run check (Top 20)" })).toBeInTheDocument();
-    expect(
-      screen.getByText("This run ~ $0.10 - $37.50 left of $50.00 this month"),
-    ).toBeInTheDocument();
+    expect(screen.queryByText(/This run/)).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Run check (Top 20)" }));
     expect(onRunChecks).toHaveBeenLastCalledWith([row.id], 20);

@@ -6,7 +6,6 @@ import {
   ActivityList,
   ConnectionOkBanner,
   CredentialFields,
-  EnvHint,
 } from "@/components/integrations/ConnectDrawerControls";
 import { ConnectDrawerFooter } from "@/components/integrations/ConnectDrawerFooter";
 import { ConnectDrawerOauth } from "@/components/integrations/ConnectDrawerOauth";
@@ -33,7 +32,7 @@ import {
   hasRequiredCredentialFields,
 } from "@/components/integrations/provider-credentials";
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
-import { ConfirmModal, Sheet } from "@/components/ui";
+import { Sheet } from "@/components/ui";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import type {
   IntegrationProviderData,
@@ -61,7 +60,6 @@ export function ConnectDrawer({
   projectRef,
   provider,
 }: Readonly<ConnectDrawerProps>) {
-  const [confirmOpen, setConfirmOpen] = useState(false);
   const [notice, setNotice] = useState<Notice | null>(null);
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
   const [testedCredentialSignature, setTestedCredentialSignature] = useState<string | null>(null);
@@ -177,27 +175,6 @@ export function ConnectDrawer({
       .catch((error) => setNotice(providerActionErrorNotice(error)));
   }
 
-  async function handleDisconnectConfirm() {
-    if (readOnly) {
-      return;
-    }
-    setPendingAction("disconnect");
-    setNotice(null);
-    try {
-      await activeActions.disconnectProvider?.({
-        projectId,
-        providerId: provider.id as ConnectFormValues["providerId"],
-      });
-      setConfirmOpen(false);
-      onClose();
-    } catch (error) {
-      setNotice(providerActionErrorNotice(error));
-      throw error;
-    } finally {
-      setPendingAction(null);
-    }
-  }
-
   const footer =
     authMode === "oauth" && !isManage ? undefined : (
       <ConnectDrawerFooter
@@ -205,7 +182,6 @@ export function ConnectDrawer({
         formId={formId}
         isManage={isManage}
         oauthOnly={authMode === "oauth"}
-        onDisconnect={() => setConfirmOpen(true)}
         onTest={handleTest}
         pendingAction={pendingAction}
         saveDisabled={saveDisabled}
@@ -224,48 +200,41 @@ export function ConnectDrawer({
   );
 
   return (
-    <>
-      <Sheet footer={footer} onClose={onClose} open={open} title={title}>
-        <form className="flex flex-col gap-5" id={formId} onSubmit={handleSave}>
-          <input type="hidden" {...form.register("projectId")} />
-          <input type="hidden" {...form.register("providerId")} />
-          {authMode === "oauth" ? (
-            <ConnectDrawerOauth
-              completePropertySelection={activeActions.completeGooglePropertySelection}
-              loadStoredProperties={activeActions.loadStoredGoogleProperties}
-              projectId={projectId}
-              projectRef={projectRef}
-              provider={provider}
-              saveStoredProperty={activeActions.saveStoredGoogleProperty}
-              scopes={oauthScopes(provider)}
-            />
-          ) : (
+    <Sheet footer={footer} onClose={onClose} open={open} title={title}>
+      <form className="flex flex-col gap-5" id={formId} onSubmit={handleSave}>
+        <input type="hidden" {...form.register("projectId")} />
+        <input type="hidden" {...form.register("providerId")} />
+        {authMode === "oauth" ? (
+          <ConnectDrawerOauth
+            completePropertySelection={activeActions.completeGooglePropertySelection}
+            loadStoredProperties={activeActions.loadStoredGoogleProperties}
+            projectId={projectId}
+            projectRef={projectRef}
+            provider={provider}
+            saveStoredProperty={activeActions.saveStoredGoogleProperty}
+            scopes={oauthScopes(provider)}
+          />
+        ) : (
+          <>
             <CredentialFields errors={errors} form={form} provider={provider} />
-          )}
-          {requiresSuccessfulTest && hasCurrentSuccessfulTest && testState === "ok" ? (
-            <ConnectionOkBanner message={testSuccessCopy(provider.id, testResult)} />
-          ) : null}
-          {provider.kind === "serp" && provider.drawer.rates ? (
-            <ProviderRates
-              connected={isManage}
-              projectId={projectId}
-              providerId={provider.id}
-              rates={provider.drawer.rates}
-              updateRate={activeActions.updateProviderRate}
-            />
-          ) : null}
-          <ActivityList provider={provider} />
-          {authMode === "key" ? <EnvHint provider={provider} /> : null}
-          {notice ? <ActionNotice notice={notice} /> : null}
-        </form>
-      </Sheet>
-      <ConfirmModal
-        busy={pendingAction === "disconnect"}
-        kind="removeIntegration"
-        onClose={() => setConfirmOpen(false)}
-        onConfirm={handleDisconnectConfirm}
-        open={confirmOpen}
-      />
-    </>
+            {notice ? <ActionNotice notice={notice} /> : null}
+          </>
+        )}
+        {requiresSuccessfulTest && hasCurrentSuccessfulTest && testState === "ok" ? (
+          <ConnectionOkBanner message={testSuccessCopy(provider.id, testResult)} />
+        ) : null}
+        {provider.kind === "serp" && provider.drawer.rates ? (
+          <ProviderRates
+            connected={isManage}
+            projectId={projectId}
+            providerId={provider.id}
+            rates={provider.drawer.rates}
+            updateRate={activeActions.updateProviderRate}
+          />
+        ) : null}
+        <ActivityList provider={provider} />
+        {authMode === "oauth" && notice ? <ActionNotice notice={notice} /> : null}
+      </form>
+    </Sheet>
   );
 }

@@ -1,11 +1,19 @@
+import { deriveKeywordDetailState } from "@/lib/keyword-detail/state-model";
 import type { Metrics } from "@/lib/queries/keyword-metrics";
 import { type KeywordTrafficSummary, mapKeyword } from "@/lib/queries/keyword-row";
 import { pathFromUrl } from "@/lib/queries/keyword-row-format";
+import type { KeywordTrafficDetail } from "@/lib/queries/keyword-traffic";
 import { dateFromFrozenNow } from "@/tests/clock";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const metrics: Metrics = { cpc: null, difficulty: null, serpFeatures: [], volume: null };
 const project = { defaults: null, domain: "example.com" };
+const noTraffic: KeywordTrafficDetail = {
+  hasAnalyticsConnection: false,
+  hasSearchConsoleConnection: false,
+  pages: [],
+  query: null,
+};
 
 function keywordRow() {
   return {
@@ -35,8 +43,10 @@ function rankCheck(
   return {
     checkedAt: new Date(checkedAt),
     id,
+    errorCode: null,
     normalizationVersion: "v2",
     position,
+    provider: "primary",
     previousPosition: null,
     rankingUrl: "https://example.com/rank",
     requestedDepth: 100,
@@ -235,6 +245,134 @@ describe("mapKeyword traffic fields", () => {
         rankingUrl: null,
       },
     ]);
+  });
+
+  it("keeps completed rank data when a newer attempt fails", () => {
+    const row = mapKeyword(
+      {
+        ...keywordRow(),
+        rankChecks: [
+          rankCheck("2026-07-02T10:00:00.000Z", "check_failed", null, {
+            errorCode: "request_failed",
+            provider: "fallback",
+            status: "failed",
+          }),
+          rankCheck("2026-07-01T10:00:00.000Z", "check_completed", 48, {
+            provider: "primary",
+          }),
+        ],
+      },
+      project,
+      metrics,
+    );
+
+    expect(row).toMatchObject({
+      checkState: "failed",
+      dataAsOfAt: "2026-07-01T10:00:00.000Z",
+      dataProvider: "primary",
+      hasRankData: true,
+      lastCheckErrorCode: "request_failed",
+      latestAttemptHealth: "failed",
+      position: 48,
+    });
+  });
+
+  it("keeps a completed not-ranked observation when a newer attempt fails", () => {
+    const row = mapKeyword(
+      {
+        ...keywordRow(),
+        rankChecks: [
+          rankCheck("2026-07-02T10:00:00.000Z", "check_failed", null, {
+            errorCode: "request_failed",
+            status: "failed",
+          }),
+          rankCheck("2026-07-01T10:00:00.000Z", "check_completed", null),
+        ],
+      },
+      project,
+      metrics,
+    );
+
+    expect(row).toMatchObject({
+      checkState: "failed",
+      dataAsOfAt: "2026-07-01T10:00:00.000Z",
+      hasRankData: true,
+      latestAttemptHealth: "failed",
+      position: 101,
+    });
+    expect(deriveKeywordDetailState(row, noTraffic)).toMatchObject({
+      latestAttemptHealth: "failed",
+      rankState: "not_ranked",
+    });
+  });
+
+  it("reports failed health when no completed data exists", () => {
+    const row = mapKeyword(
+      {
+        ...keywordRow(),
+        rankChecks: [
+          rankCheck("2026-07-02T10:00:00.000Z", "check_failed", null, {
+            errorCode: "request_failed",
+            status: "failed",
+          }),
+        ],
+      },
+      project,
+      metrics,
+    );
+
+    expect(row).toMatchObject({
+      dataAsOfAt: null,
+      dataProvider: null,
+      hasRankData: false,
+      lastCheckErrorCode: "request_failed",
+      latestAttemptHealth: "failed",
+    });
+    expect(deriveKeywordDetailState(row, noTraffic)).toMatchObject({
+      latestAttemptHealth: "failed",
+      rankState: "failed",
+    });
+  });
+
+  it("reports running health when an active queued task exists", () => {
+    const row = mapKeyword(
+      {
+        ...keywordRow(),
+        queuedRankCheckTasks: [{ state: "prepared" }],
+        rankChecks: [
+          rankCheck("2026-07-02T10:00:00.000Z", "check_failed", null, { status: "failed" }),
+        ],
+      },
+      project,
+      metrics,
+    );
+
+    expect(row.latestAttemptHealth).toBe("running");
+  });
+
+  it("keeps completed rank data while a newer attempt is running", () => {
+    const row = mapKeyword(
+      {
+        ...keywordRow(),
+        rankChecks: [
+          rankCheck("2026-07-02T10:00:00.000Z", "check_running", null, { status: "running" }),
+          rankCheck("2026-07-01T10:00:00.000Z", "check_completed", 48),
+        ],
+      },
+      project,
+      metrics,
+    );
+
+    expect(row).toMatchObject({
+      dataAsOfAt: "2026-07-01T10:00:00.000Z",
+      hasRankData: true,
+      latestAttemptHealth: "running",
+      position: 48,
+    });
+    expect(deriveKeywordDetailState(row, noTraffic)).toMatchObject({
+      latestAttemptHealth: "running",
+      rankState: "normal",
+    });
   });
 
   it("keeps URL history across a comparison boundary while segmenting position history", () => {

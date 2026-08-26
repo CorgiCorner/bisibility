@@ -48,7 +48,7 @@ export function ResearchKeywordCell({
         </span>
       ) : null}
       {row.alreadyTracked ? (
-        <span className="rounded-full border border-border-strong px-1.5 py-0.5 font-mono text-[9.5px] text-fg-muted">
+        <span className="rounded-full border border-border px-1.5 py-0.5 font-mono text-[9.5px] text-fg-muted">
           Tracked
         </span>
       ) : (

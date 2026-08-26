@@ -95,7 +95,7 @@ function DiagnosticsBanner({
   const warning = tone === "warning";
   return (
     <div
-      className={`grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2.5 rounded-[10px] border px-3 py-2 text-[11.5px] text-fg-muted ${
+      className={`grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2.5 rounded-control border px-3 py-2 text-[11.5px] text-fg-muted ${
         warning ? "border-yellow/40 bg-yellow/10" : "border-border bg-bg-sunken"
       }`}
       data-testid="research-diagnostics-banner"
@@ -113,7 +113,7 @@ function DiagnosticsBanner({
       </div>
       <button
         aria-label="Dismiss"
-        className="grid h-8 w-8 shrink-0 cursor-pointer place-items-center rounded-[7px] p-0 text-fg-muted hover:text-fg"
+        className="grid h-8 w-8 shrink-0 cursor-pointer place-items-center rounded-control p-0 text-fg-muted hover:text-fg"
         onClick={onDismiss}
         type="button"
       >

@@ -11,8 +11,7 @@
   --fg-muted: #615b4d;
   --border: #ddd8cc;
   --border-soft: #f0eee6;
-  --border-strong: #ddd8cc;
-  --border-control: #867b68;
+  --border-control: #b1a99a;
   --nav-active: #edeae1;
   --meter-track: #e2ddd0;
   --accent: #f1511c;
@@ -76,7 +75,6 @@
   --fg-muted: #a09d95;
   --border: #343333;
   --border-soft: #221d15;
-  --border-strong: #686766;
   --border-control: #716653;
   --nav-active: #231f17;
   --meter-track: #443c29;

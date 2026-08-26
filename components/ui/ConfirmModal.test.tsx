@@ -1,5 +1,5 @@
 import { ToastProvider } from "@/components/ui";
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { CONFIRM, ConfirmModal, type ConfirmModalProps } from "./ConfirmModal";
 
@@ -130,6 +130,38 @@ describe("ConfirmModal async lifecycle", () => {
       resolveConfirm();
     });
     expect(screen.getByText("Keyword deleted")).toBeInTheDocument();
+  });
+
+  it("renders a supplied actionable failure detail inside the open dialog", async () => {
+    const onConfirm = vi.fn(async () => {
+      throw new Error("fail");
+    });
+    render(
+      <ToastProvider>
+        <ConfirmModal
+          failureDetail={
+            <div role="alert">
+              <span>Detailed failure</span>
+              <button type="button">Resolve issue</button>
+            </div>
+          }
+          kind="deleteKeyword"
+          onClose={vi.fn()}
+          onConfirm={onConfirm}
+          open
+        />
+      </ToastProvider>,
+    );
+
+    const dialog = screen.getByRole("dialog", { name: "Delete keyword" });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Delete keyword" }));
+
+    await waitFor(() =>
+      expect(within(dialog).getByRole("alert")).toHaveTextContent("Detailed failure"),
+    );
+    expect(within(dialog).getByRole("button", { name: "Resolve issue" })).toBeInTheDocument();
+    expect(within(dialog).queryByText("The action could not be completed. Try again.")).toBeNull();
+    expect(dialog).toBeInTheDocument();
   });
 
   it("emits no success toast on rejection and becomes retryable", async () => {

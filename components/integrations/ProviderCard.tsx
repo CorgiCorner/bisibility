@@ -2,6 +2,7 @@
 
 import { ConnectDrawer } from "@/components/integrations/ConnectDrawer";
 import { ProviderCredentialWarning } from "@/components/integrations/ProviderCredentialWarning";
+import { ProviderDisconnectAction } from "@/components/integrations/ProviderDisconnectAction";
 import { ProviderSyncFailureAlert } from "@/components/integrations/ProviderSyncFailureAlert";
 import {
   ProjectReadOnlyTooltip,
@@ -17,6 +18,8 @@ import type {
 } from "@/lib/integrations/types";
 import type { ProjectRef } from "@/lib/routing/app-path";
 import { useState } from "react";
+import type { Notice } from "./ConnectDrawerSchema";
+import { ProviderCardFeedback } from "./ProviderCardFeedback";
 
 export type ProviderCardProps = {
   actions?: ProviderActionHandlers;
@@ -50,7 +53,6 @@ const outlineActionSx = {
   "&:hover": { borderColor: "var(--accent)", color: "var(--accent-text)" },
   "&.Mui-focusVisible": { borderColor: "var(--accent)", color: "var(--accent-text)" },
 } as const;
-const actionWrapperClass = "flex flex-1 sm:inline-flex sm:flex-initial";
 type ProviderId = Parameters<ProviderActionHandlers["testProviderConnection"]>[0]["providerId"];
 const demoTestConnection = async (): Promise<ProviderTestResult> => ({
   balance: 41_200,
@@ -78,6 +80,7 @@ export function ProviderCard({
   const [testResult, setTestResult] = useState<ProviderTestResult | null>(null);
   const [syncPending, setSyncPending] = useState(false);
   const [syncResult, setSyncResult] = useState<ProviderTestResult | null>(null);
+  const [disconnectNotice, setDisconnectNotice] = useState<Notice | null>(null);
   const { readOnly } = useProjectWriteMode();
   const primaryAction = provider.status !== "connected";
   const actionVariant = primaryAction ? "primary" : "secondary";
@@ -183,7 +186,7 @@ export function ProviderCard({
         </dl>
         {provider.status === "needs_reauth" ? (
           <p
-            className="m-0 mt-3 rounded-lg border border-red bg-red/5 px-3 py-2 text-[12.5px] leading-[1.45] text-red-text sm:col-span-2"
+            className="m-0 mt-3 rounded-control border border-red bg-red/5 px-3 py-2 text-[12.5px] leading-[1.45] text-red-text sm:col-span-2"
             role="alert"
           >
             {reauthCopy[provider.id as string] ??
@@ -195,8 +198,17 @@ export function ProviderCard({
           <ProviderSyncFailureAlert failure={provider.syncFailure} timeZone={timeZone} />
         ) : null}
         <div className="mt-3.5 flex shrink-0 items-center gap-[7px] border-border-soft border-t pt-3.5 sm:col-start-2 sm:row-start-1 sm:mt-0 sm:flex-wrap sm:justify-end sm:border-t-0 sm:pt-0">
+          {provider.status === "connected" && canManageProviders ? (
+            <ProviderDisconnectAction
+              disconnectProvider={actions?.disconnectProvider}
+              projectId={projectId ?? "prj_storybook"}
+              providerId={provider.id as ProviderId}
+              onDisconnected={() => setDrawerOpen(false)}
+              onNotice={setDisconnectNotice}
+            />
+          ) : null}
           {provider.secondaryAction && canManageProviders ? (
-            <ProjectReadOnlyTooltip className={actionWrapperClass}>
+            <ProjectReadOnlyTooltip className="flex flex-1 sm:inline-flex sm:flex-initial">
               <Button
                 disabled={readOnly || testPending}
                 onClick={() => {
@@ -212,7 +224,7 @@ export function ProviderCard({
             </ProjectReadOnlyTooltip>
           ) : null}
           {canSync && canUpdateProject ? (
-            <ProjectReadOnlyTooltip className={actionWrapperClass}>
+            <ProjectReadOnlyTooltip className="flex flex-1 sm:inline-flex sm:flex-initial">
               <Button
                 disabled={readOnly || syncPending}
                 onClick={() => {
@@ -228,7 +240,7 @@ export function ProviderCard({
             </ProjectReadOnlyTooltip>
           ) : null}
           {canManageProviders && actionDisabled ? (
-            <ProjectReadOnlyTooltip className={actionWrapperClass}>
+            <ProjectReadOnlyTooltip className="flex flex-1 sm:inline-flex sm:flex-initial">
               <Button disabled size="xs" sx={actionSx} type="button" variant={actionVariant}>
                 {actionLabels[provider.status]}
               </Button>
@@ -248,38 +260,12 @@ export function ProviderCard({
             </Button>
           ) : null}
         </div>
-        {testResult ? (
-          <p
-            className={`m-0 mt-3 text-[12.5px] leading-[1.45] sm:col-span-2 ${
-              testResult.ok ? "text-green-text" : "text-red-text"
-            }`}
-            role={testResult.ok ? "status" : "alert"}
-          >
-            <strong className="font-semibold">
-              {testResult.ok ? "Connection verified." : "Connection failed."}
-            </strong>{" "}
-            {testResult.message}
-          </p>
-        ) : null}
-        {provider.neverSynced ? (
-          <p className="m-0 mt-3 text-[12.5px] leading-[1.45] text-fg-muted sm:col-span-2">
-            <strong className="font-semibold text-fg">Never synced.</strong> Traffic data appears
-            after the first sync. Use Sync now to load it immediately.
-          </p>
-        ) : null}
-        {syncResult ? (
-          <p
-            className={`m-0 mt-3 text-[12.5px] leading-[1.45] sm:col-span-2 ${
-              syncResult.ok ? "text-green-text" : "text-red-text"
-            }`}
-            role={syncResult.ok ? "status" : "alert"}
-          >
-            <strong className="font-semibold">
-              {syncResult.ok ? "Traffic sync finished." : "Traffic sync failed."}
-            </strong>{" "}
-            {syncResult.message}
-          </p>
-        ) : null}
+        <ProviderCardFeedback
+          disconnectNotice={disconnectNotice}
+          neverSynced={Boolean(provider.neverSynced)}
+          syncResult={syncResult}
+          testResult={testResult}
+        />
       </Card>
 
       {canManageProviders ? (

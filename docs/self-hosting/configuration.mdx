@@ -154,6 +154,7 @@ hand.
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google social sign-in and Google Search Console / GA4 connections. |
 | `SLACK_CLIENT_ID`, `SLACK_CLIENT_SECRET` | Slack alert delivery (API-only preview; workspace installation and channel management are not yet exposed in the dashboard). |
 | `DATAFORSEO_LOGIN`, `DATAFORSEO_PASSWORD`, `SERPAPI_API_KEY` | Optional environment fallbacks for SERP provider credentials normally connected in the app. See [Integrations](/integrations). |
+| `PROVIDER_AVAILABILITY_TTL_SECONDS` | Cache TTL (seconds) for provider availability and balance checks. Defaults to `900` (15m). |
 | `KEYWORD_RESEARCH_CACHE_TTL_SECONDS` | Redis TTL (seconds) for cached keyword-research results. Defaults to `43200` (12h). |
 | `RANKED_KEYWORDS_CACHE_TTL_SECONDS` | Redis TTL (seconds) for cached ranked-keyword results. Defaults to `43200` (12h). |
 | `BACKLINKS_CACHE_TTL_SECONDS` | Redis TTL (seconds) for cached backlink results. Defaults to `86400` (24h). |

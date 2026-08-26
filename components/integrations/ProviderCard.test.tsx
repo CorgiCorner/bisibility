@@ -1,6 +1,6 @@
 import { ProjectWriteModeProvider } from "@/components/shell/ProjectWriteModeProvider";
 import type { ProviderActionHandlers } from "@/lib/integrations/types";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { integrationCategories } from "./integrations-fixtures";
 import { ProviderCard as ProductionProviderCard, type ProviderCardProps } from "./ProviderCard";
@@ -56,6 +56,38 @@ describe("ProviderCard", () => {
       projectId: "prj_1",
       providerId: "dataforseo",
     });
+  });
+
+  it("disconnects from the provider card after confirmation", async () => {
+    const actions = {
+      connectProvider: vi.fn(async () => undefined),
+      disconnectProvider: vi.fn(async () => undefined),
+      testProviderConnection: vi.fn(async () => ({ message: "ok", ok: true })),
+      updateProviderCost: vi.fn(async () => undefined),
+      updateProviderSettings: vi.fn(async () => undefined),
+    } satisfies ProviderActionHandlers;
+    const provider = integrationCategories[0].providers[0];
+
+    render(
+      <ProviderCard
+        actions={actions}
+        canManageProviders
+        canUpdateProject
+        projectId="prj_1"
+        provider={provider}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Disconnect" }));
+    const dialog = screen.getByRole("dialog", { name: "Disconnect provider" });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Disconnect provider" }));
+
+    await waitFor(() =>
+      expect(actions.disconnectProvider).toHaveBeenCalledWith({
+        projectId: "prj_1",
+        providerId: "dataforseo",
+      }),
+    );
   });
 
   it("runs a connected analytics sync and explains the never-synced state", async () => {
@@ -217,4 +249,52 @@ describe("ProviderCard", () => {
 
     expect(screen.getByRole("button", { name: "Sync now" })).toBeDisabled();
   });
+  it.each([
+    [
+      new Error("Credentials could not be revoked."),
+      "Provider action failedCredentials could not be revoked.",
+      false,
+    ],
+    [
+      new Error('Server Action "missing" was not found on the server.'),
+      "App update required",
+      true,
+    ],
+  ])(
+    "keeps disconnect confirmation open and shows rejected action details",
+    async (error, expected, stale) => {
+      const actions = {
+        connectProvider: vi.fn(async () => undefined),
+        disconnectProvider: vi.fn().mockRejectedValue(error),
+        testProviderConnection: vi.fn(async () => ({ message: "ok", ok: true })),
+        updateProviderCost: vi.fn(async () => undefined),
+        updateProviderSettings: vi.fn(async () => undefined),
+      } satisfies ProviderActionHandlers;
+      render(
+        <ProviderCard
+          actions={actions}
+          canManageProviders
+          canUpdateProject
+          projectId="prj_1"
+          provider={integrationCategories[0].providers[0]}
+        />,
+      );
+      fireEvent.click(screen.getByRole("button", { name: "Disconnect" }));
+      fireEvent.click(
+        within(screen.getByRole("dialog", { name: "Disconnect provider" })).getByRole("button", {
+          name: "Disconnect provider",
+        }),
+      );
+      const dialog = screen.getByRole("dialog", { name: "Disconnect provider" });
+      await waitFor(() => expect(within(dialog).getByRole("alert")).toHaveTextContent(expected));
+      expect(dialog).toBeInTheDocument();
+      expect(
+        within(dialog).queryByText("The action could not be completed. Try again."),
+      ).toBeNull();
+      expect(screen.queryByText("Connection verified.")).not.toBeInTheDocument();
+      expect(screen.queryByRole("status")).not.toBeInTheDocument();
+      if (stale)
+        expect(within(dialog).getByRole("button", { name: "Refresh app" })).toBeInTheDocument();
+    },
+  );
 });

@@ -8,7 +8,7 @@ const meta = {
   decorators: [
     (Story) => (
       <div className="min-h-[360px] bg-bg p-6 text-fg">
-        <div className="w-[280px] rounded-2xl border border-border-strong bg-bg-elev p-4">
+        <div className="w-[280px] rounded-card border border-border bg-bg-elev p-4">
           <Story />
         </div>
       </div>

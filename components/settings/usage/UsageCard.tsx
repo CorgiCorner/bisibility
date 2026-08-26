@@ -2,6 +2,7 @@ import { SettingsCard } from "@/components/settings/shell/SettingsCard";
 import type { ReactNode } from "react";
 
 type UsageCardProps = {
+  action?: ReactNode;
   children: ReactNode;
   className?: string;
   description: string;
@@ -10,6 +11,7 @@ type UsageCardProps = {
 };
 
 export function UsageCard({
+  action,
   children,
   className,
   description,
@@ -18,7 +20,13 @@ export function UsageCard({
 }: Readonly<UsageCardProps>) {
   return (
     <section id={id}>
-      <SettingsCard className={className} description={description} showSave={false} title={title}>
+      <SettingsCard
+        action={action}
+        className={className}
+        description={description}
+        showSave={false}
+        title={title}
+      >
         {children}
       </SettingsCard>
     </section>

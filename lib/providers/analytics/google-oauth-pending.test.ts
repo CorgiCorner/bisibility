@@ -5,6 +5,7 @@ import {
 } from "./google-oauth-pending";
 
 const mocks = vi.hoisted(() => ({
+  backfillLegacyProjectAllocationInLockedTransaction: vi.fn(),
   cookieStore: {
     delete: vi.fn(),
     get: vi.fn(),
@@ -17,6 +18,8 @@ const mocks = vi.hoisted(() => ({
   listGoogleSites: vi.fn(),
   listGa4Properties: vi.fn(),
   prisma: {
+    $queryRaw: vi.fn(),
+    $transaction: vi.fn(),
     providerConnection: {
       findUnique: vi.fn(),
       upsert: vi.fn(),
@@ -40,6 +43,10 @@ vi.mock("@/lib/auth/audit", () => ({
   writeAudit: mocks.writeAudit,
 }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
+vi.mock("@/lib/provider-allocations/legacy-backfill", () => ({
+  backfillLegacyProjectAllocationInLockedTransaction:
+    mocks.backfillLegacyProjectAllocationInLockedTransaction,
+}));
 vi.mock("@/lib/providers/crypto", () => ({
   decryptProviderCredentials: mocks.decryptProviderCredentials,
   decryptSecret: mocks.decryptSecret,
@@ -65,6 +72,10 @@ const pending = {
 describe("pending Google OAuth property selection", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.backfillLegacyProjectAllocationInLockedTransaction.mockResolvedValue({
+      internalPrimaryConnectionId: null,
+      status: "already_backfilled",
+    });
     mocks.cookieStore.get.mockReturnValue({ value: "encrypted_pending" });
     mocks.decryptSecret.mockReturnValue(JSON.stringify(pending));
     mocks.decryptProviderCredentials.mockReturnValue({});
@@ -73,6 +84,7 @@ describe("pending Google OAuth property selection", () => {
     mocks.requireProjectScope.mockResolvedValue({ id: "project_1", publicId: "prj_1" });
     mocks.refreshGoogleAccessToken.mockResolvedValue("access_token");
     mocks.verifyProviderConnectionBeforeSave.mockResolvedValue(undefined);
+    mocks.prisma.$transaction.mockImplementation((callback) => callback(mocks.prisma));
     mocks.listGoogleSites.mockResolvedValue([
       { permissionLevel: "siteOwner", siteUrl: "sc-domain:example.com" },
       { permissionLevel: "siteFullUser", siteUrl: "https://example.com/" },
@@ -157,6 +169,9 @@ describe("pending Google OAuth property selection", () => {
       projectId: "project_1",
       provider: expect.objectContaining({ id: "gsc", kind: "analytics" }),
     });
+    expect(mocks.prisma.$queryRaw.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.prisma.providerConnection.upsert.mock.invocationCallOrder[0] ?? 0,
+    );
     expect(mocks.prisma.providerConnection.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
         create: expect.objectContaining({
@@ -174,6 +189,7 @@ describe("pending Google OAuth property selection", () => {
         targetId: "conn_abcdefghijklmnopqrstuvwx",
         targetType: "provider_connection",
       }),
+      mocks.prisma,
     );
     expect(mocks.revalidateProviderViews).toHaveBeenCalledOnce();
   });

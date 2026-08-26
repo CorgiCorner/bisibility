@@ -38,7 +38,7 @@ export function AccountSection({
         {action ? <div className="flex-none">{action}</div> : null}
       </div>
       <Card
-        className={cn("rounded-[14px] p-5", tone === "danger" && "border-red", contentClassName)}
+        className={cn("rounded-card p-5", tone === "danger" && "border-red", contentClassName)}
         size="md"
         sx={tone === "danger" ? { borderColor: "var(--red)" } : undefined}
       >

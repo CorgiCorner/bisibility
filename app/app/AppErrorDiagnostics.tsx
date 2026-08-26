@@ -75,7 +75,7 @@ export function AppErrorDiagnostics({
   }
 
   return (
-    <div className="mt-[26px] w-full max-w-[520px] overflow-hidden rounded-xl border border-border bg-bg-elev text-left">
+    <div className="mt-[26px] w-full max-w-[520px] overflow-hidden rounded-card border border-border bg-bg-elev text-left">
       <button
         aria-controls={panelId}
         aria-expanded={open}
@@ -136,7 +136,7 @@ export function AppErrorDiagnostics({
               padding: "0 9px",
               "&:hover": {
                 backgroundColor: "color-mix(in srgb, var(--code-bg) 82%, #000)",
-                borderColor: "var(--border-strong)",
+                borderColor: "var(--border)",
                 color: "var(--code-fg)",
               },
             }}

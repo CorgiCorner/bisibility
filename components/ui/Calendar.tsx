@@ -189,12 +189,12 @@ export function Calendar({
               aria-label={dayFormat.format(parseISO(iso))}
               aria-pressed={selected}
               className={cn(
-                "grid h-8 w-full place-items-center rounded-lg text-[12.5px] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-solid",
+                "grid h-8 w-full place-items-center rounded-control text-[12.5px] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-solid",
                 selected
                   ? "bg-accent-solid font-semibold text-accent-on-solid"
                   : "hover:bg-bg-sunken text-fg",
                 !inMonth && !selected && "text-fg-muted",
-                iso === today && !selected && "ring-1 ring-border-strong",
+                iso === today && !selected && "ring-1 ring-border-control",
                 disabled && "pointer-events-none opacity-35",
               )}
               disabled={disabled}
@@ -228,7 +228,7 @@ function MonthNavButton({
   return (
     <button
       aria-label={label}
-      className="grid h-7 w-7 place-items-center rounded-lg border border-border-strong bg-bg-elev text-fg-muted outline-none transition-colors hover:border-accent hover:text-fg focus-visible:border-accent disabled:pointer-events-none disabled:opacity-35"
+      className="grid h-7 w-7 place-items-center rounded-control border border-border-control bg-bg-elev text-fg-muted outline-none transition-colors hover:border-accent hover:text-fg focus-visible:border-accent disabled:pointer-events-none disabled:opacity-35"
       disabled={disabled}
       onClick={onClick}
       type="button"

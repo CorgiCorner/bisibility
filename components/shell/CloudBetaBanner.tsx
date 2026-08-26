@@ -138,7 +138,7 @@ export function CloudBetaBanner({
           </div>
           <button
             aria-label="Dismiss hosted beta banner"
-            className="grid h-7 w-7 shrink-0 place-items-center rounded-[7px] text-fg-muted transition-colors hover:bg-yellow/[0.14] hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid @xl:order-3"
+            className="grid h-7 w-7 shrink-0 place-items-center rounded-control text-fg-muted transition-colors hover:bg-yellow/[0.14] hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid @xl:order-3"
             onClick={dismiss}
             type="button"
           >

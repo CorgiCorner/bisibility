@@ -59,12 +59,12 @@ export function ExportPackageCard({
 
   return (
     <>
-      <div className="mt-4 overflow-hidden rounded-xl border border-border">
+      <div className="mt-4 overflow-hidden rounded-card border border-border">
         <div className="bg-bg-sunken px-[15px] py-2.5 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
           Instance import package
         </div>
         <div className="flex items-center gap-3 border-border-soft border-t px-[15px] py-[13px]">
-          <span className="grid h-9 w-9 flex-none place-items-center rounded-[9px] bg-bg-sunken text-accent-text">
+          <span className="grid h-9 w-9 flex-none place-items-center rounded-control bg-bg-sunken text-accent-text">
             <FileArrowDown aria-hidden size={18} weight="fill" />
           </span>
           <div className="min-w-0 flex-1">
@@ -96,7 +96,7 @@ export function ExportPackageCard({
 
 export function ExportSecurityNote() {
   return (
-    <div className="mt-3.5 flex items-start gap-2.5 rounded-[11px] border border-accent bg-accent-soft px-[15px] py-[13px] text-[12.5px] leading-5 text-fg">
+    <div className="mt-3.5 flex items-start gap-2.5 rounded-control border border-accent bg-accent-soft px-[15px] py-[13px] text-[12.5px] leading-5 text-fg">
       <span className="flex h-5 shrink-0 items-center">
         <ShieldWarning aria-hidden className="text-accent-text" size={17} weight="fill" />
       </span>

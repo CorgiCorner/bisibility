@@ -9,10 +9,7 @@ import { providerCredentialFields } from "@/components/integrations/provider-aut
 import { Button, inputClassName, MonoText, PasswordInput } from "@/components/ui";
 import { COST_ESTIMATE_PER_CHECK_LABEL } from "@/lib/integrations/settings-copy";
 import type { IntegrationProviderData } from "@/lib/integrations/types";
-import {
-  CheckCircleIcon as CheckCircle,
-  TerminalWindowIcon as TerminalWindow,
-} from "@phosphor-icons/react";
+import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react";
 import type { FieldErrors, UseFormReturn } from "react-hook-form";
 
 type FormProps = {
@@ -23,7 +20,7 @@ type FormProps = {
 const labelClass =
   "flex flex-col gap-[7px] font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted";
 
-const inputClass = `${inputClassName} rounded-[9px] px-[13px] py-[11px] font-mono text-[13px] font-medium`;
+const inputClass = `${inputClassName} rounded-control px-[13px] py-[11px] font-mono text-[13px] font-medium`;
 
 function FieldError({ error }: { error?: unknown }) {
   let message: string | null = null;
@@ -113,7 +110,7 @@ export function CostField({
 
 export function ActivityList({ provider }: Readonly<Pick<FormProps, "provider">>) {
   return (
-    <section className="overflow-hidden rounded-[11px] border border-border">
+    <section className="overflow-hidden rounded-control border border-border">
       <MonoText
         className="bg-bg-sunken px-3.5 py-[11px] uppercase tracking-[0.5px]"
         muted
@@ -134,26 +131,13 @@ export function ActivityList({ provider }: Readonly<Pick<FormProps, "provider">>
   );
 }
 
-export function EnvHint({ provider }: Readonly<Pick<FormProps, "provider">>) {
-  if (!provider.drawer.envHint) return null;
-
-  return (
-    <div className="flex items-start gap-[9px] rounded-[11px] border border-border-strong border-dashed bg-bg-sunken px-3.5 py-3">
-      <span className="flex h-5 shrink-0 items-center">
-        <TerminalWindow aria-hidden className="text-accent-text" size={15} />
-      </span>
-      <p className="m-0 text-[12px] leading-5 text-fg-muted">{provider.drawer.envHint}</p>
-    </div>
-  );
-}
-
 export function ActionNotice({ notice }: Readonly<{ notice: Notice }>) {
   let tone = notice.ok === false ? "var(--red)" : "var(--green)";
   if (notice.tone === "warning") tone = "var(--yellow)";
 
   return (
     <div
-      className="rounded-[11px] border border-border-strong bg-transparent px-3 py-3"
+      className="rounded-control border border-border bg-transparent px-3 py-3"
       role={notice.ok === false ? "alert" : "status"}
     >
       <p className="m-0 text-[13px] font-semibold" style={{ color: tone }}>
@@ -182,7 +166,7 @@ export function ActionNotice({ notice }: Readonly<{ notice: Notice }>) {
 
 export function ConnectionOkBanner({ message }: Readonly<{ message: string }>) {
   return (
-    <div className="flex items-center gap-2.5 rounded-[10px] border border-green bg-bg-sunken px-3.5 py-[11px] text-[12.5px] font-medium text-green-text [background:color-mix(in_srgb,var(--green)_8%,transparent)]">
+    <div className="flex items-center gap-2.5 rounded-control border border-green bg-bg-sunken px-3.5 py-[11px] text-[12.5px] font-medium text-green-text [background:color-mix(in_srgb,var(--green)_8%,transparent)]">
       <CheckCircle aria-hidden size={16} weight="fill" />
       {message}
     </div>

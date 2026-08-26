@@ -3,26 +3,19 @@ import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import { makePublicId } from "@/lib/db/public-id";
 import { dollarsToCents } from "@/lib/format/currency";
-import {
-  credentialsForProviderTest,
-  restoreProviderAfterSuccessfulTest,
-} from "@/lib/providers/auth-recovery";
+import { lockProjectForProviderMutation } from "@/lib/provider-allocations/project-lock";
+import { credentialsFromInput } from "@/lib/providers/credentials-input";
 import { decryptProviderCredentials, encryptSecret } from "@/lib/providers/crypto";
 import { PROVIDER_CATALOG } from "@/lib/providers/registry";
-import type { ProviderCredentials } from "@/lib/providers/types";
 import {
   connectProviderSchema,
   type ProviderConnectionRefInput,
   providerConnectionRefSchema,
-  type TestProviderConnectionInput,
 } from "@/lib/schemas/provider";
 import { z } from "zod";
 import { auditConnection, auditProviderMutation, type ProviderClient } from "./provider-audit";
 import { renumberProviderChain } from "./provider-chain-writer";
-import {
-  probeProviderConnection,
-  verifyProviderConnectionBeforeSave,
-} from "./provider-verification";
+import { verifyProviderConnectionBeforeSave } from "./provider-verification";
 import { requireApiPublicId } from "./public-id";
 
 const prioritySchema = z.coerce.number().int().min(0).max(1000);
@@ -30,7 +23,6 @@ const prioritySchema = z.coerce.number().int().min(0).max(1000);
 export const connectProviderActionSchema = connectProviderSchema.extend({
   enabled: z.coerce.boolean().default(true),
 });
-
 export const providerSettingsSchema = providerConnectionRefSchema.extend({
   enabled: z.coerce.boolean().optional(),
   priority: prioritySchema.optional(),
@@ -44,30 +36,14 @@ type ProviderMutationContext = {
   projectPublicId?: string;
 };
 type ProviderMutationClient = ProviderClient &
-  Pick<typeof prisma, "$queryRaw" | "providerConnectionRate">;
+  Pick<typeof prisma, "$queryRaw" | "project" | "providerConnectionRate">;
 function providerCatalogItem(providerId: string) {
   const item = PROVIDER_CATALOG.find((provider) => provider.id === providerId);
   if (!item) throw new Error(`Unknown provider: ${providerId}`);
   return item;
 }
 
-function credentialsFromInput(input: {
-  credentials?: { apiKey?: string; endpoint?: string; login?: string; secret?: string };
-  login?: string;
-  secret?: string;
-}): ProviderCredentials {
-  const endpoint = input.credentials?.endpoint;
-  const login = input.credentials?.login ?? input.login;
-  const secret = input.credentials?.secret ?? input.secret;
-  const apiKey = input.credentials?.apiKey ?? (login ? undefined : secret);
-
-  return {
-    ...(endpoint ? { endpoint } : {}),
-    ...(login ? { login } : {}),
-    ...(apiKey ? { apiKey } : {}),
-    ...(login && secret ? { password: secret } : {}),
-  };
-}
+export { credentialsFromInput } from "@/lib/providers/credentials-input";
 
 function findConnection(
   projectId: string,
@@ -77,17 +53,6 @@ function findConnection(
   return client.providerConnection.findUnique({
     where: { projectId_provider: { projectId, provider: providerId } },
   });
-}
-
-async function publicProjectId(context: ProviderMutationContext) {
-  if (context.projectPublicId) {
-    return requireApiPublicId(context.projectPublicId, "prj");
-  }
-  const project = await prisma.project.findUnique({
-    select: { publicId: true },
-    where: { id: context.projectId },
-  });
-  return requireApiPublicId(project?.publicId ?? "", "prj");
 }
 
 export async function connectProviderConnection(
@@ -106,15 +71,20 @@ export async function connectProviderConnection(
     projectId: context.projectId,
     provider: item,
   });
-  const secret =
-    Object.keys(credentials).length > 0 ? encryptSecret(JSON.stringify(credentials)) : undefined;
+  const secret = Object.keys(credentials).length
+    ? encryptSecret(JSON.stringify(credentials))
+    : undefined;
   const cost = input.costPerCheck === undefined ? null : dollarsToCents(input.costPerCheck);
 
   const writeConnection = async (client: ProviderMutationClient) => {
-    await client.$queryRaw`
-      SELECT "id" FROM "projects" WHERE "id" = ${context.projectId} FOR UPDATE
-    `;
+    await lockProjectForProviderMutation(client, context.projectId);
     const before = await findConnection(context.projectId, item.id, client);
+    if (
+      before?.id !== stored?.id ||
+      before?.credentialsEncrypted !== stored?.credentialsEncrypted
+    ) {
+      throw new Error("Provider connection changed during verification. Try again.");
+    }
     const connections = await client.providerConnection.findMany({
       select: { priority: true },
       where: { kind: item.kind, projectId: context.projectId },
@@ -180,67 +150,15 @@ export async function connectProviderConnection(
   return prisma.$transaction(writeConnection);
 }
 
-export async function testProviderConnection(
-  input: TestProviderConnectionInput,
-  context: ProviderMutationContext,
-) {
-  const item = providerCatalogItem(input.providerId);
-  const targetId = await publicProjectId(context);
-
-  try {
-    const credentials = await credentialsForProviderTest(
-      context.projectId,
-      item.id,
-      credentialsFromInput(input),
-    );
-    const result = await probeProviderConnection({
-      credentials,
-      projectId: context.projectId,
-      provider: item,
-    });
-    await restoreProviderAfterSuccessfulTest({
-      ok: result.ok,
-      projectId: context.projectId,
-      providerId: item.id,
-      testInput: input,
-    });
-    await auditProviderMutation({
-      action: "provider.test",
-      actorId: context.actorId,
-      after: { ok: result.ok, provider: item.id },
-      projectId: context.projectId,
-      targetId,
-      targetType: "project",
-    });
-    return result;
-  } catch (error) {
-    const result = {
-      message: error instanceof Error ? error.message : "Provider connection test failed.",
-      ok: false,
-    };
-    await auditProviderMutation({
-      action: "provider.test_failed",
-      actorId: context.actorId,
-      after: { message: result.message, provider: item.id },
-      projectId: context.projectId,
-      targetId,
-      targetType: "project",
-    });
-    return result;
-  }
-}
-
 export async function setProviderSettings(
   input: ProviderSettingsInput,
   context: ProviderMutationContext,
 ) {
   const item = providerCatalogItem(input.providerId);
-  const before = await findConnection(context.projectId, item.id);
-  if (!before) {
-    throw new Error("Provider connection not found.");
-  }
-
   return prisma.$transaction(async (tx) => {
+    await lockProjectForProviderMutation(tx, context.projectId);
+    const before = await findConnection(context.projectId, item.id, tx);
+    if (!before) throw new Error("Provider connection not found.");
     const updated = await tx.providerConnection.update({
       data: {
         ...(typeof input.enabled === "boolean" ? { enabled: input.enabled } : {}),
@@ -271,12 +189,10 @@ export async function disconnectProviderConnection(
   context: ProviderMutationContext,
 ) {
   const item = providerCatalogItem(input.providerId);
-  const before = await findConnection(context.projectId, item.id);
-  if (!before) {
-    return null;
-  }
-
-  await prisma.$transaction(async (tx) => {
+  const removed = await prisma.$transaction(async (tx) => {
+    await lockProjectForProviderMutation(tx, context.projectId);
+    const before = await findConnection(context.projectId, item.id, tx);
+    if (!before) return false;
     await tx.providerConnection.delete({ where: { id: before.id } });
     await auditProviderMutation(
       {
@@ -289,7 +205,8 @@ export async function disconnectProviderConnection(
       },
       tx,
     );
+    return true;
   });
 
-  return { ok: true };
+  return removed ? { ok: true } : null;
 }

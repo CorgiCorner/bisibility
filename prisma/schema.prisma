@@ -49,6 +49,11 @@ enum ProviderStatus {
   optional
 }
 
+enum ProviderAllocationUnit {
+  cents
+  units
+}
+
 enum ProviderCostFeature {
   backlinks
   domain_overview
@@ -499,6 +504,7 @@ model Project {
   signals                  Signal[]
   sitemapMonitoringEnabled Boolean                  @default(true)
   budgetCapCents           Int                      @default(5000)
+  providerAllocationsInitializedAt DateTime?
   sitemapSnapshots         SitemapSnapshot[]
   urlPresences             UrlPresence[]
   webhookEndpoints         WebhookEndpoint[]
@@ -530,6 +536,8 @@ model ProviderCostEntry {
   tag           String?
   correlationId String?
   providerRequestId String?
+  // A migration-only partial unique index covers non-null connection/request identifiers.
+  usageQuantity Decimal?            @db.Decimal(18, 6)
   costCents     Decimal             @db.Decimal(10, 4)
   unitCostCents Decimal?            @db.Decimal(10, 4)
   cached        Boolean             @default(false)
@@ -1044,6 +1052,8 @@ model ProviderConnection {
   enabled                Boolean                  @default(true)
   credentialsEncrypted   String?
   costPerCheckCents      Decimal?                 @db.Decimal(10, 4)
+  allocationUnit         ProviderAllocationUnit?
+  allocationAmountPerMonth Int?
   rates                  ProviderConnectionRate[]
   queuedRankCheckBatches QueuedRankCheckBatch[]
   lastUsedAt             DateTime?

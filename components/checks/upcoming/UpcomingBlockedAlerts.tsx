@@ -30,7 +30,7 @@ export function UpcomingBlockedAlerts({
   return (
     <section aria-label="Blocked scheduled checks" className="space-y-2.5">
       {noProvider ? (
-        <div className="rounded-xl border border-red/30 bg-red/8 p-3.5">
+        <div className="rounded-card border border-red/30 bg-red/8 p-3.5">
           <div className="flex items-start gap-2.5">
             <WarningCircle
               aria-hidden
@@ -54,7 +54,7 @@ export function UpcomingBlockedAlerts({
       ) : null}
 
       {migrationHold ? (
-        <div className="flex items-center gap-2.5 rounded-xl border border-border bg-bg-sunken/65 px-3.5 py-3">
+        <div className="flex items-center gap-2.5 rounded-card border border-border bg-bg-sunken/65 px-3.5 py-3">
           <Pause aria-hidden className="shrink-0 text-fg-muted" size={15} weight="fill" />
           <p className="m-0 min-w-0 flex-1 text-xs text-fg-muted">
             Paused during import · {formatKeywordCount(migrationHold.keywordCount)}
@@ -66,7 +66,7 @@ export function UpcomingBlockedAlerts({
       ) : null}
 
       {budgetExhausted ? (
-        <div className="flex items-center gap-2.5 rounded-xl border border-yellow/35 bg-yellow/10 px-3.5 py-3">
+        <div className="flex items-center gap-2.5 rounded-card border border-yellow/35 bg-yellow/10 px-3.5 py-3">
           <Gauge aria-hidden className="shrink-0 text-yellow-text" size={16} weight="fill" />
           <p className="m-0 min-w-0 flex-1 text-xs text-fg-muted">
             Monthly budget reached · {formatKeywordCount(budgetExhausted.keywordCount)}

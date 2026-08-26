@@ -212,13 +212,13 @@ function OnboardingStory({
             <span className="inline-flex items-center gap-1.5">
               <Avatar
                 alt=""
-                className="h-[22px] w-[22px] rounded-md bg-accent-solid font-mono text-[9px] font-semibold text-accent-on-solid"
+                className="h-[22px] w-[22px] rounded-control bg-accent-solid font-mono text-[9px] font-semibold text-accent-on-solid"
                 initials="AK"
                 src={null}
               />
               demo@acme.dev
             </span>
-            <span aria-hidden className="h-4 w-px bg-border-strong" />
+            <span aria-hidden className="h-4 w-px bg-border" />
             <span className="text-fg-muted">Not you?</span>
             <Button
               size="xs"
@@ -244,7 +244,7 @@ function OnboardingStory({
           </p>
         </section>
         <OnboardingStepper currentStep={step} maxReachableStep={maxReachableStep}>
-          <section className="rounded-2xl border border-border bg-bg-elev p-6 sm:px-7 sm:py-[26px]">
+          <section className="rounded-card border border-border bg-bg-elev p-6 sm:px-7 sm:py-[26px]">
             {panelForStep(step, providerMode, competitorMode, analyticsMode)}
             {step === 4 ? null : <OnboardingNav currentStep={step} />}
           </section>

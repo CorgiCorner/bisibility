@@ -1,4 +1,5 @@
 import { normalizeDomain } from "@/lib/domains/normalize";
+import type { ProviderRequestAttribution } from "@/lib/provider-usage/tag";
 import type { ProviderCredentials, SerpDevice } from "@/lib/providers/types";
 import type { DataForSeoQueuePriority } from "@/lib/rank-check/queued-config";
 import { QUEUED_RESULT_GET_TIMEOUT_MS } from "@/lib/rank-check/queued-timeouts";
@@ -14,6 +15,7 @@ const TASK_POST_TIMEOUT_MS = 30_000;
 const CREATED_STATUS = 20100;
 
 export type DataForSeoQueuedTaskInput = {
+  attribution: ProviderRequestAttribution;
   correlationId: string;
   depth: SerpDepth;
   device: SerpDevice;
@@ -71,7 +73,7 @@ function taskPayload(input: DataForSeoQueuedTaskInput, priority: DataForSeoQueue
       ? { location_name: input.location.primaryGeoName }
       : { location_code: input.location.primaryGeoCode }),
     priority: priority === "high" ? 2 : 1,
-    tag: input.tag ?? legacyDataForSeoQueuedTaskTag(input.correlationId),
+    tag: input.attribution.tag,
     ...(resolveSerpStopOnMatch(input.stopOnMatch)
       ? {
           find_targets_in: ["organic"],
@@ -140,12 +142,7 @@ export async function submitDataForSeoQueuedTasks(input: {
   if (input.tasks.length === 0 || input.tasks.length > 100) {
     throw new Error("DataForSEO queued submissions require between 1 and at most 100 tasks.");
   }
-  const byTag = new Map(
-    input.tasks.map((task) => [
-      task.tag ?? legacyDataForSeoQueuedTaskTag(task.correlationId),
-      task.correlationId,
-    ]),
-  );
+  const byTag = new Map(input.tasks.map((task) => [task.attribution.tag, task.correlationId]));
   const data = await postTasks(
     input.credentials,
     input.tasks.map((task) => taskPayload(task, input.priority)),

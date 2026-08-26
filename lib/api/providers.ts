@@ -10,8 +10,8 @@ import {
   disconnectProviderConnection,
   providerSettingsSchema,
   setProviderSettings,
-  testProviderConnection,
 } from "./provider-service";
+import { testProviderConnection } from "./provider-test-service";
 import { requireApiPublicId } from "./public-id";
 import { listResponse, resourceResponse } from "./responses";
 import {

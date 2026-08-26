@@ -21,7 +21,7 @@ describe("StepAddKeywords schedule summary", () => {
     expect(
       screen.getByText("450 keywords × 2 devices × 2 locations = 1800 checks"),
     ).toBeInTheDocument();
-    expect(screen.getByText("≈ 54000 checks/month at Top 100")).toBeInTheDocument();
+    expect(screen.getByText("≈ 54000 checks/month at Top 20")).toBeInTheDocument();
   });
 
   it("projects weekly checks from the tracking draft", () => {
@@ -32,7 +32,7 @@ describe("StepAddKeywords schedule summary", () => {
       />,
     );
     fireEvent.change(keywordBox(), { target: { value: "rank tracker\nseo api" } });
-    expect(screen.getByText("≈ 8 checks/month at Top 100")).toBeInTheDocument();
+    expect(screen.getByText("≈ 8 checks/month at Top 20")).toBeInTheDocument();
   });
 
   it("places usage after defaults and updates it from frequency, devices, and depth", async () => {
@@ -40,18 +40,18 @@ describe("StepAddKeywords schedule summary", () => {
     fireEvent.change(keywordBox(), { target: { value: "rank tracker\nseo api" } });
 
     const defaultsHeading = screen.getByRole("heading", { name: "Tracking defaults" });
-    const initialEstimate = screen.getByText("≈ 60 checks/month at Top 100");
+    const initialEstimate = screen.getByText("≈ 60 checks/month at Top 20");
     expect(
       defaultsHeading.compareDocumentPosition(initialEstimate) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
 
     fireEvent.click(screen.getByRole("button", { name: "Frequency" }));
     fireEvent.click(screen.getByRole("menuitem", { name: "Monthly" }));
-    expect(screen.getByText("≈ 2 checks/month at Top 100")).toBeInTheDocument();
+    expect(screen.getByText("≈ 2 checks/month at Top 20")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Devices" }));
     fireEvent.click(screen.getByRole("menuitemcheckbox", { name: "Mobile" }));
-    expect(screen.getByText("≈ 4 checks/month at Top 100")).toBeInTheDocument();
+    expect(screen.getByText("≈ 4 checks/month at Top 20")).toBeInTheDocument();
     fireEvent.keyDown(screen.getByRole("menu", { name: "Devices" }), { key: "Escape" });
     await waitFor(() =>
       expect(screen.queryByRole("menu", { name: "Devices" })).not.toBeInTheDocument(),
@@ -76,7 +76,7 @@ describe("StepAddKeywords schedule summary", () => {
       />,
     );
     fireEvent.change(keywordBox(), { target: { value: "rank tracker" } });
-    expect(screen.getByText("excludes custom cron schedule at Top 100")).toBeInTheDocument();
+    expect(screen.getByText("excludes custom cron schedule at Top 20")).toBeInTheDocument();
     expect(screen.queryByText(/\$0\.00\/month/)).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Estimate provider cost" })).toBeNull();
   });
@@ -112,7 +112,7 @@ describe("StepAddKeywords schedule summary", () => {
         jitterMinutes: 60,
         locationKey: "US",
         projectId: "prj_1",
-        serpDepth: 100,
+        serpDepth: 20,
         timezone: "UTC",
       }),
     );

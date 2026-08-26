@@ -96,7 +96,9 @@ async function clickThroughAppPages(page: Page, keyword: string, projectRef: str
     ).toBeVisible();
   });
   await expectAppPage(page, `/app/${projectRef}/settings/general`, async () => {
-    await expect(page.getByText("Project details")).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Project details", exact: true }).first(),
+    ).toBeVisible();
   });
   // /app/docs hands off to the hosted docs site via a streamed redirect (HTTP 200 +
   // meta refresh), so assert only that the browser leaves the in-app route.

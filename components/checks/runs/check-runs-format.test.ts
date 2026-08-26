@@ -1,6 +1,7 @@
 import type { CheckRunRow } from "@/lib/checks/contract";
 import { describe, expect, it } from "vitest";
 import {
+  formatAttemptOutcome,
   formatResult,
   INTERNAL_ERROR_LABEL,
   isInternalErrorString,
@@ -79,13 +80,43 @@ describe("presentCheckError", () => {
 });
 
 describe("formatResult", () => {
-  it("never surfaces raw internal errors in the Result cell", () => {
-    expect(formatResult(failedRun(prismaError), now)).toBe(INTERNAL_ERROR_LABEL);
-  });
-
-  it("keeps the timeout copy and concise errors", () => {
-    expect(formatResult(failedRun("stale running check"), now)).toBe("Timed out after 15 min");
+  it("uses the terminal failure label for every failed run", () => {
+    expect(formatResult(failedRun(prismaError), now)).toBe("All providers failed");
+    expect(formatResult(failedRun("stale running check"), now)).toBe("All providers failed");
     expect(formatResult(failedRun("All providers failed"), now)).toBe("All providers failed");
     expect(formatResult(failedRun(null), now)).toBe("All providers failed");
+  });
+});
+
+describe("formatAttemptOutcome", () => {
+  it("replaces legacy success detail on a failed provider attempt", () => {
+    expect(
+      formatAttemptOutcome({
+        costCents: null,
+        degradedToCountry: false,
+        detail: "  Ok. ",
+        durationMs: null,
+        outcome: "provider_failed",
+        provider: "provider",
+        providerLabel: "Provider",
+      }),
+    ).toBe("Provider error");
+  });
+
+  it("marks an inconsistent successful attempt in a failed run as an error", () => {
+    expect(
+      formatAttemptOutcome(
+        {
+          costCents: null,
+          degradedToCountry: false,
+          detail: "Completed",
+          durationMs: null,
+          outcome: "ok",
+          provider: "provider",
+          providerLabel: "Provider",
+        },
+        true,
+      ),
+    ).toBe("Provider error");
   });
 });

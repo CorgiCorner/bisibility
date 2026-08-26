@@ -12,6 +12,7 @@ import {
 import { Card } from "@/components/ui";
 import type { ProjectRef } from "@/lib/routing/app-path";
 import { appPath, rankTrackerTabPath } from "@/lib/routing/app-path";
+import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import { PositionDistributionCard } from "./PositionDistributionCard";
 import { PositionTrendCard } from "./PositionTrendCard";
 import type { DistributionBucket, OverviewView, TrendPoint } from "./types";
@@ -169,7 +170,11 @@ export function NoDataKpiRow(props: Readonly<NoDataKpiRowProps>) {
         const sublineClassName = kpi.value === "count" ? "text-accent-text" : "text-fg-muted";
 
         return (
-          <Card key={kpi.label} size="md" style={{ borderRadius: 14, padding: "16px 18px" }}>
+          <Card
+            key={kpi.label}
+            size="md"
+            style={{ borderRadius: UI_RADIUS_ROLES.card, padding: "16px 18px" }}
+          >
             <div className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
               {kpi.label}
             </div>

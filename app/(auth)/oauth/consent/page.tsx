@@ -61,7 +61,7 @@ export default async function OAuthConsentPage({ searchParams }: Readonly<Consen
         </div>
 
         <div className="font-mono text-[11px] text-fg-muted">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-border-strong px-2.5 py-1">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-border px-2.5 py-1">
             <Fingerprint aria-hidden className="text-green-text" size={14} weight="fill" />
             PKCE S256
             <InfoTooltip text="PKCE binds this authorization request to the client that started it without using a stored client secret." />

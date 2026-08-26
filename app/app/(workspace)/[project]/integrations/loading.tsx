@@ -6,7 +6,7 @@ import { PageContent } from "@/components/shell/PageContent";
 import { cn } from "@/lib/ui/cn";
 
 function Bar({ className }: Readonly<{ className?: string }>) {
-  return <div className={cn("animate-pulse rounded-[10px] bg-bg-sunken", className)} />;
+  return <div className={cn("animate-pulse rounded-control bg-bg-sunken", className)} />;
 }
 
 const metaKeys = ["m1", "m2", "m3"] as const;
@@ -19,10 +19,10 @@ const groups = [
 
 function ProviderRow() {
   return (
-    <div className="rounded-[14px] border border-border bg-bg-elev px-5 py-4.5">
+    <div className="rounded-card border border-border bg-bg-elev px-5 py-4.5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-3.5">
         <div className="flex min-w-0 flex-1 items-start gap-3.5">
-          <Bar className="h-[42px] w-[42px] shrink-0 rounded-xl" />
+          <Bar className="h-[42px] w-[42px] shrink-0 rounded-card" />
           <div className="flex min-w-0 flex-1 flex-col gap-2">
             <div className="flex items-center gap-2">
               <Bar className="h-4 w-[130px]" />
@@ -50,8 +50,8 @@ function ProviderRow() {
 export default function IntegrationsLoading() {
   return (
     <PageContent aria-hidden className="flex flex-col gap-5">
-      <div className="flex items-start gap-[11px] rounded-xl border border-border bg-bg-elev px-4 py-3.5">
-        <Bar className="h-5 w-5 shrink-0 rounded-md" />
+      <div className="flex items-start gap-[11px] rounded-card border border-border bg-bg-elev px-4 py-3.5">
+        <Bar className="h-5 w-5 shrink-0 rounded-control" />
         <div className="flex min-w-0 flex-1 flex-col gap-2">
           <Bar className="h-3 w-full max-w-[520px]" />
           <Bar className="h-3 w-full max-w-[420px]" />

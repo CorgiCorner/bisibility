@@ -44,7 +44,7 @@ export function CommandPaletteTrigger() {
     <Tooltip content="Search (⌘K)">
       <button
         aria-label="Search"
-        className="grid h-8 w-8 flex-none place-items-center rounded-[9px] border border-border-strong bg-bg-elev text-fg-muted transition-colors hover:bg-bg-sunken hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid"
+        className="grid h-8 w-8 flex-none place-items-center rounded-control border border-border-control bg-bg-elev text-fg-muted transition-colors hover:bg-bg-sunken hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid"
         onClick={openPalette}
         type="button"
       >
@@ -181,14 +181,14 @@ function CommandPalette({
       />
       <dialog
         aria-label="Command palette"
-        className="relative m-0 flex max-h-[calc(100dvh-4.5rem)] w-full max-w-[600px] flex-col overflow-hidden rounded-[15px] border border-border-strong bg-bg-elev p-0 text-fg sm:max-h-[70vh]"
+        className="relative m-0 flex max-h-[calc(100dvh-4.5rem)] w-full max-w-[600px] flex-col overflow-hidden rounded-card border border-border bg-bg-elev p-0 text-fg sm:max-h-[70vh]"
         onKeyDown={(event) => {
           if (event.key === "Escape") onClose();
         }}
         open
       >
         <div className="border-b border-border p-3">
-          <div className="flex min-h-[46px] items-center gap-[11px] rounded-[11px] border border-border-strong bg-transparent px-3 transition-colors focus-within:border-accent">
+          <div className="flex min-h-[46px] items-center gap-[11px] rounded-control border border-border-control bg-transparent px-3 transition-colors focus-within:border-accent">
             <MagnifyingGlass
               aria-hidden
               className="flex-none text-accent-text"
@@ -196,14 +196,14 @@ function CommandPalette({
               weight="bold"
             />
             <input
-              className="min-w-0 flex-1 bg-transparent py-2 text-[16px] font-medium text-fg outline-none focus-visible:outline-none sm:text-[15px]"
+              className="min-w-0 flex-1 bg-transparent py-2 text-[16px] font-medium text-fg outline-none placeholder:text-[12px] placeholder:leading-4 focus-visible:outline-none sm:text-[15px]"
               data-cmdk-input
               onChange={(event) => handleQueryChange(event.target.value)}
               placeholder="Search keywords, views and actions…"
               ref={(node) => node?.focus()}
               value={query}
             />
-            <span className="hidden flex-none rounded-md border border-border bg-bg-elev px-[7px] py-0.5 font-mono text-[10.5px] uppercase text-fg-muted sm:inline-flex">
+            <span className="hidden flex-none rounded-control border border-border bg-bg-elev px-[7px] py-0.5 font-mono text-[10.5px] uppercase text-fg-muted sm:inline-flex">
               esc
             </span>
           </div>
@@ -218,7 +218,7 @@ function CommandPalette({
                 const Icon = item.icon ?? Cursor;
                 return (
                   <button
-                    className="flex w-full items-center gap-3 rounded-[9px] px-[11px] py-[9px] text-left text-fg outline-none hover:bg-nav-active focus-visible:bg-nav-active"
+                    className="flex w-full items-center gap-3 rounded-control px-[11px] py-[9px] text-left text-fg outline-none hover:bg-nav-active focus-visible:bg-nav-active"
                     key={item.id ?? `${group.title}-${item.label}`}
                     onClick={() => void runItem(item)}
                     type="button"
@@ -244,10 +244,10 @@ function CommandPalette({
         </div>
         <div className="flex items-center gap-3.5 border-t border-border px-4 py-[9px] font-mono text-[10.5px] text-fg-muted">
           <span className="inline-flex items-center gap-1.5">
-            <span className="rounded-[5px] bg-bg-sunken px-[5px] py-px">↵</span>open
+            <span className="rounded-control bg-bg-sunken px-[5px] py-px">↵</span>open
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <span className="rounded-[5px] bg-bg-sunken px-[5px] py-px">esc</span>close
+            <span className="rounded-control bg-bg-sunken px-[5px] py-px">esc</span>close
           </span>
         </div>
       </dialog>

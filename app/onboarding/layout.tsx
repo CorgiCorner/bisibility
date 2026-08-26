@@ -35,13 +35,13 @@ export default async function OnboardingLayout({ children }: Readonly<Onboarding
             <span className="inline-flex items-center gap-1.5">
               <Avatar
                 alt=""
-                className="h-[22px] w-[22px] rounded-md bg-accent-solid font-mono text-[9px] font-semibold text-accent-on-solid"
+                className="h-[22px] w-[22px] rounded-control bg-accent-solid font-mono text-[9px] font-semibold text-accent-on-solid"
                 initials={initials}
                 src={avatarSrc}
               />
               {email}
             </span>
-            <span aria-hidden className="h-4 w-px bg-border-strong" />
+            <span aria-hidden className="h-4 w-px bg-border" />
             <span className="text-fg-muted">Not you?</span>
             <OnboardingLogoutButton />
           </div>

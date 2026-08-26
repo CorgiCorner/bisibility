@@ -163,7 +163,7 @@ export function AdminAuditTable({ entries, filter, nextCursor }: Readonly<Instan
 
         {nextCursor ? (
           <Link
-            className="mt-3 inline-flex min-h-[34px] items-center gap-2 rounded-[9px] border border-border-strong bg-bg-elev px-3.5 text-xs font-semibold text-fg-muted outline-none transition-colors hover:border-accent hover:text-fg focus-visible:border-accent focus-visible:text-fg"
+            className="mt-3 inline-flex min-h-[34px] items-center gap-2 rounded-control border border-border-control bg-bg-elev px-3.5 text-xs font-semibold text-fg-muted outline-none transition-colors hover:border-accent hover:text-fg focus-visible:border-accent focus-visible:text-fg"
             href={auditHref(filter, nextCursor)}
             prefetch={false}
           >

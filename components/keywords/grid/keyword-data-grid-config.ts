@@ -1,3 +1,4 @@
+import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import type { GridColumnVisibilityModel } from "@mui/x-data-grid";
 
 export const defaultKeywordColumnVisibility: GridColumnVisibilityModel = {
@@ -65,4 +66,7 @@ export const keywordGridSx = {
   },
 };
 
-export const keywordTableCardSx = { borderRadius: "14px", overflow: "hidden" } as const;
+export const keywordTableCardSx = {
+  borderRadius: UI_RADIUS_ROLES.card,
+  overflow: "hidden",
+} as const;

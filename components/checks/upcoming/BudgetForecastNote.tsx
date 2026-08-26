@@ -8,7 +8,7 @@ export type BudgetForecastNoteProps = {
 // A small, muted note. Only the amounts and dates are emphasised (semibold, full
 // contrast); the surrounding prose stays quiet at ~12px per the design.
 export function BudgetForecastNote({ forecast }: Readonly<BudgetForecastNoteProps>) {
-  if (!forecast) return null;
+  if (!forecast || forecast.next48hCents <= 0) return null;
 
   const cap = formatCap(forecast.capCents);
   const next48h = formatEstimatedCost(forecast.next48hCents);

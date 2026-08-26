@@ -152,14 +152,14 @@ export function CloudBackupModal({
           </div>
           <div aria-label="Export format" className="mt-2 grid gap-2" role="radiogroup">
             <label
-              className={`flex cursor-pointer items-center gap-3 rounded-[11px] border px-3 py-2.5 text-left transition-colors focus-within:outline focus-within:outline-2 focus-within:outline-accent-solid ${
+              className={`flex cursor-pointer items-center gap-3 rounded-control border px-3 py-2.5 text-left transition-colors focus-within:outline focus-within:outline-2 focus-within:outline-accent-solid ${
                 format === "package"
                   ? "border-accent bg-accent-soft"
-                  : "border-border bg-bg-elev hover:border-border-strong"
+                  : "border-border-control bg-bg-elev hover:border-border-control"
               }`}
             >
               <input className="sr-only" type="radio" value="package" {...register("format")} />
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[9px] bg-accent-soft text-accent-solid">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-control bg-accent-soft text-accent-solid">
                 <FileZip aria-hidden size={19} weight="fill" />
               </span>
               <span className="min-w-0 flex-1">
@@ -175,14 +175,14 @@ export function CloudBackupModal({
               </span>
             </label>
             <label
-              className={`flex cursor-pointer items-center gap-3 rounded-[11px] border px-3 py-2.5 text-left transition-colors focus-within:outline focus-within:outline-2 focus-within:outline-accent-solid ${
+              className={`flex cursor-pointer items-center gap-3 rounded-control border px-3 py-2.5 text-left transition-colors focus-within:outline focus-within:outline-2 focus-within:outline-accent-solid ${
                 format === "csv"
                   ? "border-accent bg-accent-soft"
-                  : "border-border bg-bg-elev hover:border-border-strong"
+                  : "border-border-control bg-bg-elev hover:border-border-control"
               }`}
             >
               <input className="sr-only" type="radio" value="csv" {...register("format")} />
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[9px] bg-bg-sunken text-fg-muted">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-control bg-bg-sunken text-fg-muted">
                 <Table aria-hidden size={19} weight="fill" />
               </span>
               <span className="min-w-0 flex-1">
@@ -207,7 +207,7 @@ export function CloudBackupModal({
           <div className="mt-2 grid gap-1.5">
             {CLOUD_BACKUP_SECTIONS.map((section) => (
               <div
-                className="flex items-center gap-2.5 rounded-[9px] border border-border px-2.5 py-2"
+                className="flex items-center gap-2.5 rounded-control border border-border px-2.5 py-2"
                 key={section.label}
               >
                 <CheckSquare

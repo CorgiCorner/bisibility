@@ -40,7 +40,7 @@ export function SetupSuccess({ mailerConfigured }: Readonly<{ mailerConfigured: 
         Open the admin panel
       </ExternalLink>
       {!mailerConfigured ? (
-        <div className="flex items-start gap-2.5 rounded-[10px] border border-border bg-bg p-[11px_13px]">
+        <div className="flex items-start gap-2.5 rounded-control border border-border bg-bg p-[11px_13px]">
           <EnvelopeSimple aria-hidden className="mt-px shrink-0 text-[#a06b2a]" size={16} />
           <p className="m-0 text-[12.5px] leading-[1.5] text-fg-muted">
             <strong className="block font-semibold text-fg">Next: configure email delivery.</strong>

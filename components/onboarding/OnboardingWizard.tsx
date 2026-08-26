@@ -215,7 +215,7 @@ export function OnboardingWizard({
       maxReachableStep={maxReachableStep}
       onStepChange={goToStep}
     >
-      <section className="rounded-2xl border border-border bg-bg-elev p-6 sm:px-7 sm:py-[26px]">
+      <section className="rounded-card border border-border bg-bg-elev p-6 sm:px-7 sm:py-[26px]">
         {inlineWarning ? (
           <p className={`m-0 mb-4 ${feedbackClass} text-yellow-text`}>{inlineWarning}</p>
         ) : null}

@@ -37,6 +37,11 @@ export function createUserDateTimeFormatter({
     timeZone: timezone,
     year: "numeric",
   });
+  const monthYear = new Intl.DateTimeFormat("en-US", {
+    month: "long",
+    timeZone: timezone,
+    year: "numeric",
+  });
   const time = new Intl.DateTimeFormat("en-US", {
     hour: "2-digit",
     hourCycle: "h23",
@@ -67,6 +72,7 @@ export function createUserDateTimeFormatter({
   return {
     formatDate,
     formatDateTime: (date: Date) => `${formatDate(date)}, ${time.format(date)}`,
+    formatMonthYear: (date: Date) => monthYear.format(date),
     formatRelativeDay,
     formatTime: (date: Date) => time.format(date),
     timezone,

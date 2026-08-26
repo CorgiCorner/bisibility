@@ -13,7 +13,7 @@ describe("KeywordInlineEditTextField", () => {
 
     expect(screen.getByRole("textbox", { name: "Keyword" })).toHaveClass(
       "bg-transparent",
-      "border-border-strong",
+      "border-border-control",
     );
     expect(keywordGridSx).not.toHaveProperty("& .MuiDataGrid-row:hover");
   });

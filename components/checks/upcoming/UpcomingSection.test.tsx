@@ -41,9 +41,9 @@ describe("UpcomingSection", () => {
 
     expect(screen.getByText("Upcoming")).toBeInTheDocument();
     expect(screen.getByText("Forecast")).toBeInTheDocument();
-    const iconWell = screen.getByText("Upcoming").closest("div")?.previousElementSibling;
-    expect(iconWell).toHaveClass("bg-accent-soft", "text-accent-solid");
-    expect(iconWell).not.toHaveClass("bg-bg-sunken", "text-accent-text");
+    const header = screen.getByText("Forecast").parentElement;
+    expect(header).toHaveClass("border-b");
+    expect(header?.querySelector(".h-9.w-9")).toBeNull();
     expect(screen.getByText("214 checks")).toBeInTheDocument();
     expect(screen.getByText("~$0.45 est.")).toBeInTheDocument();
     expect(screen.getByText("flow dictation app")).toBeInTheDocument();
@@ -159,5 +159,19 @@ describe("UpcomingSection", () => {
       "href",
       "/app/rank-tracker",
     );
+  });
+  it("omits a zero-cost budget forecast", () => {
+    render(
+      <UpcomingSection
+        {...sharedProps}
+        view={{
+          ...upcomingUnblockedView,
+          forecast: { capCents: 5_000, capLastsUntil: null, next48hCents: 0, spentCents: 0 },
+        }}
+      />,
+    );
+
+    expect(screen.queryByText(/Forecast for scheduled checks/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/no projected end date/)).not.toBeInTheDocument();
   });
 });

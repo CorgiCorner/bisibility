@@ -24,7 +24,7 @@ type ManagedCompetitorControlsProps = {
 };
 
 const iconButtonClass =
-  "grid h-7 w-7 place-items-center rounded-lg border border-border-strong bg-bg-elev text-fg-muted outline-none transition-colors hover:border-accent hover:text-accent-text focus-visible:border-accent focus-visible:text-accent-text disabled:opacity-50";
+  "grid h-7 w-7 place-items-center rounded-control border border-border-control bg-bg-elev text-fg-muted outline-none transition-colors hover:border-accent hover:text-accent-text focus-visible:border-accent focus-visible:text-accent-text disabled:opacity-50";
 
 export function ManagedCompetitorControls({
   canDelete,
@@ -93,7 +93,7 @@ export function ManagedCompetitorControls({
         <span className="flex items-center gap-1.5">
           <input
             aria-label="Competitor label"
-            className="h-8 min-w-0 flex-1 rounded-lg border border-border-strong bg-transparent px-2.5 text-[12.5px] font-medium text-fg outline-none focus:border-accent"
+            className="h-8 min-w-0 flex-1 rounded-control border border-border-control bg-transparent px-2.5 text-[12.5px] font-medium text-fg outline-none focus:border-accent"
             {...register("label")}
           />
           <button

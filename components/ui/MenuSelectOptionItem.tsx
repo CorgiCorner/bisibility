@@ -1,12 +1,13 @@
 "use client";
 
+import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import MenuItem from "@mui/material/MenuItem";
 import { CheckIcon as Check } from "@phosphor-icons/react";
 import type { MenuSelectOption } from "./menu-select-support";
 import { Tooltip } from "./Tooltip";
 
 export const menuSelectRowSx = {
-  borderRadius: "9px",
+  borderRadius: UI_RADIUS_ROLES.control,
   color: "var(--fg-muted)",
   fontSize: "13px",
   gap: "12px",

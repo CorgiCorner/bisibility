@@ -38,7 +38,6 @@ describe("KeywordPendingModules", () => {
     const positionCard = screen.getByText("Position").closest(".rounded-card");
     expect(positionCard).not.toBeNull();
     expect(positionCard).toHaveClass("rounded-card");
-    expect(positionCard).not.toHaveClass("rounded-" + "[14px]");
     expect(positionCard).toHaveStyle({ padding: "15px 16px" });
   });
 
@@ -50,7 +49,6 @@ describe("KeywordPendingModules", () => {
       .closest(".MuiPaper-root");
     expect(chartCard).not.toBeNull();
     expect(chartCard).toHaveClass("rounded-card");
-    expect(chartCard).not.toHaveClass("rounded-card-lg");
-    expect(chartCard).toHaveStyle({ borderRadius: "14px" });
+    expect(chartCard).toHaveStyle({ borderRadius: "12px" });
   });
 });

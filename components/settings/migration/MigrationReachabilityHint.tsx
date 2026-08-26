@@ -27,10 +27,10 @@ export function MigrationReachabilityHint({
         ? "Use the generated HTTPS URL as the Destination URL on the source, and keep the command running until the transfer finishes."
         : "Paste the generated HTTPS URL here and keep the command running until the transfer finishes.";
     return (
-      <div className="rounded-[10px] border border-border bg-bg-sunken px-3.5 py-3 text-[12.5px] leading-[1.5] text-fg-muted">
+      <div className="rounded-control border border-border bg-bg-sunken px-3.5 py-3 text-[12.5px] leading-[1.5] text-fg-muted">
         <div className="font-semibold text-fg">Running locally?</div>
         <p className="m-0 mt-1">Create a temporary public URL with Cloudflare Quick Tunnel:</p>
-        <div className="mt-2 flex items-center gap-2 rounded-[9px] border border-border bg-bg px-2.5 py-2">
+        <div className="mt-2 flex items-center gap-2 rounded-control border border-border bg-bg px-2.5 py-2">
           <code className="min-w-0 flex-1 wrap-break-word font-mono text-[11.5px] font-medium text-fg">
             {command}
           </code>

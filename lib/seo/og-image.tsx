@@ -1,5 +1,6 @@
 import { OpenGraphBrandLockup } from "@/lib/seo/og-brand-lockup";
 import { LICENSE } from "@/lib/site/site";
+import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import { ImageResponse } from "next/og";
 
 export const ogImageSize = {
@@ -40,7 +41,7 @@ export function createContentOpenGraphImage({ description, label, title }: Conte
       <div
         style={{
           border: "2px solid #ddd8cc",
-          borderRadius: "28px",
+          borderRadius: UI_RADIUS_ROLES.card,
           display: "flex",
           flexDirection: "column",
           gap: "30px",
@@ -56,7 +57,7 @@ export function createContentOpenGraphImage({ description, label, title }: Conte
             style={{
               background: "#fff8ee",
               border: "2px solid #ddd8cc",
-              borderRadius: "999px",
+              borderRadius: "9999px",
               color: "#f1511c",
               display: "flex",
               fontSize: 22,

@@ -57,7 +57,7 @@ export function BackupExportCard({ exportBackup, projectId }: Readonly<BackupExp
       id="backup"
       title="Export project data"
     >
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[11px] border border-border bg-bg-sunken px-3.5 py-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-control border border-border bg-bg-sunken px-3.5 py-3">
         <div className="min-w-0">
           <div className="text-[12.5px] font-semibold text-fg">Project package</div>
           <div className="mt-0.5 text-[11.5px] text-fg-muted">

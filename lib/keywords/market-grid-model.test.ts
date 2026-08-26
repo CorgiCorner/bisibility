@@ -13,6 +13,8 @@ function target(overrides: Partial<KeywordRow> & { id: string }): KeywordRow {
     clicks: null,
     cpc: "0.00",
     createdAt: "2026-08-01T00:00:00.000Z",
+    dataAsOfAt: "2026-01-01T00:00:00.000Z",
+    dataProvider: "primary",
     ctr: null,
     device: "Desktop",
     difficulty: 32,
@@ -23,7 +25,9 @@ function target(overrides: Partial<KeywordRow> & { id: string }): KeywordRow {
     intent: null,
     keyword: "seo platform",
     lastCheckAt: "2026-08-13T12:00:00.000Z",
+    lastCheckErrorCode: null,
     lastCheckStatus: "completed",
+    latestAttemptHealth: "ok",
     location: {
       canonicalKey: "country:us@en",
       cityName: null,

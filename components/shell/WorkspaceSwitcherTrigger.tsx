@@ -9,7 +9,7 @@ import type { MouseEvent } from "react";
 export type WorkspaceTriggerVariant = "boxed" | "ghost";
 
 const VARIANT_BORDER: Record<WorkspaceTriggerVariant, string> = {
-  boxed: "border-border-strong",
+  boxed: "border-border-control",
   ghost: "border-transparent",
 };
 
@@ -56,14 +56,18 @@ export function WorkspaceSwitcherTrigger({
       ].join(" ");
 
   return (
-    <Tooltip placement="right" content={collapsed ? "Switch project" : ""}>
+    <Tooltip
+      content={collapsed ? "Switch project" : ""}
+      placement="right"
+      wrapperClassName={collapsed ? undefined : "w-full"}
+    >
       <button
         aria-controls={open ? menuId : undefined}
         aria-expanded={open}
         aria-haspopup="menu"
         aria-label="Switch project"
         className={[
-          "group flex items-center rounded-[10px] border text-left text-[13.5px] text-fg transition-colors",
+          "group flex items-center rounded-control border text-left text-[13.5px] text-fg transition-colors",
           // The focus ring belongs to both modes. It used to sit only in the expanded branch,
           // so a keyboard user on the collapsed rail got outline-none and nothing back.
           "focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-solid",

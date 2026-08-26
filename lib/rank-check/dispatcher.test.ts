@@ -139,6 +139,10 @@ describe("claimDueRankChecks", () => {
     expect(sql).toContain("WHEN ks.id IS NOT NULL THEN ks.frequency");
     expect(sql).toContain('owner."deactivatedAt" IS NULL');
     expect(sql).toContain("p.\"writeMode\" = 'active'");
+    expect(sql).toContain("NULLIF(BTRIM(p.domain), '') IS NOT NULL");
+    expect(sqlText(mocks.queryRaw.mock.calls[0])).toContain(
+      "NULLIF(BTRIM(p.domain), '') IS NOT NULL",
+    );
     expect(sql).toContain("IN ('daily', 'weekly', 'monthly', 'custom_cron')");
   });
 

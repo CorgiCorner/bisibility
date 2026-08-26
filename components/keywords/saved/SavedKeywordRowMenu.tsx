@@ -2,6 +2,7 @@
 
 import { useToast } from "@/components/ui";
 import type { SavedKeywordRow } from "@/lib/saved-keywords/model";
+import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import IconButton from "@mui/material/IconButton";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
@@ -78,7 +79,7 @@ export function SavedKeywordRowMenu({
             sx: {
               backgroundColor: "var(--bg-elev)",
               border: "1px solid var(--border)",
-              borderRadius: "11px",
+              borderRadius: UI_RADIUS_ROLES.control,
               minWidth: 210,
               padding: "6px",
             },

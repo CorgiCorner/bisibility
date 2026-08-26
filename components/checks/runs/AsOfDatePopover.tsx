@@ -2,6 +2,7 @@
 
 import { Calendar } from "@/components/ui";
 import { zonedDateInputValue } from "@/lib/checks/date-boundary";
+import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import Popover from "@mui/material/Popover";
 
 type AsOfDatePopoverProps = {
@@ -41,7 +42,7 @@ export function AsOfDatePopover({
           sx: {
             backgroundColor: "var(--bg-elev)",
             border: "1px solid var(--border)",
-            borderRadius: "12px",
+            borderRadius: UI_RADIUS_ROLES.card,
             boxShadow: "none",
             marginTop: "6px",
             overflow: "hidden",

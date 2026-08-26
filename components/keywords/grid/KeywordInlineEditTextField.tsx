@@ -32,7 +32,7 @@ export function KeywordInlineEditTextField({
       <Input
         aria-label={label}
         className={cn(
-          "min-h-10 rounded-lg px-3 text-[13px] font-medium normal-case tracking-normal",
+          "min-h-10 rounded-control px-3 text-[13px] font-medium normal-case tracking-normal",
           mono ? "font-mono" : "font-sans",
         )}
         {...inputProps}

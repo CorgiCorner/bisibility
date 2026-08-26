@@ -19,7 +19,9 @@ export type WorkspaceTileProps = {
 
 /**
  * A project is identified by its domain, so the tile shows its real favicon and the SAME object
- * appears in the trigger and in every menu row. It never encodes selected/active state.
+ * appears in the trigger and in every menu row. Its fixed white surface keeps transparent
+ * favicon pixels from revealing the fallback glyph in either color scheme. It never encodes
+ * selected/active state.
  */
 export function WorkspaceTile({
   className = "",
@@ -31,7 +33,7 @@ export function WorkspaceTile({
   return (
     <span
       aria-hidden
-      className={`relative grid h-7 w-7 flex-none place-items-center overflow-hidden border border-border-strong bg-bg-elev font-mono text-[12px] font-semibold leading-none text-fg-muted ${className}`}
+      className={`relative grid h-7 w-7 flex-none place-items-center overflow-hidden border border-border-strong bg-white font-mono text-[12px] font-semibold leading-none text-neutral-800 ${className}`}
       style={{ borderRadius: `${radius}px` }}
     >
       {workspaceTileLetter(domain)}

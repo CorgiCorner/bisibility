@@ -11,6 +11,7 @@ import {
 import { Avatar, useToast } from "@/components/ui";
 import { authClient } from "@/lib/auth/client";
 import { initials as avatarInitials } from "@/lib/avatar/initials";
+import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import Divider from "@mui/material/Divider";
 import Menu from "@mui/material/Menu";
 import { useState } from "react";
@@ -18,7 +19,7 @@ import { useState } from "react";
 const PAPER_SX = {
   backgroundColor: "var(--bg-elev)",
   border: "1px solid var(--border)",
-  borderRadius: "13px",
+  borderRadius: UI_RADIUS_ROLES.card,
   boxShadow: "none",
   color: "var(--fg)",
   marginTop: "6px",
@@ -97,7 +98,7 @@ export function UserMenu({
       <div className="flex items-center gap-2.5 px-[9px] pb-[11px] pt-[9px]">
         <Avatar
           alt=""
-          className="grid h-8.5 w-[34px] flex-none place-items-center rounded-[9px] bg-accent-solid font-mono text-xs font-semibold text-accent-on-solid"
+          className="grid h-8.5 w-[34px] flex-none place-items-center rounded-control bg-accent-solid font-mono text-xs font-semibold text-accent-on-solid"
           initials={initials}
           src={avatarUrl}
         />

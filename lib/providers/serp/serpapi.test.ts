@@ -615,13 +615,19 @@ describe("serpApiProvider", () => {
     expect(fetchMock).toHaveBeenCalledTimes(3);
   });
 
-  it("checks account balance with the api_key query parameter", async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValue(jsonResponse({ plan_searches_left: 17, total_searches_left: 23 }));
+  it("checks account balance and total capacity with the api_key query parameter", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      jsonResponse({
+        extra_credits: 6,
+        plan_searches_left: 17,
+        searches_per_month: 20,
+        total_searches_left: 23,
+      }),
+    );
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(serpApiProvider.testConnection({ apiKey: "serp-key" })).resolves.toEqual({
+      availabilityTotal: 26,
       balance: 23,
       message: "Connected.",
       ok: true,
@@ -630,6 +636,51 @@ describe("serpApiProvider", () => {
     const requestedUrl = new URL(String(fetchMock.mock.calls[0][0]));
     expect(requestedUrl.origin + requestedUrl.pathname).toBe("https://serpapi.com/account.json");
     expect(requestedUrl.searchParams.get("api_key")).toBe("serp-key");
+  });
+
+  it("uses monthly searches as capacity when extra credits are absent", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(jsonResponse({ searches_per_month: 250, total_searches_left: 222 })),
+    );
+
+    await expect(serpApiProvider.testConnection({ apiKey: "serp-key" })).resolves.toEqual({
+      availabilityTotal: 250,
+      balance: 222,
+      message: "Connected.",
+      ok: true,
+    });
+  });
+
+  it("keeps plan balance without inferring capacity and rejects invalid quota values", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse({
+          extra_credits: -5,
+          plan_searches_left: 17,
+          searches_per_month: Number.POSITIVE_INFINITY,
+          total_searches_left: -1,
+        }),
+      ),
+    );
+
+    await expect(serpApiProvider.testConnection({ apiKey: "serp-key" })).resolves.toEqual({
+      balance: 17,
+      message: "Connected.",
+      ok: true,
+    });
+  });
+
+  it("keeps successful connections backwards compatible when quota data is absent", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({})));
+
+    await expect(serpApiProvider.testConnection({ apiKey: "serp-key" })).resolves.toEqual({
+      message: "Connected.",
+      ok: true,
+    });
   });
 
   it("redacts the api key from provider errors", async () => {

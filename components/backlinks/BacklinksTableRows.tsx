@@ -65,10 +65,10 @@ function Flags({ row }: Readonly<{ row: Pick<BacklinksRow, "flags" | "lostAt" | 
       ) : null}
       {row.flags.map((flag) => (
         <span
-          className={`rounded-[5px] border px-1.5 py-px font-mono text-[10px] ${
+          className={`rounded-control border px-1.5 py-px font-mono text-[10px] ${
             flag === "sitewide"
               ? "border-yellow/60 text-yellow-text"
-              : "border-border-strong text-fg-muted"
+              : "border-border text-fg-muted"
           }`}
           key={flag}
         >
@@ -261,7 +261,7 @@ export function BacklinksRows({
 export function BacklinksColumnHeaders() {
   return (
     <div
-      className={`grid ${columns} items-center gap-2 border-b border-border-strong px-4 py-2 font-medium ${tableHeaderClassName}`}
+      className={`grid ${columns} items-center gap-2 border-b border-border px-4 py-2 font-medium ${tableHeaderClassName}`}
     >
       <span />
       <span>Source</span>

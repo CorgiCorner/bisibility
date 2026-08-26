@@ -19,6 +19,19 @@ export function resolveNextOutput(env: Record<string, string | undefined>) {
   return env.AMPLIFY_HOSTING || env.VERCEL ? undefined : "standalone";
 }
 
+export function isNextBuildMemoryCapped(env: Record<string, string | undefined>) {
+  return Boolean(env.AMPLIFY_HOSTING || env.VERCEL || env.CI || env.NEXT_BUILD_MEMORY_CAPPED);
+}
+
+export function resolveNextBuildCpus(env: Record<string, string | undefined>) {
+  return isNextBuildMemoryCapped(env) ? 2 : undefined;
+}
+
+// Hosting targets that need a config branch. Railway, Fly, and Render all run the Docker
+// image, so they are the unflagged default rather than a flag of their own.
+// Every build that runs under a pinned `--max-old-space-size=4096` (amplify.yml and
+// scripts/ci/node-memory-limit.mjs both set it) has to keep the worker cap below. A local
+// dev run has no such cap and should not pay for one.
 const nextConfig: NextConfig = {
   // Release E2E intentionally reaches the dev server through the IPv4 loopback address.
   // Next 16 blocks that origin unless it is explicitly allowlisted.
@@ -27,10 +40,27 @@ const nextConfig: NextConfig = {
   // hand-written AGENTS.md carrying the private agent instructions, and a dev or build
   // run overwrote it.
   agentRules: false,
-  // Keep managed 8 GB builds below their process limit. More workers made page-data
-  // collection fail with spawn ENOMEM and forced the 2.5x compute rate as a workaround.
   experimental: {
-    cpus: 2,
+    // Keep managed 8 GB builds below their process limit. More workers made page-data
+    // collection fail with spawn ENOMEM and forced the 2.5x compute rate as a workaround.
+    // The cap is a build-time constraint, so a dev run keeps the full worker pool.
+    cpus: resolveNextBuildCpus(process.env),
+    // Next already optimizes a default barrel list that covers `@mui/material`, but not
+    // these. Phosphor is the expensive one: 57 MB and ~4.5k modules behind a barrel that
+    // 322 files import, and dev builds never tree-shake it away. The `/dist/ssr` subpath
+    // needs its own entry because the option does not accept wildcards.
+    optimizePackageImports: [
+      "@phosphor-icons/react",
+      "@phosphor-icons/react/dist/ssr",
+      "@mui/x-data-grid",
+      "@mui/x-charts",
+    ],
+  },
+  // Turbopack infers the project root from the nearest lockfile and finds one in the parent
+  // workspace directory, outside this repository, which makes it warn and widen the file
+  // watching scope. Pinning the root to this directory keeps inference out of the picture.
+  turbopack: {
+    root: import.meta.dirname,
   },
   distDir: resolveNextDistDir(process.env.NEXT_DIST_DIR),
   outputFileTracingIncludes: {
@@ -95,7 +125,11 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  // Managed SSR hosts need the native `.next` output; standalone is Docker only.
+  // `standalone` exists for the Docker targets (Railway, Fly, Render) whose runner image
+  // starts `.next/standalone/server.js`. Amplify's managed SSR build and Vercel's builder
+  // both consume the default `.next` output and never read the standalone tree, so neither
+  // should pay to produce it. deploy/README.md records that Vercel deliberately runs with no
+  // `vercel.json` override, which leaves this line as the only place that distinction lives.
   output: resolveNextOutput(process.env),
 };
 

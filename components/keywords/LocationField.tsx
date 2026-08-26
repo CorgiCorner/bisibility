@@ -13,9 +13,11 @@ import {
   useLocationSearch,
 } from "@/components/keywords/location-picker-data";
 import { FieldLabel, Input } from "@/components/ui";
+import { cn } from "@/lib/ui/cn";
 import Popper from "@mui/material/Popper";
-import { MapPinIcon as MapPin } from "@phosphor-icons/react";
+import { CaretDownIcon as CaretDown, MapPinIcon as MapPin } from "@phosphor-icons/react";
 import { type FocusEvent, useId, useRef, useState } from "react";
+import { CountryFlag } from "./CountryFlag";
 import { LocationResults, locationOptionDomId } from "./location-field-results";
 
 export type { LocationFieldValue };
@@ -32,8 +34,8 @@ type LocationFieldProps = {
   /** Keep the label for screen readers only - for compact single-row layouts. */
   labelHidden?: boolean;
   placeholder?: string;
-  /** "form" is the drawer/form field look; "toolbar" matches the compact toolbar controls. */
-  variant?: "form" | "toolbar";
+  /** "form" is the drawer/form field look; "toolbar" is compact; "research" matches its market control. */
+  variant?: "form" | "toolbar" | "research";
   controlClassName?: string;
 };
 
@@ -139,11 +141,19 @@ export function LocationField({
       />
       <div>
         <span className="relative flex items-center" ref={anchorRef}>
-          <MapPin
-            className="pointer-events-none absolute left-2.5 text-fg-muted"
-            size={14}
-            weight="bold"
-          />
+          {variant === "research" ? (
+            <CountryFlag
+              className="pointer-events-none absolute left-2.5 h-3 w-4 rounded-[2px] shadow-sm"
+              code={value.countryCode}
+              fallback="globe"
+            />
+          ) : (
+            <MapPin
+              className="pointer-events-none absolute left-2.5 text-fg-muted"
+              size={14}
+              weight="bold"
+            />
+          )}
           <Input
             aria-activedescendant={
               normalizedActiveIndex >= 0
@@ -155,7 +165,7 @@ export function LocationField({
             aria-expanded={visible}
             aria-label={label}
             autoComplete="off"
-            className={`${fieldClass} ${controlClassName ?? ""} normal-case tracking-normal`}
+            className={cn(fieldClass, controlClassName, "normal-case tracking-normal")}
             disabled={disabled}
             id={`${prefix}-location`}
             onChange={(event) => handleInput(event.target.value)}
@@ -166,6 +176,16 @@ export function LocationField({
             value={currentInput}
           />
           {draft !== null ? <LocationClearButton onClick={clearDraft} /> : null}
+          {draft === null && variant === "research" ? (
+            <CaretDown
+              aria-hidden
+              className="pointer-events-none absolute right-3 text-fg-muted"
+              data-location-field-caret
+              data-testid="location-field-caret"
+              size={11}
+              weight="bold"
+            />
+          ) : null}
         </span>
         <Popper
           anchorEl={anchorRef.current}

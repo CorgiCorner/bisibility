@@ -25,10 +25,11 @@ describe("WorkspaceTile", () => {
     expect(container.innerHTML).not.toContain("logo.dev");
   });
 
-  it("paints an opaque favicon layer that covers the fallback glyph by stacking contract", () => {
+  it("paints a fixed white favicon surface that covers the fallback glyph", () => {
     render(<WorkspaceTile domain="example.com" />);
 
     expect(screen.getByText("e")).toBeInTheDocument();
+    expect(screen.getByText("e")).toHaveClass("text-neutral-800");
     const probe = screen.getByTestId("workspace-tile-favicon-probe");
     Object.defineProperties(probe, {
       naturalHeight: { configurable: true, value: 32 },
@@ -37,7 +38,7 @@ describe("WorkspaceTile", () => {
     fireEvent.load(probe);
 
     const layer = screen.getByTestId("workspace-tile-favicon");
-    expect(layer).toHaveClass("bg-bg-sunken");
+    expect(layer).toHaveClass("bg-white");
     expect(layer).toHaveStyle({
       backgroundImage: 'url("https://www.google.com/s2/favicons?domain=example.com&sz=32")',
       backgroundSize: "cover",
@@ -69,11 +70,12 @@ describe("WorkspaceTile", () => {
     expect(screen.queryByTestId("workspace-tile-favicon")).not.toBeInTheDocument();
   });
 
-  it("keeps its letter without a domain request when opted out", () => {
+  it("keeps a fixed white fallback surface without a domain request when opted out", () => {
     vi.stubEnv("NEXT_PUBLIC_DOMAIN_ICONS", "off");
-    render(<WorkspaceTile domain="example.com" />);
+    const { container } = render(<WorkspaceTile domain="example.com" />);
 
     expect(screen.getByText("e")).toBeInTheDocument();
+    expect(container.firstElementChild).toHaveClass("bg-white");
     expect(screen.queryByTestId("workspace-tile-favicon-probe")).not.toBeInTheDocument();
     expect(screen.queryByTestId("workspace-tile-favicon")).not.toBeInTheDocument();
   });

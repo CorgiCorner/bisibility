@@ -62,7 +62,7 @@ export function MatchScopeCard({ domain }: Readonly<MatchScopeCardProps>) {
           ))}
         </div>
       ) : (
-        <div className="mt-5 rounded-[9px] border border-dashed border-border-strong bg-bg-sunken px-3 py-3">
+        <div className="mt-5 rounded-control border border-dashed border-border bg-bg-sunken px-3 py-3">
           <p className="m-0 text-[13px] font-semibold text-fg">Set a domain first</p>
           <p className="m-0 mt-1 text-[12px] leading-[1.55] text-fg-muted">
             Add the project domain in General to see which SERP results count as a match.

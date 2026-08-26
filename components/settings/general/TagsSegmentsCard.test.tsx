@@ -14,6 +14,22 @@ describe("TagsSegmentsCard", () => {
     vi.clearAllMocks();
   });
 
+  it("uses medium emphasis for the secondary add affordance", () => {
+    render(
+      <TagsSegmentsCard
+        canCreate
+        canDelete
+        createTag={vi.fn()}
+        deleteTag={vi.fn()}
+        projectId="prj_7Kd2Qf9m"
+        tags={tags}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Add tag" })).toHaveClass("font-medium");
+    expect(screen.getByRole("button", { name: "Add tag" })).not.toHaveClass("font-semibold");
+  });
+
   it("keeps tag additions local until the card Save is used", async () => {
     const user = userEvent.setup();
     const createTag = vi.fn().mockResolvedValue({ ok: true, value: { created: true } });
@@ -67,5 +83,28 @@ describe("TagsSegmentsCard", () => {
     await waitFor(() =>
       expect(deleteTag).toHaveBeenCalledWith({ name: "product", projectId: "prj_7Kd2Qf9m" }),
     );
+  });
+  it("centers the remove glyph within its circular target", () => {
+    render(
+      <TagsSegmentsCard
+        canCreate
+        canDelete
+        createTag={vi.fn()}
+        deleteTag={vi.fn()}
+        projectId="prj_7Kd2Qf9m"
+        tags={tags}
+      />,
+    );
+
+    const button = screen.getByRole("button", { name: "Remove product" });
+    expect(button).toHaveClass(
+      "inline-flex",
+      "items-center",
+      "justify-center",
+      "p-0",
+      "leading-none",
+    );
+    expect(button.querySelector("svg")).toHaveClass("block", "shrink-0");
+    expect(button.querySelector("svg")).not.toHaveClass("-translate-y-px");
   });
 });

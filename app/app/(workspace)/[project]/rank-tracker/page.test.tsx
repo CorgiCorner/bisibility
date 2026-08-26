@@ -1,16 +1,19 @@
 import { checkRunsFixtureView } from "@/components/checks/runs/check-runs-fixtures";
 import { upcomingViewFixture } from "@/components/checks/upcoming/upcoming-fixtures";
 import type { RankTrackerAction } from "@/lib/keywords/rank-tracker-command";
+import { redirect } from "@/tests/next-navigation";
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import KeywordsPage from "./page";
 
 const mocks = vi.hoisted(() => ({
   getCheckHealth: vi.fn(),
+  getCheckRunCount: vi.fn(),
   getCheckRunsView: vi.fn(),
   getKeywordCount: vi.fn(),
   getKeywordDefaultMarket: vi.fn(),
   getKeywordRows: vi.fn(),
+  getRankTrackerKeywordList: vi.fn(),
   getKeywordTagSuggestions: vi.fn(),
   getPreferences: vi.fn(),
   getProjectCostContext: vi.fn(),
@@ -29,11 +32,17 @@ const mocks = vi.hoisted(() => ({
 let capturedInitialAction: RankTrackerAction | null | undefined;
 let capturedInitialAddOpen: boolean | undefined;
 let capturedInitialDensity: string | undefined;
+let capturedGridProps: Record<string, unknown> = {};
 
 vi.mock("@/components/rank-tracker/RankTrackerTabs", () => ({
-  RankTrackerTabs: (props: { activeTab: string; savedCount: number; trackedCount: number }) => (
+  RankTrackerTabs: (props: {
+    activeTab: string;
+    checksCount: number;
+    savedCount: number;
+    trackedCount: number;
+  }) => (
     <div data-testid="rank-tracker-tabs">
-      {props.activeTab}:{props.trackedCount}:{props.savedCount}
+      {props.activeTab}:{props.trackedCount}:{props.savedCount}:{props.checksCount}
     </div>
   ),
 }));
@@ -49,7 +58,9 @@ vi.mock("@/components/keywords/grid/KeywordsGrid", () => ({
     initialAction?: RankTrackerAction | null;
     initialAddOpen?: boolean;
     initialDensity?: string;
+    [key: string]: unknown;
   }) => {
+    capturedGridProps = props;
     capturedInitialAction = props.initialAction;
     capturedInitialAddOpen = props.initialAddOpen;
     capturedInitialDensity = props.initialDensity;
@@ -75,6 +86,7 @@ vi.mock("@/lib/queries/_auth", () => ({
 vi.mock("@/lib/queries/account", () => ({ getPreferences: mocks.getPreferences }));
 vi.mock("@/lib/queries/check-health", () => ({ getCheckHealth: mocks.getCheckHealth }));
 vi.mock("@/lib/queries/check-runs", () => ({
+  getCheckRunCount: mocks.getCheckRunCount,
   getCheckRunsView: mocks.getCheckRunsView,
   getUpcomingView: mocks.getUpcomingView,
 }));
@@ -90,6 +102,9 @@ vi.mock("@/lib/queries/keywords", () => ({
   getKeywordRows: mocks.getKeywordRows,
   getKeywordTagSuggestions: mocks.getKeywordTagSuggestions,
   KEYWORD_LIST_MAX: 1000,
+}));
+vi.mock("@/lib/queries/rank-tracker-list", () => ({
+  getRankTrackerKeywordList: mocks.getRankTrackerKeywordList,
 }));
 vi.mock("@/lib/queries/project-markets", () => ({
   getProjectMarkets: mocks.getProjectMarkets,
@@ -118,15 +133,20 @@ async function renderPage(searchParams: Record<string, string | string[] | undef
 describe("KeywordsPage tabs", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    redirect.mockImplementation((href: string) => {
+      throw new Error(`NEXT_REDIRECT:${href}`);
+    });
     capturedInitialAction = undefined;
     capturedInitialAddOpen = undefined;
     capturedInitialDensity = undefined;
+    capturedGridProps = {};
     mocks.resolveProjectAccess.mockResolvedValue({
       mode: "member",
       projectId: "project_1",
       publicId: "prj_1",
     });
     mocks.getCheckHealth.mockResolvedValue({ budget: {}, providerConnected: true });
+    mocks.getCheckRunCount.mockResolvedValue(12_480);
     mocks.getCheckRunsView.mockResolvedValue(checkRunsFixtureView);
     mocks.getKeywordCount.mockResolvedValue(9);
     mocks.getKeywordDefaultMarket.mockResolvedValue({
@@ -138,6 +158,18 @@ describe("KeywordsPage tabs", () => {
       source: "explicit",
     });
     mocks.getKeywordRows.mockResolvedValue([]);
+    mocks.getRankTrackerKeywordList.mockResolvedValue({
+      facets: { intents: [], positions: [], tags: [], topics: [] },
+      locations: [],
+      matchedTargetCount: 0,
+      page: 1,
+      pageCount: 0,
+      pageSize: 25,
+      resolvedLens: { device: "desktop", locationId: null },
+      rows: [],
+      totalCount: 9,
+    });
+
     mocks.getKeywordTagSuggestions.mockResolvedValue([]);
     mocks.getProjectCostContext.mockResolvedValue({ costPerCheckCents: 1 });
     mocks.getProjectMarkets.mockResolvedValue({
@@ -171,16 +203,66 @@ describe("KeywordsPage tabs", () => {
   it("keeps Tracked as the default branch and renders both counts", async () => {
     await renderPage({});
 
-    expect(screen.getByTestId("rank-tracker-tabs")).toHaveTextContent("tracked:0:2");
+    expect(screen.getByTestId("rank-tracker-tabs")).toHaveTextContent("tracked:9:2:12480");
     expect(screen.getByTestId("tracked-grid")).toBeInTheDocument();
     expect(screen.queryByTestId("saved-workspace")).not.toBeInTheDocument();
     expect(capturedInitialAction).toBeNull();
     expect(capturedInitialDensity).toBe("standard");
-    expect(mocks.getKeywordRows).toHaveBeenCalledWith("prj_1");
+    expect(mocks.getRankTrackerKeywordList).toHaveBeenCalledWith({
+      projectRef: "prj_1",
+      query: expect.objectContaining({ grouped: false, page: 1 }),
+    });
+    expect(mocks.getKeywordRows).not.toHaveBeenCalled();
+    expect(capturedGridProps.listMode).toBe("flat-server");
     expect(mocks.getCheckHealth).toHaveBeenCalledWith("prj_1");
     expect(mocks.isProviderConnected).toHaveBeenCalledWith("prj_1", "gsc");
     expect(mocks.getProjectCostContext).toHaveBeenCalledWith("prj_1");
     expect(mocks.requireReadableProject).toHaveBeenCalledWith("prj_1");
+  });
+
+  it("uses the grouped client fallback only when grouped is explicit", async () => {
+    mocks.getKeywordRows.mockResolvedValue([]);
+    await renderPage({ grouped: "1" });
+
+    expect(mocks.getKeywordRows).toHaveBeenCalledWith("prj_1");
+    expect(mocks.getRankTrackerKeywordList).not.toHaveBeenCalled();
+    expect(capturedGridProps.listMode).toBe("grouped-client");
+  });
+
+  it("canonicalizes stale saved-view identity and preserves explicit and orthogonal state", async () => {
+    await expect(
+      renderPage({
+        action: "filter",
+        add: "1",
+        q: "",
+        tab: "tracked",
+        tags: "",
+        view: "viw_stale",
+      }),
+    ).rejects.toThrow("NEXT_REDIRECT:");
+    const href = String(redirect.mock.calls[0]?.[0]);
+    expect(href).not.toContain("view=");
+    expect(href).toContain("q=");
+    expect(href).toContain("tags=");
+    expect(href).toContain("tab=tracked");
+    expect(href).toContain("add=1");
+    expect(href).toContain("action=filter");
+  });
+
+  it("canonicalizes a stale location once and accepts the canonical reload", async () => {
+    await expect(
+      renderPage({ action: "filter", location: "stale", q: "kept", tab: "tracked" }),
+    ).rejects.toThrow("NEXT_REDIRECT:");
+    const href = String(redirect.mock.calls[0]?.[0]);
+    expect(href).toContain("location=");
+    expect(href).not.toContain("location=stale");
+    expect(href).toContain("q=kept");
+    expect(href).toContain("tab=tracked");
+    expect(href).toContain("action=filter");
+
+    redirect.mockClear();
+    await renderPage(Object.fromEntries(new URL(href, "https://example.com").searchParams));
+    expect(redirect).not.toHaveBeenCalled();
   });
 
   it("passes each validated action and rejects unknown input", async () => {
@@ -212,7 +294,7 @@ describe("KeywordsPage tabs", () => {
   it("renders the Checks branch for the ?tab=checks deep link", async () => {
     await renderPage({ tab: "checks" });
 
-    expect(screen.getByTestId("rank-tracker-tabs")).toHaveTextContent("checks:9:2");
+    expect(screen.getByTestId("rank-tracker-tabs")).toHaveTextContent("checks:9:2:12480");
     expect(screen.getByTestId("checks-workspace")).toHaveTextContent("prj_1:1");
     expect(screen.queryByTestId("tracked-grid")).not.toBeInTheDocument();
     expect(mocks.getCheckRunsView).toHaveBeenCalledWith(
@@ -224,5 +306,95 @@ describe("KeywordsPage tabs", () => {
       expect.objectContaining({ now: expect.any(Date) }),
     );
     expect(mocks.getRequestSerpProviderChain).toHaveBeenCalledWith("project_1");
+  });
+  it("redirects an out-of-range flat page to the last valid page", async () => {
+    mocks.getRankTrackerKeywordList.mockResolvedValueOnce({
+      facets: { intents: [], positions: [], tags: [], topics: [] },
+      locations: [],
+      matchedTargetCount: 51,
+      page: 6,
+      pageCount: 6,
+      pageSize: 10,
+      resolvedLens: { device: "desktop", locationId: null },
+      rows: [],
+      totalCount: 51,
+    });
+    await expect(
+      renderPage({
+        action: "filter",
+        add: "1",
+        page: "99",
+        pageSize: "10",
+        tags: "",
+        tab: "tracked",
+      }),
+    ).rejects.toThrow("NEXT_REDIRECT:");
+    expect(redirect).toHaveBeenCalledWith(expect.stringContaining("page=6"));
+    expect(redirect).toHaveBeenCalledWith(expect.stringContaining("tags="));
+    expect(redirect).toHaveBeenCalledWith(expect.stringContaining("action=filter"));
+  });
+
+  it("canonicalizes a zero-result page to one with full query semantics", async () => {
+    mocks.getSavedView.mockResolvedValueOnce({
+      canDelete: true,
+      config: {
+        filters: {
+          change: "any",
+          contains: "",
+          intents: [],
+          lastCheck: "any",
+          position: [],
+          serp: [],
+          tags: ["saved"],
+          topics: [],
+          urlChanged: false,
+          volMax: 50,
+          volMin: 0,
+          wrongUrl: false,
+        },
+        lens: { device: "desktop", locationId: null },
+        search: "saved",
+        surface: "keywords",
+        version: 1,
+      },
+      id: "viw_1",
+      name: "Saved",
+    });
+    await expect(
+      renderPage({
+        action: "filter",
+        add: "1",
+        page: "99",
+        q: "no matches",
+        tab: "tracked",
+        tags: "",
+        view: "viw_1",
+      }),
+    ).rejects.toThrow("NEXT_REDIRECT:");
+    const href = String(redirect.mock.calls[0]?.[0]);
+    expect(href).toContain("page=1");
+    expect(href).toContain("q=no+matches");
+    expect(href).toContain("tags=");
+    expect(href).toContain("view=viw_1");
+    expect(href).toContain("tab=tracked");
+    expect(href).toContain("add=1");
+    expect(href).toContain("action=filter");
+  });
+
+  it("canonicalizes a malformed device once while preserving URL semantics", async () => {
+    await expect(
+      renderPage({ action: "filter", add: "1", device: "tablet", q: "", tab: "tracked", tags: "" }),
+    ).rejects.toThrow("NEXT_REDIRECT:");
+    const href = String(redirect.mock.calls[0]?.[0]);
+    expect(href).toContain("device=desktop");
+    expect(href).toContain("q=");
+    expect(href).toContain("tags=");
+    expect(href).toContain("tab=tracked");
+    expect(href).toContain("add=1");
+    expect(href).toContain("action=filter");
+
+    redirect.mockClear();
+    await renderPage(Object.fromEntries(new URL(href, "https://example.com").searchParams));
+    expect(redirect).not.toHaveBeenCalled();
   });
 });

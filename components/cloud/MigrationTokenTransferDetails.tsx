@@ -54,7 +54,7 @@ export function MigrationTokenTransferDetails({
         Copy this token now. For security, it cannot be shown again after you refresh or leave this
         page.
       </p>
-      <div className="mt-4 overflow-hidden rounded-xl border border-border bg-bg-sunken">
+      <div className="mt-4 overflow-hidden rounded-card border border-border bg-bg-sunken">
         {destinationUrl ? <CopyRow label="Destination URL" value={destinationUrl} /> : null}
         <CopyRow label="Migration token" value={token.token} />
       </div>

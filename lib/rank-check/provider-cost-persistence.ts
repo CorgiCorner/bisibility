@@ -1,7 +1,8 @@
 import "server-only";
 
 import type { Prisma } from "@/lib/generated/prisma/client";
-import type { ProviderUsage } from "@/lib/provider-usage/tag";
+import { recordProviderUsage } from "@/lib/provider-usage/recorder";
+import type { ProviderRequestAttribution } from "@/lib/provider-usage/tag";
 
 export async function writeRankCheckProviderCostEntry(
   tx: Prisma.TransactionClient,
@@ -13,37 +14,46 @@ export async function writeRankCheckProviderCostEntry(
     provider: string;
     providerRequestId?: string;
     projectId?: string;
-    usage?: ProviderUsage;
+    usage?: ProviderRequestAttribution;
+    usageQuantity?: number | null;
   },
 ) {
-  if (!input.connectionId || !input.projectId || !input.costCents || input.costCents <= 0) {
-    return;
-  }
+  const costCents = input.costCents ?? 0;
+  const usageQuantity = input.usageQuantity ?? 0;
+  if (!input.connectionId || !input.projectId || (costCents <= 0 && usageQuantity <= 0)) return;
   if (!input.usage) {
     console.warn("Provider cost entry is missing its provider tag context.", {
       feature: "rank_check",
       projectId: input.projectId,
     });
+    await tx.providerCostEntry.createMany({
+      data: [
+        {
+          cached: false,
+          connectionId: input.connectionId,
+          costCents,
+          failed: input.failed,
+          feature: "rank_check",
+          keywordId: input.keywordId,
+          provider: input.provider,
+          providerRequestId: input.providerRequestId,
+          projectId: input.projectId,
+          usageQuantity: input.usageQuantity ?? undefined,
+        },
+      ],
+      skipDuplicates: true,
+    });
+    return;
   }
-  await tx.providerCostEntry.create({
-    data: {
-      cached: false,
-      connectionId: input.connectionId,
-      costCents: input.costCents,
-      failed: input.failed,
-      feature: "rank_check",
-      keywordId: input.keywordId,
-      provider: input.provider,
-      ...(input.providerRequestId ? { providerRequestId: input.providerRequestId } : {}),
-      projectId: input.projectId,
-      ...(input.usage
-        ? {
-            correlationId: input.usage.correlationId,
-            source: input.usage.source,
-            tag: input.usage.tag,
-            trigger: input.usage.trigger,
-          }
-        : {}),
-    },
+  await recordProviderUsage(tx, {
+    attribution: input.usage,
+    connectionId: input.connectionId,
+    costCents,
+    failed: input.failed,
+    keywordId: input.keywordId,
+    projectId: input.projectId,
+    provider: input.provider,
+    providerRequestId: input.providerRequestId,
+    usageQuantity: input.usageQuantity,
   });
 }

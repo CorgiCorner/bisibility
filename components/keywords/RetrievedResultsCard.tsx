@@ -43,7 +43,7 @@ function SummaryBar({
   rankingUrl,
 }: Readonly<{ position: number | null; rankingUrl: string | null }>) {
   return (
-    <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 rounded-[10px] bg-bg-sunken px-3.5 py-2.5">
+    <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 rounded-control bg-bg-sunken px-3.5 py-2.5">
       <Eyebrow>Your result</Eyebrow>
       <span className="font-mono text-[15px] font-semibold text-fg">
         {position === null ? "not found" : `#${position}`}
@@ -88,7 +88,7 @@ function OneCheck({
   const formatDate = dateFormatter(timeZone);
   if (results.tier === "none") {
     return (
-      <div className="rounded-[10px] border border-dashed border-border bg-bg-sunken p-4">
+      <div className="rounded-control border border-dashed border-border bg-bg-sunken p-4">
         <p className="m-0 text-[13px] font-semibold text-fg">No stored results for this check</p>
         <p className="m-0 mt-1 text-[12.5px] leading-[1.55] text-fg-muted">
           This check ran on {formatDate(results.checkedAt)}, before results were stored. Its
@@ -194,7 +194,7 @@ export function RetrievedResultsCard({
   const degraded = entries.find((entry) => entry.checkId === selected)?.degradedToCountry ?? false;
 
   return (
-    <Card className="overflow-visible rounded-[14px] p-0" size="lg">
+    <Card className="overflow-visible rounded-card p-0" size="lg">
       <div className="grid gap-3 border-b border-border px-5 py-4">
         <div className="min-w-0">
           <div className="flex items-center gap-2">

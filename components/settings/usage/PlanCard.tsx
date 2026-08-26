@@ -29,10 +29,7 @@ type PlanCardProps = {
 function SelfHostedPlan() {
   return (
     <div className="space-y-3" data-pricing-state="self-hosted">
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-[17px] font-semibold tracking-[-0.2px]">Self-hosted</span>
-        <StatusPill label="No app subscription" showDot={false} status="connected" />
-      </div>
+      <span className="block text-[17px] font-semibold tracking-[-0.2px]">Self-hosted</span>
       <p className="m-0 max-w-[640px] text-[13px] leading-[1.55] text-fg-muted">
         This instance runs on infrastructure you operate. Bisibility does not charge a subscription
         or per-keyword license fee for the self-hosted app.

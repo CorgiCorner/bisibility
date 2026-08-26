@@ -13,7 +13,7 @@ export default function PreferencesLoading() {
             <AccountLoadingBar className="h-4 w-[120px]" />
             <AccountLoadingBar className="h-3 w-[300px]" />
           </div>
-          <div className="rounded-[14px] border border-border bg-bg-elev p-5">
+          <div className="rounded-card border border-border bg-bg-elev p-5">
             <div className="flex flex-col gap-4">
               <div className="flex flex-wrap items-center justify-between gap-3.5">
                 <div className="flex min-w-0 flex-col gap-1">

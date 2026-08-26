@@ -1,5 +1,6 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { StepConnectGscCard } from "./StepConnectGscCard";
 import {
   clickContinue,
   clickTestConnection,
@@ -59,6 +60,19 @@ describe("StepConnectProvider", () => {
     expect(screen.getByLabelText("API key")).toBeInTheDocument();
     expect(screen.queryByLabelText("API login")).not.toBeInTheDocument();
     expect(screen.getByLabelText("API key").closest(".grid")).not.toHaveClass("sm:grid-cols-2");
+  });
+
+  it("keeps the Search Console option full width in a one-column grid", () => {
+    renderProviderStep({
+      analyticsOption: <StepConnectGscCard configured={false} />,
+    });
+
+    const card = screen.getByText("Search Console").closest("section");
+    if (!card) throw new Error("Search Console card was not rendered.");
+    const grid = card.parentElement;
+    expect(grid).toHaveClass("grid-cols-1");
+    expect(grid).not.toHaveClass("sm:grid-cols-2");
+    expect(card).toHaveClass("w-full");
   });
 
   it("selects from the whole radio card and then synchronizes the URL", () => {

@@ -77,6 +77,9 @@ function ResultTarget({ row }: Readonly<{ row: FirstCheckResultRow }>) {
 function resultsNote(state: FirstCheckRunState) {
   const failed = state.rows.filter((row) => row.status === "failed").length;
   if (state.status === "running") return "Live checks usually return within a minute.";
+  if (failed === 1 && state.rows.length === 1) {
+    return "The sample check failed. Retry it below.";
+  }
   if (failed > 0) {
     return `${failed} of ${state.rows.length} checks failed. Successful results are kept.`;
   }
@@ -90,7 +93,7 @@ export function FirstCheckResults({ onRetryFailed, state }: Readonly<FirstCheckR
   return (
     <div className="mt-4">
       {state.rows.length > 0 ? (
-        <div className="overflow-hidden rounded-xl border border-border">
+        <div className="overflow-hidden rounded-card border border-border">
           {state.rows.map((row, index) => (
             <div className={index % 2 === 0 ? "bg-bg-sunken" : "bg-bg-elev"} key={row.keywordId}>
               <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] items-center gap-3 px-4 py-3">

@@ -24,7 +24,7 @@ export type ApiKeyCreateModalProps = {
   projectId?: string;
 };
 
-const inputClass = `${inputClassName} mt-[7px] min-h-11 w-full rounded-[9px] px-[13px] font-mono text-[13.5px] font-medium`;
+const inputClass = `${inputClassName} mt-[7px] min-h-11 w-full rounded-control px-[13px] font-mono text-[13.5px] font-medium`;
 const labelClass = "font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted";
 
 export function ApiKeyCreateModal({
@@ -160,8 +160,8 @@ export function ApiKeyCreateModal({
                 return (
                   <label
                     className={cn(
-                      "flex cursor-pointer items-center gap-3 rounded-[11px] border-[1.5px] px-[13px] py-[11px]",
-                      active ? "border-accent bg-accent-soft" : "border-border-strong bg-bg-elev",
+                      "flex cursor-pointer items-center gap-3 rounded-control border-[1.5px] px-[13px] py-[11px]",
+                      active ? "border-accent bg-accent-soft" : "border-border-control bg-bg-elev",
                     )}
                     key={scope.value}
                   >
@@ -180,7 +180,7 @@ export function ApiKeyCreateModal({
                     <span
                       className={cn(
                         "grid h-[18px] w-[18px] flex-none place-items-center rounded-full border-[1.5px]",
-                        active ? "border-accent" : "border-border-strong",
+                        active ? "border-accent" : "border-border",
                       )}
                     >
                       <span

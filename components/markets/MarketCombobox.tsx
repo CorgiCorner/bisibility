@@ -1,5 +1,6 @@
 "use client";
 
+import { CountryFlag } from "@/components/keywords/CountryFlag";
 import { MenuSelect, type MenuSelectOption, type MenuSelectOptionGroup } from "@/components/ui";
 import type { ReactNode } from "react";
 
@@ -27,9 +28,11 @@ export type MarketComboboxProps<T> = {
   menuWidth?: number;
   noResultsMessage?: string;
   onChange: (payload: T) => void;
+  selectedCountryCode?: string;
   trackedLabel?: string;
   trackedMarkets: readonly MarketComboboxOption<T>[];
   triggerClassName?: string;
+  triggerWrapperClassName?: string;
   triggerTitle?: string;
   value: string;
 };
@@ -40,6 +43,13 @@ function toMenuSelectOption<T>(market: MarketComboboxOption<T>): MenuSelectOptio
     : market.locationLabel;
   return {
     ariaLabel: market.ariaLabel,
+    icon: (
+      <CountryFlag
+        className="h-3 w-4 flex-none rounded-[2px] shadow-sm"
+        code={market.countryCode}
+        fallback="globe"
+      />
+    ),
     disabled: market.disabled,
     label,
     secondary: market.secondary,
@@ -60,9 +70,11 @@ export function MarketCombobox<T>({
   menuWidth,
   noResultsMessage,
   onChange,
+  selectedCountryCode,
   trackedLabel = "Tracked markets",
   trackedMarkets,
   triggerClassName,
+  triggerWrapperClassName,
   triggerTitle,
   value,
 }: Readonly<MarketComboboxProps<T>>) {
@@ -97,7 +109,17 @@ export function MarketCombobox<T>({
       disabled={disabled}
       emptyMessage={emptyMessage}
       groups={groups}
-      leadingIcon={leadingIcon}
+      leadingIcon={
+        selectedCountryCode ? (
+          <CountryFlag
+            className="h-3 w-4 flex-none rounded-[2px] shadow-sm"
+            code={selectedCountryCode}
+            fallback="globe"
+          />
+        ) : (
+          leadingIcon
+        )
+      }
       menuWidth={menuWidth}
       noResultsMessage={noResultsMessage}
       onChange={handleChange}
@@ -105,6 +127,7 @@ export function MarketCombobox<T>({
       searchable
       triggerClassName={triggerClassName}
       triggerTitle={triggerTitle}
+      triggerWrapperClassName={triggerWrapperClassName}
       value={value}
     />
   );

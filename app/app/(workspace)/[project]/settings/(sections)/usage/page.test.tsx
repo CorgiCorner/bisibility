@@ -4,17 +4,19 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   canProjectAction: vi.fn(),
   deploymentMode: vi.fn(),
+  getPreferences: vi.fn(),
   getPricingFeedbackRow: vi.fn(),
   getProjectRole: vi.fn(),
   getSettings: vi.fn(),
   requireReadableProject: vi.fn(),
   requireSession: vi.fn(),
+  updateProviderAllocation: vi.fn(),
   usageContent: vi.fn(),
 }));
 
 vi.mock("@/app/app/(workspace)/[project]/settings/(sections)/usage/actions", () => ({
   submitHostedPricingFeedback: vi.fn(),
-  updateUsageBudget: vi.fn(),
+  updateProviderAllocation: mocks.updateProviderAllocation,
 }));
 vi.mock("@/components/settings/shell/SettingsShell", () => ({
   SettingsShell: ({ children, projectRef }: { children: React.ReactNode; projectRef: string }) => (
@@ -31,6 +33,7 @@ vi.mock("@/lib/auth/authorize", () => ({ getProjectRole: mocks.getProjectRole })
 vi.mock("@/lib/auth/capabilities", () => ({ canProjectAction: mocks.canProjectAction }));
 vi.mock("@/lib/auth/session", () => ({ requireSession: mocks.requireSession }));
 vi.mock("@/lib/deployment/deployment", () => ({ deploymentMode: mocks.deploymentMode }));
+vi.mock("@/lib/queries/account", () => ({ getPreferences: mocks.getPreferences }));
 vi.mock("@/lib/queries/_auth", () => ({ requireReadableProject: mocks.requireReadableProject }));
 vi.mock("@/lib/queries/settings", () => ({ getSettings: mocks.getSettings }));
 vi.mock("@/lib/queries/waitlist", () => ({
@@ -45,6 +48,15 @@ const usage = {
   connections: [],
   hasProvider: false,
   onPaceCents: null,
+  period: {
+    dateFormat: "iso",
+    endAt: "2026-09-01T00:00:00.000Z",
+    endLabel: "2026-08-31",
+    label: "August 2026",
+    now: "2026-08-24T17:03:00.000Z",
+    resetsLabel: "resets in 8 days",
+    timezone: "UTC",
+  },
   primaryProvider: "-",
   serpChecksMonth: "0",
 };
@@ -56,6 +68,7 @@ describe("UsageSettingsPage", () => {
     vi.clearAllMocks();
     mocks.deploymentMode.mockReturnValue("cloud");
     mocks.getProjectRole.mockReturnValue("owner");
+    mocks.getPreferences.mockResolvedValue({ dateFormat: "iso" });
     mocks.canProjectAction.mockImplementation(
       (role: string | null, _action: string, resource: string) =>
         role === "owner" && ["billing", "project"].includes(resource),
@@ -75,7 +88,7 @@ describe("UsageSettingsPage", () => {
   it("loads real settings data and derives hosted owner capabilities on the server", async () => {
     render(await UsageSettingsPage({ params: Promise.resolve({ project: "prj_story" }) }));
 
-    expect(mocks.getSettings).toHaveBeenCalledWith("prj_story");
+    expect(mocks.getSettings).toHaveBeenCalledWith("prj_story", { dateFormat: "iso" });
     expect(mocks.requireReadableProject).toHaveBeenCalledWith("prj_story");
     expect(screen.getByRole("main")).toHaveAttribute("data-project-ref", "prj_story");
     expect(mocks.usageContent).toHaveBeenCalledWith(
@@ -84,6 +97,7 @@ describe("UsageSettingsPage", () => {
         canSubmitPricingFeedback: true,
         deployment: "cloud",
         projectId: "prj_story",
+        updateProviderAllocation: mocks.updateProviderAllocation,
         usage,
       }),
     );

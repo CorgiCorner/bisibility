@@ -1,302 +1,300 @@
 "use client";
-
 import {
   type KeywordExportTarget,
   keywordExportTarget,
 } from "@/components/keywords/export-target-model";
 import { useKeywordImport } from "@/components/keywords/import/KeywordImportProvider";
+import { emptyKeywordFilters, removeFilterChip } from "@/lib/keywords/keyword-filter-model";
 import {
-  KeywordsScopeControls,
-  KeywordsScopeLocationChip,
-} from "@/components/keywords/KeywordsScopeControls";
-import {
-  applyKeywordFilters,
-  emptyKeywordFilters,
-  getFilterChips,
-  matchesKeywordSearch,
-  removeFilterChip,
-} from "@/lib/keywords/keyword-filter-model";
-import {
-  type ActiveLens,
-  applyLens,
-  DEFAULT_LENS_DEVICE,
-  lensHref,
-  lensLocationOptions,
-} from "@/lib/keywords/lens-model";
-import {
-  cloneSavedViewConfig,
-  emptySavedViewConfig,
-  keywordSavedViewConfig,
-} from "@/lib/keywords/saved-view-model";
+  filterFieldsForChip,
+  patchRankTrackerFilters,
+  RANK_TRACKER_FILTER_FIELDS,
+  resetRankTrackerPage,
+} from "@/lib/keywords/rank-tracker-navigation";
+import { emptySavedViewConfig } from "@/lib/keywords/saved-view-model";
 import { appPath } from "@/lib/routing/app-path";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { KeywordDataTable } from "./KeywordDataTable";
-import { KeywordsEmptyState } from "./KeywordsEmptyState";
+import { KeywordsGridDialogBundle } from "./KeywordsGridDialogBundle";
 import type { AddKeywordDraft } from "./KeywordsGridDialogs";
-import { KeywordsGridNotices } from "./KeywordsGridNotices";
-import { FiltersDrawer, KeywordsGridDialogs } from "./KeywordsGridOverlays";
+import { KeywordsGridScopeChip } from "./KeywordsGridFilterOverlays";
+import { KeywordsGridNoticeBlock } from "./KeywordsGridNoticeBlock";
+import { KeywordsGridProjectEmpty } from "./KeywordsGridProjectEmpty";
+import { KeywordsGridScopeView } from "./KeywordsGridScopeView";
+import { KeywordsGridServerFilters } from "./KeywordsGridServerFilters";
 import { emptyCheckStates } from "./keyword-empty-check-states";
-import {
-  BASE_KEYWORD_LENS,
-  keywordNoRowsState,
-  keywordScopeSummary,
-} from "./keyword-scope-summary";
+import { flatKeywordNoRowsState } from "./keyword-scope-summary";
+import { initialAddKeywordDraft } from "./keywords-grid-initial-state";
 import type { KeywordsGridProps } from "./keywords-grid-types";
-import { SavedViewsControl } from "./SavedViewsControl";
-import { useKeywordRunChecks } from "./useKeywordRunChecks";
-import { RankTrackerCommandMarker } from "./useRankTrackerCommands";
-
-export function KeywordsGrid({
-  activeViewId = null,
-  addKeywordsAction,
-  bulkClearTargetAction,
-  bulkDeleteAction,
-  bulkSetFrequencyAction,
-  bulkSetTargetAction,
-  bulkTagAction,
-  canCreateKeyword,
-  canDeleteKeyword,
-  canManageProviders,
-  canUpdateKeyword,
-  checkHealth,
-  costContext,
-  createSavedViewAction,
-  deletableSavedViewIds,
-  deleteSavedViewAction,
-  getFirstCheckRunPlanAction,
-  initialAction = null,
-  initialAddOpen = false,
-  initialDensity,
-  initialViewConfig,
-  importTopQueriesAction,
-  keywordDefaults,
-  lens,
-  providerConnected,
-  projectId,
-  projectMarkets,
-  searchConsoleConnected,
-  queueFirstChecksAction,
-  runCheckNowAction,
-  rows,
-  savedViews = [],
-  tagSuggestions = [],
-  totalKeywordCount,
-  updateKeywordAction,
-  updateKeywordScheduleAction,
-}: KeywordsGridProps) {
-  const router = useRouter();
-  const { openKeywordImport } = useKeywordImport();
-  const activeLens: ActiveLens = lens ?? { device: DEFAULT_LENS_DEVICE, locationId: null };
-  const viewConfig = cloneSavedViewConfig(initialViewConfig ?? emptySavedViewConfig);
-  const [addDraft, setAddDraft] = useState<AddKeywordDraft>({
-    keyword: "",
-    open: canCreateKeyword && initialAddOpen,
-    tab: "manual",
-  });
-  const [exportTarget, setExportTarget] = useState<KeywordExportTarget | null>(null);
-  const [filters, setFilters] = useState(viewConfig.filters);
-  const [filtersOpen, setFiltersOpen] = useState(false);
-  const [searchValue, setSearchValue] = useState(viewConfig.search);
-  const { checkFailed, dismissFailure, pendingIds, runChecks, statusLabel } = useKeywordRunChecks(
+import { useFlatRankTrackerNavigation } from "./use-flat-rank-tracker-navigation";
+import { useKeywordsGridViewState } from "./use-keywords-grid-view-state";
+import { useRunChecksModal } from "./useRunChecksModal";
+export function KeywordsGrid(props: KeywordsGridProps) {
+  const {
+    activeViewId = null,
+    bulkClearTargetAction,
+    bulkDeleteAction,
+    bulkSetFrequencyAction,
+    bulkSetTargetAction,
+    bulkTagAction,
+    canCreateKeyword,
+    canDeleteKeyword,
+    checkHealth,
+    costContext,
+    createSavedViewAction,
+    deletableSavedViewIds,
+    deleteSavedViewAction,
+    facets,
+    getFirstCheckRunPlanAction,
+    initialAddOpen = false,
+    initialViewConfig,
+    importTopQueriesAction,
+    lens,
+    listMode = "grouped-client",
+    locations,
+    matchedTargetCount,
+    page,
+    pageSize,
+    projectId,
+    searchConsoleConnected,
+    query,
+    queueFirstChecksAction,
     runCheckNowAction,
-    () => router.refresh(),
-    { providerRate: checkHealth?.providerRate, rows },
+    rows,
+    savedViews = [],
+    totalCount,
+    totalKeywordCount,
+    updateKeywordAction,
+    updateKeywordScheduleAction,
+  } = props;
+  const router = useRouter();
+  const flatServer = listMode === "flat-server" && query !== undefined;
+  const { openKeywordImport } = useKeywordImport();
+  const [addDraft, setAddDraft] = useState(() =>
+    initialAddKeywordDraft(canCreateKeyword, initialAddOpen),
   );
-  const locationOptions = useMemo(() => lensLocationOptions(rows), [rows]);
-  const lensRows = useMemo(() => applyLens(rows, activeLens), [rows, activeLens]);
-  const filterChips = useMemo(() => getFilterChips(filters), [filters]);
-  const filteredRows = useMemo(
-    () =>
-      applyKeywordFilters(lensRows, filters).filter((row) =>
-        matchesKeywordSearch(row, searchValue),
-      ),
-    [filters, lensRows, searchValue],
+  const [exportTarget, setExportTarget] = useState<KeywordExportTarget | null>(null);
+  const initialConfig = initialViewConfig ?? emptySavedViewConfig;
+  const [filters, setFilters] = useState(flatServer ? query.filters : initialConfig.filters);
+  const [draftFilters, setDraftFilters] = useState(
+    flatServer ? query.filters : initialConfig.filters,
   );
-  const capturedFilters = [
-    keywordScopeSummary(activeLens, locationOptions),
-    searchValue.trim() ? `Search: "${searchValue.trim()}"` : null,
-    ...filterChips.map((chip) => chip.label),
-  ]
-    .filter(Boolean)
-    .join(" / ");
-  const currentViewConfig = useMemo(
-    () => keywordSavedViewConfig({ filters, lens: activeLens, search: searchValue.trim() }),
-    [activeLens, filters, searchValue],
-  );
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [searchValue, setSearchValue] = useState(flatServer ? query.search : initialConfig.search);
+  const {
+    close: closeRunChecks,
+    confirm: confirmRunChecks,
+    flow: runChecksFlow,
+    pendingIds,
+    request: requestRunChecks,
+    retry: retryRunChecks,
+  } = useRunChecksModal({
+    onSettled: () => router.refresh(),
+    projectId,
+    providerRate: checkHealth?.providerRate,
+    rows,
+    runCheckNowAction,
+  });
+  const checkFailed = runChecksFlow?.step === "failed";
+  const {
+    activeLens,
+    capturedFilters,
+    currentViewConfig,
+    filterChips,
+    filteredRows,
+    lensRows,
+    locationOptions,
+  } = useKeywordsGridViewState({
+    activeLens: lens,
+    filters,
+    flatServer,
+    initialViewConfig,
+    locations,
+    rows,
+    searchValue,
+  });
   const keywordsPath = appPath(projectId, "rank-tracker");
-
   const openAddDrawer = (keyword = "", tab: AddKeywordDraft["tab"] = "manual") =>
     setAddDraft({ keyword, open: true, tab });
-  const closeAddDrawer = () => setAddDraft({ keyword: "", open: false, tab: "manual" });
-  function openExport(selectedIds: string[]) {
-    setExportTarget(
-      keywordExportTarget({ filterChips, filteredRows, rows, searchValue, selectedIds }),
-    );
-  }
+  const { markSearchCommitted, navigateQuery, onSearchChange, onSearchCommit, resetScope } =
+    useFlatRankTrackerNavigation({
+      activeViewId,
+      flatServer,
+      keywordsPath,
+      query,
+      searchValue,
+      setSearchValue,
+    });
   const clearFilters = () => {
+    if (flatServer && query)
+      return navigateQuery(
+        resetRankTrackerPage({ ...query, filters: emptyKeywordFilters, search: "" }),
+        ["search", ...RANK_TRACKER_FILTER_FIELDS, "page"],
+      );
     setFilters(emptyKeywordFilters);
     setSearchValue("");
   };
-  const resetScope = () => router.push(lensHref(keywordsPath, BASE_KEYWORD_LENS, activeViewId));
+  const scopeView = KeywordsGridScopeView({
+    activeFiltersSummary: capturedFilters,
+    activeViewId,
+    config: currentViewConfig,
+    createSavedViewAction,
+    deletableSavedViewIds,
+    deleteSavedViewAction,
+    keywordsPath,
+    lens: activeLens,
+    locationOptions,
+    projectId,
+    onQueryNavigation: markSearchCommitted,
+    query: flatServer && query ? { ...query, search: searchValue } : undefined,
+    savedViews,
+  });
+  const buildExportTarget = (selectedIds: string[] = []) =>
+    keywordExportTarget({
+      filterChips,
+      filteredRows,
+      flatServerQuery: flatServer ? query : undefined,
+      matchedTargetCount,
+      rows,
+      searchValue,
+      selectedIds,
+    });
   const dialogs = (
-    <>
-      {(canCreateKeyword && addDraft.open) || exportTarget ? (
-        <KeywordsGridDialogs
-          addDraft={addDraft}
-          addKeywordsAction={addKeywordsAction}
-          exportTarget={exportTarget}
-          costContext={costContext}
-          keywordDefaults={keywordDefaults}
-          onCloseAdd={closeAddDrawer}
-          onCloseExport={() => setExportTarget(null)}
-          projectId={projectId}
-          projectMarkets={projectMarkets}
-          rows={rows}
-          tagSuggestions={tagSuggestions}
-        />
-      ) : null}
-      <RankTrackerCommandMarker
-        canCreateKeyword={canCreateKeyword}
-        canUpdateKeyword={canUpdateKeyword}
-        initialAction={initialAction ?? null}
-        onAdd={openAddDrawer}
-        onExport={() => openExport([])}
-        onFilter={() => setFiltersOpen(true)}
-        onImport={() => openKeywordImport(projectId)}
-        onRunChecks={() => runChecks(filteredRows.map((r) => r.id))}
-        rowCounts={{ all: rows.length, visible: filteredRows.length }}
-      />
-    </>
+    <KeywordsGridDialogBundle
+      {...props}
+      addDraft={addDraft}
+      closeRunChecks={closeRunChecks}
+      confirmRunChecks={confirmRunChecks}
+      exportTarget={exportTarget}
+      onExport={() => setExportTarget(buildExportTarget())}
+      onFilter={() => setFiltersOpen(true)}
+      onImport={() => openKeywordImport(projectId)}
+      onRunChecks={() => requestRunChecks(filteredRows.map((row) => row.id))}
+      openAddDrawer={openAddDrawer}
+      pendingRows={filteredRows.length}
+      requestRows={rows}
+      retryRunChecks={retryRunChecks}
+      runChecksFlow={runChecksFlow}
+      setAddDraft={setAddDraft}
+      setExportTarget={setExportTarget}
+    />
   );
-  if (rows.length === 0) {
+  if ((totalCount ?? rows.length) === 0) {
     return (
-      <section className="grid w-full min-w-0 gap-4">
-        <KeywordsEmptyState
-          canCreateKeyword={canCreateKeyword}
-          canManageProviders={canManageProviders}
-          costContext={costContext}
-          importTopQueriesAction={importTopQueriesAction}
-          onAddKeyword={() => openAddDrawer()}
-          onImportCsv={() => openKeywordImport(projectId)}
-          onImportQueries={(queries) => openAddDrawer(queries.join("\n"))}
-          providerConnected={providerConnected}
-          projectId={projectId}
-          searchConsoleConnected={searchConsoleConnected}
-        />
-        {dialogs}
-      </section>
+      <KeywordsGridProjectEmpty
+        canCreateKeyword={canCreateKeyword}
+        canManageProviders={props.canManageProviders}
+        costContext={costContext}
+        dialogs={dialogs}
+        importTopQueriesAction={importTopQueriesAction}
+        onAddKeyword={() => openAddDrawer()}
+        onImportCsv={() => openKeywordImport(projectId)}
+        openAddDrawer={openAddDrawer}
+        projectId={projectId}
+        searchConsoleConnected={searchConsoleConnected}
+      />
     );
   }
-
   const emptyRankCheckStates = emptyCheckStates(rows);
-  const hasSearch = Boolean(searchValue.trim());
-  const noRowsState =
-    filteredRows.length === 0
-      ? keywordNoRowsState({
-          filterChips,
-          hasNoRankData: emptyRankCheckStates.length > 0,
-          hasSearch,
-          lens: activeLens,
-          onResetScope: resetScope,
-          options: locationOptions,
-        })
-      : undefined;
-
+  const noRowsState = flatKeywordNoRowsState({
+    activeLens,
+    filterChips,
+    flatServer,
+    hasNoRankData: emptyRankCheckStates.length > 0,
+    locationOptions,
+    onResetScope: resetScope,
+    page,
+    rowsEmpty: filteredRows.length === 0,
+    searchValue,
+  });
   return (
     <section className="grid w-full min-w-0 gap-4">
       {dialogs}
-      <KeywordsGridNotices
-        canManageProviders={canManageProviders}
+      <KeywordsGridNoticeBlock
+        {...props}
         checkHealth={checkHealth}
-        checkStates={emptyRankCheckStates}
-        firstPendingKeywordId={rows.find((row) => row.checkState === "never_checked")?.id ?? null}
+        emptyRankCheckStates={emptyRankCheckStates}
+        flatServer={flatServer}
         getFirstCheckRunPlanAction={getFirstCheckRunPlanAction}
-        providerConnected={providerConnected}
         projectId={projectId}
         queueFirstChecksAction={queueFirstChecksAction}
-        runCheckNowAction={canUpdateKeyword ? runCheckNowAction : undefined}
-        rowCount={rows.length}
+        rows={rows}
+        runCheckNowAction={runCheckNowAction}
         totalKeywordCount={totalKeywordCount}
       />
       <KeywordDataTable
+        {...props}
         bulkClearTargetAction={bulkClearTargetAction}
         bulkDeleteAction={bulkDeleteAction}
         bulkSetFrequencyAction={bulkSetFrequencyAction}
         bulkSetTargetAction={bulkSetTargetAction}
         bulkTagAction={bulkTagAction}
         canDeleteKeyword={canDeleteKeyword}
-        canUpdateKeyword={canUpdateKeyword}
         checkFailed={checkFailed}
         checkHealth={checkHealth}
         filterChips={filterChips}
         filterCount={filterChips.length}
-        initialDensity={initialDensity}
         noRowsState={noRowsState}
-        savedViewControl={
-          <SavedViewsControl
-            activeFiltersSummary={capturedFilters}
-            activeViewId={activeViewId}
-            config={currentViewConfig}
-            createSavedViewAction={createSavedViewAction}
-            deletableSavedViewIds={deletableSavedViewIds}
-            deleteSavedViewAction={deleteSavedViewAction}
-            projectId={projectId}
-            savedViews={savedViews}
-          />
-        }
+        savedViewControl={scopeView.savedView}
         onAddKeyword={canCreateKeyword ? () => openAddDrawer() : undefined}
         onClearFilters={clearFilters}
-        onDismissFailure={dismissFailure}
+        onDismissFailure={closeRunChecks}
         onImportCsv={canCreateKeyword ? () => openKeywordImport(projectId) : undefined}
-        onOpenExport={openExport}
+        onOpenExport={(selectedIds) => setExportTarget(buildExportTarget(selectedIds))}
         onOpenFilters={() => setFiltersOpen(true)}
-        onRemoveFilter={(key) => setFilters((value) => removeFilterChip(value, key))}
-        onRunChecks={runChecks}
-        onSearchChange={setSearchValue}
+        onQueryNavigation={markSearchCommitted}
+        onRemoveFilter={(key) => {
+          const next = removeFilterChip(filters, key);
+          if (flatServer && query)
+            navigateQuery(patchRankTrackerFilters(query, next), [
+              ...filterFieldsForChip(key),
+              "page",
+            ]);
+          else setFilters(next);
+        }}
+        onRunChecks={requestRunChecks}
+        onSearchChange={onSearchChange}
+        onSearchCommit={onSearchCommit}
         pendingCheckIds={pendingIds}
         projectId={projectId}
-        providerConnected={providerConnected}
-        projectMarkets={projectMarkets}
+        listMode={listMode}
+        matchedTargetCount={matchedTargetCount}
+        page={page}
+        pageSize={pageSize}
+        query={query}
         rows={filteredRows}
         searchValue={searchValue}
         scopeChip={
-          activeLens.locationId ? (
-            <KeywordsScopeLocationChip
-              basePath={keywordsPath}
-              lens={activeLens}
-              locationOptions={locationOptions}
-              viewId={activeViewId}
-            />
-          ) : null
-        }
-        scopeControl={
-          <KeywordsScopeControls
-            basePath={keywordsPath}
+          <KeywordsGridScopeChip
+            activeViewId={activeViewId}
+            keywordsPath={keywordsPath}
             lens={activeLens}
             locationOptions={locationOptions}
-            viewId={activeViewId}
+            query={flatServer ? query : undefined}
           />
         }
+        scopeControl={scopeView.control}
         updateKeywordAction={updateKeywordAction}
         updateKeywordScheduleAction={updateKeywordScheduleAction}
       />
-      {statusLabel ? (
-        <p className="m-0 font-mono text-[11.5px] text-fg-muted">{statusLabel}</p>
-      ) : null}
-      {filtersOpen ? (
-        <FiltersDrawer
-          basePath={keywordsPath}
-          filters={filters}
-          lens={activeLens}
-          locationOptions={locationOptions}
-          onChange={setFilters}
-          onClose={() => setFiltersOpen(false)}
-          open
-          rows={lensRows}
-          viewId={activeViewId}
-        />
-      ) : null}
+      <KeywordsGridServerFilters
+        activeViewId={activeViewId}
+        draftFilters={draftFilters}
+        facets={facets}
+        filters={filters}
+        flatServer={flatServer}
+        keywordsPath={keywordsPath}
+        lens={activeLens}
+        locationOptions={locationOptions}
+        navigateQuery={navigateQuery}
+        onClose={() => setFiltersOpen(false)}
+        open={filtersOpen}
+        query={query}
+        rows={lensRows}
+        setDraftFilters={setDraftFilters}
+        setFilters={setFilters}
+      />
     </section>
   );
 }

@@ -1,10 +1,9 @@
 "use client";
 
-import { Card, EmptyState, iconWellClassName, MonoText, SectionTitle } from "@/components/ui";
+import { Card, EmptyState, MonoText, SectionTitle } from "@/components/ui";
 import type { UpcomingView } from "@/lib/checks/contract";
 import {
   CalendarBlankIcon as CalendarBlank,
-  CalendarCheckIcon as CalendarCheck,
   CaretRightIcon as CaretRight,
 } from "@phosphor-icons/react";
 import Link from "next/link";
@@ -34,7 +33,7 @@ function EmptyUpcoming({
 }: Readonly<{ mode: UpcomingDisplayMode; schedulesHref: string }>) {
   if (mode === "strip") {
     return (
-      <div className="flex min-h-12 items-center justify-between gap-3 rounded-xl border border-dashed border-border-strong bg-bg-elev px-3.5 py-2.5">
+      <div className="flex min-h-12 items-center justify-between gap-3 rounded-card border border-dashed border-border bg-bg-elev px-3.5 py-2.5">
         <span className="flex min-w-0 items-center gap-2 text-xs text-fg-muted">
           <CalendarBlank aria-hidden className="shrink-0 text-fg-muted" size={16} />
           No scheduled keywords
@@ -70,18 +69,11 @@ function EmptyUpcoming({
 
 function UpcomingHeader() {
   return (
-    <div className="flex items-start gap-3 border-border border-b px-4 py-3.5">
-      <span
-        className={`grid h-9 w-9 shrink-0 place-items-center rounded-[10px] ${iconWellClassName}`}
-      >
-        <CalendarCheck aria-hidden size={17} weight="fill" />
-      </span>
-      <div className="min-w-0">
-        <SectionTitle>Upcoming</SectionTitle>
-        <MonoText className="truncate" muted>
-          Forecast
-        </MonoText>
-      </div>
+    <div className="border-border border-b px-4 py-3.5">
+      <SectionTitle>Upcoming</SectionTitle>
+      <MonoText className="truncate" muted>
+        Forecast
+      </MonoText>
     </div>
   );
 }
@@ -150,7 +142,7 @@ export function UpcomingSection({
           ) : null}
         </div>
       </Card>
-      {view.forecast ? (
+      {view.forecast && view.forecast.next48hCents > 0 ? (
         <Card size="md">
           <BudgetForecastNote forecast={view.forecast} />
         </Card>

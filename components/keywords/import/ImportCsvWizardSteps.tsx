@@ -93,7 +93,7 @@ export function TemplateStep() {
       >
         Download template.csv
       </Button>
-      <div className="mt-4.5 overflow-hidden rounded-[11px] border border-border">
+      <div className="mt-4.5 overflow-hidden rounded-control border border-border">
         <div className="flex items-center justify-between bg-code-bg px-[13px] py-2 font-mono text-[10.5px] text-code-faint">
           <span>template.csv</span>
           <span className="text-green-text">UTF-8</span>
@@ -107,7 +107,7 @@ export function TemplateStep() {
           const item = column === "keyword" ? "keyword*" : column;
           return (
             <span
-              className="rounded-[7px] bg-bg-sunken px-[9px] py-[3px] font-mono text-[11px] text-fg-muted first:bg-accent-soft first:font-semibold first:text-accent-text"
+              className="rounded-control bg-bg-sunken px-[9px] py-[3px] font-mono text-[11px] text-fg-muted first:bg-accent-soft first:font-semibold first:text-accent-text"
               key={item}
             >
               {item}
@@ -130,8 +130,8 @@ export function UploadStep() {
       <p className="m-0 mt-1.5 text-[13px] text-fg-muted">
         CSV or XLSX. CSV must be UTF-8 and cannot contain replacement characters (�).
       </p>
-      <div className="mt-4 flex flex-col items-center gap-2.5 rounded-[13px] border border-dashed border-border-strong bg-bg px-6 py-[38px] text-center">
-        <span className="grid h-[46px] w-[46px] place-items-center rounded-xl bg-accent-soft text-accent-solid">
+      <div className="mt-4 flex flex-col items-center gap-2.5 rounded-card border border-dashed border-border bg-bg px-6 py-[38px] text-center">
+        <span className="grid h-[46px] w-[46px] place-items-center rounded-card bg-accent-soft text-accent-solid">
           <CloudArrowUp size={24} weight="bold" />
         </span>
         <div className="text-[13.5px] font-semibold">Drag and drop your CSV here</div>
@@ -140,8 +140,8 @@ export function UploadStep() {
           Browse files
         </Button>
       </div>
-      <div className="mt-3.5 flex items-center gap-3 rounded-[11px] border border-border bg-bg-elev px-[15px] py-[13px]">
-        <span className="grid h-9 w-9 place-items-center rounded-[9px] text-green-text [background:color-mix(in_srgb,var(--green)_12%,transparent)]">
+      <div className="mt-3.5 flex items-center gap-3 rounded-control border border-border bg-bg-elev px-[15px] py-[13px]">
+        <span className="grid h-9 w-9 place-items-center rounded-control text-green-text [background:color-mix(in_srgb,var(--green)_12%,transparent)]">
           <FileCsv size={19} weight="fill" />
         </span>
         <span className="min-w-0 flex-1">
@@ -164,7 +164,7 @@ export function MapStep() {
     <div>
       <h3 className="m-0 text-[15px] font-semibold">Map columns</h3>
       <p className="m-0 mt-1.5 text-[13px] text-fg-muted">We matched your columns automatically.</p>
-      <div className="mt-4 overflow-hidden rounded-xl border border-border">
+      <div className="mt-4 overflow-hidden rounded-card border border-border">
         <div className="grid grid-cols-[1fr_24px_1fr] gap-2.5 bg-bg-sunken px-[15px] py-[9px] font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
           <span>CSV column</span>
           <span />
@@ -180,7 +180,7 @@ export function MapStep() {
               <span className="truncate">{csv}</span>
             </span>
             <ArrowRight className="text-fg-muted" size={13} weight="bold" />
-            <span className="inline-flex items-center justify-between gap-2 rounded-lg border border-border-strong bg-bg-elev px-[11px] py-[7px] text-[12.5px] font-medium">
+            <span className="inline-flex items-center justify-between gap-2 rounded-control border border-border bg-bg-elev px-[11px] py-[7px] text-[12.5px] font-medium">
               {field}
               {req ? <span className="font-mono text-[10px] text-accent-text">{req}</span> : null}
             </span>
@@ -194,7 +194,7 @@ export function MapStep() {
       <div className="mt-4 flex flex-wrap gap-2">
         {["Country US", "Device Desktop", "Refresh Daily"].map((item) => (
           <span
-            className="rounded-lg border border-border bg-bg-elev px-[11px] py-1.5 text-[12px]"
+            className="rounded-control border border-border bg-bg-elev px-[11px] py-1.5 text-[12px]"
             key={item}
           >
             {item}
@@ -225,12 +225,12 @@ export function ReviewStep({
           </span>
         </div>
       </div>
-      <div className="mt-3.5 flex items-center gap-2.5 rounded-[11px] border border-border bg-bg px-3.5 py-3">
+      <div className="mt-3.5 flex items-center gap-2.5 rounded-control border border-border bg-bg px-3.5 py-3">
         <span className="text-[12.5px] text-fg-muted">Duplicates:</span>
-        <div className="flex rounded-[9px] border border-border-strong bg-bg-elev p-[3px]">
+        <div className="flex rounded-control border border-border bg-bg-elev p-[3px]">
           {["skip", "overwrite"].map((value) => (
             <button
-              className="rounded-[7px] px-[13px] py-1.5 text-[12px] font-semibold"
+              className="rounded-control px-[13px] py-1.5 text-[12px] font-semibold"
               key={value}
               onClick={() => setDuplicateMode(value)}
               style={{
@@ -244,7 +244,7 @@ export function ReviewStep({
           ))}
         </div>
       </div>
-      <div className="mt-3.5 overflow-hidden rounded-xl border border-border">
+      <div className="mt-3.5 overflow-hidden rounded-card border border-border">
         <div className="grid grid-cols-[1.7fr_1.3fr_50px_64px] gap-2 bg-bg-sunken px-3.5 py-[9px] font-mono text-[10px] uppercase tracking-[0.4px] text-fg-muted">
           <span>Keyword</span>
           <span>Target URL</span>
@@ -260,7 +260,7 @@ export function ReviewStep({
             <span className="truncate font-mono text-[11.5px] text-fg-muted">{url}</span>
             <span className="font-mono text-[11px] text-fg-muted">{country}</span>
             {dup ? (
-              <span className="rounded-md px-[7px] py-0.5 font-mono text-[9.5px] font-semibold text-yellow-text [background:color-mix(in_srgb,var(--yellow)_14%,transparent)]">
+              <span className="rounded-control px-[7px] py-0.5 font-mono text-[9.5px] font-semibold text-yellow-text [background:color-mix(in_srgb,var(--yellow)_14%,transparent)]">
                 {dup}
               </span>
             ) : null}
@@ -281,7 +281,7 @@ export function ReviewStep({
 export function DoneStep() {
   return (
     <div className="flex flex-col items-center px-4 py-[30px] text-center">
-      <span className="grid h-14 w-14 place-items-center rounded-[15px] text-green-text [background:color-mix(in_srgb,var(--green)_12%,transparent)]">
+      <span className="grid h-14 w-14 place-items-center rounded-card text-green-text [background:color-mix(in_srgb,var(--green)_12%,transparent)]">
         <CheckCircle size={30} weight="fill" />
       </span>
       <h3 className="m-0 mt-4.5 text-[18px] font-semibold tracking-[-0.4px]">Import complete</h3>

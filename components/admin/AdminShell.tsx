@@ -16,7 +16,7 @@ export function AdminShell({ children }: Readonly<{ children: ReactNode }>) {
                 rail falls back to the mark alone. */}
             <BrandLockup className="sm:hidden" markOnly />
             <BrandLockup className="hidden sm:inline-flex" />
-            <span aria-hidden className="hidden h-4 w-px bg-border-strong md:block" />
+            <span aria-hidden className="hidden h-4 w-px bg-border md:block" />
             <span className="hidden font-mono text-[11px] uppercase tracking-[0.5px] text-fg-muted md:inline">
               Instance admin
             </span>
@@ -24,7 +24,7 @@ export function AdminShell({ children }: Readonly<{ children: ReactNode }>) {
           <div className="flex flex-none items-center gap-1 sm:gap-2">
             <AdminRefresh />
             <Link
-              className="inline-flex min-h-[34px] items-center gap-1.5 rounded-[9px] px-2.5 text-[12.5px] font-semibold text-fg-muted transition-colors hover:bg-bg-sunken hover:text-fg sm:px-3"
+              className="inline-flex min-h-[34px] items-center gap-1.5 rounded-control px-2.5 text-[12.5px] font-semibold text-fg-muted transition-colors hover:bg-bg-sunken hover:text-fg sm:px-3"
               href={appRootPath()}
             >
               Back to app

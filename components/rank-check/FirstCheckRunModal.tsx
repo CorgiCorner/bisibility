@@ -86,7 +86,7 @@ function FirstCheckRunPlanRows({
   });
 
   return (
-    <div className="overflow-hidden rounded-xl border border-border">
+    <div className="overflow-hidden rounded-card border border-border">
       {rows.map((row, index) => (
         <div className={index % 2 === 0 ? "bg-bg-sunken" : "bg-bg-elev"} key={row.label}>
           <div className="flex items-center justify-between gap-4 px-4 py-3">
@@ -123,7 +123,7 @@ function FirstCheckRunPlanBody({
 
   return (
     <div className="grid gap-4.5">
-      <p className="m-0 rounded-[10px] border border-border bg-bg px-3.5 py-3 text-[12.5px] leading-5 text-fg-muted">
+      <p className="m-0 rounded-control border border-border bg-bg px-3.5 py-3 text-[12.5px] leading-5 text-fg-muted">
         This manual run starts checks now, outside the schedule.
       </p>
 
@@ -137,7 +137,7 @@ function FirstCheckRunPlanBody({
         <ol className="m-0 grid list-none gap-2 p-0" aria-label="SERP provider fallback order">
           {plan.providers.map((provider, index) => (
             <li
-              className="flex items-center gap-3 rounded-[10px] border border-border px-3.5 py-2.5"
+              className="flex items-center gap-3 rounded-control border border-border px-3.5 py-2.5"
               key={provider}
             >
               <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent-soft font-mono text-[10px] font-semibold text-accent-text">

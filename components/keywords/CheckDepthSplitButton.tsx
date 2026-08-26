@@ -4,10 +4,13 @@ import {
   bulkBarButtonSx,
   outlinedSplitChromeSx,
 } from "@/components/keywords/grid/bulk-action-styles";
-import { MenuSelectOptionItem, menuSelectPaperSx } from "@/components/ui";
+import { settingsSectionHref } from "@/components/settings/shell/settings-sections";
+import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
+import { Button as DesignButton, MenuSelectOptionItem, menuSelectPaperSx } from "@/components/ui";
 import { type SerpDepth, serpDepthValues } from "@/lib/serp/markets";
 import Button from "@mui/material/Button";
 import ButtonGroup from "@mui/material/ButtonGroup";
+import Divider from "@mui/material/Divider";
 import Menu from "@mui/material/Menu";
 import {
   ArrowsClockwiseIcon as ArrowsClockwise,
@@ -48,6 +51,7 @@ export function CheckDepthSplitButton({
   spinning = false,
 }: Readonly<CheckDepthSplitButtonProps>) {
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
+  const { projectRef } = useProjectWriteMode();
   const compact = size === "xs";
   const buttonSx = splitButtonSx(size);
   const heightClass = compact ? "min-h-[30px]" : "min-h-[36px]";
@@ -100,6 +104,26 @@ export function CheckDepthSplitButton({
             option={{ label: optionLabel(depth), value: String(depth) }}
           />
         ))}
+        {projectRef
+          ? [
+              <Divider
+                component="li"
+                key="change-default-divider"
+                role="separator"
+                sx={{ marginY: 0.5 }}
+              />,
+              <li className="w-full px-2 py-1.5" key="change-default-link">
+                <DesignButton
+                  className="w-full"
+                  href={settingsSectionHref(projectRef, "tracking")}
+                  size="xs"
+                  variant="secondary"
+                >
+                  Change default
+                </DesignButton>
+              </li>,
+            ]
+          : null}
       </Menu>
     </span>
   );

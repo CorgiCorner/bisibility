@@ -282,9 +282,11 @@ describe("backlinks analyze service", () => {
     );
     await expect(run()).resolves.toEqual({ ok: false, reason: "budget_exhausted" });
     expect(mocks.preflightBudget).toHaveBeenCalledWith({
-      budgetCapCents: 5_000,
+      connectionId: "connection_1",
       estimatedCostCents: 5,
+      estimatedUsageQuantity: 3,
       projectId: "project_1",
+      provider: "dataforseo",
     });
     expect(mocks.paidCall).not.toHaveBeenCalled();
   });

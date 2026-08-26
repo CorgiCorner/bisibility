@@ -1,9 +1,9 @@
 "use client";
 
-import { Pill, ToolbarSearch } from "@/components/ui";
+import { Button, Pill, ToolbarSearch, Tooltip } from "@/components/ui";
 import type { KeywordFilterChip } from "@/lib/keywords/keyword-filter-model";
 import type { GridColumnVisibilityModel, GridDensity } from "@mui/x-data-grid";
-import { XIcon as X } from "@phosphor-icons/react";
+import { ArrowClockwiseIcon as ArrowClockwise, XIcon as X } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
 import { KeywordsToolbarActions } from "./KeywordsToolbarActions";
 
@@ -20,8 +20,10 @@ type KeywordsFilterBarProps = {
   onImportCsv?: () => void;
   onOpenExport: () => void;
   onOpenFilters: () => void;
+  onRefresh: () => void;
   onRemoveFilter: (key: string) => void;
   onSearchChange: (value: string) => void;
+  onSearchCommit?: () => void;
   savedViewControl?: ReactNode;
   searchValue: string;
   scopeChip?: ReactNode;
@@ -41,8 +43,10 @@ export function KeywordsFilterBar({
   onImportCsv,
   onOpenExport,
   onOpenFilters,
+  onRefresh,
   onRemoveFilter,
   onSearchChange,
+  onSearchCommit,
   savedViewControl,
   searchValue,
   scopeChip,
@@ -61,7 +65,7 @@ export function KeywordsFilterBar({
         {hasContextControls ? (
           <div
             // `contents` would leak these into the parent grid as separate rows below xl.
-            className="flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-nowrap sm:items-center sm:gap-2"
+            className="order-2 flex min-w-0 flex-row flex-nowrap items-center gap-2 lg:order-1"
             data-keywords-toolbar-context=""
           >
             {scopeControl ? (
@@ -71,15 +75,29 @@ export function KeywordsFilterBar({
             {savedViewControl ? (
               <span className="hidden flex-none sm:inline-flex">{savedViewControl}</span>
             ) : null}
+            <Tooltip content="Refresh table">
+              <span className="inline-flex shrink-0">
+                <Button
+                  aria-label="Refresh table"
+                  className="shrink-0"
+                  onClick={onRefresh}
+                  size="sm"
+                  startIcon={<ArrowClockwise aria-hidden size={15} />}
+                  sx={{ minWidth: 40, "& .MuiButton-startIcon": { margin: 0 } }}
+                  variant="secondary"
+                />
+              </span>
+            </Tooltip>
           </div>
         ) : null}
-        <div className="grid min-w-0 gap-2 sm:grid-cols-[minmax(220px,1fr)_auto] sm:items-center xl:grid-cols-[minmax(320px,1fr)_auto]">
+        <div className="order-1 grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 lg:order-2 lg:grid-cols-[minmax(220px,1fr)_auto] xl:grid-cols-[minmax(320px,1fr)_auto]">
           <ToolbarSearch
             className="min-w-0"
             id="keywords-filter"
-            label="Filter keywords"
+            label="Search keywords"
             onChange={onSearchChange}
-            placeholder="Filter keywords..."
+            onSubmit={onSearchCommit}
+            placeholder="Search keywords..."
             value={searchValue}
           />
           <KeywordsToolbarActions
@@ -97,7 +115,7 @@ export function KeywordsFilterBar({
       </div>
       {hasChips || hasFilters ? (
         <div
-          className={`mt-3 flex min-w-0 flex-wrap items-center gap-2 ${scopeChipOnly ? "sm:hidden" : ""}`}
+          className={`mt-3 flex min-w-0 flex-wrap items-center gap-2 ${scopeChipOnly ? "lg:hidden" : ""}`}
         >
           {hasFilters ? (
             <span className="mr-1 font-mono text-[10px] font-semibold uppercase tracking-[0.6px] text-fg-muted">

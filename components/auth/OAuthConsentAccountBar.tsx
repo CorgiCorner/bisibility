@@ -28,7 +28,7 @@ export function OAuthConsentAccountBar({
   }
 
   return (
-    <div className="mb-2.5 flex items-center rounded-[11px] border border-border bg-bg-elev px-3 py-2">
+    <div className="mb-2.5 flex items-center rounded-control border border-border bg-bg-elev px-3 py-2">
       <Avatar
         alt=""
         className="grid h-[26px] w-[26px] shrink-0 place-items-center rounded-full bg-accent-soft text-[11px] font-semibold text-accent-text"

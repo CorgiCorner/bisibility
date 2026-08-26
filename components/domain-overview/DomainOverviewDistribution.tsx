@@ -25,7 +25,7 @@ export function DomainOverviewDistribution({ metrics }: Readonly<{ metrics: Doma
         const share = total > 0 ? (bucket.count / total) * 100 : 0;
         return (
           <div
-            className="grid min-h-9 w-full grid-cols-1 items-center gap-1 rounded-lg px-1.5 py-1 sm:grid-cols-[74px_minmax(0,1fr)_74px_58px] sm:gap-3"
+            className="grid min-h-9 w-full grid-cols-1 items-center gap-1 rounded-control px-1.5 py-1 sm:grid-cols-[74px_minmax(0,1fr)_74px_58px] sm:gap-3"
             key={bucket.value}
           >
             <span className="font-mono text-[12px] text-fg-muted">{bucket.label}</span>

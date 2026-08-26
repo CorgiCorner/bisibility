@@ -13,7 +13,7 @@ import type {
   AnalyticsProvider,
   AnalyticsTopQuery,
   PageStatRow,
-  ProviderCatalogItem,
+  ProviderCatalogEntry,
   QueryStatRow,
   SerpProvider,
   SerpRankInput,
@@ -22,6 +22,12 @@ import type {
 const BASE_PROVIDER_CATALOG = [
   {
     id: "dataforseo",
+    allocation: {
+      allocationUnit: "cents",
+      billing: "metered",
+      kind: "billable",
+      quotaReset: "none",
+    },
     label: "DataForSEO",
     kind: "serp",
     defaultStatus: "ready",
@@ -30,6 +36,12 @@ const BASE_PROVIDER_CATALOG = [
   },
   {
     id: "serpapi",
+    allocation: {
+      allocationUnit: "units",
+      billing: "quota",
+      kind: "billable",
+      quotaReset: "billing_cycle",
+    },
     label: "SerpApi",
     kind: "serp",
     defaultStatus: "ready",
@@ -38,6 +50,7 @@ const BASE_PROVIDER_CATALOG = [
   },
   {
     id: "gsc",
+    allocation: { kind: "non_billable" },
     label: "Google Search Console",
     kind: "analytics",
     defaultStatus: "optional",
@@ -46,6 +59,7 @@ const BASE_PROVIDER_CATALOG = [
   },
   {
     id: "ga4",
+    allocation: { kind: "non_billable" },
     label: "Google Analytics 4",
     kind: "analytics",
     defaultStatus: "optional",
@@ -54,22 +68,24 @@ const BASE_PROVIDER_CATALOG = [
   },
   {
     id: "plausible",
+    allocation: { kind: "non_billable" },
     label: "Plausible",
     kind: "analytics",
     defaultStatus: "optional",
     requiredCredentials: ["apiKey", "login"],
     logoDomain: "plausible.io",
   },
-] as const satisfies ProviderCatalogItem[];
+] as const satisfies ProviderCatalogEntry[];
 
 const LOCAL_SEQUENCE_CATALOG_ITEM = {
   id: "local-sequence",
-  label: "Local sequence (dev-only)",
+  allocation: { kind: "non_billable" },
+  label: "Local rank test",
   kind: "serp",
   defaultStatus: "ready",
   logoDomain: undefined,
   requiredCredentials: [],
-} as const satisfies ProviderCatalogItem;
+} as const satisfies ProviderCatalogEntry;
 
 export function localSequenceProviderEnabled(nodeEnv: string | undefined, explicitFlag?: string) {
   return nodeEnv !== "production" && (nodeEnv !== "test" || explicitFlag === "1");
@@ -83,7 +99,7 @@ const localSequenceEnabled = localSequenceProviderEnabled(
 export const PROVIDER_CATALOG = [
   ...BASE_PROVIDER_CATALOG,
   ...(localSequenceEnabled ? [LOCAL_SEQUENCE_CATALOG_ITEM] : []),
-] as const satisfies readonly ProviderCatalogItem[];
+] as const satisfies readonly ProviderCatalogEntry[];
 
 export type ProviderTint = "accent" | "blue" | "green" | "purple";
 
@@ -237,6 +253,10 @@ export function serpProviderCapabilities(id: string) {
       typeof provider.fetchHistoricalRankOverview === "function" &&
       typeof provider.fetchRankedKeywords === "function" &&
       typeof provider.fetchRelevantPages === "function",
+    backlinks:
+      typeof provider.fetchBacklinksSummary === "function" ||
+      typeof provider.fetchBacklinksHistory === "function" ||
+      typeof provider.fetchBacklinksRows === "function",
     keywordMetrics: typeof provider.fetchKeywordMetrics === "function",
     keywordResearch:
       typeof provider.fetchRelatedKeywords === "function" ||

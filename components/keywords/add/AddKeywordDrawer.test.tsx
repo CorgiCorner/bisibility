@@ -74,7 +74,7 @@ describe("AddKeywordDrawer", () => {
       "bg-transparent",
       "text-[12.5px]",
     );
-    expect(selected.nextElementSibling).toHaveClass("bg-nav-active", "border-border-strong");
+    expect(selected.nextElementSibling).toHaveClass("bg-nav-active", "border-border-control");
     expect(screen.queryByRole("radio", { name: "CSV" })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("radio", { name: "API" }));
     expect(screen.getByRole("radio", { name: "API" })).toBeChecked();
@@ -92,6 +92,31 @@ describe("AddKeywordDrawer", () => {
 
     fireEvent.change(screen.getByLabelText("Keywords"), { target: { value: "rank tracker" } });
     expect(submit).toBeEnabled();
+  });
+
+  it("uses compact placeholder typography for custom keyword drawer inputs", () => {
+    renderDrawer();
+
+    expect(screen.getByLabelText("Target URL")).toHaveClass(
+      "placeholder:text-[12px]",
+      "placeholder:leading-4",
+      "placeholder:text-fg-muted",
+    );
+    expect(screen.getByLabelText("Tags")).toHaveClass(
+      "placeholder:text-[12px]",
+      "placeholder:leading-4",
+      "placeholder:text-fg-muted",
+    );
+  });
+
+  it("keeps the submit tooltip wrapper on one line", () => {
+    renderDrawer();
+
+    expect(screen.getByRole("button", { name: "Add keywords" }).parentElement).toHaveClass(
+      "inline-flex",
+      "flex-1",
+      "whitespace-nowrap",
+    );
   });
 
   it("marks required fields instead of optional ones", () => {

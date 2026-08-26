@@ -179,7 +179,7 @@ export function NotificationChannelsCard({
                 label="Events & channels"
               />
               <div className="mt-2 overflow-x-auto">
-                <div className="min-w-[420px] overflow-hidden rounded-lg border border-border-strong">
+                <div className="min-w-[420px] overflow-hidden rounded-control border border-border">
                   <div className="grid grid-cols-[minmax(150px,1.6fr)_repeat(2,minmax(82px,1fr))] bg-bg-sunken text-center font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
                     <div className="px-3 py-2 text-left">Event</div>
                     {channels.map((channel) => (
@@ -192,7 +192,7 @@ export function NotificationChannelsCard({
                   </div>
                   {rows.map((row) => (
                     <div
-                      className="grid min-h-11 grid-cols-[minmax(150px,1.6fr)_repeat(2,minmax(82px,1fr))] items-center border-t border-border-strong text-[13px]"
+                      className="grid min-h-11 grid-cols-[minmax(150px,1.6fr)_repeat(2,minmax(82px,1fr))] items-center border-t border-border text-[13px]"
                       key={row.label}
                     >
                       <div className="px-3 font-semibold text-fg">{row.label}</div>

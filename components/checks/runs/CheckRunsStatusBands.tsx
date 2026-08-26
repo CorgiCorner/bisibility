@@ -71,13 +71,13 @@ function Band({
   tone: "aged" | "red" | "yellow";
 }>) {
   const classes = {
-    aged: "border-dashed border-border-strong bg-bg-sunken",
+    aged: "border-dashed border-border bg-bg-sunken",
     red: "border-red/35 bg-red/8",
     yellow: "border-yellow/35 bg-yellow/10",
   }[tone];
   return (
     <div
-      className={`mx-4 mt-3 flex flex-wrap items-start gap-2.5 rounded-[10px] border px-3.5 py-3 ${classes}`}
+      className={`mx-4 mt-3 flex flex-wrap items-start gap-2.5 rounded-control border px-3.5 py-3 ${classes}`}
     >
       {icon}
       <p className="m-0 min-w-[200px] flex-1 text-[12.5px] leading-[1.55] text-fg">{children}</p>
@@ -86,14 +86,12 @@ function Band({
   );
 }
 
-function RetryButton({ label, onClick }: Readonly<{ label: string; onClick?: () => void }>) {
+function RetryButton({ label, onClick }: Readonly<{ label: string; onClick: () => void }>) {
   return (
     <Button
-      disabled={!onClick}
       onClick={onClick}
       size="sm"
       startIcon={<Retry aria-hidden size={12} weight="bold" />}
-      title={onClick ? undefined : "Retry action is not available yet"}
       variant="secondary"
     >
       {label}
@@ -167,7 +165,7 @@ export function CheckRunsStatusBands({
     const checkLabel = stale === 1 ? "check" : "checks";
     return (
       <Band
-        action={<RetryButton label="Retry stale" onClick={onRetryStale} />}
+        action={onRetryStale ? <RetryButton label="Retry stale" onClick={onRetryStale} /> : null}
         icon={
           <Clock aria-hidden className="mt-0.5 shrink-0 text-fg-muted" size={15} weight="fill" />
         }
@@ -182,7 +180,7 @@ export function CheckRunsStatusBands({
     const total = view.counts.completed + view.counts.failed + view.counts.deferred;
     return (
       <Band
-        action={<RetryButton label="Retry failed" onClick={onRetryFailed} />}
+        action={onRetryFailed ? <RetryButton label="Retry failed" onClick={onRetryFailed} /> : null}
         icon={
           <Warning aria-hidden className="mt-0.5 shrink-0 text-red-text" size={15} weight="fill" />
         }

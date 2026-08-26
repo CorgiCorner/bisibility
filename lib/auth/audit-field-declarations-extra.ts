@@ -172,6 +172,11 @@ export function registerAdditionalAuditDeclarations(
     before: { ...f.dates("snoozedUntil"), ...strings("status") },
   });
 
+  const providerAllocation = { ...strings("unit"), ...f.numbers("amountPerMonth") };
+  declare(["provider.allocation.update"], {
+    after: providerAllocation,
+    before: providerAllocation,
+  });
   declare(
     ["provider.connect", "provider.set_settings", "provider.update", "provider.update_cost"],
     {

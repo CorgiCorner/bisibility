@@ -162,17 +162,14 @@ export function KeywordPendingDetail({
         rankState={state}
         timeZone={costContext?.timezone ?? "UTC"}
       />
-      {canUpdateKeyword &&
-      editing &&
-      projectMarkets &&
-      addKeywordsMatrixAction &&
-      bulkDeleteAction ? (
+      {canUpdateKeyword && projectMarkets && addKeywordsMatrixAction && bulkDeleteAction ? (
         <KeywordMarketsDrawer
           addKeywordsMatrixAction={addKeywordsMatrixAction}
           bulkDeleteAction={bulkDeleteAction}
           canCreateKeyword={canCreateKeyword}
           keyword={keyword}
           onClose={() => setEditing(false)}
+          open={editing}
           projectId={projectId}
           projectMarkets={projectMarkets}
           targets={targets}

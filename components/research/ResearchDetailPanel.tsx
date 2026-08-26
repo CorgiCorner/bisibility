@@ -127,7 +127,7 @@ export function ResearchDetailPanel({
             <Eyebrow>12-month trend</Eyebrow>
             <div className="mt-2 h-[190px] min-w-0">
               {!metricsAvailable ? (
-                <div className="grid h-full place-items-center rounded-[10px] bg-bg-sunken">
+                <div className="grid h-full place-items-center rounded-control bg-bg-sunken">
                   <ResearchUnavailableMetric label="Search trend unavailable" />
                 </div>
               ) : availableTrend.length > 1 ? (
@@ -165,7 +165,7 @@ export function ResearchDetailPanel({
                   yAxis={[{ max: trendMax, min: 0, position: "none" }]}
                 />
               ) : (
-                <div className="grid h-full place-items-center rounded-[10px] bg-bg-sunken text-[12px] text-fg-muted">
+                <div className="grid h-full place-items-center rounded-control bg-bg-sunken text-[12px] text-fg-muted">
                   No monthly trend available
                 </div>
               )}
@@ -257,7 +257,7 @@ function Metric({
   value,
 }: Readonly<{ label: string; unavailable?: boolean; value: string }>) {
   return (
-    <div className="rounded-[10px] bg-bg-sunken p-3">
+    <div className="rounded-control bg-bg-sunken p-3">
       <span className="block font-mono text-[9.5px] uppercase tracking-[0.4px] text-fg-muted">
         {label}
       </span>

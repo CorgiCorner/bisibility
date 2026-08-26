@@ -36,6 +36,7 @@ export async function createProjectRecord(data: CreateProjectData, ownerId: stri
         members: { create: { publicId: makePublicId("mbr"), role: "owner", userId: ownerId } },
         name: data.name,
         ownerId,
+        // Provider allocations stay null until an explicit allocation change or legacy backfill.
         publicId: makePublicId("prj"),
         trackingScope: data.trackingScope,
       },

@@ -115,7 +115,7 @@ export function CloudImport({
 
   if (!canManage) {
     return (
-      <section className="mt-5 rounded-[14px] border border-border bg-bg-elev px-5 py-4">
+      <section className="mt-5 rounded-card border border-border bg-bg-elev px-5 py-4">
         <p className="m-0 text-[13px] text-fg-muted">
           Migration controls are available to project admins and owners.
         </p>

@@ -55,6 +55,48 @@ describe("ToolbarSearch", () => {
       expect(onChange).toHaveBeenCalledWith("hello");
     });
 
+    it("hides the native cancel decoration and renders a focused clear button for a value", () => {
+      const onChange = vi.fn();
+      render(
+        <form>
+          <ToolbarSearch
+            id="test-search"
+            label="Search items"
+            onChange={onChange}
+            placeholder="Search items..."
+            value="www"
+          />
+        </form>,
+      );
+
+      const input = screen.getByRole("searchbox", { name: "Search items" });
+      const clear = screen.getByRole("button", { name: "Clear Search items" });
+      expect(input.className).toMatch(/searchInput/);
+      expect(clear).toHaveAttribute("type", "button");
+      expect(clear).toHaveClass("size-6", "items-center", "justify-center", "text-fg-muted");
+      expect(clear.querySelector("svg")).toHaveAttribute("width", "12");
+
+      input.focus();
+      fireEvent.mouseDown(clear);
+      fireEvent.click(clear);
+      expect(onChange).toHaveBeenCalledWith("");
+      expect(input).toHaveFocus();
+    });
+
+    it("does not render the clear button for an empty value", () => {
+      render(
+        <ToolbarSearch
+          id="test-search"
+          label="Search items"
+          onChange={() => {}}
+          placeholder="Search items..."
+          value=""
+        />,
+      );
+
+      expect(screen.queryByRole("button", { name: "Clear Search items" })).toBeNull();
+    });
+
     it("renders the search icon", () => {
       const { container } = render(
         <ToolbarSearch
@@ -100,12 +142,12 @@ describe("ToolbarSearch", () => {
 
       const input = screen.getByRole("searchbox", { name: "Search audit events" });
       const label = input.parentElement;
-      // toolbarControlClassName surface (min-h 34, rounded 9, border-strong, transparent)
+      // toolbarControlClassName surface (min-h 34, rounded 9, border-control, transparent)
       expect(label).toHaveClass(
         "min-h-[34px]",
-        "rounded-[9px]",
+        "rounded-control",
         "border",
-        "border-border-strong",
+        "border-border-control",
         "bg-transparent",
       );
       // exact horizontal padding and focus treatment
@@ -147,9 +189,13 @@ describe("ToolbarSearch", () => {
         "flex-1",
         "bg-transparent",
         "font-mono",
+        "compact-text-12",
         "text-[12px]",
         "text-fg",
+        "leading-4",
         "outline-none",
+        "placeholder:text-[12px]",
+        "placeholder:leading-4",
         "placeholder:text-fg-muted",
         "focus-visible:outline-none",
       );
@@ -158,7 +204,7 @@ describe("ToolbarSearch", () => {
   });
 
   describe('variant="outlined"', () => {
-    it("reproduces the SavedKeywords surface: h 34px, rounded 9px, border-strong, transparent, px 12px, focus-within outline", () => {
+    it("reproduces the SavedKeywords surface: h 34px, rounded 9px, border-control, transparent, px 12px, focus-within outline", () => {
       render(
         <ToolbarSearch
           className="min-w-[220px]"
@@ -176,9 +222,9 @@ describe("ToolbarSearch", () => {
       expect(label).toHaveClass(
         "h-8.5",
         "min-w-[220px]",
-        "rounded-[9px]",
+        "rounded-control",
         "border",
-        "border-border-strong",
+        "border-border-control",
         "bg-transparent",
         "px-3",
       );

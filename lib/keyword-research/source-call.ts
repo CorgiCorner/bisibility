@@ -74,13 +74,13 @@ export async function callResearchSource(input: {
     | undefined;
   if (!method) throw new ProviderLookupSignal({ ok: false, reason: "no_source" });
   return paidProviderCall({
-    budgetCapCents: input.budgetCapCents,
     call: (credentials, usage) =>
       method.call(input.selected.provider, credentials, {
         includeClickstream: input.includeClickstream,
         limit: input.limit,
         location: researchProviderRankLocation(input.location),
         seed: input.seed,
+        attribution: usage,
         tag: usage?.tag,
       }),
     connection: input.selected.connection,

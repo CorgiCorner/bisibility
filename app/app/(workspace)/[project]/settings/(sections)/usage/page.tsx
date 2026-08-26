@@ -1,6 +1,6 @@
 import {
   submitHostedPricingFeedback,
-  updateUsageBudget,
+  updateProviderAllocation,
 } from "@/app/app/(workspace)/[project]/settings/(sections)/usage/actions";
 import { SettingsShell } from "@/components/settings/shell/SettingsShell";
 import { UsageSettingsContent } from "@/components/settings/usage/UsageSettingsContent";
@@ -9,6 +9,7 @@ import { canProjectAction } from "@/lib/auth/capabilities";
 import { requireSession } from "@/lib/auth/session";
 import { deploymentMode } from "@/lib/deployment/deployment";
 import { requireReadableProject } from "@/lib/queries/_auth";
+import { getPreferences } from "@/lib/queries/account";
 import { getSettings } from "@/lib/queries/settings";
 import { getPricingFeedbackRow } from "@/lib/queries/waitlist";
 import { asProjectRef } from "@/lib/routing/app-path";
@@ -17,8 +18,9 @@ type UsageSettingsPageProps = { params: Promise<{ project: string }> };
 
 export default async function UsageSettingsPage({ params }: Readonly<UsageSettingsPageProps>) {
   const { project: projectRef } = await params;
+  const preferences = await getPreferences();
   const [settings, access, session] = await Promise.all([
-    getSettings(projectRef),
+    getSettings(projectRef, { dateFormat: preferences.dateFormat }),
     requireReadableProject(projectRef),
     requireSession(),
   ]);
@@ -43,8 +45,9 @@ export default async function UsageSettingsPage({ params }: Readonly<UsageSettin
           deployment={deploymentMode()}
           initialPricingFeedbackAnswered={pricingFeedbackAnswered}
           projectId={settings.project.projectId}
+          projectRef={publicId}
           submitPricingFeedback={submitHostedPricingFeedback}
-          updateBudget={updateUsageBudget}
+          updateProviderAllocation={updateProviderAllocation}
           usage={settings.usage}
         />
       </div>

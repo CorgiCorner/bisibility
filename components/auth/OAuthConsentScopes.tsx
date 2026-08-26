@@ -83,10 +83,10 @@ function ScopeChip({ scope }: Readonly<{ scope: ScopeItem }>) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 font-mono text-[11px] leading-none",
+        "inline-flex items-center gap-1.5 rounded-control border px-2.5 py-1 font-mono text-[11px] leading-none",
         scope.broad
           ? "border-red/30 bg-red/10 text-red-text"
-          : "border-border-strong bg-bg-elev text-fg-muted",
+          : "border-border bg-bg-elev text-fg-muted",
       )}
     >
       <Icon aria-hidden size={12} />

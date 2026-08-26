@@ -71,8 +71,8 @@ function GroupCard({
         } · every scheduled run skipped`
       : `${group.count.toLocaleString("en-US")} checks · ${deferredWindow(group, now, timeZone)}`;
   return (
-    <article className="flex min-w-0 gap-3 rounded-xl border border-border bg-bg-elev p-4">
-      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[10px] bg-bg-sunken text-yellow-text">
+    <article className="flex min-w-0 gap-3 rounded-card border border-border bg-bg-elev p-4">
+      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-control bg-bg-sunken text-yellow-text">
         <Icon aria-hidden size={17} weight="fill" />
       </span>
       <div className="min-w-0 flex-1">

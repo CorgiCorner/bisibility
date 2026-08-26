@@ -98,7 +98,7 @@ export function ExportOptionRow({
 }>) {
   return (
     <button
-      className="flex w-full items-center gap-3 rounded-[11px] border-[1.5px] px-[13px] py-[11px] text-left outline-none transition-colors hover:border-accent focus-visible:border-accent"
+      className="flex w-full items-center gap-3 rounded-control border-[1.5px] px-[13px] py-[11px] text-left outline-none transition-colors hover:border-accent focus-visible:border-accent"
       onClick={onClick}
       style={{
         backgroundColor: active ? "var(--accent-soft)" : "var(--bg-elev)",
@@ -109,7 +109,7 @@ export function ExportOptionRow({
       {children}
       <span
         className="grid h-[18px] w-[18px] shrink-0 place-items-center rounded-full border-[1.5px]"
-        style={{ borderColor: active ? "var(--accent)" : "var(--border-strong)" }}
+        style={{ borderColor: active ? "var(--accent)" : "var(--border)" }}
       >
         {active ? <span className="h-[9px] w-[9px] rounded-full bg-accent" /> : null}
       </span>

@@ -42,14 +42,13 @@ export async function WorkspaceShell({
 
   const now = new Date();
   // Workspace chrome reads are independent. Self-host skips the Cloud-only audit query.
-  const [workspaces, budgetSummary, lastCloudExport, instanceAdminSession, workerLiveness] =
-    await Promise.all([
-      listWorkspaces(),
-      loadWorkspaceBudgetSummary(activeProjectId, now),
-      isCloud ? getLatestCloudPackageExport(projectRef) : Promise.resolve(null),
-      getInstanceAdminSession(),
-      getWorkerLivenessDetails(),
-    ]);
+  const [workspaces, budgetSummary, lastCloudExport, instanceAdminSession] = await Promise.all([
+    listWorkspaces(),
+    loadWorkspaceBudgetSummary(activeProjectId, now),
+    isCloud ? getLatestCloudPackageExport(projectRef) : Promise.resolve(null),
+    getInstanceAdminSession(),
+  ]);
+  const workerLiveness = instanceAdminSession ? await getWorkerLivenessDetails() : null;
   const active = workspaces.find((workspace) => workspace.id === projectRef);
   if (!active) {
     notFound();
@@ -96,9 +95,10 @@ export async function WorkspaceShell({
               <AppHeader
                 actions={
                   <HeaderProviderSpend
-                    capCents={budgetSummary?.capCents ?? null}
                     projectRef={projectRef}
-                    spentCents={budgetSummary?.spentCents ?? null}
+                    recorded={budgetSummary?.recorded ?? null}
+                    tightest={budgetSummary?.tightest ?? null}
+                    usedPercent={budgetSummary?.maxUsedPercent ?? null}
                   />
                 }
                 activeProjectId={active.publicId}
@@ -122,18 +122,21 @@ export async function WorkspaceShell({
                 projectName={active.name}
               />
               <main className="min-w-0 flex-1 px-4 py-4 sm:px-5 lg:px-7 lg:py-5.5">{children}</main>
-              {instanceAdminSession ? (
-                <AppFooter
-                  schemaStatus={
-                    workerLiveness.schemaComparison === "ok"
+              <AppFooter
+                schemaStatus={
+                  instanceAdminSession && workerLiveness
+                    ? workerLiveness.schemaComparison === "ok"
                       ? "ok"
                       : workerLiveness.schemaComparison === "unknown"
                         ? "unknown"
                         : "drift"
-                  }
-                  workerStatus={workerLiveness.status}
-                />
-              ) : null}
+                    : undefined
+                }
+                showInstanceAdmin={Boolean(instanceAdminSession)}
+                workerStatus={
+                  instanceAdminSession && workerLiveness ? workerLiveness.status : undefined
+                }
+              />
             </div>
           </CommandPaletteProvider>
         </SessionSpendProvider>

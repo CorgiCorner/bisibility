@@ -3,7 +3,7 @@
 import { menuSelectRowSx } from "@/components/ui/MenuSelectOptionItem";
 import MenuItem from "@mui/material/MenuItem";
 import { CheckIcon as Check } from "@phosphor-icons/react";
-import type { MenuSelectOption } from "./MenuSelect";
+import type { MenuSelectOption } from "./menu-select-support";
 
 export function MenuMultiSelectOption({
   current,

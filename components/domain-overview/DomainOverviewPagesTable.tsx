@@ -77,8 +77,8 @@ export function DomainOverviewPagesTable({
   }
 
   return (
-    <section className="min-w-0 overflow-hidden rounded-[12px] border border-border bg-bg-elev">
-      <header className="flex items-center gap-2.5 border-b border-border-strong px-4 py-3">
+    <section className="min-w-0 overflow-hidden rounded-card border border-border bg-bg-elev">
+      <header className="flex items-center gap-2.5 border-b border-border px-4 py-3">
         <h3 className="m-0 text-[14.5px] font-semibold">Top pages</h3>
         <span className="ml-auto text-[12px] text-fg-muted">Preview of fetched rows</span>
         <Button
@@ -93,7 +93,7 @@ export function DomainOverviewPagesTable({
       </header>
       <div className="max-h-[640px] overflow-auto">
         <div className="min-w-[900px]">
-          <div className="sticky top-0 z-1 grid grid-cols-[minmax(220px,1.25fr)_104px_86px_minmax(180px,1fr)_96px_86px] items-center gap-3 border-b border-border-strong bg-bg-sunken px-4 py-2.5">
+          <div className="sticky top-0 z-1 grid grid-cols-[minmax(220px,1.25fr)_104px_86px_minmax(180px,1fr)_96px_86px] items-center gap-3 border-b border-border bg-bg-sunken px-4 py-2.5">
             <SortableColumnHeader
               active={sort === "path"}
               direction={direction}
@@ -200,7 +200,7 @@ export function DomainOverviewPagesTable({
           ) : null}
         </div>
       ) : null}
-      <footer className="flex flex-wrap items-center gap-3 border-t border-border-strong px-4 py-2.5 text-[12px] text-fg-muted">
+      <footer className="flex flex-wrap items-center gap-3 border-t border-border px-4 py-2.5 text-[12px] text-fg-muted">
         {fetchedRowsSummary(providerFetchedCount, result.totalCount, "pages")}
         <span className="ml-auto">Sorting the fetched rows is free</span>
       </footer>

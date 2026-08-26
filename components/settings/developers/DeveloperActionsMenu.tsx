@@ -2,6 +2,7 @@
 
 import { menuSelectPaperSx } from "@/components/ui";
 import { cn } from "@/lib/ui/cn";
+import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import { DotsThreeIcon as DotsThree } from "@phosphor-icons/react";
@@ -33,7 +34,7 @@ export function DeveloperActionsMenu({ ariaLabel, items }: Readonly<DeveloperAct
         aria-expanded={open}
         aria-haspopup="menu"
         aria-label={ariaLabel}
-        className="grid h-[30px] w-[30px] flex-none place-items-center rounded-[7px] border border-border bg-bg-elev text-fg-muted hover:bg-surface-hover hover:text-fg"
+        className="grid h-[30px] w-[30px] flex-none place-items-center rounded-control border border-border bg-bg-elev text-fg-muted hover:bg-surface-hover hover:text-fg"
         onClick={(event) => setAnchor(event.currentTarget)}
         type="button"
       >
@@ -58,7 +59,7 @@ export function DeveloperActionsMenu({ ariaLabel, items }: Readonly<DeveloperAct
               item.onSelect();
             }}
             sx={{
-              borderRadius: "7px",
+              borderRadius: UI_RADIUS_ROLES.control,
               color: item.danger ? "var(--red-text)" : "var(--fg)",
               fontSize: "12.5px",
               minHeight: 32,

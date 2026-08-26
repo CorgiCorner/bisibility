@@ -12,7 +12,7 @@ const meta = {
   decorators: [
     (Story) => (
       <div className="min-h-[220px] bg-bg p-6 text-fg">
-        <div className="rounded-[14px] border border-border bg-bg-elev">
+        <div className="rounded-card border border-border bg-bg-elev">
           <Story />
         </div>
       </div>
@@ -61,6 +61,7 @@ function FilterBarStory() {
       onDensityChange={setDensity}
       onOpenExport={() => undefined}
       onOpenFilters={() => undefined}
+      onRefresh={() => undefined}
       onRemoveFilter={() => undefined}
       onSearchChange={setSearchValue}
       savedViewControl={<ToolbarControl>Default view</ToolbarControl>}
@@ -82,6 +83,7 @@ export const Interactive: Story = {
     onDensityChange: () => undefined,
     onOpenExport: () => undefined,
     onOpenFilters: () => undefined,
+    onRefresh: () => undefined,
     onRemoveFilter: () => undefined,
     onSearchChange: () => undefined,
     searchValue: "",

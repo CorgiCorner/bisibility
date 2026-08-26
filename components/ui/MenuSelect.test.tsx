@@ -110,6 +110,25 @@ describe("MenuSelect", () => {
     expect(trigger.querySelector(".truncate")).not.toHaveClass("text-fg-muted");
   });
 
+  it("optionally renders compact content with a pinned caret", () => {
+    render(
+      <MenuSelect
+        ariaLabel="Research mode"
+        compact
+        leadingLabel="Mode:"
+        onChange={() => undefined}
+        options={[{ label: "Auto", value: "auto" }]}
+        pinCaret
+        value="auto"
+      />,
+    );
+
+    const trigger = screen.getByRole("button", { name: "Research mode" });
+    expect(trigger).toHaveClass("text-[12px]", "leading-4");
+    expect(trigger.querySelector("[data-menu-select-content]")).toHaveTextContent("Mode:Auto");
+    expect(trigger.querySelector("[data-menu-select-caret]")).toHaveClass("ml-auto");
+  });
+
   it("does not bold the selected option in the open menu", async () => {
     const user = userEvent.setup();
     render(

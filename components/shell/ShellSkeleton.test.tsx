@@ -106,7 +106,7 @@ describe("ShellSkeleton", () => {
     );
 
     expect(screen.getByTestId("shell-skeleton-header")).toHaveClass("border-b", "border-border");
-    expect(container.querySelectorAll(".h-8.w-8.rounded-\\[9px\\]")).toHaveLength(3);
+    expect(container.querySelectorAll(".h-8.w-8.rounded-control")).toHaveLength(3);
   });
 
   it("frames the sidebar rather than filling it with a solid slab", () => {

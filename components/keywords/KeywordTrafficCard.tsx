@@ -52,7 +52,7 @@ function StatGrid({ stats }: Readonly<{ stats: Stat[] }>) {
     <div className="mt-3 grid grid-cols-[repeat(auto-fit,minmax(130px,1fr))] gap-2.5">
       {stats.map((stat) => (
         <div
-          className="rounded-[9px] border border-border bg-bg-sunken px-3 py-2.5"
+          className="rounded-control border border-border bg-bg-sunken px-3 py-2.5"
           key={stat.label}
         >
           <p className="m-0 font-mono text-[10px] uppercase tracking-[0.65px] text-fg-muted">
@@ -76,7 +76,7 @@ function SearchPerformanceCard({ query }: Readonly<{ query: QueryTraffic }>) {
   ];
 
   return (
-    <Card className="rounded-[14px]" size="lg">
+    <Card className="rounded-card" size="lg">
       <div className="flex flex-wrap items-center gap-2">
         <SectionTitle>Search performance</SectionTitle>
         <SourceChip provider={query.provider} />
@@ -96,13 +96,13 @@ function SearchPerformanceEmpty({
   projectRef,
 }: Readonly<{ connected: boolean; projectRef: string }>) {
   return (
-    <Card className="rounded-[14px]" size="lg">
+    <Card className="rounded-card" size="lg">
       <div className="flex flex-wrap items-center gap-2">
         <SectionTitle>Search performance</SectionTitle>
         <SourceChip provider="gsc" />
       </div>
       <p className="m-0 mt-1 text-[12px] text-fg-muted">Trailing 28 days</p>
-      <div className="mt-3 rounded-[11px] border border-dashed border-border-strong bg-transparent px-4 py-5">
+      <div className="mt-3 rounded-control border border-dashed border-border bg-transparent px-4 py-5">
         {connected ? (
           <>
             <p className="m-0 text-[13.5px] font-medium text-fg">Awaiting first traffic sync.</p>
@@ -151,7 +151,7 @@ function LandingPagePerformanceCard({ pages }: Readonly<{ pages: PageTrafficSnap
   const firstPath = pages[0]?.path ?? "the ranking page";
 
   return (
-    <Card className="rounded-[14px]" size="lg">
+    <Card className="rounded-card" size="lg">
       <SectionTitle>Landing page performance</SectionTitle>
       <p className="m-0 mt-1 text-[12px] text-fg-muted">
         All traffic to {firstPath}, not attributed to this keyword.
@@ -159,7 +159,7 @@ function LandingPagePerformanceCard({ pages }: Readonly<{ pages: PageTrafficSnap
       <div className="mt-3 grid gap-3">
         {pages.map((page) => (
           <section
-            className="rounded-[11px] border border-border bg-bg-elev p-3"
+            className="rounded-control border border-border bg-bg-elev p-3"
             key={`${page.provider}:${page.path}`}
           >
             <div className="flex flex-wrap items-center gap-2">

@@ -97,7 +97,7 @@ export function ProviderRates({
   }
 
   return (
-    <section className="overflow-hidden rounded-[11px] border border-border">
+    <section className="overflow-hidden rounded-control border border-border">
       <div className="bg-bg-sunken py-2 pr-2.5 pl-3.5 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
         Provider rates
       </div>
@@ -118,7 +118,7 @@ export function ProviderRates({
               ) : (
                 <button
                   aria-label={`Edit ${rate.label} rate`}
-                  className={`inline-flex items-center gap-[9px] rounded-[7px] border px-2 py-1 outline-none transition-colors hover:border-border-strong hover:bg-bg-sunken focus-visible:border-accent disabled:cursor-default disabled:opacity-70 ${
+                  className={`inline-flex items-center gap-[9px] rounded-control border px-2 py-1 outline-none transition-colors hover:border-border-control hover:bg-bg-sunken focus-visible:border-accent disabled:cursor-default disabled:opacity-70 ${
                     rate.source === "manual" || isEditing
                       ? "border-accent bg-accent-soft"
                       : "border-transparent bg-transparent"
@@ -142,7 +142,7 @@ export function ProviderRates({
               <div className="flex items-center gap-[9px] px-3.5 pb-3">
                 <input
                   aria-label={`${rate.label} rate in USD`}
-                  className="min-w-0 flex-1 rounded-lg border border-accent bg-transparent px-3 py-[9px] font-mono text-[13px] font-medium text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid"
+                  className="min-w-0 flex-1 rounded-control border border-accent bg-transparent px-3 py-[9px] font-mono text-[13px] font-medium text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid"
                   disabled={pending}
                   inputMode="decimal"
                   onChange={(event) => setDraft(event.target.value)}

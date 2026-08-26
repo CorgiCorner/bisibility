@@ -106,6 +106,14 @@ export function envelopeMessage(data: DataForSeoResponse) {
   );
 }
 
+export function dataForSeoBillingStatusCode(data: DataForSeoResponse) {
+  const billingCodes = new Set([40200, 40210]);
+  return (
+    data.tasks?.find((task) => billingCodes.has(task.status_code ?? 0))?.status_code ??
+    (billingCodes.has(data.status_code ?? 0) ? data.status_code : undefined)
+  );
+}
+
 function retryDelay(attempt: number) {
   return RETRY_BASE_MS * 2 ** attempt;
 }
@@ -192,8 +200,9 @@ export async function requestAuthenticatedEnvelope(
 export function extractDataForSeoBalance(data: unknown) {
   const tasks = (data as { tasks?: Array<{ result?: unknown[] }> }).tasks ?? [];
   const firstResult = tasks[0]?.result?.[0] as Record<string, unknown> | undefined;
+  const money = firstResult?.money as Record<string, unknown> | undefined;
   const balance =
-    firstResult?.balance ?? firstResult?.money ?? (data as Record<string, unknown>).balance;
+    firstResult?.balance ?? money?.balance ?? (data as Record<string, unknown>).balance;
 
   return typeof balance === "number" ? balance : undefined;
 }

@@ -66,7 +66,7 @@ export function AddKeywordDrawerFooter({
             </Tooltip>
           </ProjectReadOnlyTooltip>
         ) : null}
-        <ProjectReadOnlyTooltip className="inline-flex flex-1">
+        <ProjectReadOnlyTooltip className="inline-flex flex-1 whitespace-nowrap">
           <Button
             disabled={readOnly || submitDisabled}
             form={isReviewMode ? undefined : "add-keyword-form"}

@@ -1,5 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ProjectReadOnlyError } from "../deployment/project-write-mode";
+import {
+  PROJECT_DOMAIN_REQUIRED_MESSAGE,
+  ProjectDomainRequiredError,
+} from "../projects/tracked-domain";
 import { ProviderRateLimitedError } from "../providers/rate-limit";
 import { BudgetExhaustedError } from "../rank-check/budget";
 import { ProviderChainError } from "../rank-check/fallback";
@@ -11,6 +15,7 @@ import {
   createRunningRankCheckActivity,
   discardRankCheckActivity,
   failRankCheckActivity,
+  PROJECT_DOMAIN_REQUIRED_FAILURE,
   PROJECT_READ_ONLY_FAILURE,
   PROVIDER_AUTH_FAILURE,
   PROVIDER_BILLING_FAILURE,
@@ -619,6 +624,22 @@ describe("rank-check activities", () => {
     });
   });
 
+  it("maps a missing project domain to a non-retryable Temporal failure", async () => {
+    mocks.runKeywordCheckWithFallback.mockRejectedValue(new ProjectDomainRequiredError());
+
+    const promise = runRankCheckActivity({
+      keywordId: "keyword_1",
+      rankCheckId: "rank_running_1",
+      source: "manual",
+    });
+
+    await expect(promise).rejects.toMatchObject({
+      message: PROJECT_DOMAIN_REQUIRED_MESSAGE,
+      nonRetryable: true,
+      type: PROJECT_DOMAIN_REQUIRED_FAILURE,
+    });
+  });
+
   it("maps project read-only errors to a non-retryable Temporal failure", async () => {
     mocks.runKeywordCheckWithFallback.mockRejectedValue(new ProjectReadOnlyError("project_1"));
 
@@ -674,6 +695,28 @@ describe("rank-check activities", () => {
     await expect(promise).rejects.toMatchObject({
       nonRetryable: true,
       type: PROVIDER_AUTH_FAILURE,
+    });
+  });
+
+  it("makes all exhausted connection allocations non-retryable", async () => {
+    const chainError = new ProviderChainError([
+      {
+        provider: "primary",
+        message: "Provider connection monthly allocation reached.",
+        reason: "allocation_exhausted",
+      },
+    ]);
+    mocks.runKeywordCheckWithFallback.mockRejectedValue(chainError);
+    mocks.prisma.rankCheck.updateMany.mockResolvedValue({ count: 1 });
+    await expect(
+      runRankCheckActivity({
+        keywordId: "keyword_1",
+        rankCheckId: "rank_running_1",
+        source: "manual",
+      }),
+    ).rejects.toMatchObject({
+      nonRetryable: true,
+      type: BUDGET_EXHAUSTED_FAILURE,
     });
   });
 

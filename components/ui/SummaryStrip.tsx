@@ -37,7 +37,7 @@ export function SummaryStrip({
       <div
         aria-hidden
         className={cn(
-          "h-8.5 w-full animate-pulse motion-reduce:animate-none rounded-lg bg-bg-sunken",
+          "h-8.5 w-full animate-pulse motion-reduce:animate-none rounded-control bg-bg-sunken",
           className,
         )}
       />
@@ -50,7 +50,7 @@ export function SummaryStrip({
     <div
       aria-label={sentence}
       className={cn(
-        "flex w-full items-center gap-[9px] rounded-lg bg-bg-sunken px-3 py-2 text-[13px] font-normal leading-[1.5] text-fg",
+        "flex w-full items-center gap-[9px] rounded-control bg-bg-sunken px-3 py-2 text-[13px] font-normal leading-[1.5] text-fg",
         className,
       )}
       role="status"

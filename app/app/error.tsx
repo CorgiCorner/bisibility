@@ -4,10 +4,14 @@ import { useDeploymentMode } from "@/components/shell/DeploymentModeProvider";
 import { Button, MonoText, SectionTitle } from "@/components/ui";
 import { reportAppError } from "@/lib/observability/error-reporting";
 import { FEEDBACK_URL, GITHUB_ISSUES_URL } from "@/lib/site/site";
-import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react";
+import {
+  CheckIcon as Check,
+  CopyIcon as Copy,
+  WarningCircleIcon as WarningCircle,
+} from "@phosphor-icons/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { AppErrorDiagnostics } from "./AppErrorDiagnostics";
 
 type AppErrorBoundaryProps = {
@@ -30,6 +34,41 @@ function formatOccurredAt(date: Date) {
   return `${date.toISOString().slice(11, 19)} UTC`;
 }
 
+function CopyViewUrlButton({ pathname }: Readonly<{ pathname: string }>) {
+  const [copied, setCopied] = useState(false);
+  const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const setButtonRef = useCallback((node: HTMLButtonElement | null) => {
+    if (!node && resetTimer.current) {
+      clearTimeout(resetTimer.current);
+      resetTimer.current = null;
+    }
+  }, []);
+
+  async function copyUrl() {
+    const url = typeof window === "undefined" ? pathname : window.location.href || pathname;
+    await navigator.clipboard.writeText(url);
+    setCopied(true);
+    if (resetTimer.current) clearTimeout(resetTimer.current);
+    resetTimer.current = setTimeout(() => {
+      resetTimer.current = null;
+      setCopied(false);
+    }, 1200);
+  }
+
+  return (
+    <button
+      aria-label={copied ? "URL copied" : "Copy URL"}
+      className="inline-flex h-7 flex-none items-center gap-1.5 rounded-control border border-border-strong bg-bg px-2 font-sans text-[11px] font-medium text-fg-muted transition-colors hover:bg-bg-sunken hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid"
+      onClick={() => void copyUrl()}
+      ref={setButtonRef}
+      type="button"
+    >
+      {copied ? <Check aria-hidden size={13} weight="bold" /> : <Copy aria-hidden size={13} />}
+      {copied ? "Copied" : "Copy URL"}
+    </button>
+  );
+}
+
 export default function AppErrorBoundary({ error, reset }: Readonly<AppErrorBoundaryProps>) {
   const deploymentMode = useDeploymentMode();
   const pathname = usePathname();
@@ -44,21 +83,17 @@ export default function AppErrorBoundary({ error, reset }: Readonly<AppErrorBoun
 
   return (
     <div className="py-8">
-      <div className="mx-auto w-full max-w-[720px] overflow-hidden rounded-2xl border border-border bg-bg">
+      <div className="mx-auto w-full max-w-[720px] overflow-hidden rounded-card border border-border bg-bg">
         <div className="flex h-[46px] items-center justify-between gap-3 border-b border-border bg-bg-elev px-4.5">
           <div className="flex min-w-0 items-center gap-[9px] font-mono text-[11px] text-fg-muted">
             <span aria-hidden className="h-[7px] w-[7px] flex-none rounded-full bg-red" />
             <span className="truncate text-fg-muted">{viewPath}</span>
           </div>
-          {/* The mock says "Sidebar still works", but this boundary sits above
-              the workspace layout, so the sidebar is unmounted here. */}
-          <span className="hidden flex-none font-mono text-[10.5px] uppercase tracking-[1px] text-fg-muted sm:inline">
-            App still running
-          </span>
+          <CopyViewUrlButton pathname={viewPath} />
         </div>
 
         <div className="flex flex-col items-center px-10 pb-10 pt-11 text-center">
-          <span className="grid h-[52px] w-[52px] place-items-center rounded-2xl bg-[color-mix(in_srgb,var(--red)_10%,transparent)] text-red-text">
+          <span className="grid h-[52px] w-[52px] place-items-center rounded-card bg-[color-mix(in_srgb,var(--red)_10%,transparent)] text-red-text">
             <WarningCircle aria-hidden size={26} weight="bold" />
           </span>
           <MonoText

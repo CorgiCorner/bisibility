@@ -5,7 +5,7 @@ import { PageContent } from "@/components/shell/PageContent";
 import { cn } from "@/lib/ui/cn";
 
 function Bar({ className }: Readonly<{ className?: string }>) {
-  return <div className={cn("animate-pulse rounded-[10px] bg-bg-sunken", className)} />;
+  return <div className={cn("animate-pulse rounded-control bg-bg-sunken", className)} />;
 }
 
 const selectKeys = ["date", "event", "actor", "status"] as const;
@@ -17,7 +17,7 @@ const rowGrid =
 export default function AuditLoading() {
   return (
     <PageContent aria-hidden className="flex flex-col gap-3.5" variant="analytics">
-      <div className="overflow-hidden rounded-[14px] border border-border bg-bg-elev">
+      <div className="overflow-hidden rounded-card border border-border bg-bg-elev">
         <div className="border-b border-border px-4 py-3.5">
           <div className="grid gap-3 xl:flex xl:items-center xl:justify-between">
             <div className="flex min-w-0 flex-1 flex-wrap items-center gap-[7px]">
@@ -43,7 +43,7 @@ export default function AuditLoading() {
               <div className={cn(rowGrid, "border-b border-border-soft px-4 py-4")} key={key}>
                 <Bar className="h-3 w-[120px]" />
                 <div className="flex min-w-0 items-center gap-2.5">
-                  <Bar className="h-[26px] w-[26px] shrink-0 rounded-[7px]" />
+                  <Bar className="h-[26px] w-[26px] shrink-0 rounded-control" />
                   <div className="flex min-w-0 flex-1 flex-col gap-1.5">
                     <Bar className="h-3 w-[72%]" />
                     <Bar className="h-2.5 w-[52%]" />

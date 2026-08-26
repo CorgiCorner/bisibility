@@ -32,7 +32,7 @@ describe("onboarding ProviderCard", () => {
       <ProviderCard onSelect={() => undefined} provider={provider} selected={false} state="idle" />,
     );
     expect(screen.getByRole("radio").closest("section")).toHaveClass(
-      "border-border-strong",
+      "border-border",
       "bg-transparent",
     );
     expect(screen.getByRole("radio").closest("section")).not.toHaveClass("border-accent");

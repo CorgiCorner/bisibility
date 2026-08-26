@@ -39,7 +39,7 @@ export function OverviewEmpty({
             right edge several times. */}
         <div className="max-w-[720px]">
           <span
-            className="grid h-12 w-12 place-items-center rounded-[13px] text-purple"
+            className="grid h-12 w-12 place-items-center rounded-card text-purple"
             style={{ backgroundColor: "color-mix(in srgb, var(--purple) 14%, transparent)" }}
           >
             <RocketLaunch aria-hidden size={25} weight="bold" />

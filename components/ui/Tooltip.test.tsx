@@ -1,5 +1,6 @@
 import { MOTION_TOOLTIP } from "@/lib/ui/motion";
 import { act, fireEvent, render, screen } from "@testing-library/react";
+import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Tooltip, TooltipProvider } from "./Tooltip";
 
@@ -58,6 +59,27 @@ function controlFocusVisible(el: HTMLElement) {
     selector === ":focus-visible" ? visible : realMatches(selector)) as typeof el.matches;
   return { hide: () => (visible = false) };
 }
+
+describe("Tooltip child guards", () => {
+  it("renders a non-element child unchanged", () => {
+    const { container } = render(<Tooltip content="Tip">{null}</Tooltip>);
+
+    expect(container).toBeEmptyDOMElement();
+  });
+});
+
+describe("TooltipProvider markup", () => {
+  it("does not add provider-only hidden markup", () => {
+    const { container } = render(
+      <TooltipProvider>
+        <button type="button">Child</button>
+      </TooltipProvider>,
+    );
+
+    expect(container).toHaveTextContent("Child");
+    expect(container.querySelector("[hidden]")).toBeNull();
+  });
+});
 
 describe("Tooltip enter delay and cold animation", () => {
   it("waits 500ms before showing on hover", () => {
@@ -269,5 +291,22 @@ describe("TooltipProvider cleanup", () => {
     unmount();
     expect(rafSpy).toHaveBeenCalled();
     rafSpy.mockRestore();
+  });
+});
+
+describe("Tooltip server rendering", () => {
+  it("does not crash when a valid child element has undefined props", () => {
+    const button = <button type="button">Trigger</button>;
+    const childWithUndefinedProps = Object.create(button, {
+      props: { configurable: true, value: undefined },
+    });
+
+    expect(() =>
+      renderToString(
+        <Tooltip content="More" semantics="description">
+          {childWithUndefinedProps}
+        </Tooltip>,
+      ),
+    ).not.toThrow();
   });
 });

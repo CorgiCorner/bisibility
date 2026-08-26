@@ -45,14 +45,14 @@ export function EmptyState({
         // a nested panel that means nothing.
         compact
           ? "min-h-[126px] px-5 py-6"
-          : "rounded-2xl border border-border bg-bg-elev px-8 py-11",
+          : "rounded-card border border-border bg-bg-elev px-8 py-11",
       )}
     >
       {icon ? (
         <span
           className={cn(
             "grid place-items-center",
-            compact ? "h-10 w-10 rounded-[10px]" : "h-[54px] w-[54px] rounded-[14px]",
+            compact ? "h-10 w-10 rounded-control" : "h-[54px] w-[54px] rounded-card",
             toneTileClasses[tone],
           )}
         >
