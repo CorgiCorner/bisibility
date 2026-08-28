@@ -1,3 +1,4 @@
+import { requiredRoleFor } from "@/lib/auth/capabilities";
 import { describe, expect, it } from "vitest";
 import { getOpenApiDocument } from "./openapi";
 import { operationPolicy, operationPolicyForRequest, type ProjectAccess } from "./operation-policy";
@@ -38,6 +39,8 @@ function legacyRequiredScope(method: string, path: string[]): ApiScope {
   if (method === "DELETE" && path[0] === "projects" && path.length === 2) return "admin";
   if (method === "DELETE" && path[0] === "projects" && path[2] === "webhooks") return "admin";
   if (path[0] === "projects" && path[2] === "team" && method !== "GET") return "admin";
+  // Team invite revocation is an admin operation on either route shape.
+  if (method === "DELETE" && path[0] === "team" && path[1] === "invites") return "admin";
   if (
     method === "GET" &&
     path[0] === "projects" &&
@@ -82,7 +85,12 @@ describe("operation policy", () => {
     const before = documentedOperations();
     const after = Object.entries(operationPolicy)
       .filter(([operationId]) => operationId !== "revokeCurrentPersonalAccessToken")
-      .map(([operationId, declared]) => ({ operationId, ...declared }))
+      // `capability` is asserted separately below; the route contract compared here is
+      // method, path, project access and required scope.
+      .map(([operationId, { capability: _capability, ...declared }]) => ({
+        operationId,
+        ...declared,
+      }))
       .sort((left, right) => left.operationId.localeCompare(right.operationId));
 
     expect(after).toEqual(before);
@@ -106,7 +114,7 @@ describe("operation policy", () => {
       { admin: 0, read: 0, write: 0 },
     );
 
-    expect(counts).toEqual({ admin: 15, read: 27, write: 45 });
+    expect(counts).toEqual({ admin: 16, read: 27, write: 44 });
   });
 
   it("declares self-revocation and prefers it over the token-id route", () => {
@@ -120,5 +128,64 @@ describe("operation policy", () => {
       operationId: "revokePersonalAccessToken",
       requiredScope: "admin",
     });
+  });
+});
+
+describe("operation capabilities mirror the app authorization table", () => {
+  const adminOrOwnerOnly = [
+    "mintMigrationToken",
+    "connectProvider",
+    "disconnectProvider",
+    "updateProviderSettings",
+    "deleteAlertRule",
+    "removeCompetitor",
+    "removeProjectCompetitor",
+    "testProviderConnection",
+    "createWebhookEndpoint",
+    "updateWebhookEndpoint",
+    "deleteWebhookEndpoint",
+    "revokeTeamInvite",
+    "revokeMigrationToken",
+    "revokeProjectMigrationToken",
+    "deleteKeyword",
+    "deleteProjectSavedKeyword",
+    "deleteProject",
+  ] as const;
+
+  function declaredCapability(name: (typeof adminOrOwnerOnly)[number]) {
+    const capability = operationPolicy[name].capability;
+    if (!capability) {
+      throw new Error(`API operation "${name}" is missing a capability`);
+    }
+    return capability;
+  }
+
+  it.each(adminOrOwnerOnly)("%s declares a capability that needs admin or owner", (name) => {
+    const { action, resourceType } = declaredCapability(name);
+
+    expect(["admin", "owner"]).toContain(requiredRoleFor(action, resourceType));
+  });
+
+  it("deleteProject is owner-only", () => {
+    const { action, resourceType } = declaredCapability("deleteProject");
+
+    expect(requiredRoleFor(action, resourceType)).toBe("owner");
+  });
+
+  it("gates notification preferences at the member tier and escalates in the handler", () => {
+    const capability = operationPolicy.updateNotificationPreferences.capability;
+
+    expect(capability).toEqual({ action: "update", resourceType: "notification_preference" });
+    expect(requiredRoleFor("update", "notification_preference")).toBe("member");
+  });
+
+  it("keeps member-level operations free of a capability gate", () => {
+    expect(operationPolicy.addKeywords.capability).toBeUndefined();
+    expect(operationPolicy.createAlertRule.capability).toBeUndefined();
+    expect(operationPolicy.listKeywords.capability).toBeUndefined();
+  });
+
+  it("requires the admin scope to revoke a team invite", () => {
+    expect(operationPolicy.revokeTeamInvite.requiredScope).toBe("admin");
   });
 });

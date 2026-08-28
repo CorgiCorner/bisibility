@@ -67,6 +67,12 @@ describe("OverviewEmpty", () => {
     expect(screen.getByText("Welcome to your new project")).toBeVisible();
   });
 
+  it("does not retain the historical project-name compatibility branch", () => {
+    renderEmpty({}, "owner", "New workspace");
+
+    expect(screen.getByText("Welcome to New workspace")).toBeVisible();
+  });
+
   it("labels the Google Cloud Console detour honestly when OAuth is not configured", () => {
     renderEmpty({ gscOAuthConfigured: false });
 

@@ -1,8 +1,11 @@
+import { POST } from "@/app/api/v1/cloud/import/route";
 import {
   CloudImportTokenError,
   cloudImportBodySchema,
   importCloudExport,
 } from "@/lib/api/cloud-import";
+import { ImportSessionBodyError, readJsonBody } from "@/lib/api/instance-import/session-http";
+import type { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -23,10 +26,20 @@ const mocks = vi.hoisted(() => ({
     savedView: { create: vi.fn(), findFirst: vi.fn(), update: vi.fn() },
     tag: { findMany: vi.fn() },
   },
+  checkRateLimit: vi.fn(),
+  rateLimitExceeded: vi.fn(),
+  verifyMigrationToken: vi.fn(),
   writeAudit: vi.fn(),
 }));
 
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
+vi.mock("@/lib/api/instance-import/token-verifier", () => ({
+  verifyMigrationTokenInternal: mocks.verifyMigrationToken,
+}));
+vi.mock("@/lib/api/ratelimit", () => ({
+  checkRateLimit: mocks.checkRateLimit,
+  rateLimitExceeded: mocks.rateLimitExceeded,
+}));
 vi.mock("@/lib/api/keyword-create", () => ({ createKeywords: mocks.createKeywords }));
 vi.mock("@/lib/auth/audit", () => ({ writeAudit: mocks.writeAudit }));
 vi.mock("@/lib/notifications/events", () => ({
@@ -285,5 +298,90 @@ describe("importCloudExport hardening", () => {
         },
       ],
     });
+  });
+});
+
+describe("cloud import body limits", () => {
+  const previousLimit = process.env.BISIBILITY_MIGRATION_IMPORT_MAX_BODY_BYTES;
+
+  function countedStream(chunkCount: number, counter: { pulled: number }) {
+    return new ReadableStream<Uint8Array>({
+      pull(controller) {
+        if (counter.pulled >= chunkCount) {
+          controller.close();
+          return;
+        }
+        counter.pulled += 1;
+        controller.enqueue(new Uint8Array(1024));
+      },
+    });
+  }
+
+  function streamedRequest(chunkCount: number, counter: { pulled: number }) {
+    return new Request(url, {
+      body: countedStream(chunkCount, counter),
+      // @ts-expect-error - duplex is required by undici for a streaming body.
+      duplex: "half",
+      headers: { authorization: "Bearer mig_valid_token_value_12345" },
+      method: "POST",
+    });
+  }
+
+  function unreadableRequest() {
+    const body = new ReadableStream<Uint8Array>({
+      pull() {
+        throw new Error("Stream read failed.");
+      },
+    });
+    return new Request(url, {
+      body,
+      // @ts-expect-error - duplex is required by undici for a streaming body.
+      duplex: "half",
+      headers: { authorization: "Bearer mig_valid_token_value_12345" },
+      method: "POST",
+    });
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    process.env.BISIBILITY_MIGRATION_IMPORT_MAX_BODY_BYTES = "4096";
+    mocks.checkRateLimit.mockResolvedValue({ headers: new Headers(), success: true });
+    mocks.rateLimitExceeded.mockImplementation(() =>
+      Response.json({ status: 429 }, { status: 429 }),
+    );
+  });
+
+  afterEach(() => {
+    if (previousLimit === undefined) delete process.env.BISIBILITY_MIGRATION_IMPORT_MAX_BODY_BYTES;
+    else process.env.BISIBILITY_MIGRATION_IMPORT_MAX_BODY_BYTES = previousLimit;
+  });
+
+  it("stops reading a streamed import package once it passes the limit", async () => {
+    const counter = { pulled: 0 };
+    const chunkCount = 64;
+
+    const response = await POST(streamedRequest(chunkCount, counter) as NextRequest);
+
+    expect(response.status).toBe(413);
+    expect(counter.pulled).toBeLessThan(chunkCount);
+    expect(mocks.verifyMigrationToken).not.toHaveBeenCalled();
+  });
+
+  it("returns bad request for an unreadable import package body", async () => {
+    const response = await POST(unreadableRequest() as NextRequest);
+
+    expect(response.status).toBe(400);
+    expect(response.status).not.toBe(500);
+    expect(mocks.verifyMigrationToken).not.toHaveBeenCalled();
+  });
+
+  it("stops reading a streamed import session body once it passes the limit", async () => {
+    const counter = { pulled: 0 };
+    const chunkCount = 64;
+
+    await expect(
+      readJsonBody(streamedRequest(chunkCount, counter), { limit: 4096 }),
+    ).rejects.toBeInstanceOf(ImportSessionBodyError);
+    expect(counter.pulled).toBeLessThan(chunkCount);
   });
 });

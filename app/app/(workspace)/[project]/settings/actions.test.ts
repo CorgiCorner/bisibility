@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   readProjectDeleteSnapshot: vi.fn(),
   requireProjectScope: vi.fn(),
 }));
+const writeAudit = vi.hoisted(() => vi.fn());
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/actions/_shared", () => ({
@@ -28,7 +29,7 @@ vi.mock("@/lib/actions/project", () => ({
 vi.mock("@/lib/actions/waitlist", () => ({ joinWaitlist: mocks.joinWaitlist }));
 vi.mock("@/lib/auth/audit", () => ({
   requiredPublicAuditId: (value: string) => value,
-  writeAudit: vi.fn(),
+  writeAudit,
 }));
 
 describe("settings actions", () => {
@@ -64,6 +65,14 @@ describe("settings actions", () => {
     });
 
     expect(mocks.readActorProjects).toHaveBeenCalledWith("user_1");
+    expect(mocks.deleteProjectById).toHaveBeenCalledWith("project_internal_1", {
+      actorId: "user_1",
+      before: {
+        domain: "example.com",
+        publicId: "prj_a00000000000000000000000",
+      },
+      targetId: "prj_a00000000000000000000000",
+    });
     expect(mocks.readActorProjects.mock.invocationCallOrder[0]).toBeGreaterThan(
       mocks.deleteProjectById.mock.invocationCallOrder[0],
     );
@@ -80,6 +89,16 @@ describe("settings actions", () => {
       id: "prj_a00000000000000000000000",
       nextProjectPublicId: null,
     });
+  });
+
+  it("does not record a successful delete when deletion fails", async () => {
+    mocks.deleteProjectById.mockRejectedValueOnce(new Error("constraint failure"));
+
+    await expect(
+      deleteWorkspace({ confirmText: "example.com", projectId: "prj_a00000000000000000000000" }),
+    ).rejects.toThrow("constraint failure");
+
+    expect(writeAudit).not.toHaveBeenCalled();
   });
 
   it("authorizes billing interest against the owner-only billing resource", async () => {

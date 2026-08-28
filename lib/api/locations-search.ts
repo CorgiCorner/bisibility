@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { LocationSearchItem } from "@/lib/api/locations-search-contract";
 import { prisma } from "@/lib/db/prisma";
 import type { Location, Prisma } from "@/lib/generated/prisma/client";
 import { countryCodeForMarketName, countrySeed } from "@/lib/serp/location";
@@ -12,19 +13,7 @@ const DEFAULT_MAX_RESULTS = 10;
 const MIN_PROVIDER_QUERY_LENGTH = 3;
 const MIN_CACHE_CITY_HITS = 3;
 
-export type LocationCandidate = {
-  id: string;
-  kind: Location["kind"];
-  display_name: string;
-  country_code: string;
-  region_code: string | null;
-  region_name: string | null;
-  city_name: string | null;
-  canonical_key: string;
-  hl: string;
-  language_code: string;
-  language_label: string;
-};
+export type LocationCandidate = LocationSearchItem & { id: string; kind: Location["kind"] };
 
 function candidateId(kind: LocationCandidate["kind"], canonicalKey: string) {
   return `${kind === "country" ? "country" : "location"}:${canonicalKey}`;

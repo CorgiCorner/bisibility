@@ -113,6 +113,7 @@ async function authenticatePersonalToken(rawKey: string): Promise<PersonalTokenA
       scopes: true,
       user: {
         select: {
+          deactivatedAt: true,
           email: true,
           id: true,
           memberships: { select: { projectId: true, role: true } },
@@ -132,6 +133,10 @@ async function authenticatePersonalToken(rawKey: string): Promise<PersonalTokenA
   }
   if (token.expiresAt && token.expiresAt <= new Date()) {
     throw new ApiAuthError("Personal access token has expired.");
+  }
+  // A deactivated account keeps its token rows; the API must refuse them anyway.
+  if (token.user.deactivatedAt) {
+    throw new ApiAuthError("Account is deactivated.");
   }
 
   await prisma.personalAccessToken.update({

@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+## [0.16.0] - 2026-08-28
+
+- Validated the app's location-search endpoint and location-picker consumer responses.
+
+- Hardened sign-in, OAuth return paths, personal tokens, project API keys, and account deactivation against authentication and authorization bypasses.
+
+- Hardened deploy hooks, instance imports, webhook management, and saved-keyword deletion with early body limits and stricter API roles.
+
+- Improved account email-change safeguards, including rate-limited codes, current-address verification, session sign-out, and clearer security notices.
+
+- Made project and team cleanup more reliable, with atomic deletion audits, alert-recipient cleanup, and corrected contributor, webhook, and welcome-email documentation.
+
 ## [0.15.0] - 2026-08-26
 
 - Gave interactive edges their own colour token, so inputs, buttons, and chips no longer share the hairline used by separators and card outlines.

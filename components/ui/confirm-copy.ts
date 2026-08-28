@@ -49,7 +49,7 @@ export const CONFIRM: Record<ConfirmKind, ConfirmConfig> = {
     title: "Clear target URLs",
   },
   deactivateAccount: {
-    body: "Block sign-in, revoke every session, and pause scheduled checks owned by this account. Instance administrators are protected.",
+    body: "Deactivation will block sign-in and revoke every session. It will pause scheduled checks owned by this account. Every personal access token belonging to it will be permanently revoked. Instance administrators are protected.",
     dangerLabel: "Deactivate account",
     icon: UserMinus,
     toastMessage: "Account action requested",
@@ -118,7 +118,7 @@ export const CONFIRM: Record<ConfirmKind, ConfirmConfig> = {
     title: "Remove project member",
   },
   reactivateAccount: {
-    body: "Allow sign-in again. Scheduled checks will reconverge through the schedule reconciler.",
+    body: "Allow sign-in again. Previously revoked personal access tokens stay revoked and must be recreated. Scheduled checks will reconverge through the schedule reconciler.",
     dangerLabel: "Reactivate account",
     icon: UserPlus,
     toastMessage: "Account action requested",

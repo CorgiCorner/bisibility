@@ -142,6 +142,7 @@ describe("authenticateBearer", () => {
       revokedAt: null,
       scopes: ["read", "write", "admin"],
       user: {
+        deactivatedAt: null,
         email: "owner@example.com",
         id: "user_1",
         memberships: [{ projectId: "project_1", role: "owner" }],
@@ -186,6 +187,30 @@ describe("authenticateBearer", () => {
     expect(mocks.prisma.personalAccessToken.update).toHaveBeenCalledWith(
       expect.objectContaining({ data: { lastUsedAt: expect.any(Date) }, where: { id: "pat_1" } }),
     );
+  });
+
+  it("rejects a valid personal token when the user is deactivated", async () => {
+    const row = personalTokenRow();
+    mocks.prisma.personalAccessToken.findMany.mockResolvedValue([
+      {
+        ...row,
+        user: { ...row.user, deactivatedAt: new Date("2026-08-01T00:00:00.000Z") },
+      },
+    ]);
+
+    await expect(authenticateBearer(requestWithKey(rawPersonalToken))).rejects.toBeInstanceOf(
+      ApiAuthError,
+    );
+    expect(mocks.prisma.personalAccessToken.update).not.toHaveBeenCalled();
+  });
+
+  it("reads the deactivation flag alongside the token candidates", async () => {
+    mocks.prisma.personalAccessToken.findMany.mockResolvedValue([personalTokenRow()]);
+
+    await authenticateBearer(requestWithKey(rawPersonalToken));
+
+    const [args] = mocks.prisma.personalAccessToken.findMany.mock.calls.at(-1) ?? [];
+    expect(args?.select?.user?.select?.deactivatedAt).toBe(true);
   });
 
   it.each([

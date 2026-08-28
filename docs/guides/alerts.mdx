@@ -18,7 +18,7 @@ immediately query a SERP provider or evaluate historical checks.
 7. Verify `X-Bisibility-Signature` against the raw request body with the
    [copy-pasteable verifier](/api/webhooks#verify-signatures).
 
-The test is a real signed `alert.fired` envelope with `data.test: true`.
+The test is a real signed `webhook.test` envelope; see [Event envelopes](/api/webhooks#event-envelopes).
 After it succeeds, create a webhook-channel rule. Every enabled project endpoint
 receives every webhook event; endpoints are not filtered by rule or event name.
 

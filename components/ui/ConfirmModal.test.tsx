@@ -19,8 +19,12 @@ function renderConfirmModal(kind: ConfirmModalProps["kind"], onConfirm = vi.fn()
 describe("instance-admin confirmation copy", () => {
   it("documents account state and rolling-spend consequences", () => {
     expect(CONFIRM.deactivateAccount.body).toContain("revoke every session");
+    expect(CONFIRM.deactivateAccount.body).toContain(
+      "personal access token belonging to it will be permanently revoked",
+    );
     expect(CONFIRM.deactivateAccount.body).toContain("pause scheduled checks");
     expect(CONFIRM.reactivateAccount.body).toContain("reconverge");
+    expect(CONFIRM.reactivateAccount.body).toContain("stay revoked and must be recreated");
     expect(CONFIRM.resetAccountLimits.body).toContain(
       "Monthly spend is a rolling window and cannot be reset",
     );

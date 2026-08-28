@@ -1,4 +1,5 @@
 import type { KeywordLocation, KeywordRow } from "@/lib/queries/keywords";
+import { keywordLocation, locationSearchWireCandidate } from "@/lib/test/fixtures/location";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { KeywordInlineEdit } from "./KeywordInlineEdit";
@@ -22,17 +23,7 @@ function mockLocations(items: unknown[]) {
 }
 
 function location(overrides: Partial<KeywordLocation> = {}): KeywordLocation {
-  return {
-    canonicalKey: "US",
-    cityName: null,
-    countryCode: "US",
-    displayName: "United States",
-    gl: "us",
-    hl: "en",
-    id: "loc_us",
-    kind: "country",
-    ...overrides,
-  };
+  return keywordLocation(overrides);
 }
 
 function keyword(overrides: Partial<KeywordRow> = {}): KeywordRow {
@@ -195,15 +186,12 @@ describe("KeywordInlineEdit", () => {
   it("sends the canonical country when the country is changed", async () => {
     const updateKeywordAction = vi.fn();
     mockLocations([
-      {
+      locationSearchWireCandidate({
         canonical_key: "DE",
-        city_name: null,
         country_code: "DE",
         display_name: "Germany",
         id: "country:DE",
-        kind: "country",
-        region_name: null,
-      },
+      }),
     ]);
 
     render(
@@ -231,15 +219,16 @@ describe("KeywordInlineEdit", () => {
   it("sends the selected city canonical key when the city is changed", async () => {
     const updateKeywordAction = vi.fn();
     mockLocations([
-      {
+      locationSearchWireCandidate({
         canonical_key: "US/Texas/Austin",
         city_name: "Austin",
         country_code: "US",
         display_name: "Austin, Texas, United States",
         id: "location:US/Texas/Austin",
         kind: "city",
+        region_code: "US-TX",
         region_name: "Texas",
-      },
+      }),
     ]);
 
     render(

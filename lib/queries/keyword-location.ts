@@ -29,35 +29,25 @@ type LocationRelation = {
 };
 
 /**
- * Fall back to the legacy location string when the joined relation is missing.
+ * Throws when `locationRef` is missing. `Keyword.locationId` is NOT NULL and
+ * its `locationRef` relation is required in Prisma, so a missing relation means
+ * the caller omitted `locationRef` from its Prisma `select`, not that the
+ * keyword has no location.
  */
-export function locationView(row: {
-  location: string;
-  locationRef?: LocationRelation | null;
-}): KeywordLocation {
+export function locationView(row: { locationRef: LocationRelation }): KeywordLocation {
   const ref = row.locationRef;
-  if (ref) {
-    return {
-      canonicalKey: ref.canonicalKey,
-      cityName: ref.cityName,
-      countryCode: ref.countryCode,
-      displayName: ref.displayName,
-      gl: ref.gl,
-      hl: ref.hl,
-      id: ref.canonicalKey,
-      kind: ref.kind,
-      languageLabel: ref.languageLabel,
-    };
+  if (!ref) {
+    throw new Error("Keyword row is missing its required locationRef relation.");
   }
   return {
-    canonicalKey: row.location,
-    cityName: null,
-    countryCode: "",
-    displayName: row.location,
-    gl: "us",
-    hl: "en",
-    id: row.location,
-    kind: "country",
-    languageLabel: "English",
+    canonicalKey: ref.canonicalKey,
+    cityName: ref.cityName,
+    countryCode: ref.countryCode,
+    displayName: ref.displayName,
+    gl: ref.gl,
+    hl: ref.hl,
+    id: ref.canonicalKey,
+    kind: ref.kind,
+    languageLabel: ref.languageLabel,
   };
 }

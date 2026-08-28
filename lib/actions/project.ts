@@ -153,8 +153,28 @@ export async function readProjectDeleteSnapshot(projectId: string) {
   });
 }
 
-export async function deleteProjectById(projectId: string) {
-  return prisma.project.delete({ where: { id: projectId } });
+export async function deleteProjectById(
+  projectId: string,
+  audit: {
+    actorId: string;
+    before: NonNullable<Awaited<ReturnType<typeof readProjectDeleteSnapshot>>>;
+    targetId: string;
+  },
+) {
+  return prisma.$transaction(async (tx) => {
+    await writeAudit(
+      {
+        action: "project.delete",
+        actorId: audit.actorId,
+        before: audit.before,
+        projectId,
+        targetId: audit.targetId,
+        targetType: "project",
+      },
+      tx,
+    );
+    return tx.project.delete({ where: { id: projectId } });
+  });
 }
 
 export async function readActorProjects(actorId: string) {

@@ -1,4 +1,5 @@
 import { locationSearchMemberProjectId, searchLocations } from "@/lib/api/locations-search";
+import { locationSearchResponseSchema } from "@/lib/api/locations-search-contract";
 import { checkRateLimit, rateLimitExceeded } from "@/lib/api/ratelimit";
 import { errorResponse, listResponse } from "@/lib/api/responses";
 import { getSession } from "@/lib/auth/session";
@@ -37,7 +38,16 @@ export async function GET(req: NextRequest) {
   );
   const { candidates, warning } = await searchLocations({ country, projectId, query });
 
-  return listResponse(candidates, null, {
+  const response = locationSearchResponseSchema.safeParse({ data: candidates });
+  if (!response.success) {
+    const issueSummary = response.error.issues
+      .slice(0, 3)
+      .map((issue) => `${issue.path.join(".") || "data"}: ${issue.message}`)
+      .join("; ");
+    console.warn(`[locations] Ignoring invalid location-search response: ${issueSummary}`);
+  }
+
+  return listResponse(response.success ? response.data.data : candidates, null, {
     headers: warning ? new Headers({ "x-location-warning": warning }) : undefined,
   });
 }

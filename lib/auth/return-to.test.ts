@@ -12,6 +12,9 @@ const evilDestinations = [
   "http://evil.example/phish",
   "//evil.example/phish",
   "///evil.example/phish",
+  "/.//evil.example",
+  "/a/..//evil.example",
+  "/%2e//evil.example",
   String.raw`\evil.example\phish`,
   String.raw`/\evil.example/phish`,
   "/%5Cevil.example/phish",
@@ -28,6 +31,10 @@ describe("return-to validation", () => {
 
   it("accepts relative paths and preserves their query", () => {
     expect(validateReturnTo("/app/settings?tab=access")).toBe("/app/settings?tab=access");
+  });
+
+  it("preserves a safe path, query, and fragment", () => {
+    expect(validateReturnTo("/app/x?y=1#z")).toBe("/app/x?y=1#z");
   });
 
   it("falls back to the signed-in home for an invalid destination", () => {

@@ -21,12 +21,25 @@ export async function filterAlertEmailRecipients(
   recipients: AlertEmailRecipient[],
 ) {
   if (recipients.length === 0) return [];
-  const preferences = await prisma.notificationPreference.findMany({
-    select: { alertEmail: true, userId: true },
-    where: { projectId, userId: { in: recipients.map(({ userId }) => userId) } },
-  });
+  const userIds = recipients.map(({ userId }) => userId);
+  const [members, project, preferences] = await Promise.all([
+    prisma.membership.findMany({
+      select: { userId: true },
+      where: { projectId, userId: { in: userIds } },
+    }),
+    // authorize() accepts ownerId without a membership row; delivery must agree with it.
+    prisma.project.findUnique({ select: { ownerId: true }, where: { id: projectId } }),
+    prisma.notificationPreference.findMany({
+      select: { alertEmail: true, userId: true },
+      where: { projectId, userId: { in: userIds } },
+    }),
+  ]);
+  // Membership is the source of truth: a removed member must never receive project alerts,
+  // even when a stale recipient or preference row still names them.
+  const current = new Set(members.map(({ userId }) => userId));
+  if (project?.ownerId) current.add(project.ownerId);
   const disabled = new Set(
     preferences.filter(({ alertEmail }) => !alertEmail).map(({ userId }) => userId),
   );
-  return recipients.filter(({ userId }) => !disabled.has(userId));
+  return recipients.filter(({ userId }) => current.has(userId) && !disabled.has(userId));
 }

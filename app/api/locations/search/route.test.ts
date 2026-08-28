@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "./route";
 
 const mocks = vi.hoisted(() => ({
@@ -26,6 +26,10 @@ function request(query: string) {
 }
 
 describe("GET /api/locations/search", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.getSession.mockResolvedValue({ user: { id: "user_1" } });
@@ -71,7 +75,21 @@ describe("GET /api/locations/search", () => {
 
   it("searches the cache for any authenticated user (no project required)", async () => {
     mocks.searchLocations.mockResolvedValue({
-      candidates: [{ id: "loc_1", display_name: "Austin,Texas,United States" }],
+      candidates: [
+        {
+          canonical_key: "US/Texas/Austin",
+          city_name: "Austin",
+          country_code: "US",
+          display_name: "Austin, Texas, United States",
+          hl: "en",
+          id: "location:US/Texas/Austin",
+          kind: "city",
+          language_code: "en",
+          language_label: "English",
+          region_code: "US-TX",
+          region_name: "Texas",
+        },
+      ],
       warning: null,
     });
 
@@ -108,5 +126,20 @@ describe("GET /api/locations/search", () => {
     mocks.searchLocations.mockResolvedValue({ candidates: [], warning: "degraded to country" });
     const response = await GET(request("?q=Nowhere&country=United States&project=prj_1"));
     expect(response.headers.get("x-location-warning")).toBe("degraded to country");
+  });
+
+  it("returns candidates when the response contract does not match", async () => {
+    const candidate = { canonical_key: "US", display_name: "United States" };
+    const warning = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    mocks.searchLocations.mockResolvedValue({ candidates: [candidate], warning: null });
+
+    const response = await GET(request("?q=United States"));
+
+    expect(response.status).toBe(200);
+    expect((await response.json()).data).toEqual([candidate]);
+    expect(warning).toHaveBeenCalledOnce();
+    expect(warning).toHaveBeenCalledWith(
+      expect.stringContaining("data.0.city_name: Invalid input"),
+    );
   });
 });

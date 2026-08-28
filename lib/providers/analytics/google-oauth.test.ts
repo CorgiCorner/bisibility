@@ -413,4 +413,11 @@ describe("createGoogleInstallState return-target validation", () => {
       expect(() => createGoogleInstallState({ ...base, returnPath: target })).toThrow();
     }
   });
+
+  it.each(["/\t/evil.example", "/\n/evil.example", "/%09/evil.example"])(
+    "rejects a return target that smuggles a control character (%j)",
+    (target) => {
+      expect(() => createGoogleInstallState({ ...base, returnPath: target })).toThrow();
+    },
+  );
 });

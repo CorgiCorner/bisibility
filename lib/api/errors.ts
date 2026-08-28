@@ -18,6 +18,13 @@ export class ApiConflictError extends Error {
   }
 }
 
+export class ApiForbiddenError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ApiForbiddenError";
+  }
+}
+
 export class ApiNotFoundError extends Error {
   constructor(message: string) {
     super(message);

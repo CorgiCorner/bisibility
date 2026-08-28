@@ -1,6 +1,12 @@
 import "@/lib/deployment/runtime-env.generated";
 import type { ReactNode } from "react";
 
+export type SupportWidgetUser = Readonly<{
+  email: string;
+  id: string;
+  name: string;
+}>;
+
 function plausibleScriptSource(baseUrl: string) {
   try {
     const url = new URL(baseUrl.trim());
@@ -30,8 +36,8 @@ function renderHead(): ReactNode {
   return <script async data-domain={config.domain} src={config.src} />;
 }
 
-function renderMarketingSupportWidget(): ReactNode {
-  return null;
+function renderSupportWidget(_user: SupportWidgetUser): Promise<ReactNode> {
+  return Promise.resolve(null);
 }
 
 async function renderOnboardingQuizSlot(children: ReactNode): Promise<ReactNode> {
@@ -40,6 +46,6 @@ async function renderOnboardingQuizSlot(children: ReactNode): Promise<ReactNode>
 
 export const appExtensions = {
   renderHead,
-  renderMarketingSupportWidget,
+  renderSupportWidget,
   renderOnboardingQuizSlot,
 };

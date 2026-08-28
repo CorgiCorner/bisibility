@@ -6,7 +6,11 @@ import "@/lib/deployment/runtime-env.generated";
 import { authDatabase } from "@/lib/auth/auth-database";
 import { AUTH_IP_ADDRESS_OPTIONS } from "@/lib/auth/client-ip";
 import { demoEmailOtpRateLimit } from "@/lib/auth/demo-email-otp";
-import { emailOtpTwoFactorPlugin } from "@/lib/auth/email-otp-two-factor";
+import { revokeOtherSessionsBeforeEmailChange } from "@/lib/auth/email-change-session-revocation";
+import {
+  emailOtpTwoFactorPlugin,
+  socialOAuthTwoFactorPlugin,
+} from "@/lib/auth/email-otp-two-factor";
 import { prepareFirstRunUserCreation } from "@/lib/auth/first-run";
 import { firstRunCreationState, isPendingFirstRunUser } from "@/lib/auth/first-run-context";
 import {
@@ -59,6 +63,9 @@ if (GITHUB_CLIENT_ID && GITHUB_CLIENT_SECRET) {
   socialProviders.github = {
     clientId: GITHUB_CLIENT_ID,
     clientSecret: GITHUB_CLIENT_SECRET,
+    // Prevent a client-supplied ID token to POST /sign-in/social from minting a
+    // session without reaching the /callback/:id two-factor hook.
+    disableIdTokenSignIn: true,
   };
 }
 
@@ -66,6 +73,9 @@ if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
   socialProviders.google = {
     clientId: GOOGLE_CLIENT_ID,
     clientSecret: GOOGLE_CLIENT_SECRET,
+    // Prevent a client-supplied ID token to POST /sign-in/social from minting a
+    // session without reaching the /callback/:id two-factor hook.
+    disableIdTokenSignIn: true,
   };
 }
 
@@ -194,6 +204,8 @@ export const auth = betterAuth({
         after: sendCloudWelcomeSequence,
         before: prepareUserCreation,
       },
+      // Runs after the change-email code is consumed and before the address is written.
+      update: { before: revokeOtherSessionsBeforeEmailChange },
     },
   },
   emailAndPassword: {
@@ -237,7 +249,8 @@ export const auth = betterAuth({
   },
   plugins: [
     emailOTP({
-      changeEmail: { enabled: true },
+      // Requires an OTP proving the CURRENT address before a change code goes to the new one.
+      changeEmail: { enabled: true, verifyCurrentEmail: true },
       otpLength: 6,
       // Match the "expires in 5 minutes" copy in sendOtpEmail (and don't depend on
       // the better-auth default, which is longer).
@@ -282,6 +295,7 @@ export const auth = betterAuth({
     }),
     authAuditPlugin,
     emailOtpTwoFactorPlugin,
+    socialOAuthTwoFactorPlugin,
     nextCookies(),
   ],
 });

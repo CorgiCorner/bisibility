@@ -23,7 +23,7 @@ export type PreparedWelcomeEmail = {
 };
 
 export function prepareWelcomeEmail(
-  recipient: WelcomeRecipient & { variant: WelcomeVariant },
+  recipient: WelcomeRecipient & { projectRef: string | null; variant: WelcomeVariant },
   origin: string,
 ): PreparedWelcomeEmail {
   const identity = resolveFounderEmailIdentity();

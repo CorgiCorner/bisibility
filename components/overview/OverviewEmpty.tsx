@@ -6,7 +6,7 @@ import type { GettingStartedCapabilities, GettingStartedProgress } from "./getti
 import type { AddKeywordsAction, OnboardingCardProps } from "./OnboardingCard";
 import { OnboardingCard } from "./OnboardingCard";
 
-const CREATION_DEFAULT_NAMES = new Set(["new project", "new workspace"]);
+const CREATION_DEFAULT_NAME = "new project";
 
 export type OverviewEmptyProps = {
   addKeywordsAction?: AddKeywordsAction;
@@ -26,11 +26,11 @@ export function OverviewEmpty({
   workspaceName,
 }: Readonly<OverviewEmptyProps>) {
   // The creation default (lib/actions/cloud.ts) doubles as a name here, and "Welcome to
-  // New project" reads like a grammar slip; a possessive greeting covers that case.
-  // "New workspace" is the pre-rename default still carried by older projects.
-  const heading = CREATION_DEFAULT_NAMES.has(workspaceName.trim().toLowerCase())
-    ? "Welcome to your new project"
-    : `Welcome to ${workspaceName}`;
+  // "New project" reads like a grammar slip; a possessive greeting covers that case.
+  const heading =
+    workspaceName.trim().toLowerCase() === CREATION_DEFAULT_NAME
+      ? "Welcome to your new project"
+      : `Welcome to ${workspaceName}`;
 
   return (
     <div className="flex flex-col gap-4.5">

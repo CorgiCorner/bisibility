@@ -227,6 +227,34 @@ describe("POST /api/ingest/deploy", () => {
     expect(mocks.emitSignal).not.toHaveBeenCalled();
   });
 
+  it("stops reading a streamed body once it passes the limit", async () => {
+    const chunkCount = 300;
+    let pulled = 0;
+    const body = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        if (pulled >= chunkCount) {
+          controller.close();
+          return;
+        }
+        pulled += 1;
+        controller.enqueue(new Uint8Array(1024));
+      },
+    });
+    const request = new Request("https://example.test/api/ingest/deploy", {
+      body,
+      // @ts-expect-error - duplex is required by undici for a streaming body.
+      duplex: "half",
+      headers: { authorization: `Bearer ${rawToken}` },
+      method: "POST",
+    }) as NextRequest;
+
+    const response = await post(request);
+
+    expect(response.status).toBe(413);
+    expect(pulled).toBeLessThan(chunkCount);
+    expect(mocks.emitSignal).not.toHaveBeenCalled();
+  });
+
   it("rejects invalid tokens", async () => {
     mocks.prisma.ingestHook.findUnique.mockResolvedValue(null);
 

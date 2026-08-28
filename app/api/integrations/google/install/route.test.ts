@@ -108,4 +108,16 @@ describe("GET /api/integrations/google/install", () => {
       expect(mocks.createGoogleInstallUrl).not.toHaveBeenCalled();
     },
   );
+
+  it.each(["%2F%09%2Fevil.example", "%2F%2509%2Fevil.example", "%2F%5Cevil.example"])(
+    "rejects return path %s before authorization",
+    async (returnPath) => {
+      const response = await GET(
+        request(`projectId=${projectId}&provider=gsc&returnPath=${returnPath}`),
+      );
+
+      expect(response.headers.get("location")).toBe("https://app.example.com/app?google=error");
+      expect(mocks.createGoogleInstallUrl).not.toHaveBeenCalled();
+    },
+  );
 });

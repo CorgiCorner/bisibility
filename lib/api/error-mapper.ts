@@ -4,7 +4,7 @@ import { ProviderRateLimitedError } from "@/lib/providers/rate-limit";
 import { BudgetExhaustedError } from "@/lib/rank-check/budget";
 import { RankCheckRunnerError } from "@/lib/rank-check/runner";
 import { ZodError, z } from "zod";
-import { ApiConflictError, ApiInputError, ApiNotFoundError } from "./errors";
+import { ApiConflictError, ApiForbiddenError, ApiInputError, ApiNotFoundError } from "./errors";
 import { errorResponse } from "./responses";
 
 export function errorFromUnknown(error: unknown, headers: Headers, url: URL) {
@@ -27,6 +27,9 @@ export function errorFromUnknown(error: unknown, headers: Headers, url: URL) {
   }
   if (error instanceof ApiNotFoundError) {
     return errorResponse("not_found", error.message, 404, { headers, instance });
+  }
+  if (error instanceof ApiForbiddenError) {
+    return errorResponse("forbidden", error.message, 403, { headers, instance });
   }
   if (error instanceof ProjectReadOnlyError) {
     return errorResponse("project_read_only", error.message, 423, { headers, instance });

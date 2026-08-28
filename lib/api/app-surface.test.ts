@@ -41,7 +41,7 @@ const mocks = vi.hoisted(() => ({
   queries: {
     getCloudImportView: vi.fn(),
     getCompetitorsApiView: vi.fn(),
-    getNotificationPreferences: vi.fn(),
+    readNotificationPreferencesFor: vi.fn(),
     getTeamAccess: vi.fn(),
     listSavedViews: vi.fn(),
   },
@@ -127,7 +127,7 @@ vi.mock("@/lib/actions/notification-prefs", () => ({
   updateNotificationPreferences: mocks.actions.updateNotificationPreferences,
 }));
 vi.mock("@/lib/queries/notification-prefs", () => ({
-  getNotificationPreferences: mocks.queries.getNotificationPreferences,
+  readNotificationPreferencesFor: mocks.queries.readNotificationPreferencesFor,
 }));
 vi.mock("@/lib/actions/cloud", () => ({
   mintMigrationToken: mocks.actions.mintMigrationToken,
@@ -211,7 +211,7 @@ describe("public API app surface routes", () => {
       markets: [],
       suggestions: [],
     });
-    mocks.queries.getNotificationPreferences.mockResolvedValue({
+    mocks.queries.readNotificationPreferencesFor.mockResolvedValue({
       alertEmail: true,
       alertInApp: true,
       alertSlack: false,

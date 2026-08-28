@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { keywordLocationRelation } from "./keyword-location-test-fixtures";
 import type { Metrics } from "./keyword-metrics";
 import { getKeywordCount, getKeywordRows, getKeywordTagSuggestions } from "./keywords";
 
@@ -75,6 +76,7 @@ function keyword(overrides: Record<string, unknown> = {}) {
     device: "desktop",
     id: "keyword_1",
     location: "United States",
+    locationRef: keywordLocationRelation,
     project: { defaults: null, domain: "example.com" },
     publicId: "kw_real",
     rankChecks: [],

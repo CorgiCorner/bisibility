@@ -30,13 +30,15 @@ vi.mock("@/lib/seo/origin", () => ({
   resolveCanonicalOrigin: mocks.resolveCanonicalOrigin,
 }));
 
+const projectRef = "prj_a00000000000000000000000";
+
 const baseOwner = {
   accounts: [{ providerId: "google" }],
   deactivatedAt: null,
   email: "ada@example.com",
   name: "Ada",
   _count: { memberships: 1, projects: 1 },
-  projects: [{ id: "prj_1" }],
+  projects: [{ publicId: projectRef }],
 };
 
 const invitedMember = {
@@ -102,13 +104,34 @@ describe("sendWelcomeEmailActivity", () => {
         name: true,
         _count: { select: { memberships: true, projects: true } },
         projects: {
-          where: { onboardingCompletedAt: { not: null } },
-          select: { id: true },
+          orderBy: [{ isSample: "asc" }, { onboardingCompletedAt: "asc" }],
+          select: { publicId: true },
           take: 1,
+          where: { onboardingCompletedAt: { not: null } },
         },
       },
       where: { id: "user_1" },
     });
+  });
+
+  it("links the completed email to the same project that made it completed", async () => {
+    await sendWelcomeEmailActivity({ userId: "user_1" });
+
+    expect(mocks.prepareWelcome).toHaveBeenCalledWith(
+      expect.objectContaining({ projectRef, variant: "completed" }),
+      "https://cloud.example.com",
+    );
+  });
+
+  it("passes a null projectRef with the incomplete variant when no project is completed", async () => {
+    mocks.findUnique.mockResolvedValue({ ...baseOwner, projects: [] });
+
+    await sendWelcomeEmailActivity({ userId: "user_1" });
+
+    expect(mocks.prepareWelcome).toHaveBeenCalledWith(
+      expect.objectContaining({ projectRef: null, variant: "incomplete" }),
+      "https://cloud.example.com",
+    );
   });
 
   it("selects variant completed when a completed project exists", async () => {

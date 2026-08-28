@@ -3,9 +3,9 @@ title: "Team"
 description: "List project members and manage invitations."
 ---
 
-Paths are relative to `/api/v1`. All routes use a project-scoped API key -
-`Authorization: Bearer <api_key>` - that must belong to the project in the
-path. See [Authentication](/authentication) for scopes.
+Paths are relative to `/api/v1`. Routes accept a project-scoped API key that
+belongs to the project in the path or a personal access token. See
+[Authentication](/authentication) for scopes.
 
 | Method | Path | Purpose |
 | - | - | - |
@@ -14,8 +14,8 @@ path. See [Authentication](/authentication) for scopes.
 | `POST` | `/projects/{project_id}/team/invites` | Create or replace an invitation. |
 | `DELETE` | `/projects/{project_id}/team/invites/{invite_id}` | Revoke an invitation through the project route. |
 | `POST` | `/projects/{project_id}/team/invites/{invite_id}/resend` | Resend a pending invitation with a new token and expiration. |
-| `PATCH` | `/projects/{project_id}/team/members/{member_id}` | Change a non-owner member role. |
-| `DELETE` | `/projects/{project_id}/team/members/{member_id}` | Remove a non-owner member. |
+| `PATCH` | `/projects/{project_id}/team/members/{member_id}` | Change a non-owner member role. Project API keys act as admins; changing an admin-tier member or deleting a project needs an owner's personal access token. |
+| `DELETE` | `/projects/{project_id}/team/members/{member_id}` | Remove a non-owner member. Project API keys act as admins; removing an admin-tier member or deleting a project needs an owner's personal access token. |
 | `DELETE` | `/team/invites/{invite_id}` | Revoke the same invitation through the short route. |
 
 Invite roles are `admin`, `member`, or `viewer`. Creating and revoking invites

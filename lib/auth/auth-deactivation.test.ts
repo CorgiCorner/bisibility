@@ -1,10 +1,18 @@
+import { revokeOtherSessionsBeforeEmailChange } from "@/lib/auth/email-change-session-revocation";
 import type { BetterAuthOptions } from "better-auth";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({
-  emailOtpOptions: null as null | { changeEmail?: unknown },
-  findUnique: vi.fn(),
-}));
+const mocks = vi.hoisted(() => {
+  process.env.GITHUB_CLIENT_ID = "github-client-id";
+  process.env.GITHUB_CLIENT_SECRET = "github-client-secret";
+  process.env.GOOGLE_CLIENT_ID = "google-client-id";
+  process.env.GOOGLE_CLIENT_SECRET = "google-client-secret";
+
+  return {
+    emailOtpOptions: null as null | { changeEmail?: unknown },
+    findUnique: vi.fn(),
+  };
+});
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/deployment/runtime-env.generated", () => ({}));
@@ -55,6 +63,7 @@ describe("deactivated account session creation", () => {
     });
     expect(options.databaseHooks?.account?.create?.before).toBe(enforceGoogleSignupCapacity);
     expect(options.databaseHooks?.user?.create?.after).toBe(sendCloudWelcomeSequence);
+    expect(options.databaseHooks?.user?.update?.before).toBe(revokeOtherSessionsBeforeEmailChange);
   });
 
   it("wires the email OTP two-factor bridge before the cookie integration", () => {
@@ -69,8 +78,21 @@ describe("deactivated account session creation", () => {
   it("enables only the email OTP change-email flow", () => {
     const options = auth.options as BetterAuthOptions;
 
-    expect(mocks.emailOtpOptions?.changeEmail).toEqual({ enabled: true });
+    expect(mocks.emailOtpOptions?.changeEmail).toEqual({ enabled: true, verifyCurrentEmail: true });
     expect(options.user?.changeEmail).toBeUndefined();
+  });
+
+  it("disables ID-token social sign-in before it can bypass two-factor", () => {
+    const socialProviders = (auth.options as BetterAuthOptions).socialProviders;
+
+    expect(socialProviders?.github).toBeDefined();
+    expect(socialProviders?.google).toBeDefined();
+    expect(socialProviders?.github).toEqual(
+      expect.objectContaining({ disableIdTokenSignIn: true }),
+    );
+    expect(socialProviders?.google).toEqual(
+      expect.objectContaining({ disableIdTokenSignIn: true }),
+    );
   });
 
   it("allows an active user to create a session", async () => {

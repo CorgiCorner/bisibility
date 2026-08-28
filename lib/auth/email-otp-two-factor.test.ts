@@ -12,15 +12,25 @@ vi.mock("better-auth/crypto", () => ({
   generateRandomString: mocks.generateRandomString,
 }));
 
-import { emailOtpTwoFactorPlugin, enforceEmailOtpTwoFactor } from "./email-otp-two-factor";
+import {
+  emailOtpTwoFactorPlugin,
+  enforceEmailOtpTwoFactor,
+  enforceSocialOAuthTwoFactor,
+  socialOAuthTwoFactorLocation,
+  socialOAuthTwoFactorPlugin,
+} from "./email-otp-two-factor";
 
-function bridgeContext(twoFactorEnabled: boolean) {
+function bridgeContext(
+  twoFactorEnabled: boolean,
+  location = "/oauth/consent?client_id=client_1&scope=openid",
+) {
   const deleteSession = vi.fn();
   const createVerificationValue = vi.fn();
   const setNewSession = vi.fn();
   const setSignedCookie = vi.fn();
   const findOne = vi.fn().mockResolvedValue({ verified: true });
   const json = vi.fn((body) => body);
+  const setHeader = vi.fn();
   const createAuthCookie = vi.fn(() => ({
     name: "better-auth.two_factor",
     attributes: { httpOnly: true, maxAge: 600, sameSite: "lax" },
@@ -36,8 +46,10 @@ function bridgeContext(twoFactorEnabled: boolean) {
       },
       secret: "test-auth-secret",
       setNewSession,
+      responseHeaders: new Headers(location ? { location } : undefined),
     },
     json,
+    setHeader,
     setSignedCookie,
   };
 
@@ -48,6 +60,7 @@ function bridgeContext(twoFactorEnabled: boolean) {
     findOne,
     json,
     setNewSession,
+    setHeader,
     setSignedCookie,
   };
 }
@@ -117,5 +130,60 @@ describe("email OTP two-factor bridge", () => {
       twoFactorMethods: ["totp"],
       twoFactorRedirect: true,
     });
+  });
+
+  it("matches completed social OAuth callbacks and social sign-ins", () => {
+    const matcher = socialOAuthTwoFactorPlugin.hooks.after[0].matcher;
+
+    expect(matcher({ path: "/callback/:id" } as never)).toBe(true);
+    expect(matcher({ path: "/sign-in/social" } as never)).toBe(true);
+    expect(matcher({ path: "/oauth2/callback/:providerId" } as never)).toBe(false);
+  });
+
+  it.each(["google", "github"])(
+    "replaces a two-factor %s session with a pending challenge and preserves an internal OAuth return path",
+    async (provider) => {
+      const returnPath = `/oauth/consent?provider=${provider}&scope=openid`;
+      const scenario = bridgeContext(true, returnPath);
+
+      await expect(enforceSocialOAuthTwoFactor(scenario.context as never)).resolves.toBeUndefined();
+
+      expect(mocks.deleteSessionCookie).toHaveBeenCalledWith(scenario.context, true);
+      expect(scenario.deleteSession).toHaveBeenCalledWith("test-session-token");
+      expect(scenario.setNewSession).toHaveBeenCalledWith(null);
+      expect(scenario.setHeader).toHaveBeenCalledWith(
+        "location",
+        `/two-factor?next=${encodeURIComponent(returnPath)}`,
+      );
+    },
+  );
+
+  it("challenges a completed ID-token social sign-in session", async () => {
+    const matcher = socialOAuthTwoFactorPlugin.hooks.after[0].matcher;
+    const scenario = bridgeContext(true, "");
+
+    expect(matcher({ path: "/sign-in/social" } as never)).toBe(true);
+    await expect(enforceSocialOAuthTwoFactor(scenario.context as never)).resolves.toBeUndefined();
+
+    expect(scenario.deleteSession).toHaveBeenCalledWith("test-session-token");
+    expect(scenario.setNewSession).toHaveBeenCalledWith(null);
+    expect(scenario.setHeader).toHaveBeenCalledWith("location", "/two-factor");
+  });
+
+  it("keeps the successful social callback when two-factor is disabled", async () => {
+    const scenario = bridgeContext(false);
+
+    await expect(enforceSocialOAuthTwoFactor(scenario.context as never)).resolves.toBeUndefined();
+
+    expect(mocks.deleteSessionCookie).not.toHaveBeenCalled();
+    expect(scenario.setHeader).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["/app/settings?section=api-keys", "/two-factor?next=%2Fapp%2Fsettings%3Fsection%3Dapi-keys"],
+    ["https://evil.example.com", "/two-factor"],
+    ["//evil.example.com", "/two-factor"],
+  ])("redirects social OAuth %s safely", (location, expected) => {
+    expect(socialOAuthTwoFactorLocation(location)).toBe(expected);
   });
 });

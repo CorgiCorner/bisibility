@@ -1,5 +1,6 @@
 import { LocationField, type LocationFieldValue } from "@/components/keywords/LocationField";
 import { countryValueForName } from "@/components/keywords/location-picker-data";
+import { locationSearchWireCandidate } from "@/lib/test/fixtures/location";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -74,24 +75,22 @@ describe("LocationField", () => {
 
   it("queries mixed suggestions and preserves the selected city key", async () => {
     mockLocations([
-      {
+      locationSearchWireCandidate({
         canonical_key: "AU",
-        city_name: null,
         country_code: "AU",
         display_name: "Australia",
         id: "country:AU",
-        kind: "country",
-        region_name: null,
-      },
-      {
+      }),
+      locationSearchWireCandidate({
         canonical_key: "US/Texas/Austin",
         city_name: "Austin",
         country_code: "US",
         display_name: "Austin, Texas, United States",
         id: "location:US/Texas/Austin",
         kind: "city",
+        region_code: "US-TX",
         region_name: "Texas",
-      },
+      }),
     ]);
 
     render(<Harness />);
@@ -118,15 +117,12 @@ describe("LocationField", () => {
 
   it("supports keyboard selection", async () => {
     mockLocations([
-      {
+      locationSearchWireCandidate({
         canonical_key: "DE",
-        city_name: null,
         country_code: "DE",
         display_name: "Germany",
         id: "country:DE",
-        kind: "country",
-        region_name: null,
-      },
+      }),
     ]);
 
     render(<Harness />);
@@ -141,17 +137,15 @@ describe("LocationField", () => {
 
   it("renders and selects a country from a legacy response without id", async () => {
     mockLocations([
-      {
+      locationSearchWireCandidate({
         canonical_key: "ES",
-        city_name: null,
         country_code: "ES",
         display_name: "Spain",
         hl: "es",
+        id: undefined,
         kind: "country",
         language_label: "Spanish",
-        region_code: null,
-        region_name: null,
-      },
+      }),
     ]);
 
     render(<Harness />);
@@ -170,24 +164,39 @@ describe("LocationField", () => {
     expect(screen.getByTestId("key")).toHaveTextContent("ES");
   });
 
+  it("ignores malformed location-search data without crashing the picker", async () => {
+    const warning = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    mockLocations([{ canonical_key: "US", display_name: "United States" }]);
+
+    render(<Harness />);
+    fireEvent.change(screen.getByRole("combobox", { name: /location/i }), {
+      target: { value: "united" },
+    });
+
+    await waitFor(() => expect(warning).toHaveBeenCalledWith(expect.any(String)));
+    expect(screen.getByText(/No results yet/i)).toBeInTheDocument();
+    expect(screen.getByTestId("key")).toHaveTextContent("US");
+    warning.mockRestore();
+  });
+
   it("assigns unique positional DOM ids when canonical keys sanitize identically", async () => {
     mockLocations([
-      {
+      locationSearchWireCandidate({
         canonical_key: "a b-c",
-        city_name: null,
         country_code: "US",
         display_name: "Collision Country",
-        kind: "country",
-        region_name: null,
-      },
-      {
+        id: undefined,
+      }),
+      locationSearchWireCandidate({
         canonical_key: "a-b c",
         city_name: "Collision City",
         country_code: "US",
         display_name: "Collision City, Test Region, United States",
+        id: undefined,
         kind: "city",
+        region_code: "US-TR",
         region_name: "Test Region",
-      },
+      }),
     ]);
 
     render(<Harness />);
@@ -222,15 +231,12 @@ describe("LocationField", () => {
 
   it("portals the listbox outside the field control so card overflow cannot clip it", async () => {
     mockLocations([
-      {
+      locationSearchWireCandidate({
         canonical_key: "FR",
-        city_name: null,
         country_code: "FR",
         display_name: "France",
         id: "country:FR",
-        kind: "country",
-        region_name: null,
-      },
+      }),
     ]);
 
     render(<Harness />);
@@ -242,15 +248,12 @@ describe("LocationField", () => {
 
   it("keeps the portaled listbox open when blur targets a listbox option", async () => {
     mockLocations([
-      {
+      locationSearchWireCandidate({
         canonical_key: "IT",
-        city_name: null,
         country_code: "IT",
         display_name: "Italy",
         id: "country:IT",
-        kind: "country",
-        region_name: null,
-      },
+      }),
     ]);
     render(<Harness />);
     const input = screen.getByRole("combobox", { name: /location/i });
@@ -262,15 +265,12 @@ describe("LocationField", () => {
 
   it("closes the portaled listbox on blur when focus leaves the field and listbox", async () => {
     mockLocations([
-      {
+      locationSearchWireCandidate({
         canonical_key: "IT",
-        city_name: null,
         country_code: "IT",
         display_name: "Italy",
         id: "country:IT",
-        kind: "country",
-        region_name: null,
-      },
+      }),
     ]);
 
     render(<Harness />);

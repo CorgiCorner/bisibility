@@ -1,5 +1,9 @@
 "use client";
 
+import {
+  locationSearchConsumerResponseSchema,
+  normalizeLocationSearchItem,
+} from "@/lib/api/locations-search-contract";
 import { normalizeSerpMarketName, serpMarkets } from "@/lib/serp/markets";
 import { useRef, useState } from "react";
 
@@ -11,6 +15,11 @@ import { useRef, useState } from "react";
 const DEBOUNCE_MS = 180;
 export const MIN_LOCATION_QUERY_LENGTH = 2;
 export const EMPTY_PROVIDER_HINT_LENGTH = 3;
+let reportedInvalidSearchResponse = false;
+
+export function resetInvalidSearchResponseReport() {
+  reportedInvalidSearchResponse = false;
+}
 
 export type CountryOption = {
   /** ISO alpha-2, upper - the stored Location.countryCode. */
@@ -79,21 +88,9 @@ export function countryValueForName(name: string): LocationFieldValue | null {
   return option ? countryValueForCode(option.code) : null;
 }
 
-// Shape returned by GET /api/locations/search (snake_case envelope items).
-type LocationSearchItem = {
-  id?: string;
-  display_name: string;
-  country_code: string;
-  region_name: string | null;
-  city_name: string | null;
-  canonical_key: string;
-  hl?: string;
-  language_code?: string;
-  kind: "country" | "region" | "city";
-  language_label?: string;
-};
-
-function toSuggestion(item: LocationSearchItem): LocationSuggestion | null {
+function toSuggestion(
+  item: ReturnType<typeof normalizeLocationSearchItem>,
+): LocationSuggestion | null {
   if (item.kind !== "country" && item.kind !== "city") {
     return null;
   }
@@ -109,6 +106,13 @@ function toSuggestion(item: LocationSearchItem): LocationSuggestion | null {
     languageLabel: item.language_label,
     regionName: item.region_name,
   };
+}
+
+function reportInvalidSearchResponse() {
+  if (!reportedInvalidSearchResponse) {
+    console.warn("[locations] Ignoring an invalid location-search response.");
+    reportedInvalidSearchResponse = true;
+  }
 }
 
 async function fetchLocations(
@@ -127,9 +131,20 @@ async function fetchLocations(
   if (!response.ok) {
     return [];
   }
-  const body = (await response.json()) as { data?: LocationSearchItem[] };
-  return (body.data ?? []).flatMap((item) => {
-    const suggestion = toSuggestion(item);
+  let body: unknown;
+  try {
+    body = await response.json();
+  } catch {
+    reportInvalidSearchResponse();
+    return [];
+  }
+  const parsed = locationSearchConsumerResponseSchema.safeParse(body);
+  if (!parsed.success) {
+    reportInvalidSearchResponse();
+    return [];
+  }
+  return parsed.data.data.flatMap((item) => {
+    const suggestion = toSuggestion(normalizeLocationSearchItem(item));
     return suggestion ? [suggestion] : [];
   });
 }

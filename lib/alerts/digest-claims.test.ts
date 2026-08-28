@@ -14,6 +14,8 @@ const mocks = vi.hoisted(() => ({
   sendAlertOverflowNotice: vi.fn(),
   prisma: {
     alertRuleDailyStat: { findUnique: vi.fn() },
+    membership: { findMany: vi.fn() },
+    project: { findUnique: vi.fn() },
     notificationPreference: { findMany: vi.fn() },
     triggeredAlert: { findMany: vi.fn(), updateMany: vi.fn() },
   },
@@ -83,6 +85,10 @@ describe("alert digest claims", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.prisma.alertRuleDailyStat.findUnique.mockResolvedValue({ suppressedCount: 0 });
+    // Every recipient in these fixtures is a current project member.
+    mocks.prisma.membership.findMany.mockImplementation((input) =>
+      Promise.resolve(((input?.where?.userId?.in ?? []) as string[]).map((userId) => ({ userId }))),
+    );
     mocks.prisma.notificationPreference.findMany.mockResolvedValue([]);
     mocks.reserveDeliveryBudgetOnce.mockResolvedValue({ granted: true, reused: false });
   });

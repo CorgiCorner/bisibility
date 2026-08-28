@@ -3,6 +3,7 @@ import "server-only";
 import { checkRateLimit, rateLimitExceeded } from "@/lib/api/ratelimit";
 import { errorResponse, jsonResponse } from "@/lib/api/responses";
 import { isProjectReadOnly, ProjectReadOnlyError } from "@/lib/deployment/project-write-mode";
+import { readBodyWithLimit } from "@/lib/http/bounded-body";
 import { ingestDeployEvent } from "@/lib/ingest/ingest-deploy-event";
 import { hashApiKey } from "@/lib/providers/crypto";
 import { findDeployIngestHook } from "@/lib/queries/ingest-deploy";
@@ -30,23 +31,28 @@ function authToken(req: Request, url: URL) {
 }
 
 async function readJsonBody(req: Request, headers: Headers) {
-  const tooLarge = () =>
-    errorResponse("bad_request", "Request body is too large.", 413, {
-      headers,
-      instance: instance(req),
-    });
-  const declared = Number(req.headers.get("content-length"));
-  if (Number.isFinite(declared) && declared > MAX_BODY_BYTES) {
-    return { response: tooLarge() };
-  }
-
-  const text = await req.text();
-  if (Buffer.byteLength(text, "utf8") > MAX_BODY_BYTES) {
-    return { response: tooLarge() };
+  const read = await readBodyWithLimit(req, MAX_BODY_BYTES);
+  if (!read.ok) {
+    switch (read.reason) {
+      case "too_large":
+        return {
+          response: errorResponse("bad_request", "Request body is too large.", 413, {
+            headers,
+            instance: instance(req),
+          }),
+        };
+      case "unreadable":
+        return {
+          response: errorResponse("bad_request", "Request body could not be read.", 400, {
+            headers,
+            instance: instance(req),
+          }),
+        };
+    }
   }
 
   try {
-    return { body: JSON.parse(text) as unknown };
+    return { body: JSON.parse(read.bytes.toString("utf8")) as unknown };
   } catch {
     return {
       response: errorResponse("bad_request", "Request body must be valid JSON.", 400, {

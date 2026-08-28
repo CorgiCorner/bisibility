@@ -1,6 +1,7 @@
 import "server-only";
 
 import { getActionActor, requireProjectScope } from "@/lib/actions/_shared";
+import { validateReturnTo } from "@/lib/auth/return-to";
 import { isPublicIdOfType } from "@/lib/db/public-id";
 import { oauthRequestOrigin, oauthResultUrl } from "@/lib/integrations/oauth-url";
 import {
@@ -32,7 +33,7 @@ const installQuerySchema = z.object({
     .trim()
     .min(1)
     .max(200)
-    .refine((value) => value.startsWith("/") && !value.startsWith("//") && !value.includes("\\"))
+    .refine((value) => validateReturnTo(value) !== null, "Invalid return path.")
     .optional(),
 });
 

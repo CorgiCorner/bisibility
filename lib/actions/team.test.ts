@@ -18,6 +18,7 @@ const USER_PUBLIC_ID = "usr_abcdefghijklmnopqrstuvwx";
 const mocks = vi.hoisted(() => ({
   prisma: {
     $transaction: vi.fn(),
+    alertRuleRecipient: { deleteMany: vi.fn() },
     dailySendCounter: { upsert: vi.fn() },
     invite: {
       delete: vi.fn(),
@@ -34,6 +35,7 @@ const mocks = vi.hoisted(() => ({
       update: vi.fn(),
       updateMany: vi.fn(),
     },
+    notificationPreference: { deleteMany: vi.fn() },
     project: { findFirst: vi.fn(), update: vi.fn() },
     user: { findUnique: vi.fn() },
   },

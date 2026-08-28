@@ -33,7 +33,8 @@ function teamActor(ctx: ApiContext): Actor {
   return (
     ctx.actor ?? {
       id: ctx.auth.project.ownerId ?? ctx.auth.apiKey.id,
-      memberships: [{ projectId: ctx.auth.project.id, role: "owner" }],
+      // Mirrors the router: an API credential never acts above the admin tier.
+      memberships: [{ projectId: ctx.auth.project.id, role: "admin" }],
     }
   );
 }

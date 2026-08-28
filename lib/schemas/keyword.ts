@@ -1,3 +1,4 @@
+import { CANONICAL_KEY_MAX } from "@/lib/api/locations-search-contract";
 import { MAX_PROJECT_MARKETS } from "@/lib/markets/limits";
 import { normalizeCanonicalLocationKey } from "@/lib/serp/location";
 import {
@@ -20,7 +21,6 @@ export const KEYWORD_TEXT_MAX = 180;
 export const JITTER_MINUTES_MAX = 120;
 export const JITTER_MINUTES_MIN = 0;
 export const JITTER_MINUTES_RANGE_MESSAGE = "Jitter must be a whole number from 0 to 120 minutes.";
-
 // Bound parsed input work before deduplication; duplicate rows intentionally count toward the cap.
 export function keywordImportFileLimitMessage(received: number) {
   return `This file contains ${received} rows; the maximum is ${KEYWORD_IMPORT_MAX}. Duplicate rows count toward this limit. Remove duplicates, reduce the file, or split it into multiple imports.`;
@@ -37,7 +37,7 @@ export const serpMarketNameSchema = z.preprocess(
 export const canonicalKeySchema = z
   .string()
   .trim()
-  .max(260)
+  .max(CANONICAL_KEY_MAX)
   .superRefine((value, ctx) => {
     try {
       normalizeCanonicalLocationKey(value);

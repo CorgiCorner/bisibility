@@ -1,6 +1,10 @@
 "use server";
 
 import {
+  consumeAccountEmailCodeBudget,
+  isCurrentEmailOtpError,
+} from "@/lib/actions/account-email-code-budget";
+import {
   confirmAccountEmailChangeSchema,
   confirmCurrentAccountEmailVerificationSchema,
   requestAccountEmailChangeSchema,
@@ -9,11 +13,18 @@ import {
 import { writeAudit } from "@/lib/auth/audit";
 import { auth } from "@/lib/auth/auth";
 import { requireSession } from "@/lib/auth/session";
+import { countOtherSessions, revokeOtherSessions } from "@/lib/auth/session-revocation";
 import { prisma } from "@/lib/db/prisma";
 import { parsePublicId } from "@/lib/db/public-id";
+import { sendEmailChangedNotice } from "@/lib/email/email-changed-notice";
 import { appPath, appRootPath, asProjectRef } from "@/lib/routing/app-path";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
+
+export type AccountEmailChangeCodeRequested = {
+  currentEmail: string;
+  status: "verification_required";
+};
 
 export type AccountEmailChangeRequested = {
   currentEmail: string;
@@ -73,6 +84,35 @@ function revalidateAccountEmailViews() {
   revalidatePath(appPath(projectRoute, "settings", "notifications"), "page");
 }
 
+/**
+ * Step one of an email change: send a code to the address already on the account so the
+ * change request can prove control of it, not only of the new address.
+ */
+export async function requestAccountEmailChangeCode(): Promise<AccountEmailChangeCodeRequested> {
+  const session = await requireSession();
+  await consumeAccountEmailCodeBudget(session.user.id);
+  const current = await accountEmailContext(session.user.id);
+
+  try {
+    await auth.api.sendVerificationOTP({
+      body: { email: current.email, type: "email-verification" },
+      headers: await headers(),
+    });
+  } catch {
+    throw new Error("Verification code could not be sent.");
+  }
+
+  await writeAudit({
+    action: "account.email_change_code_requested",
+    actorId: session.user.id,
+    after: { email: current.email },
+    targetId: current.publicId,
+    targetType: "user",
+  });
+
+  return { currentEmail: current.email, status: "verification_required" };
+}
+
 export async function requestAccountEmailChange(
   input: unknown,
 ): Promise<AccountEmailChangeRequested> {
@@ -86,10 +126,14 @@ export async function requestAccountEmailChange(
 
   try {
     await auth.api.requestEmailChangeEmailOTP({
-      body: { newEmail: data.newEmail },
+      // `otp` is the code from the current address; better-auth rejects the request without it.
+      body: { newEmail: data.newEmail, otp: data.currentCode },
       headers: await headers(),
     });
-  } catch {
+  } catch (error: unknown) {
+    if (isCurrentEmailOtpError(error)) {
+      throw new Error("The code from your current email is invalid or expired. Request a new one.");
+    }
     throw new Error("Verification code could not be sent.");
   }
 
@@ -109,6 +153,15 @@ export async function requestAccountEmailChange(
   };
 }
 
+/** The change already happened, so a mailer outage must not fail the confirmation. */
+async function notifyPreviousAddress(input: { newEmail: string; previousEmail: string }) {
+  try {
+    await sendEmailChangedNotice({ changedAt: new Date(), ...input });
+  } catch (error: unknown) {
+    console.error("[account] email change notice could not be sent", error);
+  }
+}
+
 export async function confirmAccountEmailChange(input: unknown): Promise<AccountEmailChanged> {
   const session = await requireSession();
   const data = confirmAccountEmailChangeSchema.parse(input);
@@ -117,6 +170,12 @@ export async function confirmAccountEmailChange(input: unknown): Promise<Account
   if (sameEmail(current.email, data.newEmail)) {
     throw new Error("Enter a different email address.");
   }
+
+  // Other sessions are revoked by the `user.update.before` auth hook, which Better Auth runs
+  // after the code has been verified and consumed and before the address is written. A wrong
+  // code therefore never touches sessions, and a revocation failure aborts the change. The
+  // count is taken here for the audit row; the sweep below only catches a hook that did not run.
+  const revokedSessionCount = await countOtherSessions(session);
 
   try {
     await auth.api.changeEmailEmailOTP({
@@ -132,16 +191,23 @@ export async function confirmAccountEmailChange(input: unknown): Promise<Account
     throw new Error("Email change could not be confirmed.");
   }
 
+  const survivors = await revokeOtherSessions(session);
+  if (survivors > 0) {
+    console.error("[account] sessions survived the email change hook", { survivors });
+  }
+
+  revalidateAccountEmailViews();
+  await notifyPreviousAddress({ newEmail: updated.email, previousEmail: current.email });
+
   await writeAudit({
     action: "account.email_changed",
     actorId: session.user.id,
-    after: { email: updated.email },
+    after: { email: updated.email, revokedSessionCount },
     before: { email: current.email },
     targetId: current.publicId,
     targetType: "user",
   });
 
-  revalidateAccountEmailViews();
   return { email: updated.email, emailVerification: "verified", status: "changed" };
 }
 

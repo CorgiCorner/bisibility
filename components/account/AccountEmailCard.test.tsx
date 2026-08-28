@@ -6,6 +6,25 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const defaults = { email: "owner@example.com", emailVerified: true } as const;
 
+function changeActions() {
+  return {
+    confirmAccountEmailChange: vi.fn().mockResolvedValue({
+      email: "updated@example.com",
+      emailVerification: "verified" as const,
+      status: "changed" as const,
+    }),
+    requestAccountEmailChange: vi.fn().mockResolvedValue({
+      currentEmail: "owner@example.com",
+      pendingEmail: "updated@example.com",
+      status: "verification_required" as const,
+    }),
+    requestAccountEmailChangeCode: vi.fn().mockResolvedValue({
+      currentEmail: "owner@example.com",
+      status: "verification_required" as const,
+    }),
+  };
+}
+
 function renderCard(props: Partial<ComponentProps<typeof AccountEmailCard>> = {}) {
   const result = render(<AccountEmailCard {...defaults} {...props} />);
   const card = result.container.querySelector<HTMLElement>('[data-account-card-frame="email"]');
@@ -51,71 +70,56 @@ describe("AccountEmailCard", () => {
     expect(screen.queryByRole("button", { name: "Confirm email" })).not.toBeInTheDocument();
   });
 
-  it("requests an email change without replacing the persisted email", async () => {
-    const requestAccountEmailChange = vi.fn().mockResolvedValue({
-      currentEmail: "owner@example.com",
-      pendingEmail: "updated@example.com",
-      status: "verification_required",
-    });
-    const confirmAccountEmailChange = vi.fn().mockResolvedValue({
-      email: "updated@example.com",
-      emailVerification: "verified",
-      status: "changed",
-    });
-    const { card } = renderCard({
-      confirmAccountEmailChange,
-      requestAccountEmailChange,
-    });
-    const save = within(card).getByRole("button", { name: "Save" });
+  it("never offers a change flow that skips the current address", () => {
+    const actions = changeActions();
+    renderCard(actions);
 
-    fireEvent.change(screen.getByLabelText("Account email"), {
+    expect(
+      screen.getByRole("button", { name: "Send code to owner@example.com" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText("New email address")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Account email")).toHaveAttribute("readonly");
+  });
+
+  it("runs the three change steps and keeps the persisted email until the last one", async () => {
+    const actions = changeActions();
+    renderCard(actions);
+
+    fireEvent.click(screen.getByRole("button", { name: "Send code to owner@example.com" }));
+    await waitFor(() => expect(actions.requestAccountEmailChangeCode).toHaveBeenCalledOnce());
+
+    fireEvent.change(await screen.findByLabelText("Code from your current email"), {
+      target: { value: "654321" },
+    });
+    fireEvent.change(screen.getByLabelText("New email address"), {
       target: { value: "updated@example.com" },
     });
-    await waitFor(() => expect(save).toBeEnabled());
-    fireEvent.click(save);
+    fireEvent.click(screen.getByRole("button", { name: "Send code to the new address" }));
 
     await waitFor(() =>
-      expect(requestAccountEmailChange).toHaveBeenCalledWith({ newEmail: "updated@example.com" }),
+      expect(actions.requestAccountEmailChange).toHaveBeenCalledWith({
+        currentCode: "654321",
+        newEmail: "updated@example.com",
+      }),
     );
-    expect(await within(card).findByText("Saved")).toBeInTheDocument();
-    expect(screen.getByLabelText("Current account email")).toHaveValue("owner@example.com");
-    expect(screen.queryByText("Unverified")).not.toBeInTheDocument();
-    expect(
-      screen.getByText(
-        "New account email pending confirmation: updated@example.com. Enter its code to confirm the change.",
-      ),
-    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Account email")).toHaveValue("owner@example.com");
     expect(routerMock.refresh).not.toHaveBeenCalled();
 
-    fireEvent.change(screen.getByLabelText("Verification code"), { target: { value: "123456" } });
-    fireEvent.click(screen.getByRole("button", { name: "Confirm email" }));
+    fireEvent.change(await screen.findByLabelText("Code from your new email"), {
+      target: { value: "123456" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Confirm email change" }));
+
     await waitFor(() =>
-      expect(confirmAccountEmailChange).toHaveBeenCalledWith({
+      expect(actions.confirmAccountEmailChange).toHaveBeenCalledWith({
         code: "123456",
         newEmail: "updated@example.com",
       }),
     );
-    expect(screen.getByLabelText("Account email")).toHaveValue("updated@example.com");
+    await waitFor(() =>
+      expect(screen.getByLabelText("Account email")).toHaveValue("updated@example.com"),
+    );
     expect(routerMock.refresh).toHaveBeenCalledTimes(1);
-  });
-
-  it("does not request or save an invalid account email", async () => {
-    const requestAccountEmailChange = vi.fn();
-    const { card } = renderCard({
-      confirmAccountEmailChange: vi.fn(),
-      requestAccountEmailChange,
-    });
-    const save = within(card).getByRole("button", { name: "Save" });
-
-    fireEvent.change(screen.getByLabelText("Account email"), {
-      target: { value: "invalid-email" },
-    });
-    await waitFor(() => expect(save).toBeEnabled());
-    fireEvent.click(save);
-
-    expect(await screen.findByRole("alert")).toHaveTextContent("Enter a valid account email.");
-    expect(requestAccountEmailChange).not.toHaveBeenCalled();
-    expect(within(card).queryByText("Saved")).not.toBeInTheDocument();
   });
 
   it("does not confirm a malformed verification code", async () => {
@@ -145,7 +149,7 @@ describe("AccountEmailCard", () => {
       emailVerification: "verified",
       status: "verified",
     });
-    renderCard({
+    const { card } = renderCard({
       confirmCurrentAccountEmailVerification,
       email: "unverified@example.com",
       emailVerified: false,
@@ -170,7 +174,7 @@ describe("AccountEmailCard", () => {
         email: "unverified@example.com",
       }),
     );
-    expect(screen.getByText("Verified")).toBeInTheDocument();
+    expect(within(card).getByText("Verified")).toBeInTheDocument();
     expect(routerMock.refresh).toHaveBeenCalledTimes(1);
   });
 });

@@ -22,3 +22,16 @@ regexes = [
   '''rawKey\s*=\s*"bsb_key_test_[a-z0-9_]+"''',
   '''rawPersonalToken\s*=\s*"bsb_pat_live_[a-z0-9_]+"''',
 ]
+
+[[allowlists]]
+description = """The literal `bsb_key_live_...` / `bsb_pat_live_...` stubs, ellipsis included.
+Three dots cannot be a credential, so this matches the placeholder itself rather than
+opening up a path. It exists because the marketing integrations page shows the same curl
+example the app does (components/marketing/content/integrations/ProgrammaticAccess.tsx:120);
+there JSX splits `Bearer` from the token across two source lines and the rule never sees
+them together, while the design source keeps them on one line inside a <pre>, where a break
+would change what renders."""
+regexTarget = "match"
+regexes = [
+  '''bsb_(key|pat)_live_\.\.\.''',
+]

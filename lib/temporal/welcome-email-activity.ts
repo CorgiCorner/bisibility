@@ -22,10 +22,14 @@ export async function sendWelcomeEmailActivity({ userId }: { userId: string }) {
       email: true,
       name: true,
       _count: { select: { memberships: true, projects: true } },
+      // One row decides both the email variant and its project links, so the "completed"
+      // copy can never point at a different project than the one it describes. A real
+      // project wins over a sample one, then the earliest completed onboarding.
       projects: {
-        where: { onboardingCompletedAt: { not: null } },
-        select: { id: true },
+        orderBy: [{ isSample: "asc" }, { onboardingCompletedAt: "asc" }],
+        select: { publicId: true },
         take: 1,
+        where: { onboardingCompletedAt: { not: null } },
       },
     },
     where: { id: userId },
@@ -38,12 +42,14 @@ export async function sendWelcomeEmailActivity({ userId }: { userId: string }) {
   }
 
   const origin = resolveCanonicalOrigin();
-  const variant = user.projects.length > 0 ? "completed" : "incomplete";
+  const completedProject = user.projects[0] ?? null;
+  const variant = completedProject ? "completed" : "incomplete";
   const prepared = prepareWelcomeEmail(
     {
       email: user.email,
       name: user.name,
       profileNameTrusted: user.accounts.some(({ providerId }) => OAUTH_PROVIDERS.has(providerId)),
+      projectRef: completedProject?.publicId ?? null,
       variant,
     },
     origin,

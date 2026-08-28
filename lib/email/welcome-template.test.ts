@@ -3,6 +3,7 @@ import { welcomeEmail, welcomeFollowupEmail, welcomeGreetingName } from "./welco
 
 const origin = "https://cloud.example.com";
 const appUrl = `${origin}/app`;
+const projectRef = "prj_a00000000000000000000000";
 const unsubscribeUrl = `${origin}/email/unsubscribe?token=signed`;
 const sender = {
   founderName: "Ada" as string | null,
@@ -15,6 +16,7 @@ const nullBase = {
   from: "bisibility <hello@example.com>",
   origin,
   profileNameTrusted: false,
+  projectRef: null,
   replyTo: "hello@example.com",
 };
 
@@ -89,18 +91,20 @@ describe("greeting name", () => {
 });
 
 describe("welcome email variant A (onboarding completed)", () => {
-  const alertsUrl = `${origin}/alerts`;
-  const integrationsUrl = `${origin}/integrations`;
+  const alertsUrl = `${origin}/app/${projectRef}/alerts`;
+  const integrationsUrl = `${origin}/app/${projectRef}/integrations`;
   const apiDocsUrl = "https://bisibility.com/docs/api/quickstart";
 
-  const message = welcomeEmail({
+  const completedInput = {
     email: "owner@example.com",
     name: "Owner Example",
     origin,
     profileNameTrusted: false,
-    variant: "completed",
+    projectRef: projectRef as string | null,
+    variant: "completed" as const,
     ...sender,
-  });
+  };
+  const message = welcomeEmail(completedInput);
 
   const expectedText = [
     "Hey Owner,",
@@ -147,6 +151,15 @@ describe("welcome email variant A (onboarding completed)", () => {
     expect(message.html).toContain(`>${apiDocsUrl}</a>`);
   });
 
+  it("falls back to the app root for both project links when there is no project", () => {
+    const rootLinked = welcomeEmail({ ...completedInput, projectRef: null });
+
+    const hrefs = [...rootLinked.html.matchAll(/href="([^"]*)"/g)].map((m) => m[1]);
+    expect(hrefs).toEqual([appUrl, appUrl, apiDocsUrl]);
+    expect(rootLinked.text).toContain(`without checking in ${appUrl}`);
+    expect(rootLinked.text).toContain(`next to rankings ${appUrl}`);
+  });
+
   it("has no self-hosting, P.S., step query, shell markup, or em dash", () => {
     assertNoSelfHostOrPS(message.text, message.html);
     assertNoStep(message.text, message.html);
@@ -161,6 +174,7 @@ describe("welcome email variant B (onboarding incomplete)", () => {
     name: "owner",
     origin,
     profileNameTrusted: false,
+    projectRef,
     variant: "incomplete",
     ...sender,
   });

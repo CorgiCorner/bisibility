@@ -1,3 +1,4 @@
+import { locationSearchWireCandidate } from "@/lib/test/fixtures/location";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ResearchSearchCard } from "./ResearchSearchCard";
@@ -49,15 +50,12 @@ describe("ResearchSearchCard", () => {
       ok: true,
       json: async () => ({
         data: [
-          {
+          locationSearchWireCandidate({
             canonical_key: "DE",
-            city_name: null,
             country_code: "DE",
             display_name: "Germany",
             id: "country:DE",
-            kind: "country",
-            region_name: null,
-          },
+          }),
         ],
       }),
     } as Response);
