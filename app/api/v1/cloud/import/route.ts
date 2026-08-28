@@ -13,6 +13,7 @@ import { verifyMigrationTokenInternal } from "@/lib/api/instance-import/token-ve
 import { checkRateLimit, rateLimitExceeded } from "@/lib/api/ratelimit";
 import { errorResponse, resourceResponse } from "@/lib/api/responses";
 import { ProjectReadOnlyError } from "@/lib/deployment/project-write-mode";
+import { readBodyWithLimit } from "@/lib/http/bounded-body";
 import {
   IMPORT_PACKAGE_MAX_BODY_BYTES,
   IMPORT_PACKAGE_MAX_KEYWORDS,
@@ -67,11 +68,6 @@ function maxBodyBytes() {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : IMPORT_PACKAGE_MAX_BODY_BYTES;
 }
 
-function bodyTooLarge(req: Request, limit: number) {
-  const length = Number.parseInt(req.headers.get("content-length") ?? "", 10);
-  return Number.isFinite(length) && length > limit;
-}
-
 function payloadTooLarge(req: Request, limit: number, headers?: Headers) {
   return errorResponse("bad_request", payloadLimitDetail(limit), 413, {
     headers,
@@ -81,22 +77,27 @@ function payloadTooLarge(req: Request, limit: number, headers?: Headers) {
 
 export async function POST(req: NextRequest) {
   const limit = maxBodyBytes();
-  if (bodyTooLarge(req, limit)) {
-    return payloadTooLarge(req, limit);
-  }
-
   const anonymousLimit = await checkRateLimit(req, { kind: "anonymous" });
   if (!anonymousLimit.success) {
     return rateLimitExceeded(anonymousLimit);
   }
 
+  const read = await readBodyWithLimit(req, limit);
+  if (!read.ok) {
+    switch (read.reason) {
+      case "too_large":
+        return payloadTooLarge(req, limit, anonymousLimit.headers);
+      case "unreadable":
+        return errorResponse("bad_request", "Request body could not be read.", 400, {
+          headers: anonymousLimit.headers,
+          instance: instance(req),
+        });
+    }
+  }
+
   let rawBody: unknown;
   try {
-    const text = await req.text();
-    if (Buffer.byteLength(text, "utf8") > limit) {
-      return payloadTooLarge(req, limit, anonymousLimit.headers);
-    }
-    rawBody = JSON.parse(text) as unknown;
+    rawBody = JSON.parse(read.bytes.toString("utf8")) as unknown;
   } catch {
     return errorResponse("bad_request", "Request body must be valid JSON.", 400, {
       headers: anonymousLimit.headers,

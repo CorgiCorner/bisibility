@@ -1,6 +1,6 @@
 import { decryptSecret } from "@/lib/providers/crypto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { completeSlackOAuthInstall, createSlackInstallState } from "./slack";
+import { completeSlackOAuthInstall, createSlackInstallState, installSlack } from "./slack";
 
 const mocks = vi.hoisted(() => ({
   cookieStore: { delete: vi.fn(), get: vi.fn(), set: vi.fn() },
@@ -164,4 +164,20 @@ describe("Slack OAuth install", () => {
     );
     expect(mocks.prisma.slackConnection.upsert).not.toHaveBeenCalled();
   });
+});
+
+describe("Slack install return path validation", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it.each(["/\t/evil.example", "/%09/evil.example", "/\\evil.example"])(
+    "rejects return path %j before authorization",
+    async (returnPath) => {
+      await expect(
+        installSlack({ projectId: "prj_a00000000000000000000000", returnPath }),
+      ).rejects.toThrow(/Invalid return path/);
+      expect(mocks.requireSession).not.toHaveBeenCalled();
+    },
+  );
 });

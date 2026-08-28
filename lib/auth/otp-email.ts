@@ -24,6 +24,11 @@ function signInSubject(type: OtpEmail["type"]) {
     return "Confirm your new bisibility email";
   }
 
+  // Proves control of the address already on the account (used before an email change).
+  if (type === "email-verification") {
+    return "Verify your bisibility email";
+  }
+
   return "Your bisibility sign-in code";
 }
 

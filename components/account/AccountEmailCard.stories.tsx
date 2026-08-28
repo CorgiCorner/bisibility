@@ -1,26 +1,26 @@
 import {
   AccountEmailCard,
   type AccountEmailCardProps,
-  type ConfirmAccountEmailChangeInput,
-  type ConfirmAccountEmailChangeResult,
+  type ConfirmAccountEmailChange,
   type ConfirmCurrentAccountEmailVerification,
-  type RequestAccountEmailChangeInput,
-  type RequestAccountEmailChangeResult,
+  type RequestAccountEmailChange,
+  type RequestAccountEmailChangeCode,
   type RequestCurrentAccountEmailVerification,
 } from "@/components/account/AccountEmailCard";
 import type { Meta, StoryObj } from "@storybook/react";
 
-const requestAccountEmailChange = async (
-  input: RequestAccountEmailChangeInput,
-): Promise<RequestAccountEmailChangeResult> => ({
+const requestAccountEmailChangeCode: RequestAccountEmailChangeCode = async () => ({
+  currentEmail: "owner@example.com",
+  status: "verification_required",
+});
+
+const requestAccountEmailChange: RequestAccountEmailChange = async (input) => ({
   currentEmail: "owner@example.com",
   pendingEmail: input.newEmail,
   status: "verification_required",
 });
 
-const confirmAccountEmailChange = async (
-  input: ConfirmAccountEmailChangeInput,
-): Promise<ConfirmAccountEmailChangeResult> => ({
+const confirmAccountEmailChange: ConfirmAccountEmailChange = async (input) => ({
   email: input.newEmail,
   emailVerification: "verified",
   status: "changed",
@@ -38,6 +38,7 @@ const actionProps = {
   confirmAccountEmailChange,
   confirmCurrentAccountEmailVerification,
   requestAccountEmailChange,
+  requestAccountEmailChangeCode,
   requestCurrentAccountEmailVerification,
 } satisfies Partial<AccountEmailCardProps>;
 

@@ -51,7 +51,7 @@ type UrlPresenceSource = {
   verdict: string | null;
 };
 
-type KeywordRowInput = {
+export type KeywordRowInput = {
   alertTargets?: {
     rule: {
       conditionType: string;
@@ -66,7 +66,7 @@ type KeywordRowInput = {
   id: string;
   intent: string | null;
   location: string;
-  locationRef?: {
+  locationRef: {
     canonicalKey: string;
     cityName: string | null;
     countryCode: string;
@@ -76,7 +76,7 @@ type KeywordRowInput = {
     id: string;
     kind: KeywordLocation["kind"];
     languageLabel?: string;
-  } | null;
+  };
   publicId: string;
   queuedRankCheckTasks?: { state: string }[];
   rankChecks: {

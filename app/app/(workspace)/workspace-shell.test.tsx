@@ -77,7 +77,7 @@ vi.mock("@/lib/deployment/deployment", () => ({
   },
 }));
 vi.mock("@/lib/app-extensions", () => ({
-  appExtensions: { renderMarketingSupportWidget: mocks.supportWidget },
+  appExtensions: { renderSupportWidget: mocks.supportWidget },
 }));
 vi.mock("@/lib/auth/instance-admin", () => ({
   getInstanceAdminSession: mocks.adminSession,
@@ -144,7 +144,7 @@ describe("workspace layout", () => {
     expect(mocks.listWorkspaces).toHaveBeenCalledOnce();
   });
 
-  it("does not render the marketing support extension inside the authenticated shell", async () => {
+  it("does not load support in a self-hosted workspace", async () => {
     const result = await WorkspaceShell({
       activeProjectId: "project_1",
       children: <div>Workspace content</div>,
@@ -153,6 +153,23 @@ describe("workspace layout", () => {
 
     expect(renderToStaticMarkup(result)).not.toContain('data-testid="support-extension"');
     expect(mocks.supportWidget).not.toHaveBeenCalled();
+  });
+
+  it("renders support for an authenticated Cloud workspace", async () => {
+    mocks.deployment.isCloud = true;
+
+    const result = await WorkspaceShell({
+      activeProjectId: "project_1",
+      children: <div>Workspace content</div>,
+      projectRef: "prj_f00000000000000000000000",
+    });
+
+    expect(renderToStaticMarkup(result)).toContain('data-testid="support-extension"');
+    expect(mocks.supportWidget).toHaveBeenCalledWith({
+      email: "admin@example.com",
+      id: "user-1",
+      name: "Admin",
+    });
   });
 
   it.each([

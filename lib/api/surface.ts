@@ -1,7 +1,8 @@
+import { AuthorizationError } from "@/lib/auth/authorize";
 import { ProjectReadOnlyError } from "@/lib/deployment/project-write-mode";
 import { ZodError, type z } from "zod";
 import { type ApiContext, forbidden, projectMatches } from "./context";
-import { ApiConflictError, ApiInputError, ApiNotFoundError } from "./errors";
+import { ApiConflictError, ApiForbiddenError, ApiInputError, ApiNotFoundError } from "./errors";
 
 type PlainRecord = Record<string, unknown>;
 
@@ -85,6 +86,10 @@ export function domainError(error: unknown): never {
   }
   if (error instanceof ProjectReadOnlyError) {
     throw error;
+  }
+  // Domain services enforce the same role table as the router; a denial is a 403 to the caller.
+  if (error instanceof AuthorizationError) {
+    throw new ApiForbiddenError(error.message);
   }
   const detail = message(error);
   if (/not found/i.test(detail)) {

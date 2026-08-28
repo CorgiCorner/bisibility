@@ -39,6 +39,9 @@ export function validateReturnTo(value: unknown): string | null {
     if (target.origin !== validationOrigin) {
       return null;
     }
+    if (target.pathname.startsWith("//")) {
+      return null;
+    }
 
     return `${target.pathname}${target.search}${target.hash}`;
   } catch {

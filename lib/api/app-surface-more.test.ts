@@ -22,7 +22,7 @@ const mocks = vi.hoisted(() => ({
     getCloudImportView: vi.fn(),
     getCompetitorsApiView: vi.fn(),
     getIntegrationCategories: vi.fn(),
-    getNotificationPreferences: vi.fn(),
+    readNotificationPreferencesFor: vi.fn(),
     getTeamAccess: vi.fn(),
     listSavedViews: vi.fn(),
   },
@@ -78,11 +78,11 @@ vi.mock("@/lib/actions/competitors", () => ({
 vi.mock("@/lib/queries/competitors", () => ({
   getCompetitorsApiView: mocks.queries.getCompetitorsApiView,
 }));
-vi.mock("@/lib/actions/notification-prefs", () => ({
-  updateNotificationPreferences: mocks.actions.updateNotificationPreferences,
+vi.mock("@/lib/notifications/preferences-update", () => ({
+  applyNotificationPreferences: mocks.actions.updateNotificationPreferences,
 }));
 vi.mock("@/lib/queries/notification-prefs", () => ({
-  getNotificationPreferences: mocks.queries.getNotificationPreferences,
+  readNotificationPreferencesFor: mocks.queries.readNotificationPreferencesFor,
 }));
 vi.mock("@/lib/actions/cloud", () => ({
   mintMigrationToken: mocks.actions.mintMigrationToken,
@@ -170,7 +170,7 @@ describe("public API remaining app surface routes", () => {
       ],
       suggestions: [],
     });
-    mocks.queries.getNotificationPreferences.mockResolvedValue({
+    mocks.queries.readNotificationPreferencesFor.mockResolvedValue({
       alertEmail: true,
       alertInApp: true,
       alertSlack: false,
@@ -320,6 +320,7 @@ describe("public API remaining app surface routes", () => {
       200, 200, 200, 201, 200,
     ]);
     expect(mocks.actions.updateNotificationPreferences).toHaveBeenCalledWith(
+      expect.objectContaining({ memberships: expect.any(Array) }),
       expect.objectContaining({ checkEmail: true, projectId: ids.project }),
     );
     expect(mocks.tokenService.mint).toHaveBeenCalledWith({

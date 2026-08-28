@@ -9,12 +9,15 @@ const viewerPublicId = "mbr_c00000000000000000000000";
 
 const mocks = vi.hoisted(() => ({
   prisma: {
+    $transaction: vi.fn(),
+    alertRuleRecipient: { deleteMany: vi.fn() },
     membership: {
       count: vi.fn(),
       delete: vi.fn(),
       findFirst: vi.fn(),
       update: vi.fn(),
     },
+    notificationPreference: { deleteMany: vi.fn() },
     project: { findFirst: vi.fn() },
     user: { findUnique: vi.fn() },
   },
@@ -50,6 +53,8 @@ function mockActor(role: "admin" | "member" | "owner" | "viewer") {
 describe("team admin-tier RBAC guards", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // The prisma mock doubles as the transaction client so delete assertions still see the calls.
+    mocks.prisma.$transaction.mockImplementation((fn) => fn(mocks.prisma));
     mocks.prisma.membership.count.mockResolvedValue(2);
     mocks.writeAudit.mockResolvedValue({ id: "audit_1" });
     mockActor("admin");

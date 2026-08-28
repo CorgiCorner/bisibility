@@ -9,6 +9,7 @@ import type { Actor } from "@/lib/auth/authorize";
 import { prisma } from "@/lib/db/prisma";
 import { isPublicIdOfType, makePublicId } from "@/lib/db/public-id";
 import { assertInviteCreateAllowed, assertInviteResendAllowed } from "./invite-rate-limit";
+import { removeMembershipSideEffects } from "./membership-cleanup";
 
 const INVITE_DAYS = 7;
 const memberSelect = { id: true, publicId: true, role: true, userId: true } as const;
@@ -182,7 +183,10 @@ export async function removeTeamMember(
   assertEditableMember(member);
   assertOwnerForAdminTier(context.actor, project.id, member.role);
   await assertAdminOrOwnerRemains(project.id, member.role);
-  await prisma.membership.delete({ where: { id: member.id } });
+  await prisma.$transaction(async (tx) => {
+    await tx.membership.delete({ where: { id: member.id } });
+    await removeMembershipSideEffects(tx, { projectId: project.id, userId: member.userId });
+  });
   await writeAudit({
     action: "team.member.remove",
     actorId: context.auditActorId,

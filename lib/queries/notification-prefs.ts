@@ -1,7 +1,8 @@
 import "server-only";
 
+import { type Actor, authorize } from "@/lib/auth/authorize";
 import { prisma } from "@/lib/db/prisma";
-import { requireReadableProject } from "./_auth";
+import { getQueryActor } from "./_auth";
 
 export type NotificationPreferencesView = {
   alertEmail: boolean;
@@ -46,10 +47,18 @@ const preferenceSelect = {
   reportEmail: true,
 };
 
-export async function getNotificationPreferences(
+export async function readNotificationPreferencesFor(
+  actor: Actor,
   projectId: string,
 ): Promise<NotificationPreferencesView> {
-  const { actor, project } = await requireReadableProject(projectId);
+  const project = await prisma.project.findFirst({
+    select: { id: true, publicId: true },
+    where: { publicId: projectId },
+  });
+  if (!project) {
+    throw new Error("Project not found.");
+  }
+  authorize(actor, "read", { projectId: project.id, type: "project" });
   const [preference, user, slackConnection, webhookCount, enabledWebhookCount] = await Promise.all([
     prisma.notificationPreference.findUnique({
       select: preferenceSelect,
@@ -82,4 +91,10 @@ export async function getNotificationPreferences(
     slackAvailable: Boolean(slackConnection),
     webhookAvailable: webhookCount > 0,
   };
+}
+
+export async function getNotificationPreferences(
+  projectId: string,
+): Promise<NotificationPreferencesView> {
+  return readNotificationPreferencesFor(await getQueryActor(), projectId);
 }

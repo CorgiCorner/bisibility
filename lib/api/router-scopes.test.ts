@@ -170,7 +170,8 @@ describe("API key scopes", () => {
       expect.objectContaining({
         actor: {
           id: "owner_1",
-          memberships: [{ projectId: "project_1", role: "owner" }],
+          // Project keys act at the admin tier, never as the project owner.
+          memberships: [{ projectId: "project_1", role: "admin" }],
         },
         actorId: null,
       }),
@@ -350,5 +351,210 @@ describe("API key scopes", () => {
 
     expect(response.status).toBe(403);
     expect(mocks.dispatchRoute).not.toHaveBeenCalled();
+  });
+});
+
+describe("role capabilities", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.dispatchAccountRoute.mockResolvedValue(undefined);
+    mocks.dispatchRoute.mockResolvedValue(new Response(null, { status: 200 }));
+  });
+
+  function personalToken(role: "admin" | "member" | "owner" | "viewer") {
+    const apiKey = {
+      id: "pat_1",
+      name: "CLI",
+      prefix: "bsb_pat_live_",
+      projectId: project.id,
+      scopes: ["read", "write", "admin"],
+    };
+    mocks.authenticateBearer.mockResolvedValue({
+      kind: "personal_token",
+      memberships: [{ projectId: project.id, role }],
+      token: { ...apiKey, userId: "user_1" },
+      user: { email: "user@example.com", id: "user_1", name: "User" },
+    });
+    mocks.resolvePersonalProjectScope.mockResolvedValue({ auth: { apiKey, project }, role });
+  }
+
+  function projectKey(scopes: string[]) {
+    mocks.authenticateBearer.mockResolvedValue({
+      kind: "project_key",
+      apiKey: {
+        id: "key_1",
+        name: "Automation",
+        prefix: "bsb_key_live_",
+        projectId: project.id,
+        scopes,
+      },
+      project: { ...project, ownerId: "owner_1" },
+    });
+  }
+
+  it("denies a member token the migration token mint", async () => {
+    personalToken("member");
+
+    const response = await handleApiRequest(request("POST", "/projects/prj_1/migration-tokens"), [
+      "projects",
+      "prj_1",
+      "migration-tokens",
+    ]);
+
+    expect(response.status).toBe(403);
+    expect(mocks.dispatchRoute).not.toHaveBeenCalled();
+  });
+
+  it("denies a member token an alert rule deletion", async () => {
+    personalToken("member");
+
+    const response = await handleApiRequest(request("DELETE", "/alert-rules/alr_1"), [
+      "alert-rules",
+      "alr_1",
+    ]);
+
+    expect(response.status).toBe(403);
+    await expect(response.json()).resolves.toMatchObject({
+      detail: "Your project role does not allow this operation.",
+    });
+    expect(mocks.dispatchRoute).not.toHaveBeenCalled();
+  });
+
+  it("denies a member token a migration token revocation", async () => {
+    personalToken("member");
+
+    const response = await handleApiRequest(request("DELETE", "/migration-tokens/mt_1"), [
+      "migration-tokens",
+      "mt_1",
+    ]);
+
+    expect(response.status).toBe(403);
+    expect(mocks.dispatchRoute).not.toHaveBeenCalled();
+  });
+
+  it("denies a member token a keyword deletion", async () => {
+    personalToken("member");
+
+    const response = await handleApiRequest(request("DELETE", "/keywords/kw_1"), [
+      "keywords",
+      "kw_1",
+    ]);
+
+    expect(response.status).toBe(403);
+    expect(mocks.dispatchRoute).not.toHaveBeenCalled();
+  });
+
+  it("denies a member token saved-keyword deletion", async () => {
+    personalToken("member");
+
+    const response = await handleApiRequest(
+      request("DELETE", "/projects/prj_1/saved-keywords/skw_1"),
+      ["projects", "prj_1", "saved-keywords", "skw_1"],
+    );
+
+    expect(response.status).toBe(403);
+    expect(mocks.dispatchRoute).not.toHaveBeenCalled();
+  });
+
+  it("allows an admin token to delete a saved keyword", async () => {
+    personalToken("admin");
+
+    const response = await handleApiRequest(
+      request("DELETE", "/projects/prj_1/saved-keywords/skw_1"),
+      ["projects", "prj_1", "saved-keywords", "skw_1"],
+    );
+
+    expect(response.status).toBe(200);
+    expect(mocks.dispatchRoute).toHaveBeenCalledTimes(1);
+  });
+
+  it("denies a member token webhook endpoint creation", async () => {
+    personalToken("member");
+
+    const response = await handleApiRequest(request("POST", "/projects/prj_1/webhooks"), [
+      "projects",
+      "prj_1",
+      "webhooks",
+    ]);
+
+    expect(response.status).toBe(403);
+    expect(mocks.dispatchRoute).not.toHaveBeenCalled();
+  });
+
+  it("allows an admin token to create a webhook endpoint", async () => {
+    personalToken("admin");
+
+    const response = await handleApiRequest(request("POST", "/projects/prj_1/webhooks"), [
+      "projects",
+      "prj_1",
+      "webhooks",
+    ]);
+
+    expect(response.status).toBe(200);
+    expect(mocks.dispatchRoute).toHaveBeenCalledTimes(1);
+  });
+
+  it("allows an admin token to delete an alert rule", async () => {
+    personalToken("admin");
+
+    const response = await handleApiRequest(request("DELETE", "/alert-rules/alr_1"), [
+      "alert-rules",
+      "alr_1",
+    ]);
+
+    expect(response.status).toBe(200);
+    expect(mocks.dispatchRoute).toHaveBeenCalledTimes(1);
+  });
+
+  it("denies an admin token the project deletion", async () => {
+    personalToken("admin");
+
+    const response = await handleApiRequest(request("DELETE", "/projects/prj_1"), [
+      "projects",
+      "prj_1",
+    ]);
+
+    expect(response.status).toBe(403);
+    expect(mocks.dispatchRoute).not.toHaveBeenCalled();
+  });
+
+  it("allows an owner token to delete the project", async () => {
+    personalToken("owner");
+
+    const response = await handleApiRequest(request("DELETE", "/projects/prj_1"), [
+      "projects",
+      "prj_1",
+    ]);
+
+    expect(response.status).toBe(200);
+    expect(mocks.dispatchRoute).toHaveBeenCalledTimes(1);
+  });
+
+  it("denies a project API key the project deletion even with the admin scope", async () => {
+    projectKey(["read", "write", "admin"]);
+
+    const response = await handleApiRequest(request("DELETE", "/projects/prj_1"), [
+      "projects",
+      "prj_1",
+    ]);
+
+    expect(response.status).toBe(403);
+    expect(mocks.dispatchRoute).not.toHaveBeenCalled();
+  });
+
+  it("caps the project API key actor at the admin role", async () => {
+    projectKey(["read", "write", "admin"]);
+
+    const response = await handleApiRequest(
+      request("PATCH", "/projects/prj_1/team/members/mbr_1"),
+      ["projects", "prj_1", "team", "members", "mbr_1"],
+    );
+
+    expect(response.status).toBe(200);
+    expect(mocks.dispatchRoute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actor: { id: "owner_1", memberships: [{ projectId: project.id, role: "admin" }] },
+      }),
+    );
   });
 });

@@ -218,5 +218,5 @@ DELETE /api/v1/projects/{project_id}
 Authorization: Bearer <api_key>
 ```
 
-Deletes the scoped project and returns the deleted project resource. A PAT may
-delete it only when the user has the `owner` role.
+Deletes the scoped project and returns the deleted project resource. Only an
+owner's PAT can delete a project; project API keys receive 403.

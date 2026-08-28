@@ -7,7 +7,9 @@ const mocks = vi.hoisted(() => ({
   prisma: {
     invite: { delete: vi.fn(), findFirst: vi.fn() },
     membership: { delete: vi.fn(), findFirst: vi.fn(), update: vi.fn() },
+    $transaction: vi.fn(),
   },
+  removeMembershipSideEffects: vi.fn(),
   requireProjectScope: vi.fn(),
   writeAudit: vi.fn(),
 }));
@@ -24,6 +26,9 @@ vi.mock("@/lib/actions/team-rbac", () => ({
 }));
 vi.mock("@/lib/auth/audit", () => ({ writeAudit: mocks.writeAudit }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
+vi.mock("@/lib/team/membership-cleanup", () => ({
+  removeMembershipSideEffects: mocks.removeMembershipSideEffects,
+}));
 vi.mock("@/lib/team/invite-rate-limit", () => ({
   assertInviteCreateAllowed: vi.fn(),
   assertInviteResendAllowed: vi.fn(),
@@ -39,6 +44,9 @@ describe("team service public identifiers", () => {
     vi.clearAllMocks();
     mocks.requireProjectScope.mockResolvedValue({ id: "project_1" });
     mocks.writeAudit.mockResolvedValue({});
+    mocks.prisma.$transaction.mockImplementation((run: never) =>
+      (run as never as (tx: unknown) => unknown)(mocks.prisma),
+    );
   });
 
   it("rejects raw invite and membership keys before a lookup", async () => {
@@ -106,5 +114,27 @@ describe("team service public identifiers", () => {
         before: { role: "auditor" },
       }),
     );
+  });
+  it("clears alert recipients and notification settings with the membership", async () => {
+    const memberPublicId = "mbr_bbbbbbbbbbbbbbbbbbbbbbbb";
+    mocks.prisma.membership.findFirst.mockResolvedValue({
+      id: "membership_db_2",
+      publicId: memberPublicId,
+      role: "member",
+      userId: "user_2",
+    });
+
+    await expect(
+      removeTeamMember({ memberId: memberPublicId, projectId: "prj_1" }, context),
+    ).resolves.toEqual({ id: memberPublicId });
+
+    expect(mocks.prisma.$transaction).toHaveBeenCalledTimes(1);
+    expect(mocks.prisma.membership.delete).toHaveBeenCalledWith({
+      where: { id: "membership_db_2" },
+    });
+    expect(mocks.removeMembershipSideEffects).toHaveBeenCalledWith(mocks.prisma, {
+      projectId: "project_1",
+      userId: "user_2",
+    });
   });
 });

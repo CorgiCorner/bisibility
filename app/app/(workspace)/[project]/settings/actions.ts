@@ -87,16 +87,11 @@ export async function deleteWorkspace(input: unknown) {
     throw new Error("Confirmation text does not match this project.");
   }
 
-  await writeAudit({
-    action: "project.delete",
+  await deleteProjectById(project.id, {
     actorId: actor.id,
     before,
-    projectId: project.id,
     targetId: requiredPublicAuditId(project.publicId, "prj", "Project"),
-    targetType: "project",
   });
-
-  await deleteProjectById(project.id);
   const nextProject = (await readActorProjects(actor.id))[0] ?? null;
 
   revalidateSettingsViews();

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { searchLocations } from "./locations-search";
+import { locationSearchResponseSchema } from "./locations-search-contract";
 
 const mocks = vi.hoisted(() => ({
   prisma: { location: { findMany: vi.fn() } },
@@ -69,6 +70,9 @@ describe("searchLocations", () => {
       ]),
     );
     expect(mocks.suggestKeywordLocations).not.toHaveBeenCalled();
+    expect(locationSearchResponseSchema.parse({ data: result.candidates }).data).toEqual(
+      result.candidates,
+    );
   });
 
   it("filters cached city rows by ISO country from a legacy market name", async () => {

@@ -117,12 +117,13 @@ declare(["account.avatar_updated"], {
   after: f.urls("image"),
   before: f.urls("image"),
 });
-declare(["account.email_change_requested", "account.email_changed"], {
+declare(["account.email_change_code_requested", "account.email_verification_requested"], {
   after: strings("email"),
-  before: strings("email"),
 });
-declare(["account.email_verification_requested"], {
-  after: strings("email"),
+declare(["account.email_change_requested"], { after: strings("email"), before: strings("email") });
+declare(["account.email_changed"], {
+  after: { ...strings("email"), ...f.numbers("revokedSessionCount") },
+  before: strings("email"),
 });
 declare(["account.email_verified"], {
   after: { ...strings("email"), ...f.booleans("emailVerified") },
@@ -131,9 +132,7 @@ declare(["account.email_verified"], {
 declare(["account.deleted"], {
   before: { ...strings("email", "name"), counts: projectCounts },
 });
-declare(["account.session_revoked"], {
-  before: strings("id", "ipAddress", "userAgent"),
-});
+declare(["account.session_revoked"], { before: strings("id", "ipAddress", "userAgent") });
 declare(["account.sessions_revoked"], { after: f.numbers("revokedCount") });
 declare(["instance_admin.delete_blocked"], { before: f.booleans("isInstanceAdmin") });
 
@@ -215,7 +214,7 @@ declare(["instance_admin.account_deactivate_blocked"], {
   before: { ...f.dates("deactivatedAt"), ...f.booleans("isInstanceAdmin") },
 });
 declare(["instance_admin.account_deactivated", "instance_admin.account_reactivated"], {
-  after: f.dates("deactivatedAt"),
+  after: { ...f.dates("deactivatedAt"), ...f.numbers("revokedTokenCount") },
   before: f.dates("deactivatedAt"),
 });
 declare(["instance_admin.account_limits_reset"], {

@@ -28,6 +28,15 @@ export type PersonalApiContext = {
   url: URL;
 };
 
+/**
+ * Membership role the router resolved for the scoped project: the caller's own role for a
+ * personal token, `admin` for a project key. Undefined when the context carries no actor.
+ */
+export function actorProjectRole(ctx: Pick<ApiContext, "actor" | "auth">) {
+  return ctx.actor?.memberships?.find((membership) => membership.projectId === ctx.auth.project.id)
+    ?.role;
+}
+
 export function projectMatches(auth: AuthenticatedApiKey, projectId: string) {
   return projectId === auth.project.publicId;
 }

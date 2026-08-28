@@ -8,6 +8,8 @@ import {
 const mocks = vi.hoisted(() => ({
   startAlertDeliveryWorkflow: vi.fn(),
   prisma: {
+    membership: { findMany: vi.fn() },
+    project: { findUnique: vi.fn() },
     notificationPreference: { findMany: vi.fn() },
     triggeredAlert: {
       findFirst: vi.fn(),
@@ -29,6 +31,10 @@ describe("alert delivery context", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // Every recipient in these fixtures is a current project member.
+    mocks.prisma.membership.findMany.mockImplementation((input) =>
+      Promise.resolve(((input?.where?.userId?.in ?? []) as string[]).map((userId) => ({ userId }))),
+    );
     mocks.prisma.notificationPreference.findMany.mockResolvedValue([]);
     mocks.startAlertDeliveryWorkflow.mockResolvedValue(undefined);
   });

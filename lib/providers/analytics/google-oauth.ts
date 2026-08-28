@@ -1,6 +1,7 @@
 import "server-only";
 
 import { getActionActor, requireProjectScope } from "@/lib/actions/_shared";
+import { validateReturnTo } from "@/lib/auth/return-to";
 import { prisma } from "@/lib/db/prisma";
 import { GoogleOAuthInstallError } from "@/lib/integrations/google-oauth-failure";
 import { decryptProviderCredentials, decryptSecret, encryptSecret } from "@/lib/providers/crypto";
@@ -28,7 +29,7 @@ const returnPathSchema = z
   .trim()
   .min(1)
   .max(512)
-  .refine((value) => value.startsWith("/") && !value.startsWith("//") && !value.includes("\\"));
+  .refine((value) => validateReturnTo(value) !== null, "Invalid return path.");
 
 const googleStateSchema = z
   .object({

@@ -34,3 +34,44 @@ describe("OAuth URLs", () => {
     );
   });
 });
+
+describe("OAuth result path validation", () => {
+  const offOrigin = [
+    "/\t/evil.example",
+    "/\n/evil.example",
+    "/%09/evil.example",
+    "//evil.example",
+    "/.//evil.example",
+    "/a/..//evil.example",
+    "/%2e//evil.example",
+    "/\\evil.example",
+  ];
+
+  it.each(offOrigin)("never redirects off-origin for %j", (returnPath) => {
+    vi.stubEnv("SITE_URL", "https://app.example.com");
+    vi.stubEnv("BETTER_AUTH_URL", "");
+
+    const url = oauthResultUrl(
+      "https://app.example.com/api/integrations/slack/callback",
+      returnPath,
+    );
+
+    expect(url.origin).toBe("https://app.example.com");
+    expect(url.pathname).toBe("/app");
+    expect(url.search).toBe("");
+  });
+
+  it("keeps a safe path and query", () => {
+    vi.stubEnv("SITE_URL", "https://app.example.com");
+    vi.stubEnv("BETTER_AUTH_URL", "");
+
+    const url = oauthResultUrl(
+      "https://app.example.com/x",
+      "/app/prj_a00000000000000000000000/integrations?tab=slack",
+    );
+
+    expect(url.href).toBe(
+      "https://app.example.com/app/prj_a00000000000000000000000/integrations?tab=slack",
+    );
+  });
+});

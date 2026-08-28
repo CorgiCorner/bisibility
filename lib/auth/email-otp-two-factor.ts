@@ -1,5 +1,7 @@
 import "server-only";
 
+import { validateReturnTo } from "@/lib/auth/return-to";
+import { SIGNED_IN_HOME_PATH, TWO_FACTOR_CHALLENGE_PATH } from "@/lib/auth/two-factor-routes";
 import type { BetterAuthPlugin } from "better-auth";
 import { createAuthMiddleware } from "better-auth/api";
 import { deleteSessionCookie } from "better-auth/cookies";
@@ -11,11 +13,11 @@ const TWO_FACTOR_COOKIE_MAX_AGE_SECONDS = 10 * 60;
 
 type EmailOtpTwoFactorContext = Parameters<typeof deleteSessionCookie>[0];
 
-export async function enforceEmailOtpTwoFactor(ctx: EmailOtpTwoFactorContext) {
+export async function startTwoFactorChallenge(ctx: EmailOtpTwoFactorContext) {
   const signedIn = ctx.context.newSession;
 
   if (!signedIn?.user.twoFactorEnabled) {
-    return;
+    return null;
   }
 
   deleteSessionCookie(ctx, true);
@@ -54,7 +56,17 @@ export async function enforceEmailOtpTwoFactor(ctx: EmailOtpTwoFactorContext) {
   });
   const twoFactorMethods = twoFactorRecord && twoFactorRecord.verified !== false ? ["totp"] : [];
 
-  return ctx.json({ twoFactorRedirect: true, twoFactorMethods });
+  return { twoFactorMethods };
+}
+
+export async function enforceEmailOtpTwoFactor(ctx: EmailOtpTwoFactorContext) {
+  const challenge = await startTwoFactorChallenge(ctx);
+
+  if (!challenge) {
+    return;
+  }
+
+  return ctx.json({ twoFactorRedirect: true, ...challenge });
 }
 
 export const emailOtpTwoFactorPlugin = {
@@ -66,6 +78,41 @@ export const emailOtpTwoFactorPlugin = {
           return context.path === "/sign-in/email-otp";
         },
         handler: createAuthMiddleware(enforceEmailOtpTwoFactor),
+      },
+    ],
+  },
+} satisfies BetterAuthPlugin;
+
+export function socialOAuthTwoFactorLocation(value: unknown) {
+  const destination = validateReturnTo(value) ?? SIGNED_IN_HOME_PATH;
+
+  if (destination === SIGNED_IN_HOME_PATH) {
+    return TWO_FACTOR_CHALLENGE_PATH;
+  }
+
+  return `${TWO_FACTOR_CHALLENGE_PATH}?${new URLSearchParams({ next: destination }).toString()}`;
+}
+
+export async function enforceSocialOAuthTwoFactor(ctx: EmailOtpTwoFactorContext) {
+  const location = ctx.context.responseHeaders?.get("location");
+  const challenge = await startTwoFactorChallenge(ctx);
+
+  if (!challenge) {
+    return;
+  }
+
+  ctx.setHeader("location", socialOAuthTwoFactorLocation(location));
+}
+
+export const socialOAuthTwoFactorPlugin = {
+  id: "social-oauth-two-factor",
+  hooks: {
+    after: [
+      {
+        matcher(context) {
+          return context.path === "/callback/:id" || context.path === "/sign-in/social";
+        },
+        handler: createAuthMiddleware(enforceSocialOAuthTwoFactor),
       },
     ],
   },

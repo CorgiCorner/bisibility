@@ -1,5 +1,6 @@
 import "server-only";
 import { writeAudit } from "@/lib/auth/audit";
+import { validateReturnTo } from "@/lib/auth/return-to";
 import { prisma } from "@/lib/db/prisma";
 import { decryptSecret, encryptSecret } from "@/lib/providers/crypto";
 import { appPath } from "@/lib/routing/app-path";
@@ -30,7 +31,7 @@ const returnPathSchema = z
   .trim()
   .min(1)
   .max(200)
-  .refine((value) => value.startsWith("/") && !value.startsWith("//") && !value.includes("\\"));
+  .refine((value) => validateReturnTo(value) !== null, "Invalid return path.");
 
 const slackInstallSchema = z.object({
   projectId: projectIdSchema,

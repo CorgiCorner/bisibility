@@ -62,9 +62,11 @@ describe("auth OTP email", () => {
 
     await sendOtpEmail({ ...input, type: "forget-password" }, { fixedOtpEnabled: false });
     await sendOtpEmail({ ...input, type: "change-email" }, { fixedOtpEnabled: false });
+    await sendOtpEmail({ ...input, type: "email-verification" }, { fixedOtpEnabled: false });
 
     expect(sendEmailMock.mock.calls[0]?.[0]?.subject).toBe("Reset your bisibility password");
     expect(sendEmailMock.mock.calls[1]?.[0]?.subject).toBe("Confirm your new bisibility email");
+    expect(sendEmailMock.mock.calls[2]?.[0]?.subject).toBe("Verify your bisibility email");
   });
 
   it("logs the code instead of sending when no provider is configured", async () => {

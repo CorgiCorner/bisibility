@@ -102,12 +102,25 @@ Prerequisites:
 - Node.js 22
 - Docker with Docker Compose
 
-For the fastest full-stack start, follow the [README quick start](README.md). It
-creates a local `.env` with development secrets and runs:
+For the fastest full-stack start, follow the
+[local demo quickstart](https://bisibility.com/docs/quickstart). It walks
+through `scripts/dev/bootstrap-local.sh`, which creates a local `.env` with
+development secrets and prints the startup commands. The core stack is:
 
 ```bash
-docker compose up --build
+docker compose -f compose.yaml up -d
 ```
+
+To build the web image from your checkout instead of pulling the published one,
+add the build overlay and name the service, so that only the web stack starts:
+
+```bash
+docker compose -f compose.yaml -f compose.build.yaml up -d --build app
+```
+
+`compose.build.yaml` also defines the worker image, so without the `app`
+argument it would start a worker that has none of its configuration; the full
+stack below is the place for a worker build.
 
 Open [http://localhost:3000](http://localhost:3000) after the stack is ready.
 
@@ -124,15 +137,16 @@ configured for the feature you are testing.
 
 ### Temporal Worker
 
-The default Docker stack runs manual rank checks without the scheduler. To run
-scheduled checks in Docker, use the scheduled Compose profile:
+The core Compose stack runs manual rank checks without the scheduler. To run
+scheduled checks in Docker, add the worker and Temporal overlays:
 
 ```bash
-docker compose --profile scheduled up --build
+docker compose -f compose.yaml -f compose.worker.yaml -f compose.temporal.yaml --profile temporal-ui up -d
 ```
 
-That profile starts Temporal, the worker container, and the Temporal Web UI at
-`http://localhost:8233`.
+That command starts Temporal, the worker container, and the Temporal Web UI at
+`http://localhost:8233`. Add `-f compose.build.yaml --build` to it to build both
+the web and worker images from your checkout.
 
 To run the worker from your checkout while using Docker only for Temporal, start
 the Temporal fallback stack:

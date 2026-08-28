@@ -157,8 +157,15 @@ export async function setInstanceAdminAccountDeactivated(
     const targetPublicId = requiredPublicAuditId(target.publicId, "usr", "User");
     const changedAt = deactivated ? new Date() : null;
     await tx.user.update({ data: { deactivatedAt: changedAt }, where: { id: target.id } });
+    let revokedTokenCount = 0;
     if (deactivated) {
       await tx.session.deleteMany({ where: { userId: target.id } });
+      // Sessions alone do not stop API or MCP access; personal tokens must go too.
+      const revoked = await tx.personalAccessToken.updateMany({
+        data: { revokedAt: changedAt },
+        where: { revokedAt: null, userId: target.id },
+      });
+      revokedTokenCount = revoked.count;
     }
     await writeAudit(
       {
@@ -166,7 +173,7 @@ export async function setInstanceAdminAccountDeactivated(
           ? "instance_admin.account_deactivated"
           : "instance_admin.account_reactivated",
         actorId,
-        after: { deactivatedAt: changedAt },
+        after: { deactivatedAt: changedAt, revokedTokenCount },
         before: { deactivatedAt: target.deactivatedAt },
         projectId: null,
         targetId: targetPublicId,
@@ -178,7 +185,7 @@ export async function setInstanceAdminAccountDeactivated(
     return {
       accountStatus: deactivated ? "deactivated" : "active",
       message: deactivated
-        ? "Account deactivated. Sessions were revoked; scheduled checks pause on reconciliation."
+        ? "Account deactivated. Sessions and personal access tokens were revoked; scheduled checks pause on reconciliation."
         : "Account reactivated. Scheduled checks will reconverge on reconciliation.",
       status: "completed",
     } as const;

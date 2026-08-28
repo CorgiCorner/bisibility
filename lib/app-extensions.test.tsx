@@ -65,7 +65,7 @@ describe("Plausible head extension", () => {
 
 describe("app extension registry", () => {
   it("preserves the exact private and public registry shape", () => {
-    const expectedKeys = ["renderHead", "renderMarketingSupportWidget", "renderOnboardingQuizSlot"];
+    const expectedKeys = ["renderHead", "renderSupportWidget", "renderOnboardingQuizSlot"];
     const publicRegistryBody = readSnapshotRegistrySource().match(
       /export const appExtensions = \{(?<body>[\s\S]*?)\};/,
     )?.groups?.body;

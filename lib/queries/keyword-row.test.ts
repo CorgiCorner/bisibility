@@ -1,4 +1,5 @@
 import { deriveKeywordDetailState } from "@/lib/keyword-detail/state-model";
+import { keywordLocationRelation } from "@/lib/queries/keyword-location-test-fixtures";
 import type { Metrics } from "@/lib/queries/keyword-metrics";
 import { type KeywordTrafficSummary, mapKeyword } from "@/lib/queries/keyword-row";
 import { pathFromUrl } from "@/lib/queries/keyword-row-format";
@@ -22,6 +23,7 @@ function keywordRow() {
     id: "keyword_1",
     intent: null,
     location: "United States",
+    locationRef: keywordLocationRelation,
     publicId: "kw_1",
     rankChecks: [],
     schedule: null,

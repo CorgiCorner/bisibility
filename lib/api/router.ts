@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { Actor } from "@/lib/auth/authorize";
+import { canProjectAction } from "@/lib/auth/capabilities";
 import { isProjectReadOnly, ProjectReadOnlyError } from "@/lib/deployment/project-write-mode";
 import { handleAccountRequest } from "./account-router";
 import { isAccountRoute, isPersonalTokenOnlyRoute } from "./account-routes";
@@ -199,17 +200,6 @@ async function dispatchApiRequest(
     if ("response" in resolved) {
       return resolved.response;
     }
-    if (
-      method === "DELETE" &&
-      path[0] === "projects" &&
-      path.length === 2 &&
-      resolved.role !== "owner"
-    ) {
-      return errorResponse("forbidden", "Only the project owner can delete a project.", 403, {
-        headers: authResult.headers,
-        instance: instance(url),
-      });
-    }
     projectAuth = resolved.auth;
     actor = {
       id: auth.user.id,
@@ -217,10 +207,22 @@ async function dispatchApiRequest(
     };
   } else {
     projectAuth = auth;
+    // Project keys never exceed the admin tier: owner-only operations need an owner's PAT.
     actor = {
       id: auth.project.ownerId ?? auth.apiKey.id,
-      memberships: [{ projectId: auth.project.id, role: "owner" }],
+      memberships: [{ projectId: auth.project.id, role: "admin" }],
     };
+  }
+
+  const { capability } = declaredOperation;
+  if (
+    capability &&
+    !canProjectAction(actor.memberships?.[0]?.role, capability.action, capability.resourceType)
+  ) {
+    return errorResponse("forbidden", "Your project role does not allow this operation.", 403, {
+      headers: authResult.headers,
+      instance: instance(url),
+    });
   }
 
   if (!hasScope(projectAuth.apiKey.scopes, declaredOperation.requiredScope)) {

@@ -1,23 +1,15 @@
-import type { ApiScope } from "./scope-policy";
+import * as caps from "./operation-capabilities";
+import { type OperationPolicy, policy } from "./operation-policy-helpers";
 
 export type ApiMethod = "DELETE" | "GET" | "PATCH" | "POST";
 export type ProjectAccess = "read" | "write";
 
-type OperationPolicy = {
-  method: ApiMethod;
-  path: string;
-  projectAccess: ProjectAccess;
-  requiredScope: ApiScope;
-};
-
-function policy(
-  method: ApiMethod,
-  path: string,
-  requiredScope: ApiScope,
-  projectAccess: ProjectAccess = method === "GET" ? "read" : "write",
-): OperationPolicy {
-  return { method, path, projectAccess, requiredScope };
-}
+/**
+ * Project-role requirement an operation inherits from the app authorization table.
+ * The router resolves it with `canProjectAction()` so API credentials and the UI
+ * answer to the same rules.
+ */
+export type { OperationCapability } from "./operation-capabilities";
 
 export const operationPolicy = {
   addCompetitor: policy("POST", "/projects/{project_id}/competitors", "write"),
@@ -29,6 +21,8 @@ export const operationPolicy = {
     "POST",
     "/projects/{project_id}/providers/{provider_id}/connect",
     "write",
+    "write",
+    caps.manageProviderConnection,
   ),
   createAlertRule: policy("POST", "/projects/{project_id}/alert-rules", "write"),
   createApiKey: policy("POST", "/api-keys", "admin"),
@@ -39,19 +33,45 @@ export const operationPolicy = {
   createSavedView: policy("POST", "/projects/{project_id}/saved-views", "write"),
   createSignal: policy("POST", "/signals", "write"),
   createTeamInvite: policy("POST", "/projects/{project_id}/team/invites", "admin"),
-  createWebhookEndpoint: policy("POST", "/projects/{project_id}/webhooks", "write"),
-  deleteAlertRule: policy("DELETE", "/alert-rules/{rule_id}", "write"),
-  deleteKeyword: policy("DELETE", "/keywords/{id}", "write"),
-  deleteProject: policy("DELETE", "/projects/{project_id}", "admin"),
+  createWebhookEndpoint: policy(
+    "POST",
+    "/projects/{project_id}/webhooks",
+    "write",
+    "write",
+    caps.manageWebhookEndpoint,
+  ),
+  deleteAlertRule: policy(
+    "DELETE",
+    "/alert-rules/{rule_id}",
+    "write",
+    "write",
+    caps.deleteAlertRule,
+  ),
+  deleteKeyword: policy("DELETE", "/keywords/{id}", "write", "write", caps.deleteKeyword),
+  deleteProject: policy("DELETE", "/projects/{project_id}", "admin", "write", caps.deleteProject),
   deleteProjectSavedKeyword: policy(
     "DELETE",
     "/projects/{project_id}/saved-keywords/{saved_keyword_id}",
     "write",
+    "write",
+    caps.deleteKeyword,
   ),
   deleteProjectSavedView: policy("DELETE", "/projects/{project_id}/saved-views/{view_id}", "write"),
   deleteSavedView: policy("DELETE", "/saved-views/{view_id}", "write"),
-  deleteWebhookEndpoint: policy("DELETE", "/projects/{project_id}/webhooks/{webhook_id}", "admin"),
-  disconnectProvider: policy("DELETE", "/projects/{project_id}/providers/{provider_id}", "write"),
+  deleteWebhookEndpoint: policy(
+    "DELETE",
+    "/projects/{project_id}/webhooks/{webhook_id}",
+    "admin",
+    "write",
+    caps.manageWebhookEndpoint,
+  ),
+  disconnectProvider: policy(
+    "DELETE",
+    "/projects/{project_id}/providers/{provider_id}",
+    "write",
+    "write",
+    caps.manageProviderConnection,
+  ),
   exportRankHistory: policy("GET", "/projects/{project_id}/exports/rank-history", "read"),
   getKeyword: policy("GET", "/keywords/{id}", "read"),
   getKeywordMetrics: policy("POST", "/projects/{project_id}/keyword-metrics", "write", "read"),
@@ -112,17 +132,31 @@ export const operationPolicy = {
     "write",
   ),
   matchProjectKeywords: policy("POST", "/projects/{project_id}/keyword-matches", "read", "read"),
-  mintMigrationToken: policy("POST", "/projects/{project_id}/migration-tokens", "write"),
+  mintMigrationToken: policy(
+    "POST",
+    "/projects/{project_id}/migration-tokens",
+    "write",
+    "write",
+    caps.manageProject,
+  ),
   muteTriggeredAlert: policy(
     "POST",
     "/projects/{project_id}/triggered-alerts/{alert_id}/mute",
     "write",
   ),
-  removeCompetitor: policy("DELETE", "/competitors/{competitor_id}", "write"),
+  removeCompetitor: policy(
+    "DELETE",
+    "/competitors/{competitor_id}",
+    "write",
+    "write",
+    caps.deleteCompetitor,
+  ),
   removeProjectCompetitor: policy(
     "DELETE",
     "/projects/{project_id}/competitors/{competitor_id}",
     "write",
+    "write",
+    caps.deleteCompetitor,
   ),
   removeTeamMember: policy("DELETE", "/projects/{project_id}/team/members/{member_id}", "admin"),
   researchKeywords: policy("GET", "/projects/{project_id}/keyword-research", "write"),
@@ -133,19 +167,33 @@ export const operationPolicy = {
   ),
   revokeApiKey: policy("DELETE", "/api-keys/{key_id}", "admin"),
   revokeCurrentPersonalAccessToken: policy("DELETE", "/me/tokens/current", "read"),
-  revokeMigrationToken: policy("DELETE", "/migration-tokens/{token_id}", "write"),
+  revokeMigrationToken: policy(
+    "DELETE",
+    "/migration-tokens/{token_id}",
+    "write",
+    "write",
+    caps.manageProject,
+  ),
   revokePersonalAccessToken: policy("DELETE", "/me/tokens/{token_id}", "admin"),
   revokeProjectMigrationToken: policy(
     "DELETE",
     "/projects/{project_id}/migration-tokens/{token_id}",
     "write",
+    "write",
+    caps.manageProject,
   ),
   revokeProjectTeamInvite: policy(
     "DELETE",
     "/projects/{project_id}/team/invites/{invite_id}",
     "admin",
   ),
-  revokeTeamInvite: policy("DELETE", "/team/invites/{invite_id}", "write"),
+  revokeTeamInvite: policy(
+    "DELETE",
+    "/team/invites/{invite_id}",
+    "admin",
+    "write",
+    caps.manageTeam,
+  ),
   runRankCheck: policy("POST", "/keywords/{id}/checks", "write"),
   searchLocations: policy("GET", "/locations/search", "read"),
   setKeywordTargetUrl: policy("PATCH", "/keywords/{id}", "write"),
@@ -154,6 +202,8 @@ export const operationPolicy = {
     "POST",
     "/projects/{project_id}/providers/{provider_id}/test",
     "write",
+    "write",
+    caps.manageProviderConnection,
   ),
   updateAlertRule: policy("PATCH", "/alert-rules/{rule_id}", "write"),
   updateMe: policy("PATCH", "/me", "write"),
@@ -161,6 +211,10 @@ export const operationPolicy = {
     "PATCH",
     "/projects/{project_id}/notification-preferences",
     "write",
+    "write",
+    // Member level, like the app action: the handler escalates to
+    // manage/notification_delivery_channel only when Slack or webhook flips.
+    caps.updateNotificationPreference,
   ),
   updateProject: policy("PATCH", "/projects/{project_id}", "write"),
   updateProjectDefaults: policy("PATCH", "/projects/{project_id}/defaults", "write"),
@@ -168,6 +222,8 @@ export const operationPolicy = {
     "PATCH",
     "/projects/{project_id}/providers/{provider_id}",
     "write",
+    "write",
+    caps.manageProviderConnection,
   ),
   updateSitemapMonitor: policy(
     "PATCH",
@@ -175,7 +231,13 @@ export const operationPolicy = {
     "write",
   ),
   updateTeamMemberRole: policy("PATCH", "/projects/{project_id}/team/members/{member_id}", "admin"),
-  updateWebhookEndpoint: policy("PATCH", "/projects/{project_id}/webhooks/{webhook_id}", "write"),
+  updateWebhookEndpoint: policy(
+    "PATCH",
+    "/projects/{project_id}/webhooks/{webhook_id}",
+    "write",
+    "write",
+    caps.manageWebhookEndpoint,
+  ),
 } as const satisfies Record<string, OperationPolicy>;
 
 export type ApiOperationId = keyof typeof operationPolicy;

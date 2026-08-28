@@ -7,6 +7,7 @@ import {
   confirmAccountEmailChange,
   confirmCurrentAccountEmailVerification,
   requestAccountEmailChange,
+  requestAccountEmailChangeCode,
   requestCurrentAccountEmailVerification,
 } from "@/lib/actions/account-email";
 import { getAccount } from "@/lib/queries/account";
@@ -33,6 +34,7 @@ export default async function AccountPage() {
           email={account.email}
           emailVerified={account.emailVerified}
           requestAccountEmailChange={requestAccountEmailChange}
+          requestAccountEmailChangeCode={requestAccountEmailChangeCode}
           requestCurrentAccountEmailVerification={requestCurrentAccountEmailVerification}
         />
         <ConnectedAccounts accounts={account.connectedAccounts} />

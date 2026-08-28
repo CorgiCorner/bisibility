@@ -4,6 +4,7 @@ import { gunzipSync } from "node:zlib";
 import { checkRateLimit, rateLimitExceeded } from "@/lib/api/ratelimit";
 import { type ApiErrorCode, errorResponse } from "@/lib/api/responses";
 import { ProjectReadOnlyError } from "@/lib/deployment/project-write-mode";
+import { readBodyWithLimit } from "@/lib/http/bounded-body";
 import { z } from "zod";
 import type { VerifiedMigrationToken } from "./jobs";
 import { CloudImportTokenError, SelfImportError } from "./jobs";
@@ -120,10 +121,16 @@ export async function authorizeMigrationRequest(
 }
 
 export async function readJsonBody(req: Request, options: BodyOptions) {
-  const raw = Buffer.from(await req.arrayBuffer());
-  if (raw.byteLength > options.limit) {
-    throw new ImportSessionBodyError(413, BODY_TOO_LARGE_DETAIL);
+  const read = await readBodyWithLimit(req, options.limit);
+  if (!read.ok) {
+    switch (read.reason) {
+      case "too_large":
+        throw new ImportSessionBodyError(413, BODY_TOO_LARGE_DETAIL);
+      case "unreadable":
+        throw new ImportSessionBodyError(400, "Request body could not be read.");
+    }
   }
+  const raw = read.bytes;
   if (raw.byteLength === 0 && options.allowEmpty) {
     return { bytes: 0, rawBody: {} as unknown };
   }

@@ -1,3 +1,5 @@
+import { auditPayloadPolicy } from "@/lib/auth/audit-field-declarations";
+import { sanitizeDeclaredAuditPayload } from "@/lib/auth/audit-payload-policy";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   resetInstanceAdminAccountLimits,
@@ -12,6 +14,7 @@ const mocks = vi.hoisted(() => ({
   getInstanceAdminSession: vi.fn(),
   resetBucketsFor: vi.fn(),
   tx: {
+    personalAccessToken: { updateMany: vi.fn() },
     session: { deleteMany: vi.fn() },
     user: { findUnique: vi.fn(), update: vi.fn() },
   },
@@ -49,6 +52,7 @@ describe("instance admin account actions", () => {
     });
     mocks.tx.user.update.mockResolvedValue({ id: "user_1" });
     mocks.tx.session.deleteMany.mockResolvedValue({ count: 2 });
+    mocks.tx.personalAccessToken.updateMany.mockResolvedValue({ count: 3 });
     mocks.resetBucketsFor.mockResolvedValue({ backend: "redis", deleted: 3 });
     mocks.writeAudit.mockResolvedValue({ id: "audit_1" });
   });
@@ -65,10 +69,15 @@ describe("instance admin account actions", () => {
       where: { id: "user_1" },
     });
     expect(mocks.tx.session.deleteMany).toHaveBeenCalledWith({ where: { userId: "user_1" } });
+    expect(mocks.tx.personalAccessToken.updateMany).toHaveBeenCalledWith({
+      data: { revokedAt: expect.any(Date) },
+      where: { revokedAt: null, userId: "user_1" },
+    });
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({
         action: "instance_admin.account_deactivated",
         actorId: "admin_1",
+        after: expect.objectContaining({ revokedTokenCount: 3 }),
         projectId: null,
         targetId: USER_PUBLIC_ID,
       }),
@@ -92,6 +101,7 @@ describe("instance admin account actions", () => {
     });
     expect(mocks.tx.user.update).not.toHaveBeenCalled();
     expect(mocks.tx.session.deleteMany).not.toHaveBeenCalled();
+    expect(mocks.tx.personalAccessToken.updateMany).not.toHaveBeenCalled();
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({
         action: "instance_admin.account_deactivate_blocked",
@@ -126,6 +136,7 @@ describe("instance admin account actions", () => {
       where: { id: "user_1" },
     });
     expect(mocks.tx.session.deleteMany).not.toHaveBeenCalled();
+    expect(mocks.tx.personalAccessToken.updateMany).not.toHaveBeenCalled();
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({ action: "instance_admin.account_reactivated", projectId: null }),
       mocks.tx,
@@ -173,5 +184,14 @@ describe("instance admin account actions", () => {
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({ projectId: null, status: "failed" }),
     );
+  });
+
+  it("declares revokedTokenCount so it survives audit payload sanitization", () => {
+    const policy = auditPayloadPolicy("instance_admin.account_deactivated");
+    const sanitized = sanitizeDeclaredAuditPayload(
+      { deactivatedAt: new Date("2026-08-01T00:00:00.000Z"), revokedTokenCount: 3 },
+      policy?.after,
+    );
+    expect(sanitized).toMatchObject({ revokedTokenCount: 3 });
   });
 });

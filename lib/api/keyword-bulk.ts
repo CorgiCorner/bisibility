@@ -3,9 +3,10 @@ import "server-only";
 import { parseActionInput } from "@/lib/actions/_shared";
 import { addTags } from "@/lib/actions/keyword-helpers";
 import { writeAudit } from "@/lib/auth/audit";
+import { canProjectAction } from "@/lib/auth/capabilities";
 import { prisma } from "@/lib/db/prisma";
 import { refreshKeywordDispatchStates } from "@/lib/rank-check/dispatcher-state";
-import type { ApiContext } from "./context";
+import { type ApiContext, actorProjectRole, forbidden } from "./context";
 import { scheduleFromBulk } from "./keyword-utils";
 import { requireApiPublicId } from "./public-id";
 import { resourceResponse } from "./responses";
@@ -36,6 +37,13 @@ function results(ids: string[], map: Map<string, BulkKeyword>, status: string) {
 export async function bulkKeywords(ctx: ApiContext) {
   const body = await ctx.req.json();
   const data = parseActionInput(keywordBulkSchema, body);
+  // Deleting keywords is admin-only in the app (delete/keyword); the write tier alone is not enough.
+  if (
+    data.operation === "delete" &&
+    !canProjectAction(actorProjectRole(ctx), "delete", "keyword")
+  ) {
+    return forbidden(ctx, "Your project role does not allow deleting keywords.");
+  }
   const keywordIds = data.keyword_ids.map((id) => requireApiPublicId(id, "kw"));
   const keywords = await prisma.keyword.findMany({
     select: { id: true, publicId: true },

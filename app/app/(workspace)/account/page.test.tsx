@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   confirmCurrentAccountEmailVerification: vi.fn(),
   getAccount: vi.fn(),
   requestAccountEmailChange: vi.fn(),
+  requestAccountEmailChangeCode: vi.fn(),
   requestCurrentAccountEmailVerification: vi.fn(),
 }));
 
@@ -33,6 +34,7 @@ vi.mock("@/lib/actions/account-email", () => ({
   confirmAccountEmailChange: mocks.confirmAccountEmailChange,
   confirmCurrentAccountEmailVerification: mocks.confirmCurrentAccountEmailVerification,
   requestAccountEmailChange: mocks.requestAccountEmailChange,
+  requestAccountEmailChangeCode: mocks.requestAccountEmailChangeCode,
   requestCurrentAccountEmailVerification: mocks.requestCurrentAccountEmailVerification,
 }));
 vi.mock("./actions", () => ({
@@ -71,6 +73,7 @@ describe("AccountPage", () => {
         email: "owner@example.com",
         emailVerified: true,
         requestAccountEmailChange: mocks.requestAccountEmailChange,
+        requestAccountEmailChangeCode: mocks.requestAccountEmailChangeCode,
         requestCurrentAccountEmailVerification: mocks.requestCurrentAccountEmailVerification,
       }),
     );

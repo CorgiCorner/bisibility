@@ -195,7 +195,7 @@ describe("project write API routes", () => {
     vi.unstubAllEnvs();
   });
 
-  it("updates, deletes, and updates defaults for scoped projects", async () => {
+  it("updates a project and its defaults for scoped project keys", async () => {
     const patched = await call("PATCH", "/projects/prj_a00000000000000000000000", {
       name: "Renamed",
     });
@@ -208,9 +208,8 @@ describe("project write API routes", () => {
       serp_stop_on_match: false,
       timezone: "UTC",
     });
-    const deleted = await call("DELETE", "/projects/prj_a00000000000000000000000");
 
-    expect([patched.status, defaults.status, deleted.status]).toEqual([200, 200, 200]);
+    expect([patched.status, defaults.status]).toEqual([200, 200]);
     await expect(patched.json()).resolves.toMatchObject({
       id: "prj_a00000000000000000000000",
       name: "Renamed",
@@ -227,7 +226,6 @@ describe("project write API routes", () => {
       where: { id: { in: ["kw_2"] } },
     });
     expect(mocks.prisma.project.create).not.toHaveBeenCalled();
-    expect(mocks.prisma.project.delete).toHaveBeenCalledWith({ where: { id: "project_1" } });
     expect(mocks.prisma.projectDefaults.upsert).toHaveBeenCalledTimes(1);
     expect(mocks.prisma.projectDefaults.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -237,8 +235,19 @@ describe("project write API routes", () => {
     );
   });
 
-  it("deletes projects and records the audit entry in one transaction", async () => {
+  it("denies a project API key the project deletion", async () => {
     const deleted = await call("DELETE", "/projects/prj_a00000000000000000000000");
+
+    expect(deleted.status).toBe(403);
+    expect(mocks.prisma.project.delete).not.toHaveBeenCalled();
+  });
+
+  it("deletes projects and records the audit entry in one transaction", async () => {
+    // Deletion is owner-only at the router, so the handler is exercised directly here.
+    const deleted = await projectHandlers.deleteProject(
+      context("DELETE", "/projects/prj_a00000000000000000000000"),
+      "prj_a00000000000000000000000",
+    );
 
     expect(deleted.status).toBe(200);
     expect(mocks.prisma.$transaction).toHaveBeenCalledOnce();

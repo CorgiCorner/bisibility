@@ -11,6 +11,7 @@ import {
   ProjectWriteModeProvider,
 } from "@/components/shell/ProjectWriteModeProvider";
 import { Sidebar } from "@/components/shell/Sidebar";
+import { appExtensions } from "@/lib/app-extensions";
 import { appVersion } from "@/lib/app-version";
 import { getInstanceAdminSession } from "@/lib/auth/instance-admin";
 import { gravatarUrl } from "@/lib/avatar/gravatar";
@@ -42,12 +43,20 @@ export async function WorkspaceShell({
 
   const now = new Date();
   // Workspace chrome reads are independent. Self-host skips the Cloud-only audit query.
-  const [workspaces, budgetSummary, lastCloudExport, instanceAdminSession] = await Promise.all([
-    listWorkspaces(),
-    loadWorkspaceBudgetSummary(activeProjectId, now),
-    isCloud ? getLatestCloudPackageExport(projectRef) : Promise.resolve(null),
-    getInstanceAdminSession(),
-  ]);
+  const [workspaces, budgetSummary, lastCloudExport, instanceAdminSession, supportWidget] =
+    await Promise.all([
+      listWorkspaces(),
+      loadWorkspaceBudgetSummary(activeProjectId, now),
+      isCloud ? getLatestCloudPackageExport(projectRef) : Promise.resolve(null),
+      getInstanceAdminSession(),
+      isCloud
+        ? appExtensions.renderSupportWidget({
+            email: session.user.email,
+            id: session.user.id,
+            name: session.user.name,
+          })
+        : Promise.resolve(null),
+    ]);
   const workerLiveness = instanceAdminSession ? await getWorkerLivenessDetails() : null;
   const active = workspaces.find((workspace) => workspace.id === projectRef);
   if (!active) {
@@ -80,6 +89,7 @@ export async function WorkspaceShell({
       className="min-h-dvh bg-bg text-fg lg:grid lg:grid-cols-[248px_minmax(0,1fr)] data-[collapsed=true]:lg:grid-cols-[80px_minmax(0,1fr)]"
     >
       <ProjectWriteModeProvider projectRef={projectRef} writeMode={active.writeMode}>
+        {supportWidget}
         <SessionSpendProvider key={active.publicId}>
           <CommandPaletteProvider projectId={active.publicId} projectRef={projectRef}>
             <Sidebar

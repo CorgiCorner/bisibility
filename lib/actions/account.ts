@@ -3,6 +3,7 @@
 import { updateProfileNameRecord } from "@/lib/account/profile-service";
 import { writeAudit } from "@/lib/auth/audit";
 import { requireSession } from "@/lib/auth/session";
+import { revokeOtherSessions } from "@/lib/auth/session-revocation";
 import { prisma } from "@/lib/db/prisma";
 import { parsePublicId } from "@/lib/db/public-id";
 import { revalidatePath } from "next/cache";
@@ -109,9 +110,7 @@ export async function signOutEverywhere() {
   const session = await requireSession();
   const userPublicId = await currentUserPublicId(session.user.id);
 
-  const { count } = await prisma.session.deleteMany({
-    where: { id: { not: session.session.id }, userId: session.user.id },
-  });
+  const count = await revokeOtherSessions(session);
 
   await writeAudit({
     action: "account.sessions_revoked",

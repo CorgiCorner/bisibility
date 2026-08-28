@@ -1,3 +1,4 @@
+import { appPath, appRootPath } from "@/lib/routing/app-path";
 import { absoluteUrl } from "@/lib/seo/origin";
 import { escapeHtml } from "./escape-html";
 
@@ -16,7 +17,7 @@ type WelcomeIdentity = {
 type WelcomeVariant = "completed" | "incomplete";
 
 type WelcomeEmailInput = WelcomeIdentity &
-  WelcomeEmailSender & { origin: string; variant: WelcomeVariant };
+  WelcomeEmailSender & { origin: string; projectRef: string | null; variant: WelcomeVariant };
 type WelcomeFollowupInput = WelcomeIdentity & WelcomeEmailSender & { unsubscribeUrl: string };
 
 function comparableName(value: string) {
@@ -60,7 +61,7 @@ export function welcomeEmail(input: WelcomeEmailInput) {
   const greeting = welcomeGreetingName(input);
   const safeGreeting = escapeHtml(greeting);
   const founder = input.founderName;
-  const appUrl = absoluteUrl(input.origin, "/app");
+  const appUrl = absoluteUrl(input.origin, appRootPath());
   const sigText = signatureLines(founder);
   const sigHtml = signatureHtmlLines(founder).map(paragraph).join("");
 
@@ -73,8 +74,12 @@ export function welcomeEmail(input: WelcomeEmailInput) {
   let html: string;
 
   if (input.variant === "completed") {
-    const alertsUrl = absoluteUrl(input.origin, "/alerts");
-    const integrationsUrl = absoluteUrl(input.origin, "/integrations");
+    // Without an onboarded project there is no project-scoped route to send them to,
+    // so both links fall back to the workspace root rather than a guessed URL.
+    const sectionUrl = (section: string) =>
+      input.projectRef ? absoluteUrl(input.origin, appPath(input.projectRef, section)) : appUrl;
+    const alertsUrl = sectionUrl("alerts");
+    const integrationsUrl = sectionUrl("integrations");
     const apiDocsUrl = "https://bisibility.com/docs/api/quickstart";
 
     text = [

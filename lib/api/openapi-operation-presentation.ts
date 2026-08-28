@@ -54,6 +54,11 @@ export const openApiOperationPresentation: Record<string, OperationPresentation>
   matchProjectKeywords: { summary: "Match tracked keywords" },
   removeCompetitor: { summary: "Remove a competitor by ID" },
   removeProjectCompetitor: { summary: "Remove a project competitor" },
+  removeTeamMember: {
+    description:
+      "Project API keys act with admin-level permissions. Removing an admin-tier member or deleting a project needs an owner's personal access token.",
+    summary: "Remove a non-owner team member",
+  },
   researchKeywords: {
     description: "Researches or estimates keywords from one seed and requires write scope.",
     summary: "Research keywords",
@@ -68,5 +73,10 @@ export const openApiOperationPresentation: Record<string, OperationPresentation>
   },
   syncProjectTraffic: { summary: "Sync analytics traffic" },
   updateSitemapMonitor: { summary: "Update sitemap monitor" },
+  updateTeamMemberRole: {
+    description:
+      "Project API keys act with admin-level permissions. Changing an admin-tier member or deleting a project needs an owner's personal access token.",
+    summary: "Change a non-owner team member role",
+  },
   uploadCloudImportChunk: { summary: "Upload an instance import chunk" },
 };

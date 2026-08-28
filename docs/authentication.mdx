@@ -105,6 +105,9 @@ A PAT's effective project permission is the lower of the token level and the
 user's membership role in that project. For example, an admin PAT cannot exceed
 a viewer membership's read access. Only a project owner can delete that project.
 
+Project API keys act with at most admin-level project permissions; only an
+owner's PAT can delete a project.
+
 ## Project selection
 
 A project API key always belongs to one project. `GET /projects` returns only

@@ -48,6 +48,7 @@ const recipient = {
   email: "owner@example.com",
   name: "Owner",
   profileNameTrusted: true,
+  projectRef: "prj_a00000000000000000000000" as string | null,
   variant: "completed" as const,
 };
 
@@ -103,6 +104,7 @@ describe("welcome email prepare/send boundary", () => {
         email: "owner@example.com",
         name: "Owner",
         profileNameTrusted: true,
+        projectRef: "prj_a00000000000000000000000",
         variant: "completed",
         from: "ada@example.com",
         replyTo: "replies@example.com",
@@ -119,6 +121,18 @@ describe("welcome email prepare/send boundary", () => {
       text: "Welcome",
       to: "owner@example.com",
     });
+  });
+
+  it("forwards a null projectRef to the template unchanged", () => {
+    prepareWelcomeEmail({ ...recipient, projectRef: null }, "https://cloud.example.com");
+
+    expect(mocks.welcomeEmail).toHaveBeenCalledWith(expect.objectContaining({ projectRef: null }));
+  });
+
+  it("keeps projectRef out of the prepared message payload", () => {
+    const prepared = prepareWelcomeEmail(recipient, "https://cloud.example.com");
+
+    expect(prepared).not.toHaveProperty("projectRef");
   });
 
   it("sendPreparedWelcomeEmail passes the prepared message to the transport", async () => {
