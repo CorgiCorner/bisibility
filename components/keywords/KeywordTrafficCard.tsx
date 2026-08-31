@@ -117,7 +117,7 @@ function SearchPerformanceEmpty({
               Connect Search Console to see clicks, impressions and CTR for this keyword.
             </p>
             <Link
-              className="mt-3 inline-flex text-[13px] font-semibold text-accent-text"
+              className="mt-3 inline-flex text-[13px] font-semibold text-fg underline decoration-fg underline-offset-3"
               href={appPath(projectRef, "integrations")}
             >
               Connect Search Console

@@ -3,9 +3,9 @@
 import { Button, Modal } from "@/components/ui";
 import {
   CheckIcon as Check,
-  CloudIcon as Cloud,
   DownloadSimpleIcon as DownloadSimple,
   HardDrivesIcon as HardDrives,
+  InfoIcon as Info,
   XIcon as X,
 } from "@phosphor-icons/react";
 
@@ -54,9 +54,9 @@ function PolicyColumn({
               }`}
             >
               {coveredTone ? (
-                <Check aria-hidden size={10} weight="bold" />
+                <Check aria-hidden size={10} weight="regular" />
               ) : (
-                <X aria-hidden size={10} weight="bold" />
+                <X aria-hidden size={10} weight="regular" />
               )}
             </span>
             <span>{item}</span>
@@ -81,7 +81,7 @@ export function CloudBetaCoverageModal({
           </Button>
           <Button
             onClick={onExport}
-            startIcon={<DownloadSimple aria-hidden size={15} weight="bold" />}
+            startIcon={<DownloadSimple aria-hidden size={15} weight="regular" />}
             type="button"
           >
             Export data
@@ -117,7 +117,7 @@ export function CloudBetaCoverageModal({
                 aria-hidden
                 className="mt-0.5 shrink-0 text-fg-muted"
                 size={17}
-                weight="fill"
+                weight="regular"
               />
               <div>
                 <div className="text-[12.5px] font-semibold">On our side</div>
@@ -128,15 +128,15 @@ export function CloudBetaCoverageModal({
                 </p>
               </div>
             </div>
-            <div className="flex items-start gap-3 rounded-control border border-accent bg-accent-soft px-3.5 py-3">
+            <div className="flex items-start gap-3 rounded-control border border-border px-3.5 py-3">
               <DownloadSimple
                 aria-hidden
-                className="mt-0.5 shrink-0 text-accent-text"
+                className="mt-0.5 shrink-0 text-fg-muted"
                 size={17}
-                weight="bold"
+                weight="regular"
               />
               <div>
-                <div className="text-[12.5px] font-semibold">On yours</div>
+                <div className="text-[12.5px] font-semibold">On your side</div>
                 <p className="m-0 mt-0.5 text-[11.5px] leading-[1.45] text-fg-muted">
                   Keep a recent export. It is the copy fully under your control and can be restored
                   into self-host.
@@ -150,8 +150,14 @@ export function CloudBetaCoverageModal({
           <h3 className="m-0 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
             When the beta ends
           </h3>
-          <div className="mt-2 flex items-start gap-3 rounded-control border border-border bg-bg-sunken px-3.5 py-3">
-            <Cloud aria-hidden className="mt-0.5 shrink-0 text-fg-muted" size={17} weight="fill" />
+          <div className="mt-2 flex items-start gap-3 rounded-control border border-border px-3.5 py-3">
+            <Info
+              aria-hidden
+              className="mt-0.5 shrink-0 text-fg-muted"
+              data-icon="info"
+              size={17}
+              weight="regular"
+            />
             <p className="m-0 text-[11.5px] leading-[1.5] text-fg-muted">
               30 days notice before pricing. Nothing charged without your confirmation. Self-host
               stays available.

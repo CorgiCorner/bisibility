@@ -37,18 +37,23 @@ export function useCommandPalette() {
   return useContext(CommandPaletteContext);
 }
 
-export function CommandPaletteTrigger() {
+type CommandPaletteTriggerProps = {
+  variant?: "header" | "sidebar";
+};
+
+export function CommandPaletteTrigger({ variant }: Readonly<CommandPaletteTriggerProps>) {
   const { openPalette } = useCommandPalette();
+  const className =
+    variant === "sidebar"
+      ? "grid h-[30px] w-[30px] flex-none place-items-center rounded-control p-0 text-fg-muted transition-colors hover:bg-bg-sunken hover:text-fg focus-visible:-outline-offset-2"
+      : variant === "header"
+        ? "grid h-9 w-9 flex-none place-items-center rounded-control border-0 bg-transparent p-0 text-fg-muted shadow-none transition-colors hover:bg-bg-sunken hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid"
+        : "grid h-8 w-8 flex-none place-items-center rounded-control border border-border-control bg-bg-elev text-fg-muted transition-colors hover:bg-bg-sunken hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid";
 
   return (
     <Tooltip content="Search (⌘K)">
-      <button
-        aria-label="Search"
-        className="grid h-8 w-8 flex-none place-items-center rounded-control border border-border-control bg-bg-elev text-fg-muted transition-colors hover:bg-bg-sunken hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid"
-        onClick={openPalette}
-        type="button"
-      >
-        <MagnifyingGlass aria-hidden size={17} />
+      <button aria-label="Search" className={className} onClick={openPalette} type="button">
+        <MagnifyingGlass aria-hidden size={17} weight="regular" />
       </button>
     </Tooltip>
   );
@@ -193,7 +198,7 @@ function CommandPalette({
               aria-hidden
               className="flex-none text-accent-text"
               size={18}
-              weight="bold"
+              weight="regular"
             />
             <input
               className="min-w-0 flex-1 bg-transparent py-2 text-[16px] font-medium text-fg outline-none placeholder:text-[12px] placeholder:leading-4 focus-visible:outline-none sm:text-[15px]"
@@ -218,12 +223,17 @@ function CommandPalette({
                 const Icon = item.icon ?? Cursor;
                 return (
                   <button
-                    className="flex w-full items-center gap-3 rounded-control px-[11px] py-[9px] text-left text-fg outline-none hover:bg-nav-active focus-visible:bg-nav-active"
+                    className="flex w-full items-center gap-3 rounded-control px-[11px] py-[9px] text-left text-fg outline-none hover:bg-bg-sunken focus-visible:bg-bg-sunken"
                     key={item.id ?? `${group.title}-${item.label}`}
                     onClick={() => void runItem(item)}
                     type="button"
                   >
-                    <Icon aria-hidden className="flex-none text-fg-muted" size={16} />
+                    <Icon
+                      aria-hidden
+                      className="flex-none text-fg-muted"
+                      size={16}
+                      weight="regular"
+                    />
                     <span className="min-w-0 flex-1 truncate text-[13.5px] font-medium">
                       {item.label}
                     </span>
@@ -237,7 +247,7 @@ function CommandPalette({
           ))}
           {hasResults ? null : (
             <div className="flex flex-col items-center gap-[7px] px-4 py-[34px] text-fg-muted">
-              <MagnifyingGlass aria-hidden size={20} />
+              <MagnifyingGlass aria-hidden size={20} weight="regular" />
               <span className="text-[13px]">No matches</span>
             </div>
           )}

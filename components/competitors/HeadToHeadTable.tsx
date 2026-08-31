@@ -88,7 +88,7 @@ export function HeadToHeadTable({ market, onExport }: Readonly<HeadToHeadTablePr
             onClick={onExport}
             type="button"
           >
-            <UploadSimple aria-hidden size={13} />
+            <UploadSimple weight="regular" aria-hidden size={13} />
             Export
           </button>
         </div>

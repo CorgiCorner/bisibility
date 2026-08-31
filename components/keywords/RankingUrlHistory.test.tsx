@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
 import { RankingUrlHistory } from "@/components/keywords/RankingUrlHistory";
 import { deriveRankingUrlPeriods } from "@/lib/keyword-detail/ranking-url-history";
@@ -36,6 +38,28 @@ function renderHistory(history: UrlHistoryEventInput[], trackedDepth = 100) {
 }
 
 describe("RankingUrlHistory", () => {
+  it("keeps interactive tooltip markup inside a client boundary", () => {
+    const historySource = readFileSync(
+      resolve(process.cwd(), "components/keywords/RankingUrlHistory.tsx"),
+      "utf8",
+    );
+    const linkSource = readFileSync(
+      resolve(process.cwd(), "components/keywords/RankingUrlExternalLink.tsx"),
+      "utf8",
+    );
+
+    expect(historySource).toContain("<RankingUrlExternalLink");
+    expect(historySource).not.toMatch(/\bTooltip\b/u);
+    expect(historySource).not.toMatch(/<a\b/u);
+    expect(linkSource).toMatch(/^"use client";/u);
+    expect(linkSource).toContain(
+      '<Tooltip content="Open ranking URL in a new tab" semantics="description">',
+    );
+    expect(linkSource).toContain("<a");
+    expect(linkSource).toContain("ArrowUpRightIcon as ArrowUpRight");
+    expect(linkSource).toMatch(/<ArrowUpRight[^>]*size=\{12\}[^>]*weight="regular"/u);
+  });
+
   it("counts only real URL changes in the design source sequence", () => {
     const designSourceNewestFirst = [
       event({ isCurrent: true, url: "/headless-cms" }),
@@ -88,6 +112,15 @@ describe("RankingUrlHistory", () => {
     expect(screen.getByText("Jun 18 - now")).toHaveClass("col-start-2", "row-start-1");
     const link = screen.getByRole("link");
     expect(link).toHaveAttribute("aria-describedby");
+    expect(link).toHaveAttribute("href", "https://example.com/headless-cms");
+    expect(link).toHaveAttribute("target", "_blank");
+    expect(link).toHaveAttribute("rel", "noreferrer noopener");
+    expect(link).toHaveTextContent("/headless-cms");
+    const icon = link.querySelector("svg");
+    expect(icon).toHaveClass("ml-1", "inline-block");
+    expect(icon).toHaveAttribute("aria-hidden", "true");
+    expect(icon).toHaveAttribute("width", "12");
+    expect(icon).toHaveAttribute("height", "12");
     // The grid item is the ancestor carrying the placement classes; Tooltip adds a wrap
     // between it and the link.
     expect(link.closest(".row-start-2")).toHaveClass("row-start-2", "sm:row-start-1");

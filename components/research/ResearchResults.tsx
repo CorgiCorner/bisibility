@@ -101,9 +101,9 @@ function DiagnosticsBanner({
       data-testid="research-diagnostics-banner"
     >
       {warning ? (
-        <WarningCircle className="shrink-0 text-yellow-text" size={14} weight="fill" />
+        <WarningCircle className="shrink-0 text-yellow-text" size={14} weight="regular" />
       ) : (
-        <Info className="shrink-0 text-fg-muted" size={14} weight="fill" />
+        <Info className="shrink-0 text-fg-muted" size={14} weight="regular" />
       )}
       <div
         className="flex min-w-0 flex-wrap gap-x-4 gap-y-1 py-0.5 leading-[1.45]"
@@ -117,7 +117,7 @@ function DiagnosticsBanner({
         onClick={onDismiss}
         type="button"
       >
-        <X size={12} weight="bold" />
+        <X size={12} weight="regular" />
       </button>
     </div>
   );
@@ -248,7 +248,7 @@ export function ResearchResults({
       </div>
       {!metricsAvailable ? (
         <p className="m-0 flex items-start gap-2 text-[12.5px] leading-5 text-fg-muted">
-          <Info aria-hidden className="mt-0.5 shrink-0" size={14} />
+          <Info weight="regular" aria-hidden className="mt-0.5 shrink-0" size={14} />
           {RESEARCH_METRICS_UNAVAILABLE_TOOLTIP}
         </p>
       ) : null}

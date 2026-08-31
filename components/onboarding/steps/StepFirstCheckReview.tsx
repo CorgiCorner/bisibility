@@ -1,7 +1,6 @@
 "use client";
 
 import type { LocationFieldValue } from "@/components/keywords/LocationField";
-import { MarketChip } from "@/components/markets/MarketChip";
 import { trackingDefaults } from "@/components/onboarding/onboarding-form-utils";
 import { languageForLocationValue } from "@/components/onboarding/onboarding-location-field";
 import { MenuSelect } from "@/components/ui";
@@ -25,6 +24,7 @@ type StepFirstCheckReviewProps = {
   paused: boolean;
   projectLabel: string;
   providerLabel: string;
+  providerAction?: ReactNode;
   providerReady: boolean;
   sampleKeyword: string;
   stateStatus: FirstCheckRunState["status"];
@@ -52,16 +52,25 @@ function SummaryRow({
   return (
     <div
       className={`${index === 0 ? "rounded-t-[11px]" : ""} ${index % 2 === 0 ? "bg-bg-sunken" : "bg-bg-elev"}`}
+      data-summary-row={label.toLowerCase()}
     >
-      <div className="flex items-center justify-between gap-4 px-4 py-3">
+      <div className="flex min-w-0 items-center justify-between gap-4 px-4 py-3">
         <span className="shrink-0 text-[13px] text-fg-muted">{label}</span>
-        <span className="min-w-0 text-right font-mono text-[13px] font-semibold text-fg">
-          {value}
+        <span className="flex min-w-0 items-center justify-end gap-2 text-right font-mono text-[13px] font-semibold text-fg">
+          <span aria-label={`${label}: ${value}`} className="min-w-0 truncate whitespace-nowrap">
+            {value}
+          </span>
+          {children}
         </span>
       </div>
-      {children}
     </div>
   );
+}
+
+function marketsSummary(markets: readonly LocationFieldValue[]) {
+  return markets
+    .map((market) => `${market.displayName} / ${languageForLocationValue(market)}`)
+    .join(" · ");
 }
 
 export function StepFirstCheckReview({
@@ -76,6 +85,7 @@ export function StepFirstCheckReview({
   onTimezoneChange,
   paused,
   projectLabel,
+  providerAction,
   providerLabel,
   providerReady,
   sampleKeyword,
@@ -91,29 +101,23 @@ export function StepFirstCheckReview({
     frequencyLabel,
   ].join(" · ");
   const selectedKeyword = keywordOptions.find((option) => option.value === sampleKeyword)?.label;
+  const marketsValue = marketsSummary(markets);
 
   return (
     <div className="mt-5 rounded-card border border-border">
       <SummaryRow index={0} label="Project" value={projectLabel} />
-      <SummaryRow index={1} label="Provider" value={providerLabel} />
-      <SummaryRow index={2} label="Keywords" value={String(keywordCount)} />
-      <SummaryRow index={3} label="Scope" value={scopeSummary}>
-        <div className="flex items-center justify-between gap-4 px-4 pb-[13px]">
-          <span className="shrink-0 text-[13px] text-fg-muted">Markets</span>
-          <div className="flex flex-wrap justify-end gap-1.5">
-            {markets.map((market) => (
-              <MarketChip
-                key={market.canonicalKey}
-                languageLabel={languageForLocationValue(market)}
-                locationLabel={market.displayName}
-                size="md"
-              />
-            ))}
-          </div>
-        </div>
+      <SummaryRow index={1} label="Provider" value={providerLabel}>
+        {providerAction}
       </SummaryRow>
-      <SummaryRow index={4} label="First check" value={firstCheckLabel} />
-      <div className="bg-bg-elev">
+      <SummaryRow
+        index={2}
+        label="Keywords"
+        value={`${keywordCount} ${keywordCount === 1 ? "keyword" : "keywords"} saved`}
+      />
+      <SummaryRow index={3} label="Scope" value={scopeSummary} />
+      <SummaryRow index={4} label="Markets" value={marketsValue} />
+      <SummaryRow index={5} label="First check" value={firstCheckLabel} />
+      <div className="bg-bg-sunken">
         <div className="flex items-center justify-between gap-4 px-4 py-3">
           <span className="shrink-0 text-[13px] text-fg-muted">Sample keyword</span>
           {providerReady && keywordOptions.length > 1 && stateStatus === "idle" ? (
@@ -128,12 +132,12 @@ export function StepFirstCheckReview({
             <span className="min-w-0 text-right font-mono text-[13px] font-semibold text-fg">
               {providerReady
                 ? (selectedKeyword ?? "No keywords")
-                : "Paused until a provider is connected"}
+                : (selectedKeyword ?? sampleKeyword ?? "No keywords")}
             </span>
           )}
         </div>
       </div>
-      <div className="rounded-b-[11px] bg-bg-sunken">
+      <div className="rounded-b-[11px] bg-bg-elev">
         <div className="flex items-center justify-between gap-4 px-4 py-3">
           <span className="shrink-0 text-[13px] text-fg-muted">Next scheduled run</span>
           {providerReady && !paused ? (
@@ -156,7 +160,13 @@ export function StepFirstCheckReview({
             </span>
           ) : (
             <span className="text-right font-mono text-[13px] font-semibold text-fg">
-              {providerReady ? frequencyLabel : "Paused until a provider is connected"}
+              {providerReady
+                ? frequencyLabel
+                : frequency === "manual"
+                  ? "Manual · runs only when you start it"
+                  : frequency === "paused"
+                    ? "Paused · no checks scheduled"
+                    : `${frequencyLabel} · starts after the first check`}
             </span>
           )}
         </div>

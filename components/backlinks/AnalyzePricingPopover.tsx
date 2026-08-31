@@ -53,7 +53,7 @@ export function AnalyzePricingPopover({
   );
 
   const rows: PricingRow[] = [
-    { label: "Profile summary, new & lost", value: estimateLabel(summaryCents) },
+    { label: "Profile summary, new and lost", value: estimateLabel(summaryCents) },
   ];
   if (scope === "site") {
     rows.push({ label: "12-month history", value: estimateLabel(historyCents) });

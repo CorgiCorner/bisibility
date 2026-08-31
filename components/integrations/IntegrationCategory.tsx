@@ -3,16 +3,19 @@ import { SerpFallbackOrder } from "@/components/integrations/SerpFallbackOrder";
 import { MonoText, SectionTitle } from "@/components/ui";
 import type { IntegrationCategoryData, ProviderActionHandlers } from "@/lib/integrations/types";
 import type { ProjectRef } from "@/lib/routing/app-path";
+import type { SearchSyncPreflightPlan } from "@/lib/search-insights/sync/plan";
 
 export type IntegrationCategoryProps = {
   actions?: ProviderActionHandlers;
   canManageProviders: boolean;
   canUpdateProject: boolean;
   category: IntegrationCategoryData;
+  deploymentMode?: "cloud" | "self-host";
   initialConnectProviderId?: string;
   noProvidersYet?: boolean;
   projectId?: string;
   projectRef?: ProjectRef;
+  searchSyncPlan?: SearchSyncPreflightPlan;
   timeZone: string;
 };
 
@@ -21,10 +24,12 @@ export function IntegrationCategory({
   canManageProviders,
   canUpdateProject,
   category,
+  deploymentMode,
   initialConnectProviderId,
   noProvidersYet = false,
   projectId,
   projectRef,
+  searchSyncPlan,
   timeZone,
 }: Readonly<IntegrationCategoryProps>) {
   return (
@@ -57,12 +62,14 @@ export function IntegrationCategory({
               actions={actions}
               canManageProviders={canManageProviders}
               canUpdateProject={canUpdateProject}
+              deploymentMode={deploymentMode}
               initialOpen={initialConnectProviderId === provider.id}
               key={provider.id}
               noProvidersYet={noProvidersYet && isFirstSerpProvider}
               projectId={projectId}
               projectRef={projectRef}
               provider={provider}
+              searchSyncPlan={searchSyncPlan}
               timeZone={timeZone}
             />
           );

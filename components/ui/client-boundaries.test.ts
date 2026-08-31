@@ -9,7 +9,15 @@ const browserIconModules = readdirSync(import.meta.dirname)
   )
   .filter((fileName) => {
     const source = readFileSync(resolve(import.meta.dirname, fileName), "utf8");
-    return source.includes('from "@phosphor-icons/react"');
+    return source.split(";").some((statement) => {
+      const importStatement = statement.trimStart();
+
+      return (
+        importStatement.startsWith("import ") &&
+        !importStatement.startsWith("import type ") &&
+        importStatement.includes('from "@phosphor-icons/react"')
+      );
+    });
   });
 
 describe("UI client boundaries", () => {

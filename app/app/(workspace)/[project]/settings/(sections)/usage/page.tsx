@@ -14,10 +14,19 @@ import { getSettings } from "@/lib/queries/settings";
 import { getPricingFeedbackRow } from "@/lib/queries/waitlist";
 import { asProjectRef } from "@/lib/routing/app-path";
 
-type UsageSettingsPageProps = { params: Promise<{ project: string }> };
+type UsageSettingsPageProps = {
+  params: Promise<{ project: string }>;
+  searchParams?: Promise<{ budget?: string }>;
+};
 
-export default async function UsageSettingsPage({ params }: Readonly<UsageSettingsPageProps>) {
-  const { project: projectRef } = await params;
+export default async function UsageSettingsPage({
+  params,
+  searchParams,
+}: Readonly<UsageSettingsPageProps>) {
+  const [{ project: projectRef }, query] = await Promise.all([
+    params,
+    searchParams ?? Promise.resolve<{ budget?: string }>({}),
+  ]);
   const preferences = await getPreferences();
   const [settings, access, session] = await Promise.all([
     getSettings(projectRef, { dateFormat: preferences.dateFormat }),
@@ -43,6 +52,7 @@ export default async function UsageSettingsPage({ params }: Readonly<UsageSettin
           canEditBudget={writable && canProjectAction(role, "manage", "project")}
           canSubmitPricingFeedback={writable && canProjectAction(role, "manage", "billing")}
           deployment={deploymentMode()}
+          initialBudgetEditOpen={query.budget === "edit"}
           initialPricingFeedbackAnswered={pricingFeedbackAnswered}
           projectId={settings.project.projectId}
           projectRef={publicId}

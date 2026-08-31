@@ -40,25 +40,30 @@ import type {
   ProviderTestResult,
 } from "@/lib/integrations/types";
 import type { ProjectRef } from "@/lib/routing/app-path";
+import type { SearchSyncPreflightPlan } from "@/lib/search-insights/sync/plan";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
 export type ConnectDrawerProps = {
   actions?: ProviderActionHandlers;
+  deploymentMode?: "cloud" | "self-host";
   open: boolean;
   onClose: () => void;
   projectId?: string;
   projectRef?: ProjectRef;
   provider: IntegrationProviderData;
+  searchSyncPlan?: SearchSyncPreflightPlan;
 };
 
 export function ConnectDrawer({
   actions,
+  deploymentMode = "self-host",
   open,
   onClose,
   projectId = "prj_storybook",
   projectRef,
   provider,
+  searchSyncPlan,
 }: Readonly<ConnectDrawerProps>) {
   const [notice, setNotice] = useState<Notice | null>(null);
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
@@ -190,11 +195,16 @@ export function ConnectDrawer({
       />
     );
 
+  const titleCopy =
+    authMode === "oauth"
+      ? `Sign in with Google, read-only. Tokens are stored encrypted in your ${deploymentMode === "cloud" ? "workspace" : "instance"}.`
+      : "Use your own provider account. Credentials are stored encrypted in your instance.";
+
   const title = (
     <span className="block">
       <span className="block truncate">{provider.name}</span>
       <span className="mt-[3px] block text-[13px] font-normal leading-normal tracking-normal text-fg-muted">
-        Use your own provider account. Credentials are stored encrypted in your instance.
+        {titleCopy}
       </span>
     </span>
   );
@@ -207,12 +217,15 @@ export function ConnectDrawer({
         {authMode === "oauth" ? (
           <ConnectDrawerOauth
             completePropertySelection={activeActions.completeGooglePropertySelection}
+            disconnectProvider={activeActions.disconnectProvider}
             loadStoredProperties={activeActions.loadStoredGoogleProperties}
+            onDisconnected={onClose}
             projectId={projectId}
             projectRef={projectRef}
             provider={provider}
             saveStoredProperty={activeActions.saveStoredGoogleProperty}
             scopes={oauthScopes(provider)}
+            syncPlan={provider.id === "gsc" ? searchSyncPlan : undefined}
           />
         ) : (
           <>
@@ -232,7 +245,7 @@ export function ConnectDrawer({
             updateRate={activeActions.updateProviderRate}
           />
         ) : null}
-        <ActivityList provider={provider} />
+        {provider.kind === "serp" ? <ActivityList provider={provider} /> : null}
         {authMode === "oauth" && notice ? <ActionNotice notice={notice} /> : null}
       </form>
     </Sheet>

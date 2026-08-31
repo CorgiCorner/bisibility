@@ -1,7 +1,7 @@
 export { AccentCtaLink, type AccentCtaLinkProps, accentCtaLinkClassName } from "./AccentCtaLink";
 export { AlertBanner, type AlertBannerAction, type AlertBannerProps } from "./AlertBanner";
 export { AlertBannerStack, type AlertBannerStackProps } from "./AlertBannerStack";
-export { AppDrawer, type AppDrawerProps } from "./AppDrawer";
+export { AppDrawer, type AppDrawerCloseReason, type AppDrawerProps } from "./AppDrawer";
 export { Avatar, type AvatarProps } from "./Avatar";
 export {
   BrandLockup,
@@ -59,6 +59,7 @@ export {
   InlineCode,
   inlineCalloutCodeClass,
 } from "./InlineCallout";
+export { InlineScript } from "./InlineScript";
 export { InlineToken, type InlineTokenProps } from "./InlineToken";
 export { Input, type InputProps } from "./Input";
 export {
@@ -74,6 +75,13 @@ export {
 } from "./input-styles";
 export { Kbd, type KbdProps } from "./Kbd";
 export {
+  MenuActionFooter,
+  menuActionFooterClassName,
+  menuActionFooterContentClassName,
+  menuActionFooterDividerClassName,
+} from "./MenuActionFooter";
+export { MenuGroupHeading, type MenuGroupHeadingProps } from "./MenuGroupHeading";
+export {
   MenuMultiSelect,
   type MenuMultiSelectProps,
   MenuSelect,
@@ -85,9 +93,11 @@ export {
 } from "./MenuSelect";
 export { MenuSelectOptionItem } from "./MenuSelectOptionItem";
 export { Modal, type ModalProps, type ModalSize } from "./Modal";
+export { ModuleMark, type ModuleMarkProps, type ModuleMarkVariant } from "./ModuleMark";
 export { MonoText, type MonoTextProps } from "./MonoText";
+export { menuTransitionDuration, useMenuExitLifecycle } from "./menu-exit-lifecycle";
 export { PasswordInput, type PasswordInputProps } from "./PasswordInput";
-export { Pill, type PillProps } from "./Pill";
+export { Pill, PillBadge, type PillBadgeProps, type PillProps } from "./Pill";
 export {
   PricingPopover,
   type PricingPopoverProps,
@@ -122,19 +132,14 @@ export {
 } from "./SummaryStrip";
 export { Switch, type SwitchProps } from "./Switch";
 export { Textarea, type TextareaProps } from "./Textarea";
+export { ThemeRoot } from "./ThemeRoot";
 export {
   ThemeSegments,
   type ThemeSegmentsProps,
   ThemeSegmentsRow,
   type ThemeSegmentsSize,
 } from "./ThemeSegments";
-export {
-  type ToastContextValue,
-  type ToastOptions,
-  ToastProvider,
-  type ToastTint,
-  useToast,
-} from "./Toast";
+export { type ToastContextValue, type ToastOptions, ToastProvider, useToast } from "./Toast";
 export {
   ToolbarSearch,
   type ToolbarSearchProps,
@@ -148,5 +153,6 @@ export {
   type TooltipSemantics,
 } from "./Tooltip";
 export { tableHeaderClassName } from "./table-header-styles";
+export type { ToastSeverity } from "./toast-presentation";
 export { toolbarControlClassName } from "./toolbar-control-styles";
 export { useBrowserTimeZone, ZonedTime, type ZonedTimeProps } from "./ZonedTime";

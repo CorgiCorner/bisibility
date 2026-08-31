@@ -30,6 +30,7 @@ export type GoogleFetchContext = {
 };
 
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
+const GOOGLE_USER_INFO_URL = "https://openidconnect.googleapis.com/v1/userinfo";
 export const GOOGLE_AUTHORIZE_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const GSC_SITES_URL = "https://www.googleapis.com/webmasters/v3/sites";
 const GA4_ACCOUNT_SUMMARIES_URL =
@@ -142,6 +143,17 @@ export async function exchangeGoogleCode(code: string, redirectUri: string) {
     refreshToken: stringValue(payload?.refresh_token),
     scope: stringValue(payload?.scope),
   };
+}
+
+type GoogleUserInfoPayload = { email?: unknown };
+
+export async function googleAccountEmail(accessToken: string): Promise<string | null> {
+  const response = await fetch(GOOGLE_USER_INFO_URL, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!response.ok) return null;
+  const payload = (await response.json().catch(() => null)) as GoogleUserInfoPayload | null;
+  return stringValue(payload?.email);
 }
 
 export async function refreshGoogleAccessToken(

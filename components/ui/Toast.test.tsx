@@ -14,14 +14,17 @@ function ToastTriggers({ undoFn }: { undoFn?: () => Promise<void> | void }) {
   const { showToast } = useToast();
   return (
     <>
-      <button onClick={() => showToast("Check failed", { tint: "red" })} type="button">
+      <button onClick={() => showToast("Check failed", { severity: "error" })} type="button">
         Show error
       </button>
-      <button onClick={() => showToast("Alert created", { tint: "green" })} type="button">
+      <button onClick={() => showToast("Alert created", { severity: "success" })} type="button">
         Show success
       </button>
       {undoFn ? (
-        <button onClick={() => showToast("Added market", { undo: undoFn })} type="button">
+        <button
+          onClick={() => showToast("Added market", { severity: "success", undo: undoFn })}
+          type="button"
+        >
           Show undo
         </button>
       ) : null}
@@ -223,6 +226,9 @@ describe("ToastProvider", () => {
     fireEvent.click(screen.getByRole("button", { name: "Undo" }));
     await act(async () => rejectUndo(new Error("fail")));
     expect(screen.getByText("Undo failed. Please try again.")).toBeInTheDocument();
+    const errorOutput = outputFor("Undo failed. Please try again.");
+    expect(errorOutput).toHaveAttribute("data-toast-severity", "error");
+    expect(errorOutput.querySelector('[data-toast-icon="XCircleIcon"]')).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Undo" })).not.toBeInTheDocument();
     expect(screen.queryByText("Added market")).not.toBeInTheDocument();
     act(() => vi.advanceTimersByTime(4000));
@@ -243,6 +249,9 @@ describe("ToastProvider", () => {
     expect(undoFn).toHaveBeenCalledOnce();
     await act(async () => {});
     expect(screen.getByText("Undo failed. Please try again.")).toBeInTheDocument();
+    const errorOutput = outputFor("Undo failed. Please try again.");
+    expect(errorOutput).toHaveAttribute("data-toast-severity", "error");
+    expect(errorOutput.querySelector('[data-toast-icon="XCircleIcon"]')).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Undo" })).not.toBeInTheDocument();
   });
 

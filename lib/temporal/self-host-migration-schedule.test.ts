@@ -1,13 +1,18 @@
 import { ensureMigrationHoldReleaseSchedule } from "@/lib/temporal/maintenance-schedule-bootstrap";
 import { ScheduleAlreadyRunning, type ScheduleHandle } from "@temporalio/client";
-import { expect, it, vi } from "vitest";
+import { afterEach, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
 const scheduleId = "maintenance-migration-hold-release";
 const hourMs = 60 * 60_000;
 
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
+
 it("converges the former daily migration release schedule to an hourly interval", async () => {
+  vi.stubEnv("SCHEDULED_MAINTENANCE_ENABLED", "1");
   const handle = {
     describe: vi.fn(async () => ({
       action: { workflowId: scheduleId, workflowType: "releaseExpiredMigrationHoldsWorkflow" },

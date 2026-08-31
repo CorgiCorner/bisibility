@@ -50,10 +50,10 @@ export function ImportColumnMapping({
           key={source.index}
         >
           <span className="inline-flex min-w-0 items-center gap-[7px] font-mono text-[12.5px]">
-            <Table className="shrink-0 text-fg-muted" size={14} />
+            <Table weight="regular" className="shrink-0 text-fg-muted" size={14} />
             <span className="truncate">{source.label}</span>
           </span>
-          <ArrowRight aria-hidden className="text-fg-muted" size={13} weight="bold" />
+          <ArrowRight aria-hidden className="text-fg-muted" size={13} weight="regular" />
           <MenuSelect
             ariaLabel={`Map ${source.label}`}
             onChange={(value) =>

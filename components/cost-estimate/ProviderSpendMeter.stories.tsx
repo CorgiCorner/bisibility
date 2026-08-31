@@ -11,6 +11,7 @@ const meta = {
   args: {
     capCents: null,
     docsHref,
+    headerAction: { href: "/app/prj_example/settings/usage", label: "Details" },
     recorded: { cents: 1240, units: 28 },
     spentCents: 1240,
     tightest: { provider: "SerpApi", usedPercent: 86 },
@@ -54,7 +55,14 @@ export const HeaderExhausted: Story = {
 };
 
 export const HeaderNoBudget: Story = {
-  args: { tightest: null, usedPercent: null },
+  args: {
+    headerAction: {
+      href: "/app/prj_example/settings/usage?budget=edit",
+      label: "Set budget",
+    },
+    tightest: null,
+    usedPercent: null,
+  },
   name: "Header/No budget set",
 };
 

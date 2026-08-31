@@ -20,17 +20,17 @@ type Story = StoryObj<typeof meta>;
 export const Filters: Story = {
   args: {
     action: (
-      <Button startIcon={<Plus size={15} />} variant="primary">
+      <Button startIcon={<Plus size={15} weight="regular" />} variant="primary">
         Add keyword
       </Button>
     ),
     children: (
       <>
         <Pill>
-          <CalendarBlank size={15} /> Last 28 days
+          <CalendarBlank size={15} weight="regular" /> Last 28 days
         </Pill>
         <Pill>
-          <Monitor size={15} /> Desktop
+          <Monitor size={15} weight="regular" /> Desktop
         </Pill>
       </>
     ),

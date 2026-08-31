@@ -52,6 +52,7 @@ export function LoginForm({
   const [socialProvider, setSocialProvider] = useState<OAuthProvider | null>(null);
   const [authAttempts, setAuthAttempts] = useState(0);
   const [cooldownRemaining, setCooldownRemaining] = useState(0);
+  const [resentCode, setResentCode] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [capacityMiss, setCapacityMiss] = useState<SignInCapacityMiss>(initialCapacityMiss);
   const cooldownTimer = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -142,6 +143,7 @@ export function LoginForm({
     }
 
     resetOtpState();
+    setResentCode(false);
     setStep("otp");
     startCooldown();
   }
@@ -211,6 +213,7 @@ export function LoginForm({
     }
 
     setAuthStatus("idle");
+    setResentCode(false);
     clearCooldown();
     const destination = mergeReturnToHash(returnTo, window.location.hash);
     const redirectUrl = signInRedirectUrl(response, window.location.origin, destination);
@@ -236,6 +239,7 @@ export function LoginForm({
     const result = await resendSignInOtp(form.getValues("email").trim());
 
     if (!result.ok) {
+      setResentCode(false);
       if (result.retryAfter > 0) {
         startCooldown(result.retryAfter);
       }
@@ -243,11 +247,13 @@ export function LoginForm({
       return;
     }
 
+    setResentCode(true);
     startCooldown(result.retryAfter);
   }
 
   function editEmail() {
     resetOtpState();
+    setResentCode(false);
     clearCooldown();
     setStep("email");
   }
@@ -267,6 +273,7 @@ export function LoginForm({
         onResend={resendCode}
         onSubmit={form.handleSubmit(verifyCode)}
         otpError={errors.otp?.message}
+        resentCode={resentCode}
         status={authStatus}
       />
     );

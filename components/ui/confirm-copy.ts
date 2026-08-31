@@ -23,6 +23,7 @@ export type ConfirmKind =
   | "revokeMigrationToken"
   | "rollMigrationToken"
   | "removeIntegration"
+  | "removeSearchConsoleConnection"
   | "removeSampleData"
   | "removeTeamMember"
   | "transferProjectOwnership";
@@ -102,6 +103,13 @@ export const CONFIRM: Record<ConfirmKind, ConfirmConfig> = {
     icon: Plugs,
     toastMessage: "Provider disconnected",
     title: "Disconnect provider",
+  },
+  removeSearchConsoleConnection: {
+    body: "This removes the saved connection and authorization tokens from this project. Already imported Search Console metrics remain available.",
+    dangerLabel: "Disconnect Search Console",
+    icon: Plugs,
+    toastMessage: "Search Console disconnected",
+    title: "Disconnect Search Console",
   },
   removeSampleData: {
     body: "This deletes the sample project and its generated demo data. Your other projects are not affected.",

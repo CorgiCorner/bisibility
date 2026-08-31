@@ -53,7 +53,7 @@ export function ReadOnlyBanner({
 }>) {
   return (
     <div className="mt-3.5 flex items-center gap-2 rounded-control border border-yellow bg-yellow/10 px-[13px] py-[9px] text-xs font-medium text-yellow-text">
-      <LockSimple aria-hidden className="flex-none" size={15} weight="fill" />
+      <LockSimple aria-hidden className="flex-none" size={15} weight="regular" />
       <span className="min-w-0 flex-1">
         Read-only mode is on. Writes and rank checks stay paused while this migration is in
         progress. It releases only when you cancel the migration, or automatically after 24 hours of

@@ -42,6 +42,16 @@ describe("SampleProjectBanner", () => {
     expect(well).not.toHaveClass("bg-accent-solid");
   });
 
+  it("renders a regular 19px test-tube icon in the banner well", () => {
+    renderBanner();
+
+    const icon = screen.getByTestId("sample-project-banner-icon");
+    expect(icon).toHaveAttribute("data-icon", "test-tube");
+    expect(icon).toHaveAttribute("data-weight", "regular");
+    expect(icon).toHaveAttribute("width", "19");
+    expect(icon).toHaveAttribute("aria-hidden", "true");
+  });
+
   it("opens a confirmation modal instead of relabeling the banner button", () => {
     renderBanner();
 

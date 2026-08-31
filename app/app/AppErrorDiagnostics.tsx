@@ -90,7 +90,7 @@ export function AppErrorDiagnostics({
             open && "rotate-90",
           )}
           size={13}
-          weight="bold"
+          weight="regular"
         />
         <MonoText
           className="flex-none font-semibold tracking-[0.4px]"
@@ -124,7 +124,9 @@ export function AppErrorDiagnostics({
           <Button
             onClick={handleCopy}
             size="sm"
-            startIcon={copied ? <Check size={12} weight="bold" /> : <Copy size={12} />}
+            startIcon={
+              copied ? <Check size={12} weight="regular" /> : <Copy size={12} weight="regular" />
+            }
             sx={{
               // Darker inset on the trace panel; the code-* tokens carry the
               // dark surface in both themes, so mix toward black rather than --bg.

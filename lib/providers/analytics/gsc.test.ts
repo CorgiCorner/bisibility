@@ -2,6 +2,7 @@ import { clearProviderRateLimitState, ProviderRateLimitedError } from "@/lib/pro
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { gscAnalyticsProvider } from "./gsc";
 import { GSC_QUERY_STATS_PAGE_SIZE, GSC_QUERY_STATS_ROW_CAP } from "./gsc-query-pagination";
+import { createGscSearchAnalyticsSession } from "./gsc-search-analytics";
 
 const tokenResponse = { access_token: "access_token" };
 const searchAnalyticsResponse = {
@@ -613,6 +614,176 @@ describe("gsc analytics provider", () => {
     await rejection.catch((error: unknown) => {
       expect(error).toBeInstanceOf(Error);
       expect(error).not.toBeInstanceOf(ProviderRateLimitedError);
+    });
+  });
+
+  it("sends an aggregate totals request with no dimension keys at all", async () => {
+    await expect(
+      gscAnalyticsProvider.fetchSearchAnalyticsEnvelope({
+        credentials: { apiKey: "refresh_token", login: "sc-domain:example.com" },
+        dataState: "final",
+        dimensions: [],
+        endDate: "2026-07-01",
+        rowLimit: 1,
+        startDate: "2026-07-01",
+        type: "web",
+      }),
+    ).resolves.toMatchObject({ rows: expect.any(Array) });
+
+    const fetchMock = vi.mocked(fetch);
+    const queryCall = fetchMock.mock.calls.find(([url]) =>
+      String(url).includes("/searchAnalytics/query"),
+    );
+    expect(JSON.parse(String(queryCall?.[1]?.body))).toEqual({
+      dataState: "final",
+      dimensions: [],
+      endDate: "2026-07-01",
+      rowLimit: 1,
+      startDate: "2026-07-01",
+      type: "web",
+    });
+  });
+
+  it("asks for daily totals with dimensions date, finalized data and the web surface", async () => {
+    await gscAnalyticsProvider.fetchSearchAnalyticsEnvelope({
+      credentials: { apiKey: "refresh_token", login: "sc-domain:example.com" },
+      dataState: "final",
+      dimensions: ["date"],
+      endDate: "2026-07-01",
+      rowLimit: GSC_QUERY_STATS_PAGE_SIZE,
+      startDate: "2025-03-01",
+      type: "web",
+    });
+
+    const fetchMock = vi.mocked(fetch);
+    const queryCall = fetchMock.mock.calls.find(([url]) =>
+      String(url).includes("/searchAnalytics/query"),
+    );
+    expect(JSON.parse(String(queryCall?.[1]?.body))).toEqual({
+      dataState: "final",
+      dimensions: ["date"],
+      endDate: "2026-07-01",
+      rowLimit: GSC_QUERY_STATS_PAGE_SIZE,
+      startDate: "2025-03-01",
+      type: "web",
+    });
+  });
+
+  it("pages a dimensional day request with the full row limit and an explicit startRow", async () => {
+    await gscAnalyticsProvider.fetchSearchAnalyticsEnvelope({
+      credentials: { apiKey: "refresh_token", login: "sc-domain:example.com" },
+      dataState: "final",
+      dimensions: ["query"],
+      endDate: "2026-07-01",
+      rowLimit: GSC_QUERY_STATS_PAGE_SIZE,
+      startRow: GSC_QUERY_STATS_PAGE_SIZE,
+      startDate: "2026-07-01",
+      type: "web",
+    });
+
+    const fetchMock = vi.mocked(fetch);
+    const queryCall = fetchMock.mock.calls.find(([url]) =>
+      String(url).includes("/searchAnalytics/query"),
+    );
+    expect(JSON.parse(String(queryCall?.[1]?.body))).toEqual({
+      dataState: "final",
+      dimensions: ["query"],
+      endDate: "2026-07-01",
+      rowLimit: GSC_QUERY_STATS_PAGE_SIZE,
+      startRow: GSC_QUERY_STATS_PAGE_SIZE,
+      startDate: "2026-07-01",
+      type: "web",
+    });
+  });
+
+  it("reuses one access token for every request in a search analytics session", async () => {
+    const session = await createGscSearchAnalyticsSession({
+      apiKey: "refresh_token",
+      login: "sc-domain:example.com",
+    });
+
+    await session.fetchEnvelope({
+      dimensions: ["date"],
+      endDate: "2026-07-01",
+      startDate: "2026-07-01",
+    });
+    await session.fetchEnvelope({
+      dimensions: ["query"],
+      endDate: "2026-07-01",
+      startDate: "2026-07-01",
+    });
+
+    expect(session.property).toBe("sc-domain:example.com");
+    const calls = vi.mocked(fetch).mock.calls;
+    // A backfill issues thousands of these; a refresh per request would double every round
+    // trip and put that half outside the provider rate-limit gate.
+    expect(
+      calls.filter(([url]) => String(url).includes("oauth2.googleapis.com/token")),
+    ).toHaveLength(1);
+    expect(calls.filter(([url]) => String(url).includes("/searchAnalytics/query"))).toHaveLength(2);
+  });
+
+  it("reads the freshness boundary Google spells snake_case in the response metadata", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string | URL | Request) => {
+        const target = String(url);
+        if (target.includes("oauth2.googleapis.com/token")) {
+          return Response.json(tokenResponse);
+        }
+        if (target.includes("/searchAnalytics/query")) {
+          return Response.json({
+            metadata: { first_incomplete_date: "2026-06-30", first_incomplete_hour: "" },
+            responseAggregationType: "byProperty",
+            rows: [],
+          });
+        }
+        return new Response("not found", { status: 404 });
+      }),
+    );
+
+    await expect(
+      gscAnalyticsProvider.fetchSearchAnalyticsEnvelope({
+        credentials: { apiKey: "refresh_token", login: "sc-domain:example.com" },
+        dataState: "all",
+        dimensions: ["date"],
+        endDate: "2026-07-01",
+        startDate: "2026-06-21",
+      }),
+    ).resolves.toEqual({
+      metadata: { firstIncompleteDate: "2026-06-30" },
+      responseAggregationType: "byProperty",
+      rows: [],
+    });
+  });
+
+  it("reports no freshness metadata rather than an empty one when Google sends none", async () => {
+    await expect(
+      gscAnalyticsProvider.fetchSearchAnalyticsEnvelope({
+        credentials: { apiKey: "refresh_token", login: "sc-domain:example.com" },
+        dimensions: ["date"],
+        endDate: "2026-07-01",
+        startDate: "2026-06-21",
+      }),
+    ).resolves.not.toHaveProperty("metadata");
+  });
+
+  it("leaves the default request shape untouched for callers that pass no new options", async () => {
+    await gscAnalyticsProvider.fetchSearchAnalytics({
+      credentials: { apiKey: "refresh_token", login: "sc-domain:example.com" },
+      endDate: "2026-07-01",
+      startDate: "2026-06-04",
+    });
+
+    const fetchMock = vi.mocked(fetch);
+    const queryCall = fetchMock.mock.calls.find(([url]) =>
+      String(url).includes("/searchAnalytics/query"),
+    );
+    expect(JSON.parse(String(queryCall?.[1]?.body))).toEqual({
+      dimensions: ["query"],
+      endDate: "2026-07-01",
+      rowLimit: 100,
+      startDate: "2026-06-04",
     });
   });
 });

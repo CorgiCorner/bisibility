@@ -74,9 +74,7 @@ describe("AccountEmailCard", () => {
     const actions = changeActions();
     renderCard(actions);
 
-    expect(
-      screen.getByRole("button", { name: "Send code to owner@example.com" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Change email" })).toBeInTheDocument();
     expect(screen.queryByLabelText("New email address")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Account email")).toHaveAttribute("readonly");
   });
@@ -85,7 +83,7 @@ describe("AccountEmailCard", () => {
     const actions = changeActions();
     renderCard(actions);
 
-    fireEvent.click(screen.getByRole("button", { name: "Send code to owner@example.com" }));
+    fireEvent.click(screen.getByRole("button", { name: "Change email" }));
     await waitFor(() => expect(actions.requestAccountEmailChangeCode).toHaveBeenCalledOnce());
 
     fireEvent.change(await screen.findByLabelText("Code from your current email"), {

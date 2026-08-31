@@ -1,7 +1,6 @@
 "use client";
 
 import useMediaQuery from "@mui/material/useMediaQuery";
-import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react";
 import {
   createContext,
   type ReactNode,
@@ -13,12 +12,10 @@ import {
 } from "react";
 import { type ToastEntry, ToastItem } from "./ToastItem";
 import { createToastLifecycle, type ToastLifecycle } from "./toast-lifecycle";
-
-export type ToastTint = "accent" | "blue" | "green" | "neutral" | "purple" | "red" | "yellow";
+import { type ToastSeverity, toastPresentations } from "./toast-presentation";
 
 export type ToastOptions = {
-  icon?: ReactNode;
-  tint?: ToastTint;
+  severity?: ToastSeverity;
   undo?: () => Promise<void> | void;
 };
 
@@ -26,24 +23,13 @@ export type ToastContextValue = {
   showToast: (message: ReactNode, options?: ToastOptions) => void;
 };
 
-type ToastProviderProps = {
-  children: ReactNode;
-};
+type ToastProviderProps = { children: ReactNode };
 
-const TOAST_DURATION = 3200;
-const ERROR_TOAST_DURATION = 8000;
 const UNDO_TOAST_DURATION = 6000;
 const UNDO_ERROR_MESSAGE = "Undo failed. Please try again.";
 
-const fallbackToastContext: ToastContextValue = {
-  showToast: () => undefined,
-};
-
+const fallbackToastContext: ToastContextValue = { showToast: () => undefined };
 const ToastContext = createContext<ToastContextValue | null>(null);
-
-function defaultIcon(tint: ToastTint) {
-  return <CheckCircle aria-hidden size={18} weight={tint === "neutral" ? "regular" : "bold"} />;
-}
 
 export function ToastProvider({ children }: Readonly<ToastProviderProps>) {
   const [toasts, setToastsState] = useState<ToastEntry[]>([]);
@@ -51,9 +37,7 @@ export function ToastProvider({ children }: Readonly<ToastProviderProps>) {
   const lifecyclesRef = useRef(new Map<number, ToastLifecycle>());
   const mountedRef = useRef(false);
   const nextIdRef = useRef(1);
-  const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)", {
-    noSsr: true,
-  });
+  const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)", { noSsr: true });
 
   const updateToasts = useCallback((updater: (current: ToastEntry[]) => ToastEntry[]) => {
     setToastsState((current) => {
@@ -67,7 +51,9 @@ export function ToastProvider({ children }: Readonly<ToastProviderProps>) {
     (id: number) => {
       if (!mountedRef.current) return;
       updateToasts((current) =>
-        current.map((t) => (t.id === id && t.phase !== "exiting" ? { ...t, phase: "exiting" } : t)),
+        current.map((toast) =>
+          toast.id === id && toast.phase !== "exiting" ? { ...toast, phase: "exiting" } : toast,
+        ),
       );
     },
     [updateToasts],
@@ -76,12 +62,9 @@ export function ToastProvider({ children }: Readonly<ToastProviderProps>) {
   const handleExited = useCallback(
     (id: number) => {
       if (!mountedRef.current) return;
-      const lifecycle = lifecyclesRef.current.get(id);
-      if (lifecycle) {
-        lifecycle.dispose();
-        lifecyclesRef.current.delete(id);
-      }
-      updateToasts((current) => current.filter((t) => t.id !== id));
+      lifecyclesRef.current.get(id)?.dispose();
+      lifecyclesRef.current.delete(id);
+      updateToasts((current) => current.filter((toast) => toast.id !== id));
     },
     [updateToasts],
   );
@@ -89,15 +72,15 @@ export function ToastProvider({ children }: Readonly<ToastProviderProps>) {
   const handleEntered = useCallback(
     (id: number) => {
       if (!mountedRef.current) return;
-      const toast = toastsRef.current.find((t) => t.id === id);
+      const toast = toastsRef.current.find((entry) => entry.id === id);
       if (toast?.phase !== "entering") return;
       const lifecycle = lifecyclesRef.current.get(id) ?? createToastLifecycle();
       if (!lifecyclesRef.current.has(id)) lifecyclesRef.current.set(id, lifecycle);
       lifecycle.start(toast.durationMs, () => handleExpired(id));
-      if (toast.undoPending) {
-        lifecycle.pause("undo");
-      }
-      updateToasts((current) => current.map((t) => (t.id === id ? { ...t, phase: "visible" } : t)));
+      if (toast.undoPending) lifecycle.pause("undo");
+      updateToasts((current) =>
+        current.map((entry) => (entry.id === id ? { ...entry, phase: "visible" } : entry)),
+      );
     },
     [updateToasts, handleExpired],
   );
@@ -105,33 +88,29 @@ export function ToastProvider({ children }: Readonly<ToastProviderProps>) {
   const handleUndoReject = useCallback(
     (id: number) => {
       if (!mountedRef.current) return;
-      const toast = toastsRef.current.find((t) => t.id === id);
+      const toast = toastsRef.current.find((entry) => entry.id === id);
       if (!toast) return;
-      const old = lifecyclesRef.current.get(id);
-      if (old) {
-        old.dispose();
-        lifecyclesRef.current.delete(id);
-      }
+      lifecyclesRef.current.get(id)?.dispose();
+      lifecyclesRef.current.delete(id);
+      const durationMs = toastPresentations.error.durationMs;
       if (toast.phase === "visible") {
         const lifecycle = createToastLifecycle();
         lifecyclesRef.current.set(id, lifecycle);
-        lifecycle.start(ERROR_TOAST_DURATION, () => handleExpired(id));
-        if (typeof document !== "undefined" && document.hidden) {
-          lifecycle.pause("hidden");
-        }
+        lifecycle.start(durationMs, () => handleExpired(id));
+        if (typeof document !== "undefined" && document.hidden) lifecycle.pause("hidden");
       }
       updateToasts((current) =>
-        current.map((t) =>
-          t.id === id
+        current.map((entry) =>
+          entry.id === id
             ? {
-                ...t,
-                durationMs: ERROR_TOAST_DURATION,
+                ...entry,
+                durationMs,
                 message: UNDO_ERROR_MESSAGE,
-                tint: "red",
+                severity: "error",
                 undo: undefined,
                 undoPending: false,
               }
-            : t,
+            : entry,
         ),
       );
     },
@@ -140,21 +119,19 @@ export function ToastProvider({ children }: Readonly<ToastProviderProps>) {
 
   const handleUndoClick = useCallback(
     (id: number) => {
-      const toast = toastsRef.current.find((t) => t.id === id);
+      const toast = toastsRef.current.find((entry) => entry.id === id);
       if (!toast?.undo || toast.undoPending || toast.phase === "exiting") return;
       const undo = toast.undo;
       lifecyclesRef.current.get(id)?.pause("undo");
       updateToasts((current) =>
-        current.map((t) => (t.id === id ? { ...t, undoPending: true } : t)),
+        current.map((entry) => (entry.id === id ? { ...entry, undoPending: true } : entry)),
       );
       new Promise<void>((resolve) => resolve(undo()))
         .then(() => {
-          if (!mountedRef.current) return;
-          handleExpired(id);
+          if (mountedRef.current) handleExpired(id);
         })
         .catch(() => {
-          if (!mountedRef.current) return;
-          handleUndoReject(id);
+          if (mountedRef.current) handleUndoReject(id);
         });
     },
     [updateToasts, handleExpired, handleUndoReject],
@@ -163,15 +140,12 @@ export function ToastProvider({ children }: Readonly<ToastProviderProps>) {
   const handlePauseHover = useCallback((id: number) => {
     lifecyclesRef.current.get(id)?.pause("hover");
   }, []);
-
   const handleResumeHover = useCallback((id: number) => {
     lifecyclesRef.current.get(id)?.resume("hover");
   }, []);
-
   const handlePauseFocus = useCallback((id: number) => {
     lifecyclesRef.current.get(id)?.pause("focus");
   }, []);
-
   const handleResumeFocus = useCallback((id: number) => {
     lifecyclesRef.current.get(id)?.resume("focus");
   }, []);
@@ -179,26 +153,20 @@ export function ToastProvider({ children }: Readonly<ToastProviderProps>) {
   const showToast = useCallback(
     (message: ReactNode, options: ToastOptions = {}) => {
       if (!mountedRef.current) return;
-      const tint = options.tint ?? "accent";
-      const id = nextIdRef.current++;
-      const durationMs = options.undo
-        ? UNDO_TOAST_DURATION
-        : tint === "red"
-          ? ERROR_TOAST_DURATION
-          : TOAST_DURATION;
+      const severity = options.severity ?? "info";
+      const baseDuration = toastPresentations[severity].durationMs;
       const entry: ToastEntry = {
-        durationMs,
-        icon: options.icon ?? defaultIcon(tint),
-        id,
+        durationMs: options.undo ? Math.max(baseDuration, UNDO_TOAST_DURATION) : baseDuration,
+        id: nextIdRef.current++,
         message,
         phase: "entering",
-        tint,
+        severity,
         undo: options.undo,
         undoPending: false,
       };
       const lifecycle = createToastLifecycle();
       if (typeof document !== "undefined" && document.hidden) lifecycle.pause("hidden");
-      lifecyclesRef.current.set(id, lifecycle);
+      lifecyclesRef.current.set(entry.id, lifecycle);
       updateToasts((current) => [...current, entry]);
     },
     [updateToasts],
@@ -206,41 +174,26 @@ export function ToastProvider({ children }: Readonly<ToastProviderProps>) {
 
   const setMountedRef = useCallback((node: HTMLSpanElement | null) => {
     mountedRef.current = node !== null;
-    if (node !== null) {
-      return () => {
-        mountedRef.current = false;
-        for (const lifecycle of lifecyclesRef.current.values()) {
-          lifecycle.dispose();
-        }
-        lifecyclesRef.current.clear();
-      };
-    }
-    return undefined;
+    if (node === null) return undefined;
+    return () => {
+      mountedRef.current = false;
+      for (const lifecycle of lifecyclesRef.current.values()) lifecycle.dispose();
+      lifecyclesRef.current.clear();
+    };
   }, []);
 
   const setLiveRegionRef = useCallback((node: HTMLDivElement | null) => {
     if (!node) return undefined;
     const doc = node.ownerDocument;
     const onVisibilityChange = () => {
-      if (doc.hidden) {
-        for (const lifecycle of lifecyclesRef.current.values()) {
-          lifecycle.pause("hidden");
-        }
-      } else {
-        for (const lifecycle of lifecyclesRef.current.values()) {
-          lifecycle.resume("hidden");
-        }
+      for (const lifecycle of lifecyclesRef.current.values()) {
+        if (doc.hidden) lifecycle.pause("hidden");
+        else lifecycle.resume("hidden");
       }
     };
     doc.addEventListener("visibilitychange", onVisibilityChange);
-    if (doc.hidden) {
-      for (const lifecycle of lifecyclesRef.current.values()) {
-        lifecycle.pause("hidden");
-      }
-    }
-    return () => {
-      doc.removeEventListener("visibilitychange", onVisibilityChange);
-    };
+    if (doc.hidden) onVisibilityChange();
+    return () => doc.removeEventListener("visibilitychange", onVisibilityChange);
   }, []);
 
   const contextValue = useMemo(() => ({ showToast }), [showToast]);

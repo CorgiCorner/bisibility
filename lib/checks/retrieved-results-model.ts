@@ -18,6 +18,7 @@ const FEATURE_MAP: Record<string, string> = {
   "video results": "Video",
   "inline videos": "Video",
   video: "Video",
+  sitelinks: "Sitelinks",
   "top stories": "Top stories",
   "news results": "News",
   shopping: "Shopping",
@@ -42,6 +43,7 @@ const FEATURE_CATALOG: Array<[string, string]> = [
   ["Knowledge panel", "A knowledge-graph info box about the subject."],
   ["Local pack", "A map-based local business results block."],
   ["Images", "An image results block on the results page."],
+  ["Sitelinks", "Additional links from the same result shown beneath it."],
   ["Video", "A video results block on the results page."],
   ["Top stories", "A news headlines block on the results page."],
   ["News", "A news results block on the results page."],
@@ -162,23 +164,21 @@ export function compareChecks(
     fullCheckDates: readonly string[];
   },
 ): CompareResult {
-  const { formatDate, fullCheckDates } = options;
+  const { formatDate } = options;
 
   if (from.tier !== "full" || to.tier !== "full") {
     const offender = from.tier !== "full" ? from : to;
+    const earlier = from.checkedAt <= to.checkedAt ? from : to;
+    const relation = offender === earlier ? "earlier" : "later";
+    const kept =
+      offender.tier === "compact"
+        ? Math.max(0, ...offender.domains.map((entry) => entry.bestPosition))
+        : 0;
     const body =
       offender.tier === "compact"
-        ? `The ${formatDate(offender.checkedAt)} check is older than the full-detail window: one row per domain with its best position is all that survives. Lined up against a full check it would report domains entering and dropping out that never moved, only lost detail.`
+        ? `The ${relation} check kept only its top ${kept}, so its titles, URLs and page features below that are gone.`
         : `The ${formatDate(offender.checkedAt)} check has no stored results at all, so there is nothing to line up against the other one.`;
-    let rule = "Pick two checks that both hold full detail.";
-    if (fullCheckDates.length > 0) {
-      const formatted = fullCheckDates.map(formatDate);
-      const joined =
-        formatted.length === 1
-          ? formatted[0]
-          : `${formatted.slice(0, -1).join(", ")} and ${formatted.at(-1)}`;
-      rule = `${rule} ${joined} do.`;
-    }
+    const rule = "Comparison stays available between checks that both hold full detail.";
     return {
       kind: "refused",
       eyebrow: "COMPARISON NOT POSSIBLE",

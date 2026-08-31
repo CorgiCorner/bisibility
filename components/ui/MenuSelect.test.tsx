@@ -129,6 +129,46 @@ describe("MenuSelect", () => {
     expect(trigger.querySelector("[data-menu-select-caret]")).toHaveClass("ml-auto");
   });
 
+  it("supports a local scroll height while keeping the standard popover gap", async () => {
+    const user = userEvent.setup();
+    render(
+      <MenuSelect
+        ariaLabel="Property"
+        menuMaxHeight="min(192px, calc(100dvh - 84px))"
+        onChange={() => undefined}
+        options={Array.from({ length: 6 }, (_, index) => ({
+          label: `Property ${index + 1}`,
+          value: String(index + 1),
+        }))}
+        value="1"
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Property" }));
+    const paper = screen.getByRole("menu").closest(".MuiPaper-root");
+    expect(paper).toHaveStyle({
+      marginTop: "6px",
+      maxHeight: "min(192px, calc(100dvh - 84px))",
+      overflowY: "auto",
+    });
+  });
+
+  it("keeps the default menu height when no local cap is provided", async () => {
+    const user = userEvent.setup();
+    render(
+      <MenuSelect
+        ariaLabel="Default property"
+        onChange={() => undefined}
+        options={[{ label: "Property", value: "property" }]}
+        value="property"
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Default property" }));
+    const paper = screen.getByRole("menu").closest(".MuiPaper-root");
+    expect(paper).toHaveStyle({ marginTop: "6px", maxHeight: "min(360px, calc(100dvh - 84px))" });
+  });
+
   it("does not bold the selected option in the open menu", async () => {
     const user = userEvent.setup();
     render(

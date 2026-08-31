@@ -6,9 +6,7 @@ function propertyKind(siteUrl: string): GooglePropertyOption["kind"] {
 }
 
 function propertyLabel(siteUrl: string) {
-  return siteUrl.startsWith("sc-domain:")
-    ? `${siteUrl.slice("sc-domain:".length)} (Domain property)`
-    : `${siteUrl} (URL-prefix property)`;
+  return siteUrl.startsWith("sc-domain:") ? siteUrl.slice("sc-domain:".length) : siteUrl;
 }
 
 export function gscPropertyOptions(sites: readonly GoogleSite[]): GooglePropertyOption[] {

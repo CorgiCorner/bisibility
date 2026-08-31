@@ -54,10 +54,10 @@ const FALLBACK_BUFFER_MS = 50;
 
 function ActionIcon({ icon }: Readonly<{ icon?: NonNullable<AlertBannerAction["icon"]> }>) {
   if (icon === "retry") {
-    return <ArrowsClockwise aria-hidden size={14} />;
+    return <ArrowsClockwise aria-hidden size={14} weight="regular" />;
   }
   if (icon === "arrow") {
-    return <CaretRight aria-hidden size={14} weight="bold" />;
+    return <CaretRight aria-hidden size={14} weight="regular" />;
   }
   return null;
 }
@@ -139,7 +139,12 @@ export function AlertBanner({
       ref={refCallback}
       style={style.background ? { backgroundColor: style.background } : undefined}
     >
-      <WarningCircle className="shrink-0" size={17} style={{ color: style.color }} weight="fill" />
+      <WarningCircle
+        className="shrink-0"
+        size={17}
+        style={{ color: style.color }}
+        weight="regular"
+      />
       <span className="min-w-[220px] flex-1 text-[12.5px] text-fg">
         {detail ? (
           <>
@@ -168,7 +173,7 @@ export function AlertBanner({
           style={{ "--alert-dismiss-hover": style.hover } as CSSProperties}
           type="button"
         >
-          <X size={13} weight="bold" />
+          <X size={13} weight="regular" />
         </button>
       ) : null}
     </output>

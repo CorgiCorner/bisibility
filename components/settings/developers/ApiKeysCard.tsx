@@ -80,7 +80,7 @@ export function ApiKeysCard({
             <Button
               onClick={() => setCreateOpen(true)}
               size="sm"
-              startIcon={<Plus aria-hidden size={14} weight="bold" />}
+              startIcon={<Plus aria-hidden size={14} weight="regular" />}
               type="button"
             >
               Create key

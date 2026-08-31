@@ -3,7 +3,7 @@
 import { Button, Card } from "@/components/ui";
 import { appPath } from "@/lib/routing/app-path";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
-import { CaretRightIcon as CaretRight, InfoIcon as Info } from "@phosphor-icons/react/dist/ssr";
+import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import { DataSourceStatusBadge } from "./DataSourceStatusBadge";
 import type { DataSourceHealth, HighlightRow } from "./types";
@@ -38,10 +38,6 @@ export function DataSourceNoDataPanel({ health }: Readonly<{ health: DataSourceH
             </div>
           </div>
         ))}
-      </div>
-      <div className="mt-4 flex items-center gap-[9px] border-t border-border-soft pt-3.5 text-[12.5px] leading-normal text-fg-muted">
-        <Info aria-hidden className="flex-none text-accent-text" size={15} />
-        <span>{health.note}</span>
       </div>
     </Card>
   );
@@ -91,8 +87,9 @@ export function RecentlyAddedCard({
 export function ViewAllKeywordsButton({ projectRef }: Readonly<{ projectRef: string }>) {
   return (
     <Button
+      className="self-end"
       component="a"
-      endIcon={<CaretRight size={15} weight="bold" />}
+      endIcon={<CaretRight size={15} weight="regular" />}
       href={appPath(projectRef, "rank-tracker")}
       sx={{
         alignSelf: "flex-start",

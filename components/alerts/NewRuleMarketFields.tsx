@@ -36,7 +36,7 @@ export function NewRuleMarketFields({
           onClick={() => setValue("marketIds", [], { shouldDirty: true })}
           type="button"
         >
-          {marketIds.length === 0 ? <Check aria-hidden size={10} weight="bold" /> : null}
+          {marketIds.length === 0 ? <Check aria-hidden size={10} weight="regular" /> : null}
           All markets
         </button>
         {markets.map((market) => {
@@ -50,7 +50,7 @@ export function NewRuleMarketFields({
               title={market.canonicalKey}
               type="button"
             >
-              {selected ? <Check aria-hidden size={10} weight="bold" /> : null}
+              {selected ? <Check aria-hidden size={10} weight="regular" /> : null}
               {market.label}
             </button>
           );

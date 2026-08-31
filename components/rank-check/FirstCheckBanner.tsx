@@ -35,7 +35,7 @@ export function FirstCheckBannerLink({ href, label }: Readonly<{ href: string; l
       {...docsLinkProps(href)}
     >
       {label}
-      <CaretRight aria-hidden size={14} weight="bold" />
+      <CaretRight aria-hidden size={14} weight="regular" />
     </Link>
   );
 }
@@ -57,7 +57,7 @@ export function FirstCheckBanner({
   const resolvedDetail = detail ?? defaultFirstCheckDetail(keywordCount ?? 0);
 
   return (
-    <section className="flex flex-col gap-3 rounded-card border border-accent bg-accent-soft px-4 py-[13px] text-fg sm:flex-row sm:items-center sm:gap-3">
+    <section className="flex flex-col gap-3 rounded-card border border-border bg-bg-elev px-4 py-[13px] text-fg sm:flex-row sm:items-center sm:gap-3">
       <span
         className={`grid h-9 w-9 shrink-0 place-items-center rounded-control ${iconWellClassName}`}
       >
@@ -65,9 +65,9 @@ export function FirstCheckBanner({
           aria-hidden
           data-icon={icon === "ranking" ? "ranking" : "puzzle-piece"}
           data-testid="first-check-banner-icon"
-          data-weight="bold"
+          data-weight="regular"
           size={19}
-          weight="bold"
+          weight="regular"
         />
       </span>
       <div className="min-w-0 flex-1">

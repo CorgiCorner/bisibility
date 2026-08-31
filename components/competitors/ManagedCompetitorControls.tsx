@@ -102,7 +102,7 @@ export function ManagedCompetitorControls({
             disabled={isPending}
             type="submit"
           >
-            <Check aria-hidden size={13} weight="bold" />
+            <Check aria-hidden size={13} weight="regular" />
           </button>
           <button
             aria-label="Cancel rename"
@@ -110,7 +110,7 @@ export function ManagedCompetitorControls({
             onClick={closeEdit}
             type="button"
           >
-            <X aria-hidden size={13} weight="bold" />
+            <X aria-hidden size={13} weight="regular" />
           </button>
         </span>
         <span className="font-mono text-[10px] text-red-text">
@@ -130,7 +130,7 @@ export function ManagedCompetitorControls({
             onClick={() => setIsEditing(true)}
             type="button"
           >
-            <PencilSimple aria-hidden size={13} />
+            <PencilSimple weight="regular" aria-hidden size={13} />
           </button>
         </Tooltip>
       ) : null}
@@ -144,7 +144,7 @@ export function ManagedCompetitorControls({
               onClick={onRemove}
               type="button"
             >
-              <Trash aria-hidden size={13} />
+              <Trash weight="regular" aria-hidden size={13} />
             </button>
           </span>
         </Tooltip>

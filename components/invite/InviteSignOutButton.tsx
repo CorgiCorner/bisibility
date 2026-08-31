@@ -20,7 +20,7 @@ export function InviteSignOutButton({ returnTo }: Readonly<{ returnTo: string }>
       onClick={() => void handleSignOut()}
       type="button"
     >
-      <SignOut aria-hidden size={14} weight="bold" />
+      <SignOut aria-hidden size={14} weight="regular" />
       Sign out
     </button>
   );

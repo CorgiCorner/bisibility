@@ -2,16 +2,15 @@
 
 import { keywordLines } from "@/components/onboarding/onboarding-form-utils";
 import { actionErrorMessage } from "@/lib/ui/action-error";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import type { FirstCheckRunActions } from "./use-first-check-run";
 
-type FirstCheckKeywordInput = {
+type Input = {
+  initialKeywordText?: string | null;
   keywordDraft?: string;
   listFirstCheckCandidatesAction?: FirstCheckRunActions["listFirstCheckCandidatesAction"];
   projectId: string | null;
-  providerReady: boolean;
 };
-
 function uniqueKeywordOptions(keywordDraft: string | undefined) {
   const seen = new Set<string>();
   return keywordLines(keywordDraft ?? "").flatMap((keyword) => {
@@ -21,53 +20,37 @@ function uniqueKeywordOptions(keywordDraft: string | undefined) {
     return [{ label: keyword, value: keyword }];
   });
 }
-
 export function useFirstCheckKeyword({
+  initialKeywordText,
   keywordDraft,
   listFirstCheckCandidatesAction,
   projectId,
-  providerReady,
-}: FirstCheckKeywordInput) {
+}: Input) {
   const draftOptions = useMemo(() => uniqueKeywordOptions(keywordDraft), [keywordDraft]);
+  const initialOptions = draftOptions.length
+    ? draftOptions
+    : initialKeywordText
+      ? [{ label: initialKeywordText, value: initialKeywordText }]
+      : [];
   const [resumedOptions, setResumedOptions] = useState<{ label: string; value: string }[]>([]);
   const [keywordError, setKeywordError] = useState<string | null>(null);
-  const [retryAttempt, setRetryAttempt] = useState(0);
-  const loadRequest = useMemo(
-    () => ({ attempt: retryAttempt, projectId }),
-    [projectId, retryAttempt],
-  );
-  const options = draftOptions.length > 0 ? draftOptions : resumedOptions;
-  const [selected, setSelected] = useState(draftOptions[0]?.value ?? "");
-
-  useEffect(() => {
-    if (selected || draftOptions.length > 0) return;
-    if (!loadRequest.projectId || !providerReady || !listFirstCheckCandidatesAction) return;
-    let cancelled = false;
-    void listFirstCheckCandidatesAction({ limit: 1, projectId: loadRequest.projectId })
-      .then(({ candidates }) => {
-        const keyword = candidates[0]?.text;
-        if (cancelled || !keyword) return;
-        setKeywordError(null);
-        setResumedOptions([{ label: keyword, value: keyword }]);
-        setSelected(keyword);
-      })
-      .catch((error) => {
-        if (!cancelled) {
-          setKeywordError(
-            actionErrorMessage(error, "The sample keyword could not be loaded. Try again."),
-          );
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [draftOptions.length, listFirstCheckCandidatesAction, loadRequest, providerReady, selected]);
-
-  function retryKeyword() {
+  const options = resumedOptions.length ? resumedOptions : initialOptions;
+  const [selected, setSelected] = useState(initialOptions[0]?.value ?? "");
+  async function retryKeyword() {
     setKeywordError(null);
-    setRetryAttempt((current) => current + 1);
+    if (!projectId || !listFirstCheckCandidatesAction) return;
+    try {
+      const { candidates } = await listFirstCheckCandidatesAction({ limit: 1, projectId });
+      const keyword = candidates[0]?.text;
+      if (!keyword) throw new Error("No saved keyword is available.");
+      setResumedOptions([{ label: keyword, value: keyword }]);
+      setSelected(keyword);
+    } catch (error) {
+      setKeywordError(
+        actionErrorMessage(error, "The sample keyword could not be loaded. Try again."),
+      );
+    }
   }
-
   return {
     keywordError,
     keywordOptions: options,

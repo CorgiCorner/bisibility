@@ -8,6 +8,7 @@ import {
   dataSourceStatusLabel,
   dataSourceStatusTextColor,
 } from "./data-source-status";
+import { DataSourceNoDataPanel } from "./OverviewNoDataBottom";
 import { overviewFixture } from "./overview-fixtures";
 
 describe("dataSourceStatusColor", () => {
@@ -44,6 +45,24 @@ describe("DataSourceStatusBadge", () => {
     expect(badge).toHaveClass("gap-1", "p-0", "text-[10px]");
     expect(badge).not.toHaveClass("border", "rounded-full");
     expect(badge.getAttribute("style")).toContain("color: var(--green-text)");
+  });
+});
+
+describe("DataSourceNoDataPanel", () => {
+  it("keeps the data source card while omitting the provider billing note", () => {
+    render(
+      createElement(DataSourceNoDataPanel, {
+        health: {
+          ...overviewFixture.dataSource,
+          note: "Provider billing remains direct between you and the provider.",
+        },
+      }),
+    );
+
+    expect(screen.getByText("Data source")).toBeInTheDocument();
+    expect(
+      screen.queryByText("Provider billing remains direct between you and the provider."),
+    ).not.toBeInTheDocument();
   });
 });
 

@@ -60,6 +60,24 @@ describe("OnboardingMarkets", () => {
     expect(saveMarketsAction).not.toHaveBeenCalled();
   });
 
+  it("associates errors without unsupported aria-invalid attributes", () => {
+    render(
+      <OnboardingMarkets
+        error="Add at least one market to continue."
+        onChange={vi.fn()}
+        projectId="prj_1"
+        values={[]}
+      />,
+    );
+
+    const group = screen.getByLabelText("Markets");
+    const add = screen.getByRole("button", { name: "Add market" });
+    expect(group).toHaveAttribute("aria-describedby", "onboarding-markets-error");
+    expect(group).not.toHaveAttribute("aria-invalid");
+    expect(add).toHaveAttribute("aria-describedby", "onboarding-markets-error");
+    expect(add).not.toHaveAttribute("aria-invalid");
+  });
+
   it("caps the picker at the onboarding market maximum", () => {
     render(<OnboardingMarkets onChange={vi.fn()} projectId="prj_1" values={[]} />);
 
@@ -67,10 +85,11 @@ describe("OnboardingMarkets", () => {
     expect(screen.getByLabelText("Market maximum")).toHaveTextContent("5");
   });
 
-  it("keeps the last market and the picker behind the drawer trigger", () => {
+  it("removes the final market", () => {
+    const onChange = vi.fn();
     render(
       <OnboardingMarkets
-        onChange={vi.fn()}
+        onChange={onChange}
         projectId="prj_1"
         values={[
           {
@@ -86,7 +105,10 @@ describe("OnboardingMarkets", () => {
     );
 
     expect(screen.queryByLabelText("Market maximum")).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Remove Spain / English" })).toBeDisabled();
+    const remove = screen.getByRole("button", { name: "Remove Spain / English" });
+    expect(remove).toBeEnabled();
+    fireEvent.click(remove);
+    expect(onChange).toHaveBeenCalledWith([]);
   });
 
   it("can re-add a market removed from the current draft", async () => {

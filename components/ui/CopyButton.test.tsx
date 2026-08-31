@@ -86,7 +86,7 @@ describe("CopyButton", () => {
     expect(screen.getByRole("button", { name: "Copy failed" })).toBeInTheDocument();
     expect(mocks.showToast).toHaveBeenCalledWith(
       "Copy failed",
-      expect.objectContaining({ tint: "red" }),
+      expect.objectContaining({ severity: "error" }),
     );
   });
 
@@ -106,7 +106,7 @@ describe("CopyButton", () => {
     expect(screen.getByRole("button", { name: "Copy failed" })).toBeInTheDocument();
     expect(mocks.showToast).toHaveBeenCalledWith(
       "Copy failed",
-      expect.objectContaining({ tint: "red" }),
+      expect.objectContaining({ severity: "error" }),
     );
   });
 
@@ -233,7 +233,7 @@ describe("CopyButton", () => {
     expect(screen.getByRole("tooltip")).toHaveTextContent("Copy failed");
     expect(mocks.showToast).toHaveBeenCalledWith(
       "Copy failed",
-      expect.objectContaining({ tint: "red" }),
+      expect.objectContaining({ severity: "error" }),
     );
   });
 

@@ -2,8 +2,9 @@
 
 import { Tooltip } from "@/components/ui";
 import type { NavItem } from "@/lib/nav/nav-items";
-import { navItems, RAIL_ICON_SIZE } from "@/lib/nav/nav-items";
+import { navItemGroups, navItems, RAIL_ICON_SIZE } from "@/lib/nav/nav-items";
 import { appPath } from "@/lib/routing/app-path";
+import { FlaskIcon as Flask } from "@phosphor-icons/react/ssr";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -23,7 +24,11 @@ export function SidebarNav({
   const pathname = usePathname();
   const currentHref = activeHref ?? pathname ?? appPath(projectRef, "dashboard");
   const allItems = navItems(projectRef);
-  const items = allItems.filter((item) => item.group !== "utility");
+  const topItems = allItems.filter((item) => item.group === "top");
+  const groupedItems = navItemGroups.map((group) => ({
+    ...group,
+    items: allItems.filter((item) => item.group === group.id),
+  }));
   const utilityItems = allItems.filter((item) => item.group === "utility");
 
   function renderItem(item: NavItem) {
@@ -31,10 +36,14 @@ export function SidebarNav({
     const Icon = item.icon;
 
     return (
-      <Tooltip key={item.href} placement="right" content={collapsed ? item.label : ""}>
+      <Tooltip
+        key={`${item.href}:${collapsed ? "collapsed" : "expanded"}`}
+        placement="right"
+        content={collapsed ? item.label : ""}
+      >
         <Link
           aria-current={active ? "page" : undefined}
-          aria-label={collapsed ? item.label : undefined}
+          aria-label={collapsed || item.badge === "experimental" ? item.label : undefined}
           className={[
             "relative flex items-center rounded-control text-[13.5px] font-medium transition-colors duration-150",
             // Inset ring: full-bleed rows in a narrow column clip an outset one.
@@ -48,7 +57,7 @@ export function SidebarNav({
             // No fill on the current page: the row surface belongs to hover, the page
             // marker is the leading dot + filled glyph + 600 label (see Sidebar.tsx).
             active ? "font-semibold text-fg" : "text-fg-muted hover:text-fg",
-            "hover:bg-nav-active active:bg-bg-inset",
+            "hover:bg-bg-sunken active:bg-bg-inset",
           ].join(" ")}
           href={item.href}
           onClick={onNavigate}
@@ -81,8 +90,34 @@ export function SidebarNav({
           {collapsed ? null : (
             <>
               <span className="min-w-0 flex-1 truncate">{item.label}</span>
-              {item.badge ? (
-                <span className="rounded-full border border-border bg-bg-elev px-[7px] py-0.5 font-mono text-[9px] uppercase tracking-[0.6px] text-fg-muted">
+              {item.badge === "experimental" ? (
+                <Tooltip content="Experimental" placement="top" semantics="description">
+                  <span
+                    aria-label="Experimental"
+                    className="grid h-[30px] w-[30px] shrink-0 place-items-center text-fg-muted transition-colors hover:text-fg"
+                    role="img"
+                  >
+                    <Flask
+                      aria-hidden
+                      className="shrink-0 text-current"
+                      data-experimental-badge-flask
+                      size={14}
+                      weight="regular"
+                    />
+                  </span>
+                </Tooltip>
+              ) : item.badge ? (
+                <span
+                  // Decorative status, and the row's accessible name is the label alone: without
+                  // this the expanded link announces as "Search Consolealpha".
+                  aria-hidden
+                  className={[
+                    "inline-flex flex-none items-center rounded-full px-[7px] py-0.5 font-mono text-[9.5px] font-semibold",
+                    item.badge === "new"
+                      ? "bg-accent-soft text-accent-text"
+                      : "bg-nav-active text-fg-muted",
+                  ].join(" ")}
+                >
                   {item.badge}
                 </span>
               ) : null}
@@ -93,15 +128,25 @@ export function SidebarNav({
     );
   }
 
-  // Two groups, exactly as the rail: primary navigation, then utilities at the foot with
-  // distance doing the separating. The drawer used to concatenate them into one list, so the
-  // mobile shell had no notion of the split the desktop shell is built around.
+  // The drawer shares the rail's grouping data, so mobile cannot reorder the same destinations.
   return (
-    <div className="flex h-full flex-col">
-      <nav className="flex flex-col gap-0.5">{items.map(renderItem)}</nav>
-      <nav className="mt-auto flex flex-none flex-col gap-0.5 pt-4">
-        {utilityItems.map(renderItem)}
-      </nav>
-    </div>
+    <nav className="flex flex-col gap-0.5">
+      <div className="flex flex-col gap-0.5">{topItems.map(renderItem)}</div>
+      {groupedItems.map((group) => (
+        <div className={`flex flex-col gap-0.5 ${collapsed ? "pt-[30px]" : ""}`} key={group.id}>
+          {/* 14 + 10 + 4 = a 28px heading box. `block` and `leading-none` pin the line box to
+                the 10px font size; preflight is off (app/styles/base-reset.css), so without them
+                a UA line-height makes the settled heading taller than its ShellSkeleton
+                placeholder and the rail shifts on hydration. */}
+          {collapsed ? null : (
+            <span className="block px-[11px] pt-3.5 pb-1 font-mono text-[10px] font-semibold uppercase leading-none tracking-[0.5px] text-fg-muted">
+              {group.label}
+            </span>
+          )}
+          {group.items.map(renderItem)}
+        </div>
+      ))}
+      <div className="flex flex-col gap-0.5 pt-4">{utilityItems.map(renderItem)}</div>
+    </nav>
   );
 }

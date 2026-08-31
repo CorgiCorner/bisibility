@@ -1,5 +1,5 @@
 import type { PricingRow } from "@/components/ui/PricingPopover";
-import { PricingPopover } from "@/components/ui/PricingPopover";
+import { PricingPopover, pricingTriggerClassName } from "@/components/ui/PricingPopover";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
@@ -36,6 +36,18 @@ function PricingHarness({
 }
 
 describe("PricingPopover", () => {
+  it("underlines pricing triggers only during hover or keyboard focus", () => {
+    const classes = pricingTriggerClassName.split(" ");
+
+    expect(classes).not.toContain("underline");
+    expect(classes).toContain("hover:underline");
+    expect(classes).toContain("focus-visible:underline");
+    expect(classes).toContain("decoration-border-control");
+    expect(classes).toContain("underline-offset-4");
+    expect(classes).toContain("transition-colors");
+    expect(classes).toContain("hover:text-fg");
+  });
+
   it("renders every supplied row label and value once the anchor is set", () => {
     render(
       <PricingHarness

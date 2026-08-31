@@ -227,6 +227,7 @@ export async function runFirstCheckPreview(input: unknown): Promise<RunFirstChec
       auditTargetType = "rank_check";
       result = {
         position: preview.rankCheck.position,
+        recordedCostCents: Number(preview.rankCheck.costCents ?? 0),
         provider: preview.provider,
         rankingUrl: preview.rankCheck.rankingUrl ?? null,
         status: "completed",

@@ -53,7 +53,7 @@ describe("AdminAccountActions", () => {
       expect(mocks.changeState).toHaveBeenCalledWith({ deactivated: true, userId: "user_1" }),
     );
     expect(onStatusChange).toHaveBeenCalledWith("deactivated");
-    expect(mocks.showToast).toHaveBeenCalledWith("Account deactivated.", { tint: "green" });
+    expect(mocks.showToast).toHaveBeenCalledWith("Account deactivated.", { severity: "success" });
   });
 
   it("renders the reactivation path for a deactivated account", () => {
@@ -77,7 +77,7 @@ describe("AdminAccountActions", () => {
     await waitFor(() => expect(mocks.resetLimits).toHaveBeenCalledWith({ userId: "user_1" }));
     expect(mocks.showToast).toHaveBeenCalledWith(
       "Rate limits reset; monthly spend is a rolling window and cannot be reset",
-      { tint: "green" },
+      { severity: "success" },
     );
   });
 });

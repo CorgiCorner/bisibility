@@ -35,3 +35,13 @@ regexTarget = "match"
 regexes = [
   '''bsb_(key|pat)_live_\.\.\.''',
 ]
+
+[[allowlists]]
+description = """The Install design page's demo key. `Dashboard - Install.dc.html` renders
+`bsk_live_a71c93ef25d6` plus a four character suffix as sample copy for the read-only API key
+card; `bsk_live_` is not a prefix the app issues (`bsb_key_live_` is), so the literal cannot
+be a credential. The regex pins that one value rather than opening the design-source path."""
+regexTarget = "match"
+regexes = [
+  '''bsk_live_a71c93ef25d6''',
+]

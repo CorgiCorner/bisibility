@@ -57,7 +57,7 @@ export function SaveViewModal({
 
     try {
       const view = await createSavedViewAction({ config, name: values.name, projectId });
-      showToast("View saved");
+      showToast("View saved", { severity: "success" });
       onClose();
       router.push(savedViewHref(projectId, view.id, view.config.lens));
       router.refresh();
@@ -82,7 +82,7 @@ export function SaveViewModal({
             form="save-keyword-view"
             loading={isSubmitting}
             loadingLabel="Saving..."
-            startIcon={<BookmarkSimple size={15} weight="bold" />}
+            startIcon={<BookmarkSimple size={15} weight="regular" />}
             type="submit"
             variant="primary"
           >
@@ -112,7 +112,7 @@ export function SaveViewModal({
             Preview
           </span>
           <span className="inline-flex min-w-0 items-center gap-1.5 truncate rounded-control border border-border bg-accent-soft px-3 py-1.5 text-[12px] font-semibold text-accent-text">
-            <BookmarkSimple className="shrink-0" size={13} weight="fill" />
+            <BookmarkSimple className="shrink-0" size={13} weight="regular" />
             <span className="truncate">{previewName}</span>
           </span>
         </div>
@@ -131,7 +131,7 @@ export function SaveViewModal({
 
         <div className="flex items-start gap-2 rounded-control border border-border bg-bg px-[13px] py-[11px]">
           <span className="flex h-[17px] shrink-0 items-center">
-            <FunnelSimple className="text-accent-text" size={14} />
+            <FunnelSimple weight="regular" className="text-accent-text" size={14} />
           </span>
           <span className="text-[11.5px] leading-[1.45] text-fg-muted">
             <strong className="font-semibold text-fg">Captured view:</strong> {activeFiltersSummary}
@@ -140,7 +140,7 @@ export function SaveViewModal({
 
         {errors.root ? (
           <p className="m-0 flex items-center gap-1.5 font-mono text-[11.5px] text-red-text">
-            <X size={12} weight="bold" />
+            <X size={12} weight="regular" />
             {errors.root.message}
           </p>
         ) : null}

@@ -68,7 +68,7 @@ export function SortableColumnHeader({
         type="button"
       >
         {children}
-        {active ? <Icon aria-hidden size={9} weight="bold" /> : null}
+        {active ? <Icon aria-hidden size={9} weight="regular" /> : null}
       </button>
     </span>
   );

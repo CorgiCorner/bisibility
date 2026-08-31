@@ -71,14 +71,14 @@ export function SavedViewsControl({
     startTransition(() => {
       void deleteSavedViewAction({ projectId, viewId })
         .then(() => {
-          showToast("View deleted", { tint: "neutral" });
+          showToast("View deleted", { severity: "success" });
           if (viewId === activeViewId) {
             router.push(savedViewHref(projectId, null));
           } else {
             router.refresh();
           }
         })
-        .catch((error) => showToast(actionErrorMessage(error), { tint: "red" }));
+        .catch((error) => showToast(actionErrorMessage(error), { severity: "error" }));
     });
   }
 
@@ -93,10 +93,10 @@ export function SavedViewsControl({
         type="button"
       >
         <span className="flex shrink-0 text-fg-muted">
-          <BookmarkSimple aria-hidden size={15} />
+          <BookmarkSimple weight="regular" aria-hidden size={15} />
         </span>
         <span className="min-w-0 truncate text-fg">{activeView?.name ?? "All keywords"}</span>
-        <CaretDown aria-hidden className="shrink-0 text-fg-muted" size={11} weight="bold" />
+        <CaretDown aria-hidden className="shrink-0 text-fg-muted" size={11} weight="regular" />
       </button>
       <Menu
         anchorEl={anchorEl}
@@ -110,7 +110,7 @@ export function SavedViewsControl({
         </div>
         <MenuItem onClick={() => applyView(null)} selected={!activeViewId}>
           <span className="mr-2 grid h-4 w-4 place-items-center">
-            {!activeViewId ? <Check size={13} weight="bold" /> : null}
+            {!activeViewId ? <Check size={13} weight="regular" /> : null}
           </span>
           {"All keywords "}
         </MenuItem>
@@ -123,7 +123,7 @@ export function SavedViewsControl({
               selected={view.id === activeViewId}
             >
               <span className="mr-2 grid h-4 w-4 place-items-center">
-                {view.id === activeViewId ? <Check size={13} weight="bold" /> : null}
+                {view.id === activeViewId ? <Check size={13} weight="regular" /> : null}
               </span>
               <span className="min-w-0 flex-1 truncate">{view.name}</span>
               {deletableSavedViewIdSet.has(view.id) ? (
@@ -138,7 +138,7 @@ export function SavedViewsControl({
                     size="small"
                     sx={{ color: "var(--fg-muted)", ml: 1 }}
                   >
-                    <Trash size={13} />
+                    <Trash weight="regular" size={13} />
                   </IconButton>
                 </Tooltip>
               ) : null}
@@ -156,7 +156,7 @@ export function SavedViewsControl({
           }}
         >
           <span className="mr-2 grid h-4 w-4 place-items-center text-accent-text">
-            <Plus size={13} weight="bold" />
+            <Plus size={13} weight="regular" />
           </span>
           {"Save current view "}
         </MenuItem>

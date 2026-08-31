@@ -39,12 +39,12 @@ function AttemptTone({
   failedRun,
 }: Readonly<{ attempt: CheckAttempt; failedRun: boolean }>) {
   if (attempt.outcome === "ok" && !failedRun) {
-    return <CheckCircle aria-hidden className="text-green-text" size={15} weight="fill" />;
+    return <CheckCircle aria-hidden className="text-green-text" size={15} weight="regular" />;
   }
   if (attempt.outcome === "rate_limited") {
-    return <WarningCircle aria-hidden className="text-yellow-text" size={15} weight="fill" />;
+    return <WarningCircle aria-hidden className="text-yellow-text" size={15} weight="regular" />;
   }
-  return <XCircle aria-hidden className="text-red-text" size={15} weight="fill" />;
+  return <XCircle aria-hidden className="text-red-text" size={15} weight="regular" />;
 }
 
 function fallbackOutcome(run: CheckRunRow, index: number) {

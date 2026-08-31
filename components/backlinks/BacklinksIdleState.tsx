@@ -1,6 +1,6 @@
 "use client";
 
-import { EmptyState } from "@/components/ui";
+import { EmptyState, ModuleMark } from "@/components/ui";
 import { LinkIcon as Link } from "@phosphor-icons/react";
 
 const bullets = [
@@ -14,7 +14,7 @@ export function BacklinksIdleState() {
     <section aria-label="Backlinks introduction">
       <EmptyState
         bullets={[...bullets]}
-        icon={<Link aria-hidden size={28} />}
+        mark={<ModuleMark bordered icon={Link} />}
         title="Point it at any domain"
       />
     </section>

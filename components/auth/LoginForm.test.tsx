@@ -100,7 +100,7 @@ describe("LoginForm capacity errors", () => {
         digit,
       );
     }
-    await user.click(screen.getByRole("button", { name: "Verify & continue" }));
+    await user.click(screen.getByRole("button", { name: "Verify and continue" }));
 
     await waitFor(() =>
       expect(mocks.signInRedirectUrl).toHaveBeenCalledWith(

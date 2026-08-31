@@ -70,7 +70,7 @@ function Delta({ row }: Readonly<{ row: OverviewMarketRow }>) {
       <span
         className={`inline-flex items-center justify-end gap-[3px] whitespace-nowrap font-mono text-xs font-semibold ${tone}`}
       >
-        {Icon ? <Icon aria-hidden size={11} weight="bold" /> : null}
+        {Icon ? <Icon aria-hidden size={11} weight="regular" /> : null}
         {value}
       </span>
     </Tooltip>
@@ -100,7 +100,7 @@ export function ByMarketRollup({ device, projectRef, rows }: Readonly<ByMarketRo
         </div>
         <MenuSelect
           ariaLabel="Sort markets"
-          leadingIcon={<Sort aria-hidden size={12} />}
+          leadingIcon={<Sort weight="regular" aria-hidden size={12} />}
           onChange={(value) => setSort(value as MarketSort)}
           options={sortOptions}
           triggerClassName="min-h-[30px]"
@@ -162,7 +162,7 @@ export function ByMarketRollup({ device, projectRef, rows }: Readonly<ByMarketRo
                 width={72}
               />
             </span>
-            <CaretRight aria-hidden className="text-fg-muted" size={13} weight="bold" />
+            <CaretRight aria-hidden className="text-fg-muted" size={13} weight="regular" />
           </Link>
         ))}
       </div>

@@ -47,7 +47,7 @@ function guardNotices(plan: FirstCheckRunPlan, projectRef: ProjectRef) {
         <>
           Monthly rank-check budget reached.{" "}
           <Link
-            className="font-semibold text-accent-text"
+            className="font-semibold text-fg underline decoration-fg underline-offset-3"
             href={`${appPath(projectRef, "settings")}#provider-usage`}
           >
             Raise the budget
@@ -228,7 +228,7 @@ export function FirstCheckRunModal({
         onClick={onConfirm}
         type="button"
       >
-        Confirm &amp; run
+        Confirm and run
       </Button>
     </div>
   );

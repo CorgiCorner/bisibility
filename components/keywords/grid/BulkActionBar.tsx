@@ -136,7 +136,7 @@ export function BulkActionBar({
           ) : (
             <Button
               component={Link}
-              endIcon={<CaretRight aria-hidden size={12} weight="bold" />}
+              endIcon={<CaretRight aria-hidden size={12} weight="regular" />}
               href={appPath(projectId, "integrations")}
               size="xs"
             >
@@ -150,7 +150,7 @@ export function BulkActionBar({
               disabled={readOnly}
               onClick={() => setMode(mode === "tag" ? null : "tag")}
               size="xs"
-              startIcon={<Tag size={15} />}
+              startIcon={<Tag weight="regular" size={15} />}
               variant="secondary"
             >
               Add tag
@@ -163,7 +163,7 @@ export function BulkActionBar({
               disabled={readOnly}
               onClick={() => setMode(mode === "target" ? null : "target")}
               size="xs"
-              startIcon={<LinkSimple size={15} />}
+              startIcon={<LinkSimple weight="regular" size={15} />}
               variant="secondary"
             >
               {targetView.actionLabel}
@@ -176,7 +176,7 @@ export function BulkActionBar({
               disabled={readOnly}
               onClick={() => setMode(mode === "frequency" ? null : "frequency")}
               size="xs"
-              startIcon={<ClockCountdown size={15} />}
+              startIcon={<ClockCountdown weight="regular" size={15} />}
               variant="secondary"
             >
               Set frequency
@@ -189,7 +189,7 @@ export function BulkActionBar({
               disabled={readOnly || deleting}
               onClick={() => setConfirmOpen(true)}
               size="xs"
-              startIcon={<Trash size={15} />}
+              startIcon={<Trash weight="regular" size={15} />}
               sx={{
                 backgroundColor: "transparent",
                 border: "1px solid var(--red)",
@@ -209,7 +209,7 @@ export function BulkActionBar({
         <Button
           onClick={onClear}
           size="xs"
-          startIcon={<X size={14} />}
+          startIcon={<X weight="regular" size={14} />}
           sx={{ marginLeft: "auto" }}
           variant="ghost"
         >

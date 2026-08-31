@@ -1,10 +1,11 @@
-import { Button, MonoText } from "@/components/ui";
+import { Button } from "@/components/ui";
 import type { RetrievedResults } from "@/lib/checks/contract";
 import {
   type CompareRow,
   type CompareState,
   compareChecks,
 } from "@/lib/checks/retrieved-results-model";
+import { InfoIcon as Info, ProhibitIcon as Prohibit } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
 
 export type RetrievedResultsCompareProps = {
@@ -15,7 +16,6 @@ export type RetrievedResultsCompareProps = {
   onPickFullPair?: (fromCheckId: string, toCheckId: string) => void;
   fullPair?: { from: string; to: string } | null;
 };
-
 const STATS: ReadonlyArray<{ state: CompareState; label: string }> = [
   { state: "entered", label: "Entered" },
   { state: "up", label: "Moved up" },
@@ -23,133 +23,117 @@ const STATS: ReadonlyArray<{ state: CompareState; label: string }> = [
   { state: "unchanged", label: "Unchanged" },
   { state: "dropped_out", label: "Dropped out" },
 ];
-
-const chipSx: Record<CompareState, { bg: string; fg: string; border: string }> = {
-  up: {
-    bg: "color-mix(in srgb, var(--green) 12%, transparent)",
-    fg: "var(--green-text)",
-    border: "var(--green)",
-  },
-  down: {
-    bg: "color-mix(in srgb, var(--red) 12%, transparent)",
-    fg: "var(--red-text)",
-    border: "var(--red)",
-  },
-  entered: { bg: "var(--bg-sunken)", fg: "var(--fg-muted)", border: "var(--border)" },
-  unchanged: { bg: "var(--bg-sunken)", fg: "var(--fg-muted)", border: "var(--border)" },
-  dropped_out: { bg: "var(--bg-sunken)", fg: "var(--fg-muted)", border: "var(--border)" },
+const CHIP_CLASS: Record<CompareState, string> = {
+  up: "border-green/40 bg-green/10 text-green-text",
+  down: "border-red/30 bg-red/10 text-red-text",
+  entered: "border-blue-300/50 bg-blue-100/50 text-blue-700",
+  unchanged: "border-border bg-bg-sunken text-fg-muted",
+  dropped_out: "border-amber-300/50 bg-amber-100/50 text-amber-800",
 };
-
-function makeDateFormatter(timeZone: string): (iso: string) => string {
-  const fmt = new Intl.DateTimeFormat("en-US", { day: "numeric", month: "short", timeZone });
+function makeDateFormatter(timeZone: string) {
+  const fmt = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", timeZone });
   return (iso: string) => fmt.format(new Date(iso));
 }
-
-function StatCell({ count, label }: Readonly<{ count: number; label: string }>) {
+function Position({ row }: Readonly<{ row: CompareRow }>) {
   return (
-    <div className="flex flex-col gap-0.5">
-      <MonoText size="lg">{count}</MonoText>
-      <span className="text-[10px] text-fg-muted">{label}</span>
-    </div>
+    <span className="whitespace-nowrap font-mono text-[11.5px] text-fg-muted">
+      {row.from === null ? "-" : `#${row.from}`} -&gt; {row.to === null ? "-" : `#${row.to}`}
+    </span>
   );
 }
-
 function Chip({ row }: Readonly<{ row: CompareRow }>) {
-  const style = chipSx[row.state];
   return (
     <span
-      className="inline-flex items-center rounded-full px-2 py-0.5 font-mono text-[10px] font-semibold"
-      style={{ backgroundColor: style.bg, border: `1px solid ${style.border}`, color: style.fg }}
+      className={`rounded-full border px-2.5 py-1 font-mono text-[10px] ${CHIP_CLASS[row.state]}`}
       title={row.tip}
     >
       {row.chip}
     </span>
   );
 }
-
 function ListResult({
+  notice,
   result,
-  overlapNote,
-  tailNote,
+  trackedDomain,
 }: Readonly<{
+  notice: ReactNode;
   result: Extract<ReturnType<typeof compareChecks>, { kind: "list" }>;
-  overlapNote: string;
-  tailNote: string;
+  trackedDomain: string | null;
 }>) {
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap gap-x-6 gap-y-2">
-        {STATS.map((s) => (
-          <StatCell key={s.state} count={result.stats[s.state]} label={s.label} />
-        ))}
-      </div>
-      <p className="m-0 text-[11px] text-fg-muted">{overlapNote}</p>
-      <ul className="m-0 flex flex-col gap-1.5 p-0">
-        {result.rows.map((row) => (
-          <li className="flex items-center justify-between gap-3" key={row.domain}>
-            <span className="truncate text-[12px] text-fg">{row.domain}</span>
-            <span className="flex shrink-0 items-center gap-2">
-              {row.state === "dropped_out" ? (
-                <MonoText muted size="md">
-                  was #{row.from}
-                </MonoText>
-              ) : (
-                <MonoText muted size="md">
-                  #{row.to}
-                </MonoText>
-              )}
-              <Chip row={row} />
+    <div>
+      <div className="flex flex-col gap-2 border-b border-border px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+        <div className="flex flex-wrap gap-x-3 gap-y-1 font-mono text-[11px]">
+          {STATS.map((item) => (
+            <span key={item.state}>
+              <strong className="text-fg">{result.stats[item.state]}</strong>{" "}
+              <span className="text-fg-muted">{item.label}</span>
             </span>
-          </li>
-        ))}
+          ))}
+        </div>
+        <p className="m-0 text-right font-mono text-[10.5px] text-fg-muted">
+          Both checks retrieved the top {result.overlap}, so the comparison covers positions 1 to{" "}
+          {result.overlap}.
+        </p>
+      </div>
+      {notice}
+      <ul className="m-0 list-none p-0">
+        {result.rows.map((row) => {
+          const tracked = row.domain === trackedDomain;
+          return (
+            <li
+              className={`flex min-h-[49px] flex-wrap items-center gap-2 border-b border-border-soft px-4 py-2 sm:px-5 ${tracked ? "m-3 rounded-control border border-border-control px-3 sm:px-4" : ""}`}
+              key={row.domain}
+            >
+              <span className="min-w-0 flex-1 truncate text-[12.5px] font-medium text-fg">
+                {row.domain}
+              </span>
+              {tracked ? (
+                <span className="rounded-full border border-accent-solid px-2.5 py-1 font-mono text-[10px] text-accent-text">
+                  Your site
+                </span>
+              ) : null}
+              <Position row={row} />
+              <Chip row={row} />
+            </li>
+          );
+        })}
       </ul>
-      <p className="m-0 text-[11px] text-fg-muted">{tailNote}</p>
     </div>
   );
 }
-
 function RefusedResult({
   result,
-  fromCheckedAt,
-  toCheckedAt,
-  formatDate,
   fullPair,
   onPickFullPair,
+  buttonLabel,
 }: Readonly<{
   result: Extract<ReturnType<typeof compareChecks>, { kind: "refused" }>;
-  fromCheckedAt: string;
-  toCheckedAt: string;
-  formatDate: (iso: string) => string;
   fullPair?: { from: string; to: string } | null;
-  onPickFullPair?: (fromCheckId: string, toCheckId: string) => void;
+  onPickFullPair?: (from: string, to: string) => void;
+  buttonLabel: string;
 }>) {
-  const showButton = fullPair && onPickFullPair;
   return (
-    <div
-      className="flex flex-col gap-2 rounded-card border border-dashed border-border p-4"
-      style={{ backgroundColor: "var(--bg-sunken)" }}
-    >
-      <MonoText muted size="md">
+    <div className="m-4 rounded-control border border-dashed border-border bg-bg-sunken p-4">
+      <p className="m-0 flex items-center gap-2 font-mono text-[10px] text-fg-muted">
+        <Prohibit aria-hidden size={13} weight="regular" />
         {result.eyebrow}
-      </MonoText>
-      <h4 className="m-0 text-[13px] font-semibold text-fg">{result.title}</h4>
-      <p className="m-0 text-[12px] text-fg-muted">{result.body}</p>
-      <p className="m-0 font-mono text-[10px] text-fg-muted">{result.rule}</p>
-      {showButton ? (
+      </p>
+      <h4 className="m-0 mt-1 text-[13px] font-semibold">{result.title}</h4>
+      <p className="m-0 mt-1 text-[12px] text-fg-muted">{result.body}</p>
+      <p className="m-0 mt-2 font-mono text-[10px] text-fg-muted">{result.rule}</p>
+      {fullPair && onPickFullPair ? (
         <Button
-          onClick={() =>
-            onPickFullPair?.((fullPair as { from: string }).from, (fullPair as { to: string }).to)
-          }
+          onClick={() => onPickFullPair(fullPair.from, fullPair.to)}
           size="xs"
           variant="secondary"
         >
-          {`Compare ${formatDate(fromCheckedAt)} with ${formatDate(toCheckedAt)}`}
+          {buttonLabel}
         </Button>
       ) : null}
     </div>
   );
 }
-
 export function RetrievedResultsCompare({
   from,
   to,
@@ -160,28 +144,37 @@ export function RetrievedResultsCompare({
 }: Readonly<RetrievedResultsCompareProps>): ReactNode {
   const formatDate = makeDateFormatter(timeZone);
   const result = compareChecks(from, to, { formatDate, fullCheckDates });
-  const crossProvider = from.provider !== to.provider;
-
+  const trackedDomain =
+    to.tier === "full" ? (to.rows.find((row) => row.tracked)?.domain ?? null) : null;
+  const providerNotice =
+    from.provider !== to.provider ? (
+      <p className="m-0 flex items-start gap-2 border-b border-border px-4 py-4 text-[12px] leading-5 text-fg-muted sm:px-5">
+        <Info aria-hidden className="mt-0.5 shrink-0" size={15} weight="regular" />
+        <span>
+          These checks used different providers: {from.providerLabel} ({formatDate(from.checkedAt)})
+          and {to.providerLabel} ({formatDate(to.checkedAt)}). Domains entering or dropping out may
+          reflect the provider switch, not movement in Google.
+        </span>
+      </p>
+    ) : null;
   return (
-    <div className="flex flex-col gap-3">
-      {crossProvider ? (
-        <p className="m-0 text-[11px] text-fg-muted">
-          {`Compared across providers: ${from.providerLabel} then ${to.providerLabel}. Some domains entering or dropping out can reflect the provider change rather than movement in Google.`}
-        </p>
-      ) : null}
+    <div>
       {result.kind === "list" ? (
-        <ListResult result={result} overlapNote={result.overlapNote} tailNote={result.tailNote} />
-      ) : result.kind === "degenerate" ? (
-        <p className="m-0 text-[12px] text-fg-muted">{result.note}</p>
+        <ListResult notice={providerNotice} result={result} trackedDomain={trackedDomain} />
       ) : (
-        <RefusedResult
-          result={result}
-          fromCheckedAt={from.checkedAt}
-          toCheckedAt={to.checkedAt}
-          formatDate={formatDate}
-          fullPair={fullPair}
-          onPickFullPair={onPickFullPair}
-        />
+        <>
+          {providerNotice}
+          {result.kind === "degenerate" ? (
+            <p className="m-0 p-5 text-[12px] text-fg-muted">{result.note}</p>
+          ) : (
+            <RefusedResult
+              buttonLabel={`Compare ${formatDate(from.checkedAt)} with ${formatDate(to.checkedAt)}`}
+              fullPair={fullPair}
+              onPickFullPair={onPickFullPair}
+              result={result}
+            />
+          )}
+        </>
       )}
     </div>
   );

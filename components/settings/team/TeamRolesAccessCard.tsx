@@ -15,11 +15,11 @@ const displayedRoles = [
 const capabilityRows = [
   {
     allowed: (role: Role) => canProjectAction(role, "read", "keyword"),
-    label: "View dashboards, keywords & exports",
+    label: "View dashboards, keywords and exports",
   },
   {
     allowed: (role: Role) => canProjectAction(role, "update", "keyword"),
-    label: "Add & edit keywords, alerts, views",
+    label: "Add and edit keywords, alerts, views",
   },
   {
     allowed: (role: Role) => canProjectAction(role, "delete", "keyword"),
@@ -27,11 +27,11 @@ const capabilityRows = [
   },
   {
     allowed: (role: Role) => canProjectAction(role, "create", "api_key"),
-    label: "Create & revoke API keys and hooks",
+    label: "Create and revoke API keys and hooks",
   },
   {
     allowed: (role: Role) => canProjectAction(role, "manage", "team"),
-    label: "Invite & manage members",
+    label: "Invite and manage members",
   },
   { allowed: canReadProjectAudit, label: "Read the audit log" },
   {
@@ -56,7 +56,7 @@ function PermissionMark({
       className={cn("grid place-items-center", allowed ? "text-green-text" : "text-fg-muted")}
       role="img"
     >
-      <Icon aria-hidden size={15} weight={allowed ? "fill" : "regular"} />
+      <Icon aria-hidden size={15} weight="regular" />
     </span>
   );
 }
@@ -67,7 +67,7 @@ export function TeamRolesAccessCard() {
       className={teamCardGeometryClassNames.roles}
       description="What each role can do; a role is changed on the member's row."
       frameId="roles"
-      title="Roles & access"
+      title="Roles and access"
     >
       <div className="overflow-x-auto rounded-control border border-border">
         <div className="min-w-[600px]">

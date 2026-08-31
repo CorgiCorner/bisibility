@@ -1,8 +1,8 @@
 import { NotificationChannelsCard } from "@/components/settings/notifications/NotificationChannelsCard";
 import { SettingsCard } from "@/components/settings/shell/SettingsCard";
+import { Button } from "@/components/ui";
 import type { NotificationPreferencesView } from "@/lib/queries/notification-prefs";
 import { appRootPath } from "@/lib/routing/app-path";
-import Link from "next/link";
 
 export type NotificationPreferencesProps = {
   canEdit: boolean;
@@ -17,17 +17,19 @@ export function NotificationPreferences({
     <div className="space-y-5" data-notifications-section="">
       <NotificationChannelsCard canEdit={canEdit} preferences={preferences} />
       <SettingsCard
+        action={
+          <Button href={appRootPath("account")} size="sm" variant="secondary">
+            Manage email
+          </Button>
+        }
+        className="min-h-auto"
         description="The address that receives notification emails."
         showSave={false}
         title="Delivery address"
       >
         <p className="m-0 text-[13px] leading-5 text-fg">
           Notifications are delivered to{" "}
-          <span className="font-mono font-medium">{preferences.email}</span>.{" "}
-          <Link className="text-accent-text underline" href={appRootPath("account")}>
-            Manage your account email
-          </Link>
-          .
+          <span className="font-mono font-medium">{preferences.email}</span>.
         </p>
       </SettingsCard>
     </div>

@@ -47,8 +47,8 @@ const scopeDefinitions: Record<string, Omit<ScopeItem, "value"> & { group: Scope
 };
 
 const groupDefinitions: Array<Omit<ScopeGroup, "scopes">> = [
-  { icon: UserCircle, id: "identity", note: "who you are", title: "Sign-in & session" },
-  { icon: PlugsConnected, id: "access", note: "your rank data", title: "MCP & API access" },
+  { icon: UserCircle, id: "identity", note: "who you are", title: "Sign-in and session" },
+  { icon: PlugsConnected, id: "access", note: "your rank data", title: "MCP and API access" },
   {
     icon: Key,
     id: "credentials",

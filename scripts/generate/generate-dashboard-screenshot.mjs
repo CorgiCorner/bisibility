@@ -164,7 +164,10 @@ async function stopChild(child) {
 }
 
 async function waitForAuthResult(target, page, failurePrefix) {
-  const errorMessage = page.locator(".text-red-text").filter({ hasText: /\S/ }).first();
+  const errorMessage = page
+    .locator("form .text-red-text")
+    .filter({ hasText: /[A-Za-z]/ })
+    .first();
   await Promise.race([
     target,
     errorMessage.waitFor({ state: "visible" }).then(async () => {
@@ -194,7 +197,7 @@ async function captureDashboard(origin, browser, projectRef) {
     "Requesting the demo sign-in code failed",
   );
   await firstOtpDigit.pressSequentially(demoOtp);
-  await page.getByRole("button", { name: "Verify & continue" }).click();
+  await page.getByRole("button", { name: "Verify and continue" }).click();
   await waitForAuthResult(
     page.waitForURL((url) => url.pathname === dashboardPath, { timeout: 30_000 }),
     page,

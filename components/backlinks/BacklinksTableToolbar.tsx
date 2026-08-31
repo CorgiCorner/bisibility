@@ -117,7 +117,7 @@ export function BacklinksTableToolbar({
           onClick={onOpenFilters}
           type="button"
         >
-          <FunnelSimple aria-hidden size={13} weight="bold" />
+          <FunnelSimple aria-hidden size={13} weight="regular" />
           Filters
           <span className="grid h-[17px] min-w-[17px] place-items-center rounded-full bg-accent-soft px-1 font-mono text-[10px] font-semibold text-accent-text">
             {filterCount}

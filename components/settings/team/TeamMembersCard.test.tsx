@@ -80,6 +80,22 @@ describe("TeamMembersCard", () => {
     expect(document.querySelector('img[src="https://example.com/avatar.png"]')).not.toBeNull();
   });
 
+  it("lets the members card size to its content", () => {
+    renderCard();
+
+    const card = document.querySelector('[data-team-card-frame="members"] [data-settings-card]');
+    expect(card).not.toHaveClass("h-[540px]", "sm:h-[400px]");
+  });
+
+  it("keeps the current-user badge compact beside the member name", () => {
+    renderCard({ members: [owner] });
+
+    const currentUserBadge = screen.getByText("you");
+    expect(currentUserBadge).toHaveClass("h-4", "px-1.5", "text-[9px]");
+    expect(currentUserBadge.parentElement).toHaveClass("gap-1.5");
+    expect(currentUserBadge.closest("[data-team-member-row]"))?.toHaveClass("p-3");
+  });
+
   it("shows an existing auditor as Viewer with audit access", () => {
     renderCard();
 

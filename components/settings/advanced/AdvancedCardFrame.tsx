@@ -49,7 +49,7 @@ export function AdvancedCardFrame({
       </div>
       {children}
       {footer ? (
-        <div className="mt-auto flex flex-wrap items-center justify-end gap-2.5 border-border-soft border-t pt-4">
+        <div className="-mx-5 mt-auto flex flex-wrap items-center justify-end gap-2.5 border-border-soft border-t px-5 pt-4">
           {footer}
         </div>
       ) : null}

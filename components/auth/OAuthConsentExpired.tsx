@@ -8,7 +8,7 @@ export function OAuthConsentExpired({ client }: Readonly<{ client: OAuthConsentC
   return (
     <Card className="w-full max-w-[520px] p-6 sm:p-8" size="lg">
       <span className="grid h-11 w-11 place-items-center rounded-card bg-yellow/15 text-yellow-text">
-        <HourglassLow aria-hidden size={24} weight="fill" />
+        <HourglassLow aria-hidden size={24} weight="regular" />
       </span>
       <h2 className="mt-5 mb-0 text-[20px] font-semibold tracking-[-0.5px]">Request expired</h2>
       <p className="mt-3 mb-0 text-[14px] leading-[1.6] text-fg-muted">

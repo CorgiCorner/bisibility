@@ -46,6 +46,7 @@ describe("workspace budget summary", () => {
     mocks.monthlySpend.mockResolvedValue(1_240);
     mocks.projectBudgetCap.mockResolvedValue(5_000);
     mocks.providerSpend.mockResolvedValue({
+      connections: [{ allocation: { amountPerMonth: 5_000, unit: "cents" }, status: "connected" }],
       summary: {
         maxUsedPercent: 80,
         recorded: { cents: 1_240, units: 10 },
@@ -69,6 +70,7 @@ describe("workspace budget summary", () => {
     ).resolves.toEqual({
       capCents: 5_000,
       hasAllocation: true,
+      headerAction: "details",
       maxUsedPercent: 80,
       recorded: { cents: 1_240, units: 10 },
       spentCents: 1_240,
@@ -82,6 +84,43 @@ describe("workspace budget summary", () => {
     expect(mocks.monthlySpend.mock.invocationCallOrder[0]).toBeLessThan(
       mocks.projectBudgetCap.mock.invocationCallOrder[0],
     );
+  });
+
+  it.each([
+    {
+      action: "details",
+      connections: [
+        { allocation: null, status: "connected" },
+        { allocation: { amountPerMonth: 100, unit: "units" }, status: "connected" },
+      ],
+      name: "mixed allocations",
+    },
+    {
+      action: "set_budget",
+      connections: [
+        { allocation: null, status: "connected" },
+        { allocation: null, status: "connected" },
+      ],
+      name: "connected providers without allocations",
+    },
+    {
+      action: null,
+      connections: [{ allocation: { amountPerMonth: 100, unit: "units" }, status: "needs_reauth" }],
+      name: "no connected eligible provider",
+    },
+  ] as const)("derives the header action from $name", async ({ action, connections }) => {
+    mocks.providerSpend.mockResolvedValueOnce({
+      connections,
+      summary: {
+        maxUsedPercent: null,
+        recorded: { cents: 0, units: 0 },
+        tightest: null,
+      },
+    });
+
+    const result = await loadWorkspaceBudgetSummary("project_1");
+
+    expect(result?.headerAction).toBe(action);
   });
 
   it("fails soft on a connection-pool timeout and logs the code", async () => {

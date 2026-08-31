@@ -91,7 +91,7 @@ export function AlertRowActions({
             key={cta}
             onClick={() => void runCta(cta)}
             size="sm"
-            startIcon={<CtaIcon aria-hidden size={12} />}
+            startIcon={<CtaIcon aria-hidden size={12} weight="regular" />}
             type="button"
             variant="secondary"
           >
@@ -103,7 +103,7 @@ export function AlertRowActions({
         disabled={busy}
         onClick={() => void snooze()}
         size="sm"
-        startIcon={<BellSlash aria-hidden size={12} />}
+        startIcon={<BellSlash weight="regular" aria-hidden size={12} />}
         type="button"
         variant="ghost"
       >

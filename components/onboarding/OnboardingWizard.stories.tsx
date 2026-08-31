@@ -72,6 +72,7 @@ const firstCheckActions = {
   }),
   runFirstCheckPreviewAction: async () => ({
     position: 4,
+    recordedCostCents: 0,
     provider: "dataforseo",
     rankingUrl: "https://acme.dev/rank-tracker",
     status: "completed" as const,
@@ -222,7 +223,7 @@ function OnboardingStory({
             <span className="text-fg-muted">Not you?</span>
             <Button
               size="xs"
-              startIcon={<SignOut aria-hidden size={13} weight="bold" />}
+              startIcon={<SignOut aria-hidden size={13} weight="regular" />}
               sx={{
                 color: "var(--accent-text)",
                 minWidth: 0,

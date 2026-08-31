@@ -20,9 +20,9 @@ describe("SavedKeywordsEmptyState", () => {
       "/app/prj_1/keyword-research",
     );
     expect(
-      screen.getByText(
+      screen.queryByText(
         "Tracked keywords cost provider budget every month. Save first, track when you are ready.",
       ),
-    ).toBeInTheDocument();
+    ).not.toBeInTheDocument();
   });
 });

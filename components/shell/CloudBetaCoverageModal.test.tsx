@@ -17,12 +17,28 @@ describe("CloudBetaCoverageModal", () => {
     expect(
       screen.getByText("No guaranteed migration path between hosted regions."),
     ).toBeInTheDocument();
-    expect(screen.getByText("On our side").parentElement).toHaveTextContent(
-      "Nightly snapshots are kept for 7 days",
+    const ourSideCopy = screen.getByText("On our side");
+    const yourSideCopy = screen.getByText("On your side");
+    const pricingCopy = screen.getByText(/30 days notice before pricing/);
+    const neutralRows = [
+      ourSideCopy.closest("div.rounded-control"),
+      yourSideCopy.closest("div.rounded-control"),
+      pricingCopy.closest("div.rounded-control"),
+    ];
+
+    expect(ourSideCopy.parentElement).toHaveTextContent("Nightly snapshots are kept for 7 days");
+    expect(yourSideCopy.parentElement).toHaveTextContent("Keep a recent export.");
+    expect(screen.queryByText("On yours")).not.toBeInTheDocument();
+    expect(pricingCopy).toHaveTextContent(/Self-host stays available\.$/);
+    for (const row of neutralRows) {
+      expect(row).toHaveClass("border-border");
+      expect(row).not.toHaveClass("border-accent", "bg-accent-soft", "bg-bg-sunken");
+      expect(row?.querySelector("svg")).toHaveClass("text-fg-muted");
+    }
+    expect(pricingCopy.closest("div.rounded-control")?.querySelector("svg")).toHaveAttribute(
+      "data-icon",
+      "info",
     );
-    expect(screen.getByText("On yours").parentElement).toHaveTextContent("Keep a recent export.");
-    const betaEnds = screen.getByRole("heading", { name: "When the beta ends" }).parentElement;
-    expect(betaEnds).toHaveTextContent(/Self-host stays available\.$/);
     expect(screen.queryByRole("link", { name: "See plan and billing" })).not.toBeInTheDocument();
   });
 

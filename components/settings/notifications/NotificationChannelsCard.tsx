@@ -176,7 +176,7 @@ export function NotificationChannelsCard({
             <SettingsField width="full">
               <FieldLabel
                 className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted"
-                label="Events & channels"
+                label="Events and channels"
               />
               <div className="mt-2 overflow-x-auto">
                 <div className="min-w-[420px] overflow-hidden rounded-control border border-border">

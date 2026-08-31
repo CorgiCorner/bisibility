@@ -43,7 +43,7 @@ function SavedAt({ savedAt }: Readonly<{ savedAt: string }>) {
         stale ? "text-yellow-text" : "text-fg-muted",
       )}
     >
-      {stale ? <Clock size={12} /> : null}
+      {stale ? <Clock weight="regular" size={12} /> : null}
       {savedKeywordAge(savedAt)}
     </span>
   );

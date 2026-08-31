@@ -73,7 +73,7 @@ function GroupCard({
   return (
     <article className="flex min-w-0 gap-3 rounded-card border border-border bg-bg-elev p-4">
       <span className="grid h-9 w-9 shrink-0 place-items-center rounded-control bg-bg-sunken text-yellow-text">
-        <Icon aria-hidden size={17} weight="fill" />
+        <Icon aria-hidden size={17} weight="regular" />
       </span>
       <div className="min-w-0 flex-1">
         <h3 className="m-0 text-[13px] font-semibold text-fg">{meta.title}</h3>
@@ -84,7 +84,7 @@ function GroupCard({
           href={links[meta.link]}
         >
           {meta.cta}
-          <CaretRight aria-hidden size={12} weight="bold" />
+          <CaretRight aria-hidden size={12} weight="regular" />
         </Link>
       </div>
     </article>

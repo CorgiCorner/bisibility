@@ -67,17 +67,17 @@ export function SavedKeywordsToolbar({
       <Button
         onClick={() => downloadSavedKeywordsCsv(rows)}
         size="sm"
-        startIcon={<DownloadSimple size={14} />}
+        startIcon={<DownloadSimple weight="regular" size={14} />}
         variant="secondary"
       >
         Export
       </Button>
       <Button
         component={Link}
-        endIcon={<CaretRight className="text-fg-muted" size={12} />}
+        endIcon={<CaretRight weight="regular" className="text-fg-muted" size={12} />}
         href={appPath(projectRef, "keyword-research")}
         size="sm"
-        startIcon={<MagnifyingGlass size={13} />}
+        startIcon={<MagnifyingGlass weight="regular" size={13} />}
         variant="secondary"
       >
         Find more in Research
@@ -121,7 +121,7 @@ export function SavedKeywordsBulkBar({
         <Button
           onClick={onRemove}
           size="sm"
-          startIcon={<Trash size={13} />}
+          startIcon={<Trash weight="regular" size={13} />}
           sx={{ borderColor: "var(--red)", color: "var(--red)", minHeight: 30 }}
           variant="secondary"
         >
@@ -197,7 +197,7 @@ export function SavedKeywordsFooter({
             onClick={() => onPageChange(page - 1)}
             type="button"
           >
-            <CaretLeft size={12} weight="bold" />
+            <CaretLeft size={12} weight="regular" />
           </button>
           <button
             aria-label="Next page"
@@ -206,7 +206,7 @@ export function SavedKeywordsFooter({
             onClick={() => onPageChange(page + 1)}
             type="button"
           >
-            <CaretRight size={12} weight="bold" />
+            <CaretRight size={12} weight="regular" />
           </button>
         </div>
       </div>

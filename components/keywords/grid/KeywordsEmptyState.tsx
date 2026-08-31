@@ -120,7 +120,7 @@ export function KeywordsEmptyState({
       </div>
       <div className="flex flex-col items-center px-6 py-10 text-center">
         <span className="grid h-[54px] w-[54px] place-items-center rounded-card bg-accent-soft text-accent-solid">
-          <MagnifyingGlass size={27} weight="bold" />
+          <MagnifyingGlass size={27} weight="regular" />
         </span>
         <h3 className="mt-4.5 text-lg font-semibold tracking-[-0.4px] text-fg">
           Choose what to track

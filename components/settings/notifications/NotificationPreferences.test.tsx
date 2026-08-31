@@ -46,12 +46,31 @@ describe("NotificationPreferences", () => {
     expect(container.querySelectorAll('[data-settings-card-frame="settled"]')).toHaveLength(2);
     expect(screen.getByRole("heading", { name: "Channels" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Delivery address" })).toBeInTheDocument();
-    expect(screen.queryByText("Digest & reports")).not.toBeInTheDocument();
+    expect(screen.queryByText("Digest and reports")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Notification email")).not.toBeInTheDocument();
-    expect(screen.getByText("owner@example.com")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Manage your account email" })).toHaveAttribute(
-      "href",
-      "/app/account",
+    const deliveryAddressCopy = screen.getByText("owner@example.com").closest("p");
+    expect(deliveryAddressCopy).toHaveTextContent(
+      "Notifications are delivered to owner@example.com.",
+    );
+
+    const deliveryAddressCard = screen
+      .getByRole("heading", { name: "Delivery address" })
+      .closest("[data-settings-card]");
+    if (!deliveryAddressCard) throw new Error("Delivery address card was not rendered.");
+    expect(deliveryAddressCard).toHaveClass("min-h-auto");
+    expect(deliveryAddressCard).not.toHaveClass("min-h-[184px]");
+
+    const cardActions = deliveryAddressCard.querySelector<HTMLElement>(
+      "[data-settings-card-actions]",
+    );
+    if (!cardActions) throw new Error("Delivery address actions were not rendered.");
+
+    const manageEmailAction = within(cardActions).getByRole("link", { name: "Manage email" });
+    expect(manageEmailAction).toHaveAttribute("href", "/app/account");
+    expect(manageEmailAction).toHaveClass(
+      "MuiButton-root",
+      "MuiButton-outlined",
+      "MuiButton-sizeSmall",
     );
   });
 

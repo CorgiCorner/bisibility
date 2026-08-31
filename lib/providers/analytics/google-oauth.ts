@@ -11,6 +11,7 @@ import {
   exchangeGoogleCode,
   GOOGLE_AUTHORIZE_URL,
   type GoogleProviderId,
+  googleAccountEmail,
   googleAnalyticsScopes,
   googleClientId,
   googleRedirectUri,
@@ -116,7 +117,6 @@ function googleAuthorizeUrl(input: {
   url.searchParams.set("response_type", "code");
   url.searchParams.set("scope", googleAnalyticsScopes(input.provider).join(" "));
   url.searchParams.set("access_type", "offline");
-  url.searchParams.set("include_granted_scopes", "true");
   url.searchParams.set("prompt", "consent");
   url.searchParams.set("state", input.state);
   return url.toString();
@@ -273,8 +273,15 @@ export async function completeGoogleOAuthInstall(input: {
       failureContext,
     );
   }
+  let accountEmail: string | null = null;
+  try {
+    accountEmail = await googleAccountEmail(exchanged.accessToken);
+  } catch {
+    // The profile label is optional; a user-info failure must not discard a valid OAuth grant.
+  }
   try {
     await storePendingGoogleOAuth({
+      ...(accountEmail ? { accountEmail } : {}),
       actorId: actor.id,
       projectId: project.id,
       ...(property ? { property } : {}),

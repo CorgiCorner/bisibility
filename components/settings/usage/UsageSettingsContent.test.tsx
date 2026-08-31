@@ -114,6 +114,43 @@ function renderUsage(next = usage) {
 }
 
 describe("UsageSettingsContent", () => {
+  it("matches the monthly price control to the medium feedback button and omits helper copy", () => {
+    renderUsage();
+
+    const input = screen.getByLabelText("What would you pay per month?");
+    const button = screen.getByRole("button", { name: "Send feedback" });
+    expect(input).toHaveAttribute("maxlength", "4");
+    expect(input).toHaveClass("h-[35px]", "min-h-[35px]");
+    expect(input).not.toHaveClass("min-h-10");
+    expect(button).toHaveClass("MuiButton-sizeMedium");
+    expect(
+      screen.queryByText("Four digits at most. The answer is not a commitment."),
+    ).not.toBeInTheDocument();
+  });
+
+  it("renders the hosted plan summary as an unindented checked list", () => {
+    renderUsage();
+
+    const list = screen.getByText(/Free while the beta lasts/).closest("ul");
+    expect(list).not.toBeNull();
+    expect(list).toHaveClass("m-0", "list-none", "p-0");
+
+    const items = list?.querySelectorAll("li") ?? [];
+    const checks = list?.querySelectorAll('svg[data-hosted-plan-bullet="true"]') ?? [];
+    expect(items).toHaveLength(4);
+    expect(checks).toHaveLength(items.length);
+    for (const item of items) {
+      expect(item).toHaveClass("flex", "items-start", "gap-2.5");
+      const check = item.querySelector('svg[data-hosted-plan-bullet="true"]');
+      expect(check).toHaveAttribute("aria-hidden", "true");
+      expect(check).toHaveClass(
+        "shrink-0",
+        "self-center",
+        "[color:color-mix(in_srgb,var(--fg-muted)_60%,transparent)]",
+      );
+    }
+  });
+
   it("renders allocation data, fallback attention, and no prohibited copy", () => {
     const { container } = renderUsage();
     expect(screen.getByText("$0.10 + 28 searches")).toBeInTheDocument();

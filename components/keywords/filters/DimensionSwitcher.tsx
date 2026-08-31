@@ -61,9 +61,9 @@ const DIMENSION_META: Record<DimensionKind, { lower: boolean; name: string; noun
 
 function deviceIcon(value: string) {
   return value.toLowerCase() === "mobile" ? (
-    <DeviceMobile aria-hidden size={15} />
+    <DeviceMobile weight="regular" aria-hidden size={15} />
   ) : (
-    <Monitor aria-hidden size={15} />
+    <Monitor weight="regular" aria-hidden size={15} />
   );
 }
 
@@ -113,7 +113,7 @@ export function DimensionSwitcher({
     <CaretDown
       className={`text-fg-muted transition-transform ${open ? "rotate-180" : ""}`}
       size={11}
-      weight="bold"
+      weight="regular"
     />
   );
   const chipShape = serpHref ? "rounded-l-full border-0" : "";
@@ -126,7 +126,7 @@ export function DimensionSwitcher({
       className={cn(
         quietChipVariants({ size: "lg" }),
         chipShape,
-        "font-mono text-fg outline-none transition-colors hover:border-border-control hover:bg-nav-active focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted",
+        "font-mono text-fg outline-none transition-colors hover:border-border-control hover:bg-bg-sunken focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted",
       )}
       disabled={!canTrack || readOnly}
       onClick={(event) => {
@@ -155,7 +155,7 @@ export function DimensionSwitcher({
             target="_blank"
             title="Open live search results in a new tab"
           >
-            <ArrowUpRight size={12} weight="bold" />
+            <ArrowUpRight size={12} weight="regular" />
           </a>
         </span>
       ) : (
@@ -199,7 +199,7 @@ export function DimensionSwitcher({
             <span className="min-w-0 flex-1 truncate text-[12.5px] text-fg" title={label}>
               {label}
             </span>
-            <Check aria-hidden className="shrink-0 text-accent-text" size={13} weight="bold" />
+            <Check aria-hidden className="shrink-0 text-accent-text" size={13} weight="regular" />
           </MenuItem>
           <div aria-hidden className="mx-2 my-1 h-px bg-border" />
           <div className="px-3.5 pt-1 text-[11px] font-semibold text-fg">

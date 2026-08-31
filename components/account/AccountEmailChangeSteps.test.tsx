@@ -44,7 +44,7 @@ async function reachDetailsStep(
 ) {
   const rendered = renderSteps(props);
 
-  fireEvent.click(screen.getByRole("button", { name: "Send code to owner@example.com" }));
+  fireEvent.click(screen.getByRole("button", { name: "Change email" }));
   await waitFor(() => expect(rendered.requestAccountEmailChangeCode).toHaveBeenCalledOnce());
   await screen.findByLabelText("Code from your current email");
 
@@ -55,11 +55,34 @@ describe("AccountEmailChangeSteps", () => {
   it("starts by offering a code to the current address only", () => {
     renderSteps();
 
-    expect(
-      screen.getByRole("button", { name: "Send code to owner@example.com" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Change email" })).toBeInTheDocument();
     expect(screen.queryByLabelText("New email address")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Code from your current email")).not.toBeInTheDocument();
+  });
+
+  it("keeps the initial change email action right-aligned without helper copy", () => {
+    renderSteps();
+
+    const actionRow = screen.getByRole("button", { name: "Change email" }).parentElement;
+    expect(actionRow).toHaveClass("sm:justify-end");
+    expect(
+      screen.queryByText(
+        "Changing this address starts with a code sent to the address on the account today.",
+      ),
+    ).not.toBeInTheDocument();
+  });
+
+  it("keeps confirmation actions responsive with Cancel left and sending right", async () => {
+    await reachDetailsStep();
+
+    const cancel = screen.getByRole("button", { name: "Cancel" });
+    const sendCode = screen.getByRole("button", { name: "Send code to the new address" });
+    const actionRow = cancel.parentElement;
+
+    expect(actionRow).toHaveClass("flex", "flex-wrap", "items-center", "gap-2");
+    expect(sendCode).toHaveClass("ml-auto");
+    expect(actionRow?.firstElementChild).toBe(cancel);
+    expect(actionRow?.lastElementChild).toBe(sendCode);
   });
 
   it("asks for the current code together with the new address", async () => {
@@ -121,9 +144,7 @@ describe("AccountEmailChangeSteps", () => {
       }),
     );
     await waitFor(() => expect(onChanged).toHaveBeenCalledWith("updated@example.com"));
-    expect(
-      await screen.findByRole("button", { name: "Send code to owner@example.com" }),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Change email" })).toBeInTheDocument();
   });
 
   it("surfaces a failed send without advancing", async () => {
@@ -132,7 +153,7 @@ describe("AccountEmailChangeSteps", () => {
       .mockRejectedValue(new Error("Verification code could not be sent."));
     renderSteps({ requestAccountEmailChangeCode });
 
-    fireEvent.click(screen.getByRole("button", { name: "Send code to owner@example.com" }));
+    fireEvent.click(screen.getByRole("button", { name: "Change email" }));
 
     expect(await screen.findByText("Verification code could not be sent.")).toBeInTheDocument();
     expect(screen.queryByLabelText("Code from your current email")).not.toBeInTheDocument();

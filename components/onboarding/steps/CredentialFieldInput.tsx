@@ -27,11 +27,17 @@ export function CredentialFieldInput({
   placeholder,
   registration,
 }: Readonly<CredentialFieldInputProps>) {
+  const errorId = `${id}-error`;
+  const accessibility = {
+    "aria-describedby": error ? errorId : undefined,
+    "aria-invalid": error ? true : undefined,
+  };
   return (
     <label className={`${labelClass} w-full`} htmlFor={id}>
       {label}
       {password ? (
         <PasswordInput
+          {...accessibility}
           className={`${inputClass} truncate pr-12 font-mono text-sm`}
           disabled={disabled}
           id={id}
@@ -40,6 +46,7 @@ export function CredentialFieldInput({
         />
       ) : (
         <input
+          {...accessibility}
           autoComplete="off"
           className={`${inputClass} font-mono text-sm`}
           disabled={disabled}
@@ -49,7 +56,11 @@ export function CredentialFieldInput({
           {...registration}
         />
       )}
-      {error ? <span className={`${feedbackClass} text-red-text`}>{error}</span> : null}
+      {error ? (
+        <span className={`${feedbackClass} text-red-text`} id={errorId}>
+          {error}
+        </span>
+      ) : null}
     </label>
   );
 }

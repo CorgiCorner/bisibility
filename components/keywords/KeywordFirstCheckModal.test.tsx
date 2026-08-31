@@ -35,7 +35,7 @@ describe("KeywordFirstCheckModal", () => {
     expect(screen.getByText("Top 100")).toBeInTheDocument();
     expect(screen.getByText("~$0.02")).toBeInTheDocument();
     expect(onConfirm).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole("button", { name: "Confirm & run" }));
+    fireEvent.click(screen.getByRole("button", { name: "Confirm and run" }));
     expect(onConfirm).toHaveBeenCalledOnce();
   });
 
@@ -174,9 +174,7 @@ describe("KeywordFirstCheckModal", () => {
 
     const failedDialog = screen.getByRole("dialog", { name: "Check failed" });
     expect(failedDialog).toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", { name: "Check failed" }).querySelector("svg"),
-    ).not.toBeNull();
+    expect(screen.getByRole("heading", { name: "Check failed" }).querySelector("svg")).toBeNull();
     expect(failedDialog.querySelector('[class*="h-10"]')).toBeNull();
     expect(
       screen.getByText(

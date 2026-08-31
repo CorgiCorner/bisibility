@@ -12,31 +12,30 @@ describe("GithubStars", () => {
     expect(link.querySelectorAll("svg")).toHaveLength(1);
   });
 
-  it("renders the current count with the repository link", () => {
+  it("renders GitHub before the current count without star glyphs", () => {
     render(<GithubStars count="42" />);
 
-    expect(screen.getByRole("link", { name: "42 stars on GitHub" })).toHaveTextContent("42");
+    const link = screen.getByRole("link", { name: "42 stars on GitHub" });
+    expect(link).toHaveTextContent("GitHub42");
+    expect(link.querySelectorAll("svg")).toHaveLength(1);
+    expect(link.querySelector("svg")).not.toHaveClass("text-yellow-text");
+    expect(link.querySelector("span:last-child")).toHaveClass("opacity-70", "font-semibold");
   });
 
-  it("keeps compact thousands formatting", () => {
-    render(<GithubStars count="1200" />);
+  it("uses normal weight in nav while keeping chip weight semibold", () => {
+    const { rerender } = render(<GithubStars count="42" variant="nav" />);
 
-    expect(screen.getByRole("link", { name: "1.2k stars on GitHub" })).toHaveTextContent("1.2k");
+    expect(screen.getByRole("link", { name: "42 stars on GitHub" })).toHaveClass("font-normal");
+
+    rerender(<GithubStars count="42" variant="chip" />);
+    expect(screen.getByRole("link", { name: "42 stars on GitHub" })).toHaveClass("font-semibold");
   });
 
-  it("cross-fades only for fine pointers and leaves keyboard focus ring-only", () => {
+  it("keeps compact thousands formatting after the GitHub label", () => {
     render(<GithubStars count="1200" />);
 
-    const link = screen.getByRole("link", { name: "1.2k stars on GitHub" });
-    const glyphClasses = Array.from(link.querySelectorAll("svg"))
-      .map((glyph) => glyph.getAttribute("class") ?? "")
-      .join(" ");
-
-    expect(glyphClasses).toContain("pointer-fine:group-hover:opacity-0");
-    expect(glyphClasses).toContain("pointer-fine:group-hover:opacity-100");
-    expect(glyphClasses).toContain("duration-[var(--motion-press)]");
-    expect(glyphClasses).not.toContain("group-focus-visible");
-    expect(glyphClasses).not.toMatch(/scale-(?:90|110)/);
-    expect(link).toHaveClass("focus-visible:outline-2");
+    expect(screen.getByRole("link", { name: "1.2k stars on GitHub" })).toHaveTextContent(
+      "GitHub1.2k",
+    );
   });
 });

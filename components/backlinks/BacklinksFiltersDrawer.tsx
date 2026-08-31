@@ -138,7 +138,7 @@ export function BacklinksFiltersDrawer({
               Reset
             </Button>
             <Button
-              endIcon={<CaretRight size={14} weight="bold" />}
+              endIcon={<CaretRight size={14} weight="regular" />}
               onClick={onApply}
               sx={{ flex: 1 }}
             >
@@ -231,21 +231,21 @@ export function BacklinksFiltersDrawer({
       </FilterSection>
       <FilterSection icon={TextT} title="Text match">
         <TextFilter
-          icon={<TextT size={14} />}
+          icon={<TextT weight="regular" size={14} />}
           label="Anchor contains"
           onChange={(anchorContains) => patch({ anchorContains })}
           placeholder="e.g. acme"
           value={draft.anchorContains}
         />
         <TextFilter
-          icon={<ArrowRight size={14} />}
+          icon={<ArrowRight weight="regular" size={14} />}
           label="Target URL contains"
           onChange={(targetUrlContains) => patch({ targetUrlContains })}
           placeholder="e.g. /desks"
           value={draft.targetUrlContains}
         />
         <TextFilter
-          icon={<Prohibit size={14} />}
+          icon={<Prohibit weight="regular" size={14} />}
           label="Exclude domain"
           onChange={(excludeDomain) => patch({ excludeDomain })}
           placeholder="e.g. toolindex.app"

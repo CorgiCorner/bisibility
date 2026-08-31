@@ -15,17 +15,24 @@ export function InlineCode({ children }: Readonly<{ children: ReactNode }>) {
   return <code className={inlineCalloutCodeClass}>{children}</code>;
 }
 
-export type InlineCalloutTint = "red" | "yellow";
+export type InlineCalloutTint = "neutral" | "red" | "yellow";
 
 export type InlineCalloutProps = {
   children: ReactNode;
   /** Extra classes on the callout, e.g. `mt-3` for spacing from the element above. */
   className?: string;
+  contentClassName?: string;
+  role?: "alert" | "note" | "status";
   tint: InlineCalloutTint;
 };
 
 // Tint tokens mirror AlertBanner so the two alert surfaces read as one system.
 const tintStyles = {
+  neutral: {
+    border: "border-border",
+    background: "bg-bg-sunken",
+    icon: "text-fg-muted",
+  },
   red: {
     border: "border-red",
     background: "bg-[color-mix(in_srgb,var(--red)_7%,transparent)]",
@@ -39,25 +46,33 @@ const tintStyles = {
 } satisfies Record<InlineCalloutTint, { background: string; border: string; icon: string }>;
 
 /** Free-form inline callout, distinct from the structured full-width AlertBanner. */
-export function InlineCallout({ children, className, tint }: Readonly<InlineCalloutProps>) {
+export function InlineCallout({
+  children,
+  className,
+  contentClassName,
+  role = "alert",
+  tint,
+}: Readonly<InlineCalloutProps>) {
   const style = tintStyles[tint];
   return (
     <p
+      aria-label={typeof children === "string" ? children : undefined}
+      data-tint={tint}
       className={cn(
         "m-0 flex items-start gap-2 rounded-control border px-3 py-2.5 text-[12.5px] leading-[1.5] text-fg-muted",
         style.border,
         style.background,
         className,
       )}
-      role="alert"
+      role={role}
     >
       <WarningCircle
         aria-hidden
         className={cn("mt-0.5 shrink-0", style.icon)}
         size={15}
-        weight="fill"
+        weight="regular"
       />
-      <span className="min-w-0 break-words">{children}</span>
+      <span className={cn("min-w-0 break-words", contentClassName)}>{children}</span>
     </p>
   );
 }

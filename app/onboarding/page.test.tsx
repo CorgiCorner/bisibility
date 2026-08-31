@@ -7,7 +7,9 @@ const mocks = vi.hoisted(() => ({
   existingOnboardingCityLocationKeys: vi.fn(),
   getIntegrationCategories: vi.fn(),
   getKeywordCount: vi.fn(),
+  getOnboardingNextCheckAt: vi.fn(),
   getOnboardingProjectMarketKeys: vi.fn(),
+  getOnboardingSampleKeyword: vi.fn(),
   getProjectCostContext: vi.fn(),
   getRequestProjectDefaults: vi.fn(),
   listWorkspaces: vi.fn(),
@@ -62,7 +64,9 @@ vi.mock("@/lib/queries/onboarding", () => ({
   existingOnboardingCityLocationKeys: mocks.existingOnboardingCityLocationKeys,
   getOnboardingGscPropertyLabel: vi.fn(async () => null),
   getOnboardingKeywordCount: mocks.getKeywordCount,
+  getOnboardingNextCheckAt: mocks.getOnboardingNextCheckAt,
   getOnboardingProjectMarketKeys: mocks.getOnboardingProjectMarketKeys,
+  getOnboardingSampleKeyword: mocks.getOnboardingSampleKeyword,
 }));
 vi.mock("@/lib/queries/workspaces", () => ({ listWorkspaces: mocks.listWorkspaces }));
 vi.mock("@/lib/queries/workspace-request-data", () => ({
@@ -97,7 +101,9 @@ describe("OnboardingPage", () => {
     mocks.getIntegrationCategories.mockResolvedValue([]);
     mocks.getProjectCostContext.mockResolvedValue({ costPerCheckCents: null });
     mocks.existingOnboardingCityLocationKeys.mockResolvedValue(new Set<string>());
+    mocks.getOnboardingNextCheckAt.mockResolvedValue(null);
     mocks.getOnboardingProjectMarketKeys.mockResolvedValue([]);
+    mocks.getOnboardingSampleKeyword.mockResolvedValue(null);
     mocks.getRequestProjectDefaults.mockResolvedValue(null);
     mocks.prisma.apiKey.findFirst.mockResolvedValue(null);
     mocks.prisma.providerConnection.findUnique.mockResolvedValue(null);
@@ -167,7 +173,7 @@ describe("OnboardingPage", () => {
     ).rejects.toThrow("redirect:/onboarding?step=1");
 
     expect(redirect).toHaveBeenCalledWith(
-      "/onboarding?step=1&projectId=prj_1&loc=US&device=desktop",
+      "/onboarding?step=1&projectId=prj_1&loc=US&device=mobile",
     );
   });
 
@@ -259,7 +265,7 @@ describe("OnboardingPage", () => {
     ).rejects.toThrow("redirect:/onboarding?step=3");
 
     expect(redirect).toHaveBeenCalledWith(
-      "/onboarding?step=3&projectId=prj_1&loc=US&device=desktop",
+      "/onboarding?step=3&projectId=prj_1&loc=US&device=mobile",
     );
   });
 
@@ -279,7 +285,7 @@ describe("OnboardingPage", () => {
     ).rejects.toThrow("redirect:/onboarding?step=3");
 
     expect(redirect).toHaveBeenCalledWith(
-      "/onboarding?step=3&projectId=prj_1&loc=US%2FTexas%2FAustin&loc=PL&device=desktop",
+      "/onboarding?step=3&projectId=prj_1&loc=US%2FTexas%2FAustin&loc=PL&device=mobile",
     );
   });
 

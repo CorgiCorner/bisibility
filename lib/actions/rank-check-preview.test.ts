@@ -87,6 +87,7 @@ describe("rank check preview actions", () => {
       attempts: [],
       provider: "dataforseo",
       rankCheck: {
+        costCents: 7,
         id: "rank_1",
         position: 3,
         publicId: "check_abcdefghijklmnopqrstuvwx",
@@ -114,6 +115,7 @@ describe("rank check preview actions", () => {
       position: 3,
       provider: "dataforseo",
       rankingUrl: "https://example.com/page",
+      recordedCostCents: 7,
       status: "completed",
     });
     expect(mocks.writeAudit).toHaveBeenCalledWith(

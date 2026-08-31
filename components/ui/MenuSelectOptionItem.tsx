@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "@/lib/ui/cn";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import MenuItem from "@mui/material/MenuItem";
 import { CheckIcon as Check } from "@phosphor-icons/react";
@@ -45,13 +46,32 @@ export function MenuSelectOptionItem({
       <span className="flex min-w-0 items-center gap-2.5">
         {option.icon ? <span className="flex shrink-0 text-fg-muted">{option.icon}</span> : null}
         <span className="min-w-0">
-          <span className={current ? "block text-fg" : "block"}>{option.label}</span>
+          <span className={cn("block", current && "text-fg", option.noWrap && "whitespace-nowrap")}>
+            {option.label}
+          </span>
           {option.secondary ? (
-            <span className="block font-mono text-[11px] text-fg-muted">{option.secondary}</span>
+            <span
+              className={cn(
+                "block font-mono text-[11px] text-fg-muted",
+                option.noWrap && "whitespace-nowrap",
+              )}
+            >
+              {option.secondary}
+            </span>
           ) : null}
         </span>
       </span>
-      {current ? <Check aria-hidden className="text-accent-text" size={15} weight="bold" /> : null}
+      <span
+        className="grid shrink-0 grid-cols-[max-content_15px] items-center gap-2"
+        data-slot="menu-option-trailing"
+      >
+        <span className="justify-self-end">{option.trailing}</span>
+        {current ? (
+          <Check aria-hidden className="text-accent-text" size={15} weight="regular" />
+        ) : (
+          <span />
+        )}
+      </span>
     </MenuItem>
   );
 

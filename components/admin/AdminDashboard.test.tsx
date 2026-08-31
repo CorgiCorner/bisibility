@@ -94,18 +94,26 @@ const baseData = {
     status: "ok",
   },
   worker: {
+    alertDeliveryTaskQueue: "alert-deliveries",
     appliedMigration: "20260724220000_instance_settings",
     bundledMigration: "20260724220000_instance_settings",
     environment: "production",
     heartbeatAgeMs: 0,
     heartbeatState: "fresh",
     lastSeenAt: "2026-07-17T12:00:00.000Z",
+    namespace: "default",
     release: "worker-image-sha",
     revision: "worker-public-revision",
     schedulerDriver: "temporal",
     schedulerMode: "legacy",
     schemaComparison: "ok",
     status: "ok",
+    taskQueue: "rank-checks",
+    temporalIdentityComparison: {
+      detail:
+        "app: default / rank-checks / alert-deliveries · worker: default / rank-checks / alert-deliveries",
+      status: "match",
+    },
   },
 } satisfies InstanceAdminDashboard;
 
@@ -117,6 +125,33 @@ describe("AdminDashboard", () => {
     expect(within(worker).getByText("worker-image-sha")).toBeInTheDocument();
     expect(within(worker).getByText("In sync")).toBeInTheDocument();
     expect(within(worker).getAllByText("20260724220000_instance_settings")).toHaveLength(2);
+  });
+
+  it("does not expose Temporal identity comparison in the dashboard", () => {
+    render(
+      <AdminDashboard
+        data={{
+          ...baseData,
+          worker: {
+            ...baseData.worker,
+            temporalIdentityComparison: {
+              detail:
+                "app: default / rank-checks / alert-deliveries · worker: default / other-rank-checks / alert-deliveries",
+              status: "mismatch",
+            },
+          },
+        }}
+      />,
+    );
+
+    const worker = screen.getByRole("region", { name: "Worker" });
+    expect(within(worker).queryByText("Temporal identity")).not.toBeInTheDocument();
+    expect(within(worker).queryByText("Different queues")).not.toBeInTheDocument();
+    expect(
+      within(worker).queryByText(
+        "app: default / rank-checks / alert-deliveries · worker: default / other-rank-checks / alert-deliveries",
+      ),
+    ).not.toBeInTheDocument();
   });
 
   it("renders split, data-driven connection labels", () => {

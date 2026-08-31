@@ -34,12 +34,15 @@ const PAPER_SX = {
   width: WORKSPACE_MENU_WIDTH,
 } as const;
 
-const DIVIDER_SX = { borderColor: "var(--border)", marginX: "2px", marginY: "4px" } as const;
+const DIVIDER_SX = { borderColor: "var(--border)", marginX: "-6px", marginY: "4px" } as const;
 
 export type WorkspaceSwitcherProps = {
   activeProjectId: string;
-  canCreateWorkspace: boolean;
+  /** Compact header triggers omit the keyword-count sublabel. */
   collapsed?: boolean;
+  compact?: boolean;
+  canCreateWorkspace: boolean;
+  className?: string;
   /** `ghost` (default) is transparent until hover; `boxed` sits on its own elevated card. */
   variant?: WorkspaceTriggerVariant;
   workspaces: WorkspaceSummary[];
@@ -48,7 +51,9 @@ export type WorkspaceSwitcherProps = {
 export function WorkspaceSwitcher({
   activeProjectId,
   canCreateWorkspace,
+  className,
   collapsed = false,
+  compact = false,
   variant = "ghost",
   workspaces,
 }: Readonly<WorkspaceSwitcherProps>) {
@@ -57,9 +62,6 @@ export function WorkspaceSwitcher({
   // Last rendered menu height. A plain ref written from a callback ref, so the flip needs no
   // effect: the open handler reads a real measurement from the previous render.
   const menuHeightRef = useRef(0);
-  // Collapsed, the menu hangs off the rail column, not off the 36px button inside it, so
-  // "beside the rail" clears the whole 80px strip instead of the button's own right edge.
-  const railRef = useRef<HTMLDivElement>(null);
   const open = Boolean(anchorEl);
 
   const activeIndex = Math.max(
@@ -74,7 +76,7 @@ export function WorkspaceSwitcher({
     const menuHeight =
       menuHeightRef.current || estimateWorkspaceMenuHeight(workspaces.length, actionCount);
     setPlacement(resolveWorkspaceMenuPlacement(trigger.getBoundingClientRect().top, menuHeight));
-    setAnchorEl((collapsed ? railRef.current : null) ?? trigger);
+    setAnchorEl(trigger);
   }
 
   function close() {
@@ -97,15 +99,16 @@ export function WorkspaceSwitcher({
     }
   }
 
-  const { anchorOrigin, offset, transformOrigin } = workspaceMenuOrigins(collapsed, placement);
-  const sublabel = active ? workspaceSublabel(active) : null;
+  const { anchorOrigin, offset, transformOrigin } = workspaceMenuOrigins(false, placement);
+  const sublabel = compact || !active ? null : workspaceSublabel(active);
 
   return (
-    // The switcher now sits at the foot of the rail, so its 18px of breathing room moved from
-    // below it to above it.
-    <div className="relative mt-4.5 w-full flex-none" ref={railRef}>
+    // The switcher follows the brand, so a 12px gap keeps the two controls grouped without
+    // competing with the navigation below.
+    <div className={`relative ${compact ? "" : "w-full"} flex-none ${className ?? "mt-3"}`}>
       <WorkspaceSwitcherTrigger
         collapsed={collapsed}
+        compact={compact}
         domain={active?.domain ?? ""}
         menuId={MENU_ID}
         name={active?.name ?? "Project"}
@@ -148,7 +151,7 @@ export function WorkspaceSwitcher({
         {canCreateWorkspace ? (
           <MenuItem component={Link} href="/onboarding?new=1" onClick={close} sx={MENU_ROW_SX}>
             <span className="grid h-[30px] w-[30px] flex-none place-items-center rounded-control border border-dashed border-border text-fg-muted">
-              <Plus aria-hidden size={14} weight="bold" />
+              <Plus aria-hidden size={14} weight="regular" />
             </span>
             <span className="text-fg">Create project</span>
           </MenuItem>

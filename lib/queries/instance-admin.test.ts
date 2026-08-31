@@ -96,6 +96,7 @@ describe("instance admin queries", () => {
     ]);
     mocks.config.mockReturnValue({ enabled: true, webhookUrl: "configured" });
     mocks.liveness.mockResolvedValue({
+      alertDeliveryTaskQueue: "alert-deliveries",
       appliedMigration: "20260724220000_instance_settings",
       bundledMigration: "20260724220000_instance_settings",
       environment: "worker-production",
@@ -103,6 +104,8 @@ describe("instance admin queries", () => {
       release: "worker-image-sha",
       schemaComparison: "ok",
       status: "ok",
+      namespace: "default",
+      taskQueue: "rank-checks",
     });
     mocks.collectOperational.mockResolvedValue({
       bootstrapErrors: [],
@@ -229,6 +232,7 @@ describe("instance admin queries", () => {
       severity: "error",
     });
     expect(result.worker).toEqual({
+      alertDeliveryTaskQueue: "alert-deliveries",
       appliedMigration: "20260724220000_instance_settings",
       bundledMigration: "20260724220000_instance_settings",
       environment: "worker-production",
@@ -236,6 +240,13 @@ describe("instance admin queries", () => {
       release: "worker-image-sha",
       schemaComparison: "ok",
       status: "ok",
+      namespace: "default",
+      taskQueue: "rank-checks",
+      temporalIdentityComparison: {
+        detail:
+          "app: default / rank-checks / alert-deliveries · worker: default / rank-checks / alert-deliveries",
+        status: "match",
+      },
     });
     expect(result.rank24h.failureBreakdown.groups).toEqual([
       {
@@ -267,6 +278,32 @@ describe("instance admin queries", () => {
 
     type FailureGroup = (typeof result.rank24h.failureBreakdown.groups)[number];
     expectTypeOf<FailureGroup>().not.toHaveProperty("keywordId");
+  });
+
+  it("compares the app and worker Temporal identity in the app process", async () => {
+    vi.stubEnv("BISIBILITY_DEPLOYMENT_SUFFIX", "e7a7bfa7");
+
+    const result = await getInstanceAdminDashboard(now);
+
+    expect(result.worker.temporalIdentityComparison).toEqual({
+      detail:
+        "app: bisibility-e7a7bfa7 / bisibility-rank-checks-e7a7bfa7 / bisibility-alert-deliveries-e7a7bfa7 · worker: default / rank-checks / alert-deliveries",
+      status: "mismatch",
+    });
+    expect(result.worker.status).toBe("ok");
+  });
+
+  it("reports unknown identity for a legacy worker heartbeat", async () => {
+    mocks.liveness.mockResolvedValueOnce({
+      ...(await mocks.liveness()),
+      alertDeliveryTaskQueue: null,
+      namespace: null,
+      taskQueue: null,
+    });
+
+    const result = await getInstanceAdminDashboard(now);
+
+    expect(result.worker.temporalIdentityComparison.status).toBe("unknown");
   });
 
   it("wires the 24h fallback breakdown and keeps it off the 7d window", async () => {

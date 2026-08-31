@@ -64,8 +64,10 @@ export function SidebarUserButton({
         <Avatar
           alt=""
           className={cn(
-            "grid flex-none place-items-center rounded-control border border-border-control bg-bg-elev font-mono font-semibold text-accent-text transition-colors",
-            collapsed ? "h-8 w-8 text-[10.5px] group-hover:bg-bg-sunken" : "h-8 w-8 text-xs",
+            "grid flex-none place-items-center rounded-control bg-bg-elev font-mono font-semibold text-accent-text transition-colors",
+            collapsed
+              ? "h-8 w-8 border border-border text-[10.5px] group-hover:bg-bg-sunken"
+              : "h-8 w-8 border border-border-control text-xs",
             collapsed && open ? "bg-bg-sunken" : "",
           )}
           initials={initials}
@@ -82,7 +84,7 @@ export function SidebarUserButton({
               ) : null}
             </span>
             <span className="grid h-[30px] w-[30px] flex-none place-items-center rounded-control text-fg-muted">
-              <DotsThreeVertical aria-hidden size={19} weight="bold" />
+              <DotsThreeVertical aria-hidden size={19} weight="regular" />
             </span>
           </>
         )}

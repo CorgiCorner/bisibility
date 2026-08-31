@@ -62,6 +62,26 @@ describe("MarketCombobox", () => {
     expect(screen.queryByText("Catalog")).not.toBeInTheDocument();
   });
 
+  it("preserves an explicit menu width override", async () => {
+    const user = userEvent.setup();
+    render(
+      <MarketCombobox
+        ariaLabel="Market"
+        catalogMarkets={catalog}
+        menuWidth={312}
+        onChange={vi.fn()}
+        trackedMarkets={tracked}
+        value="US"
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Market" }));
+    expect(document.querySelector<HTMLElement>(".MuiPaper-root")).toHaveStyle({
+      maxWidth: "312px",
+      minWidth: "312px",
+    });
+  });
+
   it("uses the selected country flag for the trigger and menu options", async () => {
     const user = userEvent.setup();
     render(

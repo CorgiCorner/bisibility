@@ -1,3 +1,4 @@
+import { SessionSpendProvider } from "@/components/cost-estimate/SessionSpendProvider";
 import { KeywordDetailStoryThemes } from "@/components/keyword-detail/shared/story-theme-preview";
 import { KeywordHeaderCard } from "@/components/keywords/KeywordHeaderCard";
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
@@ -38,11 +39,13 @@ const meta = {
   component: KeywordHeaderCard,
   decorators: [
     (Story) => (
-      <KeywordDetailStoryThemes>
-        <div className="min-h-[260px] text-fg">
-          <Story />
-        </div>
-      </KeywordDetailStoryThemes>
+      <SessionSpendProvider>
+        <KeywordDetailStoryThemes>
+          <div className="min-h-[260px] text-fg">
+            <Story />
+          </div>
+        </KeywordDetailStoryThemes>
+      </SessionSpendProvider>
     ),
   ],
   parameters: {

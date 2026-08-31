@@ -1,27 +1,15 @@
 "use client";
 
-import { useToast } from "@/components/ui";
-import { zodResolver } from "@/lib/forms/zod-resolver";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
-import { isBudgetExhaustedResult } from "@/lib/rank-check/budget-contract";
-import {
-  type AddKeywordsMatrixInput,
-  type BulkKeywordIdsInput,
-  type RunCheckNowInput,
-  runCheckNowSchema,
-} from "@/lib/schemas/keyword";
-import { DEFAULT_SERP_DEPTH, type SerpDepth } from "@/lib/serp/markets";
+import type { AddKeywordsMatrixInput, BulkKeywordIdsInput } from "@/lib/schemas/keyword";
+import { DEFAULT_SERP_DEPTH } from "@/lib/serp/markets";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
-import {
-  type AddKeywordsInput,
-  actionErrorMessage,
-  type KeywordAction,
-  type KeywordDetailActions,
-} from "./action-utils";
+import type { AddKeywordsInput, KeywordAction, KeywordDetailActions } from "./action-utils";
+import { RunChecksConfirmationModal } from "./grid/RunChecksConfirmationModal";
+import { useRunChecksModal } from "./grid/useRunChecksModal";
 import { KeywordDetailHeaderChrome } from "./KeywordDetailHeaderChrome";
 import { KeywordHeaderActions } from "./KeywordHeaderActions";
 import { KeywordMarketSwitcher } from "./KeywordMarketSwitcher";
@@ -56,16 +44,7 @@ export function KeywordHeaderCard({
   targets = [keyword],
 }: KeywordHeaderCardProps) {
   const router = useRouter();
-  const { showToast } = useToast();
   const [editing, setEditing] = useState(false);
-  const {
-    formState: { isSubmitting },
-    handleSubmit,
-    register,
-  } = useForm<RunCheckNowInput>({
-    defaultValues: { keywordId: keyword.id },
-    resolver: zodResolver(runCheckNowSchema),
-  });
   const effectiveDepth =
     keyword.schedule?.serp_depth ?? keyword.projectSerpDepth ?? DEFAULT_SERP_DEPTH;
   const providerRate = costContext
@@ -74,23 +53,14 @@ export function KeywordHeaderCard({
         providerId: costContext.providerId,
       }
     : undefined;
-
-  async function handleRunCheckNow(values: RunCheckNowInput) {
-    try {
-      const result = await runCheckNowAction(values);
-      if (isBudgetExhaustedResult(result)) {
-        showToast(result.message, { tint: "red" });
-        return;
-      }
-      showToast(`Check started (Top ${values.depth ?? effectiveDepth})`, { tint: "green" });
-      router.refresh();
-    } catch (error) {
-      showToast(actionErrorMessage(error), { tint: "red" });
-    }
-  }
-
-  const submitRunCheck = (depth: SerpDepth) =>
-    handleSubmit((values) => handleRunCheckNow({ ...values, depth }))();
+  const runChecks = useRunChecksModal({
+    onSettled: router.refresh,
+    projectId,
+    providerRate,
+    rows: [keyword],
+    runCheckNowAction,
+  });
+  const runPending = runChecks.pendingIds.has(keyword.id) || runChecks.flow?.step === "starting";
 
   return (
     <>
@@ -101,10 +71,10 @@ export function KeywordHeaderCard({
             editing={editing}
             effectiveDepth={effectiveDepth}
             onExport={() => exportHistoryCsv(keyword)}
-            onRunCheck={(depth) => submitRunCheck(depth).catch(() => undefined)}
+            onRunCheck={(depth) => runChecks.request([keyword.id], depth)}
             onToggleEdit={() => setEditing((value) => !value)}
             providerRate={providerRate}
-            runPending={isSubmitting}
+            runPending={runPending}
           />
         }
         dimensionControls={
@@ -122,7 +92,15 @@ export function KeywordHeaderCard({
         providerId={costContext?.providerId}
         timeZone={costContext?.timezone ?? "UTC"}
       />
-      <input type="hidden" {...register("keywordId")} />
+      <RunChecksConfirmationModal
+        flow={runChecks.flow}
+        onClose={runChecks.close}
+        onConfirm={() => void runChecks.confirm()}
+        onRetry={runChecks.retry}
+        projectId={projectId}
+        providerRate={providerRate}
+        rows={[keyword]}
+      />
       {canUpdateKeyword && projectMarkets && addKeywordsMatrixAction ? (
         <KeywordMarketsDrawer
           addKeywordsMatrixAction={addKeywordsMatrixAction}

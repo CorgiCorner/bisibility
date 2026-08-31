@@ -107,7 +107,7 @@ export function CopyButton({
     } catch {
       if (!mountedRef.current) return;
       setState("error");
-      showToast("Copy failed", { tint: "red" });
+      showToast("Copy failed", { severity: "error" });
     }
   }
 
@@ -148,11 +148,11 @@ export function CopyButton({
         {...props}
       >
         {copied ? (
-          <Check size={copyIconSizeBySize[size]} weight="bold" />
+          <Check size={copyIconSizeBySize[size]} weight="regular" />
         ) : error ? (
-          <WarningCircle size={copyIconSizeBySize[size]} weight="bold" />
+          <WarningCircle size={copyIconSizeBySize[size]} weight="regular" />
         ) : (
-          <Copy size={copyIconSizeBySize[size]} />
+          <Copy size={copyIconSizeBySize[size]} weight="regular" />
         )}
       </IconButton>
     </Tooltip>

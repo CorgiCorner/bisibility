@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { KeywordsToolbarActions } from "./KeywordsToolbarActions";
 
@@ -37,6 +37,33 @@ describe("KeywordsToolbarActions", () => {
     ).toBeInTheDocument();
   });
 
+  it("keeps toolbar action icons on the button foreground color contract", () => {
+    render(
+      <KeywordsToolbarActions
+        {...props}
+        density="compact"
+        filterCount={1}
+        onAddKeyword={vi.fn()}
+        onImportCsv={vi.fn()}
+      />,
+    );
+
+    for (const label of [
+      "Columns",
+      "Filters",
+      "Import or export",
+      "Export",
+      "Import",
+      "Add keyword",
+    ]) {
+      for (const action of screen.getAllByRole("button", { name: label })) {
+        const icon = action.querySelector(".MuiButton-startIcon svg");
+        expect(icon, `${label} action icon`).toHaveClass("text-current");
+        expect(icon, `${label} action icon`).not.toHaveClass("text-accent", "text-accent-text");
+      }
+    }
+  });
+
   it("renders density as a radiogroup with the active option checked", () => {
     render(<KeywordsToolbarActions {...props} density="compact" />);
     const compact = screen.getByRole("radio", { name: "Compact" });
@@ -64,5 +91,55 @@ describe("KeywordsToolbarActions", () => {
     fireEvent.click(transfer);
     fireEvent.click(screen.getByRole("menuitem", { name: "Import keywords" }));
     expect(onImportCsv).toHaveBeenCalledOnce();
+  });
+
+  it("splits compact and labeled transfer actions at the xl breakpoint", () => {
+    render(<KeywordsToolbarActions {...props} density="compact" onImportCsv={vi.fn()} />);
+
+    for (const [action, label] of [
+      ["export", "Export"],
+      ["import", "Import"],
+    ] as const) {
+      const compact = screen.getByTestId(`keywords-${action}-compact-action`);
+      const labeled = screen.getByTestId(`keywords-${action}-labeled-action`);
+      expect(compact).toHaveClass("lg:inline-flex", "xl:hidden");
+      expect(labeled).toHaveClass("xl:inline-flex");
+      expect(within(compact).getByRole("button")).toHaveAccessibleName(label);
+      expect(within(labeled).getByRole("button")).toHaveAccessibleName(label);
+    }
+  });
+
+  it("gives compact transfer icons accessible tooltip labels", () => {
+    render(<KeywordsToolbarActions {...props} density="compact" onImportCsv={vi.fn()} />);
+
+    for (const [action, label] of [
+      ["export", "Export"],
+      ["import", "Import"],
+    ] as const) {
+      const compactAction = within(
+        screen.getByTestId(`keywords-${action}-compact-action`),
+      ).getByRole("button");
+      expect(compactAction).not.toHaveTextContent(action);
+      expect(compactAction.querySelectorAll("svg")).toHaveLength(1);
+      expect(compactAction.closest('[data-toolbar-tooltip="true"]')).toHaveAttribute(
+        "data-tooltip-label",
+        label,
+      );
+    }
+  });
+
+  it("keeps labeled transfer actions for xl desktop", () => {
+    render(<KeywordsToolbarActions {...props} density="compact" onImportCsv={vi.fn()} />);
+
+    for (const [action, label] of [
+      ["export", "Export"],
+      ["import", "Import"],
+    ] as const) {
+      const desktopAction = within(
+        screen.getByTestId(`keywords-${action}-labeled-action`),
+      ).getByRole("button");
+      expect(desktopAction).toHaveTextContent(label);
+      expect(desktopAction.querySelectorAll("svg")).toHaveLength(1);
+    }
   });
 });

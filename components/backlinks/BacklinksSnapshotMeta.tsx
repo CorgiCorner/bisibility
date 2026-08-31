@@ -32,14 +32,14 @@ export function BacklinksSnapshotMeta({
   return (
     <div className="flex flex-wrap items-center gap-2.5">
       <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/30 bg-accent-soft px-3 py-1 text-[12.5px] font-semibold text-accent-text">
-        <GlobeSimple aria-hidden size={13} weight="bold" />
+        <GlobeSimple aria-hidden size={13} weight="regular" />
         {snapshot.target}
       </span>
       <span className="text-[12.5px] text-fg-muted">
         {scope} - snapshot {relativePast(new Date(snapshot.fetchedAt), now)}
       </span>
       <span className="inline-flex items-center gap-1 rounded-full bg-green/10 px-2 py-0.5 text-[11px] font-medium text-green-text">
-        <Clock aria-hidden size={11} />
+        <Clock weight="regular" aria-hidden size={11} />
         {cacheLabel(snapshot.cachedUntil, now)}
       </span>
       <button

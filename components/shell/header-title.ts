@@ -2,15 +2,14 @@ import { pluralize } from "@/lib/format/pluralize";
 import { appSectionPath } from "@/lib/routing/app-path";
 
 export type HeaderMeta = {
+  headerVariant?: "settings";
   subtitle?: string;
-  subtitleVariant?: "project-domain";
   /** Heading shown in the app header. */
   title: string;
 };
 
 type HeaderContext = {
   keywordCount?: number;
-  projectDomain?: string | null;
 };
 
 function matches(pathname: string, base: string): boolean {
@@ -62,6 +61,13 @@ export function headerMetaFor(pathname: string, context: HeaderContext = {}): He
     return { title: "Dashboard" };
   }
 
+  if (matches(sectionPath, "/search-console")) {
+    return sectionMeta(
+      "Search Console",
+      "What Google reported, what it withheld, and what you keep.",
+    );
+  }
+
   if (matches(sectionPath, "/domain-overview")) {
     return sectionMeta("Domain Overview", "Analyze estimated organic visibility for any domain.");
   }
@@ -83,6 +89,13 @@ export function headerMetaFor(pathname: string, context: HeaderContext = {}): He
 
   if (matches(sectionPath, "/integrations")) {
     return sectionMeta("Integrations", "Connect data providers and analytics sources.");
+  }
+
+  if (matches(sectionPath, "/install")) {
+    return sectionMeta(
+      "Install",
+      "Let your AI agent, editor or scripts use the same data you see here.",
+    );
   }
 
   if (matches(sectionPath, "/competitors")) {
@@ -116,11 +129,7 @@ export function headerMetaFor(pathname: string, context: HeaderContext = {}): He
   }
 
   if (matches(sectionPath, "/settings")) {
-    return {
-      subtitle: context.projectDomain?.trim() || "No domain set",
-      subtitleVariant: "project-domain",
-      title: "Settings",
-    };
+    return { headerVariant: "settings", title: "Settings" };
   }
 
   if (matches(sectionPath, "/docs")) {

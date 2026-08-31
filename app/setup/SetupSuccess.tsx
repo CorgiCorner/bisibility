@@ -12,7 +12,7 @@ export function SetupSuccess({ mailerConfigured }: Readonly<{ mailerConfigured: 
     <>
       <div className="flex flex-col items-center gap-3.5 px-0 pt-2 pb-0.5 text-center">
         <span className="grid h-[58px] w-[58px] place-items-center rounded-full bg-[#e8f0e4] text-[#2f7f50]">
-          <CheckCircle aria-hidden size={32} weight="fill" />
+          <CheckCircle aria-hidden size={32} weight="regular" />
         </span>
         <div className="flex flex-col gap-1.5">
           <h1 className="m-0 text-[23px] font-bold tracking-[-0.02em]">
@@ -27,7 +27,7 @@ export function SetupSuccess({ mailerConfigured }: Readonly<{ mailerConfigured: 
       <Button
         className="w-full"
         component={Link}
-        endIcon={<CaretRight size={15} weight="bold" />}
+        endIcon={<CaretRight size={15} weight="regular" />}
         href={appRootPath()}
         size="lg"
       >
@@ -41,7 +41,12 @@ export function SetupSuccess({ mailerConfigured }: Readonly<{ mailerConfigured: 
       </ExternalLink>
       {!mailerConfigured ? (
         <div className="flex items-start gap-2.5 rounded-control border border-border bg-bg p-[11px_13px]">
-          <EnvelopeSimple aria-hidden className="mt-px shrink-0 text-[#a06b2a]" size={16} />
+          <EnvelopeSimple
+            aria-hidden
+            className="mt-px shrink-0 text-[#a06b2a]"
+            size={16}
+            weight="regular"
+          />
           <p className="m-0 text-[12.5px] leading-[1.5] text-fg-muted">
             <strong className="block font-semibold text-fg">Next: configure email delivery.</strong>
             Sign-in codes for other users need a working email provider - add one to your server

@@ -175,7 +175,6 @@ export const featureStatus = {
   keywordSuggestions: {
     label: "keyword suggestions from connected data sources",
     status: "building",
-    docs: "/roadmap",
   },
   keywordResearchWorkspace: {
     label: "keyword research workspace",
@@ -195,7 +194,6 @@ export const featureStatus = {
   notificationPreferences: {
     label: "advanced notification preferences",
     status: "planned",
-    docs: "/roadmap",
   },
   weeklyDigest: {
     label: "weekly email digest",
@@ -218,7 +216,10 @@ export const featureStatus = {
 
 export type FeatureKey = keyof typeof featureStatus;
 
-export const featureDocs = (key: FeatureKey) => featureStatus[key].docs;
+export const featureDocs = (key: FeatureKey) => {
+  const feature: FeatureStatusEntry = featureStatus[key];
+  return feature.docs;
+};
 
 export function shippedFeatureLabel(key: FeatureKey) {
   const feature: FeatureStatusEntry = featureStatus[key];

@@ -65,7 +65,7 @@ export function ExportPackageCard({
         </div>
         <div className="flex items-center gap-3 border-border-soft border-t px-[15px] py-[13px]">
           <span className="grid h-9 w-9 flex-none place-items-center rounded-control bg-bg-sunken text-accent-text">
-            <FileArrowDown aria-hidden size={18} weight="fill" />
+            <FileArrowDown aria-hidden size={18} weight="regular" />
           </span>
           <div className="min-w-0 flex-1">
             <div className="text-[13px] font-semibold">
@@ -81,7 +81,7 @@ export function ExportPackageCard({
             loading={busy}
             loadingLabel="Exporting..."
             onClick={handleExport}
-            startIcon={<DownloadSimple aria-hidden size={14} weight="bold" />}
+            startIcon={<DownloadSimple aria-hidden size={14} weight="regular" />}
             type="button"
             variant="primary"
           >
@@ -98,7 +98,7 @@ export function ExportSecurityNote() {
   return (
     <div className="mt-3.5 flex items-start gap-2.5 rounded-control border border-accent bg-accent-soft px-[15px] py-[13px] text-[12.5px] leading-5 text-fg">
       <span className="flex h-5 shrink-0 items-center">
-        <ShieldWarning aria-hidden className="text-accent-text" size={17} weight="fill" />
+        <ShieldWarning aria-hidden className="text-accent-text" size={17} weight="regular" />
       </span>
       <span>
         <strong className="font-semibold">Not included:</strong> provider API keys, analytics tokens

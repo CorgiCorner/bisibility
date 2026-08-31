@@ -1,5 +1,4 @@
 "use client";
-
 import { CloudImportWorkspaceButton } from "@/components/onboarding/CloudImportWorkspaceButton";
 import { OnboardingNav } from "@/components/onboarding/OnboardingNav";
 import { OnboardingStepper } from "@/components/onboarding/OnboardingStepper";
@@ -28,13 +27,13 @@ import { readCurrentProviderValues } from "./onboarding-provider-values";
 import {
   type ConnectedProviderMap,
   costPerCheckCentsFromUsd,
+  type OnboardingConnectProviderInput,
   providerOptions,
 } from "./steps/StepConnectProvider.fields";
+import { StepConnectProviderSkip } from "./steps/StepConnectProviderSkip";
 
-export function OnboardingWizard({
-  actions,
-  costPerCheckCents,
-  dataResidencyMessage,
+// biome-ignore format: Compact initial props keep this production component within its line limit.
+export function OnboardingWizard({ actions, costPerCheckCents, dataResidencyMessage,
   gscJustConnected,
   gscGoogleOAuth,
   gscOAuthConfigured,
@@ -42,10 +41,12 @@ export function OnboardingWizard({
   hasAnalyticsSource,
   initialFlowState,
   initialKeywordCount,
+  initialKeywordText,
   initialProject,
   initialSerpConnections,
   initialStep,
   monthlyCapCents,
+  nextCheckAt,
   providerConnected,
   rankedKeywordConnections = [],
 }: Readonly<OnboardingWizardProps>) {
@@ -56,10 +57,10 @@ export function OnboardingWizard({
   const [currentStep, setCurrentStep] = useState(initialStep);
   const [project, setProject] = useState(initialProject);
   const [flowState, setFlowState] = useState<OnboardingFlowState>(startingFlowState);
-  const [draft, setDraft] = useState(() =>
-    initialOnboardingDraft(initialProject, startingFlowState),
-  );
+  const initialDraft = initialOnboardingDraft(initialProject, startingFlowState);
+  const [draft, setDraft] = useState(() => initialDraft);
   const [keywordCount, setKeywordCount] = useState(initialKeywordCount);
+  const [authoritativeNextCheckAt, setAuthoritativeNextCheckAt] = useState(nextCheckAt);
   const [hasConnectedProvider, setHasConnectedProvider] = useState(providerConnected);
   const [serpConnections, setSerpConnections] = useState<ConnectedProviderMap>(
     initialSerpConnections ?? {},
@@ -67,6 +68,9 @@ export function OnboardingWizard({
   const [maxReachableStep, setMaxReachableStep] = useState(initialStep);
   const [providerContinueDisabled, setProviderContinueDisabled] = useState(
     !providerConnected && !hasAnalyticsSource,
+  );
+  const [keywordsContinueDisabled, setKeywordsContinueDisabled] = useState(
+    initialDraft.addKeywords.locations.length === 0,
   );
   const [projectedCostPerCheckCents, setProjectedCostPerCheckCents] = useState(costPerCheckCents);
   const [inlineWarning, setInlineWarning] = useState<string | null>(null);
@@ -79,11 +83,9 @@ export function OnboardingWizard({
       ? requestedProviderId
       : savedProviderId;
   const providerReady = hasConnectedProvider || connectedProviderId !== undefined;
-
   function currentProviderValues() {
     return readCurrentProviderValues(draft.connectProvider, flowState.projectId);
   }
-
   function replaceStep(step: OnboardingStepNumber, nextFlowState: OnboardingFlowState) {
     setInlineWarning(null);
     setCurrentStep(step);
@@ -91,20 +93,17 @@ export function OnboardingWizard({
       window.history.replaceState(null, "", buildOnboardingStepHref(step, nextFlowState));
     }
   }
-
   function goToStep(step: OnboardingStepNumber, nextFlowState = flowState) {
     if (step > currentStep || step > maxReachableStep) {
       return;
     }
     replaceStep(step, nextFlowState);
   }
-
   function updateFlowAndStep(step: OnboardingStepNumber, nextFlowState: OnboardingFlowState) {
     setFlowState(nextFlowState);
     setMaxReachableStep((current) => Math.max(step, current) as OnboardingStepNumber);
     replaceStep(step, nextFlowState);
   }
-
   function mergeProjectId(projectId: string) {
     setDraft((current) => ({
       ...current,
@@ -113,8 +112,6 @@ export function OnboardingWizard({
       schedule: { ...current.schedule, projectId },
     }));
   }
-
-  const previousStep = Math.max(1, currentStep - 1) as OnboardingStepNumber;
   const handleCreateProjectComplete: OnboardingWizardStepsProps["onCreateProjectComplete"] = (
     values,
     nextProject,
@@ -144,7 +141,17 @@ export function OnboardingWizard({
     setProjectedCostPerCheckCents(costPerCheckCentsFromUsd(values.costPerCheck));
     updateFlowAndStep(3, { ...flowState, providerId: values.providerId });
   };
-  const handleProviderSkip: OnboardingWizardStepsProps["onProviderSkip"] = (values) => {
+  const handleInlineProviderComplete: OnboardingWizardStepsProps["onInlineProviderComplete"] = (
+    values,
+    nextConnections,
+  ) => {
+    setDraft((current) => ({ ...current, connectProvider: values }));
+    setHasConnectedProvider(true);
+    setSerpConnections(nextConnections);
+    setProjectedCostPerCheckCents(costPerCheckCentsFromUsd(values.costPerCheck));
+    setFlowState((current) => ({ ...current, providerId: values.providerId }));
+  };
+  const handleProviderSkip = (values: OnboardingConnectProviderInput) => {
     setDraft((current) => ({ ...current, connectProvider: values }));
     setHasConnectedProvider(false);
     setProjectedCostPerCheckCents(null);
@@ -183,6 +190,7 @@ export function OnboardingWizard({
     }));
   };
   const handleMarketsChange: OnboardingWizardStepsProps["onMarketsChange"] = (locations) => {
+    setKeywordsContinueDisabled(locations.length === 0);
     setDraft((current) => ({
       ...current,
       addKeywords: { ...current.addKeywords, locations },
@@ -196,18 +204,18 @@ export function OnboardingWizard({
   async function handleTimezoneChange(timezone: string) {
     const defaults = { ...draft.schedule, timezone };
     setDraft((current) => ({ ...current, schedule: defaults }));
-    await actions.updateProjectDefaultsAction(defaults);
+    const result = await actions.updateProjectDefaultsAction(defaults);
+    setAuthoritativeNextCheckAt(result.nextCheckAt ?? null);
   }
   const providerStepContinueDisabled =
     currentStep === 2 && providerContinueDisabled && !hasAnalyticsSource;
-  // Connected providers must submit through their form; the analytics-only skip
-  // path would clear provider state.
+  const continueDisabled =
+    providerStepContinueDisabled || (currentStep === 3 && keywordsContinueDisabled);
   const canContinueWithConnectedDataSource =
     currentStep === 2 &&
     !providerStepContinueDisabled &&
     hasAnalyticsSource &&
     !hasConnectedProvider;
-
   return (
     <OnboardingStepper
       currentStep={currentStep}
@@ -233,15 +241,17 @@ export function OnboardingWizard({
           hasConnectedProvider={providerReady}
           connectedProviderId={connectedProviderId}
           initialSerpConnections={serpConnections}
+          initialKeywordText={initialKeywordText}
           keywordCount={keywordCount}
           monthlyCapCents={monthlyCapCents}
+          nextCheckAt={authoritativeNextCheckAt}
           onCreateProjectComplete={handleCreateProjectComplete}
           onKeywordsChange={handleKeywordsChange}
           onMarketsChange={handleMarketsChange}
           onKeywordsComplete={handleKeywordsComplete}
           onProviderComplete={handleProviderComplete}
+          onInlineProviderComplete={handleInlineProviderComplete}
           onProviderContinueDisabledChange={setProviderContinueDisabled}
-          onProviderSkip={handleProviderSkip}
           onFirstCheckBack={() => goToStep(3)}
           onTimezoneChange={handleTimezoneChange}
           project={project}
@@ -250,7 +260,7 @@ export function OnboardingWizard({
         />
         {currentStep !== 4 ? (
           <OnboardingNav
-            continueDisabled={providerStepContinueDisabled}
+            continueDisabled={continueDisabled}
             continueLabel="Continue"
             currentStep={currentStep}
             flowState={flowState}
@@ -268,9 +278,19 @@ export function OnboardingWizard({
                 </div>
               ) : undefined
             }
-            onBack={currentStep === 1 ? undefined : () => goToStep(previousStep)}
+            // biome-ignore format: Guarded compact handler keeps this component within its line limit.
+            onBack={currentStep === 1 ? undefined : () => goToStep((currentStep - 1) as OnboardingStepNumber)}
             onContinue={
               canContinueWithConnectedDataSource ? continueWithConnectedDataSource : undefined
+            }
+            secondaryAction={
+              currentStep === 2 ? (
+                <StepConnectProviderSkip
+                  flowState={flowState}
+                  getValues={currentProviderValues}
+                  onSkip={handleProviderSkip}
+                />
+              ) : undefined
             }
           />
         ) : null}

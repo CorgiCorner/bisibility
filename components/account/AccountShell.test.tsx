@@ -68,13 +68,13 @@ describe("AccountShell", () => {
     expect(dots[0]).toHaveClass("absolute", "-left-2.5", "bg-accent-solid");
   });
 
-  it("sets fill icon weight on the active section and regular on the rest", () => {
+  it("sets regular icon weight on every section", () => {
     const { container } = render(<Shell activeSection="security" />);
 
     const activeIcon = container.querySelector('[data-account-subnav-icon="security"]');
     const inactiveIcon = container.querySelector('[data-account-subnav-icon="profile"]');
 
-    expect(activeIcon).toHaveAttribute("data-account-subnav-icon-weight", "fill");
+    expect(activeIcon).toHaveAttribute("data-account-subnav-icon-weight", "regular");
     expect(inactiveIcon).toHaveAttribute("data-account-subnav-icon-weight", "regular");
   });
 

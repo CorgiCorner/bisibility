@@ -236,7 +236,7 @@ export function ResearchDetailPanel({
             </p>
             <Button
               onClick={() => onAdd({ device, keywords: [keyword], location, scheduleFrequency })}
-              startIcon={<Plus size={14} />}
+              startIcon={<Plus weight="regular" size={14} />}
               sx={{ width: "100%" }}
             >
               Add to tracking

@@ -49,7 +49,7 @@ export function RateLimitBanner({ onFilterChange, range, view }: Readonly<Banner
         aria-hidden
         className="mt-0.5 shrink-0 text-yellow-text"
         size={17}
-        weight="fill"
+        weight="regular"
       />
       <p className="m-0 min-w-0 flex-1 leading-relaxed">
         <strong>{provider?.providerLabel ?? "A provider"} is rate-limiting.</strong>{" "}
@@ -184,7 +184,7 @@ function HealthLink({ href }: Readonly<{ href: string }>) {
       href={href}
     >
       Provider chain
-      <CaretRight aria-hidden size={12} weight="bold" />
+      <CaretRight aria-hidden size={12} weight="regular" />
     </Link>
   );
 }

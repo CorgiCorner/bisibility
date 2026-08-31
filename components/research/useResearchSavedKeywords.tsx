@@ -4,7 +4,6 @@ import { useToast } from "@/components/ui";
 import type { removeSavedKeywords, saveKeywords } from "@/lib/actions/saved-keyword";
 import { rankTrackerTabPath } from "@/lib/routing/app-path";
 import { actionErrorMessage } from "@/lib/ui/action-error";
-import { BookmarkSimpleIcon as BookmarkSimple } from "@phosphor-icons/react";
 import Link from "next/link";
 import {
   type ResearchSaveDraft,
@@ -65,8 +64,7 @@ export function useResearchSavedKeywords({
             projectRef={projectId}
           />,
           {
-            icon: <BookmarkSimple aria-hidden size={18} weight="fill" />,
-            tint: "accent",
+            severity: "info",
           },
         );
         return;
@@ -84,8 +82,7 @@ export function useResearchSavedKeywords({
           projectRef={projectId}
         />,
         {
-          icon: <BookmarkSimple aria-hidden size={18} weight="fill" />,
-          tint: "accent",
+          severity: "success",
           ...(canRemove
             ? {
                 undo: async () => {
@@ -100,7 +97,7 @@ export function useResearchSavedKeywords({
         },
       );
     } catch (error) {
-      showToast(actionErrorMessage(error), { tint: "red" });
+      showToast(actionErrorMessage(error), { severity: "error" });
     }
   }
 
@@ -116,7 +113,7 @@ export function useResearchSavedKeywords({
         false,
       );
     } catch (error) {
-      showToast(actionErrorMessage(error), { tint: "red" });
+      showToast(actionErrorMessage(error), { severity: "error" });
     }
   }
 

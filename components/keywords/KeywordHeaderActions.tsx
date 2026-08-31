@@ -96,7 +96,7 @@ export function KeywordHeaderActions({
         sx={{ minWidth: 40, paddingX: 0.75 }}
         variant="secondary"
       >
-        <DotsThree aria-hidden size={17} weight="bold" />
+        <DotsThree aria-hidden size={17} weight="regular" />
       </Button>
       <Menu
         anchorEl={actionsMenuAnchor}

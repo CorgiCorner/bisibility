@@ -1,5 +1,6 @@
 import { GITHUB_URL } from "@/lib/site/site";
-import { GithubLogoIcon as GithubLogo, StarIcon as Star } from "@phosphor-icons/react/dist/ssr";
+import { cn } from "@/lib/ui/cn";
+import { GithubLogoIcon as GithubLogo } from "@phosphor-icons/react/dist/ssr";
 import { cva } from "class-variance-authority";
 
 export type GithubStarsSize = "lg" | "md" | "sm";
@@ -8,6 +9,7 @@ export type GithubStarsVariant = "chip" | "nav";
 
 export type GithubStarsProps = {
   /** Server-fetched count. Null or undefined keeps the repository link without showing a count. */
+  className?: string;
   count?: string | null;
   href?: string;
   size?: GithubStarsSize;
@@ -15,7 +17,7 @@ export type GithubStarsProps = {
 };
 
 const starsVariants = cva(
-  "group inline-flex items-center whitespace-nowrap font-mono font-semibold no-underline transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid",
+  "group inline-flex items-center whitespace-nowrap font-mono no-underline transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid",
   {
     variants: {
       size: {
@@ -25,9 +27,9 @@ const starsVariants = cva(
       },
       variant: {
         // Its own control: an edge, an elevated fill, and a hover that darkens it.
-        chip: "rounded-full border border-border-control bg-bg-elev text-fg-muted hover:bg-bg-sunken hover:text-fg",
+        chip: "rounded-full border border-border-control bg-bg-elev font-semibold text-fg-muted hover:bg-bg-sunken hover:text-fg",
         // One of the nav links: no edge, no fill, and the same pill on hover they use.
-        nav: "rounded-control text-fg-muted hover:bg-bg-sunken hover:text-fg",
+        nav: "rounded-control font-normal text-fg-muted hover:bg-bg-sunken hover:text-fg",
       },
     },
     compoundVariants: [
@@ -60,6 +62,7 @@ function formatStars(count: string) {
 }
 
 export function GithubStars({
+  className,
   count,
   href = GITHUB_URL,
   size = "md",
@@ -70,29 +73,17 @@ export function GithubStars({
   return (
     <a
       aria-label={formattedCount ? `${formattedCount} stars on GitHub` : "GitHub repository"}
-      className={starsVariants({ size, variant })}
+      className={cn(starsVariants({ size, variant }), className)}
       href={href}
       rel="noreferrer noopener"
       target="_blank"
     >
-      <GithubLogo aria-hidden size={glyphSize[size]} />
+      <GithubLogo aria-hidden size={glyphSize[size]} weight="regular" />
+      <span aria-hidden>GitHub</span>
       {formattedCount ? (
-        <>
-          <span aria-hidden>{formattedCount}</span>
-          {/* Phosphor draws each weight as its own path, so the two cannot be tweened. Both sit in
-              one grid cell and cross-fade for fine pointers without nudging the row. */}
-          <span aria-hidden className="grid text-yellow-text">
-            <Star
-              className="col-start-1 row-start-1 transition-opacity duration-[var(--motion-press)] pointer-fine:group-hover:opacity-0"
-              size={glyphSize[size] - 3}
-            />
-            <Star
-              className="col-start-1 row-start-1 opacity-0 transition-opacity duration-[var(--motion-press)] pointer-fine:group-hover:opacity-100"
-              size={glyphSize[size] - 3}
-              weight="fill"
-            />
-          </span>
-        </>
+        <span aria-hidden className="opacity-70 font-semibold">
+          {formattedCount}
+        </span>
       ) : null}
     </a>
   );

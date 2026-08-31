@@ -69,6 +69,7 @@ export function ComparisonScopeDrawer({
         <div className="flex flex-wrap items-center gap-2">
           <label className="relative min-w-[220px] flex-1">
             <MagnifyingGlass
+              weight="regular"
               aria-hidden
               className="absolute left-3 top-1/2 -translate-y-1/2 text-fg-muted"
               size={14}
@@ -98,7 +99,7 @@ export function ComparisonScopeDrawer({
             const checked = !excluded.has(observation.id);
             return (
               <label
-                className="flex cursor-pointer items-start gap-3 border-border-soft border-b px-3.5 py-3 last:border-b-0 hover:bg-nav-active"
+                className="flex cursor-pointer items-start gap-3 border-border-soft border-b px-3.5 py-3 last:border-b-0 hover:bg-bg-sunken"
                 key={observation.id}
               >
                 <input

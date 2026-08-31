@@ -145,7 +145,7 @@ export function KeywordMarketsDrawer({
       }
       const nextId = retained?.id ?? addedIds[0];
       setPendingAddition(null);
-      showToast("Updated markets and devices", { tint: "green" });
+      showToast("Updated markets and devices", { severity: "success" });
       onClose();
       if (currentDeleted && nextId) {
         router.push(appPath(asProjectRef(projectId), "rank-tracker", nextId));

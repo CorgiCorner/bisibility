@@ -169,7 +169,7 @@ export function TransferPanel({
         <span
           className={`grid h-[38px] w-[38px] flex-none place-items-center rounded-control ${tone.tile}`}
         >
-          <StateIcon aria-hidden size={19} weight={cfg.weight} />
+          <StateIcon aria-hidden size={19} weight="regular" />
         </span>
         <div className="min-w-0 flex-1">
           <div className="text-[13.5px] font-semibold">{cfg.title}</div>
@@ -215,7 +215,7 @@ export function TransferPanel({
 
       {job.state === "done" ? (
         <div className="flex items-center gap-[9px] border-border-soft border-t p-[14px_20px]">
-          <LinkIcon aria-hidden className="flex-none text-fg-muted" size={15} />
+          <LinkIcon aria-hidden className="flex-none text-fg-muted" size={15} weight="regular" />
           <span className="min-w-0 flex-1 truncate font-mono text-[11.5px] text-fg-muted">
             Import job {job.id}
           </span>
@@ -224,7 +224,7 @@ export function TransferPanel({
             href={appPath(projectRef, "dashboard")}
           >
             Open project
-            <CaretRight aria-hidden size={12} weight="bold" />
+            <CaretRight aria-hidden size={12} weight="regular" />
           </a>
         </div>
       ) : null}
@@ -236,7 +236,7 @@ export function TransferPanel({
               aria-hidden
               className="mt-px flex-none text-red-text"
               size={16}
-              weight="fill"
+              weight="regular"
             />
             <div className="min-w-0 flex-1 text-[12.5px] leading-[1.5] text-fg">
               <strong className="font-semibold">Transfer stopped at {job.progress}%.</strong>{" "}
@@ -260,7 +260,7 @@ export function TransferPanel({
             <Button
               onClick={onNewToken}
               size="sm"
-              startIcon={<ArrowsClockwise aria-hidden size={13} />}
+              startIcon={<ArrowsClockwise aria-hidden size={13} weight="regular" />}
               sx={{ flex: "none" }}
               type="button"
               variant="primary"
@@ -272,7 +272,7 @@ export function TransferPanel({
               download={`${job.id ?? "cloud-import"}-error.log`}
               href={errorLogHref(job)}
             >
-              <DownloadSimple aria-hidden size={13} />
+              <DownloadSimple aria-hidden size={13} weight="regular" />
               Download error log
             </a>
             <span className="text-[12px] text-fg-muted">then push again from the source.</span>

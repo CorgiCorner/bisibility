@@ -49,13 +49,14 @@ const deviceTabs: { value: LensDevice; label: string; icon: typeof Monitor }[] =
 function locationMenuOptions(locationOptions: LensLocationOption[]): MenuSelectOption[] {
   return [
     {
-      icon: <GlobeHemisphereWest aria-hidden size={14} />,
+      icon: <GlobeHemisphereWest weight="regular" aria-hidden size={14} />,
       label: "All locations",
       value: ALL_LOCATIONS,
     },
     ...locationOptions.map((option) => ({
-      icon: <MapPin aria-hidden size={14} weight={option.kind === "city" ? "fill" : "regular"} />,
+      icon: <MapPin aria-hidden size={14} weight="regular" />,
       label: option.displayName,
+      noWrap: true,
       secondary: `${option.count} keyword${option.count === 1 ? "" : "s"} · ${option.kind}`,
       value: option.id,
     })),
@@ -105,7 +106,8 @@ export function KeywordsScopeLocationSelect({
   return (
     <MenuSelect
       ariaLabel="Location scope"
-      leadingIcon={<MapPin className="text-fg-muted" size={13} />}
+      leadingIcon={<MapPin weight="regular" className="text-fg-muted" size={13} />}
+      menuMinWidth={280}
       onChange={(value) => go({ ...lens, locationId: value === ALL_LOCATIONS ? null : value })}
       options={locationMenuOptions(locationOptions)}
       triggerClassName={triggerClassName}
@@ -133,12 +135,11 @@ export function KeywordsDeviceScope({
       optionClassName="min-w-8 sm:min-w-0"
       options={deviceTabs.map((tab) => {
         const Icon = tab.icon;
-        const active = tab.value === lens.device;
         return {
           ariaLabel: `${tab.label} device scope`,
           label: (
             <>
-              <Icon aria-hidden size={13} weight={active ? "fill" : "regular"} />
+              <Icon aria-hidden size={13} weight="regular" />
               <span className="hidden sm:inline">{tab.label}</span>
             </>
           ),
@@ -201,7 +202,7 @@ export function KeywordsScopeLocationChip({
   return (
     <Pill active className="lg:hidden" onClick={() => go({ ...lens, locationId: null })} size="sm">
       Scope: {label}
-      <X size={11} weight="bold" />
+      <X size={11} weight="regular" />
     </Pill>
   );
 }

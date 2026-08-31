@@ -19,6 +19,7 @@ describe("readable provider identity", () => {
     vi.stubEnv("BISIBILITY_SECRETS_KEY", key(1));
     const encrypted = encryptSecret(
       JSON.stringify({
+        accountEmail: "owner@example.com",
         apiKey: "secret-token",
         endpoint: "https://stats.example.com",
         login: "example.com",
@@ -26,6 +27,7 @@ describe("readable provider identity", () => {
     );
 
     expect(readableProviderIdentity(encrypted)).toEqual({
+      accountEmail: "owner@example.com",
       endpoint: "https://stats.example.com",
       login: "example.com",
       state: "readable",

@@ -1,7 +1,7 @@
 import { decryptProviderCredentials, isEncryptedSecret } from "@/lib/providers/crypto";
 import type { ProviderCredentials } from "@/lib/providers/types";
 
-type ProviderIdentity = Pick<ProviderCredentials, "endpoint" | "login">;
+type ProviderIdentity = Pick<ProviderCredentials, "accountEmail" | "endpoint" | "login">;
 
 export type ProviderIdentityResult =
   | { state: "absent" }
@@ -16,8 +16,9 @@ export function readableProviderIdentity(
   }
 
   try {
-    const { endpoint, login } = decryptProviderCredentials(encrypted);
+    const { accountEmail, endpoint, login } = decryptProviderCredentials(encrypted);
     return {
+      ...(accountEmail ? { accountEmail } : {}),
       ...(endpoint ? { endpoint } : {}),
       ...(login ? { login } : {}),
       state: "readable",

@@ -55,6 +55,24 @@ describe("TrackingSettingsLoading", () => {
     }
   });
 
+  it("stacks provider budget cards at every breakpoint", () => {
+    const { container } = render(
+      <TrackingSettingsContent
+        canEdit
+        defaults={defaults}
+        domain="example.com"
+        initialCronPreview={{ message: "", runs: [], status: "idle" }}
+        previewCron={vi.fn()}
+        projectId="prj_1"
+        updateDefaults={vi.fn()}
+      />,
+    );
+
+    const budgets = container.querySelector("[data-tracking-provider-budgets]");
+    expect(budgets).toHaveClass("grid", "gap-5");
+    expect(budgets).not.toHaveClass("md:grid-cols-2");
+  });
+
   it("shares every settled card geometry class", () => {
     const { container } = render(
       <>

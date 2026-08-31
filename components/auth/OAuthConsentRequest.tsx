@@ -48,7 +48,7 @@ function ClientBox({ client }: Readonly<{ client: OAuthConsentClient }>) {
       </p>
       {client.redirectUri ? (
         <p className="mt-1.5 mb-0 flex items-start gap-2 break-all font-mono text-[10.5px] text-fg-muted">
-          <ArrowUDownLeft aria-hidden className="mt-0.5 shrink-0" size={13} />
+          <ArrowUDownLeft aria-hidden className="mt-0.5 shrink-0" size={13} weight="regular" />
           {client.redirectUri}
         </p>
       ) : null}
@@ -63,7 +63,7 @@ function TokenLifetime({
   return (
     <dl className="mt-4 mb-0 border-border border-t pt-3">
       <div className="flex items-center gap-2 text-[12.5px]">
-        <Clock aria-hidden className="text-fg-muted" size={14} />
+        <Clock aria-hidden className="text-fg-muted" size={14} weight="regular" />
         <dt className="flex items-center gap-1.5 text-fg-muted">
           Access token
           <InfoTooltip text="The short-lived credential this client uses to call bisibility. It expires after 1 hour." />
@@ -72,7 +72,7 @@ function TokenLifetime({
       </div>
       {refresh ? (
         <div className="mt-2 flex items-center gap-2 text-[12.5px]">
-          <Hourglass aria-hidden className="text-fg-muted" size={14} />
+          <Hourglass aria-hidden className="text-fg-muted" size={14} weight="regular" />
           <dt className="flex items-center gap-1.5 text-fg-muted">
             Refresh access
             <InfoTooltip text="Allows this client to obtain new access tokens for up to 30 days without asking you to approve every hour." />
@@ -85,7 +85,7 @@ function TokenLifetime({
       {canCreateApiTokens ? (
         <div className="mt-2">
           <div className="flex items-center gap-2 text-[12.5px]">
-            <Key aria-hidden className="text-fg-muted" size={14} />
+            <Key aria-hidden className="text-fg-muted" size={14} weight="regular" />
             <dt className="text-fg-muted">API token</dt>
             <dd className="ml-auto font-mono font-semibold text-fg">{API_TOKEN_EXPIRY_LABEL}</dd>
           </div>
@@ -118,7 +118,7 @@ export function OAuthConsentRequest({
     <Card className="w-full max-w-[520px] p-5 sm:p-6" size="lg">
       <div className="flex flex-wrap items-start gap-3">
         <span className="grid h-10 w-10 shrink-0 place-items-center rounded-control bg-accent-soft text-accent-solid">
-          <ShieldCheck aria-hidden size={21} weight="fill" />
+          <ShieldCheck aria-hidden size={21} weight="regular" />
         </span>
         <div>
           <p className="m-0 font-mono text-[10.5px] uppercase tracking-[0.5px] text-fg-muted">
@@ -133,7 +133,7 @@ export function OAuthConsentRequest({
             expiring ? "border-red/40 text-red-text" : "border-border text-fg-muted"
           }`}
         >
-          <Clock aria-hidden size={13} />
+          <Clock aria-hidden size={13} weight="regular" />
           expires in {formatOAuthConsentCountdown(secondsLeft)}
         </span>
       </div>
@@ -169,7 +169,7 @@ export function OAuthConsentRequest({
         <Button
           className="w-full"
           disabled={disabled}
-          endIcon={<CaretRight aria-hidden size={16} weight="bold" />}
+          endIcon={<CaretRight aria-hidden size={16} weight="regular" />}
           loading={pendingChoice === "accept"}
           loadingLabel="Approving"
           onClick={() => onChoose(true)}

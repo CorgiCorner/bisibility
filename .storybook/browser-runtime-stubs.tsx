@@ -58,6 +58,10 @@ export async function loadCloudBackupCounts() {
   };
 }
 
+export async function updateSearchSyncSettings() {
+  return { ok: true as const };
+}
+
 export async function updatePresenceInspectionBudget(input: {
   inspectionDailyLimit: number;
   projectId: string;
@@ -88,6 +92,18 @@ export async function loadStoredGoogleProperties(input: { provider: "ga4" | "gsc
 
 export async function saveStoredGoogleProperty(input: { property: string }) {
   return { property: input.property, status: "saved" as const };
+}
+
+export async function pauseSearchInsightsImport() {
+  return { ok: true as const, state: "paused" };
+}
+
+export async function resumeSearchInsightsImport() {
+  return { ok: true as const, state: "running" };
+}
+
+export async function retrySearchInsightsImport() {
+  return { ok: true as const, state: "running" };
 }
 
 export default function Link({ children, href = "#", ...props }: LinkProps) {

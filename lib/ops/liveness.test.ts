@@ -51,6 +51,7 @@ describe("worker liveness", () => {
 
     expect(mocks.getRedisClient).toHaveBeenCalled();
     await expect(getWorkerLivenessDetails(new Date("2026-07-16T08:10:00.000Z"))).resolves.toEqual({
+      alertDeliveryTaskQueue: null,
       appliedMigration: null,
       bundledMigration: null,
       environment: "unknown",
@@ -63,6 +64,8 @@ describe("worker liveness", () => {
       schedulerMode: "unknown",
       schemaComparison: "unknown",
       status: "ok",
+      namespace: null,
+      taskQueue: null,
     });
   });
 
@@ -74,6 +77,7 @@ describe("worker liveness", () => {
     vi.stubEnv("DEPLOYMENT_ENV", "production");
     vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", "cutover");
     vi.stubEnv("SCHEDULER_DRIVER", "temporal");
+    vi.stubEnv("BISIBILITY_DEPLOYMENT_SUFFIX", "e7a7bfa7");
     mocks.set.mockImplementation(async (_key, value) => {
       stored = value;
     });
@@ -83,6 +87,7 @@ describe("worker liveness", () => {
 
     expect(mocks.set).toHaveBeenCalledWith(WORKER_LAST_SEEN_KEY, expect.any(String));
     expect(JSON.parse(mocks.set.mock.calls[0]?.[1] as string)).toEqual({
+      alertDeliveryTaskQueue: "bisibility-alert-deliveries-e7a7bfa7",
       appliedMigration: "20260724220000_instance_settings",
       bundledMigration: "20260724220000_instance_settings",
       environment: "production",
@@ -92,8 +97,11 @@ describe("worker liveness", () => {
       schedulerDriver: "temporal",
       schedulerMode: "cutover",
       schemaComparison: "ok",
+      namespace: "bisibility-e7a7bfa7",
+      taskQueue: "bisibility-rank-checks-e7a7bfa7",
     });
     await expect(getWorkerLivenessDetails(new Date("2026-07-16T08:10:00.000Z"))).resolves.toEqual({
+      alertDeliveryTaskQueue: "bisibility-alert-deliveries-e7a7bfa7",
       appliedMigration: "20260724220000_instance_settings",
       bundledMigration: "20260724220000_instance_settings",
       environment: "production",
@@ -106,6 +114,8 @@ describe("worker liveness", () => {
       schedulerMode: "cutover",
       schemaComparison: "ok",
       status: "ok",
+      namespace: "bisibility-e7a7bfa7",
+      taskQueue: "bisibility-rank-checks-e7a7bfa7",
     });
   });
 
@@ -119,6 +129,7 @@ describe("worker liveness", () => {
     );
 
     await expect(getWorkerLivenessDetails(new Date("2026-07-16T08:10:00.000Z"))).resolves.toEqual({
+      alertDeliveryTaskQueue: null,
       appliedMigration: null,
       bundledMigration: null,
       environment: "worker-production",
@@ -131,6 +142,8 @@ describe("worker liveness", () => {
       schedulerMode: "unknown",
       schemaComparison: "unknown",
       status: "ok",
+      namespace: null,
+      taskQueue: null,
     });
   });
 

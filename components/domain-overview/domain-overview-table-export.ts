@@ -1,15 +1,6 @@
 import type { RankedKeywordsPage, RelevantPagesResult } from "@/lib/providers/types";
+import { csvRow } from "@/lib/ui/csv";
 import { downloadTextFile } from "@/lib/ui/download";
-
-function csvCell(value: number | string | null) {
-  const raw = value === null ? "" : String(value);
-  const text = typeof value === "string" && /^[=+\-@]/.test(raw) ? `'${raw}` : raw;
-  return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
-}
-
-function csvRow(values: readonly (number | string | null)[]) {
-  return values.map(csvCell).join(",");
-}
 
 export function domainOverviewKeywordsCsv(rows: readonly RankedKeywordsPage["rows"][number][]) {
   return [

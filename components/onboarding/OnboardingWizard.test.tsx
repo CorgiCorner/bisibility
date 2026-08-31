@@ -1,3 +1,4 @@
+import { deferred } from "@/tests/deferred";
 import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
@@ -99,7 +100,7 @@ describe("OnboardingWizard", () => {
     expect(screen.queryByText("Connect from your terminal or API")).not.toBeInTheDocument();
   });
 
-  it("shows one top Skip only on the provider step and clears the provider when clicked", () => {
+  it("shows one footer Skip for now immediately before Continue and clears the provider", () => {
     renderWizard({
       costPerCheckCents: 25,
       initialFlowState: { projectId: "prj_1", providerId: "dataforseo" },
@@ -111,12 +112,19 @@ describe("OnboardingWizard", () => {
     const skipButton = screen.getByRole("button", {
       name: "Skip provider connection and add keywords as paused",
     });
-    expect(skipButton).toHaveTextContent("Skip");
+    expect(skipButton).toHaveTextContent("Skip for now");
     expect(skipButton).toBeEnabled();
-    expect(skipButton).toHaveClass("MuiButton-outlined");
-    expect(skipButton).not.toHaveClass("text-accent-text", "text-fg-muted");
-    expect(screen.getAllByText("Skip")).toHaveLength(1);
-    expect(skipButton.closest("footer")).toBeNull();
+    expect(skipButton).toHaveClass("MuiButton-text");
+    expect(skipButton).not.toHaveClass("MuiButton-outlined");
+    expect(screen.getAllByText("Skip for now")).toHaveLength(1);
+    const footer = skipButton.closest("footer");
+    const continueButton = screen.getByRole("button", { name: "Continue" });
+    expect(footer).not.toBeNull();
+    expect(skipButton.parentElement).toBe(continueButton.parentElement);
+    expect(skipButton.nextElementSibling).toBe(continueButton);
+    expect(getComputedStyle(skipButton).minHeight).toBe(getComputedStyle(continueButton).minHeight);
+    expect(getComputedStyle(skipButton).fontSize).toBe(getComputedStyle(continueButton).fontSize);
+    expect(screen.getByRole("button", { name: "Connect data" })).not.toContainElement(skipButton);
     fireEvent.click(skipButton);
 
     expect(screen.getByRole("heading", { name: "Add your first keywords" })).toBeInTheDocument();
@@ -252,18 +260,216 @@ describe("OnboardingWizard", () => {
     ).toBeInTheDocument();
   });
 
+  it("initializes step 3 Continue as disabled from an empty draft", () => {
+    renderWizard({
+      initialFlowState: { locations: [], projectId: "prj_1", providerId: null },
+      initialProject: project,
+      initialStep: 3,
+    });
+
+    expect(screen.getByRole("button", { name: "Continue" })).toBeDisabled();
+  });
+
+  it("disables step 3 Continue with no markets and re-enables it after adding one", async () => {
+    renderWizard({
+      initialFlowState: { locations: ["US"], projectId: "prj_1", providerId: null },
+      initialProject: project,
+      initialStep: 3,
+    });
+
+    const continueButton = screen.getByRole("button", { name: "Continue" });
+    expect(continueButton).toBeEnabled();
+    fireEvent.click(screen.getByRole("button", { name: "Remove United States / English" }));
+
+    expect(await screen.findByText("Add at least one market to continue.")).toBeInTheDocument();
+    expect(continueButton).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Add market" })).toBeEnabled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Add market" }));
+    fireEvent.click(screen.getByRole("button", { name: "Add 1" }));
+
+    await waitFor(() => expect(continueButton).toBeEnabled());
+    expect(screen.queryByText("Add at least one market to continue.")).not.toBeInTheDocument();
+  });
+
+  it("connects a provider in the final-step modal and focuses the enabled test action", async () => {
+    const connectProviderAction = vi.fn(async () => undefined);
+    const completeOnboardingAction = vi.fn(async () => ({ completed: true }));
+    renderWizard({
+      actions: { connectProviderAction, completeOnboardingAction },
+      costPerCheckCents: null,
+      initialFlowState: { projectId: "prj_1", providerId: null },
+      initialKeywordCount: 1,
+      initialKeywordText: "rank tracker",
+      initialProject: project,
+      initialStep: 4,
+      providerConnected: false,
+    });
+    const trigger = screen.getByRole("button", { name: "Connect" });
+    expect(trigger).toHaveAttribute("aria-haspopup", "dialog");
+    expect(trigger).toHaveAttribute("aria-expanded", "false");
+    expect(trigger).not.toHaveAttribute("aria-controls");
+    expect(trigger).toHaveClass("MuiButton-sizeSmall");
+    fireEvent.click(trigger);
+    const dialog = await screen.findByRole("dialog", { name: "Connect a provider" });
+    expect(screen.getAllByRole("dialog")).toHaveLength(1);
+    expect(within(dialog).queryByRole("form")).toBeNull();
+    expect(within(dialog).queryByText("Connect data")).not.toBeInTheDocument();
+    const cancel = within(dialog).getByRole("button", { name: "Cancel" });
+    expect(cancel).toHaveClass("MuiButton-text", "MuiButton-sizeMedium");
+    expect(cancel).not.toHaveClass("MuiButton-outlined");
+    expect(within(dialog).getByRole("button", { name: "Test connection" })).toBeInTheDocument();
+    const save = within(dialog).getByRole("button", { name: "Save DataForSEO" });
+    expect(save).toBeDisabled();
+    fireEvent.change(within(dialog).getByLabelText("API login"), { target: { value: "login" } });
+    fireEvent.change(within(dialog).getByLabelText("API password"), {
+      target: { value: "password" },
+    });
+    fireEvent.keyDown(within(dialog).getByLabelText("API password"), { key: "Enter" });
+    expect(completeOnboardingAction).not.toHaveBeenCalled();
+    expect(routerMock.push).not.toHaveBeenCalled();
+    fireEvent.click(within(dialog).getByRole("button", { name: "Test connection" }));
+    await waitFor(() => expect(save).toBeEnabled());
+    fireEvent.click(save);
+    await waitFor(() => expect(connectProviderAction).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(screen.getByText(/DataForSEO · estimated rate unavailable/)).toBeInTheDocument();
+    const run = screen.getByRole("button", { name: "Run a test check (1 keyword)" });
+    expect(run).toBeEnabled();
+    expect(run).toHaveFocus();
+  });
+
+  it("keeps the provider modal open while save is in flight, then completes once", async () => {
+    const save = deferred<void>();
+    const connectProviderAction = vi.fn(() => save.promise);
+    renderWizard({
+      actions: { connectProviderAction },
+      initialFlowState: { projectId: "prj_1", providerId: null },
+      initialKeywordCount: 1,
+      initialKeywordText: "rank tracker",
+      initialProject: project,
+      initialStep: 4,
+      providerConnected: false,
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Connect" }));
+    const dialog = await screen.findByRole("dialog", { name: "Connect a provider" });
+    fireEvent.change(within(dialog).getByLabelText("API login"), { target: { value: "login" } });
+    fireEvent.change(within(dialog).getByLabelText("API password"), {
+      target: { value: "password" },
+    });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Test connection" }));
+    const saveButton = within(dialog).getByRole("button", { name: "Save DataForSEO" });
+    await waitFor(() => expect(saveButton).toBeEnabled());
+    fireEvent.click(saveButton);
+    await waitFor(() => expect(connectProviderAction).toHaveBeenCalledOnce());
+
+    expect(within(dialog).getByRole("button", { name: "Cancel" })).toBeDisabled();
+    expect(within(dialog).getByRole("button", { name: "Close modal" })).toBeDisabled();
+    fireEvent.keyDown(dialog, { key: "Escape" });
+    expect(screen.getByRole("dialog", { name: "Connect a provider" })).toBeInTheDocument();
+
+    save.resolve();
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(screen.getByText(/DataForSEO · estimated rate unavailable/)).toBeInTheDocument();
+  });
+
+  it("keeps Step 4 provider selection on the final-step URL", async () => {
+    window.history.replaceState(null, "", "/onboarding?step=4&projectId=prj_1");
+    renderWizard({
+      initialFlowState: { projectId: "prj_1", providerId: null },
+      initialKeywordCount: 1,
+      initialProject: project,
+      initialStep: 4,
+      providerConnected: false,
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Connect" }));
+    const dialog = await screen.findByRole("dialog", { name: "Connect a provider" });
+    fireEvent.click(within(dialog).getByRole("radio", { name: /SerpApi/ }));
+    expect(window.location.search).toBe("?step=4&projectId=prj_1");
+    expect(routerMock.push).not.toHaveBeenCalled();
+  });
+
+  it.each(["Cancel", "Close modal"])("returns focus to Connect after %s", async (name) => {
+    renderWizard({
+      initialFlowState: { projectId: "prj_1", providerId: null },
+      initialKeywordCount: 1,
+      initialKeywordText: "rank tracker",
+      initialProject: project,
+      initialStep: 4,
+      providerConnected: false,
+    });
+    const trigger = screen.getByRole("button", { name: "Connect" });
+    fireEvent.click(trigger);
+    fireEvent.click(await screen.findByRole("button", { name }));
+    await waitFor(() => expect(trigger).toHaveFocus());
+  });
+
+  it("returns focus to Connect after Escape", async () => {
+    renderWizard({
+      initialFlowState: { projectId: "prj_1", providerId: null },
+      initialKeywordCount: 1,
+      initialKeywordText: "rank tracker",
+      initialProject: project,
+      initialStep: 4,
+      providerConnected: false,
+    });
+    const trigger = screen.getByRole("button", { name: "Connect" });
+    fireEvent.click(trigger);
+    fireEvent.keyDown(await screen.findByRole("dialog"), { key: "Escape" });
+    await waitFor(() => expect(trigger).toHaveFocus());
+  });
+
+  it("uses the authoritative next dispatch returned after a timezone save", async () => {
+    const updateProjectDefaultsAction = vi.fn(async () => ({
+      nextCheckAt: "2026-08-30T06:00:00.000Z",
+    }));
+    renderWizard({
+      actions: {
+        listFirstCheckCandidatesAction: vi.fn(async () => ({
+          candidates: [
+            {
+              device: "desktop" as const,
+              id: "keyword_1",
+              market: { languageLabel: "English", locationLabel: "United States" },
+              publicId: "kw_keyword_1",
+              text: "rank tracker",
+            },
+          ],
+          hasAnalyticsSource: false,
+          isSampleProject: false,
+          providerReady: true,
+        })),
+        updateProjectDefaultsAction,
+      },
+      initialFlowState: { projectId: "prj_1", providerId: "dataforseo" },
+      initialKeywordCount: 1,
+      initialKeywordText: "rank tracker",
+      initialProject: { ...project, frequency: "daily", timezone: "UTC" },
+      initialStep: 4,
+      nextCheckAt: "2026-08-29T06:00:00.000Z",
+      providerConnected: true,
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Project timezone" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: /Europe\/Warsaw/ }));
+    await waitFor(() => expect(updateProjectDefaultsAction).toHaveBeenCalledTimes(1));
+    fireEvent.click(screen.getByRole("button", { name: "Run a test check (1 keyword)" }));
+    expect(await screen.findByText(/next run Aug 30, 2026, 8:00 AM/)).toBeInTheDocument();
+    expect(screen.queryByText(/Aug 29, 2026/)).not.toBeInTheDocument();
+  }, 20_000);
+
   it("completes onboarding only when the final dashboard action is submitted", async () => {
     const completeOnboardingAction = vi.fn(async () => ({ completed: true }));
     renderWizard({
       actions: { completeOnboardingAction },
       initialFlowState: { projectId: "prj_1", providerId: "dataforseo" },
       initialKeywordCount: 1,
+      initialKeywordText: "rank tracker",
       initialProject: project,
       initialStep: 4,
       providerConnected: true,
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /open dashboard/i }));
+    fireEvent.click(screen.getByRole("button", { name: "Open app" }));
 
     await waitFor(() => expect(completeOnboardingAction).toHaveBeenCalledTimes(1));
     expect(completeOnboardingAction).toHaveBeenCalledWith({
@@ -282,14 +488,16 @@ describe("OnboardingWizard", () => {
         providerId: "dataforseo",
       },
       initialKeywordCount: 1,
+      initialKeywordText: "rank tracker",
       initialProject: project,
       initialStep: 4,
       providerConnected: true,
     });
 
-    expect(screen.getByText("United States")).toBeInTheDocument();
-    expect(screen.getByText("Spain")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Open dashboard" }));
+    expect(
+      screen.getByLabelText(/Markets: United States \/ English · Spain \/ English/),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Open app" }));
 
     await waitFor(() =>
       expect(saveMarketsAction).toHaveBeenCalledWith({
@@ -311,7 +519,7 @@ describe("OnboardingWizard", () => {
     });
 
     expect(screen.getByText("1 sample check - one per market and device")).toBeInTheDocument();
-    expect(screen.getByText("SerpApi")).toBeInTheDocument();
+    expect(screen.getByText(/SerpApi · estimated rate unavailable/)).toBeInTheDocument();
     expect(screen.queryByText(/No SERP provider connected/)).toBeNull();
   });
 
@@ -323,6 +531,7 @@ describe("OnboardingWizard", () => {
       actions: {
         addKeywordsAction: vi.fn(async () => ({
           created: 1,
+          persistedKeywordCount: 1,
           keywords: [{ id: "keyword_1", publicId: "kw_1" }],
           skippedDuplicates: 0,
         })),

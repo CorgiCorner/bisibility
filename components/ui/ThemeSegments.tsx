@@ -79,7 +79,7 @@ export function ThemeSegmentsRow({ defaultPreference }: Readonly<ThemeSegmentsPr
   return (
     <div className="flex items-center justify-between gap-2 px-[9px] py-1.5">
       <span className="inline-flex items-center gap-[9px] text-[13px] text-fg">
-        <Palette aria-hidden className="text-fg-muted" size={16} />
+        <Palette aria-hidden className="text-fg-muted" size={16} weight="regular" />
         Theme
       </span>
       <ThemeSegments defaultPreference={defaultPreference} size="sm" />

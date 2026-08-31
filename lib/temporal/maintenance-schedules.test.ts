@@ -46,6 +46,8 @@ describe("scheduled maintenance gate", () => {
   });
 
   it("defaults to the reconciler flag when SCHEDULED_MAINTENANCE_ENABLED is unset", () => {
+    vi.stubEnv("SCHEDULED_MAINTENANCE_ENABLED", "");
+    vi.stubEnv("RANK_CHECK_RECONCILER_ENABLED", "true");
     expect(isScheduledMaintenanceEnabled()).toBe(true);
 
     vi.stubEnv("RANK_CHECK_RECONCILER_ENABLED", "false");

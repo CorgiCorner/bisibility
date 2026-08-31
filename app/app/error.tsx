@@ -63,7 +63,11 @@ function CopyViewUrlButton({ pathname }: Readonly<{ pathname: string }>) {
       ref={setButtonRef}
       type="button"
     >
-      {copied ? <Check aria-hidden size={13} weight="bold" /> : <Copy aria-hidden size={13} />}
+      {copied ? (
+        <Check aria-hidden size={13} weight="regular" />
+      ) : (
+        <Copy aria-hidden size={13} weight="regular" />
+      )}
       {copied ? "Copied" : "Copy URL"}
     </button>
   );
@@ -94,7 +98,7 @@ export default function AppErrorBoundary({ error, reset }: Readonly<AppErrorBoun
 
         <div className="flex flex-col items-center px-10 pb-10 pt-11 text-center">
           <span className="grid h-[52px] w-[52px] place-items-center rounded-card bg-[color-mix(in_srgb,var(--red)_10%,transparent)] text-red-text">
-            <WarningCircle aria-hidden size={26} weight="bold" />
+            <WarningCircle aria-hidden size={26} weight="regular" />
           </span>
           <MonoText
             className="font-semibold uppercase tracking-[1.7px]"

@@ -87,21 +87,9 @@ export function providerMeta(
 }
 
 export function providerActivities(
-  kind: ProviderKind,
   connection: ProviderConnectionRow | undefined,
   now: Date,
 ): ProviderMetaRow[] {
-  if (kind === "analytics") {
-    return [
-      { label: "Last sync", value: providerAgeLabel(connection?.lastUsedAt, now) },
-      { label: "Connection updated", value: providerAgeLabel(connection?.updatedAt, now) },
-      {
-        label: "Connection state",
-        value: connection ? (connection.enabled ? "Enabled" : "Disabled") : "Not connected",
-      },
-    ];
-  }
-
   return [
     { label: "Last used", value: providerAgeLabel(connection?.lastUsedAt, now) },
     { label: "Connection updated", value: providerAgeLabel(connection?.updatedAt, now) },

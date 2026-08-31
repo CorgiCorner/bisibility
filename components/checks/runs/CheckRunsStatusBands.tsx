@@ -91,7 +91,7 @@ function RetryButton({ label, onClick }: Readonly<{ label: string; onClick: () =
     <Button
       onClick={onClick}
       size="sm"
-      startIcon={<Retry aria-hidden size={12} weight="bold" />}
+      startIcon={<Retry aria-hidden size={12} weight="regular" />}
       variant="secondary"
     >
       {label}
@@ -117,7 +117,7 @@ export function CheckRunsStatusBands({
         action={
           <Button
             component={Link}
-            endIcon={<ArrowRight aria-hidden size={11} weight="bold" />}
+            endIcon={<ArrowRight aria-hidden size={11} weight="regular" />}
             href={budgetSettingsHref}
             size="sm"
             variant="ghost"
@@ -126,7 +126,12 @@ export function CheckRunsStatusBands({
           </Button>
         }
         icon={
-          <Pause aria-hidden className="mt-0.5 shrink-0 text-yellow-text" size={15} weight="fill" />
+          <Pause
+            aria-hidden
+            className="mt-0.5 shrink-0 text-yellow-text"
+            size={15}
+            weight="regular"
+          />
         }
         tone="yellow"
       >
@@ -151,7 +156,12 @@ export function CheckRunsStatusBands({
           </Button>
         }
         icon={
-          <Pause aria-hidden className="mt-0.5 shrink-0 text-yellow-text" size={15} weight="fill" />
+          <Pause
+            aria-hidden
+            className="mt-0.5 shrink-0 text-yellow-text"
+            size={15}
+            weight="regular"
+          />
         }
         tone="yellow"
       >
@@ -167,7 +177,7 @@ export function CheckRunsStatusBands({
       <Band
         action={onRetryStale ? <RetryButton label="Retry stale" onClick={onRetryStale} /> : null}
         icon={
-          <Clock aria-hidden className="mt-0.5 shrink-0 text-fg-muted" size={15} weight="fill" />
+          <Clock aria-hidden className="mt-0.5 shrink-0 text-fg-muted" size={15} weight="regular" />
         }
         tone="aged"
       >
@@ -182,7 +192,12 @@ export function CheckRunsStatusBands({
       <Band
         action={onRetryFailed ? <RetryButton label="Retry failed" onClick={onRetryFailed} /> : null}
         icon={
-          <Warning aria-hidden className="mt-0.5 shrink-0 text-red-text" size={15} weight="fill" />
+          <Warning
+            aria-hidden
+            className="mt-0.5 shrink-0 text-red-text"
+            size={15}
+            weight="regular"
+          />
         }
         tone="red"
       >

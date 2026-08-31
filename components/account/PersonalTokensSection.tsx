@@ -107,7 +107,7 @@ export function PersonalTokensSection({
         <Button
           onClick={() => setCreateOpen(true)}
           size="sm"
-          startIcon={<Plus aria-hidden size={14} weight="bold" />}
+          startIcon={<Plus aria-hidden size={14} weight="regular" />}
           type="button"
           variant="secondary"
         >
@@ -142,7 +142,7 @@ export function PersonalTokensSection({
                 onClick={() => setRevokeTarget(token)}
                 type="button"
               >
-                <Trash size={14} />
+                <Trash size={14} weight="regular" />
               </button>
             </div>
           ))}
@@ -150,7 +150,7 @@ export function PersonalTokensSection({
       ) : (
         <div className="flex flex-col items-center rounded-card border border-border bg-bg-elev px-6 py-8 text-center">
           <span className="grid h-12 w-12 place-items-center rounded-card bg-bg-sunken text-fg-muted">
-            <UserGear aria-hidden size={23} />
+            <UserGear aria-hidden size={23} weight="regular" />
           </span>
           <div className="mt-3 text-[14.5px] font-semibold">No personal tokens yet</div>
           <p className="m-0 mt-1.5 max-w-[400px] text-[12.5px] leading-[1.55] text-fg-muted">
@@ -160,7 +160,7 @@ export function PersonalTokensSection({
           <Button
             onClick={() => setCreateOpen(true)}
             size="sm"
-            startIcon={<Plus aria-hidden size={14} weight="bold" />}
+            startIcon={<Plus aria-hidden size={14} weight="regular" />}
             sx={{ marginTop: "16px" }}
             type="button"
           >
@@ -175,7 +175,7 @@ export function PersonalTokensSection({
             <Button
               onClick={closeCreate}
               size="sm"
-              startIcon={<CheckCircle aria-hidden size={15} />}
+              startIcon={<CheckCircle aria-hidden size={15} weight="regular" />}
               type="button"
             >
               Done
@@ -190,7 +190,7 @@ export function PersonalTokensSection({
                 loading={isPending}
                 loadingLabel="Creating"
                 onClick={onCreate}
-                startIcon={<Plus aria-hidden size={15} weight="bold" />}
+                startIcon={<Plus aria-hidden size={15} weight="regular" />}
                 type="button"
               >
                 Create token

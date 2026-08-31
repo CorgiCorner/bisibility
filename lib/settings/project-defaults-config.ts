@@ -10,6 +10,8 @@ export function projectDefaultsConfig(defaults: ProjectDefaults) {
     inspectionDailyLimit: defaults.inspectionDailyLimit,
     jitterMinutes: defaults.jitterMinutes,
     locationKey: defaults.locationKey,
+    searchSyncImportMonths: defaults.searchSyncImportMonths,
+    searchSyncPace: defaults.searchSyncPace,
     serpDepth: defaults.serpDepth,
     serpStopOnMatch: defaults.serpStopOnMatch,
     timezone: defaults.timezone,

@@ -101,7 +101,7 @@ export function InviteModal({
               form="invite-teammate-form"
               loading={form.formState.isSubmitting}
               loadingLabel="Sending"
-              startIcon={<PaperPlaneTilt aria-hidden size={15} weight="bold" />}
+              startIcon={<PaperPlaneTilt aria-hidden size={15} weight="regular" />}
               type="submit"
             >
               Send invite
@@ -127,7 +127,7 @@ export function InviteModal({
       {sent ? (
         <div className="flex flex-col items-center px-2 pb-1.5 pt-3.5 text-center">
           <span className="grid h-12 w-12 place-items-center rounded-card bg-green/10 text-green-text">
-            <PaperPlaneTilt aria-hidden size={24} weight="fill" />
+            <PaperPlaneTilt aria-hidden size={24} weight="regular" />
           </span>
           <div className="mt-3.5 text-[15px] font-semibold text-fg">Invitation sent</div>
           <p className="m-0 mt-1.5 max-w-[300px] text-[13px] text-fg-muted">

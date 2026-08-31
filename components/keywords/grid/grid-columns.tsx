@@ -25,7 +25,7 @@ import { TargetRankingCell } from "./TargetRankingCell";
 function DeviceCell({ row }: Readonly<GridRenderCellParams<KeywordRow>>) {
   return (
     <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-border bg-bg-sunken px-2.5 py-1 font-mono text-[11px] leading-none text-fg-muted">
-      <Monitor className="text-fg-muted" size={13} />
+      <Monitor weight="regular" className="text-fg-muted" size={13} />
       {row.device}
     </span>
   );
@@ -176,7 +176,7 @@ export function keywordColumns(
     },
     {
       field: "targetRanking",
-      headerName: "Target & ranking",
+      headerName: "Target and ranking",
       flex: 1.35,
       minWidth: 300,
       renderCell: ({ row }) => <TargetRankingCell row={row} />,

@@ -28,7 +28,7 @@ export function DomainOverviewRecentTargets({
   return (
     <section aria-label="Recent searches">
       <div className="mb-2 flex items-center gap-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.5px] text-fg-muted">
-        <Clock aria-hidden size={13} /> Recent searches
+        <Clock weight="regular" aria-hidden size={13} /> Recent searches
       </div>
       <div className="flex gap-2 overflow-x-auto pb-1">
         {visible.map((target) => (

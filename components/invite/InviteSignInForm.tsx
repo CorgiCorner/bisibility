@@ -108,7 +108,7 @@ export function InviteSignInForm({ email }: Readonly<{ email: string }>) {
             aria-hidden
             className="mt-0.5 text-accent-text"
             size={18}
-            weight="fill"
+            weight="regular"
           />
           <p className="m-0 text-[13px] leading-relaxed text-fg-muted">
             We sent a one-time code to{" "}
@@ -140,7 +140,9 @@ export function InviteSignInForm({ email }: Readonly<{ email: string }>) {
           disabled={pending}
           type="submit"
         >
-          {pending ? <CircleNotch aria-hidden className="bv-spin" size={15} weight="bold" /> : null}
+          {pending ? (
+            <CircleNotch aria-hidden className="bv-spin" size={15} weight="regular" />
+          ) : null}
           Verify and return to invite
         </button>
       </form>
@@ -172,9 +174,9 @@ export function InviteSignInForm({ email }: Readonly<{ email: string }>) {
         type="submit"
       >
         {pending ? (
-          <CircleNotch aria-hidden className="bv-spin" size={15} weight="bold" />
+          <CircleNotch aria-hidden className="bv-spin" size={15} weight="regular" />
         ) : (
-          <CaretRight aria-hidden size={15} weight="bold" />
+          <CaretRight aria-hidden size={15} weight="regular" />
         )}
         Send sign-in code
       </button>

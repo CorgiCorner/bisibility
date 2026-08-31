@@ -21,10 +21,10 @@ export function AdminOpsActions({ slackConfigured }: Readonly<{ slackConfigured:
         const result =
           action === "send-test" ? await sendTestSlackNotification() : await runOpsSweepNow();
         const succeeded = result.status === "delivered" || result.status === "completed";
-        showToast(result.message, { tint: succeeded ? "green" : "yellow" });
+        showToast(result.message, { severity: succeeded ? "success" : "warning" });
         router.refresh();
       } catch {
-        showToast("The operator action could not be completed.", { tint: "red" });
+        showToast("The operator action could not be completed.", { severity: "error" });
       } finally {
         setPendingAction(null);
       }
@@ -39,7 +39,7 @@ export function AdminOpsActions({ slackConfigured }: Readonly<{ slackConfigured:
         loadingLabel="Sending..."
         onClick={() => run("send-test")}
         size="sm"
-        startIcon={<PaperPlaneTilt aria-hidden size={14} />}
+        startIcon={<PaperPlaneTilt aria-hidden size={14} weight="regular" />}
         type="button"
         variant="secondary"
       >
@@ -51,7 +51,7 @@ export function AdminOpsActions({ slackConfigured }: Readonly<{ slackConfigured:
         loadingLabel="Running..."
         onClick={() => run("sweep")}
         size="sm"
-        startIcon={<Wrench aria-hidden size={14} />}
+        startIcon={<Wrench aria-hidden size={14} weight="regular" />}
         type="button"
         variant="secondary"
       >

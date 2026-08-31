@@ -202,7 +202,7 @@ export function AlertsPageContent({
                   disabled={unreadCount === 0}
                   onClick={() => void markAllRead()}
                   size="sm"
-                  startIcon={<Check aria-hidden size={13} />}
+                  startIcon={<Check weight="regular" aria-hidden size={13} />}
                   type="button"
                   variant="secondary"
                 >
@@ -236,7 +236,7 @@ export function AlertsPageContent({
                     className="inline-flex min-h-8 items-center gap-1.5 rounded-control bg-transparent px-3 text-xs font-semibold text-fg-muted outline-none transition-colors hover:text-accent-text focus-visible:text-accent-text"
                     href={appPath(projectRef, "settings", "audit")}
                   >
-                    <ListMagnifyingGlass aria-hidden size={13} />
+                    <ListMagnifyingGlass weight="regular" aria-hidden size={13} />
                     View audit log
                   </Link>
                 ) : null}
@@ -244,7 +244,9 @@ export function AlertsPageContent({
                   disabled={!hasMore}
                   onClick={loadMore}
                   size="sm"
-                  startIcon={<ArrowRight aria-hidden className="rotate-90" size={12} />}
+                  startIcon={
+                    <ArrowRight weight="regular" aria-hidden className="rotate-90" size={12} />
+                  }
                   type="button"
                   variant="secondary"
                 >

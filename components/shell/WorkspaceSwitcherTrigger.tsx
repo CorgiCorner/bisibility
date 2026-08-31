@@ -22,6 +22,8 @@ const VARIANT_FILL: Record<WorkspaceTriggerVariant, string> = {
 
 export type WorkspaceSwitcherTriggerProps = {
   collapsed: boolean;
+  /** Header switchers use the navigation icon axis rather than the standard row inset. */
+  compact?: boolean;
   domain: string;
   menuId: string;
   name: string;
@@ -33,6 +35,7 @@ export type WorkspaceSwitcherTriggerProps = {
 
 export function WorkspaceSwitcherTrigger({
   collapsed,
+  compact = false,
   domain,
   menuId,
   name,
@@ -43,15 +46,15 @@ export function WorkspaceSwitcherTrigger({
 }: Readonly<WorkspaceSwitcherTriggerProps>) {
   // Collapsed the row loses its box entirely and the hover fill moves onto the tile, so the
   // rail stays a column of glyphs rather than growing a second, wider hit target.
-  // 44px in BOTH states, set explicitly. Expanded used to take its height from its contents
-  // (padding plus a 28px tile, or a two-line label), so it stood 48px tall against the
-  // collapsed 40px and changed height depending on whether the project had a sublabel.
+  // The collapsed control is a 36px square. Expanding changes only its width, never its
+  // height, so the icon keeps the same vertical position and its hover surface simply grows
+  // into the project label.
   const shell = collapsed
-    ? "ml-5.5 h-11 w-9 justify-center p-0 border-transparent bg-transparent"
+    ? "ml-5.5 size-9 justify-center p-0 border-transparent bg-transparent"
     : [
-        "h-11 w-full gap-2.5 px-[11px]",
+        compact ? "h-9 w-full gap-2.5 px-[5px]" : "h-9 w-full gap-2.5 px-[11px]",
         VARIANT_BORDER[variant],
-        open ? "bg-bg-sunken" : `${VARIANT_FILL[variant]} hover:bg-nav-active`,
+        open ? "bg-bg-sunken" : `${VARIANT_FILL[variant]} hover:bg-bg-sunken`,
         "active:bg-bg-inset",
       ].join(" ");
 
@@ -80,11 +83,12 @@ export function WorkspaceSwitcherTrigger({
           // Collapsed the hover fill lands on the tile, not on the row: a filled 36px row
           // inside an 80px rail reads as the item growing. The tile already rests on
           // --bg-sunken, which is the open state the expanded row paints on itself.
-          className={collapsed ? "group-hover:bg-nav-active group-active:bg-bg-inset" : ""}
+          className={collapsed ? "group-hover:bg-bg-sunken group-active:bg-bg-inset" : ""}
           domain={domain}
           // One radius in both states. The tile is the same 28px square either way, so a
           // different corner collapsed made the same object look like two objects.
-          radius={8}
+          radius={6}
+          size={20}
         />
         {collapsed ? null : (
           <>
@@ -98,7 +102,12 @@ export function WorkspaceSwitcherTrigger({
               ) : null}
             </span>
             {/* --fg-muted, not --fg-faint: that token was retired and now aliases muted. */}
-            <CaretUpDown aria-hidden className="flex-none text-fg-muted" size={13} weight="bold" />
+            <CaretUpDown
+              aria-hidden
+              className="flex-none text-fg-muted"
+              size={13}
+              weight="regular"
+            />
           </>
         )}
       </button>

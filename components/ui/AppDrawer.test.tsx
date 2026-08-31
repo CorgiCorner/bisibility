@@ -12,8 +12,9 @@ vi.mock("@mui/material/Drawer", () => ({
   },
 }));
 
-function setMediaQuery(reduced: boolean) {
+function setMediaQuery(reduced: boolean, narrow = false) {
   const queries: Record<string, boolean> = {
+    "(max-width:640px)": narrow,
     "(prefers-reduced-motion: reduce)": reduced,
   };
   const listeners = new Map<string, Set<(e: { matches: boolean }) => void>>();
@@ -72,6 +73,24 @@ describe("AppDrawer rendering", () => {
     expect(screen.getByRole("button", { name: "Close drawer" })).toBeInTheDocument();
   });
 
+  it("supports a ReactNode title without crowding the close button", () => {
+    render(
+      <AppDrawer
+        onClose={vi.fn()}
+        open
+        title={<span>Long query title</span>}
+        titleAction={<a href="https://example.com">source</a>}
+      >
+        <button type="button">content</button>
+      </AppDrawer>,
+    );
+
+    const heading = screen.getByRole("heading", { level: 2, name: "Long query title" });
+    expect(heading).toHaveClass("min-w-0", "truncate");
+    expect(screen.getByRole("link", { name: "source" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Close drawer" })).toHaveClass("shrink-0");
+  });
+
   it("omits the description paragraph when not provided", () => {
     render(
       <AppDrawer onClose={vi.fn()} open title="No desc">
@@ -98,7 +117,7 @@ describe("AppDrawer dialog semantics", () => {
     setMediaQuery(false);
   });
 
-  it("exposes the Paper slot as role=dialog with aria-labelledby matching the heading id", () => {
+  it("exposes each panel as a labelled modal dialog", () => {
     render(
       <AppDrawer onClose={vi.fn()} open title="Dialog title">
         <button type="button">content</button>
@@ -107,6 +126,8 @@ describe("AppDrawer dialog semantics", () => {
     const slotProps = lastDrawerProps.slotProps as Record<string, Record<string, unknown>>;
     const paper = slotProps.paper as Record<string, unknown>;
     expect(paper).toHaveProperty("role", "dialog");
+    expect(paper).not.toHaveProperty("aria-label");
+    expect(paper).toHaveProperty("aria-modal", true);
     const labelledBy = paper["aria-labelledby"] as string;
     expect(typeof labelledBy).toBe("string");
     expect(labelledBy.length).toBeGreaterThan(0);
@@ -204,5 +225,86 @@ describe("AppDrawer exit lifecycle", () => {
     const slotProps = lastDrawerProps.slotProps as Record<string, Record<string, unknown>>;
     expect(slotProps.transition).toHaveProperty("onExited", onExited);
     expect(slotProps.transition).toHaveProperty("timeout", 0);
+  });
+});
+
+describe("AppDrawer stacked panels", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    lastDrawerProps = {};
+    setMediaQuery(false);
+  });
+
+  it("puts the leading control above the title, for a way back out of a stack", () => {
+    render(
+      <AppDrawer
+        headerLeading={<button type="button">Back to the list</button>}
+        onClose={vi.fn()}
+        open
+        title="Second panel"
+      >
+        <button type="button">content</button>
+      </AppDrawer>,
+    );
+    expect(screen.getByRole("button", { name: "Back to the list" })).toBeInTheDocument();
+  });
+
+  it("says why it is closing, so a caller can treat Escape as a step back", () => {
+    const onClose = vi.fn();
+    render(
+      <AppDrawer onClose={onClose} open title="Reasoned close">
+        <button type="button">content</button>
+      </AppDrawer>,
+    );
+
+    const drawerClose = lastDrawerProps.onClose as (event: object, reason: string) => void;
+    drawerClose({}, "escapeKeyDown");
+    expect(onClose).toHaveBeenCalledWith("escapeKeyDown");
+
+    screen.getByRole("button", { name: "Close drawer" }).click();
+    expect(onClose).toHaveBeenLastCalledWith();
+  });
+
+  it("leaves the caret alone by default", () => {
+    render(
+      <AppDrawer onClose={vi.fn()} open title="No autofocus">
+        <button type="button">content</button>
+      </AppDrawer>,
+    );
+    expect(screen.getByRole("button", { name: "Close drawer" })).not.toHaveFocus();
+  });
+
+  it("puts the caret on the close button when the caller asks for it", () => {
+    render(
+      <AppDrawer autoFocusClose onClose={vi.fn()} open title="Autofocus">
+        <button type="button">content</button>
+      </AppDrawer>,
+    );
+    expect(screen.getByRole("button", { name: "Close drawer" })).toHaveFocus();
+  });
+
+  it("becomes a bottom sheet on a phone, where a thumb reaches", () => {
+    setMediaQuery(false, true);
+    render(
+      <AppDrawer onClose={vi.fn()} open sheetOnMobile title="Sheet">
+        <button type="button">content</button>
+      </AppDrawer>,
+    );
+
+    expect(lastDrawerProps.anchor).toBe("bottom");
+    const slotProps = lastDrawerProps.slotProps as Record<string, Record<string, unknown>>;
+    expect(slotProps.paper.sx).toMatchObject({ maxHeight: "88vh", width: "100%" });
+  });
+
+  it("stays a side panel on a wide screen", () => {
+    render(
+      <AppDrawer onClose={vi.fn()} open sheetOnMobile title="Panel">
+        <button type="button">content</button>
+      </AppDrawer>,
+    );
+
+    expect(lastDrawerProps.anchor).toBe("right");
+    const slotProps = lastDrawerProps.slotProps as Record<string, Record<string, unknown>>;
+    expect(slotProps.paper.sx).toMatchObject({ width: 560 });
   });
 });

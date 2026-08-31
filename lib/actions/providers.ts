@@ -12,7 +12,10 @@ import {
   setProviderSettings,
 } from "@/lib/api/provider-service";
 import { testProviderConnection } from "@/lib/api/provider-test-service";
-import { completePendingGooglePropertySelection } from "@/lib/providers/analytics/google-oauth-pending";
+import {
+  cancelPendingGoogleOAuth,
+  completePendingGooglePropertySelection,
+} from "@/lib/providers/analytics/google-oauth-pending";
 import {
   loadStoredGoogleProperties as loadStoredGooglePropertiesService,
   saveStoredGoogleProperty as saveStoredGooglePropertyService,
@@ -36,6 +39,9 @@ const googlePropertySelectionSchema = z.object({
   projectId: z.string().trim().min(1).max(120),
   property: z.string().trim().min(1).max(300),
 });
+const cancelGooglePropertySelectionSchema = z.object({
+  projectId: z.string().trim().min(1).max(120),
+});
 const storedGooglePropertyLoadSchema = z.object({
   projectId: z.string().trim().min(1).max(120),
   provider: z.enum(["gsc", "ga4"]),
@@ -50,6 +56,22 @@ export async function completeGooglePropertySelection(input: unknown) {
   return completePendingGooglePropertySelection(
     parseActionInput(googlePropertySelectionSchema, input),
   );
+}
+
+export async function cancelGooglePropertySelection(input: unknown) {
+  const data = parseActionInput(cancelGooglePropertySelectionSchema, input);
+  return cancelPendingGoogleOAuth(data.projectId);
+}
+
+export async function disconnectGoogleSearchConsole(input: unknown) {
+  const data = parseActionInput(cancelGooglePropertySelectionSchema, input);
+  const result = await disconnectProviderConnection(
+    { projectId: data.projectId, providerId: "gsc" },
+    await providerScope(data.projectId),
+  );
+  await cancelPendingGoogleOAuth(data.projectId);
+  revalidateProviderViews();
+  return result;
 }
 
 async function providerScope(projectId: string) {

@@ -26,7 +26,12 @@ function DeltaBadge({ value }: Readonly<{ value: number }>) {
         positive ? "bg-green/10 text-green-text" : "bg-red/10 text-red-text"
       }`}
     >
-      <ArrowUpRight aria-hidden className={positive ? "" : "rotate-90"} size={10} weight="bold" />
+      <ArrowUpRight
+        aria-hidden
+        className={positive ? "" : "rotate-90"}
+        size={10}
+        weight="regular"
+      />
       {signedNumber(value)} / 30d
     </span>
   );

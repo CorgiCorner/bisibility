@@ -56,8 +56,8 @@ describe("OAuthConsentForm", () => {
     expect(screen.getByText("127.0.0.1:51008/callback/request")).toBeInTheDocument();
     expect(screen.getByText("DCR")).toBeInTheDocument();
     expect(screen.getByLabelText(/registered dynamically/i)).toBeInTheDocument();
-    expect(screen.getByText("Sign-in & session")).toBeInTheDocument();
-    expect(screen.getByText("MCP & API access")).toBeInTheDocument();
+    expect(screen.getByText("Sign-in and session")).toBeInTheDocument();
+    expect(screen.getByText("MCP and API access")).toBeInTheDocument();
     expect(screen.getByText("Credentials")).toBeInTheDocument();
     expect(screen.getByText("create API tokens for your account")).toBeInTheDocument();
     for (const scope of [

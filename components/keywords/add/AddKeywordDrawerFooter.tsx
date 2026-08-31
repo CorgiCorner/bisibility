@@ -61,6 +61,7 @@ export function AddKeywordDrawerFooter({
                 checked={isPaused}
                 disabled={readOnly}
                 label="Pause schedule"
+                className="!border-0"
                 {...register("isPaused")}
               />
             </Tooltip>

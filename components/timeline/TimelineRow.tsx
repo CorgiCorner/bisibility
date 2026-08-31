@@ -49,7 +49,7 @@ function TimelineMeta({ item }: Readonly<{ item: TimelineItem }>) {
       ))}
       <span aria-hidden>/</span>
       <span aria-label={deviceLabel} role="img" title={deviceLabel}>
-        <DeviceIcon aria-hidden size={12} />
+        <DeviceIcon aria-hidden size={12} weight="regular" />
       </span>
       <span aria-hidden>/</span>
       <span className="max-w-[220px] truncate">{source}</span>
@@ -69,10 +69,10 @@ export function TimelineRow({ canDelete, item, projectId }: Readonly<TimelineRow
 
   return (
     <div
-      className="flex items-start gap-3.5 border-border-soft border-b px-5 py-[13px] last:border-b-0"
+      className="flex items-center gap-3.5 border-border-soft border-b px-5 py-[13px] last:border-b-0"
       id={`signal-${item.id}`}
     >
-      <div className="grid min-w-0 flex-1 gap-2 md:grid-cols-[124px_minmax(0,1fr)_auto] md:items-start">
+      <div className="grid min-w-0 flex-1 gap-2 md:grid-cols-[124px_minmax(0,1fr)_auto] md:items-center">
         <MonoText className="text-fg-muted" component="span">
           {item.date}
           <span className="mt-0.5 block text-fg-muted">{item.time}</span>
@@ -83,7 +83,7 @@ export function TimelineRow({ canDelete, item, projectId }: Readonly<TimelineRow
               className="inline-grid h-[22px] w-[22px] place-items-center rounded-control"
               style={{ backgroundColor: tint.bg, color: tint.color }}
             >
-              <Icon aria-hidden size={12} weight="fill" />
+              <Icon aria-hidden size={12} weight="regular" />
             </span>
             <span className="min-w-0 text-[13.5px] font-semibold leading-[1.35] text-fg">
               {item.title}
@@ -111,7 +111,7 @@ export function TimelineRow({ canDelete, item, projectId }: Readonly<TimelineRow
               target="_blank"
             >
               <span className="truncate">{item.urlLabel}</span>
-              <ArrowUpRight aria-hidden className="shrink-0" size={11} />
+              <ArrowUpRight weight="regular" aria-hidden className="shrink-0" size={11} />
             </a>
           ) : null}
           {item.note ? (
@@ -138,9 +138,7 @@ export function TimelineRow({ canDelete, item, projectId }: Readonly<TimelineRow
           ) : null}
         </div>
         {item.position ? (
-          <span className="font-mono text-[13px] font-semibold text-fg md:pt-1">
-            {item.position}
-          </span>
+          <span className="font-mono text-[13px] font-semibold text-fg">{item.position}</span>
         ) : null}
         {canDelete && item.removable ? (
           <RemoveNoteAction projectId={projectId} signalId={item.id} />

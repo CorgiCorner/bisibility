@@ -113,7 +113,7 @@ export function RunChecksConfirmationModal({
           Cancel
         </Button>
         <Button loading={flow.step === "starting"} loadingLabel="Starting..." onClick={onConfirm}>
-          Confirm &amp; run
+          Confirm and run
         </Button>
       </div>
     );
@@ -207,6 +207,7 @@ export function RunChecksConfirmationModal({
 
   return (
     <RankCheckRunModal
+      dismissDisabled={flow?.step === "starting"}
       footer={footer}
       onClose={onClose}
       onPrimaryAction={flow?.step === "confirm" ? onConfirm : undefined}

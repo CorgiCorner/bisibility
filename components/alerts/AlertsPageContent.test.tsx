@@ -275,6 +275,21 @@ describe("AlertsPageContent optimistic rollback", () => {
     expect(screen.getByText("won't fire below top 10")).toBeInTheDocument();
   });
 
+  it("renders template buttons without decorative SVG icons", () => {
+    const templateLabels = ["Dropped more than 3", "Slipped", "Entered top 3"];
+    renderAlerts({
+      templates: [
+        { id: "positiondrop", label: templateLabels[0], severity: "warning" },
+        { id: "slipped", label: templateLabels[1], severity: "urgent" },
+        { id: "top3", label: templateLabels[2], severity: "info" },
+      ],
+    });
+
+    for (const label of templateLabels) {
+      expect(screen.getByRole("button", { name: label }).querySelector("svg")).toBeNull();
+    }
+  });
+
   it("disables the CTR template and links its requirement when GSC is disconnected", () => {
     renderAlerts({
       gscConnected: false,

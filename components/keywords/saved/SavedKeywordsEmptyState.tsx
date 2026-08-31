@@ -29,7 +29,7 @@ export function SavedKeywordsEmptyState({ projectRef }: Readonly<{ projectRef: s
       </div>
       <div className="flex flex-col items-center px-8 pb-14 pt-[52px] text-center">
         <span className="grid h-[54px] w-[54px] place-items-center rounded-card bg-accent-soft text-accent-solid">
-          <BookmarkSimple size={26} weight="fill" />
+          <BookmarkSimple size={26} weight="regular" />
         </span>
         <h2 className="mb-0 mt-4.5 text-[18px] font-semibold tracking-[-0.4px] text-fg">
           Nothing saved yet
@@ -42,14 +42,11 @@ export function SavedKeywordsEmptyState({ projectRef }: Readonly<{ projectRef: s
           component={Link}
           href={appPath(projectRef, "keyword-research")}
           size="md"
-          startIcon={<MagnifyingGlass size={13} weight="bold" />}
+          startIcon={<MagnifyingGlass size={13} weight="regular" />}
           sx={{ marginTop: "22px", minHeight: 40, paddingInline: "18px" }}
         >
           Find keywords in Research
         </Button>
-        <p className="mb-0 mt-4 text-[12.5px] text-fg-muted">
-          Tracked keywords cost provider budget every month. Save first, track when you are ready.
-        </p>
       </div>
     </Card>
   );

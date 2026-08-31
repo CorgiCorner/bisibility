@@ -126,7 +126,7 @@ export function ExportModal({ onClose, open, projectId, target }: Readonly<Expor
             form="export-keywords"
             loading={isSubmitting}
             loadingLabel="Exporting..."
-            startIcon={<DownloadSimple size={15} weight="bold" />}
+            startIcon={<DownloadSimple size={15} weight="regular" />}
             type="submit"
           >
             {ctaLabel}
@@ -170,7 +170,7 @@ export function ExportModal({ onClose, open, projectId, target }: Readonly<Expor
                       color: `var(--${option.tint})`,
                     }}
                   >
-                    <Icon size={20} weight="fill" />
+                    <Icon size={20} weight="regular" />
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-[7px]">
@@ -202,7 +202,7 @@ export function ExportModal({ onClose, open, projectId, target }: Readonly<Expor
                   <Icon
                     className={active ? "text-accent-text" : "text-fg-muted"}
                     size={18}
-                    weight="bold"
+                    weight="regular"
                   />
                   <span className="min-w-0 flex-1">
                     <span className="block text-[13.5px] font-semibold text-fg">{option.name}</span>
@@ -249,7 +249,7 @@ export function ExportModal({ onClose, open, projectId, target }: Readonly<Expor
           <div className="mt-[9px] grid grid-cols-2 gap-[7px]">
             <div className="inline-flex items-center gap-[9px] rounded-control border border-border bg-bg px-2.5 py-2">
               <span className="grid h-[17px] w-[17px] place-items-center rounded-control bg-accent-solid text-accent-on-solid">
-                <LockSimple size={10} weight="bold" />
+                <LockSimple size={10} weight="regular" />
               </span>
               <span className="flex-1 text-[12.5px] text-fg">Keyword + Pos</span>
               <span className="font-mono text-[9px] uppercase tracking-[0.4px] text-fg-muted">
@@ -272,7 +272,7 @@ export function ExportModal({ onClose, open, projectId, target }: Readonly<Expor
                       borderColor: active ? "var(--accent)" : "var(--border)",
                     }}
                   >
-                    {active ? <Check className="text-white" size={11} weight="bold" /> : null}
+                    {active ? <Check className="text-white" size={11} weight="regular" /> : null}
                   </span>
                   <span className="text-[12.5px] text-fg">{columnLabels[column]}</span>
                 </button>
@@ -282,7 +282,7 @@ export function ExportModal({ onClose, open, projectId, target }: Readonly<Expor
         </div>
 
         <div className="flex items-center gap-[9px] rounded-control border border-dashed border-border bg-transparent px-[13px] py-[11px]">
-          <ArrowsClockwise className="shrink-0 text-accent-text" size={15} />
+          <ArrowsClockwise weight="regular" className="shrink-0 text-accent-text" size={15} />
           <span className="text-[11.5px] leading-[1.45] text-fg-muted">
             CSV and XLSX keep import-friendly columns. JSON includes ranking history for each
             exported keyword.

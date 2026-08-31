@@ -9,6 +9,13 @@ const { barChartMock } = vi.hoisted(() => ({
 vi.mock("@mui/x-charts/BarChart", () => ({ BarChart: barChartMock }));
 
 describe("PositionDistributionCard", () => {
+  it("uses the chart-bar icon for its empty state", () => {
+    const { container } = render(<PositionDistributionCard buckets={[]} empty />);
+
+    expect(container.querySelector('[data-icon="ChartBarIcon"]')).toBeInTheDocument();
+    expect(container.querySelector('[data-icon="ChartLineUpIcon"]')).not.toBeInTheDocument();
+  });
+
   it("places every count, including zero, outside its bar", () => {
     render(
       <PositionDistributionCard
@@ -55,10 +62,16 @@ describe("PositionDistributionCard", () => {
     expect(screen.getByRole("button", { name: "Positions 1 to 3: 1 keywords" })).toBeVisible();
     expect(screen.getByRole("button", { name: "Positions 4 to 10: 0 keywords" })).toBeVisible();
     expect(
-      screen.getByRole("button", {
+      screen.getByText(
+        "Ranked keywords grouped by current position. Keywords outside the top 100 are not shown.",
+        { selector: "p" },
+      ),
+    ).toBeVisible();
+    expect(
+      screen.queryByRole("button", {
         name: "Ranked keywords grouped by current position. Keywords outside the top 100 are not shown.",
       }),
-    ).toBeVisible();
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /1 keyword by rank bucket/ }),
     ).not.toBeInTheDocument();
@@ -67,6 +80,6 @@ describe("PositionDistributionCard", () => {
       screen
         .getByRole("heading", { name: "Position distribution" })
         .closest("[data-overview-chart-header]"),
-    ).toHaveClass("min-h-[69px]");
+    ).toHaveClass("min-h-[96px]");
   });
 });

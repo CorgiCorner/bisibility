@@ -23,10 +23,29 @@ describe("SidebarUserButton", () => {
     expect(button.closest("[data-tooltip]")).toBeNull();
   });
 
-  it("sizes the collapsed button to match the header icon buttons beside it", () => {
-    render(<SidebarUserButton collapsed />);
+  it("uses the standard border on the 32px collapsed avatar for initials and images", () => {
+    const { rerender } = render(<SidebarUserButton collapsed />);
 
-    expect(screen.getByRole("button", { name: "Account menu" })).toHaveClass("h-8", "w-8");
+    const button = screen.getByRole("button", { name: "Account menu" });
+    const initialsAvatar = button.firstElementChild;
+    expect(button).toHaveClass("h-8", "w-8", "border-0");
+    expect(initialsAvatar).toHaveClass("h-8", "w-8", "border", "border-border");
+    expect(initialsAvatar).not.toHaveClass("border-border-control");
+
+    rerender(
+      <SidebarUserButton
+        collapsed
+        user={{
+          avatarUrl: "https://example.com/avatar.png",
+          email: "member@example.com",
+          name: "Member Example",
+        }}
+      />,
+    );
+
+    const imageAvatar = screen.getByRole("button", { name: "Account menu" }).querySelector("img");
+    expect(imageAvatar).toHaveClass("h-8", "w-8", "border", "border-border");
+    expect(imageAvatar).not.toHaveClass("border-border-control");
   });
 
   it("renders the server-derived avatar URL", () => {

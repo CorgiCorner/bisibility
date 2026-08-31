@@ -4,12 +4,15 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import { describe, expect, it, vi } from "vitest";
 import { integrationCategories } from "./integrations-fixtures";
 import { ProviderCard as ProductionProviderCard, type ProviderCardProps } from "./ProviderCard";
+import { consumerActionSx } from "./ProviderConsumerRows";
 
 function ProviderCard({
   timeZone = "UTC",
   ...props
 }: Omit<ProviderCardProps, "timeZone"> & { timeZone?: string }) {
-  return <ProductionProviderCard {...props} timeZone={timeZone} />;
+  return (
+    <ProductionProviderCard {...props} searchSyncPlan={props.searchSyncPlan} timeZone={timeZone} />
+  );
 }
 
 vi.mock("@/components/integrations/ConnectDrawer", () => ({
@@ -18,6 +21,16 @@ vi.mock("@/components/integrations/ConnectDrawer", () => ({
 }));
 
 describe("ProviderCard", () => {
+  it("uses one muted accent interaction contract for consumer-row actions", () => {
+    expect(consumerActionSx).toEqual({
+      color: "var(--fg-muted)",
+      "&:hover, &.Mui-focusVisible": {
+        borderColor: "var(--accent)",
+        color: "var(--accent-text)",
+      },
+    });
+  });
+
   it("tests the stored connection without remounting the card result", async () => {
     let finish: ((value: { message: string; ok: boolean }) => void) | undefined;
     const actions = {
@@ -56,6 +69,79 @@ describe("ProviderCard", () => {
       projectId: "prj_1",
       providerId: "dataforseo",
     });
+  });
+
+  it("shows independent Search Console and traffic states without a global last-sync claim", () => {
+    const provider = {
+      ...integrationCategories[1].providers[0],
+      consumerStatuses: {
+        searchModule: {
+          detail: "corgitocoin.com",
+          state: "backfill_running" as const,
+          summary: "Backfill running · 37 of ~488 days",
+        },
+        trafficEnrichment: { state: "never_synced" as const, summary: "Never synced" },
+      },
+      enabled: true,
+      meta: [
+        { label: "Property", value: "sc-domain:example.com" },
+        { label: "Last sync", value: "Never" },
+        { label: "State", value: "Enabled" },
+      ],
+      neverSynced: true,
+      status: "connected" as const,
+    };
+
+    render(
+      <ProviderCard
+        canManageProviders={false}
+        canUpdateProject={false}
+        projectId="prj_1"
+        projectRef="prj_1"
+        provider={provider}
+      />,
+    );
+
+    const searchRow = screen.getByRole("group", { name: "Search Console" });
+    expect(searchRow).toHaveTextContent("Backfill running · 37 of ~488 days");
+    expect(within(searchRow).getByRole("heading", { name: "Search Console" })).toBeVisible();
+    expect(within(searchRow).getByTitle("corgitocoin.com")).toHaveTextContent("corgitocoin.com");
+    expect(searchRow).not.toHaveTextContent("sc-domain:");
+    expect(within(searchRow).getByRole("link", { name: "Open Search Console" })).toHaveAttribute(
+      "href",
+      "/app/prj_1/search-console",
+    );
+    expect(within(searchRow).getByRole("link", { name: "Open Search Console" })).toHaveClass(
+      "MuiButton-outlined",
+      "MuiButton-sizeSmall",
+      "min-h-[30px]",
+    );
+    const trafficRow = screen.getByRole("group", { name: "Traffic enrichment" });
+    expect(trafficRow).toHaveTextContent(
+      "Not synced yet. Sync to add Search Console clicks, impressions, and CTR to matching Rank Tracker keywords.",
+    );
+    expect(trafficRow).not.toHaveTextContent(
+      "Adds clicks, impressions, and CTR to matching keywords in Rank Tracker.",
+    );
+    expect(trafficRow).not.toHaveTextContent("Traffic snapshots");
+    expect(trafficRow).not.toHaveTextContent("this pipeline");
+    expect(screen.queryByText("LAST SYNC")).not.toBeInTheDocument();
+    expect(screen.queryByText("Never synced.")).not.toBeInTheDocument();
+  });
+
+  it("labels connected Search Console account management as connection settings", () => {
+    const provider = {
+      ...integrationCategories[1].providers[0],
+      status: "connected" as const,
+    };
+
+    render(
+      <ProviderCard canManageProviders canUpdateProject projectId="prj_1" provider={provider} />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Connection settings" }));
+    expect(screen.getByTestId("connect-drawer")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Manage" })).not.toBeInTheDocument();
   });
 
   it("disconnects from the provider card after confirmation", async () => {
@@ -119,6 +205,10 @@ describe("ProviderCard", () => {
     } satisfies ProviderActionHandlers;
     const analyticsProvider = {
       ...integrationCategories[1].providers[0],
+      consumerStatuses: {
+        searchModule: { state: "first_view_ready" as const, summary: "First view ready" },
+        trafficEnrichment: { state: "never_synced" as const, summary: "Never synced" },
+      },
       enabled: true,
       neverSynced: true,
       secondaryAction: "Test",
@@ -134,11 +224,13 @@ describe("ProviderCard", () => {
       />,
     );
 
-    expect(screen.getByText("Never synced.")).toBeInTheDocument();
-    expect(screen.getByText(/Traffic data appears after the first sync/)).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Sync now" }));
+    const trafficRow = screen.getByRole("group", { name: "Traffic enrichment" });
+    expect(trafficRow).toHaveTextContent(
+      "Not synced yet. Sync to add Search Console clicks, impressions, and CTR to matching Rank Tracker keywords.",
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Sync keyword traffic" }));
 
-    expect(screen.getByRole("button", { name: "Syncing..." })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Syncing keyword traffic..." })).toBeDisabled();
     finish?.({
       connections: 1,
       keywordSnapshots: 12,
@@ -148,9 +240,81 @@ describe("ProviderCard", () => {
 
     await waitFor(() => expect(screen.getByRole("status")).toBeInTheDocument());
     expect(screen.getByRole("status")).toHaveTextContent(
-      "Traffic sync finished. 12 keyword and 4 page snapshots updated.",
+      "Keyword traffic sync finished. 12 keyword and 4 page snapshots updated.",
     );
     expect(actions.syncProjectTraffic).toHaveBeenCalledWith({ projectId: "prj_1" });
+  });
+
+  it("runs only traffic sync from the Traffic enrichment row", async () => {
+    const actions = {
+      connectProvider: vi.fn(async () => undefined),
+      disconnectProvider: vi.fn(async () => undefined),
+      syncProjectTraffic: vi.fn(async () => ({
+        connections: 1,
+        keywordSnapshots: 1,
+        pageSnapshots: 2,
+        runs: [{ status: "succeeded_with_data" }],
+      })),
+      testProviderConnection: vi.fn(async () => ({ message: "ok", ok: true })),
+      updateProviderCost: vi.fn(async () => undefined),
+      updateProviderSettings: vi.fn(async () => undefined),
+    } satisfies ProviderActionHandlers;
+    const provider = {
+      ...integrationCategories[1].providers[0],
+      consumerStatuses: {
+        searchModule: { state: "paused_by_user" as const, summary: "Paused by you" },
+        trafficEnrichment: { state: "ready" as const, summary: "Ready" },
+      },
+      enabled: true,
+    };
+
+    render(
+      <ProviderCard
+        actions={actions}
+        canManageProviders
+        canUpdateProject
+        projectId="prj_1"
+        provider={provider}
+      />,
+    );
+    fireEvent.click(
+      within(screen.getByRole("group", { name: "Traffic enrichment" })).getByRole("button", {
+        name: "Sync keyword traffic",
+      }),
+    );
+
+    expect(screen.getByRole("group", { name: "Traffic enrichment" })).toHaveTextContent(
+      "Adds clicks, impressions, and CTR to matching keywords in Rank Tracker.",
+    );
+    await waitFor(() =>
+      expect(actions.syncProjectTraffic).toHaveBeenCalledWith({ projectId: "prj_1" }),
+    );
+    expect(actions.testProviderConnection).not.toHaveBeenCalled();
+  });
+
+  it("shows consumer state to viewers without mutation controls", () => {
+    const provider = {
+      ...integrationCategories[1].providers[0],
+      consumerStatuses: {
+        searchModule: { state: "paused_by_user" as const, summary: "Paused by you" },
+        trafficEnrichment: { state: "never_synced" as const, summary: "Never synced" },
+      },
+      enabled: true,
+    };
+    render(
+      <ProviderCard
+        canManageProviders={false}
+        canUpdateProject={false}
+        projectRef="prj_1"
+        provider={provider}
+      />,
+    );
+    expect(screen.getByText("Paused by you")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Sync keyword traffic" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open Search Console" })).toHaveAttribute(
+      "href",
+      "/app/prj_1/search-console",
+    );
   });
 
   it("renders sync failures in the project timezone", () => {
@@ -188,7 +352,7 @@ describe("ProviderCard", () => {
     expect(screen.queryByText(/authorization is no longer valid/)).not.toBeInTheDocument();
   });
 
-  it("guides misconfigured analytics properties back to Manage", () => {
+  it("guides misconfigured Search Console properties to Connection settings", () => {
     const provider = {
       ...integrationCategories[1].providers[0],
       enabled: true,
@@ -211,9 +375,35 @@ describe("ProviderCard", () => {
     );
 
     expect(screen.getByRole("alert")).toHaveTextContent(
-      "The saved property looks misconfigured - open Manage and re-select it",
+      "The saved property looks misconfigured - open Connection settings and re-select it.",
     );
     expect(screen.getByRole("alert")).toHaveTextContent("2 consecutive failures · config invalid");
+  });
+
+  it("retains Manage remediation for other connected providers", () => {
+    const provider = {
+      ...integrationCategories[0].providers[0],
+      syncFailure: {
+        consecutiveFailures: 2,
+        errorClass: "config_invalid",
+        since: "2026-07-18T13:40:00.000Z",
+      },
+    };
+
+    render(
+      <ProviderCard
+        actions={{} as ProviderActionHandlers}
+        canManageProviders
+        canUpdateProject
+        projectId="prj_1"
+        provider={provider}
+      />,
+    );
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "The saved property looks misconfigured - open Manage and re-select it.",
+    );
+    expect(screen.getByRole("button", { name: "Manage" })).toBeInTheDocument();
   });
 
   it("renders unreadable stored credentials without changing the connected state", () => {
@@ -236,6 +426,10 @@ describe("ProviderCard", () => {
   it("disables analytics sync while the project is read-only", () => {
     const provider = {
       ...integrationCategories[1].providers[0],
+      consumerStatuses: {
+        searchModule: { state: "first_view_ready" as const, summary: "First view ready" },
+        trafficEnrichment: { state: "ready" as const, summary: "Ready" },
+      },
       enabled: true,
       neverSynced: true,
       secondaryAction: "Test",
@@ -247,7 +441,7 @@ describe("ProviderCard", () => {
       </ProjectWriteModeProvider>,
     );
 
-    expect(screen.getByRole("button", { name: "Sync now" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Sync keyword traffic" })).toBeDisabled();
   });
   it.each([
     [

@@ -12,8 +12,8 @@ describe("StepFirstCheck", () => {
       runFirstCheckPreviewAction: vi.fn(() => never),
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /Run \d+ sample checks?/i }));
-    fireEvent.click(screen.getByRole("button", { name: "Open dashboard" }));
+    fireEvent.click(screen.getByRole("button", { name: "Run a test check (1 keyword)" }));
+    fireEvent.click(screen.getByRole("button", { name: "Open app" }));
 
     await waitFor(() =>
       expect(routerMock.push).toHaveBeenCalledWith(appPath("prj_1", "dashboard")),
@@ -25,7 +25,7 @@ describe("StepFirstCheck", () => {
     const saveMarketsAction = vi.fn(async (input) => ({ marketKeys: input.marketKeys }));
     renderReadyStep({ completeOnboardingAction, saveMarketsAction });
 
-    fireEvent.click(screen.getByRole("button", { name: "Open dashboard" }));
+    fireEvent.click(screen.getByRole("button", { name: "Open app" }));
 
     await waitFor(() => expect(completeOnboardingAction).toHaveBeenCalledTimes(1));
     expect(saveMarketsAction).toHaveBeenCalledWith({ marketKeys: ["US"], projectId: "prj_1" });
@@ -51,7 +51,7 @@ describe("StepFirstCheck", () => {
     fireEvent.submit(form);
 
     expect(saveMarketsAction).toHaveBeenCalledTimes(1);
-    expect(screen.getByRole("button", { name: "Open dashboard" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Open app" })).toBeDisabled();
     saving.resolve({ marketKeys: ["US"] });
     await waitFor(() => expect(routerMock.push).toHaveBeenCalledTimes(1));
     expect(completeOnboardingAction).toHaveBeenCalledTimes(1);
@@ -66,7 +66,7 @@ describe("StepFirstCheck", () => {
 
     fireEvent.submit(form);
     await waitFor(() => expect(routerMock.push).toHaveBeenCalledTimes(1));
-    expect(screen.getByRole("button", { name: "Open dashboard" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Open app" })).toBeDisabled();
     fireEvent.submit(form);
 
     expect(saveMarketsAction).toHaveBeenCalledTimes(1);
@@ -83,16 +83,16 @@ describe("StepFirstCheck", () => {
     });
     renderReadyStep({ completeOnboardingAction, saveMarketsAction });
 
-    fireEvent.click(screen.getByRole("button", { name: "Open dashboard" }));
+    fireEvent.click(screen.getByRole("button", { name: "Open app" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Market selection could not be saved.",
     );
     expect(completeOnboardingAction).not.toHaveBeenCalled();
     expect(routerMock.push).not.toHaveBeenCalled();
-    expect(screen.getByRole("button", { name: "Open dashboard" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Open app" })).toBeEnabled();
 
-    fireEvent.click(screen.getByRole("button", { name: "Open dashboard" }));
+    fireEvent.click(screen.getByRole("button", { name: "Open app" }));
     await waitFor(() => expect(routerMock.push).toHaveBeenCalledTimes(1));
     expect(saveMarketsAction).toHaveBeenCalledTimes(2);
     expect(completeOnboardingAction).toHaveBeenCalledTimes(1);

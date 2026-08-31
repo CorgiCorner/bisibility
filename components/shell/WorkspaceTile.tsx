@@ -13,8 +13,10 @@ export type WorkspaceTileProps = {
   /** Extra classes for the caller's state styling; never for selection. */
   className?: string;
   domain: string;
-  /** Corner radius in px. 8 everywhere the tile is 28px; the menu and both rail states. */
+  /** Corner radius in px. */
   radius?: number;
+  /** The compact sidebar switcher uses a 20px tile; menu rows retain 28px. */
+  size?: 20 | 28;
 };
 
 /**
@@ -27,13 +29,14 @@ export function WorkspaceTile({
   className = "",
   domain,
   radius = 8,
+  size = 28,
 }: Readonly<WorkspaceTileProps>) {
   const src = buildDomainIconUrl({ domain, size: 64 });
 
   return (
     <span
       aria-hidden
-      className={`relative grid h-7 w-7 flex-none place-items-center overflow-hidden border border-border-strong bg-white font-mono text-[12px] font-semibold leading-none text-neutral-800 ${className}`}
+      className={`relative grid flex-none place-items-center overflow-hidden border border-border-strong bg-white font-mono font-semibold leading-none text-neutral-800 ${size === 20 ? "h-5 w-5 text-[9px]" : "h-7 w-7 text-[12px]"} ${className}`}
       style={{ borderRadius: `${radius}px` }}
     >
       {workspaceTileLetter(domain)}

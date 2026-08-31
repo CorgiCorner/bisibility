@@ -2,52 +2,31 @@ export type PropertyNormalizationResult<ErrorCode extends string> =
   | { ok: true; value: string }
   | { error: { code: ErrorCode; message: string }; ok: false };
 
-export type Ga4PropertyErrorCode = "measurement-id" | "universal-analytics" | "invalid";
+export type Ga4PropertyErrorCode = "empty" | "measurement-id" | "universal-analytics" | "invalid";
 export type GscPropertyErrorCode = "invalid";
-
-const GA4_PROPERTY_LOCATION =
-  "Google Analytics 4: Admin (gear, bottom-left) -> Property settings -> Property details -> Property ID";
 
 function ga4PropertyError(
   code: Ga4PropertyErrorCode,
   input: string,
 ): PropertyNormalizationResult<Ga4PropertyErrorCode> {
-  const pasted = JSON.stringify(input);
-  const requirement =
-    "Enter the digits-only Google Analytics 4 Property ID (for example, 123456789). " +
-    `Find it in ${GA4_PROPERTY_LOCATION}.`;
-
-  if (code === "measurement-id") {
-    return {
-      error: {
-        code,
-        message: `${pasted} is a Measurement ID for a web data stream, not a Google Analytics 4 Property ID. ${requirement}`,
-      },
-      ok: false,
-    };
+  let message: string;
+  if (code === "empty") {
+    message = "Enter a Property ID first.";
+  } else if (code === "measurement-id") {
+    message = `${input} is a Measurement ID. You need the numeric Property ID - they live on the same Google Analytics screen.`;
+  } else if (code === "universal-analytics") {
+    message = `${input} is a Universal Analytics tracking ID. You need the numeric Property ID - see the note above.`;
+  } else {
+    message = `${input} is not a Property ID. Property IDs are digits only - see the note above for where to find yours.`;
   }
-  if (code === "universal-analytics") {
-    return {
-      error: {
-        code,
-        message: `${pasted} is a Universal Analytics tracking ID, not a Google Analytics 4 Property ID. ${requirement}`,
-      },
-      ok: false,
-    };
-  }
-  return {
-    error: {
-      code,
-      message: `${pasted} is not a valid GA4 Property ID. ${requirement}`,
-    },
-    ok: false,
-  };
+  return { error: { code, message }, ok: false };
 }
 
 export function normalizeGa4PropertyId(
   input: string,
 ): PropertyNormalizationResult<Ga4PropertyErrorCode> {
   const value = input.trim();
+  if (!value) return ga4PropertyError("empty", value);
   if (/^G-/i.test(value)) return ga4PropertyError("measurement-id", value);
   if (/^UA-/i.test(value)) return ga4PropertyError("universal-analytics", value);
   if (/^\d+$/.test(value)) return { ok: true, value };

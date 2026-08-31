@@ -1,6 +1,5 @@
 "use client";
 
-import { useCommandPalette } from "@/components/shell/CommandPalette";
 import { UserMenuRow } from "@/components/shell/UserMenuRow";
 import {
   accountLinks,
@@ -28,7 +27,7 @@ const PAPER_SX = {
   width: 248,
 } as const;
 
-const DIVIDER_SX = { borderColor: "var(--border)", marginX: "4px", marginY: "6px" } as const;
+const DIVIDER_SX = { borderColor: "var(--border)", marginX: "-6px", marginY: "6px" } as const;
 
 export type UserMenuProps = {
   anchorEl: HTMLElement | null;
@@ -53,18 +52,12 @@ export function UserMenu({
   showHostedLinks = false,
 }: Readonly<UserMenuProps>) {
   const [pending, setPending] = useState(false);
-  const { openPalette } = useCommandPalette();
   const { showToast } = useToast();
   const initials = avatarInitials(name, email);
 
   function closeAfterNavigate() {
     onClose();
     onNavigate?.();
-  }
-
-  function openPaletteFromMenu() {
-    closeAfterNavigate();
-    openPalette();
   }
 
   async function handleSignOut() {
@@ -75,7 +68,7 @@ export function UserMenu({
       // The session is still live, and /login would redirect straight back into the app,
       // so surface the failure here instead of navigating into a no-op.
       setPending(false);
-      showToast("Could not sign out. Please try again.", { tint: "red" });
+      showToast("Could not sign out. Please try again.", { severity: "error" });
       return;
     }
     closeAfterNavigate();
@@ -105,19 +98,14 @@ export function UserMenu({
         <span className="min-w-0 flex-1">
           <span className="block text-[13px] font-semibold leading-tight">{name}</span>
           <span className="block truncate font-mono text-[10.5px] text-fg-muted">{email}</span>
-          <span className="mt-1 block font-mono text-[9px] uppercase tracking-[0.4px] text-accent-text">
+          <span className="mt-1 block font-mono text-[9px] uppercase tracking-[0.4px] text-fg-muted">
             {roleLine}
           </span>
         </span>
       </div>
       <Divider sx={{ ...DIVIDER_SX, marginTop: "2px" }} />
       {accountLinks.map((item) => (
-        <UserMenuRow
-          item={item}
-          key={item.label}
-          onClose={closeAfterNavigate}
-          onSelect={item.action === "command-palette" ? openPaletteFromMenu : undefined}
-        />
+        <UserMenuRow item={item} key={item.label} onClose={closeAfterNavigate} />
       ))}
       <Divider sx={DIVIDER_SX} />
       {resourceLinksForDeployment(showHostedLinks).map((item) => (

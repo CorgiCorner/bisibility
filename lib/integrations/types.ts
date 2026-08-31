@@ -1,5 +1,6 @@
 import type { ActiveIntegrationKind } from "@/lib/integrations/category-copy";
 import type { ProviderRateFeature, ProviderRateSource } from "@/lib/provider-rates/resolver";
+import type { ProviderFailureClass } from "@/lib/providers/failure-class";
 import type {
   ConnectProviderInput,
   ProviderConnectionRefInput,
@@ -35,6 +36,27 @@ export type CredentialField = {
 
 export type ProviderMetaRow = { label: string; value: string };
 
+export type ProviderConsumerStatus = {
+  detail?: string;
+  state:
+    | "backfill_running"
+    | "first_view_ready"
+    | "kept_current"
+    | "last_synced"
+    | "needs_reauth"
+    | "never_synced"
+    | "not_configured"
+    | "paused_by_user"
+    | "ready"
+    | "sync_failed";
+  summary: string;
+};
+
+export type ProviderConsumerStatuses = {
+  searchModule: ProviderConsumerStatus;
+  trafficEnrichment: ProviderConsumerStatus;
+};
+
 type ProviderRateDataBase = {
   amountCents?: number;
   checkedAt?: string;
@@ -59,9 +81,17 @@ export type GooglePropertyOption = {
   value: string;
 };
 
+export type ArchivedGoogleProperty = GooglePropertyOption & {
+  lastSyncedDate: string;
+};
+
 export type GoogleOAuthSetup = {
+  accountEmail?: string;
+  archivedProperties?: readonly ArchivedGoogleProperty[];
   error?: string;
+  failureClass?: ProviderFailureClass;
   preferredProperty?: string;
+  projectDomain?: string;
   properties: readonly GooglePropertyOption[];
   provider?: "ga4" | "gsc";
   requiresReauth?: boolean;
@@ -90,8 +120,10 @@ export type ProviderConnectionReadState = {
 
 export type IntegrationProviderData = ProviderConnectionReadState & {
   credentialIssue?: "unreadable";
+  consumerStatuses?: ProviderConsumerStatuses;
   description: string;
   drawer: {
+    accountEmail?: string;
     activities: readonly ProviderMetaRow[];
     costHelp: string;
     credentialFields: readonly CredentialField[];

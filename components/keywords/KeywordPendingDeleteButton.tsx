@@ -52,7 +52,7 @@ export function KeywordPendingDeleteButton({
         onClick={() => setConfirmOpen(true)}
         type="button"
       >
-        <Trash aria-hidden size={14} weight="bold" />
+        <Trash aria-hidden size={14} weight="regular" />
         Delete
       </button>
       <ConfirmModal

@@ -195,7 +195,7 @@ describe("addKeywordsMatrix", () => {
       targetUrl: null,
     });
 
-    expect(first).toMatchObject({ created: 2, keywordCount: 2, skippedDuplicates: 0 });
+    expect(first).toMatchObject({ created: 2, persistedKeywordCount: 2, skippedDuplicates: 0 });
     expect(first.keywords).toEqual([
       expect.objectContaining({
         id: "kw_a00000000000000000000000",
@@ -206,7 +206,12 @@ describe("addKeywordsMatrix", () => {
         publicId: "kw_b00000000000000000000000",
       }),
     ]);
-    expect(second).toEqual({ created: 0, keywordCount: 2, keywords: [], skippedDuplicates: 2 });
+    expect(second).toEqual({
+      created: 0,
+      persistedKeywordCount: 2,
+      keywords: [],
+      skippedDuplicates: 2,
+    });
     expect(mocks.prisma.keyword.createMany).toHaveBeenCalledTimes(1);
     expect(mocks.prisma.keyword.createMany).toHaveBeenCalledWith(
       expect.objectContaining({

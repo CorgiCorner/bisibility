@@ -87,7 +87,7 @@ export function ApiKeyCreateModal({
           <Button
             onClick={handleClose}
             size="sm"
-            startIcon={<CheckCircle aria-hidden size={15} />}
+            startIcon={<CheckCircle aria-hidden size={15} weight="regular" />}
             type="button"
           >
             Done
@@ -102,7 +102,7 @@ export function ApiKeyCreateModal({
               form="create-api-key-form"
               loading={form.formState.isSubmitting}
               loadingLabel="Creating"
-              startIcon={<Plus aria-hidden size={15} weight="bold" />}
+              startIcon={<Plus aria-hidden size={15} weight="regular" />}
               type="submit"
             >
               Create key

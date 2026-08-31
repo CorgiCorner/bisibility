@@ -103,14 +103,14 @@ export function RowActionsCell({
     setAnchorEl(null);
     const clipboard = navigator.clipboard;
     if (!clipboard) {
-      showToast("Could not copy keyword ID", { tint: "red" });
+      showToast("Could not copy keyword ID", { severity: "error" });
       return;
     }
     try {
       await clipboard.writeText(row.id);
-      showToast("Keyword ID copied", { tint: "green" });
+      showToast("Keyword ID copied", { severity: "success" });
     } catch {
-      showToast("Could not copy keyword ID", { tint: "red" });
+      showToast("Could not copy keyword ID", { severity: "error" });
     }
   }
 
@@ -125,7 +125,7 @@ export function RowActionsCell({
         size="small"
         sx={{ color: "var(--fg-muted)" }}
       >
-        <DotsThreeVertical size={17} weight="bold" />
+        <DotsThreeVertical size={17} weight="regular" />
       </IconButton>
       <Menu
         anchorEl={anchorEl}
@@ -141,16 +141,16 @@ export function RowActionsCell({
             onClick={(event) => select(event, onEdit)}
             sx={{ gap: "10px", minHeight: 36 }}
           >
-            <PencilSimple size={15} />
+            <PencilSimple weight="regular" size={15} />
             Edit keyword
           </MenuItem>
         ) : null}
         <MenuItem onClick={open} sx={{ gap: "10px", minHeight: 36 }}>
-          <ArrowUpRight size={15} />
+          <ArrowUpRight weight="regular" size={15} />
           View details
         </MenuItem>
         <MenuItem onClick={copyId} sx={{ gap: "10px", minHeight: 36 }}>
-          <Copy size={15} />
+          <Copy weight="regular" size={15} />
           Copy keyword ID
         </MenuItem>
         {canUpdateKeyword ? (
@@ -159,7 +159,7 @@ export function RowActionsCell({
             onClick={(event) => select(event, onRunCheck)}
             sx={{ gap: "10px", minHeight: 36 }}
           >
-            <ArrowsClockwise size={15} />
+            <ArrowsClockwise weight="regular" size={15} />
             {`Run check (Top ${effectiveRowDepth(row)})`}
           </MenuItem>
         ) : null}
@@ -169,7 +169,7 @@ export function RowActionsCell({
             onClick={(event) => select(event, onDelete)}
             sx={{ color: "var(--red)", gap: "10px", minHeight: 36 }}
           >
-            <Trash size={15} />
+            <Trash weight="regular" size={15} />
             Delete
           </MenuItem>
         ) : null}

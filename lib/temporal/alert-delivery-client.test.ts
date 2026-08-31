@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { AlertDigestJob } from "../alerts/digest-types";
 import { buildAlertDigestWebhookBody } from "../alerts/webhook-envelope";
 import {
+  ALERT_DELIVERY_TASK_QUEUE,
   alertDeliveryWorkflowId,
   alertDigestDeliveryWorkflowId,
   enqueueAlertDeliveries,
@@ -31,7 +32,7 @@ describe("alert delivery client", () => {
     await startAlertDeliveryWorkflow("alert_1");
     expect(mocks.start).toHaveBeenCalledWith("alertDeliveryWorkflow", {
       args: [{ alertId: "alert_1" }],
-      taskQueue: "alert-deliveries",
+      taskQueue: ALERT_DELIVERY_TASK_QUEUE,
       workflowId: "alert-delivery-alert_1",
     });
   });
@@ -89,7 +90,7 @@ describe("alert delivery client", () => {
     await enqueueAlertDigestJob(job);
     expect(mocks.start).toHaveBeenCalledWith("alertDigestDeliveryWorkflow", {
       args: [job],
-      taskQueue: "alert-deliveries",
+      taskQueue: ALERT_DELIVERY_TASK_QUEUE,
       workflowId: "alert-digest-rule_1-alert_1-2",
     });
     expect(JSON.stringify(job)).not.toContain("hmacSecret");

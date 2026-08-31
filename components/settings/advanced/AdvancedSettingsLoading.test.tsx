@@ -14,9 +14,8 @@ describe("Advanced settings loading geometry", () => {
     expect(advancedLoadingCardGeometryClassNames.backup).toBe(
       advancedCardGeometryClassNames.backup,
     );
-    expect(advancedCardGeometryClassNames.backup).toBe(
-      "h-[324px] sm:h-[286.625px] lg:h-[254.625px]",
-    );
+    expect(advancedCardGeometryClassNames.backup).toBe("min-h-[254px]");
+    expect(advancedCardGeometryClassNames.backup).not.toMatch(/(?:^|\s)(?:sm:|lg:)?h-\[/);
   });
 
   it("uses the settled transfer card as the self-host loader geometry", () => {

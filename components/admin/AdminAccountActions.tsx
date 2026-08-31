@@ -38,14 +38,15 @@ export function AdminAccountActions({
         });
         if (result.status === "completed") {
           onStatusChange(result.accountStatus);
-          showToast(result.message, { tint: "green" });
+          showToast(result.message, { severity: "success" });
         } else {
           showToast(result.message, {
-            tint: result.status === "failed" || result.status === "forbidden" ? "red" : "yellow",
+            severity:
+              result.status === "failed" || result.status === "forbidden" ? "error" : "warning",
           });
         }
       } catch {
-        showToast("Account action failed.", { tint: "red" });
+        showToast("Account action failed.", { severity: "error" });
       } finally {
         setModal(null);
       }
@@ -57,15 +58,15 @@ export function AdminAccountActions({
       try {
         const result = await resetInstanceAdminAccountLimits({ userId });
         showToast(result.message, {
-          tint:
+          severity:
             result.status === "completed"
-              ? "green"
+              ? "success"
               : result.status === "failed" || result.status === "forbidden"
-                ? "red"
-                : "yellow",
+                ? "error"
+                : "warning",
         });
       } catch {
-        showToast("Rate limits could not be reset.", { tint: "red" });
+        showToast("Rate limits could not be reset.", { severity: "error" });
       } finally {
         setModal(null);
       }
@@ -80,7 +81,11 @@ export function AdminAccountActions({
           onClick={() => setModal("state")}
           size="sm"
           startIcon={
-            deactivated ? <UserPlus aria-hidden size={14} /> : <UserMinus aria-hidden size={14} />
+            deactivated ? (
+              <UserPlus aria-hidden size={14} weight="regular" />
+            ) : (
+              <UserMinus aria-hidden size={14} weight="regular" />
+            )
           }
           type="button"
           variant={deactivated ? "secondary" : "destructive"}
@@ -91,7 +96,7 @@ export function AdminAccountActions({
           disabled={pending}
           onClick={() => setModal("limits")}
           size="sm"
-          startIcon={<Gauge aria-hidden size={14} />}
+          startIcon={<Gauge aria-hidden size={14} weight="regular" />}
           type="button"
           variant="secondary"
         >

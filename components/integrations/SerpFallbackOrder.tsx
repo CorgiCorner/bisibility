@@ -164,13 +164,14 @@ export function SerpFallbackOrder({
                 aria-label="Active"
                 className="text-green-text"
                 size={15}
-                weight="fill"
+                weight="regular"
               />
             ) : (
               <MinusCircle
                 aria-label={isConnected ? "Paused" : "Not connected"}
                 className="text-fg-muted"
                 size={15}
+                weight="regular"
               />
             )}
           </div>
@@ -192,7 +193,7 @@ export function SerpFallbackOrder({
                   onClick={() => move(provider.id, -1)}
                   type="button"
                 >
-                  <ArrowUp aria-hidden size={15} />
+                  <ArrowUp aria-hidden size={15} weight="regular" />
                 </button>
                 <button
                   aria-label={`Move ${provider.name} down`}
@@ -201,7 +202,7 @@ export function SerpFallbackOrder({
                   onClick={() => move(provider.id, 1)}
                   type="button"
                 >
-                  <ArrowDown aria-hidden size={15} />
+                  <ArrowDown aria-hidden size={15} weight="regular" />
                 </button>
               </div>
             ) : null}

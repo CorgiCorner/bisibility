@@ -267,6 +267,7 @@ describe("public API router", () => {
     process.env.BISIBILITY_API_KEY_RATE_LIMIT_PER_MINUTE = "100";
     process.env.BISIBILITY_API_ANON_RATE_LIMIT_PER_MINUTE = "100";
     process.env.REDIS_URL = "";
+    process.env.SCHEDULER_DRIVER = "";
     mocks.prisma.apiKey.findMany.mockResolvedValue([authRow()]);
     mocks.prisma.apiKey.update.mockResolvedValue({ id: "api_key_1" });
     mocks.prisma.auditLog.create.mockResolvedValue({});

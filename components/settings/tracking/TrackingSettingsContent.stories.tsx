@@ -55,6 +55,13 @@ const defaults: DefaultsData = {
   locationCount: 1,
   locationKey: "PL",
   locationLabel: "Poland",
+  searchSync: {
+    lastQuotaPausedAt: "2026-08-27T09:15:00.000Z",
+    pace: "gentle",
+    plannedRemaining: 1240,
+    requestsToday: 32,
+    retentionMonths: 12,
+  },
   schedule: {
     cron_expression: null,
     frequency: "daily",
@@ -124,6 +131,13 @@ export const FrequencyOpenCustom: Story = {
     ...args,
     defaults: {
       ...defaults,
+      searchSync: {
+        lastQuotaPausedAt: "2026-08-27T09:15:00.000Z",
+        pace: "gentle",
+        plannedRemaining: 1240,
+        requestsToday: 32,
+        retentionMonths: 12,
+      },
       schedule: { ...defaults.schedule, cron_expression: "0 6 * * 1-5", frequency: "custom_cron" },
     },
     initialCronPreview: readyPreview,

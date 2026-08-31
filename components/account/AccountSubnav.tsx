@@ -20,7 +20,7 @@ export function AccountSubnav({ activeSection }: Readonly<AccountSubnavProps>) {
             <li key={section.id}>
               <Link
                 aria-current={current ? "page" : undefined}
-                className={`relative flex h-10 items-center gap-2.5 rounded-control px-[11px] text-[13.5px] no-underline outline-none transition-colors duration-150 hover:bg-nav-active hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-solid ${
+                className={`relative flex h-10 items-center gap-2.5 rounded-control px-[11px] text-[13.5px] no-underline outline-none transition-colors duration-150 hover:bg-bg-sunken hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-solid ${
                   current ? "font-semibold text-fg" : "font-medium text-fg-muted"
                 }`}
                 data-account-subnav-link={section.id}
@@ -37,14 +37,9 @@ export function AccountSubnav({ activeSection }: Readonly<AccountSubnavProps>) {
                   aria-hidden
                   className="grid h-[30px] w-[30px] shrink-0 place-items-center"
                   data-account-subnav-icon={section.id}
-                  data-account-subnav-icon-weight={current ? "fill" : "regular"}
+                  data-account-subnav-icon-weight="regular"
                 >
-                  <Icon
-                    aria-hidden
-                    className="text-current"
-                    size={16}
-                    weight={current ? "fill" : "regular"}
-                  />
+                  <Icon aria-hidden className="text-current" size={16} weight="regular" />
                 </span>
                 <span>{section.label}</span>
               </Link>

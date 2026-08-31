@@ -693,7 +693,9 @@ describe("ResearchWorkspace", () => {
         variantCount: 0,
       })),
     });
-    expect(screen.getByLabelText("saved keywords")).toHaveTextContent("keyword 1");
+    await waitFor(() =>
+      expect(screen.getByLabelText("saved keywords")).toHaveTextContent("keyword 1"),
+    );
     expect(screen.getByRole("link", { name: "View in Keywords / Saved" })).toHaveAttribute(
       "href",
       "/app/prj_1/rank-tracker?tab=saved",

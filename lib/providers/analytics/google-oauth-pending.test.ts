@@ -1,6 +1,10 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ProviderAuthError } from "@/lib/providers/auth-error";
+import { ProviderHttpError } from "@/lib/providers/failure-class";
+import { ProviderRateLimitedError } from "@/lib/providers/rate-limit";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   completePendingGooglePropertySelection,
+  formatGooglePropertyDiscoveryLog,
   getPendingGoogleOAuthSetup,
 } from "./google-oauth-pending";
 
@@ -25,6 +29,7 @@ const mocks = vi.hoisted(() => ({
       upsert: vi.fn(),
     },
   },
+  queueSearchInsightsImport: vi.fn(),
   refreshGoogleAccessToken: vi.fn(),
   requireProjectScope: vi.fn(),
   revalidateProviderViews: vi.fn(),
@@ -52,6 +57,9 @@ vi.mock("@/lib/providers/crypto", () => ({
   decryptSecret: mocks.decryptSecret,
   encryptSecret: mocks.encryptSecret,
 }));
+vi.mock("@/lib/search-insights/sync/ensure-import", () => ({
+  queueSearchInsightsImport: mocks.queueSearchInsightsImport,
+}));
 vi.mock("@/lib/api/provider-verification", () => ({
   verifyProviderConnectionBeforeSave: mocks.verifyProviderConnectionBeforeSave,
 }));
@@ -70,6 +78,9 @@ const pending = {
 };
 
 describe("pending Google OAuth property selection", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.backfillLegacyProjectAllocationInLockedTransaction.mockResolvedValue({
@@ -115,29 +126,113 @@ describe("pending Google OAuth property selection", () => {
     });
   });
 
-  it("degrades a failed GA4 summaries request to guided manual entry", async () => {
-    mocks.decryptSecret.mockReturnValue(JSON.stringify({ ...pending, provider: "ga4" }));
-    mocks.listGa4Properties.mockRejectedValue(new Error("admin api unavailable"));
+  it.each([
+    [
+      new ProviderAuthError("google", "raw auth payload"),
+      "auth",
+      "This Google account may not have Analytics access, or Google rejected the request.",
+    ],
+    [
+      new ProviderHttpError(403, "raw forbidden payload"),
+      "provider_4xx",
+      "This Google account may not have Analytics access, or Google rejected the request.",
+    ],
+    [
+      new ProviderRateLimitedError("ga4", { message: "raw quota payload" }),
+      "rate_limit",
+      "Google's request limit was reached. Try again shortly.",
+    ],
+    [
+      new ProviderHttpError(503, "raw outage payload"),
+      "provider_5xx",
+      "Google Analytics is temporarily unavailable.",
+    ],
+    [
+      new TypeError("raw network payload"),
+      "network",
+      "Google Analytics is temporarily unavailable.",
+    ],
+    [
+      new Error("raw unknown payload"),
+      "unknown",
+      "This Google account may not have Analytics access, or the Analytics API rejected the request.",
+    ],
+  ])(
+    "classifies and sanitizes failed GA4 property discovery",
+    async (error, failureClass, reason) => {
+      const info = vi.spyOn(console, "info").mockImplementation(() => undefined);
+      const errorLog = vi.spyOn(console, "error").mockImplementation(() => undefined);
+      mocks.decryptSecret.mockReturnValue(JSON.stringify({ ...pending, provider: "ga4" }));
+      mocks.listGa4Properties.mockRejectedValue(error);
 
-    await expect(getPendingGoogleOAuthSetup("prj_1")).resolves.toEqual({
-      error: expect.stringContaining("enter the numeric Property ID manually"),
-      properties: [],
+      await expect(getPendingGoogleOAuthSetup("prj_1")).resolves.toEqual({
+        error: `Couldn't load your GA4 properties. ${reason}`,
+        failureClass,
+        properties: [],
+        provider: "ga4",
+      });
+      expect(info).toHaveBeenCalledWith(
+        `[google] property discovery failed | provider ga4 | class ${failureClass}${
+          error instanceof ProviderHttpError ? ` | status ${error.status}` : ""
+        }`,
+      );
+      expect(errorLog).not.toHaveBeenCalled();
+      expect(JSON.stringify(info.mock.calls)).not.toContain(error.message);
+    },
+  );
+
+  it("formats property discovery diagnostics without sensitive data", () => {
+    const output = formatGooglePropertyDiscoveryLog({
+      failureClass: "provider_4xx",
+      httpStatus: 403,
       provider: "ga4",
     });
+
+    expect(output).toBe(
+      "[google] property discovery failed | provider ga4 | class provider_4xx | status 403",
+    );
+    expect(output).not.toMatch(/refresh|token|payload|owner@example\.com|prj_|properties\/|stack/i);
+    expect(formatGooglePropertyDiscoveryLog({ failureClass: "network", provider: "ga4" })).toBe(
+      "[google] property discovery failed | provider ga4 | class network",
+    );
+  });
+
+  it("uses only the pending GA4 refresh token for property discovery", async () => {
+    mocks.decryptSecret.mockReturnValue(
+      JSON.stringify({ ...pending, provider: "ga4", refreshToken: "pending_ga4_refresh" }),
+    );
+    mocks.refreshGoogleAccessToken.mockResolvedValue("pending_ga4_access");
+
+    await getPendingGoogleOAuthSetup("prj_1");
+
+    expect(mocks.refreshGoogleAccessToken).toHaveBeenCalledWith("pending_ga4_refresh");
+    expect(mocks.listGa4Properties).toHaveBeenCalledWith("pending_ga4_access");
+    expect(mocks.decryptProviderCredentials).not.toHaveBeenCalled();
+    expect(mocks.prisma.providerConnection.findUnique).not.toHaveBeenCalled();
+  });
+
+  it("does not list GA4 properties without a pending GA4 context", async () => {
+    mocks.cookieStore.get.mockReturnValue(undefined);
+
+    await expect(getPendingGoogleOAuthSetup("prj_1")).resolves.toBeNull();
+    expect(mocks.refreshGoogleAccessToken).not.toHaveBeenCalled();
+    expect(mocks.listGa4Properties).not.toHaveBeenCalled();
   });
 
   it("exposes only verified properties with their exact Google ids", async () => {
     await expect(getPendingGoogleOAuthSetup("prj_1")).resolves.toEqual({
+      archivedProperties: [],
+      projectDomain: "",
       properties: [
         {
           kind: "domain",
-          label: "example.com (Domain property)",
+          label: "example.com",
           permissionLevel: "siteOwner",
           value: "sc-domain:example.com",
         },
         {
           kind: "url-prefix",
-          label: "https://example.com/ (URL-prefix property)",
+          label: "https://example.com/",
           permissionLevel: "siteFullUser",
           value: "https://example.com/",
         },
@@ -192,6 +287,52 @@ describe("pending Google OAuth property selection", () => {
       mocks.prisma,
     );
     expect(mocks.revalidateProviderViews).toHaveBeenCalledOnce();
+  });
+
+  it("persists the durable Google account email inside encrypted credentials", async () => {
+    mocks.decryptSecret.mockReturnValue(
+      JSON.stringify({ ...pending, accountEmail: "owner@example.com" }),
+    );
+    mocks.prisma.providerConnection.findUnique.mockResolvedValue(null);
+    mocks.prisma.providerConnection.upsert.mockResolvedValue({
+      id: "connection_1",
+      publicId: "conn_abcdefghijklmnopqrstuvwx",
+    });
+
+    await completePendingGooglePropertySelection({
+      projectId: "prj_1",
+      property: "sc-domain:example.com",
+    });
+
+    expect(mocks.encryptSecret).toHaveBeenCalledWith(
+      JSON.stringify({
+        accountEmail: "owner@example.com",
+        apiKey: "refresh_token",
+        login: "sc-domain:example.com",
+      }),
+    );
+  });
+
+  it("queues the history import once the Search Console connection is written", async () => {
+    mocks.prisma.providerConnection.findUnique.mockResolvedValue(null);
+    mocks.prisma.providerConnection.upsert.mockResolvedValue({
+      id: "connection_1",
+      publicId: "conn_abcdefghijklmnopqrstuvwx",
+    });
+
+    await completePendingGooglePropertySelection({
+      projectId: "prj_1",
+      property: "sc-domain:example.com",
+    });
+
+    expect(mocks.queueSearchInsightsImport).toHaveBeenCalledWith({
+      projectId: "project_1",
+      property: "sc-domain:example.com",
+      source: "gsc",
+    });
+    expect(mocks.queueSearchInsightsImport.mock.invocationCallOrder[0]).toBeGreaterThan(
+      mocks.prisma.providerConnection.upsert.mock.invocationCallOrder[0] ?? 0,
+    );
   });
 
   it("rejects a property that was not returned by Google", async () => {
@@ -271,5 +412,10 @@ describe("pending Google OAuth property selection", () => {
         create: expect.objectContaining({ provider: "ga4", status: "connected" }),
       }),
     );
+    expect(mocks.queueSearchInsightsImport).toHaveBeenCalledWith({
+      projectId: "project_1",
+      property: "123456789",
+      source: "ga4",
+    });
   });
 });

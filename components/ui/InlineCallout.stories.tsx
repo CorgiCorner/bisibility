@@ -65,7 +65,7 @@ export const GscOAuth: Story = {
           {...docsLinkProps("/docs/integrations#analytics-sources")}
         >
           setup guide
-          <ArrowUpRight aria-hidden size={13} weight="bold" />
+          <ArrowUpRight aria-hidden size={13} weight="regular" />
         </a>{" "}
         for how to create them.
       </>

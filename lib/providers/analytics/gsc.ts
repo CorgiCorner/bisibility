@@ -1,4 +1,3 @@
-import { providerAccountKey } from "@/lib/providers/rate-limit";
 import type {
   AnalyticsProvider,
   AnalyticsQueryStatsInput,
@@ -7,12 +6,7 @@ import type {
   ProviderTestResult,
   QueryStatRow,
 } from "@/lib/providers/types";
-import {
-  type GoogleFetchContext,
-  googleApiFetch,
-  listGoogleSites,
-  refreshGoogleAccessToken,
-} from "./google-client";
+import { googleApiFetch, listGoogleSites, refreshGoogleAccessToken } from "./google-client";
 import { readGscCredentials as readCredentials } from "./gsc-credentials";
 import {
   createGscUrlInspectionSession,
@@ -20,51 +14,29 @@ import {
   type GscUrlInspectionResult,
   type GscUrlInspectionSession,
 } from "./gsc-inspection";
+import { fetchGscQueryStats, filterGscQueryStats } from "./gsc-query-pagination";
 import {
-  fetchGscQueryStats,
-  filterGscQueryStats,
-  gscDimensionFilterGroups,
-} from "./gsc-query-pagination";
+  fetchSearchAnalyticsEnvelope,
+  fetchSearchAnalyticsRows,
+  type GscQueryInput,
+  type GscRow,
+  type GscSearchAnalyticsEnvelope,
+  gscFetchContext,
+} from "./gsc-search-analytics";
 
 export type {
   GscUrlInspectionInput,
   GscUrlInspectionResult,
   GscUrlInspectionSession,
 } from "./gsc-inspection";
-
-// Rate-limit account is the Google account (refresh token) scoped to the property,
-// matching the per-user and per-property quotas Search Console enforces.
-function fetchContext(creds: ProviderCredentials, property: string): GoogleFetchContext {
-  return {
-    accountKey: providerAccountKey("gsc", { apiKey: creds.apiKey, login: property }),
-    providerId: "gsc",
-  };
-}
-
-export type GscQueryInput = {
-  credentials: ProviderCredentials;
-  dimensions?: string[];
-  endDate: string;
-  pagePath?: AnalyticsQueryStatsInput["pagePath"];
-  query?: string;
-  rowLimit?: number;
-  startRow?: number;
-  startDate: string;
-};
-
-export type GscRow = {
-  clicks: number;
-  ctr: number;
-  impressions: number;
-  keys: string[];
-  position: number;
-};
-
-function queryUrl(property: string) {
-  return `https://www.googleapis.com/webmasters/v3/sites/${encodeURIComponent(
-    property,
-  )}/searchAnalytics/query`;
-}
+export type {
+  GscDataState,
+  GscQueryInput,
+  GscRow,
+  GscSearchAnalyticsEnvelope,
+  GscSearchAnalyticsMetadata,
+  GscSearchType,
+} from "./gsc-search-analytics";
 
 function sitemapUrl(property: string, feedpath: string) {
   return `https://www.googleapis.com/webmasters/v3/sites/${encodeURIComponent(
@@ -142,34 +114,10 @@ function queryStatFromRow(row: GscRow, includePage = false): QueryStatRow | null
   };
 }
 
-async function fetchSearchAnalytics(input: GscQueryInput): Promise<GscRow[]> {
-  const { property, refreshToken } = readCredentials(input.credentials);
-  const accessToken = await refreshGoogleAccessToken(
-    refreshToken,
-    input.credentials.onRefreshToken,
-  );
-  const data = await googleApiFetch<{ rows?: GscRow[] }>(
-    queryUrl(property),
-    accessToken,
-    {
-      body: JSON.stringify({
-        dimensions: input.dimensions ?? ["query"],
-        endDate: input.endDate,
-        ...gscDimensionFilterGroups(input),
-        rowLimit: input.rowLimit ?? 100,
-        ...(input.startRow === undefined ? {} : { startRow: input.startRow }),
-        startDate: input.startDate,
-      }),
-      method: "POST",
-    },
-    fetchContext(input.credentials, property),
-  );
-  return data.rows ?? [];
-}
-
 export type GscAnalyticsProvider = AnalyticsProvider & {
   createUrlInspectionSession(creds: ProviderCredentials): Promise<GscUrlInspectionSession>;
   fetchSearchAnalytics(input: GscQueryInput): Promise<GscRow[]>;
+  fetchSearchAnalyticsEnvelope(input: GscQueryInput): Promise<GscSearchAnalyticsEnvelope>;
   fetchTopQueries(
     credentials: ProviderCredentials,
     input: { limit: number },
@@ -215,7 +163,12 @@ export const gscAnalyticsProvider: GscAnalyticsProvider = {
   },
 
   async fetchSearchAnalytics(input: GscQueryInput): Promise<GscRow[]> {
-    return fetchSearchAnalytics(input);
+    return fetchSearchAnalyticsRows(input);
+  },
+
+  // Totals and freshness are read from the envelope; rows alone cannot carry either.
+  async fetchSearchAnalyticsEnvelope(input: GscQueryInput): Promise<GscSearchAnalyticsEnvelope> {
+    return fetchSearchAnalyticsEnvelope(input);
   },
 
   async fetchTopQueries(
@@ -223,7 +176,7 @@ export const gscAnalyticsProvider: GscAnalyticsProvider = {
     input: { limit: number },
   ): Promise<AnalyticsTopQuery[]> {
     const range = last28DaysRange();
-    const rows = await fetchSearchAnalytics({
+    const rows = await fetchSearchAnalyticsRows({
       credentials,
       dimensions: ["query"],
       endDate: range.endDate,
@@ -240,7 +193,7 @@ export const gscAnalyticsProvider: GscAnalyticsProvider = {
     credentials: ProviderCredentials,
     input: AnalyticsQueryStatsInput,
   ): Promise<QueryStatRow[]> {
-    const rows = await fetchGscQueryStats(credentials, input, fetchSearchAnalytics);
+    const rows = await fetchGscQueryStats(credentials, input, fetchSearchAnalyticsRows);
     const stats = rows.flatMap((row) => {
       const stat = queryStatFromRow(row, Boolean(input.pagePath));
       return stat ? [stat] : [];
@@ -257,7 +210,7 @@ export const gscAnalyticsProvider: GscAnalyticsProvider = {
       sitemapUrl(property, feedpath),
       accessToken,
       {},
-      fetchContext(creds, property),
+      gscFetchContext(creds, property),
     );
     return {
       contents: (data.contents ?? []).map((entry) => ({

@@ -52,7 +52,7 @@ export function CompetitorScopeControls({
       disabled: !available,
       label: (
         <>
-          <Icon aria-hidden size={13} />
+          <Icon aria-hidden size={13} weight="regular" />
           {option.label}
         </>
       ),
@@ -93,7 +93,7 @@ export function CompetitorScopeControls({
         value={current.device}
       />
       <span className="ml-auto flex items-center gap-1.5 font-mono text-[11px] text-fg-muted">
-        <Info aria-hidden className="shrink-0 text-accent-text" size={13} />
+        <Info weight="regular" aria-hidden className="shrink-0 text-accent-text" size={13} />
         SOV compares one market (location + language) + device at a time
       </span>
     </div>

@@ -1,4 +1,3 @@
-import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CloudBackupModal } from "./CloudBackupModal";
@@ -41,7 +40,6 @@ const defaultProps = {
   onExportSuccess: mocks.onExportSuccess,
   open: true,
   projectId: "project_1",
-  projectRef: "prj_1",
   projectName: "acme.dev",
 } as const;
 
@@ -67,14 +65,24 @@ describe("CloudBackupModal", () => {
     expect(exportChip.closest("h2")).toBe(
       screen.getByRole("heading", { name: /Export project data/i }),
     );
-    expect(screen.getByRole("radio", { name: /Project package/i })).toBeChecked();
-    expect(includedRow("Keywords & tags")).toHaveTextContent("248");
+    expect(includedRow("Keywords and tags")).toHaveTextContent("248");
     expect(includedRow("Rank history")).toHaveTextContent("412,000");
     expect(includedRow("Competitors")).toHaveTextContent("3");
     expect(includedRow("Alert rules")).toHaveTextContent("2");
     expect(includedRow("Saved views")).toHaveTextContent("4");
     expect(includedRow("Notification preferences")).toHaveTextContent("1");
     expect(includedRow("Project details")?.children).toHaveLength(2);
+  });
+
+  it("omits format choices from the package-only export modal", () => {
+    render(<CloudBackupModal {...defaultProps} />);
+
+    expect(screen.queryByText(/^Format$/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(".csv")).not.toBeInTheDocument();
+    expect(screen.queryByText("Project package")).not.toBeInTheDocument();
+    expect(screen.queryByText("Keyword table")).not.toBeInTheDocument();
+    expect(screen.queryByRole("radio")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Export package" })).toBeInTheDocument();
   });
 
   it("renders a sensible state when the project has never exported", () => {
@@ -98,7 +106,7 @@ describe("CloudBackupModal", () => {
       />,
     );
 
-    expect(includedRow("Keywords & tags")).toHaveTextContent("0");
+    expect(includedRow("Keywords and tags")).toHaveTextContent("0");
     expect(includedRow("Rank history")).toHaveTextContent("0");
     expect(includedRow("Competitors")).toHaveTextContent("0");
     expect(includedRow("Alert rules")).toHaveTextContent("0");
@@ -135,18 +143,5 @@ describe("CloudBackupModal", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Project export is unavailable.");
     expect(mocks.downloadWorkspacePackage).not.toHaveBeenCalled();
-  });
-
-  it("hands CSV off to the established keyword export flow", async () => {
-    render(<CloudBackupModal {...defaultProps} />);
-
-    fireEvent.click(screen.getByRole("radio", { name: /Keyword table/i }));
-    fireEvent.click(screen.getByRole("button", { name: "Export CSV" }));
-
-    await waitFor(() =>
-      expect(routerMock.push).toHaveBeenCalledWith("/app/prj_1/rank-tracker?action=export"),
-    );
-    expect(mocks.onClose).toHaveBeenCalledOnce();
-    expect(mocks.exportPackage).not.toHaveBeenCalled();
   });
 });

@@ -133,7 +133,7 @@ export function ProjectMarketsSelector({
                 onClick={() => toggleMarket(market.canonicalKey)}
                 type="button"
               >
-                {selected ? <Check aria-hidden size={10} weight="bold" /> : null}
+                {selected ? <Check aria-hidden size={10} weight="regular" /> : null}
                 <span className="inline-flex min-w-0 items-baseline gap-1 whitespace-nowrap">
                   <span className="truncate font-semibold">{market.displayName}</span>
                   <span className="text-fg-muted">/ {market.languageLabel}</span>
@@ -159,7 +159,7 @@ export function ProjectMarketsSelector({
         disabled={visibleMarkets.length >= markets.maxMarkets}
         onClick={() => setPickerOpen(true)}
         size="xs"
-        startIcon={<Plus aria-hidden size={11} weight="bold" />}
+        startIcon={<Plus aria-hidden size={11} weight="regular" />}
         sx={{
           alignSelf: "start",
           backgroundColor: "transparent",
@@ -206,7 +206,7 @@ export function ProjectMarketsSelector({
               type="button"
             >
               {devices.includes(option.value) ? (
-                <Check aria-hidden size={10} weight="bold" />
+                <Check aria-hidden size={10} weight="regular" />
               ) : null}
               {option.label}
             </button>

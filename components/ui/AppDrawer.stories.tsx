@@ -1,6 +1,6 @@
 import { AppDrawer } from "@/components/ui/AppDrawer";
 import type { Meta, StoryObj } from "@storybook/react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 const meta = {
   title: "UI/AppDrawer",
@@ -84,4 +84,56 @@ export const Interactive: Story = {
     title: "Stateful harness",
   },
   render: () => <Harness />,
+};
+
+function StackedHarness() {
+  const [open, setOpen] = useState(false);
+  const [reason, setReason] = useState<string>("not closed yet");
+  const bodyRef = useRef<HTMLDivElement>(null);
+  return (
+    <div className="min-h-[560px] bg-bg p-6 text-fg">
+      <div className="flex items-center gap-3">
+        <button
+          className="rounded-control bg-accent-solid px-4 py-2.5 text-[13px] font-semibold text-accent-on-solid"
+          onClick={() => setOpen(true)}
+          type="button"
+        >
+          Open panel
+        </button>
+        <span className="text-[12px] text-fg-muted">Last close reason: {reason}</span>
+      </div>
+      <AppDrawer
+        bodyRef={bodyRef}
+        headerLeading={
+          <button
+            className="flex items-center gap-1.5 border-0 bg-transparent p-0 font-mono text-ui-micro uppercase tracking-wider text-fg-muted"
+            onClick={() => bodyRef.current?.scrollTo({ top: 0 })}
+            type="button"
+          >
+            Back to the list
+          </button>
+        }
+        onClose={(closeReason) => {
+          setReason(closeReason ?? "close button");
+          setOpen(false);
+        }}
+        open={open}
+        sheetOnMobile
+        title="Second panel of a stack"
+      >
+        {content}
+      </AppDrawer>
+    </div>
+  );
+}
+
+/** The stacked shape: a back control above the title, a bottom sheet under 640px. */
+export const Stacked: Story = {
+  args: {
+    children: <span />,
+    onClose: () => undefined,
+    open: false,
+    title: "Second panel of a stack",
+  },
+  render: () => <StackedHarness />,
 };

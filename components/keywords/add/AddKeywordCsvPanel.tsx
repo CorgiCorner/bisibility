@@ -52,7 +52,7 @@ export function AddKeywordCsvPanel({
         onDragOver={handleDragOver}
         onDrop={(event) => void handleDrop(event)}
       >
-        <UploadSimple className="text-accent-solid" size={26} />
+        <UploadSimple weight="regular" className="text-accent-solid" size={26} />
         <span className="text-[13.5px] font-semibold text-fg">Drop a CSV or click to upload</span>
         <span className="text-[11.5px] text-fg-muted">{csvColumnsHint}</span>
         <input

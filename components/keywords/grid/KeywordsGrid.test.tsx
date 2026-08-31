@@ -4,7 +4,7 @@ import { appPath } from "@/lib/routing/app-path";
 import { stubBlobDownload } from "@/tests/blob-download";
 import { routerMock, setNavigationState } from "@/tests/next-navigation";
 import { stubResizeObserver } from "@/tests/observers";
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { pendingRows, renderPendingGrid } from "./KeywordsGrid.test-helpers";
@@ -94,7 +94,11 @@ describe("KeywordsGrid pending state", () => {
     expect(screen.getByRole("button", { name: /all keywords/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /columns/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /filters/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /^Import$/i })).toBeInTheDocument();
+    expect(
+      within(screen.getByTestId("keywords-import-labeled-action")).getByRole("button", {
+        name: /^Import$/i,
+      }),
+    ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /add keyword/i })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: /device/i })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: /frequency/i })).toBeInTheDocument();
@@ -218,7 +222,11 @@ describe("KeywordsGrid pending state", () => {
       query,
       totalCount: 100,
     });
-    fireEvent.click(screen.getByRole("button", { name: /^Export$/i }));
+    fireEvent.click(
+      within(screen.getByTestId("keywords-export-labeled-action")).getByRole("button", {
+        name: /^Export$/i,
+      }),
+    );
     expect(await screen.findByText("Export 80 filtered keywords")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Export CSV" }));
     await waitFor(() =>

@@ -75,21 +75,6 @@ describe("StepConnectProvider submission", () => {
     expect(onComplete).not.toHaveBeenCalled();
   });
 
-  it("keeps the skip affordance on the paused-keywords path", () => {
-    renderProviderStep({ flowState: { projectId: "prj_1" } });
-
-    expect(
-      screen.getByRole("link", {
-        name: "Skip provider connection and add keywords as paused",
-      }),
-    ).toHaveAttribute("href", "/onboarding?step=3&projectId=prj_1");
-    expect(
-      screen.getByRole("link", {
-        name: "Skip provider connection and add keywords as paused",
-      }),
-    ).toHaveStyle({ minHeight: "30px", padding: "4px 10px" });
-  });
-
   it("submits no client-owned enabled, primary, or priority to the provider action", async () => {
     const connectProviderAction = vi.fn(async (_input: unknown) => undefined);
     const testProviderConnectionAction = vi.fn(async (_input: unknown) => ({

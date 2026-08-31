@@ -54,7 +54,7 @@ export function StepConnectGscSetupNotice({ configured }: Readonly<{ configured:
         {...docsLinkProps("/docs/integrations#analytics-sources")}
       >
         setup guide
-        <ArrowUpRight aria-hidden size={13} weight="bold" />
+        <ArrowUpRight aria-hidden size={13} weight="regular" />
       </a>{" "}
       for how to create them.
     </InlineCallout>
@@ -155,10 +155,10 @@ export function StepConnectGscCard({
         </p>
       </div>
       {setup || (connected && loadStoredProperties) || href ? (
-        <div className="mt-4 flex-none">
+        <div className="mt-4 flex flex-none justify-end">
           {setup ? (
             <Button
-              className="w-full"
+              className="w-full sm:w-auto"
               onClick={() => setPropertyDrawerDismissed(false)}
               type="button"
               variant="secondary"
@@ -167,7 +167,7 @@ export function StepConnectGscCard({
             </Button>
           ) : connected && loadStoredProperties ? (
             <Button
-              className="w-full"
+              className="w-full sm:w-auto"
               loading={pending}
               loadingLabel="Loading properties…"
               onClick={() => void changeProperty()}
@@ -177,7 +177,7 @@ export function StepConnectGscCard({
               Change property
             </Button>
           ) : (
-            <Button className="w-full" href={href ?? undefined} variant="secondary">
+            <Button className="w-full sm:w-auto" href={href ?? undefined} variant="secondary">
               {connected ? "Change property" : "Connect"}
             </Button>
           )}
@@ -225,7 +225,12 @@ export function StepConnectGscCard({
             </div>
           ) : (
             <p className="m-0 flex gap-2 rounded-control bg-bg-sunken px-3 py-2.5 text-[12px] leading-5 text-fg-muted">
-              <WarningCircle aria-hidden className="mt-0.5 shrink-0 text-yellow-text" size={15} />
+              <WarningCircle
+                aria-hidden
+                className="mt-0.5 shrink-0 text-yellow-text"
+                size={15}
+                weight="regular"
+              />
               {setup.error ??
                 "This account has no verified Search Console properties. Verify one or connect a different Google account."}
             </p>

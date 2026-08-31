@@ -57,8 +57,8 @@ describe("NoDataBanner", () => {
       "data-icon",
       "puzzle-piece",
     );
-    expect(screen.getByTestId("first-check-banner-icon")).toHaveAttribute("data-weight", "bold");
-    expect(screen.getByRole("link", { name: "Connect SERP provider" })).toHaveAttribute(
+    expect(screen.getByTestId("first-check-banner-icon")).toHaveAttribute("data-weight", "regular");
+    expect(screen.getByRole("link", { name: "Connect" })).toHaveAttribute(
       "href",
       "/app/prj_1/integrations#all-providers",
     );
@@ -92,7 +92,7 @@ describe("NoDataBanner", () => {
 
     expect(runCheckNowAction).not.toHaveBeenCalled();
     expect(await screen.findByRole("dialog", { name: "Run first check" })).toBeInTheDocument();
-    const confirmButton = screen.getByRole("button", { name: "Confirm & run" });
+    const confirmButton = screen.getByRole("button", { name: "Confirm and run" });
     await waitFor(() => expect(confirmButton).toBeEnabled());
     fireEvent.click(confirmButton);
 
@@ -148,7 +148,7 @@ describe("NoDataBanner", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Run first check" }));
     await screen.findByRole("dialog", { name: "Run first check" });
-    const confirmButton = screen.getByRole("button", { name: "Confirm & run" });
+    const confirmButton = screen.getByRole("button", { name: "Confirm and run" });
     await waitFor(() => expect(confirmButton).toBeEnabled());
     fireEvent.click(confirmButton);
 
@@ -170,7 +170,7 @@ describe("NoDataBanner", () => {
     fireEvent.click(screen.getByRole("button", { name: "Run first check" }));
     const allReady = await screen.findByRole("radio", { name: "All ready (2)" });
     fireEvent.click(allReady);
-    const confirmButton = screen.getByRole("button", { name: "Confirm & run" });
+    const confirmButton = screen.getByRole("button", { name: "Confirm and run" });
     await waitFor(() => expect(confirmButton).toBeEnabled());
     fireEvent.click(confirmButton);
 
@@ -234,6 +234,23 @@ describe("NoDataKpiRow", () => {
       serpProviderState: "ready",
     },
   ];
+
+  it("keeps KPI metrics while omitting the awaiting-first-check label", () => {
+    render(
+      <NoDataKpiRow
+        budgetExhausted={false}
+        keywordCount={2}
+        projectReadOnly={false}
+        runningCheckCount={0}
+        serpProviderState="ready"
+      />,
+    );
+
+    expect(screen.getByText("Avg. position")).toBeInTheDocument();
+    expect(screen.getByText("Visibility")).toBeInTheDocument();
+    expect(screen.getAllByText("–")).toHaveLength(3);
+    expect(screen.queryByText("awaiting first check")).not.toBeInTheDocument();
+  });
 
   it.each(states)(
     "shows $expected when that is the current check state",

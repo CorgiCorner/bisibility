@@ -1,4 +1,4 @@
-import { settingsCardFrameClassName } from "@/components/settings/shell/settings-layout";
+import { settingsCardNaturalFrameClassName } from "@/components/settings/shell/settings-layout";
 import { Card, SectionTitle } from "@/components/ui";
 import { cn } from "@/lib/ui/cn";
 import type { ReactNode } from "react";
@@ -25,7 +25,11 @@ export function DeveloperCardFrame({
   return (
     <Card
       aria-labelledby={titleId}
-      className={cn(settingsCardFrameClassName, "flex flex-col gap-4.5 p-[18px_20px]", className)}
+      className={cn(
+        settingsCardNaturalFrameClassName,
+        "flex flex-col gap-4.5 p-[18px_20px]",
+        className,
+      )}
       data-developer-card={id}
       data-settings-card=""
       data-settings-card-frame="settled"

@@ -82,7 +82,7 @@ export function KeywordsFilterBar({
                   className="shrink-0"
                   onClick={onRefresh}
                   size="sm"
-                  startIcon={<ArrowClockwise aria-hidden size={15} />}
+                  startIcon={<ArrowClockwise weight="regular" aria-hidden size={15} />}
                   sx={{ minWidth: 40, "& .MuiButton-startIcon": { margin: 0 } }}
                   variant="secondary"
                 />
@@ -132,7 +132,7 @@ export function KeywordsFilterBar({
               size="sm"
             >
               {chip.label}
-              <X aria-hidden size={11} weight="bold" />
+              <X aria-hidden size={11} weight="regular" />
             </Pill>
           ))}
           {hasFilters ? (

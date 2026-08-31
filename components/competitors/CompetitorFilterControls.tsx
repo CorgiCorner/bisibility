@@ -44,7 +44,7 @@ export function CompetitorFilterControls({
         <span className="inline-flex items-center gap-1">
           <MenuSelect
             ariaLabel="Filter by tag"
-            leadingIcon={<Tag aria-hidden size={12} />}
+            leadingIcon={<Tag weight="regular" aria-hidden size={12} />}
             onChange={(value) => onFilterChange({ ...filter, tag: value || null })}
             options={tagOptions}
             value={filter.tag ?? ""}
@@ -56,7 +56,7 @@ export function CompetitorFilterControls({
               onClick={() => onFilterChange({ ...filter, tag: null })}
               type="button"
             >
-              <X aria-hidden size={12} weight="bold" />
+              <X aria-hidden size={12} weight="regular" />
             </button>
           ) : null}
         </span>

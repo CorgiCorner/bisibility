@@ -96,7 +96,11 @@ export function KeywordImportDropzone({
       onDrop={(event) => void handleDrop(event)}
     >
       <span className="grid h-10 w-10 place-items-center rounded-control bg-accent-soft text-accent-solid">
-        {selectedFileName ? <Icon size={22} weight="bold" /> : <UploadSimple size={23} />}
+        {selectedFileName ? (
+          <Icon size={22} weight="regular" />
+        ) : (
+          <UploadSimple weight="regular" size={23} />
+        )}
       </span>
       <span className="text-[13.5px] font-semibold text-fg">Drop CSV or XLSX here</span>
       <span className="text-[11.5px] text-fg-muted">{status}</span>

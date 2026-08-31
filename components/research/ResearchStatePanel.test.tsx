@@ -44,6 +44,30 @@ describe("ResearchStatePanel", () => {
     expect(screen.getByText(/reported a charge before it failed/i)).toBeInTheDocument();
   });
 
+  it("uses a module mark for the idle module identity", () => {
+    const { container } = render(<ResearchStatePanel projectRef="prj_1" state="idle" />);
+    expect(container.querySelector('[data-module-mark="soft"]')).not.toBeNull();
+  });
+
+  it.each(["no_provider", "needs_reauth"] as const)(
+    "uses the regular Binoculars module mark for %s",
+    (state) => {
+      const idle = render(<ResearchStatePanel projectRef="prj_1" state="idle" />);
+      const idleIcon = idle.container.querySelector('[data-module-mark="soft"] svg');
+      const idleGlyph = idleIcon?.innerHTML;
+      idle.unmount();
+
+      const { container } = render(<ResearchStatePanel projectRef="prj_1" state={state} />);
+      const mark = container.querySelector('[data-module-mark="soft"]');
+      const icon = mark?.querySelector("svg");
+
+      expect(mark).not.toBeNull();
+      expect(icon?.innerHTML).toBe(idleGlyph);
+      expect(icon).toHaveAttribute("data-icon-weight", "regular");
+      expect(container.querySelector('[data-icon="puzzle-piece"]')).toBeNull();
+    },
+  );
+
   it("explains the idle workflow in three steps", () => {
     render(<ResearchStatePanel projectRef="prj_1" state="idle" />);
     expect(screen.getAllByRole("listitem")).toHaveLength(3);
@@ -57,7 +81,11 @@ describe("ResearchStatePanel", () => {
     const connect = screen.getByRole("link", { name: "Connect DataForSEO" });
     expect(connect).toHaveClass("bg-accent-solid", "rounded-control");
     expect(connect.querySelector("svg")).not.toBeNull();
-    expect(document.querySelector('[data-icon="puzzle-piece"]')).not.toBeNull();
+    expect(
+      screen.queryByText(
+        "Other providers do not offer research endpoints, so they cannot power this page.",
+      ),
+    ).not.toBeInTheDocument();
 
     rerender(<ResearchStatePanel projectRef="prj_1" state="needs_reauth" />);
     const reconnect = screen.getByRole("link", { name: "Reconnect DataForSEO" });

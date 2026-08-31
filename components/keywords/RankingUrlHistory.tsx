@@ -1,11 +1,8 @@
-import { Card, InfoTooltip, MonoText, SectionTitle, Tooltip } from "@/components/ui";
+import { Card, InfoTooltip, MonoText, SectionTitle } from "@/components/ui";
 import type { KeywordRow, RankingUrlEvent } from "@/lib/queries/keywords";
 import { rankObservationState } from "@/lib/serp/rank-depth";
-import {
-  ArrowUpRightIcon as ArrowUpRight,
-  MinusIcon as Minus,
-  WarningIcon as Warning,
-} from "@phosphor-icons/react/ssr";
+import { MinusIcon as Minus, WarningIcon as Warning } from "@phosphor-icons/react/ssr";
+import { RankingUrlExternalLink } from "./RankingUrlExternalLink";
 
 type TimelineEvent = RankingUrlEvent & { changed: boolean };
 
@@ -78,13 +75,13 @@ export function RankingUrlHistory({ keyword }: Readonly<{ keyword: KeywordRow }>
             <InfoTooltip text={HISTORY_EXPLANATION} />
             {changeState === "diff" ? (
               <span className="inline-flex h-6 items-center gap-1 rounded-full border border-yellow px-2 font-mono text-[10.5px] font-semibold text-yellow-text">
-                <Warning size={11} weight="fill" />
+                <Warning size={11} weight="regular" />
                 URL changed
               </span>
             ) : null}
             {changeState === "no_change" ? (
               <span className="inline-flex items-center gap-1 font-mono text-[10.5px] text-fg-muted">
-                <Minus size={12} weight="bold" />
+                <Minus size={12} weight="regular" />
                 No change
               </span>
             ) : null}
@@ -119,22 +116,7 @@ export function RankingUrlHistory({ keyword }: Readonly<{ keyword: KeywordRow }>
               </MonoText>
               <div className="col-span-2 col-start-2 row-start-2 min-w-0 sm:col-span-1 sm:col-start-3 sm:row-start-1">
                 <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5">
-                  <Tooltip content="Open ranking URL in a new tab" semantics="description">
-                    <a
-                      className="min-w-0 flex-1 truncate font-mono text-[12.5px] text-fg hover:text-accent-text hover:underline"
-                      href={event.url}
-                      rel="noreferrer noopener"
-                      target="_blank"
-                    >
-                      <span>{pathFromUrl(event.url)}</span>
-                      <ArrowUpRight
-                        aria-hidden
-                        className="ml-1 inline-block"
-                        size={12}
-                        weight="bold"
-                      />
-                    </a>
-                  </Tooltip>
+                  <RankingUrlExternalLink href={event.url} path={pathFromUrl(event.url)} />
                   {periodNote(event, index, timeline.length) ? (
                     <span className="max-w-[200px] truncate text-[11.5px] text-fg-muted">
                       {periodNote(event, index, timeline.length)}

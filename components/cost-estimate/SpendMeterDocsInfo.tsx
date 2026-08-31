@@ -8,15 +8,12 @@ import Link from "next/link";
 import { useState } from "react";
 
 export type SpendMeterDocsInfoProps = {
-  editBudgetHref?: string;
+  action?: { href: string; label: "Details" | "Set budget" };
   sessionCents?: number;
 };
 
 /** Compact popover replacement for the always-visible budget docs link. */
-export function SpendMeterDocsInfo({
-  editBudgetHref,
-  sessionCents,
-}: Readonly<SpendMeterDocsInfoProps>) {
+export function SpendMeterDocsInfo({ action, sessionCents }: Readonly<SpendMeterDocsInfoProps>) {
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
 
   return (
@@ -27,7 +24,7 @@ export function SpendMeterDocsInfo({
         onClick={(event) => setAnchor(event.currentTarget)}
         type="button"
       >
-        <Info aria-hidden size={12} weight="bold" />
+        <Info aria-hidden size={12} weight="regular" />
       </button>
       <Popover
         anchorEl={anchor}
@@ -55,19 +52,14 @@ export function SpendMeterDocsInfo({
               {formatMoneyCents(sessionCents)} this session
             </p>
           )}
-          {editBudgetHref ? (
-            <div className="mt-2 flex items-center justify-between gap-3">
+          {action ? (
+            <div className="mt-2">
               <Link
                 className="inline-flex text-[12px] font-medium text-accent-text hover:text-accent-text hover:underline"
-                href={editBudgetHref}
+                href={action.href}
+                onClick={() => setAnchor(null)}
               >
-                View usage
-              </Link>
-              <Link
-                className="inline-flex text-[12px] font-medium text-accent-text hover:text-accent-text hover:underline"
-                href={editBudgetHref}
-              >
-                Edit budget
+                {action.label}
               </Link>
             </div>
           ) : null}

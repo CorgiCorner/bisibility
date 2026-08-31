@@ -87,7 +87,7 @@ export function ResearchResultsTable({
             <Button
               onClick={() => onSelectionChange([])}
               size="sm"
-              startIcon={<X size={13} />}
+              startIcon={<X weight="regular" size={13} />}
               variant="ghost"
             >
               Clear
@@ -104,7 +104,7 @@ export function ResearchResultsTable({
                 onSaveSelected(rows.filter((row) => selected.has(row.keyword)));
               }}
               size="sm"
-              startIcon={<BookmarkSimple size={14} />}
+              startIcon={<BookmarkSimple weight="regular" size={14} />}
               sx={{
                 backgroundColor: "var(--bg-sidebar)",
                 border: "1px solid var(--accent)",
@@ -122,7 +122,7 @@ export function ResearchResultsTable({
               className="w-full @4xl:w-auto"
               onClick={onAddSelected}
               size="sm"
-              startIcon={<Plus size={14} />}
+              startIcon={<Plus weight="regular" size={14} />}
             >
               Add {selectedKeywords.length} to tracking
               {` +${checksPerRun} ${checksPerRun === 1 ? "check" : "checks"} per run`}
@@ -134,7 +134,7 @@ export function ResearchResultsTable({
         <Button
           onClick={onOpenFilters}
           size="sm"
-          startIcon={<Funnel size={14} />}
+          startIcon={<Funnel weight="regular" size={14} />}
           variant="secondary"
         >
           Filters

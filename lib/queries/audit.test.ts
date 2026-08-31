@@ -44,6 +44,7 @@ function auditRow() {
     actor: {
       email: "auditor@example.com",
       id: "user_1",
+      image: "https://example.com/auditor.png",
       name: "Auditor User",
       publicId: "usr_abcdefghijklmnopqrstuvwx",
     },
@@ -198,13 +199,27 @@ describe("getAuditLogView", () => {
     expect(result.retentionDays).toBe(365);
   });
 
-  it("derives a gravatar URL for a real actor", async () => {
+  it("selects and exposes the actor's existing image URL", async () => {
     const result = await getAuditLogView(project.publicId);
     if (!result.authorized) throw new Error("expected authorized audit view");
 
-    expect(result.entries[0]?.actor.avatarUrl).toEqual(
-      expect.stringContaining("https://www.gravatar.com/avatar/"),
+    expect(mocks.prisma.auditLog.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        include: { actor: { select: { email: true, image: true, name: true, publicId: true } } },
+      }),
     );
+    expect(result.entries[0]?.actor.avatarUrl).toBe("https://example.com/auditor.png");
+  });
+
+  it("leaves avatarUrl null when the actor has no image", async () => {
+    mocks.prisma.auditLog.findMany.mockResolvedValue([
+      { ...auditRow(), actor: { ...auditRow().actor, image: null } },
+    ]);
+
+    const result = await getAuditLogView(project.publicId);
+    if (!result.authorized) throw new Error("expected authorized audit view");
+
+    expect(result.entries[0]?.actor.avatarUrl).toBeNull();
   });
 
   it("sets avatarUrl to null for a synthetic system actor", async () => {

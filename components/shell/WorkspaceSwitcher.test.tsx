@@ -33,6 +33,71 @@ describe("WorkspaceSwitcher", () => {
     },
   );
 
+  it("runs the create-project divider edge to edge while retaining vertical spacing", async () => {
+    render(
+      <WorkspaceSwitcher
+        activeProjectId={mockWorkspaces[0].id}
+        canCreateWorkspace
+        workspaces={mockWorkspaces}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Switch project" }));
+    const divider = await screen.findByRole("separator");
+
+    expect(divider).toHaveStyle({
+      marginBottom: "4px",
+      marginLeft: "-6px",
+      marginRight: "-6px",
+      marginTop: "4px",
+    });
+  });
+
+  it("uses a square trigger with equal padding when the sidebar is collapsed", () => {
+    render(
+      <WorkspaceSwitcher
+        activeProjectId={mockWorkspaces[0].id}
+        canCreateWorkspace
+        collapsed
+        workspaces={mockWorkspaces}
+      />,
+    );
+
+    const trigger = screen.getByRole("button", { name: "Switch project" });
+    expect(trigger).toHaveClass("size-9", "p-0", "justify-center");
+    expect(trigger).not.toHaveClass("w-full", "h-11");
+  });
+
+  it("keeps the expanded trigger at the collapsed square height", () => {
+    render(
+      <WorkspaceSwitcher
+        activeProjectId={mockWorkspaces[0].id}
+        canCreateWorkspace
+        compact
+        workspaces={mockWorkspaces}
+      />,
+    );
+
+    const trigger = screen.getByRole("button", { name: "Switch project" });
+    expect(trigger).toHaveClass("h-9", "w-full");
+    expect(trigger).not.toHaveClass("h-11");
+  });
+
+  it("uses the sunken hover surface on the expanded sidebar trigger", () => {
+    render(
+      <WorkspaceSwitcher
+        activeProjectId={mockWorkspaces[0].id}
+        canCreateWorkspace
+        workspaces={mockWorkspaces}
+      />,
+    );
+
+    const trigger = screen.getByRole("button", { name: "Switch project" });
+
+    expect(trigger).toHaveClass("hover:bg-bg-sunken");
+    expect(trigger).not.toHaveClass("hover:bg-nav-active");
+  });
+
   it("reserves the full available sidebar width when expanded", () => {
     render(
       <WorkspaceSwitcher
@@ -45,21 +110,6 @@ describe("WorkspaceSwitcher", () => {
     const trigger = screen.getByRole("button", { name: "Switch project" });
 
     expect(trigger.closest("[data-tooltip]")).toHaveClass("w-full");
-  });
-
-  it("labels the collapsed trigger with a right-aligned tooltip", () => {
-    render(
-      <WorkspaceSwitcher
-        activeProjectId={mockWorkspaces[0].id}
-        canCreateWorkspace
-        collapsed
-        workspaces={mockWorkspaces}
-      />,
-    );
-
-    const trigger = screen.getByRole("button", { name: "Switch project" });
-    expect(trigger.closest("[data-tooltip]")).toHaveAttribute("data-tooltip", "Switch project");
-    expect(trigger.closest("[data-tooltip]")).toHaveAttribute("data-tooltip-placement", "right");
   });
 
   it("suppresses the expanded trigger tooltip", () => {
@@ -103,8 +153,8 @@ describe("WorkspaceSwitcher", () => {
     expect(trigger.className).toContain("bg-bg-elev");
   });
 
-  it("keeps the trigger workspace tile on a fixed white surface in expanded and collapsed states", () => {
-    const { rerender } = render(
+  it("uses a compact 20px workspace favicon in the sidebar trigger", () => {
+    render(
       <WorkspaceSwitcher
         activeProjectId={mockWorkspaces[0].id}
         canCreateWorkspace
@@ -121,17 +171,22 @@ describe("WorkspaceSwitcher", () => {
     };
 
     expectElevatedTile();
+    expect(
+      screen.getByRole("button", { name: "Switch project" }).querySelector("[aria-hidden]"),
+    ).toHaveClass("h-5", "w-5");
+  });
 
-    rerender(
+  it("aligns a compact header favicon to the navigation icon axis", () => {
+    render(
       <WorkspaceSwitcher
         activeProjectId={mockWorkspaces[0].id}
         canCreateWorkspace
-        collapsed
+        compact
         workspaces={mockWorkspaces}
       />,
     );
 
-    expectElevatedTile();
+    expect(screen.getByRole("button", { name: "Switch project" })).toHaveClass("px-[5px]");
   });
 
   it("shows the workspace tile in the trigger without encoding selection", () => {

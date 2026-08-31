@@ -14,6 +14,7 @@ type SettingsCardProps = {
   action?: ReactNode;
   children: ReactNode | ((state: SettingsCardState) => ReactNode);
   className?: string;
+  contentClassName?: string;
   description?: string;
   onSave?: () => void | Promise<void>;
   showSave?: boolean;
@@ -31,6 +32,7 @@ export function SettingsCard({
   action,
   children,
   className,
+  contentClassName,
   description,
   onSave,
   showSave = true,
@@ -101,7 +103,7 @@ export function SettingsCard({
           </div>
         ) : null}
       </div>
-      <div className="mt-5">{cardContents(children, state)}</div>
+      <div className={cn("mt-5", contentClassName)}>{cardContents(children, state)}</div>
     </Card>
   );
 }

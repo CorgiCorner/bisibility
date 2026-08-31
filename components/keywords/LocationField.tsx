@@ -151,7 +151,7 @@ export function LocationField({
             <MapPin
               className="pointer-events-none absolute left-2.5 text-fg-muted"
               size={14}
-              weight="bold"
+              weight="regular"
             />
           )}
           <Input
@@ -183,7 +183,7 @@ export function LocationField({
               data-location-field-caret
               data-testid="location-field-caret"
               size={11}
-              weight="bold"
+              weight="regular"
             />
           ) : null}
         </span>

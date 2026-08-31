@@ -37,19 +37,23 @@ const selectTriggerClass =
 
 function themeIcon(value: UserPreferences["theme"]) {
   if (value === "light") {
-    return <Sun aria-hidden size={15} />;
+    return <Sun aria-hidden size={15} weight="regular" />;
   }
-  return value === "dark" ? <MoonStars aria-hidden size={15} /> : <Monitor aria-hidden size={15} />;
+  return value === "dark" ? (
+    <MoonStars aria-hidden size={15} weight="regular" />
+  ) : (
+    <Monitor aria-hidden size={15} weight="regular" />
+  );
 }
 
 function densityIcon(value: UserPreferences["density"]) {
   if (value === "compact") {
-    return <ListDashes aria-hidden size={16} />;
+    return <ListDashes aria-hidden size={16} weight="regular" />;
   }
   if (value === "comfortable") {
-    return <Rows aria-hidden size={16} />;
+    return <Rows aria-hidden size={16} weight="regular" />;
   }
-  return <List aria-hidden size={16} />;
+  return <List aria-hidden size={16} weight="regular" />;
 }
 
 function themeSegments(): SegmentedControlOption<UserPreferences["theme"]>[] {

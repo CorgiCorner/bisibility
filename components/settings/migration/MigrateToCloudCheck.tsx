@@ -152,13 +152,13 @@ export function CheckStep({
           target="_blank"
         >
           Migration guide
-          <ArrowUpRight aria-hidden size={13} weight="bold" />
+          <ArrowUpRight aria-hidden size={13} weight="regular" />
         </a>
       </div>
       {compatibility ? (
         <details className="mt-4 rounded-control border border-border bg-bg-sunken px-3.5 py-3">
           <summary className="flex cursor-pointer list-none items-center gap-1.5 text-[12px] font-semibold text-fg-muted [&::-webkit-details-marker]:hidden">
-            <CaretDown aria-hidden className="transition-transform" size={12} weight="bold" />
+            <CaretDown aria-hidden className="transition-transform" size={12} weight="regular" />
             Technical details
           </summary>
           <div className="mt-2 flex flex-col gap-1">
@@ -211,7 +211,7 @@ function StatusRow({ data }: Readonly<{ data: StatusRowData }>) {
       icon: WarningCircle,
       status: "text-red-text",
       symbol: "text-red-text",
-      weight: "fill" as const,
+      weight: "regular" as const,
     },
     info: {
       icon: Info,
@@ -223,7 +223,7 @@ function StatusRow({ data }: Readonly<{ data: StatusRowData }>) {
       icon: CheckCircle,
       status: "text-green-text",
       symbol: "text-green-text",
-      weight: "fill" as const,
+      weight: "regular" as const,
     },
     pending: {
       icon: Circle,
@@ -235,7 +235,7 @@ function StatusRow({ data }: Readonly<{ data: StatusRowData }>) {
   const Icon = tone.icon;
   return (
     <div className="flex min-h-11 items-center gap-3 rounded-control border border-border bg-transparent px-[13px] py-3">
-      <Icon aria-hidden className={tone.symbol} size={19} weight={tone.weight} />
+      <Icon aria-hidden className={tone.symbol} size={19} weight="regular" />
       <span className="min-w-0 flex-1">
         <span className="block text-[13px] font-semibold">{data.title}</span>
         <span className="block wrap-break-word text-[12px] leading-5 text-fg-muted">

@@ -17,7 +17,17 @@ describe("stored Google property configuration", () => {
           endDate: "today",
           startDate: "yesterday",
         }),
-      "Measurement ID for a web data stream",
+      "G-Y67LRWFT7X is a Measurement ID. You need the numeric Property ID",
+    ],
+    [
+      "Universal Analytics tracking ID",
+      () =>
+        ga4AnalyticsProvider.fetchReport({
+          credentials: { apiKey: "refresh_token", login: "UA-123456-1" },
+          endDate: "today",
+          startDate: "yesterday",
+        }),
+      "UA-123456-1 is a Universal Analytics tracking ID. You need the numeric Property ID",
     ],
     [
       "invalid GSC property",

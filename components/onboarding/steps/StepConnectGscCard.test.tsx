@@ -31,7 +31,8 @@ describe("StepConnectGscCard", () => {
     expect(connectButton).toHaveAttribute("href", expect.not.stringContaining("property="));
     expect(connectButton).toHaveClass("MuiButton-outlined");
     expect(connectButton).not.toHaveClass("mt-4");
-    expect(connectButton.parentElement).toHaveClass("mt-4");
+    expect(connectButton).toHaveClass("w-full", "sm:w-auto");
+    expect(connectButton.parentElement).toHaveClass("mt-4", "flex", "justify-end");
   });
 
   it("returns the OAuth roundtrip to onboarding step 2 with the wizard context", () => {
@@ -76,7 +77,8 @@ describe("StepConnectGscCard", () => {
     expect(screen.queryByText(/sc-domain:/)).not.toBeInTheDocument();
     const changeButton = screen.getByRole("button", { name: "Change property" });
     expect(changeButton).not.toHaveClass("mt-4");
-    expect(changeButton.parentElement).toHaveClass("mt-4");
+    expect(changeButton).toHaveClass("w-full", "sm:w-auto", "MuiButton-outlined");
+    expect(changeButton.parentElement).toHaveClass("mt-4", "flex", "justify-end");
     fireEvent.click(changeButton);
     expect(
       await screen.findByRole("heading", { name: "Select a Search Console property" }),
@@ -96,18 +98,19 @@ describe("StepConnectGscCard", () => {
   });
 
   it("keeps full OAuth available when the stored account must be reconnected", async () => {
+    const loadStoredProperties = vi.fn(async () => ({
+      error: "Reconnect the Google account to load its properties.",
+      properties: [],
+      provider: "gsc" as const,
+      requiresReauth: true,
+    }));
     render(
       <StepConnectGscCard
         configured
         connectedPropertyLabel="sc-domain:example.com"
-        loadStoredProperties={async () => ({
-          error: "Reconnect the Google account to load its properties.",
-          properties: [],
-          provider: "gsc",
-          requiresReauth: true,
-        })}
+        loadStoredProperties={loadStoredProperties}
         projectId="prj_1"
-        returnPath="/onboarding?step=2&projectId=prj_1"
+        returnPath={"/onboarding?step=2&projectId=prj_1"}
       />,
     );
 
@@ -151,7 +154,10 @@ describe("StepConnectGscCard", () => {
         screen.queryByRole("heading", { name: "Select a Search Console property" }),
       ).not.toBeInTheDocument(),
     );
-    fireEvent.click(screen.getByRole("button", { name: "Select property" }));
+    const selectButton = screen.getByRole("button", { name: "Select property" });
+    expect(selectButton).toHaveClass("w-full", "sm:w-auto", "MuiButton-outlined");
+    expect(selectButton.parentElement).toHaveClass("flex", "justify-end");
+    fireEvent.click(selectButton);
     fireEvent.click(screen.getByRole("button", { name: "Use selected property" }));
     await waitFor(() =>
       expect(completePropertySelection).toHaveBeenCalledWith({

@@ -93,7 +93,7 @@ const meta = {
     },
     usage: usage as unknown as UsageSettingsContentProps["usage"],
   },
-  title: "Settings/Usage & billing",
+  title: "Settings/Usage and billing",
 } satisfies Meta<typeof UsageSettingsContent>;
 export default meta;
 type Story = StoryObj<typeof meta>;

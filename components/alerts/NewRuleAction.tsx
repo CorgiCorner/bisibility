@@ -46,7 +46,7 @@ export function NewRuleAction({
           disabled={readOnly}
           onClick={() => setOpen(true)}
           size="sm"
-          startIcon={<Plus aria-hidden size={14} weight="bold" />}
+          startIcon={<Plus aria-hidden size={14} weight="regular" />}
           type="button"
         >
           {label}

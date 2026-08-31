@@ -3,7 +3,6 @@
 import {
   buildOnboardingStepHref,
   type OnboardingFlowState,
-  onboardingDefaults,
 } from "@/components/onboarding/onboarding-fixtures";
 import {
   actionErrorMessage,
@@ -34,6 +33,7 @@ import {
   projectDefaultsInput,
 } from "./keyword-setup-model";
 import type { SaveOnboardingMarketsAction } from "./OnboardingMarkets";
+import { focusFirstKeywordSetupError, keywordSetupDefaults } from "./step-add-keywords-defaults";
 import {
   type AddKeywordsForm,
   keywordDraftMessage,
@@ -55,7 +55,7 @@ type CreatedKeyword = { id: string; publicId: string };
 type StepAddKeywordsProps = {
   addKeywordsAction?: (input: AddKeywordsInput) => Promise<{
     created: number;
-    keywordCount?: number;
+    persistedKeywordCount: number;
     keywords: CreatedKeyword[];
     skippedDuplicates: number;
     warnings?: string[];
@@ -103,14 +103,7 @@ export function StepAddKeywords({
 }: Readonly<StepAddKeywordsProps>) {
   const router = useRouter();
   const scheduleDefaults = withTrackingDefaults(trackingDefaults, flowState);
-  const formDefaults: KeywordSetupForm = {
-    ...scheduleDefaults,
-    device: defaultValues?.device ?? scheduleDefaults.devices[0] ?? DEFAULT_SERP_DEVICE,
-    devices: defaultValues?.devices ?? scheduleDefaults.devices,
-    keywords: defaultValues?.keywords ?? onboardingDefaults.addKeywords,
-    locations: defaultValues?.locations ?? scheduleDefaults.locations,
-    projectId: defaultValues?.projectId ?? scheduleDefaults.projectId,
-  };
+  const formDefaults = keywordSetupDefaults(scheduleDefaults, defaultValues);
   const [selectedLocations, setSelectedLocations] = useState(() =>
     locationValuesForKeys(formDefaults.locations),
   );
@@ -121,7 +114,6 @@ export function StepAddKeywords({
     formState: { errors, isSubmitting },
     handleSubmit,
     register,
-    setFocus,
     setValue,
     watch,
   } = useForm<KeywordSetupForm>({
@@ -184,12 +176,7 @@ export function StepAddKeywords({
         setActionSuccess(`${result.created} added, ${result.skippedDuplicates} already tracked`);
         setActionWarning(warning);
         await new Promise((resolve) => setTimeout(resolve, 0));
-        onComplete?.(
-          keywordFormValues(values),
-          defaults,
-          result.keywordCount ?? submitted.uniqueKeywords.length,
-          warning,
-        );
+        onComplete?.(keywordFormValues(values), defaults, result.persistedKeywordCount, warning);
       }
       if (!onComplete) router.push(buildOnboardingStepHref(4, { ...flowState, projectId }));
     } catch (cause) {
@@ -201,7 +188,7 @@ export function StepAddKeywords({
     <form
       id={onboardingFormId}
       noValidate
-      onSubmit={handleSubmit(onSubmit, () => setFocus("keywords"))}
+      onSubmit={handleSubmit(onSubmit, focusFirstKeywordSetupError)}
     >
       <input type="hidden" {...register("projectId")} />
       <input type="hidden" {...register("device")} />
@@ -235,7 +222,7 @@ export function StepAddKeywords({
         aria-describedby={errors.keywords ? "onboarding-keywords-error" : undefined}
         aria-invalid={errors.keywords ? true : undefined}
         aria-required="true"
-        className="mt-3 min-h-[150px] w-full resize-y rounded-control border border-border-control bg-transparent px-3.5 py-3 font-mono text-[13px] leading-[1.7] text-fg outline-none placeholder:text-[12px] placeholder:leading-4 focus:border-accent"
+        className="mt-3 min-h-[150px] w-full resize-y rounded-control border border-border-control bg-transparent px-3.5 py-3 font-mono text-[13px] font-normal leading-[1.7] text-fg outline-none placeholder:font-normal placeholder:text-fg-muted focus:border-accent"
         placeholder="One keyword per line"
         {...register("keywords", { onChange: (event) => onKeywordsChange?.(event.target.value) })}
         required

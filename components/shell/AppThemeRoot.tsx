@@ -1,5 +1,6 @@
 "use client";
 
+import { ThemeRoot } from "@/components/ui";
 import { readTheme, subscribeTheme, type ThemeMode } from "@/lib/theme/browser-theme";
 import { isSidebarCollapsed } from "@/lib/ui/sidebar-collapsed";
 import { type ComponentPropsWithoutRef, useSyncExternalStore } from "react";
@@ -20,14 +21,7 @@ function AppThemeRootContent({ defaultTheme, ...props }: Readonly<AppThemeRootPr
   );
   const { collapsed } = useSidebarCollapsed();
 
-  return (
-    <div
-      {...props}
-      data-app-theme-root
-      data-collapsed={collapsed ? "true" : "false"}
-      data-theme={theme}
-    />
-  );
+  return <ThemeRoot {...props} data-collapsed={collapsed ? "true" : "false"} data-theme={theme} />;
 }
 
 export function AppThemeRoot({ defaultTheme, ...props }: Readonly<AppThemeRootProps>) {

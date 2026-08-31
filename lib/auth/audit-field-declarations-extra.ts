@@ -30,12 +30,27 @@ export function registerAdditionalAuditDeclarations(
       preference: notificationPreference,
     },
   });
-  declare(["settings.presence_inspection_budget.update", "settings.rank_check_frequency.update"], {
-    after: projectDefaults,
-    before: projectDefaults,
-  });
+  declare(
+    [
+      "settings.presence_inspection_budget.update",
+      "settings.rank_check_frequency.update",
+      "settings.search_data_sync.update",
+    ],
+    {
+      after: projectDefaults,
+      before: projectDefaults,
+    },
+  );
   declare(["settings.hosted_pricing_feedback.submit"], {
     after: { ...f.booleans("answered"), ...strings("category") },
+  });
+  const searchImportPause = {
+    ...strings("pausedById", "pausedReason", "reason", "state"),
+    ...f.dates("pauseStartedAt"),
+  };
+  declare(["search_data_sync.pause", "search_data_sync.resume", "search_data_sync.retry"], {
+    after: searchImportPause,
+    before: searchImportPause,
   });
   declare(["project_defaults.update", "settings.defaults.update"], {
     after: {
@@ -263,6 +278,9 @@ export function registerAdditionalAuditDeclarations(
   });
   declare(["report.weekly_digest_sent"], {
     after: f.numbers("failedChecksCount", "recipients", "topMovers"),
+  });
+  declare(["search_insights.sync_now"], {
+    after: strings("property", "workflowId"),
   });
   declare(["sitemap_monitor.disable", "sitemap_monitor.enable"], {
     after: f.booleans("enabled"),

@@ -18,10 +18,12 @@ import { gravatarUrl } from "@/lib/avatar/gravatar";
 import { isCloud } from "@/lib/deployment/deployment";
 import { workspaceRoleLine } from "@/lib/format/workspace-role-line";
 import { getWorkerLivenessDetails } from "@/lib/ops/liveness";
+import { compareWorkerTemporalIdentity } from "@/lib/ops/worker-temporal-identity";
 import { getQuerySession } from "@/lib/queries/_auth";
 import { getLatestCloudPackageExport } from "@/lib/queries/cloud-beta-export";
 import { loadWorkspaceBudgetSummary } from "@/lib/queries/workspace-budget-summary";
 import { listWorkspaces } from "@/lib/queries/workspaces";
+import { temporalDeploymentConfig } from "@/lib/temporal/deployment-config";
 import { normalizeThemePreference, serverThemeMode } from "@/lib/theme/browser-theme";
 import { isSidebarCollapsed } from "@/lib/ui/sidebar-collapsed";
 import { cookies } from "next/headers";
@@ -58,6 +60,9 @@ export async function WorkspaceShell({
         : Promise.resolve(null),
     ]);
   const workerLiveness = instanceAdminSession ? await getWorkerLivenessDetails() : null;
+  const temporalIdentityComparison = workerLiveness
+    ? compareWorkerTemporalIdentity(temporalDeploymentConfig(), workerLiveness)
+    : null;
   const active = workspaces.find((workspace) => workspace.id === projectRef);
   if (!active) {
     notFound();
@@ -86,7 +91,7 @@ export async function WorkspaceShell({
       defaultTheme={serverThemeMode(theme)}
       data-shell-root
       data-collapsed={collapsed ? "true" : "false"}
-      className="min-h-dvh bg-bg text-fg lg:grid lg:grid-cols-[248px_minmax(0,1fr)] data-[collapsed=true]:lg:grid-cols-[80px_minmax(0,1fr)]"
+      className="min-h-dvh bg-bg text-fg lg:grid lg:grid-cols-[270px_minmax(0,1fr)] data-[collapsed=true]:lg:grid-cols-[80px_minmax(0,1fr)]"
     >
       <ProjectWriteModeProvider projectRef={projectRef} writeMode={active.writeMode}>
         {supportWidget}
@@ -102,24 +107,6 @@ export async function WorkspaceShell({
               workspaces={workspaces}
             />
             <div className="flex min-w-0 flex-col">
-              <AppHeader
-                actions={
-                  <HeaderProviderSpend
-                    projectRef={projectRef}
-                    recorded={budgetSummary?.recorded ?? null}
-                    tightest={budgetSummary?.tightest ?? null}
-                    usedPercent={budgetSummary?.maxUsedPercent ?? null}
-                  />
-                }
-                activeProjectId={active.publicId}
-                canCreateWorkspace={canCreateWorkspace}
-                projectDomain={active.domain}
-                projectRef={projectRef}
-                showHostedLinks={isCloud}
-                user={user}
-                workspaces={workspaces}
-              />
-              <ProjectWriteModeBanner />
               <CloudBetaBanner
                 dismissed={cloudBetaDismissed}
                 hasExportableData={active.keywordCount > 0}
@@ -131,6 +118,24 @@ export async function WorkspaceShell({
                 projectRef={projectRef}
                 projectName={active.name}
               />
+              <AppHeader
+                actions={
+                  <HeaderProviderSpend
+                    action={budgetSummary?.headerAction}
+                    projectRef={projectRef}
+                    recorded={budgetSummary?.recorded ?? null}
+                    tightest={budgetSummary?.tightest ?? null}
+                    usedPercent={budgetSummary?.maxUsedPercent ?? null}
+                  />
+                }
+                activeProjectId={active.publicId}
+                canCreateWorkspace={canCreateWorkspace}
+                projectRef={projectRef}
+                showHostedLinks={isCloud}
+                user={user}
+                workspaces={workspaces}
+              />
+              <ProjectWriteModeBanner />
               <main className="min-w-0 flex-1 px-4 py-4 sm:px-5 lg:px-7 lg:py-5.5">{children}</main>
               <AppFooter
                 schemaStatus={
@@ -143,6 +148,8 @@ export async function WorkspaceShell({
                     : undefined
                 }
                 showInstanceAdmin={Boolean(instanceAdminSession)}
+                temporalIdentityDetail={temporalIdentityComparison?.detail}
+                temporalIdentityStatus={temporalIdentityComparison?.status}
                 workerStatus={
                   instanceAdminSession && workerLiveness ? workerLiveness.status : undefined
                 }

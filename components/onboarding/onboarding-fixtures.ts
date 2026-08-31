@@ -1,7 +1,6 @@
 import { scheduledRunsPerMonth } from "@/lib/cost-estimate/project-estimate";
 import {
   DEFAULT_SERP_DEPTH,
-  DEFAULT_SERP_DEVICE,
   DEFAULT_SERP_MARKET,
   SERP_ENGINE,
   type SerpDepth,
@@ -11,6 +10,8 @@ import {
 import type { RankCheckFrequency } from "@/lib/settings/options";
 
 export type OnboardingStepNumber = 1 | 2 | 3 | 4;
+export const DEFAULT_ONBOARDING_DEVICE: SerpDevice = "mobile";
+export const DEFAULT_ONBOARDING_FREQUENCY: RankCheckFrequency = "manual";
 export type OnboardingIconKey = "database" | "folder" | "lightning" | "search";
 
 export type OnboardingStep = {
@@ -54,14 +55,14 @@ export const onboardingDefaults = {
   apiLogin: "",
   apiPassword: "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022",
   country: DEFAULT_SERP_MARKET,
-  device: "Desktop",
+  device: "Mobile",
   domain: "acme.dev",
   engine: SERP_ENGINE.label,
   language: "English",
   projectId: "prj_7Kd2Qf9m",
   projectName: "Acme",
   provider: "DataForSEO",
-  refresh: "Daily",
+  refresh: "Manual",
   serpDepth: `Top ${DEFAULT_SERP_DEPTH}`,
 } as const;
 
@@ -132,7 +133,7 @@ export function normalizeOnboardingDevices(values: readonly string[] | undefined
       }),
     ),
   ] as SerpDevice[];
-  return devices.length > 0 ? devices : [DEFAULT_SERP_DEVICE];
+  return devices.length > 0 ? devices : [DEFAULT_ONBOARDING_DEVICE];
 }
 
 export function countKeywordLines(value: string) {

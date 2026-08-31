@@ -29,14 +29,14 @@ describe("TwoFactorChallengeForm", () => {
     const { container } = render(<TwoFactorChallengeForm returnTo={returnTo} />);
 
     expect(container.querySelector("form")).toBeNull();
-    expect(screen.getByRole("button", { name: "Verify & continue" })).toHaveAttribute(
+    expect(screen.getByRole("button", { name: "Verify and continue" })).toHaveAttribute(
       "type",
       "button",
     );
     fireEvent.change(screen.getByLabelText("Authenticator code"), {
       target: { value: "123456" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Verify & continue" }));
+    fireEvent.click(screen.getByRole("button", { name: "Verify and continue" }));
 
     await waitFor(() => expect(mocks.verifyTotp).toHaveBeenCalledWith({ code: "123456" }));
     expect(routerMock.replace).toHaveBeenCalledWith(returnTo);
@@ -64,7 +64,7 @@ describe("TwoFactorChallengeForm", () => {
     fireEvent.change(screen.getByLabelText("Backup code"), {
       target: { value: "abcde-12345" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Verify & continue" }));
+    fireEvent.click(screen.getByRole("button", { name: "Verify and continue" }));
 
     await waitFor(() =>
       expect(mocks.verifyBackupCode).toHaveBeenCalledWith({ code: "abcde-12345" }),
@@ -79,7 +79,7 @@ describe("TwoFactorChallengeForm", () => {
     fireEvent.change(screen.getByLabelText("Authenticator code"), {
       target: { value: "123456" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Verify & continue" }));
+    fireEvent.click(screen.getByRole("button", { name: "Verify and continue" }));
 
     await waitFor(() => expect(routerMock.replace).toHaveBeenCalledWith(appRootPath()));
   });
@@ -113,7 +113,7 @@ describe("TwoFactorChallengeForm", () => {
     fireEvent.change(screen.getByLabelText("Backup code"), {
       target: { value: "used1-code1" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Verify & continue" }));
+    fireEvent.click(screen.getByRole("button", { name: "Verify and continue" }));
 
     expect(
       await screen.findByText("That code is invalid, expired, or already used."),

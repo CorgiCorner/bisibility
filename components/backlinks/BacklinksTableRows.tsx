@@ -177,7 +177,7 @@ function DomainRow({
             <CaretRight
               className={`text-fg-muted transition-transform ${expanded ? "rotate-90" : ""}`}
               size={11}
-              weight="bold"
+              weight="regular"
             />
           ) : null}
         </span>
@@ -205,7 +205,7 @@ function DomainRow({
                 className="flex items-center gap-2.5 border-t border-border/70 bg-bg-sunken/40 py-2 pl-[54px] pr-4"
                 key={item.signature}
               >
-                <StackSimple aria-hidden className="text-fg-muted" size={14} />
+                <StackSimple weight="regular" aria-hidden className="text-fg-muted" size={14} />
                 <span className="text-[12.5px] text-fg-muted">
                   {item.count} more pages carry the same footer link
                 </span>

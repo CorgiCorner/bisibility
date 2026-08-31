@@ -100,7 +100,7 @@ export function LocationSelectionChips({
               type="button"
               variant="ghost"
             >
-              <X aria-hidden size={11} weight="bold" />
+              <X aria-hidden size={11} weight="regular" />
             </Button>
           </span>
         ))}
@@ -108,7 +108,7 @@ export function LocationSelectionChips({
           <Button
             onClick={() => setAdding(true)}
             size="xs"
-            startIcon={<Plus aria-hidden size={13} weight="bold" />}
+            startIcon={<Plus aria-hidden size={13} weight="regular" />}
             sx={{ borderRadius: "9999px", borderStyle: "dashed" }}
             type="button"
             variant="secondary"
@@ -139,7 +139,7 @@ export function LocationSelectionChips({
               className="justify-self-end"
               onClick={cancelAdd}
               size="xs"
-              startIcon={<X aria-hidden size={12} weight="bold" />}
+              startIcon={<X aria-hidden size={12} weight="regular" />}
               sx={{
                 borderRadius: "9999px",
                 "&:hover": {

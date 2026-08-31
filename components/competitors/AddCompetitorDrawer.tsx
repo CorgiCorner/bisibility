@@ -98,7 +98,7 @@ export function AddCompetitorDrawer({
             form="add-competitor-form"
             loading={isSubmitting}
             loadingLabel="Adding..."
-            startIcon={<Plus aria-hidden size={14} weight="bold" />}
+            startIcon={<Plus aria-hidden size={14} weight="regular" />}
             type="submit"
           >
             Add competitor
@@ -174,7 +174,7 @@ export function AddCompetitorDrawer({
                   onClick={() => pickSuggestion(suggestion.domain)}
                   type="button"
                 >
-                  <Plus aria-hidden size={12} weight="bold" />
+                  <Plus aria-hidden size={12} weight="regular" />
                   Use
                 </button>
               </div>
@@ -188,7 +188,7 @@ export function AddCompetitorDrawer({
 
         <div className="flex items-start gap-[9px] rounded-control border border-dashed border-border bg-transparent px-3.5 py-3 text-xs leading-5 text-fg-muted">
           <span className="flex h-5 shrink-0 items-center">
-            <Info aria-hidden className="text-accent-text" size={15} />
+            <Info weight="regular" aria-hidden className="text-accent-text" size={15} />
           </span>
           <span>
             Share of voice and head-to-head ranks update from completed rank checks for keywords you

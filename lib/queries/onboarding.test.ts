@@ -1,6 +1,7 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   getOnboardingKeywordCount,
+  getOnboardingNextCheckAt,
   getOnboardingProjectMarketKeys,
   hasActiveOnboardingApiKey,
 } from "./onboarding";
@@ -10,6 +11,9 @@ const mocks = vi.hoisted(() => ({
     $queryRaw: vi.fn(),
     apiKey: { findFirst: vi.fn() },
     projectMarket: { findMany: vi.fn() },
+    keywordDispatchState: { findFirst: vi.fn() },
+    keyword: { findFirst: vi.fn(), findMany: vi.fn() },
+    projectDefaults: { findUnique: vi.fn() },
   },
   requireReadableProject: vi.fn(),
 }));
@@ -78,5 +82,69 @@ describe("hasActiveOnboardingApiKey", () => {
         revokedAt: null,
       },
     });
+  });
+});
+
+describe("getOnboardingNextCheckAt", () => {
+  const now = new Date("2026-08-28T12:00:00Z");
+  function defaults(frequency: string) {
+    return {
+      cronExpression: frequency === "daily" ? "0 6 * * *" : null,
+      frequency,
+      jitterMinutes: 0,
+      timezone: "UTC",
+    };
+  }
+  function keyword(
+    id: string,
+    nextCheckAt: string,
+    schedule: ReturnType<typeof defaults> | null = null,
+  ) {
+    return {
+      createdAt: new Date(),
+      dispatchState: { nextCheckAt: new Date(nextCheckAt) },
+      id,
+      schedule,
+    };
+  }
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(now);
+    vi.clearAllMocks();
+    mocks.requireReadableProject.mockResolvedValue({ project: { id: "project_1" } });
+    mocks.prisma.projectDefaults.findUnique.mockResolvedValue(defaults("daily"));
+    mocks.prisma.keyword.findMany.mockResolvedValue([]);
+  });
+  afterEach(() => vi.useRealTimers());
+
+  it("returns null for a manual project default", async () => {
+    mocks.prisma.projectDefaults.findUnique.mockResolvedValue(defaults("manual"));
+    mocks.prisma.keyword.findMany.mockResolvedValue([keyword("keyword_1", "2026-08-29T06:00:00Z")]);
+    await expect(getOnboardingNextCheckAt("prj_1")).resolves.toBeNull();
+  });
+  it("excludes a paused keyword override", async () => {
+    mocks.prisma.keyword.findMany.mockResolvedValue([
+      keyword("keyword_1", "2026-08-29T06:00:00Z", defaults("paused")),
+    ]);
+    await expect(getOnboardingNextCheckAt("prj_1")).resolves.toBeNull();
+  });
+  it("excludes stale dispatch rows", async () => {
+    mocks.prisma.keyword.findMany.mockResolvedValue([keyword("keyword_1", "2026-08-27T06:00:00Z")]);
+    await expect(getOnboardingNextCheckAt("prj_1")).resolves.toBeNull();
+  });
+  it("uses an inherited scheduled dispatch", async () => {
+    const next = new Date("2026-08-29T06:00:00Z");
+    mocks.prisma.keyword.findMany.mockResolvedValue([keyword("keyword_1", next.toISOString())]);
+    await expect(getOnboardingNextCheckAt("prj_1")).resolves.toEqual(next);
+  });
+  it("chooses the earliest runnable row from mixed schedules", async () => {
+    const next = new Date("2026-08-29T05:00:00Z");
+    mocks.prisma.keyword.findMany.mockResolvedValue([
+      keyword("manual", "2026-08-29T01:00:00Z", defaults("manual")),
+      keyword("daily_late", "2026-08-30T06:00:00Z"),
+      keyword("daily_next", next.toISOString()),
+      keyword("paused", "2026-08-29T02:00:00Z", defaults("paused")),
+    ]);
+    await expect(getOnboardingNextCheckAt("prj_1")).resolves.toEqual(next);
   });
 });

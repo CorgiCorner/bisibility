@@ -99,7 +99,7 @@ export function TeamMemberActionsMenu({
           onClick={(event) => setAnchor(event.currentTarget)}
           type="button"
         >
-          <DotsThree aria-hidden size={16} weight="bold" />
+          <DotsThree aria-hidden size={16} weight="regular" />
         </button>
       </Tooltip>
       <Menu

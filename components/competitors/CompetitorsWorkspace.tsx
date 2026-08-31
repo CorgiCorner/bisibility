@@ -8,7 +8,7 @@ import { HeadToHeadTable } from "@/components/competitors/HeadToHeadTable";
 import { ShareOfVoiceCard } from "@/components/competitors/ShareOfVoiceCard";
 import type { KeywordWorkspaceActions } from "@/components/keywords/action-utils";
 import { AddKeywordDrawer } from "@/components/keywords/add/AddKeywordDrawer";
-import { Button, EmptyState } from "@/components/ui";
+import { Button, EmptyState, ModuleMark } from "@/components/ui";
 import { downloadCompetitorMarketCsv } from "@/lib/competitors/competitor-csv";
 import { buildCompetitorMarket } from "@/lib/competitors/competitor-market-model";
 import { useCompetitorDraft } from "@/lib/competitors/draft-store";
@@ -101,7 +101,7 @@ export function CompetitorsWorkspace({
             ) : undefined
           }
           description="Add at least one competitor to compare share of voice and head-to-head rankings."
-          icon={<UsersThree aria-hidden size={28} />}
+          mark={<ModuleMark bordered icon={UsersThree} />}
           title="No competitors yet"
         />
       </div>
@@ -120,7 +120,7 @@ export function CompetitorsWorkspace({
             href={appPath(projectRef, "rank-tracker")}
           >
             Add keywords first
-            <CaretRight aria-hidden size={14} weight="bold" />
+            <CaretRight aria-hidden size={14} weight="regular" />
           </Link>
         }
         description={`${view.managedCompetitors.length} competitor${view.managedCompetitors.length === 1 ? "" : "s"} (${competitorNames}) saved. Track at least one keyword before benchmarking.`}
@@ -218,7 +218,7 @@ export function CompetitorsWorkspace({
           <Button
             onClick={() => setScopeOpen(true)}
             size="sm"
-            startIcon={<FunnelSimple aria-hidden size={13} />}
+            startIcon={<FunnelSimple weight="regular" aria-hidden size={13} />}
             variant="secondary"
           >
             Comparison scope
@@ -226,7 +226,7 @@ export function CompetitorsWorkspace({
           <Button
             onClick={() => downloadCompetitorMarketCsv(market)}
             size="sm"
-            startIcon={<UploadSimple aria-hidden size={13} />}
+            startIcon={<UploadSimple weight="regular" aria-hidden size={13} />}
             variant="secondary"
           >
             Export

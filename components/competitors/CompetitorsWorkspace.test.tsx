@@ -69,6 +69,7 @@ describe("CompetitorsWorkspace", () => {
 
     const heading = screen.getByRole("heading", { level: 3, name: "No competitors yet" });
     expect(heading.parentElement).toHaveClass("rounded-card", "border", "bg-bg-elev");
+    expect(heading.parentElement?.querySelector('[data-module-mark="soft"]')).not.toBeNull();
     expect(screen.getByText(/add at least one competitor/i)).toBeInTheDocument();
     expect(screen.queryByText(/managed/i)).not.toBeInTheDocument();
   });

@@ -43,8 +43,9 @@ export function Ga4PropertyManualEntry({
           onPropertyChange("");
           onErrorChange(null);
         }}
+        className="w-auto self-start"
         type="button"
-        variant="secondary"
+        variant="ghost"
       >
         I don&apos;t see my property
       </Button>
@@ -67,7 +68,6 @@ export function Ga4PropertyManualEntry({
             onPropertyChange(event.target.value);
             onErrorChange(null);
           }}
-          placeholder="123456789"
           required
           type="text"
           value={property}

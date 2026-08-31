@@ -68,4 +68,4 @@ export function PricingPopover({
 }
 
 export const pricingTriggerClassName =
-  "whitespace-nowrap text-[12.5px] text-fg-muted underline decoration-border-control underline-offset-4 transition-colors hover:text-fg";
+  "whitespace-nowrap text-[12.5px] text-fg-muted decoration-border-control underline-offset-4 transition-colors hover:text-fg hover:underline focus-visible:underline";

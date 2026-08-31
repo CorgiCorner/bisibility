@@ -27,6 +27,35 @@ describe("DomainOverviewStatePanel", () => {
     expect(query).toBeInTheDocument();
   });
 
+  it("uses a module mark for idle but not the unsupported-location globe", () => {
+    const { container, rerender } = render(
+      <DomainOverviewStatePanel projectRef="prj_1" state="idle" />,
+    );
+    expect(container.querySelector('[data-module-mark="soft"]')).not.toBeNull();
+
+    rerender(<DomainOverviewStatePanel projectRef="prj_1" state="unsupported_location" />);
+    expect(container.querySelector("[data-module-mark]")).toBeNull();
+  });
+
+  it.each(["no_provider", "needs_reauth"] as const)(
+    "uses the regular Globe module mark for %s",
+    (state) => {
+      const idle = render(<DomainOverviewStatePanel projectRef="prj_1" state="idle" />);
+      const idleIcon = idle.container.querySelector('[data-module-mark="soft"] svg');
+      const idleGlyph = idleIcon?.innerHTML;
+      idle.unmount();
+
+      const { container } = render(<DomainOverviewStatePanel projectRef="prj_1" state={state} />);
+      const mark = container.querySelector('[data-module-mark="soft"]');
+      const icon = mark?.querySelector("svg");
+
+      expect(mark).not.toBeNull();
+      expect(icon?.innerHTML).toBe(idleGlyph);
+      expect(icon).toHaveAttribute("data-icon-weight", "regular");
+      expect(container.querySelector('[data-icon="puzzle-piece"]')).toBeNull();
+    },
+  );
+
   it("gives Connect and Reconnect DataForSEO the solid CTA with a trailing caret", () => {
     const { rerender } = render(
       <DomainOverviewStatePanel projectRef="prj_1" state="no_provider" />,
@@ -34,7 +63,6 @@ describe("DomainOverviewStatePanel", () => {
     const connect = screen.getByRole("link", { name: "Connect DataForSEO" });
     expect(connect).toHaveClass("bg-accent-solid", "rounded-control");
     expect(connect.querySelector("svg")).not.toBeNull();
-    expect(document.querySelector('[data-icon="puzzle-piece"]')).not.toBeNull();
 
     rerender(<DomainOverviewStatePanel projectRef="prj_1" state="needs_reauth" />);
     const reconnect = screen.getByRole("link", { name: "Reconnect DataForSEO" });

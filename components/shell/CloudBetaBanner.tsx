@@ -100,7 +100,7 @@ export function CloudBetaBanner({
     <>
       <div className="@container">
         <div
-          className="flex flex-wrap items-center gap-x-2 gap-y-1.5 border-b border-border bg-yellow/[0.1] px-3 py-2.5 @sm:px-4"
+          className="flex min-h-10 flex-wrap items-center gap-x-2 gap-y-1.5 border-b border-border bg-bg-elev px-3 py-1 @sm:px-4"
           role="status"
         >
           {/* Glyph and message form one item so the row centres them together against the taller
@@ -116,14 +116,14 @@ export function CloudBetaBanner({
           <div className="flex min-w-0 flex-1 items-start gap-x-2">
             <span
               aria-hidden
-              className="-translate-y-px flex h-lh shrink-0 items-center text-[12px] leading-[1.45] text-yellow-text"
+              className="-translate-y-px flex h-lh shrink-0 items-center text-[12px] leading-[1.45]"
               data-testid="cloud-beta-warning-line"
             >
               <WarningCircle
-                className="shrink-0"
+                className="shrink-0 text-accent-solid"
                 data-testid="cloud-beta-warning-icon"
                 size={17}
-                weight="fill"
+                weight="regular"
               />
             </span>
             <p
@@ -138,11 +138,11 @@ export function CloudBetaBanner({
           </div>
           <button
             aria-label="Dismiss hosted beta banner"
-            className="grid h-7 w-7 shrink-0 place-items-center rounded-control text-fg-muted transition-colors hover:bg-yellow/[0.14] hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid @xl:order-3"
+            className="grid h-7 w-7 shrink-0 place-items-center rounded-control text-fg-muted transition-colors hover:bg-bg-sunken hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid @xl:order-3"
             onClick={dismiss}
             type="button"
           >
-            <X aria-hidden size={13} weight="bold" />
+            <X aria-hidden size={13} weight="regular" />
           </button>
           {/* Below the container's xl width the message needs the whole line, so the actions take
               a row of their own, indented to the message's text edge. The dismiss control keeps
@@ -187,7 +187,6 @@ export function CloudBetaBanner({
           onExportSuccess={setLatestExport}
           open={activeModal === "backup"}
           projectId={projectId}
-          projectRef={projectRef}
           projectName={projectName}
         />
       ) : null}

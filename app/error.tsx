@@ -7,10 +7,7 @@ import {
   TerminalBlock,
 } from "@/components/marketing/system/SystemPage";
 import { reportAppError } from "@/lib/observability/error-reporting";
-import {
-  ArrowClockwiseIcon as ArrowClockwise,
-  ArrowLeftIcon as ArrowLeft,
-} from "@phosphor-icons/react";
+import { ArrowClockwiseIcon as ArrowClockwise } from "@phosphor-icons/react";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 
@@ -33,16 +30,11 @@ export default function ErrorBoundary({ error, reset }: Readonly<ErrorPageProps>
         <>
           <SystemPrimaryAction
             onClick={reset}
-            startIcon={<ArrowClockwise size={16} weight="bold" />}
+            startIcon={<ArrowClockwise size={16} weight="regular" />}
           >
             Try again
           </SystemPrimaryAction>
-          <SystemSecondaryAction
-            href="/app"
-            startIcon={<ArrowLeft aria-hidden size={16} weight="bold" />}
-          >
-            Back to dashboard
-          </SystemSecondaryAction>
+          <SystemSecondaryAction href="/app">Back to dashboard</SystemSecondaryAction>
         </>
       }
       description="The request fell outside a clean ranking run. Try again, or head back to the dashboard while we recover the route."

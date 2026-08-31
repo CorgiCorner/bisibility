@@ -51,6 +51,22 @@ export function trackingScheduleValue(
   };
 }
 
+export function trackingScheduleValueWithDepthOverride(
+  frequency: TrackingScheduleSelection,
+  costContext: ProjectCostContext,
+) {
+  if (frequency !== "project_default") {
+    return trackingScheduleValue(frequency, costContext);
+  }
+  return {
+    cronExpression: costContext.rawFrequency === "custom_cron" ? costContext.cronExpression : null,
+    frequency: costContext.rawFrequency,
+    jitterMinutes: 60,
+    serpDepth: costContext.depth,
+    timezone: costContext.timezone ?? "UTC",
+  };
+}
+
 export function addKeywordDrawerCtaLabel(
   activeTab: AddKeywordTab,
   csvReviewOpen: boolean,

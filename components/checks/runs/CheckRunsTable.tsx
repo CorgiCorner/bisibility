@@ -59,7 +59,7 @@ function PositionDelta({ run }: Readonly<{ run: CheckRunRow }>) {
         delta > 0 ? "bg-green/10 text-green-text" : "bg-red/10 text-red-text"
       }`}
     >
-      <Icon aria-hidden size={9} weight="bold" />
+      <Icon aria-hidden size={9} weight="regular" />
       {Math.abs(delta)}
     </span>
   );
@@ -214,9 +214,9 @@ function RunTableBody({
                     type="button"
                   >
                     {expanded ? (
-                      <CaretDown aria-hidden size={14} />
+                      <CaretDown weight="regular" aria-hidden size={14} />
                     ) : (
-                      <CaretRight aria-hidden size={14} />
+                      <CaretRight weight="regular" aria-hidden size={14} />
                     )}
                   </button>
                 ) : null}

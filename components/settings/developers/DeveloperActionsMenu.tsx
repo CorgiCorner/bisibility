@@ -38,7 +38,7 @@ export function DeveloperActionsMenu({ ariaLabel, items }: Readonly<DeveloperAct
         onClick={(event) => setAnchor(event.currentTarget)}
         type="button"
       >
-        <DotsThree aria-hidden size={16} weight="bold" />
+        <DotsThree aria-hidden size={16} weight="regular" />
       </button>
       <Menu
         anchorEl={anchor}

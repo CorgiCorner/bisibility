@@ -35,6 +35,8 @@ export const PREFERENCE_COOKIES = {
 const LANDING_MIGRATIONS: Readonly<Record<string, LandingSegment>> = {
   overview: "dashboard",
   keywords: "rank-tracker",
+  "search-insights": "search-console",
+  "search-console-insights": "search-console",
 };
 
 const DEFAULT_LANDING: LandingSegment = "dashboard";

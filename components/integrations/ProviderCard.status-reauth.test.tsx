@@ -30,7 +30,7 @@ describe("ProviderCard", () => {
 
     expect(screen.getByText("Reconnect required")).toBeInTheDocument();
     expect(screen.getByRole("alert")).toHaveTextContent(
-      "Google authorization is no longer valid. Reconnect to resume traffic and index-status syncs.",
+      "Google authorization is no longer valid. Reconnect to resume Search Insights and traffic enrichment.",
     );
     fireEvent.click(screen.getByRole("button", { name: "Reconnect" }));
     expect(screen.getByTestId("connect-drawer")).toBeInTheDocument();

@@ -27,6 +27,7 @@ export type MenuMultiSelectProps = {
   searchPlaceholder?: string;
   searchable?: boolean;
   summary?: (selected: readonly MenuSelectOption[]) => string;
+  summaryClassName?: string;
   triggerClassName?: string;
   values: readonly string[];
 };
@@ -42,6 +43,7 @@ export function MenuMultiSelect({
   searchPlaceholder = "Search...",
   searchable = false,
   summary,
+  summaryClassName,
   triggerClassName,
   values,
 }: Readonly<MenuMultiSelectProps>) {
@@ -86,10 +88,10 @@ export function MenuMultiSelect({
         type="button"
       >
         {leadingIcon ? <span className="flex shrink-0 text-fg-muted">{leadingIcon}</span> : null}
-        <span className="min-w-0 truncate text-fg">
+        <span className={cn("min-w-0 truncate text-fg", summaryClassName)}>
           {selectedSummary(selected, placeholder, summary)}
         </span>
-        <CaretDown aria-hidden className="shrink-0 text-fg-muted" size={11} weight="bold" />
+        <CaretDown aria-hidden className="shrink-0 text-fg-muted" size={11} weight="regular" />
       </button>
       <Menu
         anchorEl={anchorEl}
@@ -116,7 +118,7 @@ export function MenuMultiSelect({
           >
             <span className={values.length === 0 ? "text-fg" : undefined}>{allLabel}</span>
             {values.length === 0 ? (
-              <Check aria-hidden className="text-accent-text" size={15} weight="bold" />
+              <Check aria-hidden className="text-accent-text" size={15} weight="regular" />
             ) : null}
           </MenuItem>
         ) : null}

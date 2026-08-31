@@ -36,8 +36,10 @@ export type OnboardingWizardStepsProps = {
   hasAnalyticsSource: boolean;
   hasConnectedProvider: boolean;
   initialSerpConnections?: ConnectedProviderMap;
+  initialKeywordText?: string | null;
   keywordCount: number;
   monthlyCapCents: number;
+  nextCheckAt?: string | null;
   project: OnboardingProject | null;
   projectedCostPerCheckCents: number | null;
   rankedKeywordConnections: RankedKeywordConnection[];
@@ -46,10 +48,10 @@ export type OnboardingWizardStepsProps = {
   onMarketsChange: NonNullable<Parameters<typeof StepAddKeywords>[0]["onMarketsChange"]>;
   onKeywordsComplete: NonNullable<Parameters<typeof StepAddKeywords>[0]["onComplete"]>;
   onProviderComplete: NonNullable<Parameters<typeof StepConnectProvider>[0]["onComplete"]>;
+  onInlineProviderComplete: NonNullable<Parameters<typeof StepConnectProvider>[0]["onComplete"]>;
   onProviderContinueDisabledChange: NonNullable<
     Parameters<typeof StepConnectProvider>[0]["onContinueDisabledChange"]
   >;
-  onProviderSkip: NonNullable<Parameters<typeof StepConnectProvider>[0]["onSkip"]>;
   onFirstCheckBack?: () => void;
   onTimezoneChange?: (timezone: string) => Promise<void> | void;
 };
@@ -68,8 +70,10 @@ export function OnboardingWizardSteps({
   hasAnalyticsSource,
   hasConnectedProvider,
   initialSerpConnections,
+  initialKeywordText,
   keywordCount,
   monthlyCapCents,
+  nextCheckAt,
   project,
   projectedCostPerCheckCents,
   rankedKeywordConnections,
@@ -78,8 +82,8 @@ export function OnboardingWizardSteps({
   onMarketsChange,
   onKeywordsComplete,
   onProviderComplete,
+  onInlineProviderComplete,
   onProviderContinueDisabledChange,
-  onProviderSkip,
   onFirstCheckBack,
   onTimezoneChange,
 }: Readonly<OnboardingWizardStepsProps>) {
@@ -123,7 +127,6 @@ export function OnboardingWizardSteps({
           initialConnections={initialSerpConnections}
           onComplete={onProviderComplete}
           onContinueDisabledChange={onProviderContinueDisabledChange}
-          onSkip={onProviderSkip}
           testProviderConnectionAction={actions.testProviderConnectionAction}
         />
       ) : null}
@@ -151,18 +154,26 @@ export function OnboardingWizardSteps({
       {currentStep === 4 ? (
         <StepFirstCheck
           completeOnboardingAction={actions.completeOnboardingAction}
+          connectProviderAction={actions.connectProviderAction}
           defaults={draft.schedule}
           flowState={flowState}
           getObservedPositionsAction={actions.getObservedPositionsAction}
           hasAnalyticsSource={hasAnalyticsSource}
           keywordCount={keywordCount}
           keywordDraft={draft.addKeywords.keywords}
+          initialConnections={initialSerpConnections}
+          initialKeywordText={initialKeywordText}
+          nextCheckAt={nextCheckAt}
+          onProviderConnected={onInlineProviderComplete}
+          providerDefaultValues={draft.connectProvider}
+          projectedCostPerCheckCents={projectedCostPerCheckCents}
           listFirstCheckCandidatesAction={actions.listFirstCheckCandidatesAction}
           project={project}
           providerConnected={hasConnectedProvider}
           providerId={connectedProviderId}
           runFirstCheckPreviewAction={actions.runFirstCheckPreviewAction}
           saveMarketsAction={actions.saveMarketsAction}
+          testProviderConnectionAction={actions.testProviderConnectionAction}
           onBack={onFirstCheckBack}
           onTimezoneChange={onTimezoneChange}
         />

@@ -53,7 +53,7 @@ function FieldMessage({ error, id }: Readonly<{ error?: FieldError; id: string }
 
 export function AccountEmailChangeSteps({
   confirmAccountEmailChange,
-  currentEmail,
+  currentEmail: _currentEmail,
   onChanged,
   requestAccountEmailChange,
   requestAccountEmailChangeCode,
@@ -120,7 +120,7 @@ export function AccountEmailChangeSteps({
   return (
     <div className="mt-3 space-y-3" data-account-email-step={step}>
       {step === "current" ? (
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 sm:justify-end">
           <Button
             loading={busy}
             onClick={sendCurrentCode}
@@ -128,11 +128,8 @@ export function AccountEmailChangeSteps({
             type="button"
             variant="secondary"
           >
-            {`Send code to ${currentEmail}`}
+            Change email
           </Button>
-          <p className="m-0 text-[12px] leading-5 text-fg-muted">
-            Changing this address starts with a code sent to the address on the account today.
-          </p>
         </div>
       ) : null}
 
@@ -174,11 +171,11 @@ export function AccountEmailChangeSteps({
             />
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Button loading={busy} size="sm" type="submit">
-              Send code to the new address
-            </Button>
             <Button disabled={busy} onClick={restart} size="sm" type="button" variant="secondary">
               Cancel
+            </Button>
+            <Button className="ml-auto" loading={busy} size="sm" type="submit">
+              Send code to the new address
             </Button>
           </div>
         </form>

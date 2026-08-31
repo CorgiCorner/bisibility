@@ -110,9 +110,9 @@ export function AuditFilters({
     ...actors.map((actor) => ({ label: actor.email, value: actor.email })),
   ];
   const statusOptions = [
-    { label: "Status", value: "all" },
-    { label: "Success", value: "success" },
-    { label: "Failed", value: "failed" },
+    { label: "Status", noWrap: true, value: "all" },
+    { label: "Success", noWrap: true, value: "success" },
+    { label: "Failed", noWrap: true, value: "failed" },
   ];
 
   return (
@@ -133,27 +133,28 @@ export function AuditFilters({
           />
           <MenuSelect
             ariaLabel="Date range"
-            leadingIcon={<CalendarBlank aria-hidden size={14} />}
+            leadingIcon={<CalendarBlank aria-hidden size={14} weight="regular" />}
             onChange={(next) => setFilter("dateRange", next as AuditDateRange)}
             options={dateOptions}
             value={filters.dateRange}
           />
           <MenuSelect
             ariaLabel="Event type"
-            leadingIcon={<Funnel aria-hidden size={14} />}
+            leadingIcon={<Funnel aria-hidden size={14} weight="regular" />}
             onChange={(next) => setFilter("eventType", next as AuditFilterState["eventType"])}
             options={eventTypeOptions}
             value={filters.eventType}
           />
           <MenuSelect
             ariaLabel="Actor"
-            leadingIcon={<User aria-hidden size={14} />}
+            leadingIcon={<User aria-hidden size={14} weight="regular" />}
             onChange={(next) => setFilter("actor", next)}
             options={actorOptions}
             value={filters.actor}
           />
           <MenuSelect
             ariaLabel="Status"
+            menuMinWidth={160}
             onChange={(next) => setFilter("status", next as AuditStatus | "all")}
             options={statusOptions}
             value={filters.status}
@@ -167,9 +168,9 @@ export function AuditFilters({
             onClick={(event) => setExportAnchor(event.currentTarget)}
             type="button"
           >
-            <UploadSimple aria-hidden size={14} />
+            <UploadSimple aria-hidden size={14} weight="regular" />
             Export
-            <CaretDown aria-hidden size={12} />
+            <CaretDown aria-hidden size={12} weight="regular" />
           </button>
           <Menu
             anchorEl={exportAnchor}
@@ -185,21 +186,21 @@ export function AuditFilters({
               Export {pluralize(visibleCount, "event")}
             </div>
             <MenuItem onClick={() => runExport("csv")} sx={{ gap: "10px" }}>
-              <FileCsv aria-hidden className="text-green-text" size={16} weight="fill" />
+              <FileCsv aria-hidden className="text-green-text" size={16} weight="regular" />
               <span className="flex flex-col">
                 <span className="text-[13px] text-fg">CSV</span>
                 <span className="text-[11px] text-fg-muted">Spreadsheet-ready table</span>
               </span>
             </MenuItem>
             <MenuItem onClick={() => runExport("json")} sx={{ gap: "10px" }}>
-              <BracketsCurly aria-hidden className="text-blue-text" size={16} />
+              <BracketsCurly aria-hidden className="text-blue-text" size={16} weight="regular" />
               <span className="flex flex-col">
                 <span className="text-[13px] text-fg">JSON</span>
                 <span className="text-[11px] text-fg-muted">Full event payloads</span>
               </span>
             </MenuItem>
-            <div className="flex items-start gap-2 border-t border-border px-3 pb-2 pt-2 text-[10px] leading-[1.35] text-fg-muted">
-              <Funnel aria-hidden className="mt-px shrink-0" size={12} />
+            <div className="-mx-1.5 flex items-start gap-2 border-t border-border px-[18px] pb-2 pt-2 text-[10px] leading-[1.35] text-fg-muted">
+              <Funnel aria-hidden className="mt-px shrink-0" size={12} weight="regular" />
               Respects the current date and filter selection.
             </div>
           </Menu>

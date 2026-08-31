@@ -53,6 +53,7 @@ export type FirstCheckPreviewFailureCode =
 export type RunFirstCheckPreviewResult =
   | {
       position: number | null;
+      recordedCostCents: number;
       provider: string;
       rankingUrl: string | null;
       status: "completed";

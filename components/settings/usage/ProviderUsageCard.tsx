@@ -17,6 +17,7 @@ import { useState } from "react";
 
 type ProviderUsageCardProps = {
   canEditBudget: boolean;
+  initialBudgetEditOpen?: boolean;
   projectId: string;
   projectRef: string;
   updateProviderAllocation: typeof updateProviderConnectionAllocationAction;
@@ -105,12 +106,13 @@ function attentionCopy(usage: ProviderUsageCardProps["usage"]) {
 
 export function ProviderUsageCard({
   canEditBudget,
+  initialBudgetEditOpen = false,
   projectId,
   projectRef,
   updateProviderAllocation,
   usage,
 }: Readonly<ProviderUsageCardProps>) {
-  const [editOpen, setEditOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(initialBudgetEditOpen && canEditBudget);
   const { connections, summary } = usage.providerSpend;
   const banner = summary.attention.length ? attentionCopy(usage) : null;
   const summaryTone = spendTone(summary.maxUsedPercent ?? 0, summary.maxUsedPercent != null);
@@ -123,7 +125,7 @@ export function ProviderUsageCard({
           </Button>
         ) : null
       }
-      className="min-h-[610px]"
+      className="min-h-0"
       description="Monthly budget and provider spend for this project. Checks pause once the budget is spent."
       id="provider-usage"
       title="Provider spend"
@@ -131,9 +133,9 @@ export function ProviderUsageCard({
       <p className="m-0 text-[12px] text-fg-muted">{periodLine(usage)}</p>
       {banner ? (
         <div className="mt-4 flex items-start gap-2.5 rounded-control border border-red/30 bg-[color-mix(in_srgb,var(--red)_8%,transparent)] px-3.5 py-3 text-[12.5px] leading-5 text-red-text">
-          <WarningCircle aria-hidden className="mt-0.5 shrink-0" size={16} weight="fill" />
+          <WarningCircle aria-hidden className="mt-0.5 shrink-0" size={16} weight="regular" />
           <span>
-            <strong>{banner}</strong>{" "}
+            <span className="font-semibold">{banner}</span>{" "}
             <a className="font-medium underline hover:no-underline" href="#provider-connections">
               Connection settings
             </a>
@@ -187,7 +189,7 @@ export function ProviderUsageCard({
           Usage appears once a provider is connected.
         </p>
       )}
-      <div className="mt-5 border-t border-border-soft pt-4">
+      <div className="-mx-5 mt-5 border-t border-border-soft px-5 pt-4">
         <ExternalLink
           className="text-[12px] font-medium text-accent-text hover:underline"
           href={`${MARKETING_URL}/rank-tracking-cost-calculator`}

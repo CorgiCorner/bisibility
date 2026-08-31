@@ -8,6 +8,26 @@ beforeEach(() => {
 });
 
 describe("AuditLogView", () => {
+  it("keeps the grid frame constrained while leaving column overflow to DataGrid", () => {
+    render(
+      <AuditLogView
+        dateRange="30d"
+        entries={[]}
+        entryLimit={200}
+        retentionDays={365}
+        truncated={false}
+      />,
+    );
+
+    const boundary = screen.getByTestId("audit-grid-scroll-boundary");
+    const viewport = screen.getByTestId("audit-grid-viewport");
+
+    expect(boundary).toHaveClass("min-w-0", "overflow-hidden");
+    expect(boundary).not.toHaveClass("overflow-x-auto");
+    expect(viewport).toHaveClass("w-full", "min-w-0");
+    expect(viewport).not.toHaveClass("min-w-[920px]");
+  });
+
   it("states that client-side filters only search the capped event set", () => {
     render(
       <AuditLogView

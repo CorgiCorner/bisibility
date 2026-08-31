@@ -1,4 +1,4 @@
-const advancedBackupCardGeometryClassName = "h-[324px] sm:h-[286.625px] lg:h-[254.625px]";
+const advancedBackupCardGeometryClassName = "min-h-[254px]";
 
 export const advancedCardGeometryClassNames = {
   audit: "min-h-[220px]",

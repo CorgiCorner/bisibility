@@ -163,7 +163,7 @@ export function SegmentedControl<T extends string>({
                         : "min-h-9 px-2 py-1.5 text-[12.5px] font-semibold",
                   active
                     ? cn("border-border-control bg-nav-active text-fg", activeClassName)
-                    : "text-fg-muted hover:bg-nav-active hover:text-fg",
+                    : "text-fg-muted hover:bg-bg-sunken hover:text-fg",
                   optionDisabled &&
                     "cursor-not-allowed text-fg-muted hover:bg-transparent hover:text-fg-muted",
                   "peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent-solid",

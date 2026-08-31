@@ -50,7 +50,7 @@ export function InfoBox({
   return (
     <div className="mt-4 flex items-start gap-[9px] rounded-control border border-dashed border-border bg-transparent px-3.5 py-3 text-xs leading-5 text-fg-muted">
       <span className="flex h-5 shrink-0 items-center">
-        <Icon aria-hidden className="text-accent-text" size={15} />
+        <Icon aria-hidden className="text-accent-text" size={15} weight="regular" />
       </span>
       <span>{children}</span>
     </div>

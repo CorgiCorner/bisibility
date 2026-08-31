@@ -73,7 +73,7 @@ export function DeployHookCreateModal({
           <Button
             onClick={handleClose}
             size="sm"
-            startIcon={<CheckCircle aria-hidden size={15} />}
+            startIcon={<CheckCircle aria-hidden size={15} weight="regular" />}
             type="button"
           >
             Done
@@ -88,7 +88,7 @@ export function DeployHookCreateModal({
               form="create-deploy-hook-form"
               loading={form.formState.isSubmitting}
               loadingLabel="Creating"
-              startIcon={<Plus aria-hidden size={15} weight="bold" />}
+              startIcon={<Plus aria-hidden size={15} weight="regular" />}
               type="submit"
             >
               Create webhook

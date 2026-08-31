@@ -31,7 +31,11 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
           onClick={() => setShowValue((visible) => !visible)}
           type="button"
         >
-          {showValue ? <EyeSlash aria-hidden size={17} /> : <Eye aria-hidden size={17} />}
+          {showValue ? (
+            <EyeSlash aria-hidden size={17} weight="regular" />
+          ) : (
+            <Eye aria-hidden size={17} weight="regular" />
+          )}
         </button>
       </span>
     );

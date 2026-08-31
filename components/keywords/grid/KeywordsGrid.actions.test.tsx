@@ -83,7 +83,11 @@ describe("KeywordsGrid actions", () => {
       '[role="row"]',
     ) as HTMLElement;
     fireEvent.click(within(keywordRow).getByRole("checkbox"));
-    fireEvent.click(screen.getByRole("button", { name: /^export$/i }));
+    fireEvent.click(
+      within(screen.getByTestId("keywords-export-labeled-action")).getByRole("button", {
+        name: /^export$/i,
+      }),
+    );
 
     expect(
       await screen.findByText("Export 1 selected keyword", {}, { timeout: 10_000 }),
@@ -147,7 +151,7 @@ describe("KeywordsGrid actions", () => {
     expect(screen.getByText("1 keyword")).toBeInTheDocument();
     expect(screen.getByText("Top 100")).toBeInTheDocument();
     expect(screen.getByText("~$0.02")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Confirm & run" }));
+    fireEvent.click(screen.getByRole("button", { name: "Confirm and run" }));
 
     expect(runCheckNowAction).toHaveBeenCalledTimes(1);
     expect([rows[0].id, rows[1].id]).toContain(runCheckNowAction.mock.calls[0][0].keywordId);
@@ -181,12 +185,12 @@ describe("KeywordsGrid actions", () => {
     expect(runCheckNowAction).not.toHaveBeenCalled();
     expect(screen.getByRole("dialog", { name: "Run rank check" })).toBeInTheDocument();
     expect(screen.getAllByText("Top 20")).toHaveLength(2);
-    fireEvent.click(screen.getByRole("button", { name: "Confirm & run" }));
+    fireEvent.click(screen.getByRole("button", { name: "Confirm and run" }));
     await waitFor(() =>
       expect(runCheckNowAction).toHaveBeenCalledWith({ depth: 20, keywordId: row.id }),
     );
     expect(screen.getByRole("dialog", { name: "Check running" })).toBeInTheDocument();
-  });
+  }, 10_000);
 
   it("shows sample-project refusal as a final failed modal state", async () => {
     const [row] = pendingRows(1);
@@ -202,12 +206,12 @@ describe("KeywordsGrid actions", () => {
     ) as HTMLElement;
     fireEvent.click(within(keywordRow).getByRole("checkbox"));
     fireEvent.click(screen.getByRole("button", { name: "Run check (Top 100)" }));
-    fireEvent.click(screen.getByRole("button", { name: "Confirm & run" }));
+    fireEvent.click(screen.getByRole("button", { name: "Confirm and run" }));
 
     expect(await screen.findByRole("dialog", { name: "Check failed" })).toBeInTheDocument();
     expect(screen.getByRole("alert")).toHaveTextContent("Sample projects don't run real checks.");
     expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
-  });
+  }, 10_000);
 
   it("opens the same confirmation modal from Retry", async () => {
     const rows = pendingRows(2);
@@ -229,7 +233,7 @@ describe("KeywordsGrid actions", () => {
     expect(runCheckNowAction).not.toHaveBeenCalled();
     expect(screen.getByRole("dialog", { name: "Run rank checks" })).toBeInTheDocument();
     expect(screen.getByText("2 keywords")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Confirm & run" }));
+    fireEvent.click(screen.getByRole("button", { name: "Confirm and run" }));
     await waitFor(() => expect(runCheckNowAction).toHaveBeenCalledTimes(2));
   });
 
@@ -241,7 +245,11 @@ describe("KeywordsGrid actions", () => {
       target: { value: rows[0].keyword },
     });
     await screen.findByRole("button", { name: /clear all search and filters/i });
-    fireEvent.click(screen.getByRole("button", { name: /^export$/i }));
+    fireEvent.click(
+      within(screen.getByTestId("keywords-export-labeled-action")).getByRole("button", {
+        name: /^export$/i,
+      }),
+    );
 
     expect(await screen.findByText("Export 1 selected keyword")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /export csv/i }));

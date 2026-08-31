@@ -3,15 +3,14 @@
 import { EASE_OUT, MOTION_TOAST_ENTER, MOTION_TOAST_EXIT } from "@/lib/ui/motion";
 import type { ReactNode } from "react";
 import { useCallback } from "react";
-import type { ToastTint } from "./Toast";
+import { type ToastSeverity, toastIcon, toastPresentations } from "./toast-presentation";
 
 export type ToastPhase = "entering" | "visible" | "exiting";
 
 export type ToastEntry = {
   id: number;
   message: ReactNode;
-  icon: ReactNode;
-  tint: ToastTint;
+  severity: ToastSeverity;
   undo?: () => Promise<void> | void;
   phase: ToastPhase;
   durationMs: number;
@@ -30,12 +29,7 @@ type ToastItemProps = {
   onResumeFocus: (id: number) => void;
 };
 
-type TintStyle = {
-  color: string;
-  soft: string;
-  border: string;
-};
-
+type TintStyle = { color: string; soft: string; border: string };
 const tintStyles = {
   accent: {
     border: "color-mix(in srgb, var(--accent) 28%, var(--border))",
@@ -52,11 +46,6 @@ const tintStyles = {
     color: "var(--green-text)",
     soft: "color-mix(in srgb, var(--green) 12%, transparent)",
   },
-  neutral: {
-    border: "var(--border)",
-    color: "var(--fg-muted)",
-    soft: "var(--bg-sunken)",
-  },
   purple: {
     border: "color-mix(in srgb, var(--purple) 28%, var(--border))",
     color: "var(--purple)",
@@ -72,7 +61,7 @@ const tintStyles = {
     color: "var(--yellow-text)",
     soft: "color-mix(in srgb, var(--yellow) 14%, transparent)",
   },
-} satisfies Record<ToastTint, TintStyle>;
+} satisfies Record<(typeof toastPresentations)[ToastSeverity]["tint"], TintStyle>;
 
 const BUFFER = 50;
 const ENTER_OFFSET = 8;
@@ -98,7 +87,6 @@ export function ToastItem({
   const setRootRef = useCallback(
     (node: HTMLElement | null) => {
       if (!node) return undefined;
-
       if (toast.phase === "exiting") {
         applyTransition(node, MOTION_TOAST_EXIT, reducedMotion);
         if (reducedMotion) {
@@ -111,9 +99,8 @@ export function ToastItem({
           node.style.opacity = "0";
           node.style.transform = `translateY(${EXIT_OFFSET}px)`;
         });
-        const onEnd = (e: TransitionEvent) => {
-          if (e.target !== node || e.propertyName !== "opacity") return;
-          onExited(toast.id);
+        const onEnd = (event: TransitionEvent) => {
+          if (event.target === node && event.propertyName === "opacity") onExited(toast.id);
         };
         node.addEventListener("transitionend", onEnd);
         const fallback = setTimeout(() => onExited(toast.id), MOTION_TOAST_EXIT + BUFFER);
@@ -123,7 +110,6 @@ export function ToastItem({
           clearTimeout(fallback);
         };
       }
-
       if (toast.phase === "entering") {
         node.style.opacity = "0";
         node.style.transform = reducedMotion ? "none" : `translateY(${ENTER_OFFSET}px)`;
@@ -140,9 +126,8 @@ export function ToastItem({
             node.style.transform = "translateY(0)";
           });
         });
-        const onEnd = (e: TransitionEvent) => {
-          if (e.target !== node || e.propertyName !== "opacity") return;
-          onEntered(toast.id);
+        const onEnd = (event: TransitionEvent) => {
+          if (event.target === node && event.propertyName === "opacity") onEntered(toast.id);
         };
         node.addEventListener("transitionend", onEnd);
         const fallback = setTimeout(() => onEntered(toast.id), MOTION_TOAST_ENTER + BUFFER);
@@ -153,48 +138,34 @@ export function ToastItem({
           clearTimeout(fallback);
         };
       }
-
       return undefined;
     },
     [toast.phase, toast.id, reducedMotion, onEntered, onExited],
   );
 
-  const style = tintStyles[toast.tint];
-
-  function handleMouseEnter() {
-    if (toast.undo) onPauseHover(toast.id);
-  }
-
-  function handleMouseLeave() {
-    if (toast.undo) onResumeHover(toast.id);
-  }
-
-  function handleFocusCapture() {
-    if (toast.undo) onPauseFocus(toast.id);
-  }
-
-  function handleBlurCapture(e: React.FocusEvent<HTMLElement>) {
-    if (!toast.undo) return;
-    const next = e.relatedTarget as Node | null;
-    if (next && e.currentTarget.contains(next)) return;
-    onResumeFocus(toast.id);
-  }
-
+  const presentation = toastPresentations[toast.severity];
+  const style = tintStyles[presentation.tint];
   return (
     <output
       className="pointer-events-auto flex w-full max-w-[calc(100vw-32px)] items-center gap-3 rounded-card border bg-bg-elev px-3.5 py-3 text-fg sm:max-w-none"
-      onBlurCapture={handleBlurCapture}
-      onFocusCapture={handleFocusCapture}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+      data-toast-severity={toast.severity}
+      onBlurCapture={(event) => {
+        if (!toast.undo) return;
+        const next = event.relatedTarget as Node | null;
+        if (!next || !event.currentTarget.contains(next)) onResumeFocus(toast.id);
+      }}
+      onFocusCapture={() => toast.undo && onPauseFocus(toast.id)}
+      onMouseEnter={() => toast.undo && onPauseHover(toast.id)}
+      onMouseLeave={() => toast.undo && onResumeHover(toast.id)}
       ref={setRootRef}
       style={{ borderColor: style.border }}
     >
       <span
         className="grid h-8 w-8 shrink-0 place-items-center rounded-control"
+        data-toast-icon={presentation.iconName}
         style={{ backgroundColor: style.soft, color: style.color }}
       >
-        {toast.icon}
+        {toastIcon(toast.severity)}
       </span>
       <p className="m-0 min-w-0 flex-1 text-[13.5px] font-medium leading-snug text-fg">
         {toast.message}

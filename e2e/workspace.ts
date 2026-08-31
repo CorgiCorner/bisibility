@@ -36,7 +36,7 @@ export async function signIn(page: Page, email: string) {
   await expect(firstBox).toBeVisible();
   await firstBox.focus();
   await page.keyboard.type(await latestOtpFor(email));
-  await page.getByRole("button", { name: "Verify & continue" }).click();
+  await page.getByRole("button", { name: "Verify and continue" }).click();
   await expect(page).toHaveURL(/\/(app\/[^/]+\/dashboard|onboarding)(\?|$)/);
 }
 
@@ -67,8 +67,10 @@ export async function testAndSaveDataForSeo(page: Page) {
     await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
     await page.getByLabel("API login").fill("fake-login");
     await page.getByRole("textbox", { name: /API password/ }).fill("fake-secret");
-    await page.getByRole("button", { name: "Test connection", exact: true }).click();
+    const testButton = page.getByRole("button", { name: "Test connection", exact: true });
     try {
+      await expect(testButton).toBeEnabled({ timeout: 5000 });
+      await testButton.click();
       await expect(status).toContainText("DataForSEO verified", { timeout: 10_000 });
       break;
     } catch (error) {
@@ -102,7 +104,7 @@ export async function completeOnboarding(page: Page, suffix: string) {
 
   await page.getByPlaceholder("One keyword per line").fill(keyword);
   await clickWizardPrimary(page, "Continue", /[?&]step=4(?:&|$)/);
-  await clickWizardPrimary(page, "Open dashboard", /\/app\/prj_[^/]+\/dashboard$/);
+  await clickWizardPrimary(page, "Open app", /\/app\/prj_[^/]+\/dashboard$/);
 
   const projectRef = new URL(page.url()).pathname.split("/")[2];
   if (!projectRef) throw new Error("Onboarding did not land on a project-scoped dashboard.");

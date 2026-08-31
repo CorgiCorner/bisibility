@@ -71,7 +71,7 @@ export function HandoffPanel({
     <div className="mt-4 overflow-hidden rounded-card border border-border bg-bg-elev">
       <div className="flex items-center gap-[13px] border-border-soft border-b p-[16px_18px]">
         <span className="grid h-[38px] w-[38px] flex-none place-items-center rounded-control bg-accent-soft text-accent-solid">
-          <CloudArrowUp aria-hidden size={20} weight="fill" />
+          <CloudArrowUp aria-hidden size={20} weight="regular" />
         </span>
         <div className="min-w-0 flex-1">
           <div className="text-[13.5px] font-semibold">{targetLabel} handoff</div>
@@ -82,7 +82,7 @@ export function HandoffPanel({
         <Button
           disabled={busy}
           onClick={handleGenerate}
-          startIcon={<LinkIcon aria-hidden size={14} />}
+          startIcon={<LinkIcon aria-hidden size={14} weight="regular" />}
           sx={{ flex: "none" }}
           type="button"
           variant="primary"
@@ -112,16 +112,16 @@ export function HandoffPanel({
             target="_blank"
           >
             Open {targetLabel} import page
-            <CaretRight aria-hidden size={13} weight="bold" />
+            <CaretRight aria-hidden size={13} weight="regular" />
           </a>
         </div>
       ) : null}
       {message ? (
         <div className="flex items-center gap-2 border-border-soft border-t px-4.5 py-3 text-[12px] text-fg-muted">
           {handoff ? (
-            <CheckCircle aria-hidden className="text-green-text" size={14} weight="fill" />
+            <CheckCircle aria-hidden className="text-green-text" size={14} weight="regular" />
           ) : (
-            <WarningCircle aria-hidden className="text-yellow-text" size={14} weight="fill" />
+            <WarningCircle aria-hidden className="text-yellow-text" size={14} weight="regular" />
           )}
           {message}
         </div>
@@ -204,9 +204,9 @@ export function DoneStep({
         className={`grid h-14 w-14 place-items-center rounded-card ${completed ? "bg-green/10 text-green-text" : "bg-yellow/10 text-yellow-text"}`}
       >
         {completed ? (
-          <CloudCheck aria-hidden size={30} weight="fill" />
+          <CloudCheck aria-hidden size={30} weight="regular" />
         ) : (
-          <WarningCircle aria-hidden size={30} weight="fill" />
+          <WarningCircle aria-hidden size={30} weight="regular" />
         )}
       </span>
       <h3 className="m-0 mt-4.5 text-[18px] font-semibold tracking-[-0.4px]">

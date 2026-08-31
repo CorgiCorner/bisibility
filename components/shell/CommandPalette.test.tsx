@@ -77,7 +77,15 @@ describe("CommandPalette", () => {
     );
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     const trigger = screen.getByRole("button", { name: "Search" });
-    expect(trigger).toHaveClass("h-8", "w-8", "place-items-center");
+    expect(trigger).toHaveClass(
+      "h-8",
+      "w-8",
+      "place-items-center",
+      "border",
+      "border-border-control",
+      "bg-bg-elev",
+      "hover:bg-bg-sunken",
+    );
     expect(trigger.parentElement).toHaveAttribute("data-tooltip", "Search (⌘K)");
     expect(screen.queryByText("Search…")).not.toBeInTheDocument();
     expect(screen.queryByText("⌘K")).not.toBeInTheDocument();
@@ -93,6 +101,25 @@ describe("CommandPalette", () => {
     fireEvent.click(screen.getByRole("button", { name: /Open overview/ }));
     expect(mocks.run).toHaveBeenCalledOnce();
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("renders the header variant as a borderless 36px utility control", () => {
+    render(
+      <CommandPaletteProvider projectId="project_1" projectRef="prj_1">
+        <CommandPaletteTrigger variant="header" />
+      </CommandPaletteProvider>,
+    );
+
+    const trigger = screen.getByRole("button", { name: "Search" });
+    expect(trigger).toHaveClass(
+      "h-9",
+      "w-9",
+      "text-fg-muted",
+      "hover:bg-bg-sunken",
+      "hover:text-fg",
+      "focus-visible:outline-accent-solid",
+    );
+    expect(trigger).not.toHaveClass("border", "border-border-control", "bg-bg-elev");
   });
 
   it("renders empty results and closes via Escape and backdrop", () => {

@@ -41,7 +41,7 @@ export function ImportCsvWizardFooter({
         <Button
           disabled={isSubmitting || isReviewing}
           onClick={() => setStep((value) => Math.max(1, value - 1))}
-          startIcon={<ArrowLeft size={14} weight="bold" />}
+          startIcon={<ArrowLeft size={14} weight="regular" />}
           type="button"
           variant="secondary"
         >
@@ -61,7 +61,7 @@ export function ImportCsvWizardFooter({
       ) : (
         <Button
           disabled={isSubmitting || isReviewing || (step === 3 && !canImport)}
-          endIcon={<ArrowRight size={14} weight="bold" />}
+          endIcon={<ArrowRight size={14} weight="regular" />}
           key="step-navigation"
           onClick={() => void next()}
           sx={{ flex: 1 }}

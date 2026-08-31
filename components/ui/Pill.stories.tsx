@@ -1,4 +1,4 @@
-import { Pill } from "@/components/ui/Pill";
+import { Pill, PillBadge } from "@/components/ui/Pill";
 import type { Meta, StoryObj } from "@storybook/react";
 
 const meta = {
@@ -37,6 +37,16 @@ export const Sizes: Story = {
           {size.toUpperCase()}
         </Pill>
       ))}
+    </>
+  ),
+};
+
+export const StaticBadges: Story = {
+  render: () => (
+    <>
+      <PillBadge>Domain</PillBadge>
+      <PillBadge>URL prefix</PillBadge>
+      <PillBadge size="xs">GA4</PillBadge>
     </>
   ),
 };

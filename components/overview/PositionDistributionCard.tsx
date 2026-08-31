@@ -3,6 +3,7 @@
 import { Card, ChartRegion } from "@/components/ui";
 import { chartColors, rankBucketColors, rankBucketCssVars } from "@/lib/theme/chart-colors";
 import { BarChart } from "@mui/x-charts/BarChart";
+import { ChartBarIcon as ChartBar } from "@phosphor-icons/react";
 import { useState } from "react";
 import { ChartNoDataOverlay } from "./ChartNoDataOverlay";
 import { OverviewChartHeader } from "./OverviewChartHeader";
@@ -125,7 +126,7 @@ export function PositionDistributionCard({
       {empty ? (
         <div className="relative mt-3 min-w-0 flex-1 pt-1.5">
           <div aria-hidden className="h-[244px]" />
-          <ChartNoDataOverlay />
+          <ChartNoDataOverlay icon={ChartBar} />
         </div>
       ) : (
         <div className="relative mt-3 min-w-0 pt-1.5">

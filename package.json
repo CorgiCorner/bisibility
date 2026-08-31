@@ -1,6 +1,6 @@
 {
   "name": "bisibility",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "private": true,
   "description": "Self-hostable open-source keyword rank tracker with keyword and backlink research, MCP, and bring-your-own providers.",
   "license": "AGPL-3.0-only",
@@ -56,7 +56,7 @@
     "pretemporal:worker": "node tools/check-node.mjs",
     "temporal:worker": "node --experimental-transform-types --import ./lib/temporal/register-loader.mjs lib/temporal/worker.ts",
     "format": "biome format --write .",
-    "lint": "biome check . && eslint .",
+    "lint": "biome check . && eslint . && node scripts/checks/server-tooltip-boundary.mjs",
     "licenses:generate": "node scripts/generate/generate-dependency-licenses.mjs",
     "generate:brand-assets": "node scripts/generate/brand-assets.mjs",
     "check:brand-assets": "node scripts/generate/brand-assets.mjs --check",

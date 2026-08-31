@@ -49,6 +49,11 @@ enum ProviderStatus {
   optional
 }
 
+enum SearchInsightsPropertyStatus {
+  active
+  archived
+}
+
 enum ProviderAllocationUnit {
   cents
   units
@@ -185,6 +190,7 @@ model User {
   isInstanceAdmin              Boolean                  @default(false)
   deactivatedAt                DateTime?
   marketingEmailUnsubscribedAt DateTime?
+  pausedSearchAnalyticsImports SearchAnalyticsImport[]  @relation("SearchImportPausedBy")
   sessions                     Session[]
   accounts                     Account[]
   twoFactors                   TwoFactor[]
@@ -453,70 +459,80 @@ model Jwks {
 }
 
 model Waitlist {
-  id                   String   @id @default(cuid())
-  email                String   @unique
-  source               String
-  cloudPrice           String?
-  prefersUsagePricing  Boolean  @default(false)
-  hostedPrice          String?
+  id                    String    @id @default(cuid())
+  email                 String    @unique
+  source                String
+  cloudPrice            String?
+  prefersUsagePricing   Boolean   @default(false)
+  hostedPrice           String?
   hostedPriceAnsweredAt DateTime?
   // Lifetime count: incremented on every accepted upsert across all sources;
   // not a per-source feedback counter and never reset.
-  submissions          Int      @default(1)
-  lastSubmittedAt      DateTime @default(now())
-  createdAt            DateTime @default(now())
+  submissions           Int       @default(1)
+  lastSubmittedAt       DateTime  @default(now())
+  createdAt             DateTime  @default(now())
 
   @@map("waitlists")
 }
 
 model Project {
-  id                       String                   @id @default(cuid())
-  publicId                 String                   @unique
-  name                     String
+  id                               String                           @id @default(cuid())
+  publicId                         String                           @unique
+  name                             String
   // Optional: a workspace exists before the user says which domain to track.
-  domain                   String?
-  isSample                 Boolean                  @default(false)
-  trackingScope            String                   @default("country")
-  writeMode                ProjectWriteMode         @default(active)
-  writeModeChangedAt       DateTime?
-  writeModeChangedById     String?
-  writeModeChangedBy       User?                    @relation("ProjectWriteModeChangedBy", fields: [writeModeChangedById], references: [id], onDelete: SetNull)
-  onboardingCompletedAt    DateTime?
-  ownerId                  String
-  owner                    User                     @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: Cascade)
-  members                  Membership[]
-  keywords                 Keyword[]
-  markets                  ProjectMarket[]
-  savedKeywords            SavedKeyword[]
-  tags                     Tag[]
-  competitors              Competitor[]
-  defaults                 ProjectDefaults?
-  providerConnections      ProviderConnection[]
-  providerCostEntries      ProviderCostEntry[]
-  queuedRankCheckBatches   QueuedRankCheckBatch[]
-  backlinkSnapshots        BacklinkSnapshot[]
-  domainOverviewSnapshots  DomainOverviewSnapshot[]
-  pageTrafficSnapshots     PageTrafficSnapshot[]
-  apiKeys                  ApiKey[]
-  ingestHooks              IngestHook[]
-  auditLogs                AuditLog[]
-  alertRules               AlertRule[]
-  signals                  Signal[]
-  sitemapMonitoringEnabled Boolean                  @default(true)
-  budgetCapCents           Int                      @default(5000)
+  domain                           String?
+  isSample                         Boolean                          @default(false)
+  trackingScope                    String                           @default("country")
+  writeMode                        ProjectWriteMode                 @default(active)
+  writeModeChangedAt               DateTime?
+  writeModeChangedById             String?
+  writeModeChangedBy               User?                            @relation("ProjectWriteModeChangedBy", fields: [writeModeChangedById], references: [id], onDelete: SetNull)
+  onboardingCompletedAt            DateTime?
+  ownerId                          String
+  owner                            User                             @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members                          Membership[]
+  keywords                         Keyword[]
+  markets                          ProjectMarket[]
+  savedKeywords                    SavedKeyword[]
+  tags                             Tag[]
+  competitors                      Competitor[]
+  defaults                         ProjectDefaults?
+  providerConnections              ProviderConnection[]
+  providerCostEntries              ProviderCostEntry[]
+  queuedRankCheckBatches           QueuedRankCheckBatch[]
+  backlinkSnapshots                BacklinkSnapshot[]
+  domainOverviewSnapshots          DomainOverviewSnapshot[]
+  pageTrafficSnapshots             PageTrafficSnapshot[]
+  searchAnalyticsDaily             SearchAnalyticsDaily[]
+  searchAnalyticsQueryDaily        SearchAnalyticsQueryDaily[]
+  searchAnalyticsPageDaily         SearchAnalyticsPageDaily[]
+  searchAnalyticsQueryPageDaily    SearchAnalyticsQueryPageDaily[]
+  searchAnalyticsImports           SearchAnalyticsImport[]
+  searchAnalyticsSyncPartitions    SearchAnalyticsSyncPartition[]
+  searchAnalyticsRequestUsage      SearchAnalyticsRequestUsage[]
+  searchInsightsPropertyRegistry   SearchInsightsPropertyRegistry[]
+  organicSessionsDaily             OrganicSessionsDaily[]
+  organicSessionsPageDaily         OrganicSessionsPageDaily[]
+  apiKeys                          ApiKey[]
+  ingestHooks                      IngestHook[]
+  auditLogs                        AuditLog[]
+  alertRules                       AlertRule[]
+  signals                          Signal[]
+  sitemapMonitoringEnabled         Boolean                          @default(true)
+  budgetCapCents                   Int                              @default(5000)
   providerAllocationsInitializedAt DateTime?
-  sitemapSnapshots         SitemapSnapshot[]
-  urlPresences             UrlPresence[]
-  webhookEndpoints         WebhookEndpoint[]
-  slackConnection          SlackConnection?
-  notifications            Notification[]
-  notificationPreferences  NotificationPreference[]
-  savedViews               SavedView[]
-  invites                  Invite[]
-  migrationTokens          MigrationToken[]
-  cloudImportJobs          CloudImportJob[]
-  createdAt                DateTime                 @default(now())
-  updatedAt                DateTime                 @updatedAt
+  sitemapSnapshots                 SitemapSnapshot[]
+  urlPresences                     UrlPresence[]
+  webhookEndpoints                 WebhookEndpoint[]
+  slackConnection                  SlackConnection?
+  notifications                    Notification[]
+  notificationPreferences          NotificationPreference[]
+  savedViews                       SavedView[]
+  invites                          Invite[]
+  migrationTokens                  MigrationToken[]
+  cloudImportJobs                  CloudImportJob[]
+  createdAt                        DateTime                         @default(now())
+  updatedAt                        DateTime                         @updatedAt
 
   @@index([ownerId])
   @@index([writeModeChangedById])
@@ -524,25 +540,25 @@ model Project {
 }
 
 model ProviderCostEntry {
-  id            String              @id @default(cuid())
-  projectId     String
-  project       Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  connectionId  String
-  feature       ProviderCostFeature @default(ranked_keywords)
-  provider      String?
-  keywordId     String?
-  source        String?
-  trigger       String?
-  tag           String?
-  correlationId String?
+  id                String              @id @default(cuid())
+  projectId         String
+  project           Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  connectionId      String
+  feature           ProviderCostFeature @default(ranked_keywords)
+  provider          String?
+  keywordId         String?
+  source            String?
+  trigger           String?
+  tag               String?
+  correlationId     String?
   providerRequestId String?
   // A migration-only partial unique index covers non-null connection/request identifiers.
-  usageQuantity Decimal?            @db.Decimal(18, 6)
-  costCents     Decimal             @db.Decimal(10, 4)
-  unitCostCents Decimal?            @db.Decimal(10, 4)
-  cached        Boolean             @default(false)
-  failed        Boolean             @default(false)
-  createdAt     DateTime            @default(now())
+  usageQuantity     Decimal?            @db.Decimal(18, 6)
+  costCents         Decimal             @db.Decimal(10, 4)
+  unitCostCents     Decimal?            @db.Decimal(10, 4)
+  cached            Boolean             @default(false)
+  failed            Boolean             @default(false)
+  createdAt         DateTime            @default(now())
 
   @@index([projectId, createdAt])
   @@index([connectionId, createdAt])
@@ -569,25 +585,27 @@ model Membership {
 }
 
 model ProjectDefaults {
-  id                   String             @id @default(cuid())
-  projectId            String             @unique
-  project              Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  locationKey          String?
-  locationRef          Location?          @relation("ProjectDefaultLocation", fields: [locationKey], references: [canonicalKey], onDelete: Restrict)
-  country              String?
-  city                 String?
-  device               Device?
-  serpDepth            Int                @default(100)
-  serpStopOnMatch      Boolean            @default(true)
-  frequency            RankCheckFrequency @default(daily)
-  cronExpression       String?
-  timezone             String             @default("UTC")
-  jitterMinutes        Int                @default(60)
-  inspectionDailyLimit Int                @default(50)
-  lastCheckedAt        DateTime?
-  nextCheckAt          DateTime?
-  createdAt            DateTime           @default(now())
-  updatedAt            DateTime           @updatedAt
+  id                     String             @id @default(cuid())
+  projectId              String             @unique
+  project                Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  locationKey            String?
+  locationRef            Location?          @relation("ProjectDefaultLocation", fields: [locationKey], references: [canonicalKey], onDelete: Restrict)
+  country                String?
+  city                   String?
+  device                 Device?
+  serpDepth              Int                @default(100)
+  serpStopOnMatch        Boolean            @default(true)
+  frequency              RankCheckFrequency @default(daily)
+  cronExpression         String?
+  timezone               String             @default("UTC")
+  jitterMinutes          Int                @default(60)
+  inspectionDailyLimit   Int                @default(50)
+  searchSyncImportMonths Int?
+  searchSyncPace         String?
+  lastCheckedAt          DateTime?
+  nextCheckAt            DateTime?
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
 
   @@index([locationKey])
   @@map("project_defaults")
@@ -1041,24 +1059,24 @@ model KeywordTrafficSnapshot {
 }
 
 model ProviderConnection {
-  id                     String                   @id @default(cuid())
-  publicId               String                   @unique
-  projectId              String
-  project                Project                  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  kind                   ProviderKind
-  provider               String
-  status                 ProviderStatus
-  priority               Int                      @default(100)
-  enabled                Boolean                  @default(true)
-  credentialsEncrypted   String?
-  costPerCheckCents      Decimal?                 @db.Decimal(10, 4)
-  allocationUnit         ProviderAllocationUnit?
+  id                       String                   @id @default(cuid())
+  publicId                 String                   @unique
+  projectId                String
+  project                  Project                  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  kind                     ProviderKind
+  provider                 String
+  status                   ProviderStatus
+  priority                 Int                      @default(100)
+  enabled                  Boolean                  @default(true)
+  credentialsEncrypted     String?
+  costPerCheckCents        Decimal?                 @db.Decimal(10, 4)
+  allocationUnit           ProviderAllocationUnit?
   allocationAmountPerMonth Int?
-  rates                  ProviderConnectionRate[]
-  queuedRankCheckBatches QueuedRankCheckBatch[]
-  lastUsedAt             DateTime?
-  createdAt              DateTime                 @default(now())
-  updatedAt              DateTime                 @updatedAt
+  rates                    ProviderConnectionRate[]
+  queuedRankCheckBatches   QueuedRankCheckBatch[]
+  lastUsedAt               DateTime?
+  createdAt                DateTime                 @default(now())
+  updatedAt                DateTime                 @updatedAt
 
   @@unique([projectId, provider])
   @@index([projectId])
@@ -1579,14 +1597,14 @@ model MigrationImportChunk {
 
 /// Durable execution ledger for ordered repository data migrations.
 model DataMigration {
-  id                 String    @id
-  checksum           String
-  attempts           Int       @default(0)
-  startedAt          DateTime
-  runCompletedAt     DateTime?
-  finishedAt         DateTime?
-  failedAt           DateTime?
-  error              String?
+  id                   String    @id
+  checksum             String
+  attempts             Int       @default(0)
+  startedAt            DateTime
+  runCompletedAt       DateTime?
+  finishedAt           DateTime?
+  failedAt             DateTime?
+  error                String?
   finalizationAttempts Int       @default(0)
   finalizationFailedAt DateTime?
   finalizationError    String?
@@ -1622,4 +1640,274 @@ model OnboardingQuizAnswer {
   @@unique([responseId, questionId])
   @@index([responseId])
   @@map("onboarding_quiz_answers")
+}
+
+/// Aggregate daily totals from Search Console requests with dimensions ["date"] only.
+/// Totals are never rebuilt by summing the dimensional tables below.
+model SearchAnalyticsDaily {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  /// The normalized property key produced by searchInsightsPropertyKey, e.g. "sc-domain:example.com".
+  /// Every read filters on it, so a raw connection value written here stores rows nothing finds.
+  property    String
+  /// Allowed values: "web".
+  searchType  String   @default("web")
+  date        DateTime @db.Date
+  clicks      Int
+  impressions Int
+  ctr         Float
+  position    Float
+  fetchedAt   DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([projectId, property, searchType, date], map: "search_analytics_daily_partition_key")
+  @@map("search_analytics_daily")
+}
+
+/// Dimensional daily rows from requests with dimensions ["date", "query"]. Privacy-filtered and
+/// row-capped by the provider, so these never reconcile to SearchAnalyticsDaily.
+model SearchAnalyticsQueryDaily {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  /// The normalized property key produced by searchInsightsPropertyKey, e.g. "sc-domain:example.com".
+  /// Every read filters on it, so a raw connection value written here stores rows nothing finds.
+  property    String
+  /// Allowed values: "web".
+  searchType  String   @default("web")
+  date        DateTime @db.Date
+  query       String
+  /// sha256 hex of the query, used as the unique key so long text never exceeds the btree row limit.
+  keyHash     String
+  clicks      Int
+  impressions Int
+  ctr         Float
+  position    Float
+  fetchedAt   DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([projectId, property, searchType, date, keyHash], map: "search_analytics_query_daily_partition_key")
+  @@index([projectId, property, searchType, keyHash, date], map: "search_analytics_query_daily_drawer_idx")
+  @@map("search_analytics_query_daily")
+}
+
+/// Dimensional daily rows from requests with dimensions ["date", "page"].
+model SearchAnalyticsPageDaily {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  /// The normalized property key produced by searchInsightsPropertyKey, e.g. "sc-domain:example.com".
+  /// Every read filters on it, so a raw connection value written here stores rows nothing finds.
+  property    String
+  /// Allowed values: "web".
+  searchType  String   @default("web")
+  date        DateTime @db.Date
+  /// The absolute URL exactly as the provider returns it.
+  page        String
+  /// sha256 hex of the page URL, used as the unique key so long text never exceeds the btree row limit.
+  keyHash     String
+  clicks      Int
+  impressions Int
+  ctr         Float
+  position    Float
+  fetchedAt   DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([projectId, property, searchType, date, keyHash], map: "search_analytics_page_daily_partition_key")
+  @@index([projectId, property, searchType, keyHash, date], map: "search_analytics_page_daily_drawer_idx")
+  @@map("search_analytics_page_daily")
+}
+
+/// Dimensional daily rows from requests with dimensions ["date", "query", "page"]. Feeds the
+/// query-by-page pivot and the page-overlap chip.
+model SearchAnalyticsQueryPageDaily {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  /// The normalized property key produced by searchInsightsPropertyKey, e.g. "sc-domain:example.com".
+  /// Every read filters on it, so a raw connection value written here stores rows nothing finds.
+  property    String
+  /// Allowed values: "web".
+  searchType  String   @default("web")
+  date        DateTime @db.Date
+  query       String
+  /// The absolute URL exactly as the provider returns it.
+  page        String
+  /// sha256 hex of the query and the page joined by a NUL byte.
+  keyHash     String
+  clicks      Int
+  impressions Int
+  ctr         Float
+  position    Float
+  fetchedAt   DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([projectId, property, searchType, date, keyHash], map: "search_analytics_query_page_daily_partition_key")
+  @@map("search_analytics_query_page_daily")
+}
+
+/// Organic-search sessions per day, total for the property.
+model OrganicSessionsDaily {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  /// The analytics numeric property id.
+  property  String
+  date      DateTime @db.Date
+  sessions  Int
+  fetchedAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([projectId, property, date], map: "organic_sessions_daily_partition_key")
+  @@map("organic_sessions_daily")
+}
+
+/// Organic-search sessions per day and landing page, joined to page rows by path.
+model OrganicSessionsPageDaily {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  /// The analytics numeric property id.
+  property  String
+  date      DateTime @db.Date
+  /// Landing page path as reported, leading slash and no origin.
+  path      String
+  /// sha256 hex of the path, used as the unique key so long text never exceeds the btree row limit.
+  keyHash   String
+  sessions  Int
+  fetchedAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([projectId, property, date, keyHash], map: "organic_sessions_page_daily_partition_key")
+  @@index([projectId, property, keyHash, date], map: "organic_sessions_page_daily_drawer_idx")
+  @@map("organic_sessions_page_daily")
+}
+
+/// One durable entry per normalized GSC property used by a project. Archived rows preserve
+/// historical data keys after the selected property changes or the connection is removed.
+model SearchInsightsPropertyRegistry {
+  projectId     String
+  project       Project                      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  propertyKey   String
+  status        SearchInsightsPropertyStatus
+  ga4PropertyId String?
+  activatedAt   DateTime                     @default(now())
+  archivedAt    DateTime?
+
+  @@id([projectId, propertyKey])
+  @@index([projectId, status])
+  @@map("gsc_property_registry")
+}
+
+/// One row per property and source describing the import job and the freshness facts the trust
+/// strip reads. Deliberately unrelated to ProviderConnection: disconnecting must not delete history.
+model SearchAnalyticsImport {
+  id                     String    @id @default(cuid())
+  projectId              String
+  project                Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  /// The normalized property key produced by searchInsightsPropertyKey, e.g. "sc-domain:example.com".
+  /// The daily tables are keyed by the same string; the two must never drift apart.
+  property               String
+  /// Allowed values: "gsc", "ga4".
+  source                 String
+  /// Allowed values: "web".
+  searchType             String    @default("web")
+  /// Allowed values: "queued", "running", "paused", "completed", "failed".
+  state                  String
+  /// Allowed values: "rate_limited", "needs_reauth", "error", "user".
+  pausedReason           String?
+  pauseStartedAt         DateTime?
+  pausedById             String?
+  pausedBy               User?     @relation("SearchImportPausedBy", fields: [pausedById], references: [id], onDelete: SetNull)
+  /// Sixteen months before the newest finalized day known at import start.
+  earliestTargetDate     DateTime? @db.Date
+  /// Next day the backfill will fetch, walking backward.
+  cursorDate             DateTime? @db.Date
+  /// Provider availability boundary used to plan reads. Usually firstIncompleteDate - 1; metadata-free probes use a conservative fallback.
+  newestFinalizedDate    DateTime? @db.Date
+  /// Provenance for newestFinalizedDate: "metadata" or "fallback"; null means legacy/unknown.
+  availabilityBoundarySource String?
+  /// Latest day whose partitions are fully stored.
+  finalizedThroughDate   DateTime? @db.Date
+  daysTotal              Int       @default(0)
+  plannedRetentionMonths Int?
+  daysDone               Int       @default(0)
+  capHitDays             Int       @default(0)
+  lastSyncStartedAt      DateTime?
+  lastSyncFinishedAt     DateTime?
+  /// When the provider was last asked with dataState "all"; shown as "Fresh through".
+  lastProbeAt            DateTime?
+  lastQuotaPausedAt      DateTime?
+  lastError              String?
+  lastErrorClass         String?
+  workflowId             String?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  @@unique([projectId, property, source], map: "search_analytics_imports_partition_key")
+  @@index([projectId, source])
+  @@index([pausedById])
+  @@map("search_analytics_imports")
+}
+
+model SearchAnalyticsRequestUsage {
+  id           String    @id @default(cuid())
+  projectId    String
+  project      Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  property     String
+  operation    String
+  dimensions   String
+  dataState    String
+  searchType   String
+  source       String
+  startDate    DateTime  @db.Date
+  endDate      DateTime  @db.Date
+  startRow     Int
+  rowLimit     Int
+  returnedRows Int?
+  capHit       Boolean?
+  attemptedAt  DateTime  @default(now())
+  persistedAt  DateTime?
+
+  @@index([projectId, property, attemptedAt], map: "search_analytics_request_usage_quota_idx")
+  @@map("search_analytics_request_usage")
+}
+
+/// Per-request-set provenance: what was asked for versus what came back. Requesting 25k rows is
+/// not the same as receiving 25k rows, and the trust strip says so.
+model SearchAnalyticsSyncPartition {
+  id            String   @id @default(cuid())
+  projectId     String
+  project       Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  property      String
+  /// Allowed values: "gsc", "ga4".
+  source        String
+  /// Allowed values: "web".
+  searchType    String   @default("web")
+  date          DateTime @db.Date
+  /// Comma-joined request dimensions, e.g. "date", "query", "page", "query,page", "date,landingPage".
+  dimensions    String
+  /// Allowed values: "final", "all".
+  dataState     String
+  /// Row limit multiplied by the number of paginated requests.
+  requestedRows Int
+  returnedRows  Int
+  /// Number of paginated requests issued for this partition.
+  pages         Int
+  capHit        Boolean  @default(false)
+  fetchedAt     DateTime
+  durationMs    Int?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([projectId, property, source, searchType, date, dimensions, dataState], map: "search_analytics_sync_partition_key")
+  @@index([projectId, property, date], map: "search_analytics_sync_partitions_property_date_idx")
+  @@map("search_analytics_sync_partitions")
 }

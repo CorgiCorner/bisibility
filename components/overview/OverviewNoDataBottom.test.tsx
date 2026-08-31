@@ -7,6 +7,7 @@ describe("ViewAllKeywordsButton", () => {
     const button = ViewAllKeywordsButton({ projectRef: "prj_abc123" });
 
     expect(button.props.component).toBe("a");
+    expect(button.props.className).toContain("self-end");
 
     render(button);
 

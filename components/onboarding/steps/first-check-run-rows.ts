@@ -19,6 +19,7 @@ export type FirstCheckResultRow =
       provider: string;
       publicId: string;
       position: number | null;
+      recordedCostCents: number;
       rankingUrl: string | null;
       status: "completed";
       text: string;
@@ -68,6 +69,7 @@ export function previewRow(
       market: candidate.market,
       position: result.position,
       provider: result.provider,
+      recordedCostCents: result.recordedCostCents,
       publicId: candidate.publicId,
       rankingUrl: result.rankingUrl,
       status: "completed",

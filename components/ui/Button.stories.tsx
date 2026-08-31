@@ -21,10 +21,10 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   render: () => (
     <>
-      <Button startIcon={<Plus size={15} weight="bold" />}>Add keyword</Button>
+      <Button startIcon={<Plus size={15} weight="regular" />}>Add keyword</Button>
       <Button variant="secondary">Set frequency</Button>
       <Button variant="ghost">Clear</Button>
-      <Button startIcon={<Trash size={15} />} variant="destructive">
+      <Button startIcon={<Trash size={15} weight="regular" />} variant="destructive">
         Delete
       </Button>
       <Button loading loadingLabel="Saving">

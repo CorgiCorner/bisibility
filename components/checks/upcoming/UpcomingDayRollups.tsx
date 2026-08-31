@@ -76,7 +76,7 @@ export function UpcomingDayRollups({
         </div>
         <Link className={`${manageLinkClassName} mt-3`} href={schedulesHref}>
           Manage schedules in Keywords
-          <CaretRight aria-hidden size={12} weight="bold" />
+          <CaretRight aria-hidden size={12} weight="regular" />
         </Link>
       </section>
     );
@@ -106,7 +106,7 @@ export function UpcomingDayRollups({
                   expanded ? "rotate-180" : ""
                 }`}
                 size={14}
-                weight="bold"
+                weight="regular"
               />
             </button>
             {expanded ? (
@@ -115,7 +115,7 @@ export function UpcomingDayRollups({
                 <div className="border-border-soft border-t px-3.5 py-2.5">
                   <Link className={manageLinkClassName} href={schedulesHref}>
                     Manage schedules in Keywords
-                    <CaretRight aria-hidden size={12} weight="bold" />
+                    <CaretRight aria-hidden size={12} weight="regular" />
                   </Link>
                 </div>
               </div>

@@ -4,6 +4,7 @@ import {
   ALERT_DELIVERY_SWEEP_SCHEDULE_ID,
   ensureAlertDeliverySweepSchedule,
 } from "./alert-delivery-bootstrap";
+import { ALERT_DELIVERY_TASK_QUEUE } from "./alert-delivery-client";
 
 describe("alert delivery sweep bootstrap", () => {
   afterEach(() => {
@@ -19,7 +20,7 @@ describe("alert delivery sweep bootstrap", () => {
     expect(client.create).toHaveBeenCalledWith(
       expect.objectContaining({
         action: expect.objectContaining({
-          taskQueue: "alert-deliveries",
+          taskQueue: ALERT_DELIVERY_TASK_QUEUE,
           workflowType: "sweepAlertDeliveriesWorkflow",
         }),
         scheduleId: ALERT_DELIVERY_SWEEP_SCHEDULE_ID,

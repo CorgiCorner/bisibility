@@ -144,6 +144,7 @@ describe("BacklinksWorkspace", () => {
 
     const heading = screen.getByRole("heading", { level: 3, name: "Point it at any domain" });
     expect(heading.parentElement).toHaveClass("rounded-card", "border", "bg-bg-elev");
+    expect(heading.parentElement?.querySelector('[data-module-mark="soft"]')).not.toBeNull();
     expect(
       screen.getByText("Runs on your own DataForSEO key, price shown before every run"),
     ).toBeInTheDocument();

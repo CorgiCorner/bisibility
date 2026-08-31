@@ -1,6 +1,18 @@
+import type { TimelineItem } from "@/lib/timeline/timeline-data";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { TimelineRow } from "./TimelineRow";
+
+const manualNote: TimelineItem = {
+  date: "Aug 29",
+  id: "sig_abcdefghijklmnopqrstuvwx",
+  icon: "notes",
+  meta: "Manual · by M",
+  removable: false,
+  time: "11:42 PM",
+  tint: "green",
+  title: "test",
+};
 
 describe("TimelineRow", () => {
   it("uses the full row width without a leading marker column", () => {
@@ -92,5 +104,31 @@ describe("TimelineRow", () => {
     expect(screen.getByText("test")).toBeVisible();
     expect(screen.getByText("/, /pricing")).toBeVisible();
     expect(document.querySelector("#signal-sig_test")).toBeInTheDocument();
+  });
+  it("centers desktop columns without position top-padding compensation", () => {
+    const { rerender } = render(
+      <TimelineRow canDelete={false} item={manualNote} projectId="prj_abcdefghijklmnopqrstuvwx" />,
+    );
+
+    const row = screen.getByText("test").closest("[id^='signal-']");
+    expect(row).toHaveClass("items-center");
+    expect(row).not.toHaveClass("items-start");
+
+    const grid = row?.firstElementChild;
+    expect(grid).toHaveClass("md:items-center");
+    expect(grid).not.toHaveClass("md:items-start");
+    expect(screen.getByText("Manual · by M")).toBeInTheDocument();
+    expect(screen.getByText("Aug 29")).toBeInTheDocument();
+    expect(screen.getByText("11:42 PM")).toBeInTheDocument();
+
+    rerender(
+      <TimelineRow
+        canDelete={false}
+        item={{ ...manualNote, id: "sig_bcdefghijklmnopqrstuvwxy", position: "#7" }}
+        projectId="prj_abcdefghijklmnopqrstuvwx"
+      />,
+    );
+
+    expect(screen.getByText("#7")).not.toHaveClass("md:pt-1");
   });
 });

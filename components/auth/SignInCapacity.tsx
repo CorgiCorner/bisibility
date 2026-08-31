@@ -89,7 +89,7 @@ export function EmailCapacityPanel({
             aria-hidden
             className="mt-px shrink-0 text-red-text"
             size={16}
-            weight="fill"
+            weight="regular"
           />
           <p className="m-0 text-[12.5px] leading-[1.55] text-red-text">
             <strong className="font-semibold">Just missed it.</strong> The last login codes went out
@@ -103,7 +103,7 @@ export function EmailCapacityPanel({
             aria-hidden
             className="mt-px shrink-0 text-yellow-text"
             size={18}
-            weight="fill"
+            weight="regular"
           />
           <p className="m-0 text-[13px] leading-[1.6] text-fg-muted">
             <strong className="font-semibold text-fg">
@@ -122,7 +122,7 @@ export function EmailCapacityPanel({
           rel="noreferrer noopener"
           target="_blank"
         >
-          <HardDrives aria-hidden size={16} />
+          <HardDrives aria-hidden size={16} weight="regular" />
           Self-hosting guide
         </a>
       </div>
@@ -137,7 +137,7 @@ export function FullCapacityCard({
   return (
     <div className="flex flex-col items-center gap-4 text-center">
       <span className="grid h-[54px] w-[54px] place-items-center rounded-full bg-accent-soft text-yellow-text">
-        <MoonStars aria-hidden size={28} weight="fill" />
+        <MoonStars aria-hidden size={28} weight="regular" />
       </span>
       <div>
         <h1 className="m-0 text-[25px] font-semibold tracking-[-0.7px]">
@@ -156,7 +156,7 @@ export function FullCapacityCard({
           rel="noreferrer noopener"
           target="_blank"
         >
-          <HardDrives aria-hidden size={16} />
+          <HardDrives aria-hidden size={16} weight="regular" />
           Self-host bisibility - it&apos;s open source
         </a>
         <a

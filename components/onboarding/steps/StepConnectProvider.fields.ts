@@ -160,8 +160,9 @@ export function providerConnectInput(
 export function savedProviderCompletionInput(
   projectId: string,
   providerId: OnboardingSerpProviderId,
+  costPerCheck?: number,
 ): OnboardingConnectProviderInput {
-  return { projectId, providerId };
+  return { costPerCheck, projectId, providerId };
 }
 
 export function costOrEmpty(value: number | undefined) {

@@ -304,19 +304,17 @@ function allPairsForScheme(scheme: ColorSchemeName): Pair[] {
     }
 
     // --border-control draws every interactive edge: inputs, buttons, chips, switches.
-    // Dark clears the 3:1 non-text floor of WCAG 1.4.11. Light deliberately sits below
-    // it: the cream palette cannot carry both a hairline for chrome and a 3:1 control
-    // edge, and the lighter edge was chosen knowingly. The floor is asserted rather
-    // than skipped, so a further lightening of the palette fails here instead of
-    // slipping through the way #DDD8CC did. --bg-inset is excluded because it is a
-    // momentary :active fill and a meter track, never a resting surface under a
-    // bordered control.
+    // Both schemes use operator-chosen control edges below the WCAG 1.4.11 3:1 floor.
+    // Dark #616060 was chosen visually; its narrower floor is asserted rather than
+    // skipped so any further regression still fails. Light keeps its existing palette
+    // exception for the same reason. --bg-inset is excluded because it is a momentary
+    // :active fill and a meter track, never a resting surface under a bordered control.
     if (surface !== "bg-inset") {
       pairs.push({
         background: token(scheme, surface),
         description: `${scheme}: --border-control against --${surface}`,
         foreground: token(scheme, "border-control"),
-        minimum: scheme === "dark" ? 3 : 2,
+        minimum: scheme === "dark" ? 2.8 : 2,
       });
     }
 
@@ -430,7 +428,7 @@ describe("theme contrast contract", () => {
       "bg-band": "#141414",
       "fg-muted": "#A09D95",
       border: "#343333",
-      "border-control": "#716653",
+      "border-control": "#616060",
       "accent-solid": "#F1511C",
       "accent-solid-hover": "#F0450F",
       "accent-on-solid": "#FFF3EE",

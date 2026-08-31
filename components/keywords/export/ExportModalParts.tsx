@@ -59,7 +59,7 @@ export const formatOptions: {
 
 export const scopeOptions: {
   desc: string;
-  icon: ComponentType<{ className?: string; size?: number; weight?: "bold" }>;
+  icon: ComponentType<{ className?: string; size?: number; weight?: "regular" }>;
   id: ExportScope;
   name: string;
 }[] = [

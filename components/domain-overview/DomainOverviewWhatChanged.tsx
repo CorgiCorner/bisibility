@@ -42,7 +42,7 @@ export function DomainOverviewWhatChanged({
             <li className={styles.item} key={row.label}>
               <div className={styles.metric}>
                 <span className="inline-flex items-center gap-1.5 text-[13px] text-fg-muted">
-                  <Icon aria-hidden className={tone} size={13} weight="bold" />
+                  <Icon aria-hidden className={tone} size={13} weight="regular" />
                   {row.label}
                 </span>
                 <strong className={`${tone} font-mono text-[13px]`}>

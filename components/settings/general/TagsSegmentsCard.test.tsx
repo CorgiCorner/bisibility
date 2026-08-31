@@ -26,8 +26,14 @@ describe("TagsSegmentsCard", () => {
       />,
     );
 
-    expect(screen.getByRole("button", { name: "Add tag" })).toHaveClass("font-medium");
-    expect(screen.getByRole("button", { name: "Add tag" })).not.toHaveClass("font-semibold");
+    const addTag = screen.getByRole("button", { name: "Add tag" });
+
+    expect(addTag).toHaveClass("font-medium", "hover:bg-bg-sunken", "focus-visible:bg-bg-sunken");
+    expect(addTag).not.toHaveClass(
+      "font-semibold",
+      "hover:bg-nav-active",
+      "focus-visible:bg-nav-active",
+    );
   });
 
   it("keeps tag additions local until the card Save is used", async () => {

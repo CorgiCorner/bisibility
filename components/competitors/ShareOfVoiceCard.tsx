@@ -150,7 +150,7 @@ export function ShareOfVoiceCard({
       ) : null}
 
       <p className="m-0 mt-4 flex items-center gap-2 border-border-soft border-t pt-3.5 text-[11.5px] text-fg-muted">
-        <Info aria-hidden className="shrink-0 text-accent-text" size={14} />
+        <Info weight="regular" aria-hidden className="shrink-0 text-accent-text" size={14} />
         SOV = share of estimated top-10 visibility (rank x search volume).
       </p>
     </Card>

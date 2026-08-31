@@ -36,6 +36,103 @@ const groupedOptions: MenuSelectOptionGroup[] = [
 ];
 
 describe("MenuSelect grouped", () => {
+  it("renders non-sticky opaque full-bleed group headers", async () => {
+    const user = userEvent.setup();
+    render(
+      <MenuSelect
+        ariaLabel="Market"
+        groups={groupedOptions}
+        onChange={() => undefined}
+        searchable
+        value="US"
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Market" }));
+    const header = screen.getByText("Tracked markets");
+    expect(header).toHaveAttribute("data-slot", "menu-group-header");
+    expect(header).toHaveAttribute("role", "presentation");
+    expect(header).toHaveClass("MuiListSubheader-gutters", "font-mono", "uppercase");
+    expect(header).not.toHaveClass("MuiListSubheader-sticky");
+    expect(header).toHaveStyle({
+      backgroundColor: "var(--bg-sunken)",
+      marginBottom: "4px",
+      marginInline: "-6px",
+      paddingInline: "15px",
+      width: "calc(100% + 12px)",
+      zIndex: "1",
+    });
+  });
+
+  it("matches Paper width to the live trigger width with the shared six-pixel gap", async () => {
+    const user = userEvent.setup();
+    render(
+      <MenuSelect
+        ariaLabel="Market"
+        groups={groupedOptions}
+        onChange={() => undefined}
+        value="US"
+      />,
+    );
+    const trigger = screen.getByRole("button", { name: "Market" });
+    vi.spyOn(trigger, "getBoundingClientRect").mockReturnValue({
+      bottom: 100,
+      height: 32,
+      left: 20,
+      right: 463,
+      top: 68,
+      width: 443,
+      x: 20,
+      y: 68,
+      toJSON: () => ({}),
+    });
+
+    await user.click(trigger);
+
+    const paper = document.querySelector<HTMLElement>(".MuiPaper-root");
+    expect(paper).not.toBeNull();
+    expect(paper).toHaveStyle({
+      marginTop: "6px",
+      maxWidth: "443px",
+      minWidth: "443px",
+      top: "100px",
+    });
+  });
+
+  it("adds spacing only before rendered groups after the first", async () => {
+    const user = userEvent.setup();
+    const groupsWithHiddenEntries: MenuSelectOptionGroup[] = [
+      { id: "empty", label: "Empty", options: [] },
+      {
+        id: "search-only",
+        label: "Search only",
+        options: [{ label: "Hidden until search", value: "hidden" }],
+        searchOnly: true,
+      },
+      groupedOptions[0],
+      { ...groupedOptions[1], searchOnly: false },
+    ];
+    render(
+      <MenuSelect
+        ariaLabel="Market"
+        groups={groupsWithHiddenEntries}
+        onChange={() => undefined}
+        searchable
+        value="US"
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Market" }));
+    expect(screen.getByText("Tracked markets")).toHaveStyle({
+      marginBottom: "4px",
+      marginTop: "0px",
+    });
+    expect(screen.getByText("Catalog")).toHaveStyle({
+      marginBottom: "4px",
+      marginTop: "4px",
+    });
+  });
+
   it("shows tracked group and hides searchOnly catalog without a query", async () => {
     const user = userEvent.setup();
     render(

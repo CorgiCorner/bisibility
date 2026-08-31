@@ -5,7 +5,10 @@ import type { Meta, StoryObj } from "@storybook/react";
 const meta = {
   title: "Integrations/IntegrationCategory",
   component: IntegrationCategory,
-  args: { timeZone: "Europe/Warsaw" },
+  args: {
+    searchSyncPlan: { daysTotal: 93, pace: "gentle", retentionMonths: 3 },
+    timeZone: "Europe/Warsaw",
+  },
   decorators: [
     (Story) => (
       <div className="min-h-[560px] bg-bg p-6 text-fg">

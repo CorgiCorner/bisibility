@@ -54,21 +54,21 @@ function tagOptions(tags: readonly string[]): FilterOption[] {
 function filterMenus(selected: SelectedFilters): readonly FilterMenu[] {
   return [
     {
-      icon: <CalendarBlank aria-hidden className="text-fg-muted" size={15} />,
+      icon: <CalendarBlank weight="regular" aria-hidden className="text-fg-muted" size={15} />,
       key: "range",
       options: RANGE_OPTIONS,
       prefix: "",
       selected: selected.rangeValue,
     },
     {
-      icon: <Monitor aria-hidden className="text-fg-muted" size={15} />,
+      icon: <Monitor weight="regular" aria-hidden className="text-fg-muted" size={15} />,
       key: "device",
       options: DEVICE_OPTIONS,
       prefix: "",
       selected: selected.deviceValue,
     },
     {
-      icon: <Tag aria-hidden className="text-fg-muted" size={15} />,
+      icon: <Tag weight="regular" aria-hidden className="text-fg-muted" size={15} />,
       key: "tag",
       options: tagOptions(selected.availableTags),
       prefix: "Tag: ",
@@ -159,7 +159,7 @@ export function OverviewToolbar({
             component={Link}
             href={appPath(projectRef, "rank-tracker?add=1")}
             size="sm"
-            startIcon={<Plus size={15} weight="bold" />}
+            startIcon={<Plus size={15} weight="regular" />}
             sx={{ height: 37, minHeight: 37, whiteSpace: "nowrap" }}
             variant="primary"
           >
@@ -172,7 +172,7 @@ export function OverviewToolbar({
           <MenuMultiSelect
             allLabel="All markets"
             ariaLabel="Markets"
-            leadingIcon={<Globe aria-hidden size={15} />}
+            leadingIcon={<Globe weight="regular" aria-hidden size={15} />}
             minSelected={0}
             onChange={changeMarkets}
             options={selected.marketOptions}
@@ -184,6 +184,7 @@ export function OverviewToolbar({
               }
               return `${markets.length} markets`;
             }}
+            summaryClassName="!text-fg-muted"
             triggerClassName={OVERVIEW_MARKET_FILTER_CLASS}
             values={selected.marketValues}
           />
@@ -201,7 +202,7 @@ export function OverviewToolbar({
             >
               {menu.icon}
               {`${menu.prefix}${selected[menu.key]}`}
-              <CaretDown aria-hidden className="text-fg-muted" size={11} weight="bold" />
+              <CaretDown aria-hidden className="text-fg-muted" size={11} weight="regular" />
             </Pill>
           );
         })}
@@ -231,7 +232,7 @@ export function OverviewToolbar({
               >
                 <span className={current ? "text-fg" : undefined}>{option.label}</span>
                 {current ? (
-                  <Check aria-hidden className="text-accent-text" size={15} weight="bold" />
+                  <Check aria-hidden className="text-accent-text" size={15} weight="regular" />
                 ) : null}
               </MenuItem>
             );

@@ -41,6 +41,7 @@ export type Ga4ReportInput = {
   endDate: string;
   limit?: number;
   metrics?: string[];
+  offset?: number;
   orderBys?: Ga4ReportOrderBy[];
   startDate: string;
 };
@@ -57,9 +58,15 @@ export type Ga4Row = {
   metricValues?: Array<{ value?: string }>;
 };
 
-type Ga4ReportOrderBy = {
-  desc?: boolean;
-  metric: { metricName: string };
+export type Ga4ReportOrderBy =
+  | { desc?: boolean; dimension: { dimensionName: string } }
+  | { desc?: boolean; metric: { metricName: string } };
+
+export const GA4_ORGANIC_SEARCH_FILTER: Ga4DimensionFilter = {
+  filter: {
+    fieldName: "sessionDefaultChannelGroup",
+    stringFilter: { value: "Organic Search" },
+  },
 };
 
 function reportUrl(property: string) {
@@ -72,6 +79,7 @@ function reportBody(input: {
   endDate: string;
   limit?: number;
   metrics?: string[];
+  offset?: number;
   orderBys?: Ga4ReportOrderBy[];
   startDate: string;
 }) {
@@ -81,6 +89,7 @@ function reportBody(input: {
     dimensionFilter?: Ga4DimensionFilter;
     limit?: string;
     metrics: Array<{ name: string }>;
+    offset?: string;
     orderBys?: Ga4ReportOrderBy[];
   } = {
     dateRanges: [{ endDate: input.endDate, startDate: input.startDate }],
@@ -89,6 +98,9 @@ function reportBody(input: {
   };
   if (input.limit !== undefined) {
     body.limit = String(input.limit);
+  }
+  if (input.offset !== undefined) {
+    body.offset = String(input.offset);
   }
   if (input.dimensionFilter) {
     body.dimensionFilter = input.dimensionFilter;
@@ -211,12 +223,7 @@ export const ga4AnalyticsProvider: Ga4AnalyticsProvider = {
   ): Promise<PageStatRow[]> {
     const rows = await fetchReport({
       credentials,
-      dimensionFilter: {
-        filter: {
-          fieldName: "sessionDefaultChannelGroup",
-          stringFilter: { value: "Organic Search" },
-        },
-      },
+      dimensionFilter: GA4_ORGANIC_SEARCH_FILTER,
       dimensions: ["landingPage"],
       endDate: input.endDate,
       limit: input.limit ?? 1000,

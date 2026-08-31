@@ -36,6 +36,19 @@ const baseProps = {
 } as const;
 
 describe("DevelopersSettingsContent", () => {
+  it("lets both developer cards size naturally to their content", () => {
+    render(<DevelopersSettingsContent {...baseProps} />);
+
+    const apiKeysCard = screen.getByRole("region", { name: "API keys" });
+    const deployWebhooksCard = screen.getByRole("region", { name: "Deploy webhooks" });
+
+    const hasHeightUtility = (className: string) =>
+      className.split(/\s+/).some((token) => /(?:^|:)min-h-|(?:^|:)h-/.test(token));
+
+    expect(hasHeightUtility(apiKeysCard.className)).toBe(false);
+    expect(hasHeightUtility(deployWebhooksCard.className)).toBe(false);
+  });
+
   it("renders the exact API-key state without inventing unavailable metadata", () => {
     render(<DevelopersSettingsContent {...baseProps} />);
 

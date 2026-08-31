@@ -65,7 +65,7 @@ export function TeamPendingInvitesCard({
         {invites.length === 0 ? (
           <div className="flex items-center gap-3 p-3 text-[12.5px] text-fg-muted">
             <span className="grid h-8.5 w-[34px] place-items-center rounded-control border border-dashed border-border">
-              <EnvelopeSimple aria-hidden size={16} />
+              <EnvelopeSimple aria-hidden size={16} weight="regular" />
             </span>
             No pending invites.
           </div>
@@ -82,7 +82,7 @@ export function TeamPendingInvitesCard({
               key={invite.id}
             >
               <span className="grid h-8.5 w-[34px] shrink-0 place-items-center rounded-control border border-dashed border-border text-fg-muted">
-                <EnvelopeSimple aria-hidden size={16} />
+                <EnvelopeSimple aria-hidden size={16} weight="regular" />
               </span>
               <span className="min-w-[160px] flex-1">
                 <span className="block truncate font-mono text-[12.5px] text-fg">
@@ -127,7 +127,7 @@ export function TeamPendingInvitesCard({
                     }
                     type="button"
                   >
-                    <X aria-hidden size={14} />
+                    <X aria-hidden size={14} weight="regular" />
                   </button>
                 </Tooltip>
               ) : null}

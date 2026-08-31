@@ -1,3 +1,4 @@
+import { SessionSpendProvider } from "@/components/cost-estimate/SessionSpendProvider";
 import { ToastProvider } from "@/components/ui";
 import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
@@ -18,6 +19,7 @@ type HeaderActionsMockProps = {
   onExport: () => void;
   onRunCheck: (depth: 10 | 20 | 50 | 100) => void;
   onToggleEdit: () => void;
+  runPending: boolean;
 };
 vi.mock("@/components/ui", async () => {
   const actual = await vi.importActual<typeof import("@/components/ui")>("@/components/ui");
@@ -80,8 +82,15 @@ vi.mock("@/components/keywords/filters/DimensionSwitcher", async () => {
 vi.mock("./KeywordHeaderActions", () => ({
   KeywordHeaderActions: (props: HeaderActionsMockProps) => (
     <div>
-      <button onClick={() => props.onRunCheck(props.effectiveDepth)} type="button">
-        Run
+      <button
+        disabled={props.runPending}
+        onClick={() => props.onRunCheck(props.effectiveDepth)}
+        type="button"
+      >
+        Run check (Top {props.effectiveDepth})
+      </button>
+      <button disabled={props.runPending} onClick={() => props.onRunCheck(20)} type="button">
+        Run check (Top 20)
       </button>
       <button onClick={props.onExport} type="button">
         Export
@@ -124,16 +133,18 @@ function renderCard(overrides: Record<string, unknown> = {}) {
     updateKeywordScheduleAction: vi.fn(),
   };
   render(
-    <ToastProvider>
-      <KeywordHeaderCard
-        canCreateKeyword
-        canUpdateKeyword
-        keyword={keyword as never}
-        projectId="project_1"
-        {...actions}
-        {...overrides}
-      />
-    </ToastProvider>,
+    <SessionSpendProvider>
+      <ToastProvider>
+        <KeywordHeaderCard
+          canCreateKeyword
+          canUpdateKeyword
+          keyword={keyword as never}
+          projectId="prj_1"
+          {...actions}
+          {...overrides}
+        />
+      </ToastProvider>
+    </SessionSpendProvider>,
   );
   return actions;
 }
@@ -151,45 +162,79 @@ describe("KeywordHeaderCard", () => {
     else process.env.TZ = originalTZ;
   });
 
-  it("starts a check, exports, and opens editing", async () => {
-    const actions = renderCard({
+  it("opens confirmation before starting, then enters the running flow", async () => {
+    const runCheckNowAction = vi.fn().mockResolvedValue({
+      rankCheckId: "check_abcdefghijklmnopqrstuvwx",
+      status: "running",
+    });
+    renderCard({
+      costContext: { costPerCheckCents: 2, providerId: "dataforseo", timezone: "UTC" },
       projectMarkets: {
         markets: [],
         maxMarkets: 5,
         monthlyCostCents: 0,
         perMarketChecks: 0,
-        projectId: "project_1",
+        projectId: "prj_1",
       },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "Run" }));
-    expect(await screen.findByText("Check started (Top 100)")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Export" }));
-    expect(mocks.exportHistoryCsv).toHaveBeenCalledWith(keyword);
-    const drawer = screen.getByText("Markets and devices drawer");
-    expect(drawer).toHaveAttribute("data-open", "false");
-    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
-    expect(drawer).toHaveAttribute("data-open", "true");
-    expect(screen.queryByText(/Edit drawer/)).not.toBeInTheDocument();
-    expect(actions.runCheckNowAction).toHaveBeenCalledWith({
-      depth: 100,
-      keywordId: "keyword_1",
-    });
-  });
-
-  it("uses the keyword schedule depth for the default manual check", async () => {
-    const actions = renderCard({
-      keyword: {
-        ...keyword,
-        projectSerpDepth: 50,
-        schedule: { serp_depth: 20 },
-      },
+      runCheckNowAction,
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Run" }));
+    fireEvent.click(screen.getByRole("button", { name: "Run check (Top 100)" }));
+
+    expect(runCheckNowAction).not.toHaveBeenCalled();
+    expect(screen.getByRole("dialog", { name: "Run rank check" })).toBeInTheDocument();
+    expect(screen.getByText("Top 100")).toBeInTheDocument();
+    expect(screen.getByText("~$0.02")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Confirm and run" }));
 
     await waitFor(() =>
-      expect(actions.runCheckNowAction).toHaveBeenCalledWith({ depth: 20, keywordId: "keyword_1" }),
+      expect(runCheckNowAction).toHaveBeenCalledWith({
+        depth: 100,
+        keywordId: "keyword_1",
+      }),
     );
+    expect(await screen.findByRole("dialog", { name: "Check running" })).toBeInTheDocument();
+    expect(routerMock.refresh).toHaveBeenCalledOnce();
+  });
+
+  it("passes a selected depth override through confirmation", async () => {
+    const runCheckNowAction = vi.fn().mockResolvedValue({
+      rankCheckId: "check_abcdefghijklmnopqrstuvwx",
+      status: "running",
+    });
+    renderCard({ runCheckNowAction });
+
+    fireEvent.click(screen.getByRole("button", { name: "Run check (Top 20)" }));
+    expect(runCheckNowAction).not.toHaveBeenCalled();
+    expect(screen.getByRole("dialog", { name: "Run rank check" })).toBeInTheDocument();
+    expect(screen.getByText("Top 20")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Confirm and run" }));
+    await waitFor(() =>
+      expect(runCheckNowAction).toHaveBeenCalledWith({
+        depth: 20,
+        keywordId: "keyword_1",
+      }),
+    );
+  });
+
+  it("shows a retryable failed modal without a duplicate toast", async () => {
+    const runCheckNowAction = vi.fn().mockResolvedValue({
+      code: "sample_project",
+      message: "Sample projects don't run real checks.",
+      status: "not_started",
+    });
+    renderCard({ runCheckNowAction });
+
+    fireEvent.click(screen.getByRole("button", { name: "Run check (Top 100)" }));
+    fireEvent.click(screen.getByRole("button", { name: "Confirm and run" }));
+
+    expect(await screen.findByRole("dialog", { name: "Check failed" })).toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent("Sample projects don't run real checks.");
+    expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
+    expect(runCheckNowAction).toHaveBeenCalledOnce();
+    expect(screen.queryByText("Check started (Top 100)")).not.toBeInTheDocument();
   });
 
   it("renders target, ranking, timing, and provider metadata below the dimension chips", () => {
@@ -229,31 +274,6 @@ describe("KeywordHeaderCard", () => {
     expect(screen.queryByRole("button", { name: "Track device" })).not.toBeInTheDocument();
   });
 
-  it("reports check failures", async () => {
-    const check = vi.fn(async () => {
-      throw new Error("Check unavailable");
-    });
-    renderCard({ runCheckNowAction: check });
-    fireEvent.click(screen.getByRole("button", { name: "Run" }));
-    expect(await screen.findByText("Check unavailable")).toBeInTheDocument();
-  });
-
-  it("treats a serialized budget rejection as a failed check", async () => {
-    renderCard({
-      runCheckNowAction: vi.fn().mockResolvedValue({
-        code: "budget_exhausted",
-        message: "Rank check monthly budget reached.",
-        status: "not_started",
-      }),
-    });
-
-    fireEvent.click(screen.getByRole("button", { name: "Run" }));
-
-    expect(await screen.findByText("Rank check monthly budget reached.")).toBeInTheDocument();
-    expect(screen.queryByText("Check started (Top 100)")).not.toBeInTheDocument();
-    expect(routerMock.refresh).not.toHaveBeenCalled();
-  });
-
   it("works without a schedule editor", () => {
     renderCard({
       projectMarkets: {
@@ -261,7 +281,7 @@ describe("KeywordHeaderCard", () => {
         maxMarkets: 5,
         monthlyCostCents: 0,
         perMarketChecks: 0,
-        projectId: "project_1",
+        projectId: "prj_1",
       },
       updateKeywordScheduleAction: undefined,
     });

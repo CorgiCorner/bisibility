@@ -11,7 +11,7 @@ export function DomainOverviewBacklinksTeaser({
   return (
     <section className="flex flex-col items-start gap-3 rounded-card border border-border bg-bg-elev px-4.5 py-4 sm:flex-row sm:items-center">
       <span className="grid h-[38px] w-[38px] shrink-0 place-items-center rounded-control bg-bg-sunken text-fg-muted">
-        <LinkSimple aria-hidden size={18} />
+        <LinkSimple weight="regular" aria-hidden size={18} />
       </span>
       <div className="min-w-0 flex-1">
         <h3 className="m-0 text-[14.5px] font-semibold">Backlinks</h3>
@@ -21,7 +21,7 @@ export function DomainOverviewBacklinksTeaser({
       </div>
       <Button
         component={Link}
-        endIcon={<ArrowRight size={13} weight="bold" />}
+        endIcon={<ArrowRight size={13} weight="regular" />}
         href={`${appPath(projectRef, "backlinks")}?${params.toString()}`}
         size="sm"
         variant="secondary"

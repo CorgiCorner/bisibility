@@ -85,6 +85,27 @@ describe("CloudBetaBanner", () => {
     expect(screen.getByRole("status")).not.toHaveTextContent("match self-hosted");
   });
 
+  it("renders the hosted beta lead semibold", () => {
+    render(<CloudBetaBanner {...defaultProps} />);
+
+    expect(screen.getByText("You're on the hosted beta.")).toHaveClass("font-semibold");
+  });
+
+  it("uses the elevated shell surface with a 40px default minimum height", () => {
+    render(<CloudBetaBanner {...defaultProps} />);
+
+    const banner = screen.getByRole("status");
+    expect(banner).toHaveClass("min-h-10", "bg-bg-elev", "py-1");
+    expect(banner).not.toHaveClass("bg-yellow/[0.1]");
+  });
+
+  it("emphasizes only the warning icon with the solid semantic accent", () => {
+    render(<CloudBetaBanner {...defaultProps} />);
+
+    expect(screen.getByTestId("cloud-beta-warning-icon")).toHaveClass("text-accent-solid");
+    expect(screen.getByTestId("cloud-beta-content")).toHaveClass("text-fg-muted");
+  });
+
   it("keeps the latest export status out of the Cloud beta banner", () => {
     render(
       <CloudBetaBanner {...defaultProps} lastExport={{ exportedAt: "2026-07-19T12:00:00.000Z" }} />,

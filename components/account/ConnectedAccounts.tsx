@@ -30,7 +30,7 @@ export function ConnectedAccounts({ accounts }: Readonly<ConnectedAccountsProps>
           return (
             <div className="flex items-center gap-[13px] px-4.5 py-3.5" key={provider}>
               <span className="grid h-8.5 w-[34px] flex-none place-items-center rounded-control bg-bg-sunken text-fg">
-                <Icon size={19} weight="fill" />
+                <Icon size={19} weight="regular" />
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block text-[13.5px] font-semibold text-fg">{label}</span>

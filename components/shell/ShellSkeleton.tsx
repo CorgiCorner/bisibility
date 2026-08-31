@@ -13,15 +13,21 @@
 // This is a picture of the shell, not a working one: no links, no nav labels, no client
 // components. The row counts come from the real rail so the two cannot drift.
 
-import { navItems } from "@/lib/nav/nav-items";
-import type { ReactNode } from "react";
+import { navItemGroups, navItems } from "@/lib/nav/nav-items";
+import { Fragment, type ReactNode } from "react";
 
 // The boundary has no project yet, so the rail is built against the literal route pattern.
 // Only the row counts are used - the hrefs and labels are discarded.
 const railRows = navItems("[project]");
-const primaryRowKeys = railRows
-  .filter((item) => item.group !== "utility")
+const topRowKeys = railRows
+  .filter((item) => item.group === "top")
   .map((_, index) => `nav-${index}`);
+const groupedRailRows = navItemGroups.map((group) => ({
+  ...group,
+  rows: railRows
+    .filter((item) => item.group === group.id)
+    .map((_, index) => `${group.id}-${index}`),
+}));
 const utilityRowKeys = railRows
   .filter((item) => item.group === "utility")
   .map((_, index) => `utility-${index}`);
@@ -48,6 +54,16 @@ function RailRow({ collapsed }: Readonly<{ collapsed: boolean }>) {
   );
 }
 
+function RailHeading() {
+  // Same 28px box as the settled group heading: 14px top padding, a 10px line box (the
+  // heading's `text-[10px] leading-none`, mirrored here as the block's height), 4px bottom.
+  return (
+    <div className="px-[11px] pt-3.5 pb-1" data-testid="shell-skeleton-nav-heading">
+      <Block className="h-2.5 w-10" />
+    </div>
+  );
+}
+
 function SidebarSkeleton({ collapsed }: Readonly<{ collapsed: boolean }>) {
   return (
     <div
@@ -57,48 +73,49 @@ function SidebarSkeleton({ collapsed }: Readonly<{ collapsed: boolean }>) {
       ].join(" ")}
       data-testid="shell-skeleton-sidebar"
     >
-      {/* Order mirrors the settled rail: head, nav, utility, switcher, version. */}
-      <div className="flex-none pb-4">
+      {/* Order mirrors the settled rail: top control, switcher, scrollable nav, footer. */}
+      <div className="flex-none">
         {collapsed ? (
-          // The head is 48px tall in both states, so the mark's centre does not move across
-          // the toggle; the 22px margin holds it on the rail's icon axis.
           <div className="ml-5.5 grid h-12 w-9 place-items-center">
-            <Block className="h-9 w-9" />
+            <Block className="h-5 w-5 rounded-control" />
           </div>
         ) : (
-          <div className="flex h-12 w-full items-center gap-2.5 px-[11px]">
-            <div className="flex h-[30px] flex-none items-center pl-[2px]">
-              <Block className="h-[26px] w-[26px] rounded-control" />
-            </div>
-            <Block className="h-4 w-[84px]" />
+          <div className="flex h-12 w-full items-center px-[11px]">
             <Block className="ml-auto h-[30px] w-[30px] flex-none rounded-control" />
           </div>
         )}
       </div>
-      {/* Only the nav region gives; the rest of the column is flex-none. */}
-      <div className="flex min-h-0 flex-1 flex-col gap-1 overflow-hidden">
-        {primaryRowKeys.map((key) => (
+      {collapsed ? null : (
+        <div className="mt-3 flex h-11 w-full items-center gap-2.5 px-[11px]">
+          <Block className="h-5 w-5 flex-none rounded-control" />
+          <Block className="h-3.5 min-w-0 flex-1" />
+          <Block className="h-3 w-3 flex-none rounded-control" />
+        </div>
+      )}
+      {/* Only the nav region gives; the footer is the only pinned area. */}
+      <div className="mt-4 flex min-h-0 flex-1 flex-col gap-0.5 overflow-hidden">
+        {topRowKeys.map((key) => (
           <RailRow collapsed={collapsed} key={key} />
         ))}
-      </div>
-      <div className="mt-auto flex flex-none flex-col gap-1 pt-4">
-        {utilityRowKeys.map((key) => (
-          <RailRow collapsed={collapsed} key={key} />
+        {groupedRailRows.map((group) => (
+          <Fragment key={group.id}>
+            {collapsed ? null : <RailHeading />}
+            {group.rows.map((key) => (
+              <RailRow collapsed={collapsed} key={key} />
+            ))}
+          </Fragment>
         ))}
+        <div className="flex flex-col gap-0.5 pt-4">
+          {utilityRowKeys.map((key) => (
+            <RailRow collapsed={collapsed} key={key} />
+          ))}
+        </div>
       </div>
-      <div className="mt-4.5 flex-none">
-        {collapsed ? (
-          <Block className="ml-5.5 h-11 w-9" />
-        ) : (
-          <div className="flex h-11 w-full items-center gap-2.5 px-[11px]">
-            <Block className="h-[30px] w-[30px] flex-none" />
-            <Block className="h-3.5 min-w-0 flex-1" />
-            <Block className="h-3 w-3 flex-none rounded-control" />
-          </div>
-        )}
-      </div>
-      <div className={`flex flex-none pt-2 ${collapsed ? "justify-center" : "justify-end pr-1"}`}>
-        <Block className="h-2.5 w-9 rounded-control" />
+      <div
+        className={`flex flex-none items-center pt-2 ${collapsed ? "justify-center" : "justify-between px-[11px]"}`}
+      >
+        <Block className="h-[18px] w-[18px] rounded-control" />
+        <Block className="ml-auto h-2.5 w-9 rounded-control" />
       </div>
     </div>
   );
@@ -145,7 +162,7 @@ export function ShellSkeleton({ children, collapsed = false }: Readonly<ShellSke
       aria-hidden
       className={[
         "min-h-dvh bg-bg text-fg lg:grid",
-        collapsed ? "lg:grid-cols-[80px_minmax(0,1fr)]" : "lg:grid-cols-[248px_minmax(0,1fr)]",
+        collapsed ? "lg:grid-cols-[80px_minmax(0,1fr)]" : "lg:grid-cols-[270px_minmax(0,1fr)]",
       ].join(" ")}
       data-testid="shell-skeleton"
     >

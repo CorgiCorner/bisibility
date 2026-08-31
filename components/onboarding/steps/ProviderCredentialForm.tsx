@@ -32,6 +32,7 @@ type ProviderCredentialFormProps = {
   testDisabled?: boolean;
   testResult?: ProviderTestResult | null;
   testing: boolean;
+  showSave?: boolean;
 };
 
 const statusChip = "inline-flex items-center gap-1.5 font-medium text-[12px]";
@@ -53,7 +54,7 @@ function TestStatus({
   if (savedConnection) {
     return (
       <span className={`${statusChip} text-green-text`} role="status">
-        <CheckCircle aria-hidden size={14} weight="fill" />
+        <CheckCircle aria-hidden size={14} weight="regular" />
         {providerLabel} connected
       </span>
     );
@@ -61,7 +62,7 @@ function TestStatus({
   if (testResult?.ok) {
     return (
       <span className={`${statusChip} text-green-text`} role="status">
-        <CheckCircle aria-hidden size={14} weight="fill" />
+        <CheckCircle aria-hidden size={14} weight="regular" />
         {providerLabel} verified
       </span>
     );
@@ -69,7 +70,7 @@ function TestStatus({
   if (testResult) {
     return (
       <span className={`${statusChip} text-red-text`} role="status">
-        <WarningCircle aria-hidden size={14} weight="fill" />
+        <WarningCircle aria-hidden size={14} weight="regular" />
         {testResult.message}
       </span>
     );
@@ -91,6 +92,7 @@ export function ProviderCredentialForm({
   testDisabled = false,
   testResult,
   testing,
+  showSave = true,
 }: Readonly<ProviderCredentialFormProps>) {
   const saveHint = "Test the credentials and save.";
   return (
@@ -109,32 +111,36 @@ export function ProviderCredentialForm({
           />
         ))}
       </div>
-      <div className="mt-4 flex flex-wrap items-center gap-2.5">
-        <Button
-          disabled={busy || testDisabled}
-          loading={testing}
-          onClick={onTest}
-          sx={{ fontWeight: 400 }}
-          type="button"
-          variant="secondary"
-        >
-          Test connection
-        </Button>
-        <Button
-          disabled={busy || saveDisabled}
-          onClick={onSave}
-          sx={{ fontWeight: 400 }}
-          type="button"
-          variant="primary"
-        >
-          Save {providerLabel}
-        </Button>
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-2.5">
         <TestStatus
           providerLabel={providerLabel}
           savedConnection={savedConnection}
           testResult={testResult}
           testing={testing}
         />
+        <div className="ml-auto flex flex-wrap justify-end gap-2.5">
+          <Button
+            disabled={busy || testDisabled}
+            loading={testing}
+            onClick={onTest}
+            sx={{ fontWeight: 400 }}
+            type="button"
+            variant="secondary"
+          >
+            Test connection
+          </Button>
+          {showSave ? (
+            <Button
+              disabled={busy || saveDisabled}
+              onClick={onSave}
+              sx={{ fontWeight: 400 }}
+              type="button"
+              variant="secondary"
+            >
+              Save {providerLabel}
+            </Button>
+          ) : null}
+        </div>
       </div>
       <p className="m-0 mt-2.5 text-[11.5px] leading-[1.5] text-fg-muted">
         {savedConnection ? "Leave credentials blank to keep the stored connection." : saveHint}

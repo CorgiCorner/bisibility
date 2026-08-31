@@ -95,8 +95,6 @@ function researchMarketLabel(location: LocationFieldValue) {
 }
 
 export function ResearchSearchCard({
-  connectionId,
-  connectionOptions,
   disabled = false,
   estimate,
   includeClickstream,
@@ -104,7 +102,6 @@ export function ResearchSearchCard({
   location,
   metricsScope,
   mode,
-  onConnectionChange,
   onIncludeClickstreamChange,
   onLimitChange,
   onLocationChange,
@@ -194,16 +191,6 @@ export function ResearchSearchCard({
             />
           </div>
           <MenuSelect
-            ariaLabel="Data provider connection"
-            compact
-            leadingLabel="Provider:"
-            onChange={onConnectionChange}
-            pinCaret
-            options={connectionOptions}
-            triggerClassName="md:w-[160px]"
-            value={connectionId}
-          />
-          <MenuSelect
             ariaLabel="Results limit"
             onChange={(value) => onLimitChange(Number(value) as 100 | 300 | 500)}
             options={limitOptions}
@@ -247,7 +234,7 @@ export function ResearchSearchCard({
                 disabled={disabled || lookupDisabled || researching || !hasSeed}
                 loading={researching}
                 loadingLabel={researchButtonLabel(true, estimate, fallbackCostCents)}
-                startIcon={<MagnifyingGlass size={15} weight="bold" />}
+                startIcon={<MagnifyingGlass size={15} weight="regular" />}
                 sx={{ minWidth: 216 }}
                 type="submit"
               >
@@ -267,7 +254,7 @@ export function ResearchSearchCard({
             className="-mx-4 -mb-4 mt-1 flex items-center gap-2 rounded-b-[12px] border-t border-border bg-bg-sunken px-4 py-2.5 font-mono text-[11.5px] text-fg-muted sm:-mx-5 sm:-mb-5 sm:px-5"
             role="status"
           >
-            <GlobeSimple aria-hidden size={14} />
+            <GlobeSimple weight="regular" aria-hidden size={14} />
             <span>
               Metrics scope: {metricsScope.country} - {metricsScope.language}
             </span>

@@ -31,6 +31,7 @@ export function renderReadyStep(overrides: Partial<Parameters<typeof StepFirstCh
       providerConnected
       runFirstCheckPreviewAction={vi.fn(async () => ({
         position: 2,
+        recordedCostCents: 0.2,
         provider: "dataforseo",
         rankingUrl: "https://example.com/rank-tracker",
         status: "completed" as const,

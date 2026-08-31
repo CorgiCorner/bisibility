@@ -33,7 +33,7 @@ export function RecentResearchSearches({
   return (
     <section aria-label="Recent searches">
       <div className="mb-2 flex items-center gap-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.5px] text-fg-muted">
-        <Clock size={13} /> Recent searches
+        <Clock weight="regular" size={13} /> Recent searches
       </div>
       <div className="flex gap-2 overflow-x-auto pb-1">
         {searches.map((search) => (
@@ -64,7 +64,7 @@ export function RecentResearchSearches({
               onClick={() => onRemove(search)}
               type="button"
             >
-              <X aria-hidden size={12} weight="bold" />
+              <X aria-hidden size={12} weight="regular" />
             </button>
           </div>
         ))}

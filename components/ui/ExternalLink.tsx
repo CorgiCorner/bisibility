@@ -13,7 +13,7 @@ export function ExternalLink({ children, className, href, ...props }: Readonly<E
   return (
     <a {...props} {...linkProps} className={cn("inline-flex items-center gap-0.5", className)}>
       {children}
-      <ArrowUpRight aria-hidden size={13} weight="bold" />
+      <ArrowUpRight aria-hidden size={13} weight="regular" />
     </a>
   );
 }
