@@ -1,18 +1,20 @@
-import { appPath, appRootPath } from "@/lib/routing/app-path";
+import { appPath, appRootPath, SEARCH_CONSOLE_SEGMENT } from "@/lib/routing/app-path";
 import { DOCS_URL } from "@/lib/site/site";
 import type { Icon } from "@phosphor-icons/react/lib";
 import {
-  BellIcon as Bell,
   BinocularsIcon as Binoculars,
   BookOpenTextIcon as BookOpenText,
-  CalendarDotsIcon as CalendarDots,
+  ClockCounterClockwiseIcon as ClockCounterClockwise,
   GearSixIcon as GearSix,
   GlobeIcon as Globe,
+  GoogleLogoIcon as GoogleLogo,
   LinkIcon as Link,
   PuzzlePieceIcon as PuzzlePiece,
   RankingIcon as Ranking,
   ShieldCheckIcon as ShieldCheck,
+  SirenIcon as Siren,
   SquaresFourIcon as SquaresFour,
+  TerminalWindowIcon as TerminalWindow,
   UsersThreeIcon as UsersThree,
 } from "@phosphor-icons/react/ssr";
 
@@ -23,11 +25,13 @@ import {
  */
 export const RAIL_ICON_SIZE = 18;
 
-export type NavBadge = "Soon";
+export type NavBadge = "new" | "alpha" | "experimental";
+
+export type NavItemGroup = "top" | "track" | "research" | "connect" | "utility";
 
 export type NavItem = {
-  /** Utilities sit apart from primary navigation: history, alerts, settings. */
-  group?: "utility";
+  /** The rail consumes this grouping while command-palette navigation stays flat. */
+  group: NavItemGroup;
   label: string;
   href: string;
   icon: Icon;
@@ -36,12 +40,12 @@ export type NavItem = {
 };
 
 /**
- * Route segments for the primary (non-utility) sidebar entries. The account "default landing
- * page" preference stores one of these, so the preference options stay in lockstep with the
- * rail without a second hand-maintained list.
+ * Route segments eligible for the account "default landing page" preference. This stays
+ * narrower than the rail: Connect and utility surfaces are navigable but are not landing pages.
  */
 export const landingSegments = [
   "dashboard",
+  SEARCH_CONSOLE_SEGMENT,
   "keyword-research",
   "domain-overview",
   "rank-tracker",
@@ -58,46 +62,85 @@ type PrimaryNavEntry = {
   icon: Icon;
 };
 
+export const navItemGroups = [
+  { id: "track", label: "Track" },
+  { id: "research", label: "Research" },
+  { id: "connect", label: "Connect" },
+] as const satisfies readonly {
+  id: Exclude<NavItemGroup, "top" | "utility">;
+  label: string;
+}[];
+
+type NavEntry = Omit<NavItem, "href"> & { segment: string };
+
 // Keyword research scouts the market (Binoculars); Rank Tracker is the podium of tracked
 // positions (Ranking). Fill marks the current row, Regular the rest - same as every rail glyph.
-// Timeline reads the project's own history, so it belongs with the primary flow; Integrations
-// is setup you touch once, which is what utilities are for.
-export const primaryNavEntries: readonly PrimaryNavEntry[] = [
-  { label: "Dashboard", segment: "dashboard", icon: SquaresFour },
-  { label: "Keyword Research", segment: "keyword-research", icon: Binoculars },
-  { label: "Domain Overview", segment: "domain-overview", icon: Globe },
-  { label: "Rank Tracker", segment: "rank-tracker", icon: Ranking },
-  { label: "Backlinks", segment: "backlinks", icon: Link },
-  { label: "Competitors", segment: "competitors", icon: UsersThree },
-  { label: "Timeline", segment: "timeline", icon: CalendarDots },
-];
+// The order is the rail order. `landingSegments` deliberately preserves the independent
+// preference order below rather than treating every reachable rail item as a landing page.
+const railNavEntries = [
+  { group: "top", label: "Dashboard", segment: "dashboard", icon: SquaresFour },
+  {
+    group: "top",
+    label: "Search Console",
+    segment: SEARCH_CONSOLE_SEGMENT,
+    icon: GoogleLogo,
+    badge: "alpha",
+  },
+  { group: "track", label: "Rank Tracker", segment: "rank-tracker", icon: Ranking },
+  {
+    group: "track",
+    label: "Competitors",
+    segment: "competitors",
+    icon: UsersThree,
+    badge: "alpha",
+  },
+  {
+    group: "track",
+    label: "Timeline",
+    segment: "timeline",
+    icon: ClockCounterClockwise,
+    badge: "experimental",
+  },
+  {
+    group: "research",
+    label: "Keyword Research",
+    segment: "keyword-research",
+    icon: Binoculars,
+  },
+  { group: "research", label: "Domain Overview", segment: "domain-overview", icon: Globe },
+  { group: "research", label: "Backlinks", segment: "backlinks", icon: Link },
+  { group: "connect", label: "Integrations", segment: "integrations", icon: PuzzlePiece },
+  { group: "connect", label: "Install", segment: "install", icon: TerminalWindow },
+  { group: "utility", label: "Alerts", segment: "alerts", icon: Siren, badge: "alpha" },
+  { group: "utility", label: "Settings", segment: "settings", icon: GearSix },
+] as const satisfies readonly NavEntry[];
+
+export const primaryNavEntries: readonly PrimaryNavEntry[] = landingSegments.map((segment) => {
+  const entry = railNavEntries.find((item) => item.segment === segment);
+  if (!entry) {
+    throw new Error(`Missing landing navigation entry for ${segment}`);
+  }
+
+  return { label: entry.label, segment, icon: entry.icon };
+});
 
 export function navItems(projectRef: string): NavItem[] {
-  return [
-    ...primaryNavEntries.map((entry) => ({
-      label: entry.label,
-      href: appPath(projectRef, entry.segment),
-      icon: entry.icon,
-    })),
-    {
-      group: "utility",
-      label: "Integrations",
-      href: appPath(projectRef, "integrations"),
-      icon: PuzzlePiece,
-    },
-    { group: "utility", label: "Alerts", href: appPath(projectRef, "alerts"), icon: Bell },
-    { group: "utility", label: "Settings", href: appPath(projectRef, "settings"), icon: GearSix },
-  ];
+  return railNavEntries.map(({ segment, ...item }) => ({
+    ...item,
+    href: appPath(projectRef, segment),
+  }));
 }
 
 export const docsNavItem = {
-  label: "Docs & self-hosting",
+  group: "top",
+  label: "Docs and self-hosting",
   href: DOCS_URL,
   icon: BookOpenText,
   external: true,
 } satisfies NavItem;
 
 export const instanceAdminNavItem = {
+  group: "top",
   label: "Instance admin",
   href: appRootPath("admin"),
   icon: ShieldCheck,

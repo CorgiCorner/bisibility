@@ -7,9 +7,11 @@ import { ProviderAuthError } from "@/lib/providers/auth-error";
 import { ProviderCredentialsDecryptError } from "@/lib/providers/crypto";
 import { ProviderHttpError } from "@/lib/providers/failure-class";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { type GoogleProviderId, googleAnalyticsScopes } from "./google-client";
 import {
   completeGoogleOAuthInstall,
   createGoogleInstallState,
+  createGoogleInstallUrl,
   googleOAuthReturnContextFromState,
   reusableGoogleInstallUrl,
 } from "./google-oauth";
@@ -40,10 +42,11 @@ vi.mock("@/lib/providers/crypto", async (importOriginal) => ({
   decryptSecret: mocks.decryptSecret,
   encryptSecret: mocks.encryptSecret,
 }));
-vi.mock("./google-client", () => ({
+vi.mock("./google-client", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./google-client")>()),
   exchangeGoogleCode: mocks.exchangeGoogleCode,
   GOOGLE_AUTHORIZE_URL: "https://accounts.google.test/authorize",
-  googleAnalyticsScopes: () => ["openid", "webmasters"],
+  googleAccountEmail: vi.fn(),
   googleClientId: () => "client_id",
   googleRedirectUri: () => "https://example.test/api/integrations/google/callback",
 }));
@@ -60,6 +63,47 @@ const state = {
   redirectUri: "https://example.test/api/integrations/google/callback",
   returnPath: "/app/integrations?connect=gsc",
 };
+
+function expectProviderAuthorizeUrl(url: string, provider: GoogleProviderId) {
+  const params = new URL(url).searchParams;
+  const scopes = new Set((params.get("scope") ?? "").split(" ").filter(Boolean));
+
+  expect(params.has("include_granted_scopes")).toBe(false);
+  expect(params.get("access_type")).toBe("offline");
+  expect(params.get("prompt")).toBe("consent");
+  expect(scopes).toEqual(new Set(googleAnalyticsScopes(provider)));
+  expect(scopes).toContain("openid");
+  expect(scopes).toContain("email");
+  if (provider === "gsc") {
+    expect(scopes).toContain("https://www.googleapis.com/auth/webmasters.readonly");
+    expect(scopes).not.toContain("https://www.googleapis.com/auth/analytics.readonly");
+  } else {
+    expect(scopes).toContain("https://www.googleapis.com/auth/analytics.readonly");
+    expect(scopes).not.toContain("https://www.googleapis.com/auth/webmasters.readonly");
+  }
+}
+
+describe("Google authorize URL scope hygiene", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.encryptSecret.mockReturnValue("encrypted_state");
+  });
+
+  it.each(["gsc", "ga4"] as const)(
+    "requests only the %s scopes for a new authorization",
+    (provider) => {
+      const url = createGoogleInstallUrl({
+        actorId: "user_1",
+        origin: "https://example.test",
+        projectId: "project_1",
+        provider,
+        returnPath: `/app/integrations?connect=${provider}`,
+      });
+
+      expectProviderAuthorizeUrl(url, provider);
+    },
+  );
+});
 
 describe("completeGoogleOAuthInstall", () => {
   beforeEach(() => {
@@ -333,13 +377,28 @@ describe("reusableGoogleInstallUrl", () => {
     mocks.decryptSecret.mockReturnValue(JSON.stringify(state));
   });
 
-  it("sends the user back to Google with the state the cookie already holds", () => {
-    const url = reusableGoogleInstallUrl({ ...install, state: "encrypted_state" });
+  it.each(["gsc", "ga4"] as const)(
+    "keeps scope hygiene when reusing a %s authorization state",
+    (provider) => {
+      const providerState = {
+        ...state,
+        provider,
+        returnPath: `/app/integrations?connect=${provider}`,
+      };
+      mocks.decryptSecret.mockReturnValue(JSON.stringify(providerState));
+      const url = reusableGoogleInstallUrl({
+        ...install,
+        provider,
+        returnPath: providerState.returnPath,
+        state: "encrypted_state",
+      });
 
-    expect(url).not.toBeNull();
-    expect(new URL(url ?? "").searchParams.get("state")).toBe("encrypted_state");
-    expect(mocks.encryptSecret).not.toHaveBeenCalled();
-  });
+      expect(url).not.toBeNull();
+      expect(new URL(url ?? "").searchParams.get("state")).toBe("encrypted_state");
+      expectProviderAuthorizeUrl(url ?? "", provider);
+      expect(mocks.encryptSecret).not.toHaveBeenCalled();
+    },
+  );
 
   it("mints a new state when the browser carries none", () => {
     expect(reusableGoogleInstallUrl({ ...install, state: null })).toBeNull();

@@ -1,6 +1,6 @@
 "use client";
 
-import { AccentCtaLink, Button, Card, EmptyState } from "@/components/ui";
+import { AccentCtaLink, Button, Card, EmptyState, ModuleMark } from "@/components/ui";
 import { appPath } from "@/lib/routing/app-path";
 import {
   ArrowsClockwiseIcon as ArrowsClockwise,
@@ -8,7 +8,6 @@ import {
   CheckCircleIcon as CheckCircle,
   GlobeIcon as Globe,
   MagnifyingGlassMinusIcon as MagnifyingGlassMinus,
-  PuzzlePieceIcon as PuzzlePiece,
 } from "@phosphor-icons/react";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -46,7 +45,7 @@ export function DomainOverviewNoDataCard({
           action={action}
           compact
           description={description}
-          icon={<MagnifyingGlassMinus size={24} />}
+          icon={<MagnifyingGlassMinus weight="regular" size={24} />}
           title={title}
         />
       </div>
@@ -80,7 +79,7 @@ export function DomainOverviewStatePanel({
           "Results cached for 12 hours, repeat lookups are free",
           "Turn findings into tracked keywords in one click",
         ]}
-        icon={<Globe size={28} />}
+        mark={<ModuleMark bordered icon={Globe} />}
         title="Analyze any domain"
       />
     );
@@ -90,7 +89,7 @@ export function DomainOverviewStatePanel({
       <EmptyState
         action={<ProviderAction projectRef={projectRef} />}
         description="Domain Overview requires a provider with domain intelligence support. Lookups run on your own key."
-        icon={<PuzzlePiece aria-hidden data-icon="puzzle-piece" size={28} />}
+        mark={<ModuleMark bordered icon={Globe} />}
         title="Connect DataForSEO to analyze domains"
       />
     );
@@ -104,7 +103,7 @@ export function DomainOverviewStatePanel({
           </AccentCtaLink>
         }
         description="Reconnect this project's DataForSEO credentials to resume domain analysis."
-        icon={<PuzzlePiece aria-hidden data-icon="puzzle-piece" size={28} />}
+        mark={<ModuleMark bordered icon={Globe} />}
         title="DataForSEO needs to be reconnected"
       />
     );
@@ -121,7 +120,7 @@ export function DomainOverviewStatePanel({
           </Link>
         }
         description="Fresh lookups resume after the monthly reset. Cached recent analyses remain free."
-        icon={<ChartLineDown size={28} />}
+        icon={<ChartLineDown weight="regular" size={28} />}
         title="Monthly provider budget reached"
       />
     );
@@ -130,7 +129,7 @@ export function DomainOverviewStatePanel({
     return (
       <EmptyState
         description="Domain intelligence is not available for this market. Choose another country or city."
-        icon={<Globe size={28} />}
+        icon={<Globe weight="regular" size={28} />}
         title="This market is not supported for Domain Overview"
       />
     );
@@ -143,7 +142,7 @@ export function DomainOverviewStatePanel({
             ? `Another analysis is already running. Try again after ${new Date(resetAt).toLocaleTimeString()}.`
             : "Another analysis is already running. Wait for it to finish before retrying."
         }
-        icon={<ArrowsClockwise size={28} />}
+        icon={<ArrowsClockwise weight="regular" size={28} />}
         title="Analysis already in progress"
       />
     );
@@ -156,7 +155,7 @@ export function DomainOverviewStatePanel({
             ? `The provider is temporarily rate limited. Try again after ${new Date(resetAt).toLocaleTimeString()}.`
             : "The provider is temporarily rate limited. Try again shortly."
         }
-        icon={<ArrowsClockwise size={28} />}
+        icon={<ArrowsClockwise weight="regular" size={28} />}
         title="Provider rate limit reached"
       />
     );
@@ -165,7 +164,7 @@ export function DomainOverviewStatePanel({
     return (
       <EmptyState
         description="The price changed before the lookup started. Review the updated estimate above before analyzing again."
-        icon={<ChartLineDown size={28} />}
+        icon={<ChartLineDown weight="regular" size={28} />}
         title="The approved price is no longer current"
       />
     );
@@ -174,7 +173,7 @@ export function DomainOverviewStatePanel({
     return (
       <EmptyState
         description="The cached analysis expired. Review the current price above before running it again."
-        icon={<ArrowsClockwise size={28} />}
+        icon={<ArrowsClockwise weight="regular" size={28} />}
         title="This cached analysis has expired"
       />
     );
@@ -208,7 +207,7 @@ export function DomainOverviewStatePanel({
           ) : null
         }
         compact
-        icon={<MagnifyingGlassMinus size={28} />}
+        icon={<MagnifyingGlassMinus weight="regular" size={28} />}
         title="Nothing matches these filters"
       />
     );
@@ -225,7 +224,7 @@ export function DomainOverviewStatePanel({
         }
         compact
         description="This section could not be loaded. The rest of the analysis is still available."
-        icon={<ArrowsClockwise size={24} />}
+        icon={<ArrowsClockwise weight="regular" size={24} />}
         title="Part of this report is unavailable"
       />
     );
@@ -234,7 +233,7 @@ export function DomainOverviewStatePanel({
     <EmptyState
       action={
         onRetry ? (
-          <Button onClick={onRetry} startIcon={<ArrowsClockwise size={15} />}>
+          <Button onClick={onRetry} startIcon={<ArrowsClockwise weight="regular" size={15} />}>
             {retryLabel}
           </Button>
         ) : null
@@ -244,13 +243,14 @@ export function DomainOverviewStatePanel({
           <span>The request failed before a complete report came back.</span>
           {charged === false ? (
             <span className="inline-flex items-center gap-1 font-semibold text-green-text">
-              <CheckCircle size={14} weight="fill" /> You were not charged for the failed attempt.
+              <CheckCircle size={14} weight="regular" /> You were not charged for the failed
+              attempt.
             </span>
           ) : null}
           {charged === true ? <span>The provider reported a charge for this attempt.</span> : null}
         </span>
       }
-      icon={<ArrowsClockwise size={28} />}
+      icon={<ArrowsClockwise weight="regular" size={28} />}
       title="That lookup did not go through"
     />
   );

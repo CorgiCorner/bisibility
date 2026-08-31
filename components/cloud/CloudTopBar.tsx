@@ -26,7 +26,7 @@ export function CloudTopBar({
       <div className="flex min-w-0 items-center gap-[11px]">
         <BrandLockup className="flex-none" />
         <span className="inline-flex flex-none items-center gap-1.5 rounded-full bg-accent-soft px-[9px] py-[3px] font-mono text-[10px] font-bold uppercase tracking-[0.4px] text-accent-text">
-          <Cloud aria-hidden size={11} weight="fill" />
+          <Cloud aria-hidden size={11} weight="regular" />
           Beta
         </span>
       </div>
@@ -62,7 +62,7 @@ function WorkspaceChrome({ workspaceName }: Readonly<{ workspaceName: string }>)
         {initialFor(workspaceName)}
       </span>
       <span className="max-w-[150px] truncate">{workspaceName}</span>
-      <CaretDown aria-hidden className="text-fg-muted" size={9} weight="bold" />
+      <CaretDown aria-hidden className="text-fg-muted" size={9} weight="regular" />
     </span>
   );
 }

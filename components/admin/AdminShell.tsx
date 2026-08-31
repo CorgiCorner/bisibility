@@ -28,7 +28,7 @@ export function AdminShell({ children }: Readonly<{ children: ReactNode }>) {
               href={appRootPath()}
             >
               Back to app
-              <CaretRight aria-hidden size={12} weight="bold" />
+              <CaretRight aria-hidden size={12} weight="regular" />
             </Link>
           </div>
         </div>

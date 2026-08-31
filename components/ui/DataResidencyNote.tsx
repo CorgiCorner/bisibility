@@ -21,7 +21,7 @@ export function DataResidencyNote({ className, message }: Readonly<DataResidency
         aria-hidden
         className="mt-0.5 shrink-0 text-green-text"
         size={15}
-        weight="fill"
+        weight="regular"
       />
       <span>{message}</span>
     </p>

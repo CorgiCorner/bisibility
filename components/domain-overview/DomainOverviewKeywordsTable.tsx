@@ -114,7 +114,7 @@ export function DomainOverviewKeywordsTable({
           aria-label="Export fetched keywords as CSV"
           onClick={() => downloadDomainOverviewKeywords(page.rows)}
           size="xs"
-          startIcon={<DownloadSimple size={14} />}
+          startIcon={<DownloadSimple weight="regular" size={14} />}
           variant="secondary"
         >
           Export
@@ -124,7 +124,7 @@ export function DomainOverviewKeywordsTable({
           loading={selection.saving}
           onClick={() => void selection.saveSelected()}
           size="xs"
-          startIcon={<BookmarkSimple size={13} />}
+          startIcon={<BookmarkSimple weight="regular" size={13} />}
         >
           Add{" "}
           {selection.selectedRows.length > 0
@@ -265,7 +265,7 @@ export function DomainOverviewKeywordsTable({
             onClick={onLoadMore}
             disabled={estimateCents == null}
             size="sm"
-            startIcon={<Plus size={13} />}
+            startIcon={<Plus weight="regular" size={13} />}
             variant="secondary"
           >
             Load next {remaining == null ? 100 : Math.min(100, remaining)} keywords

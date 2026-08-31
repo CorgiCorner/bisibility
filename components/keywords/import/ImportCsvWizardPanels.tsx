@@ -69,7 +69,7 @@ export function TemplateStep() {
       </p>
       <Button
         onClick={downloadTemplate}
-        startIcon={<DownloadSimple size={15} weight="bold" />}
+        startIcon={<DownloadSimple size={15} weight="regular" />}
         sx={{ marginTop: "16px" }}
         type="button"
         variant="secondary"
@@ -197,7 +197,7 @@ export function MapStep({
           className="mt-4 flex items-center gap-2 text-[12px] text-fg-muted"
           role="status"
         >
-          <CircleNotch aria-hidden className="animate-spin" size={15} />
+          <CircleNotch weight="regular" aria-hidden className="animate-spin" size={15} />
           Checking mapped rows and project markets...
         </p>
       ) : null}
@@ -248,7 +248,7 @@ export function DoneStep({ result }: Readonly<{ result: ImportResultSummary }>) 
   return (
     <div className="flex flex-col items-center px-4 py-[30px] text-center">
       <span className="grid h-14 w-14 place-items-center rounded-card text-green-text [background:color-mix(in_srgb,var(--green)_12%,transparent)]">
-        <CheckCircle size={30} weight="fill" />
+        <CheckCircle size={30} weight="regular" />
       </span>
       <h3 className="m-0 mt-4.5 text-[18px] font-semibold tracking-[-0.4px]">Import complete</h3>
       <p className="m-0 mt-[7px] max-w-[340px] text-[13.5px] leading-[1.55] text-fg-muted">

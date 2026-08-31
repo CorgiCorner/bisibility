@@ -41,7 +41,7 @@ export function SignOutEverywhereButton({
   }
 
   return (
-    <div className="mt-3 flex flex-wrap items-center gap-3">
+    <div className="mt-3 flex flex-wrap items-center justify-end gap-3">
       {message ? <span className={cn(feedbackClass, "text-fg-muted")}>{message}</span> : null}
       <button
         className={cn(ghostButtonClass, "text-red-text hover:text-red-text")}
@@ -49,7 +49,7 @@ export function SignOutEverywhereButton({
         onClick={onClick}
         type="button"
       >
-        <SignOut size={14} />
+        <SignOut size={14} weight="regular" />
         {isPending ? "Signing out" : "Sign out everywhere"}
       </button>
     </div>

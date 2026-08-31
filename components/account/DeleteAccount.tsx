@@ -44,16 +44,16 @@ export function DeleteAccount({ deleteAccount, email }: Readonly<DeleteAccountPr
   return (
     <section>
       <div className="rounded-card border border-red bg-bg-elev px-5 py-4.5">
-        <div className="flex flex-wrap items-center justify-between gap-3.5">
-          <div className="min-w-0">
-            <div className="text-[14.5px] font-semibold text-red-text">Danger zone</div>
-            <p className="m-0 mt-[3px] max-w-[560px] text-[12.5px] leading-normal text-fg-muted">
-              Permanently delete your account, owned projects and all tracked data. This cannot be
-              undone.
-            </p>
-          </div>
+        <div className="min-w-0">
+          <div className="text-[14.5px] font-semibold text-red-text">Danger zone</div>
+          <p className="m-0 mt-[3px] max-w-[560px] text-[12.5px] leading-normal text-fg-muted">
+            Permanently delete your account, owned projects and all tracked data. This cannot be
+            undone.
+          </p>
+        </div>
+        <div className="mt-3 flex flex-wrap justify-end gap-3.5">
           <button className={dangerButtonClass} onClick={() => setOpen(true)} type="button">
-            <Trash size={14} />
+            <Trash size={14} weight="regular" />
             Delete account
           </button>
         </div>

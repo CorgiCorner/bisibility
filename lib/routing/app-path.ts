@@ -48,6 +48,12 @@ export function appPath(projectRef: ProjectRef, ...segments: string[]): string {
   return joinedPath(APP_ROOT, [projectRef, ...segments]);
 }
 
+export const SEARCH_CONSOLE_SEGMENT = "search-console" as const;
+
+export function searchConsolePath(projectRef: ProjectRef): string {
+  return appPath(projectRef, SEARCH_CONSOLE_SEGMENT);
+}
+
 export type RankTrackerTab = "checks" | "saved" | "tracked";
 
 export function rankTrackerTabPath(projectRef: ProjectRef, tab: RankTrackerTab): string {

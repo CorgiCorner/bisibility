@@ -113,7 +113,7 @@ export function DomainOverviewAnalyzeCard({
           <div
             className={`${domainOverviewControlHeight()} flex flex-1 items-center gap-2 rounded-control border border-border-control px-3 focus-within:border-accent md:min-w-[320px]`}
           >
-            <Globe aria-hidden className="shrink-0 text-fg-muted" size={15} />
+            <Globe weight="regular" aria-hidden className="shrink-0 text-fg-muted" size={15} />
             <input
               {...targetField}
               aria-describedby={descriptionIds.join(" ")}
@@ -161,7 +161,7 @@ export function DomainOverviewAnalyzeCard({
               className="inline-flex max-w-full items-center gap-2 rounded-full border border-border bg-bg-sunken px-2.5 py-1 text-[12px]"
               id="domain-overview-scope-help"
             >
-              <Info aria-hidden className="shrink-0 text-fg-muted" size={13} />
+              <Info weight="regular" aria-hidden className="shrink-0 text-fg-muted" size={13} />
               Detected: {resolvedScope === "subdomain" ? "subdomain" : "whole domain"}
               <span className="truncate font-mono text-[11.5px]">{target}</span>
               {detected === "subdomain" ? (
@@ -181,7 +181,7 @@ export function DomainOverviewAnalyzeCard({
               className="inline-flex items-center gap-2 text-[12.5px] text-fg-muted"
               id="domain-overview-scope-help"
             >
-              <Info aria-hidden size={14} />
+              <Info weight="regular" aria-hidden size={14} />
               Scope is read from what you type - a subdomain analyzes that subdomain only.
             </span>
           )}
@@ -201,7 +201,7 @@ export function DomainOverviewAnalyzeCard({
               loading={submitting}
               loadingLabel={submitLabel(estimate, matchesReport, true)}
               size="sm"
-              startIcon={<Globe aria-hidden size={14} weight="bold" />}
+              startIcon={<Globe aria-hidden size={14} weight="regular" />}
               sx={{ height: 37, minHeight: 37, minWidth: 200 }}
               title={!valid ? "Enter a valid domain and wait for its price" : undefined}
               type="submit"

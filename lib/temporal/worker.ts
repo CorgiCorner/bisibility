@@ -17,7 +17,6 @@ import { rankCheckSchedulerMode } from "../rank-check/scheduler-mode";
 import { assertTemporalSchedulerEnabled, schedulerDriver } from "../scheduler/driver";
 import * as activities from "./activities";
 import { ensureAlertDeliverySweepSchedule } from "./alert-delivery-bootstrap";
-import { ALERT_DELIVERY_TASK_QUEUE } from "./alert-delivery-client";
 import {
   deleteRetiredJobProcessorSchedule,
   ensureTrafficSyncSchedule,
@@ -46,6 +45,10 @@ import {
 import { ensureOpsHeartbeatSchedule } from "./ops-bootstrap";
 import { convergeRankCheckSchedulerSingletons } from "./rank-check-scheduler-convergence";
 import { ensureRankCheckSearchAttributes } from "./search-attribute-bootstrap";
+// Imported directly, not through bootstrap.ts: search-insights-bootstrap.ts already depends on
+// bootstrap.ts for the calendar helpers, so re-exporting it there would close an import cycle.
+import { ensureSearchInsightsSyncSchedule } from "./search-insights-bootstrap";
+import { ensureSearchInsightsQueueReconciliationSchedule } from "./search-insights-reconciliation-bootstrap";
 import { probeTemporalTransport } from "./transport-probe";
 import { maxConcurrentActivities } from "./worker-config";
 import {
@@ -53,21 +56,23 @@ import {
   workerSchemaDriftDedupeKey,
   workerSchemaGuardMode,
 } from "./worker-schema-guard";
+import { logWorkerStartupIdentity, workerStartupIdentity } from "./worker-startup-identity";
 import { runWorkerStartupStage } from "./worker-startup-retry";
 
 // Worker uses the TS transform and resolve hook because parameter properties reject strip-only mode:
 //
 //   node --experimental-transform-types \
 //     --import ./lib/temporal/register-loader.mjs lib/temporal/worker.ts
-// `npm run temporal:worker` wires this up. Load env first, e.g.
-//   set -a; . ./.env.local; set +a; npm run temporal:worker
+// `npm run temporal:worker` wires this up but does not load .env or .env.local itself.
+// Load env first, e.g. set -a; . ./.env.local; set +a; npm run temporal:worker
 
 const connectionOptions = temporalConnectionOptions();
 const address = connectionOptions.address;
 const deploymentConfig = temporalDeploymentConfig();
-const namespace = deploymentConfig.namespace;
-const taskQueue = deploymentConfig.taskQueue;
-const deliveryTaskQueue = ALERT_DELIVERY_TASK_QUEUE;
+const startupIdentity = workerStartupIdentity(deploymentConfig);
+const namespace = startupIdentity.namespace;
+const taskQueue = startupIdentity.taskQueue;
+const deliveryTaskQueue = startupIdentity.alertDeliveryTaskQueue;
 const smokeMode = process.env.TEMPORAL_WORKER_SMOKE === "1";
 const release = process.env.APP_VERSION?.trim() || "unknown";
 const schedulerMode = rankCheckSchedulerMode();
@@ -180,6 +185,7 @@ async function run() {
     tls: connectionOptions.tls ?? false,
     tls_source: connectionOptions.tlsSource,
   });
+  logWorkerStartupIdentity(deploymentConfig);
   await runWorkerStartupStage("app-database-migrations", async () => {
     await assertMigrationsReady();
     await enforceWorkerSchemaGuard();
@@ -238,6 +244,8 @@ async function run() {
         ensureMigrationHoldReleaseSchedule(),
         ensureWeeklyDigestSchedule(),
         ensureTrafficSyncSchedule(),
+        ensureSearchInsightsSyncSchedule(),
+        ensureSearchInsightsQueueReconciliationSchedule(),
         ensureSitemapSyncSchedule(),
         ensurePresenceSyncSchedule(),
         safeOpsHeartbeatBootstrap(),

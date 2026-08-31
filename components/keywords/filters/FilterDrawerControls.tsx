@@ -57,7 +57,7 @@ export function FilterCheckTile({
           borderColor: active ? "var(--accent)" : "var(--border-strong)",
         }}
       >
-        {active ? <Check className="text-white" size={11} weight="bold" /> : null}
+        {active ? <Check className="text-white" size={11} weight="regular" /> : null}
       </span>
       {Icon ? <Icon className="shrink-0 text-fg-muted" size={14} /> : null}
       <span className="min-w-0 flex-1 truncate text-[12.5px] font-medium text-fg">{label}</span>

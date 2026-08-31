@@ -54,7 +54,7 @@ export function ImportStepper({ step }: Readonly<{ step: number }>) {
                   color: current ? "#fff" : completed ? "var(--accent)" : "var(--fg-muted)",
                 }}
               >
-                {completed ? <Check aria-hidden size={15} weight="bold" /> : number}
+                {completed ? <Check aria-hidden size={15} weight="regular" /> : number}
               </span>
               <span
                 className="whitespace-nowrap text-[10px] font-normal"
@@ -86,7 +86,7 @@ export function TemplateStep() {
       </p>
       <Button
         size="lg"
-        startIcon={<DownloadSimple size={16} weight="bold" />}
+        startIcon={<DownloadSimple size={16} weight="regular" />}
         sx={{ marginTop: "16px" }}
         type="button"
         variant="primary"
@@ -116,7 +116,7 @@ export function TemplateStep() {
         })}
       </div>
       <div className="mt-3 flex items-center gap-[7px] text-[12px] text-fg-muted">
-        <Info size={14} />
+        <Info weight="regular" size={14} />
         Blank columns are ignored. Tags are semicolon-separated.
       </div>
     </div>
@@ -132,17 +132,21 @@ export function UploadStep() {
       </p>
       <div className="mt-4 flex flex-col items-center gap-2.5 rounded-card border border-dashed border-border bg-bg px-6 py-[38px] text-center">
         <span className="grid h-[46px] w-[46px] place-items-center rounded-card bg-accent-soft text-accent-solid">
-          <CloudArrowUp size={24} weight="bold" />
+          <CloudArrowUp size={24} weight="regular" />
         </span>
         <div className="text-[13.5px] font-semibold">Drag and drop your CSV here</div>
         <div className="text-[12px] text-fg-muted">or</div>
-        <Button startIcon={<FolderOpen size={15} />} type="button" variant="secondary">
+        <Button
+          startIcon={<FolderOpen weight="regular" size={15} />}
+          type="button"
+          variant="secondary"
+        >
           Browse files
         </Button>
       </div>
       <div className="mt-3.5 flex items-center gap-3 rounded-control border border-border bg-bg-elev px-[15px] py-[13px]">
         <span className="grid h-9 w-9 place-items-center rounded-control text-green-text [background:color-mix(in_srgb,var(--green)_12%,transparent)]">
-          <FileCsv size={19} weight="fill" />
+          <FileCsv size={19} weight="regular" />
         </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-[13px] font-semibold">acme-keywords-q2.csv</span>
@@ -151,7 +155,7 @@ export function UploadStep() {
           </span>
         </span>
         <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-green-text">
-          <CheckCircle size={14} weight="fill" />
+          <CheckCircle size={14} weight="regular" />
           Parsed
         </span>
       </div>
@@ -176,10 +180,10 @@ export function MapStep() {
             key={csv}
           >
             <span className="inline-flex min-w-0 items-center gap-[7px] font-mono text-[12.5px]">
-              <Table className="shrink-0 text-fg-muted" size={14} />
+              <Table weight="regular" className="shrink-0 text-fg-muted" size={14} />
               <span className="truncate">{csv}</span>
             </span>
-            <ArrowRight className="text-fg-muted" size={13} weight="bold" />
+            <ArrowRight className="text-fg-muted" size={13} weight="regular" />
             <span className="inline-flex items-center justify-between gap-2 rounded-control border border-border bg-bg-elev px-[11px] py-[7px] text-[12.5px] font-medium">
               {field}
               {req ? <span className="font-mono text-[10px] text-accent-text">{req}</span> : null}
@@ -188,7 +192,7 @@ export function MapStep() {
         ))}
       </div>
       <div className="mt-3.5 flex items-center gap-2 text-[12px] font-semibold text-green-text">
-        <CheckCircle size={14} weight="fill" />
+        <CheckCircle size={14} weight="regular" />
         All required fields mapped
       </div>
       <div className="mt-4 flex flex-wrap gap-2">
@@ -271,7 +275,7 @@ export function ReviewStep({
         </div>
       </div>
       <div className="mt-3.5 flex items-center gap-2 text-[12px] text-fg-muted">
-        <Info size={14} />
+        <Info weight="regular" size={14} />
         History is not back-filled.
       </div>
     </div>
@@ -282,7 +286,7 @@ export function DoneStep() {
   return (
     <div className="flex flex-col items-center px-4 py-[30px] text-center">
       <span className="grid h-14 w-14 place-items-center rounded-card text-green-text [background:color-mix(in_srgb,var(--green)_12%,transparent)]">
-        <CheckCircle size={30} weight="fill" />
+        <CheckCircle size={30} weight="regular" />
       </span>
       <h3 className="m-0 mt-4.5 text-[18px] font-semibold tracking-[-0.4px]">Import complete</h3>
       <p className="m-0 mt-[7px] max-w-[340px] text-[13.5px] leading-[1.55] text-fg-muted">

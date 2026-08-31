@@ -115,6 +115,14 @@ describe("StepCreateProject", () => {
     expect(onComplete).not.toHaveBeenCalled();
   });
 
+  it("renders an invalid website error once and associates it with the field", async () => {
+    renderCreateProjectStep({ defaultValues: { website: "not a website" } });
+    submitProject();
+    const errors = await screen.findAllByText("Enter a website like example.com.");
+    expect(errors).toHaveLength(1);
+    expect(screen.getByLabelText("Your website")).toHaveAttribute("aria-describedby", errors[0].id);
+  });
+
   it("creates the project from the website input only", async () => {
     const createProjectAction = vi.fn(async () => project);
     const onComplete = vi.fn();

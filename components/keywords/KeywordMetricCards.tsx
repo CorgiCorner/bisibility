@@ -85,7 +85,7 @@ function PositionSummary({
           <span
             className={`inline-flex items-center gap-1 font-mono text-[11px] font-semibold ${deltaColor}`}
           >
-            <DeltaIcon size={12} weight="bold" />
+            <DeltaIcon size={12} weight="regular" />
             {delta === null ? "New" : Math.abs(delta)}
           </span>
         </div>
@@ -127,7 +127,7 @@ function RankingUrlSummary({ keyword }: Readonly<{ keyword: KeywordRow }>) {
           title="Open ranking URL in a new tab"
         >
           <span className="truncate">{compactPath(keyword.rankingUrl)}</span>
-          <ArrowUpRight aria-hidden size={13} weight="bold" />
+          <ArrowUpRight aria-hidden size={13} weight="regular" />
         </a>
       ) : (
         <span className="font-mono text-[15px] font-semibold text-fg-muted">No ranking URL</span>
@@ -139,7 +139,7 @@ function RankingUrlSummary({ keyword }: Readonly<{ keyword: KeywordRow }>) {
             {targetMismatch && keyword.targetUrl ? (
               <span className="flex flex-wrap items-center gap-1.5">
                 <span className="inline-flex items-center gap-1 rounded-full bg-yellow/15 px-2 py-0.5 font-semibold text-[10px] text-yellow-text">
-                  <Warning aria-hidden size={11} weight="fill" />
+                  <Warning aria-hidden size={11} weight="regular" />
                   Target mismatch
                 </span>
                 <span>Expected {compactPath(keyword.targetUrl)}</span>
@@ -174,7 +174,7 @@ function WhatChangedSummary({
       ) : null}
       {state === "no_change" ? (
         <span className="flex items-center gap-2 text-[12px] text-fg">
-          <Minus className="text-fg-muted" size={13} weight="bold" />
+          <Minus className="text-fg-muted" size={13} weight="regular" />
           No changes since the previous check
         </span>
       ) : null}
@@ -185,23 +185,23 @@ function WhatChangedSummary({
               <span className="flex items-center gap-2">
                 {positionChange.direction === "improved" ||
                 positionChange.direction === "entered" ? (
-                  <ArrowUp className="text-green-text" size={13} weight="bold" />
+                  <ArrowUp className="text-green-text" size={13} weight="regular" />
                 ) : (
-                  <ArrowDown className="text-red-text" size={13} weight="bold" />
+                  <ArrowDown className="text-red-text" size={13} weight="regular" />
                 )}
                 {positionChange.text}
               </span>
             ) : (
               <span className="flex items-center gap-2">
-                <Minus className="text-fg-muted" size={13} weight="bold" />
+                <Minus className="text-fg-muted" size={13} weight="regular" />
                 No position change
               </span>
             )}
             <span className="flex items-center gap-2">
               {dimensions.rankingUrlChanged ? (
-                <ArrowUpRight className="text-yellow-text" size={13} weight="bold" />
+                <ArrowUpRight className="text-yellow-text" size={13} weight="regular" />
               ) : (
-                <Minus className="text-fg-muted" size={13} weight="bold" />
+                <Minus className="text-fg-muted" size={13} weight="regular" />
               )}
               {dimensions.rankingUrlChanged ? "Ranking URL changed" : "Ranking URL unchanged"}
             </span>

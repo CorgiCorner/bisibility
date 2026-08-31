@@ -25,7 +25,7 @@ export function TargetMismatchCannibalization({
       </p>
       <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] text-fg-muted">
         <span className="inline-flex items-center gap-1 rounded-full bg-[color-mix(in_srgb,var(--yellow)_16%,transparent)] px-2 py-1 font-mono text-[9.5px] font-semibold text-yellow-text">
-          <Warning aria-hidden size={11} weight="fill" />
+          <Warning aria-hidden size={11} weight="regular" />
           Target mismatch
         </span>
         <span>
@@ -35,7 +35,7 @@ export function TargetMismatchCannibalization({
       <div className="mt-auto flex flex-wrap items-center gap-2 pt-5 text-[11px] text-fg-muted">
         <span className="font-mono">{visibleUrlCount} URLs ranking</span>
         <span className="inline-flex items-center gap-1 font-mono font-semibold text-yellow-text">
-          <Warning aria-hidden size={11} weight="fill" />
+          <Warning aria-hidden size={11} weight="regular" />
           Cannibalization
         </span>
       </div>

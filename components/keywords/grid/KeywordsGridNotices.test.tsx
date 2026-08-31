@@ -124,7 +124,7 @@ describe("KeywordsGridNotices", () => {
 
     expect(runCheckNowAction).not.toHaveBeenCalled();
     expect(await screen.findByRole("dialog", { name: "Run first check" })).toBeInTheDocument();
-    const confirmButton = screen.getByRole("button", { name: "Confirm & run" });
+    const confirmButton = screen.getByRole("button", { name: "Confirm and run" });
     await waitFor(() => expect(confirmButton).toBeEnabled());
     fireEvent.click(confirmButton);
 
@@ -147,7 +147,7 @@ describe("KeywordsGridNotices", () => {
     fireEvent.click(screen.getByRole("button", { name: "Run first check" }));
     const allReady = await screen.findByRole("radio", { name: "All ready (2)" });
     fireEvent.click(allReady);
-    const confirmButton = screen.getByRole("button", { name: "Confirm & run" });
+    const confirmButton = screen.getByRole("button", { name: "Confirm and run" });
     await waitFor(() => expect(confirmButton).toBeEnabled());
     fireEvent.click(confirmButton);
 

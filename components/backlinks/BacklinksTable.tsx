@@ -46,7 +46,7 @@ function BrokenEmptyState() {
   return (
     <div className="flex flex-col items-center gap-2.5 px-5 py-12 text-center">
       <span className="grid h-11 w-11 place-items-center rounded-full bg-green/10 text-green-text">
-        <Check aria-hidden size={20} weight="bold" />
+        <Check aria-hidden size={20} weight="regular" />
       </span>
       <strong className="text-[14.5px]">No broken backlinks</strong>
       <p className="m-0 max-w-[360px] text-[12.5px] leading-5 text-fg-muted">

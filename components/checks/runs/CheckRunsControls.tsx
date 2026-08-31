@@ -105,7 +105,7 @@ export function CheckRunsHeader({
               aria-haspopup="dialog"
               onClick={(event) => setDateAnchor(event.currentTarget)}
               size="sm"
-              startIcon={<CalendarBlank aria-hidden size={15} />}
+              startIcon={<CalendarBlank weight="regular" aria-hidden size={15} />}
               sx={{ fontWeight: 400 }}
               variant="secondary"
             >

@@ -2,7 +2,7 @@
 
 import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
-import { projectInspectionBudgetSchema } from "@/lib/schemas/project";
+import { projectInspectionBudgetSchema, projectSearchSyncSchema } from "@/lib/schemas/project";
 import {
   projectDefaultsConfig,
   publicProjectDefaults,
@@ -31,6 +31,35 @@ export async function updatePresenceInspectionBudget(input: unknown) {
 
   await writeAudit({
     action: "settings.presence_inspection_budget.update",
+    actorId: actor.id,
+    after: projectDefaultsConfig(defaults),
+    before: before ? projectDefaultsConfig(before) : null,
+    projectId: project.id,
+    targetId: requiredPublicAuditId(project.publicId, "prj", "Project"),
+    targetType: "project_defaults",
+  });
+  revalidateSettingsViews();
+  return publicProjectDefaults(defaults, project.publicId);
+}
+
+export async function updateSearchSyncSettings(input: unknown) {
+  const data = parseActionInput(projectSearchSyncSchema, input);
+  const actor = await getActionActor();
+  const project = await requireProjectScope(actor, "update", data.projectId, {
+    type: "project_defaults",
+  });
+  const before = await prisma.projectDefaults.findUnique({ where: { projectId: project.id } });
+  const defaults = await prisma.projectDefaults.upsert({
+    create: {
+      projectId: project.id,
+      searchSyncImportMonths: data.retentionMonths,
+      searchSyncPace: data.pace,
+    },
+    update: { searchSyncImportMonths: data.retentionMonths, searchSyncPace: data.pace },
+    where: { projectId: project.id },
+  });
+  await writeAudit({
+    action: "settings.search_data_sync.update",
     actorId: actor.id,
     after: projectDefaultsConfig(defaults),
     before: before ? projectDefaultsConfig(before) : null,

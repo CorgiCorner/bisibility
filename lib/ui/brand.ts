@@ -3,7 +3,7 @@
 // components. components/ui/BrandMark and components/ui/BrandLockup re-export from here, so
 // there is still exactly one source for the paths and the scale.
 
-export type BrandLockupSize = "sm" | "md" | "lg" | "hero";
+export type BrandLockupSize = "xs" | "sm" | "md" | "lg" | "hero";
 export type BrandLockupOrientation = "horizontal" | "stacked";
 
 export type BrandMarkCut = {
@@ -37,6 +37,7 @@ export const BRAND_MARK_SMALL_CUT: BrandMarkCut = {
 export const BRAND_MARK_VIEW_BOX_SIZE = 96;
 
 const HORIZONTAL_SCALE: Record<BrandLockupSize, BrandLockupScale> = {
+  xs: { gap: 4, mark: 14, type: 11 },
   sm: { gap: 5, mark: 18, type: 14 },
   md: { gap: 7, mark: 26, type: 20 },
   lg: { gap: 12, mark: 44, type: 36 },

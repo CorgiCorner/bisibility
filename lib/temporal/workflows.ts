@@ -145,6 +145,11 @@ export {
 // Re-export into workflowsPath so the worker can resolve the reconciler by name
 // inside the same sandbox bundle.
 export { reconcileRankCheckSchedulesWorkflow } from "./reconcile-workflows";
+export { reconcileQueuedSearchInsightsImportsWorkflow } from "./search-insights-reconciliation-workflow";
+export {
+  searchInsightsBackfillWorkflow,
+  searchInsightsSyncWorkflow,
+} from "./search-insights-workflows";
 export { syncTrafficWorkflow } from "./traffic-workflows";
 export { welcomeFollowupWorkflow } from "./welcome-email-workflow";
 export type { RankCheckWorkflowInput, RankCheckWorkflowResult };

@@ -59,8 +59,7 @@ export function ConfirmModal({
       await onConfirm();
       if (showConfirmationToast) {
         showToast(config.toastMessage, {
-          icon: <Icon aria-hidden size={18} weight="bold" />,
-          tint: "red",
+          severity: "success",
           ...(onUndo ? { undo: onUndo } : {}),
         });
       }
@@ -112,7 +111,7 @@ export function ConfirmModal({
         <span
           className={`grid h-10 w-10 shrink-0 place-items-center rounded-control ${dangerIconWellClassName}`}
         >
-          <Icon aria-hidden size={21} weight="bold" />
+          <Icon aria-hidden size={21} weight="regular" />
         </span>
         <p className="m-0 text-[13.5px] leading-[1.55] text-fg-muted">{config.body}</p>
       </div>

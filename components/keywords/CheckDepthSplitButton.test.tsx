@@ -75,7 +75,15 @@ describe("CheckDepthSplitButton", () => {
     const changeDefault = screen.getByRole("link", { name: "Change default" });
     expect(changeDefault).toHaveAttribute("href", "/app/prj_1/settings/tracking");
     expect(changeDefault).toHaveClass("w-full");
-    expect(changeDefault.closest("li")).toHaveClass("w-full");
+    const footer = changeDefault.closest('[data-slot="menu-action-footer"]');
+    expect(footer).toHaveClass("-mx-1.5", "-mb-3.5", "list-none");
+    expect(footer).not.toHaveClass("mb-1.5");
+    const divider = footer?.querySelector('[data-slot="menu-action-footer-divider"]');
+    expect(divider).toHaveAttribute("role", "presentation");
+    expect(divider).toHaveClass("m-0", "w-full");
+    const content = footer?.querySelector('[data-slot="menu-action-footer-content"]');
+    expect(content).toHaveClass("px-1.5", "py-1.5");
+    expect(content?.parentElement).toBe(footer);
     fireEvent.click(changeDefault);
     expect(onDepthChange).toHaveBeenCalledOnce();
   });

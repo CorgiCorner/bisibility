@@ -72,7 +72,7 @@ export function ProviderUsageRow({
               aria-hidden
               className="shrink-0 text-fg-muted transition-transform group-open:rotate-180"
               size={14}
-              weight="bold"
+              weight="regular"
             />
           </span>
           <span className="basis-full">

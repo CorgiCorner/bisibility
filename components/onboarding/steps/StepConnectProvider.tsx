@@ -1,16 +1,10 @@
 "use client";
-
-import { buildOnboardingStepHref } from "@/components/onboarding/onboarding-fixtures";
-import {
-  actionErrorMessage,
-  feedbackClass,
-  onboardingFormId,
-} from "@/components/onboarding/onboarding-form-utils";
-import { InfoTooltip } from "@/components/ui";
+import { actionErrorMessage } from "@/components/onboarding/onboarding-form-utils";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { useRouter } from "next/navigation";
-import { type FormEvent, useState } from "react";
+import { type FormEventHandler, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
+import { completeProviderSelection } from "./complete-provider-selection";
 import {
   type ConnectedProviderMap,
   currentProviderState,
@@ -27,17 +21,16 @@ import {
   providerSelectionState,
   providerTestInput,
   replaceSelectedProviderInUrl,
-  savedProviderCompletionInput,
   type TestedCredentialKeyMap,
   withConnectedProvider,
 } from "./StepConnectProvider.fields";
 import type { StepConnectProviderProps } from "./StepConnectProvider.types";
 import { StepConnectProviderCards } from "./StepConnectProviderCards";
 import { StepConnectProviderCredentials } from "./StepConnectProviderCredentials";
-import { StepConnectProviderSkip } from "./StepConnectProviderSkip";
+import { StepConnectProviderLayout } from "./StepConnectProviderLayout";
+import { StepConnectProviderView } from "./StepConnectProviderView";
 
 export type { OnboardingConnectProviderInput } from "./StepConnectProvider.fields";
-
 export function StepConnectProvider({
   analyticsNotice,
   analyticsOption,
@@ -45,12 +38,20 @@ export function StepConnectProvider({
   defaultValues,
   flowState,
   initialConnections,
+  mode = "step",
+  modalOpen,
   onComplete,
+  onModalClose,
+  onModalExited,
   onContinueDisabledChange,
-  onSkip,
   testProviderConnectionAction,
 }: Readonly<StepConnectProviderProps>) {
   const router = useRouter();
+  const pendingModalCompletion = useRef<{
+    connections: ConnectedProviderMap;
+    providerId: OnboardingSerpProviderId;
+    values: OnboardingConnectProviderInput;
+  } | null>(null);
   const defaults = formDefaults(defaultValues, flowState);
   const [actionError, setActionError] = useState<string | null>(null);
   const [connections, setConnections] = useState<ConnectedProviderMap>(initialConnections ?? {});
@@ -87,7 +88,6 @@ export function StepConnectProvider({
     testResults,
     testedCredentialKeys,
   );
-  const hasCurrentSuccessfulTest = currentTestResult?.ok === true;
   const connectedProvider = providerOptions.find(
     ({ value }) => connections[value] && !dirtyProviders[value],
   )?.value;
@@ -126,7 +126,7 @@ export function StepConnectProvider({
     clearErrors();
     setActionError(null);
     updateContinueDisabled();
-    if (typeof window !== "undefined")
+    if (mode === "step" && typeof window !== "undefined")
       replaceSelectedProviderInUrl(flowState, values.projectId, providerId);
   }
   async function runTest(values: OnboardingConnectProviderInput) {
@@ -152,14 +152,13 @@ export function StepConnectProvider({
     values = getValues(),
     nextConnections = connections,
   ) {
-    const nextValues = savedProviderCompletionInput(values.projectId, providerId);
-    if (onComplete) return onComplete(nextValues, nextConnections);
-    router.push(
-      buildOnboardingStepHref(3, {
-        ...flowState,
-        providerId,
-        projectId: nextValues.projectId,
-      }),
+    completeProviderSelection(
+      providerId,
+      values,
+      nextConnections,
+      flowState,
+      onComplete,
+      router.push,
     );
   }
   function handleTest() {
@@ -195,14 +194,19 @@ export function StepConnectProvider({
           values.providerId,
           result.balance,
         );
-        const nextDirtyProviders = {
-          ...dirtyProviders,
-          [values.providerId]: false,
-        };
+        const nextDirtyProviders = { ...dirtyProviders, [values.providerId]: false };
         setConnections(nextConnections);
         setDirtyProviders(nextDirtyProviders);
         setActionError(null);
         updateContinueDisabled(nextConnections, nextDirtyProviders);
+        if (mode === "modal") {
+          pendingModalCompletion.current = {
+            connections: nextConnections,
+            providerId: values.providerId,
+            values,
+          };
+          onModalClose?.();
+        }
       } catch (error) {
         updateContinueDisabled();
         setActionError(actionErrorMessage(error));
@@ -223,59 +227,74 @@ export function StepConnectProvider({
     setActionError("Save a provider before continuing.");
     updateContinueDisabled();
   }
-  function handleProviderSubmit(event: FormEvent<HTMLFormElement>) {
-    if (!connectedProvider) return void handleSubmit(onSubmit)(event);
-    event.preventDefault();
-    void onSubmit(getValues());
+  const handleProviderSubmit: FormEventHandler<HTMLFormElement> = connectedProvider
+    ? (event) => {
+        event.preventDefault();
+        void onSubmit(getValues());
+      }
+    : handleSubmit(onSubmit);
+  const editor = (
+    <StepConnectProviderView
+      actionError={actionError}
+      analyticsNotice={analyticsNotice}
+      analyticsOption={analyticsOption}
+      cards={
+        <StepConnectProviderCards
+          connections={connections}
+          dirtyProviders={dirtyProviders}
+          onSelect={selectProvider}
+          selectedProviderId={selectedProviderId}
+          testResults={testResults}
+        />
+      }
+      credentials={
+        <StepConnectProviderCredentials
+          busy={isSubmitting || testingProviderId !== null}
+          errors={errors}
+          onCredentialChange={handleCredentialChange}
+          onSave={handleSave}
+          onTest={handleTest}
+          providerId={selectedProvider.value}
+          providerLabel={selectedProvider.label}
+          register={register}
+          saveDisabled={currentTestResult?.ok !== true}
+          savedConnection={
+            Boolean(connections[selectedProvider.value]) && !dirtyProviders[selectedProvider.value]
+          }
+          showSave={mode === "step"}
+          testDisabled={testDisabled}
+          testResult={currentTestResult}
+          testing={testingProviderId === selectedProvider.value}
+        />
+      }
+      hidden={
+        <>
+          <input type="hidden" {...register("projectId")} />
+          <input type="hidden" {...register("providerId")} />
+        </>
+      }
+      providerError={errors.providerId?.message}
+      showHeading={mode === "step"}
+    />
+  );
+  function handleModalExited() {
+    const pending = pendingModalCompletion.current;
+    pendingModalCompletion.current = null;
+    if (pending) continueToNext(pending.providerId, pending.values, pending.connections);
+    else onModalExited?.();
   }
   return (
-    <form id={onboardingFormId} onSubmit={handleProviderSubmit}>
-      <input type="hidden" {...register("projectId")} />
-      <input type="hidden" {...register("providerId")} />
-      <div className="flex items-start justify-between gap-3">
-        <div className="text-lg font-semibold tracking-[-0.4px]">Connect data</div>
-        <StepConnectProviderSkip flowState={flowState} getValues={getValues} onSkip={onSkip} />
-      </div>
-      <StepConnectProviderCards
-        connections={connections}
-        dirtyProviders={dirtyProviders}
-        onSelect={selectProvider}
-        selectedProviderId={selectedProviderId}
-        testResults={testResults}
-      />
-      {errors.providerId ? (
-        <p className={`m-0 mt-2 ${feedbackClass} text-red-text`}>{errors.providerId.message}</p>
-      ) : null}
-      <StepConnectProviderCredentials
-        busy={isSubmitting || testingProviderId !== null}
-        saveDisabled={!hasCurrentSuccessfulTest}
-        errors={errors}
-        onCredentialChange={handleCredentialChange}
-        onSave={handleSave}
-        onTest={handleTest}
-        providerId={selectedProvider.value}
-        providerLabel={selectedProvider.label}
-        register={register}
-        savedConnection={
-          Boolean(connections[selectedProvider.value]) && !dirtyProviders[selectedProvider.value]
-        }
-        testDisabled={testDisabled}
-        testResult={currentTestResult}
-        testing={testingProviderId === selectedProvider.value}
-      />
-      {actionError ? (
-        <p className={`m-0 mt-3 ${feedbackClass} text-red-text`}>{actionError}</p>
-      ) : null}
-      {analyticsOption ? (
-        <div className="mt-5.5">
-          <div className="flex items-center gap-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.5px] text-fg-muted">
-            Your site&apos;s data / optional, free
-            <InfoTooltip text="Search Console shows the queries your site already ranks for. Free import for keyword suggestions; it cannot check rankings." />
-          </div>
-          {analyticsNotice}
-          <div className="mt-2 grid grid-cols-1 items-stretch gap-3">{analyticsOption}</div>
-        </div>
-      ) : null}
-    </form>
+    <StepConnectProviderLayout
+      busy={isSubmitting}
+      disabled={isSubmitting || testingProviderId !== null || currentTestResult?.ok !== true}
+      editor={editor}
+      label={selectedProvider.label}
+      mode={mode}
+      onCancel={onModalClose}
+      onExited={handleModalExited}
+      onSave={handleSave}
+      onSubmit={handleProviderSubmit}
+      open={modalOpen}
+    />
   );
 }

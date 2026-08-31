@@ -4,7 +4,7 @@ import { ConfirmModal, iconWellClassName } from "@/components/ui";
 import { removeSampleData } from "@/lib/actions/sample-data";
 import { appPath, asProjectRef, type ProjectRef } from "@/lib/routing/app-path";
 import Button from "@mui/material/Button";
-import { DatabaseIcon as Database, TrashIcon as Trash } from "@phosphor-icons/react";
+import { TestTubeIcon as TestTube, TrashIcon as Trash } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -30,7 +30,14 @@ export function SampleProjectBanner({ projectId, projectRef }: Readonly<SamplePr
       <span
         className={`mb-3 grid h-9 w-9 place-items-center rounded-control sm:mb-0 ${iconWellClassName}`}
       >
-        <Database aria-hidden size={19} weight="bold" />
+        <TestTube
+          aria-hidden
+          data-icon="test-tube"
+          data-testid="sample-project-banner-icon"
+          data-weight="regular"
+          size={19}
+          weight="regular"
+        />
       </span>
       <div className="min-w-0 flex-1">
         <h2 className="m-0 text-[13px] font-semibold leading-[1.5] text-fg">
@@ -59,7 +66,7 @@ export function SampleProjectBanner({ projectId, projectRef }: Readonly<SamplePr
         <Button
           onClick={() => setConfirmOpen(true)}
           size="small"
-          startIcon={<Trash aria-hidden size={14} weight="bold" />}
+          startIcon={<Trash aria-hidden size={14} weight="regular" />}
           sx={{
             borderColor: "var(--red)",
             color: "var(--red)",

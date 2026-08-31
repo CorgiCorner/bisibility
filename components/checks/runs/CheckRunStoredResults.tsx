@@ -56,7 +56,7 @@ export function CheckRunStoredResults({ keywordHref, run }: Readonly<Props>) {
         href={keywordHref}
       >
         Open full results
-        <ArrowRight aria-hidden size={11} weight="bold" />
+        <ArrowRight aria-hidden size={11} weight="regular" />
       </Link>
     </div>
   );

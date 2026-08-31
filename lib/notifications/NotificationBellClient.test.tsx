@@ -64,7 +64,7 @@ describe("NotificationBellClient", () => {
 
   afterEach(() => document.removeEventListener("click", preventNavigation));
 
-  it("opens, marks one notification read, and closes after navigation", async () => {
+  it("uses the borderless 36px header control styling and opens the notification popover", async () => {
     const markOne = vi.fn(async () => ({ updated: 1 }));
     render(
       <NotificationBellClient
@@ -75,8 +75,13 @@ describe("NotificationBellClient", () => {
         refreshNotificationFeed={vi.fn(async () => feed)}
       />,
     );
-    expect(screen.getByRole("button", { name: "Notifications" })).toHaveTextContent("1");
-    fireEvent.click(screen.getByRole("button", { name: "Notifications" }));
+    const bell = screen.getByRole("button", { name: "Notifications" });
+    expect(bell).toHaveTextContent("1");
+    expect(bell).toHaveClass("h-9", "w-9", "p-0", "text-fg-muted", "transition-colors");
+    expect(bell).not.toHaveClass("border", "border-border-control", "bg-bg-elev");
+    fireEvent.click(bell);
+    expect(bell).toHaveClass("bg-bg-sunken");
+    expect(screen.getByText("Notifications")).toBeInTheDocument();
     expect(screen.queryByText("Live")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("link", { name: /Import complete/ }));
     await waitFor(() =>

@@ -113,7 +113,7 @@ export default async function LoginPage({ searchParams }: Readonly<LoginPageProp
         <div className="flex items-center gap-4.5 font-mono text-[11.5px] text-fg-muted">
           {brandStats.map(({ icon: Icon, label, tone }) => (
             <span className="inline-flex items-center gap-1.5" key={label}>
-              <Icon aria-hidden className={tone} size={14} weight="fill" />
+              <Icon aria-hidden className={tone} size={14} weight="regular" />
               {label}
             </span>
           ))}

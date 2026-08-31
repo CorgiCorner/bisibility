@@ -122,7 +122,7 @@ function LocationGroup({
                 className="mt-0.5 flex-none text-accent-text"
                 data-city-location-pin
                 size={14}
-                weight="bold"
+                weight="regular"
               />
             )}
             <span className="min-w-0">

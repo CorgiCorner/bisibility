@@ -90,7 +90,7 @@ function AddNoteFormControls({
         onClick={() => setOpen(true)}
         type="button"
       >
-        <Plus aria-hidden size={14} weight="bold" />
+        <Plus aria-hidden size={14} weight="regular" />
         Add note
       </button>
       <AppDrawer
@@ -102,7 +102,7 @@ function AddNoteFormControls({
               onClick={close}
               type="button"
             >
-              <X aria-hidden size={13} />
+              <X weight="regular" aria-hidden size={13} />
               Cancel
             </button>
             <button
@@ -111,7 +111,7 @@ function AddNoteFormControls({
               form={FORM_ID}
               type="submit"
             >
-              <NotePencil aria-hidden size={13} />
+              <NotePencil weight="regular" aria-hidden size={13} />
               {isPending ? "Saving..." : "Save note"}
             </button>
           </div>

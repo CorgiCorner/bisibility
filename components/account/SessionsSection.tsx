@@ -42,7 +42,7 @@ export function SessionsSection({
             return (
               <div className="flex items-center gap-[13px] px-4.5 py-3.5" key={session.id}>
                 <span className="grid h-8.5 w-[34px] flex-none place-items-center rounded-control bg-bg-sunken text-fg-muted">
-                  <Icon size={18} weight="bold" />
+                  <Icon size={18} weight="regular" />
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="flex flex-wrap items-center gap-2">

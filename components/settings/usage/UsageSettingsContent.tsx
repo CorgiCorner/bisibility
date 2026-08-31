@@ -8,6 +8,7 @@ export type UsageSettingsContentProps = {
   canEditBudget: boolean;
   canSubmitPricingFeedback: boolean;
   deployment: "cloud" | "self-host";
+  initialBudgetEditOpen?: boolean;
   initialPricingFeedbackAnswered?: boolean;
   projectId: string;
   projectRef: string;
@@ -22,6 +23,7 @@ export function UsageSettingsContent({
   canEditBudget,
   canSubmitPricingFeedback,
   deployment,
+  initialBudgetEditOpen,
   initialPricingFeedbackAnswered,
   projectId,
   projectRef,
@@ -40,6 +42,7 @@ export function UsageSettingsContent({
       />
       <ProviderUsageCard
         canEditBudget={canEditBudget}
+        initialBudgetEditOpen={initialBudgetEditOpen}
         projectId={projectId}
         projectRef={projectRef}
         updateProviderAllocation={updateProviderAllocation}

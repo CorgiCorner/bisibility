@@ -22,12 +22,7 @@ export default async function AppNotFound() {
       <EmptyState
         action={
           <div className="flex flex-wrap justify-center gap-3">
-            <Button
-              component="a"
-              href={appRootPath()}
-              size="lg"
-              startIcon={<SquaresFour size={16} weight="bold" />}
-            >
+            <Button component="a" href={appRootPath()} size="lg">
               Back to your projects
             </Button>
             <Button component="a" href="/login?switch=1" size="lg" variant="secondary">
@@ -41,7 +36,7 @@ export default async function AppNotFound() {
             : "This project either does not exist or your account is not a member of it."
         }
         footnote="404 - Not found"
-        icon={<SquaresFour aria-hidden size={28} weight="bold" />}
+        icon={<SquaresFour aria-hidden size={28} weight="regular" />}
         title="This page is not available"
       />
     </main>

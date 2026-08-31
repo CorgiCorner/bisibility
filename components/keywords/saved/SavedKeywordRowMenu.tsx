@@ -49,9 +49,9 @@ export function SavedKeywordRowMenu({
     close();
     try {
       await navigator.clipboard.writeText(row.text);
-      showToast("Keyword copied", { tint: "green" });
+      showToast("Keyword copied", { severity: "success" });
     } catch {
-      showToast("Could not copy keyword", { tint: "red" });
+      showToast("Could not copy keyword", { severity: "error" });
     }
   }
 
@@ -66,7 +66,7 @@ export function SavedKeywordRowMenu({
         size="small"
         sx={{ color: "var(--fg-muted)" }}
       >
-        <DotsThreeVertical size={17} weight="bold" />
+        <DotsThreeVertical size={17} weight="regular" />
       </IconButton>
       <Menu
         anchorEl={anchorEl}
@@ -88,7 +88,7 @@ export function SavedKeywordRowMenu({
       >
         {canTrack ? (
           <MenuItem onClick={(event) => select(event, () => onTrack(row))} sx={{ gap: "9px" }}>
-            <ChartLineUp size={14} />
+            <ChartLineUp weight="regular" size={14} />
             Track now
           </MenuItem>
         ) : null}
@@ -98,11 +98,11 @@ export function SavedKeywordRowMenu({
           onClick={close}
           sx={{ gap: "9px" }}
         >
-          <MagnifyingGlass size={14} />
+          <MagnifyingGlass weight="regular" size={14} />
           Open source search
         </MenuItem>
         <MenuItem onClick={copy} sx={{ gap: "9px" }}>
-          <Copy size={14} />
+          <Copy weight="regular" size={14} />
           Copy keyword
         </MenuItem>
         {canDelete ? (
@@ -110,7 +110,7 @@ export function SavedKeywordRowMenu({
             onClick={(event) => select(event, () => onRemove(row))}
             sx={{ color: "var(--red)", gap: "9px" }}
           >
-            <Trash size={14} />
+            <Trash weight="regular" size={14} />
             Remove from saved
           </MenuItem>
         ) : null}

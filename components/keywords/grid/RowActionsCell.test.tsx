@@ -66,7 +66,7 @@ describe("RowActionsCell", () => {
     fireEvent.click(screen.getByRole("button", { name: "Keyword actions" }));
     fireEvent.click(screen.getByRole("menuitem", { name: "Copy keyword ID" }));
     await waitFor(() => expect(mocks.writeText).toHaveBeenCalledWith(row.id));
-    expect(mocks.showToast).toHaveBeenCalledWith("Keyword ID copied", { tint: "green" });
+    expect(mocks.showToast).toHaveBeenCalledWith("Keyword ID copied", { severity: "success" });
   });
 
   it("reports a clipboard failure instead of showing success", async () => {
@@ -87,9 +87,11 @@ describe("RowActionsCell", () => {
     fireEvent.click(screen.getByRole("menuitem", { name: "Copy keyword ID" }));
 
     await waitFor(() =>
-      expect(mocks.showToast).toHaveBeenCalledWith("Could not copy keyword ID", { tint: "red" }),
+      expect(mocks.showToast).toHaveBeenCalledWith("Could not copy keyword ID", {
+        severity: "error",
+      }),
     );
-    expect(mocks.showToast).not.toHaveBeenCalledWith("Keyword ID copied", { tint: "green" });
+    expect(mocks.showToast).not.toHaveBeenCalledWith("Keyword ID copied", { severity: "success" });
   });
 
   it("disables only the run action while the row check is pending", () => {

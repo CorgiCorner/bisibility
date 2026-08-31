@@ -101,7 +101,7 @@ function ChangedTile({
     return (
       <SummaryCard label="What changed">
         <span className="flex items-center gap-2 text-[12px] text-fg">
-          <Minus className="text-fg-muted" size={13} weight="bold" />
+          <Minus className="text-fg-muted" size={13} weight="regular" />
           No changes since the previous check
         </span>
       </SummaryCard>
@@ -115,16 +115,16 @@ function ChangedTile({
           {positionChange ? (
             <span className="flex items-center gap-2">
               {positionChange.direction === "improved" || positionChange.direction === "entered" ? (
-                <ArrowUp className="text-green-text" size={13} weight="bold" />
+                <ArrowUp className="text-green-text" size={13} weight="regular" />
               ) : (
-                <ArrowDown className="text-red-text" size={13} weight="bold" />
+                <ArrowDown className="text-red-text" size={13} weight="regular" />
               )}
               {positionChange.text}
             </span>
           ) : null}
           {dimensions.rankingUrlChanged ? (
             <span className="flex items-center gap-2">
-              <ArrowUpRight className="text-yellow-text" size={13} weight="bold" />
+              <ArrowUpRight className="text-yellow-text" size={13} weight="regular" />
               Ranking URL changed
             </span>
           ) : null}
@@ -175,7 +175,12 @@ function PendingChart({
               pendingChartWellClass(state),
             )}
           >
-            <Icon aria-hidden className={running ? "bv-spin" : undefined} size={20} weight="bold" />
+            <Icon
+              aria-hidden
+              className={running ? "bv-spin" : undefined}
+              size={20}
+              weight="regular"
+            />
           </span>
           <p className="m-0 mt-3 text-[15px] font-semibold leading-[1.35] text-fg">{copy.title}</p>
           <p className="m-0 mt-1.5 text-[12px] leading-[1.45] text-fg-muted">{copy.body}</p>

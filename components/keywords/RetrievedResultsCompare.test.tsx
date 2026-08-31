@@ -141,10 +141,16 @@ describe("RetrievedResultsCompare", () => {
 
     expect(screen.getByText("COMPARISON NOT POSSIBLE")).toBeInTheDocument();
     expect(screen.getByText("These two checks cannot be compared")).toBeInTheDocument();
-    expect(screen.getByText(/is older than the full-detail window/)).toBeInTheDocument();
-    expect(screen.getByText(/Pick two checks that both hold full detail/)).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "The earlier check kept only its top 1, so its titles, URLs and page features below that are gone.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Comparison stays available between checks that both hold full detail/),
+    ).toBeInTheDocument();
 
-    const button = screen.getByRole("button", { name: "Compare Jan 1 with Jul 8" });
+    const button = screen.getByRole("button", { name: "Compare 1 Jan with 8 Jul" });
     fireEvent.click(button);
     expect(onPickFullPair).toHaveBeenCalledWith("c-old", "c2");
   });
@@ -206,8 +212,12 @@ describe("RetrievedResultsCompare", () => {
         fullCheckDates={["2025-07-01"]}
       />,
     );
-    expect(
-      screen.getByText(/Compared across providers: DataForSEO then BrightLocal/),
-    ).toBeInTheDocument();
+    const statsLabel = screen.getByText("Entered");
+    const notice = screen.getByText(
+      /These checks used different providers: DataForSEO \(1 Jul\) and BrightLocal \(8 Jul\)/,
+    );
+    const firstRow = screen.getByText("example.com");
+    expect(statsLabel.compareDocumentPosition(notice)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(notice.compareDocumentPosition(firstRow)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
   });
 });

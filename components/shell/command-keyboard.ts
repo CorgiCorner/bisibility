@@ -22,6 +22,10 @@ export function handleShellKeyDown(
       closePalette();
       return;
     }
+    if (event.target instanceof Element && event.target.closest(".MuiModal-root")) {
+      // Focused MUI overlays handle Escape themselves so callers receive the right close reason.
+      return;
+    }
     if (closeOpenMuiOverlay()) {
       event.preventDefault();
     }

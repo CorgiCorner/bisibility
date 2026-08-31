@@ -29,26 +29,27 @@ describe("StepConnectProvider", () => {
       }),
     ).toBeInTheDocument();
 
-    const skip = screen.getByRole("link", {
-      name: "Skip provider connection and add keywords as paused",
-    });
-    const providerCards = screen.getByRole("radiogroup", {
-      name: "SERP provider",
-    });
-    expect(skip.compareDocumentPosition(providerCards) & Node.DOCUMENT_POSITION_FOLLOWING).toBe(
-      Node.DOCUMENT_POSITION_FOLLOWING,
-    );
+    expect(
+      screen.queryByRole("button", {
+        name: "Skip provider connection and add keywords as paused",
+      }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", {
+        name: "Skip provider connection and add keywords as paused",
+      }),
+    ).not.toBeInTheDocument();
     expect(screen.queryByText("No provider yet?")).not.toBeInTheDocument();
     expect(screen.queryByText(/Search Console can be connected/)).not.toBeInTheDocument();
 
-    const affiliateDisclosure = screen.getByText("affiliate");
-    const credentialLink = screen.getByTitle("Affiliate link");
+    const affiliateDisclosure = screen.getByText("· affiliate link");
+    const credentialLink = screen.getAllByRole("link", { name: /Get API credentials/ })[0];
+    expect(credentialLink).not.toHaveAttribute("title");
     expect(
       credentialLink.compareDocumentPosition(affiliateDisclosure) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
     expect(credentialLink).toHaveAttribute("rel", "sponsored noopener noreferrer");
-    expect(credentialLink).toHaveAttribute("title", "Affiliate link");
 
     const pricing = screen.getByText(/Plan-based - monthly search quota/).parentElement;
     expect(pricing).toHaveClass("mt-2");
@@ -60,6 +61,22 @@ describe("StepConnectProvider", () => {
     expect(screen.getByLabelText("API key")).toBeInTheDocument();
     expect(screen.queryByLabelText("API login")).not.toBeInTheDocument();
     expect(screen.getByLabelText("API key").closest(".grid")).not.toHaveClass("sm:grid-cols-2");
+  });
+
+  it("right-aligns secondary credential actions for both providers", () => {
+    renderProviderStep();
+
+    for (const provider of ["DataForSEO", "SerpApi"] as const) {
+      if (provider === "SerpApi") fireEvent.click(screen.getByRole("radio", { name: /SerpApi/ }));
+      const testButton = screen.getByRole("button", { name: "Test connection" });
+      const saveButton = screen.getByRole("button", { name: `Save ${provider}` });
+      const actionGroup = saveButton.parentElement;
+      const actionRow = actionGroup?.parentElement;
+      expect(testButton).toHaveClass("MuiButton-outlined");
+      expect(saveButton).toHaveClass("MuiButton-outlined");
+      expect(actionGroup).toHaveClass("flex", "justify-end");
+      expect(actionRow).toHaveClass("flex", "justify-between");
+    }
   });
 
   it("keeps the Search Console option full width in a one-column grid", () => {
@@ -258,5 +275,38 @@ describe("StepConnectProvider", () => {
     await waitFor(() => expect(onComplete).toHaveBeenCalledTimes(1));
     expect(screen.queryByText("Enter your API login.")).not.toBeInTheDocument();
     expect(screen.queryByText("Enter your API password.")).not.toBeInTheDocument();
+  });
+  it("associates credential errors and announces rejected actions", async () => {
+    const testProviderConnectionAction = vi.fn(async () => {
+      throw new Error("Provider rejected credentials.");
+    });
+    renderProviderStep({
+      defaultValues: { projectId: "prj_1", providerId: "dataforseo", login: "", secret: "" },
+      testProviderConnectionAction,
+    });
+    fireEvent.change(screen.getByLabelText("API login"), { target: { value: "" } });
+    fireEvent.change(screen.getByLabelText("API password"), { target: { value: "" } });
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    const login = await screen.findByLabelText("API login");
+    expect(login).toHaveAttribute("aria-invalid", "true");
+    expect(login.getAttribute("aria-describedby")).toMatch(/-error$/);
+    const password = screen.getByPlaceholderText("API password");
+    expect(password).toHaveAttribute("aria-invalid", "true");
+    expect(password.getAttribute("aria-describedby")).toMatch(/-error$/);
+    fireEvent.change(login, { target: { value: "login" } });
+    fireEvent.change(password, { target: { value: "password" } });
+    fireEvent.click(screen.getByRole("button", { name: "Test connection" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Provider rejected credentials.");
+  });
+
+  it("announces a rejected save action", async () => {
+    const connectProviderAction = vi.fn(async () => {
+      throw new Error("Provider could not be saved.");
+    });
+    const testProviderConnectionAction = vi.fn(async () => ({ message: "Connected", ok: true }));
+    renderProviderStep({ connectProviderAction, testProviderConnectionAction });
+    await clickTestConnection(testProviderConnectionAction);
+    fireEvent.click(screen.getByRole("button", { name: "Save DataForSEO" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Provider could not be saved.");
   });
 });

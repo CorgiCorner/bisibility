@@ -30,7 +30,9 @@ export function MenuMultiSelectOption({
           <span className="ml-1 font-normal text-fg-muted">/ {option.secondary}</span>
         ) : null}
       </span>
-      {current ? <Check aria-hidden className="text-accent-text" size={15} weight="bold" /> : null}
+      {current ? (
+        <Check aria-hidden className="text-accent-text" size={15} weight="regular" />
+      ) : null}
     </MenuItem>
   );
 }

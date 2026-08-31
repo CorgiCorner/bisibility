@@ -25,7 +25,7 @@ export function KeywordNoRowsOverlay({ state }: Readonly<{ state?: KeywordNoRows
       <EmptyState
         action={action}
         description={description}
-        icon={<MagnifyingGlass size={22} />}
+        icon={<MagnifyingGlass weight="regular" size={22} />}
         title={title}
       />
     </div>

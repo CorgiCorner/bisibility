@@ -34,7 +34,7 @@ export function SetupAccountStatusCard(props: Readonly<AccountStatusCardProps>) 
     <Card className="flex flex-col gap-4.5 p-7" size="lg">
       <div className="flex items-start gap-3.5">
         <span className="grid h-11 w-11 shrink-0 place-items-center rounded-card bg-accent-soft text-accent-solid">
-          <ShieldCheck aria-hidden size={22} weight="fill" />
+          <ShieldCheck aria-hidden size={22} weight="regular" />
         </span>
         <div className="flex flex-col gap-1.5">
           <h1 className="m-0 text-[20px] font-bold tracking-[-0.02em]">

@@ -17,7 +17,12 @@ type RenderWizardProps = Omit<Partial<OnboardingWizardProps>, "actions"> & {
 
 export function renderWizard({ actions: actionOverrides, ...props }: RenderWizardProps = {}) {
   const actions: OnboardingWizardProps["actions"] = {
-    addKeywordsAction: vi.fn(async () => ({ created: 0, keywords: [], skippedDuplicates: 0 })),
+    addKeywordsAction: vi.fn(async () => ({
+      created: 0,
+      persistedKeywordCount: 0,
+      keywords: [],
+      skippedDuplicates: 0,
+    })),
     completeGooglePropertySelectionAction: vi.fn(async (input) => ({ property: input.property })),
     completeOnboardingAction: vi.fn(async () => ({ completed: true })),
     connectProviderAction: vi.fn(async () => undefined),
@@ -39,6 +44,7 @@ export function renderWizard({ actions: actionOverrides, ...props }: RenderWizar
     })),
     runFirstCheckPreviewAction: vi.fn(async () => ({
       position: null,
+      recordedCostCents: 0,
       provider: "dataforseo",
       rankingUrl: null,
       status: "completed" as const,
@@ -51,7 +57,7 @@ export function renderWizard({ actions: actionOverrides, ...props }: RenderWizar
     // saveMatchingScopeAction: vi.fn(async () => undefined), // Restore with issue #863.
     syncProjectTrafficAction: vi.fn(async () => undefined),
     testProviderConnectionAction: vi.fn(async () => ({ message: "Connected", ok: true })),
-    updateProjectDefaultsAction: vi.fn(async () => undefined),
+    updateProjectDefaultsAction: vi.fn(async () => ({ nextCheckAt: null })),
     ...actionOverrides,
   };
 

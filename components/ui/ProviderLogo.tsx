@@ -17,6 +17,7 @@ export type ProviderLogoProps = {
   alt: string;
   domain?: string | null;
   fallbackIcon: ProviderIconName;
+  size?: "default" | "sm";
   tint: string;
 };
 
@@ -30,7 +31,13 @@ const icons = {
   trend: TrendUp,
 } as const satisfies Record<ProviderIconName, typeof ChartBar>;
 
-export function ProviderLogo({ alt, domain, fallbackIcon, tint }: Readonly<ProviderLogoProps>) {
+export function ProviderLogo({
+  alt,
+  domain,
+  fallbackIcon,
+  size = "default",
+  tint,
+}: Readonly<ProviderLogoProps>) {
   const [failed, setFailed] = useState(false);
   const FallbackIcon = icons[fallbackIcon];
   const src = failed
@@ -43,7 +50,11 @@ export function ProviderLogo({ alt, domain, fallbackIcon, tint }: Readonly<Provi
   return (
     <span
       aria-label={alt}
-      className="grid h-[46px] w-[46px] shrink-0 place-items-center rounded-control bg-bg-sunken"
+      className={
+        size === "sm"
+          ? "grid h-[38px] w-[38px] shrink-0 place-items-center rounded-control bg-bg-elev"
+          : "grid h-[46px] w-[46px] shrink-0 place-items-center rounded-control bg-bg-sunken"
+      }
       role="img"
       style={{ color: tint }}
     >
@@ -51,16 +62,20 @@ export function ProviderLogo({ alt, domain, fallbackIcon, tint }: Readonly<Provi
         // biome-ignore lint/performance/noImgElement: Logo.dev URLs are dynamic and require an onError fallback.
         <img
           alt=""
-          className="h-8 w-8 rounded-control bg-white object-contain"
+          className={
+            size === "sm"
+              ? "h-6 w-6 rounded-control bg-white object-contain"
+              : "h-8 w-8 rounded-control bg-white object-contain"
+          }
           decoding="async"
-          height={32}
+          height={size === "sm" ? 24 : 32}
           onError={() => setFailed(true)}
           referrerPolicy="no-referrer"
           src={src}
-          width={32}
+          width={size === "sm" ? 24 : 32}
         />
       ) : (
-        <FallbackIcon aria-hidden size={23} weight="fill" />
+        <FallbackIcon aria-hidden size={size === "sm" ? 19 : 23} weight="regular" />
       )}
     </span>
   );

@@ -67,13 +67,13 @@ export function CompetitorSavedViewsControl({
     startTransition(() => {
       void deleteSavedViewAction({ projectId, viewId: view.id })
         .then(() => {
-          showToast("View deleted", { tint: "neutral" });
+          showToast("View deleted", { severity: "success" });
           if (view.id === activeViewId) {
             router.push(competitorScopeHref(projectRef, config.scope));
           }
           router.refresh();
         })
-        .catch((error) => showToast(actionErrorMessage(error), { tint: "red" }));
+        .catch((error) => showToast(actionErrorMessage(error), { severity: "error" }));
     });
   }
 
@@ -83,11 +83,11 @@ export function CompetitorSavedViewsControl({
         <Button
           onClick={(event) => setAnchorEl(event.currentTarget)}
           size="sm"
-          startIcon={<BookmarkSimple aria-hidden size={14} />}
+          startIcon={<BookmarkSimple weight="regular" aria-hidden size={14} />}
           variant="secondary"
         >
           {active?.name ?? "Comparison views"}
-          <CaretDown aria-hidden size={11} />
+          <CaretDown weight="regular" aria-hidden size={11} />
         </Button>
         {modified ? (
           <span className="rounded-full bg-accent-soft px-2.5 py-1 font-mono text-[10px] font-semibold text-accent-text">
@@ -113,7 +113,7 @@ export function CompetitorSavedViewsControl({
             onClick={() => router.push(competitorSavedViewHref(projectRef, view.id, view.config))}
           >
             <span className="mr-2 grid w-4 place-items-center">
-              {view.id === activeViewId ? <Check size={13} weight="bold" /> : null}
+              {view.id === activeViewId ? <Check size={13} weight="regular" /> : null}
             </span>
             <span className="min-w-0 flex-1 truncate">{view.name}</span>
             {deleteSavedViewAction && deletableSavedViewIdSet.has(view.id) ? (
@@ -126,7 +126,7 @@ export function CompetitorSavedViewsControl({
                 }}
                 type="button"
               >
-                <Trash aria-hidden size={13} />
+                <Trash weight="regular" aria-hidden size={13} />
               </button>
             ) : null}
           </MenuItem>

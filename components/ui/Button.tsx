@@ -30,6 +30,13 @@ export type ButtonProps = Omit<MuiButtonProps, "color" | "size" | "variant"> & {
 
 const secondaryBorder = "1px solid var(--border-control)";
 
+const ghostPadding = {
+  lg: "9px 12px",
+  md: "7px 9px",
+  sm: "5px 6px",
+  xs: "5px 11px",
+} as const;
+
 function muiSizeFor(size: ButtonSize): "large" | "medium" | "small" {
   if (size === "lg") return "large";
   if (size === "sm" || size === "xs") return "small";
@@ -54,9 +61,22 @@ const variantSx = {
   },
   ghost: {
     backgroundColor: "transparent",
-    border: "1px solid transparent",
+    border: "none",
     color: "var(--fg-muted)",
-    "&:hover": { backgroundColor: "var(--bg-sunken)", color: "var(--fg)" },
+    "&:not(.Mui-focusVisible):not(:hover):not(.Mui-disabled)": {
+      backgroundColor: "transparent",
+      color: "var(--fg-muted)",
+    },
+    "&.Mui-focusVisible:not(.Mui-disabled)": {
+      backgroundColor: "var(--bg-sunken)",
+      color: "var(--fg)",
+    },
+    "@media (hover: hover)": {
+      "&:hover:not(.Mui-disabled)": {
+        backgroundColor: "var(--bg-sunken)",
+        color: "var(--fg)",
+      },
+    },
   },
   // Brand surface with the cream --accent-on-solid label. Light pair is 3.25:1;
   // see lib/theme/tokens.ts and the pinned ratios in contrast.test.ts.
@@ -99,6 +119,7 @@ export function Button({
   className,
   disabled,
   loading = false,
+  loadingIndicator,
   loadingLabel,
   size = "md",
   startIcon,
@@ -130,13 +151,14 @@ export function Button({
       color="inherit"
       disabled={busy}
       disableElevation
+      disableRipple
       size={muiSizeFor(size)}
       startIcon={
-        loading ? (
-          <CircularProgress aria-hidden color="inherit" size={14} thickness={5} />
-        ) : (
-          startIcon
-        )
+        loading
+          ? (loadingIndicator ?? (
+              <CircularProgress aria-hidden color="inherit" size={14} thickness={5} />
+            ))
+          : startIcon
       }
       sx={[
         {
@@ -147,7 +169,9 @@ export function Button({
           "&.Mui-disabled": disabledStyle,
         },
         ...(size === "xs" ? [buttonXsSx] : []),
-        variantSx[variant],
+        variant === "ghost"
+          ? { ...variantSx.ghost, padding: ghostPadding[size] }
+          : variantSx[variant],
         ...additionalSx,
       ]}
       variant={muiVariantFor(variant)}

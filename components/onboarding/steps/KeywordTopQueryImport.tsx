@@ -127,7 +127,7 @@ export function KeywordTopQueryImport({
         loading={isPending}
         loadingLabel="Importing top queries..."
         onClick={handleImport}
-        startIcon={<ArrowLineDown aria-hidden size={14} weight="bold" />}
+        startIcon={<ArrowLineDown aria-hidden size={14} weight="regular" />}
         sx={{
           color: "var(--fg-muted)",
           "&:hover": { borderColor: "var(--accent)", color: "var(--accent-text)" },

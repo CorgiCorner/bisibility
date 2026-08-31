@@ -167,7 +167,7 @@ export function LoginEmailStep({
                   disabled={isDisabled}
                   key={provider}
                   onClick={() => onProviderSignIn(provider)}
-                  startIcon={<Icon size={18} weight="fill" />}
+                  startIcon={<Icon size={18} weight="regular" />}
                   sx={{
                     backgroundColor: "var(--bg-elev)",
                     borderColor: "var(--border)",
@@ -245,7 +245,7 @@ export function LoginEmailStep({
 
             <Button
               disabled={isSubmitting}
-              endIcon={<CaretRight size={16} weight="bold" />}
+              endIcon={<CaretRight size={16} weight="regular" />}
               fullWidth
               sx={{
                 borderRadius: UI_RADIUS_ROLES.control,

@@ -17,42 +17,33 @@ import type {
   ProviderTrafficSyncResult,
 } from "@/lib/integrations/types";
 import type { ProjectRef } from "@/lib/routing/app-path";
+import type { SearchSyncPreflightPlan } from "@/lib/search-insights/sync/plan";
 import { useState } from "react";
 import type { Notice } from "./ConnectDrawerSchema";
 import { ProviderCardFeedback } from "./ProviderCardFeedback";
+import { ProviderConsumerRows } from "./ProviderConsumerRows";
 
 export type ProviderCardProps = {
   actions?: ProviderActionHandlers;
   canManageProviders: boolean;
   canUpdateProject: boolean;
+  deploymentMode?: "cloud" | "self-host";
   initialOpen?: boolean;
   noProvidersYet?: boolean;
   projectId?: string;
   projectRef?: ProjectRef;
   provider: IntegrationProviderData;
+  searchSyncPlan?: SearchSyncPreflightPlan;
   timeZone: string;
 };
-const actionLabels = {
-  connected: "Manage",
-  needs_reauth: "Reconnect",
-  optional: "Connect",
-  planned: "Connect",
-  ready: "Connect",
-} as const;
-const responsiveActionSx = {
-  width: "100%",
-  "@media (min-width:640px)": { width: "auto" },
-} as const;
-const reauthCopy: Record<string, string> = {
-  gsc: "Google authorization is no longer valid. Reconnect to resume traffic and index-status syncs.",
-  ga4: "Google authorization is no longer valid. Reconnect to resume traffic syncs.",
-};
-const outlineActionSx = {
-  ...responsiveActionSx,
-  color: "var(--fg-muted)",
-  "&:hover": { borderColor: "var(--accent)", color: "var(--accent-text)" },
-  "&.Mui-focusVisible": { borderColor: "var(--accent)", color: "var(--accent-text)" },
-} as const;
+
+import {
+  actionLabels,
+  outlineActionSx,
+  reauthCopy,
+  responsiveActionSx,
+} from "./provider-card-config";
+
 type ProviderId = Parameters<ProviderActionHandlers["testProviderConnection"]>[0]["providerId"];
 const demoTestConnection = async (): Promise<ProviderTestResult> => ({
   balance: 41_200,
@@ -69,10 +60,12 @@ export function ProviderCard({
   actions,
   canManageProviders,
   canUpdateProject,
+  deploymentMode,
   initialOpen = false,
   projectId,
   projectRef,
   provider,
+  searchSyncPlan,
   timeZone,
 }: Readonly<ProviderCardProps>) {
   const [drawerOpen, setDrawerOpen] = useState(initialOpen && canManageProviders);
@@ -86,8 +79,12 @@ export function ProviderCard({
   const actionVariant = primaryAction ? "primary" : "secondary";
   const actionSx = primaryAction ? responsiveActionSx : outlineActionSx;
   const actionDisabled = readOnly && primaryAction;
+  const managementActionLabel =
+    provider.id === "gsc" && provider.status === "connected" ? "Connection settings" : "Manage";
   const canSync =
     provider.kind === "analytics" && provider.status === "connected" && provider.enabled !== false;
+  const consumerStatuses = provider.id === "gsc" ? provider.consumerStatuses : undefined;
+  const hasConsumerRows = Boolean(consumerStatuses);
   const testProviderConnection =
     actions?.testProviderConnection ?? (projectId ? testConnectionAction : demoTestConnection);
   const syncProjectTraffic = actions?.syncProjectTraffic ?? demoTrafficSync;
@@ -146,6 +143,7 @@ export function ProviderCard({
   return (
     <>
       <Card
+        id={`provider-${provider.id}`}
         className="grid grid-cols-1 px-5 py-4.5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start sm:gap-x-3.5"
         size="md"
         sx={{ opacity: provider.status === "planned" ? 0.92 : 1 }}
@@ -174,16 +172,30 @@ export function ProviderCard({
           </div>
         </div>
 
-        <dl className="m-0 mt-3.5 flex flex-wrap gap-x-9 gap-y-3 border-border-soft border-t pt-3.5 sm:col-span-2 sm:row-start-2">
-          {provider.meta.map((row) => (
-            <div key={row.label}>
-              <dt className="font-mono text-[9.5px] uppercase tracking-[0.5px] text-fg-muted">
-                {row.label}
-              </dt>
-              <dd className="m-0 mt-[3px] font-mono text-[12.5px] text-fg-muted">{row.value}</dd>
-            </div>
-          ))}
-        </dl>
+        {consumerStatuses ? (
+          <ProviderConsumerRows
+            canSync={canSync && canUpdateProject}
+            onSync={() => void handleTrafficSync()}
+            projectRef={projectRef}
+            readOnly={readOnly}
+            statuses={consumerStatuses}
+            syncFailure={provider.syncFailure}
+            syncPending={syncPending}
+            syncResult={syncResult}
+            timeZone={timeZone}
+          />
+        ) : (
+          <dl className="m-0 mt-3.5 flex flex-wrap gap-x-9 gap-y-3 border-border-soft border-t pt-3.5 sm:col-span-2 sm:row-start-2">
+            {provider.meta.map((row) => (
+              <div key={row.label}>
+                <dt className="font-mono text-[9.5px] uppercase tracking-[0.5px] text-fg-muted">
+                  {row.label}
+                </dt>
+                <dd className="m-0 mt-[3px] font-mono text-[12.5px] text-fg-muted">{row.value}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
         {provider.status === "needs_reauth" ? (
           <p
             className="m-0 mt-3 rounded-control border border-red bg-red/5 px-3 py-2 text-[12.5px] leading-[1.45] text-red-text sm:col-span-2"
@@ -194,8 +206,12 @@ export function ProviderCard({
           </p>
         ) : null}
         <ProviderCredentialWarning credentialIssue={provider.credentialIssue} />
-        {provider.syncFailure ? (
-          <ProviderSyncFailureAlert failure={provider.syncFailure} timeZone={timeZone} />
+        {!hasConsumerRows && provider.syncFailure ? (
+          <ProviderSyncFailureAlert
+            failure={provider.syncFailure}
+            managementActionLabel={managementActionLabel}
+            timeZone={timeZone}
+          />
         ) : null}
         <div className="mt-3.5 flex shrink-0 items-center gap-[7px] border-border-soft border-t pt-3.5 sm:col-start-2 sm:row-start-1 sm:mt-0 sm:flex-wrap sm:justify-end sm:border-t-0 sm:pt-0">
           {provider.status === "connected" && canManageProviders ? (
@@ -223,7 +239,7 @@ export function ProviderCard({
               </Button>
             </ProjectReadOnlyTooltip>
           ) : null}
-          {canSync && canUpdateProject ? (
+          {canSync && canUpdateProject && !hasConsumerRows ? (
             <ProjectReadOnlyTooltip className="flex flex-1 sm:inline-flex sm:flex-initial">
               <Button
                 disabled={readOnly || syncPending}
@@ -242,7 +258,9 @@ export function ProviderCard({
           {canManageProviders && actionDisabled ? (
             <ProjectReadOnlyTooltip className="flex flex-1 sm:inline-flex sm:flex-initial">
               <Button disabled size="xs" sx={actionSx} type="button" variant={actionVariant}>
-                {actionLabels[provider.status]}
+                {provider.status === "connected"
+                  ? managementActionLabel
+                  : actionLabels[provider.status]}
               </Button>
             </ProjectReadOnlyTooltip>
           ) : canManageProviders ? (
@@ -256,14 +274,16 @@ export function ProviderCard({
               type="button"
               variant={actionVariant}
             >
-              {actionLabels[provider.status]}
+              {provider.status === "connected"
+                ? managementActionLabel
+                : actionLabels[provider.status]}
             </Button>
           ) : null}
         </div>
         <ProviderCardFeedback
           disconnectNotice={disconnectNotice}
-          neverSynced={Boolean(provider.neverSynced)}
-          syncResult={syncResult}
+          neverSynced={!hasConsumerRows && Boolean(provider.neverSynced)}
+          syncResult={hasConsumerRows ? null : syncResult}
           testResult={testResult}
         />
       </Card>
@@ -271,11 +291,13 @@ export function ProviderCard({
       {canManageProviders ? (
         <ConnectDrawer
           actions={actions}
+          deploymentMode={deploymentMode}
           onClose={() => setDrawerOpen(false)}
           open={drawerOpen}
           projectId={projectId}
           projectRef={projectRef}
           provider={provider}
+          searchSyncPlan={searchSyncPlan}
         />
       ) : null}
     </>

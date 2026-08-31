@@ -1,4 +1,5 @@
 import { cn } from "@/lib/ui/cn";
+import { CheckIcon as Check } from "@phosphor-icons/react/ssr";
 import type { ReactNode } from "react";
 import { iconWellClassName } from "./icon-well-styles";
 
@@ -9,6 +10,7 @@ export type EmptyStateProps = {
   description?: ReactNode;
   bullets?: string[];
   icon?: ReactNode;
+  mark?: ReactNode;
   action?: ReactNode;
   footnote?: ReactNode;
   tone?: EmptyStateTone;
@@ -25,11 +27,13 @@ export function EmptyState({
   description,
   bullets,
   icon,
+  mark,
   action,
   footnote,
   tone = "accent",
   compact = false,
 }: Readonly<EmptyStateProps>) {
+  const hasMedia = mark != null || icon != null;
   const hasBullets = bullets != null && bullets.length > 0;
   const copyClasses = cn(
     "leading-[1.55] text-fg-muted",
@@ -48,22 +52,23 @@ export function EmptyState({
           : "rounded-card border border-border bg-bg-elev px-8 py-11",
       )}
     >
-      {icon ? (
-        <span
-          className={cn(
-            "grid place-items-center",
-            compact ? "h-10 w-10 rounded-control" : "h-[54px] w-[54px] rounded-card",
-            toneTileClasses[tone],
-          )}
-        >
-          {icon}
-        </span>
-      ) : null}
+      {mark ??
+        (icon ? (
+          <span
+            className={cn(
+              "grid place-items-center",
+              compact ? "h-10 w-10 rounded-control" : "h-12 w-12 rounded-card",
+              toneTileClasses[tone],
+            )}
+          >
+            {icon}
+          </span>
+        ) : null)}
       <h3
         className={cn(
           "m-0 font-semibold tracking-[-0.4px]",
           compact ? "text-[15px]" : "text-[18px]",
-          icon ? (compact ? "mt-2.5" : "mt-4.5") : null,
+          hasMedia ? (compact ? "mt-2.5" : "mt-4.5") : null,
         )}
       >
         {title}
@@ -72,10 +77,20 @@ export function EmptyState({
         <div className={cn("m-0 mt-[7px]", copyClasses)}>{description}</div>
       ) : null}
       {hasBullets ? (
-        <div className={cn("m-0", description != null ? "mt-1.5" : "mt-[7px]", copyClasses)}>
-          <ul className="m-0 mx-auto grid w-fit list-disc gap-1.5 pl-5 text-left marker:text-fg-muted">
+        <div className={cn("m-0", description != null ? "mt-1.5" : "mt-2.5", copyClasses)}>
+          <ul className="m-0 mx-auto grid w-fit list-none gap-1.5 p-0 text-left">
             {bullets.map((bullet) => (
-              <li key={bullet}>{bullet}</li>
+              <li className="flex items-start gap-2.5" key={bullet}>
+                <Check
+                  aria-hidden
+                  className="shrink-0 self-center [color:color-mix(in_srgb,var(--fg-muted)_60%,transparent)]"
+                  data-empty-state-bullet="true"
+                  data-empty-state-bullet-kind="check"
+                  size={14}
+                  weight="regular"
+                />
+                <span>{bullet}</span>
+              </li>
             ))}
           </ul>
         </div>

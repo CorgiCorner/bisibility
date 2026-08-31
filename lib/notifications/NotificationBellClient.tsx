@@ -161,14 +161,14 @@ export function NotificationBellClient({
         aria-haspopup="dialog"
         aria-label="Notifications"
         className={[
-          "grid h-8 w-8 place-items-center rounded-control border border-border-control bg-bg-elev text-fg-muted transition-colors hover:bg-bg-sunken hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid",
-          open ? "bg-bg-sunken" : "bg-bg-elev",
+          "grid h-9 w-9 place-items-center rounded-control p-0 text-fg-muted transition-colors hover:bg-bg-sunken hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid",
+          open ? "bg-bg-sunken" : "",
         ].join(" ")}
         onClick={(event) => setAnchorEl(event.currentTarget)}
         title="Notifications"
         type="button"
       >
-        <Bell aria-hidden size={17} />
+        <Bell aria-hidden size={17} weight="regular" />
         {unreadCount > 0 ? (
           <span className="absolute right-1.5 top-[5px] grid h-[15px] min-w-[15px] place-items-center rounded-full border-[1.5px] border-bg bg-accent-solid px-[3px] font-mono text-[9px] font-semibold leading-none text-accent-on-solid">
             {unreadCount}
@@ -240,7 +240,7 @@ function NotificationRow({ item, onNavigate, unread }: Readonly<NotificationRowP
         className="grid h-8 w-8 flex-none place-items-center rounded-control"
         style={{ background: tint.bg, color: tint.fg }}
       >
-        <Icon aria-hidden size={16} />
+        <Icon aria-hidden size={16} weight="regular" />
       </span>
       <span className="min-w-0 flex-1">
         <span className="block text-[13px] font-medium leading-[1.35] text-fg">{item.title}</span>

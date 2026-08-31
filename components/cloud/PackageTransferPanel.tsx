@@ -79,7 +79,7 @@ function TransferStatus({
     <>
       {file ? (
         <div className="mx-5 mb-4 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-control border border-border bg-bg-sunken px-3.5 py-3">
-          <CheckCircle aria-hidden className="text-green-text" size={15} weight="fill" />
+          <CheckCircle aria-hidden className="text-green-text" size={15} weight="regular" />
           <span className="min-w-0 flex-1 truncate font-mono text-[11.5px] text-fg-muted">
             {displayedFilename ?? file.filename}
           </span>
@@ -100,7 +100,8 @@ function TransferStatus({
       ) : null}
       {!hasToken ? (
         <div className="mx-5 mb-4 flex items-start gap-2.5 rounded-control border border-border bg-bg px-3.5 py-3 text-[12.5px] leading-5 text-fg-muted">
-          <WarningCircle aria-hidden className="mt-px flex-none text-accent-text" size={15} />
+          {/* biome-ignore format: Keep this icon compact for the file line limit. */}
+          <WarningCircle aria-hidden className="mt-px flex-none text-accent-text" size={15} weight="regular" />
           {missingTokenMessage}
         </div>
       ) : null}
@@ -233,7 +234,7 @@ export function PackageTransferPanel({
     <div className="mt-4.5 overflow-hidden rounded-card border border-border bg-bg-elev">
       <div className="flex items-center gap-[13px] border-border-soft border-b p-[16px_20px]">
         <span className="grid h-[38px] w-[38px] flex-none place-items-center rounded-control bg-blue/15 text-blue-text">
-          <FileJs aria-hidden size={20} weight="fill" />
+          <FileJs aria-hidden size={20} weight="regular" />
         </span>
         <div className="min-w-0 flex-1">
           <div className="text-[13.5px] font-semibold">Package and transfer</div>
@@ -256,7 +257,7 @@ export function PackageTransferPanel({
               loadingLabel="Exporting..."
               onClick={handleExport}
               size="lg"
-              startIcon={<DownloadSimple aria-hidden size={15} />}
+              startIcon={<DownloadSimple aria-hidden size={15} weight="regular" />}
               type="button"
               variant="secondary"
             >
@@ -267,7 +268,7 @@ export function PackageTransferPanel({
                 isBusy ? "cursor-not-allowed text-fg-muted" : "cursor-pointer"
               }`}
             >
-              <FileArrowUp aria-hidden size={15} />
+              <FileArrowUp aria-hidden size={15} weight="regular" />
               {busy === "upload" ? "Reading..." : "Upload JSON or ZIP"}
               <input
                 accept="application/json,application/zip,.json,.zip"
@@ -281,12 +282,12 @@ export function PackageTransferPanel({
         )}
         <Button
           disabled={isBusy || !hasToken || (!serverExport && !file)}
-          endIcon={<CaretRight aria-hidden size={12} weight="bold" />}
+          endIcon={<CaretRight aria-hidden size={12} weight="regular" />}
           loading={busy === "transfer"}
           loadingLabel="Transferring..."
           onClick={handleTransfer}
           size="lg"
-          startIcon={<CloudArrowUp aria-hidden size={15} weight="fill" />}
+          startIcon={<CloudArrowUp aria-hidden size={15} weight="regular" />}
           type="button"
           variant="primary"
         >

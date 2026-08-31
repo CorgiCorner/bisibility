@@ -10,7 +10,7 @@ import {
   hostedPricingFeedbackSchema,
 } from "@/lib/schemas/usage-settings";
 import { actionErrorMessage, waitlistFailureMessage } from "@/lib/ui/action-error";
-import { PaperPlaneTiltIcon as PaperPlaneTilt } from "@phosphor-icons/react";
+import { CheckIcon as Check, PaperPlaneTiltIcon as PaperPlaneTilt } from "@phosphor-icons/react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
@@ -48,11 +48,24 @@ function HostedPlanSummary() {
         <span className="text-[17px] font-semibold tracking-[-0.2px]">Hosted plan</span>
         <StatusPill label="Free beta" showDot={false} status="ready" />
       </div>
-      <ul className="m-0 grid list-none gap-2 border-t border-border-soft pt-3 text-[12.5px] leading-[1.5] text-fg-muted">
-        <li>Free while the beta lasts, with usage limits and no payment method.</li>
-        <li>Pricing will be announced before the beta ends.</li>
-        <li>Nothing is charged without your confirmation.</li>
-        <li>Provider accounts, quotas and billing stay directly with each provider.</li>
+      <ul className="m-0 grid list-none gap-2 border-t border-border-soft p-0 pt-3 text-[12.5px] leading-[1.5] text-fg-muted">
+        {[
+          "Free while the beta lasts, with usage limits and no payment method.",
+          "Pricing will be announced before the beta ends.",
+          "Nothing is charged without your confirmation.",
+          "Provider accounts, quotas and billing stay directly with each provider.",
+        ].map((item) => (
+          <li className="flex items-start gap-2.5" key={item}>
+            <Check
+              aria-hidden
+              className="shrink-0 self-center [color:color-mix(in_srgb,var(--fg-muted)_60%,transparent)]"
+              data-hosted-plan-bullet="true"
+              size={14}
+              weight="regular"
+            />
+            <span>{item}</span>
+          </li>
+        ))}
       </ul>
     </div>
   );
@@ -120,6 +133,7 @@ export function PlanCard({
                   <Input
                     {...form.register("monthlyPrice")}
                     aria-label="What would you pay per month?"
+                    className="h-[35px] min-h-[35px]"
                     id="hosted-monthly-price"
                     inputMode="numeric"
                     maxLength={4}
@@ -128,16 +142,13 @@ export function PlanCard({
                 <Button
                   loading={form.formState.isSubmitting}
                   loadingLabel="Sending"
-                  startIcon={<PaperPlaneTilt aria-hidden size={15} weight="bold" />}
+                  startIcon={<PaperPlaneTilt aria-hidden size={15} weight="regular" />}
                   type="submit"
                   variant="secondary"
                 >
                   Send feedback
                 </Button>
               </div>
-              <p className="m-0 mt-1.5 text-[11.5px] text-fg-muted">
-                Four digits at most. The answer is not a commitment.
-              </p>
               {form.formState.errors.monthlyPrice ? (
                 <p className="m-0 mt-1.5 text-[11.5px] text-red-text">
                   {form.formState.errors.monthlyPrice.message}

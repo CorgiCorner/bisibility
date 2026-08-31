@@ -5,6 +5,7 @@ import {
   compactInputTypographyClassName,
   EmptyState,
   filterChipStateClassName,
+  ModuleMark,
 } from "@/components/ui";
 import type { DateFormatPreference } from "@/lib/format/user-datetime";
 import type { TimelineFilterKey, TimelineView } from "@/lib/queries/timeline";
@@ -85,7 +86,7 @@ function FilterChip({
       href={timelineHref({ filter: filter.key, projectRef, search })}
       prefetch={false}
     >
-      <Icon aria-hidden size={14} />
+      <Icon aria-hidden size={14} weight="regular" />
       {filter.label}
       <span className="sr-only">{selected ? " selected" : " switch filter"}</span>
     </Link>
@@ -128,27 +129,27 @@ function TimelineEmpty({
           </Link>
         }
         description="This page has no timeline entries. Return to the first page to continue browsing."
-        icon={<FileDashed aria-hidden size={24} />}
+        icon={<FileDashed weight="regular" aria-hidden size={24} />}
         title="No timeline entries on this page"
+      />
+    );
+  }
+
+  if (filtered) {
+    return (
+      <EmptyState
+        description="Adjust the search or filter to see more timeline entries."
+        icon={<MagnifyingGlass weight="regular" aria-hidden size={24} />}
+        title="No matching timeline entries"
       />
     );
   }
 
   return (
     <EmptyState
-      description={
-        filtered
-          ? "Adjust the search or filter to see more timeline entries."
-          : "Rank changes, page events, deploys, and manual notes will appear here."
-      }
-      icon={
-        filtered ? (
-          <MagnifyingGlass aria-hidden size={24} />
-        ) : (
-          <ClockCounterClockwise aria-hidden size={24} />
-        )
-      }
-      title={filtered ? "No matching timeline entries" : "No timeline entries yet"}
+      description="Rank changes, page events, deploys, and manual notes will appear here."
+      mark={<ModuleMark bordered icon={ClockCounterClockwise} />}
+      title="No timeline entries yet"
     />
   );
 }
@@ -222,7 +223,12 @@ export function TimelineFeed({
               <input name="filter" type="hidden" value={view.filter} />
             ) : null}
             <label className="flex h-[34px] min-w-0 flex-1 items-center gap-2 rounded-control border border-border-control bg-transparent px-3 transition-colors focus-within:border-accent">
-              <MagnifyingGlass aria-hidden className="shrink-0 text-fg-muted" size={15} />
+              <MagnifyingGlass
+                weight="regular"
+                aria-hidden
+                className="shrink-0 text-fg-muted"
+                size={15}
+              />
               <input
                 aria-label="Search timeline"
                 className={`${compactInputTypographyClassName} min-w-0 flex-1 bg-transparent font-mono text-fg outline-none focus-visible:outline-none`}
@@ -242,7 +248,7 @@ export function TimelineFeed({
           <AddNoteForm canCreate={canCreate} compact projectId={projectId} />
         </div>
 
-        <div className="flex min-w-0 flex-wrap gap-[7px] border-t border-border pt-3">
+        <div className="-mx-4 flex min-w-0 flex-wrap gap-[7px] border-t border-border px-4 pt-3 sm:-mx-5 sm:px-5">
           {filters.map((filter) => (
             <FilterChip
               filter={filter}

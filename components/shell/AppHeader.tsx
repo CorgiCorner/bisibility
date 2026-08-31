@@ -4,6 +4,7 @@ import { MobileNav } from "@/components/shell/MobileNav";
 import { NotificationBell } from "@/components/shell/NotificationBell";
 import type { ShellUser } from "@/components/shell/SidebarFooter";
 import { SidebarUserButton } from "@/components/shell/SidebarUserButton";
+import { appVersion } from "@/lib/app-version";
 import type { WorkspaceSummary } from "@/lib/queries/workspaces";
 import type { ReactNode } from "react";
 
@@ -11,7 +12,6 @@ export type AppHeaderProps = {
   actions?: ReactNode;
   activeProjectId: string;
   canCreateWorkspace: boolean;
-  projectDomain?: string | null;
   projectRef: string;
   showHostedLinks?: boolean;
   user?: ShellUser;
@@ -22,7 +22,6 @@ export function AppHeader({
   actions,
   activeProjectId,
   canCreateWorkspace,
-  projectDomain,
   projectRef,
   showHostedLinks = false,
   user,
@@ -39,18 +38,18 @@ export function AppHeader({
           projectRef={projectRef}
           showHostedLinks={showHostedLinks}
           user={user}
+          version={appVersion()}
           workspaces={workspaces}
         />
-        <AppHeaderTitle
-          keywordCount={activeWorkspace?.keywordCount}
-          projectDomain={projectDomain}
-        />
+        <AppHeaderTitle keywordCount={activeWorkspace?.keywordCount} />
       </div>
       {/* Right cluster order: [spend meter] [search][bell][account]. */}
       <div className="flex flex-none items-center gap-6">
         {actions}
         <div className="flex items-center gap-2">
-          <CommandPaletteTrigger />
+          <div className="lg:hidden">
+            <CommandPaletteTrigger variant="header" />
+          </div>
           <NotificationBell projectId={activeProjectId} projectRef={projectRef} />
           {user ? (
             <SidebarUserButton collapsed showHostedLinks={showHostedLinks} user={user} />

@@ -23,6 +23,7 @@ type StepConnectProviderCredentialsProps = {
   testDisabled: boolean;
   testResult?: ProviderTestResult | null;
   testing: boolean;
+  showSave?: boolean;
 };
 
 export function StepConnectProviderCredentials({
@@ -39,6 +40,7 @@ export function StepConnectProviderCredentials({
   testDisabled,
   testResult,
   testing,
+  showSave,
 }: Readonly<StepConnectProviderCredentialsProps>) {
   return (
     <ProviderCredentialForm
@@ -58,6 +60,7 @@ export function StepConnectProviderCredentials({
       testDisabled={testDisabled}
       testResult={testResult}
       testing={testing}
+      showSave={showSave}
     />
   );
 }

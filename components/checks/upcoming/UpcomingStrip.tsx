@@ -54,7 +54,7 @@ export function UpcomingStrip({
               aria-hidden
               className={hasNeverRun ? "text-red-text" : "text-fg-muted"}
               size={14}
-              weight="fill"
+              weight="regular"
             />
             {blockerLabel}
           </span>
@@ -122,7 +122,7 @@ export function UpcomingStrip({
                 onClick={() => setOpenDayKey(null)}
                 type="button"
               >
-                <X aria-hidden size={18} weight="bold" />
+                <X aria-hidden size={18} weight="regular" />
               </button>
             </header>
             <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
@@ -146,7 +146,7 @@ export function UpcomingStrip({
                 href={schedulesHref}
               >
                 Manage schedules in Keywords
-                <CaretRight aria-hidden size={12} weight="bold" />
+                <CaretRight aria-hidden size={12} weight="regular" />
               </Link>
             </footer>
           </div>

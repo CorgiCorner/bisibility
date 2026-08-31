@@ -31,10 +31,11 @@ describe("onboarding tracking defaults", () => {
     expect(parsed.serpDepth).toBe(20);
   });
 
-  it("defaults missing tracking values to daily and Top 20", () => {
+  it("defaults missing onboarding tracking values to manual, mobile, and Top 20", () => {
     const defaults = withTrackingDefaults(undefined, { projectId: "prj_1" });
 
-    expect(defaults.frequency).toBe("daily");
+    expect(defaults.devices).toEqual(["mobile"]);
+    expect(defaults.frequency).toBe("manual");
     expect(defaults.serpDepth).toBe(20);
   });
 

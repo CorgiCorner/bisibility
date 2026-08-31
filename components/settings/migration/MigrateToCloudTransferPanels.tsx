@@ -245,7 +245,7 @@ function DownloadTransferPanel({
           target="_blank"
         >
           Open destination import page
-          <CaretRight aria-hidden size={13} weight="bold" />
+          <CaretRight aria-hidden size={13} weight="regular" />
         </a>
         <p className="m-0 mt-2 text-xs leading-5 text-fg-muted">
           Upload the downloaded project package there and paste the migration token from step 1 when

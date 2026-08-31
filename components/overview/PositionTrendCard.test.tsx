@@ -12,6 +12,13 @@ vi.mock("@mui/x-charts/LineChart", () => ({
 }));
 
 describe("PositionTrendCard", () => {
+  it("retains the chart-line-up icon for its empty state", () => {
+    const { container } = render(<PositionTrendCard data={[]} empty />);
+
+    expect(container.querySelector('[data-icon="ChartLineUpIcon"]')).toBeInTheDocument();
+    expect(container.querySelector('[data-icon="ChartBarIcon"]')).not.toBeInTheDocument();
+  });
+
   it("shows an explicit next-check state for a single trend point", () => {
     render(<PositionTrendCard data={[{ label: "now", value: 1 }]} />);
 
@@ -20,7 +27,7 @@ describe("PositionTrendCard", () => {
     expect(screen.queryByTestId("line-chart")).not.toBeInTheDocument();
   });
 
-  it("shows the takeaway below the title while the info tooltip stays definitional", () => {
+  it("shows the definition and a separate takeaway below the title", () => {
     const takeaway = "Avg position slipped 0.8 in the first 21 days of tracking";
     render(
       <PositionTrendCard
@@ -44,16 +51,24 @@ describe("PositionTrendCard", () => {
       }),
     ).toBeInTheDocument();
     expect(screen.getByText(takeaway, { selector: "p" })).toBeVisible();
+    const definition = screen.getByText(
+      "Daily average position of ranked keywords. Lower is better - #1 is the top.",
+      { selector: "p" },
+    );
+    const renderedTakeaway = screen.getByText(takeaway, { selector: "p" });
+    expect(definition).toBeVisible();
+    expect(renderedTakeaway).toBeVisible();
+    expect(definition).not.toBe(renderedTakeaway);
     expect(
       screen
         .getByRole("heading", { name: "Position trend" })
         .closest("[data-overview-chart-header]"),
-    ).toHaveClass("min-h-[69px]");
+    ).toHaveClass("min-h-[96px]");
     expect(
-      screen.getByRole("button", {
+      screen.queryByRole("button", {
         name: "Daily average position of ranked keywords. Lower is better - #1 is the top.",
       }),
-    ).toBeInTheDocument();
+    ).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /21 days/ })).not.toBeInTheDocument();
   });
 
@@ -67,12 +82,12 @@ describe("PositionTrendCard", () => {
       />,
     );
 
-    expect(container.querySelector("p")).not.toBeInTheDocument();
+    expect(container.querySelectorAll("p")).toHaveLength(1);
     expect(
       screen
         .getByRole("heading", { name: "Position trend" })
         .closest("[data-overview-chart-header]"),
-    ).toHaveClass("min-h-[69px]");
+    ).toHaveClass("min-h-[96px]");
 
     rerender(
       <PositionTrendCard
@@ -81,8 +96,8 @@ describe("PositionTrendCard", () => {
       />,
     );
 
-    expect(container.querySelector("p")).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /21 days/ })).not.toBeInTheDocument();
+    expect(container.querySelectorAll("p")).toHaveLength(1);
+    expect(screen.queryByText(/21 days/)).not.toBeInTheDocument();
   });
 
   it("renders the takeaway loading treatment below the title", () => {

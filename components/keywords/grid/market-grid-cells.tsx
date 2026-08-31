@@ -56,7 +56,7 @@ export function MarketKeywordCell({
     ).size;
     return (
       <span className="flex min-w-0 items-center gap-2">
-        <Caret aria-hidden className="flex-none text-fg-muted" size={14} weight="bold" />
+        <Caret aria-hidden className="flex-none text-fg-muted" size={14} weight="regular" />
         <span className="min-w-0">
           <span className="bv-keyword-title block truncate text-[13.5px] font-semibold text-fg">
             {row.keyword}
@@ -84,7 +84,7 @@ export function MarketKeywordCell({
             "&:hover": { backgroundColor: "var(--accent-soft)", color: "var(--accent-text)" },
           }}
         >
-          <Eye size={14} />
+          <Eye weight="regular" size={14} />
         </IconButton>
       </Tooltip>
       <span className="bv-keyword-title min-w-0 flex-1 truncate text-[13.5px] font-medium text-fg">
@@ -109,6 +109,7 @@ export function MarketPositionCell({ row }: Readonly<GridRenderCellParams<Keywor
         {value}
         {parent.aggregate.stale ? (
           <ClockCountdown
+            weight="regular"
             aria-label="Includes a stale target"
             className="text-yellow-text"
             size={14}
@@ -131,7 +132,7 @@ export function MarketLocationCell({
       <MapPin
         className={isCity ? "flex-none text-accent-text" : "flex-none text-fg-muted"}
         size={13}
-        weight={isCity ? "fill" : "regular"}
+        weight="regular"
       />
       <span className="truncate text-[12.5px] text-fg-muted">
         <span>{row.location.displayName}</span>

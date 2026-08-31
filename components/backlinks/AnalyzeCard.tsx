@@ -96,7 +96,12 @@ export function AnalyzeCard({
           <div
             className={`flex ${analyzeControlHeightClassName} flex-1 items-center gap-2 rounded-control border border-border-control bg-transparent px-2.5 text-[13px] focus-within:border-accent md:min-w-[240px]`}
           >
-            <GlobeSimple aria-hidden className="shrink-0 text-fg-muted" size={15} />
+            <GlobeSimple
+              weight="regular"
+              aria-hidden
+              className="shrink-0 text-fg-muted"
+              size={15}
+            />
             {targetIsSet ? (
               <span className="inline-flex min-w-0 items-center gap-1.5 rounded-control bg-bg-sunken px-2 py-1 font-medium">
                 <span className="truncate">{target}</span>
@@ -106,7 +111,7 @@ export function AnalyzeCard({
                   onClick={clearTarget}
                   type="button"
                 >
-                  <X aria-hidden size={11} weight="bold" />
+                  <X aria-hidden size={11} weight="regular" />
                 </button>
               </span>
             ) : (
@@ -172,7 +177,7 @@ export function AnalyzeCard({
               disabled={analyzeDisabled}
               loading={submitting}
               loadingLabel={analyzeLabel(estimate, true)}
-              startIcon={<Link aria-hidden size={14} weight="bold" />}
+              startIcon={<Link aria-hidden size={14} weight="regular" />}
               sx={{ minWidth: 216 }}
               title={!targetIsSet ? "Enter a domain first - the price appears here" : undefined}
               type="submit"

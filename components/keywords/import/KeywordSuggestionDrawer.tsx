@@ -218,7 +218,12 @@ export function KeywordSuggestionDrawer({
 
       {decorated.length > FILTER_THRESHOLD ? (
         <label className="mt-3 flex items-center gap-2 rounded-control border border-border-control bg-transparent px-2.5 py-1.5 focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent-solid">
-          <MagnifyingGlass aria-hidden className="shrink-0 text-fg-muted" size={14} />
+          <MagnifyingGlass
+            weight="regular"
+            aria-hidden
+            className="shrink-0 text-fg-muted"
+            size={14}
+          />
           <input
             aria-label="Filter suggestions"
             className="min-w-0 flex-1 bg-transparent text-[13px] text-fg outline-none placeholder:text-[12px] placeholder:leading-4"

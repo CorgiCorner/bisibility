@@ -1,6 +1,5 @@
 import "server-only";
 
-import { Context } from "@temporalio/activity";
 import type { ClaimedRankCheckGroup } from "../rank-check/dispatcher-types";
 import { inspectQueuedRankCheckBatch } from "../rank-check/queued-inspect";
 import { deferQueuedRankCheckBatch, queuedBatchProgress } from "../rank-check/queued-lifecycle";
@@ -13,6 +12,7 @@ import {
   QUEUED_INSPECTION_ACTIVITY_HEARTBEAT_MS,
   QUEUED_RESULT_ACTIVITY_HEARTBEAT_MS,
 } from "../rank-check/queued-timeouts";
+import { heartbeatingActivity } from "./heartbeating-activity";
 import type { QueuedRankCheckWorkflowInput } from "./queued-rank-check-contract";
 
 export function planQueuedRankCheckGroupActivity(group: ClaimedRankCheckGroup) {
@@ -46,28 +46,6 @@ export function submitQueuedRankCheckBatchActivity(input: { batchId: string }) {
 
 type InspectQueuedRankCheckBatch = typeof inspectQueuedRankCheckBatch;
 
-async function heartbeatingProviderActivity<T>(
-  input: { batchId: string },
-  phase: string,
-  heartbeatMs: number,
-  operation: (signal: AbortSignal) => Promise<T>,
-) {
-  const context = Context.current();
-  const details = { batchId: input.batchId, phase };
-  context.heartbeat(details);
-  const heartbeat = setInterval(() => context.heartbeat(details), heartbeatMs);
-  try {
-    const result = await operation(context.cancellationSignal);
-    if (context.cancellationSignal.aborted) await context.cancelled;
-    return result;
-  } catch (error) {
-    if (context.cancellationSignal.aborted) await context.cancelled;
-    throw error;
-  } finally {
-    clearInterval(heartbeat);
-  }
-}
-
 export function createInspectQueuedRankCheckBatchActivity(
   inspect: InspectQueuedRankCheckBatch = inspectQueuedRankCheckBatch,
   authorize: typeof authorizeQueuedRankCheckBatch = authorizeQueuedRankCheckBatch,
@@ -87,10 +65,11 @@ export function createInspectQueuedRankCheckBatchActivity(
         terminal: 0,
       };
     }
-    return heartbeatingProviderActivity(
-      input,
-      "provider-inspection",
-      QUEUED_INSPECTION_ACTIVITY_HEARTBEAT_MS,
+    return heartbeatingActivity(
+      {
+        details: { batchId: input.batchId, phase: "provider-inspection" },
+        heartbeatMs: QUEUED_INSPECTION_ACTIVITY_HEARTBEAT_MS,
+      },
       (signal) =>
         inspect(input.batchId, {
           deadlineAt: new Date(input.deadlineAt),
@@ -113,10 +92,11 @@ export async function persistReadyQueuedRankCheckTasksActivity(input: {
       `Queued result retrieval is disabled in ${authorization.mode} scheduler mode.`,
     );
   }
-  return heartbeatingProviderActivity(
-    input,
-    "result-persistence",
-    QUEUED_RESULT_ACTIVITY_HEARTBEAT_MS,
+  return heartbeatingActivity(
+    {
+      details: { batchId: input.batchId, phase: "result-persistence" },
+      heartbeatMs: QUEUED_RESULT_ACTIVITY_HEARTBEAT_MS,
+    },
     (signal) =>
       persistReadyQueuedRankCheckTasks(input.batchId, {
         deadlineAt: new Date(input.deadlineAt),

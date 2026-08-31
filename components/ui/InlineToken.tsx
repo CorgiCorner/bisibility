@@ -31,7 +31,7 @@ export function InlineToken({
           onClick={onDismiss}
           type="button"
         >
-          <X aria-hidden size={14} weight="bold" />
+          <X aria-hidden size={14} weight="regular" />
         </button>
       ) : null}
     </span>

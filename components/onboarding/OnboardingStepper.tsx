@@ -117,7 +117,7 @@ function StepRailItem({
         data-step-dot-state={state}
       >
         {done ? (
-          <Check aria-hidden size={15} weight="bold" />
+          <Check aria-hidden size={15} weight="regular" />
         ) : (
           <span aria-hidden className="font-mono text-[12px] font-semibold">
             {step.n}

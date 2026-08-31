@@ -21,6 +21,15 @@ Google connections store an encrypted refresh token and selected property. If
 Google does not return a refresh token during reconnection, remove the previous
 app grant in Google and reconnect with consent.
 
+## Search Console
+
+Search Console starts with KPIs for finalized days only, followed by
+top queries, top pages, and a trust strip for freshness, coverage, and retention.
+It imports the available 16 months of daily history into your workspace, then
+keeps that history with daily incremental syncs from the Temporal worker.
+Use **Sync now** when you need an immediate check of finalized data. Export CSV
+to download the stored query rows for the selected comparison window.
+
 ## Plausible
 
 Connect the site domain, Stats API token, and optional self-hosted Plausible base

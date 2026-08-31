@@ -161,7 +161,7 @@ export function DomainOverviewPerformanceChart({
         <div className="grid min-h-[260px] flex-1 place-items-center text-center">
           <div className="grid justify-items-center gap-2.5">
             <span className="grid h-11 w-11 place-items-center rounded-control bg-bg-sunken text-fg-muted">
-              <ChartLineUp aria-hidden size={22} weight="bold" />
+              <ChartLineUp aria-hidden size={22} weight="regular" />
             </span>
             <strong className="text-sm">Load monthly organic history</strong>
             <span className="max-w-[360px] font-mono text-[11px] leading-relaxed text-fg-muted">

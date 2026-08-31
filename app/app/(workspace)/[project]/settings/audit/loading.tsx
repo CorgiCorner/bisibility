@@ -12,7 +12,7 @@ const selectKeys = ["date", "event", "actor", "status"] as const;
 const headerKeys = ["h1", "h2", "h3", "h4", "h5"] as const;
 const rowKeys = ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8"] as const;
 const rowGrid =
-  "grid grid-cols-[198px_minmax(230px,1.4fr)_minmax(240px,1.6fr)_110px_110px] items-center gap-4";
+  "grid grid-cols-[minmax(132px,0.9fr)_minmax(148px,1.2fr)_minmax(168px,1.4fr)_minmax(72px,0.6fr)_minmax(72px,0.6fr)] items-center gap-4";
 
 export default function AuditLoading() {
   return (
@@ -32,8 +32,8 @@ export default function AuditLoading() {
             </div>
           </div>
         </div>
-        <div className="min-w-0 overflow-x-auto">
-          <div className="min-w-[920px]">
+        <div className="min-w-0 overflow-hidden">
+          <div className="w-full min-w-0">
             <div className={cn(rowGrid, "border-b border-border bg-bg-sunken px-4 py-3")}>
               {headerKeys.map((key) => (
                 <div className="h-2.5 w-16 rounded bg-border" key={key} />

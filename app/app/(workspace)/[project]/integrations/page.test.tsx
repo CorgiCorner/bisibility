@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   completeGooglePropertySelection: vi.fn(),
   loadStoredGoogleProperties: vi.fn(),
   getIntegrationsView: vi.fn(),
+  loadSearchSyncPreflightPlan: vi.fn(),
   integrationCategory: vi.fn(),
   requireReadableProject: vi.fn(),
   resolveProjectAccess: vi.fn(),
@@ -25,6 +26,7 @@ vi.mock("@/components/shell/PageContent", () => ({
 }));
 vi.mock("@/components/ui", () => ({
   Card: ({ children }: { children: ReactNode }) => children,
+  iconWellClassName: "",
 }));
 vi.mock("@/lib/actions/providers", () => ({
   completeGooglePropertySelection: mocks.completeGooglePropertySelection,
@@ -50,7 +52,15 @@ vi.mock("@/lib/queries/_auth", () => ({
 vi.mock("@/lib/queries/integrations", () => ({
   getIntegrationsView: mocks.getIntegrationsView,
 }));
-vi.mock("@phosphor-icons/react/dist/ssr", () => ({ KeyIcon: () => null }));
+vi.mock("@/lib/settings/search-sync-metrics", () => ({
+  loadSearchSyncPreflightPlan: mocks.loadSearchSyncPreflightPlan,
+}));
+vi.mock("@phosphor-icons/react/dist/ssr", () => ({
+  CaretRightIcon: () => null,
+  KeyIcon: () => null,
+  PuzzlePieceIcon: () => null,
+  RankingIcon: () => null,
+}));
 
 describe("IntegrationsPage", () => {
   beforeEach(() => {
@@ -62,10 +72,28 @@ describe("IntegrationsPage", () => {
       actor: { id: "user_1" },
       project: { id: "project_1" },
     });
+    mocks.loadSearchSyncPreflightPlan.mockResolvedValue({
+      daysTotal: 93,
+      pace: "gentle",
+      retentionMonths: 3,
+    });
     mocks.getIntegrationsView.mockResolvedValue({
       categories: [{ id: "analytics", items: [], title: "Analytics" }],
       connectionCount: 0,
       timeZone: "Europe/Madrid",
+    });
+  });
+
+  it("opens the provider requested by the connect query", async () => {
+    render(
+      await IntegrationsPage({
+        params: Promise.resolve({ project: "prj_abcdefghijklmnopqrstuvwx" }),
+        searchParams: Promise.resolve({ connect: "gsc" }),
+      }),
+    );
+
+    expect(mocks.integrationCategory.mock.calls[0]?.[0]).toMatchObject({
+      initialConnectProviderId: "gsc",
     });
   });
 
@@ -84,6 +112,11 @@ describe("IntegrationsPage", () => {
     );
     expect(props.actions.loadStoredGoogleProperties).toBe(mocks.loadStoredGoogleProperties);
     expect(props.actions.saveStoredGoogleProperty).toBe(mocks.saveStoredGoogleProperty);
-    expect(props).toMatchObject({ timeZone: "Europe/Madrid" });
+    expect(mocks.loadSearchSyncPreflightPlan).toHaveBeenCalledWith("prj_abcdefghijklmnopqrstuvwx");
+    expect(props).toMatchObject({
+      deploymentMode: "self-host",
+      searchSyncPlan: { daysTotal: 93, pace: "gentle", retentionMonths: 3 },
+      timeZone: "Europe/Madrid",
+    });
   });
 });

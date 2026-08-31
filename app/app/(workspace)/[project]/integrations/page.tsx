@@ -15,11 +15,13 @@ import {
 import { syncProjectTraffic } from "@/lib/actions/traffic-sync";
 import { getProjectRole } from "@/lib/auth/authorize";
 import { canProjectAction } from "@/lib/auth/capabilities";
+import { deploymentMode } from "@/lib/deployment/deployment";
 import { googleOAuthErrorCopy } from "@/lib/integrations/google-oauth-copy";
 import type { GoogleOAuthSetup, ProviderActionHandlers } from "@/lib/integrations/types";
 import { getPendingGoogleOAuthSetup } from "@/lib/providers/analytics/google-oauth-pending";
 import { requireReadableProject, resolveProjectAccess } from "@/lib/queries/_auth";
 import { getIntegrationsView } from "@/lib/queries/integrations";
+import { loadSearchSyncPreflightPlan } from "@/lib/settings/search-sync-metrics";
 
 type IntegrationsProviderActions = ProviderActionHandlers &
   Required<Pick<ProviderActionHandlers, "completeGooglePropertySelection">>;
@@ -71,12 +73,13 @@ export default async function IntegrationsPage({
       provider: googleProvider,
     };
   }
-  const [{ categories, connectionCount, timeZone }, readable] = await Promise.all([
+  const [{ categories, connectionCount, timeZone }, readable, searchSyncPlan] = await Promise.all([
     getIntegrationsView(publicId, {
       googleOAuth: googleOAuth ?? undefined,
       now: new Date(),
     }),
     requireReadableProject(publicId),
+    loadSearchSyncPreflightPlan(publicId),
   ]);
   const role = getProjectRole(readable.actor, readable.project.id);
   const canManageProviders = canProjectAction(role, "manage", "provider_connection");
@@ -94,11 +97,13 @@ export default async function IntegrationsPage({
             canManageProviders={canManageProviders}
             canUpdateProject={canUpdateProject}
             category={category}
+            deploymentMode={deploymentMode()}
             initialConnectProviderId={canManageProviders ? initialConnectProviderId : undefined}
             key={category.id}
             noProvidersYet={noProvidersYet}
             projectId={publicId}
             projectRef={publicId}
+            searchSyncPlan={searchSyncPlan}
             timeZone={timeZone}
           />
         ))}

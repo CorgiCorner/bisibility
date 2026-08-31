@@ -11,8 +11,10 @@ export type MenuSelectOption = {
   disabled?: boolean;
   icon?: ReactNode;
   label: string;
+  noWrap?: boolean;
   secondary?: string;
   searchText?: string;
+  trailing?: ReactNode;
   tooltip?: string;
   value: string;
 };

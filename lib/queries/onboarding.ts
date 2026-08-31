@@ -2,6 +2,7 @@ import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
 import { ProjectMarketStatus } from "@/lib/generated/prisma/client";
+import { resolveEffectiveSchedule } from "@/lib/keywords/effective-schedule";
 import { decryptProviderCredentials } from "@/lib/providers/crypto";
 import { requireReadableProject } from "./_auth";
 import { activeApiKeyWhere } from "./api-key-settings";
@@ -19,6 +20,16 @@ export async function getOnboardingProjectMarketKeys(projectId: string) {
   return markets.map((market) => market.location.canonicalKey);
 }
 
+export async function getOnboardingSampleKeyword(projectId: string) {
+  const { project } = await requireReadableProject(projectId);
+  const keyword = await prisma.keyword.findFirst({
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+    select: { text: true },
+    where: { projectId: project.id },
+  });
+  return keyword?.text ?? null;
+}
+
 export async function getOnboardingKeywordCount(projectId: string) {
   const { project } = await requireReadableProject(projectId);
   const [result] = await prisma.$queryRaw<Array<{ count: number }>>`
@@ -27,6 +38,41 @@ export async function getOnboardingKeywordCount(projectId: string) {
     WHERE "projectId" = ${project.id}
   `;
   return result?.count ?? 0;
+}
+
+export async function getOnboardingNextCheckAt(projectId: string) {
+  const { project } = await requireReadableProject(projectId);
+  const now = new Date();
+  const [defaults, keywords] = await Promise.all([
+    prisma.projectDefaults.findUnique({
+      select: { cronExpression: true, frequency: true, jitterMinutes: true, timezone: true },
+      where: { projectId: project.id },
+    }),
+    prisma.keyword.findMany({
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+      select: {
+        dispatchState: { select: { nextCheckAt: true } },
+        id: true,
+        schedule: {
+          select: { cronExpression: true, frequency: true, jitterMinutes: true, timezone: true },
+        },
+      },
+      where: { projectId: project.id },
+    }),
+  ]);
+  const future = keywords.flatMap((keyword) => {
+    const nextCheckAt = keyword.dispatchState?.nextCheckAt ?? null;
+    if (!nextCheckAt || nextCheckAt <= now) return [];
+    const source = keyword.schedule ?? defaults;
+    const effective = resolveEffectiveSchedule(
+      source ? { ...source, nextCheckAt } : null,
+      null,
+      undefined,
+      now,
+    );
+    return effective.runnable && effective.nextCheckAt ? [effective.nextCheckAt] : [];
+  });
+  return future.sort((left, right) => left.getTime() - right.getTime())[0] ?? null;
 }
 
 export async function getOnboardingGscPropertyLabel(projectId: string | null) {

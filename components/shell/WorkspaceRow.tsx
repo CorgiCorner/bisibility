@@ -24,8 +24,8 @@ export const MENU_ROW_SX = {
   paddingX: "9px",
   paddingY: "8px",
   // The fill belongs to the pointer alone; selection is the check glyph, never a fill.
-  "&:hover": { backgroundColor: "var(--nav-active)" },
-  "&.Mui-focusVisible": { backgroundColor: "var(--nav-active)" },
+  "&:hover": { backgroundColor: "var(--bg-sunken)" },
+  "&.Mui-focusVisible": { backgroundColor: "var(--bg-sunken)" },
   "&:active": { backgroundColor: "var(--bg-inset)" },
   "&.Mui-selected": { backgroundColor: "transparent" },
 } as const;
@@ -68,7 +68,7 @@ export function WorkspaceRow({ workspace, active, onSelect }: Readonly<Workspace
         className="flex-none text-accent-solid"
         size={16}
         style={{ visibility: active ? "visible" : "hidden" }}
-        weight="bold"
+        weight="regular"
       />
     </MenuItem>
   );

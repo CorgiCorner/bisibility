@@ -1,37 +1,40 @@
 "use client";
 
-import {
-  ProjectReadOnlyTooltip,
-  useProjectWriteMode,
-} from "@/components/shell/ProjectWriteModeProvider";
-import { Button } from "@/components/ui";
+import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
+import { ConfirmModal } from "@/components/ui";
 import type {
   GoogleOAuthSetup,
   GooglePropertySaveResult,
   IntegrationProviderData,
+  ProviderActionHandlers,
 } from "@/lib/integrations/types";
 import { googleInstallUrl } from "@/lib/providers/analytics/google-install-url";
 import { normalizeGa4PropertyId } from "@/lib/providers/analytics/property-id";
 import { appPath, asProjectRef, type ProjectRef } from "@/lib/routing/app-path";
-import { GoogleLogoIcon as GoogleLogo } from "@phosphor-icons/react";
+import type { SearchSyncPreflightPlan } from "@/lib/search-insights/sync/plan";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { ActionNotice } from "./ConnectDrawerControls";
+import { ConnectDrawerOauthActions } from "./ConnectDrawerOauthActions";
 import { ConnectDrawerOauthSelection } from "./ConnectDrawerOauthSelection";
 import {
   GoogleConnectedSummary,
   GoogleConnectionIntro,
   GoogleSelectionResult,
 } from "./ConnectDrawerOauthSummary";
+import { type Notice, providerActionErrorNotice } from "./ConnectDrawerSchema";
 
 export type ConnectDrawerOauthProps = {
   completePropertySelection?: (input: {
     projectId: string;
     property: string;
   }) => Promise<{ property: string }>;
+  disconnectProvider?: ProviderActionHandlers["disconnectProvider"];
   loadStoredProperties?: (input: {
     projectId: string;
     provider: "ga4" | "gsc";
   }) => Promise<GoogleOAuthSetup>;
+  onDisconnected?: () => void;
   projectId?: string;
   projectRef?: ProjectRef;
   provider: IntegrationProviderData;
@@ -41,25 +44,23 @@ export type ConnectDrawerOauthProps = {
     provider: "ga4" | "gsc";
   }) => Promise<GooglePropertySaveResult>;
   scopes: readonly string[];
+  syncPlan: SearchSyncPreflightPlan | undefined;
 };
-
-const oauthButtonSx = {
-  gap: "9px",
-  minHeight: 40,
-  "&:hover": { borderColor: "var(--accent)" },
-  "&.Mui-focusVisible": { borderColor: "var(--accent)" },
-} as const;
 
 export function ConnectDrawerOauth({
   completePropertySelection,
+  disconnectProvider,
   loadStoredProperties,
+  onDisconnected,
   projectId,
   projectRef,
   provider,
   saveStoredProperty,
   scopes,
+  syncPlan,
 }: Readonly<ConnectDrawerOauthProps>) {
-  const isGa4 = provider.id === "ga4";
+  const oauthProviderId = provider.id as "ga4" | "gsc";
+  const isGa4 = oauthProviderId === "ga4";
   const isConnected = provider.status === "connected";
   const needsReauth = provider.status === "needs_reauth";
   const [setup, setSetup] = useState<GoogleOAuthSetup | null>(provider.drawer.googleOAuth ?? null);
@@ -83,17 +84,20 @@ export function ConnectDrawerOauth({
   );
   const [pending, setPending] = useState(false);
   const [savedProperty, setSavedProperty] = useState<string | null>(null);
+  const [disconnectOpen, setDisconnectOpen] = useState(false);
+  const [disconnecting, setDisconnecting] = useState(false);
+  const [disconnectFailure, setDisconnectFailure] = useState<Notice | null>(null);
   const { readOnly } = useProjectWriteMode();
   const router = useRouter();
   const scopedProjectRef = projectRef ?? (projectId ? asProjectRef(projectId) : undefined);
   const returnPath = scopedProjectRef
-    ? `${appPath(scopedProjectRef, "integrations")}?connect=${provider.id}`
+    ? `${appPath(scopedProjectRef, "integrations")}?connect=${oauthProviderId}`
     : undefined;
   const href =
     projectId && scopedProjectRef
       ? googleInstallUrl({
           projectId,
-          provider: provider.id as "ga4" | "gsc",
+          provider: oauthProviderId,
           returnPath: returnPath ?? appPath(scopedProjectRef, "integrations"),
         })
       : undefined;
@@ -106,7 +110,7 @@ export function ConnectDrawerOauth({
     try {
       const loaded = await loadStoredProperties({
         projectId,
-        provider: provider.id as "ga4" | "gsc",
+        provider: oauthProviderId,
       });
       setSetup(loaded);
       setSelectionSource("stored");
@@ -116,6 +120,7 @@ export function ConnectDrawerOauth({
           : (loaded.properties[0]?.value ?? ""),
       );
       setManualEntry(false);
+      setSavedProperty(null);
     } catch {
       setError("Properties could not be loaded. Try again or reconnect the account.");
     } finally {
@@ -123,8 +128,25 @@ export function ConnectDrawerOauth({
     }
   }
 
+  async function disconnect() {
+    if (!projectId || !disconnectProvider || readOnly) return;
+    setDisconnecting(true);
+    try {
+      await disconnectProvider({ projectId, providerId: oauthProviderId });
+      setDisconnectFailure(null);
+      setDisconnectOpen(false);
+      router.refresh();
+      onDisconnected?.();
+    } catch (cause) {
+      setDisconnectFailure(providerActionErrorNotice(cause));
+      throw cause;
+    } finally {
+      setDisconnecting(false);
+    }
+  }
+
   async function selectProperty() {
-    if (!projectId || !property || readOnly || !selectionSource) return;
+    if (!projectId || readOnly || !selectionSource) return;
     let selectedValue = property;
     if (isGa4) {
       const normalized = normalizeGa4PropertyId(property);
@@ -134,6 +156,8 @@ export function ConnectDrawerOauth({
       }
       selectedValue = normalized.value;
       setProperty(selectedValue);
+    } else if (!property) {
+      return;
     }
     setError(null);
     setPropertyError(null);
@@ -144,7 +168,7 @@ export function ConnectDrawerOauth({
           ? await saveStoredProperty?.({
               projectId,
               property: selectedValue,
-              provider: provider.id as "ga4" | "gsc",
+              provider: oauthProviderId,
             })
           : await completePropertySelection?.({ projectId, property: selectedValue });
       if (!result) throw new Error("Property selection is unavailable.");
@@ -152,7 +176,7 @@ export function ConnectDrawerOauth({
         setSetup({
           error: "Reconnect the Google account to change its property.",
           properties: [],
-          provider: provider.id as "ga4" | "gsc",
+          provider: oauthProviderId,
           requiresReauth: true,
         });
         return;
@@ -175,97 +199,91 @@ export function ConnectDrawerOauth({
         connected={isConnected}
         needsReauth={needsReauth}
         provider={provider}
+        selecting={Boolean(setup)}
       />
 
       {isConnected && !setup ? (
-        <GoogleConnectedSummary property={provider.drawer.defaults.login} />
-      ) : null}
-
-      {setup ? (
-        <ConnectDrawerOauthSelection
-          allowManualEntry={selectionSource === "pending" && !setup.requiresReauth}
-          isGa4={isGa4}
-          manualEntry={manualEntry}
-          onManualEntryChange={setManualEntry}
-          onPropertyChange={setProperty}
-          onPropertyErrorChange={setPropertyError}
-          onSelect={() => void selectProperty()}
-          pending={pending}
-          property={property}
-          propertyError={propertyError}
-          readOnly={readOnly}
-          setup={setup}
+        <GoogleConnectedSummary
+          property={savedProperty ?? provider.drawer.defaults.login}
+          providerId={provider.id}
         />
       ) : null}
 
-      {!isConnected || setup ? (
-        ready && href ? (
-          <Button
-            fullWidth
-            href={href}
-            startIcon={<GoogleLogo aria-hidden size={17} weight="fill" />}
-            sx={oauthButtonSx}
-            variant="secondary"
-          >
-            {setup
-              ? "Use a different Google account"
-              : needsReauth
-                ? "Reconnect Google account"
-                : "Connect Google account"}
-          </Button>
-        ) : (
-          <ProjectReadOnlyTooltip className="block">
-            <Button
-              disabled
-              fullWidth
-              startIcon={<GoogleLogo aria-hidden size={17} weight="fill" />}
-              sx={oauthButtonSx}
-              type="button"
-              variant="secondary"
-            >
-              {needsReauth ? "Reconnect Google account" : "Connect Google account"}
-            </Button>
-          </ProjectReadOnlyTooltip>
-        )
-      ) : ready && href && loadStoredProperties ? (
-        <div className="flex flex-col gap-2.5">
-          <Button
-            fullWidth
-            loading={pending}
-            loadingLabel="Loading properties…"
-            onClick={() => void loadProperties()}
-            sx={oauthButtonSx}
-            type="button"
-            variant="secondary"
-          >
-            Change property
-          </Button>
-          <Button
-            fullWidth
-            href={href}
-            startIcon={<GoogleLogo aria-hidden size={17} weight="fill" />}
-            sx={oauthButtonSx}
-            variant="secondary"
-          >
-            Reconnect account
-          </Button>
-        </div>
-      ) : (
-        <ProjectReadOnlyTooltip className="block">
-          <Button
-            disabled
-            fullWidth
-            startIcon={<GoogleLogo aria-hidden size={17} weight="fill" />}
-            sx={oauthButtonSx}
-            type="button"
-            variant="secondary"
-          >
-            Change property
-          </Button>
-        </ProjectReadOnlyTooltip>
-      )}
+      {setup ? (
+        isGa4 ? (
+          <ConnectDrawerOauthSelection
+            allowManualEntry={selectionSource === "pending" && !setup.requiresReauth}
+            isGa4
+            manualEntry={manualEntry}
+            onManualEntryChange={setManualEntry}
+            onCancel={() => {
+              setSetup(null);
+              setSelectionSource(null);
+              setError(null);
+            }}
+            onPropertyChange={setProperty}
+            onPropertyErrorChange={setPropertyError}
+            onSelect={() => void selectProperty()}
+            pending={pending}
+            property={property}
+            propertyError={propertyError}
+            readOnly={readOnly}
+            setup={setup}
+          />
+        ) : syncPlan ? (
+          <ConnectDrawerOauthSelection
+            allowManualEntry={selectionSource === "pending" && !setup.requiresReauth}
+            isGa4={false}
+            manualEntry={manualEntry}
+            onManualEntryChange={setManualEntry}
+            onCancel={() => {
+              setSetup(null);
+              setSelectionSource(null);
+              setError(null);
+            }}
+            onPropertyChange={setProperty}
+            onPropertyErrorChange={setPropertyError}
+            onSelect={() => void selectProperty()}
+            pending={pending}
+            property={property}
+            propertyError={propertyError}
+            readOnly={readOnly}
+            setup={setup}
+            syncPlan={syncPlan}
+          />
+        ) : null
+      ) : null}
 
-      <GoogleSelectionResult error={error} savedProperty={savedProperty} scopes={scopes} />
+      <ConnectDrawerOauthActions
+        accountEmail={provider.drawer.accountEmail}
+        disconnectDisabled={!disconnectProvider || readOnly}
+        href={href}
+        isConnected={isConnected}
+        loadStoredProperties={loadStoredProperties ? () => void loadProperties() : undefined}
+        needsReauth={needsReauth}
+        onDisconnect={() => {
+          setDisconnectFailure(null);
+          setDisconnectOpen(true);
+        }}
+        pending={pending}
+        ready={ready}
+        setupActive={Boolean(setup)}
+      />
+      <ConfirmModal
+        busy={disconnecting}
+        failureDetail={disconnectFailure ? <ActionNotice notice={disconnectFailure} /> : undefined}
+        kind="removeIntegration"
+        onClose={() => setDisconnectOpen(false)}
+        onConfirm={disconnect}
+        open={disconnectOpen}
+      />
+
+      <GoogleSelectionResult
+        connected={isConnected || Boolean(savedProperty)}
+        error={error}
+        savedProperty={savedProperty}
+        scopes={scopes}
+      />
     </section>
   );
 }

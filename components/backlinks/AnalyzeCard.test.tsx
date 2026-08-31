@@ -159,7 +159,7 @@ describe("AnalyzeCard", () => {
     render(<AnalyzeCard {...baseProps} resultLimit={100} scope="site" />);
     fireEvent.click(screen.getByRole("button", { name: "How is this priced?" }));
 
-    expect(screen.getByText("Profile summary, new & lost").nextElementSibling).toHaveTextContent(
+    expect(screen.getByText("Profile summary, new and lost").nextElementSibling).toHaveTextContent(
       "$0.02",
     );
     expect(screen.getByText("12-month history").nextElementSibling).toHaveTextContent("$0.02");

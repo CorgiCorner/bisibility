@@ -119,15 +119,15 @@ export function AlertRulesList({
                 <div className="mt-1.5 flex flex-wrap gap-x-3.5 gap-y-1.5 font-mono text-[11.5px] text-fg-muted">
                   <span className="text-fg-muted">{rule.condition}</span>
                   <span className="inline-flex items-center gap-1">
-                    <FunnelSimple aria-hidden size={12} />
+                    <FunnelSimple weight="regular" aria-hidden size={12} />
                     {rule.scope}
                   </span>
                   <span className="inline-flex items-center gap-1">
-                    <ClockCountdown aria-hidden size={12} />
+                    <ClockCountdown weight="regular" aria-hidden size={12} />
                     {rule.period}
                   </span>
                   <span className="inline-flex items-center gap-1">
-                    <ChannelIcon aria-hidden size={12} />
+                    <ChannelIcon aria-hidden size={12} weight="regular" />
                     {rule.channel}
                   </span>
                   <span>{rule.fires}</span>
@@ -163,7 +163,7 @@ export function AlertRulesList({
                     type="button"
                     variant="secondary"
                   >
-                    <PencilSimple aria-hidden size={14} />
+                    <PencilSimple weight="regular" aria-hidden size={14} />
                   </Button>
                 </ProjectReadOnlyTooltip>
               ) : null}
@@ -186,7 +186,7 @@ export function AlertRulesList({
                     type="button"
                     variant="secondary"
                   >
-                    <Trash aria-hidden size={14} />
+                    <Trash weight="regular" aria-hidden size={14} />
                   </Button>
                 </ProjectReadOnlyTooltip>
               ) : null}
@@ -194,7 +194,7 @@ export function AlertRulesList({
           );
         })}
         <p className="m-0 flex items-center gap-2 px-4.5 py-3 text-xs text-fg-muted">
-          <Info aria-hidden className="shrink-0 text-accent-text" size={14} />
+          <Info weight="regular" aria-hidden className="shrink-0 text-accent-text" size={14} />
           Trend-style rules start after enough completed checks to compare changes.
         </p>
       </Card>

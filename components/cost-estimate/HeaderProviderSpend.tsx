@@ -5,6 +5,7 @@ import { DOCS_URL } from "@/lib/site/site";
 import { ProviderSpendMeter } from "./ProviderSpendMeter";
 
 export type HeaderProviderSpendProps = {
+  action: "details" | "set_budget" | null | undefined;
   recorded: { cents: number; units: number } | null;
   projectRef: ProjectRef;
   tightest: { provider: string; usedPercent: number } | null;
@@ -14,12 +15,14 @@ export type HeaderProviderSpendProps = {
 // Compact provider-spend meter for the app header. Its figures are the server
 // read model, so the displayed amount and allocation percentage always agree.
 export function HeaderProviderSpend({
+  action,
   recorded,
   projectRef,
   tightest,
   usedPercent,
 }: Readonly<HeaderProviderSpendProps>) {
-  if (recorded == null) {
+  if (action === null) return null;
+  if (recorded == null || action === undefined) {
     return (
       <div
         aria-label="Provider spend temporarily unavailable"
@@ -38,7 +41,13 @@ export function HeaderProviderSpend({
       <ProviderSpendMeter
         capCents={null}
         docsHref={`${DOCS_URL}/integrations#budget-cap`}
-        editBudgetHref={appPath(projectRef, "settings", "usage")}
+        headerAction={{
+          href:
+            action === "set_budget"
+              ? `${appPath(projectRef, "settings", "usage")}?budget=edit`
+              : appPath(projectRef, "settings", "usage"),
+          label: action === "set_budget" ? "Set budget" : "Details",
+        }}
         recorded={recorded}
         spentCents={recorded.cents}
         tightest={tightest}

@@ -2,6 +2,7 @@ import {
   AdvancedSettingsContent,
   type AdvancedSettingsContentProps,
 } from "@/components/settings/advanced/AdvancedSettingsContent";
+import { ToastProvider } from "@/components/ui";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -58,13 +59,19 @@ describe("AdvancedSettingsContent", () => {
 
   it("keeps backup export on hosted deployments without a move-to-self-host card", async () => {
     const props = hostedProps();
-    render(<AdvancedSettingsContent {...props} />);
+    render(
+      <ToastProvider>
+        <AdvancedSettingsContent {...props} />
+      </ToastProvider>,
+    );
 
     expect(
       screen.getByText(
         "Keywords, retained history, tags, competitors, alerts, saved views and notification preferences.",
       ),
     ).toBeInTheDocument();
+    expect(screen.queryByText("Writes stay active")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Project writes were not changed/)).not.toBeInTheDocument();
     expect(screen.queryByText("Move to self-host")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Move to self-host" })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Download data export" }));
@@ -73,6 +80,34 @@ describe("AdvancedSettingsContent", () => {
       expect(props.actions.exportBackup).toHaveBeenCalledWith({ projectId: "prj_story" }),
     );
     expect(mocks.downloadWorkspacePackage).toHaveBeenCalledWith(packageFile);
+    const successToast = await screen.findByText("Project data exported.");
+    expect(successToast.closest("output")).toHaveAttribute("data-toast-severity", "success");
+    expect(screen.queryByText(/Project writes were not changed/)).not.toBeInTheDocument();
+
+    const exportButton = screen.getByRole("button", { name: "Download data export" });
+    expect(exportButton).toBeEnabled();
+    fireEvent.click(exportButton);
+    await waitFor(() => expect(props.actions.exportBackup).toHaveBeenCalledTimes(2));
+    expect(mocks.downloadWorkspacePackage).toHaveBeenCalledTimes(2);
+  });
+
+  it("uses naturally sized cards with full-width right-aligned action rows", () => {
+    const props = hostedProps();
+    render(<AdvancedSettingsContent {...props} />);
+
+    for (const [role, name] of [
+      ["link", "Open audit log"],
+      ["button", "Download data export"],
+      ["button", "Delete project"],
+    ] as const) {
+      const actionRow = screen.getByRole(role, { name }).parentElement;
+      expect(actionRow).toHaveClass("-mx-5", "px-5", "justify-end", "border-t");
+    }
+
+    for (const name of ["Audit log", "Export project data", "Danger zone"]) {
+      const card = screen.getByRole("region", { name });
+      expect(card.className).not.toMatch(/(?:^|\s)(?:sm:|lg:)?h-\[/);
+    }
   });
 
   it("shows a generic transfer card on self-hosted deployments", () => {

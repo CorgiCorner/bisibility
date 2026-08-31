@@ -36,7 +36,12 @@ import { getPendingGoogleOAuthSetup } from "@/lib/providers/analytics/google-oau
 import { requireReadableProject } from "@/lib/queries/_auth";
 import { getProjectCostContext } from "@/lib/queries/cost-calculator";
 import { getIntegrationCategories } from "@/lib/queries/integrations";
-import { getOnboardingGscPropertyLabel, getOnboardingKeywordCount } from "@/lib/queries/onboarding";
+import {
+  getOnboardingGscPropertyLabel,
+  getOnboardingKeywordCount,
+  getOnboardingNextCheckAt,
+  getOnboardingSampleKeyword,
+} from "@/lib/queries/onboarding";
 import { getRequestProjectDefaults } from "@/lib/queries/workspace-request-data";
 import { listWorkspaces } from "@/lib/queries/workspaces";
 import { DEFAULT_MONTHLY_COST_CAP_CENTS } from "@/lib/rank-check/budget";
@@ -150,32 +155,45 @@ export default async function OnboardingPage({ searchParams }: Readonly<Onboardi
   const projectId = project?.publicId ?? null;
   const googleStatus = paramValue(params?.google);
   const googleProvider = paramValue(params?.provider);
-  const [keywordCount, providerState, connectedGscPropertyLabel, googleOAuth, projectDefaults] =
-    project
-      ? await Promise.all([
-          getOnboardingKeywordCount(project.publicId),
-          getOnboardingProviderState(project.publicId),
-          getOnboardingGscPropertyLabel(project.id),
-          googleStatus === "select" && googleProvider === "gsc"
-            ? getPendingGoogleOAuthSetup(project.publicId)
-            : googleStatus === "error" && googleProvider === "gsc"
-              ? {
-                  error: googleOAuthErrorCopy(
-                    paramValue(params?.reason),
-                    "Google connection wasn't completed. Try again with the account that owns the property.",
-                  ),
-                  properties: [],
-                }
-              : null,
-          getRequestProjectDefaults(project.id),
-        ])
-      : [0, await getOnboardingProviderState(null), null, null, null];
+  const [
+    keywordCount,
+    initialKeywordText,
+    providerState,
+    connectedGscPropertyLabel,
+    googleOAuth,
+    projectDefaults,
+    nextCheckAt,
+  ] = project
+    ? await Promise.all([
+        getOnboardingKeywordCount(project.publicId),
+        getOnboardingSampleKeyword(project.publicId),
+        getOnboardingProviderState(project.publicId),
+        getOnboardingGscPropertyLabel(project.id),
+        googleStatus === "select" && googleProvider === "gsc"
+          ? getPendingGoogleOAuthSetup(project.publicId)
+          : googleStatus === "error" && googleProvider === "gsc"
+            ? {
+                error: googleOAuthErrorCopy(
+                  paramValue(params?.reason),
+                  "Google connection wasn't completed. Try again with the account that owns the property.",
+                ),
+                properties: [],
+              }
+            : null,
+        getRequestProjectDefaults(project.id),
+        getOnboardingNextCheckAt(project.publicId),
+      ])
+    : [0, null, await getOnboardingProviderState(null), null, null, null, null];
   const locations = await resolveOnboardingLocations({
     countryValues: paramValues(params?.country),
     locValues: paramValues(params?.loc),
     projectId,
   });
-  const devices = normalizeOnboardingDevices(paramValues(params?.device));
+  const deviceValues = paramValues(params?.device);
+  const devices =
+    deviceValues.length > 0
+      ? normalizeOnboardingDevices(deviceValues)
+      : normalizeOnboardingDevices(projectDefaults?.device ? [projectDefaults.device] : undefined);
   const flowState: OnboardingFlowState = {
     devices,
     locations,
@@ -183,7 +201,12 @@ export default async function OnboardingPage({ searchParams }: Readonly<Onboardi
     providerId: paramValue(params?.providerId) ?? providerState.providerId,
   };
   const initialProject = project
-    ? { ...project, timezone: projectDefaults?.timezone ?? "UTC" }
+    ? {
+        ...project,
+        device: projectDefaults?.device ?? undefined,
+        frequency: projectDefaults?.frequency,
+        timezone: projectDefaults?.timezone ?? "UTC",
+      }
     : null;
 
   // A workspace row can exist before the user names a domain. Skipping to
@@ -252,10 +275,12 @@ export default async function OnboardingPage({ searchParams }: Readonly<Onboardi
         hasAnalyticsSource={providerState.hasAnalyticsSource}
         initialFlowState={flowState}
         initialKeywordCount={keywordCount}
+        initialKeywordText={initialKeywordText}
         initialProject={initialProject}
         initialSerpConnections={providerState.serpConnections}
         initialStep={currentStep}
         monthlyCapCents={project?.budgetCapCents ?? DEFAULT_MONTHLY_COST_CAP_CENTS}
+        nextCheckAt={nextCheckAt?.toISOString() ?? null}
         providerConnected={providerState.providerConnected}
         rankedKeywordConnections={providerState.rankedKeywordConnections}
       />

@@ -5,6 +5,7 @@ import { SLACK_ALERT_CHANNEL_DASHBOARD_LABEL } from "@/lib/alerts/channel-availa
 import type { NewRuleForm } from "@/lib/alerts/new-rule-data";
 import type { AlertChannelInput } from "@/lib/alerts/schema";
 import {
+  BellIcon as Bell,
   EnvelopeSimpleIcon as EnvelopeSimple,
   LockSimpleIcon as LockSimple,
   SlackLogoIcon as SlackLogo,
@@ -53,6 +54,13 @@ export function DeliveryChannelsField({
           readOnly
           tabIndex={-1}
         />
+        <Bell
+          aria-hidden
+          className="text-accent-text"
+          data-testid="delivery-channel-feed-icon"
+          size={15}
+          weight="regular"
+        />
         <span className="flex-1 text-[13px] font-semibold">In-app feed</span>
         <span className="font-mono text-[10px] text-accent-text">always on</span>
       </label>
@@ -96,6 +104,7 @@ export function DeliveryChannelsField({
                 unavailable ? "text-fg-muted" : checked ? "text-accent-text" : "text-fg-muted"
               }
               size={15}
+              weight="regular"
             />
             <span className="flex-1 text-[13px] font-semibold">{label}</span>
             {unavailable ? (
@@ -104,7 +113,7 @@ export function DeliveryChannelsField({
                   aria-label={`${label} ${SLACK_ALERT_CHANNEL_DASHBOARD_LABEL}`}
                   className="inline-flex text-fg-muted"
                 >
-                  <LockSimple aria-hidden size={13} weight="bold" />
+                  <LockSimple aria-hidden size={13} weight="regular" />
                 </span>
               </Tooltip>
             ) : (

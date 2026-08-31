@@ -27,7 +27,7 @@ describe("Modal keyboard shortcuts", () => {
     renderModal();
 
     const close = screen.getByRole("button", { name: "Close modal" });
-    expect(close).toHaveClass("duration-[var(--motion-press)]");
+    expect(close).toHaveClass("duration-(--motion-press)");
     expect(close).toHaveClass("motion-safe:active:not-focus-visible:scale-[0.97]");
   });
 
@@ -243,6 +243,6 @@ describe("Modal token classes", () => {
     expect(content).toHaveClass("px-5.5", "py-4.5");
 
     const footer = within(dialog).getByText("ok").closest("footer");
-    expect(footer).toHaveClass("px-5.5", "py-3.5", "gap-4.5");
+    expect(footer).toHaveClass("px-5.5", "py-3.5", "gap-3");
   });
 });

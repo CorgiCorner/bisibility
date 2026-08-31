@@ -1,5 +1,4 @@
 "use server";
-
 import { normalizeSchedule } from "@/lib/actions/_schedule";
 import {
   getActionActor,
@@ -33,17 +32,14 @@ import { projectDefaultsUpsertArgs } from "@/lib/settings/project-defaults-write
 import { z } from "zod";
 
 const idSchema = z.string().trim().min(1).max(120);
-
 const projectDetailsSchema = createProjectSchema.pick({ name: true }).extend({
   projectId: idSchema,
 });
-
 const runProjectCheckSchema = z.object({ projectId: idSchema });
 const projectTrackingScopeSchema = z.object({
   projectId: idSchema,
   trackingScope: trackingScopeSchema,
 });
-
 type ManualCheckKeyword = { publicId: string };
 type ManualCheckResult = {
   failed: number;
@@ -51,14 +47,11 @@ type ManualCheckResult = {
   reason?: "budget_exhausted";
   total: number;
 };
-
 const MANUAL_CHECK_CONCURRENCY = 4;
-
 function manualCheckStarted(result: unknown) {
   if (!result || typeof result !== "object" || !("status" in result)) return false;
   return result.status === "running" || result.status === "completed";
 }
-
 async function runManualChecks(
   keywords: ManualCheckKeyword[],
   runCheck: (input: { keywordId: string }) => Promise<unknown>,
@@ -68,7 +61,6 @@ async function runManualChecks(
   let failed = 0;
   let queued = 0;
   const workerCount = Math.min(MANUAL_CHECK_CONCURRENCY, keywords.length);
-
   await Promise.all(
     Array.from({ length: workerCount }, async () => {
       while (!budgetExhausted && nextIndex < keywords.length) {
@@ -103,7 +95,6 @@ async function runManualChecks(
   }
   return { failed, queued, total: keywords.length };
 }
-
 export async function updateProjectDetails(input: unknown) {
   const data = parseActionInput(projectDetailsSchema, input);
   const actor = await getActionActor();
@@ -115,13 +106,11 @@ export async function updateProjectDetails(input: unknown) {
   if (!before) {
     throw new Error("Project not found.");
   }
-
   const updated = await prisma.project.update({
     data: { name: data.name },
     select: { domain: true, name: true, publicId: true, trackingScope: true },
     where: { id: project.id },
   });
-
   await writeAudit({
     action: "settings.project_details.update",
     actorId: actor.id,
@@ -132,7 +121,6 @@ export async function updateProjectDetails(input: unknown) {
     targetType: "project",
   });
   revalidateSettingsViews();
-
   return {
     domain: updated.domain,
     name: updated.name,
@@ -140,7 +128,6 @@ export async function updateProjectDetails(input: unknown) {
     trackingScope: normalizeTrackingScope(updated.trackingScope),
   };
 }
-
 export async function updateProjectTrackingScope(input: unknown) {
   const data = parseActionInput(projectTrackingScopeSchema, input);
   const actor = await getActionActor();
@@ -152,13 +139,11 @@ export async function updateProjectTrackingScope(input: unknown) {
   if (!before) {
     throw new Error("Project not found.");
   }
-
   const updated = await prisma.project.update({
     data: { trackingScope: data.trackingScope },
     select: { publicId: true, trackingScope: true },
     where: { id: project.id },
   });
-
   await writeAudit({
     action: "settings.project_tracking_scope.update",
     actorId: actor.id,
@@ -169,13 +154,11 @@ export async function updateProjectTrackingScope(input: unknown) {
     targetType: "project",
   });
   revalidateSettingsViews();
-
   return {
     projectId: updated.publicId,
     trackingScope: normalizeTrackingScope(updated.trackingScope),
   };
 }
-
 export async function updateDefaultRankCheckSettings(input: unknown) {
   const data = parseActionInput(projectDefaultsSchema, input);
   const actor = await getActionActor();
@@ -233,10 +216,13 @@ export async function updateDefaultRankCheckSettings(input: unknown) {
     targetType: "project_defaults",
   });
   revalidateSettingsViews();
-
-  return publicProjectDefaults(defaults, project.publicId);
+  const { getOnboardingNextCheckAt } = await import("@/lib/queries/onboarding");
+  const nextCheckAt = await getOnboardingNextCheckAt(project.publicId);
+  return {
+    ...publicProjectDefaults(defaults, project.publicId),
+    nextCheckAt: nextCheckAt?.toISOString() ?? null,
+  };
 }
-
 export async function updateRankCheckFrequency(input: unknown) {
   const data = parseActionInput(projectDefaultsSchema, input);
   const actor = await getActionActor();
@@ -254,7 +240,6 @@ export async function updateRankCheckFrequency(input: unknown) {
     await refreshKeywordDispatchStates({ inheritedProjectId: project.id }, tx);
     return stored;
   });
-
   await writeAudit({
     action: "settings.rank_check_frequency.update",
     actorId: actor.id,
@@ -265,10 +250,8 @@ export async function updateRankCheckFrequency(input: unknown) {
     targetType: "project_defaults",
   });
   revalidateSettingsViews();
-
   return publicProjectDefaults(defaults, project.publicId);
 }
-
 export async function runManualProjectCheck(input: unknown) {
   const data = parseActionInput(runProjectCheckSchema, input);
   const actor = await getActionActor();
@@ -277,12 +260,10 @@ export async function runManualProjectCheck(input: unknown) {
     select: { publicId: true },
     where: { projectId: project.id },
   });
-
   // Defer the rank-check action so its server-only Temporal client stays out of
   // the module graph until a check is actually requested.
   const { runCheckNow } = await import("@/lib/actions/rankCheck");
   const result = await runManualChecks(keywords, runCheckNow);
-
   await writeAudit({
     action: "settings.run_check_now",
     actorId: actor.id,
@@ -293,6 +274,5 @@ export async function runManualProjectCheck(input: unknown) {
   });
   revalidateRankCheckViews();
   revalidateSettingsPage();
-
   return result;
 }

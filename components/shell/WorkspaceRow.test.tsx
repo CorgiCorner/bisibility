@@ -1,4 +1,4 @@
-import { WorkspaceRow } from "@/components/shell/WorkspaceRow";
+import { MENU_ROW_SX, WorkspaceRow } from "@/components/shell/WorkspaceRow";
 import { mockWorkspaces } from "@/components/shell/workspaces.mock";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
@@ -12,6 +12,15 @@ function checkGlyph(container: HTMLElement) {
 }
 
 describe("WorkspaceRow", () => {
+  it("uses the sunken surface for pointer and keyboard focus while preserving active press", () => {
+    expect(MENU_ROW_SX["&:hover"]).toEqual({ backgroundColor: "var(--bg-sunken)" });
+    expect(MENU_ROW_SX["&.Mui-focusVisible"]).toEqual({
+      backgroundColor: "var(--bg-sunken)",
+    });
+    expect(MENU_ROW_SX["&:active"]).toEqual({ backgroundColor: "var(--bg-inset)" });
+    expect(MENU_ROW_SX["&.Mui-selected"]).toEqual({ backgroundColor: "transparent" });
+  });
+
   it("marks the current workspace with a visible check and no selected fill", () => {
     const { container } = renderRow(true);
 

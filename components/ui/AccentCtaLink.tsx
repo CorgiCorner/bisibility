@@ -14,7 +14,7 @@ export function AccentCtaLink({ children, href }: Readonly<AccentCtaLinkProps>) 
   return (
     <Link className={accentCtaLinkClassName} href={href}>
       {children}
-      <CaretRight aria-hidden size={14} weight="bold" />
+      <CaretRight aria-hidden size={14} weight="regular" />
     </Link>
   );
 }

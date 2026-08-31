@@ -49,7 +49,7 @@ export function ConnectDrawerFooter({
           loading={testState === "testing"}
           loadingLabel="Testing…"
           onClick={onTest}
-          startIcon={TestIcon ? <TestIcon aria-hidden size={16} weight="fill" /> : undefined}
+          startIcon={TestIcon ? <TestIcon aria-hidden size={16} weight="regular" /> : undefined}
           type="button"
           variant="secondary"
         >

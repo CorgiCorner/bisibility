@@ -52,7 +52,7 @@ function StatusCell({ status }: Readonly<{ status: AuditStatus }>) {
   return (
     <span className="flex w-full items-center justify-between gap-2">
       <StatusPill size="sm" status={status} />
-      <CaretRight aria-hidden className="shrink-0 text-fg-muted" size={12} />
+      <CaretRight aria-hidden className="shrink-0 text-fg-muted" size={12} weight="regular" />
     </span>
   );
 }

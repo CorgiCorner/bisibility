@@ -1,3 +1,4 @@
+import { SessionSpendProvider } from "@/components/cost-estimate/SessionSpendProvider";
 import { KeywordDetailStoryThemes } from "@/components/keyword-detail/shared/story-theme-preview";
 import { KeywordHeaderCard } from "@/components/keywords/KeywordHeaderCard";
 import { KeywordMetricCards } from "@/components/keywords/KeywordMetricCards";
@@ -105,30 +106,32 @@ const meta = {
   component: KeywordHeaderCard,
   decorators: [
     () => (
-      <KeywordDetailStoryThemes>
-        <ToastProvider>
-          <main className="grid max-w-6xl gap-4 text-fg">
-            <KeywordHeaderCard {...actions} keyword={keyword} />
-            <KeywordMetricCards keyword={keyword} keywordContext="full" />
-            <PositionHistoryCard
-              chartState="normal"
-              keyword={keyword}
-              timeZone={costContext.timezone}
-            />
-            <KeywordTrafficCard
-              projectRef="prj_demo"
-              traffic={{
-                hasAnalyticsConnection: true,
-                hasSearchConsoleConnection: true,
-                pages,
-                query,
-              }}
-              trafficState="both"
-            />
-            <RankingUrlHistory keyword={keyword} />
-          </main>
-        </ToastProvider>
-      </KeywordDetailStoryThemes>
+      <SessionSpendProvider>
+        <KeywordDetailStoryThemes>
+          <ToastProvider>
+            <main className="grid max-w-6xl gap-4 text-fg">
+              <KeywordHeaderCard {...actions} keyword={keyword} />
+              <KeywordMetricCards keyword={keyword} keywordContext="full" />
+              <PositionHistoryCard
+                chartState="normal"
+                keyword={keyword}
+                timeZone={costContext.timezone}
+              />
+              <KeywordTrafficCard
+                projectRef="prj_demo"
+                traffic={{
+                  hasAnalyticsConnection: true,
+                  hasSearchConsoleConnection: true,
+                  pages,
+                  query,
+                }}
+                trafficState="both"
+              />
+              <RankingUrlHistory keyword={keyword} />
+            </main>
+          </ToastProvider>
+        </KeywordDetailStoryThemes>
+      </SessionSpendProvider>
     ),
   ],
   parameters: {

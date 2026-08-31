@@ -23,7 +23,7 @@ export const Default: Story = {
   args: {
     action: <Button variant="contained">Add keyword</Button>,
     description: "Connect a SERP provider, then add keywords for acme.dev.",
-    icon: <MagnifyingGlass size={28} />,
+    icon: <MagnifyingGlass size={28} weight="regular" />,
     title: "No keywords tracked yet",
   },
 };
@@ -51,7 +51,7 @@ export const WithFootnote: Story = {
 export const PositiveTone: Story = {
   args: {
     description: "No alerts have fired in the last 48 hours.",
-    icon: <MagnifyingGlass size={27} weight="fill" />,
+    icon: <MagnifyingGlass size={27} weight="regular" />,
     title: "All clear",
     tone: "positive",
   },

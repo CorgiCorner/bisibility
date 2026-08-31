@@ -16,10 +16,12 @@ export type OnboardingWizardProps = {
   hasAnalyticsSource: boolean;
   initialFlowState: OnboardingFlowState;
   initialKeywordCount: number;
+  initialKeywordText?: string | null;
   initialProject: OnboardingProject | null;
   initialSerpConnections?: ConnectedProviderMap;
   initialStep: OnboardingStepNumber;
   monthlyCapCents: number;
+  nextCheckAt?: string | null;
   providerConnected: boolean;
   rankedKeywordConnections?: RankedKeywordConnection[];
 };

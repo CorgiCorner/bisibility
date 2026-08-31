@@ -28,7 +28,7 @@ function SaveToggle({
         }}
         type="button"
       >
-        <BookmarkSimple aria-hidden size={13} weight={row.alreadySaved ? "fill" : "regular"} />
+        <BookmarkSimple aria-hidden size={13} weight="regular" />
       </button>
     </Tooltip>
   );
@@ -60,7 +60,7 @@ export function ResearchKeywordCell({
               aria-hidden
               className="shrink-0 text-accent-text"
               size={13}
-              weight="fill"
+              weight="regular"
             />
           )}
           {row.alreadySaved ? (

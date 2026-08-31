@@ -110,14 +110,14 @@ export function KeywordDetailHeaderChrome({
             {dimensionControls ?? (
               <>
                 <DimensionSwitcher
-                  icon={<Flag size={13} />}
+                  icon={<Flag weight="regular" size={13} />}
                   kind="location"
                   label={keyword.location.displayName}
                   onTrack={onTrack}
                   value={keyword.locationName}
                 />
                 <DimensionSwitcher
-                  icon={<Monitor size={13} />}
+                  icon={<Monitor weight="regular" size={13} />}
                   kind="device"
                   label={keyword.device}
                   onTrack={onTrack}
@@ -155,7 +155,7 @@ export function KeywordDetailHeaderChrome({
             {matchesTarget ? <span>Matches target</span> : null}
             {targetMismatch ? (
               <span className="inline-flex items-center gap-1 rounded-full bg-yellow/15 px-2 py-0.5 font-semibold text-[10px] text-yellow-text">
-                <Warning aria-hidden size={11} weight="fill" />
+                <Warning aria-hidden size={11} weight="regular" />
                 Target mismatch
               </span>
             ) : null}
@@ -168,7 +168,7 @@ export function KeywordDetailHeaderChrome({
               title="View SERP in a new tab"
             >
               View SERP
-              <ArrowUpRight aria-hidden size={10} weight="bold" />
+              <ArrowUpRight aria-hidden size={10} weight="regular" />
             </a>
             <span aria-hidden className="h-[11px] w-px bg-border" />
             <span>

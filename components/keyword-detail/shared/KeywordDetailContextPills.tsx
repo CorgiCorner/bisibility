@@ -18,7 +18,7 @@ type ContextPillProps = {
 function ContextPill({ children, icon: Icon }: Readonly<ContextPillProps>) {
   return (
     <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-bg-sunken px-2.5 py-1 text-[12px] font-medium text-fg">
-      <Icon aria-hidden className="text-fg-muted" size={13} weight="bold" />
+      <Icon aria-hidden className="text-fg-muted" size={13} weight="regular" />
       <span>{children}</span>
     </span>
   );

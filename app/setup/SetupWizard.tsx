@@ -174,7 +174,7 @@ export function SetupWizard({ mailerConfigured }: Readonly<{ mailerConfigured: b
             {formError ? <p className="m-0 text-[13px] text-red-text">{formError}</p> : null}
             <Button
               className="w-full"
-              endIcon={<CaretRight size={15} weight="bold" />}
+              endIcon={<CaretRight size={15} weight="regular" />}
               loading={isSubmitting}
               loadingLabel="Sending code..."
               size="lg"
@@ -184,7 +184,12 @@ export function SetupWizard({ mailerConfigured }: Readonly<{ mailerConfigured: b
             </Button>
           </form>
           <p className="m-0 flex items-start gap-2 text-[12.5px] leading-[1.55] text-fg-muted">
-            <ShieldCheck aria-hidden className="mt-px shrink-0 text-accent-text" size={15} />
+            <ShieldCheck
+              aria-hidden
+              className="mt-px shrink-0 text-accent-text"
+              size={15}
+              weight="regular"
+            />
             The first account becomes the instance administrator. Everyone else signs in normally
             after setup.
           </p>
@@ -211,7 +216,7 @@ export function SetupWizard({ mailerConfigured }: Readonly<{ mailerConfigured: b
                   aria-hidden
                   className="mt-px shrink-0 text-[#a06b2a]"
                   size={17}
-                  weight="fill"
+                  weight="regular"
                 />
                 <p className="m-0 text-[13px] leading-[1.55] text-[#7a5620]">
                   Email delivery isn&apos;t configured yet, so we printed your code in the server

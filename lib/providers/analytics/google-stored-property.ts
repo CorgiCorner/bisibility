@@ -9,6 +9,9 @@ import { ProviderAuthError } from "@/lib/providers/auth-error";
 import { decryptProviderCredentials, encryptSecret } from "@/lib/providers/crypto";
 import { PROVIDER_CATALOG } from "@/lib/providers/registry";
 import type { ProviderCredentials } from "@/lib/providers/types";
+import { dateKey } from "@/lib/search-insights/dates";
+import { searchInsightsPropertyKey } from "@/lib/search-insights/keys";
+import { queueSearchInsightsImport } from "@/lib/search-insights/sync/ensure-import";
 import {
   type GoogleProviderId,
   listGa4Properties,
@@ -74,6 +77,41 @@ function selectedProperty(
   return selected;
 }
 
+async function storedGscContext(projectId: string) {
+  const [project, rows] = await Promise.all([
+    prisma.project?.findUnique?.({ select: { domain: true }, where: { id: projectId } }) ??
+      Promise.resolve(null),
+    prisma.searchInsightsPropertyRegistry?.findMany?.({
+      select: { propertyKey: true },
+      where: { projectId, status: "archived" },
+    }) ?? Promise.resolve([]),
+  ]);
+  const archivedProperties = await Promise.all(
+    rows.map(async (row) => {
+      const partition = await prisma.searchAnalyticsSyncPartition.findFirst({
+        orderBy: { date: "desc" },
+        select: { date: true },
+        where: { projectId, property: row.propertyKey, source: "gsc" },
+      });
+      if (!partition) return null;
+      const kind = row.propertyKey.startsWith("sc-domain:") ? "domain" : "url-prefix";
+      return {
+        kind,
+        label: row.propertyKey.startsWith("sc-domain:")
+          ? row.propertyKey.slice("sc-domain:".length)
+          : row.propertyKey,
+        lastSyncedDate: dateKey(partition.date),
+        permissionLevel: "",
+        value: row.propertyKey,
+      } as const;
+    }),
+  );
+  return {
+    archivedProperties: archivedProperties.filter((property) => property !== null),
+    projectDomain: project?.domain ?? "",
+  };
+}
+
 async function storedConnection(projectId: string, provider: GoogleProviderId) {
   return prisma.providerConnection.findUnique({
     select: { credentialsEncrypted: true, id: true, publicId: true },
@@ -90,7 +128,10 @@ export async function loadStoredGoogleProperties(
 
   try {
     const accessToken = await refreshGoogleAccessToken(credentials.apiKey);
+    const gscContext = context.provider === "gsc" ? await storedGscContext(context.projectId) : {};
     return {
+      ...gscContext,
+      ...(credentials.accountEmail ? { accountEmail: credentials.accountEmail } : {}),
       preferredProperty: credentials.login,
       properties: await listProperties(context.provider, accessToken),
       provider: context.provider,
@@ -153,6 +194,47 @@ export async function saveStoredGoogleProperty(
       },
       where: { id: current.id },
     });
+    if (context.provider === "gsc") {
+      const ga4Connection = await tx.providerConnection.findUnique({
+        select: { credentialsEncrypted: true, id: true, publicId: true },
+        where: { projectId_provider: { projectId: context.projectId, provider: "ga4" } },
+      });
+      const ga4Credentials = readCredentials(ga4Connection);
+      const normalizedGa4 = normalizeGa4PropertyId(ga4Credentials?.login ?? "");
+      const ga4PropertyId = normalizedGa4.ok ? normalizedGa4.value : null;
+      const now = new Date();
+      await tx.searchInsightsPropertyRegistry.updateMany({
+        data: { archivedAt: now, status: "archived" },
+        where: { projectId: context.projectId, status: "active" },
+      });
+      const previousProperty = searchInsightsPropertyKey(credentials.login ?? "");
+      if (previousProperty && previousProperty !== selected.value) {
+        await tx.searchInsightsPropertyRegistry.upsert({
+          create: {
+            archivedAt: now,
+            projectId: context.projectId,
+            propertyKey: previousProperty,
+            status: "archived",
+          },
+          update: { archivedAt: now, status: "archived" },
+          where: {
+            projectId_propertyKey: { projectId: context.projectId, propertyKey: previousProperty },
+          },
+        });
+      }
+      await tx.searchInsightsPropertyRegistry.upsert({
+        create: {
+          ga4PropertyId,
+          projectId: context.projectId,
+          propertyKey: selected.value,
+          status: "active",
+        },
+        update: { activatedAt: now, archivedAt: null, ga4PropertyId, status: "active" },
+        where: {
+          projectId_propertyKey: { projectId: context.projectId, propertyKey: selected.value },
+        },
+      });
+    }
     await writeAudit(
       {
         action: "provider.update",
@@ -175,6 +257,14 @@ export async function saveStoredGoogleProperty(
       tx,
     );
   });
+
+  if (context.provider === "gsc" || context.provider === "ga4") {
+    await queueSearchInsightsImport({
+      projectId: context.projectId,
+      property: selected.value,
+      source: context.provider,
+    });
+  }
 
   return { property: selected.value, status: "saved" };
 }

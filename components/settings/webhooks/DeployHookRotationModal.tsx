@@ -22,7 +22,7 @@ export function DeployHookRotationModal({
         <Button
           onClick={onClose}
           size="sm"
-          startIcon={<CheckCircle aria-hidden size={15} />}
+          startIcon={<CheckCircle aria-hidden size={15} weight="regular" />}
           type="button"
         >
           Done

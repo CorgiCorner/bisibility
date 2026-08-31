@@ -115,7 +115,7 @@ function InvalidInvite({ status }: Readonly<{ status: InviteStatus }>) {
     <Shell>
       <div className="mt-8">
         <span className="grid h-12 w-12 place-items-center rounded-card bg-red/10 text-red-text">
-          <WarningCircle aria-hidden size={24} weight="fill" />
+          <WarningCircle aria-hidden size={24} weight="regular" />
         </span>
         <h1 className="mt-4 mb-0 text-[24px] font-semibold leading-tight">{copy.title}</h1>
         <p className="mt-2 mb-0 text-[14px] leading-relaxed text-fg-muted">{copy.body}</p>
@@ -155,7 +155,7 @@ export default async function InvitePage({ params }: Readonly<InvitePageProps>) 
           className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-control bg-accent-solid px-4 text-[13px] font-semibold text-accent-on-solid hover:opacity-90"
           type="submit"
         >
-          Accept invite <CaretRight aria-hidden size={15} weight="bold" />
+          Accept invite <CaretRight aria-hidden size={15} weight="regular" />
         </button>
       </form>
     );
@@ -177,7 +177,7 @@ export default async function InvitePage({ params }: Readonly<InvitePageProps>) 
     <Shell>
       <div className="mt-8">
         <span className="grid h-12 w-12 place-items-center rounded-card bg-accent-soft text-accent-solid">
-          <CheckCircle aria-hidden size={24} weight="fill" />
+          <CheckCircle aria-hidden size={24} weight="regular" />
         </span>
         <p className="mt-5 mb-0 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
           Team invite
@@ -196,7 +196,7 @@ export default async function InvitePage({ params }: Readonly<InvitePageProps>) 
           </div>
           <div className="flex items-center justify-between gap-3 text-[13px]">
             <span className="inline-flex items-center gap-1.5 text-fg-muted">
-              <ClockCountdown aria-hidden size={14} />
+              <ClockCountdown aria-hidden size={14} weight="regular" />
               Expires
             </span>
             <span className="font-medium text-fg">{formatInviteDate(invite.expiresAt)}</span>

@@ -206,7 +206,7 @@ export function FiltersDrawer({
             Keyword contains
           </label>
           <div className="mt-2 flex items-center gap-2 rounded-control border border-border-control bg-transparent px-[11px] py-2 transition-colors focus-within:border-accent">
-            <TextAa className="text-fg-muted" size={14} />
+            <TextAa weight="regular" className="text-fg-muted" size={14} />
             <input
               className="min-w-0 flex-1 bg-transparent font-mono text-[12.5px] text-fg outline-none focus-visible:outline-none"
               id="keyword-contains"

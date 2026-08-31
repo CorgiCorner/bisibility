@@ -52,7 +52,7 @@ export function KeywordChangeCell({ row }: Readonly<{ row: KeywordRow }>) {
         className="inline-flex items-center gap-1 font-mono text-xs font-semibold"
         style={{ color: delta.color }}
       >
-        <Icon size={delta.label === "0" ? 7 : 12} weight={delta.label === "0" ? "fill" : "bold"} />
+        <Icon size={delta.label === "0" ? 7 : 12} weight="regular" />
         {delta.label}
       </span>
     </Tooltip>

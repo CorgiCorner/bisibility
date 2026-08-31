@@ -19,7 +19,7 @@ export function CronRunPreview({
         aria-live="polite"
         className="mt-3 flex items-start gap-2 rounded-control border border-yellow-border bg-yellow-soft px-3 py-2.5 text-[12px] text-yellow-text"
       >
-        <Warning aria-hidden className="mt-0.5 shrink-0" size={15} weight="fill" />
+        <Warning aria-hidden className="mt-0.5 shrink-0" size={15} weight="regular" />
         {preview.message}
       </div>
     );
@@ -33,7 +33,7 @@ export function CronRunPreview({
       className="mt-3 rounded-control border border-border-soft bg-bg-sunken p-3"
     >
       <div className="flex items-center gap-2 text-[12px] font-semibold text-fg">
-        <CheckCircle aria-hidden className="text-green-text" size={15} weight="fill" />
+        <CheckCircle aria-hidden className="text-green-text" size={15} weight="regular" />
         Next three cron anchors
       </div>
       <ol className="m-0 mt-2 grid list-none gap-2 p-0 sm:grid-cols-3">

@@ -1,5 +1,5 @@
 # GENERATED - do not edit directly.
-# Source hash: 43eb370509bb6a03fa05f6d02cc6d0b59a319ab84f123c40beef2b8d4da89300
+# Source hash: fa6589e60122c45629d436ced8bec85458ef020b760e987a10cf0f972937c844
 name: CI
 
 on:
@@ -52,7 +52,7 @@ jobs:
 
   compose-contract:
     if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
-    runs-on: ${{ github.repository != 'CorgiCorner/bisibility' && vars.CI_USE_DEPOT == 'true' && 'depot-ubuntu-24.04' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository != 'CorgiCorner/bisibility' && vars.CI_USE_SELF_HOSTED == 'true' && 'bisibility-ci' || github.repository != 'CorgiCorner/bisibility' && vars.CI_USE_DEPOT == 'true' && 'depot-ubuntu-24.04' || 'ubuntu-latest' }}
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

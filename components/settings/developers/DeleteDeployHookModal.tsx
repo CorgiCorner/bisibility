@@ -30,7 +30,7 @@ export function DeleteDeployHookModal({
             loadingLabel="Deleting"
             onClick={onConfirm}
             size="sm"
-            startIcon={<Trash aria-hidden size={15} />}
+            startIcon={<Trash aria-hidden size={15} weight="regular" />}
             type="button"
             variant="destructive"
           >

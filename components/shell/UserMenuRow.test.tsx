@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { UserMenuRow } from "./UserMenuRow";
+import { USER_MENU_ROW_SX, UserMenuRow } from "./UserMenuRow";
 import {
   accountLinks,
   communityLinks,
@@ -9,13 +9,20 @@ import {
 } from "./user-menu-items";
 
 describe("UserMenuRow", () => {
+  it("uses the sunken surface for account-menu hover and keyboard focus", () => {
+    expect(USER_MENU_ROW_SX["&:hover"]).toEqual({ backgroundColor: "var(--bg-sunken)" });
+    expect(USER_MENU_ROW_SX["&.Mui-focusVisible"]).toEqual({
+      backgroundColor: "var(--bg-sunken)",
+    });
+  });
+
   it("hides the managed homepage link on self-hosted deployments", () => {
     expect(resourceLinksForDeployment(false).map((item) => item.label)).toEqual([
-      "Docs & self-hosting",
+      "Docs and self-hosting",
       "Send feedback",
     ]);
     expect(resourceLinksForDeployment(true).map((item) => item.label)).toEqual([
-      "Docs & self-hosting",
+      "Docs and self-hosting",
       "Homepage",
       "Send feedback",
     ]);
@@ -23,7 +30,7 @@ describe("UserMenuRow", () => {
 
   it("offers one canonical homepage link instead of roadmap and changelog", () => {
     expect(resourceLinks.map((item) => item.label)).toEqual([
-      "Docs & self-hosting",
+      "Docs and self-hosting",
       "Homepage",
       "Send feedback",
     ]);
@@ -64,10 +71,7 @@ describe("UserMenuRow", () => {
     expect(link).toHaveAttribute("target", "_blank");
   });
 
-  it("exposes only Account settings and Keyboard shortcuts in account links", () => {
-    expect(accountLinks.map((item) => item.label)).toEqual([
-      "Account settings",
-      "Keyboard shortcuts",
-    ]);
+  it("exposes only Account settings in account links", () => {
+    expect(accountLinks.map((item) => item.label)).toEqual(["Account settings"]);
   });
 });

@@ -6,7 +6,6 @@ import {
 } from "@/components/marketing/system/SystemPage";
 import { deploymentMode } from "@/lib/deployment/deployment";
 import { appRootPath } from "@/lib/routing/app-path";
-import { ArrowLeftIcon as ArrowLeft } from "@phosphor-icons/react/dist/ssr";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -25,12 +24,7 @@ export default function NotFound() {
     <SystemPage
       actions={
         <>
-          <SystemPrimaryAction
-            href={appRootPath()}
-            startIcon={<ArrowLeft aria-hidden size={16} weight="bold" />}
-          >
-            Back to dashboard
-          </SystemPrimaryAction>
+          <SystemPrimaryAction href={appRootPath()}>Back to dashboard</SystemPrimaryAction>
           <SystemSecondaryAction href={selfHost ? "/login" : "/"}>
             {selfHost ? "Go to sign in" : "Go to homepage"}
           </SystemSecondaryAction>

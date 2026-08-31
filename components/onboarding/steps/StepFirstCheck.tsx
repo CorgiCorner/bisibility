@@ -1,46 +1,23 @@
 "use client";
-
-import {
-  buildOnboardingStepHref,
-  type OnboardingFlowState,
-} from "@/components/onboarding/onboarding-fixtures";
+import { buildOnboardingStepHref } from "@/components/onboarding/onboarding-fixtures";
 import { displayProvider, onboardingFormId } from "@/components/onboarding/onboarding-form-utils";
 import { locationValuesForKeys } from "@/components/onboarding/onboarding-location-field";
 import { Button } from "@/components/ui";
 import type { ProjectDefaultsInput } from "@/lib/schemas/project";
-import { ArrowLeftIcon as ArrowLeft, PlugIcon as Plug } from "@phosphor-icons/react";
-import { useState } from "react";
+import { ArrowLeftIcon as ArrowLeft } from "@phosphor-icons/react";
+import { useRef, useState } from "react";
 import { FirstCheckErrors } from "./FirstCheckErrors";
 import { FirstCheckQueueMessage } from "./FirstCheckQueueMessage";
 import { FirstCheckResults } from "./FirstCheckResults";
-import type { SaveOnboardingMarketsAction } from "./OnboardingMarkets";
+import { InlineProviderSetup } from "./InlineProviderSetup";
+import type { StepFirstCheckProps } from "./StepFirstCheck.types";
+import { StepFirstCheckCompletion } from "./StepFirstCheckCompletion";
+import { StepFirstCheckFooter } from "./StepFirstCheckFooter";
 import { StepFirstCheckReview } from "./StepFirstCheckReview";
 import type { OnboardingTrackingDefaultsInput } from "./step-schedule-model";
 import { useFirstCheckKeyword } from "./use-first-check-keyword";
-import { type FirstCheckRunActions, useFirstCheckRun } from "./use-first-check-run";
+import { useFirstCheckRun } from "./use-first-check-run";
 import { useFirstCheckSubmit } from "./use-first-check-submit";
-
-type FirstCheckProject = {
-  domain: string | null;
-  isSample?: boolean;
-  name: string;
-  publicId?: string;
-};
-
-type StepFirstCheckProps = FirstCheckRunActions & {
-  completeOnboardingAction?: (input: { projectId: string }) => Promise<unknown>;
-  defaults?: ProjectDefaultsInput | OnboardingTrackingDefaultsInput;
-  flowState?: OnboardingFlowState;
-  hasAnalyticsSource?: boolean;
-  keywordCount?: number;
-  keywordDraft?: string;
-  onBack?: () => void;
-  onTimezoneChange?: (timezone: string) => Promise<void> | void;
-  project?: FirstCheckProject | null;
-  providerConnected?: boolean;
-  providerId?: string | null;
-  saveMarketsAction?: SaveOnboardingMarketsAction;
-};
 
 const frequencyLabels: Record<ProjectDefaultsInput["frequency"], string> = {
   custom_cron: "Custom cron",
@@ -50,14 +27,12 @@ const frequencyLabels: Record<ProjectDefaultsInput["frequency"], string> = {
   paused: "Paused",
   weekly: "Weekly",
 };
-
 function selectedDevices(
   defaults: ProjectDefaultsInput | OnboardingTrackingDefaultsInput | undefined,
 ) {
   if (defaults && "devices" in defaults && defaults.devices.length > 0) return defaults.devices;
   return [defaults?.device ?? "desktop"];
 }
-
 function selectedMarkets(
   defaults: ProjectDefaultsInput | OnboardingTrackingDefaultsInput | undefined,
 ) {
@@ -66,25 +41,30 @@ function selectedMarkets(
   }
   return locationValuesForKeys([defaults?.locationKey ?? "US"]);
 }
-
-function isPausedFrequency(frequency: ProjectDefaultsInput["frequency"] | undefined) {
-  return frequency === "manual" || frequency === "paused";
-}
-
+const isPausedFrequency = (frequency: ProjectDefaultsInput["frequency"] | undefined) =>
+  frequency === "manual" || frequency === "paused";
 export function StepFirstCheck({
   completeOnboardingAction,
+  connectProviderAction,
   defaults,
   flowState,
   keywordCount = 0,
   keywordDraft,
+  initialConnections,
+  initialKeywordText,
   listFirstCheckCandidatesAction,
+  nextCheckAt,
   onBack,
+  onProviderConnected,
   onTimezoneChange,
   project,
   providerConnected,
+  providerDefaultValues,
   providerId,
+  projectedCostPerCheckCents,
   runFirstCheckPreviewAction,
   saveMarketsAction,
+  testProviderConnectionAction,
 }: Readonly<StepFirstCheckProps>) {
   const projectId = flowState?.projectId ?? defaults?.projectId ?? null;
   const hasProject = Boolean(projectId);
@@ -92,16 +72,23 @@ export function StepFirstCheck({
   const sampleProject = Boolean(project?.isSample);
   const providerReady = !sampleProject && (providerConnected ?? Boolean(flowState?.providerId));
   const paused = isPausedFrequency(defaults?.frequency);
-  const markets = selectedMarkets(defaults);
-  const devices = selectedDevices(defaults);
+  const markets = selectedMarkets(defaults),
+    devices = selectedDevices(defaults);
   const sampleCount = keywordCount > 0 ? markets.length * devices.length : 0;
+  const matrixLabel =
+    sampleCount > 1
+      ? `1 keyword · ${markets.length} ${markets.length === 1 ? "market" : "markets"} · ${devices.length === 2 && devices.includes("desktop") && devices.includes("mobile") ? "both devices" : `${devices.length} ${devices.length === 1 ? "device" : "devices"}`} · ${sampleCount} checks`
+      : null;
   const { keywordError, keywordOptions, retryKeyword, sampleKeyword, setSampleKeyword } =
     useFirstCheckKeyword({
+      initialKeywordText,
       keywordDraft,
       listFirstCheckCandidatesAction,
       projectId,
-      providerReady,
     });
+  const [providerExpanded, setProviderExpanded] = useState(false);
+  const providerToggleRef = useRef<HTMLButtonElement>(null);
+  const providerCloseFocusRef = useRef<"run" | "trigger">("trigger");
   const [timezone, setTimezone] = useState(defaults?.timezone ?? "UTC");
   const [timezoneError, setTimezoneError] = useState<string | null>(null);
   const { onSubmit, submitError, submitting } = useFirstCheckSubmit({
@@ -128,7 +115,7 @@ export function StepFirstCheck({
   const firstCheckLabel = sampleProject
     ? "Sample project preview only"
     : !providerReady
-      ? "Paused until a provider is connected"
+      ? "Waiting for a provider"
       : `${sampleCount} sample ${sampleCount === 1 ? "check" : "checks"} - one per market and device`;
   const hasFailedSampleChecks = state.rows.some((row) => row.status === "failed");
   const queueMessage = sampleProject
@@ -144,6 +131,23 @@ export function StepFirstCheck({
               ? `The sample ${state.rows.length === 1 ? "check" : "checks"} finished with an issue. You can retry the failed ${state.rows.length === 1 ? "check" : "checks"} below. Every keyword still follows your ${frequencyLabel.toLowerCase()} schedule.`
               : `Sample ${state.rows.length === 1 ? "check" : "checks"} finished. Every keyword follows your ${frequencyLabel.toLowerCase()} schedule from here.`
             : `${sampleCount} ${sampleCount === 1 ? "check" : "checks"} run once now so you can see it working. Everything else follows your ${frequencyLabel.toLowerCase()} schedule.`;
+
+  function openProvider() {
+    providerCloseFocusRef.current = "trigger";
+    setProviderExpanded(true);
+  }
+  function closeProvider() {
+    setProviderExpanded(false);
+  }
+  function focusRunWhenMounted(node: HTMLButtonElement | null) {
+    if (node && providerCloseFocusRef.current === "run") {
+      providerCloseFocusRef.current = "trigger";
+      node.focus();
+    }
+  }
+  function focusAfterProviderClose() {
+    if (providerCloseFocusRef.current === "trigger") providerToggleRef.current?.focus();
+  }
 
   function onPreviewClick() {
     void start({
@@ -169,7 +173,7 @@ export function StepFirstCheck({
     <Button
       onClick={onBack}
       size="lg"
-      startIcon={<ArrowLeft aria-hidden size={15} weight="bold" />}
+      startIcon={<ArrowLeft aria-hidden size={15} weight="regular" />}
       sx={{ color: "var(--fg-muted)" }}
       type="button"
       variant="secondary"
@@ -180,7 +184,7 @@ export function StepFirstCheck({
     <Button
       href={buildOnboardingStepHref(3, flowState)}
       size="lg"
-      startIcon={<ArrowLeft aria-hidden size={15} weight="bold" />}
+      startIcon={<ArrowLeft aria-hidden size={15} weight="regular" />}
       sx={{ color: "var(--fg-muted)" }}
       variant="secondary"
     >
@@ -207,7 +211,26 @@ export function StepFirstCheck({
         onTimezoneChange={(value) => void changeTimezone(value)}
         paused={paused}
         projectLabel={project?.domain ?? project?.name ?? "Selected project"}
-        providerLabel={providerLabel}
+        providerLabel={
+          providerReady
+            ? `${providerLabel}${projectedCostPerCheckCents != null ? ` · estimated ~$${(projectedCostPerCheckCents / 100).toFixed(4)} per check` : " · estimated rate unavailable"}`
+            : "Not connected"
+        }
+        providerAction={
+          !providerReady ? (
+            <Button
+              aria-expanded={providerExpanded}
+              aria-haspopup="dialog"
+              onClick={openProvider}
+              ref={providerToggleRef}
+              size="xs"
+              type="button"
+              variant="secondary"
+            >
+              Connect
+            </Button>
+          ) : undefined
+        }
         providerReady={providerReady}
         sampleKeyword={sampleKeyword}
         stateStatus={state.status}
@@ -215,58 +238,55 @@ export function StepFirstCheck({
       />
 
       <FirstCheckErrors
-        keywordError={keywordError}
+        keywordError={
+          keywordError ??
+          (!sampleKeyword && providerReady
+            ? "The sample keyword could not be loaded. Try again."
+            : null)
+        }
         onRetryKeyword={retryKeyword}
         submitError={submitError}
         timezoneError={timezoneError}
       />
       {!providerReady ? (
-        <div className="mt-5 flex flex-col items-start gap-2.5 rounded-card border border-border border-dashed bg-bg-sunken p-4.5">
-          <span className="flex items-start gap-2 text-[13px] leading-[1.5] text-fg-muted">
-            <Plug aria-hidden className="mt-0.5 shrink-0" size={16} />
-            Your keywords are saved. Connect a provider to run the first check.
-          </span>
-          <Button
-            href={buildOnboardingStepHref(2, flowState)}
-            size="sm"
-            startIcon={<ArrowLeft aria-hidden size={13} weight="bold" />}
-            variant="secondary"
-          >
-            Connect a provider
-          </Button>
-        </div>
+        <InlineProviderSetup
+          connectProviderAction={connectProviderAction}
+          defaultValues={providerDefaultValues}
+          flowState={flowState}
+          initialConnections={initialConnections}
+          onCollapse={closeProvider}
+          open={providerExpanded}
+          onExited={focusAfterProviderClose}
+          onComplete={(values, connections) => {
+            onProviderConnected?.(values, connections);
+            providerCloseFocusRef.current = "run";
+          }}
+          testProviderConnectionAction={testProviderConnectionAction}
+        />
       ) : null}
       {queueMessage ? <FirstCheckQueueMessage message={queueMessage} /> : null}
       <FirstCheckResults onRetryFailed={() => void retryFailed()} state={state} />
-      <footer className="mt-7 flex items-center justify-between gap-3 border-border border-t pt-5">
-        {backAction}
-        <div className="flex flex-wrap items-center justify-end gap-3">
-          <Button
-            disabled={submitting}
-            size="lg"
-            sx={{ color: "var(--fg-muted)", fontSize: 13, paddingX: "8px" }}
-            type="submit"
-            variant="ghost"
-          >
-            Open dashboard
-          </Button>
-          {canPreview ? (
-            <Button
-              disabled={previewDisabled}
-              loading={state.status === "running"}
-              loadingLabel={`Running ${sampleCount} sample ${sampleCount === 1 ? "check" : "checks"}`}
-              onClick={onPreviewClick}
-              size="lg"
-              type="button"
-              variant="primary"
-            >
-              {state.status === "completed"
-                ? "Run again"
-                : `Run ${sampleCount} sample ${sampleCount === 1 ? "check" : "checks"}`}
-            </Button>
-          ) : null}
-        </div>
-      </footer>
+      {state.status === "completed" && !hasFailedSampleChecks && navigationProjectId ? (
+        <StepFirstCheckCompletion
+          frequency={defaults?.frequency}
+          frequencyLabel={frequencyLabel}
+          keywordCount={keywordCount}
+          nextCheckAt={nextCheckAt}
+          projectId={navigationProjectId}
+          timezone={timezone}
+        />
+      ) : null}
+      <StepFirstCheckFooter
+        backAction={backAction}
+        canPreview={canPreview}
+        matrixLabel={matrixLabel}
+        onPreview={onPreviewClick}
+        runButtonRef={focusRunWhenMounted}
+        previewDisabled={previewDisabled}
+        sampleCount={sampleCount}
+        state={state}
+        submitting={submitting}
+      />
     </form>
   );
 }

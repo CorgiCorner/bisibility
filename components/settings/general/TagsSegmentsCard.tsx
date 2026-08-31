@@ -112,7 +112,7 @@ export function TagsSegmentsCard({
       className={generalSettingsCardGeometryClassNames.tagsSegments}
       description="Tags group keywords and pages; every saved segment is built from them."
       onSave={saveTags}
-      title="Tags & segments"
+      title="Tags and segments"
     >
       {({ markDirty }) => (
         <div className="flex flex-wrap items-center gap-2">
@@ -134,7 +134,7 @@ export function TagsSegmentsCard({
                   }}
                   type="button"
                 >
-                  <X aria-hidden className="block shrink-0" size={10} weight="bold" />
+                  <X aria-hidden className="block shrink-0" size={10} weight="regular" />
                 </button>
               ) : null}
             </span>
@@ -163,7 +163,7 @@ export function TagsSegmentsCard({
               </span>
               <Button
                 size="xs"
-                startIcon={<Plus aria-hidden size={13} weight="bold" />}
+                startIcon={<Plus aria-hidden size={13} weight="regular" />}
                 type="submit"
               >
                 Add tag
@@ -172,7 +172,7 @@ export function TagsSegmentsCard({
           ) : canCreate ? (
             <button
               aria-label="Add tag"
-              className="inline-flex h-7 items-center rounded-full border border-border bg-bg-sidebar px-3 text-[12.5px] font-medium text-fg outline-none transition-colors hover:bg-nav-active focus-visible:bg-nav-active"
+              className="inline-flex h-7 items-center rounded-full border border-border bg-bg-sidebar px-3 text-[12.5px] font-medium text-fg outline-none transition-colors hover:bg-bg-sunken focus-visible:bg-bg-sunken"
               onClick={() => setIsAdding(true)}
               type="button"
             >

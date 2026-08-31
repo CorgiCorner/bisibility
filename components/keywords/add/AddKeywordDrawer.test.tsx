@@ -135,9 +135,11 @@ describe("AddKeywordDrawer", () => {
       screen.getByText("0 keywords x 1 market x 1 device = 0 checks per run for this keyword."),
     ).toBeInTheDocument();
     expect(screen.queryByText(/\$/)).not.toBeInTheDocument();
-    expect(screen.getByRole("switch", { name: "Pause schedule" })).toHaveAccessibleDescription(
+    const pauseScheduleSwitch = screen.getByRole("switch", { name: "Pause schedule" });
+    expect(pauseScheduleSwitch).toHaveAccessibleDescription(
       "Create these targets paused. You can resume them later.",
     );
+    expect(pauseScheduleSwitch.closest("label")).toHaveClass("!border-0");
   });
 
   it("blocks manual submission until at least one active market is selected", () => {

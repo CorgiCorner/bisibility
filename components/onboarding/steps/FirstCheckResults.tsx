@@ -33,12 +33,14 @@ function rankingLabel(position: number | null, rankingUrl: string | null) {
 
 function ResultIcon({ row }: Readonly<{ row: FirstCheckResultRow }>) {
   if (row.status === "pending") {
-    return <CircleNotch aria-hidden className="bv-spin text-accent-text" size={16} weight="bold" />;
+    return (
+      <CircleNotch aria-hidden className="bv-spin text-accent-text" size={16} weight="regular" />
+    );
   }
   if (row.status === "failed") {
-    return <WarningCircle aria-hidden className="text-red-text" size={16} weight="bold" />;
+    return <WarningCircle aria-hidden className="text-red-text" size={16} weight="regular" />;
   }
-  return <CheckCircle aria-hidden className="text-green-text" size={16} weight="fill" />;
+  return <CheckCircle aria-hidden className="text-green-text" size={16} weight="regular" />;
 }
 
 function resultText(row: FirstCheckResultRow) {
@@ -68,7 +70,7 @@ function ResultTarget({ row }: Readonly<{ row: FirstCheckResultRow }>) {
         role="img"
         title={`${deviceLabel} device`}
       >
-        <DeviceIcon aria-hidden size={13} weight="bold" />
+        <DeviceIcon aria-hidden size={13} weight="regular" />
       </span>
     </span>
   );
@@ -89,6 +91,11 @@ function resultsNote(state: FirstCheckRunState) {
 export function FirstCheckResults({ onRetryFailed, state }: Readonly<FirstCheckResultsProps>) {
   if (state.rows.length === 0 && !state.message) return null;
   const hasFailed = state.rows.some((row) => row.status === "failed");
+  const completed = state.rows.filter((row) => row.status === "completed").length;
+  const recordedCostCents = state.rows.reduce(
+    (total, row) => total + (row.status === "completed" ? row.recordedCostCents : 0),
+    0,
+  );
 
   return (
     <div className="mt-4">
@@ -116,12 +123,16 @@ export function FirstCheckResults({ onRetryFailed, state }: Readonly<FirstCheckR
       ) : null}
       {state.rows.length > 0 ? (
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2.5">
-          <p className={`m-0 ${feedbackClass} font-medium text-fg-muted`}>{resultsNote(state)}</p>
+          <p className={`m-0 ${feedbackClass} font-medium text-fg-muted`}>
+            {state.status === "completed"
+              ? `${completed}${completed === state.rows.length ? "" : ` of ${state.rows.length}`} ${state.rows.length === 1 ? "check" : "checks"} · $${(recordedCostCents / 100).toFixed(4)} recorded cost`
+              : resultsNote(state)}
+          </p>
           {hasFailed && onRetryFailed ? (
             <Button
               onClick={onRetryFailed}
               size="sm"
-              startIcon={<ArrowClockwise aria-hidden size={12} weight="bold" />}
+              startIcon={<ArrowClockwise aria-hidden size={12} weight="regular" />}
               type="button"
               variant="secondary"
             >

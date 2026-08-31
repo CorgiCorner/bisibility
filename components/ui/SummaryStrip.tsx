@@ -21,9 +21,9 @@ const iconToneClass = {
 
 function SummaryIcon({ tone }: Readonly<{ tone: SummaryStripTone }>) {
   const props = { "aria-hidden": true, size: 14 } as const;
-  if (tone === "improved") return <TrendUp {...props} weight="bold" />;
-  if (tone === "dropped") return <TrendDown {...props} weight="bold" />;
-  return <Minus {...props} weight="bold" />;
+  if (tone === "improved") return <TrendUp {...props} weight="regular" />;
+  if (tone === "dropped") return <TrendDown {...props} weight="regular" />;
+  return <Minus {...props} weight="regular" />;
 }
 
 export function SummaryStrip({

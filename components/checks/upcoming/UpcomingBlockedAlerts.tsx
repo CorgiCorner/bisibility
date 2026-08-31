@@ -36,7 +36,7 @@ export function UpcomingBlockedAlerts({
               aria-hidden
               className="mt-0.5 shrink-0 text-red-text"
               size={17}
-              weight="fill"
+              weight="regular"
             />
             <div className="min-w-0 flex-1">
               <p className="m-0 text-[13px] font-semibold text-red-text">
@@ -55,7 +55,7 @@ export function UpcomingBlockedAlerts({
 
       {migrationHold ? (
         <div className="flex items-center gap-2.5 rounded-card border border-border bg-bg-sunken/65 px-3.5 py-3">
-          <Pause aria-hidden className="shrink-0 text-fg-muted" size={15} weight="fill" />
+          <Pause aria-hidden className="shrink-0 text-fg-muted" size={15} weight="regular" />
           <p className="m-0 min-w-0 flex-1 text-xs text-fg-muted">
             Paused during import · {formatKeywordCount(migrationHold.keywordCount)}
           </p>
@@ -67,7 +67,7 @@ export function UpcomingBlockedAlerts({
 
       {budgetExhausted ? (
         <div className="flex items-center gap-2.5 rounded-card border border-yellow/35 bg-yellow/10 px-3.5 py-3">
-          <Gauge aria-hidden className="shrink-0 text-yellow-text" size={16} weight="fill" />
+          <Gauge aria-hidden className="shrink-0 text-yellow-text" size={16} weight="regular" />
           <p className="m-0 min-w-0 flex-1 text-xs text-fg-muted">
             Monthly budget reached · {formatKeywordCount(budgetExhausted.keywordCount)}
           </p>

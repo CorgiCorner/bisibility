@@ -21,7 +21,7 @@ export function OnboardingLogoutButton() {
       disabled={pending}
       onClick={() => void handleSignOut()}
       size="xs"
-      startIcon={<SignOut aria-hidden size={13} weight="bold" />}
+      startIcon={<SignOut aria-hidden size={13} weight="regular" />}
       sx={{ color: "var(--accent-text)", minWidth: 0, paddingX: "8px" }}
       type="button"
       variant="ghost"

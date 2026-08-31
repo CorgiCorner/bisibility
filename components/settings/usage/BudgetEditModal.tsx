@@ -112,7 +112,6 @@ export function BudgetEditModal({
           ) : null}
         </>
       }
-      footerClassName="gap-2.5"
       onClose={onClose}
       open
       title="Edit budget"

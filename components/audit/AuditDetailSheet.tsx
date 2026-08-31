@@ -115,7 +115,7 @@ export function AuditDetailSheet({ entry, onClose }: Readonly<AuditDetailSheetPr
             onClick={() => downloadAuditEntries([entry], "json", entry.metadata.event_id)}
             type="button"
           >
-            <DownloadSimple aria-hidden size={15} />
+            <DownloadSimple aria-hidden size={15} weight="regular" />
             Export entry (JSON)
           </button>
         </div>

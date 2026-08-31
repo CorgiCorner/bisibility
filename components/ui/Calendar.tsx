@@ -159,13 +159,13 @@ export function Calendar({
           label="Previous month"
           onClick={() => changeMonth(-1)}
         >
-          <CaretLeft aria-hidden size={15} weight="bold" />
+          <CaretLeft aria-hidden size={15} weight="regular" />
         </MonthNavButton>
         <span aria-live="polite" className="text-[13px] font-semibold text-fg">
           {monthFormat.format(firstOfMonth)}
         </span>
         <MonthNavButton disabled={nextDisabled} label="Next month" onClick={() => changeMonth(1)}>
-          <CaretRight aria-hidden size={15} weight="bold" />
+          <CaretRight aria-hidden size={15} weight="regular" />
         </MonthNavButton>
       </div>
       <div

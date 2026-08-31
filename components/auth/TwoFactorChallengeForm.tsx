@@ -104,7 +104,7 @@ export function TwoFactorChallengeForm({
   return (
     <div className="w-full max-w-[380px]">
       <span className="grid h-[46px] w-[46px] place-items-center rounded-card bg-accent-soft text-accent-solid">
-        <ShieldCheck aria-hidden size={23} weight="fill" />
+        <ShieldCheck aria-hidden size={23} weight="regular" />
       </span>
       <h1 className="mt-4.5 mb-0 text-[25px] font-semibold tracking-[-0.7px] text-fg">
         Verify it&apos;s you
@@ -119,7 +119,7 @@ export function TwoFactorChallengeForm({
           aria-pressed={method === "totp"}
           disabled={submitting}
           onClick={() => selectMethod("totp")}
-          startIcon={<ShieldCheck aria-hidden size={16} />}
+          startIcon={<ShieldCheck aria-hidden size={16} weight="regular" />}
           sx={methodButtonSx}
           type="button"
           variant="outlined"
@@ -130,7 +130,7 @@ export function TwoFactorChallengeForm({
           aria-pressed={method === "backup"}
           disabled={submitting}
           onClick={() => selectMethod("backup")}
-          startIcon={<Key aria-hidden size={16} />}
+          startIcon={<Key aria-hidden size={16} weight="regular" />}
           sx={methodButtonSx}
           type="button"
           variant="outlined"
@@ -175,9 +175,9 @@ export function TwoFactorChallengeForm({
           disabled={submitting}
           endIcon={
             submitting ? (
-              <CircleNotch aria-hidden className="bv-spin" size={16} weight="bold" />
+              <CircleNotch aria-hidden className="bv-spin" size={16} weight="regular" />
             ) : (
-              <CaretRight aria-hidden size={16} weight="bold" />
+              <CaretRight aria-hidden size={16} weight="regular" />
             )
           }
           fullWidth
@@ -192,7 +192,7 @@ export function TwoFactorChallengeForm({
           type="button"
           variant="contained"
         >
-          {submitting ? "Verifying..." : "Verify & continue"}
+          {submitting ? "Verifying..." : "Verify and continue"}
         </Button>
       </div>
 

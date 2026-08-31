@@ -54,7 +54,7 @@ async function signIn(page: Page, email: string) {
   await firstBox.focus();
   await page.keyboard.type(await latestOtpFor(email));
   await expectSuccessfulAuthPost(page, "/api/auth/sign-in/email-otp", () =>
-    page.getByRole("button", { name: "Verify & continue" }).click(),
+    page.getByRole("button", { name: "Verify and continue" }).click(),
   );
   await page.waitForURL((url) => url.pathname === "/app" || url.pathname === "/onboarding", {
     timeout: authRedirectTimeout,
@@ -77,6 +77,7 @@ async function clickThroughAppPages(page: Page, keyword: string, projectRef: str
   });
 
   await expectAppPage(page, `/app/${projectRef}/rank-tracker`, async () => {
+    await page.getByRole("button", { name: "Show all locations & devices", exact: true }).click();
     await expect(page.getByText(keyword).first()).toBeVisible();
   });
   await page.getByRole("link", { name: "View keyword details" }).click();

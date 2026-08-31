@@ -24,6 +24,12 @@ function FormHarness({
 }
 
 describe("DeliveryChannelsField", () => {
+  it("shows the always-on in-app feed with an accent bell icon", () => {
+    render(<FormHarness channels={[]} onSubmit={vi.fn()} />);
+
+    expect(screen.getByTestId("delivery-channel-feed-icon")).toHaveClass("text-accent-text");
+  });
+
   it("marks Slack disabled with the API-only preview tooltip", () => {
     render(<FormHarness channels={[]} onSubmit={vi.fn()} />);
 

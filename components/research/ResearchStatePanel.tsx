@@ -1,6 +1,6 @@
 "use client";
 
-import { AccentCtaLink, Button, EmptyState } from "@/components/ui";
+import { AccentCtaLink, Button, EmptyState, ModuleMark } from "@/components/ui";
 import { appPath } from "@/lib/routing/app-path";
 import { docsLinkProps } from "@/lib/site/site";
 import {
@@ -8,7 +8,6 @@ import {
   BinocularsIcon as Binoculars,
   CheckCircleIcon as CheckCircle,
   MagnifyingGlassMinusIcon as MagnifyingGlassMinus,
-  PuzzlePieceIcon as PuzzlePiece,
 } from "@phosphor-icons/react";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -45,7 +44,7 @@ function IdleState() {
         "Results cached for 12 hours, repeat lookups are free",
         "Grouped variants and already-tracked phrases marked",
       ]}
-      icon={<Binoculars size={28} />}
+      mark={<ModuleMark bordered icon={Binoculars} />}
       title="Research starts with a seed"
     />
   );
@@ -59,17 +58,10 @@ function NoProviderState({ projectRef }: Readonly<{ projectRef: string }>) {
   return (
     <EmptyState
       action={
-        <div className="grid justify-items-center gap-3">
-          <AccentCtaLink href={appPath(projectRef, "integrations")}>
-            Connect DataForSEO
-          </AccentCtaLink>
-          <span className="text-fg-muted">
-            Other providers do not offer research endpoints, so they cannot power this page.
-          </span>
-        </div>
+        <AccentCtaLink href={appPath(projectRef, "integrations")}>Connect DataForSEO</AccentCtaLink>
       }
       description="Lookups run on your own key and are billed by DataForSEO to your own account. Connect it in this project's integrations."
-      icon={<PuzzlePiece aria-hidden data-icon="puzzle-piece" size={28} />}
+      mark={<ModuleMark bordered icon={Binoculars} />}
       title="Keyword research needs a provider"
     />
   );
@@ -91,7 +83,7 @@ function LookupFailedState({
       action={
         <div className="grid justify-items-center gap-3">
           {onRetry ? (
-            <Button onClick={onRetry} startIcon={<ArrowsClockwise size={15} />}>
+            <Button onClick={onRetry} startIcon={<ArrowsClockwise weight="regular" size={15} />}>
               {retryLabel}
             </Button>
           ) : null}
@@ -112,7 +104,7 @@ function LookupFailedState({
           <span>The request failed before any results came back.</span>
           {charged === false ? (
             <span className="inline-flex items-center gap-1 font-semibold text-green-text">
-              <CheckCircle size={14} weight="fill" />
+              <CheckCircle size={14} weight="regular" />
               {"You weren't charged for the failed attempt."}
             </span>
           ) : null}
@@ -123,7 +115,7 @@ function LookupFailedState({
           ) : null}
         </span>
       }
-      icon={<ArrowsClockwise size={28} />}
+      icon={<ArrowsClockwise weight="regular" size={28} />}
       title="That lookup did not go through"
     />
   );
@@ -165,7 +157,7 @@ function EmptyResultsState({
         </div>
       }
       bullets={bullets}
-      icon={<MagnifyingGlassMinus size={28} />}
+      icon={<MagnifyingGlassMinus weight="regular" size={28} />}
       title={market ? `No ideas found for these seeds in ${market}` : "No keyword ideas found"}
     />
   );
@@ -174,13 +166,15 @@ function EmptyResultsState({
 function MessageState({
   action,
   description,
+  mark,
   title,
-}: Readonly<{ action?: ReactNode; description: ReactNode; title: string }>) {
+}: Readonly<{ action?: ReactNode; description: ReactNode; mark?: ReactNode; title: string }>) {
   return (
     <EmptyState
       action={action}
       description={description}
-      icon={<CheckCircle size={28} />}
+      icon={mark ? undefined : <CheckCircle weight="regular" size={28} />}
+      mark={mark}
       title={title}
     />
   );
@@ -238,6 +232,7 @@ export function ResearchStatePanel({
           </AccentCtaLink>
         }
         description="Reconnect the project's DataForSEO credentials to resume research lookups."
+        mark={<ModuleMark bordered icon={Binoculars} />}
         title="DataForSEO needs to be reconnected"
       />
     );

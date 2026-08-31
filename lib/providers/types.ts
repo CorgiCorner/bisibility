@@ -37,6 +37,7 @@ export type {
 } from "./domain-overview-types";
 
 export type ProviderCredentials = {
+  accountEmail?: string;
   login?: string;
   password?: string;
   apiKey?: string;

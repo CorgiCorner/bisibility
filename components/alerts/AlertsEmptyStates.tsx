@@ -1,4 +1,4 @@
-import { EmptyState } from "@/components/ui";
+import { EmptyState, ModuleMark } from "@/components/ui";
 import { pluralize } from "@/lib/format/pluralize";
 import { appPath } from "@/lib/routing/app-path";
 import {
@@ -24,7 +24,7 @@ export function AlertsSetupEmpty({
                 className="inline-flex min-h-10 items-center gap-[7px] rounded-control bg-accent-solid px-4.5 text-[13.5px] font-semibold text-accent-on-solid outline-none transition-colors hover:bg-accent-solid-hover focus-visible:bg-accent-solid-hover"
                 href={appPath(projectRef, "rank-tracker")}
               >
-                <Plus aria-hidden size={14} weight="bold" />
+                <Plus aria-hidden size={14} weight="regular" />
                 Add keyword
               </Link>
             ))
@@ -32,7 +32,7 @@ export function AlertsSetupEmpty({
       }
       description="Get notified when rankings slip out of the top 10, a competitor overtakes you, or a keyword jumps. Rules run after each rank check."
       footnote="Activates once you have tracked keywords"
-      icon={<Bell aria-hidden size={27} weight="bold" />}
+      mark={<ModuleMark bordered icon={Bell} />}
       title="No alerts yet"
     />
   );
@@ -57,14 +57,14 @@ export function AlertsAllClear({
       footnote={
         <span className="flex flex-wrap items-center justify-center gap-3">
           <span className="inline-flex items-center gap-1.5">
-            <CheckCircle aria-hidden className="text-green-text" size={13} weight="fill" />
+            <CheckCircle aria-hidden className="text-green-text" size={13} weight="regular" />
             {pluralize(activeRuleCount, "active rule")}
           </span>
           <span className="h-[11px] w-px bg-border" />
           <span>Nothing fired in 48h</span>
         </span>
       }
-      icon={<BellRinging aria-hidden size={27} weight="fill" />}
+      icon={<BellRinging aria-hidden size={27} weight="regular" />}
       title="All clear"
       tone="positive"
     />
@@ -80,7 +80,7 @@ export function AlertsCaughtUp({ snoozedCount }: Readonly<{ snoozedCount: number
           hours.
         </>
       }
-      icon={<BellRinging aria-hidden size={27} weight="fill" />}
+      icon={<BellRinging aria-hidden size={27} weight="regular" />}
       title="All caught up"
       tone="positive"
     />

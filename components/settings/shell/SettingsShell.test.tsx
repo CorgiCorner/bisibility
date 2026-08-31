@@ -54,7 +54,7 @@ const loadingBoundaries = [
     render: () => <NotificationsRouteLoading />,
   },
   { activeSection: "developers", name: "Developers", render: () => <DevelopersLoading /> },
-  { activeSection: "usage", name: "Usage & billing", render: () => <UsageLoading /> },
+  { activeSection: "usage", name: "Usage and billing", render: () => <UsageLoading /> },
   { activeSection: "team", name: "Team", render: () => <TeamSettingsLoading /> },
   { activeSection: "advanced", name: "Advanced", render: () => <AdvancedSettingsLoading /> },
 ] as const;
@@ -90,7 +90,7 @@ describe("SettingsShell", () => {
     expect(screen.queryByRole("link", { name: "Markets" })).not.toBeInTheDocument();
     expect(subnav?.querySelector('[data-settings-subnav-icon="developers"]')).toHaveAttribute(
       "data-settings-subnav-icon-weight",
-      "fill",
+      "regular",
     );
     expect(subnav?.querySelector('[data-settings-subnav-icon="general"]')).toHaveAttribute(
       "data-settings-subnav-icon-weight",
@@ -105,7 +105,12 @@ describe("SettingsShell", () => {
     expect(subnav?.querySelectorAll(".rounded-full")).toHaveLength(1);
     expect(subnav?.querySelector(".bg-border")).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Developers" })).toHaveClass("font-semibold");
-    expect(screen.getByRole("link", { name: "Developers" })).not.toHaveClass("bg-nav-active");
+    const currentLink = screen.getByRole("link", { name: "Developers" });
+    const inactiveLink = screen.getByRole("link", { name: "General" });
+
+    expect(currentLink).not.toHaveClass("bg-nav-active");
+    expect(inactiveLink).toHaveClass("hover:bg-bg-sunken");
+    expect(inactiveLink).not.toHaveClass("hover:bg-nav-active");
   });
 
   it("uses the inset accent outline for keyboard focus instead of a ring", () => {

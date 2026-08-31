@@ -34,6 +34,7 @@ export const AUDIT_TARGET_POLICIES = {
   provider_connection: { mode: "public", prefix: "conn", resource: "Provider connection" },
   rank_check: { mode: "public", prefix: "check", resource: "Rank-check" },
   saved_keyword: { mode: "public", prefix: "svkw", resource: "Saved keyword" },
+  search_analytics_import: { mode: "opaque" },
   saved_view: { mode: "public", prefix: "viw", resource: "Saved view" },
   session: { mode: "public", prefix: "sid", resource: "Session" },
   signal: { mode: "public", prefix: "sig", resource: "Signal" },

@@ -32,6 +32,56 @@ describe("AppFooter", () => {
     expect(document.querySelector('[style*="var(--red)"]')).toBeInTheDocument();
   });
 
+  it("shows a queue mismatch with schema-drift severity and its comparison detail", () => {
+    render(
+      <AppFooter
+        schemaStatus="ok"
+        showInstanceAdmin
+        temporalIdentityDetail="app: default / rank-checks / alert-deliveries · worker: default / other-rank-checks / alert-deliveries"
+        temporalIdentityStatus="mismatch"
+        workerStatus="ok"
+      />,
+    );
+
+    expectAdminLink("Instance admin · Worker on different queues");
+    expect(
+      screen.getByText(
+        "app: default / rank-checks / alert-deliveries · worker: default / other-rank-checks / alert-deliveries",
+      ),
+    ).toBeInTheDocument();
+    expect(document.querySelector('[style*="var(--red)"]')).toBeInTheDocument();
+  });
+
+  it("prioritizes schema drift over a queue mismatch", () => {
+    render(
+      <AppFooter
+        schemaStatus="drift"
+        showInstanceAdmin
+        temporalIdentityDetail="app: default / rank-checks / alert-deliveries · worker: default / other-rank-checks / alert-deliveries"
+        temporalIdentityStatus="mismatch"
+        workerStatus="stale"
+      />,
+    );
+
+    expectAdminLink("Instance admin · Schema drift");
+    expect(screen.queryByText(/app: default/)).not.toBeInTheDocument();
+  });
+
+  it("prioritizes a queue mismatch over a stale worker", () => {
+    render(
+      <AppFooter
+        schemaStatus="ok"
+        showInstanceAdmin
+        temporalIdentityDetail="app: default / rank-checks / alert-deliveries · worker: default / other-rank-checks / alert-deliveries"
+        temporalIdentityStatus="mismatch"
+        workerStatus="stale"
+      />,
+    );
+
+    expectAdminLink("Instance admin · Worker on different queues");
+    expect(document.querySelector('[style*="var(--red)"]')).toBeInTheDocument();
+  });
+
   it("shows a stale worker as down with a yellow status", () => {
     render(<AppFooter schemaStatus="ok" showInstanceAdmin workerStatus="stale" />);
 

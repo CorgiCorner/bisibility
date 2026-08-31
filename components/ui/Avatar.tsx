@@ -28,5 +28,9 @@ export function Avatar({ alt, className, initials, src }: Readonly<AvatarProps>)
     );
   }
 
-  return <span className={cn("grid place-items-center", className)}>{initials}</span>;
+  return (
+    <span aria-hidden={alt ? undefined : true} className={cn("grid place-items-center", className)}>
+      {initials}
+    </span>
+  );
 }

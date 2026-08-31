@@ -11,6 +11,8 @@ import {
 } from "@/lib/rank-check/scheduler-mode";
 import { getRedisClient } from "@/lib/redis/redis";
 import { type ResolvedSchedulerDriver, schedulerDriver } from "@/lib/scheduler/driver";
+import { temporalDeploymentConfig } from "@/lib/temporal/deployment-config";
+import type { WorkerTemporalIdentity } from "./worker-temporal-identity";
 
 export const WORKER_LAST_SEEN_KEY = "ops:worker:lastSeen";
 export const WORKER_LIVENESS_REFRESH_MS = 5 * 60 * 1000;
@@ -20,7 +22,7 @@ export const WORKER_STALE_AFTER_MS = 3 * WORKER_LIVENESS_REFRESH_MS;
 export type WorkerHeartbeatState = "absent" | "fresh" | "future" | "invalid" | "stale";
 export type WorkerLivenessStatus = "ok" | "stale" | "unknown";
 
-export type WorkerLiveness = {
+export type WorkerLiveness = WorkerTemporalIdentity & {
   appliedMigration: string | null;
   bundledMigration: string | null;
   environment: string;
@@ -35,7 +37,7 @@ export type WorkerLiveness = {
   status: WorkerLivenessStatus;
 };
 
-type WorkerLivenessRecord = {
+type WorkerLivenessRecord = WorkerTemporalIdentity & {
   appliedMigration: string | null;
   bundledMigration: string | null;
   environment: string;
@@ -62,18 +64,21 @@ function workerRelease() {
 
 function unknownLiveness(): WorkerLiveness {
   return {
+    alertDeliveryTaskQueue: null,
     appliedMigration: null,
     bundledMigration: null,
     environment: "unknown",
     heartbeatAgeMs: null,
     heartbeatState: "absent",
     lastSeenAt: null,
+    namespace: null,
     release: "unknown",
     revision: "unknown",
     schedulerDriver: "unknown",
     schedulerMode: "unknown",
     schemaComparison: "unknown",
     status: "unknown",
+    taskQueue: null,
   };
 }
 
@@ -90,10 +95,13 @@ function parseLivenessRecord(raw: string): WorkerLivenessRecord | null {
       return null;
     }
     return {
+      alertDeliveryTaskQueue:
+        typeof value.alertDeliveryTaskQueue === "string" ? value.alertDeliveryTaskQueue : null,
       appliedMigration: typeof value.appliedMigration === "string" ? value.appliedMigration : null,
       bundledMigration: typeof value.bundledMigration === "string" ? value.bundledMigration : null,
       environment: typeof value.environment === "string" ? value.environment : "unknown",
       lastSeenAt: value.lastSeenAt,
+      namespace: typeof value.namespace === "string" ? value.namespace : null,
       release: typeof value.release === "string" ? value.release : "unknown",
       revision: typeof value.revision === "string" ? value.revision : "unknown",
       schedulerDriver:
@@ -109,20 +117,24 @@ function parseLivenessRecord(raw: string): WorkerLivenessRecord | null {
           ? value.schedulerMode
           : "unknown",
       schemaComparison: migrationComparison(value.schemaComparison),
+      taskQueue: typeof value.taskQueue === "string" ? value.taskQueue : null,
     };
   } catch {
     // Releases before the admin panel stored a bare ISO timestamp.
     return Number.isFinite(Date.parse(raw))
       ? {
+          alertDeliveryTaskQueue: null,
           appliedMigration: null,
           bundledMigration: null,
           environment: "unknown",
           lastSeenAt: raw,
+          namespace: null,
           release: "unknown",
           revision: "unknown",
           schedulerDriver: "unknown",
           schedulerMode: "unknown",
           schemaComparison: "unknown",
+          taskQueue: null,
         }
       : null;
   }
@@ -155,16 +167,20 @@ export async function refreshWorkerLiveness(now = new Date()): Promise<void> {
     const redis = await getRedisClient();
     if (!redis) return;
     const migrationState = await currentWorkerMigrationState();
+    const { alertDeliveryTaskQueue, namespace, taskQueue } = temporalDeploymentConfig();
     await redis.set(
       WORKER_LAST_SEEN_KEY,
       JSON.stringify({
         ...migrationState,
+        alertDeliveryTaskQueue,
         environment: workerEnvironment(),
         lastSeenAt: now.toISOString(),
+        namespace,
         release: workerRelease(),
         revision: getBakedAppRevision(),
         schedulerDriver: schedulerDriver(),
         schedulerMode: rankCheckSchedulerMode(),
+        taskQueue,
       } satisfies WorkerLivenessRecord),
     );
   } catch (error) {
@@ -195,18 +211,21 @@ export async function getWorkerLivenessDetails(now = new Date()): Promise<Worker
           ? "stale"
           : "fresh";
     return {
+      alertDeliveryTaskQueue: record.alertDeliveryTaskQueue,
       appliedMigration: record.appliedMigration,
       bundledMigration: record.bundledMigration,
       environment: record.environment,
       heartbeatAgeMs,
       heartbeatState,
       lastSeenAt: new Date(lastSeen).toISOString(),
+      namespace: record.namespace,
       release: record.release,
       revision: record.revision,
       schedulerDriver: record.schedulerDriver,
       schedulerMode: record.schedulerMode,
       schemaComparison: record.schemaComparison,
       status: heartbeatState === "fresh" ? "ok" : heartbeatState === "stale" ? "stale" : "unknown",
+      taskQueue: record.taskQueue,
     };
   } catch {
     return unknownLiveness();

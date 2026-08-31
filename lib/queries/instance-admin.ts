@@ -11,9 +11,11 @@ import {
 import { buildFailureBreakdown, buildProviderHealthMatrix } from "@/lib/ops/instance-admin-health";
 import { getWorkerLivenessDetails, type WorkerLiveness } from "@/lib/ops/liveness";
 import { getTemporalSnapshot } from "@/lib/ops/temporal-snapshot";
+import { compareWorkerTemporalIdentity } from "@/lib/ops/worker-temporal-identity";
 import { monthStartUtc } from "@/lib/rank-check/budget";
 import { aggregateProviderReferenceUsage } from "@/lib/rank-check/reference-usage";
 import { schedulerDriver } from "@/lib/scheduler/driver";
+import { temporalDeploymentConfig } from "@/lib/temporal/deployment-config";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -67,18 +69,21 @@ export async function getInstanceStats(now: Date) {
 }
 
 const unavailableWorker: WorkerLiveness = {
+  alertDeliveryTaskQueue: null,
   appliedMigration: null,
   bundledMigration: null,
   environment: "unknown",
   heartbeatAgeMs: null,
   heartbeatState: "absent",
   lastSeenAt: null,
+  namespace: null,
   release: "unknown",
   revision: "unknown",
   schedulerDriver: "unknown",
   schedulerMode: "unknown",
   schemaComparison: "unknown",
   status: "unknown",
+  taskQueue: null,
 };
 
 const unavailableOperationalHeartbeat: OperationalHeartbeat = {
@@ -187,7 +192,14 @@ export async function getInstanceAdminDashboard(now = new Date()) {
     ),
     loadDashboardSection("instance stats", () => getInstanceStats(now), unavailableStats),
   ]);
-  const worker = workerResult.data;
+  const workerLiveness = workerResult.data;
+  const worker = {
+    ...workerLiveness,
+    temporalIdentityComparison: compareWorkerTemporalIdentity(
+      temporalDeploymentConfig(),
+      workerLiveness,
+    ),
+  };
   const database = databaseResult.data;
   const ranks = ranksResult.data;
   const temporalSnapshot = temporalResult.data;

@@ -86,7 +86,7 @@ export async function CloudImportScreen({
         className="mt-7 inline-flex items-center gap-1.5 font-mono text-[12px] font-semibold text-fg-muted transition-colors hover:text-fg"
         href={config.back.href}
       >
-        <ArrowLeft aria-hidden size={13} weight="bold" />
+        <ArrowLeft aria-hidden size={13} weight="regular" />
         {config.back.label}
       </Link>
       {config.topBar ? (

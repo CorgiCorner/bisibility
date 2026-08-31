@@ -12,7 +12,7 @@ describe("OnboardingWizard provider state", () => {
       providerConnected: true,
     });
 
-    expect(screen.getByText("DataForSEO")).toBeInTheDocument();
+    expect(screen.getByText(/DataForSEO · estimated rate unavailable/)).toBeInTheDocument();
   });
 
   it("prefers the saved provider over a stale provider in the URL", () => {
@@ -25,8 +25,8 @@ describe("OnboardingWizard provider state", () => {
       providerConnected: true,
     });
 
-    expect(screen.getByText("SerpApi")).toBeInTheDocument();
-    expect(screen.queryByText("DataForSEO")).not.toBeInTheDocument();
+    expect(screen.getByText(/SerpApi · estimated rate unavailable/)).toBeInTheDocument();
+    expect(screen.queryByText(/DataForSEO · estimated rate unavailable/)).not.toBeInTheDocument();
   });
 
   it("does not carry dirty credentials into another saved provider after returning", async () => {

@@ -1,5 +1,6 @@
 "use client";
 
+import { MenuGroupHeading } from "@/components/ui/MenuGroupHeading";
 import { MenuSelectOptionItem } from "@/components/ui/MenuSelectOptionItem";
 import { menuTransitionDuration, useMenuExitLifecycle } from "@/components/ui/menu-exit-lifecycle";
 import {
@@ -12,8 +13,8 @@ import {
   resolveSelectedOption,
 } from "@/components/ui/menu-select-support";
 import { cn } from "@/lib/ui/cn";
-import ListSubheader from "@mui/material/ListSubheader";
 import Menu from "@mui/material/Menu";
+import type { SxProps, Theme } from "@mui/material/styles";
 import { CaretDownIcon as CaretDown } from "@phosphor-icons/react";
 import { type ReactNode, useState } from "react";
 import { Tooltip } from "./Tooltip";
@@ -30,12 +31,15 @@ type MenuSelectBaseProps = {
   emptyMessage?: string;
   leadingIcon?: ReactNode;
   leadingLabel?: ReactNode;
+  menuMaxHeight?: string;
+  menuMinWidth?: number;
   menuWidth?: number;
   noResultsMessage?: string;
   onChange: (value: string) => void;
   pinCaret?: boolean;
   searchPlaceholder?: string;
   searchable?: boolean;
+  selectedContent?: (option: ReturnType<typeof resolveSelectedOption>) => ReactNode;
   triggerClassName?: string;
   triggerTitle?: string;
   triggerWrapperClassName?: string;
@@ -53,12 +57,15 @@ export function MenuSelect({
   emptyMessage,
   leadingIcon,
   leadingLabel,
+  menuMaxHeight,
+  menuMinWidth,
   menuWidth,
   noResultsMessage,
   onChange,
   pinCaret = false,
   searchPlaceholder = "Search...",
   searchable = false,
+  selectedContent,
   triggerClassName,
   triggerTitle,
   triggerWrapperClassName,
@@ -75,9 +82,21 @@ export function MenuSelect({
   const groupedFiltered = isGrouped ? filterGroupedGroups(input.groups, search) : [];
   const hasResults = isGrouped ? groupedFiltered.length > 0 : flatFiltered.length > 0;
 
-  const paperSx = menuWidth
-    ? { ...menuSelectPaperSx, minWidth: menuWidth, maxWidth: menuWidth }
-    : menuSelectPaperSx;
+  const resolvedMenuWidth = menuWidth ?? anchorEl?.getBoundingClientRect().width;
+  const paperSx = {
+    ...menuSelectPaperSx,
+    ...(menuMinWidth !== undefined
+      ? {
+          maxWidth: "calc(100vw - 32px)",
+          minWidth: `min(${menuMinWidth}px, calc(100vw - 32px))`,
+          width: "max-content",
+        }
+      : resolvedMenuWidth === undefined
+        ? {}
+        : { maxWidth: resolvedMenuWidth, minWidth: resolvedMenuWidth }),
+    maxHeight: menuMaxHeight ?? "min(360px, calc(100dvh - 84px))",
+    overflowY: "auto",
+  } satisfies SxProps<Theme>;
 
   const triggerButton = (
     <button
@@ -94,16 +113,24 @@ export function MenuSelect({
       {leadingLabel ? (
         <span className="flex min-w-0 items-center gap-1.5" data-menu-select-content>
           <span className="shrink-0 text-fg-muted">{leadingLabel}</span>
-          <span className={cn("min-w-0 truncate text-fg", compact && "text-[12px] leading-4")}>
-            {selected?.label ?? ariaLabel}
-          </span>
+          {selectedContent ? (
+            <span className="min-w-0 text-fg">{selectedContent(selected)}</span>
+          ) : (
+            <span className={cn("min-w-0 truncate text-fg", compact && "text-[12px] leading-4")}>
+              {selected?.label ?? ariaLabel}
+            </span>
+          )}
         </span>
       ) : (
         <>
           {leadingIcon ? <span className="flex shrink-0 text-fg-muted">{leadingIcon}</span> : null}
-          <span className={cn("min-w-0 truncate text-fg", compact && "text-[12px] leading-4")}>
-            {selected?.label ?? ariaLabel}
-          </span>
+          {selectedContent ? (
+            <span className="min-w-0 text-fg">{selectedContent(selected)}</span>
+          ) : (
+            <span className={cn("min-w-0 truncate text-fg", compact && "text-[12px] leading-4")}>
+              {selected?.label ?? ariaLabel}
+            </span>
+          )}
         </>
       )}
       <CaretDown
@@ -112,7 +139,7 @@ export function MenuSelect({
         data-menu-select-caret
         data-pinned={pinCaret || undefined}
         size={11}
-        weight="bold"
+        weight="regular"
       />
     </button>
   );
@@ -132,15 +159,21 @@ export function MenuSelect({
       )}
       <Menu
         anchorEl={anchorEl}
+        anchorOrigin={{ horizontal: "left", vertical: "bottom" }}
         autoFocus={!searchable}
         disableAutoFocusItem={searchable}
+        disablePortal={false}
+        marginThreshold={16}
         onClose={closeMenu}
         open={open}
         slotProps={{
           list: { "aria-label": ariaLabel, dense: true, sx: { padding: 0 } },
-          paper: { sx: paperSx },
+          paper: {
+            sx: paperSx,
+          },
           transition: { onExited: handleExited },
         }}
+        transformOrigin={{ horizontal: "left", vertical: "top" }}
         transitionDuration={menuTransitionDuration}
       >
         {searchable ? (
@@ -152,22 +185,10 @@ export function MenuSelect({
           </div>
         ) : null}
         {isGrouped
-          ? groupedFiltered.flatMap((group) => [
-              <ListSubheader
-                key={`${group.id}-heading`}
-                sx={{
-                  backgroundColor: "transparent",
-                  color: "var(--fg-muted)",
-                  fontSize: "11px",
-                  lineHeight: "normal",
-                  paddingX: "9px",
-                  paddingY: "4px",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                }}
-              >
+          ? groupedFiltered.flatMap((group, groupIndex) => [
+              <MenuGroupHeading first={groupIndex === 0} key={`${group.id}-heading`}>
                 {group.label}
-              </ListSubheader>,
+              </MenuGroupHeading>,
               ...group.options.map((option) => (
                 <MenuSelectOptionItem
                   current={option.value === value}

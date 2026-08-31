@@ -22,6 +22,7 @@ export type ModalProps = {
   headerDivider?: boolean;
   contentClassName?: string;
   footerClassName?: string;
+  dismissDisabled?: boolean;
   initialFocus?: () => void;
   /** Exact panel width in px; overrides the `size` presets. */
   width?: number;
@@ -42,6 +43,7 @@ export function Modal({
   ariaLabelledBy,
   children,
   contentClassName,
+  dismissDisabled = false,
   footer,
   footerClassName,
   headerDivider = false,
@@ -66,7 +68,7 @@ export function Modal({
     if (event.key === "Escape") {
       event.preventDefault();
       event.stopPropagation();
-      onClose();
+      if (!dismissDisabled) onClose();
       return;
     }
     if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
@@ -79,6 +81,7 @@ export function Modal({
   }
 
   function handleDialogClose(event: object, reason: "backdropClick" | "escapeKeyDown") {
+    if (dismissDisabled) return;
     if (reason === "escapeKeyDown") {
       const native = (event as { nativeEvent?: { isComposing?: boolean; keyCode?: number } })
         .nativeEvent;
@@ -139,11 +142,12 @@ export function Modal({
             {showClose ? (
               <button
                 aria-label="Close modal"
-                className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-control text-fg-muted outline-none transition-[color,background-color,transform] duration-[var(--motion-press)] hover:bg-bg-sunken focus-visible:bg-bg-sunken motion-safe:active:not-focus-visible:scale-[0.97]"
+                className="grid h-7.5 w-7.5 shrink-0 place-items-center rounded-control text-fg-muted outline-none transition-[color,background-color,transform] duration-(--motion-press) hover:bg-bg-sunken focus-visible:bg-bg-sunken motion-safe:active:not-focus-visible:scale-[0.97]"
+                disabled={dismissDisabled}
                 onClick={onClose}
                 type="button"
               >
-                <X aria-hidden size={17} weight="bold" />
+                <X aria-hidden size={17} weight="regular" />
               </button>
             ) : null}
           </header>
@@ -152,7 +156,7 @@ export function Modal({
         {footer ? (
           <footer
             className={cn(
-              "sticky bottom-0 z-10 flex shrink-0 items-center justify-end gap-4.5 border-t border-border bg-bg-elev px-5.5 py-3.5",
+              "sticky bottom-0 z-10 flex shrink-0 items-center justify-end gap-3 border-t border-border bg-bg-elev px-5.5 py-3.5",
               footerClassName,
             )}
           >

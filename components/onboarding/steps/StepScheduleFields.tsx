@@ -60,7 +60,7 @@ export function SerpDepthWarning({
         aria-hidden
         className="mt-[1px] shrink-0 text-yellow-text"
         size={13}
-        weight="fill"
+        weight="regular"
       />
       <span>Rankings below Top {currentDepth} report as not found and skip alerts.</span>
     </p>

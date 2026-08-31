@@ -110,7 +110,7 @@ function LookupOutcome({
   if (result.status === "not_found") {
     return (
       <div className="mt-4 flex items-center gap-2.5 rounded-card border border-border border-dashed bg-bg-sunken px-4 py-3.5">
-        <User aria-hidden className="text-fg-muted" size={16} />
+        <User aria-hidden className="text-fg-muted" size={16} weight="regular" />
         <span className="text-[12.5px] text-fg-muted">No account matches this identifier.</span>
       </div>
     );
@@ -172,7 +172,12 @@ export function AdminAccountLookup() {
         </label>
         <div className="mt-1.5 flex flex-wrap items-start gap-2.5">
           <span className="flex min-h-10 min-w-[240px] max-w-[420px] flex-1 items-center gap-2 rounded-control border border-border-control bg-transparent px-3 focus-within:border-accent">
-            <MagnifyingGlass aria-hidden className="shrink-0 text-fg-muted" size={14} />
+            <MagnifyingGlass
+              aria-hidden
+              className="shrink-0 text-fg-muted"
+              size={14}
+              weight="regular"
+            />
             <input
               aria-invalid={errors.identifier ? "true" : undefined}
               className="min-w-0 flex-1 border-0 bg-transparent py-2 font-mono text-[12.5px] text-fg outline-none"
@@ -193,7 +198,7 @@ export function AdminAccountLookup() {
         ) : null}
       </form>
       <p className="mt-2 flex items-center gap-1.5 text-[11.5px] text-fg-muted">
-        <ClockCounterClockwise aria-hidden size={12} />
+        <ClockCounterClockwise aria-hidden size={12} weight="regular" />
         Lookups are recorded in the admin audit log.
       </p>
       <LookupOutcome onStatusChange={updateAccountStatus} result={result} />

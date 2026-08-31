@@ -24,8 +24,7 @@ export function useFirstCheckSubmit({
   const [submitting, setSubmitting] = useState(false);
   const submittingRef = useRef(false);
 
-  async function onSubmit(event: SyntheticEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function complete() {
     if (submittingRef.current) return;
     submittingRef.current = true;
     setSubmitting(true);
@@ -45,5 +44,10 @@ export function useFirstCheckSubmit({
     }
   }
 
-  return { onSubmit, submitError, submitting };
+  function onSubmit(event: SyntheticEvent<HTMLFormElement>) {
+    event.preventDefault();
+    void complete();
+  }
+
+  return { complete, onSubmit, submitError, submitting };
 }

@@ -5,6 +5,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 const meta = {
   title: "Integrations/ConnectDrawer",
   component: ConnectDrawer,
+  args: { searchSyncPlan: { daysTotal: 93, pace: "gentle", retentionMonths: 3 } },
   parameters: { layout: "fullscreen" },
 } satisfies Meta<typeof ConnectDrawer>;
 

@@ -15,7 +15,7 @@ export const settingsSections = [
   { icon: Crosshair, id: "tracking", label: "Tracking" },
   { icon: PaperPlaneTilt, id: "notifications", label: "Notifications" },
   { icon: Code, id: "developers", label: "Developers" },
-  { icon: CreditCard, id: "usage", label: "Usage & billing" },
+  { icon: CreditCard, id: "usage", label: "Usage and billing" },
   { icon: UserPlus, id: "team", label: "Team" },
   { icon: ShieldWarning, id: "advanced", label: "Advanced" },
 ] as const satisfies ReadonlyArray<{ icon: Icon; id: string; label: string }>;

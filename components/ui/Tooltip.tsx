@@ -43,7 +43,7 @@ export type TooltipPlacement =
 
 export type TooltipProps = {
   children: ReactNode;
-  content: string | number;
+  content: ReactNode;
   placement?: TooltipPlacement;
   arrow?: boolean;
   semantics?: TooltipSemantics;
@@ -284,7 +284,7 @@ export function Tooltip({
             warm: warmCycle,
           },
         }}
-        title={String(content)}
+        title={content}
       >
         <TooltipTrigger child={childElement} {...triggerProps} />
       </MuiTooltip>

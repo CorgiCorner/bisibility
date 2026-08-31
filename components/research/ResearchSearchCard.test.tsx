@@ -130,23 +130,19 @@ describe("ResearchSearchCard", () => {
     ).toHaveTextContent("Metrics scope: Spain - Spanish");
   });
 
-  it("shows the provider control even when only one connection is eligible", () => {
+  it("hides the provider control while only one provider supports research", () => {
     render(<ResearchSearchCard {...baseProps} />);
 
-    expect(screen.getByRole("button", { name: "Data provider connection" })).toHaveTextContent(
-      "Provider:DataForSEO",
-    );
+    expect(screen.queryByRole("button", { name: "Data provider connection" })).toBeNull();
   });
 
-  it("pins compact provider and mode carets after their left content clusters", () => {
+  it("pins the compact mode caret after its left content cluster", () => {
     render(<ResearchSearchCard {...baseProps} />);
 
-    for (const name of ["Data provider connection", "Research mode"]) {
-      const trigger = screen.getByRole("button", { name });
-      expect(trigger).toHaveClass("text-[12px]", "leading-4");
-      expect(trigger.querySelector("[data-menu-select-content]")).toHaveClass("min-w-0");
-      expect(trigger.querySelector("[data-menu-select-caret]")).toHaveClass("ml-auto");
-    }
+    const trigger = screen.getByRole("button", { name: "Research mode" });
+    expect(trigger).toHaveClass("text-[12px]", "leading-4");
+    expect(trigger.querySelector("[data-menu-select-content]")).toHaveClass("min-w-0");
+    expect(trigger.querySelector("[data-menu-select-caret]")).toHaveClass("ml-auto");
     expect(screen.getByRole("button", { name: "Results limit" })).toHaveClass("justify-between");
   });
 

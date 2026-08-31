@@ -23,7 +23,7 @@ export type ProviderSpendMeterProps = {
   /** null = no cap set: bar hidden, amounts read "{spent} this month". */
   capCents: number | null;
   docsHref: string;
-  editBudgetHref?: string;
+  headerAction?: { href: string; label: "Details" | "Set budget" };
   /** Reference date for the card on-pace projection; stories/tests pin it. */
   now?: Date;
   /** Card only: explicit month-end projection; when omitted it is computed from `now`. */
@@ -168,7 +168,7 @@ export function ProviderSpendMeter({
   action,
   capCents,
   docsHref,
-  editBudgetHref,
+  headerAction,
   now = new Date(),
   onPaceCents,
   providers,
@@ -278,7 +278,7 @@ export function ProviderSpendMeter({
       <div className="flex items-baseline justify-between gap-2.5 whitespace-nowrap">
         <span className="inline-flex items-center gap-1">
           <MeterEyebrow header />
-          <SpendMeterDocsInfo editBudgetHref={editBudgetHref} sessionCents={sessionCents} />
+          <SpendMeterDocsInfo action={headerAction} sessionCents={sessionCents} />
         </span>
         <span className="font-mono text-[10px] tracking-[0.04em] text-fg-muted tabular-nums">
           {tightest

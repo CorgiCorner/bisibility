@@ -132,7 +132,11 @@ export function TeamMembersCard(props: Readonly<TeamMembersCardProps>) {
                 !readOnly &&
                 (member.canChangeRole || member.canTransferOwnership || member.canRemove);
               return (
-                <div className="flex flex-wrap items-center gap-2 p-3 sm:gap-3" key={member.id}>
+                <div
+                  className="flex flex-wrap items-center gap-2 p-3 sm:gap-3"
+                  data-team-member-row=""
+                  key={member.id}
+                >
                   <Avatar
                     alt=""
                     className={cn(
@@ -143,10 +147,12 @@ export function TeamMembersCard(props: Readonly<TeamMembersCardProps>) {
                     src={member.avatarUrl}
                   />
                   <span className="min-w-[140px] flex-1">
-                    <span className="flex items-center gap-2 text-[13.5px] font-semibold">
+                    <span className="flex items-center gap-1.5 text-[13.5px] font-semibold">
                       <span className="truncate">{member.name}</span>
                       {member.isCurrentUser ? (
-                        <StatusPill label="you" showDot={false} size="sm" status="optional" />
+                        <span className="inline-flex h-4 items-center rounded-full border border-border bg-bg-sunken px-1.5 font-mono text-[9px] font-semibold leading-none tracking-[0.3px] text-fg-muted">
+                          you
+                        </span>
                       ) : null}
                     </span>
                     <span className="block truncate font-mono text-[11.5px] text-fg-muted">
@@ -202,7 +208,7 @@ export function TeamMembersCard(props: Readonly<TeamMembersCardProps>) {
                 disabled={readOnly}
                 onClick={() => setInviteOpen(true)}
                 size="sm"
-                startIcon={<UserPlus aria-hidden size={14} weight="bold" />}
+                startIcon={<UserPlus aria-hidden size={14} weight="regular" />}
                 type="button"
               >
                 Invite member

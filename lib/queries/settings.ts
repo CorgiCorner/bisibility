@@ -13,6 +13,7 @@ import {
   providerRateContextKey,
 } from "@/lib/provider-rates/connection-context";
 import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
+import { decryptProviderCredentials } from "@/lib/providers/crypto";
 import { PROVIDER_CATALOG } from "@/lib/providers/registry";
 import {
   monthlyLookupSpendByConnection,
@@ -25,85 +26,21 @@ import {
   primaryProviderConnection,
   providerChainOrderBy,
 } from "@/lib/rank-check/provider-chain-order";
-import {
-  normalizeTrackingScope,
-  type TrackingScope,
-  trackedProjectDomain,
-} from "@/lib/schemas/project";
+import { normalizeTrackingScope, trackedProjectDomain } from "@/lib/schemas/project";
+import { resolveSearchInsightsConnectionState } from "@/lib/search-insights/connection-state";
 import { projectDefaultSerpMarket } from "@/lib/serp/default-market";
-import { resolveSerpDepth, resolveSerpStopOnMatch, type SerpDepth } from "@/lib/serp/markets";
-import type { ProviderUsageData } from "@/lib/settings/options";
+import { resolveSerpDepth, resolveSerpStopOnMatch } from "@/lib/serp/markets";
+import { resolveSearchSyncSettings } from "@/lib/settings/search-sync-config";
+import { loadSearchSyncMetrics } from "@/lib/settings/search-sync-metrics";
 import { requireReadableProject } from "./_auth";
 import { apiKeyExpiryLabel } from "./api-key-settings";
 import { loadProviderAvailability } from "./provider-availability";
-import { loadProjectProviderSpend, type ProjectProviderSpend } from "./provider-spend";
+import { loadProjectProviderSpend } from "./provider-spend";
 import { initials, memberColor, roleLabel } from "./settings-members";
-import {
-  type SettingsProviderSummary,
-  settingsConnectionUsage,
-  settingsProviderSummaries,
-} from "./settings-provider-summaries";
+import { settingsConnectionUsage, settingsProviderSummaries } from "./settings-provider-summaries";
+import type { SettingsView } from "./settings-view-types";
 
-export type SettingsView = {
-  apiKeys: {
-    createdLabel: string;
-    expiresLabel: string;
-    id: string;
-    isExpired: boolean;
-    lastUsedLabel: string;
-    maskedValue: string;
-    name: string;
-  }[];
-  defaults: {
-    city: string | null;
-    locationKey: string;
-    locationLabel: string;
-    costPerCheck: number;
-    country: string;
-    device: string;
-    deviceCount: number;
-    keywordCount: number;
-    inspectionDailyLimit: number;
-    locationCount: number;
-    serpDepth: SerpDepth;
-    serpStopOnMatch: boolean;
-    schedule: {
-      cron_expression: string | null;
-      frequency: "custom_cron" | "daily" | "manual" | "monthly" | "paused" | "weekly";
-      jitter_minutes: number;
-      last_checked_at: string | null;
-      next_check_at: string | null;
-      timezone: string;
-    };
-    targetUrlCount: number;
-  };
-  notifications: {
-    channel: "Email";
-    digest: "Daily";
-    email: string;
-    emailVerification: "unverified" | "verified";
-    maxAlertsPerDay: number;
-  };
-  project: {
-    domain: string;
-    name: string;
-    projectId: string;
-    trackingScope: TrackingScope;
-    writeMode: "active" | "migration_hold" | "migrated";
-  };
-  providers: SettingsProviderSummary[];
-  tags: { color: string; count: number; label: string }[];
-  team: {
-    color: "accent" | "blue" | "purple";
-    email: string;
-    id: string;
-    initials: string;
-    name: string;
-    role: "Editor" | "Owner" | "Viewer";
-    userId: string;
-  }[];
-  usage: { providerSpend: ProjectProviderSpend } & ProviderUsageData;
-};
+export type { SettingsView } from "./settings-view-types";
 
 function iso(date: Date | null | undefined) {
   return date ? date.toISOString() : null;
@@ -178,13 +115,29 @@ export async function getSettings(projectId: string, options: { dateFormat?: Dat
     loadProjectProviderSpend({ catalog: PROVIDER_CATALOG, now, projectId: project.id }),
   ]);
   if (!fullProject) throw new Error("Project not found.");
-  const [rateContexts, providerAvailability] = await Promise.all([
+  const gscConnection = fullProject.providerConnections.find((item) => item.provider === "gsc");
+  let storedGscProperty: string | undefined;
+  try {
+    storedGscProperty = gscConnection
+      ? decryptProviderCredentials(gscConnection.credentialsEncrypted).login
+      : undefined;
+  } catch {
+    storedGscProperty = undefined;
+  }
+  const { propertyKey: gscProperty, status: connectionStatus } =
+    resolveSearchInsightsConnectionState({
+      providerStatus: gscConnection?.status ?? null,
+      storedProperty: storedGscProperty,
+    });
+  const searchSyncSettings = resolveSearchSyncSettings(fullProject.defaults);
+  const [rateContexts, providerAvailability, searchSyncMetrics] = await Promise.all([
     loadProviderRateContexts(
       fullProject.providerConnections.map((connection) => connection.id),
       ["rank_check"],
       now,
     ),
     loadProviderAvailability(fullProject.providerConnections),
+    loadSearchSyncMetrics(fullProject.id, gscProperty, now),
   ]);
 
   const primarySerp = primaryProviderConnection(fullProject.providerConnections, "serp");
@@ -238,6 +191,14 @@ export async function getSettings(projectId: string, options: { dateFormat?: Dat
       keywordCount: fullProject.keywords.length,
       inspectionDailyLimit:
         fullProject.defaults?.inspectionDailyLimit ?? DEFAULT_INSPECTION_DAILY_LIMIT,
+      searchSync: {
+        ...searchSyncMetrics,
+        connectionStatus,
+        lastQuotaPausedAt: searchSyncMetrics.lastQuotaPausedAt ? dateTime.formatDateTime(searchSyncMetrics.lastQuotaPausedAt) : null,
+        lastActivityAt: iso(searchSyncMetrics.lastActivityAt),
+        pauseStartedAt: iso(searchSyncMetrics.pauseStartedAt),
+        ...searchSyncSettings,
+      },
       locationKey: market.locationKey,
       locationLabel: market.displayName,
       locationCount: locations.size || 1,

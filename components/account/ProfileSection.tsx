@@ -109,7 +109,7 @@ export function ProfileSection({
                 emailVerified ? "bg-green/10 text-green-text" : "bg-yellow/15 text-yellow-text",
               )}
             >
-              <CheckCircle size={11} weight="fill" />
+              <CheckCircle size={11} weight="regular" />
               {emailVerified ? "Verified via OTP" : "Unverified"}
             </span>
           </span>

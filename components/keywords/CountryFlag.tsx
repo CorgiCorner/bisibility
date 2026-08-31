@@ -94,7 +94,7 @@ export function CountryFlag({
         className={className}
         data-country-flag-fallback={countryCode}
         aria-label={title}
-        weight="bold"
+        weight="regular"
       />
     );
   }

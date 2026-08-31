@@ -56,8 +56,10 @@ describe("WebhookSecretField", () => {
     expect(screen.getByLabelText("HMAC secret")).toHaveValue(value);
     fireEvent.click(screen.getByRole("button", { name: "Copy secret" }));
 
-    await waitFor(() => expect(writeText).toHaveBeenCalledWith(value));
-    expect(screen.getByRole("button", { name: "Copied" })).toBeInTheDocument();
+    await waitFor(() => {
+      expect(writeText).toHaveBeenCalledWith(value);
+      expect(screen.getByRole("button", { name: "Copied" })).toBeInTheDocument();
+    });
 
     value = "";
     rerender(

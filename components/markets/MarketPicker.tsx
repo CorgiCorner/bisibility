@@ -142,7 +142,7 @@ export function MarketPicker({
           </span>
         )}
         {isTracked ? <MonoText size="sm">TRACKED</MonoText> : null}
-        {isSelected && !isTracked ? <Check aria-hidden size={15} weight="bold" /> : null}
+        {isSelected && !isTracked ? <Check aria-hidden size={15} weight="regular" /> : null}
       </button>
     );
 
@@ -224,7 +224,12 @@ export function MarketPicker({
               className={`sticky top-0 z-20 flex items-center gap-2 border-b border-border-soft bg-bg-elev px-2 ${searchRowHeightClassName}`}
             >
               <span className="relative flex flex-1 items-center">
-                <Search aria-hidden className="absolute left-2.5 text-fg-muted" size={14} />
+                <Search
+                  weight="regular"
+                  aria-hidden
+                  className="absolute left-2.5 text-fg-muted"
+                  size={14}
+                />
                 <Input
                   aria-label="Search more languages"
                   className="pl-8"

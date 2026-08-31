@@ -60,7 +60,7 @@ export function SystemPage({
 
       <section className="flex flex-1 flex-col items-center justify-center px-6 pb-[90px] pt-10 text-center">
         <span className="grid h-16 w-16 place-items-center rounded-card bg-accent-soft text-accent-solid">
-          <Binoculars aria-hidden size={34} weight="bold" />
+          <Binoculars aria-hidden size={34} weight="regular" />
         </span>
         <p className="mb-0 mt-6 font-mono text-[13px] tracking-[0.5px] text-accent">{kicker}</p>
         <h1 className="mb-0 mt-3 max-w-[760px] text-[34px] font-semibold leading-[1.05] tracking-[-1.6px] sm:text-[44px] lg:text-[52px]">
@@ -78,7 +78,7 @@ export function SystemPage({
           target="_blank"
         >
           Still stuck? Read the docs
-          <ArrowUpRight aria-hidden size={14} weight="bold" />
+          <ArrowUpRight aria-hidden size={14} weight="regular" />
         </a>
       </section>
     </main>
@@ -131,7 +131,7 @@ export function SystemLoadingPage() {
 
       <section className="flex flex-1 flex-col items-center justify-center px-6 pb-[90px] pt-10 text-center">
         <span className="grid h-16 w-16 place-items-center rounded-card bg-accent-soft text-accent-solid">
-          <Binoculars aria-hidden size={34} weight="bold" />
+          <Binoculars aria-hidden size={34} weight="regular" />
         </span>
         <SkeletonBlock className="mt-6 h-[15px] w-[136px]" />
         <SkeletonBlock className="mt-4 h-[52px] w-full max-w-[520px]" />

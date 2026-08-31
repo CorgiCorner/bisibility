@@ -58,7 +58,7 @@ export function BulkTagForm({
       try {
         const result = await action(values);
         const count = actionResultCount(result, selectedIds.length);
-        showToast(`Tagged ${keywordCountLabel(count)}`, { tint: "green", undo: noopUndo });
+        showToast(`Tagged ${keywordCountLabel(count)}`, { severity: "success", undo: noopUndo });
         onDone();
       } catch (error) {
         onError(actionErrorMessage(error));

@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui";
 import { appRootPath } from "@/lib/routing/app-path";
-import { ArrowsClockwiseIcon as ArrowsClockwise } from "@phosphor-icons/react";
+import { ArrowClockwiseIcon as ArrowClockwise } from "@phosphor-icons/react";
 
 export function AdminRefresh() {
   return (
@@ -10,7 +10,7 @@ export function AdminRefresh() {
       component="a"
       href={appRootPath("admin")}
       size="sm"
-      startIcon={<ArrowsClockwise aria-hidden size={15} />}
+      startIcon={<ArrowClockwise aria-hidden size={15} weight="regular" />}
       variant="secondary"
     >
       Refresh

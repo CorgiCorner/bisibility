@@ -42,7 +42,7 @@ export function OverviewEmpty({
             className="grid h-12 w-12 place-items-center rounded-card text-purple"
             style={{ backgroundColor: "color-mix(in srgb, var(--purple) 14%, transparent)" }}
           >
-            <RocketLaunch aria-hidden size={25} weight="bold" />
+            <RocketLaunch aria-hidden size={25} weight="regular" />
           </span>
           <h2 className="mt-4.5 text-2xl font-semibold tracking-[-0.8px] text-fg">{heading}</h2>
           <p className="mt-2 text-[14.5px] leading-[1.55] text-fg-muted">

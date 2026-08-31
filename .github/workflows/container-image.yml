@@ -30,7 +30,7 @@ jobs:
   prepare:
     name: Prepare image metadata
     if: github.repository == 'CorgiCorner/bisibility' && (github.event_name != 'push' || !startsWith(github.event.head_commit.message, 'chore(release):'))
-    runs-on: ${{ github.repository != 'CorgiCorner/bisibility' && vars.CI_USE_DEPOT == 'true' && 'depot-ubuntu-24.04' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository != 'CorgiCorner/bisibility' && vars.CI_USE_SELF_HOSTED == 'true' && 'bisibility-ci' || github.repository != 'CorgiCorner/bisibility' && vars.CI_USE_DEPOT == 'true' && 'depot-ubuntu-24.04' || 'ubuntu-latest' }}
     timeout-minutes: 10
     permissions:
       actions: read
@@ -214,10 +214,10 @@ jobs:
         platform:
           - arch: amd64
             value: linux/amd64
-            runner: ${{ github.repository != 'CorgiCorner/bisibility' && vars.CI_USE_DEPOT == 'true' && 'depot-ubuntu-24.04' || 'ubuntu-latest' }}
+            runner: ${{ github.repository != 'CorgiCorner/bisibility' && vars.CI_USE_SELF_HOSTED == 'true' && 'bisibility-ci' || github.repository != 'CorgiCorner/bisibility' && vars.CI_USE_DEPOT == 'true' && 'depot-ubuntu-24.04' || 'ubuntu-latest' }}
           - arch: arm64
             value: linux/arm64
-            runner: ${{ github.repository != 'CorgiCorner/bisibility' && vars.CI_USE_DEPOT == 'true' && 'depot-ubuntu-24.04-arm' || 'ubuntu-24.04-arm' }}
+            runner: ${{ github.repository != 'CorgiCorner/bisibility' && vars.CI_USE_SELF_HOSTED == 'true' && 'bisibility-ci' || github.repository != 'CorgiCorner/bisibility' && vars.CI_USE_DEPOT == 'true' && 'depot-ubuntu-24.04-arm' || 'ubuntu-24.04-arm' }}
     runs-on: ${{ matrix.platform.runner }}
     timeout-minutes: 90
     permissions:
@@ -305,7 +305,7 @@ jobs:
             runtime: worker
             image: docker.io/corgicorner/bisibility-worker
             package: bisibility-worker
-    runs-on: ${{ github.repository != 'CorgiCorner/bisibility' && vars.CI_USE_DEPOT == 'true' && 'depot-ubuntu-24.04' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository != 'CorgiCorner/bisibility' && vars.CI_USE_SELF_HOSTED == 'true' && 'bisibility-ci' || github.repository != 'CorgiCorner/bisibility' && vars.CI_USE_DEPOT == 'true' && 'depot-ubuntu-24.04' || 'ubuntu-latest' }}
     timeout-minutes: 20
     permissions:
       contents: read
@@ -401,7 +401,7 @@ jobs:
       - prepare
       - build
       - merge
-    runs-on: ${{ github.repository != 'CorgiCorner/bisibility' && vars.CI_USE_DEPOT == 'true' && 'depot-ubuntu-24.04' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository != 'CorgiCorner/bisibility' && vars.CI_USE_SELF_HOSTED == 'true' && 'bisibility-ci' || github.repository != 'CorgiCorner/bisibility' && vars.CI_USE_DEPOT == 'true' && 'depot-ubuntu-24.04' || 'ubuntu-latest' }}
     timeout-minutes: 10
     permissions:
       contents: read
@@ -439,7 +439,7 @@ jobs:
     needs:
       - prepare
       - verify-release
-    runs-on: ${{ github.repository != 'CorgiCorner/bisibility' && vars.CI_USE_DEPOT == 'true' && 'depot-ubuntu-24.04' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository != 'CorgiCorner/bisibility' && vars.CI_USE_SELF_HOSTED == 'true' && 'bisibility-ci' || github.repository != 'CorgiCorner/bisibility' && vars.CI_USE_DEPOT == 'true' && 'depot-ubuntu-24.04' || 'ubuntu-latest' }}
     timeout-minutes: 10
     permissions:
       contents: write
@@ -515,7 +515,7 @@ jobs:
     concurrency:
       group: dockerhub-description-sync
       cancel-in-progress: false
-    runs-on: ${{ github.repository != 'CorgiCorner/bisibility' && vars.CI_USE_DEPOT == 'true' && 'depot-ubuntu-24.04' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository != 'CorgiCorner/bisibility' && vars.CI_USE_SELF_HOSTED == 'true' && 'bisibility-ci' || github.repository != 'CorgiCorner/bisibility' && vars.CI_USE_DEPOT == 'true' && 'depot-ubuntu-24.04' || 'ubuntu-latest' }}
     timeout-minutes: 10
     permissions:
       contents: read

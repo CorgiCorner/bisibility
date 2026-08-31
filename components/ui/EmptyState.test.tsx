@@ -29,9 +29,21 @@ describe("EmptyState", () => {
 
     const list = screen.getByRole("list");
     expect(list.tagName).toBe("UL");
-    expect(list).toHaveClass("w-fit", "mx-auto", "list-disc");
+    expect(list).toHaveClass("w-fit", "mx-auto", "list-none", "p-0");
+    expect(list).not.toHaveClass("list-disc");
+    const checks = list.querySelectorAll('svg[data-empty-state-bullet="true"]');
+    expect(checks).toHaveLength(3);
+    for (const check of checks) {
+      expect(check).toHaveClass(
+        "self-center",
+        "[color:color-mix(in_srgb,var(--fg-muted)_60%,transparent)]",
+      );
+      expect(check).not.toHaveClass("mt-[2px]", "text-accent-solid");
+      expect(check).toHaveAttribute("data-empty-state-bullet-kind", "check");
+    }
     expect(list.parentElement).toHaveClass("max-w-[430px]");
     const items = screen.getAllByRole("listitem");
+    for (const item of items) expect(item).toHaveClass("gap-2.5");
     expect(items.map((item) => item.textContent)).toEqual([
       "First point",
       "Second point",
@@ -43,7 +55,7 @@ describe("EmptyState", () => {
     render(<EmptyState bullets={["Only bullet"]} title="No description" />);
 
     // Bullet list follows the title directly, so it gets the title gap.
-    expect(screen.getByRole("list").parentElement).toHaveClass("mt-[7px]");
+    expect(screen.getByRole("list").parentElement).toHaveClass("mt-2.5");
     expect(screen.getByText("No description")).toBeInTheDocument();
   });
 
@@ -61,6 +73,22 @@ describe("EmptyState", () => {
 
     expect(screen.queryByRole("list")).not.toBeInTheDocument();
     expect(screen.getByText("Bare")).toBeInTheDocument();
+  });
+
+  it("renders a mark directly and spaces the heading as media", () => {
+    render(<EmptyState mark={<div data-testid="module-mark" />} title="Marked" />);
+
+    const mark = screen.getByTestId("module-mark");
+    const heading = screen.getByRole("heading", { name: "Marked" });
+    expect(mark.parentElement).toBe(heading.parentElement);
+    expect(mark.nextElementSibling).toBe(heading);
+    expect(heading).toHaveClass("mt-4.5");
+  });
+
+  it("keeps compact media spacing for a direct mark", () => {
+    render(<EmptyState compact mark={<div data-testid="compact-mark" />} title="Compact" />);
+
+    expect(screen.getByRole("heading", { name: "Compact" })).toHaveClass("mt-2.5");
   });
 
   it("renders the mono footnote after the action", () => {

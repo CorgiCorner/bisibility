@@ -60,7 +60,7 @@ function AuditNoRowsOverlay() {
     <div className="grid h-full place-items-center p-6">
       <EmptyState
         description={`Adjust the filters to search up to the ${entryLimit} most recent events in this date range.`}
-        icon={<MagnifyingGlass aria-hidden size={28} />}
+        icon={<MagnifyingGlass aria-hidden size={28} weight="regular" />}
         title="No audit events match"
       />
     </div>
@@ -115,8 +115,11 @@ export function AuditLogView({
           truncated={truncated}
           visibleCount={filteredEntries.length}
         />
-        <div className="min-w-0 overflow-x-auto">
-          <div className="h-[min(614px,calc(100dvh-260px))] min-h-[360px] min-w-[920px]">
+        <div className="min-w-0 overflow-hidden" data-testid="audit-grid-scroll-boundary">
+          <div
+            className="h-[min(614px,calc(100dvh-260px))] min-h-[360px] w-full min-w-0"
+            data-testid="audit-grid-viewport"
+          >
             <AuditEntryLimitContext.Provider value={entryLimit}>
               <DataGrid
                 aria-label="Audit log"
@@ -140,12 +143,11 @@ export function AuditLogView({
       </Card>
       <div className="flex flex-wrap items-center justify-between gap-2 px-1 font-mono text-[11px] text-fg-muted">
         <span className="inline-flex items-center gap-2">
-          <LockSimple aria-hidden className="text-green-text" size={14} />
+          <LockSimple aria-hidden className="text-green-text" size={14} weight="regular" />
           Append-only / retained {retentionDays} days
         </span>
         <span>
-          Filters search up to {entryLimit} most recent events / Visible to Admin &amp; Auditor
-          roles
+          Filters search up to {entryLimit} most recent events / Visible to Admin and Auditor roles
         </span>
       </div>
       <AuditDetailSheet entry={selectedEntry} onClose={() => setSelectedEntry(null)} />

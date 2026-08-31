@@ -21,7 +21,7 @@ export function ResearchDetailSaveAction({
         className="mt-3 flex items-center justify-center gap-2 rounded-control border border-border-control bg-bg-sunken px-3 py-2.5 text-[12.5px] font-semibold text-accent-text hover:border-border-control"
         href={rankTrackerTabPath(projectRef, "saved")}
       >
-        <BookmarkSimple aria-hidden size={14} weight="fill" />
+        <BookmarkSimple aria-hidden size={14} weight="regular" />
         Saved / view in Keywords
       </Link>
     );
@@ -31,7 +31,7 @@ export function ResearchDetailSaveAction({
     <div className="mt-2 grid gap-1.5">
       <Button
         onClick={() => onSave(row)}
-        startIcon={<BookmarkSimple size={14} />}
+        startIcon={<BookmarkSimple weight="regular" size={14} />}
         sx={{
           width: "100%",
           backgroundColor: "var(--bg-sidebar)",

@@ -2,7 +2,6 @@ import "server-only";
 import { getAuditRetentionDays } from "@/lib/audit/retention";
 import { writeAudit } from "@/lib/auth/audit";
 import { type Actor, AuthorizationError, authorize, getProjectRole } from "@/lib/auth/authorize";
-import { gravatarUrl } from "@/lib/avatar/gravatar";
 import { initials as avatarInitials } from "@/lib/avatar/initials";
 import { prisma } from "@/lib/db/prisma";
 import { parsePublicId } from "@/lib/db/public-id";
@@ -150,7 +149,12 @@ type AuditRow = {
   status: string;
   statusReason: string | null;
   userAgent: string | null;
-  actor: { email: string; name: string | null; publicId: string | null } | null;
+  actor: {
+    email: string;
+    image: string | null;
+    name: string | null;
+    publicId: string | null;
+  } | null;
 };
 function statusFor(status: string): AuditStatus {
   return status === "failed" ? "failed" : "success";
@@ -175,7 +179,7 @@ function mapAuditRow(row: AuditRow): AuditEntry {
   const email = row.actor?.email ?? "system@bisibility";
   return {
     actor: {
-      avatarUrl: row.actor ? gravatarUrl(email, 26) : null,
+      avatarUrl: row.actor?.image ?? null,
       email,
       id: row.actor ? requiredPublicId(row.actor.publicId, "Audit actor", "usr") : "system",
       initials: avatarInitials(name, email),
@@ -219,7 +223,7 @@ function dateRangeCutoff(dateRange: AuditDateRange): Date | null {
 }
 async function loadAuditEntries(projectId: string, cutoff: Date | null) {
   const rows = await prisma.auditLog.findMany({
-    include: { actor: { select: { email: true, name: true, publicId: true } } },
+    include: { actor: { select: { email: true, image: true, name: true, publicId: true } } },
     orderBy: { createdAt: "desc" },
     take: AUDIT_ENTRY_LIMIT + 1,
     where: { projectId, ...(cutoff ? { createdAt: { gte: cutoff } } : {}) },

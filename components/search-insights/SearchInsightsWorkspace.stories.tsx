@@ -1,0 +1,95 @@
+import { ToastProvider } from "@/components/ui";
+import type { Meta, StoryObj } from "@storybook/react";
+import { userEvent, within } from "storybook/test";
+import type { CancelGooglePropertySelectionAction } from "./SearchInsightsOauthReturn";
+import { SearchInsightsWorkspace } from "./SearchInsightsWorkspace";
+import {
+  storyCompletePropertySelectionAction,
+  storyContext,
+  storyExportAction,
+  storyImportState,
+  storyLoadPropertiesAction,
+  storyOauth,
+  storySelectPropertyAction,
+  storySyncAction,
+} from "./search-insights-story-fixtures";
+
+const meta = {
+  component: SearchInsightsWorkspace,
+  decorators: [
+    (Story) => (
+      <ToastProvider>
+        <div className="min-h-screen bg-bg p-4 text-fg sm:p-6">
+          <Story />
+        </div>
+      </ToastProvider>
+    ),
+  ],
+  parameters: { layout: "fullscreen", nextjs: { appDirectory: true } },
+  title: "Search Console/Workspace",
+} satisfies Meta<typeof SearchInsightsWorkspace>;
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+const cancelPropertySelectionAction = (async () => ({
+  status: "cancelled" as const,
+})) as CancelGooglePropertySelectionAction;
+
+const common = {
+  cancelPropertySelectionAction,
+  completePropertySelectionAction: storyCompletePropertySelectionAction,
+  context: storyContext,
+  disconnectConnectionAction: async () => ({ ok: true }),
+  exportAction: storyExportAction,
+  loadPropertiesAction: storyLoadPropertiesAction,
+  oauth: storyOauth,
+  projectDomain: "example.com",
+  projectId: "prj_story",
+  selectPropertyAction: storySelectPropertyAction,
+  syncAction: storySyncAction,
+  trustStrip: null,
+};
+
+export const Connected: Story = { args: common };
+
+export const BackfillRunning: Story = {
+  args: {
+    ...common,
+    context: { ...storyContext, counts: { pages: 41, queries: 96 }, importState: storyImportState },
+  },
+};
+
+export const NotConnected: Story = {
+  args: {
+    ...common,
+    context: {
+      ...storyContext,
+      connection: { property: null, status: "not_connected" },
+      counts: { pages: 0, queries: 0 },
+      importState: null,
+      window: null,
+      yoy: { monthsImported: 0, required: 13 },
+    },
+  },
+};
+
+export const WithTrustStrip: Story = {
+  args: {
+    ...common,
+    trustStrip: (
+      <p className="bg-bg-sunken px-4 py-3 font-mono text-ui-caption text-fg-muted">
+        Google data available through Jul 8, 2026
+      </p>
+    ),
+  },
+};
+
+export const PropertyMenuOpen: Story = {
+  args: common,
+  play: async ({ canvasElement }) => {
+    await userEvent.click(
+      within(canvasElement).getByRole("button", { name: "Search Console property" }),
+    );
+  },
+};

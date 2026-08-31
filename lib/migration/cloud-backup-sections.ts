@@ -11,7 +11,7 @@ export const CLOUD_BACKUP_SECTIONS = [
     countable: true,
     countKey: "keywords",
     description: "Names, tags and target URLs",
-    label: "Keywords & tags",
+    label: "Keywords and tags",
     payloadKey: "keywords",
   },
   {

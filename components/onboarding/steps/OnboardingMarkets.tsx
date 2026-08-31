@@ -16,6 +16,7 @@ export type SaveOnboardingMarketsAction = (input: {
 
 type OnboardingMarketsProps = {
   calculatorHref?: string | null;
+  error?: string;
   onChange: (locations: LocationFieldValue[]) => void;
   projectId: string;
   values: readonly LocationFieldValue[];
@@ -37,6 +38,7 @@ function locationValue(choice: MarketPickerChoice): LocationFieldValue {
 
 export function OnboardingMarkets({
   calculatorHref,
+  error,
   onChange,
   projectId,
   values,
@@ -51,12 +53,16 @@ export function OnboardingMarkets({
   }
 
   function removeMarket(canonicalKey: string) {
-    if (values.length <= 1) return;
     onChange(values.filter((value) => value.canonicalKey !== canonicalKey));
   }
 
   return (
-    <section aria-label="Markets">
+    <section
+      aria-describedby={error ? "onboarding-markets-error" : undefined}
+      aria-label="Markets"
+      id="onboarding-markets"
+      tabIndex={-1}
+    >
       <div className="font-mono text-[10px] uppercase tracking-[0.4px] text-fg-muted">Markets</div>
       <div className="mt-2 flex flex-wrap gap-2">
         {values.map((value) => (
@@ -69,7 +75,6 @@ export function OnboardingMarkets({
             <span className="text-fg-muted">{languageForLocationValue(value)}</span>
             <Button
               aria-label={`Remove ${value.displayName} / ${languageForLocationValue(value)}`}
-              disabled={values.length <= 1}
               onClick={() => removeMarket(value.canonicalKey)}
               size="xs"
               sx={{
@@ -84,15 +89,16 @@ export function OnboardingMarkets({
               type="button"
               variant="ghost"
             >
-              <X aria-hidden size={11} weight="bold" />
+              <X aria-hidden size={11} weight="regular" />
             </Button>
           </span>
         ))}
         {values.length < MAX_PROJECT_MARKETS ? (
           <Button
+            aria-describedby={error ? "onboarding-markets-error" : undefined}
             onClick={() => setPickerOpen(true)}
             size="xs"
-            startIcon={<Plus aria-hidden size={12} weight="bold" />}
+            startIcon={<Plus aria-hidden size={12} weight="regular" />}
             sx={{ borderRadius: "9999px", borderStyle: "dashed", minHeight: 30 }}
             type="button"
             variant="secondary"
@@ -101,6 +107,11 @@ export function OnboardingMarkets({
           </Button>
         ) : null}
       </div>
+      {error ? (
+        <p className="m-0 mt-2 text-[12px] text-red-text" id="onboarding-markets-error">
+          {error}
+        </p>
+      ) : null}
       {values.length >= MAX_PROJECT_MARKETS ? (
         <p className="m-0 mt-2 text-[11.5px] font-medium text-fg-muted">
           Maximum 5 markets selected.

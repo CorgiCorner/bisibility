@@ -180,7 +180,7 @@ export function KeywordFirstCheckModal({
           Cancel
         </Button>
         <Button loading={confirming} loadingLabel="Starting..." onClick={onConfirm} type="button">
-          Confirm &amp; run
+          Confirm and run
         </Button>
       </div>
     );

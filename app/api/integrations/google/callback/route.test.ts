@@ -56,6 +56,21 @@ describe("GET /api/integrations/google/callback", () => {
     );
   });
 
+  it("retains the Search Insights view while adding GA4 selection parameters", async () => {
+    mocks.completeGoogleOAuthInstall.mockResolvedValue({
+      projectId: "internal_project_id",
+      provider: "ga4",
+      returnPath: "/app/prj_1/search-console?property=sc-domain%3Abisibility.com&period=28",
+      status: "select",
+    });
+
+    const response = await GET(callbackRequest("code=code_1&state=state_1"));
+
+    expect(response.headers.get("location")).toBe(
+      "https://bisibility.com/app/prj_1/search-console?property=sc-domain%3Abisibility.com&period=28&google=select&connect=ga4&provider=ga4",
+    );
+  });
+
   it("redirects an OAuth error to the public origin", async () => {
     mocks.googleOAuthReturnContextFromState.mockReturnValue({
       projectId: "internal_project_id",

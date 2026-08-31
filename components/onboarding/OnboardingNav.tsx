@@ -43,7 +43,7 @@ export function OnboardingNav({
       <Button
         onClick={onBack}
         size="lg"
-        startIcon={<ArrowLeft aria-hidden size={15} weight="bold" />}
+        startIcon={<ArrowLeft aria-hidden size={15} weight="regular" />}
         sx={{ color: "var(--fg-muted)" }}
         type="button"
         variant="secondary"
@@ -56,7 +56,7 @@ export function OnboardingNav({
       <Button
         href={buildOnboardingStepHref(previousStep, flowState)}
         size="lg"
-        startIcon={<ArrowLeft aria-hidden size={15} weight="bold" />}
+        startIcon={<ArrowLeft aria-hidden size={15} weight="regular" />}
         sx={{ color: "var(--fg-muted)" }}
         variant="secondary"
       >
@@ -72,7 +72,7 @@ export function OnboardingNav({
         {secondaryAction}
         <Button
           disabled={continueDisabled}
-          endIcon={<ArrowRight aria-hidden size={15} weight="bold" />}
+          endIcon={<ArrowRight aria-hidden size={15} weight="regular" />}
           form={onContinue ? undefined : onboardingFormId}
           onClick={onContinue}
           size="lg"

@@ -30,6 +30,7 @@ describe("IntegrationCategory", () => {
         canManageProviders
         canUpdateProject
         category={integrationCategories[0]}
+        searchSyncPlan={undefined}
         timeZone="UTC"
       />,
     );
@@ -46,6 +47,7 @@ describe("IntegrationCategory", () => {
         canManageProviders
         canUpdateProject
         category={integrationCategories[1]}
+        searchSyncPlan={{ daysTotal: 93, pace: "gentle", retentionMonths: 3 }}
         timeZone="UTC"
       />,
     );

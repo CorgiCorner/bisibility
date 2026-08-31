@@ -1,6 +1,7 @@
 import { providerCredentialFieldsFor } from "@/lib/integrations/credential-fields";
 import type { IntegrationProviderData, ProviderActionHandlers } from "@/lib/integrations/types";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import type { ComponentProps } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ConnectDrawer } from "./ConnectDrawer";
@@ -37,6 +38,11 @@ function connectedDataForSeo(): IntegrationProviderData {
     ...provider,
     drawer: {
       ...provider.drawer,
+      activities: [
+        { label: "Last used", value: "12 min ago" },
+        { label: "Connection updated", value: "1 day ago" },
+        { label: "Fallback state", value: "Enabled" },
+      ],
       defaults: { ...provider.drawer.defaults, secret: "" },
     },
     primary: false,
@@ -142,6 +148,22 @@ describe("ConnectDrawer", () => {
     expect(
       screen.queryByText("Credentials can also be configured through environment variables."),
     ).not.toBeInTheDocument();
+  });
+
+  it("shows recent activity only for SERP provider drawers", () => {
+    const plausible = connectablePlausible();
+    const { view } = renderDrawer({ ...plausible, status: "connected" });
+
+    expect(screen.queryByText("Recent activity")).not.toBeInTheDocument();
+    expect(screen.queryByText("Last sync")).not.toBeInTheDocument();
+    expect(screen.queryByText("Connection updated")).not.toBeInTheDocument();
+    expect(screen.queryByText("Connection state")).not.toBeInTheDocument();
+
+    view.unmount();
+    renderDrawer(connectedDataForSeo());
+
+    expect(screen.getByText("Recent activity")).toBeInTheDocument();
+    expect(screen.getByText("Last used")).toBeInTheDocument();
   });
 
   it("keeps connection tests disabled until required credentials are filled", () => {
@@ -390,6 +412,43 @@ describe("ConnectDrawer", () => {
         providerId: "plausible",
       }),
     );
+  });
+
+  it.each([
+    ["self-host", "Sign in with Google, read-only. Tokens are stored encrypted in your instance."],
+    ["cloud", "Sign in with Google, read-only. Tokens are stored encrypted in your workspace."],
+  ] as const)("uses deployment-aware OAuth title copy for %s", (deploymentMode, expected) => {
+    const connectedGsc = integrationCategories[1].providers[0];
+    renderDrawer({ ...connectedGsc, status: "ready" }, { deploymentMode });
+
+    expect(screen.getByText(expected)).toBeInTheDocument();
+  });
+
+  it("confirms inline Search Console disconnect before calling the provider action", async () => {
+    const connectedGsc = integrationCategories[1].providers[0];
+    const provider = {
+      ...connectedGsc,
+      drawer: {
+        ...connectedGsc.drawer,
+        accountEmail: "owner@example.com",
+        defaults: { ...connectedGsc.drawer.defaults, login: "sc-domain:example.com" },
+      },
+      status: "connected" as const,
+    };
+    const { onClose } = renderDrawer(provider);
+
+    await userEvent.click(screen.getByRole("button", { name: "Disconnect" }));
+    expect(actions.disconnectProvider).not.toHaveBeenCalled();
+    const dialog = screen.getByRole("dialog", { name: "Disconnect provider" });
+    await userEvent.click(within(dialog).getByRole("button", { name: "Disconnect provider" }));
+
+    await waitFor(() =>
+      expect(actions.disconnectProvider).toHaveBeenCalledWith({
+        projectId: "prj_1",
+        providerId: "gsc",
+      }),
+    );
+    expect(onClose).toHaveBeenCalledOnce();
   });
 
   it("does not show API-key test and save controls for OAuth providers", () => {

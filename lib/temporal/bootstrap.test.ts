@@ -122,8 +122,8 @@ describe("ensureReconcilerSchedule", () => {
     vi.unstubAllEnvs();
   });
 
-  it("is gated off only when explicitly disabled", async () => {
-    vi.stubEnv("RANK_CHECK_RECONCILER_ENABLED", "false");
+  it("is gated off when the canonical scheduler mode disables legacy scheduling", async () => {
+    vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", "cutover");
     const client = clientMock();
 
     expect(isReconcilerEnabled()).toBe(false);

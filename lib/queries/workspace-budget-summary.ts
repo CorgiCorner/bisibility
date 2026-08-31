@@ -9,6 +9,7 @@ import { getRequestMonthlySpendCents } from "./workspace-request-data";
 export type WorkspaceBudgetSummary = {
   capCents: number;
   hasAllocation: boolean;
+  headerAction: "details" | "set_budget" | null;
   maxUsedPercent: number | null;
   recorded: { cents: number; units: number };
   spentCents: number;
@@ -48,9 +49,14 @@ export async function loadWorkspaceBudgetSummary(
       now,
       projectId,
     });
+    const connected = providerSpend.connections.filter(
+      (connection) => connection.status === "connected",
+    );
+    const hasAllocation = connected.some((connection) => connection.allocation !== null);
     return {
       capCents,
-      hasAllocation: providerSpend.summary.maxUsedPercent !== null,
+      hasAllocation,
+      headerAction: connected.length ? (hasAllocation ? "details" : "set_budget") : null,
       maxUsedPercent: providerSpend.summary.maxUsedPercent,
       recorded: providerSpend.summary.recorded,
       spentCents,

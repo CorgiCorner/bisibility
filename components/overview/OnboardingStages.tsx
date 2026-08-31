@@ -95,7 +95,7 @@ export function ConnectStage({
         action={
           <Button
             component="a"
-            endIcon={<ArrowUpRight size={14} weight="bold" />}
+            endIcon={<ArrowUpRight size={14} weight="regular" />}
             href={googleOauthConsoleUrl}
             rel="noreferrer"
             target="_blank"
@@ -115,9 +115,9 @@ export function ConnectStage({
       action={
         <Button
           component={Link}
-          endIcon={<CaretRight size={14} weight="bold" />}
+          endIcon={<CaretRight size={14} weight="regular" />}
           href={appPath(projectRef, "integrations?connect=gsc")}
-          startIcon={<MagnifyingGlass size={15} weight="bold" />}
+          startIcon={<MagnifyingGlass size={15} weight="regular" />}
           variant="primary"
         >
           Connect Search Console
@@ -159,7 +159,7 @@ export function KeywordsStage({
             loading={pending}
             loadingLabel="Loading queries..."
             onClick={onImport}
-            startIcon={<ArrowLineDown size={15} weight="bold" />}
+            startIcon={<ArrowLineDown size={15} weight="regular" />}
             variant="primary"
           >
             Import your top queries
@@ -184,7 +184,7 @@ export function KeywordsStage({
       action={
         <Button
           component={Link}
-          endIcon={<CaretRight size={14} weight="bold" />}
+          endIcon={<CaretRight size={14} weight="regular" />}
           href={appPath(projectRef, "rank-tracker?add=1")}
           variant="primary"
         >

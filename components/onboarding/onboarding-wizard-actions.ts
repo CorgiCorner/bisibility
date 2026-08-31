@@ -52,5 +52,7 @@ export type OnboardingWizardActions = {
   testProviderConnectionAction: NonNullable<
     Parameters<typeof StepConnectProvider>[0]["testProviderConnectionAction"]
   >;
-  updateProjectDefaultsAction: (input: ProjectDefaultsInput) => Promise<unknown>;
+  updateProjectDefaultsAction: (
+    input: ProjectDefaultsInput,
+  ) => Promise<{ nextCheckAt?: string | null }>;
 };

@@ -76,7 +76,6 @@ export function UnreadSummary({
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
         {severityOrder.map((severity) => {
           const meta = severityMeta[severity];
-          const Icon = severityIcons[severity];
           const count = alerts.filter(
             (alert) => alert.severity === severity && isAlertUnread(alert, readIds),
           ).length;
@@ -84,11 +83,10 @@ export function UnreadSummary({
           return (
             <span className="inline-flex items-center gap-2" key={severity}>
               <span
-                className="grid h-[26px] w-[26px] place-items-center rounded-control"
-                style={{ backgroundColor: meta.background, color: meta.color }}
-              >
-                <Icon aria-hidden size={14} weight="fill" />
-              </span>
+                aria-hidden
+                className="h-[7px] w-[7px] rounded-full"
+                style={{ backgroundColor: meta.color }}
+              />
               <span className="text-[15px] font-semibold">{count}</span>
               <span className="font-mono text-[11px] text-fg-muted">{meta.label}</span>
             </span>
@@ -122,7 +120,7 @@ export function AlertFeedRow({
         className="mt-0.5 grid h-8.5 w-[34px] shrink-0 place-items-center rounded-control"
         style={{ backgroundColor: meta.background, color: meta.color }}
       >
-        <Icon aria-hidden size={17} weight="fill" />
+        <Icon aria-hidden size={17} weight="regular" />
       </span>
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
@@ -133,12 +131,12 @@ export function AlertFeedRow({
           <span className="font-semibold text-fg">{alert.keyword}</span>
           <span className="inline-flex min-w-0 items-center gap-1.5 text-fg-muted">
             <span className="truncate">{alert.previous}</span>
-            <ArrowRight aria-hidden size={10} weight="bold" />
+            <ArrowRight aria-hidden size={10} weight="regular" />
             <span className="truncate font-semibold text-fg">{alert.current}</span>
           </span>
         </div>
         <p className="m-0 mt-2 flex items-center gap-1.5 text-[12.5px] text-fg-muted">
-          <Lightbulb aria-hidden className="shrink-0 text-accent-text" size={13} />
+          <Lightbulb weight="regular" aria-hidden className="shrink-0 text-accent-text" size={13} />
           {alert.action}
         </p>
         {alert.targetUrl && alert.rankingUrl ? (

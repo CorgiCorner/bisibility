@@ -22,6 +22,8 @@
   --accent-solid: #f1511c;
   --accent-solid-hover: #f0450f;
   --accent-on-solid: #fff3ee;
+  --module-mark-top: rgba(255, 255, 255, 0.4);
+  --module-mark-bottom: rgba(26, 24, 19, 0.08);
   --blue: #4f86e8;
   --blue-text: #315eac;
   --purple: #8e6fe0;
@@ -67,7 +69,7 @@
   --bg: #0f0c07;
   --bg-elev: #191919;
   --bg-sidebar: #070603;
-  --bg-sunken: #15110a;
+  --bg-sunken: #141414;
   --bg-band: #141414;
   --bg-inset: #080704;
   --table-header-bg: #15110a;
@@ -75,7 +77,7 @@
   --fg-muted: #a09d95;
   --border: #343333;
   --border-soft: #221d15;
-  --border-control: #716653;
+  --border-control: #616060;
   --nav-active: #231f17;
   --meter-track: #443c29;
   --accent: #e08a6a;
@@ -85,6 +87,8 @@
   --accent-solid: #f1511c;
   --accent-solid-hover: #f0450f;
   --accent-on-solid: #fff3ee;
+  --module-mark-top: rgba(0, 0, 0, 0.32);
+  --module-mark-bottom: rgba(255, 255, 255, 0.08);
   --blue: #6a9bf0;
   --blue-text: #6a9bf0;
   --purple: #9e82e6;

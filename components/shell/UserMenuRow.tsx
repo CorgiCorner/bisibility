@@ -8,7 +8,7 @@ import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import MenuItem from "@mui/material/MenuItem";
 import Link from "next/link";
 
-const ROW_SX = {
+export const USER_MENU_ROW_SX = {
   borderRadius: UI_RADIUS_ROLES.control,
   color: "var(--fg)",
   fontSize: "13px",
@@ -16,8 +16,8 @@ const ROW_SX = {
   minHeight: 0,
   paddingX: "9px",
   paddingY: "8px",
-  "&:hover": { backgroundColor: "var(--nav-active)" },
-  "&.Mui-focusVisible": { backgroundColor: "var(--nav-active)" },
+  "&:hover": { backgroundColor: "var(--bg-sunken)" },
+  "&.Mui-focusVisible": { backgroundColor: "var(--bg-sunken)" },
 } as const;
 
 export type UserMenuRowProps = {
@@ -32,16 +32,17 @@ export function UserMenuRow({ item, disabled, onClose, onSelect }: Readonly<User
   const Icon = item.icon;
   const content = (
     <>
-      <Icon aria-hidden className="text-fg-muted" size={16} />
+      <Icon aria-hidden className="text-fg-muted" size={16} weight="regular" />
       <span className="flex-1 truncate">{item.label}</span>
-      {item.hint ? <span className="font-mono text-[11px] text-fg-muted">{item.hint}</span> : null}
-      {item.external ? <ExternalIcon aria-hidden className="text-fg-muted" size={13} /> : null}
+      {item.external ? (
+        <ExternalIcon aria-hidden className="text-fg-muted" size={13} weight="regular" />
+      ) : null}
     </>
   );
 
   if (onSelect) {
     return (
-      <MenuItem disabled={disabled} onClick={onSelect} sx={ROW_SX}>
+      <MenuItem disabled={disabled} onClick={onSelect} sx={USER_MENU_ROW_SX}>
         {content}
       </MenuItem>
     );
@@ -55,7 +56,7 @@ export function UserMenuRow({ item, disabled, onClose, onSelect }: Readonly<User
         href={item.href ?? "#"}
         onClick={onClose}
         rel="noopener"
-        sx={ROW_SX}
+        sx={USER_MENU_ROW_SX}
         target="_blank"
       >
         {content}
@@ -64,7 +65,7 @@ export function UserMenuRow({ item, disabled, onClose, onSelect }: Readonly<User
   }
 
   return (
-    <MenuItem component={Link} href={item.href ?? "#"} onClick={onClose} sx={ROW_SX}>
+    <MenuItem component={Link} href={item.href ?? "#"} onClick={onClose} sx={USER_MENU_ROW_SX}>
       {content}
     </MenuItem>
   );

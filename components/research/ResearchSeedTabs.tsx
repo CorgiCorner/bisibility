@@ -47,7 +47,7 @@ export function ResearchSeedTabs({
                 onClick={() => onClose(tab.id)}
                 type="button"
               >
-                <X aria-hidden size={12} weight="bold" />
+                <X aria-hidden size={12} weight="regular" />
               </button>
             ) : null}
           </div>

@@ -76,17 +76,11 @@ export function ProviderCard({
           href={provider.docsHref}
           rel={provider.affiliate ? "sponsored noopener noreferrer" : "noreferrer"}
           target="_blank"
-          title={provider.affiliate ? "Affiliate link" : undefined}
         >
           Get API credentials ↗
         </a>
         {provider.affiliate ? (
-          <>
-            <span aria-hidden className="text-[11.5px] text-fg-muted">
-              /
-            </span>
-            <span className="text-[11.5px] text-fg-muted">affiliate</span>
-          </>
+          <span className="text-[11.5px] text-fg-muted">· affiliate link</span>
         ) : null}
       </span>
     </section>

@@ -25,7 +25,7 @@ export function SetupStepper({ current }: Readonly<{ current: SetupStep }>) {
               data-step-state={state}
             >
               {state === "complete" ? (
-                <Check aria-hidden className="text-fg-muted" size={12} weight="bold" />
+                <Check aria-hidden className="text-fg-muted" size={12} weight="regular" />
               ) : (
                 index + 1
               )}

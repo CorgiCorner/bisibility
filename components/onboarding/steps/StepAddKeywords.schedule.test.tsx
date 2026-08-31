@@ -8,10 +8,18 @@ function keywordBox() {
 }
 
 describe("StepAddKeywords schedule summary", () => {
+  it("renders mobile and manual as the new onboarding defaults", () => {
+    render(<StepAddKeywords flowState={{ projectId: "prj_1" }} />);
+
+    expect(screen.getByRole("button", { name: "Devices" })).toHaveTextContent("Mobile");
+    expect(screen.getByRole("button", { name: "Frequency" })).toHaveTextContent("Manual");
+  });
+
   it("warns near the keyword limit and projects daily checks", () => {
     render(
       <StepAddKeywords
         flowState={{ devices: ["desktop", "mobile"], locations: ["US", "PL"], projectId: "prj_1" }}
+        trackingDefaults={{ frequency: "daily" } as OnboardingTrackingDefaultsInput}
       />,
     );
     fireEvent.change(keywordBox(), {
@@ -40,7 +48,7 @@ describe("StepAddKeywords schedule summary", () => {
     fireEvent.change(keywordBox(), { target: { value: "rank tracker\nseo api" } });
 
     const defaultsHeading = screen.getByRole("heading", { name: "Tracking defaults" });
-    const initialEstimate = screen.getByText("≈ 60 checks/month at Top 20");
+    const initialEstimate = screen.getByText("≈ 0 checks/month at Top 20");
     expect(
       defaultsHeading.compareDocumentPosition(initialEstimate) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
@@ -50,7 +58,7 @@ describe("StepAddKeywords schedule summary", () => {
     expect(screen.getByText("≈ 2 checks/month at Top 20")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Devices" }));
-    fireEvent.click(screen.getByRole("menuitemcheckbox", { name: "Mobile" }));
+    fireEvent.click(screen.getByRole("menuitemcheckbox", { name: "Desktop" }));
     expect(screen.getByText("≈ 4 checks/month at Top 20")).toBeInTheDocument();
     fireEvent.keyDown(screen.getByRole("menu", { name: "Devices" }), { key: "Escape" });
     await waitFor(() =>
@@ -81,6 +89,37 @@ describe("StepAddKeywords schedule summary", () => {
     expect(screen.queryByRole("link", { name: "Estimate provider cost" })).toBeNull();
   });
 
+  it("shows and focuses the market error after removing the final market", async () => {
+    const onComplete = vi.fn();
+    render(
+      <>
+        <StepAddKeywords flowState={{ projectId: "prj_1" }} onComplete={onComplete} />
+        <button form={onboardingFormId} type="submit">
+          Continue
+        </button>
+      </>,
+    );
+
+    const remove = screen.getByRole("button", { name: "Remove United States / English" });
+    expect(remove).toBeEnabled();
+    fireEvent.click(remove);
+
+    const error = await screen.findByText("Add at least one market to continue.");
+    const addMarket = screen.getByRole("button", { name: "Add market" });
+    const markets = screen.getByRole("region", { name: "Markets" });
+    expect(error).toHaveAttribute("id", "onboarding-markets-error");
+    expect(markets).toHaveAttribute("aria-describedby", "onboarding-markets-error");
+    expect(markets).not.toHaveAttribute("aria-invalid");
+    expect(addMarket).toHaveAttribute("aria-describedby", "onboarding-markets-error");
+    expect(addMarket).not.toHaveAttribute("aria-invalid");
+
+    fireEvent.change(keywordBox(), { target: { value: "rank tracker" } });
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+
+    await waitFor(() => expect(screen.getByRole("region", { name: "Markets" })).toHaveFocus());
+    expect(onComplete).not.toHaveBeenCalled();
+  });
+
   it("saves tracking defaults with keywords and keeps language inside market chips", async () => {
     const onComplete = vi.fn();
     const updateProjectDefaultsAction = vi.fn(async () => undefined);
@@ -97,7 +136,7 @@ describe("StepAddKeywords schedule summary", () => {
       </>,
     );
 
-    expect(screen.getByRole("button", { name: "Remove United States / English" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Remove United States / English" })).toBeEnabled();
     expect(screen.queryByLabelText("Language")).not.toBeInTheDocument();
     fireEvent.change(keywordBox(), { target: { value: "rank tracker" } });
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
@@ -107,8 +146,8 @@ describe("StepAddKeywords schedule summary", () => {
         city: null,
         country: "United States",
         cronExpression: "0 6 * * *",
-        device: "desktop",
-        frequency: "daily",
+        device: "mobile",
+        frequency: "manual",
         jitterMinutes: 60,
         locationKey: "US",
         projectId: "prj_1",

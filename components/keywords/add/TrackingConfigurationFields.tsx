@@ -31,7 +31,7 @@ const deviceOptions = serpDeviceOptions.map((option) => ({
   label: option.label,
   value: option.value,
 }));
-const scheduleOptions = (projectDefault: RankCheckFrequency) => [
+export const trackingScheduleOptions = (projectDefault: RankCheckFrequency) => [
   {
     label: `Project default, ${projectDefault.replace("_", " ")}`,
     value: "project_default",
@@ -81,7 +81,7 @@ export function TrackingConfigurationFields({
             <MenuSelect
               ariaLabel="Schedule"
               onChange={(value) => onScheduleChange(value as TrackingScheduleSelection)}
-              options={scheduleOptions(projectDefaultFrequency)}
+              options={trackingScheduleOptions(projectDefaultFrequency)}
               triggerClassName={`${fieldClass} justify-between normal-case tracking-normal`}
               value={scheduleFrequency}
             />

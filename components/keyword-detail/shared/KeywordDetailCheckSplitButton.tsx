@@ -70,7 +70,7 @@ export function KeywordDetailCheckSplitButton({
           sx={{ ...actionSx, minWidth: 40, paddingX: 0.75 }}
           type="button"
         >
-          <CaretDown aria-hidden size={13} weight="bold" />
+          <CaretDown aria-hidden size={13} weight="regular" />
         </Button>
       </ButtonGroup>
       <Menu

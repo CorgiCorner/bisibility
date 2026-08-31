@@ -29,7 +29,7 @@ export function StepConnectProviderSkip({
       className="shrink-0"
       {...(onSkip ? { onClick: () => onSkip(getValues()) } : { href: skipHref })}
     >
-      Skip
+      Skip for now
     </OnboardingStepSkip>
   );
 }

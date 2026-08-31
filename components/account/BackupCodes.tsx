@@ -19,14 +19,14 @@ export function BackupCodes({ codes }: Readonly<{ codes: readonly string[] }>) {
     <div className="grid gap-2 rounded-card border border-border-soft bg-bg-sunken p-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2 text-[12.5px] font-semibold text-fg">
-          <Key size={15} />
+          <Key size={15} weight="regular" />
           Backup codes
         </div>
         <Button
           aria-label="Download recovery codes"
           onClick={() => downloadRecoveryCodes(codes)}
           size="sm"
-          startIcon={<DownloadSimple size={14} />}
+          startIcon={<DownloadSimple size={14} weight="regular" />}
           type="button"
           variant="secondary"
         >

@@ -58,7 +58,7 @@ export function BulkTargetForm({
         const count = actionResultCount(result, selectedIds.length);
         const verb = view.hasTargets ? "changed" : "set";
         showToast(`Target URL ${verb} for ${keywordCountLabel(count)}`, {
-          tint: "green",
+          severity: "success",
           undo: noopUndo,
         });
         onDone();

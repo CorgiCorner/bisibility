@@ -12,8 +12,13 @@ function failureClass(value: string) {
 
 export function ProviderSyncFailureAlert({
   failure,
+  managementActionLabel = "Manage",
   timeZone,
-}: Readonly<{ failure: ProviderSyncFailure; timeZone: string }>) {
+}: Readonly<{
+  failure: ProviderSyncFailure;
+  managementActionLabel?: string;
+  timeZone: string;
+}>) {
   const since = new Date(failure.since);
   return (
     <p
@@ -22,7 +27,7 @@ export function ProviderSyncFailureAlert({
     >
       <strong className="font-semibold">Traffic sync is failing.</strong>{" "}
       {failure.errorClass === "config_invalid"
-        ? "The saved property looks misconfigured - open Manage and re-select it. "
+        ? `The saved property looks misconfigured - open ${managementActionLabel} and re-select it. `
         : null}
       Failing since{" "}
       {Number.isNaN(since.getTime()) ? (

@@ -50,7 +50,7 @@ export function SaveCompetitorViewModal({
       if (view.surface !== "competitors") throw new Error("Unexpected saved view surface.");
       onSaved();
       onClose();
-      showToast("Comparison view saved");
+      showToast("Comparison view saved", { severity: "success" });
       router.push(competitorSavedViewHref(projectRef, view.id, view.config));
       router.refresh();
     } catch (error) {
@@ -75,7 +75,7 @@ export function SaveCompetitorViewModal({
             form="save-competitor-view"
             type="submit"
           >
-            <BookmarkSimple aria-hidden size={15} weight="bold" />
+            <BookmarkSimple aria-hidden size={15} weight="regular" />
             {isSubmitting ? "Saving..." : "Save view"}
           </button>
         </>

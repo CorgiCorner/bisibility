@@ -12,7 +12,14 @@ import { makePublicId } from "@/lib/db/public-id";
 import type { GoogleOAuthSetup } from "@/lib/integrations/types";
 import { lockProjectForProviderMutation } from "@/lib/provider-allocations/project-lock";
 import { decryptProviderCredentials, decryptSecret, encryptSecret } from "@/lib/providers/crypto";
+import {
+  classifyProviderFailure,
+  type ProviderFailureClass,
+  ProviderHttpError,
+} from "@/lib/providers/failure-class";
 import { PROVIDER_CATALOG } from "@/lib/providers/registry";
+import { dateKey } from "@/lib/search-insights/dates";
+import { queueSearchInsightsImport } from "@/lib/search-insights/sync/ensure-import";
 import { cookies } from "next/headers";
 import { z } from "zod";
 import { listGa4Properties, listGoogleSites, refreshGoogleAccessToken } from "./google-client";
@@ -23,6 +30,7 @@ const GOOGLE_OAUTH_PENDING_COOKIE = "google_oauth_pending";
 export const GOOGLE_OAUTH_PENDING_TTL_MS = 10 * 60 * 1000;
 
 const pendingSchema = z.object({
+  accountEmail: z.string().email().max(320).optional(),
   actorId: z.string().trim().min(1).max(120),
   issuedAt: z.number().int(),
   projectId: z.string().trim().min(1).max(120),
@@ -55,6 +63,7 @@ function cookieOptions() {
 }
 
 export async function storePendingGoogleOAuth(input: {
+  accountEmail?: string;
   actorId: string;
   projectId: string;
   property?: string;
@@ -82,6 +91,77 @@ async function pendingForProject(projectId: string) {
   return { actor, cookieStore, pending, project };
 }
 
+export async function cancelPendingGoogleOAuth(projectId: string) {
+  const context = await pendingForProject(projectId);
+  if (!context) return { status: "not_found" as const };
+  context.cookieStore.delete(GOOGLE_OAUTH_PENDING_COOKIE);
+  return { status: "cancelled" as const };
+}
+
+async function pendingGscContext(projectId: string) {
+  const [project, rows] = await Promise.all([
+    prisma.project?.findUnique?.({ select: { domain: true }, where: { id: projectId } }) ??
+      Promise.resolve(null),
+    prisma.searchInsightsPropertyRegistry?.findMany?.({
+      select: { propertyKey: true },
+      where: { projectId, status: "archived" },
+    }) ?? Promise.resolve([]),
+  ]);
+  const archivedProperties = await Promise.all(
+    rows.map(async (row) => {
+      const partition = await prisma.searchAnalyticsSyncPartition.findFirst({
+        orderBy: { date: "desc" },
+        select: { date: true },
+        where: { projectId, property: row.propertyKey, source: "gsc" },
+      });
+      if (!partition) return null;
+      const kind = row.propertyKey.startsWith("sc-domain:") ? "domain" : "url-prefix";
+      return {
+        kind,
+        label: row.propertyKey.startsWith("sc-domain:")
+          ? row.propertyKey.slice(10)
+          : row.propertyKey,
+        lastSyncedDate: dateKey(partition.date),
+        permissionLevel: "",
+        value: row.propertyKey,
+      } as const;
+    }),
+  );
+  return {
+    archivedProperties: archivedProperties.filter((property) => property !== null),
+    projectDomain: project?.domain ?? "",
+  };
+}
+
+export function formatGooglePropertyDiscoveryLog(input: {
+  failureClass: ProviderFailureClass;
+  httpStatus?: number;
+  provider: "ga4" | "gsc";
+}) {
+  return `[google] property discovery failed | provider ${input.provider} | class ${input.failureClass}${
+    input.httpStatus === undefined ? "" : ` | status ${input.httpStatus}`
+  }`;
+}
+
+const GA4_FAILURE_COPY: Record<ProviderFailureClass, string> = {
+  auth: "This Google account may not have Analytics access, or Google rejected the request.",
+  config_invalid:
+    "The Google Analytics API configuration is invalid. Check the API setup and try again.",
+  network: "Google Analytics is temporarily unavailable.",
+  provider_4xx:
+    "This Google account may not have Analytics access, or Google rejected the request.",
+  provider_5xx: "Google Analytics is temporarily unavailable.",
+  rate_limit: "Google's request limit was reached. Try again shortly.",
+  unknown:
+    "This Google account may not have Analytics access, or the Analytics API rejected the request.",
+};
+
+function pendingSetupError(provider: "ga4" | "gsc", failureClass: ProviderFailureClass) {
+  return provider === "ga4"
+    ? `Couldn't load your GA4 properties. ${GA4_FAILURE_COPY[failureClass]}`
+    : "We couldn't load verified properties from this Google account. Reconnect and try again.";
+}
+
 export async function getPendingGoogleOAuthSetup(
   projectId: string,
 ): Promise<GoogleOAuthSetup | null> {
@@ -93,17 +173,28 @@ export async function getPendingGoogleOAuthSetup(
       context.pending.provider === "ga4"
         ? ga4PropertyOptions(await listGa4Properties(accessToken))
         : gscPropertyOptions(await listGoogleSites(accessToken));
+    const gscContext =
+      context.pending.provider === "gsc" ? await pendingGscContext(context.project.id) : {};
     return {
+      ...gscContext,
+      ...(context.pending.accountEmail ? { accountEmail: context.pending.accountEmail } : {}),
       ...(context.pending.property ? { preferredProperty: context.pending.property } : {}),
       properties,
       provider: context.pending.provider,
     };
-  } catch {
+  } catch (error) {
+    const failureClass = classifyProviderFailure(error);
+    console.info(
+      formatGooglePropertyDiscoveryLog({
+        failureClass,
+        ...(error instanceof ProviderHttpError ? { httpStatus: error.status } : {}),
+        provider: context.pending.provider,
+      }),
+    );
     return {
-      error:
-        context.pending.provider === "ga4"
-          ? "We couldn't load Google Analytics 4 properties from this Google account. You can enter the numeric Property ID manually."
-          : "We couldn't load verified properties from this Google account. Reconnect and try again.",
+      ...(context.pending.accountEmail ? { accountEmail: context.pending.accountEmail } : {}),
+      error: pendingSetupError(context.pending.provider, failureClass),
+      failureClass,
       properties: [],
       ...(context.pending.property ? { preferredProperty: context.pending.property } : {}),
       provider: context.pending.provider,
@@ -141,7 +232,11 @@ export async function completePendingGooglePropertySelection(input: {
   const provider = context.pending.provider;
   const providerDefinition = PROVIDER_CATALOG.find((item) => item.id === provider);
   if (!providerDefinition) throw new Error(`Unknown provider: ${provider}`);
-  const credentials = { apiKey: context.pending.refreshToken, login: property };
+  const credentials = {
+    ...(context.pending.accountEmail ? { accountEmail: context.pending.accountEmail } : {}),
+    apiKey: context.pending.refreshToken,
+    login: property,
+  };
   await verifyProviderConnectionBeforeSave({
     credentials,
     hasStoredCredentials: false,
@@ -193,6 +288,9 @@ export async function completePendingGooglePropertySelection(input: {
     return saved;
   });
   context.cookieStore.delete(GOOGLE_OAUTH_PENDING_COOKIE);
+  if (provider === "gsc" || provider === "ga4") {
+    await queueSearchInsightsImport({ projectId: context.project.id, property, source: provider });
+  }
   revalidateProviderViews();
   return { property };
 }

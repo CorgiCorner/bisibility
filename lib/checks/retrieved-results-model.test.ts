@@ -66,18 +66,25 @@ describe("retrieved-results-model", () => {
     expect(retrievedPositionsOf(rows)).toBe(5);
   });
 
-  it("gapBlock returns null when retrievedPositions equals requestedDepth, and the stopped-at-result reason only when stoppedAtResult is true", () => {
+  it("gapBlock returns null when retrievedPositions equals requestedDepth", () => {
     expect(
       gapBlock({ requestedDepth: 10, retrievedPositions: 10, stoppedAtResult: false }),
     ).toBeNull();
+  });
+
+  it("uses persisted stoppedAtResult evidence for the gap reason", () => {
     const stopped = gapBlock({
       requestedDepth: 10,
       retrievedPositions: 5,
       stoppedAtResult: true,
     });
-    expect(stopped?.heading).toBe("Positions 6-10");
-    expect(stopped?.count).toBe("5 not retrieved");
-    expect(stopped?.reason).toContain("stopped at your result");
+    expect(stopped).toEqual({
+      heading: "Positions 6-10",
+      count: "5 not retrieved",
+      reason:
+        "The check stopped at your result, so these positions were never requested and never billed. They are unknown for this check, not empty.",
+    });
+
     const notStopped = gapBlock({
       requestedDepth: 10,
       retrievedPositions: 5,
@@ -86,6 +93,7 @@ describe("retrieved-results-model", () => {
     expect(notStopped?.reason).toBe(
       "These positions were not retrieved for this check. They are unknown, not empty.",
     );
+    expect(notStopped?.reason).not.toContain("The check stopped at your result");
   });
 
   it("retentionFooter produces the unlimited sentence for a null date and interpolates the injected formatter and day count otherwise", () => {
@@ -118,9 +126,12 @@ describe("retrieved-results-model", () => {
     });
     expect(result.kind).toBe("refused");
     if (result.kind !== "refused") return;
-    expect(result.body).toContain("2024-06-01");
-    expect(result.body).toContain("older than the full-detail window");
-    expect(result.rule).toContain("2025-01-01 do.");
+    expect(result.body).toBe(
+      "The earlier check kept only its top 0, so its titles, URLs and page features below that are gone.",
+    );
+    expect(result.rule).toContain(
+      "Comparison stays available between checks that both hold full detail.",
+    );
 
     const none = {
       checkId: "c3",

@@ -56,7 +56,12 @@ export function ToolbarSearch({
       )}
       htmlFor={id}
     >
-      <MagnifyingGlass aria-hidden className="shrink-0 text-fg-muted" size={isToolbar ? 14 : 15} />
+      <MagnifyingGlass
+        aria-hidden
+        className="shrink-0 text-fg-muted"
+        size={isToolbar ? 14 : 15}
+        weight="regular"
+      />
       <input
         aria-label={label}
         className={clsx(
@@ -85,7 +90,7 @@ export function ToolbarSearch({
           onMouseDown={(event) => event.preventDefault()}
           type="button"
         >
-          <X aria-hidden size={12} weight="bold" />
+          <X aria-hidden size={12} weight="regular" />
         </button>
       ) : null}
     </label>

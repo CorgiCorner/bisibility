@@ -38,6 +38,20 @@ function renderStep(
 }
 
 describe("StepAddKeywords", () => {
+  it("keeps placeholder and entered text on the same typography geometry", () => {
+    renderStep({ defaultValues: keywordDefaults() });
+
+    const textarea = keywordBox();
+    expect(textarea).toHaveClass(
+      "font-mono",
+      "text-[13px]",
+      "font-normal",
+      "leading-[1.7]",
+      "placeholder:font-normal",
+    );
+    expect(textarea).not.toHaveClass("placeholder:text-[12px]", "placeholder:leading-4");
+  });
+
   it("previews trimmed unique keywords and ignored duplicate lines", () => {
     renderStep({ defaultValues: keywordDefaults() });
 
@@ -187,7 +201,7 @@ describe("StepAddKeywords", () => {
     expect(addKeywordsAction).not.toHaveBeenCalled();
   });
 
-  it("does not infer provider cost before execution routing is known", () => {
+  it("does not infer provider cost or offer an estimate for manual defaults", () => {
     renderStep({
       costPerCheckCents: 5,
       flowState: { projectId: "prj_1", providerId: "serpapi" },
@@ -195,12 +209,24 @@ describe("StepAddKeywords", () => {
     });
     fireEvent.change(keywordBox(), { target: { value: "rank tracker\nseo api" } });
 
-    expect(screen.getByText("≈ 60 checks/month at Top 20")).toBeInTheDocument();
+    expect(screen.getByText("≈ 0 checks/month at Top 20")).toBeInTheDocument();
     expect(screen.queryByText(/\$|monthly cost cap/)).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Estimate provider cost" })).toBeNull();
+  });
+
+  it("offers the hosted estimate for an explicit scheduled frequency", () => {
+    renderStep({
+      flowState: { projectId: "prj_1", providerId: "serpapi" },
+      trackingDefaults: { frequency: "daily" } as ComponentProps<
+        typeof StepAddKeywords
+      >["trackingDefaults"],
+    });
+    fireEvent.change(keywordBox(), { target: { value: "rank tracker\nseo api" } });
+
     const link = screen.getByRole("link", { name: "Estimate provider cost" });
     expect(link).toHaveAttribute(
       "href",
-      `${MARKETING_URL}/rank-tracking-cost-calculator?keywords=2&locations=1&devices=desktop&frequency=daily&depth=20`,
+      `${MARKETING_URL}/rank-tracking-cost-calculator?keywords=2&locations=1&devices=mobile&frequency=daily&depth=20`,
     );
     expect(link).toHaveAttribute("target", "_blank");
     expect(link).toHaveAttribute("rel", "noreferrer noopener");
@@ -212,7 +238,7 @@ describe("StepAddKeywords", () => {
 
     fireEvent.change(keywordBox(), { target: { value: "rank tracker\nseo api" } });
 
-    expect(screen.getByText("≈ 60 checks/month at Top 10")).toBeInTheDocument();
+    expect(screen.getByText("≈ 0 checks/month at Top 10")).toBeInTheDocument();
   });
 
   it("hides the hosted calculator link on self-hosted instances", () => {
@@ -230,7 +256,7 @@ describe("StepAddKeywords", () => {
     const onComplete = vi.fn();
     const addKeywordsAction = vi.fn(async (_input: AddKeywordsInput) => ({
       created: 2,
-      keywordCount: 1,
+      persistedKeywordCount: 1,
       keywords: [
         { id: "keyword_1", publicId: "kw_1" },
         { id: "keyword_2", publicId: "kw_2" },
@@ -274,6 +300,7 @@ describe("StepAddKeywords", () => {
     const onComplete = vi.fn();
     const addKeywordsAction = vi.fn(async (_input: AddKeywordsInput) => ({
       created: 1,
+      persistedKeywordCount: 1,
       keywords: [{ id: "keyword_1", publicId: "kw_1" }],
       skippedDuplicates: 0,
       warnings: ["Austin was not found; tracking United States instead."],

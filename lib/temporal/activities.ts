@@ -73,6 +73,20 @@ export {
   compensateFailedRankCheckClaimsActivity,
 } from "./rank-check-dispatcher-activities";
 export { reconcileAllSchedulesActivity } from "./reconcile-activities";
+export type {
+  SearchInsightsIncrementalActivityInput,
+  SearchInsightsIncrementalActivityResult,
+  SearchInsightsIncrementalForAllActivityResult,
+} from "./search-insights-activities";
+export {
+  deliverSearchInsightsMilestoneActivity,
+  markSearchInsightsImportFailedActivity,
+  runSearchInsightsBackfillBatchActivity,
+  runSearchInsightsIncrementalActivity,
+  runSearchInsightsIncrementalForAllActivity,
+} from "./search-insights-activities";
+export type { SearchInsightsQueueReconciliationActivityResult } from "./search-insights-reconciliation-activity";
+export { reconcileQueuedSearchInsightsImportsActivity } from "./search-insights-reconciliation-activity";
 export type { SyncTrafficActivityResult } from "./traffic-activities";
 export { syncTrafficActivity } from "./traffic-activities";
 export {

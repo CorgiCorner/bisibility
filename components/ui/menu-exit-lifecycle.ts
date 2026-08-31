@@ -1,3 +1,5 @@
+"use client";
+
 import { MOTION_MENU_ENTER, MOTION_MENU_EXIT } from "@/lib/ui/motion";
 import { useCallback, useRef, useState } from "react";
 

@@ -53,12 +53,23 @@ describe("StepFirstCheck", () => {
     expect(screen.getByText("Daily schedule")).toBeInTheDocument();
     expect(screen.getByText("·")).toBeInTheDocument();
     expect(screen.queryByText("/")).toBeNull();
-    const openDashboardButton = screen.getByRole("button", { name: "Open dashboard" });
-    const runSampleChecksButton = screen.getByRole("button", { name: "Run 2 sample checks" });
-    expect(openDashboardButton).toBeInTheDocument();
-    expect(openDashboardButton.querySelector("svg")).toBeNull();
+    const openAppButton = screen.getByRole("button", { name: "Open app" });
+    const runSampleChecksButton = screen.getByRole("button", {
+      name: "Run a test check (1 keyword)",
+    });
+    expect(openAppButton).toBeInTheDocument();
+    expect(openAppButton).toHaveClass("MuiButton-text", "MuiButton-sizeLarge");
+    expect(openAppButton).toHaveAttribute("type", "submit");
+    expect(openAppButton.querySelector("svg")).toBeNull();
     expect(runSampleChecksButton).toBeInTheDocument();
+    expect(runSampleChecksButton).toHaveClass("MuiButton-contained", "MuiButton-sizeLarge");
+    expect(runSampleChecksButton).toHaveAttribute("type", "button");
     expect(runSampleChecksButton.querySelector("svg")).toBeNull();
+    expect(
+      screen
+        .getAllByRole("button")
+        .filter((button) => button.classList.contains("MuiButton-contained")),
+    ).toHaveLength(1);
   });
 
   // This case opens the timezone menu, which renders the full IANA zone list. It measures ~800ms
@@ -90,19 +101,74 @@ describe("StepFirstCheck", () => {
     expect(screen.getByRole("button", { name: "Project timezone" })).toHaveTextContent("UTC");
   }, 20_000);
 
+  it("renders Scope and Markets as distinct truncating summary rows", () => {
+    renderReadyStep({
+      defaults: {
+        country: "United States",
+        cronExpression: null,
+        device: "desktop",
+        devices: ["desktop"],
+        frequency: "manual",
+        jitterMinutes: 60,
+        locationSelections: [
+          {
+            canonicalKey: "US",
+            countryCode: "US",
+            displayName: "United States",
+            kind: "country",
+            languageCode: "en",
+            languageLabel: "English",
+          },
+        ],
+        locations: ["US"],
+        projectId: "prj_1",
+        timezone: "UTC",
+      },
+    });
+
+    const scopeLabel = screen.getByText("Scope");
+    const marketsLabel = screen.getByText("Markets");
+    expect(scopeLabel.closest("[data-summary-row]")).not.toBe(
+      marketsLabel.closest("[data-summary-row]"),
+    );
+    const scopeValue = screen.getByLabelText("Scope: Google · 1 market · 1 device · Manual");
+    const marketsValue = screen.getByLabelText("Markets: United States / English");
+    expect(scopeValue).toHaveClass("truncate", "whitespace-nowrap");
+    expect(marketsValue).toHaveClass("truncate", "whitespace-nowrap");
+  });
+
   it("does not expose a live-check action without a provider or analytics", () => {
     renderReadyStep({
+      defaults: {
+        country: "United States",
+        cronExpression: null,
+        device: "desktop",
+        frequency: "manual",
+        jitterMinutes: 60,
+        projectId: "prj_1",
+        timezone: "UTC",
+      },
       flowState: { projectId: "prj_1", providerId: null },
       hasAnalyticsSource: false,
       providerConnected: false,
     });
 
-    expect(screen.getByRole("link", { name: "Connect a provider" })).toHaveAttribute(
-      "href",
-      "/onboarding?step=2&projectId=prj_1",
+    expect(screen.getByRole("button", { name: "Connect" })).toHaveAttribute(
+      "aria-expanded",
+      "false",
     );
-    expect(screen.queryByRole("button", { name: /Run \d+ sample checks?/ })).toBeNull();
-    expect(screen.getByRole("button", { name: "Open dashboard" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Run a test check (1 keyword)" })).toBeNull();
+    const openAppButton = screen.getByRole("button", { name: "Open app" });
+    expect(openAppButton).toHaveClass("MuiButton-contained", "MuiButton-sizeLarge");
+    expect(openAppButton).toHaveAttribute("type", "submit");
+    expect(
+      screen
+        .getAllByRole("button")
+        .filter((button) => button.classList.contains("MuiButton-contained")),
+    ).toHaveLength(1);
+    expect(screen.getByText("Waiting for a provider")).toBeInTheDocument();
+    expect(screen.getByText(/rank tracker/)).toBeInTheDocument();
+    expect(screen.getByText("Manual · runs only when you start it")).toBeInTheDocument();
   });
 
   it("shows the connect-provider state when analytics is connected but no SERP provider is ready", () => {
@@ -112,15 +178,12 @@ describe("StepFirstCheck", () => {
       providerConnected: false,
     });
 
-    expect(screen.getByRole("link", { name: "Connect a provider" })).toHaveAttribute(
-      "href",
-      "/onboarding?step=2&projectId=prj_1",
+    expect(screen.getByRole("button", { name: "Connect" })).toHaveAttribute(
+      "aria-expanded",
+      "false",
     );
-    expect(
-      screen.getByText("Your keywords are saved. Connect a provider to run the first check."),
-    ).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Show observed positions/i })).toBeNull();
-    expect(screen.queryByRole("button", { name: /Run \d+ sample checks?/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Run a test check (1 keyword)" })).toBeNull();
   });
 
   it("allows manual preview while automatic checks are paused", () => {
@@ -136,7 +199,7 @@ describe("StepFirstCheck", () => {
       },
     });
 
-    expect(screen.getByRole("button", { name: /Run \d+ sample checks?/i })).not.toBeDisabled();
+    expect(screen.getByRole("button", { name: "Run a test check (1 keyword)" })).not.toBeDisabled();
     expect(
       screen.getByText("Manual preview can run now. Scheduled checks stay paused."),
     ).toBeInTheDocument();
@@ -157,9 +220,19 @@ describe("StepFirstCheck", () => {
       providerConnected: true,
     });
 
-    expect(screen.getByRole("button", { name: "Run 1 sample check" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Run a test check (1 keyword)" })).toBeDisabled();
     expect(
       screen.getByText("Sample projects keep their synthetic ranking history."),
     ).toBeInTheDocument();
+  });
+  it("hides matrix transparency for one market and one device", () => {
+    renderReadyStep({ keywordCount: 1, keywordDraft: "rank tracker" });
+    expect(screen.getByText("1 keyword saved")).toBeInTheDocument();
+    expect(screen.queryByText(/1 keyword · 1 market/)).not.toBeInTheDocument();
+  });
+
+  it("uses plural persisted saved-count copy", () => {
+    renderReadyStep({ keywordCount: 2 });
+    expect(screen.getByText("2 keywords saved")).toBeInTheDocument();
   });
 });

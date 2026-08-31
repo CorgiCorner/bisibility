@@ -118,7 +118,12 @@ function TokenGenerateButton({
       onClick={onGenerate}
       type="button"
     >
-      <Icon aria-hidden className={creating ? "animate-spin" : undefined} size={15} weight="bold" />
+      <Icon
+        aria-hidden
+        className={creating ? "animate-spin" : undefined}
+        size={15}
+        weight="regular"
+      />
       {creating ? "Creating token" : label}
     </button>
   );
@@ -147,7 +152,7 @@ export function MigrationTokenCard({
     <div className="mt-7 overflow-hidden rounded-card border border-border bg-bg-elev">
       <div className="flex items-center gap-[13px] border-border-soft border-b p-[20px_22px]">
         <span className="grid h-[42px] w-[42px] flex-none place-items-center rounded-control bg-accent-soft text-accent-solid">
-          <Key aria-hidden size={21} weight="fill" />
+          <Key aria-hidden size={21} weight="regular" />
         </span>
         <div className="min-w-0 flex-1">
           <div className="text-[15px] font-semibold">Migration token</div>
@@ -162,14 +167,14 @@ export function MigrationTokenCard({
         {status === "error" ? (
           <div className="flex flex-col items-center px-4 pt-3.5 pb-1.5 text-center">
             <span className="grid h-[50px] w-[50px] place-items-center rounded-card bg-red/10 text-red-text">
-              <WarningOctagon aria-hidden size={26} weight="fill" />
+              <WarningOctagon aria-hidden size={26} weight="regular" />
             </span>
             <div className="mt-3.5 text-[14.5px] font-semibold">{errorTitle}</div>
             <p className="mt-1.5 max-w-[400px] text-[13px] leading-[1.55] text-fg-muted">
               {errorMessage ?? "No token was issued. Nothing was exposed."}
             </p>
             <div className="mt-3.5 inline-flex items-center gap-[7px] rounded-control bg-bg-sunken px-[11px] py-[5px] font-mono text-[11px] text-fg-muted">
-              <WarningCircle aria-hidden className="text-red-text" size={13} />
+              <WarningCircle aria-hidden className="text-red-text" size={13} weight="regular" />
               token_action_failed
             </div>
             <TokenGenerateButton
@@ -184,7 +189,7 @@ export function MigrationTokenCard({
         {status !== "error" && (status === "none" || !visibleToken) ? (
           <div className="flex flex-col items-center px-4 pt-3.5 pb-1.5 text-center">
             <span className="grid h-[50px] w-[50px] place-items-center rounded-card bg-bg-sunken text-fg-muted">
-              <Key aria-hidden size={26} />
+              <Key aria-hidden size={26} weight="regular" />
             </span>
             <div className="mt-3.5 text-[14.5px] font-semibold">No active token</div>
             <p className="mt-1.5 max-w-[400px] text-[13px] leading-[1.55] text-fg-muted">
@@ -237,7 +242,12 @@ export function MigrationTokenCard({
       </div>
       {tokenSecurityNote && status !== "error" && (status === "none" || !visibleToken) ? (
         <div className="flex items-start gap-[9px] border-border-soft border-t bg-bg-sunken px-[22px] py-3.5 text-[12px] leading-[1.5] text-fg-muted">
-          <LockSimple aria-hidden className="mt-px flex-none text-green-text" size={14} />
+          <LockSimple
+            aria-hidden
+            className="mt-px flex-none text-green-text"
+            size={14}
+            weight="regular"
+          />
           <span>{tokenSecurityNote}</span>
         </div>
       ) : null}

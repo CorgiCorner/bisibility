@@ -5,6 +5,7 @@ import {
 } from "@/lib/rank-check/cron";
 import { computeNextCheckAt } from "@/lib/rank-check/schedule";
 import type { SerpDepth } from "@/lib/serp/markets";
+import { rankScheduleTiming } from "@/lib/settings/rank-schedule-timing";
 
 export { serpMarketOptions as countryOptions } from "@/lib/serp/markets";
 
@@ -38,6 +39,13 @@ export type DefaultsData = {
   device: string;
   keywordCount: number;
   inspectionDailyLimit: number;
+  searchSync?: {
+    lastQuotaPausedAt: string | null;
+    pace: "normal" | "gentle";
+    plannedRemaining: number;
+    requestsToday: number;
+    retentionMonths: 3 | 6 | 12 | 16;
+  };
   locationKey: string;
   locationLabel: string;
   locationCount: number;
@@ -59,59 +67,13 @@ export type ProviderSummaryData = {
   tint: ProviderTint;
 };
 
-export type ProviderUsageFeature =
-  | "backlinks"
-  | "domain_overview"
-  | "keyword_metrics"
-  | "keyword_research"
-  | "rank_check"
-  | "ranked_keywords";
-
-export type ProviderUsageStat = {
-  costCents: number;
-  count: number;
-  feature: ProviderUsageFeature;
-  label: string;
-};
-
-export type ProviderAvailabilityData =
-  | {
-      amount: number;
-      checkedAt: string;
-      status: "available";
-      total?: number;
-      unit: "searches" | "usd";
-    }
-  | { checkedAt: string; status: "unreachable" }
-  | { status: "reconnect_required" };
-
-export type ProviderConnectionUsageData = {
-  availableAtProvider?: ProviderAvailabilityData | null;
-  connectionId: string;
-  costPerCheck: string;
-  features: readonly ProviderUsageStat[];
-  primary: boolean;
-  provider: string;
-  providerId: string;
-};
-
-export type ProviderUsageData = {
-  budget: { capCents: number; spentCents: number };
-  period: {
-    dateFormat: "eu" | "iso" | "long";
-    endAt: string;
-    endLabel: string;
-    label: string;
-    now: string;
-    resetsLabel: string;
-    timezone: string;
-  };
-  connections: readonly ProviderConnectionUsageData[];
-  serpChecksMonth: string;
-  primaryProvider: string;
-  hasProvider: boolean;
-  onPaceCents: number | null;
-};
+export type {
+  ProviderAvailabilityData,
+  ProviderConnectionUsageData,
+  ProviderUsageData,
+  ProviderUsageFeature,
+  ProviderUsageStat,
+} from "./provider-usage-types";
 
 export function getInspectionSchedulePreview(targetUrlCount: number, dailyLimit: number) {
   return {
@@ -252,19 +214,14 @@ export function runsPerMonth(parsed: ParsedCron, frequency: RankCheckFrequency) 
   return Math.round(runsPerDay * matchingDays * monthShare);
 }
 
-export function getRankSchedulePreview({
-  cronExpression,
-  defaults,
-  frequency,
-  referenceIso,
-  timezone,
-}: {
+export function getRankSchedulePreview(input: {
   cronExpression: string;
   defaults: DefaultsData;
   frequency: RankCheckFrequency;
   referenceIso: string;
   timezone: string;
 }) {
+  const { cronExpression, defaults, frequency, referenceIso, timezone } = input;
   const parsedCron =
     frequency === "custom_cron" ? parseCronExpression(cronExpression) : ({ ok: false } as const);
   const runChecks = checksPerRun({
@@ -286,33 +243,7 @@ export function getRankSchedulePreview({
     frequency === "custom_cron"
       ? nextRunLabelsForCron(parsedCron, cronExpression, referenceIso, timezone)
       : [];
-  const timing =
-    frequency === "daily"
-      ? {
-          detail: "Stable phase distributed across the interval",
-          label: "Cadence",
-          value: "Every 24 hours per keyword",
-        }
-      : frequency === "weekly"
-        ? {
-            detail: "Stable phase distributed across the interval",
-            label: "Cadence",
-            value: "Every 7 days per keyword",
-          }
-        : frequency === "monthly"
-          ? {
-              detail: `Wall-clock anchor in ${timezone}`,
-              label: "Cadence",
-              value: "Monthly per keyword",
-            }
-          : {
-              detail: null,
-              label: "Next run",
-              value:
-                frequency === "manual" || frequency === "paused"
-                  ? "Not scheduled"
-                  : (nextRunLabels[0] ?? "No runs available"),
-            };
+  const timing = rankScheduleTiming(frequency, timezone, nextRunLabels);
 
   return {
     checksPerRun: runChecks,

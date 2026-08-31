@@ -215,3 +215,10 @@ values for the operator record. App reads refresh within about 60 seconds.
 > [Budget cap](/integrations#budget-cap).
 >
 > **Upgrade note:** After upgrading, move any `BISIBILITY_GSC_INSPECTION_DAILY_BUDGET` value to each project's **Settings > URL inspection** panel, up to its 1,000 limit.
+
+## Search data sync
+
+| Variable | Purpose |
+| - | - |
+| `SEARCH_SYNC_IMPORT_MONTHS` | Default historical import depth. Valid values are `16`, `12`, `6`, and `3`; invalid values fall back to `16`. |
+| `SEARCH_SYNC_PACE` | Default import pace. Use `normal` or `gentle`; gentle uses half the request throughput. Invalid values fall back to `normal`. Project settings override this default. |

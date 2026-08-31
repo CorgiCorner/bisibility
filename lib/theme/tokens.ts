@@ -113,17 +113,18 @@ export const colorSchemes = {
     bg: "#0F0C07",
     "bg-elev": "#191919",
     "bg-sidebar": "#070603",
-    "bg-sunken": "#15110A",
+    "bg-sunken": "#141414",
     "bg-band": "#141414",
     "bg-inset": "#080704",
     "table-header-bg": "#15110A",
     fg: "#ECE7DB",
     "fg-muted": "#A09D95",
-    // --border is the hairline for chrome and decoration; --border-control carries
-    // the interactive edge and clears 3:1 on every dark surface.
+    // --border is the hairline for chrome and decoration. Dark --border-control
+    // #616060 is an operator-chosen interactive edge below the WCAG 1.4.11 3:1 floor;
+    // contrast.test.ts asserts its narrower floor so further regressions still fail.
     border: "#343333",
     "border-soft": "#221D15",
-    "border-control": "#716653",
+    "border-control": "#616060",
     "nav-active": "#231F17",
     // Sits in the dark hairline band so the track separates from --bg (#0F0C07) and
     // --bg-elev (#191919) alike instead of vanishing the way recessed fills do.

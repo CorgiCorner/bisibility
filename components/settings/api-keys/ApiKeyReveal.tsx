@@ -26,7 +26,12 @@ export function ApiKeyRevealContent({
     <div className="space-y-4">
       <div className="rounded-card border border-yellow bg-yellow/10 px-3.5 py-3">
         <div className="flex items-start gap-2.5">
-          <Key aria-hidden className="mt-0.5 flex-none text-yellow-text" size={17} weight="fill" />
+          <Key
+            aria-hidden
+            className="mt-0.5 flex-none text-yellow-text"
+            size={17}
+            weight="regular"
+          />
           <div className="min-w-0">
             <div className="text-[13px] font-semibold text-fg">
               Copy your key now - it will not be shown again.

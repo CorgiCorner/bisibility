@@ -85,7 +85,7 @@ export function ResearchExportMenu({
       <Button
         onClick={(event) => setAnchorEl(event.currentTarget)}
         size="sm"
-        startIcon={<DownloadSimple size={14} />}
+        startIcon={<DownloadSimple weight="regular" size={14} />}
         variant="secondary"
       >
         Export

@@ -56,6 +56,7 @@ export function TrackingDefaultsFields({
       <div className="mt-4 max-w-[560px]">
         {flowState?.projectId ? (
           <OnboardingMarkets
+            error={errors?.locations}
             onChange={onLocationsChange}
             projectId={flowState.projectId}
             values={locations}

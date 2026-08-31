@@ -1,4 +1,6 @@
 import {
+  DEFAULT_ONBOARDING_DEVICE,
+  DEFAULT_ONBOARDING_FREQUENCY,
   type OnboardingFlowState,
   onboardingDefaults,
 } from "@/components/onboarding/onboarding-fixtures";
@@ -18,6 +20,8 @@ export type OnboardingProject = {
   isSample?: boolean;
   name: string;
   publicId: string;
+  device?: "desktop" | "mobile";
+  frequency?: OnboardingTrackingDefaultsInput["frequency"];
   timezone?: string;
 };
 
@@ -42,7 +46,7 @@ export function initialOnboardingDraft(
   const defaultCountry = locationSelections[0]
     ? countryNameForLocationValue(locationSelections[0])
     : DEFAULT_SERP_MARKET;
-  const devices = [...(flowState.devices ?? [DEFAULT_SERP_DEVICE])];
+  const devices = [...(flowState.devices ?? [project?.device ?? DEFAULT_ONBOARDING_DEVICE])];
   return {
     addKeywords: {
       device: devices[0] ?? DEFAULT_SERP_DEVICE,
@@ -67,7 +71,7 @@ export function initialOnboardingDraft(
       cronExpression: "0 6 * * *",
       device: devices[0] ?? DEFAULT_SERP_DEVICE,
       devices,
-      frequency: "daily",
+      frequency: project?.frequency ?? DEFAULT_ONBOARDING_FREQUENCY,
       jitterMinutes: 60,
       locationSelections,
       locations,

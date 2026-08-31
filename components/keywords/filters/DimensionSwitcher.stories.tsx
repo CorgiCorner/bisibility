@@ -26,7 +26,7 @@ type Story = StoryObj<typeof meta>;
 
 export const DeviceAddFocused: Story = {
   args: {
-    icon: <Monitor aria-hidden size={13} />,
+    icon: <Monitor weight="regular" aria-hidden size={13} />,
     kind: "device",
     label: "desktop",
     onTrack: () => undefined,
@@ -44,7 +44,7 @@ export const DeviceAddFocused: Story = {
 
 export const CustomLocation: Story = {
   args: {
-    icon: <Flag aria-hidden size={13} />,
+    icon: <Flag weight="regular" aria-hidden size={13} />,
     kind: "location",
     label: "Warsaw",
     onTrack: () => undefined,
@@ -54,7 +54,7 @@ export const CustomLocation: Story = {
 
 export const ReadOnly: Story = {
   args: {
-    icon: <DeviceMobile aria-hidden size={13} />,
+    icon: <DeviceMobile weight="regular" aria-hidden size={13} />,
     kind: "device",
     label: "mobile",
     onTrack: () => undefined,

@@ -128,14 +128,14 @@ export async function addKeywordsMatrix(input: unknown) {
       tx,
     );
     await consumeSavedKeywords(tx, project.id, data.consumeSavedIds, promotedPairs);
-    return { created, keywordCount: keywordCountRow?.count ?? 0, skippedDuplicates };
+    return { created, persistedKeywordCount: keywordCountRow?.count ?? 0, skippedDuplicates };
   });
 
   revalidateKeywords();
   const warnings = uniqueWarnings(locations);
   return {
     created: result.created.length,
-    keywordCount: result.keywordCount,
+    persistedKeywordCount: result.persistedKeywordCount,
     keywords: result.created.map(publicKeywordView),
     skippedDuplicates: result.skippedDuplicates,
     ...(warnings.length > 0 ? { warnings } : {}),

@@ -1,6 +1,6 @@
 export const developerCardGeometryClassNames = {
-  apiKeys: "min-h-[430px] sm:min-h-[394px]",
-  deployWebhooks: "min-h-[386px] sm:min-h-[326px]",
+  apiKeys: "",
+  deployWebhooks: "",
 } as const;
 
 export const developerLoadingGeometryClassNames = {

@@ -140,7 +140,7 @@ export function KeywordScheduleInlineForm({
       const result = await updateKeywordScheduleAction(values);
       const warning = actionWarningMessage(result);
       setMessage(warning);
-      if (!warning) showToast("Schedule saved.", { tint: "green" });
+      if (!warning) showToast("Schedule saved.", { severity: "success" });
       router.refresh();
       if (!warning) onSaved?.();
     } catch (error) {

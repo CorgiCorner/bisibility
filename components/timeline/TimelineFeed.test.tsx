@@ -82,6 +82,45 @@ describe("TimelineFeed empty state", () => {
       "placeholder:leading-4",
     );
     expect(timelineInput.className).not.toContain("Attempted to call");
+    const filterRow = screen.getByRole("link", { name: /all\s*selected/i }).parentElement;
+    expect(filterRow).toHaveClass("-mx-4", "px-4", "sm:-mx-5", "sm:px-5");
+  });
+
+  it("uses a module mark only for the unfiltered first-page empty state", () => {
+    const baseView = {
+      filter: "all" as const,
+      hasNextPage: false,
+      hasPreviousPage: false,
+      isFiltered: false,
+      now: new Date("2026-07-15T12:00:00.000Z"),
+      page: 1,
+      rows: [],
+      search: "",
+      timeZone: "UTC",
+    };
+    const { rerender } = render(
+      <TimelineFeed canCreate canDelete projectId="prj_1" projectRef="prj_1" view={baseView} />,
+    );
+    expect(
+      screen
+        .getByRole("heading", { name: "No timeline entries yet" })
+        .parentElement?.querySelector('[data-module-mark="soft"]'),
+    ).not.toBeNull();
+
+    rerender(
+      <TimelineFeed
+        canCreate
+        canDelete
+        projectId="prj_1"
+        projectRef="prj_1"
+        view={{ ...baseView, isFiltered: true, search: "deploy" }}
+      />,
+    );
+    expect(
+      screen
+        .getByRole("heading", { name: "No matching timeline entries" })
+        .parentElement?.querySelector("[data-module-mark]"),
+    ).toBeNull();
   });
 
   it("identifies an out-of-range page and links back to page one", () => {

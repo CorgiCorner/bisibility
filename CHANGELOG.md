@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+## [0.17.0] - 2026-08-30
+
+- Expanded GCS Insights with 16 months of Search Console history, daily sync, query and page drilldowns, GA4 sessions, and clearer connection controls.
+
+- Unified single and bulk rank checks, with clearer progress and richer stored-result browsing and comparison.
+
+- Grouped navigation into Track, Research, and Connect, and added an Install page with copyable MCP setup and API key guidance.
+
+- Refined responsive layouts, empty states, account and settings feedback, and result browsing across desktop and mobile.
+
+- Fixed a React hydration warning on marketing pages and the workspace shell caused by the pre-paint theme script stamping the shell root before hydration.
+
 ## [0.16.0] - 2026-08-28
 
 - Validated the app's location-search endpoint and location-picker consumer responses.

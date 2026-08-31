@@ -31,6 +31,9 @@ const serverActionAliases = [
   "@/lib/actions/saved-views",
   "@/lib/actions/sample-data",
   "@/lib/actions/schedule",
+  "@/lib/actions/search-insights",
+  "@/lib/actions/search-insights-drawers",
+  "@/lib/actions/search-insights-rows",
   "@/lib/actions/settings",
   "@/lib/actions/slack",
   "@/lib/actions/tags",
@@ -40,7 +43,7 @@ const serverActionAliases = [
   "@/lib/actions/workspace",
 ];
 const serverActionPattern =
-  /^@\/(?:app\/(?:app\/(?:account(?:\/preferences)?|settings)|cloud\/import|onboarding)\/actions|lib\/actions\/(?:_shared|account|alert-feed|alerts|apiKey|cloud|competitors|keyword|keyword-import-export|instance-migration|notification-prefs|notifications|project|providers|rankCheck|saved-views|sample-data|schedule|settings|slack|tags|team|traffic-sync|waitlist|workspace))$/;
+  /^@\/(?:app\/(?:app\/(?:account(?:\/preferences)?|settings)|cloud\/import|onboarding)\/actions|lib\/actions\/(?:_shared|account|alert-feed|alerts|apiKey|cloud|competitors|keyword|keyword-import-export|instance-migration|notification-prefs|notifications|project|providers|rankCheck|saved-views|sample-data|schedule|search-insights(?:-drawers|-rows)?|settings|slack|tags|team|traffic-sync|waitlist|workspace))$/;
 const runtimeStubPatterns = [
   /^@\/components\/shell\/keyword-search$/,
   /^@\/lib\/api\/ratelimit$/,

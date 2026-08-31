@@ -27,7 +27,7 @@ export function RecentTargets({ onOpen, onRemove, targets }: Readonly<RecentTarg
   return (
     <section aria-label="Recent targets">
       <div className="mb-2 flex items-center gap-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.5px] text-fg-muted">
-        <Recent aria-hidden size={13} />
+        <Recent weight="regular" aria-hidden size={13} />
         Recent targets
       </div>
       <div className="flex gap-2 overflow-x-auto pb-1">
@@ -57,7 +57,7 @@ export function RecentTargets({ onOpen, onRemove, targets }: Readonly<RecentTarg
               onClick={() => onRemove(target)}
               type="button"
             >
-              <X aria-hidden size={12} weight="bold" />
+              <X aria-hidden size={12} weight="regular" />
             </button>
           </div>
         ))}

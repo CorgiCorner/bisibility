@@ -45,6 +45,7 @@ describe("OverviewToolbar", () => {
     for (const filter of filters) {
       expect(filter).toHaveClass("overview-toolbar-filter");
     }
+    expect(filters[0]?.querySelector("span.min-w-0.truncate")).toHaveClass("!text-fg-muted");
     expect(filters[0]).toHaveClass(
       "!rounded-full",
       "!bg-bg-elev",

@@ -11,19 +11,7 @@ import type {
   AlertTargetOptions,
   AlertTemplate,
 } from "@/lib/alerts/alert-data";
-import {
-  isRuleTemplateId,
-  type RuleTemplateId,
-  ruleSeverityMeta,
-} from "@/lib/alerts/new-rule-data";
-import {
-  ArrowLineDownIcon as ArrowLineDown,
-  CursorClickIcon as CursorClick,
-  LinkBreakIcon as LinkBreak,
-  TrendDownIcon as TrendDown,
-  TrophyIcon as Trophy,
-  UsersThreeIcon as UsersThree,
-} from "@phosphor-icons/react";
+import { isRuleTemplateId, type RuleTemplateId } from "@/lib/alerts/new-rule-data";
 import { useState } from "react";
 
 type AlertTemplateButtonsProps = {
@@ -42,16 +30,6 @@ type AlertTemplateButtonsProps = {
   projectId: string;
   targets: AlertTargetOptions;
   templates: AlertTemplate[];
-};
-
-const templateIcons = {
-  competitor: UsersThree,
-  ctr: CursorClick,
-  downtrend: TrendDown,
-  positiondrop: ArrowLineDown,
-  slipped: ArrowLineDown,
-  top3: Trophy,
-  wrongurl: LinkBreak,
 };
 
 export function AlertTemplateButtons({
@@ -80,8 +58,6 @@ export function AlertTemplateButtons({
   return (
     <>
       {templates.map((item) => {
-        const Icon = templateIcons[item.id as keyof typeof templateIcons];
-        const meta = ruleSeverityMeta[item.severity];
         const requiresGsc = item.id === "ctr" && !gscConnected;
 
         return (
@@ -95,8 +71,6 @@ export function AlertTemplateButtons({
                 type="button"
                 variant="secondary"
               >
-                <span className="h-[7px] w-[7px] rounded-full" style={{ background: meta.color }} />
-                {Icon ? <Icon aria-hidden className="text-fg-muted" size={14} /> : null}
                 {item.label}
               </Button>
             </ProjectReadOnlyTooltip>

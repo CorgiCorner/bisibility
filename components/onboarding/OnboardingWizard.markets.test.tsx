@@ -27,6 +27,7 @@ vi.mock("@/components/markets/MarketPicker", () => ({
 it("keeps draft markets across navigation and persists them on submit", async () => {
   const addKeywordsAction = vi.fn(async () => ({
     created: 1,
+    persistedKeywordCount: 1,
     keywords: [{ id: "keyword_1", publicId: "kw_1" }],
     skippedDuplicates: 0,
   }));

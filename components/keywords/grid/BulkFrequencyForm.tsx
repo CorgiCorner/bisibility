@@ -125,7 +125,7 @@ export function BulkFrequencyForm({
         const result = await action(values);
         const count = actionResultCount(result, selectedIds.length);
         showToast(`Frequency set for ${keywordCountLabel(count)}`, {
-          tint: "green",
+          severity: "success",
           undo: noopUndo,
         });
         onDone();

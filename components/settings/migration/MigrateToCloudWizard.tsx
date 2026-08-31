@@ -79,7 +79,7 @@ export function MigrateToCloudWizard({
                 disabled={wizard.holdBusy}
                 onClick={wizard.handleBack}
                 size="lg"
-                startIcon={<ArrowLeft aria-hidden size={15} weight="bold" />}
+                startIcon={<ArrowLeft aria-hidden size={15} weight="regular" />}
                 sx={{
                   color: "var(--fg-muted)",
                   "&:hover": { borderColor: "var(--accent)", color: "var(--accent-text)" },
@@ -93,7 +93,7 @@ export function MigrateToCloudWizard({
             <Button
               disabled={wizard.continueDisabled}
               endIcon={
-                wizard.step === 3 ? null : <ArrowRight aria-hidden size={15} weight="bold" />
+                wizard.step === 3 ? null : <ArrowRight aria-hidden size={15} weight="regular" />
               }
               onClick={wizard.handleNext}
               size="lg"

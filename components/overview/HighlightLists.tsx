@@ -49,7 +49,7 @@ function Delta({ row }: Readonly<{ row: HighlightRow }>) {
       <span
         className={`inline-flex items-center gap-0.5 font-mono text-[11px] font-semibold ${colorClassName}`}
       >
-        <Icon aria-hidden size={12} weight="bold" />
+        <Icon aria-hidden size={12} weight="regular" />
         {row.delta.value}
       </span>
     </Tooltip>

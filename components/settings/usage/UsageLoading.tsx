@@ -7,7 +7,7 @@ import { cn } from "@/lib/ui/cn";
 
 const frames = [
   { className: "min-h-[525px] sm:min-h-[386px]", id: "plan" },
-  { className: "min-h-[784px] sm:min-h-[676px]", id: "provider-usage" },
+  { className: "min-h-0", id: "provider-usage" },
 ] as const;
 
 export function UsageCardsLoading() {

@@ -11,7 +11,7 @@ describe("commandGroups", () => {
     const navigate = commandGroups("prj_1", push, setMode, []).find(
       (group) => group.title === "Navigate",
     );
-    const docs = navigate?.items.find((item) => item.label === "Docs & self-hosting");
+    const docs = navigate?.items.find((item) => item.label === "Docs and self-hosting");
 
     expect(docs).toBeDefined();
     docs?.run();
@@ -31,6 +31,18 @@ describe("commandGroups", () => {
     navigate?.items.find((item) => item.label === "Keyword Research")?.run();
 
     expect(push).toHaveBeenCalledWith("/app/prj_1/keyword-research");
+  });
+
+  it("includes Install in the Navigate group", () => {
+    const push = vi.fn();
+    const navigate = commandGroups("prj_1", push, vi.fn(), []).find(
+      (group) => group.title === "Navigate",
+    );
+    const install = navigate?.items.find((item) => item.label === "Install");
+
+    expect(install).toBeDefined();
+    install?.run();
+    expect(push).toHaveBeenCalledWith("/app/prj_1/install");
   });
 
   it("has exact rank tracker labels with concrete hints", () => {

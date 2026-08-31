@@ -52,6 +52,21 @@ const routeCases = [
     title: "Integrations",
   },
   {
+    path: appPath("prj_1", "install"),
+    pattern: appPath("[project]", "install"),
+    title: "Install",
+  },
+  {
+    path: appPath("prj_1", "search-console"),
+    pattern: appPath("[project]", "search-console"),
+    title: "Search Console",
+  },
+  {
+    path: appPath("prj_1", "gcs-insights"),
+    pattern: appPath("[project]", "gcs-insights"),
+    title: "Overview",
+  },
+  {
     path: appPath("prj_1", "rank-tracker", "kw_test"),
     pattern: appPath("[project]", "rank-tracker", "[id]"),
     title: "Keyword details",
@@ -181,13 +196,21 @@ describe("dashboard header titles", () => {
     );
   });
 
-  it("uses the current project domain for Settings without changing other route metadata", () => {
-    expect(
-      headerMetaFor(appPath("prj_1", "settings", "general"), { projectDomain: "example.com" }),
-    ).toMatchObject({ subtitle: "example.com", title: "Settings" });
+  it("keeps Settings free of redundant project-domain metadata", () => {
+    expect(headerMetaFor(appPath("prj_1", "settings", "general"))).toEqual({
+      headerVariant: "settings",
+      title: "Settings",
+    });
     expect(headerMetaFor(appPath("prj_1", "integrations"))).toMatchObject({
       subtitle: "Connect data providers and analytics sources.",
       title: "Integrations",
+    });
+  });
+
+  it("uses descriptive Install copy", () => {
+    expect(headerMetaFor("/app/prj_x/install")).toEqual({
+      subtitle: "Let your AI agent, editor or scripts use the same data you see here.",
+      title: "Install",
     });
   });
 });

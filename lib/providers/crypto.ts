@@ -191,6 +191,7 @@ export function decryptProviderCredentials(encrypted: string | null | undefined)
   try {
     const parsed = JSON.parse(decryptSecret(encrypted)) as ProviderCredentials;
     return {
+      ...(typeof parsed.accountEmail === "string" ? { accountEmail: parsed.accountEmail } : {}),
       ...(typeof parsed.apiKey === "string" ? { apiKey: parsed.apiKey } : {}),
       ...(typeof parsed.endpoint === "string" ? { endpoint: parsed.endpoint } : {}),
       ...(typeof parsed.login === "string" ? { login: parsed.login } : {}),

@@ -37,7 +37,7 @@ export function RemoveNoteAction({ projectId, signalId }: Readonly<RemoveNoteAct
         onClick={remove}
         type="button"
       >
-        <Trash aria-hidden size={13} />
+        <Trash weight="regular" aria-hidden size={13} />
       </button>
       {message ? <span className="font-mono text-[10px] text-red-text">{message}</span> : null}
     </span>

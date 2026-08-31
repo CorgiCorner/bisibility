@@ -48,32 +48,28 @@ export function KeywordGridViewport({
 }: KeywordGridViewportProps) {
   return (
     <div className="min-w-0 overflow-hidden">
-      <div className="min-w-0 overflow-x-auto">
-        <div
-          className="h-[650px] min-h-[420px] max-h-[calc(100dvh-200px)] min-w-[1080px]"
-          data-testid="keywords-grid-viewport"
-        >
-          <DeferredDataGrid
-            {...gridProps}
-            checkboxSelection
-            columnHeaderHeight={42}
-            disableRowSelectionExcludeModel
-            disableRowSelectionOnClick
-            getRowClassName={(params) =>
-              marketGridChild(params.row) ? "bv-market-grid-child" : ""
-            }
-            initialState={initialKeywordGridState}
-            onCellClick={handleCellClick}
-            onRowClick={(params) => {
-              if (!toggleParent(params.row)) onNavigate(params.row.id);
-            }}
-            pageSizeOptions={[10, 25, 50]}
-            pagination
-            slotProps={{ noRowsOverlay: { state: noRowsState } }}
-            slots={{ noRowsOverlay: KeywordNoRowsOverlay }}
-            sx={keywordGridSx}
-          />
-        </div>
+      <div
+        className="h-[650px] min-h-[420px] max-h-[calc(100dvh-200px)] w-full min-w-0"
+        data-testid="keywords-grid-viewport"
+      >
+        <DeferredDataGrid
+          {...gridProps}
+          checkboxSelection
+          columnHeaderHeight={42}
+          disableRowSelectionExcludeModel
+          disableRowSelectionOnClick
+          getRowClassName={(params) => (marketGridChild(params.row) ? "bv-market-grid-child" : "")}
+          initialState={initialKeywordGridState}
+          onCellClick={handleCellClick}
+          onRowClick={(params) => {
+            if (!toggleParent(params.row)) onNavigate(params.row.id);
+          }}
+          pageSizeOptions={[10, 25, 50]}
+          pagination
+          slotProps={{ noRowsOverlay: { state: noRowsState } }}
+          slots={{ noRowsOverlay: KeywordNoRowsOverlay }}
+          sx={keywordGridSx}
+        />
       </div>
     </div>
   );

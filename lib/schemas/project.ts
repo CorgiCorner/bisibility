@@ -27,6 +27,12 @@ export function normalizeTrackingScope(value: string | null | undefined): Tracki
   return trackingScopeSchema.catch("country").parse(value);
 }
 
+export const projectSearchSyncSchema = z.object({
+  projectId: idSchema,
+  retentionMonths: z.union([z.literal(16), z.literal(12), z.literal(6), z.literal(3)]),
+  pace: z.enum(["normal", "gentle"]),
+});
+
 export const projectInspectionBudgetSchema = z.object({
   inspectionDailyLimit: z.coerce
     .number()

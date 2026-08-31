@@ -24,8 +24,8 @@ export function OnboardingStepSkip({
       aria-label={ariaLabel}
       className={className}
       {...(onClick ? { onClick, type: "button" as const } : { href: href ?? "" })}
-      size="xs"
-      variant="secondary"
+      size="lg"
+      variant="ghost"
     >
       {children}
     </Button>

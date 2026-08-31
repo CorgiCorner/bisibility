@@ -35,7 +35,12 @@ function EmptyUpcoming({
     return (
       <div className="flex min-h-12 items-center justify-between gap-3 rounded-card border border-dashed border-border bg-bg-elev px-3.5 py-2.5">
         <span className="flex min-w-0 items-center gap-2 text-xs text-fg-muted">
-          <CalendarBlank aria-hidden className="shrink-0 text-fg-muted" size={16} />
+          <CalendarBlank
+            weight="regular"
+            aria-hidden
+            className="shrink-0 text-fg-muted"
+            size={16}
+          />
           No scheduled keywords
         </span>
         <Link
@@ -56,12 +61,12 @@ function EmptyUpcoming({
           href={schedulesHref}
         >
           Manage schedules in Keywords
-          <CaretRight aria-hidden size={12} weight="bold" />
+          <CaretRight aria-hidden size={12} weight="regular" />
         </Link>
       }
       compact
       description="Set a schedule in Keywords to see the next checks here."
-      icon={<CalendarBlank aria-hidden size={22} weight="duotone" />}
+      icon={<CalendarBlank aria-hidden size={22} weight="regular" />}
       title="No scheduled keywords"
     />
   );

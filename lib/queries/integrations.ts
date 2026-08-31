@@ -27,6 +27,7 @@ import {
 } from "@/lib/rank-check/provider-chain-order";
 import { DEFAULT_SERP_DEPTH, DEFAULT_SERP_MARKET } from "@/lib/serp/markets";
 import { requireReadableProject } from "./_auth";
+import { loadGscConsumerStatuses } from "./integration-consumer-status";
 import {
   displayedProviderLogin,
   type ProviderConnectionRow,
@@ -39,6 +40,7 @@ import {
 import { getRequestProjectDefaults } from "./workspace-request-data";
 
 type SyncFailure = NonNullable<IntegrationProvider["syncFailure"]>;
+type ConsumerStatuses = IntegrationProvider["consumerStatuses"];
 
 export type IntegrationsView = {
   categories: IntegrationCategory[];
@@ -86,6 +88,7 @@ function integrationProvider(
   googleOAuth?: GoogleOAuthSetup,
   syncFailure?: SyncFailure,
   costEntries: readonly ProviderCostEntryRow[] = [],
+  consumerStatuses?: ConsumerStatuses,
 ): IntegrationProvider {
   const { connection, item } = row;
   const cost = connection?.costPerCheckCents;
@@ -100,9 +103,14 @@ function integrationProvider(
 
   return {
     credentialIssue: identity.state === "unreadable" ? "unreadable" : undefined,
-    description: providerDescription(item),
+    consumerStatuses,
+    description:
+      item.id === "gsc"
+        ? "One read-only Google connection for Search Insights and traffic enrichment."
+        : providerDescription(item),
     drawer: {
-      activities: providerActivities(kind, connection, now),
+      accountEmail: identity.state === "readable" ? identity.accountEmail : undefined,
+      activities: kind === "serp" ? providerActivities(connection, now) : [],
       costHelp: COST_ESTIMATE_PER_CHECK_HELP,
       credentialFields: providerCredentialFieldsFor(item.id, { connected }),
       defaults: {
@@ -127,7 +135,10 @@ function integrationProvider(
     id: item.id,
     kind,
     logoDomain: item.logoDomain,
-    meta: providerMeta(item, connection, { ...credentials, login: displayedLogin }, now),
+    meta:
+      item.id === "gsc"
+        ? []
+        : providerMeta(item, connection, { ...credentials, login: displayedLogin }, now),
     name: item.label,
     neverSynced:
       kind === "analytics" &&
@@ -164,7 +175,7 @@ async function categoriesForProject(
   googleOAuth?: GoogleOAuthSetup,
 ): Promise<IntegrationCategory[]> {
   const connections = await loadProviderConnections(projectId);
-  const [runs, costEntries] = await Promise.all([
+  const [runs, costEntries, gscConsumerStatuses] = await Promise.all([
     prisma.operationalRun.findMany({
       orderBy: { startedAt: "desc" },
       select: { connectionId: true, errorClass: true, startedAt: true, status: true },
@@ -175,6 +186,7 @@ async function categoriesForProject(
       PROVIDER_RATE_FEATURES,
       new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000),
     ) as Promise<ProviderCostEntryRow[]>,
+    loadGscConsumerStatuses(projectId, connections, now),
   ]);
   const failuresByConnection = new Map<string, SyncFailure>();
   for (const connection of connections) {
@@ -208,6 +220,7 @@ async function categoriesForProject(
           googleOAuth,
           row.connection ? failuresByConnection.get(row.connection.id) : undefined,
           costEntries,
+          row.item.id === "gsc" ? gscConsumerStatuses : undefined,
         ),
       ),
       title: copy.title,

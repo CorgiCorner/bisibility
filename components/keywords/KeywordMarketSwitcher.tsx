@@ -71,9 +71,9 @@ function scheduleInput(keyword: KeywordRow) {
 
 function DeviceIcon({ device }: Readonly<{ device: string }>) {
   return device.toLowerCase() === "mobile" ? (
-    <DeviceMobile aria-hidden size={13} />
+    <DeviceMobile weight="regular" aria-hidden size={13} />
   ) : (
-    <Monitor aria-hidden size={13} />
+    <Monitor weight="regular" aria-hidden size={13} />
   );
 }
 
@@ -101,7 +101,7 @@ function SwitcherButton({
       type="button"
     >
       {children}
-      {onClick ? <CaretDown aria-hidden size={11} weight="bold" /> : null}
+      {onClick ? <CaretDown aria-hidden size={11} weight="regular" /> : null}
     </button>
   );
 }
@@ -144,7 +144,7 @@ export function KeywordMarketSwitcher({
   function navigate(target: KeywordRow) {
     setDeviceAnchor(null);
     if (target.id === keyword.id) return;
-    showToast(`Now showing ${pairLabel(target)} results`, { tint: "neutral" });
+    showToast(`Now showing ${pairLabel(target)} results`, { severity: "info" });
     router.push(appPath(asProjectRef(projectId), "rank-tracker", target.id));
   }
 
@@ -166,24 +166,24 @@ export function KeywordMarketSwitcher({
       });
       const keywordIds = createdKeywordIds(result);
       if (keywordIds.length === 0) {
-        showToast(`${marketLabel(market)} is already tracked`, { tint: "neutral" });
+        showToast(`${marketLabel(market)} is already tracked`, { severity: "info" });
         return;
       }
       showToast(`Added ${marketLabel(market)}`, {
-        tint: "green",
+        severity: "success",
         undo: async () => {
           try {
             await bulkDeleteAction({ keywordIds, projectId });
-            showToast(`Removed ${marketLabel(market)}`, { tint: "neutral" });
+            showToast(`Removed ${marketLabel(market)}`, { severity: "success" });
             router.refresh();
           } catch (error) {
-            showToast(actionErrorMessage(error), { tint: "red" });
+            showToast(actionErrorMessage(error), { severity: "error" });
           }
         },
       });
       router.refresh();
     } catch (error) {
-      showToast(actionErrorMessage(error), { tint: "red" });
+      showToast(actionErrorMessage(error), { severity: "error" });
     } finally {
       setAddingKey(null);
     }

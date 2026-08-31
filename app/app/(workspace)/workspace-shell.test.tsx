@@ -18,29 +18,23 @@ vi.mock("@/components/shell/AppFooter", () => ({
   AppFooter: (props: {
     schemaStatus?: string;
     showInstanceAdmin: boolean;
+    temporalIdentityDetail?: string;
+    temporalIdentityStatus?: string;
     workerStatus?: string;
   }) => (
     <footer
       data-schema-status={props.schemaStatus}
       data-show-instance-admin={props.showInstanceAdmin}
+      data-temporal-identity-detail={props.temporalIdentityDetail}
+      data-temporal-identity-status={props.temporalIdentityStatus}
       data-testid="app-footer"
       data-worker-status={props.workerStatus}
     />
   ),
 }));
 vi.mock("@/components/shell/AppHeader", () => ({
-  AppHeader: ({
-    actions,
-    projectDomain,
-    showHostedLinks,
-  }: {
-    actions: ReactNode;
-    projectDomain?: string;
-    showHostedLinks: boolean;
-  }) => (
-    <header data-hosted-links={showHostedLinks} data-project-domain={projectDomain}>
-      {actions}
-    </header>
+  AppHeader: ({ actions, showHostedLinks }: { actions: ReactNode; showHostedLinks: boolean }) => (
+    <header data-hosted-links={showHostedLinks}>{actions}</header>
   ),
 }));
 vi.mock("@/components/shell/CloudBetaBanner", () => ({
@@ -122,8 +116,11 @@ describe("workspace layout", () => {
     mocks.budgetSummary.mockResolvedValue({ capCents: 5_000, spentCents: 20 });
     mocks.lastExport.mockResolvedValue(null);
     mocks.workerLiveness.mockResolvedValue({
+      alertDeliveryTaskQueue: null,
+      namespace: null,
       schemaComparison: "unknown",
       status: "unknown",
+      taskQueue: null,
     });
   });
 
@@ -139,7 +136,7 @@ describe("workspace layout", () => {
     expect(markup).toContain("Workspace content");
     expect(markup).not.toContain("max-w-[1400px]");
     expect(markup).not.toContain("max-w-[780px]");
-    expect(markup).toContain('data-project-domain="example.com"');
+    expect(markup).not.toContain("data-project-domain");
     expect(mocks.querySession).toHaveBeenCalledOnce();
     expect(mocks.listWorkspaces).toHaveBeenCalledOnce();
   });
@@ -225,6 +222,29 @@ describe("workspace layout", () => {
     expect(markup).toContain('data-worker-status="stale"');
   });
 
+  it("resolves and threads worker queue mismatch details for instance admins", async () => {
+    mocks.adminSession.mockResolvedValueOnce({ user: { id: "user_admin" } });
+    mocks.workerLiveness.mockResolvedValueOnce({
+      alertDeliveryTaskQueue: "other-alert-deliveries",
+      namespace: "default",
+      schemaComparison: "ok",
+      status: "ok",
+      taskQueue: "other-rank-checks",
+    });
+
+    const result = await WorkspaceShell({
+      activeProjectId: "project_1",
+      children: <div>Admin workspace</div>,
+      projectRef: "prj_f00000000000000000000000",
+    });
+    const markup = renderToStaticMarkup(result);
+
+    expect(markup).toContain('data-temporal-identity-status="mismatch"');
+    expect(markup).toContain(
+      'data-temporal-identity-detail="app: default / rank-checks / alert-deliveries · worker: default / other-rank-checks / other-alert-deliveries"',
+    );
+  });
+
   it("renders no beta banner and issues no last-export query on self-host", async () => {
     const result = await WorkspaceShell({
       activeProjectId: "project_1",
@@ -236,6 +256,21 @@ describe("workspace layout", () => {
     expect(markup).not.toContain('data-testid="cloud-beta-banner"');
     expect(markup).toContain('data-hosted-links="false"');
     expect(mocks.lastExport).not.toHaveBeenCalled();
+  });
+
+  it("places the Cloud beta banner before the app header in the main column", async () => {
+    mocks.deployment.isCloud = true;
+
+    const result = await WorkspaceShell({
+      activeProjectId: "project_1",
+      children: <div>Cloud workspace</div>,
+      projectRef: "prj_f00000000000000000000000",
+    });
+    const markup = renderToStaticMarkup(result);
+
+    expect(markup.indexOf('data-testid="cloud-beta-banner"')).toBeLessThan(
+      markup.indexOf("<header"),
+    );
   });
 
   it("loads and threads the latest package export only on Cloud", async () => {

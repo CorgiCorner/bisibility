@@ -50,7 +50,7 @@ describe("StepFirstCheck", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Keyword used for the sample checks" }));
     fireEvent.click(screen.getByRole("menuitem", { name: "seo api" }));
-    fireEvent.click(screen.getByRole("button", { name: "Run 4 sample checks" }));
+    fireEvent.click(screen.getByRole("button", { name: "Run a test check (1 keyword)" }));
 
     await waitFor(() =>
       expect(listFirstCheckCandidatesAction).toHaveBeenCalledWith({
@@ -68,59 +68,50 @@ describe("StepFirstCheck", () => {
       isSampleProject: false,
       providerReady: true,
     }));
-    renderReadyStep({ keywordDraft: undefined, listFirstCheckCandidatesAction });
+    renderReadyStep({
+      initialKeywordText: "persisted rank tracker",
+      keywordDraft: undefined,
+      listFirstCheckCandidatesAction,
+    });
 
     expect(screen.queryByText("First available keyword")).not.toBeInTheDocument();
     expect(await screen.findByText("persisted rank tracker")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Run 1 sample check" }));
+    fireEvent.click(screen.getByRole("button", { name: "Run a test check (1 keyword)" }));
 
-    await waitFor(() => expect(listFirstCheckCandidatesAction).toHaveBeenCalledTimes(2));
-    expect(listFirstCheckCandidatesAction).toHaveBeenNthCalledWith(1, {
-      limit: 1,
-      projectId: "prj_1",
-    });
-    expect(listFirstCheckCandidatesAction).toHaveBeenNthCalledWith(2, {
+    await waitFor(() => expect(listFirstCheckCandidatesAction).toHaveBeenCalledTimes(1));
+    expect(listFirstCheckCandidatesAction).toHaveBeenCalledWith({
       keywordText: "persisted rank tracker",
       limit: 1,
       projectId: "prj_1",
     });
   });
 
-  it("retries a failed resumed keyword load in place and enables preview", async () => {
-    let attempts = 0;
-    const listFirstCheckCandidatesAction = vi.fn(async () => {
-      if (attempts++ === 0) throw new Error("Saved keywords could not be loaded.");
-      return {
-        candidates: [candidate("keyword_1", "persisted rank tracker")],
-        hasAnalyticsSource: false,
-        isSampleProject: false,
-        providerReady: true,
-      };
-    });
+  it("retries a resumed keyword load in place and enables preview", async () => {
+    const listFirstCheckCandidatesAction = vi.fn(async () => ({
+      candidates: [candidate("keyword_1", "persisted rank tracker")],
+      hasAnalyticsSource: false,
+      isSampleProject: false,
+      providerReady: true,
+    }));
     renderReadyStep({ keywordDraft: undefined, listFirstCheckCandidatesAction });
-
-    const loadError = await screen.findByRole("alert");
-    expect(loadError).toHaveTextContent("Saved keywords could not be loaded.");
-    expect(loadError).toHaveClass("m-0");
-    expect(loadError).not.toHaveClass("mt-2");
-    expect(screen.getByRole("button", { name: "Run 1 sample check" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Run a test check (1 keyword)" })).toBeDisabled();
     fireEvent.click(screen.getByRole("button", { name: "Retry loading keyword" }));
-
     expect(await screen.findByText("persisted rank tracker")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Run 1 sample check" })).toBeEnabled();
-    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
-    expect(listFirstCheckCandidatesAction).toHaveBeenCalledTimes(2);
+    expect(screen.getByRole("button", { name: "Run a test check (1 keyword)" })).toBeEnabled();
+    expect(listFirstCheckCandidatesAction).toHaveBeenCalledTimes(1);
   });
 
   it("renders the selected sample targets incrementally without queuing the remaining keywords", async () => {
     const first = deferred<{
       position: null;
+      recordedCostCents: 0;
       provider: string;
       rankingUrl: null;
       status: "completed";
     }>();
     const second = deferred<{
       position: number;
+      recordedCostCents: 0;
       provider: string;
       rankingUrl: string;
       status: "completed";
@@ -132,17 +123,19 @@ describe("StepFirstCheck", () => {
     const legacyQueueAction = { queueFirstChecksAction };
 
     renderReadyStep({ ...legacyQueueAction, runFirstCheckPreviewAction });
-    fireEvent.click(screen.getByRole("button", { name: /Run \d+ sample checks?/i }));
+    fireEvent.click(screen.getByRole("button", { name: "Run a test check (1 keyword)" }));
 
     await waitFor(() => expect(screen.getAllByText("Checking...")).toHaveLength(2));
     await waitFor(() => expect(runFirstCheckPreviewAction).toHaveBeenCalledTimes(1));
     expect(runFirstCheckPreviewAction).toHaveBeenLastCalledWith({ keywordId: "kw_keyword_1" });
     expect(screen.getByLabelText("Desktop device")).toBeInTheDocument();
     expect(screen.getByLabelText("Mobile device")).toBeInTheDocument();
-    expect(screen.getAllByText("United States")).toHaveLength(3);
+    expect(screen.getAllByText("United States")).toHaveLength(2);
+    expect(screen.getByLabelText("Markets: United States / English")).toBeInTheDocument();
 
     first.resolve({
       position: null,
+      recordedCostCents: 0,
       provider: "dataforseo",
       rankingUrl: null,
       status: "completed",
@@ -154,6 +147,7 @@ describe("StepFirstCheck", () => {
 
     second.resolve({
       position: 4,
+      recordedCostCents: 0,
       provider: "dataforseo",
       rankingUrl: "https://example.com/page",
       status: "completed",
@@ -182,9 +176,9 @@ describe("StepFirstCheck", () => {
       })),
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Run 1 sample check" }));
+    fireEvent.click(screen.getByRole("button", { name: "Run a test check (1 keyword)" }));
 
-    expect(await screen.findByText("The sample check failed. Retry it below.")).toBeInTheDocument();
+    expect(await screen.findByText(/0 of 1 check · \$0\.0000 recorded cost/)).toBeInTheDocument();
     expect(
       screen.getByText(
         "The sample check finished with an issue. You can retry the failed check below. Every keyword still follows your daily schedule.",
@@ -205,6 +199,7 @@ describe("StepFirstCheck", () => {
       }
       return {
         position: input.keywordId === "kw_keyword_1" ? 2 : 4,
+        recordedCostCents: 0,
         provider: "dataforseo",
         rankingUrl: `https://example.com/${input.keywordId.replace("kw_", "")}`,
         status: "completed" as const,
@@ -212,13 +207,11 @@ describe("StepFirstCheck", () => {
     });
 
     renderReadyStep({ runFirstCheckPreviewAction });
-    fireEvent.click(screen.getByRole("button", { name: /Run \d+ sample checks?/i }));
+    fireEvent.click(screen.getByRole("button", { name: "Run a test check (1 keyword)" }));
 
     expect(await screen.findByText("Monthly rank-check budget reached.")).toBeInTheDocument();
     expect(screen.getByText("#2 / example.com/keyword_1")).toBeInTheDocument();
-    expect(
-      screen.getByText("1 of 2 checks failed. Successful results are kept."),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/1 of 2 checks · \$0\.0000 recorded cost/)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Retry failed" }));
 
@@ -226,5 +219,111 @@ describe("StepFirstCheck", () => {
     expect(runFirstCheckPreviewAction).toHaveBeenCalledTimes(3);
     expect(runFirstCheckPreviewAction).toHaveBeenLastCalledWith({ keywordId: "kw_keyword_2" });
     expect(screen.queryByText("Monthly rank-check budget reached.")).not.toBeInTheDocument();
+  });
+
+  it("totals recorded persisted cost across physical checks for one logical keyword", async () => {
+    renderReadyStep({
+      listFirstCheckCandidatesAction: vi.fn(async () => ({
+        candidates: [candidate("one", "rank tracker"), candidate("two", "rank tracker", "mobile")],
+        hasAnalyticsSource: false,
+        isSampleProject: false,
+        providerReady: true,
+      })),
+      runFirstCheckPreviewAction: vi
+        .fn()
+        .mockResolvedValueOnce({
+          position: 2,
+          provider: "dataforseo",
+          rankingUrl: null,
+          recordedCostCents: 0.2,
+          status: "completed",
+        })
+        .mockResolvedValueOnce({
+          position: 3,
+          provider: "dataforseo",
+          rankingUrl: null,
+          recordedCostCents: 0.35,
+          status: "completed",
+        }),
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Run a test check (1 keyword)" }));
+
+    expect(await screen.findByText(/\$0\.0055 recorded cost/)).toBeInTheDocument();
+    const dashboard = screen.getByRole("button", { name: "Go to dashboard" });
+    expect(dashboard).toHaveClass("MuiButton-contained", "MuiButton-sizeLarge");
+    expect(dashboard).toHaveAttribute("type", "submit");
+    expect(screen.queryByRole("button", { name: "Open app" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Run a test check (1 keyword)" })).toBeNull();
+    expect(
+      screen
+        .getAllByRole("button")
+        .filter((button) => button.classList.contains("MuiButton-contained")),
+    ).toHaveLength(1);
+  });
+
+  it("shows matrix transparency and mixed persisted-cost shortfall", async () => {
+    renderReadyStep({
+      defaults: {
+        country: "United States",
+        cronExpression: null,
+        device: "desktop",
+        devices: ["desktop", "mobile"],
+        frequency: "manual",
+        jitterMinutes: 60,
+        locationSelections: [
+          {
+            canonicalKey: "US",
+            countryCode: "US",
+            displayName: "United States",
+            kind: "country",
+            languageCode: "en",
+            languageLabel: "English",
+          },
+          {
+            canonicalKey: "PL",
+            countryCode: "PL",
+            displayName: "Poland",
+            kind: "country",
+            languageCode: "pl",
+            languageLabel: "Polish",
+          },
+        ],
+        locations: ["US", "PL"],
+        projectId: "prj_1",
+        timezone: "UTC",
+      },
+      listFirstCheckCandidatesAction: vi.fn(async () => ({
+        candidates: [
+          candidate("1", "rank tracker"),
+          candidate("2", "rank tracker", "mobile"),
+          {
+            ...candidate("3", "rank tracker"),
+            market: { languageLabel: "Polish", locationLabel: "Poland" },
+          },
+          {
+            ...candidate("4", "rank tracker", "mobile"),
+            market: { languageLabel: "Polish", locationLabel: "Poland" },
+          },
+        ],
+        hasAnalyticsSource: false,
+        isSampleProject: false,
+        providerReady: true,
+      })),
+      runFirstCheckPreviewAction: vi.fn(async ({ keywordId }) =>
+        keywordId === "kw_4"
+          ? { code: "failed" as const, message: "Failed", status: "failed" as const }
+          : {
+              position: 2,
+              provider: "dataforseo",
+              rankingUrl: null,
+              recordedCostCents: 0.2,
+              status: "completed" as const,
+            },
+      ),
+    });
+    expect(screen.getByText("1 keyword · 2 markets · both devices · 4 checks")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Run a test check (1 keyword)" }));
+    expect(await screen.findByText(/3 of 4 checks · \$0\.0060 recorded cost/)).toBeInTheDocument();
   });
 });

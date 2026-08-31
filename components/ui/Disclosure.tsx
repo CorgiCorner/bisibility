@@ -52,7 +52,7 @@ export function Disclosure({
           aria-hidden="true"
           className="mt-[3px] shrink-0 text-fg-muted transition-transform duration-[var(--motion-tooltip)] ease-[var(--ease-in-out)] group-open:rotate-180 motion-reduce:transition-none"
           size={16}
-          weight="bold"
+          weight="regular"
         />
       </summary>
       <div className={cn("scroll-mt-32 px-5.5 pb-5 sm:px-7", contentClassName)} id={anchorId}>

@@ -49,7 +49,7 @@ export function AddKeywordCsvReview({ items, onEdit }: Readonly<AddKeywordCsvRev
       <div className="rounded-control border border-border bg-bg-sunken px-4 py-3">
         <div className="flex items-start gap-3">
           <span className="mt-0.5 grid h-8 w-8 flex-none place-items-center rounded-control bg-accent-soft text-accent-solid">
-            <CheckCircle size={18} weight="bold" />
+            <CheckCircle size={18} weight="regular" />
           </span>
           <div className="min-w-0">
             <h3 className="m-0 text-[14px] font-semibold text-fg">Review keywords</h3>
@@ -90,7 +90,7 @@ export function AddKeywordCsvReview({ items, onEdit }: Readonly<AddKeywordCsvRev
       <Button
         onClick={onEdit}
         size="sm"
-        startIcon={<ArrowLeft size={13} weight="bold" />}
+        startIcon={<ArrowLeft size={13} weight="regular" />}
         sx={{ alignSelf: "flex-start", color: "var(--fg-muted)", width: "max-content" }}
         type="button"
         variant="secondary"

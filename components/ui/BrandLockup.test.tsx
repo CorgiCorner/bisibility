@@ -31,6 +31,16 @@ describe("BrandLockup", () => {
     expect(screen.getByText("bisibility")).toHaveStyle({ fontSize: "56px" });
   });
 
+  it("uses a compact extra-small scale for constrained surfaces", () => {
+    const { container } = render(<BrandLockup size="xs" />);
+
+    expect(container.querySelector("svg")?.getAttribute("width")).toBe("14");
+    expect(screen.getByText("bisibility")).toHaveStyle({ fontSize: "11px" });
+    expect(container.querySelector("path")?.getAttribute("d")).toBe(
+      `${BRAND_MARK_SMALL_CUT.block} ${BRAND_MARK_SMALL_CUT.counter}`,
+    );
+  });
+
   it("drops the small size onto the small cut", () => {
     const { container } = render(<BrandLockup size="sm" />);
 

@@ -195,7 +195,11 @@ export function SecurityFactors({
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-[13px]">
           <span className="grid h-9 w-9 flex-none place-items-center rounded-control bg-bg-sunken text-fg-muted">
-            {enabled ? <ShieldCheck size={18} /> : <DeviceMobile size={18} />}
+            {enabled ? (
+              <ShieldCheck size={18} weight="regular" />
+            ) : (
+              <DeviceMobile size={18} weight="regular" />
+            )}
           </span>
           <span className="min-w-0 flex-1">
             <span className="block text-[13.5px] font-semibold text-fg">Authenticator app</span>

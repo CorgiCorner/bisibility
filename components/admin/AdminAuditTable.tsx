@@ -167,7 +167,7 @@ export function AdminAuditTable({ entries, filter, nextCursor }: Readonly<Instan
             href={auditHref(filter, nextCursor)}
             prefetch={false}
           >
-            <ClockCounterClockwise aria-hidden size={14} />
+            <ClockCounterClockwise aria-hidden size={14} weight="regular" />
             Older entries
           </Link>
         ) : null}

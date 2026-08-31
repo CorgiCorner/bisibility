@@ -16,22 +16,50 @@ describe("normalizeGa4PropertyId", () => {
   });
 
   it.each([
-    ["G-Y67LRWFT7X", "measurement-id", "Measurement ID"],
-    ["g-y67lrwft7x", "measurement-id", "Measurement ID"],
-    ["UA-123456-1", "universal-analytics", "Universal Analytics"],
-    ["ua-123456-1", "universal-analytics", "Universal Analytics"],
-    ["not-a-property", "invalid", "valid GA4 Property ID"],
-    ["", "invalid", "valid GA4 Property ID"],
-  ] as const)("rejects %j with %s", (input, code, expectedCopy) => {
-    const result = normalizeGa4PropertyId(input);
+    [
+      "G-Y67LRWFT7X",
+      "G-Y67LRWFT7X is a Measurement ID. You need the numeric Property ID - they live on the same Google Analytics screen.",
+    ],
+    [
+      "g-y67lrwft7x",
+      "g-y67lrwft7x is a Measurement ID. You need the numeric Property ID - they live on the same Google Analytics screen.",
+    ],
+  ])("rejects Measurement ID %j with concise guidance", (input, message) => {
+    expect(normalizeGa4PropertyId(input)).toEqual({
+      error: { code: "measurement-id", message },
+      ok: false,
+    });
+  });
 
-    expect(result.ok).toBe(false);
-    if (result.ok) return;
-    expect(result.error.code).toBe(code);
-    expect(result.error.message).toContain(JSON.stringify(input.trim()));
-    expect(result.error.message).toContain(expectedCopy);
-    expect(result.error.message).toContain("Admin (gear, bottom-left)");
-    expect(result.error.message).toContain("Property settings -> Property details -> Property ID");
+  it.each(["UA-123456-1", "ua-123456-1"])(
+    "rejects Universal Analytics ID %j with concise guidance",
+    (input) => {
+      expect(normalizeGa4PropertyId(input)).toEqual({
+        error: {
+          code: "universal-analytics",
+          message: `${input} is a Universal Analytics tracking ID. You need the numeric Property ID - see the note above.`,
+        },
+        ok: false,
+      });
+    },
+  );
+
+  it("rejects an empty value with a dedicated message", () => {
+    expect(normalizeGa4PropertyId("  ")).toEqual({
+      error: { code: "empty", message: "Enter a Property ID first." },
+      ok: false,
+    });
+  });
+
+  it("rejects generic nonnumeric input without quoting or repeated navigation", () => {
+    expect(normalizeGa4PropertyId(" not-a-property ")).toEqual({
+      error: {
+        code: "invalid",
+        message:
+          "not-a-property is not a Property ID. Property IDs are digits only - see the note above for where to find yours.",
+      },
+      ok: false,
+    });
   });
 });
 

@@ -32,8 +32,12 @@ describe("app not found", () => {
     expect(await render()).toContain("member@example.com");
   });
 
-  it("offers a way back to the project", async () => {
-    expect(await render()).toContain('href="/app"');
+  it("offers an icon-free primary action back to the projects", async () => {
+    const html = await render();
+    const button = html.match(/<a[^>]*href="\/app"[^>]*>([\s\S]*?)<\/a>/)?.[1];
+
+    expect(button).toContain("Back to your projects");
+    expect(button).not.toContain("<svg");
   });
 
   it("offers an explicit account switch", async () => {

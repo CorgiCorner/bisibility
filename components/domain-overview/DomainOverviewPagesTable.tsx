@@ -85,7 +85,7 @@ export function DomainOverviewPagesTable({
           aria-label="Export fetched pages as CSV"
           onClick={() => downloadDomainOverviewPages(result.rows)}
           size="xs"
-          startIcon={<DownloadSimple size={14} />}
+          startIcon={<DownloadSimple weight="regular" size={14} />}
           variant="secondary"
         >
           Export
@@ -187,7 +187,7 @@ export function DomainOverviewPagesTable({
             onClick={onLoadMore}
             disabled={estimateCents == null}
             size="sm"
-            startIcon={<Plus size={13} />}
+            startIcon={<Plus weight="regular" size={13} />}
             variant="secondary"
           >
             Load next {Math.min(100, remaining)} pages

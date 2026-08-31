@@ -176,7 +176,7 @@ export function NewRuleDrawer({
               disabled={readOnly || isSubmitting}
               onClick={() => submitWithEnabled(true)}
               size="md"
-              startIcon={<BellRinging aria-hidden size={14} weight="bold" />}
+              startIcon={<BellRinging aria-hidden size={14} weight="regular" />}
               type="button"
             >
               {isEdit ? "Save rule" : "Create rule"}
@@ -257,7 +257,7 @@ export function NewRuleDrawer({
             register={register}
           />
           <div className="mt-[9px] flex items-center gap-[7px] font-mono text-[11.5px] text-fg-muted">
-            <ClockCountdown aria-hidden size={13} />
+            <ClockCountdown weight="regular" aria-hidden size={13} />
             Evaluation: {selected.evalMode}
           </div>
         </section>
@@ -282,13 +282,13 @@ export function NewRuleDrawer({
             className="m-0 flex items-center gap-1.5 font-mono text-[11.5px] text-red-text"
             role="alert"
           >
-            <X aria-hidden size={12} weight="bold" />
+            <X aria-hidden size={12} weight="regular" />
             {actionError}
           </p>
         ) : null}
         {actionWarning ? (
           <p className="m-0 flex items-start gap-1.5 font-mono text-[11.5px] text-yellow-text">
-            <WarningCircle aria-hidden className="mt-0.5 shrink-0" size={12} weight="bold" />
+            <WarningCircle aria-hidden className="mt-0.5 shrink-0" size={12} weight="regular" />
             {actionWarning}
           </p>
         ) : null}

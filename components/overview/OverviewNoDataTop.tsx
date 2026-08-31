@@ -18,10 +18,10 @@ import { PositionTrendCard } from "./PositionTrendCard";
 import type { DistributionBucket, OverviewView, TrendPoint } from "./types";
 
 const kpis = [
-  { label: "Avg. position", subline: "awaiting first check", value: "–", muted: true },
+  { label: "Avg. position", subline: "", value: "–", muted: true },
   { label: "Tracked keywords", subline: "status", value: "count", muted: false },
   { label: "In top 10", subline: "no data", value: "–", muted: true },
-  { label: "Visibility", subline: "awaiting first check", value: "–", muted: true },
+  { label: "Visibility", subline: "", value: "–", muted: true },
 ] as const;
 
 export type NoDataBannerState =
@@ -106,7 +106,7 @@ export function NoDataBanner({
   let action = (
     <FirstCheckBannerLink
       href={appPath(projectRef, "integrations#all-providers")}
-      label="Connect SERP provider"
+      label="Connect"
     />
   );
   if (state === "migration_hold") {

@@ -35,7 +35,7 @@ export function SchedulePausedBudgetExhausted({
           aria-hidden
           className="mt-0.5 shrink-0 text-red-text"
           size={16}
-          weight="fill"
+          weight="regular"
         />
         <div>
           <p className="m-0 text-[13px] font-semibold text-fg">Monthly provider budget reached</p>

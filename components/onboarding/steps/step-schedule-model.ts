@@ -1,5 +1,9 @@
 import type { LocationFieldValue } from "@/components/keywords/LocationField";
-import type { OnboardingFlowState } from "@/components/onboarding/onboarding-fixtures";
+import {
+  DEFAULT_ONBOARDING_DEVICE,
+  DEFAULT_ONBOARDING_FREQUENCY,
+  type OnboardingFlowState,
+} from "@/components/onboarding/onboarding-fixtures";
 import {
   countryNameForLocationValue,
   locationValueForKey,
@@ -19,7 +23,10 @@ export const DEFAULT_ONBOARDING_SERP_DEPTH: SerpDepth = 20;
 
 export const onboardingTrackingDefaultsSchema = keywordScheduleBaseSchema.extend({
   devices: z.array(deviceSchema).min(1),
-  locations: z.array(canonicalKeySchema).min(1).max(MAX_ONBOARDING_LOCATIONS),
+  locations: z
+    .array(canonicalKeySchema)
+    .min(1, "Add at least one market to continue.")
+    .max(MAX_ONBOARDING_LOCATIONS),
   projectId: z.string().trim().min(1).max(120),
   serpDepth: serpDepthSchema.default(DEFAULT_ONBOARDING_SERP_DEPTH),
 });
@@ -53,12 +60,12 @@ export function withTrackingDefaults(
   const devices =
     "devices" in (values ?? {})
       ? [...((values as OnboardingTrackingDefaultsInput).devices ?? [])]
-      : [...(flowState?.devices ?? [values?.device ?? DEFAULT_SERP_DEVICE])];
+      : [...(flowState?.devices ?? [values?.device ?? DEFAULT_ONBOARDING_DEVICE])];
 
   return {
     cronExpression: values?.cronExpression ?? "0 6 * * *",
     devices,
-    frequency: values?.frequency ?? "daily",
+    frequency: values?.frequency ?? DEFAULT_ONBOARDING_FREQUENCY,
     jitterMinutes: values?.jitterMinutes ?? 60,
     locations,
     projectId: values?.projectId ?? flowState?.projectId ?? "",

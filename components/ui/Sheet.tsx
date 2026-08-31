@@ -105,7 +105,7 @@ export function Sheet({
               onClick={onClose}
               type="button"
             >
-              <X aria-hidden size={18} weight="bold" />
+              <X aria-hidden size={18} weight="regular" />
             </button>
           </div>
         </header>

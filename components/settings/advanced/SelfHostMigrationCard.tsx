@@ -64,7 +64,7 @@ export function SelfHostMigrationCard({
       <Button
         onClick={() => setReactivateOpen(true)}
         size="sm"
-        startIcon={<ArrowCounterClockwise aria-hidden size={14} weight="bold" />}
+        startIcon={<ArrowCounterClockwise aria-hidden size={14} weight="regular" />}
         type="button"
         variant="secondary"
       >

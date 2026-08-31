@@ -5,6 +5,7 @@ import { clearProviderRateLimitState, consumeProviderLimit } from "@/lib/provide
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   connectProvider,
+  disconnectGoogleSearchConsole,
   disconnectProvider,
   loadStoredGoogleProperties,
   saveStoredGoogleProperty,
@@ -33,6 +34,7 @@ const mocks = vi.hoisted(() => {
     actor: { id: "user_1" },
     analyticsProvider,
     backfillLegacyProjectAllocationInLockedTransaction: vi.fn(),
+    cancelPendingGoogleOAuth: vi.fn(),
     getActionActor: vi.fn(),
     loadStoredGoogleProperties: vi.fn(),
     provider,
@@ -48,6 +50,8 @@ const mocks = vi.hoisted(() => {
         updateMany: vi.fn(),
         upsert: vi.fn(),
       },
+      searchAnalyticsDaily: { deleteMany: vi.fn() },
+      searchAnalyticsImport: { deleteMany: vi.fn() },
       providerConnectionRate: {
         deleteMany: vi.fn(),
         findUnique: vi.fn(),
@@ -107,6 +111,10 @@ vi.mock("@/lib/providers/registry", () => ({
 }));
 vi.mock("@/lib/temporal/traffic-client", () => ({
   startTrafficSyncWorkflow: mocks.startTrafficSyncWorkflow,
+}));
+vi.mock("@/lib/providers/analytics/google-oauth-pending", () => ({
+  cancelPendingGoogleOAuth: mocks.cancelPendingGoogleOAuth,
+  completePendingGooglePropertySelection: vi.fn(),
 }));
 vi.mock("@/lib/providers/analytics/google-stored-property", () => ({
   loadStoredGoogleProperties: mocks.loadStoredGoogleProperties,
@@ -173,6 +181,7 @@ describe("provider actions", () => {
     process.env.REDIS_URL = "";
     process.env.BISIBILITY_PROVIDER_RATE_LIMIT_DISABLED = "";
     process.env.BISIBILITY_PROVIDER_RATE_LIMIT_SERPAPI_PER_MINUTE = "";
+    mocks.cancelPendingGoogleOAuth.mockResolvedValue({ status: "cancelled" });
     mocks.getActionActor.mockResolvedValue(mocks.actor);
     mocks.provider.testConnection.mockResolvedValue({ message: "ok", ok: true });
     mocks.analyticsProvider.testConnection.mockResolvedValue({ message: "ok", ok: true });
@@ -765,6 +774,8 @@ describe("provider actions", () => {
     });
     expect(mocks.prisma.providerConnection.findMany).not.toHaveBeenCalled();
     expect(mocks.prisma.$transaction).toHaveBeenCalledOnce();
+    expect(mocks.prisma.searchAnalyticsDaily.deleteMany).not.toHaveBeenCalled();
+    expect(mocks.prisma.searchAnalyticsImport.deleteMany).not.toHaveBeenCalled();
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({ action: "provider.set_settings" }),
       mocks.prisma,
@@ -891,7 +902,24 @@ describe("provider actions", () => {
     });
   });
 
-  it("disconnects an existing provider and writes an audit event", async () => {
+  it("disconnects Search Console credentials and preserves imported metrics", async () => {
+    mocks.prisma.providerConnection.findUnique.mockResolvedValue(
+      connection({ id: "conn_gsc", kind: "analytics", provider: "gsc" }),
+    );
+
+    await expect(
+      disconnectGoogleSearchConsole({ projectId: "prj_a00000000000000000000000" }),
+    ).resolves.toEqual({ ok: true });
+
+    expect(mocks.prisma.providerConnection.delete).toHaveBeenCalledWith({
+      where: { id: "conn_gsc" },
+    });
+    expect(mocks.cancelPendingGoogleOAuth).toHaveBeenCalledWith("prj_a00000000000000000000000");
+    expect(mocks.prisma.searchAnalyticsDaily.deleteMany).not.toHaveBeenCalled();
+    expect(mocks.prisma.searchAnalyticsImport.deleteMany).not.toHaveBeenCalled();
+  });
+
+  it("disconnects an existing provider without deleting imported Search Console metrics", async () => {
     mocks.prisma.providerConnection.findUnique.mockResolvedValue(connection({ id: "conn_4" }));
 
     await expect(

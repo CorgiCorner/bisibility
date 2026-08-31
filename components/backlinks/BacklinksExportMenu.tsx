@@ -47,10 +47,10 @@ export function BacklinksExportMenu(
   return (
     <>
       <Button
-        endIcon={<CaretDown size={11} />}
+        endIcon={<CaretDown weight="regular" size={11} />}
         onClick={(event) => setAnchorEl(event.currentTarget)}
         size="xs"
-        startIcon={<DownloadSimple size={14} />}
+        startIcon={<DownloadSimple weight="regular" size={14} />}
         variant="secondary"
       >
         Export

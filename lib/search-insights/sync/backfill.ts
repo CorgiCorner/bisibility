@@ -1,0 +1,299 @@
+import "server-only";
+import { prisma } from "@/lib/db/prisma";
+import {
+  createGscSearchAnalyticsSession,
+  type GscSearchAnalyticsSession,
+} from "@/lib/providers/analytics/gsc-search-analytics";
+import { addDays, dateFromKey, dateKey, diffDays } from "@/lib/search-insights/dates";
+import { formatSyncComplete, formatSyncPaused, logSyncInfo } from "./activity-log";
+import { fetchAggregateRange, probeFreshness } from "./aggregate";
+import { readSearchInsightsConnection } from "./credentials";
+import { syncCompleteGscDay } from "./day-sync";
+import { type ImportRow, loadImportRow, recordImportFailure } from "./import-state";
+import { countCappedDays } from "./partitions";
+import { nextPartitions, planBackfill } from "./plan";
+import { isImportUserPaused, userPauseGuard } from "./user-pause";
+export const DEFAULT_BACKFILL_BATCH_SIZE = 7;
+export type BackfillBatchInput = {
+  batchSize?: number;
+  projectId: string;
+  property: string;
+  retentionMonths?: number;
+};
+export type BackfillBatchOptions = {
+  /** Aborted when Temporal cancels or times out the attempt; the batch stops at a day boundary. */
+  signal?: AbortSignal;
+};
+export type BackfillBatchResult = {
+  blocked: boolean;
+  daysProcessed: number;
+  importId: string | null;
+  done: boolean;
+  nextCursor: string | null;
+  requestSets: number;
+  batchElapsedMs: number;
+};
+type BackfillPlanState = {
+  cursorDate: string;
+  /** Frozen at plan time: the oldest day this import walks back to, and the day count to it. */
+  daysTotal: number;
+  earliestTargetDate: string;
+  finalizedThroughDate: string | null;
+  newestFinalizedDate: string;
+  plannedRetentionMonths: number;
+};
+const IDLE: BackfillBatchResult = {
+  blocked: false,
+  daysProcessed: 0,
+  done: true,
+  importId: null,
+  nextCursor: null,
+  requestSets: 0,
+  batchElapsedMs: 0,
+};
+const BLOCKED: BackfillBatchResult = {
+  blocked: true,
+  daysProcessed: 0,
+  done: false,
+  importId: null,
+  nextCursor: null,
+  requestSets: 0,
+  batchElapsedMs: 0,
+};
+// The first batch establishes the plan: ask the provider where finalized data stops,
+// derive the retention window from that day, and pull the whole aggregate range in one
+// request so the headline numbers exist before any dimensional day is fetched.
+async function ensurePlan(input: {
+  now: Date;
+  retentionMonths?: number;
+  row: NonNullable<ImportRow>;
+  session: GscSearchAnalyticsSession;
+}): Promise<BackfillPlanState> {
+  const { row } = input;
+  if (row.cursorDate && row.earliestTargetDate && row.newestFinalizedDate) {
+    return {
+      cursorDate: dateKey(row.cursorDate),
+      daysTotal: row.daysTotal,
+      earliestTargetDate: dateKey(row.earliestTargetDate),
+      finalizedThroughDate: row.finalizedThroughDate ? dateKey(row.finalizedThroughDate) : null,
+      newestFinalizedDate: dateKey(row.newestFinalizedDate),
+      plannedRetentionMonths: row.plannedRetentionMonths ?? input.retentionMonths ?? 16,
+    };
+  }
+
+  const probe = await probeFreshness({
+    now: input.now,
+    projectId: row.projectId,
+    property: row.property,
+    session: input.session,
+  });
+
+  const plannedRetentionMonths = input.retentionMonths ?? 16;
+  const plan = planBackfill({
+    newestFinalizedDate: probe.newestFinalizedDate,
+    retentionMonths: plannedRetentionMonths,
+  });
+  await fetchAggregateRange({
+    end: probe.newestFinalizedDate,
+    projectId: row.projectId,
+    property: row.property,
+    session: input.session,
+    start: plan.earliestTargetDate,
+  });
+  await prisma.searchAnalyticsImport.update({
+    data: {
+      cursorDate: dateFromKey(probe.newestFinalizedDate),
+      daysTotal: plan.daysTotal,
+      earliestTargetDate: dateFromKey(plan.earliestTargetDate),
+      lastError: null,
+      availabilityBoundarySource: probe.availabilityBoundarySource,
+      lastProbeAt: probe.probedAt,
+      newestFinalizedDate: dateFromKey(probe.newestFinalizedDate),
+      plannedRetentionMonths,
+      pausedReason: null,
+      state: "running",
+    },
+    where: userPauseGuard(row.id),
+  });
+
+  return {
+    cursorDate: probe.newestFinalizedDate,
+    daysTotal: plan.daysTotal,
+    earliestTargetDate: plan.earliestTargetDate,
+    finalizedThroughDate: null,
+    newestFinalizedDate: probe.newestFinalizedDate,
+    plannedRetentionMonths,
+  };
+}
+
+async function storeDay(input: {
+  date: string;
+  importId: string;
+  plan: BackfillPlanState;
+  projectId: string;
+  property: string;
+  session: GscSearchAnalyticsSession;
+}) {
+  const { capHit } = await syncCompleteGscDay({
+    date: input.date,
+    projectId: input.projectId,
+    property: input.property,
+    session: input.session,
+  });
+
+  // The cursor advances per day, so a rate limit in the middle of a batch costs at most
+  // the day it interrupted. A stored day also clears the previous pause, so the import strip
+  // cannot show a quota reason for an import that is progressing again.
+  const reachedNewest =
+    input.plan.finalizedThroughDate === null && input.date === input.plan.newestFinalizedDate;
+  // A day the sweep already stored can be fetched again here, so the count is read back
+  // from the stored partitions; it can only have changed when this day was itself capped.
+  const cappedDays = capHit
+    ? await countCappedDays({ projectId: input.projectId, property: input.property })
+    : null;
+  await prisma.searchAnalyticsImport.update({
+    data: {
+      ...(cappedDays === null ? {} : { capHitDays: cappedDays }),
+      cursorDate: dateFromKey(addDays(input.date, -1)),
+      // Measured against the frozen plan, not the moving newest day: a retry can re-process a
+      // day, a counter would push the progress past the planned total, and a nightly sweep that
+      // finalizes a newer day must not make the bar read more days than the plan holds.
+      daysDone: input.plan.daysTotal - diffDays(input.plan.earliestTargetDate, input.date),
+      lastError: null,
+      pausedReason: null,
+      state: "running",
+    },
+    where: userPauseGuard(input.importId),
+  });
+  if (!reachedNewest) return;
+
+  const marker = dateFromKey(input.date);
+  await prisma.searchAnalyticsImport.updateMany({
+    data: { finalizedThroughDate: marker },
+    where: {
+      AND: [
+        { OR: [{ finalizedThroughDate: null }, { finalizedThroughDate: { lt: marker } }] },
+        { OR: [{ pausedReason: null }, { pausedReason: { not: "user" } }] },
+      ],
+      id: input.importId,
+    },
+  });
+  input.plan.finalizedThroughDate = input.date;
+}
+export async function runBackfillBatch(
+  input: BackfillBatchInput,
+  options: BackfillBatchOptions = {},
+): Promise<BackfillBatchResult> {
+  const batchStartedAt = Date.now();
+  const row = await loadImportRow(input.projectId, input.property);
+  if (!row) return BLOCKED;
+  if (row.state === "completed") return IDLE;
+  if (row.pausedReason === "user") return BLOCKED;
+
+  const { connection, problem } = await readSearchInsightsConnection(input.projectId);
+  if (!connection) {
+    const pausedReason = problem === "needs_reauth" ? "needs_reauth" : "error";
+    const changed = await prisma.searchAnalyticsImport.updateMany({
+      data: { pausedReason, state: "paused", workflowId: null },
+      where: {
+        id: row.id,
+        OR: [{ pausedReason: { not: pausedReason } }, { state: { not: "paused" } }],
+      },
+    });
+    if (changed.count > 0) {
+      logSyncInfo(
+        formatSyncPaused({
+          reason: pausedReason === "needs_reauth" ? "authorization" : "error",
+          stream: "backfill",
+        }),
+      );
+    }
+    return BLOCKED;
+  }
+
+  // The row belongs to a property the connection no longer points at: switching the property
+  // queues a second import and leaves this execution walking the old one. Its rows would be
+  // fetched for the new property and stored under the old key, so it stops here and releases
+  // the id it was holding against the manual sync.
+  if (connection.property !== row.property) {
+    await prisma.searchAnalyticsImport.update({
+      data: { workflowId: null },
+      where: { id: row.id },
+    });
+    return BLOCKED;
+  }
+
+  const now = new Date();
+  try {
+    const session = await createGscSearchAnalyticsSession(connection.credentials);
+    if (await isImportUserPaused(row.id)) return BLOCKED;
+    const plan = await ensurePlan({ now, retentionMonths: input.retentionMonths, row, session });
+    if (await isImportUserPaused(row.id)) return BLOCKED;
+
+    const days = nextPartitions({
+      batchSize: input.batchSize ?? DEFAULT_BACKFILL_BATCH_SIZE,
+      cursorDate: plan.cursorDate,
+      earliestTargetDate: plan.earliestTargetDate,
+    });
+    const stored: string[] = [];
+    let requestSets = 0;
+    for (const date of days) {
+      if (options.signal?.aborted || (await isImportUserPaused(row.id))) break;
+      await storeDay({
+        date,
+        importId: row.id,
+        plan,
+        projectId: row.projectId,
+        property: row.property,
+        session,
+      });
+      stored.push(date);
+      requestSets += 3;
+    }
+
+    const nextCursor = stored.length > 0 ? addDays(stored[stored.length - 1], -1) : plan.cursorDate;
+    const done = stored.length === days.length && nextCursor < plan.earliestTargetDate;
+    if (done) {
+      const changed = await prisma.searchAnalyticsImport.updateMany({
+        data: {
+          lastError: null,
+          lastSyncFinishedAt: new Date(),
+          pausedReason: null,
+          state: "completed",
+        },
+        where: { ...userPauseGuard(row.id), state: { not: "completed" } },
+      });
+      if (changed.count > 0) logSyncInfo(formatSyncComplete("backfill"));
+    }
+    return {
+      blocked: false,
+      daysProcessed: stored.length,
+      done,
+      importId: row.id,
+      nextCursor: done ? null : nextCursor,
+      requestSets,
+      batchElapsedMs: Date.now() - batchStartedAt,
+    };
+  } catch (error) {
+    // Bookkeeping must never replace the provider error on the way out: the workflow reads a
+    // quota pause and a lost authorization off this exact error, and a database failure that
+    // shadowed it would end the import as failed instead of waiting the quota out.
+    try {
+      await recordImportFailure({
+        connectionId: connection.connectionId,
+        error,
+        importId: row.id,
+        projectId: row.projectId,
+        stream: "backfill",
+      });
+    } catch (bookkeepingError) {
+      console.error("[search-insights] import failure could not be recorded", {
+        error: bookkeepingError,
+        importId: row.id,
+        projectId: row.projectId,
+        stream: "backfill",
+      });
+    }
+    throw error;
+  }
+}

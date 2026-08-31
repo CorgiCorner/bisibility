@@ -4,21 +4,21 @@ import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  openPalette: vi.fn(),
   showToast: vi.fn(),
   signOut: vi.fn(),
 }));
 
-vi.mock("@/components/shell/CommandPalette", () => ({
-  useCommandPalette: () => ({ openPalette: mocks.openPalette }),
-}));
 vi.mock("@/components/ui", () => ({
   Avatar: ({ initials, src }: { initials: string; src?: string | null }) =>
     src ? <span data-avatar-src={src} /> : <span>{initials}</span>,
   useToast: () => ({ showToast: mocks.showToast }),
 }));
 vi.mock("@/lib/auth/client", () => ({ authClient: { signOut: mocks.signOut } }));
-vi.mock("@mui/material/Divider", () => ({ default: () => null }));
+vi.mock("@mui/material/Divider", () => ({
+  default: ({ sx }: { sx?: Record<string, string> }) => (
+    <div data-divider-margin-x={sx?.marginX} data-testid="user-menu-divider" />
+  ),
+}));
 vi.mock("@mui/material/Menu", () => ({
   default: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
@@ -90,6 +90,29 @@ describe("UserMenu", () => {
     ).not.toBeNull();
   });
 
+  it("renders dividers without a horizontal inset", () => {
+    renderMenu();
+
+    for (const divider of screen.getAllByTestId("user-menu-divider")) {
+      expect(divider).toHaveAttribute("data-divider-margin-x", "-6px");
+    }
+  });
+
+  it("does not render the Keyboard shortcuts command palette row", () => {
+    renderMenu();
+
+    expect(screen.queryByRole("button", { name: "Keyboard shortcuts" })).not.toBeInTheDocument();
+  });
+
+  it("uses the quiet metadata color for the uppercase role line", () => {
+    renderMenu();
+
+    const roleLine = screen.getByText("Member");
+
+    expect(roleLine).toHaveClass("text-fg-muted");
+    expect(roleLine).not.toHaveClass("text-accent-text");
+  });
+
   it("keeps the user informed when sign out fails", async () => {
     const signOut = deferred<unknown>();
     mocks.signOut.mockReturnValue(signOut.promise);
@@ -101,7 +124,7 @@ describe("UserMenu", () => {
 
     await waitFor(() =>
       expect(mocks.showToast).toHaveBeenCalledWith("Could not sign out. Please try again.", {
-        tint: "red",
+        severity: "error",
       }),
     );
     expect(window.location.href).toBe(hrefBefore);

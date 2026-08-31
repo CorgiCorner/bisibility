@@ -6,8 +6,6 @@ import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import Button from "@mui/material/Button";
 import {
   ArrowLeftIcon as ArrowLeft,
-  CaretRightIcon as CaretRight,
-  CircleNotchIcon as CircleNotch,
   EnvelopeSimpleOpenIcon as EnvelopeSimpleOpen,
   WarningCircleIcon as WarningCircle,
 } from "@phosphor-icons/react";
@@ -28,7 +26,7 @@ const linkButtonSx = {
  * this width so neither consecutive second ticks (tabular numerals keep digit
  * width constant) nor the swap to "Resend code" shifts any row element.
  */
-const resendReferenceLabel = "Resend in 1:00";
+const resendReferenceLabel = "Code sent Resend again in 1:00";
 
 type AuthStatus = "idle" | "verifying" | "error";
 
@@ -44,6 +42,7 @@ export type OtpStepProps = {
   onResend: () => Promise<void>;
   onSubmit: (event: SyntheticEvent<HTMLFormElement>) => void;
   otpError?: string;
+  resentCode: boolean;
   status: AuthStatus;
   /** Dev-only fixed sign-in code to surface as a hint (null in production). */
   devOtpCode?: string | null;
@@ -66,6 +65,7 @@ export function OtpStep({
   onResend,
   onSubmit,
   otpError,
+  resentCode,
   status,
   devOtpCode = null,
 }: Readonly<OtpStepProps>) {
@@ -84,15 +84,15 @@ export function OtpStep({
       <Button
         color="inherit"
         onClick={onBack}
-        startIcon={<ArrowLeft size={15} weight="bold" />}
-        sx={linkButtonSx}
+        startIcon={<ArrowLeft size={15} weight="regular" />}
+        sx={{ ...linkButtonSx, paddingInline: "8px" }}
         type="button"
       >
         Back
       </Button>
 
       <span className="mt-4.5 grid h-[46px] w-[46px] place-items-center rounded-card bg-accent-soft text-accent-solid">
-        <EnvelopeSimpleOpen aria-hidden size={23} weight="fill" />
+        <EnvelopeSimpleOpen aria-hidden size={23} weight="regular" />
       </span>
 
       <h1 className="mt-4.5 mb-0 text-[25px] font-semibold tracking-[-0.7px] text-fg">
@@ -136,7 +136,7 @@ export function OtpStep({
             aria-live="polite"
             className="mt-[13px] flex items-center gap-2 rounded-control border border-red bg-[color-mix(in_srgb,var(--red)_7%,transparent)] px-3 py-2.5 text-[12.5px] font-medium text-red-text"
           >
-            <WarningCircle aria-hidden className="shrink-0" size={16} weight="fill" />
+            <WarningCircle aria-hidden className="shrink-0" size={16} weight="regular" />
             <span>{authErrorMessage}</span>
           </div>
         ) : null}
@@ -145,13 +145,6 @@ export function OtpStep({
         <Button
           disabled={submitting || !otpComplete}
           fullWidth
-          startIcon={
-            submitting ? (
-              <CircleNotch aria-hidden className="bv-spin" size={16} weight="bold" />
-            ) : (
-              <CaretRight aria-hidden size={16} weight="bold" />
-            )
-          }
           sx={{
             borderRadius: UI_RADIUS_ROLES.control,
             fontSize: "14.5px",
@@ -168,7 +161,7 @@ export function OtpStep({
           type="submit"
           variant="contained"
         >
-          {submitting ? "Verifying..." : "Verify & continue"}
+          {submitting ? "Verifying..." : "Verify and continue"}
         </Button>
       </form>
 
@@ -185,34 +178,44 @@ export function OtpStep({
         // With the fixed demo code active no email is sent and resending cannot change the
         // code, so the resend row would only mislead; the hint above replaces it.
         <div className="mt-3.5 flex items-center justify-center gap-1.5 text-[13px] text-fg-muted">
-          Didn&apos;t get it?
+          {resentCode ? "Code sent" : "Did not get it?"}
           <Button
             color="inherit"
             disabled={resendDisabled}
             onClick={() => {
               void onResend();
             }}
+            style={{ backgroundColor: "transparent", border: "none" }}
             sx={{
               ...linkButtonSx,
+              backgroundColor: "transparent",
+              border: "none",
+              color: "var(--fg)",
               fontVariantNumeric: "tabular-nums",
               minHeight: "36px",
+              textDecoration: "none",
+              "&:hover": {
+                backgroundColor: "transparent",
+                textDecoration: "underline",
+                textDecorationColor: "var(--fg)",
+                textUnderlineOffset: "3px",
+              },
               "&.Mui-disabled": {
+                backgroundColor: "transparent",
+                border: "none",
                 color: "var(--fg-muted)",
                 opacity: 1,
+                textDecoration: "none",
+              },
+              "&.Mui-focusVisible": {
+                outline: "2px solid var(--border-strong)",
+                outlineOffset: "2px",
+                textDecoration: "underline",
               },
             }}
             type="button"
           >
-            <span
-              style={{
-                backgroundColor: resendDisabled ? "var(--bg-sunken)" : "var(--accent-soft)",
-                borderRadius: "8px",
-                color: resendDisabled ? "var(--fg-muted)" : "var(--accent-text)",
-                display: "grid",
-                paddingBlock: "6px",
-                paddingInline: "11px",
-              }}
-            >
+            <span style={{ display: "grid" }}>
               <span
                 aria-hidden
                 style={{
@@ -225,7 +228,7 @@ export function OtpStep({
               </span>
               <span style={{ gridArea: "1 / 1", whiteSpace: "nowrap" }}>
                 {cooldownRemaining > 0
-                  ? `Resend in ${formatCooldown(cooldownRemaining)}`
+                  ? `${resentCode ? "Resend again in" : "Resend in"} ${formatCooldown(cooldownRemaining)}`
                   : "Resend code"}
               </span>
             </span>

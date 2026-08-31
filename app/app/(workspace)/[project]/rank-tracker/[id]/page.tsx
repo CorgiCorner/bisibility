@@ -69,7 +69,7 @@ export default async function KeywordDetailPage({ params }: Readonly<KeywordDeta
       className="inline-flex w-fit items-center gap-2 font-mono text-[12.5px] text-fg-muted hover:text-accent-text"
       href={appPath(projectRef, "rank-tracker")}
     >
-      <ArrowLeft size={14} weight="bold" />
+      <ArrowLeft size={14} weight="regular" />
       All keywords
     </Link>
   );

@@ -167,7 +167,7 @@ export function ActionNotice({ notice }: Readonly<{ notice: Notice }>) {
 export function ConnectionOkBanner({ message }: Readonly<{ message: string }>) {
   return (
     <div className="flex items-center gap-2.5 rounded-control border border-green bg-bg-sunken px-3.5 py-[11px] text-[12.5px] font-medium text-green-text [background:color-mix(in_srgb,var(--green)_8%,transparent)]">
-      <CheckCircle aria-hidden size={16} weight="fill" />
+      <CheckCircle aria-hidden size={16} weight="regular" />
       {message}
     </div>
   );

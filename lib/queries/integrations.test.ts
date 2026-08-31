@@ -7,6 +7,10 @@ const mocks = vi.hoisted(() => ({
     $queryRaw: vi.fn(),
     operationalRun: { findMany: vi.fn() },
     providerCostEntry: { findMany: vi.fn() },
+    searchAnalyticsImport: { findUnique: vi.fn() },
+    searchAnalyticsRequestUsage: { findFirst: vi.fn(), findMany: vi.fn() },
+    searchAnalyticsSyncPartition: { findMany: vi.fn() },
+    searchInsightsPropertyRegistry: { findFirst: vi.fn() },
     providerConnection: {
       count: vi.fn(),
       findUnique: vi.fn(),
@@ -59,6 +63,11 @@ describe("integration queries", () => {
     mocks.getRequestProjectDefaults.mockResolvedValue({ timezone: "Europe/Madrid" });
     mocks.prisma.providerConnection.count.mockResolvedValue(2);
     mocks.prisma.operationalRun.findMany.mockResolvedValue([]);
+    mocks.prisma.searchInsightsPropertyRegistry.findFirst.mockResolvedValue(null);
+    mocks.prisma.searchAnalyticsImport.findUnique.mockResolvedValue(null);
+    mocks.prisma.searchAnalyticsRequestUsage.findFirst.mockResolvedValue(null);
+    mocks.prisma.searchAnalyticsRequestUsage.findMany.mockResolvedValue([]);
+    mocks.prisma.searchAnalyticsSyncPartition.findMany.mockResolvedValue([]);
     mocks.prisma.$queryRaw.mockResolvedValue([]);
   });
 
@@ -313,6 +322,49 @@ describe("integration queries", () => {
     expect(provider?.meta).toContainEqual({ label: "Last sync", value: "Never" });
   });
 
+  it("loads durable Search Console progress independently from traffic sync", async () => {
+    mocks.prisma.providerConnection.findMany.mockResolvedValue([
+      connection({ id: "connection_gsc", kind: "analytics", provider: "gsc" }),
+    ]);
+    mocks.prisma.searchInsightsPropertyRegistry.findFirst.mockResolvedValue({
+      propertyKey: "sc-domain:corgitocoin.com",
+    });
+    mocks.prisma.searchAnalyticsImport.findUnique.mockResolvedValue({
+      daysTotal: 488,
+      earliestTargetDate: new Date("2025-03-01T00:00:00.000Z"),
+      newestFinalizedDate: new Date("2026-07-28T00:00:00.000Z"),
+      pausedReason: null,
+      plannedRetentionMonths: 16,
+      state: "running",
+    });
+    mocks.prisma.searchAnalyticsSyncPartition.findMany.mockResolvedValue(
+      Array.from({ length: 37 }, (_, index) =>
+        ["query", "page", "query,page"].map((dimensions) => ({
+          date: new Date(Date.UTC(2026, 6, 28 - index)),
+          dimensions,
+          fetchedAt: new Date("2026-07-28T11:00:00.000Z"),
+        })),
+      ).flat(),
+    );
+
+    const categories = await getIntegrationCategories("prj_1", { now });
+    const provider = categories.find((category) => category.id === "analytics")?.providers[0];
+
+    expect(provider?.consumerStatuses).toEqual({
+      searchModule: {
+        detail: "corgitocoin.com",
+        state: "backfill_running",
+        summary: "Backfill running · 37 of ~488 days",
+      },
+      trafficEnrichment: { state: "never_synced", summary: "Never synced" },
+    });
+    expect(provider?.meta).toEqual([]);
+    expect(mocks.prisma.searchInsightsPropertyRegistry.findFirst).toHaveBeenCalledWith({
+      select: { propertyKey: true },
+      where: { projectId: "project_1", status: "active" },
+    });
+  });
+
   it("surfaces the latest consecutive traffic-sync failure streak", async () => {
     mocks.prisma.providerConnection.findMany.mockResolvedValue([
       connection({ id: "connection_gsc", kind: "analytics", provider: "gsc" }),
@@ -430,10 +482,7 @@ describe("integration queries", () => {
     const provider = categories.find((category) => category.id === "analytics")?.providers[0];
 
     expect(provider?.drawer.defaults.login).toBe("sc-domain:example.com");
-    expect(provider?.meta).toContainEqual({
-      label: "Property",
-      value: "sc-domain:example.com",
-    });
+    expect(provider?.meta).toEqual([]);
     expect(JSON.stringify(provider)).not.toContain("secret-token");
   });
 
