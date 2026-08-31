@@ -25,6 +25,7 @@ const browserTestAliases = [
   { find: "@/lib/auth/auth", replacement: browserStubs },
   { find: "@/lib/auth/client", replacement: browserStubs },
   { find: "@/lib/auth/otp-resend", replacement: browserStubs },
+  { find: "@/lib/auth/request-login-code", replacement: browserStubs },
   { find: "@/lib/auth/session", replacement: browserStubs },
   { find: "@/lib/redis/redis", replacement: browserStubs },
   { find: "@/lib/queries/notifications", replacement: browserStubs },

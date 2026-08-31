@@ -1,10 +1,13 @@
 import { LoginForm } from "@/components/auth/LoginForm";
 import { BrandLockup } from "@/components/ui";
+import { isEmailSignInUnavailable } from "@/lib/auth/email-sign-in-availability";
+import { isFirstRun } from "@/lib/auth/first-run";
 import { returnToOrDefault } from "@/lib/auth/return-to";
 import {
   DEV_DEMO_EMAIL,
   DEV_FIXED_OTP_CODE,
   ENABLED_SOCIAL_PROVIDERS,
+  FIXED_OTP_ENABLED,
 } from "@/lib/auth/runtime-config";
 import { getSession } from "@/lib/auth/session";
 import { getSignInCapacity } from "@/lib/auth/signin-capacity";
@@ -14,6 +17,7 @@ import {
 } from "@/lib/auth/signin-capacity-types";
 import { dataResidencyMessage, isCloud } from "@/lib/deployment/deployment";
 import { legalConsentLinks } from "@/lib/deployment/legal";
+import { isEmailConfigured } from "@/lib/email/registry";
 import { getGitHubStars } from "@/lib/site/github-stars";
 import { LICENSE } from "@/lib/site/site";
 import {
@@ -55,10 +59,17 @@ export default async function LoginPage({ searchParams }: Readonly<LoginPageProp
 
   const capacityMiss: SignInCapacityMiss =
     error?.toLowerCase() === GOOGLE_CAPACITY_EXHAUSTED ? "google" : null;
-  const [capacity, githubStars] = await Promise.all([
+  const [capacity, githubStars, firstRun] = await Promise.all([
     isCloud ? getSignInCapacity() : Promise.resolve(null),
     getGitHubStars(),
+    isFirstRun(),
   ]);
+  const emailSignInUnavailable = isEmailSignInUnavailable({
+    firstRun,
+    fixedOtpEnabled: FIXED_OTP_ENABLED,
+    isEmailConfigured: isEmailConfigured(),
+    production: process.env.NODE_ENV === "production",
+  });
   const brandStats: { icon: typeof GithubLogo; label: string; tone?: string }[] = [
     ...(githubStars ? [{ icon: GithubLogo, label: `${githubStars} stars` }] : []),
     { icon: ShieldCheck, label: LICENSE, tone: "text-green-text" },
@@ -127,7 +138,9 @@ export default async function LoginPage({ searchParams }: Readonly<LoginPageProp
           demoEmail={DEV_DEMO_EMAIL}
           devOtpCode={DEV_FIXED_OTP_CODE}
           dataResidencyMessage={dataResidencyMessage()}
+          emailSignInUnavailable={emailSignInUnavailable}
           enabledProviders={ENABLED_SOCIAL_PROVIDERS}
+          humanVerificationRequired={isCloud}
           legalConsentLinks={legalConsentLinks()}
           returnTo={returnToOrDefault(next)}
         />

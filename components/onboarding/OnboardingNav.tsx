@@ -66,7 +66,7 @@ export function OnboardingNav({
   }
 
   return (
-    <footer className="mt-7 flex items-end justify-between gap-3 border-border border-t pt-5">
+    <footer className="-mx-6 mt-7 flex items-end justify-between gap-3 border-border border-t px-6 pt-5 sm:-mx-7 sm:px-7">
       {backAction}
       <div className="flex items-end gap-3">
         {secondaryAction}

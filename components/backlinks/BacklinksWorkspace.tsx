@@ -218,7 +218,10 @@ export function BacklinksWorkspace({
           snapshot={snapshot}
         />
       ) : (
-        <BacklinksIdleState />
+        <BacklinksIdleState
+          projectRef={projectId}
+          state={context.providerStatus === "connected" ? "idle" : context.providerStatus}
+        />
       )}
     </section>
   );

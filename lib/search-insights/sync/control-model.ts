@@ -4,6 +4,7 @@ import type { SearchInsightsConnectionStatus } from "@/lib/search-insights/conne
 export type SearchBackfillKind =
   | "needs_reauth"
   | "paused_user"
+  | "waiting_for_first_data"
   | "waiting_worker"
   | "quota"
   | "error"
@@ -130,6 +131,18 @@ export function resolveSearchBackfillPresentation(
       title: "Backfill needs attention",
     });
   }
+  if (facts.state === "waiting_for_first_data") {
+    return {
+      action: null,
+      actionLabel: null,
+      description:
+        "Google has not reported any search data for this property yet. We check daily and will import automatically when it appears.",
+      kind: "waiting_for_first_data",
+      polling: false,
+      supportingText: null,
+      title: "Waiting for search data",
+    };
+  }
   if (facts.firstViewReady || facts.state === "completed") {
     return presentation(facts, {
       action: null,
@@ -232,7 +245,8 @@ export function resolveSearchSyncControl(facts: SearchSyncControlFacts): SearchS
       model.kind === "queued" ||
       model.kind === "starting" ||
       model.kind === "done" ||
-      model.kind === "waiting_worker"
+      model.kind === "waiting_worker" ||
+      model.kind === "waiting_for_first_data"
         ? "running"
         : model.kind,
     status: model.title,

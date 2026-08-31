@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 
 export const metadata: Metadata = createNoindexMetadata({
-  title: "Hosted beta | bisibility",
+  title: "Hosted beta",
   description: "The hosted beta: focused setup and import tasks for your project.",
 });
 

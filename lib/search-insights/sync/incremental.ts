@@ -18,14 +18,18 @@ import {
   runOrganicSessionsIncrementalSync,
 } from "./sessions-incremental";
 import { isImportUserPaused, userPauseGuard } from "./user-pause";
+import { reprobeWaitingImport } from "./waiting-first-data";
 
 export type IncrementalStatus =
+  | "already_claimed"
+  | "backfill_started"
   | "failed"
   | "needs_reauth"
   | "no_new_days"
   | "not_connected"
   | "rate_limited"
   | "user_paused"
+  | "waiting_for_first_data"
   | "synced";
 
 export type IncrementalResult = {
@@ -103,6 +107,19 @@ export async function runIncrementalSync(input: {
       return { daysProcessed: 0, projectId: input.projectId, status: "user_paused" };
     }
     const session = await createGscSearchAnalyticsSession(connection.credentials);
+    if (row.state === "waiting_for_first_data") {
+      const result = await reprobeWaitingImport({
+        now,
+        projectId: input.projectId,
+        property,
+        row,
+        session,
+      });
+      if (syncSessions && !(await isImportUserPaused(row.id))) {
+        await runOrganicSessionsIncrementalForProject({ now, projectId: input.projectId });
+      }
+      return result;
+    }
     const probe = await probeFreshness({ now, projectId: input.projectId, property, session });
     if (await isImportUserPaused(row.id)) {
       return { daysProcessed: 0, projectId: input.projectId, status: "user_paused" };

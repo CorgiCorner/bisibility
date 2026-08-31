@@ -100,6 +100,8 @@ export const TRUST_LABELS = {
   retention: "Retention",
 } as const;
 
+export const WAITING_FOR_FIRST_DATA =
+  "Google has not reported any search data for this property yet. We check daily and will import automatically when it appears.";
 export const FRESHNESS_UNKNOWN = "Waiting for the first data from Google.";
 export const FRESHNESS_UNKNOWN_NOTE = "Finalized days appear here once the first sync lands.";
 export const COVERAGE_EMPTY = "Coverage appears once the first finalized days are imported.";

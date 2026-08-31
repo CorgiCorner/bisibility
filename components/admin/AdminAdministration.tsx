@@ -1,6 +1,7 @@
 import { AdminAccountLookup } from "@/components/admin/AdminAccountLookup";
 import { Card, IdChip, SectionTitle } from "@/components/ui";
 import type { InstanceAdminAdministration } from "@/lib/queries/instance-admin-administration";
+import { DOCS_URL, docsLinkProps } from "@/lib/site/site";
 
 const count = new Intl.NumberFormat("en-US");
 const money = new Intl.NumberFormat("en-US", {
@@ -205,9 +206,29 @@ function TopConsumption({
   );
 }
 
-export function AdminAdministration({ data }: Readonly<{ data: InstanceAdminAdministration }>) {
+export function AdminAdministration({
+  data,
+  showMailerWarning = false,
+}: Readonly<{ data: InstanceAdminAdministration; showMailerWarning?: boolean }>) {
   return (
     <div className="flex flex-col gap-4">
+      {showMailerWarning ? (
+        <Card component="section" size="lg" aria-labelledby="admin-mailer-warning-heading">
+          <SectionTitle id="admin-mailer-warning-heading">
+            Email provider not configured
+          </SectionTitle>
+          <p className="mt-2 mb-0 text-xs leading-relaxed text-fg-muted">
+            Email sign-in is unavailable because this instance cannot send sign-in codes. Set
+            EMAIL_PROVIDER and its required credentials to restore email delivery.
+          </p>
+          <a
+            className="mt-3 inline-flex text-xs font-semibold text-accent-text hover:underline"
+            {...docsLinkProps(`${DOCS_URL}/self-hosting/email`)}
+          >
+            Configure email delivery
+          </a>
+        </Card>
+      ) : null}
       <Growth data={data} />
       <TopConsumption rows={data.topConsumption} />
       <AdminAccountLookup />

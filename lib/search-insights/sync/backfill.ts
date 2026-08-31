@@ -4,14 +4,14 @@ import {
   createGscSearchAnalyticsSession,
   type GscSearchAnalyticsSession,
 } from "@/lib/providers/analytics/gsc-search-analytics";
-import { addDays, dateFromKey, dateKey, diffDays } from "@/lib/search-insights/dates";
+import { addDays, dateFromKey, diffDays } from "@/lib/search-insights/dates";
 import { formatSyncComplete, formatSyncPaused, logSyncInfo } from "./activity-log";
-import { fetchAggregateRange, probeFreshness } from "./aggregate";
+import { type BackfillPlanState, ensurePlan } from "./backfill-plan";
 import { readSearchInsightsConnection } from "./credentials";
 import { syncCompleteGscDay } from "./day-sync";
-import { type ImportRow, loadImportRow, recordImportFailure } from "./import-state";
+import { loadImportRow, recordImportFailure } from "./import-state";
 import { countCappedDays } from "./partitions";
-import { nextPartitions, planBackfill } from "./plan";
+import { nextPartitions } from "./plan";
 import { isImportUserPaused, userPauseGuard } from "./user-pause";
 export const DEFAULT_BACKFILL_BATCH_SIZE = 7;
 export type BackfillBatchInput = {
@@ -32,15 +32,7 @@ export type BackfillBatchResult = {
   nextCursor: string | null;
   requestSets: number;
   batchElapsedMs: number;
-};
-type BackfillPlanState = {
-  cursorDate: string;
-  /** Frozen at plan time: the oldest day this import walks back to, and the day count to it. */
-  daysTotal: number;
-  earliestTargetDate: string;
-  finalizedThroughDate: string | null;
-  newestFinalizedDate: string;
-  plannedRetentionMonths: number;
+  waitingForFirstData?: boolean;
 };
 const IDLE: BackfillBatchResult = {
   blocked: false,
@@ -60,72 +52,6 @@ const BLOCKED: BackfillBatchResult = {
   requestSets: 0,
   batchElapsedMs: 0,
 };
-// The first batch establishes the plan: ask the provider where finalized data stops,
-// derive the retention window from that day, and pull the whole aggregate range in one
-// request so the headline numbers exist before any dimensional day is fetched.
-async function ensurePlan(input: {
-  now: Date;
-  retentionMonths?: number;
-  row: NonNullable<ImportRow>;
-  session: GscSearchAnalyticsSession;
-}): Promise<BackfillPlanState> {
-  const { row } = input;
-  if (row.cursorDate && row.earliestTargetDate && row.newestFinalizedDate) {
-    return {
-      cursorDate: dateKey(row.cursorDate),
-      daysTotal: row.daysTotal,
-      earliestTargetDate: dateKey(row.earliestTargetDate),
-      finalizedThroughDate: row.finalizedThroughDate ? dateKey(row.finalizedThroughDate) : null,
-      newestFinalizedDate: dateKey(row.newestFinalizedDate),
-      plannedRetentionMonths: row.plannedRetentionMonths ?? input.retentionMonths ?? 16,
-    };
-  }
-
-  const probe = await probeFreshness({
-    now: input.now,
-    projectId: row.projectId,
-    property: row.property,
-    session: input.session,
-  });
-
-  const plannedRetentionMonths = input.retentionMonths ?? 16;
-  const plan = planBackfill({
-    newestFinalizedDate: probe.newestFinalizedDate,
-    retentionMonths: plannedRetentionMonths,
-  });
-  await fetchAggregateRange({
-    end: probe.newestFinalizedDate,
-    projectId: row.projectId,
-    property: row.property,
-    session: input.session,
-    start: plan.earliestTargetDate,
-  });
-  await prisma.searchAnalyticsImport.update({
-    data: {
-      cursorDate: dateFromKey(probe.newestFinalizedDate),
-      daysTotal: plan.daysTotal,
-      earliestTargetDate: dateFromKey(plan.earliestTargetDate),
-      lastError: null,
-      availabilityBoundarySource: probe.availabilityBoundarySource,
-      lastProbeAt: probe.probedAt,
-      newestFinalizedDate: dateFromKey(probe.newestFinalizedDate),
-      plannedRetentionMonths,
-      pausedReason: null,
-      state: "running",
-    },
-    where: userPauseGuard(row.id),
-  });
-
-  return {
-    cursorDate: probe.newestFinalizedDate,
-    daysTotal: plan.daysTotal,
-    earliestTargetDate: plan.earliestTargetDate,
-    finalizedThroughDate: null,
-    newestFinalizedDate: probe.newestFinalizedDate,
-    plannedRetentionMonths,
-  };
-}
-
 async function storeDay(input: {
   date: string;
   importId: string;
@@ -168,6 +94,14 @@ async function storeDay(input: {
   if (!reachedNewest) return;
 
   const marker = dateFromKey(input.date);
+  await prisma.searchAnalyticsImport.updateMany({
+    data: { firstDataDetectedAt: new Date() },
+    where: {
+      ...userPauseGuard(input.importId),
+      firstDataDetectedAt: null,
+      waitingForFirstDataAt: { not: null },
+    },
+  });
   await prisma.searchAnalyticsImport.updateMany({
     data: { finalizedThroughDate: marker },
     where: {
@@ -227,7 +161,21 @@ export async function runBackfillBatch(
   try {
     const session = await createGscSearchAnalyticsSession(connection.credentials);
     if (await isImportUserPaused(row.id)) return BLOCKED;
-    const plan = await ensurePlan({ now, retentionMonths: input.retentionMonths, row, session });
+    const planning = await ensurePlan({
+      now,
+      retentionMonths: input.retentionMonths,
+      row,
+      session,
+    });
+    if (planning.kind === "waiting_for_first_data") {
+      return {
+        ...IDLE,
+        done: false,
+        importId: planning.importId,
+        waitingForFirstData: true,
+      };
+    }
+    const { plan } = planning;
     if (await isImportUserPaused(row.id)) return BLOCKED;
 
     const days = nextPartitions({

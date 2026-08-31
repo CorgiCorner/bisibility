@@ -65,7 +65,7 @@ describe("InstallPage", () => {
     expect(screen.getByText("scope: Read and write")).toBeInTheDocument();
     expect(mocks.getOriginFromHeaders).toHaveBeenCalledWith(requestHeaders);
     expect(mocks.absoluteUrl).toHaveBeenCalledWith("https://app.example.com", "/api/mcp");
-    expect(screen.getByText("https://app.example.com/api/mcp")).toBeInTheDocument();
+    expect(screen.getAllByText("https://app.example.com/api/mcp")).toHaveLength(3);
   });
 
   it("renders the empty state without a masked value when no active key exists", async () => {

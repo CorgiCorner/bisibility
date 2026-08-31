@@ -55,6 +55,7 @@ async function completedImportNeedsExtension(row: NonNullable<ImportRow>) {
   const settings = resolveSearchSyncSettings(defaults);
   const currentEarliest = dateKey(row.earliestTargetDate);
   const target = planBackfill({
+    firstDataDate: row.firstDataDate ? dateKey(row.firstDataDate) : undefined,
     newestFinalizedDate: dateKey(row.newestFinalizedDate),
     retentionMonths: settings.retentionMonths,
   });

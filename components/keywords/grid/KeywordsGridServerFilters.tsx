@@ -28,7 +28,6 @@ type Props = Pick<KeywordsGridProps, "facets" | "rows"> & {
   setFilters: Dispatch<SetStateAction<KeywordFilters>>;
 };
 export function KeywordsGridServerFilters(props: Props) {
-  if (!props.open) return null;
   return (
     <KeywordsGridFilterDrawer
       activeViewId={props.activeViewId}
@@ -47,6 +46,7 @@ export function KeywordsGridServerFilters(props: Props) {
       }}
       onChange={props.flatServer ? props.setDraftFilters : props.setFilters}
       onClose={props.onClose}
+      open={props.open}
       query={props.flatServer ? props.query : undefined}
       rows={props.rows}
     />

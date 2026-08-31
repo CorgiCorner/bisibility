@@ -60,7 +60,7 @@ describe("navItems", () => {
       group: "connect",
       href: "/app/prj_example/install",
     });
-    expect(install?.icon.displayName).toBe("TerminalWindowIcon");
+    expect(install?.icon.displayName).toBe("SparkleIcon");
     expect(integrations?.group).toBe("connect");
     expect(items.find((item) => item.label === "Integrations")?.group).not.toBe("utility");
   });
@@ -98,7 +98,7 @@ describe("navItems", () => {
       Dashboard: undefined,
       "Search Console": "alpha",
       "Rank Tracker": undefined,
-      Competitors: "alpha",
+      Competitors: "experimental",
       Timeline: "experimental",
       "Keyword Research": undefined,
       "Domain Overview": undefined,

@@ -37,6 +37,16 @@ describe("KeywordsToolbarActions", () => {
     ).toBeInTheDocument();
   });
 
+  it("matches the labeled secondary toolbar typography contract", () => {
+    render(<KeywordsToolbarActions {...props} density="compact" />);
+
+    const columns = screen.getByRole("button", { name: "Columns" });
+    const style = getComputedStyle(columns);
+    expect(style.color).toBe("var(--fg)");
+    expect(style.fontSize).toBe("12.5px");
+    expect(style.fontWeight).toBe("400");
+  });
+
   it("keeps toolbar action icons on the button foreground color contract", () => {
     render(
       <KeywordsToolbarActions

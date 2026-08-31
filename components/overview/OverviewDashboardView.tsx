@@ -101,7 +101,7 @@ function OverviewSections({
           className="grid grid-cols-2 gap-4 lg:grid-cols-[repeat(4,minmax(0,1fr))]"
         >
           {kpis.map((kpi) => (
-            <KpiCard {...kpi} key={kpi.label} />
+            <KpiCard {...kpi} key={kpi.label} projectRef={projectRef} />
           ))}
         </section>
         <section className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1.85fr)_minmax(0,1fr)]">

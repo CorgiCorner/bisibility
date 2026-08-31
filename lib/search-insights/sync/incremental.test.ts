@@ -14,13 +14,19 @@ const mocks = vi.hoisted(() => ({
   probeFreshness: vi.fn(),
   prisma: {
     project: { findMany: vi.fn() },
-    searchAnalyticsImport: { findUnique: vi.fn(), update: vi.fn(), upsert: vi.fn() },
+    searchAnalyticsImport: {
+      findUnique: vi.fn(),
+      update: vi.fn(),
+      updateMany: vi.fn(),
+      upsert: vi.fn(),
+    },
   },
   recordImportFailure: vi.fn(),
   resolveConnection: vi.fn(),
   resolveSessionsConnection: vi.fn(),
   sessionsForAll: vi.fn(),
   sessionsSync: vi.fn(),
+  startBackfill: vi.fn(),
   syncCompleteDay: vi.fn(),
 }));
 
@@ -59,6 +65,9 @@ vi.mock("@/lib/search-insights/sync/sessions-incremental", () => ({
 vi.mock("@/lib/search-insights/sync/sessions-credentials", () => ({
   resolveOrganicSessionsConnection: mocks.resolveSessionsConnection,
 }));
+vi.mock("@/lib/temporal/search-insights-client", () => ({
+  startSearchInsightsBackfillWorkflow: mocks.startBackfill,
+}));
 
 const property = "sc-domain:example.com";
 const connection = {
@@ -93,6 +102,7 @@ describe("runIncrementalSync", () => {
     mocks.resolveConnection.mockResolvedValue(connection);
     mocks.createSession.mockResolvedValue(session);
     mocks.prisma.searchAnalyticsImport.upsert.mockResolvedValue(importRow());
+    mocks.prisma.searchAnalyticsImport.updateMany.mockResolvedValue({ count: 1 });
     mocks.syncCompleteDay.mockResolvedValue({
       capHit: false,
       pages: 1,
@@ -100,6 +110,9 @@ describe("runIncrementalSync", () => {
       returnedRows: 10,
     });
     mocks.sessionsForAll.mockResolvedValue(undefined);
+    mocks.startBackfill.mockResolvedValue({ workflowId: "search-insights-backfill:project_1:key" });
+    mocks.fetchAggregateRange.mockResolvedValue({ kind: "no_data", returnedDays: 0 });
+    mocks.recordImportFailure.mockResolvedValue("error");
     mocks.resolveSessionsConnection.mockResolvedValue(null);
   });
 
@@ -153,6 +166,115 @@ describe("runIncrementalSync", () => {
     expect(mocks.probeFreshness).not.toHaveBeenCalled();
     expect(mocks.sessionsSync).not.toHaveBeenCalled();
   });
+
+  it("uses exactly one aggregate request when waiting for first data", async () => {
+    mocks.prisma.searchAnalyticsImport.upsert.mockResolvedValue(
+      importRow({
+        cursorDate: null,
+        earliestTargetDate: null,
+        finalizedThroughDate: null,
+        newestFinalizedDate: new Date("2026-07-05T00:00:00.000Z"),
+        plannedRetentionMonths: 16,
+        state: "waiting_for_first_data",
+      }),
+    );
+    mocks.probeFreshness.mockResolvedValue({
+      availabilityBoundarySource: "metadata",
+      newestFinalizedDate: "2026-07-07",
+      probedAt,
+    });
+    mocks.fetchAggregateRange.mockResolvedValue({ kind: "no_data", returnedDays: 0 });
+
+    await expect(runIncrementalSync({ now, projectId: "project_1" })).resolves.toMatchObject({
+      daysProcessed: 0,
+      status: "waiting_for_first_data",
+    });
+    expect(mocks.probeFreshness).not.toHaveBeenCalled();
+    expect(mocks.fetchAggregateRange).toHaveBeenCalledTimes(1);
+    expect(mocks.fetchAggregateRange).toHaveBeenCalledWith(
+      expect.objectContaining({ end: "2026-07-08", start: "2025-03-08" }),
+    );
+    expect(mocks.syncCompleteDay).not.toHaveBeenCalled();
+    expect(mocks.startBackfill).not.toHaveBeenCalled();
+  });
+
+  it("starts one clamped backfill when a waiting property gets its first data", async () => {
+    mocks.prisma.searchAnalyticsImport.upsert.mockResolvedValue(
+      importRow({
+        cursorDate: null,
+        earliestTargetDate: null,
+        finalizedThroughDate: null,
+        newestFinalizedDate: new Date("2026-07-05T00:00:00.000Z"),
+        plannedRetentionMonths: 16,
+        state: "waiting_for_first_data",
+      }),
+    );
+    mocks.probeFreshness.mockResolvedValue({
+      availabilityBoundarySource: "metadata",
+      newestFinalizedDate: "2026-07-07",
+      probedAt,
+    });
+    mocks.fetchAggregateRange.mockResolvedValue({
+      firstDataDate: "2026-07-07",
+      kind: "data_found",
+      returnedDays: 1,
+    });
+
+    await expect(runIncrementalSync({ now, projectId: "project_1" })).resolves.toMatchObject({
+      daysProcessed: 0,
+      status: "backfill_started",
+    });
+    expect(mocks.probeFreshness).not.toHaveBeenCalled();
+    expect(mocks.fetchAggregateRange).toHaveBeenCalledTimes(1);
+    expect(mocks.fetchAggregateRange).toHaveBeenCalledWith(
+      expect.objectContaining({ end: "2026-07-08", start: "2025-03-08" }),
+    );
+    expect(mocks.startBackfill).toHaveBeenCalledTimes(1);
+    expect(mocks.startBackfill).toHaveBeenCalledWith({ projectId: "project_1", property });
+    expect(mocks.prisma.searchAnalyticsImport.updateMany).toHaveBeenNthCalledWith(1, {
+      data: expect.objectContaining({
+        cursorDate: null,
+        daysTotal: 0,
+        earliestTargetDate: null,
+        firstDataDate: new Date("2026-07-07T00:00:00.000Z"),
+        historyBoundarySource: "first_data",
+        state: "queued",
+        workflowId: null,
+      }),
+      where: { id: "imp_1", state: "waiting_for_first_data", workflowId: null },
+    });
+    expect(mocks.prisma.searchAnalyticsImport.updateMany).toHaveBeenNthCalledWith(2, {
+      data: { workflowId: "search-insights-backfill:project_1:key" },
+      where: { id: "imp_1", state: "queued", workflowId: null },
+    });
+    expect(mocks.syncCompleteDay).not.toHaveBeenCalled();
+  });
+
+  it.each(["error", "needs_reauth", "rate_limited"] as const)(
+    "never maps a failed waiting aggregate to waiting success for %s",
+    async (reason) => {
+      mocks.prisma.searchAnalyticsImport.upsert.mockResolvedValue(
+        importRow({
+          cursorDate: null,
+          earliestTargetDate: null,
+          finalizedThroughDate: null,
+          newestFinalizedDate: new Date("2026-07-07T00:00:00.000Z"),
+          state: "waiting_for_first_data",
+        }),
+      );
+      mocks.fetchAggregateRange.mockRejectedValue(new Error(reason));
+      mocks.recordImportFailure.mockResolvedValue(reason);
+
+      const result = await runIncrementalSync({ now, projectId: "project_1" });
+
+      expect(result.status).not.toBe("waiting_for_first_data");
+      expect(mocks.prisma.searchAnalyticsImport.update).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ state: "waiting_for_first_data" }),
+        }),
+      );
+    },
+  );
 
   it("spends no provider quota when the provider has finalized no new day", async () => {
     mocks.probeFreshness.mockResolvedValue({
@@ -429,6 +551,7 @@ describe("runIncrementalForAllProjects", () => {
     mocks.resolveConnection.mockResolvedValue(connection);
     mocks.createSession.mockResolvedValue(session);
     mocks.prisma.searchAnalyticsImport.upsert.mockResolvedValue(importRow());
+    mocks.prisma.searchAnalyticsImport.updateMany.mockResolvedValue({ count: 1 });
     mocks.probeFreshness.mockResolvedValue({
       availabilityBoundarySource: "metadata",
       newestFinalizedDate: "2026-07-05",

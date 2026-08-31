@@ -143,11 +143,13 @@ export function StepConnectGscCard({
         <div className="flex flex-wrap items-center gap-2">
           <span className="flex flex-col items-start gap-2">
             <span className="text-sm font-semibold text-fg">Search Console</span>
-            <StatusPill
-              label={connected ? "Connected" : configured ? "Ready to connect" : "Setup required"}
-              size="sm"
-              status={connected ? "connected" : "ready"}
-            />
+            {connected || configured ? (
+              <StatusPill
+                label={connected ? "Connected" : "Ready to connect"}
+                size="sm"
+                status={connected ? "connected" : "ready"}
+              />
+            ) : null}
           </span>
         </div>
         <p className="m-0 mt-2 text-[13px] leading-[1.5] text-fg-muted">

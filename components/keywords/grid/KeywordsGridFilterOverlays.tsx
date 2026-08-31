@@ -61,6 +61,7 @@ type FilterDrawerProps = ScopeProps & {
   filters: KeywordFilters;
   onChange: (filters: KeywordFilters) => void;
   onClose: () => void;
+  open: boolean;
   rows: KeywordRow[];
   facets?: RankTrackerListFacets;
   onApply?: (filters: KeywordFilters) => void;
@@ -75,6 +76,7 @@ export function KeywordsGridFilterDrawer({
   onChange,
   onClose,
   onApply,
+  open,
   rows,
   facets,
   query,
@@ -89,7 +91,7 @@ export function KeywordsGridFilterDrawer({
       onChange={onChange}
       onApply={onApply}
       onClose={onClose}
-      open
+      open={open}
       rows={rows}
       viewId={activeViewId}
       query={query}

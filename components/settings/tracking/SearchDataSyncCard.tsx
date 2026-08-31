@@ -187,9 +187,9 @@ export function SearchDataSyncCard({
             </div>
           </div>
           <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 px-4 font-mono text-[11px] text-fg-muted">
-            <span>requests today {metrics.requestsToday.toLocaleString("en-US")}</span>
-            <span>planned remaining {metrics.plannedRemaining.toLocaleString("en-US")}</span>
-            <span>last quota pause {metrics.lastQuotaPausedAt ?? "never"}</span>
+            <span>requests today: {metrics.requestsToday.toLocaleString("en-US")}</span>
+            <span>planned remaining: {metrics.plannedRemaining.toLocaleString("en-US")}</span>
+            <span>last quota pause: {metrics.lastQuotaPausedAt ?? "never"}</span>
           </div>
           <p className="m-0 mt-4 px-4 text-[12px] leading-[1.55] text-fg-muted">
             This quota is shared with other tools using the same property. Decreasing depth never

@@ -28,7 +28,7 @@ export function StepFirstCheckFooter({
   const dashboardIsPrimary = !previewAvailable || state.status === "completed";
 
   return (
-    <footer className="mt-7 flex items-center justify-between gap-3 border-border border-t pt-5">
+    <footer className="-mx-6 mt-7 flex items-center justify-between gap-3 border-border border-t px-6 pt-5 sm:-mx-7 sm:px-7">
       {backAction}
       <div className="flex flex-wrap items-center justify-end gap-3">
         {matrixLabel ? (

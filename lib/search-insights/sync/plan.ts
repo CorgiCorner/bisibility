@@ -81,13 +81,18 @@ export type BackfillPlan = {
 // The oldest day the provider still serves, measured from the newest finalized day
 // rather than from today, so the plan does not shift while the backfill runs.
 export function planBackfill(input: {
+  firstDataDate?: string;
   newestFinalizedDate: string;
   retentionMonths?: number;
 }): BackfillPlan {
-  const earliestTargetDate = monthsBefore(
+  const retentionFloor = monthsBefore(
     input.newestFinalizedDate,
     input.retentionMonths ?? RETENTION_MONTHS,
   );
+  const earliestTargetDate =
+    input.firstDataDate && input.firstDataDate > retentionFloor
+      ? input.firstDataDate
+      : retentionFloor;
   return {
     daysTotal: diffDays(earliestTargetDate, input.newestFinalizedDate) + 1,
     earliestTargetDate,

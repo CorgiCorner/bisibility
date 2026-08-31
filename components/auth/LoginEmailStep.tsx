@@ -1,6 +1,5 @@
 "use client";
 
-import type { LoginFormValues } from "@/components/auth/login-schema";
 import {
   CapacityMeter,
   EmailCapacityPanel,
@@ -8,6 +7,7 @@ import {
   GoogleCapacityNote,
 } from "@/components/auth/SignInCapacity";
 import { DataResidencyNote } from "@/components/ui";
+import type { LoginFormValues } from "@/lib/auth/login-schema";
 import type { SignInCapacity, SignInCapacityMiss } from "@/lib/auth/signin-capacity-types";
 import type { LegalConsentLinks } from "@/lib/deployment/legal";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
@@ -17,8 +17,9 @@ import {
   GithubLogoIcon as GithubLogo,
   GoogleLogoIcon as GoogleLogo,
 } from "@phosphor-icons/react";
-import type { SyntheticEvent } from "react";
+import type { ReactNode, SyntheticEvent } from "react";
 import type { FieldErrors, UseFormRegister } from "react-hook-form";
+import { EmailSignInUnavailable } from "./EmailSignInUnavailable";
 
 const oauthProviders = [
   { icon: GithubLogo, label: "Continue with GitHub", provider: "github" },
@@ -38,15 +39,18 @@ type LoginEmailStepProps = {
   capacityMiss?: SignInCapacityMiss;
   dataResidencyMessage: string;
   demoEmail?: string | null;
+  emailSignInUnavailable?: boolean;
   enabledProviders: EnabledOAuthProviders;
   errors: FieldErrors<LoginFormValues>;
   formError: string | null;
+  humanVerificationField?: ReactNode;
   isSubmitting: boolean;
   legalConsentLinks: LegalConsentLinks | null;
   onProviderSignIn: (provider: OAuthProvider) => void;
   onSubmit: (event: SyntheticEvent<HTMLFormElement>) => void;
   register: UseFormRegister<LoginFormValues>;
   socialProvider: OAuthProvider | null;
+  verificationReady?: boolean;
 };
 
 function ConsentLink({ href, label }: Readonly<{ href: string; label: string }>) {
@@ -113,15 +117,18 @@ export function LoginEmailStep({
   capacityMiss = null,
   dataResidencyMessage,
   demoEmail = null,
+  emailSignInUnavailable = false,
   enabledProviders,
   errors,
   formError,
+  humanVerificationField = null,
   isSubmitting,
   legalConsentLinks,
   onProviderSignIn,
   onSubmit,
   register,
   socialProvider,
+  verificationReady = true,
 }: Readonly<LoginEmailStepProps>) {
   const enabledOAuthProviders = getEnabledOAuthProviders(enabledProviders);
   const hasOAuthSection = enabledOAuthProviders.length > 0;
@@ -136,7 +143,6 @@ export function LoginEmailStep({
   const emailBinding = capacity?.emailCodes?.binding ?? "daily";
 
   const consent = <LegalConsent includeBetaEmails={Boolean(capacity)} links={legalConsentLinks} />;
-
   if (allFull) {
     return (
       <div className="w-full max-w-[380px]">
@@ -145,14 +151,14 @@ export function LoginEmailStep({
       </div>
     );
   }
-
   return (
     <div className="w-full max-w-[380px]">
       <h1 className="m-0 text-[25px] font-semibold tracking-[-0.7px] text-fg">
         Sign in or create an account
       </h1>
       <p className="mt-2 mb-0 text-[14px] text-fg-muted">
-        Use your work email. We&apos;ll send a one-time code, no password to remember.
+        Use your work email. We&apos;ll send a one-time code, no password to remember. Make sure you
+        can open that inbox.
       </p>
       <DataResidencyNote className="mt-4" message={dataResidencyMessage} />
 
@@ -215,10 +221,11 @@ export function LoginEmailStep({
           </div>
         </>
       ) : null}
-
       {/* Without the provider block above, this section would butt against the residency note. */}
       <div className={hasOAuthSection ? undefined : "mt-[26px]"} data-testid="login-email-section">
-        {emailFull ? (
+        {emailSignInUnavailable ? (
+          <EmailSignInUnavailable />
+        ) : emailFull ? (
           <EmailCapacityPanel binding={emailBinding} justMissed={capacityMiss === "email"} />
         ) : (
           <form onSubmit={onSubmit}>
@@ -241,10 +248,15 @@ export function LoginEmailStep({
             {errors.email ? (
               <p className="mt-2 mb-0 text-[13px] text-red-text">{errors.email.message}</p>
             ) : null}
-            {formError ? <p className="mt-2 mb-0 text-[13px] text-red-text">{formError}</p> : null}
+            {humanVerificationField ? <div className="mt-3">{humanVerificationField}</div> : null}
+            {formError ? (
+              <p className="mt-2 mb-0 text-[13px] text-red-text" role="alert">
+                {formError}
+              </p>
+            ) : null}
 
             <Button
-              disabled={isSubmitting}
+              disabled={isSubmitting || !verificationReady}
               endIcon={<CaretRight size={16} weight="regular" />}
               fullWidth
               sx={{
@@ -275,7 +287,6 @@ export function LoginEmailStep({
           </form>
         )}
       </div>
-
       {demoEmail ? (
         <p className="mt-3.5 mb-0 text-center font-mono text-[11.5px] text-fg-muted">
           <span className="font-semibold text-accent-text">Try the demo</span> &middot; {demoEmail}{" "}

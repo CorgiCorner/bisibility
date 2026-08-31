@@ -37,7 +37,7 @@ export const onboardingSteps = [
     desc: "Keywords and tracking defaults",
     icon: "search",
   },
-  { n: 4, title: "First check", desc: "Run and review", icon: "lightning" },
+  { n: 4, title: "Review", desc: "Your setup at a glance", icon: "lightning" },
 ] satisfies OnboardingStep[];
 
 export const totalOnboardingSteps = onboardingSteps.length;

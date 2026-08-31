@@ -60,9 +60,9 @@ function NoProviderState({ projectRef }: Readonly<{ projectRef: string }>) {
       action={
         <AccentCtaLink href={appPath(projectRef, "integrations")}>Connect DataForSEO</AccentCtaLink>
       }
-      description="Lookups run on your own key and are billed by DataForSEO to your own account. Connect it in this project's integrations."
+      description="Keyword Research requires a provider with keyword research support. Lookups run on your own key."
       mark={<ModuleMark bordered icon={Binoculars} />}
-      title="Keyword research needs a provider"
+      title="Connect DataForSEO to research keywords"
     />
   );
 }

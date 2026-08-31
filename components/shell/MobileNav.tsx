@@ -15,6 +15,9 @@ export type MobileNavProps = {
   canCreateWorkspace: boolean;
   defaultOpen?: boolean;
   projectRef: string;
+  setupDoneCount?: number;
+  setupTotalCount?: number;
+  showGettingStarted?: boolean;
   showHostedLinks?: boolean;
   user?: ShellUser;
   version?: string;
@@ -27,6 +30,9 @@ export function MobileNav({
   canCreateWorkspace,
   defaultOpen = false,
   projectRef,
+  setupDoneCount = 0,
+  setupTotalCount = 4,
+  showGettingStarted = false,
   showHostedLinks = false,
   user,
   version,
@@ -74,7 +80,14 @@ export function MobileNav({
             />
           </div>
           <div className="mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain">
-            <SidebarNav activeHref={activeHref} onNavigate={close} projectRef={projectRef} />
+            <SidebarNav
+              activeHref={activeHref}
+              onNavigate={close}
+              projectRef={projectRef}
+              setupDoneCount={setupDoneCount}
+              setupTotalCount={setupTotalCount}
+              showGettingStarted={showGettingStarted}
+            />
           </div>
           <SidebarFooter
             onNavigate={close}

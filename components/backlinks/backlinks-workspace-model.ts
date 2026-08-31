@@ -25,6 +25,7 @@ type BacklinksWorkspaceContext = {
     spentCents: number;
   };
   defaultTarget: string;
+  providerStatus: "connected" | "needs_reauth" | "no_provider";
   recentTargets: RecentBacklinksTarget[];
 };
 

@@ -1,12 +1,10 @@
 import "server-only";
 
-import { isFirstRun } from "@/lib/auth/first-run";
-import { reserveEmailSignInCode } from "@/lib/auth/signin-capacity";
-import { EMAIL_CAPACITY_EXHAUSTED } from "@/lib/auth/signin-capacity-types";
+import { otpSendState } from "@/lib/auth/otp-send-context";
+import { FIXED_OTP_ENABLED } from "@/lib/auth/runtime-config";
 import { isEmailConfigured } from "@/lib/email/registry";
 import { sendEmail } from "@/lib/email/send";
 import { SUPPORTED_EMAIL_PROVIDERS } from "@/lib/email/types";
-import { APIError } from "better-auth/api";
 
 export type OtpEmail = {
   email: string;
@@ -32,39 +30,29 @@ function signInSubject(type: OtpEmail["type"]) {
   return "Your bisibility sign-in code";
 }
 
-export async function sendOtpEmail(
-  { email, otp, type }: OtpEmail,
-  { fixedOtpEnabled }: { fixedOtpEnabled: boolean },
-) {
+export async function sendOtpEmail({ email, otp, type }: OtpEmail) {
   const emailConfigured = isEmailConfigured();
-  const firstRunFallback =
-    !emailConfigured &&
-    process.env.NODE_ENV === "production" &&
-    !fixedOtpEnabled &&
-    type === "sign-in" &&
-    (await isFirstRun());
-
-  let sendCounterReserved = false;
-  if (type === "sign-in" && !firstRunFallback) {
-    const capacity = await reserveEmailSignInCode();
-    if (!capacity.granted) {
-      throw new APIError("TOO_MANY_REQUESTS", {
-        code: EMAIL_CAPACITY_EXHAUSTED,
-        message: EMAIL_CAPACITY_EXHAUSTED,
-      });
-    }
-    sendCounterReserved = capacity.gated;
-  }
+  const requestState = otpSendState();
+  const firstRunFallback = requestState?.firstRunFallback === true;
+  const sendCounterReserved = requestState?.sendCounterReserved === true;
 
   if (!emailConfigured) {
     // Demo/dev fixed-code instances do not need a mailer: the code is always 000000.
-    if (process.env.NODE_ENV === "production" && !fixedOtpEnabled && !firstRunFallback) {
+    if (firstRunFallback) {
+      console.info(`[auth] sign-in OTP for ${email}: ${otp}`);
+      console.info(
+        `Configure EMAIL_PROVIDER (${SUPPORTED_EMAIL_PROVIDERS}) to receive future sign-in codes by email.`,
+      );
+      return;
+    }
+
+    if (process.env.NODE_ENV === "production" && !FIXED_OTP_ENABLED) {
       throw new Error(
         `Configure EMAIL_PROVIDER (${SUPPORTED_EMAIL_PROVIDERS}) to send auth OTP email.`,
       );
     }
 
-    // No mailer configured, so surface the code in the server log.
+    // Local development can surface the code without requiring delivery infrastructure.
     console.info(`[auth] ${type} OTP for ${email}: ${otp}`);
     return;
   }

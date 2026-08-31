@@ -57,6 +57,11 @@ const routeCases = [
     title: "Install",
   },
   {
+    path: appPath("prj_1", "getting-started"),
+    pattern: appPath("[project]", "getting-started"),
+    title: "Get started",
+  },
+  {
     path: appPath("prj_1", "search-console"),
     pattern: appPath("[project]", "search-console"),
     title: "Search Console",
@@ -190,10 +195,8 @@ describe("dashboard header titles", () => {
     });
   });
 
-  it("uses singular keyword copy for one tracked keyword", () => {
-    expect(headerMetaFor(appPath("prj_1", "rank-tracker"), { keywordCount: 1 }).subtitle).toBe(
-      "1 tracked keyword · click any row to edit",
-    );
+  it("omits the Rank Tracker subtitle", () => {
+    expect(headerMetaFor(appPath("prj_1", "rank-tracker"))).toEqual({ title: "Rank Tracker" });
   });
 
   it("keeps Settings free of redundant project-domain metadata", () => {
@@ -204,6 +207,13 @@ describe("dashboard header titles", () => {
     expect(headerMetaFor(appPath("prj_1", "integrations"))).toMatchObject({
       subtitle: "Connect data providers and analytics sources.",
       title: "Integrations",
+    });
+  });
+
+  it("uses neutral getting-started metadata", () => {
+    expect(headerMetaFor(appPath("prj_1", "getting-started"))).toEqual({
+      subtitle: "Set up your rank tracking workflow.",
+      title: "Get started",
     });
   });
 

@@ -1,10 +1,10 @@
+import type { LoginFormValues } from "@/lib/auth/login-schema";
 import type { SignInCapacity, SignInCapacityMiss } from "@/lib/auth/signin-capacity-types";
 import type { LegalConsentLinks } from "@/lib/deployment/legal";
 import { render, screen } from "@testing-library/react";
 import type { UseFormRegister } from "react-hook-form";
 import { describe, expect, it, vi } from "vitest";
 import { type EnabledOAuthProviders, LoginEmailStep, type OAuthProvider } from "./LoginEmailStep";
-import type { LoginFormValues } from "./login-schema";
 
 const enabledProviders = {
   github: true,
@@ -26,6 +26,7 @@ function renderStep(
   legalConsentLinks: LegalConsentLinks | null = cloudLegalConsentLinks,
   capacity: SignInCapacity | null = null,
   capacityMiss: SignInCapacityMiss = null,
+  emailSignInUnavailable = false,
 ) {
   const register = (() => ({
     name: "email",
@@ -39,6 +40,7 @@ function renderStep(
       capacity={capacity}
       capacityMiss={capacityMiss}
       dataResidencyMessage="Your data is stored and processed in the EU."
+      emailSignInUnavailable={emailSignInUnavailable}
       enabledProviders={providers}
       errors={{}}
       formError={null}
@@ -99,6 +101,31 @@ describe("LoginEmailStep", () => {
     renderStep(disabledProviders);
 
     expect(screen.getByText("Your data is stored and processed in the EU.")).toBeInTheDocument();
+  });
+
+  it("replaces the email form with an unavailable state while retaining OAuth", () => {
+    renderStep(enabledProviders, cloudLegalConsentLinks, null, null, true);
+
+    expect(screen.getByRole("button", { name: "Continue with GitHub" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Continue with Google" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Email sign-in unavailable" })).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "This instance has no email provider configured, so sign-in codes cannot be sent. The instance admin needs to set EMAIL_PROVIDER.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText("Email")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Send login code" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Configure email delivery" })).toHaveAttribute(
+      "href",
+      "https://bisibility.com/docs/self-hosting/email",
+    );
+  });
+
+  it("reminds users to keep the submitted inbox available", () => {
+    renderStep(disabledProviders);
+
+    expect(screen.getByText(/Make sure you can open that inbox\./)).toBeInTheDocument();
   });
 
   it("keeps both consent links and their spacing unchanged in cloud mode", () => {

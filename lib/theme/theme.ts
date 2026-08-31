@@ -151,6 +151,9 @@ export const theme = createTheme({
     MuiPaper: {
       styleOverrides: {
         root: {
+          "&:has(.MuiDataGrid-menuList)": {
+            border: "1px solid var(--border)",
+          },
           backgroundImage: "none",
           boxShadow: "none",
         },

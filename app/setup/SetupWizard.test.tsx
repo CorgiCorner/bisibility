@@ -84,7 +84,9 @@ describe("SetupWizard", () => {
         "Email delivery isn't configured yet, so we printed your code in the server logs. Reading it there confirms you control this server.",
       ),
     ).toBeInTheDocument();
-    expect(screen.getByText("[auth] setup code for admin@example.com: ******")).toBeInTheDocument();
+    expect(
+      screen.getByText("[auth] sign-in OTP for admin@example.com: ******"),
+    ).toBeInTheDocument();
 
     await enterOtp(user);
     await user.click(screen.getByRole("button", { name: "Verify and create account" }));

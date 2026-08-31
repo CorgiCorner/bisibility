@@ -124,9 +124,9 @@ describe("SearchDataSyncCard", () => {
     expect(screen.queryByText("Sync pace")).not.toBeInTheDocument();
     expect(screen.queryByText("Normal")).not.toBeInTheDocument();
     expect(screen.queryByText("Gentle")).not.toBeInTheDocument();
-    expect(screen.getByText("requests today 28")).toBeInTheDocument();
-    expect(screen.getByText("planned remaining 1,200")).toBeInTheDocument();
-    expect(screen.getByText("last quota pause never")).toBeInTheDocument();
+    expect(screen.getByText("requests today: 28")).toBeInTheDocument();
+    expect(screen.getByText("planned remaining: 1,200")).toBeInTheDocument();
+    expect(screen.getByText("last quota pause: never")).toBeInTheDocument();
     expect(screen.getByText(/shared with other tools/i)).toBeInTheDocument();
   });
 

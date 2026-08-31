@@ -42,6 +42,9 @@ describe("SidebarFooter", () => {
     expect(expanded.getByText("bisibility").closest("span")).toHaveStyle({
       color: "var(--fg-muted)",
     });
+    expect(
+      expanded.getByText("bisibility").closest("span")?.parentElement?.parentElement,
+    ).toHaveClass("ml-[7px]", "inline-flex");
     expanded.unmount();
 
     render(<SidebarFooter collapsed showBrand version="1.2.3" />);

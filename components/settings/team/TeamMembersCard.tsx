@@ -36,7 +36,7 @@ type InviteAction = (input: {
   email: string;
   projectId: string;
   role: AssignableRole;
-}) => Promise<{ inviteLink: string }>;
+}) => Promise<{ inviteLink: string; status?: "success" } | { message: string; status: "error" }>;
 
 export type TeamMembersCardProps = {
   canAssignAdmin: boolean;

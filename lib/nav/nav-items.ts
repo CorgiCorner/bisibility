@@ -13,8 +13,8 @@ import {
   RankingIcon as Ranking,
   ShieldCheckIcon as ShieldCheck,
   SirenIcon as Siren,
+  SparkleIcon as Sparkle,
   SquaresFourIcon as SquaresFour,
-  TerminalWindowIcon as TerminalWindow,
   UsersThreeIcon as UsersThree,
 } from "@phosphor-icons/react/ssr";
 
@@ -92,7 +92,7 @@ const railNavEntries = [
     label: "Competitors",
     segment: "competitors",
     icon: UsersThree,
-    badge: "alpha",
+    badge: "experimental",
   },
   {
     group: "track",
@@ -110,7 +110,7 @@ const railNavEntries = [
   { group: "research", label: "Domain Overview", segment: "domain-overview", icon: Globe },
   { group: "research", label: "Backlinks", segment: "backlinks", icon: Link },
   { group: "connect", label: "Integrations", segment: "integrations", icon: PuzzlePiece },
-  { group: "connect", label: "Install", segment: "install", icon: TerminalWindow },
+  { group: "connect", label: "Install", segment: "install", icon: Sparkle },
   { group: "utility", label: "Alerts", segment: "alerts", icon: Siren, badge: "alpha" },
   { group: "utility", label: "Settings", segment: "settings", icon: GearSix },
 ] as const satisfies readonly NavEntry[];

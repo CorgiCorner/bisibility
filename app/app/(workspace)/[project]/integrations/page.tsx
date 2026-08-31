@@ -1,5 +1,4 @@
 import { IntegrationCategory } from "@/components/integrations/IntegrationCategory";
-import { IntegrationsByoNote } from "@/components/integrations/IntegrationsByoNote";
 import { PageContent } from "@/components/shell/PageContent";
 import {
   completeGooglePropertySelection,
@@ -88,8 +87,6 @@ export default async function IntegrationsPage({
 
   return (
     <PageContent className="flex flex-col gap-5">
-      <IntegrationsByoNote />
-
       <div className="flex flex-col gap-5 scroll-mt-6" id="all-providers">
         {categories.map((category) => (
           <IntegrationCategory

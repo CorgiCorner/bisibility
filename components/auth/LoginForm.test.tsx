@@ -5,18 +5,18 @@ import { LoginForm } from "./LoginForm";
 
 const mocks = vi.hoisted(() => ({
   emailOtpSignIn: vi.fn(),
-  sendVerificationOtp: vi.fn(),
+  requestLoginCode: vi.fn(),
   signInRedirectUrl: vi.fn(),
   socialSignIn: vi.fn(),
 }));
 
 vi.mock("@/lib/auth/client", () => ({
   authClient: {
-    emailOtp: { sendVerificationOtp: mocks.sendVerificationOtp },
     signIn: { emailOtp: mocks.emailOtpSignIn, social: mocks.socialSignIn },
   },
 }));
 vi.mock("@/lib/auth/otp-resend", () => ({ resendSignInOtp: vi.fn() }));
+vi.mock("@/lib/auth/request-login-code", () => ({ requestLoginCode: mocks.requestLoginCode }));
 vi.mock("@/lib/auth/sign-in-redirect", () => ({
   signInRedirectUrl: mocks.signInRedirectUrl,
 }));
@@ -59,9 +59,7 @@ describe("LoginForm capacity errors", () => {
   });
 
   it("maps a typed email rejection to the just-missed panel without navigation", async () => {
-    mocks.sendVerificationOtp.mockResolvedValue({
-      error: { code: "capacity_exhausted", message: "capacity_exhausted" },
-    });
+    mocks.requestLoginCode.mockResolvedValue({ code: "capacity_exhausted", ok: false });
     const user = userEvent.setup();
     render(
       <LoginForm
@@ -81,8 +79,27 @@ describe("LoginForm capacity errors", () => {
     expect(screen.queryByText("capacity_exhausted")).toBeNull();
   });
 
+  it("maps a direct missing-mailer race without hiding human verification", async () => {
+    mocks.requestLoginCode.mockResolvedValue({ code: "EMAIL_NOT_CONFIGURED", ok: false });
+    const user = userEvent.setup();
+    render(
+      <LoginForm
+        dataResidencyMessage=""
+        humanVerificationRequired={false}
+        legalConsentLinks={null}
+      />,
+    );
+
+    await user.type(screen.getByLabelText("Email"), "person@example.com");
+    await user.click(screen.getByRole("button", { name: /send login code/i }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "This instance has no email provider configured, so sign-in codes cannot be sent. The instance admin needs to set EMAIL_PROVIDER.",
+    );
+  });
+
   it("passes the return destination into the email OTP redirect decision", async () => {
-    mocks.sendVerificationOtp.mockResolvedValue({ data: { success: true }, error: null });
+    mocks.requestLoginCode.mockResolvedValue({ ok: true });
     const response = { data: { twoFactorRedirect: true }, error: null };
     mocks.emailOtpSignIn.mockResolvedValue(response);
     window.history.replaceState(null, "", "/login#review-access");

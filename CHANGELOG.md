@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## [0.18.0] - 2026-08-31
+
+- Added a guided project setup checklist and clearer email-delivery failures for sign-in and team invitations.
+
+- Clamped Search Console history imports to available data and retry new properties daily without spending requests on empty dates.
+
 ## [0.17.0] - 2026-08-30
 
 - Expanded GCS Insights with 16 months of Search Console history, daily sync, query and page drilldowns, GA4 sessions, and clearer connection controls.

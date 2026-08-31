@@ -1,8 +1,8 @@
+import type { LoginFormValues } from "@/lib/auth/login-schema";
+import { emptyOtpDigits } from "@/lib/auth/login-schema";
 import { render, screen } from "@testing-library/react";
 import { useForm } from "react-hook-form";
 import { describe, expect, it, vi } from "vitest";
-import type { LoginFormValues } from "./login-schema";
-import { emptyOtpDigits } from "./login-schema";
 import { OtpStep } from "./OtpStep";
 
 function Harness({
@@ -31,6 +31,7 @@ function Harness({
       dataResidencyMessage=""
       email="person@example.com"
       formError={null}
+      humanVerificationRequired={false}
       onBack={vi.fn()}
       onDigitEntry={vi.fn()}
       onResend={vi.fn().mockResolvedValue(undefined)}

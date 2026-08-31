@@ -267,11 +267,65 @@ describe("overview builders", () => {
     expect(loss).toMatchObject({ delta: "-96.7pp", deltaTone: "negative" });
   });
 
-  it("keeps visibility muted while the first check is pending", () => {
-    expect(visibilityValue([snapshotFor(keyword("pending"))])).toMatchObject({
-      delta: "awaiting first check",
-      deltaTone: "neutral",
-      value: "–",
-    });
+  it("renders numeric zeroes after a completed not-found check", () => {
+    const kpis = buildKpis([snapshotFor(keyword("not-found", [check(null)]))], 1, 0);
+
+    expect(kpis).toEqual([
+      { delta: "no ranked positions", deltaTone: "neutral", label: "Avg. position", value: "-" },
+      { delta: "no new this month", deltaTone: "neutral", label: "Tracked keywords", value: "1" },
+      { delta: "new", deltaTone: "neutral", label: "In top 10", value: "0" },
+      { delta: "new", deltaTone: "neutral", label: "Visibility", value: "0%" },
+    ]);
+  });
+
+  it("keeps completed not-found data when a newer check failed", () => {
+    const snapshot = snapshotFor(
+      keyword("mixed", [
+        check(null, { status: "failed" }),
+        check(null, { checkedAt: new Date("2026-06-27T10:00:00.000Z") }),
+      ]),
+    );
+
+    expect(buildKpis([snapshot], 1, 0)).toEqual([
+      { delta: "no ranked positions", deltaTone: "neutral", label: "Avg. position", value: "-" },
+      { delta: "no new this month", deltaTone: "neutral", label: "Tracked keywords", value: "1" },
+      { delta: "new", deltaTone: "neutral", label: "In top 10", value: "0" },
+      { delta: "new", deltaTone: "neutral", label: "Visibility", value: "0%" },
+    ]);
+  });
+
+  it("distinguishes a failed first check from a check that has not run", () => {
+    const failed = buildKpis(
+      [snapshotFor(keyword("failed", [check(null, { status: "failed" })]))],
+      1,
+      0,
+    );
+    const pending = buildKpis([snapshotFor(keyword("pending"))], 1, 0);
+
+    expect(failed.filter((kpi) => kpi.label !== "Tracked keywords")).toEqual([
+      {
+        delta: "first check failed",
+        deltaAction: "check_runs",
+        deltaTone: "negative",
+        label: "Avg. position",
+        value: "-",
+      },
+      {
+        delta: "first check failed",
+        deltaAction: "check_runs",
+        deltaTone: "negative",
+        label: "In top 10",
+        value: "-",
+      },
+      {
+        delta: "first check failed",
+        deltaAction: "check_runs",
+        deltaTone: "negative",
+        label: "Visibility",
+        value: "–",
+      },
+    ]);
+    expect(pending.filter((kpi) => kpi.delta === "awaiting first check")).toHaveLength(3);
+    expect(failed.some((kpi) => kpi.delta === "awaiting first check")).toBe(false);
   });
 });

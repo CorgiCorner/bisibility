@@ -1,7 +1,9 @@
 "use client";
 
 import { OtpInput } from "@/components/auth/OtpInput";
+import { OtpResendControl } from "@/components/auth/OtpResendControl";
 import { DataResidencyNote } from "@/components/ui";
+import type { LoginFormValues } from "@/lib/auth/login-schema";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import Button from "@mui/material/Button";
 import {
@@ -11,7 +13,6 @@ import {
 } from "@phosphor-icons/react";
 import type { SyntheticEvent } from "react";
 import { type Control, Controller, useWatch } from "react-hook-form";
-import type { LoginFormValues } from "./login-schema";
 
 const linkButtonSx = {
   color: "var(--fg-muted)",
@@ -20,13 +21,6 @@ const linkButtonSx = {
   minWidth: 0,
   padding: 0,
 } as const;
-
-/**
- * Widest label the resend control can show. The grid overlay below reserves
- * this width so neither consecutive second ticks (tabular numerals keep digit
- * width constant) nor the swap to "Resend code" shifts any row element.
- */
-const resendReferenceLabel = "Code sent Resend again in 1:00";
 
 type AuthStatus = "idle" | "verifying" | "error";
 
@@ -37,9 +31,10 @@ export type OtpStepProps = {
   dataResidencyMessage: string;
   email: string;
   formError: string | null;
+  humanVerificationRequired: boolean;
   onBack: () => void;
   onDigitEntry: () => void;
-  onResend: () => Promise<void>;
+  onResend: (verificationToken: string | undefined) => Promise<void>;
   onSubmit: (event: SyntheticEvent<HTMLFormElement>) => void;
   otpError?: string;
   resentCode: boolean;
@@ -48,11 +43,6 @@ export type OtpStepProps = {
   devOtpCode?: string | null;
 };
 
-function formatCooldown(seconds: number) {
-  const minutes = Math.floor(seconds / 60);
-  return `${minutes}:${(seconds % 60).toString().padStart(2, "0")}`;
-}
-
 export function OtpStep({
   attempts,
   cooldownRemaining,
@@ -60,6 +50,7 @@ export function OtpStep({
   dataResidencyMessage,
   email,
   formError,
+  humanVerificationRequired,
   onBack,
   onDigitEntry,
   onResend,
@@ -77,7 +68,6 @@ export function OtpStep({
     attempts >= 3
       ? "Too many attempts. Request a new code to continue."
       : "That code is incorrect or expired. Try again.";
-  const resendDisabled = submitting || cooldownRemaining > 0;
 
   return (
     <div className="w-full max-w-[380px]">
@@ -177,63 +167,13 @@ export function OtpStep({
       {devOtpCode ? null : (
         // With the fixed demo code active no email is sent and resending cannot change the
         // code, so the resend row would only mislead; the hint above replaces it.
-        <div className="mt-3.5 flex items-center justify-center gap-1.5 text-[13px] text-fg-muted">
-          {resentCode ? "Code sent" : "Did not get it?"}
-          <Button
-            color="inherit"
-            disabled={resendDisabled}
-            onClick={() => {
-              void onResend();
-            }}
-            style={{ backgroundColor: "transparent", border: "none" }}
-            sx={{
-              ...linkButtonSx,
-              backgroundColor: "transparent",
-              border: "none",
-              color: "var(--fg)",
-              fontVariantNumeric: "tabular-nums",
-              minHeight: "36px",
-              textDecoration: "none",
-              "&:hover": {
-                backgroundColor: "transparent",
-                textDecoration: "underline",
-                textDecorationColor: "var(--fg)",
-                textUnderlineOffset: "3px",
-              },
-              "&.Mui-disabled": {
-                backgroundColor: "transparent",
-                border: "none",
-                color: "var(--fg-muted)",
-                opacity: 1,
-                textDecoration: "none",
-              },
-              "&.Mui-focusVisible": {
-                outline: "2px solid var(--border-strong)",
-                outlineOffset: "2px",
-                textDecoration: "underline",
-              },
-            }}
-            type="button"
-          >
-            <span style={{ display: "grid" }}>
-              <span
-                aria-hidden
-                style={{
-                  gridArea: "1 / 1",
-                  visibility: "hidden",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {resendReferenceLabel}
-              </span>
-              <span style={{ gridArea: "1 / 1", whiteSpace: "nowrap" }}>
-                {cooldownRemaining > 0
-                  ? `${resentCode ? "Resend again in" : "Resend in"} ${formatCooldown(cooldownRemaining)}`
-                  : "Resend code"}
-              </span>
-            </span>
-          </Button>
-        </div>
+        <OtpResendControl
+          cooldownRemaining={cooldownRemaining}
+          humanVerificationRequired={humanVerificationRequired}
+          onResend={onResend}
+          resentCode={resentCode}
+          submitting={submitting}
+        />
       )}
     </div>
   );

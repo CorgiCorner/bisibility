@@ -88,21 +88,12 @@ export function buildRankTrackerListSql(
         ),
         'tags', COALESCE((SELECT jsonb_agg(jsonb_build_object('label', label, 'count', count) ORDER BY ordinal)
           FROM (
-            WITH default_tags(label, ordinal) AS (VALUES
-              ('High intent', 1), ('Product', 2), ('Docs', 3), ('Comparison', 4),
-              ('Blog', 5), ('Infra', 6), ('Brand', 7)
-            ), occurrences AS (
-              SELECT tag.label, k."sourceOrdinal", tag.ordinal AS "tagOrdinal"
-              FROM lens_keywords k CROSS JOIN LATERAL unnest(k.tags) WITH ORDINALITY tag(label, ordinal)
-            ), counted AS (SELECT label, COUNT(*)::int count FROM occurrences GROUP BY label)
-            SELECT defaults.label, COALESCE(counted.count, 0)::int count, defaults.ordinal
-            FROM default_tags defaults LEFT JOIN counted USING (label)
-            UNION ALL
-            SELECT occurrences.label, COUNT(*)::int count,
-              7 + row_number() OVER (ORDER BY MIN(occurrences."sourceOrdinal"), MIN(occurrences."tagOrdinal")) ordinal
-            FROM occurrences
-            WHERE NOT EXISTS (SELECT 1 FROM default_tags WHERE default_tags.label = occurrences.label)
-            GROUP BY occurrences.label
+            SELECT tag.label, COUNT(DISTINCT k.id)::int count,
+              MIN(k."sourceOrdinal" * 1000 + tag.ordinal)::bigint ordinal
+            FROM lens_keywords k
+            CROSS JOIN LATERAL unnest(k.tags) WITH ORDINALITY tag(label, ordinal)
+            WHERE btrim(tag.label) <> ''
+            GROUP BY tag.label
           ) f), '[]'::jsonb),
         'topics', COALESCE((SELECT jsonb_agg(jsonb_build_object('label', topic, 'count', count) ORDER BY ordinal)
           FROM (SELECT topic, COUNT(*)::int count, MIN("sourceOrdinal") ordinal

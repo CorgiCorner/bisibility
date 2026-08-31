@@ -8,7 +8,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 export const metadata: Metadata = createNoindexMetadata({
-  title: "Instance import | bisibility",
+  title: "Instance import",
   description:
     "Create a one-time migration token that authorizes a self-hosted instance to push its data into this hosted project.",
 });

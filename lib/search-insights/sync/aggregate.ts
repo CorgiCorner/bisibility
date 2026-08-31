@@ -96,13 +96,17 @@ export async function probeFreshness(input: {
 
 // One request covers the whole range: 500 days of daily totals fit far inside the row
 // limit, so the sixteen-month history costs a single call.
+export type AggregateRangeResult =
+  | { firstDataDate: string; kind: "data_found"; returnedDays: number }
+  | { kind: "no_data"; returnedDays: number };
+
 export async function fetchAggregateRange(input: {
   end: string;
   projectId: string;
   property: string;
   session: GscSearchAnalyticsSession;
   start: string;
-}): Promise<{ days: number }> {
+}): Promise<AggregateRangeResult> {
   assertRequestedProperty(input.session.property, input.property);
   const startedAt = Date.now();
   let requestAttemptId: string | null = null;
@@ -202,5 +206,12 @@ export async function fetchAggregateRange(input: {
       where: { id: requestAttemptId },
     });
   }
-  return { days: days.length };
+  const firstDataDate = days
+    .filter((day) => day.impressions > 0)
+    .map((day) => day.date)
+    .sort()
+    .at(0);
+  return firstDataDate
+    ? { firstDataDate, kind: "data_found", returnedDays: days.length }
+    : { kind: "no_data", returnedDays: days.length };
 }

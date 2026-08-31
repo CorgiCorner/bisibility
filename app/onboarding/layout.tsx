@@ -10,7 +10,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 export const metadata: Metadata = createNoindexMetadata({
-  title: "Onboarding | bisibility",
+  title: "Onboarding",
   description: "Set up a bisibility project.",
 });
 

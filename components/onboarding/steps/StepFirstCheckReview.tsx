@@ -7,170 +7,128 @@ import { MenuSelect } from "@/components/ui";
 import type { ProjectDefaultsInput } from "@/lib/schemas/project";
 import { timezoneSelectOptions } from "@/lib/settings/timezones";
 import type { ReactNode } from "react";
-import type { FirstCheckRunState } from "./use-first-check-run";
-
-type KeywordOption = { label: string; value: string };
 
 type StepFirstCheckReviewProps = {
   devices: readonly unknown[];
-  firstCheckLabel: string;
   frequency?: ProjectDefaultsInput["frequency"];
   frequencyLabel: string;
   keywordCount: number;
-  keywordOptions: readonly KeywordOption[];
   markets: readonly LocationFieldValue[];
-  onSampleKeywordChange: (value: string) => void;
   onTimezoneChange: (value: string) => void;
-  paused: boolean;
-  projectLabel: string;
-  providerLabel: string;
   providerAction?: ReactNode;
+  providerLabel: string;
   providerReady: boolean;
-  sampleKeyword: string;
-  stateStatus: FirstCheckRunState["status"];
   timezone: string;
 };
-
-function nextRunLabel(frequency: ProjectDefaultsInput["frequency"] | undefined) {
-  if (frequency === "weekly") return "Weekly schedule";
-  if (frequency === "monthly") return "Monthly schedule";
-  if (frequency === "custom_cron") return "Custom schedule";
-  return "Daily schedule";
-}
 
 function SummaryRow({
   children,
   index,
   label,
+  subline,
   value,
 }: Readonly<{
   children?: ReactNode;
   index: number;
   label: string;
+  subline?: string;
   value: string;
 }>) {
   return (
     <div
-      className={`${index === 0 ? "rounded-t-[11px]" : ""} ${index % 2 === 0 ? "bg-bg-sunken" : "bg-bg-elev"}`}
+      className={`${index === 0 ? "rounded-t-[11px]" : ""} ${index === 2 ? "rounded-b-[11px]" : ""} ${index % 2 === 0 ? "bg-bg-sunken" : "bg-bg-elev"}`}
       data-summary-row={label.toLowerCase()}
     >
-      <div className="flex min-w-0 items-center justify-between gap-4 px-4 py-3">
-        <span className="shrink-0 text-[13px] text-fg-muted">{label}</span>
-        <span className="flex min-w-0 items-center justify-end gap-2 text-right font-mono text-[13px] font-semibold text-fg">
-          <span aria-label={`${label}: ${value}`} className="min-w-0 truncate whitespace-nowrap">
-            {value}
+      <div className="flex min-w-0 items-start justify-between gap-4 px-4 py-3">
+        <span className="shrink-0 pt-px text-[13px] text-fg-muted">{label}</span>
+        <span className="min-w-0 text-right">
+          <span
+            className="flex min-w-0 items-center justify-end gap-2 font-mono text-[13px] font-normal text-fg"
+            data-summary-value
+          >
+            <span aria-label={`${label}: ${value}`} className="min-w-0 truncate whitespace-nowrap">
+              {value}
+            </span>
+            {children}
           </span>
-          {children}
+          {subline ? (
+            <span className="mt-1 block text-[11.5px] leading-[1.45] text-fg-muted">{subline}</span>
+          ) : null}
         </span>
       </div>
     </div>
   );
 }
 
-function marketsSummary(markets: readonly LocationFieldValue[]) {
-  return markets
-    .map((market) => `${market.displayName} / ${languageForLocationValue(market)}`)
+function trackingSummary(
+  keywordCount: number,
+  markets: readonly LocationFieldValue[],
+  devices: readonly unknown[],
+) {
+  const keywords = `${keywordCount} ${keywordCount === 1 ? "keyword" : "keywords"}`;
+  const marketSummary = markets
+    .map((market) => `${market.displayName} (${languageForLocationValue(market)})`)
     .join(" · ");
+  const deviceSummary = `${devices.length} ${devices.length === 1 ? "device" : "devices"}`;
+  return [keywords, trackingDefaults.engine, marketSummary, deviceSummary]
+    .filter(Boolean)
+    .join(" · ");
+}
+
+function scheduleSummary(frequency: ProjectDefaultsInput["frequency"] | undefined) {
+  if (frequency === "manual") return "Manual - checks run when you start them";
+  if (frequency === "paused") return "Paused - no checks are scheduled";
+  return null;
 }
 
 export function StepFirstCheckReview({
   devices,
-  firstCheckLabel,
   frequency,
   frequencyLabel,
   keywordCount,
-  keywordOptions,
   markets,
-  onSampleKeywordChange,
   onTimezoneChange,
-  paused,
-  projectLabel,
   providerAction,
   providerLabel,
   providerReady,
-  sampleKeyword,
-  stateStatus,
   timezone,
 }: Readonly<StepFirstCheckReviewProps>) {
-  const marketLabel = markets.length === 1 ? "market" : "markets";
-  const deviceLabel = devices.length === 1 ? "device" : "devices";
-  const scopeSummary = [
-    trackingDefaults.engine,
-    `${markets.length} ${marketLabel}`,
-    `${devices.length} ${deviceLabel}`,
-    frequencyLabel,
-  ].join(" · ");
-  const selectedKeyword = keywordOptions.find((option) => option.value === sampleKeyword)?.label;
-  const marketsValue = marketsSummary(markets);
+  const manualSchedule = scheduleSummary(frequency);
+  const scheduledValue = frequencyLabel;
 
   return (
     <div className="mt-5 rounded-card border border-border">
-      <SummaryRow index={0} label="Project" value={projectLabel} />
-      <SummaryRow index={1} label="Provider" value={providerLabel}>
-        {providerAction}
-      </SummaryRow>
+      <SummaryRow
+        index={0}
+        label="Tracking"
+        value={trackingSummary(keywordCount, markets, devices)}
+      />
+      {manualSchedule ? (
+        <SummaryRow index={1} label="Schedule" value={manualSchedule} />
+      ) : (
+        <SummaryRow index={1} label="Schedule" value={`${scheduledValue} · ${timezone}`}>
+          <span aria-hidden className="text-border-strong">
+            ·
+          </span>
+          <MenuSelect
+            ariaLabel="Project timezone"
+            onChange={onTimezoneChange}
+            options={timezoneSelectOptions(timezone)}
+            searchable
+            searchPlaceholder="City or region"
+            triggerClassName="min-h-0 min-w-0 border-0 bg-transparent px-0 font-mono text-xs text-fg-muted hover:border-0 focus-visible:border-0"
+            value={timezone}
+          />
+        </SummaryRow>
+      )}
       <SummaryRow
         index={2}
-        label="Keywords"
-        value={`${keywordCount} ${keywordCount === 1 ? "keyword" : "keywords"} saved`}
-      />
-      <SummaryRow index={3} label="Scope" value={scopeSummary} />
-      <SummaryRow index={4} label="Markets" value={marketsValue} />
-      <SummaryRow index={5} label="First check" value={firstCheckLabel} />
-      <div className="bg-bg-sunken">
-        <div className="flex items-center justify-between gap-4 px-4 py-3">
-          <span className="shrink-0 text-[13px] text-fg-muted">Sample keyword</span>
-          {providerReady && keywordOptions.length > 1 && stateStatus === "idle" ? (
-            <MenuSelect
-              ariaLabel="Keyword used for the sample checks"
-              onChange={onSampleKeywordChange}
-              options={keywordOptions}
-              triggerClassName="min-h-[34px] w-[260px] max-w-full justify-between rounded-control bg-bg-elev px-2.5 text-[12.5px] font-medium"
-              value={sampleKeyword}
-            />
-          ) : (
-            <span className="min-w-0 text-right font-mono text-[13px] font-semibold text-fg">
-              {providerReady
-                ? (selectedKeyword ?? "No keywords")
-                : (selectedKeyword ?? sampleKeyword ?? "No keywords")}
-            </span>
-          )}
-        </div>
-      </div>
-      <div className="rounded-b-[11px] bg-bg-elev">
-        <div className="flex items-center justify-between gap-4 px-4 py-3">
-          <span className="shrink-0 text-[13px] text-fg-muted">Next scheduled run</span>
-          {providerReady && !paused ? (
-            <span className="flex min-w-0 items-center justify-end gap-2">
-              <span className="shrink-0 font-mono text-[13px] font-semibold text-fg">
-                {nextRunLabel(frequency)}
-              </span>
-              <span aria-hidden className="text-border-strong">
-                ·
-              </span>
-              <MenuSelect
-                ariaLabel="Project timezone"
-                onChange={onTimezoneChange}
-                options={timezoneSelectOptions(timezone)}
-                searchable
-                searchPlaceholder="City or region"
-                triggerClassName="min-h-0 min-w-0 border-0 bg-transparent px-0 font-mono text-xs text-fg-muted hover:border-0 focus-visible:border-0"
-                value={timezone}
-              />
-            </span>
-          ) : (
-            <span className="text-right font-mono text-[13px] font-semibold text-fg">
-              {providerReady
-                ? frequencyLabel
-                : frequency === "manual"
-                  ? "Manual · runs only when you start it"
-                  : frequency === "paused"
-                    ? "Paused · no checks scheduled"
-                    : `${frequencyLabel} · starts after the first check`}
-            </span>
-          )}
-        </div>
-      </div>
+        label="Data source"
+        subline={providerReady ? undefined : "Checks start once a provider is connected."}
+        value={providerLabel}
+      >
+        {providerAction}
+      </SummaryRow>
     </div>
   );
 }

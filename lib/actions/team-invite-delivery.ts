@@ -16,11 +16,26 @@ type InviteDeliveryRow = {
 
 type InviteEmail = InviteDeliveryRow & { inviteLink: string };
 
+export const INVITE_MAILER_NOT_CONFIGURED_MESSAGE = `Configure EMAIL_PROVIDER (${SUPPORTED_EMAIL_PROVIDERS}) to send team invites.`;
+
+export class InviteMailerNotConfiguredError extends Error {
+  readonly code = "INVITE_MAILER_NOT_CONFIGURED";
+
+  constructor() {
+    super(INVITE_MAILER_NOT_CONFIGURED_MESSAGE);
+    this.name = "InviteMailerNotConfiguredError";
+  }
+}
+
+export function isInviteMailerNotConfiguredError(
+  error: unknown,
+): error is InviteMailerNotConfiguredError {
+  return error instanceof InviteMailerNotConfiguredError;
+}
+
 export function assertInviteMailerReady() {
   if (!isEmailConfigured() && process.env.NODE_ENV === "production") {
-    throw new Error(
-      `Configure EMAIL_PROVIDER (${SUPPORTED_EMAIL_PROVIDERS}) to send team invites.`,
-    );
+    throw new InviteMailerNotConfiguredError();
   }
 }
 

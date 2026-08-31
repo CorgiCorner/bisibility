@@ -9,7 +9,7 @@ describe("OnboardingNav", () => {
     const back = screen.getByRole("button", { name: "Back" });
     const continueButton = screen.getByRole("button", { name: "Continue" });
 
-    expect(back.closest("footer")).toHaveClass("items-end");
+    expect(back.closest("footer")).toHaveClass("items-end", "-mx-6", "px-6", "sm:-mx-7", "sm:px-7");
     expect(getComputedStyle(back).minHeight).toBe(getComputedStyle(continueButton).minHeight);
     expect(getComputedStyle(back).fontWeight).toBe(getComputedStyle(continueButton).fontWeight);
   });

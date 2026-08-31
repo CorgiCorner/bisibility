@@ -224,7 +224,7 @@ export function SetupWizard({ mailerConfigured }: Readonly<{ mailerConfigured: b
                 </p>
               </div>
               <code className="overflow-x-auto whitespace-nowrap rounded-control bg-[#1a1813] p-2.5 font-mono text-[11.5px] text-[#e8e4d9]">
-                [auth] setup code for {email}: ******
+                [auth] sign-in OTP for {email}: ******
               </code>
             </div>
           ) : null}

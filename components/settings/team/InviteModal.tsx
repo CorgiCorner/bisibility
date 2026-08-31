@@ -23,7 +23,7 @@ const inviteSchema = z.object({
 type InviteForm = z.infer<typeof inviteSchema>;
 export type InviteAction = (
   input: InviteForm & { projectId: string },
-) => Promise<{ inviteLink: string }>;
+) => Promise<{ inviteLink: string; status?: "success" } | { message: string; status: "error" }>;
 
 export type InviteModalProps = {
   canAssignAdmin?: boolean;
@@ -79,6 +79,10 @@ export function InviteModal({
     setSubmitError(null);
     try {
       const result = await inviteMember({ ...values, projectId });
+      if (result.status === "error") {
+        setSubmitError(result.message);
+        return;
+      }
       setInviteLink(result.inviteLink);
       setSentEmail(values.email);
       setSent(true);
@@ -205,7 +209,9 @@ export function InviteModal({
             })}
           </div>
           {submitError ? (
-            <div className="mt-3 text-[12px] font-medium text-red-text">{submitError}</div>
+            <div className="mt-3 text-[12px] font-medium text-red-text" role="alert">
+              {submitError}
+            </div>
           ) : null}
         </form>
       )}

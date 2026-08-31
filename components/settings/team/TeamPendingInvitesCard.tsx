@@ -10,7 +10,10 @@ import { EnvelopeSimpleIcon as EnvelopeSimple, XIcon as X } from "@phosphor-icon
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-type InviteAction = (input: { inviteId: string; projectId: string }) => Promise<unknown>;
+type InviteAction = (input: {
+  inviteId: string;
+  projectId: string;
+}) => Promise<unknown | { message: string; status: "error" }>;
 
 type TeamPendingInvitesCardProps = {
   canManageTeam: boolean;
@@ -44,7 +47,18 @@ export function TeamPendingInvitesCard({
     setActionSuccess(null);
     setPendingAction(key);
     try {
-      await action({ inviteId: invite.id, projectId });
+      const result = await action({ inviteId: invite.id, projectId });
+      if (
+        typeof result === "object" &&
+        result !== null &&
+        "status" in result &&
+        result.status === "error" &&
+        "message" in result &&
+        typeof result.message === "string"
+      ) {
+        setActionError(result.message);
+        return;
+      }
       setActionSuccess(successMessage ?? null);
       router.refresh();
     } catch (error) {

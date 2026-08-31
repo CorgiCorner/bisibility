@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { renderReadyStep } from "./step-first-check-test-support";
 
 describe("StepFirstCheck", () => {
-  it("renders the complete review table and final-step footer contract", () => {
+  it("renders a three-fact review and final-step footer contract", () => {
     renderReadyStep({
       defaults: {
         city: null,
@@ -32,44 +32,35 @@ describe("StepFirstCheck", () => {
       keywordDraft: "rank tracker\nseo api",
     });
 
-    for (const label of [
-      "Project",
-      "Provider",
-      "Keywords",
-      "Scope",
-      "Markets",
-      "First check",
-      "Sample keyword",
-      "Next scheduled run",
-    ]) {
-      expect(screen.getByText(label)).toBeInTheDocument();
-    }
+    expect(screen.getByText("Review")).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Keyword used for the sample checks" }),
+      screen.getByText("Everything's ready. Your first check runs daily."),
     ).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("Tracking: 3 keywords · Google · United States (English) · 2 devices"),
+    ).toBeVisible();
+    expect(screen.getByLabelText("Schedule: Daily · UTC")).toBeVisible();
+    expect(screen.getByLabelText(/Data source: DataForSEO/)).toBeVisible();
+    expect(screen.queryByText(/Sample keyword/i)).toBeNull();
+    expect(screen.queryByText("Project")).toBeNull();
+    expect(screen.queryByText("First check")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Keyword used for the sample checks" })).toBeNull();
     expect(screen.getByRole("button", { name: "Project timezone" })).toBeInTheDocument();
-    expect(screen.getByText("Google · 1 market · 2 devices · Daily")).toBeInTheDocument();
-    expect(screen.queryByText("Google / 1 market / 2 devices / Daily")).toBeNull();
-    expect(screen.getByText("Daily schedule")).toBeInTheDocument();
-    expect(screen.getByText("·")).toBeInTheDocument();
-    expect(screen.queryByText("/")).toBeNull();
+    for (const row of screen.getAllByLabelText(/^(Tracking|Schedule|Data source):/)) {
+      const value = row.closest("[data-summary-value]");
+      expect(value).toHaveClass("font-normal");
+      expect(value).not.toHaveClass("font-medium", "font-semibold");
+    }
+
     const openAppButton = screen.getByRole("button", { name: "Open app" });
     const runSampleChecksButton = screen.getByRole("button", {
       name: "Run a test check (1 keyword)",
     });
-    expect(openAppButton).toBeInTheDocument();
+    expect(openAppButton.closest("footer")).toHaveClass("-mx-6", "px-6", "sm:-mx-7", "sm:px-7");
     expect(openAppButton).toHaveClass("MuiButton-text", "MuiButton-sizeLarge");
     expect(openAppButton).toHaveAttribute("type", "submit");
-    expect(openAppButton.querySelector("svg")).toBeNull();
-    expect(runSampleChecksButton).toBeInTheDocument();
     expect(runSampleChecksButton).toHaveClass("MuiButton-contained", "MuiButton-sizeLarge");
     expect(runSampleChecksButton).toHaveAttribute("type", "button");
-    expect(runSampleChecksButton.querySelector("svg")).toBeNull();
-    expect(
-      screen
-        .getAllByRole("button")
-        .filter((button) => button.classList.contains("MuiButton-contained")),
-    ).toHaveLength(1);
   });
 
   // This case opens the timezone menu, which renders the full IANA zone list. It measures ~800ms
@@ -101,8 +92,9 @@ describe("StepFirstCheck", () => {
     expect(screen.getByRole("button", { name: "Project timezone" })).toHaveTextContent("UTC");
   }, 20_000);
 
-  it("renders Scope and Markets as distinct truncating summary rows", () => {
+  it("combines keyword, engine, market, and device facts into Tracking", () => {
     renderReadyStep({
+      keywordCount: 1,
       defaults: {
         country: "United States",
         cronExpression: null,
@@ -126,15 +118,12 @@ describe("StepFirstCheck", () => {
       },
     });
 
-    const scopeLabel = screen.getByText("Scope");
-    const marketsLabel = screen.getByText("Markets");
-    expect(scopeLabel.closest("[data-summary-row]")).not.toBe(
-      marketsLabel.closest("[data-summary-row]"),
-    );
-    const scopeValue = screen.getByLabelText("Scope: Google · 1 market · 1 device · Manual");
-    const marketsValue = screen.getByLabelText("Markets: United States / English");
-    expect(scopeValue).toHaveClass("truncate", "whitespace-nowrap");
-    expect(marketsValue).toHaveClass("truncate", "whitespace-nowrap");
+    expect(
+      screen.getByLabelText("Tracking: 1 keyword · Google · United States (English) · 1 device"),
+    ).toHaveClass("truncate", "whitespace-nowrap");
+    expect(
+      screen.getByLabelText("Schedule: Manual - checks run when you start them"),
+    ).toBeVisible();
   });
 
   it("does not expose a live-check action without a provider or analytics", () => {
@@ -166,9 +155,16 @@ describe("StepFirstCheck", () => {
         .getAllByRole("button")
         .filter((button) => button.classList.contains("MuiButton-contained")),
     ).toHaveLength(1);
-    expect(screen.getByText("Waiting for a provider")).toBeInTheDocument();
-    expect(screen.getByText(/rank tracker/)).toBeInTheDocument();
-    expect(screen.getByText("Manual · runs only when you start it")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Almost ready. Everything is set - connect a data provider whenever you want to run checks.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Data source: Not connected")).toBeVisible();
+    expect(screen.getByText("Checks start once a provider is connected.")).toBeVisible();
+    expect(
+      screen.getByLabelText("Schedule: Manual - checks run when you start them"),
+    ).toBeVisible();
   });
 
   it("shows the connect-provider state when analytics is connected but no SERP provider is ready", () => {
@@ -200,6 +196,10 @@ describe("StepFirstCheck", () => {
     });
 
     expect(screen.getByRole("button", { name: "Run a test check (1 keyword)" })).not.toBeDisabled();
+    expect(screen.getByLabelText("Schedule: Paused - no checks are scheduled")).toBeVisible();
+    expect(
+      screen.getByText("Everything's ready. Checks are paused until you resume the schedule."),
+    ).toBeInTheDocument();
     expect(
       screen.getByText("Manual preview can run now. Scheduled checks stay paused."),
     ).toBeInTheDocument();
@@ -224,15 +224,5 @@ describe("StepFirstCheck", () => {
     expect(
       screen.getByText("Sample projects keep their synthetic ranking history."),
     ).toBeInTheDocument();
-  });
-  it("hides matrix transparency for one market and one device", () => {
-    renderReadyStep({ keywordCount: 1, keywordDraft: "rank tracker" });
-    expect(screen.getByText("1 keyword saved")).toBeInTheDocument();
-    expect(screen.queryByText(/1 keyword · 1 market/)).not.toBeInTheDocument();
-  });
-
-  it("uses plural persisted saved-count copy", () => {
-    renderReadyStep({ keywordCount: 2 });
-    expect(screen.getByText("2 keywords saved")).toBeInTheDocument();
   });
 });

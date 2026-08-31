@@ -449,8 +449,12 @@ export function resetRedisClientForTests() {
   return undefined;
 }
 
-export async function resendSignInOtp(email: string) {
-  return { email, ok: true, retryAfter: 60 };
+export async function resendSignInOtp(input: { email: string }) {
+  return { email: input.email, ok: true, retryAfter: 60 };
+}
+
+export async function requestLoginCode() {
+  return { ok: true as const };
 }
 
 export function unwrapActionResult<T>(result: {

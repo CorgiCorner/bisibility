@@ -12,8 +12,9 @@ describe("accountSearchAnalyticsRequests", () => {
     mocks.update.mockResolvedValue({});
     mocks.fetch.mockResolvedValue({ rows: [] });
   });
-  it("records one attempted call even when the provider rejects it", async () => {
-    mocks.fetch.mockRejectedValue(new Error("429"));
+  it("records the classified failure and rethrows the provider error", async () => {
+    const error = new TypeError("network unavailable");
+    mocks.fetch.mockRejectedValue(error);
     const session = accountSearchAnalyticsRequests({
       operation: "probe",
       projectId: "prj_1",
@@ -22,9 +23,52 @@ describe("accountSearchAnalyticsRequests", () => {
     });
     await expect(
       session.fetchEnvelope({ endDate: "2026-01-01", startDate: "2026-01-01" }),
-    ).rejects.toThrow("429");
+    ).rejects.toBe(error);
     expect(mocks.create).toHaveBeenCalledTimes(1);
-    expect(mocks.update).not.toHaveBeenCalled();
+    expect(mocks.update).toHaveBeenCalledWith({
+      data: { failureClass: "network" },
+      where: { id: "req_1" },
+    });
+  });
+
+  it("rethrows the provider error when failure bookkeeping also fails", async () => {
+    const errorLog = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const providerError = new TypeError("network unavailable");
+    mocks.fetch.mockRejectedValue(providerError);
+    mocks.update.mockRejectedValue(new Error("database unavailable"));
+    const session = accountSearchAnalyticsRequests({
+      operation: "probe",
+      projectId: "prj_1",
+      property: "sc-domain:example.com",
+      session: { property: "sc-domain:example.com", fetchEnvelope: mocks.fetch },
+    });
+
+    await expect(
+      session.fetchEnvelope({ endDate: "2026-01-01", startDate: "2026-01-01" }),
+    ).rejects.toBe(providerError);
+    expect(errorLog).toHaveBeenCalledWith(
+      "[search-insights] request failure classification could not be stored",
+      expect.objectContaining({ requestUsageId: "req_1" }),
+    );
+  });
+
+  it("returns an empty successful envelope and records zero rows", async () => {
+    const envelope = { rows: [] };
+    mocks.fetch.mockResolvedValue(envelope);
+    const session = accountSearchAnalyticsRequests({
+      operation: "aggregate",
+      projectId: "prj_1",
+      property: "sc-domain:example.com",
+      session: { property: "sc-domain:example.com", fetchEnvelope: mocks.fetch },
+    });
+
+    await expect(
+      session.fetchEnvelope({ endDate: "2026-01-01", startDate: "2026-01-01" }),
+    ).resolves.toBe(envelope);
+    expect(mocks.update).toHaveBeenCalledWith({
+      data: { capHit: false, returnedRows: 0 },
+      where: { id: "req_1" },
+    });
   });
   it("records every pagination fetch independently", async () => {
     const session = accountSearchAnalyticsRequests({

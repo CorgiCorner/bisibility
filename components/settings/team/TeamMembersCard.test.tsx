@@ -211,6 +211,24 @@ describe("TeamMembersCard", () => {
     expect(screen.queryByRole("button", { name: "Invite member" })).not.toBeInTheDocument();
   });
 
+  it("renders a structured invite action error as an accessible alert", async () => {
+    const message = "Configure EMAIL_PROVIDER (resend, ses, smtp) to send team invites.";
+    renderCard({
+      inviteMember: vi.fn().mockResolvedValue({ message, status: "error" }),
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Invite member" }));
+    fireEvent.change(screen.getByLabelText("Email address"), {
+      target: { value: "teammate@example.com" },
+    });
+    const submit = screen.getByRole("button", { name: "Send invite" });
+    await waitFor(() => expect(submit).toBeEnabled());
+    fireEvent.click(submit);
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(message);
+    expect(screen.queryByText("Invitation sent")).not.toBeInTheDocument();
+  });
+
   it.each([
     {
       action: "transferOwnership" as const,

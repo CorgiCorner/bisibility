@@ -38,9 +38,12 @@ describe("importProgress", () => {
     expect(importProgress(importState())).toEqual({
       completedDays: 28,
       daysTotal: 488,
+      earliestTargetDate: "2025-03-14",
       etaLabel: "about 3 days left (finishes ~Mon)",
+      firstDataDate: null,
       lastActivityAt: isoFromFrozenNow({ hours: -7, minutes: -5 }),
       monthsSaved: 1,
+      newestFinalizedDate: "2026-07-08",
       percent: 6,
       state: "running",
     });
@@ -63,9 +66,12 @@ describe("importProgress", () => {
     expect(importProgress(null)).toEqual({
       completedDays: 0,
       daysTotal: 0,
+      earliestTargetDate: null,
       etaLabel: null,
+      firstDataDate: null,
       lastActivityAt: null,
       monthsSaved: 0,
+      newestFinalizedDate: null,
       percent: 0,
       state: "none",
     });
@@ -177,6 +183,42 @@ describe("importStartupPresentation", () => {
       state: "active",
     });
     expect(JSON.stringify(presentation)).not.toMatch(/0 of ~0|not yet|\. ·/);
+  });
+
+  it("renders the clamped provider data range for an active import", () => {
+    const progress = importProgress(
+      importState({
+        completedDays: 2,
+        earliestTargetDate: "2026-05-12",
+        firstDataDate: "2026-04-01",
+        lastActivityAt: null,
+        newestFinalizedDate: "2026-07-07",
+      }),
+    );
+
+    expect(importStartupPresentation(progress, now).fact).toBe(
+      "Importing your Google history · May 12, 2026 to Jul 7, 2026",
+    );
+  });
+
+  it("uses the dedicated waiting sentence without progress or promises", () => {
+    const presentation = importStartupPresentation(
+      importProgress(
+        importState({ completedDays: 0, daysTotal: 0, state: "waiting_for_first_data" }),
+      ),
+      now,
+    );
+
+    expect(presentation).toEqual({
+      activity: null,
+      eta: null,
+      fact: "Google has not reported any search data for this property yet. We check daily and will import automatically when it appears.",
+      showHeartbeat: false,
+      showProgress: false,
+      state: "waiting_for_first_data",
+    });
+    expect(presentation.fact).not.toMatch(/0 of 0|completion|first-28/i);
+    expect(presentation.eta).toBeNull();
   });
 });
 

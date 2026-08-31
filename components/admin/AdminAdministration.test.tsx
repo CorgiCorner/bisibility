@@ -25,6 +25,7 @@ const metric = (seed: number) => ({
 const data = {
   activeAccountsApprox: 42,
   generatedAt: "2026-07-18T00:00:00.000Z",
+  mailerConfigured: false,
   growth: {
     keywords: metric(3),
     projects: metric(2),
@@ -84,6 +85,24 @@ describe("AdminAdministration", () => {
     expect(
       within(table).getByRole("img", { name: "37.5% of instance reference cost" }).firstChild,
     ).toHaveStyle({ width: "37.5%" });
+  });
+
+  it("shows the self-host mailer warning with canonical docs", () => {
+    render(<AdminAdministration data={data} showMailerWarning />);
+
+    expect(
+      screen.getByRole("heading", { name: "Email provider not configured" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Configure email delivery" })).toHaveAttribute(
+      "href",
+      "https://bisibility.com/docs/self-hosting/email",
+    );
+  });
+
+  it("does not show the mailer warning for Cloud", () => {
+    render(<AdminAdministration data={data} showMailerWarning={false} />);
+
+    expect(screen.queryByRole("heading", { name: "Email provider not configured" })).toBeNull();
   });
 
   it("renders honest consumption empty state", () => {

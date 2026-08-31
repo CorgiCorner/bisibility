@@ -58,7 +58,7 @@ function normalizedSettings(providers: readonly IntegrationProviderData[]) {
 }
 
 function statusCopy(provider: IntegrationProviderData, activeIndex: number) {
-  if (provider.status !== "connected") return "Not connected";
+  if (provider.status !== "connected") return null;
   if (provider.enabled === false) return "Paused · not used for rank checks";
   return activeIndex === 0 ? "First provider" : `Fallback #${activeIndex + 1}`;
 }
@@ -175,9 +175,11 @@ export function SerpFallbackOrder({
               />
             )}
           </div>
-          <p className="m-0 mt-0.5 text-[11.5px] leading-5 text-fg-muted">
-            {statusCopy(provider, activeIndex)}
-          </p>
+          {statusCopy(provider, activeIndex) ? (
+            <p className="m-0 mt-0.5 text-[11.5px] leading-5 text-fg-muted">
+              {statusCopy(provider, activeIndex)}
+            </p>
+          ) : null}
         </div>
         {isConnected && canManageProviders ? (
           <div className="flex items-center gap-1.5">
@@ -217,7 +219,7 @@ export function SerpFallbackOrder({
             </ProjectReadOnlyTooltip>
           </div>
         ) : canManageProviders ? (
-          <span className="font-mono text-[10px] uppercase text-fg-muted">Connect below</span>
+          <span className="font-mono text-[10px] uppercase text-fg-muted">Not connected</span>
         ) : null}
       </li>
     );
@@ -232,7 +234,7 @@ export function SerpFallbackOrder({
           </MonoText>
           <MonoText muted>{pending ? "Saving order…" : `${active.length} active`}</MonoText>
         </div>
-        <p className="m-0 mt-1 text-[12.5px] leading-5 text-fg-muted">
+        <p className="m-0 mt-2 text-[12.5px] leading-5 text-fg-muted">
           Rank checks try active providers from top to bottom. If one fails or is rate-limited,
           bisibility continues with the next active provider.
         </p>

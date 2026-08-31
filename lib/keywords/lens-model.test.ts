@@ -126,7 +126,7 @@ describe("resolveActiveLens", () => {
 
   it("degrades an unknown device to the default without throwing", () => {
     expect(resolveActiveLens({ device: "tablet", location: "loc_us" })).toEqual({
-      device: "desktop",
+      device: "all",
       locationId: "loc_us",
     });
   });

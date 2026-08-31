@@ -12,7 +12,15 @@ vi.mock("@/components/shell/SidebarFooter", () => ({
   ),
 }));
 vi.mock("@/components/shell/SidebarNav", () => ({
-  SidebarNav: () => <span data-testid="sidebar-nav" />,
+  SidebarNav: ({
+    setupDoneCount,
+    setupTotalCount,
+  }: {
+    setupDoneCount?: number;
+    setupTotalCount?: number;
+  }) => (
+    <span data-setup-progress={`${setupDoneCount}/${setupTotalCount}`} data-testid="sidebar-nav" />
+  ),
 }));
 vi.mock("@/components/shell/WorkspaceSwitcher", () => ({
   WorkspaceSwitcher: ({ className, compact }: { className?: string; compact?: boolean }) => (
@@ -71,6 +79,23 @@ describe("MobileNav", () => {
       "focus-visible:outline-offset-2",
       "focus-visible:outline-accent-solid",
     );
+  });
+
+  it("threads setup progress into drawer navigation", () => {
+    render(
+      <MobileNav
+        activeProjectId="project-1"
+        canCreateWorkspace={false}
+        defaultOpen
+        projectRef="prj_1"
+        setupDoneCount={3}
+        setupTotalCount={4}
+        showGettingStarted
+        workspaces={[]}
+      />,
+    );
+
+    expect(screen.getByTestId("sidebar-nav")).toHaveAttribute("data-setup-progress", "3/4");
   });
 
   it("orders the compact switcher before navigation, with the branded footer last", () => {

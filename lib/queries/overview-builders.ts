@@ -8,7 +8,13 @@ export type { Check, Keyword, Trend } from "./overview-trend";
 export { buildTrend, buildTrendTakeaway } from "./overview-trend";
 
 export type Tone = "positive" | "negative" | "neutral";
-export type Kpi = { delta: string; deltaTone: Tone; label: string; value: string };
+export type Kpi = {
+  delta: string;
+  deltaAction?: "check_runs";
+  deltaTone: Tone;
+  label: string;
+  value: string;
+};
 export type Bucket = { color: string; count: number; label: string };
 export type MetricDistributionBucket = { count: number | null; max: number; min: number };
 export type OverviewMetrics = {
@@ -209,9 +215,9 @@ export function buildOverviewMetrics(snapshots: Snapshot[]): OverviewMetrics {
   const comparable = snapshots.filter((item) => item.position && item.previous);
   const currentComparable = comparable.map((item) => item.position as number);
   const previous = comparable.map((item) => item.previous as number);
-  const hasRankData =
-    positions.length > 0 || snapshots.some((item) => item.latestAttempt?.status === "completed");
-  const hasVisibilityData = snapshots.some((item) => item.latestAttempt?.status === "completed");
+  const hasCompletedChecks = snapshots.some((item) =>
+    item.keyword.rankChecks.some((check) => check.status === "completed"),
+  );
   const countAt = (limit: number, values = positions) =>
     values.filter((value) => value <= limit).length;
   const averagePositionDelta = comparable.length ? avg(previous) - avg(currentComparable) : null;
@@ -223,17 +229,17 @@ export function buildOverviewMetrics(snapshots: Snapshot[]): OverviewMetrics {
     averagePosition: positions.length ? avg(positions) : null,
     averagePositionDelta,
     positionDistribution: buckets.map(([, min, max]) => ({
-      count: hasRankData
+      count: hasCompletedChecks
         ? positions.filter((position) => position >= min && position <= max).length
         : null,
       max,
       min,
     })),
-    top3Count: hasRankData ? countAt(3) : null,
-    top10Count: hasRankData ? countAt(10) : null,
+    top3Count: hasCompletedChecks ? countAt(3) : null,
+    top10Count: hasCompletedChecks ? countAt(10) : null,
     top10Delta: comparable.length ? countAt(10, currentComparable) - countAt(10, previous) : null,
-    top100Count: hasRankData ? positions.length : null,
-    visibility: hasVisibilityData ? visibility(snapshots, "position") : null,
+    top100Count: hasCompletedChecks ? positions.length : null,
+    visibility: hasCompletedChecks ? visibility(snapshots, "position") : null,
     visibilityDelta,
   };
 }
@@ -241,22 +247,43 @@ export function buildOverviewMetrics(snapshots: Snapshot[]): OverviewMetrics {
 // biome-ignore format: dense KPI construction keeps this file under the project line cap.
 export function buildKpis(snapshots: Snapshot[], keywordCount: number, addedThisMonth: number): Kpi[] {
   const metrics = buildOverviewMetrics(snapshots);
-  const hasData = metrics.averagePosition !== null;
-  const hasVisibilityData = metrics.visibility !== null;
+  const hasCompletedChecks = metrics.visibility !== null;
+  const hasFailedChecks = snapshots.some((item) =>
+    item.keyword.rankChecks.some((check) => check.status === "failed"),
+  );
+  const hasPositionData = metrics.averagePosition !== null;
   const hasComparison = metrics.averagePositionDelta !== null;
   const averageDelta = metrics.averagePositionDelta ?? 0;
   const countDelta = (value: number) => (value > 0 ? `+${value}` : String(value));
-  const averageCopy = !hasData
-    ? averageDeltaCopy(false, averageDelta)
-    : hasComparison
+  const waitingCopy = hasFailedChecks ? "first check failed" : "awaiting first check";
+  const waitingTone = hasFailedChecks ? "negative" : "neutral";
+  const waitingAction = hasFailedChecks ? "check_runs" : undefined;
+  const waitingKpi = (label: string, value: string): Kpi => ({
+    delta: waitingCopy,
+    ...(waitingAction ? { deltaAction: waitingAction } : {}),
+    deltaTone: waitingTone,
+    label,
+    value,
+  });
+  const averageCopy = hasPositionData
+    ? hasComparison
       ? `${averageDeltaCopy(true, averageDelta)} vs previous ranked check`
-      : "new";
+      : "new"
+    : "no ranked positions";
   const topDeltaCopy = hasComparison ? countDelta(metrics.top10Delta ?? 0) : "new";
   const visibilityDelta = metrics.visibilityDelta ?? 0;
+  if (!hasCompletedChecks) {
+    return [
+      waitingKpi("Avg. position", "-"),
+      kpi("Tracked keywords", String(keywordCount), addedThisMonth ? `+${addedThisMonth} this month` : "no new this month"),
+      waitingKpi("In top 10", "-"),
+      waitingKpi("Visibility", "–"),
+    ];
+  }
   return [
-    kpi("Avg. position", hasData ? metrics.averagePosition?.toFixed(1) ?? "-" : "-", averageCopy, tone(averageDelta)),
+    kpi("Avg. position", hasPositionData ? metrics.averagePosition?.toFixed(1) ?? "-" : "-", averageCopy, tone(averageDelta)),
     kpi("Tracked keywords", String(keywordCount), addedThisMonth ? `+${addedThisMonth} this month` : "no new this month"),
-    kpi("In top 10", hasData ? String(metrics.top10Count) : "-", hasData ? topDeltaCopy : "no data", tone(metrics.top10Delta ?? 0)),
-    kpi("Visibility", hasVisibilityData ? `${Math.round(metrics.visibility ?? 0)}%` : "–", hasVisibilityData ? (hasComparison ? percentagePointCopy(visibilityDelta) : "new") : "awaiting first check", tone(visibilityDelta)),
+    kpi("In top 10", String(metrics.top10Count ?? 0), topDeltaCopy, tone(metrics.top10Delta ?? 0)),
+    kpi("Visibility", `${Math.round(metrics.visibility ?? 0)}%`, hasComparison ? percentagePointCopy(visibilityDelta) : "new", tone(visibilityDelta)),
   ];
 }

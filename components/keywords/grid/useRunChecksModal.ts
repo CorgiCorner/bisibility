@@ -7,10 +7,8 @@ import {
   keywordRunCheckId,
   keywordRunCheckOutcome,
 } from "@/components/keywords/keyword-run-check-result";
-import {
-  type RankCheckBatchPollAction,
-  useRankCheckBatchPoll,
-} from "@/components/keywords/use-rank-check-batch-poll";
+import type { RankCheckBatchPollAction } from "@/components/keywords/use-rank-check-batch-poll";
+import { useRankCheckBatchProgress } from "@/components/keywords/use-rank-check-batch-progress";
 import type { GetRankCheckStatusesResult } from "@/lib/actions/rank-check-status";
 import { type CostRateInfo, runCostCents } from "@/lib/cost-estimate/project-estimate";
 import type { KeywordRow } from "@/lib/queries/keywords";
@@ -174,11 +172,12 @@ export function useRunChecksModal({
     onSettled();
   }
 
-  useRankCheckBatchPoll({
+  useRankCheckBatchProgress({
     onTerminal: terminal,
     ...(pollAction ? { pollAction } : {}),
     projectId,
     rankCheckIds: activeRankCheckIds,
+    total: activeRankCheckIds.length,
   });
 
   return { close, confirm, flow, pendingIds, request, retry };

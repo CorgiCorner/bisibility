@@ -26,6 +26,7 @@ export type SearchInsightsBackfillBatchResult = {
   nextCursor: string | null;
   requestSets: number;
   batchElapsedMs: number;
+  waitingForFirstData?: boolean;
 };
 
 export type SearchInsightsBackfillWorkflowInput = SearchInsightsImportRef & {
@@ -40,7 +41,7 @@ export type SearchInsightsBackfillWorkflowInput = SearchInsightsImportRef & {
 
 export type SearchInsightsBackfillWorkflowResult = {
   days: number;
-  status: "completed" | "failed" | "paused";
+  status: "completed" | "failed" | "paused" | "waiting_for_first_data";
 };
 
 export type SearchInsightsSyncWorkflowInput = {

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
+import { serpProviderCapabilities } from "@/lib/providers/registry";
 import { trackedProjectDomain } from "@/lib/schemas/project";
 import { requireReadableProject } from "./_auth";
 import { getProjectCostContext } from "./cost-calculator";
@@ -14,7 +15,7 @@ function recentResultLimit(fetchedRowCount: number) {
 
 export async function getBacklinksPageContext(projectId: string) {
   const { project } = await requireReadableProject(projectId);
-  const [recentSnapshots, costContext] = await Promise.all([
+  const [recentSnapshots, costContext, providerConnections] = await Promise.all([
     prisma.backlinkSnapshot.findMany({
       distinct: ["target", "targetScope", "includeSubdomains"],
       orderBy: { fetchedAt: "desc" },
@@ -30,11 +31,26 @@ export async function getBacklinksPageContext(projectId: string) {
       where: { projectId: project.id },
     }),
     getProjectCostContext(project.publicId),
+    prisma.providerConnection.findMany({
+      select: { provider: true, status: true },
+      where: { enabled: true, kind: "serp", projectId: project.id },
+    }),
   ]);
+  const capableConnections = providerConnections.filter(
+    (connection) => serpProviderCapabilities(connection.provider)?.backlinks,
+  );
+  const providerStatus: "connected" | "needs_reauth" | "no_provider" = capableConnections.some(
+    (connection) => connection.status === "connected",
+  )
+    ? "connected"
+    : capableConnections.some((connection) => connection.status === "needs_reauth")
+      ? "needs_reauth"
+      : "no_provider";
 
   return {
     costContext,
     defaultTarget: trackedProjectDomain(project.domain) ?? "",
+    providerStatus,
     recentTargets: recentSnapshots.map((snapshot) => ({
       cachedUntil: snapshot.expiresAt.toISOString(),
       fetchedAt: snapshot.fetchedAt.toISOString(),

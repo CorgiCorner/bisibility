@@ -169,7 +169,7 @@ Distinguish three failure classes:
 
 | Class | Cause | Signal |
 | - | - | - |
-| Unconfigured transport | `EMAIL_PROVIDER` not set | Production refuses email-dependent flows; dev logs the message |
+| Unconfigured transport | `EMAIL_PROVIDER` not set | Login shows an unavailable state; direct sign-in code requests return `EMAIL_NOT_CONFIGURED` |
 | Provider rejection | Provider rejected the send | Error carries HTTP status and optional retry-after hint |
 | Daily anomaly brake | Per-recipient UTC-day budget reached | `EmailBudgetExceededError` for the category |
 

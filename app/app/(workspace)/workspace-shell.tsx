@@ -17,10 +17,16 @@ import { getInstanceAdminSession } from "@/lib/auth/instance-admin";
 import { gravatarUrl } from "@/lib/avatar/gravatar";
 import { isCloud } from "@/lib/deployment/deployment";
 import { workspaceRoleLine } from "@/lib/format/workspace-role-line";
+import {
+  isSetupAcknowledged,
+  SETUP_ACKNOWLEDGEMENT_COOKIE,
+} from "@/lib/getting-started/setup-acknowledgement";
+import { resolveSetupProgress } from "@/lib/getting-started/setup-steps";
 import { getWorkerLivenessDetails } from "@/lib/ops/liveness";
 import { compareWorkerTemporalIdentity } from "@/lib/ops/worker-temporal-identity";
 import { getQuerySession } from "@/lib/queries/_auth";
 import { getLatestCloudPackageExport } from "@/lib/queries/cloud-beta-export";
+import { loadSetupContext } from "@/lib/queries/setup-context";
 import { loadWorkspaceBudgetSummary } from "@/lib/queries/workspace-budget-summary";
 import { listWorkspaces } from "@/lib/queries/workspaces";
 import { temporalDeploymentConfig } from "@/lib/temporal/deployment-config";
@@ -45,20 +51,27 @@ export async function WorkspaceShell({
 
   const now = new Date();
   // Workspace chrome reads are independent. Self-host skips the Cloud-only audit query.
-  const [workspaces, budgetSummary, lastCloudExport, instanceAdminSession, supportWidget] =
-    await Promise.all([
-      listWorkspaces(),
-      loadWorkspaceBudgetSummary(activeProjectId, now),
-      isCloud ? getLatestCloudPackageExport(projectRef) : Promise.resolve(null),
-      getInstanceAdminSession(),
-      isCloud
-        ? appExtensions.renderSupportWidget({
-            email: session.user.email,
-            id: session.user.id,
-            name: session.user.name,
-          })
-        : Promise.resolve(null),
-    ]);
+  const [
+    workspaces,
+    budgetSummary,
+    lastCloudExport,
+    instanceAdminSession,
+    supportWidget,
+    setupContext,
+  ] = await Promise.all([
+    listWorkspaces(),
+    loadWorkspaceBudgetSummary(activeProjectId, now),
+    isCloud ? getLatestCloudPackageExport(projectRef) : Promise.resolve(null),
+    getInstanceAdminSession(),
+    isCloud
+      ? appExtensions.renderSupportWidget({
+          email: session.user.email,
+          id: session.user.id,
+          name: session.user.name,
+        })
+      : Promise.resolve(null),
+    loadSetupContext(projectRef),
+  ]);
   const workerLiveness = instanceAdminSession ? await getWorkerLivenessDetails() : null;
   const temporalIdentityComparison = workerLiveness
     ? compareWorkerTemporalIdentity(temporalDeploymentConfig(), workerLiveness)
@@ -75,6 +88,15 @@ export async function WorkspaceShell({
   const cloudBetaDismissed = isCloudBetaDismissed(
     cookieStore.get(CLOUD_BETA_DISMISSAL_COOKIE)?.value,
   );
+  const setupProgress = resolveSetupProgress(setupContext);
+  const setupCompleted = setupProgress.doneCount === setupProgress.totalCount;
+  const showGettingStarted =
+    !setupCompleted ||
+    !isSetupAcknowledged(
+      cookieStore.get(SETUP_ACKNOWLEDGEMENT_COOKIE)?.value,
+      session.user.id,
+      projectRef,
+    );
 
   // Header meta + user role line follow the active workspace.
   const roleLine = workspaceRoleLine(active.role, active.name, active.domain);
@@ -101,6 +123,9 @@ export async function WorkspaceShell({
               activeProjectId={active.publicId}
               canCreateWorkspace={canCreateWorkspace}
               projectRef={projectRef}
+              setupDoneCount={setupProgress.doneCount}
+              setupTotalCount={setupProgress.totalCount}
+              showGettingStarted={showGettingStarted}
               showHostedLinks={isCloud}
               user={user}
               version={appVersion()}
@@ -131,6 +156,9 @@ export async function WorkspaceShell({
                 activeProjectId={active.publicId}
                 canCreateWorkspace={canCreateWorkspace}
                 projectRef={projectRef}
+                setupDoneCount={setupProgress.doneCount}
+                setupTotalCount={setupProgress.totalCount}
+                showGettingStarted={showGettingStarted}
                 showHostedLinks={isCloud}
                 user={user}
                 workspaces={workspaces}

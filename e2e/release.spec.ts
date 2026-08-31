@@ -77,7 +77,6 @@ async function clickThroughAppPages(page: Page, keyword: string, projectRef: str
   });
 
   await expectAppPage(page, `/app/${projectRef}/rank-tracker`, async () => {
-    await page.getByRole("button", { name: "Show all locations & devices", exact: true }).click();
     await expect(page.getByText(keyword).first()).toBeVisible();
   });
   await page.getByRole("link", { name: "View keyword details" }).click();

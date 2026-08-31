@@ -90,6 +90,23 @@ function renderNoData(overrides = {}) {
 }
 
 describe("SearchInsightsNoDataState", () => {
+  it("renders waiting for first data as its own honest empty state", () => {
+    const { container } = renderNoData({
+      completedDays: 0,
+      pausedReason: null,
+      state: "waiting_for_first_data",
+    });
+
+    expect(screen.getByRole("heading", { name: "Waiting for search data" })).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Google has not reported any search data for this property yet. We check daily and will import automatically when it appears.",
+      ),
+    ).toBeInTheDocument();
+    expect(container.textContent).not.toMatch(/0 of 0|\bETA\b|completion|first-28/i);
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+  });
+
   it("renders the exact actor-neutral paused contract with exactly one Resume", () => {
     const { container } = renderNoData();
     expect(screen.getByRole("heading", { name: "Backfill paused" })).toBeInTheDocument();

@@ -153,6 +153,7 @@ export function CloudBetaBanner({
             data-testid="cloud-beta-actions"
           >
             <Button
+              className="no-underline hover:underline"
               onClick={() => setActiveModal("coverage")}
               size="sm"
               sx={quietAction}
@@ -161,6 +162,7 @@ export function CloudBetaBanner({
               What beta covers
             </Button>
             <Button
+              className="no-underline hover:underline"
               loading={backupLoading}
               loadingLabel="Loading..."
               onClick={() => void openBackup()}

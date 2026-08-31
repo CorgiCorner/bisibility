@@ -1,9 +1,16 @@
 import {
   estimateWorkspaceMenuHeight,
   resolveWorkspaceMenuPlacement,
+  WORKSPACE_MENU_WIDTH,
   workspaceMenuOrigins,
 } from "@/components/shell/workspace-menu-placement";
 import { describe, expect, it } from "vitest";
+
+describe("workspace menu dimensions", () => {
+  it("uses the measured popup width", () => {
+    expect(WORKSPACE_MENU_WIDTH).toBe(320);
+  });
+});
 
 describe("resolveWorkspaceMenuPlacement", () => {
   it("opens upward when the menu clears the top of the viewport", () => {
@@ -22,14 +29,15 @@ describe("resolveWorkspaceMenuPlacement", () => {
 });
 
 describe("estimateWorkspaceMenuHeight", () => {
-  it("grows with every row", () => {
+  it("grows with every row while retaining the search header", () => {
+    expect(estimateWorkspaceMenuHeight(0, 0)).toBe(67);
     expect(estimateWorkspaceMenuHeight(4, 2) - estimateWorkspaceMenuHeight(3, 2)).toBe(52);
     expect(estimateWorkspaceMenuHeight(3, 2) - estimateWorkspaceMenuHeight(3, 1)).toBe(50);
   });
 
   it("lands within a few px of the rendered menu", () => {
-    // Three workspaces plus settings and create measures 315.5px in the browser.
-    expect(estimateWorkspaceMenuHeight(3, 2)).toBe(315);
+    // Three workspaces plus settings and create measures about 323px with the search header.
+    expect(estimateWorkspaceMenuHeight(3, 2)).toBe(323);
   });
 });
 

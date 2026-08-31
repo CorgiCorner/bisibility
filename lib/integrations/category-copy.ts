@@ -9,8 +9,7 @@ export type IntegrationCategoryCopy = {
 };
 
 export const SERP_INTEGRATION_CATEGORY_COPY = {
-  description:
-    "Connect providers that run Google rank checks for tracked keywords. Enabled providers form a priority-ordered fallback chain, and you pay each provider directly.",
+  description: "Connect providers that run Google rank checks in Rank Tracker.",
   eyebrow: "Google rank checks - priority fallback",
   title: "SERP providers",
 } satisfies IntegrationCategoryCopy;

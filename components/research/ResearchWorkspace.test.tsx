@@ -632,6 +632,9 @@ describe("ResearchWorkspace", () => {
       context: { ...context, connections: [] },
     });
 
+    expect(screen.getByLabelText("research disabled")).toHaveTextContent("true");
+    expect(screen.getByLabelText("research lookup disabled")).toHaveTextContent("true");
+    expect(screen.getByRole("button", { name: "Run research" })).toBeDisabled();
     expect(screen.getByRole("button", { name: /^saved seed/i })).toBeDisabled();
     expect(screen.getByText("Connect DataForSEO to replay recent searches.")).toBeInTheDocument();
     expect(researchAction).not.toHaveBeenCalled();

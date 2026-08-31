@@ -2,6 +2,7 @@ import "server-only";
 
 import { getInstanceAdminSession } from "@/lib/auth/instance-admin";
 import { prisma } from "@/lib/db/prisma";
+import { isEmailConfigured } from "@/lib/email/registry";
 import {
   aggregateProviderReferenceUsage,
   type ReferenceUsageGroup,
@@ -34,6 +35,7 @@ export type TopProjectConsumption = {
 export type InstanceAdminAdministration = {
   activeAccountsApprox: number;
   generatedAt: string;
+  mailerConfigured: boolean;
   growth: {
     keywords: GrowthMetric;
     projects: GrowthMetric;
@@ -209,6 +211,7 @@ export async function getInstanceAdminAdministration(
       rankChecks: growthMetric(rankChecks, currentStart, priorStart),
       users: growthMetric(users, currentStart, priorStart),
     },
+    mailerConfigured: isEmailConfigured(),
     monthStart: monthStart.toISOString(),
     topConsumption,
   };

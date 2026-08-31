@@ -20,6 +20,15 @@ describe("AppHeaderTitle", () => {
     expect(screen.queryByText("Project, providers, team and preferences.")).not.toBeInTheDocument();
   });
 
+  it("omits the Rank Tracker subtitle", () => {
+    setNavigationState({ pathname: "/app/prj_7Kd2Qf9m/rank-tracker" });
+
+    render(<AppHeaderTitle />);
+
+    expect(screen.getByRole("heading", { name: "Rank Tracker" })).toBeVisible();
+    expect(screen.queryByText(/tracked keyword/i)).not.toBeInTheDocument();
+  });
+
   it("uses descriptive typography for the Install subtitle", () => {
     setNavigationState({ pathname: "/app/prj_7Kd2Qf9m/install" });
 

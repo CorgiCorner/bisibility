@@ -48,13 +48,11 @@ describe("StepFirstCheck", () => {
       listFirstCheckCandidatesAction,
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Keyword used for the sample checks" }));
-    fireEvent.click(screen.getByRole("menuitem", { name: "seo api" }));
     fireEvent.click(screen.getByRole("button", { name: "Run a test check (1 keyword)" }));
 
     await waitFor(() =>
       expect(listFirstCheckCandidatesAction).toHaveBeenCalledWith({
-        keywordText: "seo api",
+        keywordText: "rank tracker",
         limit: 4,
         projectId: "prj_1",
       }),
@@ -75,7 +73,9 @@ describe("StepFirstCheck", () => {
     });
 
     expect(screen.queryByText("First available keyword")).not.toBeInTheDocument();
-    expect(await screen.findByText("persisted rank tracker")).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Run a test check (1 keyword)" })).toBeEnabled(),
+    );
     fireEvent.click(screen.getByRole("button", { name: "Run a test check (1 keyword)" }));
 
     await waitFor(() => expect(listFirstCheckCandidatesAction).toHaveBeenCalledTimes(1));
@@ -96,8 +96,9 @@ describe("StepFirstCheck", () => {
     renderReadyStep({ keywordDraft: undefined, listFirstCheckCandidatesAction });
     expect(screen.getByRole("button", { name: "Run a test check (1 keyword)" })).toBeDisabled();
     fireEvent.click(screen.getByRole("button", { name: "Retry loading keyword" }));
-    expect(await screen.findByText("persisted rank tracker")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Run a test check (1 keyword)" })).toBeEnabled();
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Run a test check (1 keyword)" })).toBeEnabled(),
+    );
     expect(listFirstCheckCandidatesAction).toHaveBeenCalledTimes(1);
   });
 
@@ -131,7 +132,9 @@ describe("StepFirstCheck", () => {
     expect(screen.getByLabelText("Desktop device")).toBeInTheDocument();
     expect(screen.getByLabelText("Mobile device")).toBeInTheDocument();
     expect(screen.getAllByText("United States")).toHaveLength(2);
-    expect(screen.getByLabelText("Markets: United States / English")).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("Tracking: 3 keywords · Google · United States (English) · 1 device"),
+    ).toBeInTheDocument();
 
     first.resolve({
       position: null,

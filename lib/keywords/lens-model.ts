@@ -20,7 +20,7 @@ export type LensLocationOption = {
 };
 
 const DEVICE_VALUES = new Set<LensDevice>(["all", "desktop", "mobile"]);
-export const DEFAULT_LENS_DEVICE: LensDevice = "desktop";
+export const DEFAULT_LENS_DEVICE: LensDevice = "all";
 
 function rowDevice(value: string): "desktop" | "mobile" | null {
   const lowered = value.toLowerCase();

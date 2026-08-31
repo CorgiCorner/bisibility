@@ -21,7 +21,9 @@ export type TeamSettingsContentProps = {
       email: string;
       projectId: string;
       role: AssignableRole;
-    }) => Promise<{ inviteLink: string }>;
+    }) => Promise<
+      { inviteLink: string; status?: "success" } | { message: string; status: "error" }
+    >;
     removeMember: MemberAction;
     resendInvite: InviteAction;
     revokeInvite: InviteAction;

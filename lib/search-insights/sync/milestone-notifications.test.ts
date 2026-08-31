@@ -17,6 +17,9 @@ vi.mock("@/lib/search-insights/queries/import-observability-db", () => ({
 const { deliverSearchImportMilestone } = await import("./milestone-notifications");
 const imported = {
   id: "imp_1",
+  firstDataDate: new Date("2026-07-06"),
+  firstDataDetectedAt: new Date("2026-07-08T10:00:00.000Z"),
+  waitingForFirstDataAt: new Date("2026-07-07T10:00:00.000Z"),
   source: "gsc",
   state: "running",
   daysTotal: 93,
@@ -51,6 +54,33 @@ describe("deliverSearchImportMilestone", () => {
     );
     expect(call.data[0].payload.href).toBe("/app/prj_public/search-console");
   });
+  it("delivers first_data only after a waiting import records its first durable day", async () => {
+    await expect(
+      deliverSearchImportMilestone({ importId: "imp_1", milestone: "first_data" }),
+    ).resolves.toEqual({ delivered: 2 });
+
+    const call = mocks.createMany.mock.calls[0][0];
+    expect(call.skipDuplicates).toBe(true);
+    expect(call.data[0]).toMatchObject({
+      idempotencyKey: "search-import:imp_1:first_data",
+      title: "Your site appeared in Google search - first data imported for example.com.",
+    });
+    expect(mocks.observability).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    { firstDataDate: null, firstDataDetectedAt: new Date("2026-07-08T10:00:00.000Z") },
+    { firstDataDate: new Date("2026-07-06"), firstDataDetectedAt: null },
+    { waitingForFirstDataAt: null },
+  ])("rejects first_data until waiting and durable data are both recorded", async (fields) => {
+    mocks.findUnique.mockResolvedValue({ ...imported, ...fields });
+
+    await expect(
+      deliverSearchImportMilestone({ importId: "imp_1", milestone: "first_data" }),
+    ).resolves.toEqual({ delivered: 0 });
+    expect(mocks.createMany).not.toHaveBeenCalled();
+  });
+
   it("reports only newly created deliveries on partial retry and whole-activity repeat", async () => {
     mocks.createMany.mockResolvedValueOnce({ count: 1 }).mockResolvedValueOnce({ count: 0 });
     await expect(

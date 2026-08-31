@@ -3,8 +3,6 @@ import type { KeywordRow } from "@/lib/queries/keywords";
 
 type FacetValue = { count: number; label: string };
 
-const defaultTags = ["High intent", "Product", "Docs", "Comparison", "Blog", "Infra", "Brand"];
-
 function inPositionBucket(position: number, bucket: PositionBucketId) {
   if (bucket === "top3") return position <= 3;
   if (bucket === "top10") return position <= 10;
@@ -12,11 +10,13 @@ function inPositionBucket(position: number, bucket: PositionBucketId) {
   return position > 50 && position <= 100;
 }
 
-function countedValues(rows: KeywordRow[], values: readonly string[]) {
-  return values.map((label) => ({
-    count: rows.filter((row) => row.tags.includes(label)).length,
-    label,
-  }));
+function tagCounts(rows: KeywordRow[]): FacetValue[] {
+  const counts = new Map<string, number>();
+  for (const row of rows) {
+    const rowTags = new Set(row.tags.map((tag) => tag.trim()).filter(Boolean));
+    for (const tag of rowTags) counts.set(tag, (counts.get(tag) ?? 0) + 1);
+  }
+  return [...counts].map(([label, count]) => ({ count, label }));
 }
 
 function metadataCounts(rows: KeywordRow[], field: "intent" | "topic"): FacetValue[] {
@@ -32,17 +32,13 @@ function metadataCounts(rows: KeywordRow[], field: "intent" | "topic"): FacetVal
 }
 
 export function getFilterFacets(rows: KeywordRow[]) {
-  const tagSet = new Set(defaultTags);
-  for (const row of rows) {
-    for (const tag of row.tags) tagSet.add(tag);
-  }
   return {
     intents: metadataCounts(rows, "intent"),
     positions: positionBuckets.map((bucket) => ({
       ...bucket,
       count: rows.filter((row) => inPositionBucket(row.position, bucket.id)).length,
     })),
-    tags: countedValues(rows, [...tagSet]),
+    tags: tagCounts(rows),
     topics: metadataCounts(rows, "topic"),
   };
 }

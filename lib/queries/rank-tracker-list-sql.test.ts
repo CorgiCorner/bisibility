@@ -107,9 +107,11 @@ describe("rank tracker list SQL", () => {
   it("computes counts and fully filtered facets outside selected pagination", () => {
     const { sql } = rendered();
     expect(sql.indexOf("COUNT(*) FROM matched")).toBeGreaterThan(sql.indexOf("LIMIT"));
-    expect(sql).toContain("FROM lens_keywords k CROSS JOIN LATERAL unnest(k.tags) WITH ORDINALITY");
-    expect(sql).toContain("('High intent', 1), ('Product', 2), ('Docs', 3)");
-    expect(sql).toContain('MIN("sourceOrdinal") ordinal');
+    expect(sql).toContain("FROM lens_keywords k");
+    expect(sql).toContain("CROSS JOIN LATERAL unnest(k.tags) WITH ORDINALITY");
+    expect(sql).toContain("COUNT(DISTINCT k.id)::int count");
+    expect(sql).toContain("WHERE btrim(tag.label) <> ''");
+    expect(sql).not.toContain("default_tags");
     expect(sql).toContain("FROM project_keywords GROUP BY 1,2,3");
   });
 
@@ -141,9 +143,7 @@ describe("rank tracker list SQL", () => {
     expect(sql).toContain(
       'row_number() OVER (ORDER BY k."createdAt" DESC, k.id DESC) AS "sourceOrdinal"',
     );
-    expect(sql).toContain(
-      'ORDER BY MIN(occurrences."sourceOrdinal"), MIN(occurrences."tagOrdinal")',
-    );
+    expect(sql).toContain('MIN(k."sourceOrdinal" * 1000 + tag.ordinal)::bigint ordinal');
     expect(sql).toContain("jsonb_build_object('label', topic, 'count', count) ORDER BY ordinal");
     expect(sql).toContain("jsonb_build_object('label', intent, 'count', count) ORDER BY ordinal");
   });

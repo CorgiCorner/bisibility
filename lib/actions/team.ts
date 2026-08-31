@@ -1,5 +1,9 @@
 "use server";
 
+import {
+  type InviteMailerNotConfiguredError,
+  isInviteMailerNotConfiguredError,
+} from "@/lib/actions/team-invite-delivery";
 import { writeAudit } from "@/lib/auth/audit";
 import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/prisma";
@@ -32,6 +36,11 @@ const changeMemberRoleSchema = z.object({ memberId: id, projectId: id, role: inv
 const memberIdSchema = z.object({ memberId: id, projectId: id });
 
 type MemberRow = { id: string; publicId: string | null; role: string; userId: string };
+type InviteActionError = { message: string; status: "error" };
+
+function inviteMailerActionError(error: InviteMailerNotConfiguredError): InviteActionError {
+  return { message: error.message, status: "error" };
+}
 
 async function auditAndRevalidate(input: Parameters<typeof writeAudit>[0]) {
   await writeAudit(input);
@@ -60,12 +69,17 @@ function requiredPublicId(value: string | null, prefix: "mbr" | "usr", resource:
 export async function inviteMember(input: unknown) {
   const data = parseActionInput(inviteMemberSchema, input);
   const actor = await getActionActor();
-  const result = await inviteTeamMember(data, {
-    actor,
-    auditActorId: actor.id,
-  });
-  revalidateSettingsViews();
-  return result;
+  try {
+    const result = await inviteTeamMember(data, {
+      actor,
+      auditActorId: actor.id,
+    });
+    revalidateSettingsViews();
+    return { ...result, status: "success" as const };
+  } catch (error) {
+    if (isInviteMailerNotConfiguredError(error)) return inviteMailerActionError(error);
+    throw error;
+  }
 }
 
 export async function acceptInvite(input: unknown) {
@@ -138,9 +152,14 @@ export async function revokeInvite(input: unknown) {
 export async function resendInvite(input: unknown) {
   const data = parseActionInput(inviteIdSchema, input);
   const actor = await getActionActor();
-  const result = await resendTeamInvite(data, { actor, auditActorId: actor.id });
-  revalidateSettingsViews();
-  return result;
+  try {
+    const result = await resendTeamInvite(data, { actor, auditActorId: actor.id });
+    revalidateSettingsViews();
+    return { ...result, status: "success" as const };
+  } catch (error) {
+    if (isInviteMailerNotConfiguredError(error)) return inviteMailerActionError(error);
+    throw error;
+  }
 }
 
 export async function changeMemberRole(input: unknown) {

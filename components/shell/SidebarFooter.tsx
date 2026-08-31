@@ -26,7 +26,11 @@ export function SidebarFooter({
     <div
       className={`flex flex-none items-center pt-3 ${collapsed ? "justify-center" : "justify-between px-[11px]"}`}
     >
-      {showBrand && !collapsed ? <BrandLockup color="var(--fg-muted)" size="xs" /> : null}
+      {showBrand && !collapsed ? (
+        <span className="ml-[7px] inline-flex">
+          <BrandLockup color="var(--fg-muted)" size="xs" />
+        </span>
+      ) : null}
       {version ? (
         <p
           className={`m-0 flex h-4 items-center font-mono leading-4 text-fg-muted ${
