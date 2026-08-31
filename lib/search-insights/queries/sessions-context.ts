@@ -12,6 +12,7 @@ export type SearchInsightsImportState = {
   daysTotal: number;
   earliestTargetDate: string | null;
   finalizedThroughDate: string | null;
+  firstDataDate?: string | null;
   lastActivityAt?: string | null;
   lastProbeAt: string | null;
   lastSyncStartedAt: string | null;
@@ -44,6 +45,7 @@ export function importStateView(
     daysTotal: number;
     earliestTargetDate: Date | null;
     finalizedThroughDate: Date | null;
+    firstDataDate?: Date | null;
     lastProbeAt: Date | null;
     lastSyncStartedAt: Date | null;
     newestFinalizedDate: Date | null;
@@ -81,6 +83,7 @@ export function importStateView(
     daysTotal: row.daysTotal,
     earliestTargetDate: row.earliestTargetDate ? dateKey(row.earliestTargetDate) : null,
     finalizedThroughDate: row.finalizedThroughDate ? dateKey(row.finalizedThroughDate) : null,
+    firstDataDate: row.firstDataDate ? dateKey(row.firstDataDate) : null,
     lastActivityAt: observability.lastActivityAt,
     lastProbeAt: row.lastProbeAt?.toISOString() ?? null,
     lastSyncStartedAt: row.lastSyncStartedAt?.toISOString() ?? null,

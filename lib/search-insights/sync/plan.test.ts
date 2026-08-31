@@ -24,6 +24,30 @@ describe("planBackfill", () => {
     expect(RETENTION_MONTHS).toBe(16);
   });
 
+  it("clamps the retention floor to the property's first day with impressions", () => {
+    expect(
+      planBackfill({
+        firstDataDate: "2026-05-12",
+        newestFinalizedDate: "2026-07-07",
+      }),
+    ).toEqual({
+      daysTotal: 57,
+      earliestTargetDate: "2026-05-12",
+    });
+  });
+
+  it("does not widen a retention window when first data predates its floor", () => {
+    expect(
+      planBackfill({
+        firstDataDate: "2024-01-01",
+        newestFinalizedDate: "2026-07-07",
+      }),
+    ).toEqual({
+      daysTotal: 488,
+      earliestTargetDate: "2025-03-07",
+    });
+  });
+
   it("clamps to the last day of a shorter target month", () => {
     expect(planBackfill({ newestFinalizedDate: "2026-03-31", retentionMonths: 1 })).toEqual({
       daysTotal: 32,

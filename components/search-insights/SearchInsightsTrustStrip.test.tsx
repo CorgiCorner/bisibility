@@ -296,6 +296,28 @@ describe("SearchInsightsTrustStrip", () => {
     expect(container.textContent).not.toContain(". ·");
   });
 
+  it("renders waiting for first data as a dedicated sentence only", () => {
+    const { container } = renderStrip({
+      providerAvailableThrough: null,
+      importState: {
+        ...importState,
+        completedDays: 0,
+        daysTotal: 0,
+        etaLabel: "about 3 days left",
+        state: "waiting_for_first_data",
+      },
+    });
+
+    expect(
+      screen.getByText(
+        "Google has not reported any search data for this property yet. We check daily and will import automatically when it appears.",
+      ),
+    ).toBeInTheDocument();
+    expect(container.textContent).not.toMatch(/0 of 0|about 3 days|completion|first-28/i);
+    expect(container.querySelector('[data-startup-segment="progress"]')).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Pause|Refresh/ })).not.toBeInTheDocument();
+  });
+
   it("keeps startup ownership guidance while finalized sync uses compact status controls", () => {
     const expected =
       "Google only keeps 16 months, so we are copying all of it into your database now. The first 28-day view unlocks as soon as its finalized days are ready; older months keep loading in the background.";

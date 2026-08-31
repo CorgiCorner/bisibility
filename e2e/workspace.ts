@@ -104,9 +104,9 @@ export async function completeOnboarding(page: Page, suffix: string) {
 
   await page.getByPlaceholder("One keyword per line").fill(keyword);
   await clickWizardPrimary(page, "Continue", /[?&]step=4(?:&|$)/);
-  await clickWizardPrimary(page, "Open app", /\/app\/prj_[^/]+\/dashboard$/);
+  await clickWizardPrimary(page, "Open app", /\/app\/prj_[^/]+\/getting-started$/);
 
   const projectRef = new URL(page.url()).pathname.split("/")[2];
-  if (!projectRef) throw new Error("Onboarding did not land on a project-scoped dashboard.");
+  if (!projectRef) throw new Error("Onboarding did not land on project-scoped getting started.");
   return { keyword, projectRef };
 }

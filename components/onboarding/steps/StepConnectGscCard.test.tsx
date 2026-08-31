@@ -11,7 +11,7 @@ describe("StepConnectGscCard", () => {
       </>,
     );
 
-    expect(screen.getByText("Setup required").closest("span")).toHaveClass("h-5");
+    expect(screen.queryByText("Setup required")).not.toBeInTheDocument();
     expect(screen.queryByText("Recommended")).not.toBeInTheDocument();
     expect(screen.queryByText("free", { exact: true })).not.toBeInTheDocument();
     expect(screen.getByRole("alert")).toHaveTextContent("GOOGLE_CLIENT_SECRET");

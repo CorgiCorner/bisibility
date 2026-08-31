@@ -1,7 +1,9 @@
 import { Card } from "@/components/ui";
+import { rankTrackerTabPath } from "@/lib/routing/app-path";
+import Link from "next/link";
 import type { KpiDeltaTone, OverviewKpi } from "./types";
 
-export type KpiCardProps = OverviewKpi;
+export type KpiCardProps = OverviewKpi & { projectRef?: string };
 
 const deltaToneClassName = {
   positive: "text-green-text",
@@ -9,7 +11,14 @@ const deltaToneClassName = {
   neutral: "text-fg-muted",
 } satisfies Record<KpiDeltaTone, string>;
 
-export function KpiCard({ label, value, delta, deltaTone }: Readonly<KpiCardProps>) {
+export function KpiCard({
+  label,
+  value,
+  delta,
+  deltaAction,
+  deltaTone,
+  projectRef,
+}: Readonly<KpiCardProps>) {
   const valueClassName = value === "-" || value === "–" ? "text-fg-muted" : "text-fg";
 
   return (
@@ -24,11 +33,20 @@ export function KpiCard({ label, value, delta, deltaTone }: Readonly<KpiCardProp
           >
             {value}
           </span>
-          <span
-            className={`ml-2 align-baseline font-mono text-xs font-semibold ${deltaToneClassName[deltaTone]}`}
-          >
-            {delta}
-          </span>
+          {deltaAction === "check_runs" && projectRef ? (
+            <Link
+              className={`ml-2 align-baseline font-mono text-xs font-semibold hover:underline ${deltaToneClassName[deltaTone]}`}
+              href={rankTrackerTabPath(projectRef, "checks")}
+            >
+              {delta}
+            </Link>
+          ) : (
+            <span
+              className={`ml-2 align-baseline font-mono text-xs font-semibold ${deltaToneClassName[deltaTone]}`}
+            >
+              {delta}
+            </span>
+          )}
         </span>
       </div>
     </Card>

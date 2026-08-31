@@ -163,9 +163,9 @@ describe("KeywordsPage tabs", () => {
       locations: [],
       matchedTargetCount: 0,
       page: 1,
-      pageCount: 0,
+      pageCount: 1,
       pageSize: 25,
-      resolvedLens: { device: "desktop", locationId: null },
+      resolvedLens: { device: "all", locationId: null },
       rows: [],
       totalCount: 9,
     });
@@ -386,7 +386,7 @@ describe("KeywordsPage tabs", () => {
       renderPage({ action: "filter", add: "1", device: "tablet", q: "", tab: "tracked", tags: "" }),
     ).rejects.toThrow("NEXT_REDIRECT:");
     const href = String(redirect.mock.calls[0]?.[0]);
-    expect(href).toContain("device=desktop");
+    expect(href).toContain("device=all");
     expect(href).toContain("q=");
     expect(href).toContain("tags=");
     expect(href).toContain("tab=tracked");

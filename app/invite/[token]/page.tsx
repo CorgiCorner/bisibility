@@ -55,7 +55,7 @@ const invalidInviteCopy = {
 } satisfies Record<InviteStatus, { body: string; title: string }>;
 
 export const metadata: Metadata = createNoindexMetadata({
-  title: "Team invite | bisibility",
+  title: "Team invite",
   description: "Accept a bisibility project invitation.",
 });
 

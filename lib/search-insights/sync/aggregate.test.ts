@@ -135,7 +135,7 @@ describe("fetchAggregateRange", () => {
         session,
         start,
       }),
-    ).resolves.toEqual({ days: 0 });
+    ).resolves.toEqual({ kind: "no_data", returnedDays: 0 });
 
     expect(mocks.fetchEnvelope).toHaveBeenCalledTimes(1);
     expect(mocks.fetchEnvelope).toHaveBeenCalledWith({
@@ -162,7 +162,11 @@ describe("fetchAggregateRange", () => {
         session,
         start: "2026-07-06",
       }),
-    ).resolves.toEqual({ days: 2 });
+    ).resolves.toEqual({
+      firstDataDate: "2026-07-06",
+      kind: "data_found",
+      returnedDays: 2,
+    });
 
     // The returned days are replaced as a slice: a re-fetch is authoritative for them.
     expect(mocks.tx.searchAnalyticsDaily.deleteMany).toHaveBeenCalledWith({
@@ -216,7 +220,11 @@ describe("fetchAggregateRange", () => {
         session,
         start: "2025-11-01",
       }),
-    ).resolves.toEqual({ days: 250 });
+    ).resolves.toEqual({
+      firstDataDate: "2025-11-02",
+      kind: "data_found",
+      returnedDays: 250,
+    });
 
     // Three bounded transactions, four statements each; the connect-time range must not cost
     // one call per day.
@@ -224,6 +232,26 @@ describe("fetchAggregateRange", () => {
     expect(mocks.tx.searchAnalyticsDaily.createMany).toHaveBeenCalledTimes(3);
     expect(mocks.tx.searchAnalyticsSyncPartition.createMany).toHaveBeenCalledTimes(3);
     expect(mocks.tx.searchAnalyticsDaily.createMany.mock.calls[0]?.[0].data).toHaveLength(100);
+  });
+
+  it("ignores valid zero-impression rows when discovering the first data date", async () => {
+    mocks.fetchEnvelope.mockResolvedValue({
+      rows: [dayRow("2026-05-10", 0), dayRow("2026-05-12", 3), dayRow("2026-05-11", 0)],
+    });
+
+    await expect(
+      fetchAggregateRange({
+        end: "2026-05-12",
+        projectId: "project_1",
+        property,
+        session,
+        start: "2026-05-10",
+      }),
+    ).resolves.toEqual({
+      firstDataDate: "2026-05-12",
+      kind: "data_found",
+      returnedDays: 3,
+    });
   });
 
   it("stores nothing for a property the session no longer points at", async () => {
@@ -255,7 +283,7 @@ describe("fetchAggregateRange", () => {
         session,
         start: "2026-07-06",
       }),
-    ).resolves.toEqual({ days: 0 });
+    ).resolves.toEqual({ kind: "no_data", returnedDays: 0 });
     expect(mocks.tx.searchAnalyticsDaily.createMany).not.toHaveBeenCalled();
   });
 });

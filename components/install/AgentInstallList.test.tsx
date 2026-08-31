@@ -43,13 +43,19 @@ function agentButton(label: string) {
 
 function commandBlock(command: string) {
   return screen.getByText(
-    (_content, element) => element?.tagName === "PRE" && element.textContent === command,
+    (_content, element) =>
+      element?.tagName === "PRE" &&
+      element.getAttribute("aria-hidden") !== "true" &&
+      element.textContent === command,
   );
 }
 
 function queryCommandBlock(command: string) {
   return screen.queryByText(
-    (_content, element) => element?.tagName === "PRE" && element.textContent === command,
+    (_content, element) =>
+      element?.tagName === "PRE" &&
+      element.getAttribute("aria-hidden") !== "true" &&
+      element.textContent === command,
   );
 }
 
@@ -62,6 +68,21 @@ describe("AgentInstallList", () => {
     expect(agentButton("Cursor")).toHaveAttribute("aria-expanded", "false");
     expect(agentButton("Claude Desktop")).toHaveAttribute("aria-expanded", "false");
     expect(agentButton("Any MCP client")).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("keeps every disclosure panel mounted for smooth height transitions", () => {
+    render(<AgentInstallList mcpUrl={mcpUrl} />);
+
+    for (const agent of AGENTS) {
+      const panel = document.getElementById(`install-agent-${agent.id}`);
+      expect(panel).not.toBeNull();
+      expect(panel).toHaveClass(
+        "grid",
+        "overflow-hidden",
+        "motion-safe:[transition:grid-template-rows_.24s_cubic-bezier(.32,.72,0,1),opacity_.18s_ease]",
+      );
+      expect(panel).toHaveAttribute("aria-hidden", agent.id === "claude-code" ? "false" : "true");
+    }
   });
 
   it("opens Codex and closes Claude Code", () => {
@@ -144,7 +165,7 @@ describe("AgentInstallList", () => {
     expect(JSON.parse(command ?? "")).toEqual({
       mcpServers: { bisibility: { url: mcpUrl } },
     });
-    expect(mocks.copyButton).toHaveBeenLastCalledWith({
+    expect(mocks.copyButton).toHaveBeenCalledWith({
       label: "Copy Cursor command",
       text: EXPECTED_COMMANDS.cursor,
     });

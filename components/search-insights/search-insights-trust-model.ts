@@ -1,16 +1,25 @@
-import { formatPacificTimestampValue } from "@/lib/search-insights/dates";
+import { formatDateLabel, formatPacificTimestampValue } from "@/lib/search-insights/dates";
 import type { SearchInsightsImportState } from "@/lib/search-insights/queries/context";
-import { FRESHNESS_UNKNOWN } from "./search-insights-copy";
+import { FRESHNESS_UNKNOWN, WAITING_FOR_FIRST_DATA } from "./search-insights-copy";
 
 /** None of these is an error: an import in progress is a limitation, a paused one retries. */
-export type ImportProgressState = "done" | "none" | "paused" | "running" | "waiting";
+export type ImportProgressState =
+  | "done"
+  | "none"
+  | "paused"
+  | "running"
+  | "waiting"
+  | "waiting_for_first_data";
 
 export type ImportProgress = {
   completedDays: number;
   daysTotal: number;
   etaLabel: string | null;
+  earliestTargetDate: string | null;
+  firstDataDate: string | null;
   lastActivityAt: string | null;
   monthsSaved: number;
+  newestFinalizedDate: string | null;
   percent: number;
   state: ImportProgressState;
 };
@@ -28,9 +37,12 @@ export function importProgress(row: SearchInsightsImportState | null): ImportPro
     return {
       completedDays: 0,
       daysTotal: 0,
+      earliestTargetDate: null,
       etaLabel: null,
+      firstDataDate: null,
       lastActivityAt: null,
       monthsSaved: 0,
+      newestFinalizedDate: null,
       percent: 0,
       state: "none",
     };
@@ -40,12 +52,19 @@ export function importProgress(row: SearchInsightsImportState | null): ImportPro
   return {
     completedDays,
     daysTotal: row.daysTotal,
+    earliestTargetDate: row.earliestTargetDate,
     etaLabel: row.etaLabel ?? null,
+    firstDataDate: row.firstDataDate ?? null,
     lastActivityAt: row.lastActivityAt ?? null,
     monthsSaved: Math.min(retentionMonths, Math.round(share * retentionMonths)),
+    newestFinalizedDate: row.newestFinalizedDate,
     percent: Math.round(share * 100),
     state:
-      row.waiting && row.state === "running" ? "waiting" : (SETTLED_STATES[row.state] ?? "running"),
+      row.state === "waiting_for_first_data"
+        ? "waiting_for_first_data"
+        : row.waiting && row.state === "running"
+          ? "waiting"
+          : (SETTLED_STATES[row.state] ?? "running"),
   };
 }
 
@@ -91,13 +110,23 @@ export type ImportStartupPresentation = {
   fact: string;
   showHeartbeat: boolean;
   showProgress: boolean;
-  state: "active" | "planned" | "starting";
+  state: "active" | "planned" | "starting" | "waiting_for_first_data";
 };
 
 export function importStartupPresentation(
   progress: ImportProgress,
   now = new Date(),
 ): ImportStartupPresentation {
+  if (progress.state === "waiting_for_first_data") {
+    return {
+      activity: null,
+      eta: null,
+      fact: WAITING_FOR_FIRST_DATA,
+      showHeartbeat: false,
+      showProgress: false,
+      state: "waiting_for_first_data",
+    };
+  }
   if (progress.daysTotal <= 0) {
     return {
       activity: null,
@@ -126,7 +155,14 @@ export function importStartupPresentation(
       ? `last activity ${relativeActivity(progress.lastActivityAt, now)}`
       : null,
     eta: progress.etaLabel,
-    fact: `Importing your Google history · ${progress.completedDays} of ~${progress.daysTotal} days`,
+    fact:
+      progress.firstDataDate && progress.earliestTargetDate && progress.newestFinalizedDate
+        ? `Importing your Google history · ${formatDateLabel(
+            progress.firstDataDate > progress.earliestTargetDate
+              ? progress.firstDataDate
+              : progress.earliestTargetDate,
+          )} to ${formatDateLabel(progress.newestFinalizedDate)}`
+        : `Importing your Google history · ${progress.completedDays} of ~${progress.daysTotal} days`,
     showHeartbeat: true,
     showProgress: true,
     state: "active",

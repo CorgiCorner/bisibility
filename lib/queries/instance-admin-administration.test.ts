@@ -4,6 +4,7 @@ import { getInstanceAdminAdministration } from "./instance-admin-administration"
 
 const mocks = vi.hoisted(() => ({
   getInstanceAdminSession: vi.fn(),
+  isEmailConfigured: vi.fn(),
   queryRaw: vi.fn(),
 }));
 
@@ -12,6 +13,7 @@ vi.mock("@/lib/auth/instance-admin", () => ({
   getInstanceAdminSession: mocks.getInstanceAdminSession,
 }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: { $queryRaw: mocks.queryRaw } }));
+vi.mock("@/lib/email/registry", () => ({ isEmailConfigured: mocks.isEmailConfigured }));
 
 type SqlCall = readonly [readonly string[], ...unknown[]];
 
@@ -38,6 +40,7 @@ describe("getInstanceAdminAdministration", () => {
       throw new Error("NEXT_NOT_FOUND");
     });
     mocks.getInstanceAdminSession.mockResolvedValue({ user: { id: "admin_1" } });
+    mocks.isEmailConfigured.mockReturnValue(true);
   });
 
   it("gates the read model before any database query", async () => {
@@ -178,6 +181,16 @@ describe("getInstanceAdminAdministration", () => {
       provider: "dataforseo",
       referenceCostCents: 0.4,
     });
+  });
+
+  it("includes current mailer configuration in the read model", async () => {
+    emptyQueries();
+    mocks.isEmailConfigured.mockReturnValue(false);
+
+    const result = await getInstanceAdminAdministration(now);
+
+    expect(result.mailerConfigured).toBe(false);
+    expect(mocks.isEmailConfigured).toHaveBeenCalledOnce();
   });
 
   it("does not expose tenant content or account identity fields", async () => {

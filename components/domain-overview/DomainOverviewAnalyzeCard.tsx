@@ -155,7 +155,31 @@ export function DomainOverviewAnalyzeCard({
             />
           </div>
         </div>
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center justify-end gap-4">
+          <button
+            className={pricingTriggerClassName}
+            onClick={(event) => setPricingAnchor(event.currentTarget)}
+            type="button"
+          >
+            How is this priced?
+          </button>
+          <Button
+            aria-describedby={
+              report && !matchesReport ? "domain-overview-report-target-note" : undefined
+            }
+            disabled={!valid || submitting}
+            loading={submitting}
+            loadingLabel={submitLabel(estimate, matchesReport, true)}
+            size="sm"
+            startIcon={<Globe aria-hidden size={14} weight="regular" />}
+            sx={{ height: 37, minHeight: 37, minWidth: 200 }}
+            title={!valid ? "Enter a valid domain and wait for its price" : undefined}
+            type="submit"
+          >
+            {submitLabel(estimate, matchesReport, false)}
+          </Button>
+        </div>
+        <div className="-mx-4.5 -mb-4.5 border-t border-border-soft px-4.5 py-3.5 sm:-mx-5 sm:-mb-5 sm:px-5">
           {detected ? (
             <span
               className="inline-flex max-w-full items-center gap-2 rounded-full border border-border bg-bg-sunken px-2.5 py-1 text-[12px]"
@@ -185,30 +209,6 @@ export function DomainOverviewAnalyzeCard({
               Scope is read from what you type - a subdomain analyzes that subdomain only.
             </span>
           )}
-          <div className="ml-auto flex items-center gap-4">
-            <button
-              className={pricingTriggerClassName}
-              onClick={(event) => setPricingAnchor(event.currentTarget)}
-              type="button"
-            >
-              How is this priced?
-            </button>
-            <Button
-              aria-describedby={
-                report && !matchesReport ? "domain-overview-report-target-note" : undefined
-              }
-              disabled={!valid || submitting}
-              loading={submitting}
-              loadingLabel={submitLabel(estimate, matchesReport, true)}
-              size="sm"
-              startIcon={<Globe aria-hidden size={14} weight="regular" />}
-              sx={{ height: 37, minHeight: 37, minWidth: 200 }}
-              title={!valid ? "Enter a valid domain and wait for its price" : undefined}
-              type="submit"
-            >
-              {submitLabel(estimate, matchesReport, false)}
-            </Button>
-          </div>
         </div>
         {report && !matchesReport ? (
           <p className="text-[12px] text-fg-muted" id="domain-overview-report-target-note">

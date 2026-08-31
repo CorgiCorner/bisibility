@@ -1,5 +1,4 @@
 import { installSampleDataset } from "@/lib/sample-data/install";
-import { redirect } from "@/tests/next-navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { installSampleData, removeSampleData } from "./sample-data";
 
@@ -93,9 +92,6 @@ function mockInstallTransaction() {
 describe("sample-data actions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    redirect.mockImplementation(() => {
-      throw new Error("NEXT_REDIRECT");
-    });
     mockActor();
     mockInstallTransaction();
     mocks.authorize.mockReturnValue({ actorId: "user_1", role: "owner" });
@@ -126,9 +122,10 @@ describe("sample-data actions", () => {
       project: { id: "project_sample", publicId: "prj_d00000000000000000000000" },
     });
 
-    await expect(installSampleData()).rejects.toThrow("NEXT_REDIRECT");
+    await expect(installSampleData()).resolves.toEqual({
+      destination: "/app/prj_d00000000000000000000000/dashboard",
+    });
 
-    expect(redirect).toHaveBeenCalledWith("/app/prj_d00000000000000000000000/dashboard");
     expect(mocks.prisma.$transaction).toHaveBeenCalledTimes(1);
     expect(mocks.tx.$executeRaw).toHaveBeenCalledTimes(1);
     expect(mocks.tx.$executeRaw.mock.invocationCallOrder[0]).toBeLessThan(
@@ -139,9 +136,10 @@ describe("sample-data actions", () => {
   });
 
   it("installs sample data and writes an audit record", async () => {
-    await expect(installSampleData()).rejects.toThrow("NEXT_REDIRECT");
+    await expect(installSampleData()).resolves.toEqual({
+      destination: "/app/prj_e00000000000000000000000/dashboard",
+    });
 
-    expect(redirect).toHaveBeenCalledWith("/app/prj_e00000000000000000000000/dashboard");
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({ action: "sample_data.install", projectId: "project_sample" }),
       mocks.tx,

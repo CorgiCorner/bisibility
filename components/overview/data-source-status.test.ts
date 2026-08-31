@@ -67,19 +67,21 @@ describe("DataSourceNoDataPanel", () => {
 });
 
 describe("DataSourcePanel", () => {
-  it("places the provider state beside the primary provider instead of the card heading", () => {
+  it("omits redundant provider health and billing-note copy", () => {
     const health = {
       ...overviewFixture.dataSource,
       metrics: overviewFixture.dataSource.metrics.map((metric, index) =>
         index === 0 ? { ...metric, label: "Primary provider" } : metric,
       ),
+      note: "Provider billing remains direct between you and the provider.",
     };
     render(createElement(DataSourcePanel, { health }));
 
     const primaryProvider = screen.getByText("Primary provider").parentElement;
-    const header = screen.getByText("Data source").closest("div.flex.flex-wrap.items-start");
-
-    expect(primaryProvider).toHaveTextContent("DataForSEOHealthy");
-    expect(header).not.toHaveTextContent("Healthy");
+    expect(primaryProvider).toHaveTextContent("DataForSEO");
+    expect(primaryProvider).not.toHaveTextContent("Healthy");
+    expect(
+      screen.queryByText("Provider billing remains direct between you and the provider."),
+    ).toBeNull();
   });
 });

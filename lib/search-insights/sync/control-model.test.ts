@@ -149,4 +149,23 @@ describe("resolveSearchBackfillPresentation", () => {
     expect(model.kind).toBe("starting");
     expect(`${model.title} ${model.supportingText}`).not.toMatch(/running|in progress/i);
   });
+
+  it("presents waiting for first data without progress or delivery promises", () => {
+    const model = resolveSearchBackfillPresentation({
+      ...base,
+      completedDays: 0,
+      state: "waiting_for_first_data",
+    });
+
+    expect(model).toMatchObject({
+      action: null,
+      description:
+        "Google has not reported any search data for this property yet. We check daily and will import automatically when it appears.",
+      kind: "waiting_for_first_data",
+      polling: false,
+      supportingText: null,
+      title: "Waiting for search data",
+    });
+    expect(JSON.stringify(model)).not.toMatch(/0 of 0|\bETA\b|completion|first-28/i);
+  });
 });

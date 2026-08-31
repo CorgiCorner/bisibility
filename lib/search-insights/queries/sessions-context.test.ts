@@ -14,9 +14,8 @@ vi.mock("@/lib/traffic/runtime-credentials", () => ({
   trafficRuntimeCredentials: mocks.runtimeCredentials,
 }));
 
-const { organicSessionsImportCoversWindow, readOrganicSessionsContext } = await import(
-  "./sessions-context"
-);
+const { importStateView, organicSessionsImportCoversWindow, readOrganicSessionsContext } =
+  await import("./sessions-context");
 const { readOrganicSessionsConnection } = await import(
   "@/lib/search-insights/sync/sessions-credentials"
 );
@@ -85,6 +84,27 @@ describe("organicSessionsImportCoversWindow", () => {
 
   it("rejects a connection with no import row", () => {
     expect(organicSessionsImportCoversWindow(null, window)).toBe(false);
+  });
+});
+
+describe("importStateView", () => {
+  it("carries the optional first data boundary into the presentation view", () => {
+    expect(
+      importStateView({
+        capHitDays: 0,
+        cursorDate: null,
+        daysDone: 0,
+        daysTotal: 57,
+        earliestTargetDate: new Date("2026-05-12T00:00:00.000Z"),
+        finalizedThroughDate: null,
+        firstDataDate: new Date("2026-05-12T00:00:00.000Z"),
+        lastProbeAt: null,
+        lastSyncStartedAt: null,
+        newestFinalizedDate: new Date("2026-07-07T00:00:00.000Z"),
+        pausedReason: null,
+        state: "running",
+      }),
+    ).toMatchObject({ firstDataDate: "2026-05-12" });
   });
 });
 

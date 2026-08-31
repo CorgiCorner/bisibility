@@ -31,7 +31,7 @@ export function renderWizard({ actions: actionOverrides, ...props }: RenderWizar
     fetchRankedKeywordSuggestionsAction: vi.fn(async () => ({ reason: "no_source" as const })),
     getObservedPositionsAction: vi.fn(async () => []),
     importTopQueriesAction: vi.fn(async () => ({ queries: [] })),
-    installSampleDataAction: vi.fn(async () => undefined),
+    installSampleDataAction: vi.fn(async () => ({ destination: "/app/prj_sample/dashboard" })),
     loadStoredGooglePropertiesAction: vi.fn(async () => ({
       properties: [],
       provider: "gsc" as const,

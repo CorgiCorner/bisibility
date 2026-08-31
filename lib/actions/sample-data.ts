@@ -9,7 +9,6 @@ import { SampleDataError } from "@/lib/sample-data/errors";
 import { installSampleDataset } from "@/lib/sample-data/install";
 import { isSampleProject } from "@/lib/sample-data/marker";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { z } from "zod";
 import {
   getActionActor,
@@ -74,7 +73,7 @@ export async function installSampleData() {
     revalidateSampleDataViews();
   }
 
-  redirect(appPath(result.project.publicId, "dashboard"));
+  return { destination: appPath(result.project.publicId, "dashboard") };
 }
 
 export async function removeSampleData(input: unknown) {

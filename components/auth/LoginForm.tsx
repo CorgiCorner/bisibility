@@ -8,16 +8,20 @@ import {
 } from "@/components/auth/LoginEmailStep";
 import { OtpStep } from "@/components/auth/OtpStep";
 import { authClient } from "@/lib/auth/client";
+import { emptyOtpDigits, type LoginFormValues, loginSchema } from "@/lib/auth/login-schema";
 import { resendSignInOtp } from "@/lib/auth/otp-resend";
+import type { RequestLoginCodeResult } from "@/lib/auth/request-login-code";
+import { requestLoginCode } from "@/lib/auth/request-login-code";
 import { loginErrorReturnTo, mergeReturnToHash } from "@/lib/auth/return-to";
 import { signInRedirectUrl } from "@/lib/auth/sign-in-redirect";
 import type { SignInCapacity, SignInCapacityMiss } from "@/lib/auth/signin-capacity-types";
 import type { LegalConsentLinks } from "@/lib/deployment/legal";
 import { zodResolver } from "@/lib/forms/zod-resolver";
+import { waitlistFailureMessage } from "@/lib/ui/action-error";
+import { useHumanVerification } from "@/lib/verification/human-verification-client";
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { authErrorMessage, isEmailCapacityError } from "./login-errors";
-import { emptyOtpDigits, type LoginFormValues, loginSchema } from "./login-schema";
 
 type LoginStep = "email" | "otp";
 type AuthStatus = "idle" | "verifying" | "error";
@@ -28,11 +32,11 @@ type LoginFormProps = {
   capacity?: SignInCapacity | null;
   capacityMiss?: SignInCapacityMiss;
   dataResidencyMessage: string;
-  /** When the dev fixed-OTP backdoor is on (dev only), the code to surface as a hint. */
   devOtpCode?: string | null;
-  /** Dev-only seeded demo account email to prefill + surface as a hint. */
   demoEmail?: string | null;
+  emailSignInUnavailable?: boolean;
   enabledProviders?: EnabledOAuthProviders;
+  humanVerificationRequired?: boolean;
   legalConsentLinks: LegalConsentLinks | null;
   returnTo?: string;
 };
@@ -43,10 +47,14 @@ export function LoginForm({
   dataResidencyMessage,
   devOtpCode = null,
   demoEmail = null,
+  emailSignInUnavailable = false,
   enabledProviders = disabledOAuthProviders,
+  humanVerificationRequired = false,
   legalConsentLinks,
   returnTo,
 }: Readonly<LoginFormProps>) {
+  const verification = useHumanVerification();
+  const [emailStepKey, setEmailStepKey] = useState(0);
   const [step, setStep] = useState<LoginStep>("email");
   const [authStatus, setAuthStatus] = useState<AuthStatus>("idle");
   const [socialProvider, setSocialProvider] = useState<OAuthProvider | null>(null);
@@ -57,7 +65,7 @@ export function LoginForm({
   const [capacityMiss, setCapacityMiss] = useState<SignInCapacityMiss>(initialCapacityMiss);
   const cooldownTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const form = useForm<LoginFormValues>({
-    defaultValues: { email: demoEmail ?? "", otp: emptyOtpDigits() },
+    defaultValues: { email: demoEmail ?? "", otp: emptyOtpDigits(), verificationToken: undefined },
     mode: "onSubmit",
     resolver: zodResolver(loginSchema),
   });
@@ -65,11 +73,8 @@ export function LoginForm({
   const isOtpStep = step === "otp";
 
   function clearCooldown() {
-    if (cooldownTimer.current) {
-      clearInterval(cooldownTimer.current);
-      cooldownTimer.current = null;
-    }
-
+    if (cooldownTimer.current) clearInterval(cooldownTimer.current);
+    cooldownTimer.current = null;
     setCooldownRemaining(0);
   }
 
@@ -110,10 +115,7 @@ export function LoginForm({
   }
 
   function clearOtpErrorOnDigit() {
-    if (authStatus !== "error") {
-      return;
-    }
-
+    if (authStatus !== "error") return;
     setAuthStatus("idle");
     setFormError(null);
     form.clearErrors("otp");
@@ -121,31 +123,29 @@ export function LoginForm({
 
   async function requestCode(values: LoginFormValues) {
     setFormError(null);
-    const parsed = loginSchema.pick({ email: true }).safeParse(values);
+    const result = await requestLoginCode({
+      email: values.email,
+      verificationToken: humanVerificationRequired ? (verification.token ?? undefined) : undefined,
+    }).catch((): RequestLoginCodeResult => ({ code: "delivery_failed", ok: false }));
+    verification.reset();
 
-    if (!parsed.success) {
-      form.setError("email", { message: parsed.error.issues[0]?.message });
+    if (result.ok) {
+      resetOtpState();
+      setResentCode(false);
+      setStep("otp");
+      startCooldown();
       return;
     }
-
-    const response = await authClient.emailOtp.sendVerificationOtp({
-      email: parsed.data.email,
-      type: "sign-in",
-    });
-
-    if (response.error) {
-      if (isEmailCapacityError(response.error)) {
-        setCapacityMiss("email");
-        return;
-      }
-      setFormError(authErrorMessage(response.error));
-      return;
+    if (isEmailCapacityError({ code: result.code })) {
+      setCapacityMiss("email");
+    } else if (result.code === "verification_failed" || result.code === "rate_limited") {
+      setFormError(waitlistFailureMessage(result.code));
+    } else if (result.code === "EMAIL_NOT_CONFIGURED") {
+      setFormError(authErrorMessage({ code: result.code }));
+    } else {
+      setFormError("Could not send a login code. Try again.");
     }
-
-    resetOtpState();
-    setResentCode(false);
-    setStep("otp");
-    startCooldown();
+    setEmailStepKey((key) => key + 1);
   }
 
   async function signInWithProvider(provider: OAuthProvider) {
@@ -226,24 +226,32 @@ export function LoginForm({
     window.location.assign(destination);
   }
 
-  async function resendCode() {
-    if (cooldownRemaining > 0) {
-      return;
-    }
-
+  async function resendCode(verificationToken: string | undefined) {
+    if (cooldownRemaining > 0) return;
     resetOtpState();
     form.setFocus("otp");
 
-    // Server-enforced throttle (Redis/Valkey 1/60s per email, in-memory fallback in dev)
-    // so the cooldown cannot be bypassed by reloading; the UI counts down retryAfter.
-    const result = await resendSignInOtp(form.getValues("email").trim());
+    const result = await resendSignInOtp({
+      email: form.getValues("email").trim(),
+      verificationToken,
+    });
 
     if (!result.ok) {
       setResentCode(false);
       if (result.retryAfter > 0) {
         startCooldown(result.retryAfter);
       }
-      setFormError(result.error ?? "Please wait before requesting another code.");
+      if (result.code === "verification_failed") {
+        setFormError("Verification failed. Please try again.");
+      } else if (result.code === "rate_limited") {
+        setFormError("Too many requests. Please try again later.");
+      } else if (result.code === "capacity_exhausted") {
+        setFormError("Email sign-in capacity is temporarily full. Try again later.");
+      } else if (result.code === "EMAIL_NOT_CONFIGURED") {
+        setFormError(authErrorMessage({ code: result.code }));
+      } else {
+        setFormError("Could not send a new code. Try again.");
+      }
       return;
     }
 
@@ -267,6 +275,7 @@ export function LoginForm({
         devOtpCode={devOtpCode}
         email={form.getValues("email").trim()}
         formError={formError}
+        humanVerificationRequired={humanVerificationRequired}
         dataResidencyMessage={dataResidencyMessage}
         onBack={editEmail}
         onDigitEntry={clearOtpErrorOnDigit}
@@ -281,18 +290,22 @@ export function LoginForm({
 
   return (
     <LoginEmailStep
+      key={emailStepKey}
       capacity={capacity}
       capacityMiss={capacityMiss}
       demoEmail={demoEmail}
       dataResidencyMessage={dataResidencyMessage}
+      emailSignInUnavailable={emailSignInUnavailable}
       enabledProviders={enabledProviders}
       errors={errors}
       formError={formError}
+      humanVerificationField={humanVerificationRequired ? verification.field : null}
       isSubmitting={isSubmitting}
       legalConsentLinks={legalConsentLinks}
       onProviderSignIn={(provider) => void signInWithProvider(provider)}
       onSubmit={form.handleSubmit(requestCode)}
       register={form.register}
+      verificationReady={!humanVerificationRequired || verification.ok}
       socialProvider={socialProvider}
     />
   );

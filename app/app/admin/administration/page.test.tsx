@@ -2,12 +2,16 @@ import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
+  adminAdministration: vi.fn(),
   getAdministration: vi.fn(),
   requireAdmin: vi.fn(),
 }));
 
 vi.mock("@/components/admin/AdminAdministration", () => ({
-  AdminAdministration: () => <p>Administration dashboard</p>,
+  AdminAdministration: (props: Record<string, unknown>) => {
+    mocks.adminAdministration(props);
+    return <p>Administration dashboard</p>;
+  },
 }));
 vi.mock("@/lib/auth/instance-admin", () => ({
   requireInstanceAdmin: mocks.requireAdmin,
@@ -23,13 +27,20 @@ describe("instance administration page", () => {
 
   it("passes the page gate before loading administration data", async () => {
     mocks.requireAdmin.mockResolvedValue({ user: { id: "user_admin" } });
-    mocks.getAdministration.mockResolvedValue({ growth: {}, topConsumption: [] });
+    mocks.getAdministration.mockResolvedValue({
+      growth: {},
+      mailerConfigured: false,
+      topConsumption: [],
+    });
 
     render(await InstanceAdministrationPage());
 
     expect(screen.getByText("Administration dashboard")).toBeInTheDocument();
     expect(mocks.requireAdmin).toHaveBeenCalledOnce();
     expect(mocks.getAdministration).toHaveBeenCalledOnce();
+    expect(mocks.adminAdministration).toHaveBeenCalledWith(
+      expect.objectContaining({ showMailerWarning: true }),
+    );
     expect(mocks.requireAdmin.mock.invocationCallOrder[0]).toBeLessThan(
       mocks.getAdministration.mock.invocationCallOrder[0] ?? 0,
     );

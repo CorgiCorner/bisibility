@@ -6,6 +6,8 @@ import { dynamic } from "./page";
 const mocks = vi.hoisted(() => ({
   getGitHubStars: vi.fn(),
   getSession: vi.fn(),
+  isEmailConfigured: vi.fn(),
+  isFirstRun: vi.fn(),
   getSignInCapacity: vi.fn(),
   loginForm: vi.fn(),
 }));
@@ -21,6 +23,8 @@ vi.mock("@/lib/auth/signin-capacity", () => ({
 }));
 vi.mock("@/lib/site/github-stars", () => ({ getGitHubStars: mocks.getGitHubStars }));
 vi.mock("@/lib/auth/session", () => ({ getSession: mocks.getSession }));
+vi.mock("@/lib/auth/first-run", () => ({ isFirstRun: mocks.isFirstRun }));
+vi.mock("@/lib/email/registry", () => ({ isEmailConfigured: mocks.isEmailConfigured }));
 vi.mock("@/lib/auth/auth", () => {
   throw new Error("The login page must not initialize the full auth server");
 });
@@ -41,6 +45,7 @@ type LoginFormProps = {
   dataResidencyMessage: string;
   demoEmail: string | null;
   devOtpCode: string | null;
+  emailSignInUnavailable: boolean;
   enabledProviders: { github: boolean; google: boolean };
   legalConsentLinks: {
     privacyHref: string | null;
@@ -93,6 +98,8 @@ async function renderLoginPage(
 
 beforeEach(() => {
   mocks.getSession.mockResolvedValue(null);
+  mocks.isEmailConfigured.mockReturnValue(true);
+  mocks.isFirstRun.mockResolvedValue(false);
 });
 
 afterEach(() => {
@@ -255,6 +262,19 @@ describe("login page runtime rendering", () => {
 
     const props = mocks.loginForm.mock.calls[0]?.[0] as LoginFormProps;
     expect(props.returnTo).toBe("/app/settings?tab=access");
+  });
+
+  it("pre-checks unavailable email sign-in for an established production instance", async () => {
+    mocks.isEmailConfigured.mockReturnValue(false);
+    mocks.isFirstRun.mockResolvedValue(false);
+
+    const { props } = await renderLoginPage({
+      ALLOW_INSECURE_FIXED_OTP: undefined,
+      DEMO_FIXED_OTP: undefined,
+      NODE_ENV: "production",
+    });
+
+    expect(props.emailSignInUnavailable).toBe(true);
   });
 
   it("reflects the social providers configured at run time", async () => {

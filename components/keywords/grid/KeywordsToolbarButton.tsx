@@ -22,6 +22,12 @@ const compactIconOnlyButtonSx = {
   },
 } satisfies SxProps<Theme>;
 
+const labeledSecondaryButtonSx = {
+  color: "var(--fg)",
+  fontSize: "12.5px",
+  fontWeight: 400,
+} satisfies SxProps<Theme>;
+
 type KeywordsToolbarButtonProps = Omit<ButtonProps, "sx"> & {
   iconOnly?: boolean;
   label: string;
@@ -49,6 +55,7 @@ export function KeywordsToolbarButton({
           iconOnly ? compactIconOnlyButtonSx : mobileIconOnlyButtonSx,
           { "& .MuiButton-startIcon > svg": { color: "currentColor" } },
           ...buttonSx,
+          !iconOnly && props.variant === "secondary" ? labeledSecondaryButtonSx : false,
         ]}
         {...props}
       >

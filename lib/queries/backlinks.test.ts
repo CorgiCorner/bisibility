@@ -3,7 +3,10 @@ import { getBacklinksPageContext } from "./backlinks";
 
 const mocks = vi.hoisted(() => ({
   cost: vi.fn(),
-  prisma: { backlinkSnapshot: { findMany: vi.fn() } },
+  prisma: {
+    backlinkSnapshot: { findMany: vi.fn() },
+    providerConnection: { findMany: vi.fn() },
+  },
   project: {
     domain: "example.com",
     id: "project_1",
@@ -23,6 +26,9 @@ describe("backlinks page context", () => {
     vi.clearAllMocks();
     mocks.requireReadableProject.mockResolvedValue({ project: mocks.project });
     mocks.cost.mockResolvedValue({ capCents: 5000, spentCents: 125 });
+    mocks.prisma.providerConnection.findMany.mockResolvedValue([
+      { provider: "dataforseo", status: "connected" },
+    ]);
     mocks.prisma.backlinkSnapshot.findMany.mockResolvedValue([
       {
         expiresAt: new Date("2026-07-25T15:00:00.000Z"),
@@ -47,6 +53,7 @@ describe("backlinks page context", () => {
     await expect(getBacklinksPageContext("prj_1")).resolves.toEqual({
       costContext: { capCents: 5000, spentCents: 125 },
       defaultTarget: "example.com",
+      providerStatus: "connected",
       recentTargets: [
         {
           cachedUntil: "2026-07-25T15:00:00.000Z",

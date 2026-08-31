@@ -30,7 +30,7 @@ function defaultFirstCheckDetail(keywordCount: number) {
 export function FirstCheckBannerLink({ href, label }: Readonly<{ href: string; label: string }>) {
   return (
     <Link
-      className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-control bg-accent-solid px-[13px] py-2 text-[12.5px] font-semibold text-accent-on-solid outline-none transition-colors hover:bg-accent-solid-hover focus-visible:bg-accent-solid-hover"
+      className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-control border border-border-control bg-bg-elev px-[13px] py-2 text-[12.5px] font-normal text-fg outline-none transition-colors hover:border-accent hover:bg-bg-sunken focus-visible:border-accent"
       href={href}
       {...docsLinkProps(href)}
     >

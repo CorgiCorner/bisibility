@@ -13,6 +13,7 @@ import {
 } from "@/lib/auth/email-otp-two-factor";
 import { prepareFirstRunUserCreation } from "@/lib/auth/first-run";
 import { firstRunCreationState, isPendingFirstRunUser } from "@/lib/auth/first-run-context";
+import { loginCodeGuardPlugin, withOtpEmailRequest } from "@/lib/auth/login-code-guard";
 import {
   OAUTH_ACCESS_TOKEN_TTL_SECONDS,
   OAUTH_AUTHORIZATION_TTL_SECONDS,
@@ -249,18 +250,15 @@ export const auth = betterAuth({
   },
   plugins: [
     emailOTP({
-      // Requires an OTP proving the CURRENT address before a change code goes to the new one.
       changeEmail: { enabled: true, verifyCurrentEmail: true },
       otpLength: 6,
-      // Match the "expires in 5 minutes" copy in sendOtpEmail (and don't depend on
-      // the better-auth default, which is longer).
       expiresIn: 5 * 60,
       storeOTP: "hashed",
       rateLimit: demoEmailOtpRateLimit(DEMO_FIXED_OTP_ENABLED, DEMO_FIXED_OTP_ACKNOWLEDGED),
       // Opt-in fixed code; otherwise better-auth uses random codes.
       ...(FIXED_OTP_ENABLED ? { generateOTP: () => "000000" } : {}),
-      async sendVerificationOTP(data) {
-        await sendOtpEmail(data, { fixedOtpEnabled: FIXED_OTP_ENABLED });
+      async sendVerificationOTP(data, context) {
+        await withOtpEmailRequest(context?.context, () => sendOtpEmail(data));
       },
     }),
     twoFactorRouteGuard(),
@@ -295,6 +293,7 @@ export const auth = betterAuth({
     }),
     authAuditPlugin,
     emailOtpTwoFactorPlugin,
+    loginCodeGuardPlugin({ fixedOtpEnabled: FIXED_OTP_ENABLED }),
     socialOAuthTwoFactorPlugin,
     nextCookies(),
   ],

@@ -1,3 +1,4 @@
+import { SegmentedControl } from "@/components/ui";
 import { CheckIcon as Check } from "@phosphor-icons/react";
 import type { ComponentType, ReactNode } from "react";
 
@@ -42,19 +43,21 @@ export function FilterCheckTile({
 }>) {
   return (
     <button
-      className="flex items-center gap-[9px] rounded-control border bg-bg-elev px-[11px] py-[9px] text-left outline-none transition-colors hover:border-accent focus-visible:border-accent"
+      className={`flex items-center gap-[9px] rounded-control border bg-bg-elev px-[11px] py-[9px] text-left outline-none transition-colors hover:border-accent focus-visible:border-accent ${
+        active ? "border-accent" : "border-border-control"
+      }`}
       onClick={onClick}
       style={{
         backgroundColor: active ? "var(--accent-soft)" : "var(--bg-elev)",
-        borderColor: "var(--border-strong)",
       }}
       type="button"
     >
       <span
-        className="grid h-[17px] w-[17px] shrink-0 place-items-center rounded-control border-[1.5px]"
+        className={`grid h-[17px] w-[17px] shrink-0 place-items-center rounded-control border-[1.5px] ${
+          active ? "border-accent" : "border-border-control"
+        }`}
         style={{
           backgroundColor: active ? "var(--accent)" : "var(--bg-elev)",
-          borderColor: active ? "var(--accent)" : "var(--border-strong)",
         }}
       >
         {active ? <Check className="text-white" size={11} weight="regular" /> : null}
@@ -69,38 +72,31 @@ export function FilterCheckTile({
 }
 
 export function FilterSegment<T extends string>({
+  ariaLabel,
   onChange,
   options,
   value,
 }: Readonly<{
+  ariaLabel: string;
   onChange: (value: T) => void;
   options: readonly { id: T; label: string }[];
   value: T;
 }>) {
+  const segmentedOptions = options.map(({ id, label }) => ({ label, value: id }));
+
   return (
     <div
-      className={`grid items-center gap-0.5 rounded-control border border-border-strong bg-transparent p-[3px] ${
-        options.length > 4 ? "grid-cols-3" : "grid-flow-col auto-cols-fr"
-      }`}
+      aria-label={ariaLabel}
+      className={options.length > 4 ? "[&>fieldset>div]:!grid-cols-3" : undefined}
+      role="radiogroup"
     >
-      {options.map((option) => {
-        const active = option.id === value;
-        return (
-          <button
-            className="min-w-0 whitespace-nowrap rounded-control px-2 py-1.5 text-[12px] font-semibold outline-none transition-colors focus-visible:bg-accent-solid focus-visible:text-accent-on-solid"
-            key={option.id}
-            onClick={() => onChange(option.id)}
-            style={{
-              backgroundColor: active ? "var(--bg-elev)" : "transparent",
-              boxShadow: active ? "0 0 0 1px var(--border-strong)" : "none",
-              color: active ? "var(--fg)" : "var(--fg-muted)",
-            }}
-            type="button"
-          >
-            {option.label}
-          </button>
-        );
-      })}
+      <SegmentedControl
+        ariaLabel={ariaLabel}
+        onChange={onChange}
+        options={segmentedOptions}
+        size="toolbar"
+        value={value}
+      />
     </div>
   );
 }

@@ -1,7 +1,13 @@
 // Pure, deterministic workflow code. Provider calls, Prisma writes and quota accounting
 // all live in the activities; the workflow only decides how long to wait and when to
 // hand the remaining days to a fresh execution.
-import { ApplicationFailure, continueAsNew, proxyActivities, sleep } from "@temporalio/workflow";
+import {
+  ApplicationFailure,
+  continueAsNew,
+  patched,
+  proxyActivities,
+  sleep,
+} from "@temporalio/workflow";
 import type {
   SearchInsightsIncrementalActivityInput,
   SearchInsightsIncrementalActivityResult,
@@ -21,7 +27,7 @@ import {
 type SearchInsightsActivities = {
   deliverSearchInsightsMilestoneActivity(input: {
     importId: string;
-    milestone: "first_28" | "full";
+    milestone: "first_data" | "first_28" | "full";
   }): Promise<{ delivered: number }>;
   markSearchInsightsImportFailedActivity(input: SearchInsightsImportRef): Promise<void>;
   runSearchInsightsBackfillBatchActivity(
@@ -105,10 +111,17 @@ export async function searchInsightsBackfillWorkflow(
     }
 
     if (batch) {
+      if (batch.waitingForFirstData) return { days, status: "waiting_for_first_data" };
       days += batch.daysProcessed;
       // Nothing to import yet, or nothing readable: stop without claiming the window is done.
       if (batch.blocked) return { days, status: "paused" };
       if (batch.importId) {
+        if (patched("search-import-first-data-milestone-v1")) {
+          await deliverSearchInsightsMilestoneActivity({
+            importId: batch.importId,
+            milestone: "first_data",
+          });
+        }
         await deliverSearchInsightsMilestoneActivity({
           importId: batch.importId,
           milestone: "first_28",

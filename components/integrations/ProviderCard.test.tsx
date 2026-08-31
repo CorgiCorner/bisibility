@@ -129,6 +129,44 @@ describe("ProviderCard", () => {
     expect(screen.queryByText("Never synced.")).not.toBeInTheDocument();
   });
 
+  it("omits redundant not-configured consumer summaries", () => {
+    const provider = {
+      ...integrationCategories[1].providers[0],
+      consumerStatuses: {
+        searchModule: { state: "not_configured" as const, summary: "Not configured" },
+        trafficEnrichment: { state: "not_configured" as const, summary: "Not configured" },
+      },
+      status: "connected" as const,
+    };
+
+    render(
+      <ProviderCard
+        canManageProviders={false}
+        canUpdateProject={false}
+        projectId="prj_1"
+        projectRef="prj_1"
+        provider={provider}
+      />,
+    );
+
+    expect(screen.queryByText("Not configured")).not.toBeInTheDocument();
+  });
+
+  it("renders provider metadata as a full-width card footer", () => {
+    const provider = integrationCategories[0].providers[0];
+    const { container } = render(
+      <ProviderCard
+        canManageProviders={false}
+        canUpdateProject={false}
+        projectId="prj_1"
+        provider={provider}
+      />,
+    );
+
+    const footer = container.querySelector("dl");
+    expect(footer).toHaveClass("-mx-5", "-mb-4.5", "border-t", "bg-bg-sunken/25", "px-5");
+  });
+
   it("labels connected Search Console account management as connection settings", () => {
     const provider = {
       ...integrationCategories[1].providers[0],

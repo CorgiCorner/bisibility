@@ -8,6 +8,7 @@ import { BacklinksWorkspace } from "./BacklinksWorkspace";
 const context = {
   costContext: { capCents: 5000, spentCents: 1200 },
   defaultTarget: "example.com",
+  providerStatus: "connected" as const,
   recentTargets: [],
 };
 const loadMoreAction = vi.fn();
@@ -65,6 +66,20 @@ afterEach(() => {
 });
 
 describe("BacklinksWorkspace", () => {
+  it("matches Domain Overview when a capable provider is missing", () => {
+    renderWorkspace({ context: { ...context, providerStatus: "no_provider" } });
+
+    expect(screen.getByText("Connect DataForSEO to analyze backlinks")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Backlinks requires a provider with backlink intelligence support. Lookups run on your own key.",
+      ),
+    ).toBeInTheDocument();
+    const connect = screen.getByRole("link", { name: "Connect DataForSEO" });
+    expect(connect).toHaveAttribute("href", "/app/prj_1/integrations");
+    expect(connect).toHaveClass("bg-accent-solid", "rounded-control");
+  });
+
   it("prefills and prices a target supplied by a linking workspace", () => {
     render(
       <SessionSpendProvider>

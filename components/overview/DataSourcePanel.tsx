@@ -1,6 +1,4 @@
 import { Card, MonoText, SectionTitle } from "@/components/ui";
-import { InfoIcon as Info } from "@phosphor-icons/react/dist/ssr";
-import { DataSourceStatusBadge } from "./DataSourceStatusBadge";
 import type { DataSourceHealth } from "./types";
 
 export type DataSourcePanelProps = {
@@ -50,18 +48,9 @@ export function DataSourcePanel({ checkHealth, health }: Readonly<DataSourcePane
             </div>
             <div className="mt-[5px] flex min-w-0 items-center gap-1.5">
               <span className="truncate text-sm font-semibold text-fg">{metric.value}</span>
-              {metric.label === "Primary provider" ? (
-                <DataSourceStatusBadge status={health.status} />
-              ) : null}
             </div>
           </div>
         ))}
-      </div>
-      <div className="mt-4 flex items-start gap-[9px] border-t border-border-soft pt-3.5 text-[12.5px] leading-5 text-fg-muted">
-        <span className="flex h-5 shrink-0 items-center">
-          <Info weight="regular" aria-hidden className="text-accent-text" size={15} />
-        </span>
-        <span>{health.note}</span>
       </div>
     </Card>
   );

@@ -47,11 +47,11 @@ const serverActionPattern =
 const runtimeStubPatterns = [
   /^@\/components\/shell\/keyword-search$/,
   /^@\/lib\/api\/ratelimit$/,
-  /^@\/lib\/auth\/(auth|client|otp-resend|session)$/,
+  /^@\/lib\/auth\/(auth|client|otp-resend|request-login-code|session)$/,
   /^@\/lib\/redis$/,
   /[\\/]components[\\/]shell[\\/]keyword-search\.ts$/,
   /[\\/]lib[\\/]api[\\/]ratelimit\.ts$/,
-  /[\\/]lib[\\/]auth[\\/](auth|client|otp-resend|session)\.ts$/,
+  /[\\/]lib[\\/]auth[\\/](auth|client|otp-resend|request-login-code|session)\.ts$/,
   /[\\/]lib[\\/]redis\.ts$/,
 ];
 const prismaRuntimeStubPatterns = [
@@ -68,6 +68,7 @@ const runtimeAliases = {
   "@/lib/auth/auth": runtimeStubs,
   "@/lib/auth/client": runtimeStubs,
   "@/lib/auth/otp-resend": runtimeStubs,
+  "@/lib/auth/request-login-code": runtimeStubs,
   "@/lib/api/ratelimit": runtimeStubs,
   "@/lib/auth/session": runtimeStubs,
   "@/lib/db/prisma": prismaRuntimeStub,

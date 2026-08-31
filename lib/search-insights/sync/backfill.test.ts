@@ -91,7 +91,11 @@ describe("runBackfillBatch", () => {
       requestedRows: 25_000,
       returnedRows: 10,
     });
-    mocks.fetchAggregateRange.mockResolvedValue({ days: 488 });
+    mocks.fetchAggregateRange.mockResolvedValue({
+      firstDataDate: "2025-03-07",
+      kind: "data_found",
+      returnedDays: 488,
+    });
   });
 
   it("probes freshness, plans the window and pulls every total before any day partition", async () => {
@@ -126,6 +130,108 @@ describe("runBackfillBatch", () => {
       state: "running",
     });
     expect(updateData(0)).not.toHaveProperty("lastSyncStartedAt");
+  });
+
+  it("clamps a fresh plan to the first day with impressions", async () => {
+    mocks.loadImportRow.mockResolvedValue(importRow());
+    mocks.probeFreshness.mockResolvedValue({
+      availabilityBoundarySource: "metadata",
+      newestFinalizedDate: "2026-07-07",
+      probedAt: new Date("2026-07-08T12:40:00.000Z"),
+    });
+    mocks.fetchAggregateRange.mockResolvedValue({
+      firstDataDate: "2026-05-12",
+      kind: "data_found",
+      returnedDays: 57,
+    });
+
+    await runBackfillBatch(input);
+
+    expect(updateData(0)).toMatchObject({
+      daysTotal: 57,
+      earliestTargetDate: new Date("2026-05-12T00:00:00.000Z"),
+      firstDataDate: new Date("2026-05-12T00:00:00.000Z"),
+      historyBoundarySource: "first_data",
+    });
+  });
+
+  it("returns to waiting when discovered data is newer than the finalized boundary", async () => {
+    mocks.loadImportRow.mockResolvedValue(
+      importRow({
+        firstDataDate: new Date("2026-07-07T00:00:00.000Z"),
+        state: "queued",
+        waitingForFirstDataAt: new Date("2026-07-01T00:00:00.000Z"),
+      }),
+    );
+    mocks.probeFreshness.mockResolvedValue({
+      availabilityBoundarySource: "fallback",
+      newestFinalizedDate: "2026-07-05",
+      probedAt: new Date("2026-07-08T12:40:00.000Z"),
+    });
+
+    await expect(runBackfillBatch(input)).resolves.toMatchObject({
+      daysProcessed: 0,
+      waitingForFirstData: true,
+    });
+
+    expect(mocks.fetchAggregateRange).not.toHaveBeenCalled();
+    expect(mocks.syncCompleteDay).not.toHaveBeenCalled();
+    expect(updateData(0)).toMatchObject({
+      daysTotal: 0,
+      earliestTargetDate: null,
+      firstDataDate: new Date("2026-07-07T00:00:00.000Z"),
+      newestFinalizedDate: new Date("2026-07-05T00:00:00.000Z"),
+      state: "waiting_for_first_data",
+      workflowId: null,
+    });
+  });
+
+  it("waits for first data without scheduling any dimensional day", async () => {
+    mocks.loadImportRow.mockResolvedValue(importRow());
+    mocks.probeFreshness.mockResolvedValue({
+      availabilityBoundarySource: "metadata",
+      newestFinalizedDate: "2026-07-07",
+      probedAt: new Date("2026-07-08T12:40:00.000Z"),
+    });
+    mocks.fetchAggregateRange.mockResolvedValue({ kind: "no_data", returnedDays: 0 });
+
+    await expect(runBackfillBatch(input)).resolves.toMatchObject({
+      blocked: false,
+      daysProcessed: 0,
+      done: false,
+      importId: "imp_1",
+      nextCursor: null,
+      waitingForFirstData: true,
+    });
+    expect(mocks.syncCompleteDay).not.toHaveBeenCalled();
+    expect(updateData(0)).toMatchObject({
+      cursorDate: null,
+      daysDone: 0,
+      daysTotal: 0,
+      earliestTargetDate: null,
+      historyBoundarySource: "no_data",
+      state: "waiting_for_first_data",
+      workflowId: null,
+    });
+  });
+
+  it("never maps a failed planning request to waiting for first data", async () => {
+    mocks.loadImportRow.mockResolvedValue(importRow());
+    mocks.probeFreshness.mockResolvedValue({
+      availabilityBoundarySource: "metadata",
+      newestFinalizedDate: "2026-07-07",
+      probedAt: new Date("2026-07-08T12:40:00.000Z"),
+    });
+    const error = new TypeError("network unavailable");
+    mocks.fetchAggregateRange.mockRejectedValue(error);
+    mocks.recordImportFailure.mockResolvedValue("error");
+
+    await expect(runBackfillBatch(input)).rejects.toBe(error);
+    expect(mocks.prisma.searchAnalyticsImport.update).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ state: "waiting_for_first_data" }),
+      }),
+    );
   });
 
   it("clears the previous pause once a day is stored again", async () => {
@@ -207,7 +313,14 @@ describe("runBackfillBatch", () => {
     expect(updateData(2).finalizedThroughDate).toBeUndefined();
     // The marker moves forward only: the scheduled sweep can finalize a newer day while this
     // batch is in flight, and writing the older day back would age the trust strip.
-    expect(mocks.prisma.searchAnalyticsImport.updateMany).toHaveBeenCalledTimes(1);
+    expect(mocks.prisma.searchAnalyticsImport.updateMany).toHaveBeenCalledTimes(2);
+    expect(mocks.prisma.searchAnalyticsImport.updateMany).toHaveBeenCalledWith({
+      data: { firstDataDetectedAt: expect.any(Date) },
+      where: expect.objectContaining({
+        firstDataDetectedAt: null,
+        waitingForFirstDataAt: { not: null },
+      }),
+    });
     expect(mocks.prisma.searchAnalyticsImport.updateMany).toHaveBeenCalledWith({
       data: { finalizedThroughDate: new Date("2026-07-07T00:00:00.000Z") },
       where: {

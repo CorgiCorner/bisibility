@@ -1,6 +1,6 @@
 import { AuthorizationError } from "@/lib/auth/authorize";
 import { resetInviteRateLimitStateForTests } from "@/lib/team/invite-rate-limit";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   acceptInvite,
   changeMemberRole,
@@ -73,6 +73,8 @@ function mockActor(role: "admin" | "member" | "owner" | "viewer") {
 }
 
 describe("team actions", () => {
+  afterEach(() => vi.unstubAllEnvs());
+
   beforeEach(() => {
     vi.clearAllMocks();
     resetInviteRateLimitStateForTests();
@@ -114,6 +116,8 @@ describe("team actions", () => {
       projectId: "prj_abcdefghijklmnopqrstuvwx",
       role: "member",
     });
+    expect(result.status).toBe("success");
+    if (result.status !== "success") throw new Error("Expected invite success.");
     const rawToken = result.inviteLink.split("/").at(-1) ?? "";
 
     expect(storedToken).toMatch(/^sha256:[a-f0-9]{64}$/);
@@ -141,6 +145,53 @@ describe("team actions", () => {
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({ action: "team.invite.create", targetId: INVITE_PUBLIC_ID }),
     );
+    expect(result.status).toBe("success");
+  });
+
+  it("returns an actionable structured error when invite email is not configured", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("EMAIL_PROVIDER", "");
+
+    const result = await inviteMember({
+      email: "teammate@example.com",
+      projectId: "prj_abcdefghijklmnopqrstuvwx",
+      role: "member",
+    });
+
+    expect(result).toEqual({
+      message: "Configure EMAIL_PROVIDER (resend, ses, smtp) to send team invites.",
+      status: "error",
+    });
+    expect(mocks.prisma.invite.upsert).not.toHaveBeenCalled();
+  });
+
+  it("does not expose unrelated invite service errors as structured action errors", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("EMAIL_PROVIDER", "unknown-provider");
+
+    await expect(
+      inviteMember({
+        email: "teammate@example.com",
+        projectId: "prj_abcdefghijklmnopqrstuvwx",
+        role: "member",
+      }),
+    ).rejects.toThrow('Unknown EMAIL_PROVIDER "unknown-provider"');
+  });
+
+  it("returns the same structured mailer error when resending an invite", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("EMAIL_PROVIDER", "");
+
+    const result = await resendInvite({
+      inviteId: INVITE_PUBLIC_ID,
+      projectId: "prj_abcdefghijklmnopqrstuvwx",
+    });
+
+    expect(result).toEqual({
+      message: "Configure EMAIL_PROVIDER (resend, ses, smtp) to send team invites.",
+      status: "error",
+    });
+    expect(mocks.prisma.invite.update).not.toHaveBeenCalled();
   });
 
   it("denies invite management to viewers before writing", async () => {
@@ -359,6 +410,8 @@ describe("team actions", () => {
       projectId: "prj_abcdefghijklmnopqrstuvwx",
     });
 
+    expect(result.status).toBe("success");
+    if (result.status !== "success") throw new Error("Expected resend success.");
     expect(result.inviteLink).toContain("https://app.example.com/invite/");
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({ action: "team.invite.revoke" }),

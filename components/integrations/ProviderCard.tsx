@@ -160,7 +160,9 @@ export function ProviderCard({
               <SectionTitle component="h3" size="md">
                 {provider.name}
               </SectionTitle>
-              <StatusPill size="sm" status={provider.status} />
+              {provider.status === "optional" || provider.status === "ready" ? null : (
+                <StatusPill size="sm" status={provider.status} />
+              )}
               {provider.primary ? <StatusPill size="sm" status="primary" /> : null}
               {provider.status === "connected" && provider.enabled === false ? (
                 <StatusPill size="sm" status="disabled" />
@@ -185,7 +187,7 @@ export function ProviderCard({
             timeZone={timeZone}
           />
         ) : (
-          <dl className="m-0 mt-3.5 flex flex-wrap gap-x-9 gap-y-3 border-border-soft border-t pt-3.5 sm:col-span-2 sm:row-start-2">
+          <dl className="-mx-5 -mb-4.5 mt-3.5 flex flex-wrap gap-x-9 gap-y-3 border-border-soft border-t bg-bg-sunken/25 px-5 py-3.5 sm:col-span-2 sm:row-start-2">
             {provider.meta.map((row) => (
               <div key={row.label}>
                 <dt className="font-mono text-[9.5px] uppercase tracking-[0.5px] text-fg-muted">

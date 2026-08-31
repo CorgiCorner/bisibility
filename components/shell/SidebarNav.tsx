@@ -1,5 +1,6 @@
 "use client";
 
+import { GettingStartedNavLink } from "@/components/shell/GettingStartedNavLink";
 import { Tooltip } from "@/components/ui";
 import type { NavItem } from "@/lib/nav/nav-items";
 import { navItemGroups, navItems, RAIL_ICON_SIZE } from "@/lib/nav/nav-items";
@@ -13,6 +14,9 @@ export type SidebarNavProps = {
   collapsed?: boolean;
   onNavigate?: () => void;
   projectRef: string;
+  setupDoneCount?: number;
+  setupTotalCount?: number;
+  showGettingStarted?: boolean;
 };
 
 export function SidebarNav({
@@ -20,6 +24,9 @@ export function SidebarNav({
   collapsed = false,
   onNavigate,
   projectRef,
+  setupDoneCount = 0,
+  setupTotalCount = 4,
+  showGettingStarted = false,
 }: Readonly<SidebarNavProps>) {
   const pathname = usePathname();
   const currentHref = activeHref ?? pathname ?? appPath(projectRef, "dashboard");
@@ -131,7 +138,19 @@ export function SidebarNav({
   // The drawer shares the rail's grouping data, so mobile cannot reorder the same destinations.
   return (
     <nav className="flex flex-col gap-0.5">
-      <div className="flex flex-col gap-0.5">{topItems.map(renderItem)}</div>
+      <div className="flex flex-col gap-0.5">
+        {showGettingStarted ? (
+          <GettingStartedNavLink
+            collapsed={collapsed}
+            currentHref={currentHref}
+            doneCount={setupDoneCount}
+            onNavigate={onNavigate}
+            projectRef={projectRef}
+            totalCount={setupTotalCount}
+          />
+        ) : null}
+        {topItems.map(renderItem)}
+      </div>
       {groupedItems.map((group) => (
         <div className={`flex flex-col gap-0.5 ${collapsed ? "pt-[30px]" : ""}`} key={group.id}>
           {/* 14 + 10 + 4 = a 28px heading box. `block` and `leading-none` pin the line box to

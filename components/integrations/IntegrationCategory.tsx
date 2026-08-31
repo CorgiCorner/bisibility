@@ -1,6 +1,6 @@
 import { ProviderCard } from "@/components/integrations/ProviderCard";
 import { SerpFallbackOrder } from "@/components/integrations/SerpFallbackOrder";
-import { MonoText, SectionTitle } from "@/components/ui";
+import { SectionTitle } from "@/components/ui";
 import type { IntegrationCategoryData, ProviderActionHandlers } from "@/lib/integrations/types";
 import type { ProjectRef } from "@/lib/routing/app-path";
 import type { SearchSyncPreflightPlan } from "@/lib/search-insights/sync/plan";
@@ -39,20 +39,11 @@ export function IntegrationCategory({
           <SectionTitle component="h2" size="md">
             {category.title}
           </SectionTitle>
-          <MonoText muted>{category.eyebrow}</MonoText>
         </div>
         <p className="m-0 max-w-3xl text-[12.5px] leading-5 text-fg-muted">
           {category.description}
         </p>
       </div>
-      {category.id === "serp" ? (
-        <SerpFallbackOrder
-          actions={actions}
-          canManageProviders={canManageProviders}
-          projectId={projectId}
-          providers={category.providers}
-        />
-      ) : null}
       <div className="grid grid-cols-[minmax(0,1fr)] gap-3">
         {category.providers.map((provider, index) => {
           const isFirstSerpProvider = category.id === "serp" && index === 0;
@@ -75,6 +66,14 @@ export function IntegrationCategory({
           );
         })}
       </div>
+      {category.id === "serp" ? (
+        <SerpFallbackOrder
+          actions={actions}
+          canManageProviders={canManageProviders}
+          projectId={projectId}
+          providers={category.providers}
+        />
+      ) : null}
     </section>
   );
 }

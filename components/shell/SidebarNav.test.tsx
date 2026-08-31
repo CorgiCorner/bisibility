@@ -151,6 +151,9 @@ describe("SidebarNav", () => {
     expect(alpha).toHaveAttribute("aria-hidden", "true");
     expect(alpha).toHaveClass("px-[7px]", "py-0.5", "bg-nav-active", "text-fg-muted");
 
+    const competitors = screen.getByRole("link", { name: "Competitors" });
+    expect(competitors.querySelector("[data-experimental-badge-flask]")).toBeInTheDocument();
+
     const timeline = screen.getByRole("link", { name: "Timeline" });
     expect(within(timeline).queryByText("experimental")).toBeNull();
 

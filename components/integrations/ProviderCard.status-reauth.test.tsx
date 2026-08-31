@@ -114,7 +114,7 @@ describe("ProviderCard", () => {
     expect(screen.queryByTestId("connect-drawer")).not.toBeInTheDocument();
   });
 
-  it("renders ready as Ready not Ready to connect", () => {
+  it("omits the redundant ready status pill", () => {
     render(
       <ProviderCard
         canManageProviders
@@ -123,7 +123,7 @@ describe("ProviderCard", () => {
         provider={{ ...integrationCategories[0].providers[1], status: "ready" as const }}
       />,
     );
-    expect(screen.getByText("Ready")).toBeInTheDocument();
+    expect(screen.queryByText("Ready")).not.toBeInTheDocument();
     expect(screen.queryByText("Ready to connect")).not.toBeInTheDocument();
   });
 
@@ -147,7 +147,7 @@ describe("ProviderCard", () => {
         provider={{ ...base, status: "optional" as const }}
       />,
     );
-    expect(screen.getByText("Optional")).toBeInTheDocument();
+    expect(screen.queryByText("Optional")).not.toBeInTheDocument();
   });
 
   it("renders Disabled pill when connected provider is not enabled", () => {

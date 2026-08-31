@@ -61,7 +61,6 @@ export function StepFirstCheck({
   providerConnected,
   providerDefaultValues,
   providerId,
-  projectedCostPerCheckCents,
   runFirstCheckPreviewAction,
   saveMarketsAction,
   testProviderConnectionAction,
@@ -79,13 +78,12 @@ export function StepFirstCheck({
     sampleCount > 1
       ? `1 keyword · ${markets.length} ${markets.length === 1 ? "market" : "markets"} · ${devices.length === 2 && devices.includes("desktop") && devices.includes("mobile") ? "both devices" : `${devices.length} ${devices.length === 1 ? "device" : "devices"}`} · ${sampleCount} checks`
       : null;
-  const { keywordError, keywordOptions, retryKeyword, sampleKeyword, setSampleKeyword } =
-    useFirstCheckKeyword({
-      initialKeywordText,
-      keywordDraft,
-      listFirstCheckCandidatesAction,
-      projectId,
-    });
+  const { keywordError, retryKeyword, sampleKeyword } = useFirstCheckKeyword({
+    initialKeywordText,
+    keywordDraft,
+    listFirstCheckCandidatesAction,
+    projectId,
+  });
   const [providerExpanded, setProviderExpanded] = useState(false);
   const providerToggleRef = useRef<HTMLButtonElement>(null);
   const providerCloseFocusRef = useRef<"run" | "trigger">("trigger");
@@ -112,11 +110,6 @@ export function StepFirstCheck({
     ? displayProvider(providerId ?? flowState?.providerId)
     : "Not connected";
   const frequencyLabel = frequencyLabels[defaults?.frequency ?? "daily"] ?? "Daily";
-  const firstCheckLabel = sampleProject
-    ? "Sample project preview only"
-    : !providerReady
-      ? "Waiting for a provider"
-      : `${sampleCount} sample ${sampleCount === 1 ? "check" : "checks"} - one per market and device`;
   const hasFailedSampleChecks = state.rows.some((row) => row.status === "failed");
   const queueMessage = sampleProject
     ? "Sample projects keep their synthetic ranking history."
@@ -192,30 +185,27 @@ export function StepFirstCheck({
     </Button>
   );
 
+  const reviewDescription = !providerReady
+    ? "Almost ready. Everything is set - connect a data provider whenever you want to run checks."
+    : defaults?.frequency === "manual"
+      ? "Everything's ready. Run your first check whenever you like - nothing runs until you start it."
+      : defaults?.frequency === "paused"
+        ? "Everything's ready. Checks are paused until you resume the schedule."
+        : `Everything's ready. Your first check runs ${frequencyLabel.toLowerCase()}.`;
+
   return (
     <form id={onboardingFormId} onSubmit={onSubmit}>
-      <div className="text-lg font-semibold tracking-[-0.4px]">Run your first check</div>
-      <div className="mt-1 text-[13px] text-fg-muted">
-        Everything&apos;s ready. Here&apos;s what we&apos;ll start tracking.
-      </div>
+      <div className="text-lg font-semibold tracking-[-0.4px]">Review</div>
+      <div className="mt-1 text-[13px] text-fg-muted">{reviewDescription}</div>
 
       <StepFirstCheckReview
         devices={devices}
-        firstCheckLabel={firstCheckLabel}
         frequency={defaults?.frequency}
         frequencyLabel={frequencyLabel}
         keywordCount={keywordCount}
-        keywordOptions={keywordOptions}
         markets={markets}
-        onSampleKeywordChange={setSampleKeyword}
         onTimezoneChange={(value) => void changeTimezone(value)}
-        paused={paused}
-        projectLabel={project?.domain ?? project?.name ?? "Selected project"}
-        providerLabel={
-          providerReady
-            ? `${providerLabel}${projectedCostPerCheckCents != null ? ` · estimated ~$${(projectedCostPerCheckCents / 100).toFixed(4)} per check` : " · estimated rate unavailable"}`
-            : "Not connected"
-        }
+        providerLabel={providerReady ? providerLabel : "Not connected"}
         providerAction={
           !providerReady ? (
             <Button
@@ -232,8 +222,6 @@ export function StepFirstCheck({
           ) : undefined
         }
         providerReady={providerReady}
-        sampleKeyword={sampleKeyword}
-        stateStatus={state.status}
         timezone={timezone}
       />
 

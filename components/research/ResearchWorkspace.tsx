@@ -141,53 +141,51 @@ export function ResearchWorkspace({
 
   return (
     <section className="grid min-w-0 gap-4">
-      {hasProvider ? (
-        <Tooltip content={budgetBlocked ? BUDGET_BLOCKED_TOOLTIP : ""} wrapperClassName="w-full">
-          <div className="w-full">
-            <ResearchSearchCard
-              connectionId={connectionId}
-              connectionOptions={connectionOptions}
-              disabled={budgetBlocked}
-              estimate={estimate}
-              includeClickstream={includeClickstream}
-              location={location}
-              metricsScope={
-                researchAvailable && hasMetricsScopeMismatch(location) ? scope : undefined
-              }
-              mode={mode}
-              onConnectionChange={(value) => {
-                setConnectionId(value);
-                scheduleEstimate(researchAvailable ? seeds : [], { connectionId: value });
-              }}
-              onIncludeClickstreamChange={(value) => {
-                setIncludeClickstream(value);
-                scheduleEstimate(researchAvailable ? seeds : [], { includeClickstream: value });
-              }}
-              onLimitChange={(value) => {
-                setResultLimit(value);
-                scheduleEstimate(researchAvailable ? seeds : [], { resultLimit: value });
-              }}
-              onLocationChange={(value) => {
-                setLocation(value);
-                scheduleEstimate(researchMetricsAvailable(value) ? seeds : [], {
-                  locationKey: value.canonicalKey,
-                });
-              }}
-              lookupDisabled={!researchAvailable}
-              onModeChange={(value) => {
-                setMode(value);
-                scheduleEstimate(researchAvailable ? seeds : [], { mode: value });
-              }}
-              onSeedsChange={updateSeeds}
-              onSubmit={(next) => void runResearch(next)}
-              projectId={context.project.id}
-              researching={researching}
-              resultLimit={resultLimit}
-              seeds={seeds}
-            />
-          </div>
-        </Tooltip>
-      ) : null}
+      <Tooltip content={budgetBlocked ? BUDGET_BLOCKED_TOOLTIP : ""} wrapperClassName="w-full">
+        <div className="w-full">
+          <ResearchSearchCard
+            connectionId={connectionId}
+            connectionOptions={connectionOptions}
+            disabled={budgetBlocked || !hasProvider}
+            estimate={estimate}
+            includeClickstream={includeClickstream}
+            location={location}
+            metricsScope={
+              researchAvailable && hasMetricsScopeMismatch(location) ? scope : undefined
+            }
+            mode={mode}
+            onConnectionChange={(value) => {
+              setConnectionId(value);
+              scheduleEstimate(researchAvailable ? seeds : [], { connectionId: value });
+            }}
+            onIncludeClickstreamChange={(value) => {
+              setIncludeClickstream(value);
+              scheduleEstimate(researchAvailable ? seeds : [], { includeClickstream: value });
+            }}
+            onLimitChange={(value) => {
+              setResultLimit(value);
+              scheduleEstimate(researchAvailable ? seeds : [], { resultLimit: value });
+            }}
+            onLocationChange={(value) => {
+              setLocation(value);
+              scheduleEstimate(researchMetricsAvailable(value) ? seeds : [], {
+                locationKey: value.canonicalKey,
+              });
+            }}
+            lookupDisabled={!hasProvider || !researchAvailable}
+            onModeChange={(value) => {
+              setMode(value);
+              scheduleEstimate(researchAvailable ? seeds : [], { mode: value });
+            }}
+            onSeedsChange={updateSeeds}
+            onSubmit={(next) => void runResearch(next)}
+            projectId={context.project.id}
+            researching={researching}
+            resultLimit={resultLimit}
+            seeds={seeds}
+          />
+        </div>
+      </Tooltip>
       <RecentResearchSearches
         disabled={!hasProvider}
         disabledHint="Connect DataForSEO to replay recent searches."

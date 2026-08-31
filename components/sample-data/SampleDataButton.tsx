@@ -2,7 +2,6 @@
 
 import { Button, type ButtonProps, Tooltip } from "@/components/ui";
 import { installSampleData } from "@/lib/actions/sample-data";
-import { appRootPath } from "@/lib/routing/app-path";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { cn } from "@/lib/ui/cn";
 import { useRouter } from "next/navigation";
@@ -12,7 +11,7 @@ export const SAMPLE_DATA_BUTTON_TOOLTIP =
   "Loads a temporary sample project and skips the rest of setup.";
 
 type SampleDataButtonProps = {
-  action?: () => Promise<unknown>;
+  action?: () => Promise<{ destination: string }>;
   className?: string;
   fullWidth?: boolean;
   help?: string;
@@ -40,8 +39,8 @@ export function SampleDataButton({
     setError(null);
     startTransition(() => {
       void action()
-        .then(() => {
-          router.push(appRootPath());
+        .then(({ destination }) => {
+          router.push(destination);
           router.refresh();
         })
         .catch((error_: unknown) => {

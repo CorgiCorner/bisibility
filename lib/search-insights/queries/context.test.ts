@@ -100,6 +100,7 @@ describe("getSearchInsightsContext", () => {
       earliestTargetDate: "2025-03-08",
       etaLabel: null,
       finalizedThroughDate: "2026-07-08",
+      firstDataDate: null,
       firstViewReady: true,
       localReadableThrough: "2026-07-08",
       lastActivityAt: null,

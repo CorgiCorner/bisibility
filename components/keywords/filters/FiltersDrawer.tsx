@@ -168,12 +168,14 @@ export function FiltersDrawer({
           </div>
           <div className="mb-2 mt-4 text-[12px] text-fg-muted">Position change / 7d</div>
           <FilterSegment<ChangeFilter>
+            ariaLabel="Position change"
             onChange={(change) => patch({ change })}
             options={changeOptions}
             value={filters.change}
           />
           <div className="mb-2 mt-4 text-[12px] text-fg-muted">Last check</div>
           <FilterSegment<LastCheckFilter>
+            ariaLabel="Last check"
             onChange={(lastCheck) => patch({ lastCheck })}
             options={lastCheckOptions}
             value={filters.lastCheck}

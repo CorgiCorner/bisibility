@@ -75,6 +75,7 @@ export function SearchInsightsWaitingStrip({
     temporalIdentityComparison?.detail ?? null,
   );
   const paused = progress.state === "paused";
+  const waitingForFirstData = progress.state === "waiting_for_first_data";
   const done = progress.state === "done";
   const presentation = importStartupPresentation(progress);
   const fact =
@@ -98,10 +99,10 @@ export function SearchInsightsWaitingStrip({
       "Pausing longer than Google's 16-month window permanently loses the oldest unimported days."
     ) : paused ? (
       NEUTRAL_COPY.importPaused
-    ) : (
+    ) : waitingForFirstData ? null : (
       importRunningOwnershipCopy(importState?.plannedRetentionMonths ?? 16, deploymentMode)
     );
-  const showActiveSegments = !waitingForWorker && !paused && !done;
+  const showActiveSegments = !waitingForWorker && !paused && !done && !waitingForFirstData;
   return (
     <section
       aria-label="Data provenance"
@@ -130,18 +131,20 @@ export function SearchInsightsWaitingStrip({
         </span>
       ) : null}
       {showActiveSegments && presentation.showHeartbeat ? <SearchInsightsRefresh active /> : null}
-      {userPaused || progress.state === "running" ? (
+      {userPaused || (progress.state === "running" && !waitingForFirstData) ? (
         <SearchImportPauseControl
           action={userPaused ? resumeAction : pauseAction}
           intent={userPaused ? "resume" : "pause"}
           projectId={projectId}
         />
       ) : null}
-      <Tooltip content={detail} semantics="description">
-        <span className="inline-flex">
-          <Info weight="regular" aria-hidden className="shrink-0 text-fg-muted" size={13} />
-        </span>
-      </Tooltip>
+      {detail ? (
+        <Tooltip content={detail} semantics="description">
+          <span className="inline-flex">
+            <Info weight="regular" aria-hidden className="shrink-0 text-fg-muted" size={13} />
+          </span>
+        </Tooltip>
+      ) : null}
     </section>
   );
 }

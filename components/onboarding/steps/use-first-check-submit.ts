@@ -36,7 +36,9 @@ export function useFirstCheckSubmit({
       if (navigationProjectId && completeOnboardingAction) {
         await completeOnboardingAction({ projectId: navigationProjectId });
       }
-      router.push(navigationProjectId ? appPath(navigationProjectId, "dashboard") : appRootPath());
+      router.push(
+        navigationProjectId ? appPath(navigationProjectId, "getting-started") : appRootPath(),
+      );
     } catch (error) {
       setSubmitError(actionErrorMessage(error, "Onboarding could not be completed. Try again."));
       submittingRef.current = false;

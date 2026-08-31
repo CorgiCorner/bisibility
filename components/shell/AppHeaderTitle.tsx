@@ -4,14 +4,8 @@ import { headerMetaFor } from "@/components/shell/header-title";
 import { appRootPath } from "@/lib/routing/app-path";
 import { usePathname } from "next/navigation";
 
-export type AppHeaderTitleProps = {
-  keywordCount?: number;
-};
-
-export function AppHeaderTitle({ keywordCount }: Readonly<AppHeaderTitleProps>) {
-  const { headerVariant, subtitle, title } = headerMetaFor(usePathname() ?? appRootPath(), {
-    keywordCount,
-  });
+export function AppHeaderTitle() {
+  const { headerVariant, subtitle, title } = headerMetaFor(usePathname() ?? appRootPath());
   const settingsHeader = headerVariant === "settings";
 
   return (

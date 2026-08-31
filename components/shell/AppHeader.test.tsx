@@ -13,13 +13,42 @@ vi.mock("./CommandPalette", () => ({
   ),
 }));
 vi.mock("./MobileNav", () => ({
-  MobileNav: () => <button type="button">Navigation</button>,
+  MobileNav: ({
+    setupDoneCount,
+    setupTotalCount,
+  }: {
+    setupDoneCount?: number;
+    setupTotalCount?: number;
+  }) => (
+    <button data-setup-progress={`${setupDoneCount}/${setupTotalCount}`} type="button">
+      Navigation
+    </button>
+  ),
 }));
 vi.mock("./NotificationBell", () => ({
   NotificationBell: () => <button type="button">Notifications</button>,
 }));
 
 describe("AppHeader", () => {
+  it("threads setup progress into mobile navigation", () => {
+    render(
+      <AppHeader
+        activeProjectId="proj_example"
+        canCreateWorkspace={false}
+        projectRef="project-example"
+        setupDoneCount={3}
+        setupTotalCount={4}
+        showGettingStarted
+        workspaces={[]}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Navigation" })).toHaveAttribute(
+      "data-setup-progress",
+      "3/4",
+    );
+  });
+
   it("keeps 24px between provider spend and the utility controls", () => {
     render(
       <AppHeader

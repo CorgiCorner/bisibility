@@ -11,7 +11,7 @@ describe("OnboardingWizard", () => {
     expect(screen.getByText("Enter the website you want to track.")).toBeInTheDocument();
 
     const rail = screen.getByLabelText("Onboarding steps");
-    for (const name of ["Connect data", "Add keywords", "First check"]) {
+    for (const name of ["Connect data", "Add keywords", "Review"]) {
       const lockedStep = within(rail).getByRole("button", { name });
       expect(lockedStep).toBeDisabled();
       fireEvent.click(lockedStep);
@@ -333,7 +333,7 @@ describe("OnboardingWizard", () => {
     fireEvent.click(save);
     await waitFor(() => expect(connectProviderAction).toHaveBeenCalledTimes(1));
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
-    expect(screen.getByText(/DataForSEO · estimated rate unavailable/)).toBeInTheDocument();
+    expect(screen.getByLabelText("Data source: DataForSEO")).toBeInTheDocument();
     const run = screen.getByRole("button", { name: "Run a test check (1 keyword)" });
     expect(run).toBeEnabled();
     expect(run).toHaveFocus();
@@ -370,7 +370,7 @@ describe("OnboardingWizard", () => {
 
     save.resolve();
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
-    expect(screen.getByText(/DataForSEO · estimated rate unavailable/)).toBeInTheDocument();
+    expect(screen.getByLabelText("Data source: DataForSEO")).toBeInTheDocument();
   });
 
   it("keeps Step 4 provider selection on the final-step URL", async () => {
@@ -475,7 +475,7 @@ describe("OnboardingWizard", () => {
     expect(completeOnboardingAction).toHaveBeenCalledWith({
       projectId: "prj_1",
     });
-    expect(routerMock.push).toHaveBeenCalledWith("/app/prj_1/dashboard");
+    expect(routerMock.push).toHaveBeenCalledWith("/app/prj_1/getting-started");
   });
 
   it("renders and saves hydrated registry markets on a resumed final step", async () => {
@@ -495,7 +495,9 @@ describe("OnboardingWizard", () => {
     });
 
     expect(
-      screen.getByLabelText(/Markets: United States \/ English · Spain \/ English/),
+      screen.getByLabelText(
+        "Tracking: 1 keyword · Google · United States (English) · Spain (English) · 1 device",
+      ),
     ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Open app" }));
 
@@ -518,8 +520,10 @@ describe("OnboardingWizard", () => {
       providerConnected: false,
     });
 
-    expect(screen.getByText("1 sample check - one per market and device")).toBeInTheDocument();
-    expect(screen.getByText(/SerpApi · estimated rate unavailable/)).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("Tracking: 1 keyword · Google · United States (English) · 1 device"),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Data source: SerpApi")).toBeInTheDocument();
     expect(screen.queryByText(/No SERP provider connected/)).toBeNull();
   });
 
@@ -558,6 +562,6 @@ describe("OnboardingWizard", () => {
         "Search Console sync didn't finish - observed data may take a moment. You can retry from Integrations.",
       ),
     ).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "First check" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Review" })).toBeInTheDocument();
   });
 });

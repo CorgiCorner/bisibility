@@ -1,6 +1,7 @@
 "use client";
 
 import { CommandPaletteTrigger } from "@/components/shell/CommandPalette";
+import { GettingStartedNavLink } from "@/components/shell/GettingStartedNavLink";
 import { useSidebarCollapsed } from "@/components/shell/SidebarCollapsedState";
 import type { ShellUser } from "@/components/shell/SidebarFooter";
 import { SidebarFooter } from "@/components/shell/SidebarFooter";
@@ -20,6 +21,9 @@ export type SidebarProps = {
   activeProjectId: string;
   canCreateWorkspace: boolean;
   projectRef: string;
+  setupDoneCount?: number;
+  setupTotalCount?: number;
+  showGettingStarted?: boolean;
   showHostedLinks?: boolean;
   user?: ShellUser;
   workspaces: WorkspaceSummary[];
@@ -30,6 +34,9 @@ export function Sidebar({
   activeProjectId,
   canCreateWorkspace,
   projectRef,
+  setupDoneCount = 0,
+  setupTotalCount = 4,
+  showGettingStarted = false,
   showHostedLinks = false,
   user,
   version,
@@ -206,7 +213,18 @@ export function Sidebar({
           scrolls and everything around it keeps its size, so the brand, the switcher and the
           version line stay where the user reaches for them. */}
       <nav className="mt-4 flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto overflow-x-hidden overscroll-contain [scrollbar-color:var(--border)_transparent] [scrollbar-width:thin]">
-        <div className="flex flex-col gap-0.5">{topItems.map(renderItem)}</div>
+        <div className="flex flex-col gap-0.5">
+          {showGettingStarted ? (
+            <GettingStartedNavLink
+              collapsed={collapsed}
+              currentHref={currentHref}
+              doneCount={setupDoneCount}
+              projectRef={projectRef}
+              totalCount={setupTotalCount}
+            />
+          ) : null}
+          {topItems.map(renderItem)}
+        </div>
         {groupedItems.map((group) => (
           <div className={`flex flex-col gap-0.5 ${collapsed ? "pt-[30px]" : ""}`} key={group.id}>
             {/* 14 + 10 + 4 = a 28px heading box. `block` and `leading-none` pin the line box to

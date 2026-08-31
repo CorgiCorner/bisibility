@@ -1,5 +1,5 @@
 import type { ProviderActionHandlers } from "@/lib/integrations/types";
-import { render } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import IntegrationsPage from "./page";
@@ -82,6 +82,16 @@ describe("IntegrationsPage", () => {
       connectionCount: 0,
       timeZone: "Europe/Madrid",
     });
+  });
+
+  it("does not render the self-host provider banner", async () => {
+    render(
+      await IntegrationsPage({
+        params: Promise.resolve({ project: "prj_abcdefghijklmnopqrstuvwx" }),
+      }),
+    );
+
+    expect(screen.queryByText("Bring your own providers.")).not.toBeInTheDocument();
   });
 
   it("opens the provider requested by the connect query", async () => {

@@ -26,6 +26,19 @@ describe("SerpFallbackOrder", () => {
     vi.clearAllMocks();
   });
 
+  it("separates the explanatory copy from the fallback heading", () => {
+    render(
+      <SerpFallbackOrder
+        actions={actions}
+        canManageProviders
+        projectId="prj_1"
+        providers={connectedProviders()}
+      />,
+    );
+
+    expect(screen.getByText(/^Rank checks try active providers/)).toHaveClass("mt-2");
+  });
+
   it("shows active, paused, and disconnected providers in one explicit order", () => {
     const [dataForSeo, serpApi] = connectedProviders();
     render(
@@ -43,7 +56,8 @@ describe("SerpFallbackOrder", () => {
 
     expect(screen.getByText("First provider")).toBeInTheDocument();
     expect(screen.getByText("Paused · not used for rank checks")).toBeInTheDocument();
-    expect(screen.getByText("Not connected")).toBeInTheDocument();
+    expect(screen.getAllByText("Not connected")).toHaveLength(1);
+    expect(screen.queryByText("Connect below")).not.toBeInTheDocument();
   });
 
   it("persists the visible top-to-bottom order", async () => {

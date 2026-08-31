@@ -32,6 +32,7 @@ describe("BacklinksPage", () => {
     mocks.context.mockResolvedValue({
       costContext: { capCents: 5_000, spentCents: 0 },
       defaultTarget: "project.example",
+      providerStatus: "connected",
       recentTargets: [],
     });
     mocks.analyze.mockResolvedValue({

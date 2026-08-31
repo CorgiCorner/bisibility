@@ -19,6 +19,7 @@ const mocks = vi.hoisted(() => ({
   continueAsNew: vi.fn(),
   incremental: vi.fn(),
   milestone: vi.fn(),
+  patched: vi.fn(),
   incrementalForAll: vi.fn(),
   markFailed: vi.fn(),
   sleep: vi.fn(),
@@ -27,6 +28,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@temporalio/workflow", () => ({
   ApplicationFailure: mocks.ApplicationFailure,
   continueAsNew: mocks.continueAsNew,
+  patched: mocks.patched,
   proxyActivities: () => ({
     deliverSearchInsightsMilestoneActivity: mocks.milestone,
     markSearchInsightsImportFailedActivity: mocks.markFailed,
@@ -62,6 +64,7 @@ describe("searchInsightsBackfillWorkflow", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.sleep.mockResolvedValue(undefined);
+    mocks.patched.mockReturnValue(true);
   });
 
   it("loops batches until the cursor passes the earliest target day", async () => {
@@ -75,6 +78,18 @@ describe("searchInsightsBackfillWorkflow", () => {
     });
     expect(mocks.backfill).toHaveBeenCalledTimes(2);
     expect(mocks.backfill).toHaveBeenCalledWith(input);
+  });
+
+  it("attempts first_data before the existing milestones for every durable batch", async () => {
+    mocks.backfill.mockResolvedValue(batch({ done: true }));
+
+    await searchInsightsBackfillWorkflow(input);
+
+    expect(mocks.milestone.mock.calls).toEqual([
+      [{ importId: "imp_1", milestone: "first_data" }],
+      [{ importId: "imp_1", milestone: "first_28" }],
+      [{ importId: "imp_1", milestone: "full" }],
+    ]);
   });
 
   it("passes an explicit batch size through to the activity", async () => {
@@ -145,6 +160,24 @@ describe("searchInsightsBackfillWorkflow", () => {
       status: "paused",
     });
     expect(mocks.markFailed).not.toHaveBeenCalled();
+  });
+
+  it("ends an empty discovery without reporting completion milestones", async () => {
+    mocks.backfill.mockResolvedValue(
+      batch({
+        daysProcessed: 0,
+        done: false,
+        nextCursor: null,
+        requestSets: 0,
+        waitingForFirstData: true,
+      }),
+    );
+
+    await expect(searchInsightsBackfillWorkflow(input)).resolves.toEqual({
+      days: 0,
+      status: "waiting_for_first_data",
+    });
+    expect(mocks.milestone).not.toHaveBeenCalled();
   });
 
   it("marks the import failed only when an unexpected failure ends the run", async () => {

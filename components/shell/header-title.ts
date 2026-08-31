@@ -1,4 +1,3 @@
-import { pluralize } from "@/lib/format/pluralize";
 import { appSectionPath } from "@/lib/routing/app-path";
 
 export type HeaderMeta = {
@@ -8,18 +7,13 @@ export type HeaderMeta = {
   title: string;
 };
 
-type HeaderContext = {
-  keywordCount?: number;
-};
-
 function matches(pathname: string, base: string): boolean {
   return pathname === base || pathname.startsWith(`${base}/`);
 }
 
 /** Derives the header title and subtitle from the current pathname. */
-export function headerMetaFor(pathname: string, context: HeaderContext = {}): HeaderMeta {
+export function headerMetaFor(pathname: string): HeaderMeta {
   const sectionPath = appSectionPath(pathname);
-  const keywordCount = context.keywordCount ?? 248;
 
   if (matches(sectionPath, "/account/security")) {
     return sectionMeta("Security", "Password, sessions and account protection.");
@@ -73,11 +67,7 @@ export function headerMetaFor(pathname: string, context: HeaderContext = {}): He
   }
 
   if (matches(sectionPath, "/rank-tracker")) {
-    const subtitle =
-      keywordCount === 0
-        ? "No keywords tracked yet"
-        : `${pluralize(keywordCount, "tracked keyword")} · click any row to edit`;
-    return sectionMeta("Rank Tracker", subtitle);
+    return { title: "Rank Tracker" };
   }
 
   if (matches(sectionPath, "/keyword-research")) {
@@ -89,6 +79,10 @@ export function headerMetaFor(pathname: string, context: HeaderContext = {}): He
 
   if (matches(sectionPath, "/integrations")) {
     return sectionMeta("Integrations", "Connect data providers and analytics sources.");
+  }
+
+  if (matches(sectionPath, "/getting-started")) {
+    return sectionMeta("Get started", "Set up your rank tracking workflow.");
   }
 
   if (matches(sectionPath, "/install")) {

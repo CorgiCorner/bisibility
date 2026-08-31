@@ -138,6 +138,9 @@ describe("CloudBetaBanner", () => {
     const actions = within(screen.getByTestId("cloud-beta-actions"));
     expect(actions.getByRole("button", { name: "What beta covers" })).toBeInTheDocument();
     expect(actions.getByRole("button", { name: "Export data" })).toBeInTheDocument();
+    for (const name of ["What beta covers", "Export data"]) {
+      expect(actions.getByRole("button", { name })).toHaveClass("hover:underline");
+    }
     expect(screen.getByTestId("cloud-beta-actions")).toHaveClass(
       "flex",
       "shrink-0",

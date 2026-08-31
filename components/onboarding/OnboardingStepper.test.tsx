@@ -32,14 +32,11 @@ describe("OnboardingStepper", () => {
       "aria-disabled",
       "true",
     );
-    expect(rail.querySelector('[aria-label="First check"]')).toHaveAttribute(
-      "aria-disabled",
-      "true",
+    expect(rail.querySelector('[aria-label="Review"]')).toHaveAttribute("aria-disabled", "true");
+    expect(rail.querySelector('[aria-label="Review"]')).toHaveTextContent("Your setup at a glance");
+    expect(rail.querySelector('[aria-label="Review"] [data-step-dot-state]')).toHaveTextContent(
+      "4",
     );
-    expect(rail.querySelector('[aria-label="First check"]')).toHaveTextContent("Run and review");
-    expect(
-      rail.querySelector('[aria-label="First check"] [data-step-dot-state]'),
-    ).toHaveTextContent("4");
 
     const completedStep = rail.querySelector(
       '[aria-label="Create project, completed"] [data-step-dot-state="past"]',
@@ -91,8 +88,8 @@ describe("OnboardingStepper", () => {
     fireEvent.click(doneStep);
     fireEvent.click(within(rail).getByRole("button", { name: "Connect data, completed" }));
 
-    const futureRailButton = within(rail).getByRole("button", { name: "First check" });
-    expect(futureRailButton).toHaveAccessibleName("First check");
+    const futureRailButton = within(rail).getByRole("button", { name: "Review" });
+    expect(futureRailButton).toHaveAccessibleName("Review");
     expect(futureRailButton).toHaveClass("MuiButton-root");
     expect(futureRailButton).toBeDisabled();
     expect(futureRailButton).toHaveAttribute("aria-disabled", "true");
@@ -104,7 +101,7 @@ describe("OnboardingStepper", () => {
     );
     fireEvent.click(futureRailButton);
 
-    for (const dot of screen.getAllByRole("button", { name: "First check" })) {
+    for (const dot of screen.getAllByRole("button", { name: "Review" })) {
       expect(dot).toBeDisabled();
       expect(dot).toHaveAttribute("aria-disabled", "true");
     }

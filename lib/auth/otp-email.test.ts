@@ -1,18 +1,12 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
-const { firstRunMock, reserveEmailSignInCodeMock, sendEmailMock } = vi.hoisted(() => ({
-  firstRunMock: vi.fn(),
-  reserveEmailSignInCodeMock: vi.fn(),
+const { sendEmailMock } = vi.hoisted(() => ({
   sendEmailMock: vi.fn(),
-}));
-
-vi.mock("@/lib/auth/first-run", () => ({ isFirstRun: firstRunMock }));
-vi.mock("@/lib/auth/signin-capacity", () => ({
-  reserveEmailSignInCode: reserveEmailSignInCodeMock,
 }));
 vi.mock("@/lib/email/send", () => ({ sendEmail: sendEmailMock }));
 
 import { sendOtpEmail } from "./otp-email";
+import { withOtpSendState } from "./otp-send-context";
 
 function clearEmailEnv() {
   vi.stubEnv("EMAIL_PROVIDER", "");
@@ -25,13 +19,7 @@ function clearEmailEnv() {
 const input = { email: "owner@example.com", otp: "482913", type: "sign-in" as const };
 
 describe("auth OTP email", () => {
-  beforeEach(() => {
-    firstRunMock.mockResolvedValue(false);
-    reserveEmailSignInCodeMock.mockResolvedValue({ gated: true, granted: true });
-  });
-
   afterEach(() => {
-    reserveEmailSignInCodeMock.mockReset();
     sendEmailMock.mockReset();
     vi.unstubAllEnvs();
     vi.restoreAllMocks();
@@ -42,7 +30,9 @@ describe("auth OTP email", () => {
     vi.stubEnv("EMAIL_PROVIDER", "resend");
     vi.stubEnv("RESEND_API_KEY", "email-key");
 
-    await sendOtpEmail(input, { fixedOtpEnabled: false });
+    await withOtpSendState({ firstRunFallback: false, sendCounterReserved: true }, () =>
+      sendOtpEmail(input),
+    );
 
     expect(sendEmailMock).toHaveBeenCalledExactlyOnceWith({
       category: "transactional",
@@ -52,7 +42,6 @@ describe("auth OTP email", () => {
       text: "Your bisibility code is 482913. It expires in 5 minutes.",
       to: "owner@example.com",
     });
-    expect(firstRunMock).not.toHaveBeenCalled();
   });
 
   it("subjects each verification type distinctly", async () => {
@@ -60,9 +49,9 @@ describe("auth OTP email", () => {
     vi.stubEnv("EMAIL_PROVIDER", "resend");
     vi.stubEnv("RESEND_API_KEY", "email-key");
 
-    await sendOtpEmail({ ...input, type: "forget-password" }, { fixedOtpEnabled: false });
-    await sendOtpEmail({ ...input, type: "change-email" }, { fixedOtpEnabled: false });
-    await sendOtpEmail({ ...input, type: "email-verification" }, { fixedOtpEnabled: false });
+    await sendOtpEmail({ ...input, type: "forget-password" });
+    await sendOtpEmail({ ...input, type: "change-email" });
+    await sendOtpEmail({ ...input, type: "email-verification" });
 
     expect(sendEmailMock.mock.calls[0]?.[0]?.subject).toBe("Reset your bisibility password");
     expect(sendEmailMock.mock.calls[1]?.[0]?.subject).toBe("Confirm your new bisibility email");
@@ -73,51 +62,58 @@ describe("auth OTP email", () => {
     const info = vi.spyOn(console, "info").mockImplementation(() => undefined);
     clearEmailEnv();
 
-    await sendOtpEmail(input, { fixedOtpEnabled: false });
+    await sendOtpEmail(input);
 
     expect(sendEmailMock).not.toHaveBeenCalled();
     expect(info).toHaveBeenCalledWith("[auth] sign-in OTP for owner@example.com: 482913");
   });
 
-  it("still fails after setup when production has no mailer", async () => {
+  it("rejects production sends when no mailer is configured", async () => {
+    const info = vi.spyOn(console, "info").mockImplementation(() => undefined);
     clearEmailEnv();
     vi.stubEnv("NODE_ENV", "production");
 
-    await expect(sendOtpEmail(input, { fixedOtpEnabled: false })).rejects.toThrow(
-      "Configure EMAIL_PROVIDER (resend, ses, smtp) to send auth OTP email.",
-    );
-    expect(firstRunMock).toHaveBeenCalledOnce();
+    await expect(sendOtpEmail(input)).rejects.toThrow("Configure EMAIL_PROVIDER");
+    expect(info).not.toHaveBeenCalled();
   });
 
   it("logs the code for a production self-host first run without a mailer", async () => {
     const info = vi.spyOn(console, "info").mockImplementation(() => undefined);
     clearEmailEnv();
     vi.stubEnv("NODE_ENV", "production");
-    firstRunMock.mockResolvedValue(true);
-
-    await sendOtpEmail(input, { fixedOtpEnabled: false });
+    await withOtpSendState({ firstRunFallback: true, sendCounterReserved: false }, () =>
+      sendOtpEmail(input),
+    );
 
     expect(sendEmailMock).not.toHaveBeenCalled();
-    expect(reserveEmailSignInCodeMock).not.toHaveBeenCalled();
-    expect(info).toHaveBeenCalledWith("[auth] sign-in OTP for owner@example.com: 482913");
+    expect(info).toHaveBeenNthCalledWith(1, "[auth] sign-in OTP for owner@example.com: 482913");
+    expect(info).toHaveBeenNthCalledWith(
+      2,
+      "Configure EMAIL_PROVIDER (resend, ses, smtp) to receive future sign-in codes by email.",
+    );
   });
 
-  it("does not log non-sign-in codes during first-run setup", async () => {
+  it("never logs non-sign-in codes in production without a mailer", async () => {
     clearEmailEnv();
     vi.stubEnv("NODE_ENV", "production");
-    firstRunMock.mockResolvedValue(true);
+    const info = vi.spyOn(console, "info").mockImplementation(() => undefined);
 
-    await expect(
-      sendOtpEmail({ ...input, type: "forget-password" }, { fixedOtpEnabled: false }),
-    ).rejects.toThrow("Configure EMAIL_PROVIDER (resend, ses, smtp) to send auth OTP email.");
+    await expect(sendOtpEmail({ ...input, type: "forget-password" })).rejects.toThrow(
+      "Configure EMAIL_PROVIDER",
+    );
+    expect(info).not.toHaveBeenCalled();
   });
 
   it("keeps the fixed-OTP demo path alive without a mailer in production", async () => {
-    const info = vi.spyOn(console, "info").mockImplementation(() => undefined);
-    clearEmailEnv();
+    vi.resetModules();
+    vi.stubEnv("DEMO_FIXED_OTP", "1");
+    vi.stubEnv("DEMO_INSTANCE_INSECURE_AUTH_ACK", "1");
     vi.stubEnv("NODE_ENV", "production");
+    clearEmailEnv();
+    const info = vi.spyOn(console, "info").mockImplementation(() => undefined);
+    const { sendOtpEmail: sendFixedOtpEmail } = await import("./otp-email");
 
-    await sendOtpEmail(input, { fixedOtpEnabled: true });
+    await sendFixedOtpEmail(input);
 
     expect(sendEmailMock).not.toHaveBeenCalled();
     expect(info).toHaveBeenCalledWith("[auth] sign-in OTP for owner@example.com: 482913");

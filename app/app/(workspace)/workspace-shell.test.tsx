@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   deployment: { isCloud: false },
   lastExport: vi.fn(),
   listWorkspaces: vi.fn(),
+  loadSetupContext: vi.fn(),
   querySession: vi.fn(),
   supportWidget: vi.fn(() => <aside data-testid="support-extension" />),
   workerLiveness: vi.fn(),
@@ -33,8 +34,23 @@ vi.mock("@/components/shell/AppFooter", () => ({
   ),
 }));
 vi.mock("@/components/shell/AppHeader", () => ({
-  AppHeader: ({ actions, showHostedLinks }: { actions: ReactNode; showHostedLinks: boolean }) => (
-    <header data-hosted-links={showHostedLinks}>{actions}</header>
+  AppHeader: ({
+    actions,
+    setupDoneCount,
+    setupTotalCount,
+    showHostedLinks,
+  }: {
+    actions: ReactNode;
+    setupDoneCount: number;
+    setupTotalCount: number;
+    showHostedLinks: boolean;
+  }) => (
+    <header
+      data-header-setup={`${setupDoneCount}/${setupTotalCount}`}
+      data-hosted-links={showHostedLinks}
+    >
+      {actions}
+    </header>
   ),
 }));
 vi.mock("@/components/shell/CloudBetaBanner", () => ({
@@ -61,8 +77,22 @@ vi.mock("@/components/shell/ProjectWriteModeProvider", () => ({
   ProjectWriteModeProvider: ({ children }: { children: ReactNode }) => children,
 }));
 vi.mock("@/components/shell/Sidebar", () => ({
-  Sidebar: ({ showHostedLinks }: { showHostedLinks: boolean }) => (
-    <nav data-hosted-links={showHostedLinks} />
+  Sidebar: ({
+    setupDoneCount,
+    setupTotalCount,
+    showGettingStarted,
+    showHostedLinks,
+  }: {
+    setupDoneCount: number;
+    setupTotalCount: number;
+    showGettingStarted: boolean;
+    showHostedLinks: boolean;
+  }) => (
+    <nav
+      data-getting-started={showGettingStarted}
+      data-hosted-links={showHostedLinks}
+      data-sidebar-setup={`${setupDoneCount}/${setupTotalCount}`}
+    />
   ),
 }));
 vi.mock("@/lib/deployment/deployment", () => ({
@@ -89,6 +119,7 @@ vi.mock("@/lib/queries/cloud-beta-export", () => ({
   getLatestCloudPackageExport: mocks.lastExport,
 }));
 vi.mock("@/lib/queries/workspaces", () => ({ listWorkspaces: mocks.listWorkspaces }));
+vi.mock("@/lib/queries/setup-context", () => ({ loadSetupContext: mocks.loadSetupContext }));
 vi.mock("next/headers", () => ({ cookies: mocks.cookies }));
 
 import { WorkspaceShell } from "./workspace-shell";
@@ -115,6 +146,19 @@ describe("workspace layout", () => {
     mocks.cookies.mockResolvedValue({ get: vi.fn(() => undefined) });
     mocks.budgetSummary.mockResolvedValue({ capCents: 5_000, spentCents: 20 });
     mocks.lastExport.mockResolvedValue(null);
+    mocks.loadSetupContext.mockResolvedValue({
+      completedCheckCount: 0,
+      inFlightBatch: null,
+      keywordCount: 0,
+      keywordIds: [],
+      project: {
+        exists: true,
+        name: "Example",
+        publicRef: "prj_f00000000000000000000000",
+      },
+      providerExists: false,
+      schedule: { mode: "manual" },
+    });
     mocks.workerLiveness.mockResolvedValue({
       alertDeliveryTaskQueue: null,
       namespace: null,
@@ -139,6 +183,44 @@ describe("workspace layout", () => {
     expect(markup).not.toContain("data-project-domain");
     expect(mocks.querySession).toHaveBeenCalledOnce();
     expect(mocks.listWorkspaces).toHaveBeenCalledOnce();
+  });
+
+  it("shows getting started while setup is incomplete", async () => {
+    const result = await WorkspaceShell({
+      activeProjectId: "project_1",
+      children: <div>Workspace content</div>,
+      projectRef: "prj_f00000000000000000000000",
+    });
+    const markup = renderToStaticMarkup(result);
+    expect(markup).toContain('data-getting-started="true"');
+    expect(markup).toContain('data-sidebar-setup="1/4"');
+    expect(markup).toContain('data-header-setup="1/4"');
+  });
+
+  it("removes getting started only after completed setup is acknowledged", async () => {
+    const projectRef = "prj_f00000000000000000000000";
+    mocks.loadSetupContext.mockResolvedValueOnce({
+      completedCheckCount: 1,
+      inFlightBatch: null,
+      keywordCount: 1,
+      keywordIds: ["kw_abcdefghijklmnopqrstuvwx"],
+      project: { exists: true, name: "Example", publicRef: projectRef },
+      providerExists: true,
+      schedule: { mode: "manual" },
+    });
+    const { addSetupAcknowledgement, serializeSetupAcknowledgements } = await import(
+      "@/lib/getting-started/setup-acknowledgement"
+    );
+    const value = serializeSetupAcknowledgements(addSetupAcknowledgement([], "user-1", projectRef));
+    mocks.cookies.mockResolvedValueOnce({
+      get: vi.fn((name: string) => (name === "getting-started-ack" ? { value } : undefined)),
+    });
+    const result = await WorkspaceShell({
+      activeProjectId: "project_1",
+      children: <div>Workspace content</div>,
+      projectRef,
+    });
+    expect(renderToStaticMarkup(result)).toContain('data-getting-started="false"');
   });
 
   it("does not load support in a self-hosted workspace", async () => {

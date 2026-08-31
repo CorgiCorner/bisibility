@@ -66,6 +66,7 @@ export const Idle: Story = {
     context: {
       costContext: { capCents: 5000, spentCents: 1246 },
       defaultTarget: "acme-store.com",
+      providerStatus: "connected",
       recentTargets: [],
     },
     loadMoreAction,

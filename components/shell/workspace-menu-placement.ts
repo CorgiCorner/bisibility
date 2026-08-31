@@ -5,17 +5,17 @@
 export const WORKSPACE_MENU_OFFSET = 6;
 /** Minimum breathing room the menu must keep from the top of the viewport. */
 export const WORKSPACE_MENU_VIEWPORT_MARGIN = 8;
-export const WORKSPACE_MENU_WIDTH = 248;
-/** The collapsed rail is 80px wide; a 248px popover laid over it would swallow the column. */
+export const WORKSPACE_MENU_WIDTH = 320;
+/** The collapsed rail is 80px wide; keep the popup clear of the column. */
 export const WORKSPACE_MENU_RAIL_GAP = 10;
 
 // Menu chrome: 6px padding plus a 1px border, top and bottom.
 const PAPER_FRAME = 14;
-// "Projects" label: 10px top, 7px bottom, ~15px of mono line box.
-const SECTION_LABEL = 32;
+// The 40px header replaces the paper top padding; its bottom gap restores that 6px.
+const SEARCH_HEADER = 40;
 // 8px padding + a name and a meta line + 8px padding, plus the row's 4px bottom margin.
 const WORKSPACE_ROW = 52;
-// 8px padding + a 30px leading slot + 8px padding, plus the row's 4px bottom margin.
+// 8px padding + two compact text lines + 8px padding, plus the row's 4px bottom margin.
 const ACTION_ROW = 50;
 // 1px rule with a 4px margin above and below, plus the list-item line box it sits in.
 const DIVIDER = 13;
@@ -32,7 +32,7 @@ export type WorkspaceMenuOrigins = {
 export function estimateWorkspaceMenuHeight(workspaceCount: number, actionCount: number): number {
   return (
     PAPER_FRAME +
-    SECTION_LABEL +
+    SEARCH_HEADER +
     DIVIDER +
     workspaceCount * WORKSPACE_ROW +
     actionCount * ACTION_ROW
