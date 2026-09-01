@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui";
 import { track } from "@/lib/analytics/client";
 import type { SearchInsightsContext } from "@/lib/search-insights/queries/context";
+import type { ImportObservabilityFacts } from "@/lib/search-insights/queries/import-observability";
 import { cn } from "@/lib/ui/cn";
 import {
   CalendarBlankIcon as CalendarBlank,
@@ -16,16 +17,17 @@ import { PERIOD_MENU_LABEL } from "./search-insights-copy";
 import { periodOptions, periodTriggerLabel } from "./search-insights-workspace-model";
 
 type PeriodMenuProps = {
+  importFacts?: ImportObservabilityFacts | null;
   period: SearchInsightsContext["period"];
   yoy: SearchInsightsContext["yoy"];
 };
 
-export function SearchInsightsPeriodMenu({ period, yoy }: Readonly<PeriodMenuProps>) {
+export function SearchInsightsPeriodMenu({ importFacts, period, yoy }: Readonly<PeriodMenuProps>) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
-  const options = periodOptions(yoy);
+  const options = periodOptions(yoy, importFacts);
 
   // The window lives in the URL so the server render owns it and a shared link keeps it.
   function pick(id: string) {

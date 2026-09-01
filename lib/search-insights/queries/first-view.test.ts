@@ -43,8 +43,6 @@ vi.mock("./tracked", () => ({ getTrackedQueryTexts: mocks.tracked }));
 const { getSearchInsightsFirstView, getSearchInsightsRowsPage } = await import("./first-view");
 
 const incident = KNOWN_DATA_INCIDENTS[0];
-
-// Only the parts of the scope these reads touch; the rest belongs to the context bar.
 const scope = {
   projectId: "project_1",
   property: "sc-domain:example.com",
@@ -92,7 +90,6 @@ describe("getSearchInsightsFirstView", () => {
 
   it("loads the whole first view against the current window and the frozen deployment mode", async () => {
     const view = await getSearchInsightsFirstView("prj_1", { period: "28" });
-
     expect(mocks.scope).toHaveBeenCalledWith("prj_1", { period: "28" });
     expect(mocks.queries).toHaveBeenCalledWith("project_1", scope.property, scope.window.current, {
       limit: FIRST_VIEW_ROW_BUFFER,
@@ -116,9 +113,18 @@ describe("getSearchInsightsFirstView", () => {
 
   it("asks about the tracked state of the queries it actually loaded", async () => {
     const view = await getSearchInsightsFirstView("prj_1");
-
     expect(mocks.tracked).toHaveBeenCalledWith("project_1", ["rank tracker"]);
     expect(view.trackedTexts).toEqual(["rank tracker"]);
+  });
+
+  it("suppresses deltas until the selected preset's previous window is covered", async () => {
+    mocks.scope.mockResolvedValue({
+      ...scope,
+      importFacts: { readyThrough: { d7: { current: true, previous: false } } },
+      period: { id: "7" },
+    });
+    const view = await getSearchInsightsFirstView("prj_1");
+    expect(view.kpis.every(({ delta, prev }) => delta === "new" && prev === "no data")).toBe(true);
   });
 
   it("carries a published provider anomaly that overlaps the compared period", async () => {
@@ -129,9 +135,7 @@ describe("getSearchInsightsFirstView", () => {
         previous: { end: incident.from, start: incident.from },
       },
     });
-
     const view = await getSearchInsightsFirstView("prj_1");
-
     expect(view.incidents).toEqual([incident]);
   });
 
@@ -144,9 +148,7 @@ describe("getSearchInsightsFirstView", () => {
         status: "connected",
       },
     });
-
     const view = await getSearchInsightsFirstView("prj_1");
-
     expect(mocks.pages).toHaveBeenCalledWith(
       "project_1",
       scope.property,
@@ -186,7 +188,6 @@ describe("getSearchInsightsFirstView", () => {
 
   it("renders an empty view rather than querying a property with no finalized day", async () => {
     mocks.scope.mockResolvedValue({ ...scope, window: null });
-
     const view = await getSearchInsightsFirstView("prj_1");
 
     expect(view.queries).toEqual({ rows: [], total: 0 });

@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## [0.19.0] - 2026-09-01
+
+- Made Search Console imports unlock useful data sooner, show truthful progress and wait reasons, and keep sync controls and freshness status in one place.
+
+- Added import depth and pace choices before connecting Search Console, safe mid-run replanning, and clear Organic sessions status while GA4 catches up.
+
+- Defined Visibility as a Top-20 metric that excludes shallow, failed, and unmeasured checks while showing measured keyword coverage.
+
 ## [0.18.0] - 2026-08-31
 
 - Added a guided project setup checklist and clearer email-delivery failures for sign-in and team invitations.

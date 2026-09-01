@@ -1,8 +1,15 @@
 import { formatDateLabel, formatPacificTimestampValue } from "@/lib/search-insights/dates";
 import type { SearchInsightsImportState } from "@/lib/search-insights/queries/context";
-import { FRESHNESS_UNKNOWN, WAITING_FOR_FIRST_DATA } from "./search-insights-copy";
+import type { ImportObservabilityFacts } from "@/lib/search-insights/queries/import-observability";
+import {
+  FRESHNESS_ADJUSTMENT_TOOLTIP,
+  FRESHNESS_CHECKED_PREFIX,
+  FRESHNESS_UNKNOWN,
+  FRESHNESS_UNKNOWN_NOTE,
+  WAITING_FOR_FIRST_DATA,
+} from "./search-insights-copy";
 
-/** None of these is an error: an import in progress is a limitation, a paused one retries. */
+/** None of these is an error: active import work is a limitation, while pauses can retry. */
 export type ImportProgressState =
   | "done"
   | "none"
@@ -12,9 +19,8 @@ export type ImportProgressState =
   | "waiting_for_first_data";
 
 export type ImportProgress = {
-  completedDays: number;
+  consecutiveDays: number;
   daysTotal: number;
-  etaLabel: string | null;
   earliestTargetDate: string | null;
   firstDataDate: string | null;
   lastActivityAt: string | null;
@@ -32,13 +38,15 @@ const SETTLED_STATES: Record<string, ImportProgressState> = {
   paused: "paused",
 };
 
-export function importProgress(row: SearchInsightsImportState | null): ImportProgress {
+export function importProgress(
+  row: SearchInsightsImportState | null,
+  facts?: ImportObservabilityFacts | null,
+): ImportProgress {
   if (!row)
     return {
-      completedDays: 0,
+      consecutiveDays: 0,
       daysTotal: 0,
       earliestTargetDate: null,
-      etaLabel: null,
       firstDataDate: null,
       lastActivityAt: null,
       monthsSaved: 0,
@@ -46,25 +54,23 @@ export function importProgress(row: SearchInsightsImportState | null): ImportPro
       percent: 0,
       state: "none",
     };
-  const completedDays = row.completedDays ?? 0;
-  const share = row.daysTotal > 0 ? Math.min(1, Math.max(0, completedDays / row.daysTotal)) : 0;
-  const retentionMonths = row.plannedRetentionMonths ?? 16;
+  const consecutiveDays = facts?.consecutiveDays ?? 0;
+  const completedMonths = facts?.deepHistoryMonths.completed ?? 0;
+  const targetMonths = facts?.deepHistoryMonths.target ?? row.plannedRetentionMonths ?? 16;
+  const share = targetMonths > 0 ? Math.min(1, completedMonths / targetMonths) : 0;
   return {
-    completedDays,
+    consecutiveDays,
     daysTotal: row.daysTotal,
     earliestTargetDate: row.earliestTargetDate,
-    etaLabel: row.etaLabel ?? null,
     firstDataDate: row.firstDataDate ?? null,
-    lastActivityAt: row.lastActivityAt ?? null,
-    monthsSaved: Math.min(retentionMonths, Math.round(share * retentionMonths)),
+    lastActivityAt: facts?.lastActivityAt ?? null,
+    monthsSaved: completedMonths,
     newestFinalizedDate: row.newestFinalizedDate,
     percent: Math.round(share * 100),
     state:
       row.state === "waiting_for_first_data"
         ? "waiting_for_first_data"
-        : row.waiting && row.state === "running"
-          ? "waiting"
-          : (SETTLED_STATES[row.state] ?? "running"),
+        : (SETTLED_STATES[row.state] ?? "running"),
   };
 }
 
@@ -104,6 +110,47 @@ export function relativeActivity(value: string, now = new Date()) {
   return hours < 24 ? `${hours}h ago` : `${Math.floor(hours / 24)}d ago`;
 }
 
+export type ImportObservabilityProgress = {
+  deepHistory: string;
+  freshness: { label: string; tooltip: string };
+  percent: number;
+  qualifyingCounter: string;
+};
+
+function nonNegativeInteger(value: number) {
+  return Number.isFinite(value) ? Math.max(0, Math.round(value)) : 0;
+}
+
+export function freshnessPresentation(lastProbeAt: string | null, now = new Date()) {
+  if (!lastProbeAt) return { label: FRESHNESS_UNKNOWN, tooltip: FRESHNESS_UNKNOWN_NOTE };
+  const timestamp = formatPacificTimestampValue(new Date(lastProbeAt));
+  return {
+    label: `${FRESHNESS_CHECKED_PREFIX} ${relativeActivity(lastProbeAt, now)}`,
+    tooltip: `Last checked ${timestamp} Pacific. ${FRESHNESS_ADJUSTMENT_TOOLTIP}`,
+  };
+}
+
+/** The readiness selector, rather than an import cursor, owns every visible progress counter. */
+export function importObservabilityProgress(
+  facts: ImportObservabilityFacts | null | undefined,
+  now = new Date(),
+): ImportObservabilityProgress | null {
+  if (!facts) return null;
+  const targetDays = nonNegativeInteger(facts.targetDays);
+  const qualifyingDays = Math.min(targetDays, nonNegativeInteger(facts.qualifyingDays));
+  const targetMonths = nonNegativeInteger(facts.deepHistoryMonths.target);
+  const completedMonths = Math.min(
+    targetMonths,
+    nonNegativeInteger(facts.deepHistoryMonths.completed),
+  );
+  return {
+    deepHistory: `${completedMonths} of ${targetMonths} months`,
+    freshness: freshnessPresentation(facts.lastProbeAt, now),
+    percent: targetDays === 0 ? 0 : Math.round((qualifyingDays / targetDays) * 100),
+    qualifyingCounter: `${qualifyingDays} of ${targetDays} finalized days`,
+  };
+}
+
 export type ImportStartupPresentation = {
   activity: string | null;
   eta: string | null;
@@ -138,7 +185,7 @@ export function importStartupPresentation(
     };
   }
 
-  const active = progress.completedDays > 0 || progress.lastActivityAt !== null;
+  const active = progress.consecutiveDays > 0 || progress.lastActivityAt !== null;
   if (!active) {
     return {
       activity: null,
@@ -154,7 +201,7 @@ export function importStartupPresentation(
     activity: progress.lastActivityAt
       ? `last activity ${relativeActivity(progress.lastActivityAt, now)}`
       : null,
-    eta: progress.etaLabel,
+    eta: null,
     fact:
       progress.firstDataDate && progress.earliestTargetDate && progress.newestFinalizedDate
         ? `Importing your Google history · ${formatDateLabel(
@@ -162,7 +209,7 @@ export function importStartupPresentation(
               ? progress.firstDataDate
               : progress.earliestTargetDate,
           )} to ${formatDateLabel(progress.newestFinalizedDate)}`
-        : `Importing your Google history · ${progress.completedDays} of ~${progress.daysTotal} days`,
+        : `Importing your Google history · ${progress.consecutiveDays} of ~${progress.daysTotal} days`,
     showHeartbeat: true,
     showProgress: true,
     state: "active",
@@ -172,13 +219,6 @@ export function importStartupPresentation(
 export function importRunningLine(progress: ImportProgress, now = new Date()) {
   const presentation = importStartupPresentation(progress, now);
   return [presentation.fact, presentation.activity].filter(Boolean).join(" · ");
-}
-
-// One presentation timezone for every timestamp in the strip: Pacific, the zone the provider
-// buckets these days in.
-export function freshnessNote(lastProbeAt: string | null) {
-  if (!lastProbeAt) return FRESHNESS_UNKNOWN;
-  return `Fresh data through ${formatPacificTimestampValue(new Date(lastProbeAt))} Pacific. Google may still adjust these numbers before they finalize.`;
 }
 
 /**

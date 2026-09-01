@@ -56,7 +56,10 @@ const defaults: DefaultsData = {
   locationKey: "PL",
   locationLabel: "Poland",
   searchSync: {
-    lastQuotaPausedAt: "2026-08-27T09:15:00.000Z",
+    firstDataDate: "2026-05-12T00:00:00.000Z",
+    firstDataDateLabel: "May 12, 2026",
+    lastQuotaPausedAt: "Aug 27, 2026",
+    newestFinalizedDate: "2026-08-29T00:00:00.000Z",
     pace: "gentle",
     plannedRemaining: 1240,
     requestsToday: 32,
@@ -132,7 +135,10 @@ export const FrequencyOpenCustom: Story = {
     defaults: {
       ...defaults,
       searchSync: {
-        lastQuotaPausedAt: "2026-08-27T09:15:00.000Z",
+        firstDataDate: "2026-05-12T00:00:00.000Z",
+        firstDataDateLabel: "May 12, 2026",
+        lastQuotaPausedAt: "Aug 27, 2026",
+        newestFinalizedDate: "2026-08-29T00:00:00.000Z",
         pace: "gentle",
         plannedRemaining: 1240,
         requestsToday: 32,

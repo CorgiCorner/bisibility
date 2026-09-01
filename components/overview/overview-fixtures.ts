@@ -177,6 +177,7 @@ export const overviewFixture = {
     { label: "W11", value: 6 },
     { label: "now", value: 5 },
   ] satisfies TrendPoint[],
+  visibilityCoverage: { limited: false, measured: 248, total: 248 },
   trendTakeaway: "Avg position improved 1.8 in the last 30 days, led by 'headless cms'",
   distribution: [
     { label: "#1-3", count: 41, color: rankBucketColors[0] },

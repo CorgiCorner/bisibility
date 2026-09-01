@@ -1,3 +1,4 @@
+import type { ImportObservabilityFacts } from "@/lib/search-insights/queries/import-observability";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
@@ -66,21 +67,45 @@ describe("SearchInsightsNoPropertyState", () => {
 
 const action = async () => ({ ok: true as const, state: "running" });
 const facts = {
-  completedDays: 7,
   connectionStatus: "connected" as const,
-  deploymentMode: "self-host" as const,
-  firstViewReady: false,
   pauseStartedAt: "2026-08-27T12:00:00.000Z",
   pausedReason: "user",
   state: "paused",
-  waiting: false,
-  workerStatus: "ok" as const,
 };
 
-function renderNoData(overrides = {}) {
+const runtime = {
+  workflowStatus: "running" as const,
+  workerStatus: {
+    status: "ok" as const,
+    temporalIdentityComparison: { detail: "identities match", status: "match" as const },
+  },
+};
+
+const observabilityFacts = {
+  consecutiveDays: 93,
+  deepHistoryMonths: { completed: 3, target: 16 },
+  lastActivityAt: "2026-08-29T17:00:00.000Z",
+  lastProbeAt: "2026-08-29T17:00:00.000Z",
+  qualifyingDays: 7,
+  readyThrough: {
+    d7: { current: true, previous: true },
+    d28: { current: false, previous: false },
+    d90: { current: false, previous: false },
+  },
+  stall: {
+    expectedBatchMs: 1,
+    expectedDayMs: 1,
+    nextRequestInMs: 0,
+    silenceMs: 0,
+    thresholdMs: 1,
+  },
+  targetDays: 10,
+} satisfies ImportObservabilityFacts;
+
+function renderNoData(overrides = {}, importFacts = observabilityFacts) {
   return render(
     <SearchInsightsNoDataState
-      facts={{ ...facts, ...overrides }}
+      facts={{ ...facts, observability: importFacts, runtime, ...overrides }}
       pauseAction={action}
       projectId="prj_abcdefghijklmnopqrstuvwx"
       resumeAction={action}
@@ -89,18 +114,21 @@ function renderNoData(overrides = {}) {
   );
 }
 
+function tooltipText(element: HTMLElement) {
+  return document.getElementById(element.getAttribute("aria-describedby") ?? "")?.textContent;
+}
+
 describe("SearchInsightsNoDataState", () => {
   it("renders waiting for first data as its own honest empty state", () => {
     const { container } = renderNoData({
-      completedDays: 0,
       pausedReason: null,
       state: "waiting_for_first_data",
     });
 
-    expect(screen.getByRole("heading", { name: "Waiting for search data" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Waiting for first data" })).toBeInTheDocument();
     expect(
       screen.getByText(
-        "Google has not reported any search data for this property yet. We check daily and will import automatically when it appears.",
+        "Google has not reported any search data for this property yet. We check daily and import automatically when it appears.",
       ),
     ).toBeInTheDocument();
     expect(container.textContent).not.toMatch(/0 of 0|\bETA\b|completion|first-28/i);
@@ -109,8 +137,16 @@ describe("SearchInsightsNoDataState", () => {
 
   it("renders the exact actor-neutral paused contract with exactly one Resume", () => {
     const { container } = renderNoData();
-    expect(screen.getByRole("heading", { name: "Backfill paused" })).toBeInTheDocument();
-    expect(screen.getByText("7 of 28 finalized days are imported.")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Paused by you" })).toBeInTheDocument();
+    expect(screen.getByTestId("qualifying-progress")).toHaveTextContent(
+      `${observabilityFacts.qualifyingDays} of ${observabilityFacts.targetDays} finalized days`,
+    );
+    expect(screen.getByTestId("deep-history-progress")).toHaveTextContent(
+      "Deep history: 3 of 16 months.",
+    );
+    expect(tooltipText(screen.getByTestId("freshness-note"))).toBe(
+      "Last checked Aug 29, 10:00 Pacific. Google may adjust recent data until it finalizes.",
+    );
     expect(
       screen.getByText(
         "Paused on Aug 27, 2026. New finalized days will not be imported until you resume sync.",
@@ -121,7 +157,7 @@ describe("SearchInsightsNoDataState", () => {
       "Resume sync",
     );
     expect(container.textContent).not.toMatch(
-      /Backfill in progress|import is running|resumes automatically|we will notify|data ends at|unknown date|paused by you/i,
+      /import is running|resumes automatically|we will notify|data ends at|unknown date/i,
     );
     expect(screen.queryByRole("button", { name: /Refresh|Pause/ })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /Reconnect/ })).not.toBeInTheDocument();
@@ -131,27 +167,21 @@ describe("SearchInsightsNoDataState", () => {
     [
       "needs_reauth",
       { connectionStatus: "needs_reauth", pausedReason: "user" },
-      "Reconnect Search Console",
+      "Needs reauth",
       "link",
     ],
-    ["quota", { pausedReason: "rate_limited" }, "Backfill paused by provider limits", null],
-    [
-      "worker",
-      { pausedReason: null, state: "running", workerStatus: "stale" },
-      "Backfill waiting for the worker",
-      null,
-    ],
+    ["quota", { pausedReason: "rate_limited" }, "Paused by provider limits", null],
     [
       "error",
       { pausedReason: null, safeError: "Provider failed.", state: "failed" },
-      "Backfill needs attention",
+      "Needs retry",
       "button",
     ],
   ] as const)("renders focused %s state", (_name, overrides, title, actionRole) => {
     const { container } = renderNoData(overrides);
     expect(screen.getByRole("heading", { name: title })).toBeInTheDocument();
     if (actionRole === "link")
-      expect(screen.getByRole("link", { name: title })).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: "Reconnect Search Console" })).toBeInTheDocument();
     if (actionRole === "button")
       expect(
         screen.getByRole("button", { name: "Retry Search Console import" }),
@@ -160,13 +190,25 @@ describe("SearchInsightsNoDataState", () => {
     if (_name !== "quota") expect(container.textContent).not.toMatch(/resumes automatically/i);
   });
 
+  it("uses a neutral status icon instead of the Google icon for a worker-caused state", () => {
+    renderNoData({
+      pausedReason: null,
+      runtime: { workflowStatus: "unknown", workerStatus: "stale" },
+      state: "running",
+    });
+
+    expect(
+      screen.getByRole("img", { name: "Search import status" }).querySelector("svg"),
+    ).toHaveAttribute("data-icon", "chart-bar");
+    expect(screen.queryByRole("img", { name: "Search Console module" })).not.toBeInTheDocument();
+  });
+
   it.each([
     ["paused", {}],
     ["needs reauthentication", { connectionStatus: "needs_reauth" }],
     ["provider quota", { pausedReason: "rate_limited" }],
-    ["worker", { pausedReason: null, state: "running", workerStatus: "stale" }],
     ["error", { pausedReason: null, safeError: "Provider failed.", state: "failed" }],
-    ["complete", { firstViewReady: true, pausedReason: null }],
+    ["complete", { pausedReason: null, state: "completed" }],
     ["running", { pausedReason: null, state: "running" }],
     ["queued", { pausedReason: null, state: "queued" }],
     ["starting", { pausedReason: null, state: null }],

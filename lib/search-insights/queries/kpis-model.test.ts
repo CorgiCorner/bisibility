@@ -157,11 +157,66 @@ describe("positionDelta", () => {
 });
 
 describe("searchInsightsKpis", () => {
+  const comparedTotals = {
+    current: { clicks: 12_480, ctr: 0.0257, impressions: 486_310, position: 18.4 },
+    previous: { clicks: 11_534, ctr: 0.0244, impressions: 471_690, position: 20 },
+  };
+
+  it("suppresses every delta until the previous window is covered", () => {
+    const cards = searchInsightsKpis(comparedTotals, false);
+
+    expect(cards.map(({ delta, dir, prev, value }) => ({ delta, dir, prev, value }))).toEqual([
+      { delta: "new", dir: "flat", prev: "no data", value: "12,480" },
+      { delta: "new", dir: "flat", prev: "no data", value: "486,310" },
+      { delta: "new", dir: "flat", prev: "no data", value: "2.57%" },
+      { delta: "new", dir: "flat", prev: "no data", value: "18.4" },
+    ]);
+  });
+
+  it("keeps covered output byte-identical to the existing default", () => {
+    const baseline = searchInsightsKpis(comparedTotals);
+
+    expect(baseline).toMatchInlineSnapshot(`
+      [
+        {
+          "delta": "+8.2%",
+          "dir": "up",
+          "label": "Clicks",
+          "prev": "11,534",
+          "source": "GSC",
+          "value": "12,480",
+        },
+        {
+          "delta": "+3.1%",
+          "dir": "up",
+          "label": "Impressions",
+          "prev": "471,690",
+          "source": "GSC",
+          "value": "486,310",
+        },
+        {
+          "delta": "+0.13 pp",
+          "dir": "up",
+          "label": "CTR",
+          "prev": "2.44%",
+          "source": "GSC",
+          "value": "2.57%",
+        },
+        {
+          "delta": "1.6 better",
+          "dir": "up",
+          "label": "Avg position",
+          "prev": "20.0",
+          "source": "GSC",
+          "value": "18.4",
+        },
+      ]
+    `);
+    expect(JSON.stringify(searchInsightsKpis(comparedTotals, true))).toBe(JSON.stringify(baseline));
+  });
+
   it("labels every card with the system that produced the number", () => {
-    const cards = searchInsightsKpis({
-      current: { clicks: 12_480, ctr: 0.0257, impressions: 486_310, position: 18.4 },
-      previous: { clicks: 11_534, ctr: 0.0244, impressions: 471_690, position: 20 },
-    });
+    const cards = searchInsightsKpis(comparedTotals);
 
     expect(cards.map((card) => card.label)).toEqual([
       "Clicks",

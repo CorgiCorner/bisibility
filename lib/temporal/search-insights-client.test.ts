@@ -57,6 +57,28 @@ describe("search insights workflow client", () => {
     });
   });
 
+  it("uses stored Search Console defaults when starting its backfill", async () => {
+    mocks.findDefaults.mockResolvedValue({ searchSyncImportMonths: 6, searchSyncPace: "gentle" });
+
+    await startSearchInsightsBackfillWorkflow({ projectId: "project_1", property, source: "gsc" });
+
+    expect(mocks.start).toHaveBeenCalledWith(SEARCH_INSIGHTS_BACKFILL_WORKFLOW_TYPE, {
+      args: [
+        {
+          projectId: "project_1",
+          property,
+          requestSetsPerHour: 21,
+          retentionMonths: 6,
+          source: "gsc",
+        },
+      ],
+      taskQueue: "rank-checks",
+      workflowId: `search-insights-backfill:project_1:${digest}`,
+      workflowIdConflictPolicy: WorkflowIdConflictPolicy.USE_EXISTING,
+      workflowIdReusePolicy: WorkflowIdReusePolicy.ALLOW_DUPLICATE,
+    });
+  });
+
   it("carries the optional source in a new sessions execution without changing its id scheme", async () => {
     await expect(
       startSearchInsightsBackfillWorkflow({

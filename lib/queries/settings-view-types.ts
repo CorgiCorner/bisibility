@@ -1,4 +1,9 @@
 import type { TrackingScope } from "@/lib/schemas/project";
+import type { ImportObservabilityFacts } from "@/lib/search-insights/queries/import-observability";
+import type {
+  SearchImportQueueFacts,
+  SearchImportRuntimeFacts,
+} from "@/lib/search-insights/sync/control-model";
 import type { SerpDepth } from "@/lib/serp/markets";
 import type { ProviderUsageData } from "@/lib/settings/options";
 import type { ProjectProviderSpend } from "./provider-spend";
@@ -26,6 +31,8 @@ export type SettingsView = {
     inspectionDailyLimit: number;
     searchSync: {
       connectionStatus: "connected" | "connected_no_property" | "needs_reauth" | "not_connected";
+      firstDataDate: string | null;
+      firstDataDateLabel: string | null;
       lastQuotaPausedAt: string | null;
       pace: "normal" | "gentle";
       lastActivityAt: string | null;
@@ -33,9 +40,13 @@ export type SettingsView = {
       pausedReason: string | null;
       safeError: string | null;
       state: string | null;
+      newestFinalizedDate: string | null;
+      observability?: ImportObservabilityFacts;
       plannedRemaining: number;
+      queue?: SearchImportQueueFacts;
       requestsToday: number;
       retentionMonths: 3 | 6 | 12 | 16;
+      runtime?: SearchImportRuntimeFacts;
     };
     locationCount: number;
     serpDepth: SerpDepth;

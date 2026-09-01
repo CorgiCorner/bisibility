@@ -1,4 +1,5 @@
 import { AdvancedSettingsLoading } from "@/components/settings/advanced/AdvancedSettingsLoading";
+import { DataSourcesSettingsRouteLoading } from "@/components/settings/data-sources/DataSourcesSettingsLoading";
 import { DevelopersLoading } from "@/components/settings/developers/DevelopersLoading";
 import { GeneralSettingsRouteLoading } from "@/components/settings/general/GeneralSettingsLoading";
 import { NotificationsRouteLoading } from "@/components/settings/notifications/NotificationsLoading";
@@ -49,6 +50,11 @@ const loadingBoundaries = [
     render: () => <TrackingSettingsRouteLoading />,
   },
   {
+    activeSection: "data-sources",
+    name: "Data sources",
+    render: () => <DataSourcesSettingsRouteLoading />,
+  },
+  {
     activeSection: "notifications",
     name: "Notifications",
     render: () => <NotificationsRouteLoading />,
@@ -86,7 +92,7 @@ describe("SettingsShell", () => {
       "aria-current",
       "page",
     );
-    expect(subnav?.querySelectorAll("[data-settings-subnav-icon] svg")).toHaveLength(7);
+    expect(subnav?.querySelectorAll("[data-settings-subnav-icon] svg")).toHaveLength(8);
     expect(screen.queryByRole("link", { name: "Markets" })).not.toBeInTheDocument();
     expect(subnav?.querySelector('[data-settings-subnav-icon="developers"]')).toHaveAttribute(
       "data-settings-subnav-icon-weight",
@@ -210,8 +216,8 @@ describe("SettingsShell", () => {
         "pl-3.5",
         "lg:flex",
       );
-      expect(rows).toHaveLength(7);
-      expect(subnav?.querySelectorAll("[data-settings-loading-subnav-icon-slot]")).toHaveLength(7);
+      expect(rows).toHaveLength(8);
+      expect(subnav?.querySelectorAll("[data-settings-loading-subnav-icon-slot]")).toHaveLength(8);
       expect(activeRows).toHaveLength(1);
       expect(activeRows?.[0]).toHaveAttribute("data-settings-loading-subnav-row", activeSection);
       expect(subnav?.querySelectorAll("[data-settings-loading-subnav-active-dot]")).toHaveLength(1);

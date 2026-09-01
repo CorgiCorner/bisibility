@@ -140,6 +140,23 @@ describe("requestSearchInsightsSync", () => {
     expect(mocks.startSync).not.toHaveBeenCalled();
   });
 
+  it.each(["user", "rate_limited"])(
+    "does not bypass a %s pause after its workflow id was released",
+    async (pausedReason) => {
+      mocks.loadImportRow.mockResolvedValue({
+        lastSyncStartedAt: dateFromFrozenNow({ minutes: -6 }),
+        pausedReason,
+        state: "paused",
+        workflowId: null,
+      });
+
+      await expect(requestSearchInsightsSync(input)).resolves.toEqual({
+        status: "already_running",
+      });
+      expect(mocks.startSync).not.toHaveBeenCalled();
+    },
+  );
+
   it("starts for an import still queued after a backfill that could not plan anything", async () => {
     // The first batch found no finalized day, closed, and released its id; the row is still
     // "queued" and must not answer the manual sync with "already_running" forever.

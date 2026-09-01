@@ -426,8 +426,9 @@ describe("overview query", () => {
       },
       { delta: "+5 this month", deltaTone: "neutral", label: "Tracked keywords", value: "5" },
       { delta: "0", deltaTone: "neutral", label: "In top 10", value: "2" },
-      { delta: "+5.0pp", deltaTone: "positive", label: "Visibility", value: "11%" },
+      { delta: "+5.0pp", deltaTone: "positive", label: "Visibility", value: "19%" },
     ]);
+    expect(result.visibilityCoverage).toEqual({ limited: false, measured: 3, total: 5 });
     expect(result.trend).toEqual([
       { label: "2026-06-19", value: 12 },
       { label: "2026-06-20", value: 7 },

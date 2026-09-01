@@ -8,6 +8,7 @@ import type { TrackingDefaultsForm } from "@/components/settings/tracking/tracki
 import { FieldLabel, MenuSelect, Switch } from "@/components/ui";
 import { type SerpDepth, serpDepthValues, serpDeviceOptions } from "@/lib/serp/markets";
 import type { DefaultsData } from "@/lib/settings/options";
+import { VISIBILITY_HORIZON, VISIBILITY_SHALLOW_CHECK_COPY } from "@/lib/visibility/definition";
 import { useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import { Controller } from "react-hook-form";
@@ -130,6 +131,11 @@ export function TrackingCheckFields({
         <p className="m-0 mt-1.5 text-[11.5px] leading-5 text-fg-muted">
           How far down each result page a check reads.
         </p>
+        {depth < VISIBILITY_HORIZON ? (
+          <p className="m-0 mt-2 text-[11.5px] leading-5 text-yellow-text">
+            {VISIBILITY_SHALLOW_CHECK_COPY}
+          </p>
+        ) : null}
         {depth < defaults.serpDepth ? (
           <p className="m-0 mt-2 text-[11.5px] leading-5 text-yellow-text">
             From the next check, keywords ranking past {depth} record as not found instead of their

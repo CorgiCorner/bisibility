@@ -23,6 +23,7 @@ import {
   buildDistribution,
   buildHighlights,
   buildKpis,
+  buildOverviewMetrics,
   buildTrend,
   buildTrendTakeaway,
   snapshotFor,
@@ -96,6 +97,7 @@ export async function getOverview(projectId: string, options: { dateFormat?: Dat
   const totalKeywordCount = unfilteredKeywordCount ?? filteredKeywordCount;
   const serpProviders = providerConnections.filter((connection) => connection.kind === "serp");
   const snapshots = keywords.map((keyword) => snapshotFor(keyword, keywordVolumes.get(keyword.id) ?? null));
+  const overviewMetrics = buildOverviewMetrics(snapshots);
   const positions = snapshots.flatMap((item) => (item.position ? [item.position] : []));
   const effectiveSchedules = keywords.length
     ? keywords.map((keyword) =>
@@ -156,7 +158,7 @@ export async function getOverview(projectId: string, options: { dateFormat?: Dat
     hasEverChecked,
     highlights: buildHighlights(snapshots, now),
     isEmpty: totalKeywordCount === 0,
-    kpis: buildKpis(snapshots, filteredKeywordCount, addedThisMonth),
+    kpis: buildKpis(snapshots, filteredKeywordCount, addedThisMonth, overviewMetrics),
     lastCheckAt: lastCheckEverAt,
     lastCheckEverAt,
     nextCheckAt: upcoming,
@@ -181,6 +183,11 @@ export async function getOverview(projectId: string, options: { dateFormat?: Dat
       tagValue: filters.tag,
     },
     trackedKeywordCount: filteredKeywordCount,
+    visibilityCoverage: {
+      limited: filteredKeywordCount > keywords.length,
+      measured: overviewMetrics.visibilityMeasuredKeywordCount,
+      total: keywords.length,
+    },
     trend: buildTrend(keywords, dateTime, trendStart),
     trendTakeaway: buildTrendTakeaway(keywords, now, keywordVolumes),
     workspaceName: project.name,

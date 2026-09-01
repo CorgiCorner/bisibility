@@ -31,6 +31,7 @@ import { syncProjectTraffic } from "@/lib/actions/traffic-sync";
 import { requireApiPublicId } from "@/lib/api/public-id";
 import { dataResidencyMessage } from "@/lib/deployment/deployment";
 import { googleOAuthErrorCopy } from "@/lib/integrations/google-oauth-copy";
+import { MAX_ONBOARDING_WEBSITE_LENGTH } from "@/lib/onboarding/website";
 import { isGoogleOAuthConfigured } from "@/lib/providers/analytics/google-client";
 import { getPendingGoogleOAuthSetup } from "@/lib/providers/analytics/google-oauth-pending";
 import { requireReadableProject } from "@/lib/queries/_auth";
@@ -139,13 +140,14 @@ async function getOnboardingProviderState(projectId: string | null) {
 
 export default async function OnboardingPage({ searchParams }: Readonly<OnboardingPageProps>) {
   const params = await searchParams;
+  const websitePrefill = paramValue(params?.website)?.slice(0, MAX_ONBOARDING_WEBSITE_LENGTH);
   const requestedStep = paramValue(params?.step);
   const currentStep = normalizeOnboardingStep(params?.step);
   const workspaces = await listWorkspaces();
   const requestedProjectId = paramValue(params?.projectId) ?? null;
   const gscJustConnected = gscCallbackSucceeded(params);
-  // ?new=1 forces a fresh step 1 instead of resuming an existing project.
-  const isNewWorkspace = paramValue(params?.new) === "1";
+  // Explicit new-project and landing website handoffs must not resume an existing project.
+  const isNewWorkspace = paramValue(params?.new) === "1" || Boolean(websitePrefill);
   const activeProjectRef = isNewWorkspace
     ? null
     : (requestedProjectId ?? workspaces[0]?.publicId ?? null);
@@ -277,6 +279,7 @@ export default async function OnboardingPage({ searchParams }: Readonly<Onboardi
         initialKeywordCount={keywordCount}
         initialKeywordText={initialKeywordText}
         initialProject={initialProject}
+        initialWebsite={project?.domain ? undefined : websitePrefill}
         initialSerpConnections={providerState.serpConnections}
         initialStep={currentStep}
         monthlyCapCents={project?.budgetCapCents ?? DEFAULT_MONTHLY_COST_CAP_CENTS}

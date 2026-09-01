@@ -9,7 +9,11 @@ import type { DataIncident } from "@/lib/search-insights/constants";
 import { formatDateLabel } from "@/lib/search-insights/dates";
 import type { SearchInsightsImportState } from "@/lib/search-insights/queries/context";
 import type { SearchInsightsCoverage } from "@/lib/search-insights/queries/coverage";
-import { resolveSearchSyncControl } from "@/lib/search-insights/sync/control-model";
+import type { ImportObservabilityFacts } from "@/lib/search-insights/queries/import-observability";
+import {
+  resolveSearchSyncControl,
+  type SearchSyncControlFacts,
+} from "@/lib/search-insights/sync/control-model";
 import type { ReactNode } from "react";
 import { SearchImportPauseControl } from "./SearchImportPauseControl";
 import { SearchInsightsRefresh } from "./SearchInsightsRefresh";
@@ -19,13 +23,13 @@ import {
   COVERAGE_EMPTY,
   COVERAGE_NOTE,
   INCIDENT_PILL,
-  importDoneCopy,
   retentionOwnershipCopy,
   TRUST_LABELS,
 } from "./search-insights-copy";
 import {
   capHitClause,
-  freshnessNote,
+  freshnessPresentation,
+  importObservabilityProgress,
   importProgress,
   incidentTooltip,
 } from "./search-insights-trust-model";
@@ -42,6 +46,7 @@ export type SearchInsightsTrustStripProps = {
   resumeAction?: SearchInsightsImportAction;
   retryAction?: SearchInsightsImportAction;
   projectId?: string;
+  statusFacts?: SearchSyncControlFacts;
   workerStatus: WorkerTemporalStatus;
 };
 const CELL = "flex flex-col gap-1.5 px-4 py-3";
@@ -95,33 +100,26 @@ function IncidentPill({ incidents }: Readonly<{ incidents: readonly DataIncident
 }
 function ImportLine({
   hideRefresh = false,
+  facts,
   importState,
   pauseAction = unavailablePauseAction,
   projectId = "",
   resumeAction = unavailablePauseAction,
   retryAction = unavailablePauseAction,
+  statusFacts,
 }: Readonly<{
   hideRefresh?: boolean;
+  facts: ImportObservabilityFacts | null;
   importState: SearchInsightsImportState | null;
   pauseAction?: SearchInsightsImportAction;
   projectId?: string;
   resumeAction?: SearchInsightsImportAction;
   retryAction?: SearchInsightsImportAction;
+  statusFacts: SearchSyncControlFacts;
 }>) {
-  const progress = importProgress(importState);
+  const progress = importProgress(importState, facts);
   if (progress.state === "none") return null;
-  if (progress.state === "done") {
-    return (
-      <span className={NOTE}>{importDoneCopy(importState?.plannedRetentionMonths ?? 16)}</span>
-    );
-  }
-  const model = resolveSearchSyncControl({
-    lastActivityAt: importState?.lastActivityAt,
-    pauseStartedAt: importState?.pauseStartedAt,
-    pausedReason: importState?.pausedReason,
-    safeError: importState?.safeError,
-    state: importState?.state,
-  });
+  const model = resolveSearchSyncControl(statusFacts);
   const reconnectHref = googleInstallUrl({
     projectId,
     provider: "gsc",
@@ -173,13 +171,20 @@ export function SearchInsightsTrustStrip({
   projectId,
   resumeAction,
   retryAction,
+  statusFacts,
   workerStatus,
 }: Readonly<SearchInsightsTrustStripProps>) {
+  const facts = importState?.facts ?? statusFacts?.observability ?? null;
+  const progress = importObservabilityProgress(facts);
+  const freshness =
+    progress?.freshness ??
+    freshnessPresentation(facts?.lastProbeAt ?? importState?.lastProbeAt ?? null);
   if (!providerAvailableThrough) {
     if (!localViewReady) return null;
     return (
       <SearchInsightsWaitingStrip
         deploymentMode={deploymentMode}
+        facts={facts}
         importState={importState}
         pauseAction={pauseAction}
         projectId={projectId}
@@ -194,16 +199,20 @@ export function SearchInsightsTrustStrip({
       <Cell label={TRUST_LABELS.freshness} trailing={<IncidentPill incidents={incidents} />}>
         <span className={FACT}>
           {providerAvailabilitySource === "metadata"
-            ? "Google data available through "
-            : "Estimated Google data availability through "}
+            ? "Final through "
+            : "Estimated final through "}
           <EmphasizedDate compact value={providerAvailableThrough} />
         </span>
-        {!localViewReady ? (
-          <span className={NOTE} data-testid="local-first-view-progress">
-            {importState?.completedDays ?? 0} of 28 days imported for the first view
+        {progress ? (
+          <span className={NOTE} data-testid="qualifying-progress">
+            {progress.qualifyingCounter}
           </span>
         ) : null}
-        <span className={NOTE}>{freshnessNote(importState?.lastProbeAt ?? null)}</span>
+        <Tooltip content={freshness.tooltip} semantics="description">
+          <span className={NOTE} data-testid="freshness-note">
+            {freshness.label}
+          </span>
+        </Tooltip>
       </Cell>
       <Cell divided label={TRUST_LABELS.coverage}>
         {coverage.calculable ? (
@@ -223,15 +232,22 @@ export function SearchInsightsTrustStrip({
         <span className={FACT}>
           {retentionOwnershipCopy(importState?.plannedRetentionMonths ?? 16, deploymentMode)}
         </span>
+        {progress ? (
+          <span className={NOTE} data-testid="deep-history-progress">
+            {progress.deepHistory}
+          </span>
+        ) : null}
       </Cell>
-      {localViewReady ? (
+      {localViewReady && statusFacts ? (
         <div className="col-span-full border-t border-border px-4 py-2.5">
           <ImportLine
+            facts={facts}
             importState={importState}
             pauseAction={pauseAction}
             projectId={projectId}
             resumeAction={resumeAction}
             retryAction={retryAction}
+            statusFacts={statusFacts}
           />
         </div>
       ) : null}

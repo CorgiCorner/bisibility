@@ -1,6 +1,6 @@
 import { ProjectWriteModeProvider } from "@/components/shell/ProjectWriteModeProvider";
 import { fireEvent, render, screen } from "@testing-library/react";
-import type { ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { CheckDepthSplitButton } from "./CheckDepthSplitButton";
 
@@ -86,5 +86,27 @@ describe("CheckDepthSplitButton", () => {
     expect(content?.parentElement).toBe(footer);
     fireEvent.click(changeDefault);
     expect(onDepthChange).toHaveBeenCalledOnce();
+  });
+
+  it("warns when the selected one-off check cannot update Visibility", () => {
+    function DepthHarness() {
+      const [depth, setDepth] = useState<10 | 20 | 50 | 100>(50);
+      return (
+        <CheckDepthSplitButton
+          actionLabel={`Run check (Top ${depth})`}
+          currentDepth={depth}
+          onAction={vi.fn()}
+          onDepthChange={setDepth}
+        />
+      );
+    }
+
+    render(<DepthHarness />, { wrapper: withProjectWriteMode });
+
+    fireEvent.click(screen.getByRole("button", { name: "Choose check depth" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Top 10" }));
+
+    expect(screen.getByText(/Top 10 checks do not update Visibility/)).toBeInTheDocument();
+    expect(screen.queryByRole("menu", { name: "Check depth" })).not.toBeInTheDocument();
   });
 });

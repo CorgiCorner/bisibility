@@ -4,6 +4,7 @@ import {
   CodeIcon as Code,
   CreditCardIcon as CreditCard,
   CrosshairIcon as Crosshair,
+  DatabaseIcon as Database,
   PaperPlaneTiltIcon as PaperPlaneTilt,
   ShieldWarningIcon as ShieldWarning,
   SlidersHorizontalIcon as SlidersHorizontal,
@@ -13,6 +14,7 @@ import {
 export const settingsSections = [
   { icon: SlidersHorizontal, id: "general", label: "General" },
   { icon: Crosshair, id: "tracking", label: "Tracking" },
+  { icon: Database, id: "data-sources", label: "Data sources" },
   { icon: PaperPlaneTilt, id: "notifications", label: "Notifications" },
   { icon: Code, id: "developers", label: "Developers" },
   { icon: CreditCard, id: "usage", label: "Usage and billing" },

@@ -39,7 +39,10 @@ vi.mock("@/lib/search-insights/queries/query-export", () => ({
 vi.mock("@/lib/search-insights/sync/sync-now", () => ({
   requestSearchInsightsSync: mocks.requestSync,
 }));
-vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
+vi.mock("next/cache", () => ({
+  revalidatePath: mocks.revalidatePath,
+  unstable_cache: (read: () => unknown) => read,
+}));
 vi.mock("./_shared", () => ({
   getActionActor: vi.fn(async () => mocks.actor),
   parseActionInput: (schema: { parse: (input: unknown) => unknown }, input: unknown) =>

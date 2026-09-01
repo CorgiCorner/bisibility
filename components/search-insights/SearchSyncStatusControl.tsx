@@ -15,6 +15,7 @@ export function SearchSyncStatusControl({
   model,
   onAction,
   reconnectHref,
+  suppressPauseTooltip = false,
   variant = "full",
 }: Readonly<{
   actionNode?: React.ReactNode;
@@ -24,6 +25,7 @@ export function SearchSyncStatusControl({
   model: SearchSyncControlModel;
   onAction?: () => void;
   reconnectHref?: string;
+  suppressPauseTooltip?: boolean;
   variant?: "compact" | "full";
 }>) {
   const baseAction =
@@ -51,7 +53,7 @@ export function SearchSyncStatusControl({
     ) : null;
   const candidate = actionNode ?? baseAction;
   const action =
-    model.action === "pause" && candidate ? (
+    !suppressPauseTooltip && model.action === "pause" && candidate ? (
       <Tooltip content={SEARCH_SYNC_PAUSE_TOOLTIP}>{candidate}</Tooltip>
     ) : (
       candidate

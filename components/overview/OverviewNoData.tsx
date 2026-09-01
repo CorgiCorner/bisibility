@@ -57,6 +57,7 @@ export function OverviewNoData({
         projectReadOnly={overview.projectReadOnly}
         runningCheckCount={runningCheckCount}
         serpProviderState={overview.serpProviderState}
+        visibilityCoverage={overview.visibilityCoverage}
       />
       <NoDataCharts
         distribution={overview.distribution}

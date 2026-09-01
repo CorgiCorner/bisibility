@@ -3,6 +3,7 @@ import {
   SearchInsightsNoDataState,
   SearchInsightsNoPropertyState,
 } from "./SearchInsightsEmptyStates";
+import { storyImportFacts } from "./search-insights-story-fixtures";
 
 const meta = {
   component: SearchInsightsNoPropertyState,
@@ -27,6 +28,23 @@ const processProps = {
   resumeAction: action,
   retryAction: action,
 };
+const runtime = {
+  workerStatus: {
+    status: "ok" as const,
+    temporalIdentityComparison: { detail: "identities match", status: "match" as const },
+  },
+  workflowStatus: "running" as const,
+};
+const startupFacts = {
+  ...storyImportFacts,
+  consecutiveDays: 0,
+  qualifyingDays: 0,
+  readyThrough: {
+    d7: { current: false, previous: false },
+    d28: { current: false, previous: false },
+    d90: { current: false, previous: false },
+  },
+};
 
 export const NoProperty: Story = { args: { projectId: "prj_story" } };
 
@@ -38,12 +56,10 @@ export const Startup: Story = {
     <SearchInsightsNoDataState
       {...processProps}
       facts={{
-        completedDays: 0,
         connectionStatus: "connected",
-        deploymentMode: "self-host",
-        firstViewReady: false,
+        observability: startupFacts,
+        runtime,
         state: "created",
-        workerStatus: "ok",
       }}
     />
   ),
@@ -55,12 +71,10 @@ export const PartialBackfill: Story = {
     <SearchInsightsNoDataState
       {...processProps}
       facts={{
-        completedDays: 7,
         connectionStatus: "connected",
-        deploymentMode: "self-host",
-        firstViewReady: false,
+        observability: storyImportFacts,
+        runtime,
         state: "running",
-        workerStatus: "ok",
       }}
     />
   ),

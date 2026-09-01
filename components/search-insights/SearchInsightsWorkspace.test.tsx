@@ -9,6 +9,27 @@ import type { SearchInsightsWorkspaceProps } from "./search-insights-workspace-m
 const mocks = vi.hoisted(() => ({ track: vi.fn() }));
 vi.mock("@/lib/analytics/client", () => ({ track: mocks.track }));
 
+const readyFacts = {
+  consecutiveDays: 10,
+  deepHistoryMonths: { completed: 0, target: 16 },
+  lastActivityAt: null,
+  lastProbeAt: null,
+  qualifyingDays: 10,
+  readyThrough: {
+    d7: { current: true, previous: false },
+    d28: { current: false, previous: false },
+    d90: { current: false, previous: false },
+  },
+  stall: {
+    expectedBatchMs: 1,
+    expectedDayMs: 1,
+    nextRequestInMs: 0,
+    silenceMs: 0,
+    thresholdMs: 1,
+  },
+  targetDays: 28,
+} as const;
+
 const context = {
   connection: {
     property: {
@@ -193,13 +214,10 @@ describe("SearchInsightsWorkspace", () => {
           daysDone: 10,
           daysTotal: 10,
           earliestTargetDate: "2026-08-17",
-          etaLabel: null,
+          facts: readyFacts,
           finalizedThroughDate: "2026-08-26",
-          firstViewReady: true,
-          lastActivityAt: null,
           lastProbeAt: null,
           lastSyncStartedAt: null,
-          localReadableThrough: "2026-08-26",
           newestFinalizedDate: "2026-08-26",
           pausedReason: null,
           state: "completed",
@@ -269,13 +287,10 @@ describe("SearchInsightsWorkspace", () => {
             daysDone: 10,
             daysTotal: 10,
             earliestTargetDate: "2026-08-17",
-            etaLabel: null,
+            facts: readyFacts,
             finalizedThroughDate: "2026-08-26",
-            firstViewReady: true,
-            lastActivityAt: null,
             lastProbeAt: null,
             lastSyncStartedAt: null,
-            localReadableThrough: "2026-08-26",
             newestFinalizedDate: "2026-08-26",
             pausedReason: null,
             state: "completed",

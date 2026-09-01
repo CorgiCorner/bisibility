@@ -5,6 +5,24 @@ import { describe, expect, it, vi } from "vitest";
 import { project, renderWizard } from "./OnboardingWizard.test-utils";
 
 describe("OnboardingWizard", () => {
+  it("prefills the website from the landing signup flow", () => {
+    renderWizard({ initialWebsite: "not validated yet & still raw" });
+
+    const input = screen.getByLabelText("Your website");
+    expect(input).toHaveAttribute("id", "onboarding-website");
+    expect(input).toHaveValue("not validated yet & still raw");
+  });
+
+  it("keeps an existing project domain ahead of a landing prefill", () => {
+    renderWizard({
+      initialFlowState: { projectId: "prj_1", providerId: null },
+      initialProject: project,
+      initialWebsite: "ignored.example",
+    });
+
+    expect(screen.getByLabelText("Your website")).toHaveValue("example.com");
+  });
+
   it("ignores clicks on locked future steps", () => {
     renderWizard();
 

@@ -4,6 +4,7 @@ import { Tooltip } from "@/components/ui";
 import type { SearchInsightsImportAction } from "@/lib/actions/search-insights";
 import type { WorkerTemporalStatus } from "@/lib/ops/worker-temporal-identity";
 import type { SearchInsightsImportState } from "@/lib/search-insights/queries/context";
+import type { ImportObservabilityFacts } from "@/lib/search-insights/queries/import-observability";
 import { docsLinkProps } from "@/lib/site/site";
 import { cn } from "@/lib/ui/cn";
 import { InfoIcon as Info } from "@phosphor-icons/react";
@@ -20,6 +21,7 @@ import {
   workerIdentityMismatchCopy,
 } from "./search-insights-copy";
 import {
+  importObservabilityProgress,
   importProgress,
   importStartupPresentation,
   progressWidthClass,
@@ -49,6 +51,7 @@ const unavailableAction: SearchInsightsImportAction = async () => ({
 
 export function SearchInsightsWaitingStrip({
   deploymentMode,
+  facts,
   importState,
   pauseAction = unavailableAction,
   projectId = "",
@@ -56,13 +59,15 @@ export function SearchInsightsWaitingStrip({
   workerStatus,
 }: Readonly<{
   deploymentMode: "cloud" | "self-host";
+  facts: ImportObservabilityFacts | null;
   importState: SearchInsightsImportState | null;
   pauseAction?: SearchInsightsImportAction;
   projectId?: string;
   resumeAction?: SearchInsightsImportAction;
   workerStatus: WorkerTemporalStatus;
 }>) {
-  const progress = importProgress(importState);
+  const selectorProgress = importObservabilityProgress(facts);
+  const progress = importProgress(importState, facts);
   const userPaused = importState?.pausedReason === "user";
   const livenessStatus = typeof workerStatus === "string" ? workerStatus : workerStatus.status;
   const temporalIdentityComparison =
@@ -89,7 +94,9 @@ export function SearchInsightsWaitingStrip({
             ? IMPORT_PAUSED_LINE
             : done
               ? importDoneCopy(importState?.plannedRetentionMonths ?? 16)
-              : presentation.fact;
+              : selectorProgress && presentation.state === "active"
+                ? `Importing your Google history · ${selectorProgress.qualifyingCounter}`
+                : presentation.fact;
   const detail =
     namesMismatch && !userPaused ? (
       mismatchCopy.detail
@@ -114,7 +121,12 @@ export function SearchInsightsWaitingStrip({
           className="h-1 w-16 shrink-0 overflow-hidden rounded-full bg-bg-inset"
           data-startup-segment="progress"
         >
-          <span className={cn("block h-full bg-fg-muted", progressWidthClass(progress.percent))} />
+          <span
+            className={cn(
+              "block h-full bg-fg-muted",
+              progressWidthClass(selectorProgress?.percent ?? progress.percent),
+            )}
+          />
         </span>
       ) : null}
       <span className={FACT} data-startup-segment="fact">
@@ -129,6 +141,18 @@ export function SearchInsightsWaitingStrip({
         <span className="text-fg-muted" data-startup-segment="eta">
           · {presentation.eta}
         </span>
+      ) : null}
+      {selectorProgress ? (
+        <span className="text-fg-muted" data-startup-segment="deep-history">
+          · {selectorProgress.deepHistory}
+        </span>
+      ) : null}
+      {selectorProgress ? (
+        <Tooltip content={selectorProgress.freshness.tooltip} semantics="description">
+          <span className="text-fg-muted" data-startup-segment="freshness">
+            · {selectorProgress.freshness.label}
+          </span>
+        </Tooltip>
       ) : null}
       {showActiveSegments && presentation.showHeartbeat ? <SearchInsightsRefresh active /> : null}
       {userPaused || (progress.state === "running" && !waitingForFirstData) ? (

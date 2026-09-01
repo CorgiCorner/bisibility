@@ -1,3 +1,4 @@
+import type { ImportObservabilityFacts } from "@/lib/search-insights/queries/import-observability";
 import { routerMock, setNavigationState } from "@/tests/next-navigation";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -8,14 +9,38 @@ const mocks = vi.hoisted(() => ({ track: vi.fn() }));
 vi.mock("@/lib/analytics/client", () => ({ track: mocks.track }));
 
 const period = { days: 28, id: "28" as const, label: "28 finalized days", sub: "vs previous 28" };
+const importFacts: ImportObservabilityFacts = {
+  consecutiveDays: 90,
+  deepHistoryMonths: { completed: 3, target: 16 },
+  lastActivityAt: null,
+  lastProbeAt: null,
+  qualifyingDays: 28,
+  readyThrough: {
+    d7: { current: true, previous: true },
+    d28: { current: true, previous: true },
+    d90: { current: true, previous: false },
+  },
+  stall: {
+    expectedBatchMs: 1,
+    expectedDayMs: 60_000,
+    nextRequestInMs: 0,
+    silenceMs: 0,
+    thresholdMs: 1,
+  },
+  targetDays: 28,
+};
 
-function renderMenu(yoyMonths = 9) {
+function renderMenu(yoyMonths = 9, facts = importFacts) {
   setNavigationState({
     pathname: "/app/prj_1/search-console",
     searchParams: { google: "select", period: "28" },
   });
   render(
-    <SearchInsightsPeriodMenu period={period} yoy={{ monthsImported: yoyMonths, required: 13 }} />,
+    <SearchInsightsPeriodMenu
+      importFacts={facts}
+      period={period}
+      yoy={{ monthsImported: yoyMonths, required: 13 }}
+    />,
   );
 }
 
@@ -77,5 +102,23 @@ describe("SearchInsightsPeriodMenu", () => {
 
     await userEvent.click(yoy as HTMLElement);
     expect(routerMock.replace).not.toHaveBeenCalled();
+  });
+
+  it("disables a period that the readiness selector has not unlocked", async () => {
+    renderMenu(9, {
+      ...importFacts,
+      consecutiveDays: 20,
+      readyThrough: {
+        d7: { current: true, previous: true },
+        d28: { current: false, previous: false },
+        d90: { current: false, previous: false },
+      },
+    });
+
+    await userEvent.click(screen.getByRole("button", { name: "Comparison window" }));
+
+    const option = await screen.findByRole("option", { name: /28 finalized days/ });
+    expect(option).toHaveAttribute("aria-disabled", "true");
+    expect(option).toHaveTextContent("vs previous 28 / ready in ~8 min");
   });
 });

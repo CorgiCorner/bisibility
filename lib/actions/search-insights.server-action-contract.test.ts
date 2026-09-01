@@ -8,8 +8,13 @@ describe("Search Insights server action contract", () => {
     ["pauseSearchInsightsImport", "export async function pauseSearchInsightsImport("],
     ["resumeSearchInsightsImport", "export async function resumeSearchInsightsImport("],
     ["retrySearchInsightsImport", "export async function retrySearchInsightsImport("],
+    ["loadSearchInsightsImportFacts", "export async function loadSearchInsightsImportFacts("],
   ])("declares %s as an async export", (_name, declaration) => {
     expect(source).toContain(declaration);
+  });
+  it("keeps modal fact transport in the authorized query layer", () => {
+    expect(source).toContain("await loadSearchInsightsScope(data.projectId");
+    expect(source).not.toContain("readImportObservability");
   });
   it("returns only the stable transition message when storage rejects new pause fields", async () => {
     const forbidden = ["Prisma", "Invalid invocation", "pauseStartedAt", "/Users/", " at "];

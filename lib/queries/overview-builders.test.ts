@@ -294,6 +294,21 @@ describe("overview builders", () => {
     ]);
   });
 
+  it("renders Visibility as awaiting when every completed check is shallower than Top 20", () => {
+    const kpis = buildKpis(
+      [snapshotFor(keyword("shallow", [check(null, { requestedDepth: 10 })]))],
+      1,
+      0,
+    );
+
+    expect(kpis.find((item) => item.label === "Visibility")).toEqual({
+      delta: "awaiting Top 20 check",
+      deltaTone: "neutral",
+      label: "Visibility",
+      value: "–",
+    });
+  });
+
   it("distinguishes a failed first check from a check that has not run", () => {
     const failed = buildKpis(
       [snapshotFor(keyword("failed", [check(null, { status: "failed" })]))],

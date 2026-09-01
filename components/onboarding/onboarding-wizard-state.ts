@@ -39,6 +39,7 @@ export function projectIdFor(project: OnboardingProject | null, flowState: Onboa
 export function initialOnboardingDraft(
   project: OnboardingProject | null,
   flowState: OnboardingFlowState,
+  initialWebsite = "",
 ): OnboardingDraft {
   const projectId = projectIdFor(project, flowState);
   const locations = [...(flowState.locations ?? [DEFAULT_ONBOARDING_LOCATION_KEY])];
@@ -64,7 +65,7 @@ export function initialOnboardingDraft(
     },
     createProject: {
       // ...defaultMatchingScopeValues, // Restore ownership matching with issue #863.
-      website: project?.domain ?? "",
+      website: project?.domain ?? initialWebsite,
     },
     schedule: {
       country: defaultCountry,

@@ -1,44 +1,45 @@
 import { propertyDisplayName } from "@/lib/search-insights/queries/context-model";
-import type { ProviderConsumerStatus, ProviderStatusKind } from "./types";
+import {
+  resolveSearchBackfillPresentation,
+  type SearchBackfillFacts,
+} from "@/lib/search-insights/sync/control-model";
+import type { ProviderConsumerStatus } from "./types";
 
-type SearchModuleInput = {
-  accountStatus: ProviderStatusKind;
-  completedDays: number;
-  daysTotal: number;
-  firstViewReady: boolean;
-  importState: string | null;
-  pausedReason: string | null;
-  plannedRetentionMonths: number | null;
+type SearchModuleInput = SearchBackfillFacts & {
   property: string | null;
 };
 
+function consumerState(
+  kind: ReturnType<typeof resolveSearchBackfillPresentation>["kind"],
+  input: SearchModuleInput,
+): ProviderConsumerStatus["state"] {
+  if (kind === "complete") return "kept_current";
+  if (kind === "needs_reauth") return "needs_reauth";
+  if (kind === "needs_retry") return "sync_failed";
+  if (kind === "paused_user") return "paused_by_user";
+  return kind === "running" && input.observability?.readyThrough.d7.current
+    ? "first_view_ready"
+    : "backfill_running";
+}
+
 export function searchModuleConsumerStatus(input: SearchModuleInput): ProviderConsumerStatus {
-  if (!input.property) return { state: "not_configured", summary: "Not configured" };
-  const detail = propertyDisplayName(input.property);
-  if (input.accountStatus === "needs_reauth") {
-    return { detail, state: "needs_reauth", summary: "Needs reconnect" };
-  }
-  if (!input.importState) return { detail, state: "not_configured", summary: "Not configured" };
-  if (input.pausedReason === "user") {
-    return { detail, state: "paused_by_user", summary: "Paused by you" };
-  }
-  if (input.importState === "completed") {
-    const months = input.plannedRetentionMonths ?? 16;
-    return { detail, state: "kept_current", summary: `${months} months imported · kept current` };
-  }
-  if (input.firstViewReady) {
+  if (input.connectionStatus === "connected" && !input.state) {
     return {
-      detail,
-      state: "first_view_ready",
-      summary: "First 28-day view ready · full history still importing",
+      ...(input.property ? { detail: propertyDisplayName(input.property) } : {}),
+      state: "not_configured",
+      summary: "Not configured",
     };
   }
-  if (input.importState === "running" || input.importState === "queued") {
-    return {
-      detail,
-      state: "backfill_running",
-      summary: `Backfill running · ${input.completedDays} of ~${input.daysTotal} days`,
-    };
-  }
-  return { detail, state: "not_configured", summary: "Not configured" };
+  const presentation = resolveSearchBackfillPresentation(input);
+  return {
+    ...(input.property ? { detail: propertyDisplayName(input.property) } : {}),
+    state: consumerState(presentation.kind, input),
+    summary: [
+      presentation.title,
+      input.observability ? presentation.description : null,
+      presentation.supportingText,
+    ]
+      .filter((value): value is string => Boolean(value))
+      .join(" · "),
+  };
 }

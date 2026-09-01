@@ -9,7 +9,10 @@ const mocks = vi.hoisted(() => ({
   isUserPaused: vi.fn(),
   loadImportRow: vi.fn(),
   probeFreshness: vi.fn(),
-  prisma: { searchAnalyticsImport: { update: vi.fn(), updateMany: vi.fn() } },
+  prisma: {
+    projectDefaults: { findUnique: vi.fn() },
+    searchAnalyticsImport: { update: vi.fn(), updateMany: vi.fn() },
+  },
   readConnection: vi.fn(),
   recordImportFailure: vi.fn(),
   syncCompleteDay: vi.fn(),
@@ -80,6 +83,7 @@ describe("runBackfillBatch", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.prisma.searchAnalyticsImport.updateMany.mockResolvedValue({ count: 1 });
+    mocks.prisma.projectDefaults.findUnique.mockResolvedValue(null);
     mocks.isUserPaused.mockResolvedValue(false);
     mocks.prisma.searchAnalyticsImport.updateMany.mockResolvedValue({ count: 1 });
     mocks.readConnection.mockResolvedValue({ connection, problem: null });
@@ -130,6 +134,63 @@ describe("runBackfillBatch", () => {
       state: "running",
     });
     expect(updateData(0)).not.toHaveProperty("lastSyncStartedAt");
+  });
+
+  it("retries instead of persisting an initial plan after settings change mid-probe", async () => {
+    const settingsUpdatedAt = new Date("2026-07-08T12:39:00.000Z");
+    mocks.loadImportRow.mockResolvedValue(importRow());
+    mocks.prisma.projectDefaults.findUnique.mockResolvedValue({
+      searchSyncImportMonths: 3,
+      searchSyncPace: "normal",
+      updatedAt: settingsUpdatedAt,
+    });
+    mocks.probeFreshness.mockResolvedValue({
+      availabilityBoundarySource: "metadata",
+      newestFinalizedDate: "2026-07-07",
+      probedAt: new Date("2026-07-08T12:40:00.000Z"),
+    });
+    mocks.prisma.searchAnalyticsImport.updateMany.mockResolvedValueOnce({ count: 0 });
+
+    await expect(runBackfillBatch(input)).resolves.toMatchObject({
+      daysProcessed: 0,
+      done: false,
+      importId: "imp_1",
+      nextCursor: null,
+      requestSets: 0,
+    });
+
+    expect(mocks.fetchAggregateRange).toHaveBeenCalledWith(
+      expect.objectContaining({ start: "2026-04-07" }),
+    );
+    expect(mocks.prisma.searchAnalyticsImport.updateMany).toHaveBeenCalledWith({
+      data: expect.objectContaining({ plannedRetentionMonths: 3 }),
+      where: expect.objectContaining({
+        project: { defaults: { is: { updatedAt: settingsUpdatedAt } } },
+      }),
+    });
+    expect(mocks.syncCompleteDay).not.toHaveBeenCalled();
+
+    const replacementUpdatedAt = new Date("2026-07-08T12:41:00.000Z");
+    mocks.prisma.projectDefaults.findUnique.mockResolvedValue({
+      searchSyncImportMonths: 16,
+      searchSyncPace: "normal",
+      updatedAt: replacementUpdatedAt,
+    });
+
+    await expect(runBackfillBatch(input)).resolves.toMatchObject({
+      daysProcessed: 2,
+      done: false,
+      nextCursor: "2026-07-05",
+    });
+    expect(mocks.fetchAggregateRange).toHaveBeenLastCalledWith(
+      expect.objectContaining({ start: "2025-03-07" }),
+    );
+    expect(mocks.prisma.searchAnalyticsImport.updateMany).toHaveBeenCalledWith({
+      data: expect.objectContaining({ plannedRetentionMonths: 16 }),
+      where: expect.objectContaining({
+        project: { defaults: { is: { updatedAt: replacementUpdatedAt } } },
+      }),
+    });
   });
 
   it("clamps a fresh plan to the first day with impressions", async () => {
@@ -313,10 +374,12 @@ describe("runBackfillBatch", () => {
     expect(updateData(2).finalizedThroughDate).toBeUndefined();
     // The marker moves forward only: the scheduled sweep can finalize a newer day while this
     // batch is in flight, and writing the older day back would age the trust strip.
-    expect(mocks.prisma.searchAnalyticsImport.updateMany).toHaveBeenCalledTimes(2);
+    expect(mocks.prisma.searchAnalyticsImport.updateMany).toHaveBeenCalledTimes(5);
     expect(mocks.prisma.searchAnalyticsImport.updateMany).toHaveBeenCalledWith({
       data: { firstDataDetectedAt: expect.any(Date) },
       where: expect.objectContaining({
+        daysTotal: 488,
+        earliestTargetDate: new Date("2025-03-07T00:00:00.000Z"),
         firstDataDetectedAt: null,
         waitingForFirstDataAt: { not: null },
       }),
@@ -324,6 +387,8 @@ describe("runBackfillBatch", () => {
     expect(mocks.prisma.searchAnalyticsImport.updateMany).toHaveBeenCalledWith({
       data: { finalizedThroughDate: new Date("2026-07-07T00:00:00.000Z") },
       where: {
+        daysTotal: 488,
+        earliestTargetDate: new Date("2025-03-07T00:00:00.000Z"),
         AND: [
           {
             OR: [
@@ -331,7 +396,6 @@ describe("runBackfillBatch", () => {
               { finalizedThroughDate: { lt: new Date("2026-07-07T00:00:00.000Z") } },
             ],
           },
-          { OR: [{ pausedReason: null }, { pausedReason: { not: "user" } }] },
         ],
         id: "imp_1",
       },
@@ -377,6 +441,47 @@ describe("runBackfillBatch", () => {
       nextCursor: null,
     });
     expect(updateData(1)).toMatchObject({ pausedReason: null, state: "completed" });
+    expect(mocks.prisma.searchAnalyticsImport.updateMany).toHaveBeenLastCalledWith({
+      data: expect.objectContaining({ state: "completed" }),
+      where: expect.objectContaining({
+        daysTotal: 0,
+        earliestTargetDate: new Date("2025-03-07T00:00:00.000Z"),
+      }),
+    });
+  });
+
+  it("stops when a concurrent re-plan rejects the stale progress write", async () => {
+    mocks.loadImportRow.mockResolvedValue(
+      importRow({
+        cursorDate: new Date("2025-03-07T00:00:00.000Z"),
+        daysTotal: 488,
+        earliestTargetDate: new Date("2025-03-07T00:00:00.000Z"),
+        finalizedThroughDate: new Date("2026-07-07T00:00:00.000Z"),
+        newestFinalizedDate: new Date("2026-07-07T00:00:00.000Z"),
+        state: "running",
+      }),
+    );
+    mocks.syncCompleteDay.mockImplementationOnce(async () => {
+      // A settings save re-planned the depth after this request stored its partition.
+      mocks.prisma.searchAnalyticsImport.updateMany.mockResolvedValueOnce({ count: 0 });
+      return { capHit: false, pages: 1, requestedRows: 25_000, returnedRows: 10 };
+    });
+
+    await expect(runBackfillBatch(input)).resolves.toMatchObject({
+      daysProcessed: 0,
+      done: false,
+      nextCursor: "2025-03-07",
+      requestSets: 3,
+    });
+
+    expect(mocks.prisma.searchAnalyticsImport.updateMany).toHaveBeenCalledWith({
+      data: expect.objectContaining({ cursorDate: new Date("2025-03-06T00:00:00.000Z") }),
+      where: expect.objectContaining({
+        daysTotal: 488,
+        earliestTargetDate: new Date("2025-03-07T00:00:00.000Z"),
+      }),
+    });
+    expect(updateData(1)).toBeUndefined();
   });
 
   it("stores the capped-day count the partitions report, never a running total", async () => {

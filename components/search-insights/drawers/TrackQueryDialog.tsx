@@ -18,6 +18,7 @@ import {
   serpDepthValues,
   serpDeviceOptions,
 } from "@/lib/serp/markets";
+import { VISIBILITY_HORIZON, VISIBILITY_SHALLOW_CHECK_COPY } from "@/lib/visibility/definition";
 import { CheckIcon as Check } from "@phosphor-icons/react";
 import { useRef, useState } from "react";
 import {
@@ -194,6 +195,11 @@ export function TrackQueryDialog({
               triggerClassName={SELECT}
               value={String(serpDepth)}
             />
+            {serpDepth < VISIBILITY_HORIZON ? (
+              <span className="mt-1 text-ui-caption leading-normal text-yellow-text">
+                {VISIBILITY_SHALLOW_CHECK_COPY}
+              </span>
+            ) : null}
           </section>
         </div>
         <section className="flex flex-col gap-1.5 rounded-card border border-border bg-bg-sunken px-3.5 py-3">

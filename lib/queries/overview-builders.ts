@@ -3,6 +3,7 @@ import { relativePast } from "@/lib/format/relative-time";
 import { notRankedLabel, rankObservationState } from "@/lib/serp/rank-depth";
 import { rankBucketColors } from "@/lib/theme/chart-colors";
 import type { Keyword } from "./overview-trend";
+import { summarizeVisibility, visibilitySnapshotFor } from "./visibility";
 
 export type { Check, Keyword, Trend } from "./overview-trend";
 export { buildTrend, buildTrendTakeaway } from "./overview-trend";
@@ -26,6 +27,7 @@ export type OverviewMetrics = {
   top10Delta: number | null;
   top100Count: number | null;
   visibility: number | null;
+  visibilityMeasuredKeywordCount: number;
   visibilityDelta: number | null;
 };
 // biome-ignore format: compact query-local shapes keep this file under the line cap.
@@ -33,11 +35,6 @@ export type HighlightRow = { delta?: { direction: "down" | "up"; title: string; 
 // biome-ignore format: compact query-local shapes keep this file under the line cap.
 export type HighlightList = { kind: "attention" | "newTop10" | "recentlyAdded" | "wins"; rows: HighlightRow[]; subtitle: string; title: string };
 export type Snapshot = ReturnType<typeof snapshotFor>;
-
-const CTR_BY_POSITION = [
-  0.3, 0.17, 0.11, 0.08, 0.065, 0.055, 0.048, 0.042, 0.037, 0.033, 0.029, 0.026, 0.023, 0.021,
-  0.019, 0.017, 0.015, 0.013, 0.011, 0.01,
-] as const;
 
 export const buckets = [
   ["#1-3", 1, 3],
@@ -180,32 +177,6 @@ export function kpi(label: string, value: string, delta: string, deltaTone: Tone
   return { delta, deltaTone, label, value };
 }
 
-function median(values: number[]) {
-  const sorted = [...values].sort((a, b) => a - b);
-  const middle = Math.floor(sorted.length / 2);
-  return sorted.length % 2
-    ? sorted[middle]
-    : ((sorted[middle - 1] ?? 0) + (sorted[middle] ?? 0)) / 2;
-}
-
-function visibility(snapshots: Snapshot[], positionKey: "position" | "previous") {
-  const known = snapshots.flatMap((item) =>
-    item.volume !== null && Number.isFinite(item.volume) ? [Math.max(0, item.volume)] : [],
-  );
-  // Unknown volumes use the known-volume median; a fully unknown set is deliberately unweighted.
-  const fallbackWeight = known.length ? median(known) : 1;
-  let weightedCtr = 0;
-  let totalWeight = 0;
-  for (const item of snapshots) {
-    const weight = item.volume === null ? fallbackWeight : Math.max(0, item.volume);
-    const position = item[positionKey];
-    weightedCtr +=
-      (position && position <= CTR_BY_POSITION.length ? CTR_BY_POSITION[position - 1] : 0) * weight;
-    totalWeight += weight;
-  }
-  return totalWeight ? (weightedCtr / (CTR_BY_POSITION[0] * totalWeight)) * 100 : 0;
-}
-
 function percentagePointCopy(value: number) {
   return `${value > 0 ? "+" : ""}${value.toFixed(1)}pp`;
 }
@@ -221,9 +192,9 @@ export function buildOverviewMetrics(snapshots: Snapshot[]): OverviewMetrics {
   const countAt = (limit: number, values = positions) =>
     values.filter((value) => value <= limit).length;
   const averagePositionDelta = comparable.length ? avg(previous) - avg(currentComparable) : null;
-  const visibilityDelta = comparable.length
-    ? visibility(comparable, "position") - visibility(comparable, "previous")
-    : null;
+  const visibility = summarizeVisibility(
+    snapshots.map((snapshot) => visibilitySnapshotFor(snapshot.keyword, snapshot.volume)),
+  );
 
   return {
     averagePosition: positions.length ? avg(positions) : null,
@@ -239,15 +210,22 @@ export function buildOverviewMetrics(snapshots: Snapshot[]): OverviewMetrics {
     top10Count: hasCompletedChecks ? countAt(10) : null,
     top10Delta: comparable.length ? countAt(10, currentComparable) - countAt(10, previous) : null,
     top100Count: hasCompletedChecks ? positions.length : null,
-    visibility: hasCompletedChecks ? visibility(snapshots, "position") : null,
-    visibilityDelta,
+    visibility: visibility.value,
+    visibilityDelta: visibility.delta,
+    visibilityMeasuredKeywordCount: visibility.measuredKeywordCount,
   };
 }
 
 // biome-ignore format: dense KPI construction keeps this file under the project line cap.
-export function buildKpis(snapshots: Snapshot[], keywordCount: number, addedThisMonth: number): Kpi[] {
-  const metrics = buildOverviewMetrics(snapshots);
-  const hasCompletedChecks = metrics.visibility !== null;
+export function buildKpis(
+  snapshots: Snapshot[],
+  keywordCount: number,
+  addedThisMonth: number,
+  metrics = buildOverviewMetrics(snapshots),
+): Kpi[] {
+  const hasCompletedChecks = snapshots.some((item) =>
+    item.keyword.rankChecks.some((check) => check.status === "completed"),
+  );
   const hasFailedChecks = snapshots.some((item) =>
     item.keyword.rankChecks.some((check) => check.status === "failed"),
   );
@@ -280,10 +258,22 @@ export function buildKpis(snapshots: Snapshot[], keywordCount: number, addedThis
       waitingKpi("Visibility", "–"),
     ];
   }
+  const visibilityKpi =
+    metrics.visibility === null
+      ? {
+          ...waitingKpi("Visibility", "–"),
+          delta: hasFailedChecks ? waitingCopy : "awaiting Top 20 check",
+        }
+      : kpi(
+          "Visibility",
+          `${Math.round(metrics.visibility)}%`,
+          metrics.visibilityDelta === null ? "new" : percentagePointCopy(visibilityDelta),
+          tone(visibilityDelta),
+        );
   return [
     kpi("Avg. position", hasPositionData ? metrics.averagePosition?.toFixed(1) ?? "-" : "-", averageCopy, tone(averageDelta)),
     kpi("Tracked keywords", String(keywordCount), addedThisMonth ? `+${addedThisMonth} this month` : "no new this month"),
     kpi("In top 10", String(metrics.top10Count ?? 0), topDeltaCopy, tone(metrics.top10Delta ?? 0)),
-    kpi("Visibility", `${Math.round(metrics.visibility ?? 0)}%`, hasComparison ? percentagePointCopy(visibilityDelta) : "new", tone(visibilityDelta)),
+    visibilityKpi,
   ];
 }

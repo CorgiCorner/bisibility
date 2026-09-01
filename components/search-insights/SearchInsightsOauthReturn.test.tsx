@@ -1,6 +1,6 @@
 import { ToastProvider } from "@/components/ui";
 import { routerMock } from "@/tests/next-navigation";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { SearchInsightsOauthReturn } from "./SearchInsightsOauthReturn";
@@ -62,21 +62,20 @@ describe("SearchInsightsOauthReturn", () => {
         "Search Console reports per property. Choose one, and bisibility imports its history - you can change it later without losing what has already been pulled.",
       ),
     ).toBeVisible();
-    expect(screen.getByText("VERIFIED PROPERTY")).toBeVisible();
+    expect(screen.getByText("Select a verified property")).toBeVisible();
     const propertyTrigger = screen.getByRole("button", { name: "Search Console property" });
     expect(propertyTrigger).toHaveClass("min-h-[42px]", "px-[11px]");
     expect(propertyTrigger).not.toHaveClass("min-h-[52px]", "px-4");
-    expect(propertyTrigger.querySelector("[data-menu-select-caret]")).toHaveClass("ml-auto");
-    expect(screen.getByText("Owner · covers every subdomain")).toBeVisible();
+    expect(screen.getByText("Owner · Domain property")).toBeVisible();
     const importInfo = screen.getByText(
-      "Importing 16 months takes about 1,900 requests to Google, spread over about 2 days.",
+      "Importing 16 months takes about 1,900 requests to Google. First view in ~30 min; full history in ~2 days at Standard speed.",
     );
     expect(importInfo).toBeVisible();
-    expect(importInfo).toHaveClass("border", "border-border");
-    expect(screen.queryByText("Select a verified property")).not.toBeInTheDocument();
-    expect(screen.queryByText(/Domain properties cover all subdomains/)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Import depth" })).toHaveTextContent("16 months");
+    expect(screen.getByRole("button", { name: "Import speed" })).toHaveTextContent("Standard");
+    expect(screen.getByText(/Domain properties cover all subdomains/)).toBeInTheDocument();
 
-    const primary = screen.getByRole("button", { name: "Start the import" });
+    const primary = screen.getByRole("button", { name: "Use selected property" });
     expect(primary.parentElement).toHaveClass("justify-end");
     const disconnect = screen.getByRole("button", { name: "Disconnect" });
     const reconnectAccount = screen.getByRole("link", { name: "Reconnect account" });
@@ -117,6 +116,36 @@ describe("SearchInsightsOauthReturn", () => {
     );
     expect(dialog).toBeInTheDocument();
   });
+
+  it("submits selected GSC depth and speed from the shared property form", async () => {
+    const completeAction = vi.fn().mockResolvedValue({ property: "sc-domain:example.com" });
+    render(
+      <ToastProvider>
+        <SearchInsightsOauthReturn
+          cancelAction={vi.fn()}
+          completeAction={completeAction}
+          disconnectAction={vi.fn()}
+          projectId="prj_1"
+          setup={setup}
+          syncPlan={{ daysTotal: 488, pace: "normal", retentionMonths: 16 }}
+        />
+      </ToastProvider>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Import depth" }));
+    fireEvent.click(await screen.findByRole("menuitem", { name: "12 months" }));
+    fireEvent.click(screen.getByRole("button", { name: "Import speed" }));
+    fireEvent.click(await screen.findByRole("menuitem", { name: "Reduced" }));
+    await userEvent.click(screen.getByRole("button", { name: "Use selected property" }));
+
+    expect(completeAction).toHaveBeenCalledWith({
+      pace: "gentle",
+      projectId: "prj_1",
+      property: "sc-domain:example.com",
+      retentionMonths: 12,
+    });
+  });
+
   it("keeps successful GA4 discovery selectable inside its local card", async () => {
     render(
       <ToastProvider>

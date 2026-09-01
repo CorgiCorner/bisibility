@@ -68,6 +68,7 @@ describe("StepAddKeywords schedule summary", () => {
     fireEvent.click(screen.getByRole("button", { name: "SERP depth" }));
     fireEvent.click(screen.getByRole("menuitem", { name: "Top 10" }));
     expect(screen.getByText("≈ 4 checks/month at Top 10")).toBeInTheDocument();
+    expect(screen.getByText(/Top 10 checks do not update Visibility/)).toBeInTheDocument();
   });
 
   it("excludes an unparseable custom cron schedule instead of pricing it at zero", () => {

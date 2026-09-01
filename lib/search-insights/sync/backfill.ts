@@ -52,6 +52,13 @@ const BLOCKED: BackfillBatchResult = {
   requestSets: 0,
   batchElapsedMs: 0,
 };
+function planGuard(importId: string, plan: BackfillPlanState) {
+  return {
+    ...userPauseGuard(importId),
+    daysTotal: plan.daysTotal,
+    earliestTargetDate: dateFromKey(plan.earliestTargetDate),
+  };
+}
 async function storeDay(input: {
   date: string;
   importId: string;
@@ -59,7 +66,7 @@ async function storeDay(input: {
   projectId: string;
   property: string;
   session: GscSearchAnalyticsSession;
-}) {
+}): Promise<boolean> {
   const { capHit } = await syncCompleteGscDay({
     date: input.date,
     projectId: input.projectId,
@@ -77,7 +84,7 @@ async function storeDay(input: {
   const cappedDays = capHit
     ? await countCappedDays({ projectId: input.projectId, property: input.property })
     : null;
-  await prisma.searchAnalyticsImport.update({
+  const changed = await prisma.searchAnalyticsImport.updateMany({
     data: {
       ...(cappedDays === null ? {} : { capHitDays: cappedDays }),
       cursorDate: dateFromKey(addDays(input.date, -1)),
@@ -89,15 +96,15 @@ async function storeDay(input: {
       pausedReason: null,
       state: "running",
     },
-    where: userPauseGuard(input.importId),
+    where: planGuard(input.importId, input.plan),
   });
-  if (!reachedNewest) return;
+  if (changed.count === 0 || !reachedNewest) return changed.count === 1;
 
   const marker = dateFromKey(input.date);
   await prisma.searchAnalyticsImport.updateMany({
     data: { firstDataDetectedAt: new Date() },
     where: {
-      ...userPauseGuard(input.importId),
+      ...planGuard(input.importId, input.plan),
       firstDataDetectedAt: null,
       waitingForFirstDataAt: { not: null },
     },
@@ -105,14 +112,12 @@ async function storeDay(input: {
   await prisma.searchAnalyticsImport.updateMany({
     data: { finalizedThroughDate: marker },
     where: {
-      AND: [
-        { OR: [{ finalizedThroughDate: null }, { finalizedThroughDate: { lt: marker } }] },
-        { OR: [{ pausedReason: null }, { pausedReason: { not: "user" } }] },
-      ],
-      id: input.importId,
+      ...planGuard(input.importId, input.plan),
+      AND: [{ OR: [{ finalizedThroughDate: null }, { finalizedThroughDate: { lt: marker } }] }],
     },
   });
   input.plan.finalizedThroughDate = input.date;
+  return true;
 }
 export async function runBackfillBatch(
   input: BackfillBatchInput,
@@ -167,6 +172,9 @@ export async function runBackfillBatch(
       row,
       session,
     });
+    if (planning.kind === "retry") {
+      return { ...IDLE, done: false, importId: planning.importId };
+    }
     if (planning.kind === "waiting_for_first_data") {
       return {
         ...IDLE,
@@ -187,7 +195,7 @@ export async function runBackfillBatch(
     let requestSets = 0;
     for (const date of days) {
       if (options.signal?.aborted || (await isImportUserPaused(row.id))) break;
-      await storeDay({
+      const storedDay = await storeDay({
         date,
         importId: row.id,
         plan,
@@ -195,12 +203,13 @@ export async function runBackfillBatch(
         property: row.property,
         session,
       });
-      stored.push(date);
       requestSets += 3;
+      if (!storedDay) break;
+      stored.push(date);
     }
 
     const nextCursor = stored.length > 0 ? addDays(stored[stored.length - 1], -1) : plan.cursorDate;
-    const done = stored.length === days.length && nextCursor < plan.earliestTargetDate;
+    let done = stored.length === days.length && nextCursor < plan.earliestTargetDate;
     if (done) {
       const changed = await prisma.searchAnalyticsImport.updateMany({
         data: {
@@ -209,8 +218,9 @@ export async function runBackfillBatch(
           pausedReason: null,
           state: "completed",
         },
-        where: { ...userPauseGuard(row.id), state: { not: "completed" } },
+        where: { ...planGuard(row.id, plan), state: { not: "completed" } },
       });
+      if (changed.count === 0) done = false;
       if (changed.count > 0) logSyncInfo(formatSyncComplete("backfill"));
     }
     return {

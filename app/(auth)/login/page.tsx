@@ -1,8 +1,9 @@
 import { LoginForm } from "@/components/auth/LoginForm";
+import { RememberedWebsiteCue } from "@/components/auth/RememberedWebsiteCue";
 import { BrandLockup } from "@/components/ui";
 import { isEmailSignInUnavailable } from "@/lib/auth/email-sign-in-availability";
 import { isFirstRun } from "@/lib/auth/first-run";
-import { returnToOrDefault } from "@/lib/auth/return-to";
+import { onboardingWebsiteFromReturnTo, returnToOrDefault } from "@/lib/auth/return-to";
 import {
   DEV_DEMO_EMAIL,
   DEV_FIXED_OTP_CODE,
@@ -50,11 +51,13 @@ export default async function LoginPage({ searchParams }: Readonly<LoginPageProp
   // An explicit switch keeps the form reachable while signed in; the app-scoped
   // recovery page links here when the session is the wrong account.
   const switchingAccount = firstParam(params?.switch) === "1";
+  const returnTo = returnToOrDefault(next);
+  const rememberedWebsite = onboardingWebsiteFromReturnTo(next);
 
   // The sign-in endpoint is the only surface that knows about the session, so marketing
   // navigation can stay static: "Sign in" is always safe to click.
   if (!switchingAccount && (await getSession())) {
-    return redirect(returnToOrDefault(next));
+    return redirect(returnTo);
   }
 
   const capacityMiss: SignInCapacityMiss =
@@ -73,7 +76,7 @@ export default async function LoginPage({ searchParams }: Readonly<LoginPageProp
   const brandStats: { icon: typeof GithubLogo; label: string; tone?: string }[] = [
     ...(githubStars ? [{ icon: GithubLogo, label: `${githubStars} stars` }] : []),
     { icon: ShieldCheck, label: LICENSE, tone: "text-green-text" },
-    { icon: LockKey, label: "Self-hosted" },
+    { icon: LockKey, label: "Bring your own keys" },
   ];
 
   return (
@@ -94,31 +97,6 @@ export default async function LoginPage({ searchParams }: Readonly<LoginPageProp
             Daily Google positions for every keyword that matters, in a dashboard your whole team
             can read.
           </p>
-
-          <div className="mt-[26px] overflow-hidden rounded-card border border-code-border">
-            <div className="flex items-center gap-[7px] border-code-border border-b bg-code-bg px-3.5 py-[9px]">
-              <span className="h-2.5 w-2.5 rounded-full bg-red" />
-              <span className="h-2.5 w-2.5 rounded-full bg-yellow" />
-              <span className="h-2.5 w-2.5 rounded-full bg-green" />
-              <span className="ml-1.5 font-mono text-[11px] text-code-faint">~/bisibility</span>
-            </div>
-            <pre className="m-0 overflow-x-auto bg-code-bg px-4 py-[15px] font-mono text-[12.5px] leading-[1.7] text-code-fg">
-              <span className="text-code-faint"># self-host in one command</span>
-              {"\n"}
-              <span className="text-accent-text">$</span> docker compose -f compose.yaml -f
-              compose.worker.yaml -f compose.temporal.yaml up -d
-              {"\n"}
-              <span className="block">
-                <span className="text-blue-text">✓</span> app{" "}
-                <span className="text-green-text">started</span>
-              </span>
-              <span className="block">
-                <span className="text-blue-text">✓</span> scheduled worker{" "}
-                <span className="text-green-text">started</span>
-              </span>
-              <span className="block text-code-faint">{"  + 6 supporting services"}</span>
-            </pre>
-          </div>
         </div>
 
         <div className="flex items-center gap-4.5 font-mono text-[11.5px] text-fg-muted">
@@ -132,18 +110,21 @@ export default async function LoginPage({ searchParams }: Readonly<LoginPageProp
       </section>
 
       <section className="relative flex items-center justify-center px-6 py-11">
-        <LoginForm
-          capacity={capacity}
-          capacityMiss={capacityMiss}
-          demoEmail={DEV_DEMO_EMAIL}
-          devOtpCode={DEV_FIXED_OTP_CODE}
-          dataResidencyMessage={dataResidencyMessage()}
-          emailSignInUnavailable={emailSignInUnavailable}
-          enabledProviders={ENABLED_SOCIAL_PROVIDERS}
-          humanVerificationRequired={isCloud}
-          legalConsentLinks={legalConsentLinks()}
-          returnTo={returnToOrDefault(next)}
-        />
+        <div className="w-full max-w-[380px]">
+          {rememberedWebsite ? <RememberedWebsiteCue website={rememberedWebsite} /> : null}
+          <LoginForm
+            capacity={capacity}
+            capacityMiss={capacityMiss}
+            demoEmail={DEV_DEMO_EMAIL}
+            devOtpCode={DEV_FIXED_OTP_CODE}
+            dataResidencyMessage={dataResidencyMessage()}
+            emailSignInUnavailable={emailSignInUnavailable}
+            enabledProviders={ENABLED_SOCIAL_PROVIDERS}
+            humanVerificationRequired={isCloud}
+            legalConsentLinks={legalConsentLinks()}
+            returnTo={returnTo}
+          />
+        </div>
       </section>
     </main>
   );

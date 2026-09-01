@@ -114,9 +114,12 @@ optional exact tag name.
 ```
 
 Positive `average_position_delta` means the average rank improved. Visibility
-is a percentage and `visibility_delta` is measured in percentage points. Rank
-aggregates and distribution counts are `null` before the project has check data;
-a completed check with no keyword in a bucket returns the real count `0`.
+measures volume-weighted ranking strength in Google's Top 20. A value of 100
+means every measured keyword ranks #1. Rankings below #20 do not add Visibility,
+and shallow or failed checks are not treated as lost rankings.
+`visibility_delta` is measured in percentage points. Rank aggregates and
+distribution counts are `null` before the project has check data; a completed
+check with no keyword in a bucket returns the real count `0`.
 
 ## Update project
 

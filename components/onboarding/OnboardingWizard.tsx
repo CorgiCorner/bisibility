@@ -31,7 +31,6 @@ import {
   providerOptions,
 } from "./steps/StepConnectProvider.fields";
 import { StepConnectProviderSkip } from "./steps/StepConnectProviderSkip";
-
 // biome-ignore format: Compact initial props keep this production component within its line limit.
 export function OnboardingWizard({ actions, costPerCheckCents, dataResidencyMessage,
   gscJustConnected,
@@ -43,6 +42,7 @@ export function OnboardingWizard({ actions, costPerCheckCents, dataResidencyMess
   initialKeywordCount,
   initialKeywordText,
   initialProject,
+  initialWebsite,
   initialSerpConnections,
   initialStep,
   monthlyCapCents,
@@ -57,7 +57,7 @@ export function OnboardingWizard({ actions, costPerCheckCents, dataResidencyMess
   const [currentStep, setCurrentStep] = useState(initialStep);
   const [project, setProject] = useState(initialProject);
   const [flowState, setFlowState] = useState<OnboardingFlowState>(startingFlowState);
-  const initialDraft = initialOnboardingDraft(initialProject, startingFlowState);
+  const initialDraft = initialOnboardingDraft(initialProject, startingFlowState, initialWebsite);
   const [draft, setDraft] = useState(() => initialDraft);
   const [keywordCount, setKeywordCount] = useState(initialKeywordCount);
   const [authoritativeNextCheckAt, setAuthoritativeNextCheckAt] = useState(nextCheckAt);

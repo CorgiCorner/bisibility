@@ -171,6 +171,16 @@ describe("KeywordScheduleInlineForm", () => {
     ).toBeInTheDocument();
   });
 
+  it("explains that an effective Top-10 keyword remains in Visibility coverage", () => {
+    renderForm(keyword(), { projectDepth: 10 });
+
+    expect(
+      screen.getByText(
+        "Top 10 checks do not update Visibility. Affected keywords still count toward its coverage total.",
+      ),
+    ).toBeVisible();
+  });
+
   it("does not render inherited hint for fallback schedules", () => {
     renderForm(keyword({ scheduleSource: "fallback" }));
 

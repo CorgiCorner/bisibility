@@ -5,22 +5,17 @@ import { SearchInsightsTrustStrip } from "./SearchInsightsTrustStrip";
 
 const importState: SearchInsightsImportState = {
   capHitDays: 0,
-  completedDays: 28,
   cursorDate: "2026-03-14",
   daysDone: 274,
   daysTotal: 488,
   earliestTargetDate: "2025-03-14",
-  etaLabel: "about 3 days left",
   finalizedThroughDate: "2026-07-08",
-  firstViewReady: true,
-  lastActivityAt: "2026-08-29T17:00:00.000Z",
   lastProbeAt: "2026-08-29T17:00:00.000Z",
   lastSyncStartedAt: null,
   newestFinalizedDate: "2026-07-08",
   pausedReason: null,
   plannedRetentionMonths: 16,
   state: "running",
-  waiting: false,
 };
 
 const mismatchWorkerHealth = {

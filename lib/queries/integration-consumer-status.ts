@@ -4,7 +4,14 @@ import { prisma } from "@/lib/db/prisma";
 import { providerAgeLabel } from "@/lib/integrations/provider-age";
 import { searchModuleConsumerStatus } from "@/lib/integrations/provider-consumer-status";
 import type { IntegrationProviderData, ProviderStatusKind } from "@/lib/integrations/types";
+import { getWorkerLivenessDetails } from "@/lib/ops/liveness";
+import { compareWorkerTemporalIdentity } from "@/lib/ops/worker-temporal-identity";
 import { readImportObservability } from "@/lib/search-insights/queries/import-observability-db";
+import { readSearchImportQueueFacts } from "@/lib/search-insights/queries/import-queue";
+import { searchSyncRequestSetsPerHour } from "@/lib/search-insights/sync/plan";
+import { resolveSearchSyncSettings } from "@/lib/settings/search-sync-config";
+import { temporalDeploymentConfig } from "@/lib/temporal/deployment-config";
+import { describeSearchInsightsBackfillStatus } from "@/lib/temporal/search-insights-status";
 
 type Connection = { lastUsedAt: Date | null; provider: string; status: ProviderStatusKind };
 type ConsumerStatuses = IntegrationProviderData["consumerStatuses"];
@@ -20,32 +27,69 @@ export async function loadGscConsumerStatuses(
     where: { projectId, status: "active" },
   });
   const property = active?.propertyKey ?? null;
-  const importRow = property
-    ? await prisma.searchAnalyticsImport.findUnique({
-        where: { projectId_property_source: { projectId, property, source: "gsc" } },
-      })
-    : null;
-  const observability =
+  const connectionStatus =
+    connection?.status === "needs_reauth"
+      ? "needs_reauth"
+      : connection
+        ? property
+          ? "connected"
+          : "connected_no_property"
+        : "not_connected";
+  const [importRow, defaults] = property
+    ? await Promise.all([
+        prisma.searchAnalyticsImport.findUnique({
+          where: { projectId_property_source: { projectId, property, source: "gsc" } },
+        }),
+        prisma.projectDefaults.findUnique({ where: { projectId } }),
+      ])
+    : [null, null];
+  const settings = resolveSearchSyncSettings(defaults);
+  const [observability, queue, workflowStatus, workerLiveness] =
     importRow && property
-      ? await readImportObservability({
-          daysTotal: importRow.daysTotal,
-          earliestTargetDate: importRow.earliestTargetDate,
-          newestFinalizedDate: importRow.newestFinalizedDate,
-          now,
-          projectId,
-          property,
-        })
-      : null;
+      ? await Promise.all([
+          readImportObservability({
+            daysTotal: importRow.daysTotal,
+            earliestTargetDate: importRow.earliestTargetDate,
+            lastProbeAt: importRow.lastProbeAt,
+            newestFinalizedDate: importRow.newestFinalizedDate,
+            now,
+            plannedRetentionMonths: settings.retentionMonths,
+            projectId,
+            property,
+            requestSetsPerHour: searchSyncRequestSetsPerHour(settings.pace),
+          }),
+          readSearchImportQueueFacts({
+            createdAt: importRow.createdAt,
+            id: importRow.id,
+            projectId,
+            state: importRow.state,
+          }),
+          describeSearchInsightsBackfillStatus(projectId, property),
+          getWorkerLivenessDetails(),
+        ])
+      : [null, null, "unknown" as const, null];
   return {
     searchModule: searchModuleConsumerStatus({
-      accountStatus: connection?.status ?? "ready",
-      completedDays: observability?.completedDays ?? 0,
-      daysTotal: importRow?.daysTotal ?? 0,
-      firstViewReady: observability?.firstViewReady ?? false,
-      importState: importRow?.state ?? null,
+      connectionStatus,
+      observability: observability ?? undefined,
       pausedReason: importRow?.pausedReason ?? null,
-      plannedRetentionMonths: importRow?.plannedRetentionMonths ?? null,
       property,
+      pauseStartedAt: importRow?.pauseStartedAt?.toISOString() ?? null,
+      queue: queue ?? undefined,
+      runtime: workerLiveness
+        ? {
+            workerStatus: {
+              status: workerLiveness.status,
+              temporalIdentityComparison: compareWorkerTemporalIdentity(
+                temporalDeploymentConfig(),
+                workerLiveness,
+              ),
+            },
+            workflowStatus,
+          }
+        : undefined,
+      safeError: importRow?.lastError ?? null,
+      state: importRow?.state ?? null,
     }),
     trafficEnrichment:
       connection?.status === "needs_reauth"

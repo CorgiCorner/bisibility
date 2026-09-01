@@ -122,6 +122,11 @@ const routeCases = [
     title: "Settings",
   },
   {
+    path: appPath("prj_1", "settings", "data-sources"),
+    pattern: appPath("[project]", "settings", "data-sources"),
+    title: "Settings",
+  },
+  {
     path: appPath("prj_1", "settings", "developers"),
     pattern: appPath("[project]", "settings", "developers"),
     title: "Settings",

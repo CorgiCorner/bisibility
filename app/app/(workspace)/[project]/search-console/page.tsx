@@ -33,7 +33,6 @@ import {
 import { loadSearchInsightsRows } from "@/lib/actions/search-insights-rows";
 import { getProjectRole } from "@/lib/auth/authorize";
 import { canProjectAction } from "@/lib/auth/capabilities";
-import { deploymentMode } from "@/lib/deployment/deployment";
 import { getWorkerLivenessDetails } from "@/lib/ops/liveness";
 import { compareWorkerTemporalIdentity } from "@/lib/ops/worker-temporal-identity";
 import { requireReadableProject, resolveProjectAccess } from "@/lib/queries/_auth";
@@ -48,6 +47,7 @@ import { getSearchInsightsFirstView } from "@/lib/search-insights/queries/first-
 import { resolveSearchInsightsOauthReturn } from "@/lib/search-insights/queries/oauth-return";
 import { loadSearchSyncPreflightPlan } from "@/lib/settings/search-sync-metrics";
 import { temporalDeploymentConfig } from "@/lib/temporal/deployment-config";
+import { describeSearchInsightsBackfillStatus } from "@/lib/temporal/search-insights-status";
 import { Suspense } from "react";
 import {
   SearchInsightsBodySection,
@@ -135,12 +135,25 @@ export default async function SearchInsightsPage({
       ...(period ? { period } : {}),
     }),
   );
-  const [context, drawers] = await Promise.all([
+  const [context, drawers, workflowStatus] = await Promise.all([
     getSearchInsightsContext(publicId, { period, property: first(query.property), scope }),
     connected && scope.property
       ? searchInsightsDrawerProps(publicId, scope.period.id, scope.property)
       : undefined,
+    scope.property
+      ? describeSearchInsightsBackfillStatus(scope.projectId, scope.property)
+      : Promise.resolve("unknown" as const),
   ]);
+  const statusFacts = {
+    connectionStatus: context.connection.status,
+    observability: context.importState?.facts ?? undefined,
+    pauseStartedAt: context.importState?.pauseStartedAt,
+    pausedReason: context.importState?.pausedReason,
+    queue: scope.queue ?? undefined,
+    runtime: { workerStatus, workflowStatus },
+    safeError: context.importState?.safeError,
+    state: context.importState?.state,
+  };
 
   // Started, not awaited: the first render must never wait on the sixteen-month import, and
   // both streamed sections read this one result.
@@ -173,6 +186,7 @@ export default async function SearchInsightsPage({
                 resumeAction={resumeSearchInsightsImport}
                 retryAction={retrySearchInsightsImport}
                 projectId={publicId}
+                statusFacts={statusFacts}
                 view={view}
                 workerStatus={workerStatus}
               />
@@ -200,19 +214,7 @@ export default async function SearchInsightsPage({
         ) : null}
         {view && !context.window ? (
           <SearchInsightsNoDataState
-            facts={{
-              completedDays: context.importState?.completedDays ?? 0,
-              connectionStatus: context.connection.status,
-              deploymentMode: deploymentMode(),
-              firstViewReady: context.importState?.firstViewReady === true,
-              lastActivityAt: context.importState?.lastActivityAt,
-              pauseStartedAt: context.importState?.pauseStartedAt,
-              pausedReason: context.importState?.pausedReason,
-              safeError: context.importState?.safeError,
-              state: context.importState?.state,
-              waiting: context.importState?.waiting,
-              workerStatus,
-            }}
+            facts={statusFacts}
             pauseAction={pauseSearchInsightsImport}
             projectId={publicId}
             resumeAction={resumeSearchInsightsImport}

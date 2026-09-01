@@ -48,7 +48,10 @@ export async function requestSearchInsightsSync(input: SyncNowInput): Promise<Sy
 
   // The sixteen-month backfill already holds the load quota; a manual sync queued behind
   // it would spend that quota twice for the same days.
-  if (row?.workflowId && (row.state === "running" || row.state === "queued")) {
+  if (
+    row?.state === "paused" ||
+    (row?.workflowId && (row.state === "running" || row.state === "queued"))
+  ) {
     return { status: "already_running" };
   }
 

@@ -37,6 +37,7 @@ const mocks = vi.hoisted(() => ({
   retryImport: vi.fn(),
   trustSection: vi.fn(),
   workspace: vi.fn(),
+  workflowStatus: vi.fn(),
 }));
 
 vi.mock("@/components/search-insights/SearchInsightsEmptyStates", () => ({
@@ -116,6 +117,9 @@ vi.mock("@/lib/ops/worker-temporal-identity", () => ({
 vi.mock("@/lib/temporal/deployment-config", () => ({
   temporalDeploymentConfig: mocks.deploymentConfig,
 }));
+vi.mock("@/lib/temporal/search-insights-status", () => ({
+  describeSearchInsightsBackfillStatus: mocks.workflowStatus,
+}));
 vi.mock("@/lib/queries/cost-calculator", () => ({ getProjectCostContext: mocks.costContext }));
 vi.mock("@/lib/queries/keywords", () => ({ getKeywordDefaultMarket: mocks.defaultMarket }));
 vi.mock("@/lib/queries/project-markets", () => ({ getProjectMarkets: mocks.markets }));
@@ -187,6 +191,7 @@ describe("SearchInsightsPage", () => {
         "app: default / rank-checks / alert-deliveries · worker: default / rank-checks / alert-deliveries",
       status: "match",
     });
+    mocks.workflowStatus.mockResolvedValue("running");
     mocks.markets.mockResolvedValue({ markets: [], maxMarkets: 5 });
     mocks.defaultMarket.mockResolvedValue({ device: "desktop", locationKey: "us-en" });
     mocks.costContext.mockResolvedValue({ costPerCheckCents: null, depth: 100 });
@@ -382,11 +387,13 @@ describe("SearchInsightsPage", () => {
     expect(mocks.noData).toHaveBeenCalledWith(
       expect.objectContaining({
         facts: expect.objectContaining({
-          completedDays: 0,
           connectionStatus: "connected",
-          firstViewReady: false,
+          observability: undefined,
+          runtime: expect.objectContaining({
+            workerStatus: expect.objectContaining({ status: "ok" }),
+            workflowStatus: "running",
+          }),
           state: undefined,
-          workerStatus: expect.objectContaining({ status: "ok" }),
         }),
         pauseAction: mocks.pauseImport,
         projectId: "prj_1",

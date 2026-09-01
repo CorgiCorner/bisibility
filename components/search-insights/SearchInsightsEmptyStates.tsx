@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, EmptyState, ModuleMark } from "@/components/ui";
+import { Button, EmptyState, ModuleMark, Tooltip } from "@/components/ui";
 import type { SearchInsightsImportAction } from "@/lib/actions/search-insights";
 import { googleInstallUrl } from "@/lib/providers/analytics/google-install-url";
 import { asProjectRef, searchConsolePath } from "@/lib/routing/app-path";
@@ -8,7 +8,11 @@ import {
   resolveSearchBackfillPresentation,
   type SearchBackfillFacts,
 } from "@/lib/search-insights/sync/control-model";
-import { ArrowUpRight, GoogleLogoIcon as GoogleLogo } from "@phosphor-icons/react";
+import {
+  ArrowUpRight,
+  ChartBarIcon as ChartBar,
+  GoogleLogoIcon as GoogleLogo,
+} from "@phosphor-icons/react";
 import { SearchImportPauseControl } from "./SearchImportPauseControl";
 import {
   NO_PROPERTY_BODY,
@@ -18,6 +22,7 @@ import {
   REAUTH_CTA,
   REAUTH_TITLE,
 } from "./search-insights-copy";
+import { importObservabilityProgress } from "./search-insights-trust-model";
 
 export type SearchInsightsNoPropertyStateProps = {
   projectId: string;
@@ -87,6 +92,8 @@ export function SearchInsightsNoDataState({
   retryAction,
 }: Readonly<SearchInsightsNoDataStateProps>) {
   const model = resolveSearchBackfillPresentation(facts);
+  const progress = importObservabilityProgress(facts.observability);
+  const workerCaused = model.kind === "waiting_worker";
   const reconnectHref = googleInstallUrl({
     projectId,
     provider: "gsc",
@@ -117,11 +124,34 @@ export function SearchInsightsNoDataState({
       action={action}
       description={
         <>
-          <p className="m-0">{model.description}</p>
+          {progress && model.kind !== "waiting_for_first_data" ? (
+            <>
+              <p className="m-0">
+                <span data-testid="qualifying-progress">{progress.qualifyingCounter}</span> are
+                imported for the first view.
+              </p>
+              <p className="m-0 mt-1.5" data-testid="deep-history-progress">
+                Deep history: {progress.deepHistory}.
+              </p>
+              <Tooltip content={progress.freshness.tooltip} semantics="description">
+                <p className="m-0 mt-1.5" data-testid="freshness-note">
+                  {progress.freshness.label}
+                </p>
+              </Tooltip>
+            </>
+          ) : (
+            <p className="m-0">{model.description}</p>
+          )}
           {model.supportingText ? <p className="m-0 mt-1.5">{model.supportingText}</p> : null}
         </>
       }
-      mark={<ModuleMark bordered icon={GoogleLogo} label="Search Console module" />}
+      mark={
+        <ModuleMark
+          bordered
+          icon={workerCaused ? ChartBar : GoogleLogo}
+          label={workerCaused ? "Search import status" : "Search Console module"}
+        />
+      }
       title={model.title}
     />
   );

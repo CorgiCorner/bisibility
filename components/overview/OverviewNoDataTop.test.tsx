@@ -243,11 +243,13 @@ describe("NoDataKpiRow", () => {
         projectReadOnly={false}
         runningCheckCount={0}
         serpProviderState="ready"
+        visibilityCoverage={{ limited: false, measured: 0, total: 2 }}
       />,
     );
 
     expect(screen.getByText("Avg. position")).toBeInTheDocument();
     expect(screen.getByText("Visibility")).toBeInTheDocument();
+    expect(screen.getByText("0 of 2 keywords measured")).toBeInTheDocument();
     expect(screen.getAllByText("–")).toHaveLength(3);
     expect(screen.queryByText("awaiting first check")).not.toBeInTheDocument();
   });
@@ -255,7 +257,13 @@ describe("NoDataKpiRow", () => {
   it.each(states)(
     "shows $expected when that is the current check state",
     ({ expected, ...props }) => {
-      render(<NoDataKpiRow {...props} keywordCount={2} />);
+      render(
+        <NoDataKpiRow
+          {...props}
+          keywordCount={2}
+          visibilityCoverage={{ limited: false, measured: 0, total: 2 }}
+        />,
+      );
 
       expect(screen.getByText(expected)).toBeInTheDocument();
     },

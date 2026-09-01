@@ -6,7 +6,7 @@ import {
   FIRST_VIEW_ROW_BUFFER,
   incidentsOverlapping,
 } from "@/lib/search-insights/constants";
-import { loadSearchInsightsScope, type ScopedOptions } from "./context";
+import { loadSearchInsightsScope, type ScopedOptions, type SearchInsightsScope } from "./context";
 import { EMPTY_COVERAGE, getQueryCoverage, type SearchInsightsCoverage } from "./coverage";
 import {
   EMPTY_WINDOW_SESSIONS,
@@ -61,6 +61,16 @@ const NO_ORGANIC_SESSIONS: OrganicSessionsContext = {
 
 const PAGE = { limit: FIRST_VIEW_ROW_BUFFER, offset: 0 };
 
+function previousWindowCovered(scope: SearchInsightsScope) {
+  if (!scope.importFacts) return undefined;
+  const readiness = {
+    "7": scope.importFacts.readyThrough.d7,
+    "28": scope.importFacts.readyThrough.d28,
+    "90": scope.importFacts.readyThrough.d90,
+  };
+  return readiness[scope.period.id as "7" | "28" | "90"]?.previous;
+}
+
 /**
  * Everything the first view renders, from stored rows only. Nothing here calls the provider:
  * the retention promise on the trust strip is only true if reading the module is free, and the
@@ -102,7 +112,7 @@ export async function getSearchInsightsFirstView(
     coverage,
     deploymentMode: mode,
     incidents: incidentsOverlapping(previous.start, current.end),
-    kpis: searchInsightsKpis(totals),
+    kpis: searchInsightsKpis(totals, previousWindowCovered(scope)),
     organicSessions,
     pages,
     queries,

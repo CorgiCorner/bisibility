@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState } from "react";
 
 export type DomainIconLayerProps = {
+  layerClassName?: string;
   size?: number;
   src?: string | null;
   testId?: string;
@@ -26,7 +27,11 @@ function isProbeValid(img: HTMLImageElement) {
  * Paints a verified domain icon as a background, leaving the caller's text fallback visible
  * when the icon service resolves to a smaller placeholder or an error.
  */
-export function DomainIconLayer({ src, testId }: Readonly<DomainIconLayerProps>) {
+export function DomainIconLayer({
+  layerClassName = "",
+  src,
+  testId,
+}: Readonly<DomainIconLayerProps>) {
   const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
   const verifiedSrc = loadedSrc === src ? src : null;
   const srcRef = useRef(src);
@@ -69,7 +74,7 @@ export function DomainIconLayer({ src, testId }: Readonly<DomainIconLayerProps>)
       }
       {verifiedSrc ? (
         <span
-          className="absolute inset-0 bg-white opacity-100 starting:opacity-0 transition-opacity duration-[var(--motion-tooltip)] ease-[ease] motion-reduce:transition-none"
+          className={`absolute inset-0 bg-white opacity-100 starting:opacity-0 transition-opacity duration-[var(--motion-tooltip)] ease-[ease] motion-reduce:transition-none ${layerClassName}`}
           data-testid={testId}
           style={{
             backgroundImage: `url("${verifiedSrc}")`,

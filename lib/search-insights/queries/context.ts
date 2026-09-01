@@ -4,10 +4,12 @@ import { prisma } from "@/lib/db/prisma";
 import { Prisma, type SearchAnalyticsImport } from "@/lib/generated/prisma/client";
 import { decryptProviderCredentials } from "@/lib/providers/crypto";
 import { requireReadableProject } from "@/lib/queries/_auth";
+import { getRequestProjectDefaults } from "@/lib/queries/workspace-request-data";
 import {
   resolveSearchInsightsConnectionState,
   type SearchInsightsConnectionStatus,
 } from "@/lib/search-insights/connection-state";
+import { WINDOW_PRESETS } from "@/lib/search-insights/constants";
 import {
   type DateWindow,
   dateKey,
@@ -16,6 +18,8 @@ import {
 } from "@/lib/search-insights/dates";
 import { searchInsightsPropertyKey } from "@/lib/search-insights/keys";
 import { SEARCH_INSIGHTS_SOURCE } from "@/lib/search-insights/sync/credentials";
+import { searchSyncRequestSetsPerHour } from "@/lib/search-insights/sync/plan";
+import { resolveSearchSyncSettings } from "@/lib/settings/search-sync-config";
 import {
   resolvePeriod,
   type SearchInsightsPeriod,
@@ -24,7 +28,9 @@ import {
   searchInsightsProperty,
   yoyState,
 } from "./context-model";
-import { readImportObservability } from "./import-observability-db";
+import type { ImportObservabilityFacts } from "./import-observability";
+import * as importObservabilityDb from "./import-observability-db";
+import { readSearchImportQueueFacts, type SearchImportQueueFacts } from "./import-queue";
 import {
   importStateView,
   type OrganicSessionsContext,
@@ -45,10 +51,7 @@ export type SearchInsightsConnection = {
 
 export type { SearchInsightsImportState } from "./sessions-context";
 
-export type SearchInsightsCounts = {
-  pages: number;
-  queries: number;
-};
+export type SearchInsightsCounts = { pages: number; queries: number };
 
 export type SearchInsightsContext = {
   connection: SearchInsightsConnection;
@@ -66,12 +69,14 @@ export type SearchInsightsContext = {
 /** The property and the finalized window: what every read of the module starts from. */
 export type SearchInsightsScope = {
   connection: SearchInsightsConnection;
+  importFacts: ImportObservabilityFacts | null;
   importRow: SearchAnalyticsImport | null;
   organicSessions: OrganicSessionsContext;
   period: SearchInsightsPeriod;
   projectDomain: string;
   projectId: string;
   property: string | null;
+  queue: SearchImportQueueFacts | null;
   view: SearchInsightsPropertyView;
   window: FinalizedWindow | null;
 };
@@ -165,12 +170,27 @@ async function readCounts(
   return { pages: Number(row?.pages ?? 0), queries: Number(row?.queries ?? 0) };
 }
 
+function readyImportPeriod(raw: string | undefined, facts: ImportObservabilityFacts | null) {
+  const ready = facts
+    ? {
+        "7": facts.readyThrough.d7.current,
+        "28": facts.readyThrough.d28.current,
+        "90": facts.readyThrough.d90.current,
+      }
+    : null;
+  const requested = WINDOW_PRESETS.find(({ id }) => id === raw);
+  const preset =
+    requested && ready?.[requested.id]
+      ? requested
+      : [...WINDOW_PRESETS].reverse().find(({ id }) => ready?.[id]);
+  return resolvePeriod(preset?.id ?? "7");
+}
+
 export async function loadSearchInsightsScope(
   projectRef: string,
   options: SearchInsightsViewOptions = {},
 ): Promise<SearchInsightsScope> {
   const { project } = await requireReadableProject(projectRef);
-  const period = resolvePeriod(options.period);
   const connection = await readConnection(project.id);
   const selection = await resolvePropertyView(
     project.id,
@@ -197,29 +217,54 @@ export async function loadSearchInsightsScope(
       })
     : null;
 
-  const observability =
+  const settings =
     importRow && property && selection.view === "active"
-      ? await readImportObservability({
+      ? resolveSearchSyncSettings(await getRequestProjectDefaults(project.id))
+      : null;
+  const [importFacts, queue] = await Promise.all([
+    importRow && property && settings
+      ? importObservabilityDb.readImportObservability({
           daysTotal: importRow.daysTotal,
           earliestTargetDate: importRow.earliestTargetDate,
+          lastProbeAt: importRow.lastProbeAt,
           newestFinalizedDate: importRow.newestFinalizedDate,
+          plannedRetentionMonths: settings.retentionMonths,
           projectId: project.id,
           property,
+          requestSetsPerHour: searchSyncRequestSetsPerHour(settings.pace),
         })
-      : null;
-  const localReadableThrough = observability?.localReadableThrough
-    ? observability.localReadableThrough
-    : selection.view === "archived" && importRow?.finalizedThroughDate
-      ? dateKey(importRow.finalizedThroughDate)
-      : null;
+      : null,
+    importRow && selection.view === "active"
+      ? readSearchImportQueueFacts({
+          createdAt: importRow.createdAt,
+          id: importRow.id,
+          projectId: project.id,
+          state: importRow.state,
+        })
+      : null,
+  ]);
+  const period =
+    selection.view === "active"
+      ? readyImportPeriod(options.period, importFacts)
+      : resolvePeriod(options.period);
+  const localReadableThrough =
+    selection.view === "active" &&
+    importFacts?.readyThrough.d7.current &&
+    importRow?.newestFinalizedDate
+      ? dateKey(importRow.newestFinalizedDate)
+      : selection.view === "archived" && importRow?.finalizedThroughDate
+        ? dateKey(importRow.finalizedThroughDate)
+        : null;
   return {
     connection,
+    importFacts,
     importRow,
     organicSessions,
     period,
     projectDomain: project.domain ?? "",
     projectId: project.id,
     property,
+    queue,
     view: selection.view,
     window: localReadableThrough ? finalizedWindow(localReadableThrough, period.days) : null,
   };
@@ -238,20 +283,7 @@ export async function getSearchInsightsContext(
   return {
     connection: scope.connection,
     counts,
-    importState: scope.importRow
-      ? importStateView(
-          scope.importRow,
-          scope.property
-            ? await readImportObservability({
-                daysTotal: scope.importRow.daysTotal,
-                earliestTargetDate: scope.importRow.earliestTargetDate,
-                newestFinalizedDate: scope.importRow.newestFinalizedDate,
-                projectId: scope.projectId,
-                property: scope.property,
-              })
-            : undefined,
-        )
-      : null,
+    importState: scope.importRow ? importStateView(scope.importRow, scope.importFacts) : null,
     organicSessions: scope.organicSessions,
     period: scope.period,
     projectDomain: scope.projectDomain,

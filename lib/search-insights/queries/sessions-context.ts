@@ -2,18 +2,21 @@ import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
 import { addDays, dateKey, type FinalizedWindow } from "@/lib/search-insights/dates";
+import type { SearchSyncStatusTitle } from "@/lib/search-insights/sync/control-model";
 import { resolveOrganicSessionsProperty } from "@/lib/search-insights/sync/sessions-credentials";
+import type { ImportObservabilityFacts } from "./import-observability";
 
 export type SearchInsightsImportState = {
   availabilityBoundarySource?: "fallback" | "metadata" | null;
   capHitDays: number;
   cursorDate: string | null;
+  createdAt?: string | null;
   daysDone: number;
   daysTotal: number;
   earliestTargetDate: string | null;
+  facts?: ImportObservabilityFacts | null;
   finalizedThroughDate: string | null;
   firstDataDate?: string | null;
-  lastActivityAt?: string | null;
   lastProbeAt: string | null;
   lastSyncStartedAt: string | null;
   newestFinalizedDate: string | null;
@@ -23,11 +26,7 @@ export type SearchInsightsImportState = {
   pauseStartedAt?: string | null;
   pausedById?: string | null;
   state: string;
-  completedDays?: number;
-  etaLabel?: string | null;
-  firstViewReady?: boolean;
-  localReadableThrough?: string | null;
-  waiting?: boolean;
+  updatedAt?: string | null;
 };
 
 export type OrganicSessionsContext = {
@@ -36,11 +35,22 @@ export type OrganicSessionsContext = {
   status: "connected" | "needs_reauth" | "not_connected";
 };
 
+/** A client-safe slot for a connected GA4 source whose compared sessions are not readable yet. */
+export type OrganicSessionsPendingPresentation = {
+  kind: "pending";
+  label: "Organic sessions";
+  readyIn: string | null;
+  reason: string;
+  source: "GA4";
+  status: SearchSyncStatusTitle | "Waiting for today's GA4 data";
+};
+
 export function importStateView(
   row: {
     availabilityBoundarySource?: string | null;
     capHitDays: number;
     cursorDate: Date | null;
+    createdAt?: Date | null;
     daysDone: number;
     daysTotal: number;
     earliestTargetDate: Date | null;
@@ -55,22 +65,9 @@ export function importStateView(
     pauseStartedAt?: Date | null;
     pausedById?: string | null;
     state: string;
+    updatedAt?: Date | null;
   },
-  observability: {
-    completedDays: number;
-    etaLabel: string | null;
-    firstViewReady: boolean;
-    localReadableThrough: string | null;
-    lastActivityAt: string | null;
-    waiting: boolean;
-  } = {
-    completedDays: 0,
-    etaLabel: null,
-    firstViewReady: false,
-    localReadableThrough: null,
-    lastActivityAt: null,
-    waiting: false,
-  },
+  facts: ImportObservabilityFacts | null = null,
 ): SearchInsightsImportState {
   return {
     availabilityBoundarySource:
@@ -79,12 +76,13 @@ export function importStateView(
         : null,
     capHitDays: row.capHitDays,
     cursorDate: row.cursorDate ? dateKey(row.cursorDate) : null,
+    createdAt: row.createdAt?.toISOString() ?? null,
     daysDone: row.daysDone,
     daysTotal: row.daysTotal,
     earliestTargetDate: row.earliestTargetDate ? dateKey(row.earliestTargetDate) : null,
+    facts,
     finalizedThroughDate: row.finalizedThroughDate ? dateKey(row.finalizedThroughDate) : null,
     firstDataDate: row.firstDataDate ? dateKey(row.firstDataDate) : null,
-    lastActivityAt: observability.lastActivityAt,
     lastProbeAt: row.lastProbeAt?.toISOString() ?? null,
     lastSyncStartedAt: row.lastSyncStartedAt?.toISOString() ?? null,
     newestFinalizedDate: row.newestFinalizedDate ? dateKey(row.newestFinalizedDate) : null,
@@ -94,11 +92,7 @@ export function importStateView(
     pauseStartedAt: row.pauseStartedAt?.toISOString() ?? null,
     pausedById: row.pausedById ?? null,
     state: row.state,
-    completedDays: observability.completedDays,
-    etaLabel: observability.etaLabel,
-    firstViewReady: observability.firstViewReady,
-    localReadableThrough: observability.localReadableThrough,
-    waiting: observability.waiting,
+    updatedAt: row.updatedAt?.toISOString() ?? null,
   };
 }
 

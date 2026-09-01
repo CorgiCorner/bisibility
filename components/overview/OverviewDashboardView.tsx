@@ -16,6 +16,7 @@ import { pluralize } from "@/lib/format/pluralize";
 import type { CheckHealth } from "@/lib/queries/check-health";
 import { providerFailurePresentation } from "@/lib/rank-check/failure-presentation";
 import { appPath, rankTrackerTabPath } from "@/lib/routing/app-path";
+import { VISIBILITY_DESCRIPTION, visibilityCoverageCopy } from "@/lib/visibility/definition";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -101,7 +102,17 @@ function OverviewSections({
           className="grid grid-cols-2 gap-4 lg:grid-cols-[repeat(4,minmax(0,1fr))]"
         >
           {kpis.map((kpi) => (
-            <KpiCard {...kpi} key={kpi.label} projectRef={projectRef} />
+            <KpiCard
+              {...kpi}
+              description={kpi.label === "Visibility" ? VISIBILITY_DESCRIPTION : undefined}
+              detail={
+                kpi.label === "Visibility"
+                  ? visibilityCoverageCopy(overview.visibilityCoverage)
+                  : undefined
+              }
+              key={kpi.label}
+              projectRef={projectRef}
+            />
           ))}
         </section>
         <section className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1.85fr)_minmax(0,1fr)]">

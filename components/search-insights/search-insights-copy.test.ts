@@ -1,11 +1,17 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { basename, join, relative, resolve } from "node:path";
+import { SEARCH_SYNC_STATUS_VOCABULARY } from "@/lib/search-insights/sync/control-model";
 import { describe, expect, it } from "vitest";
 import {
+  FRESHNESS_ADJUSTMENT_TOOLTIP,
+  FRESHNESS_CHECKED_PREFIX,
+  FRESHNESS_FINAL_PREFIX,
+  IMPORT_WAITING_FOR_WORKER,
   importRunningOwnershipCopy,
   NEUTRAL_COPY,
   OWNERSHIP_COPY,
   ownershipCopy,
+  SYNC_LABEL,
 } from "./search-insights-copy";
 
 const OWNED = /your database/i;
@@ -65,42 +71,42 @@ describe("search insights ownership copy", () => {
     [
       3,
       "self-host",
-      "We are copying the planned 3 months of Google history into your database now. The first 28-day view unlocks as soon as its finalized days are ready; older months keep loading in the background.",
+      "We are copying the planned 3 months of Google history into your database now. The first 7-day view unlocks as soon as its finalized days are ready; older months keep loading in the background.",
     ],
     [
       3,
       "cloud",
-      "We are copying the planned 3 months of Google history into your workspace now. The first 28-day view unlocks as soon as its finalized days are ready; older months keep loading in the background.",
+      "We are copying the planned 3 months of Google history into your workspace now. The first 7-day view unlocks as soon as its finalized days are ready; older months keep loading in the background.",
     ],
     [
       6,
       "self-host",
-      "We are copying the planned 6 months of Google history into your database now. The first 28-day view unlocks as soon as its finalized days are ready; older months keep loading in the background.",
+      "We are copying the planned 6 months of Google history into your database now. The first 7-day view unlocks as soon as its finalized days are ready; older months keep loading in the background.",
     ],
     [
       6,
       "cloud",
-      "We are copying the planned 6 months of Google history into your workspace now. The first 28-day view unlocks as soon as its finalized days are ready; older months keep loading in the background.",
+      "We are copying the planned 6 months of Google history into your workspace now. The first 7-day view unlocks as soon as its finalized days are ready; older months keep loading in the background.",
     ],
     [
       12,
       "self-host",
-      "We are copying the planned 12 months of Google history into your database now. The first 28-day view unlocks as soon as its finalized days are ready; older months keep loading in the background.",
+      "We are copying the planned 12 months of Google history into your database now. The first 7-day view unlocks as soon as its finalized days are ready; older months keep loading in the background.",
     ],
     [
       12,
       "cloud",
-      "We are copying the planned 12 months of Google history into your workspace now. The first 28-day view unlocks as soon as its finalized days are ready; older months keep loading in the background.",
+      "We are copying the planned 12 months of Google history into your workspace now. The first 7-day view unlocks as soon as its finalized days are ready; older months keep loading in the background.",
     ],
     [
       16,
       "self-host",
-      "Google only keeps 16 months, so we are copying all of it into your database now. The first 28-day view unlocks as soon as its finalized days are ready; older months keep loading in the background.",
+      "Google only keeps 16 months, so we are copying all of it into your database now. The first 7-day view unlocks as soon as its finalized days are ready; older months keep loading in the background.",
     ],
     [
       16,
       "cloud",
-      "Google only keeps 16 months, so we are saving all of it to your workspace now. The first 28-day view unlocks as soon as its finalized days are ready; older months keep loading in the background.",
+      "Google only keeps 16 months, so we are saving all of it to your workspace now. The first 7-day view unlocks as soon as its finalized days are ready; older months keep loading in the background.",
     ],
   ] as const)("uses exact import copy for %s months on %s", (months, mode, expected) => {
     expect(importRunningOwnershipCopy(months, mode)).toBe(expected);
@@ -131,5 +137,40 @@ describe("search insights ownership copy", () => {
       expect(OWNED.test(pair[0])).toBe(true);
       expect(OWNED.test(pair[1])).toBe(false);
     }
+  });
+});
+
+describe("search import status copy", () => {
+  it("exposes only the closed status vocabulary", () => {
+    expect(SEARCH_SYNC_STATUS_VOCABULARY).toEqual([
+      "Running",
+      "Paused by you",
+      "Paused by provider limits",
+      "Waiting for first data",
+      "Waiting on worker",
+      "Needs reauth",
+      "Needs retry",
+      "Queued",
+      "Complete",
+    ]);
+    expect(new Set(SEARCH_SYNC_STATUS_VOCABULARY).size).toBe(9);
+  });
+
+  it("explains the worker wait with a concrete recovery action", () => {
+    expect(IMPORT_WAITING_FOR_WORKER).toBe(
+      "Import is waiting for the background worker - restart it and it resumes.",
+    );
+  });
+
+  it("keeps Sync now as the control label while an import is running", () => {
+    expect(SYNC_LABEL).toBe("Sync now");
+  });
+
+  it("keeps freshness compact and moves mutability into the tooltip", () => {
+    expect([FRESHNESS_FINAL_PREFIX, FRESHNESS_CHECKED_PREFIX]).toEqual([
+      "Final through",
+      "checked",
+    ]);
+    expect(FRESHNESS_ADJUSTMENT_TOOLTIP).toBe("Google may adjust recent data until it finalizes.");
   });
 });

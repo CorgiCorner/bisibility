@@ -3537,7 +3537,7 @@
             "type": "integer"
           },
           "visibility": {
-            "description": "Volume-weighted visibility percentage.",
+            "description": "Visibility measures volume-weighted ranking strength in Google's Top 20. 100 means every measured keyword ranks #1. Rankings below #20 do not add Visibility. Shallow or failed checks are not treated as lost rankings.",
             "maximum": 100,
             "minimum": 0,
             "type": ["number", "null"]

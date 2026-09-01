@@ -39,7 +39,9 @@ describe("deliverSearchImportMilestone", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.findUnique.mockResolvedValue(imported);
-    mocks.observability.mockResolvedValue({ firstViewReady: true });
+    mocks.observability.mockResolvedValue({
+      readyThrough: { d28: { current: true, previous: false } },
+    });
     mocks.createMany.mockResolvedValue({ count: 2 });
   });
   it("dedupes owner and members and creates one delivery per recipient and milestone", async () => {
@@ -91,7 +93,9 @@ describe("deliverSearchImportMilestone", () => {
     ).resolves.toEqual({ delivered: 0 });
   });
   it("rejects first_28 unless exact durable readiness passes", async () => {
-    mocks.observability.mockResolvedValue({ firstViewReady: false });
+    mocks.observability.mockResolvedValue({
+      readyThrough: { d28: { current: false, previous: false } },
+    });
     await expect(
       deliverSearchImportMilestone({ importId: "imp_1", milestone: "first_28" }),
     ).resolves.toEqual({ delivered: 0 });

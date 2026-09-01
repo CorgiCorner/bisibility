@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { buildDomainIconUrl } from "./domain-icon-url";
+import { buildDomainIconUrl, buildPublicDomainIconUrl } from "./domain-icon-url";
 
 describe("buildDomainIconUrl", () => {
   afterEach(() => {
@@ -40,5 +40,14 @@ describe("buildDomainIconUrl", () => {
     vi.stubEnv("NEXT_PUBLIC_DOMAIN_ICONS", "off");
 
     expect(buildDomainIconUrl({ domain: "example.com" })).toBeNull();
+  });
+
+  it("only permits public-looking hostnames for blur-triggered icon probes", () => {
+    expect(buildPublicDomainIconUrl({ domain: "Example.com" })).toBe(
+      "https://www.google.com/s2/favicons?domain=example.com&sz=32",
+    );
+    expect(buildPublicDomainIconUrl({ domain: "localhost" })).toBeNull();
+    expect(buildPublicDomainIconUrl({ domain: "preview.internal" })).toBeNull();
+    expect(buildPublicDomainIconUrl({ domain: "10.0.0.1" })).toBeNull();
   });
 });

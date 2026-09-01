@@ -58,20 +58,6 @@ export function TrackingSettingsLoading() {
           ))}
         </div>
       </Frame>
-      <Frame name="urlInspection">
-        <div className="flex items-start justify-between gap-4">
-          <div className="w-full space-y-2">
-            <SettingsLoadingBar className="h-4 w-28" />
-            <SettingsLoadingBar className="h-3 w-full max-w-[430px]" />
-          </div>
-          <SettingsLoadingBar className="h-8 w-16" />
-        </div>
-        <div className="mt-5 space-y-2">
-          <SettingsLoadingBar className="h-2.5 w-32" />
-          <SettingsLoadingBar className="h-10 w-full max-w-[340px]" />
-          <SettingsLoadingBar className="mt-4 h-12 w-full" />
-        </div>
-      </Frame>
       <section className={settingsCardFrameClassName} data-tracking-loading-frame="markets">
         <div className="flex items-start justify-between gap-4">
           <div className="w-full space-y-2">

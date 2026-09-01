@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   completePendingGooglePropertySelection,
   formatGooglePropertyDiscoveryLog,
+  getPendingGoogleOAuthProvider,
   getPendingGoogleOAuthSetup,
 } from "./google-oauth-pending";
 
@@ -124,6 +125,19 @@ describe("pending Google OAuth property selection", () => {
       ],
       provider: "ga4",
     });
+  });
+
+  it("returns the provider from the scoped pending OAuth state", async () => {
+    mocks.decryptSecret.mockReturnValue(JSON.stringify({ ...pending, provider: "ga4" }));
+
+    await expect(getPendingGoogleOAuthProvider("prj_1")).resolves.toBe("ga4");
+
+    expect(mocks.requireProjectScope).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "user_1" }),
+      "manage",
+      "prj_1",
+      { type: "provider_connection" },
+    );
   });
 
   it.each([

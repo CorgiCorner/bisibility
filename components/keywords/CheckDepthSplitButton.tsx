@@ -13,6 +13,7 @@ import {
   menuSelectPaperSx,
 } from "@/components/ui";
 import { type SerpDepth, serpDepthValues } from "@/lib/serp/markets";
+import { VISIBILITY_HORIZON, VISIBILITY_SHALLOW_CHECK_COPY } from "@/lib/visibility/definition";
 import Button from "@mui/material/Button";
 import ButtonGroup from "@mui/material/ButtonGroup";
 import Menu from "@mui/material/Menu";
@@ -61,7 +62,7 @@ export function CheckDepthSplitButton({
   const heightClass = compact ? "min-h-[30px]" : "min-h-[36px]";
 
   return (
-    <span className="inline-flex">
+    <span className="inline-flex items-center gap-2">
       <ButtonGroup
         size={compact ? "small" : "medium"}
         sx={compact ? { height: 30 } : undefined}
@@ -127,6 +128,11 @@ export function CheckDepthSplitButton({
           </MenuActionFooter>
         ) : null}
       </Menu>
+      {currentDepth !== null && currentDepth < VISIBILITY_HORIZON ? (
+        <span className="max-w-56 text-xs leading-relaxed text-yellow-text">
+          {VISIBILITY_SHALLOW_CHECK_COPY}
+        </span>
+      ) : null}
     </span>
   );
 }

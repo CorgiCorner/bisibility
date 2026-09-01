@@ -9,10 +9,11 @@ import {
   type QueueFirstChecksAction,
   type RunFirstCheckAction,
 } from "@/components/rank-check/FirstCheckBannerAction";
-import { Card } from "@/components/ui";
+import { Card, InfoTooltip } from "@/components/ui";
 import type { ProjectRef } from "@/lib/routing/app-path";
 import { appPath, rankTrackerTabPath } from "@/lib/routing/app-path";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
+import { VISIBILITY_DESCRIPTION, visibilityCoverageCopy } from "@/lib/visibility/definition";
 import { PositionDistributionCard } from "./PositionDistributionCard";
 import { PositionTrendCard } from "./PositionTrendCard";
 import type { DistributionBucket, OverviewView, TrendPoint } from "./types";
@@ -138,6 +139,7 @@ type NoDataKpiRowProps = {
   projectReadOnly: boolean;
   runningCheckCount: number;
   serpProviderState: OverviewView["serpProviderState"];
+  visibilityCoverage: OverviewView["visibilityCoverage"];
 };
 
 function trackedKeywordSubline({
@@ -165,7 +167,12 @@ export function NoDataKpiRow(props: Readonly<NoDataKpiRowProps>) {
     >
       {kpis.map((kpi) => {
         const value = kpi.value === "count" ? String(keywordCount) : kpi.value;
-        const subline = kpi.subline === "status" ? keywordSubline : kpi.subline;
+        const subline =
+          kpi.label === "Visibility"
+            ? visibilityCoverageCopy(props.visibilityCoverage)
+            : kpi.subline === "status"
+              ? keywordSubline
+              : kpi.subline;
         const valueClassName = kpi.muted ? "text-fg-muted" : "text-fg";
         const sublineClassName = kpi.value === "count" ? "text-accent-text" : "text-fg-muted";
 
@@ -175,8 +182,9 @@ export function NoDataKpiRow(props: Readonly<NoDataKpiRowProps>) {
             size="md"
             style={{ borderRadius: UI_RADIUS_ROLES.card, padding: "16px 18px" }}
           >
-            <div className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
-              {kpi.label}
+            <div className="flex items-center gap-1 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
+              <span>{kpi.label}</span>
+              {kpi.label === "Visibility" ? <InfoTooltip text={VISIBILITY_DESCRIPTION} /> : null}
             </div>
             <div
               className={`mt-2 text-[26px] font-semibold leading-none tracking-[-1px] ${valueClassName}`}

@@ -3,7 +3,17 @@ export type DomainIconUrlInput = {
   size?: number;
 };
 
-function normalizeHost(domain: string | null | undefined) {
+const NON_PUBLIC_HOST_SUFFIXES = new Set([
+  "example",
+  "internal",
+  "invalid",
+  "local",
+  "localhost",
+  "onion",
+  "test",
+]);
+
+export function domainIconHost(domain: string | null | undefined) {
   const value = domain?.trim();
   if (!value) {
     return null;
@@ -38,11 +48,33 @@ export function buildDomainIconUrl({ domain }: DomainIconUrlInput) {
     return null;
   }
 
-  const host = normalizeHost(domain);
+  const host = domainIconHost(domain);
   if (!host) {
     return null;
   }
 
   const params = new URLSearchParams({ domain: host, sz: "32" });
   return `https://www.google.com/s2/favicons?${params.toString()}`;
+}
+
+function isPublicFaviconHost(host: string) {
+  const labels = host.split(".");
+  const suffix = labels.at(-1);
+  const isIpv4Address = labels.length === 4 && labels.every((label) => /^\d{1,3}$/.test(label));
+
+  return (
+    labels.length > 1 &&
+    suffix !== undefined &&
+    !NON_PUBLIC_HOST_SUFFIXES.has(suffix) &&
+    !isIpv4Address
+  );
+}
+
+export function buildPublicDomainIconUrl({ domain }: DomainIconUrlInput) {
+  const host = domainIconHost(domain);
+  if (!host || !isPublicFaviconHost(host)) {
+    return null;
+  }
+
+  return buildDomainIconUrl({ domain: host });
 }

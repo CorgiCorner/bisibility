@@ -204,4 +204,14 @@ describe("TrackingDefaultsCard", () => {
       expect.objectContaining({ projectId: "prj_1", serpDepth: 20, timezone: "Europe/Warsaw" }),
     );
   });
+
+  it("explains that a Top-10 default does not update Visibility", () => {
+    renderCard({ serpDepth: 10 });
+
+    expect(
+      screen.getByText(
+        "Top 10 checks do not update Visibility. Affected keywords still count toward its coverage total.",
+      ),
+    ).toBeVisible();
+  });
 });

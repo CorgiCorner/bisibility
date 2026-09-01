@@ -2,7 +2,6 @@
 
 import { SettingsCard } from "@/components/settings/shell/SettingsCard";
 import { SettingsField } from "@/components/settings/shell/settings-field-widths";
-import { trackingCardGeometryClassNames } from "@/components/settings/tracking/tracking-settings-layout";
 import { FieldLabel } from "@/components/ui";
 import { updatePresenceInspectionBudget } from "@/lib/actions/presence-settings";
 import { zodResolver } from "@/lib/forms/zod-resolver";
@@ -55,7 +54,6 @@ export function UrlInspectionCard({
 
   return (
     <SettingsCard
-      className={trackingCardGeometryClassNames.urlInspection}
       description="Daily Search Console index-status checks for tracked target URLs."
       onSave={saveInspectionBudget}
       title="URL inspection"

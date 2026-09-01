@@ -231,7 +231,7 @@ describe("SearchInsightsActions", () => {
   it("stands down while the backfill already holds the queue", () => {
     renderActions({ importState: runningImport });
 
-    const button = screen.getByRole("button", { name: /Backfill running/ });
+    const button = screen.getByRole("button", { name: "Sync now" });
     expect(button).toBeDisabled();
     expect(button.closest("span")).toHaveAttribute("aria-describedby", expect.any(String));
     expect(document.body).toHaveTextContent("spend load quota twice");
@@ -255,7 +255,7 @@ describe("SearchInsightsActions", () => {
     fireEvent.click(screen.getByRole("button", { name: /Sync now/ }));
     await act(async () => undefined);
 
-    const button = screen.getByRole("button", { name: /Synced, next in 5 min/ });
+    const button = screen.getByRole("button", { name: "Sync now" });
     expect(button).toBeDisabled();
 
     vi.setSystemTime(new Date(now.getTime() + SYNC_NOW_COOLDOWN_MS));

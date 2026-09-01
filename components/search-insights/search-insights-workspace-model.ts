@@ -11,6 +11,7 @@ import type {
   SearchInsightsPeriod,
   SearchInsightsProperty,
 } from "@/lib/search-insights/queries/context";
+import type { ImportObservabilityFacts } from "@/lib/search-insights/queries/import-observability";
 import type { SearchInsightsOauthReturn } from "@/lib/search-insights/queries/oauth-return";
 import type { SearchSyncPace, SearchSyncRetentionMonths } from "@/lib/search-insights/sync/plan";
 import type { ReactNode } from "react";
@@ -20,7 +21,7 @@ import type {
   CompleteGooglePropertySelectionAction,
   DisconnectGoogleSearchConsoleAction,
 } from "./SearchInsightsOauthReturn";
-import { DOMAIN_TIP, PREFIX_TIP, SYNC_LABELS, SYNC_TITLES } from "./search-insights-copy";
+import { DOMAIN_TIP, PREFIX_TIP, SYNC_LABEL, SYNC_TITLES } from "./search-insights-copy";
 
 export type SearchInsightsWorkspaceProps = {
   /** Module body: the streamed first view, or an empty state. */
@@ -83,14 +84,33 @@ export function periodTriggerLabel(period: SearchInsightsPeriod) {
   return `${period.label} / ${period.sub}`;
 }
 
-export function periodOptions(yoy: SearchInsightsContext["yoy"]): PeriodOption[] {
+function etaLabel(milliseconds: number) {
+  const minutes = Math.ceil(Math.max(0, milliseconds) / 60_000);
+  return minutes < 60 ? `${minutes} min` : `${Math.ceil(minutes / 60)} hr`;
+}
+
+function periodReadiness(facts: ImportObservabilityFacts, id: "7" | "28" | "90") {
+  return facts.readyThrough[`d${id}`].current;
+}
+
+export function periodOptions(
+  yoy: SearchInsightsContext["yoy"],
+  facts?: ImportObservabilityFacts | null,
+): PeriodOption[] {
   return [
-    ...WINDOW_PRESETS.map((preset) => ({
-      disabled: false,
-      id: preset.id,
-      label: preset.label,
-      sub: preset.sub,
-    })),
+    ...WINDOW_PRESETS.map((preset) => {
+      const ready = facts ? periodReadiness(facts, preset.id) : true;
+      const eta =
+        facts && !ready
+          ? etaLabel(Math.max(1, preset.days - facts.consecutiveDays) * facts.stall.expectedDayMs)
+          : null;
+      return {
+        disabled: !ready,
+        id: preset.id,
+        label: preset.label,
+        sub: ready ? preset.sub : `${preset.sub} / ready in ~${eta}`,
+      };
+    }),
     {
       disabled: true,
       id: YEAR_OVER_YEAR.id,
@@ -100,7 +120,14 @@ export function periodOptions(yoy: SearchInsightsContext["yoy"]): PeriodOption[]
   ];
 }
 
-const BUSY_IMPORT_STATES = new Set(["queued", "running"]);
+const BUSY_IMPORT_STATES = new Set(["paused", "queued", "running"]);
+
+function pausedSyncTitle(reason: string | null) {
+  if (reason === "user") return SYNC_TITLES.pausedUser;
+  if (reason === "rate_limited") return SYNC_TITLES.pausedProvider;
+  if (reason === "needs_reauth") return SYNC_TITLES.pausedReauth;
+  return SYNC_TITLES.pausedRetry;
+}
 
 export function syncView(
   importState: SearchInsightsImportState | null,
@@ -108,15 +135,22 @@ export function syncView(
   hasProperty = true,
 ): SyncView {
   if (!hasProperty) {
-    return { disabled: true, label: SYNC_LABELS.ready, title: SYNC_TITLES.requiresProperty };
+    return { disabled: true, label: SYNC_LABEL, title: SYNC_TITLES.requiresProperty };
   }
   if (importState && BUSY_IMPORT_STATES.has(importState.state)) {
-    return { disabled: true, label: SYNC_LABELS.backfill, title: SYNC_TITLES.backfill };
+    return {
+      disabled: true,
+      label: SYNC_LABEL,
+      title:
+        importState.state === "paused"
+          ? pausedSyncTitle(importState.pausedReason)
+          : SYNC_TITLES.backfill,
+    };
   }
   if (outcome === "started" || outcome === "cooldown") {
-    return { disabled: true, label: SYNC_LABELS.cooldown, title: SYNC_TITLES.cooldown };
+    return { disabled: true, label: SYNC_LABEL, title: SYNC_TITLES.cooldown };
   }
-  return { disabled: false, label: SYNC_LABELS.ready, title: SYNC_TITLES.ready };
+  return { disabled: false, label: SYNC_LABEL, title: SYNC_TITLES.ready };
 }
 
 export function exportLabel(rows: number) {
