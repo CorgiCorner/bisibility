@@ -1,9 +1,13 @@
-import { Card } from "@/components/ui";
+import { Card, InfoTooltip } from "@/components/ui";
 import { rankTrackerTabPath } from "@/lib/routing/app-path";
 import Link from "next/link";
 import type { KpiDeltaTone, OverviewKpi } from "./types";
 
-export type KpiCardProps = OverviewKpi & { projectRef?: string };
+export type KpiCardProps = OverviewKpi & {
+  description?: string;
+  detail?: string;
+  projectRef?: string;
+};
 
 const deltaToneClassName = {
   positive: "text-green-text",
@@ -17,14 +21,17 @@ export function KpiCard({
   delta,
   deltaAction,
   deltaTone,
+  description,
+  detail,
   projectRef,
 }: Readonly<KpiCardProps>) {
   const valueClassName = value === "-" || value === "–" ? "text-fg-muted" : "text-fg";
 
   return (
     <Card className="min-w-0 rounded-card px-4.5 py-4" size="md">
-      <div className="truncate font-mono text-[10.5px] uppercase tracking-[0.8px] text-fg-muted">
-        {label}
+      <div className="flex min-h-6 items-center gap-1 font-mono text-[10.5px] uppercase tracking-[0.8px] text-fg-muted">
+        <span className="truncate">{label}</span>
+        {description ? <InfoTooltip text={description} /> : null}
       </div>
       <div className="mt-[9px] flex items-end gap-3">
         <span className="min-w-0">
@@ -49,6 +56,9 @@ export function KpiCard({
           )}
         </span>
       </div>
+      {detail ? (
+        <div className="mt-2 font-mono text-[11px] leading-normal text-fg-muted">{detail}</div>
+      ) : null}
     </Card>
   );
 }

@@ -1,5 +1,6 @@
 import { KNOWN_DATA_INCIDENTS } from "@/lib/search-insights/constants";
 import type { SearchInsightsImportState } from "@/lib/search-insights/queries/context";
+import type { ImportObservabilityFacts } from "@/lib/search-insights/queries/import-observability";
 import { isoFromFrozenNow } from "@/tests/clock";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
@@ -9,12 +10,7 @@ import { importRunningOwnershipCopy, OWNERSHIP_COPY } from "./search-insights-co
 const pauseAction = async () => ({ ok: true as const, state: "running" });
 
 const importState: SearchInsightsImportState = {
-  completedDays: 28,
-  etaLabel: "about 3 days left (finishes ~Mon)",
-  firstViewReady: true,
-  lastActivityAt: isoFromFrozenNow({ hours: -7, minutes: -5 }),
   plannedRetentionMonths: 16,
-  waiting: false,
   capHitDays: 0,
   cursorDate: "2026-03-14",
   daysDone: 274,
@@ -28,6 +24,51 @@ const importState: SearchInsightsImportState = {
   state: "running",
 };
 
+const observabilityFacts = {
+  consecutiveDays: 93,
+  deepHistoryMonths: { completed: 3, target: 16 },
+  lastActivityAt: isoFromFrozenNow({ hours: -7, minutes: -5 }),
+  lastProbeAt: "2026-08-28T18:17:00.000Z",
+  qualifyingDays: 7,
+  readyThrough: {
+    d7: { current: true, previous: true },
+    d28: { current: false, previous: false },
+    d90: { current: false, previous: false },
+  },
+  stall: {
+    expectedBatchMs: 1,
+    expectedDayMs: 1,
+    nextRequestInMs: 0,
+    silenceMs: 0,
+    thresholdMs: 1,
+  },
+  targetDays: 10,
+} satisfies ImportObservabilityFacts;
+
+const matchedWorker = {
+  status: "ok" as const,
+  temporalIdentityComparison: { detail: "identities match", status: "match" as const },
+};
+const runningStatusFacts = {
+  connectionStatus: "connected" as const,
+  observability: observabilityFacts,
+  runtime: { workerStatus: matchedWorker, workflowStatus: "running" as const },
+  state: "running",
+};
+const completedFacts = {
+  ...observabilityFacts,
+  readyThrough: {
+    ...observabilityFacts.readyThrough,
+    d28: { current: true, previous: false },
+  },
+};
+
+function importStateWithFacts(facts: ImportObservabilityFacts = observabilityFacts) {
+  return { ...importState, facts } as SearchInsightsImportState & {
+    facts: ImportObservabilityFacts;
+  };
+}
+
 function renderStrip(overrides: Partial<Parameters<typeof SearchInsightsTrustStrip>[0]> = {}) {
   return render(
     <SearchInsightsTrustStrip
@@ -35,16 +76,21 @@ function renderStrip(overrides: Partial<Parameters<typeof SearchInsightsTrustStr
       deploymentMode="self-host"
       providerAvailabilitySource="metadata"
       providerAvailableThrough="2026-07-08"
-      importState={importState}
+      importState={importStateWithFacts()}
       incidents={[]}
       pauseAction={pauseAction}
       projectId="prj_test"
       resumeAction={pauseAction}
       localViewReady
-      workerStatus="ok"
+      statusFacts={runningStatusFacts}
+      workerStatus={matchedWorker}
       {...overrides}
     />,
   );
+}
+
+function tooltipText(element: HTMLElement) {
+  return document.getElementById(element.getAttribute("aria-describedby") ?? "")?.textContent;
 }
 
 describe("SearchInsightsTrustStrip", () => {
@@ -62,16 +108,15 @@ describe("SearchInsightsTrustStrip", () => {
     expect(screen.getByRole("region", { name: "Data provenance" })).not.toHaveClass("bg-bg-sunken");
   });
 
-  it("states the finalized day, the freshness probe and the coverage in one place", () => {
+  it("keeps finalized availability distinct from compact freshness", () => {
     renderStrip();
 
     expect(screen.getByTestId("provider-available-date")).toHaveTextContent("Jul 8");
-    expect(
-      screen.getByText(
-        "Fresh data through Aug 28, 11:17 Pacific. Google may still adjust these numbers before they finalize.",
-      ),
-    ).toBeInTheDocument();
-    expect(screen.getByText(/Google data available through/)).toBeInTheDocument();
+    expect(screen.getByText(/Final through/)).toBeInTheDocument();
+    expect(screen.getByTestId("freshness-note")).toHaveTextContent(/^checked /);
+    expect(tooltipText(screen.getByTestId("freshness-note"))).toBe(
+      "Last checked Aug 28, 11:17 Pacific. Google may adjust recent data until it finalizes.",
+    );
     expect(screen.queryByText(/revisions|, still subject/)).not.toBeInTheDocument();
     expect(screen.queryByText(/Finalized through/)).not.toBeInTheDocument();
     expect(screen.getByText("62%")).toBeInTheDocument();
@@ -81,7 +126,7 @@ describe("SearchInsightsTrustStrip", () => {
   it("separates provider freshness from partial local readiness", () => {
     const { container } = renderStrip({
       coverage: { calculable: false, capHitDays: 0, clicksShare: 0, impressionsShare: 0 },
-      importState: { ...importState, completedDays: 7, firstViewReady: false },
+      importState,
       localViewReady: false,
       providerAvailableThrough: "2026-08-26",
     });
@@ -92,10 +137,15 @@ describe("SearchInsightsTrustStrip", () => {
     expect(date).not.toHaveTextContent("2026");
     expect(date.childNodes).toHaveLength(1);
     expect(date.firstElementChild).toHaveClass("font-mono");
-    const availability = screen.getByText("Google data available through", { exact: false });
+    const availability = screen.getByText("Final through", { exact: false });
     expect(availability).toBeInTheDocument();
     expect(availability.textContent).not.toMatch(/\s{2}/);
-    expect(screen.getByText("7 of 28 days imported for the first view")).toBeInTheDocument();
+    expect(screen.getByTestId("qualifying-progress")).toHaveTextContent(
+      observabilityFacts.qualifyingDays.toString(),
+    );
+    expect(screen.getByTestId("deep-history-progress")).toHaveTextContent(
+      observabilityFacts.deepHistoryMonths.target.toString(),
+    );
     expect(container.textContent).not.toMatch(
       /Finalized through|imported through|locally finalized/i,
     );
@@ -103,7 +153,7 @@ describe("SearchInsightsTrustStrip", () => {
       screen.getByText("Coverage appears once the first finalized days are imported."),
     ).toBeInTheDocument();
     expect(container.textContent).not.toMatch(
-      /0% \/ 0%|Query text on|about three days|first data|16 month|,\s{2}|%.* \/ .*%/i,
+      /0% \/ 0%|Query text on|about three days|first data|,\s{2}|%.* \/ .*%/i,
     );
     expect(screen.queryByLabelText("Refresh import status")).not.toBeInTheDocument();
     expect(screen.queryByTestId("search-import-line")).not.toBeInTheDocument();
@@ -115,10 +165,8 @@ describe("SearchInsightsTrustStrip", () => {
       providerAvailableThrough: "2026-08-26",
     });
 
-    expect(container.textContent).toContain("Estimated Google data availability through Aug 26");
-    expect(container.textContent).not.toContain(
-      "Estimated Google data availability through Aug 26, 2026",
-    );
+    expect(container.textContent).toContain("Estimated final through Aug 26");
+    expect(container.textContent).not.toContain("Estimated final through Aug 26, 2026");
     expect(container.textContent).not.toMatch(/through\s{2,}Aug|Aug 26\s{2,}/);
   });
 
@@ -174,9 +222,9 @@ describe("SearchInsightsTrustStrip", () => {
     expect(screen.queryByText(/your database/)).not.toBeInTheDocument();
   });
 
-  it("reports running and completed imports without error copy", () => {
+  it("reports running and completed imports without error copy or complete polling", () => {
     const { rerender } = renderStrip();
-    expect(screen.getByText("Backfill in progress")).toBeInTheDocument();
+    expect(screen.getByText("Running")).toBeInTheDocument();
     rerender(
       <SearchInsightsTrustStrip
         coverage={{ calculable: true, capHitDays: 0, clicksShare: 62, impressionsShare: 41 }}
@@ -188,10 +236,19 @@ describe("SearchInsightsTrustStrip", () => {
         localViewReady
         pauseAction={pauseAction}
         projectId="prj_test"
-        workerStatus="ok"
+        statusFacts={{
+          ...runningStatusFacts,
+          observability: completedFacts,
+          runtime: { workerStatus: matchedWorker, workflowStatus: "completed" },
+          state: "completed",
+        }}
+        workerStatus={matchedWorker}
       />,
     );
-    expect(screen.getByText("16 months imported, growing daily")).toBeInTheDocument();
+    expect(screen.getByText("Complete")).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("Refresh import status").closest("[data-auto-refresh]"),
+    ).toHaveAttribute("data-auto-refresh", "inactive");
   });
 
   it("keeps the full-width import action at the right as a secondary control", () => {
@@ -215,6 +272,7 @@ describe("SearchInsightsTrustStrip", () => {
         pausedReason: "user",
         state: "paused",
       },
+      statusFacts: { ...runningStatusFacts, pausedReason: "user", state: "paused" },
     });
     expect(screen.getByRole("button", { name: "Resume Search Console import" })).toHaveClass(
       "MuiButton-outlined",
@@ -231,7 +289,8 @@ describe("SearchInsightsTrustStrip", () => {
         localViewReady
         projectId="prj_test"
         retryAction={pauseAction}
-        workerStatus="ok"
+        statusFacts={{ ...runningStatusFacts, safeError: "Import failed", state: "failed" }}
+        workerStatus={matchedWorker}
       />,
     );
     expect(screen.getByRole("button", { name: "Retry Search Console import" })).toHaveClass(
@@ -253,7 +312,13 @@ describe("SearchInsightsTrustStrip", () => {
         incidents={[]}
         localViewReady
         projectId="prj_test"
-        workerStatus="ok"
+        statusFacts={{
+          ...runningStatusFacts,
+          connectionStatus: "needs_reauth",
+          pausedReason: "needs_reauth",
+          state: "paused",
+        }}
+        workerStatus={matchedWorker}
       />,
     );
     expect(screen.getByRole("link", { name: "Reconnect Search Console" })).toHaveClass(
@@ -269,9 +334,10 @@ describe("SearchInsightsTrustStrip", () => {
         pausedReason: "user",
         state: "paused",
       },
+      statusFacts: { ...runningStatusFacts, pausedReason: "user", state: "paused" },
     });
-    expect(screen.getByText("Backfill paused")).toBeInTheDocument();
-    expect(screen.getByText(/Fresh data through/)).toBeInTheDocument();
+    expect(screen.getByText("Paused by you")).toBeInTheDocument();
+    expect(screen.getByTestId("freshness-note")).toHaveTextContent(/^checked /);
     const freshness = screen.getByText("Freshness").closest("div");
     expect(freshness?.textContent).not.toMatch(/paused by you|data ends at|Paused on|Resume/i);
     expect(screen.getAllByRole("button", { name: "Resume Search Console import" })).toHaveLength(1);
@@ -282,6 +348,37 @@ describe("SearchInsightsTrustStrip", () => {
     renderStrip({ incidents: KNOWN_DATA_INCIDENTS });
 
     expect(screen.getByText("Known Google data issue")).toBeInTheDocument();
+  });
+
+  it("renders selector-backed readiness and deep-history progress without another status label", () => {
+    const { container, rerender } = renderStrip({ importState: importStateWithFacts() });
+
+    expect(screen.getByTestId("qualifying-progress")).toHaveTextContent(
+      `${observabilityFacts.qualifyingDays} of ${observabilityFacts.targetDays} finalized days`,
+    );
+    expect(screen.getByTestId("deep-history-progress")).toHaveTextContent("3 of 16 months");
+    expect(screen.getAllByText("Running")).toHaveLength(1);
+    rerender(
+      <SearchInsightsTrustStrip
+        coverage={{ calculable: true, capHitDays: 0, clicksShare: 62, impressionsShare: 41 }}
+        deploymentMode="self-host"
+        importState={importStateWithFacts({
+          ...observabilityFacts,
+          deepHistoryMonths: { completed: 3, target: 12 },
+        })}
+        incidents={[]}
+        localViewReady
+        pauseAction={pauseAction}
+        projectId="prj_test"
+        providerAvailabilitySource="metadata"
+        providerAvailableThrough="2026-07-08"
+        resumeAction={pauseAction}
+        statusFacts={runningStatusFacts}
+        workerStatus={matchedWorker}
+      />,
+    );
+    expect(screen.getByTestId("deep-history-progress")).toHaveTextContent("3 of 12 months");
+    expect(container.textContent).not.toMatch(/Running.*Running/);
   });
 
   it("renders phase A as exactly one fact segment without premature progress", () => {
@@ -301,9 +398,7 @@ describe("SearchInsightsTrustStrip", () => {
       providerAvailableThrough: null,
       importState: {
         ...importState,
-        completedDays: 0,
         daysTotal: 0,
-        etaLabel: "about 3 days left",
         state: "waiting_for_first_data",
       },
     });
@@ -320,16 +415,10 @@ describe("SearchInsightsTrustStrip", () => {
 
   it("keeps startup ownership guidance while finalized sync uses compact status controls", () => {
     const expected =
-      "Google only keeps 16 months, so we are copying all of it into your database now. The first 28-day view unlocks as soon as its finalized days are ready; older months keep loading in the background.";
+      "Google only keeps 16 months, so we are copying all of it into your database now. The first 7-day view unlocks as soon as its finalized days are ready; older months keep loading in the background.";
     expect(importRunningOwnershipCopy(16, "self-host")).toBe(expected);
     const { rerender } = renderStrip({ providerAvailableThrough: null });
-    const startupDescription = screen
-      .getByRole("region", { name: "Data provenance" })
-      .querySelector("[aria-describedby]");
-    expect(startupDescription).not.toBeNull();
-    expect(
-      document.getElementById(startupDescription?.getAttribute("aria-describedby") ?? ""),
-    ).toHaveTextContent(expected);
+    expect(screen.getByText(expected)).toBeInTheDocument();
 
     rerender(
       <SearchInsightsTrustStrip
@@ -343,31 +432,48 @@ describe("SearchInsightsTrustStrip", () => {
         pauseAction={pauseAction}
         projectId="prj_test"
         resumeAction={pauseAction}
-        workerStatus="ok"
+        statusFacts={runningStatusFacts}
+        workerStatus={matchedWorker}
       />,
     );
-    expect(screen.getByText("Backfill in progress")).toBeInTheDocument();
+    expect(screen.getByText("Running")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Pause Search Console import" })).toBeInTheDocument();
   });
 });
 
-it("renders phase C fact, activity, ETA, progress, and heartbeat as separate truthful segments", () => {
-  const { container } = renderStrip({ providerAvailableThrough: null });
+it("renders selector-backed phase C progress alongside separate truthful segments", () => {
+  const { container } = renderStrip({
+    importState: importStateWithFacts(),
+    providerAvailableThrough: null,
+  });
 
-  expect(screen.getByText("Importing your Google history · 28 of ~488 days")).toBeInTheDocument();
+  expect(
+    screen.getByText(
+      `Importing your Google history · ${observabilityFacts.qualifyingDays} of ${observabilityFacts.targetDays} finalized days`,
+    ),
+  ).toBeInTheDocument();
   expect(screen.getByText(/last activity/)).toBeInTheDocument();
-  expect(screen.getByText(/about 3 days left/)).toBeInTheDocument();
+  expect(screen.queryByText(/about 3 days left/)).not.toBeInTheDocument();
   expect(container.querySelector('[data-startup-segment="progress"]')).toBeInTheDocument();
+  expect(container.querySelector('[data-startup-segment="deep-history"]')).toHaveTextContent(
+    "3 of 16 months",
+  );
+  const freshness = container.querySelector('[data-startup-segment="freshness"]');
+  expect(freshness).toBeInstanceOf(HTMLElement);
+  expect(tooltipText(freshness as HTMLElement)).toBe(
+    "Last checked Aug 28, 11:17 Pacific. Google may adjust recent data until it finalizes.",
+  );
   expect(screen.getByLabelText("Refresh import status")).toBeInTheDocument();
   expect(screen.queryByText("Coverage shows once the first days arrive.")).not.toBeInTheDocument();
-  expect(screen.queryByText(/no day yet|Pacific/)).not.toBeInTheDocument();
+  expect(screen.queryByText(/no day yet/)).not.toBeInTheDocument();
   expect(screen.queryByText(/Query text on/)).not.toBeInTheDocument();
 });
 
 it("renders phase B from the truthful total without progress, heartbeat, or ETA", () => {
   const { container } = renderStrip({
     providerAvailableThrough: null,
-    importState: { ...importState, completedDays: 0, lastActivityAt: null },
+    importState,
+    statusFacts: { ...runningStatusFacts, observability: undefined },
   });
 
   expect(
@@ -378,13 +484,19 @@ it("renders phase B from the truthful total without progress, heartbeat, or ETA"
   expect(screen.queryByText(/0 of|last activity|about .*left|not yet/)).not.toBeInTheDocument();
 });
 
-it("renders phase C without an activity placeholder when completed days are the fallback", () => {
+it("renders selector progress without an activity placeholder", () => {
   renderStrip({
     providerAvailableThrough: null,
-    importState: { ...importState, completedDays: 2, etaLabel: null, lastActivityAt: null },
+    importState: importStateWithFacts({
+      ...observabilityFacts,
+      consecutiveDays: 2,
+      lastActivityAt: null,
+    }),
   });
 
-  expect(screen.getByText("Importing your Google history · 2 of ~488 days")).toBeInTheDocument();
+  expect(
+    screen.getByText("Importing your Google history · 7 of 10 finalized days"),
+  ).toBeInTheDocument();
   expect(screen.queryByText(/last activity|not yet/)).not.toBeInTheDocument();
 });
 

@@ -4,6 +4,11 @@ import {
   parseCronExpression as parseRuntimeCronExpression,
 } from "@/lib/rank-check/cron";
 import { computeNextCheckAt } from "@/lib/rank-check/schedule";
+import type { ImportObservabilityFacts } from "@/lib/search-insights/queries/import-observability";
+import type {
+  SearchImportQueueFacts,
+  SearchImportRuntimeFacts,
+} from "@/lib/search-insights/sync/control-model";
 import type { SerpDepth } from "@/lib/serp/markets";
 import { rankScheduleTiming } from "@/lib/settings/rank-schedule-timing";
 
@@ -40,11 +45,17 @@ export type DefaultsData = {
   keywordCount: number;
   inspectionDailyLimit: number;
   searchSync?: {
+    firstDataDate: string | null;
+    firstDataDateLabel: string | null;
     lastQuotaPausedAt: string | null;
     pace: "normal" | "gentle";
+    newestFinalizedDate: string | null;
+    observability?: ImportObservabilityFacts;
     plannedRemaining: number;
+    queue?: SearchImportQueueFacts;
     requestsToday: number;
     retentionMonths: 3 | 6 | 12 | 16;
+    runtime?: SearchImportRuntimeFacts;
   };
   locationKey: string;
   locationLabel: string;

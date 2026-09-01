@@ -3,6 +3,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getIntegrationCategories, getIntegrationsView, isProviderConnected } from "./integrations";
 
 const mocks = vi.hoisted(() => ({
+  compareIdentity: vi.fn(),
+  deploymentConfig: vi.fn(),
+  liveness: vi.fn(),
+  observability: vi.fn(),
   prisma: {
     $queryRaw: vi.fn(),
     operationalRun: { findMany: vi.fn() },
@@ -11,6 +15,7 @@ const mocks = vi.hoisted(() => ({
     searchAnalyticsRequestUsage: { findFirst: vi.fn(), findMany: vi.fn() },
     searchAnalyticsSyncPartition: { findMany: vi.fn() },
     searchInsightsPropertyRegistry: { findFirst: vi.fn() },
+    projectDefaults: { findUnique: vi.fn() },
     providerConnection: {
       count: vi.fn(),
       findUnique: vi.fn(),
@@ -26,10 +31,28 @@ const mocks = vi.hoisted(() => ({
   },
   requireReadableProject: vi.fn(),
   getRequestProjectDefaults: vi.fn(),
+  queue: vi.fn(),
+  workflow: vi.fn(),
 }));
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
+vi.mock("@/lib/ops/liveness", () => ({ getWorkerLivenessDetails: mocks.liveness }));
+vi.mock("@/lib/ops/worker-temporal-identity", () => ({
+  compareWorkerTemporalIdentity: mocks.compareIdentity,
+}));
+vi.mock("@/lib/search-insights/queries/import-queue", () => ({
+  readSearchImportQueueFacts: mocks.queue,
+}));
+vi.mock("@/lib/search-insights/queries/import-observability-db", () => ({
+  readImportObservability: mocks.observability,
+}));
+vi.mock("@/lib/temporal/deployment-config", () => ({
+  temporalDeploymentConfig: mocks.deploymentConfig,
+}));
+vi.mock("@/lib/temporal/search-insights-status", () => ({
+  describeSearchInsightsBackfillStatus: mocks.workflow,
+}));
 vi.mock("./_auth", () => ({ requireReadableProject: mocks.requireReadableProject }));
 vi.mock("./workspace-request-data", () => ({
   getRequestProjectDefaults: mocks.getRequestProjectDefaults,
@@ -53,6 +76,32 @@ function connection(overrides: Record<string, unknown>) {
 
 const now = new Date("2026-06-28T12:00:00.000Z");
 const secretsKey = (byte: number) => Buffer.alloc(32, byte).toString("base64");
+const temporalDeployment = {
+  alertDeliveryTaskQueue: "alert-deliveries",
+  namespace: "default",
+  taskQueue: "rank-checks",
+};
+const workerLiveness = { ...temporalDeployment, status: "ok" as const };
+const selectorFacts = {
+  consecutiveDays: 28,
+  deepHistoryMonths: { completed: 0, target: 16 },
+  lastActivityAt: null,
+  lastProbeAt: null,
+  qualifyingDays: 28,
+  readyThrough: {
+    d7: { current: false, previous: false },
+    d28: { current: false, previous: false },
+    d90: { current: false, previous: false },
+  },
+  stall: {
+    expectedBatchMs: 30 * 60_000,
+    expectedDayMs: 3 * 60_000,
+    nextRequestInMs: 0,
+    silenceMs: 0,
+    thresholdMs: 45 * 60_000,
+  },
+  targetDays: 28,
+};
 
 describe("integration queries", () => {
   afterEach(() => vi.unstubAllEnvs());
@@ -64,11 +113,18 @@ describe("integration queries", () => {
     mocks.prisma.providerConnection.count.mockResolvedValue(2);
     mocks.prisma.operationalRun.findMany.mockResolvedValue([]);
     mocks.prisma.searchInsightsPropertyRegistry.findFirst.mockResolvedValue(null);
+    mocks.prisma.projectDefaults.findUnique.mockResolvedValue(null);
     mocks.prisma.searchAnalyticsImport.findUnique.mockResolvedValue(null);
     mocks.prisma.searchAnalyticsRequestUsage.findFirst.mockResolvedValue(null);
     mocks.prisma.searchAnalyticsRequestUsage.findMany.mockResolvedValue([]);
     mocks.prisma.searchAnalyticsSyncPartition.findMany.mockResolvedValue([]);
     mocks.prisma.$queryRaw.mockResolvedValue([]);
+    mocks.compareIdentity.mockReturnValue({ detail: "identities match", status: "match" });
+    mocks.deploymentConfig.mockReturnValue(temporalDeployment);
+    mocks.liveness.mockResolvedValue(workerLiveness);
+    mocks.observability.mockResolvedValue(selectorFacts);
+    mocks.queue.mockResolvedValue({});
+    mocks.workflow.mockResolvedValue("running");
   });
 
   it("loads connected providers from ProviderConnection rows in priority order", async () => {
@@ -323,16 +379,26 @@ describe("integration queries", () => {
   });
 
   it("loads durable Search Console progress independently from traffic sync", async () => {
+    const searchImportProgress = { qualifyingDays: 28, targetDays: 28 };
     mocks.prisma.providerConnection.findMany.mockResolvedValue([
       connection({ id: "connection_gsc", kind: "analytics", provider: "gsc" }),
     ]);
     mocks.prisma.searchInsightsPropertyRegistry.findFirst.mockResolvedValue({
       propertyKey: "sc-domain:corgitocoin.com",
     });
+    mocks.prisma.projectDefaults.findUnique.mockResolvedValue({
+      searchSyncImportMonths: 3,
+      searchSyncPace: "gentle",
+    });
     mocks.prisma.searchAnalyticsImport.findUnique.mockResolvedValue({
+      createdAt: new Date("2026-06-20T00:00:00.000Z"),
       daysTotal: 488,
       earliestTargetDate: new Date("2025-03-01T00:00:00.000Z"),
+      id: "import_1",
+      lastError: null,
+      lastProbeAt: new Date("2026-07-28T11:00:00.000Z"),
       newestFinalizedDate: new Date("2026-07-28T00:00:00.000Z"),
+      pauseStartedAt: null,
       pausedReason: null,
       plannedRetentionMonths: 16,
       state: "running",
@@ -354,7 +420,11 @@ describe("integration queries", () => {
       searchModule: {
         detail: "corgitocoin.com",
         state: "backfill_running",
-        summary: "Backfill running · 37 of ~488 days",
+        summary: expect.stringMatching(
+          new RegExp(
+            `^Running · ${searchImportProgress.qualifyingDays} of ${searchImportProgress.targetDays} finalized days are imported\\. ·`,
+          ),
+        ),
       },
       trafficEnrichment: { state: "never_synced", summary: "Never synced" },
     });
@@ -363,6 +433,25 @@ describe("integration queries", () => {
       select: { propertyKey: true },
       where: { projectId: "project_1", status: "active" },
     });
+    expect(mocks.prisma.projectDefaults.findUnique).toHaveBeenCalledWith({
+      where: { projectId: "project_1" },
+    });
+    expect(mocks.observability).toHaveBeenCalledWith(
+      expect.objectContaining({
+        plannedRetentionMonths: 3,
+        projectId: "project_1",
+        property: "sc-domain:corgitocoin.com",
+        requestSetsPerHour: 21,
+      }),
+    );
+    expect(mocks.queue).toHaveBeenCalledWith({
+      createdAt: new Date("2026-06-20T00:00:00.000Z"),
+      id: "import_1",
+      projectId: "project_1",
+      state: "running",
+    });
+    expect(mocks.workflow).toHaveBeenCalledWith("project_1", "sc-domain:corgitocoin.com");
+    expect(mocks.compareIdentity).toHaveBeenCalledWith(temporalDeployment, workerLiveness);
   });
 
   it("surfaces the latest consecutive traffic-sync failure streak", async () => {

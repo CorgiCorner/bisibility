@@ -103,7 +103,7 @@ describe("project overview API", () => {
     vi.useRealTimers();
   });
 
-  it("returns computed numeric overview metrics", async () => {
+  it("excludes an unmeasured keyword from the pinned Visibility denominator", async () => {
     mocks.prisma.keyword.count.mockResolvedValueOnce(3).mockResolvedValueOnce(1);
     mocks.prisma.keyword.findMany.mockResolvedValue([
       keyword("one", "desktop", [
@@ -145,7 +145,7 @@ describe("project overview API", () => {
       top_100_count: 2,
       tracked_keyword_count: 3,
     });
-    expect(body.visibility).toBeCloseTo(22.5556, 4);
+    expect(body.visibility).toBeCloseTo(33.8333, 4);
     expect(body.visibility_delta).toBeCloseTo(22.5, 4);
   });
 

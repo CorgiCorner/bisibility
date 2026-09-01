@@ -18,6 +18,7 @@ import { DEFAULT_SERP_DEPTH, type SerpDepth, serpDepthValues } from "@/lib/serp/
 import { FIELD_HELP } from "@/lib/settings/field-help";
 import { frequencyOptions } from "@/lib/settings/options";
 import { timezoneSelectOptions } from "@/lib/settings/timezones";
+import { VISIBILITY_HORIZON, VISIBILITY_SHALLOW_CHECK_COPY } from "@/lib/visibility/definition";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -95,6 +96,7 @@ export function KeywordScheduleInlineForm({
   const serpDepth = watch("serpDepth") ?? null;
   const timezone = watch("timezone");
   const scheduleSource = keyword.scheduleSource ?? "keyword";
+  const visibilityExcluded = (serpDepth ?? projectDepth) < VISIBILITY_HORIZON;
   const depthWarning = serpDepth !== null && serpDepth < projectDepth;
   const projectedCostCents = providerRate
     ? monthlyCostCentsFor(
@@ -109,7 +111,8 @@ export function KeywordScheduleInlineForm({
         providerRate,
       )
     : null;
-  const showStatus = scheduleSource === "project" || Boolean(message) || depthWarning;
+  const showStatus =
+    scheduleSource === "project" || Boolean(message) || depthWarning || visibilityExcluded;
 
   function setFrequency(value: string) {
     const next = value as KeywordScheduleUpdateInput["frequency"];
@@ -259,6 +262,11 @@ export function KeywordScheduleInlineForm({
           {depthWarning && serpDepth !== null ? (
             <span className="ml-3 font-mono text-[11px] text-yellow-text">
               {serpDepthDecreaseWarning(serpDepth)}
+            </span>
+          ) : null}
+          {visibilityExcluded ? (
+            <span className="ml-3 font-mono text-[11px] text-yellow-text">
+              {VISIBILITY_SHALLOW_CHECK_COPY}
             </span>
           ) : null}
         </div>

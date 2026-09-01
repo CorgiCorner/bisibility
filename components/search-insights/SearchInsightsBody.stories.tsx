@@ -36,6 +36,28 @@ const common = {
 
 export const FirstView: Story = { args: common };
 
+export const SessionsImporting: Story = {
+  args: {
+    ...common,
+    view: {
+      ...storyFirstView,
+      organicSessions: {
+        importState: {
+          ...storyImportState,
+          createdAt: "2026-08-31T10:00:00.000Z",
+          daysDone: 10,
+          daysTotal: 60,
+          lastSyncStartedAt: "2026-08-31T10:00:00.000Z",
+          state: "running",
+          updatedAt: "2026-08-31T11:00:00.000Z",
+        },
+        property: "123456789",
+        status: "connected",
+      },
+    },
+  },
+};
+
 export const EmptyWindow: Story = {
   args: {
     ...common,

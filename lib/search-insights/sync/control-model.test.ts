@@ -1,171 +1,217 @@
 import { describe, expect, it } from "vitest";
-import { resolveSearchBackfillPresentation } from "./control-model";
+import {
+  resolveSearchBackfillPresentation,
+  resolveSearchSyncControl,
+  SEARCH_SYNC_STATUS_VOCABULARY,
+  type SearchBackfillFacts,
+  type SearchImportRuntimeFacts,
+} from "./control-model";
 
-const base = {
-  completedDays: 7,
-  connectionStatus: "connected" as const,
-  deploymentMode: "self-host" as const,
-  firstViewReady: false,
-  state: "running",
-  waiting: false,
+const observability = {
+  consecutiveDays: 7,
+  deepHistoryMonths: { completed: 0, target: 16 },
+  lastActivityAt: "2026-08-31T10:00:00.000Z",
+  lastProbeAt: "2026-08-31T10:00:00.000Z",
+  qualifyingDays: 7,
+  readyThrough: {
+    d7: { current: true, previous: false },
+    d28: { current: false, previous: false },
+    d90: { current: false, previous: false },
+  },
+  stall: {
+    expectedBatchMs: 20 * 60_000,
+    expectedDayMs: 3 * 60_000,
+    nextRequestInMs: 10 * 60_000,
+    silenceMs: 10 * 60_000,
+    thresholdMs: 30 * 60_000,
+  },
+  targetDays: 28,
+} as const;
+
+const runtime: SearchImportRuntimeFacts = {
+  workflowStatus: "running",
   workerStatus: {
-    status: "ok" as const,
-    temporalIdentityComparison: { detail: "identities match", status: "match" as const },
+    status: "ok",
+    temporalIdentityComparison: { detail: "identities match", status: "match" },
   },
 };
+const base: SearchBackfillFacts = {
+  connectionStatus: "connected",
+  observability,
+  runtime,
+  state: "running",
+};
 
-describe("resolveSearchBackfillPresentation", () => {
-  it.each([
-    ["running", {}, "running", "pause", true],
-    ["partial", { completedDays: 3 }, "running", "pause", true],
-    [
-      "paused known",
-      { pauseStartedAt: "2026-08-27T12:00:00.000Z", pausedReason: "user", state: "paused" },
-      "paused_user",
-      "resume",
-      false,
-    ],
-    [
-      "paused unknown",
-      { pauseStartedAt: null, pausedReason: "user", state: "paused" },
-      "paused_user",
-      "resume",
-      false,
-    ],
-    [
-      "paused beats stale worker",
-      {
-        pausedReason: "user",
-        state: "paused",
-        workerStatus: {
-          status: "stale",
-          temporalIdentityComparison: { detail: "stale", status: "match" },
+describe("search import presentation resolver", () => {
+  it("uses pace-aware stall evidence instead of treating a ten-minute gap as universally stuck", () => {
+    const slow = resolveSearchBackfillPresentation(base);
+    expect(slow).toMatchObject({ kind: "running", title: "Running" });
+    expect(slow.supportingText).toBe("Next request in about 10 min.");
+
+    const fast = resolveSearchBackfillPresentation({
+      ...base,
+      observability: {
+        ...observability,
+        stall: {
+          ...observability.stall,
+          expectedBatchMs: 60_000,
+          expectedDayMs: 60_000,
+          nextRequestInMs: 0,
+          thresholdMs: 60_000,
         },
       },
-      "paused_user",
-      "resume",
-      false,
-    ],
-    [
-      "reauth beats pause",
-      { connectionStatus: "needs_reauth", pausedReason: "user", state: "paused" },
-      "needs_reauth",
-      "reconnect",
-      false,
-    ],
-    ["quota", { pausedReason: "rate_limited", state: "paused" }, "quota", null, false],
-    [
-      "reauth marker",
-      { pausedReason: "needs_reauth", state: "paused" },
-      "needs_reauth",
-      "reconnect",
-      false,
-    ],
-    ["error", { safeError: "Provider unavailable.", state: "failed" }, "error", "retry", false],
-    ["done", { firstViewReady: true, state: "completed" }, "done", null, false],
-    [
-      "self-host worker",
-      {
-        workerStatus: {
-          status: "stale",
-          temporalIdentityComparison: { detail: "app and worker differ", status: "mismatch" },
-        },
-      },
-      "waiting_worker",
-      null,
-      false,
-    ],
-    [
-      "cloud worker",
-      {
-        deploymentMode: "cloud",
-        workerStatus: {
-          status: "stale",
-          temporalIdentityComparison: { detail: "secret worker detail", status: "mismatch" },
-        },
-      },
-      "waiting_worker",
-      null,
-      false,
-    ],
-    ["observability wait", { waiting: true }, "starting", null, false],
-    ["queued", { state: "queued" }, "queued", null, true],
-    ["starting", { state: "created" }, "starting", null, false],
-  ] as const)("resolves %s", (_name, overrides, kind, action, polling) => {
-    expect(resolveSearchBackfillPresentation({ ...base, ...overrides })).toMatchObject({
-      action,
-      kind,
-      polling,
     });
+    expect(fast).toMatchObject({ action: "retry", kind: "needs_retry", title: "Needs retry" });
+    expect(fast.supportingText).toBe("No import activity for about 10 min.");
   });
 
-  it("uses exact actor-neutral pause copy with and without a date", () => {
+  it("only renders a stall when every runtime predicate confirms it", () => {
+    const mismatched = resolveSearchBackfillPresentation({
+      ...base,
+      observability: {
+        ...observability,
+        stall: { ...observability.stall, silenceMs: 31 * 60_000 },
+      },
+      runtime: {
+        ...runtime,
+        workerStatus: {
+          status: "ok",
+          temporalIdentityComparison: { detail: "different queues", status: "mismatch" },
+        },
+      },
+    });
+    expect(mismatched).toMatchObject({ kind: "waiting_worker", title: "Waiting on worker" });
+  });
+
+  it.each(["completed", "failed"] as const)(
+    "renders an unowned %s workflow with missing current coverage as needs retry",
+    (workflowStatus) => {
+      const model = resolveSearchBackfillPresentation({
+        ...base,
+        runtime: { ...runtime, workflowStatus },
+        state: null,
+      });
+      expect(model).toMatchObject({ kind: "needs_retry", title: "Needs retry" });
+      expect(model.title).not.toContain("delayed");
+    },
+  );
+
+  it.each(["completed", "failed"] as const)(
+    "keeps durable %s work authoritative over a terminal previous execution",
+    (workflowStatus) => {
+      const queued = resolveSearchBackfillPresentation({
+        ...base,
+        runtime: { ...runtime, workflowStatus },
+        state: "queued",
+      });
+      const running = resolveSearchBackfillPresentation({
+        ...base,
+        runtime: { ...runtime, workflowStatus },
+        state: "running",
+      });
+
+      expect(queued).toMatchObject({ kind: "queued", title: "Queued" });
+      expect(running).toMatchObject({ kind: "running", title: "Running" });
+    },
+  );
+
+  it("keeps a durable completion complete even when fewer than 28 days are available", () => {
+    const model = resolveSearchBackfillPresentation({
+      ...base,
+      runtime: { ...runtime, workflowStatus: "completed" },
+      state: "completed",
+    });
+    expect(model).toMatchObject({ action: null, kind: "complete", title: "Complete" });
+  });
+
+  it("uses a non-running semantic state for a durable completion", () => {
     expect(
+      resolveSearchSyncControl({
+        ...base,
+        runtime: { ...runtime, workflowStatus: "completed" },
+        state: "completed",
+      }),
+    ).toMatchObject({ semanticState: "complete", status: "Complete" });
+  });
+
+  it("does not complete from seven readable current days without a completed state", () => {
+    const model = resolveSearchBackfillPresentation(base);
+    expect(model).toMatchObject({ kind: "running", title: "Running" });
+    expect(model.kind).not.toBe("complete");
+  });
+
+  it.each([
+    [
+      "no worker",
+      { runtime: { workflowStatus: "unknown", workerStatus: "stale" } },
+      "no_worker",
+      "Waiting on worker",
+      "Import is waiting for the background worker - restart it and it resumes.",
+    ],
+    [
+      "behind another property",
+      { queue: { blockingPropertyLabel: "example.com" } },
+      "behind_import",
+      "Queued",
+      "Queued behind example.com. That import is using the shared property quota.",
+    ],
+    [
+      "worker pickup",
+      {},
+      "worker_pickup",
+      "Queued",
+      "Queued for worker pickup. The worker checks queued imports every 5 minutes.",
+    ],
+  ] as const)("derives queued reason for %s", (_name, overrides, reason, title, supportingText) => {
+    const model = resolveSearchBackfillPresentation({ ...base, ...overrides, state: "queued" });
+    expect(model).toMatchObject({ queueReason: reason, supportingText, title });
+  });
+
+  it.each([
+    ["missing worker runtime", undefined],
+    ["legacy ok worker status without identity proof", "ok"],
+  ] as const)("derives no worker for %s", (_name, workerStatus) => {
+    const model = resolveSearchBackfillPresentation({
+      ...base,
+      runtime: workerStatus ? { ...runtime, workerStatus } : undefined,
+      state: "queued",
+    });
+    expect(model).toMatchObject({ kind: "waiting_worker", queueReason: "no_worker" });
+  });
+
+  it("keeps every rendered title inside the closed vocabulary", () => {
+    const models = [
+      resolveSearchBackfillPresentation(base),
+      resolveSearchBackfillPresentation({ ...base, pausedReason: "user" }),
+      resolveSearchBackfillPresentation({ ...base, pausedReason: "rate_limited" }),
+      resolveSearchBackfillPresentation({ ...base, pausedReason: "needs_reauth" }),
+      resolveSearchBackfillPresentation({ ...base, state: "waiting_for_first_data" }),
+      resolveSearchBackfillPresentation({ ...base, state: "queued" }),
       resolveSearchBackfillPresentation({
         ...base,
-        pauseStartedAt: "2026-08-27T12:00:00.000Z",
-        pausedReason: "user",
-        state: "paused",
+        runtime: { ...runtime, workflowStatus: "failed" },
       }),
-    ).toMatchObject({
-      description: "7 of 28 finalized days are imported.",
-      supportingText:
-        "Paused on Aug 27, 2026. New finalized days will not be imported until you resume sync.",
-      title: "Backfill paused",
-    });
-    const unknown = resolveSearchBackfillPresentation({
-      ...base,
-      pauseStartedAt: null,
-      pausedReason: "user",
-      state: "paused",
-    });
-    expect(unknown.supportingText).toBe(
-      "New finalized days will not be imported until you resume sync.",
-    );
-    expect(unknown.supportingText).not.toContain("unknown");
-    expect(unknown.supportingText).not.toContain("by you");
-  });
-
-  it("keeps cloud worker copy deployment-neutral", () => {
-    const model = resolveSearchBackfillPresentation({
-      ...base,
-      deploymentMode: "cloud",
-      workerStatus: {
-        status: "stale",
-        temporalIdentityComparison: { detail: "namespace task queue", status: "mismatch" },
-      },
-    });
-    expect(`${model.title} ${model.supportingText}`).not.toMatch(
-      /worker|temporal|namespace|queue|restart|self-host/i,
-    );
-  });
-
-  it("does not claim running from progress or settings alone", () => {
-    const model = resolveSearchBackfillPresentation({
-      ...base,
-      completedDays: 12,
-      state: null,
-    });
-    expect(model.kind).toBe("starting");
-    expect(`${model.title} ${model.supportingText}`).not.toMatch(/running|in progress/i);
-  });
-
-  it("presents waiting for first data without progress or delivery promises", () => {
-    const model = resolveSearchBackfillPresentation({
-      ...base,
-      completedDays: 0,
-      state: "waiting_for_first_data",
-    });
-
-    expect(model).toMatchObject({
-      action: null,
-      description:
-        "Google has not reported any search data for this property yet. We check daily and will import automatically when it appears.",
-      kind: "waiting_for_first_data",
-      polling: false,
-      supportingText: null,
-      title: "Waiting for search data",
-    });
-    expect(JSON.stringify(model)).not.toMatch(/0 of 0|\bETA\b|completion|first-28/i);
+      resolveSearchBackfillPresentation({
+        ...base,
+        observability: {
+          ...observability,
+          readyThrough: { ...observability.readyThrough, d28: { current: true, previous: true } },
+        },
+        runtime: { ...runtime, workflowStatus: "completed" },
+        state: "completed",
+      }),
+      resolveSearchBackfillPresentation({
+        ...base,
+        runtime: { ...runtime, workerStatus: "stale" },
+        state: "queued",
+      }),
+      resolveSearchSyncControl({ connectionStatus: "not_connected" }),
+      resolveSearchSyncControl({ connectionStatus: "connected_no_property" }),
+    ];
+    for (const model of models) {
+      const title = "title" in model ? model.title : model.status;
+      expect(SEARCH_SYNC_STATUS_VOCABULARY).toContain(title);
+    }
+    expect(SEARCH_SYNC_STATUS_VOCABULARY).not.toContain("Sync now");
   });
 });

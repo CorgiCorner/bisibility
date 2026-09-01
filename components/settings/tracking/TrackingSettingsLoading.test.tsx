@@ -55,7 +55,7 @@ describe("TrackingSettingsLoading", () => {
     }
   });
 
-  it("stacks provider budget cards at every breakpoint", () => {
+  it("contains no Search Console source cards", () => {
     const { container } = render(
       <TrackingSettingsContent
         canEdit
@@ -67,10 +67,8 @@ describe("TrackingSettingsLoading", () => {
         updateDefaults={vi.fn()}
       />,
     );
-
-    const budgets = container.querySelector("[data-tracking-provider-budgets]");
-    expect(budgets).toHaveClass("grid", "gap-5");
-    expect(budgets).not.toHaveClass("md:grid-cols-2");
+    expect(container.querySelector('[data-testid="url-inspection-card"]')).toBeNull();
+    expect(container.querySelector('[data-testid="search-data-sync-card"]')).toBeNull();
   });
 
   it("shares every settled card geometry class", () => {

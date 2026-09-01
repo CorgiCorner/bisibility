@@ -72,13 +72,14 @@ describe("ProviderCard", () => {
   });
 
   it("shows independent Search Console and traffic states without a global last-sync claim", () => {
+    const searchImportProgress = { qualifyingDays: 5, targetDays: 28 };
     const provider = {
       ...integrationCategories[1].providers[0],
       consumerStatuses: {
         searchModule: {
           detail: "corgitocoin.com",
           state: "backfill_running" as const,
-          summary: "Backfill running · 37 of ~488 days",
+          summary: `Running · ${searchImportProgress.qualifyingDays} of ${searchImportProgress.targetDays} finalized days`,
         },
         trafficEnrichment: { state: "never_synced" as const, summary: "Never synced" },
       },
@@ -103,7 +104,9 @@ describe("ProviderCard", () => {
     );
 
     const searchRow = screen.getByRole("group", { name: "Search Console" });
-    expect(searchRow).toHaveTextContent("Backfill running · 37 of ~488 days");
+    expect(searchRow).toHaveTextContent(
+      `Running · ${searchImportProgress.qualifyingDays} of ${searchImportProgress.targetDays} finalized days`,
+    );
     expect(within(searchRow).getByRole("heading", { name: "Search Console" })).toBeVisible();
     expect(within(searchRow).getByTitle("corgitocoin.com")).toHaveTextContent("corgitocoin.com");
     expect(searchRow).not.toHaveTextContent("sc-domain:");

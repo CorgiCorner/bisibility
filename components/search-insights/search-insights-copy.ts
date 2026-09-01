@@ -19,19 +19,20 @@ export const PROPERTIES_RECONNECT = "Reconnect the Google account to load its pr
 export const PROPERTIES_FAILED = "Properties could not be loaded. Try again.";
 export const PROPERTIES_EMPTY = "No properties on this account.";
 
-export const SYNC_LABELS = {
-  backfill: "Backfill running",
-  cooldown: "Synced, next in 5 min",
-  ready: "Sync now",
-} as const;
+export const SYNC_LABEL = "Sync now";
 
 // A manual sync spends Google's load quota, so each disabled state says why rather than
 // inviting a second click.
 export const SYNC_TITLES = {
   backfill:
-    "The 16-month backfill is still running. A manual sync queues behind it and would spend load quota twice.",
+    "The 16-month import is still running. A manual sync queues behind it and would spend load quota twice.",
   cooldown:
     "Finalized days change once a day, so a second sync inside the cooldown would return the same rows.",
+  pausedProvider:
+    "The provider limit must reset before finalized data can be fetched. The import resumes automatically.",
+  pausedReauth: "Reconnect Search Console before fetching new finalized data.",
+  pausedRetry: "Retry the history import before fetching new finalized data.",
+  pausedUser: "Resume the history import before fetching new finalized data.",
   ready: "Fetch anything Google has finalized since the last run.",
   requiresProperty: "Connect a Search Console property first.",
 } as const;
@@ -49,7 +50,7 @@ export const SELECT_FAILED = "The property could not be selected. Try again.";
 export const REAUTH_REQUIRED = "Reconnect the Google account, then choose the property again.";
 
 const IMPORT_RUNNING_PROGRESS =
-  "The first 28-day view unlocks as soon as its finalized days are ready; older months keep loading in the background.";
+  "The first 7-day view unlocks as soon as its finalized days are ready; older months keep loading in the background.";
 
 // Every string that claims where the data lives, self-host first, cloud second. The guard limits
 // ownership phrasing to the self-host branch, because a cloud workspace is not the customer's own
@@ -104,6 +105,9 @@ export const WAITING_FOR_FIRST_DATA =
   "Google has not reported any search data for this property yet. We check daily and will import automatically when it appears.";
 export const FRESHNESS_UNKNOWN = "Waiting for the first data from Google.";
 export const FRESHNESS_UNKNOWN_NOTE = "Finalized days appear here once the first sync lands.";
+export const FRESHNESS_FINAL_PREFIX = "Final through";
+export const FRESHNESS_CHECKED_PREFIX = "checked";
+export const FRESHNESS_ADJUSTMENT_TOOLTIP = "Google may adjust recent data until it finalizes.";
 export const COVERAGE_EMPTY = "Coverage appears once the first finalized days are imported.";
 export const COVERAGE_NOTE =
   "Google hides low-volume query text for privacy, so the rest is real traffic with no query attached.";
@@ -120,7 +124,7 @@ const WORKER_IDENTITY_MISMATCH_COPY = {
   ],
   line: [
     "Import is waiting for the background worker configuration to match.",
-    "Import is delayed while background processing reconnects.",
+    "Import is waiting for background processing to reconnect.",
   ],
 } as const;
 

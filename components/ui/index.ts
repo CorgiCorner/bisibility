@@ -39,7 +39,12 @@ export {
   type DisclosureProps,
 } from "./Disclosure";
 export { DomainIconLayer, type DomainIconLayerProps } from "./DomainIconLayer";
-export { buildDomainIconUrl, type DomainIconUrlInput } from "./domain-icon-url";
+export {
+  buildDomainIconUrl,
+  buildPublicDomainIconUrl,
+  type DomainIconUrlInput,
+  domainIconHost,
+} from "./domain-icon-url";
 export { EmptyState, type EmptyStateProps } from "./EmptyState";
 export {
   ExpiryChoiceGroup,

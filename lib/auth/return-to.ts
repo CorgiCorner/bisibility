@@ -1,4 +1,5 @@
 import { SIGNED_IN_HOME_PATH } from "@/lib/auth/two-factor-routes";
+import { MAX_ONBOARDING_WEBSITE_LENGTH } from "@/lib/onboarding/website";
 
 export const RETURN_TO_REQUEST_HEADER = "x-bisibility-request-path";
 
@@ -51,6 +52,21 @@ export function validateReturnTo(value: unknown): string | null {
 
 export function returnToOrDefault(value: unknown) {
   return validateReturnTo(value) ?? SIGNED_IN_HOME_PATH;
+}
+
+export function onboardingWebsiteFromReturnTo(value: unknown) {
+  const destination = validateReturnTo(value);
+  if (!destination) {
+    return null;
+  }
+
+  const target = new URL(destination, validationOrigin);
+  if (target.pathname !== "/onboarding") {
+    return null;
+  }
+
+  const website = target.searchParams.get("website");
+  return website ? website.slice(0, MAX_ONBOARDING_WEBSITE_LENGTH) : null;
 }
 
 export function validateAnchor(value: unknown): string | null {

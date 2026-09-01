@@ -58,6 +58,30 @@ describe("LoginForm capacity errors", () => {
     );
   });
 
+  it("keeps the onboarding website returnTo in the Google callback", async () => {
+    mocks.socialSignIn.mockResolvedValue({});
+    const user = userEvent.setup();
+    const returnTo = "/onboarding?website=raw%26value%3D1";
+    render(
+      <LoginForm
+        dataResidencyMessage=""
+        enabledProviders={{ github: false, google: true }}
+        legalConsentLinks={null}
+        returnTo={returnTo}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: /continue with google/i }));
+
+    await waitFor(() =>
+      expect(mocks.socialSignIn).toHaveBeenCalledWith({
+        callbackURL: returnTo,
+        errorCallbackURL: "/login?next=%2Fonboarding%3Fwebsite%3Draw%2526value%253D1",
+        provider: "google",
+      }),
+    );
+  });
+
   it("maps a typed email rejection to the just-missed panel without navigation", async () => {
     mocks.requestLoginCode.mockResolvedValue({ code: "capacity_exhausted", ok: false });
     const user = userEvent.setup();
@@ -124,6 +148,34 @@ describe("LoginForm capacity errors", () => {
         response,
         window.location.origin,
         `${returnTo}&section=review-access`,
+      ),
+    );
+  });
+
+  it("passes the onboarding website returnTo into the email OTP redirect decision", async () => {
+    mocks.requestLoginCode.mockResolvedValue({ ok: true });
+    const response = { data: { twoFactorRedirect: true }, error: null };
+    mocks.emailOtpSignIn.mockResolvedValue(response);
+    const user = userEvent.setup();
+    const returnTo = "/onboarding?website=raw%26value%3D1";
+    render(<LoginForm dataResidencyMessage="" legalConsentLinks={null} returnTo={returnTo} />);
+
+    await user.type(screen.getByLabelText("Email"), "person@example.com");
+    await user.click(screen.getByRole("button", { name: /send login code/i }));
+    await screen.findByLabelText("Code");
+    for (const [index, digit] of [..."123456"].entries()) {
+      await user.type(
+        screen.getByLabelText(index === 0 ? "Code" : `Code digit ${index + 1}`),
+        digit,
+      );
+    }
+    await user.click(screen.getByRole("button", { name: "Verify and continue" }));
+
+    await waitFor(() =>
+      expect(mocks.signInRedirectUrl).toHaveBeenCalledWith(
+        response,
+        window.location.origin,
+        returnTo,
       ),
     );
   });

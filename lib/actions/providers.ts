@@ -1,5 +1,6 @@
 "use server";
 
+import { updateSearchSyncSettings } from "@/lib/actions/presence-settings";
 import {
   updateProviderConnectionRate,
   updateProviderCostConnection,
@@ -15,11 +16,13 @@ import { testProviderConnection } from "@/lib/api/provider-test-service";
 import {
   cancelPendingGoogleOAuth,
   completePendingGooglePropertySelection,
+  getPendingGoogleOAuthProvider,
 } from "@/lib/providers/analytics/google-oauth-pending";
 import {
   loadStoredGoogleProperties as loadStoredGooglePropertiesService,
   saveStoredGoogleProperty as saveStoredGooglePropertyService,
 } from "@/lib/providers/analytics/google-stored-property";
+import { projectSearchSyncSchema } from "@/lib/schemas/project";
 import {
   providerConnectionRefSchema,
   testProviderConnectionSchema,
@@ -35,10 +38,26 @@ import {
   revalidateProviderViews,
 } from "./_shared";
 
-const googlePropertySelectionSchema = z.object({
-  projectId: z.string().trim().min(1).max(120),
+const googlePropertySelectionFields = {
+  projectId: projectSearchSyncSchema.shape.projectId,
   property: z.string().trim().min(1).max(300),
-});
+  pace: projectSearchSyncSchema.shape.pace.optional(),
+  retentionMonths: projectSearchSyncSchema.shape.retentionMonths.optional(),
+};
+const pairedSearchSyncSettings = (
+  data: { pace?: string; retentionMonths?: number },
+  ctx: z.RefinementCtx,
+) => {
+  if ((data.pace === undefined) === (data.retentionMonths === undefined)) return;
+  ctx.addIssue({
+    code: "custom",
+    message: "Select both Search Console import depth and speed.",
+    path: [data.pace === undefined ? "pace" : "retentionMonths"],
+  });
+};
+const googlePropertySelectionSchema = z
+  .object(googlePropertySelectionFields)
+  .superRefine(pairedSearchSyncSettings);
 const cancelGooglePropertySelectionSchema = z.object({
   projectId: z.string().trim().min(1).max(120),
 });
@@ -46,16 +65,34 @@ const storedGooglePropertyLoadSchema = z.object({
   projectId: z.string().trim().min(1).max(120),
   provider: z.enum(["gsc", "ga4"]),
 });
-const storedGooglePropertySaveSchema = storedGooglePropertyLoadSchema.extend({
-  property: z.string().trim().min(1).max(300),
-});
+const storedGooglePropertySaveSchema = z
+  .object({ ...googlePropertySelectionFields, provider: z.enum(["gsc", "ga4"]) })
+  .superRefine(pairedSearchSyncSettings);
 
 const providerMutationSuccess = { ok: true } as const;
 
+async function persistSelectedSearchSyncSettings(data: {
+  pace?: "gentle" | "normal";
+  projectId: string;
+  retentionMonths?: 3 | 6 | 12 | 16;
+}) {
+  if (data.pace === undefined || data.retentionMonths === undefined) return;
+  await updateSearchSyncSettings({
+    pace: data.pace,
+    projectId: data.projectId,
+    retentionMonths: data.retentionMonths,
+  });
+}
+
 export async function completeGooglePropertySelection(input: unknown) {
-  return completePendingGooglePropertySelection(
-    parseActionInput(googlePropertySelectionSchema, input),
-  );
+  const data = parseActionInput(googlePropertySelectionSchema, input);
+  if ((await getPendingGoogleOAuthProvider(data.projectId)) === "gsc") {
+    await persistSelectedSearchSyncSettings(data);
+  }
+  return completePendingGooglePropertySelection({
+    projectId: data.projectId,
+    property: data.property,
+  });
 }
 
 export async function cancelGooglePropertySelection(input: unknown) {
@@ -91,6 +128,7 @@ export async function loadStoredGoogleProperties(input: unknown) {
 export async function saveStoredGoogleProperty(input: unknown) {
   const data = parseActionInput(storedGooglePropertySaveSchema, input);
   const scope = await providerScope(data.projectId);
+  if (data.provider === "gsc") await persistSelectedSearchSyncSettings(data);
   const result = await saveStoredGooglePropertyService({
     actorId: scope.actorId,
     projectId: scope.projectId,

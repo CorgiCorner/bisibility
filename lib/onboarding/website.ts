@@ -1,10 +1,12 @@
 import { z } from "zod";
 
+export const MAX_ONBOARDING_WEBSITE_LENGTH = 2_048;
+
 const websiteValueSchema = z
   .string()
   .trim()
   .min(1, "Enter your website.")
-  .max(2_048, "Enter a shorter website URL.")
+  .max(MAX_ONBOARDING_WEBSITE_LENGTH, "Enter a shorter website URL.")
   .refine((value) => {
     try {
       const candidate = /^[a-z][a-z\d+.-]*:\/\//i.test(value) ? value : `https://${value}`;

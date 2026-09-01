@@ -4,7 +4,7 @@ import { ActionNotice } from "@/components/integrations/ConnectDrawerControls";
 import { ConnectDrawerOauthSelection } from "@/components/integrations/ConnectDrawerOauthSelection";
 import type { Notice } from "@/components/integrations/ConnectDrawerSchema";
 import { providerActionErrorNotice } from "@/components/integrations/ConnectDrawerSchema";
-import { SearchInsightsOauthSelection } from "@/components/search-insights/SearchInsightsOauthSelection";
+import { ConnectedGoogleAccountFooter } from "@/components/integrations/ConnectedGoogleAccountFooter";
 import { Button, ConfirmModal, ModuleMark } from "@/components/ui";
 import type {
   cancelGooglePropertySelection,
@@ -24,6 +24,7 @@ import { SELECT_FAILED } from "./search-insights-copy";
 export type CancelGooglePropertySelectionAction = typeof cancelGooglePropertySelection;
 export type CompleteGooglePropertySelectionAction = typeof completeGooglePropertySelection;
 export type DisconnectGoogleSearchConsoleAction = typeof disconnectGoogleSearchConsole;
+type SearchSyncSelection = Pick<SearchSyncPreflightPlan, "pace" | "retentionMonths">;
 
 export type SearchInsightsOauthReturnProps = {
   cancelAction: CancelGooglePropertySelectionAction;
@@ -87,11 +88,15 @@ export function SearchInsightsOauthReturn({
     }
   }
 
-  async function select() {
+  async function select(selection?: SearchSyncSelection) {
     setPending(true);
     setPropertyError(null);
     try {
-      await completeAction({ projectId, property });
+      await completeAction({
+        ...(isGa4 ? {} : selection),
+        projectId,
+        property,
+      });
       router.refresh();
     } catch (error) {
       setPropertyError(actionErrorMessage(error, SELECT_FAILED));
@@ -171,19 +176,30 @@ export function SearchInsightsOauthReturn({
           setup={setup}
         />
       ) : syncPlan ? (
-        <SearchInsightsOauthSelection
-          accountEmail={setup.accountEmail}
-          onDisconnect={() => {
-            setDisconnectFailure(null);
-            setDisconnectOpen(true);
-          }}
+        <ConnectDrawerOauthSelection
+          accountFooter={
+            <ConnectedGoogleAccountFooter
+              accountEmail={setup.accountEmail}
+              layout="standalone"
+              onDisconnect={() => {
+                setDisconnectFailure(null);
+                setDisconnectOpen(true);
+              }}
+              switchAccountHref={switchAccountHref}
+            />
+          }
+          allowManualEntry={false}
+          isGa4={false}
+          manualEntry={false}
+          onManualEntryChange={() => undefined}
           onPropertyChange={setProperty}
           onPropertyErrorChange={setPropertyError}
-          onSelect={() => void select()}
+          onSelect={(selection) => void select(selection)}
           pending={pending}
           property={property}
+          propertyError={propertyError}
+          readOnly={false}
           setup={setup}
-          switchAccountHref={switchAccountHref}
           syncPlan={syncPlan}
         />
       ) : null}

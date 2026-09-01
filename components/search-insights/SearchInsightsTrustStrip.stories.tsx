@@ -1,7 +1,11 @@
 import { KNOWN_DATA_INCIDENTS } from "@/lib/search-insights/constants";
 import type { Meta, StoryObj } from "@storybook/react";
 import { SearchInsightsTrustStrip } from "./SearchInsightsTrustStrip";
-import { storyCoverage, storyImportState } from "./search-insights-story-fixtures";
+import {
+  storyCoverage,
+  storyImportFacts,
+  storyImportState,
+} from "./search-insights-story-fixtures";
 
 const meta = {
   component: SearchInsightsTrustStrip,
@@ -33,7 +37,22 @@ const common = {
   localViewReady: true,
   pauseAction,
   projectId: "prj_story",
-  workerStatus: "ok" as const,
+  statusFacts: {
+    connectionStatus: "connected" as const,
+    observability: storyImportFacts,
+    runtime: {
+      workerStatus: {
+        status: "ok" as const,
+        temporalIdentityComparison: { detail: "identities match", status: "match" as const },
+      },
+      workflowStatus: "running" as const,
+    },
+    state: "running" as const,
+  },
+  workerStatus: {
+    status: "ok" as const,
+    temporalIdentityComparison: { detail: "identities match", status: "match" as const },
+  },
 };
 
 export const ImportRunning: Story = { args: common };
@@ -64,7 +83,15 @@ export const StartupPlanned: Story = {
   args: {
     ...common,
     providerAvailableThrough: null,
-    importState: { ...storyImportState, completedDays: 0, lastActivityAt: null },
+    importState: {
+      ...storyImportState,
+      facts: {
+        ...storyImportFacts,
+        consecutiveDays: 0,
+        lastActivityAt: null,
+        qualifyingDays: 0,
+      },
+    },
   },
 };
 
@@ -76,7 +103,10 @@ export const PartialBackfill: Story = {
   args: {
     ...common,
     coverage: { calculable: false, capHitDays: 0, clicksShare: 0, impressionsShare: 0 },
-    importState: { ...storyImportState, completedDays: 7, firstViewReady: false },
+    importState: {
+      ...storyImportState,
+      facts: { ...storyImportFacts, consecutiveDays: 5, qualifyingDays: 5 },
+    },
     localViewReady: false,
   },
 };

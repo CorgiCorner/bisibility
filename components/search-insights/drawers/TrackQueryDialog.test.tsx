@@ -163,7 +163,8 @@ describe("TrackQueryDialog", () => {
     await user.click(screen.getByRole("button", { name: "Schedule" }));
     await user.click(screen.getByRole("menuitem", { name: "Weekly" }));
     await user.click(screen.getByRole("button", { name: "Search depth" }));
-    await user.click(screen.getByRole("menuitem", { name: "Top 20" }));
+    await user.click(screen.getByRole("menuitem", { name: "Top 10" }));
+    expect(screen.getByText(/Top 10 checks do not update Visibility/)).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Start tracking weekly" }));
 
     expect(onConfirm).toHaveBeenCalledTimes(1);
@@ -171,7 +172,7 @@ describe("TrackQueryDialog", () => {
       device: "mobile",
       locationKey: "es-en",
       schedule: "weekly",
-      serpDepth: 20,
+      serpDepth: 10,
     });
   });
 

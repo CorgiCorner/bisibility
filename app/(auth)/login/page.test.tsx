@@ -114,42 +114,56 @@ describe("login page runtime rendering", () => {
     expect(dynamic).toBe("force-dynamic");
   });
 
-  it("uses the dark code-surface hairline for the loaded terminal chrome", async () => {
+  it("removes the Compose demonstration from the left column", async () => {
     const { html } = await renderLoginPage({});
-    const terminalStart = html.indexOf('class="mt-[26px]');
-    const terminalEnd = html.indexOf("</pre>", terminalStart);
-    const terminalHtml = html.slice(terminalStart, terminalEnd);
 
-    expect(terminalHtml).toContain("border border-code-border");
-    expect(terminalHtml).toContain("border-code-border border-b bg-code-bg");
-    expect(terminalHtml).not.toContain("border border-border");
-    expect(terminalHtml).not.toContain("border-code-faint");
+    expect(html).not.toContain("~/bisibility");
+    expect(html).not.toContain("docker compose");
+    expect(html).not.toContain("scheduled worker");
+    expect(html).not.toContain("supporting services");
   });
 
-  it("summarizes Compose progress around the app and scheduled worker", async () => {
+  it("describes key ownership instead of claiming the app is self-hosted", async () => {
     const { html } = await renderLoginPage({});
 
-    expect(html).toContain("Open-source SEO platform");
-    expect(html).toContain("docker compose -f compose.yaml -f");
-    expect(html).toContain("compose.worker.yaml -f compose.temporal.yaml up -d");
-    expect(html).toContain("app <span");
-    expect(html).toContain("scheduled worker <span");
-    expect(html).toContain("+ 6 supporting services");
-    for (const service of [
-      "postgres",
-      "redis",
-      "db-migrations",
-      "temporal-postgres",
-      "temporal",
-      "temporal-ui",
-      "worker",
-    ]) {
-      expect(html).not.toContain(`bisibility-${service} <`);
-    }
-    expect(html).not.toContain("dashboard ready");
-    expect(html).not.toContain("bisibility-private");
-    expect(html).not.toContain("db-migrations-1");
-  }, 15_000);
+    expect(html).toContain("Bring your own keys");
+    expect(html).not.toContain("Self-hosted");
+  });
+
+  it("renders a safe remembered-website cue for an onboarding destination", async () => {
+    const website = "https://www.Example.com/path?<script>alert(1)</script>";
+    const next = `/onboarding?${new URLSearchParams({ website })}`;
+    const { html } = await renderLoginPage({ NEXT_PUBLIC_DOMAIN_ICONS: undefined }, { next });
+
+    expect(html).toContain("Setting up tracking for");
+    expect(html).toContain("example.com");
+    expect(html).toContain("remembered-website-favicon-probe");
+    expect(html).toContain("domain=www.example.com&amp;sz=32");
+    expect(html).not.toContain("<script>");
+    expect(html).not.toContain("alert(1)");
+  });
+
+  it.each([
+    { name: "an absent destination", searchParams: {} },
+    { name: "an onboarding destination without a website", searchParams: { next: "/onboarding" } },
+    {
+      name: "an onboarding destination with an empty website",
+      searchParams: { next: "/onboarding?website=" },
+    },
+    {
+      name: "another local destination",
+      searchParams: { next: "/app?website=example.com" },
+    },
+    {
+      name: "an off-origin destination",
+      searchParams: { next: "https://evil.example/onboarding?website=example.com" },
+    },
+  ])("omits the remembered-website cue for $name", async ({ searchParams }) => {
+    const { html } = await renderLoginPage({}, searchParams);
+
+    expect(html).not.toContain("Setting up tracking for");
+    expect(html).not.toContain("remembered-website-favicon-probe");
+  });
 
   it("leaves the sign-in surface without a theme control", async () => {
     const { html } = await renderLoginPage({});

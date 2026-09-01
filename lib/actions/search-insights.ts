@@ -10,6 +10,7 @@ import { asProjectRef, searchConsolePath } from "@/lib/routing/app-path";
 import { dateKey } from "@/lib/search-insights/dates";
 import { searchInsightsPropertyKey } from "@/lib/search-insights/keys";
 import type { SearchInsightsProperty } from "@/lib/search-insights/queries/context";
+import { loadSearchInsightsScope } from "@/lib/search-insights/queries/context";
 import {
   PROPERTY_KIND_LABELS,
   propertyDisplayName,
@@ -39,6 +40,9 @@ const transitionSchema = projectSchema.extend({
 });
 const exportSchema = projectSchema.extend({
   period: z.string().trim().max(8).optional(),
+});
+const importFactsSchema = projectSchema.extend({
+  property: z.string().trim().min(1).max(300).optional(),
 });
 
 export type SearchInsightsPropertyOption = SearchInsightsProperty & {
@@ -146,6 +150,13 @@ export async function syncSearchInsightsNow(input: unknown) {
   return result;
 }
 
+/** Read-authorized transport for modal consumers; selector work stays in the query layer. */
+export async function loadSearchInsightsImportFacts(input: unknown) {
+  const data = parseActionInput(importFactsSchema, input);
+  const scope = await loadSearchInsightsScope(data.projectId, { property: data.property });
+  return scope.importFacts;
+}
+
 export type SearchImportActionResult = { ok: true; state: string } | { message: string; ok: false };
 
 const transitionFailure = (transition: "pause" | "resume" | "retry") =>
@@ -196,6 +207,7 @@ export async function exportSearchInsightsCsv(input: unknown): Promise<SearchIns
 
 export type ExportSearchInsightsCsvAction = typeof exportSearchInsightsCsv;
 export type LoadSearchInsightsPropertiesAction = typeof loadSearchInsightsProperties;
+export type LoadSearchInsightsImportFactsAction = typeof loadSearchInsightsImportFacts;
 export type SelectSearchInsightsPropertyAction = typeof selectSearchInsightsProperty;
 export type SyncSearchInsightsNowAction = typeof syncSearchInsightsNow;
 

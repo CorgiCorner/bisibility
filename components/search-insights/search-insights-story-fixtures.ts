@@ -43,13 +43,30 @@ export const storyProperties = [
   },
 ];
 
-export const storyImportState: SearchInsightsImportState = {
-  completedDays: 28,
-  etaLabel: "about 3 days left (finishes ~Mon)",
-  firstViewReady: true,
+export const storyImportFacts = {
+  consecutiveDays: 118,
+  deepHistoryMonths: { completed: 3, target: 16 },
   lastActivityAt: isoFromFrozenNow({ hours: -7, minutes: -5 }),
+  lastProbeAt: isoFromFrozenNow({ hours: -15, minutes: -40 }),
+  qualifyingDays: 28,
+  readyThrough: {
+    d7: { current: true, previous: true },
+    d28: { current: true, previous: true },
+    d90: { current: true, previous: false },
+  },
+  stall: {
+    expectedBatchMs: 30 * 60_000,
+    expectedDayMs: 4 * 60_000,
+    nextRequestInMs: 0,
+    silenceMs: 7 * 60 * 60_000,
+    thresholdMs: 45 * 60_000,
+  },
+  targetDays: 28,
+} as const;
+
+export const storyImportState: SearchInsightsImportState = {
+  facts: storyImportFacts,
   plannedRetentionMonths: 16,
-  waiting: false,
   capHitDays: 0,
   cursorDate: "2026-03-14",
   daysDone: 118,

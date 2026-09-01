@@ -18,6 +18,7 @@ export type OnboardingWizardProps = {
   initialKeywordCount: number;
   initialKeywordText?: string | null;
   initialProject: OnboardingProject | null;
+  initialWebsite?: string;
   initialSerpConnections?: ConnectedProviderMap;
   initialStep: OnboardingStepNumber;
   monthlyCapCents: number;

@@ -1,4 +1,5 @@
 import { serpDeviceValues, serpMarketOptions } from "@/lib/serp/markets";
+import { VISIBILITY_DESCRIPTION } from "@/lib/visibility/definition";
 import { publicIdSchema } from "./openapi-public-id";
 import {
   jitterMinutesContractSchema,
@@ -142,7 +143,7 @@ export const projectSchemas = {
       top_100_count: { minimum: 0, type: ["integer", "null"] },
       tracked_keyword_count: { minimum: 0, type: "integer" },
       visibility: {
-        description: "Volume-weighted visibility percentage.",
+        description: VISIBILITY_DESCRIPTION,
         maximum: 100,
         minimum: 0,
         type: ["number", "null"],

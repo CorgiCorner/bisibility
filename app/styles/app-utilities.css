@@ -8,12 +8,6 @@ html:not([data-authed="true"]) .bv-authed-only {
   display: none;
 }
 
-.bv-announcement-banner {
-  background-color: color-mix(in srgb, var(--fg) 90%, var(--bg));
-  border-color: color-mix(in srgb, var(--fg) 90%, var(--bg));
-  color: color-mix(in srgb, var(--bg-elev) 93%, var(--fg));
-}
-
 @media (prefers-reduced-motion: reduce) {
   .bv-ping,
   .bv-countup,
@@ -34,6 +28,26 @@ html:not([data-authed="true"]) .bv-authed-only {
 
   .bv-hero-audience-phrase:first-child {
     opacity: 1;
+  }
+
+  .bv-weekly-stats-marquee {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .bv-weekly-stats-marquee > span:first-child {
+    justify-content: center;
+    padding-inline: 20px;
+    width: 100%;
+  }
+
+  .bv-weekly-stats-marquee > span[aria-hidden="true"] {
+    display: none;
+  }
+
+  .bv-weekly-stats-marquee .bv-weekly-stats-copy {
+    text-align: center;
+    white-space: normal;
   }
 }
 

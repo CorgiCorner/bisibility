@@ -24,10 +24,13 @@ import {
 } from "./ConnectDrawerOauthSummary";
 import { type Notice, providerActionErrorNotice } from "./ConnectDrawerSchema";
 
+type SearchSyncSelection = Pick<SearchSyncPreflightPlan, "pace" | "retentionMonths">;
 export type ConnectDrawerOauthProps = {
   completePropertySelection?: (input: {
+    pace?: SearchSyncSelection["pace"];
     projectId: string;
     property: string;
+    retentionMonths?: SearchSyncSelection["retentionMonths"];
   }) => Promise<{ property: string }>;
   disconnectProvider?: ProviderActionHandlers["disconnectProvider"];
   loadStoredProperties?: (input: {
@@ -39,9 +42,11 @@ export type ConnectDrawerOauthProps = {
   projectRef?: ProjectRef;
   provider: IntegrationProviderData;
   saveStoredProperty?: (input: {
+    pace?: SearchSyncSelection["pace"];
     projectId: string;
     property: string;
     provider: "ga4" | "gsc";
+    retentionMonths?: SearchSyncSelection["retentionMonths"];
   }) => Promise<GooglePropertySaveResult>;
   scopes: readonly string[];
   syncPlan: SearchSyncPreflightPlan | undefined;
@@ -145,7 +150,7 @@ export function ConnectDrawerOauth({
     }
   }
 
-  async function selectProperty() {
+  async function selectProperty(selection?: SearchSyncSelection) {
     if (!projectId || readOnly || !selectionSource) return;
     let selectedValue = property;
     if (isGa4) {
@@ -162,15 +167,21 @@ export function ConnectDrawerOauth({
     setError(null);
     setPropertyError(null);
     setPending(true);
+    const gscSelection = isGa4 ? {} : selection;
     try {
       const result =
         selectionSource === "stored"
           ? await saveStoredProperty?.({
+              ...gscSelection,
               projectId,
               property: selectedValue,
               provider: oauthProviderId,
             })
-          : await completePropertySelection?.({ projectId, property: selectedValue });
+          : await completePropertySelection?.({
+              ...gscSelection,
+              projectId,
+              property: selectedValue,
+            });
       if (!result) throw new Error("Property selection is unavailable.");
       if ("status" in result && result.status === "reauth_required") {
         setSetup({
@@ -243,7 +254,7 @@ export function ConnectDrawerOauth({
             }}
             onPropertyChange={setProperty}
             onPropertyErrorChange={setPropertyError}
-            onSelect={() => void selectProperty()}
+            onSelect={(selection) => void selectProperty(selection)}
             pending={pending}
             property={property}
             propertyError={propertyError}

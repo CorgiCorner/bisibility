@@ -1,9 +1,11 @@
 import type { SearchInsightsImportState } from "@/lib/search-insights/queries/context";
+import type { ImportObservabilityFacts } from "@/lib/search-insights/queries/import-observability";
 import { dateFromFrozenNow, isoFromFrozenNow } from "@/tests/clock";
 import { describe, expect, it } from "vitest";
 import {
   capHitClause,
-  freshnessNote,
+  freshnessPresentation,
+  importObservabilityProgress,
   importProgress,
   importRunningLine,
   importStartupPresentation,
@@ -12,12 +14,7 @@ import {
 
 function importState(overrides: Partial<SearchInsightsImportState> = {}) {
   return {
-    completedDays: 28,
-    etaLabel: "about 3 days left (finishes ~Mon)",
-    firstViewReady: true,
-    lastActivityAt: isoFromFrozenNow({ hours: -7, minutes: -5 }),
     plannedRetentionMonths: 16,
-    waiting: false,
     capHitDays: 0,
     cursorDate: "2026-03-14",
     daysDone: 274,
@@ -32,26 +29,45 @@ function importState(overrides: Partial<SearchInsightsImportState> = {}) {
     ...overrides,
   } satisfies SearchInsightsImportState;
 }
-
+const observabilityFacts = {
+  consecutiveDays: 93,
+  deepHistoryMonths: { completed: 3, target: 16 },
+  lastActivityAt: isoFromFrozenNow({ hours: -7, minutes: -5 }),
+  lastProbeAt: isoFromFrozenNow({ days: -1, minutes: -5 }),
+  qualifyingDays: 7,
+  readyThrough: {
+    d7: { current: true, previous: true },
+    d28: { current: false, previous: false },
+    d90: { current: false, previous: false },
+  },
+  stall: {
+    expectedBatchMs: 1,
+    expectedDayMs: 1,
+    nextRequestInMs: 0,
+    silenceMs: 0,
+    thresholdMs: 1,
+  },
+  targetDays: 10,
+} satisfies ImportObservabilityFacts;
 describe("importProgress", () => {
   it("reads the sixteen months as months, because that is the promise being kept", () => {
-    expect(importProgress(importState())).toEqual({
-      completedDays: 28,
+    const row = importState();
+    expect(importProgress(row, observabilityFacts)).toEqual({
+      consecutiveDays: 93,
       daysTotal: 488,
       earliestTargetDate: "2025-03-14",
-      etaLabel: "about 3 days left (finishes ~Mon)",
       firstDataDate: null,
-      lastActivityAt: isoFromFrozenNow({ hours: -7, minutes: -5 }),
-      monthsSaved: 1,
+      lastActivityAt: observabilityFacts.lastActivityAt,
+      monthsSaved: 3,
       newestFinalizedDate: "2026-07-08",
-      percent: 6,
+      percent: 19,
       state: "running",
     });
-    expect(importRunningLine(importProgress(importState()), dateFromFrozenNow({ hours: -7 }))).toBe(
-      "Importing your Google history · 28 of ~488 days · last activity 5m ago",
-    );
+    expect(importProgress(row).lastActivityAt).toBeNull();
+    expect(
+      importRunningLine(importProgress(row, observabilityFacts), dateFromFrozenNow({ hours: -7 })),
+    ).toBe("Importing your Google history · 93 of ~488 days · last activity 5m ago");
   });
-
   it.each([
     ["queued", "running"],
     ["running", "running"],
@@ -61,13 +77,11 @@ describe("importProgress", () => {
   ])("shows %s as %s, so a limitation never reads as a failure", (state, expected) => {
     expect(importProgress(importState({ state })).state).toBe(expected);
   });
-
   it("shows nothing at all before an import row exists", () => {
     expect(importProgress(null)).toEqual({
-      completedDays: 0,
+      consecutiveDays: 0,
       daysTotal: 0,
       earliestTargetDate: null,
-      etaLabel: null,
       firstDataDate: null,
       lastActivityAt: null,
       monthsSaved: 0,
@@ -76,34 +90,31 @@ describe("importProgress", () => {
       state: "none",
     });
   });
-
   it("never reports progress the durable plan cannot hold", () => {
-    const ahead = importProgress(importState({ completedDays: 600, daysDone: 1, daysTotal: 488 }));
-
+    const ahead = importProgress(importState(), {
+      ...observabilityFacts,
+      deepHistoryMonths: { completed: 16, target: 16 },
+    });
     expect(ahead.percent).toBe(100);
     expect(ahead.monthsSaved).toBe(16);
     expect(
-      importProgress(importState({ completedDays: 5, daysDone: 600, daysTotal: 0 })).percent,
+      importProgress(importState({ daysTotal: 0 }), {
+        ...observabilityFacts,
+        deepHistoryMonths: { completed: 0, target: 0 },
+      }).percent,
     ).toBe(0);
   });
-
   it.each([3, 6, 12, 16])("scales months saved against the frozen %i-month plan", (months) => {
     expect(
-      importProgress(
-        importState({
-          completedDays: 50,
-          daysDone: 1,
-          daysTotal: 100,
-          plannedRetentionMonths: months,
-        }),
-      ).monthsSaved,
+      importProgress(importState({ plannedRetentionMonths: months }), {
+        ...observabilityFacts,
+        deepHistoryMonths: { completed: Math.round(months / 2), target: months },
+      }).monthsSaved,
     ).toBe(Math.round(months / 2));
   });
 });
-
 describe("importStartupPresentation", () => {
   const now = dateFromFrozenNow({ hours: -7 });
-
   it.each([null, importState({ daysTotal: 0 })])(
     "binds an absent or uncomputed plan to phase A",
     (row) => {
@@ -119,15 +130,7 @@ describe("importStartupPresentation", () => {
   );
 
   it("binds a truthful plan without activity to phase B", () => {
-    const progress = importProgress(
-      importState({
-        completedDays: 0,
-        daysTotal: 488,
-        etaLabel: "about 3 days left",
-        lastActivityAt: null,
-      }),
-    );
-
+    const progress = importProgress(importState({ daysTotal: 488 }));
     expect(importStartupPresentation(progress, now)).toEqual({
       activity: null,
       eta: null,
@@ -139,10 +142,12 @@ describe("importStartupPresentation", () => {
   });
 
   it("binds activity to phase C with separately gated segments", () => {
-    expect(importStartupPresentation(importProgress(importState()), now)).toEqual({
+    expect(
+      importStartupPresentation(importProgress(importState(), observabilityFacts), now),
+    ).toEqual({
       activity: "last activity 5m ago",
-      eta: "about 3 days left (finishes ~Mon)",
-      fact: "Importing your Google history · 28 of ~488 days",
+      eta: null,
+      fact: "Importing your Google history · 93 of ~488 days",
       showHeartbeat: true,
       showProgress: true,
       state: "active",
@@ -150,13 +155,7 @@ describe("importStartupPresentation", () => {
   });
 
   it("uses activity as phase C even before the completed-day counter advances", () => {
-    const progress = importProgress(
-      importState({
-        completedDays: 0,
-        etaLabel: null,
-        lastActivityAt: isoFromFrozenNow({ hours: -7, minutes: -5 }),
-      }),
-    );
+    const progress = importProgress(importState(), { ...observabilityFacts, consecutiveDays: 0 });
 
     expect(importStartupPresentation(progress, now)).toEqual({
       activity: "last activity 5m ago",
@@ -169,9 +168,11 @@ describe("importStartupPresentation", () => {
   });
 
   it("uses completed days as the phase C fallback without inventing activity or ETA", () => {
-    const progress = importProgress(
-      importState({ completedDays: 2, etaLabel: null, lastActivityAt: null }),
-    );
+    const progress = importProgress(importState(), {
+      ...observabilityFacts,
+      consecutiveDays: 2,
+      lastActivityAt: null,
+    });
     const presentation = importStartupPresentation(progress, now);
 
     expect(presentation).toEqual({
@@ -188,12 +189,11 @@ describe("importStartupPresentation", () => {
   it("renders the clamped provider data range for an active import", () => {
     const progress = importProgress(
       importState({
-        completedDays: 2,
         earliestTargetDate: "2026-05-12",
         firstDataDate: "2026-04-01",
-        lastActivityAt: null,
         newestFinalizedDate: "2026-07-07",
       }),
+      { ...observabilityFacts, consecutiveDays: 2, lastActivityAt: null },
     );
 
     expect(importStartupPresentation(progress, now).fact).toBe(
@@ -203,9 +203,7 @@ describe("importStartupPresentation", () => {
 
   it("uses the dedicated waiting sentence without progress or promises", () => {
     const presentation = importStartupPresentation(
-      importProgress(
-        importState({ completedDays: 0, daysTotal: 0, state: "waiting_for_first_data" }),
-      ),
+      importProgress(importState({ daysTotal: 0, state: "waiting_for_first_data" })),
       now,
     );
 
@@ -235,15 +233,34 @@ describe("progressWidthClass", () => {
   });
 });
 
-describe("freshnessNote", () => {
-  it("states the probe in the one zone the whole strip speaks", () => {
-    expect(freshnessNote("2026-08-28T18:17:00.000Z")).toBe(
-      "Fresh data through Aug 28, 11:17 Pacific. Google may still adjust these numbers before they finalize.",
-    );
+describe("importObservabilityProgress", () => {
+  it("keeps the readiness counter, deep history, and freshness in one selector-backed model", () => {
+    expect(importObservabilityProgress(observabilityFacts, dateFromFrozenNow())).toEqual({
+      deepHistory: "3 of 16 months",
+      freshness: {
+        label: "checked 1d ago",
+        tooltip:
+          "Last checked Jul 9, 15:55 Pacific. Google may adjust recent data until it finalizes.",
+      },
+      percent: 70,
+      qualifyingCounter: "7 of 10 finalized days",
+    });
   });
 
-  it("says a probe has not come back rather than inventing a timestamp", () => {
-    expect(freshnessNote(null)).toBe("Waiting for the first data from Google.");
+  it("changes deep-history progress when the selector target changes", () => {
+    expect(
+      importObservabilityProgress(
+        { ...observabilityFacts, deepHistoryMonths: { completed: 3, target: 12 } },
+        dateFromFrozenNow(),
+      )?.deepHistory,
+    ).toBe("3 of 12 months");
+  });
+
+  it("keeps visible freshness compact and preserves probe detail in the tooltip", () => {
+    expect(freshnessPresentation(null)).toEqual({
+      label: "Waiting for the first data from Google.",
+      tooltip: "Finalized days appear here once the first sync lands.",
+    });
   });
 });
 

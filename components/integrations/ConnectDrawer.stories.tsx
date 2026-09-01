@@ -6,7 +6,7 @@ const meta = {
   title: "Integrations/ConnectDrawer",
   component: ConnectDrawer,
   args: { searchSyncPlan: { daysTotal: 93, pace: "gentle", retentionMonths: 3 } },
-  parameters: { layout: "fullscreen" },
+  parameters: { layout: "fullscreen", nextjs: { appDirectory: true } },
 } satisfies Meta<typeof ConnectDrawer>;
 
 export default meta;

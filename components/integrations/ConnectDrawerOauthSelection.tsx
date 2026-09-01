@@ -1,35 +1,53 @@
 "use client";
 
-import { Button, MenuSelect, type MenuSelectOption, PillBadge } from "@/components/ui";
+import { Button, FieldLabel, MenuSelect, type MenuSelectOption, PillBadge } from "@/components/ui";
+import { zodResolver } from "@/lib/forms/zod-resolver";
 import {
   googlePropertyDisplayName,
   googlePropertyMatchesDomain,
   groupGoogleProperties,
 } from "@/lib/integrations/google-property-grouping";
 import type { GoogleOAuthSetup, GooglePropertyOption } from "@/lib/integrations/types";
+import { projectSearchSyncSchema } from "@/lib/schemas/project";
+import type { SearchSyncPreflightPlan } from "@/lib/search-insights/sync/plan";
 import {
-  type SearchSyncPreflightPlan,
-  searchSyncPreflightCopy,
-} from "@/lib/search-insights/sync/plan";
+  SEARCH_SYNC_PACE_OPTIONS,
+  SEARCH_SYNC_RETENTION_OPTIONS,
+  searchSyncPaceLabel,
+  searchSyncPreflightEstimate,
+  searchSyncRetentionLabel,
+} from "@/lib/settings/search-sync-config";
 import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
+import { useForm } from "react-hook-form";
 import { permissionLabel } from "./ConnectDrawerScopes";
 import { Ga4PropertyManualEntry } from "./Ga4PropertyManualEntry";
 
+type SearchSyncSelection = Pick<SearchSyncPreflightPlan, "pace" | "retentionMonths">;
+const searchSyncSelectionSchema = projectSearchSyncSchema.pick({
+  pace: true,
+  retentionMonths: true,
+});
+const depthOptions = SEARCH_SYNC_RETENTION_OPTIONS.map((value) => ({
+  label: searchSyncRetentionLabel(value),
+  value: String(value),
+}));
+const paceOptions = SEARCH_SYNC_PACE_OPTIONS.map((value) => ({
+  label: searchSyncPaceLabel(value),
+  value,
+}));
+const planFields = [
+  ["retentionMonths", "Import depth", depthOptions],
+  ["pace", "Import speed", paceOptions],
+] as const;
 function propertyLabel(option: GoogleOAuthSetup["properties"][number]) {
   return option.kind === "ga4" ? option.label : googlePropertyDisplayName(option.value);
 }
-
 function propertyBadge(kind: GoogleOAuthSetup["properties"][number]["kind"]) {
   if (kind === "domain") return "DOMAIN";
   if (kind === "url-prefix") return "URL PREFIX";
   return "GA4";
 }
-
-function gscPropertyKindLabel(kind: "domain" | "url-prefix") {
-  return kind === "domain" ? "Domain property" : "URL prefix property";
-}
-
 function propertySelectionLabel(option: MenuSelectOption | undefined): ReactNode {
   if (!option) return null;
   const property = option as GoogleOAuthSetup["properties"][number];
@@ -42,7 +60,6 @@ function propertySelectionLabel(option: MenuSelectOption | undefined): ReactNode
     </span>
   );
 }
-
 type ConnectDrawerOauthSelectionBaseProps = {
   accountFooter?: ReactNode;
   allowManualEntry: boolean;
@@ -52,7 +69,7 @@ type ConnectDrawerOauthSelectionBaseProps = {
   onManualEntryChange: (value: boolean) => void;
   onPropertyChange: (value: string) => void;
   onPropertyErrorChange: (value: string | null) => void;
-  onSelect: () => void;
+  onSelect: (selection?: SearchSyncSelection) => void;
   pending: boolean;
   property: string;
   propertyError: string | null;
@@ -83,6 +100,13 @@ export function ConnectDrawerOauthSelection({
   setup,
   syncPlan,
 }: Readonly<ConnectDrawerOauthSelectionProps>) {
+  const { pace = "normal", retentionMonths = 3 } = syncPlan ?? {};
+  const form = useForm<SearchSyncSelection>({
+    defaultValues: { pace, retentionMonths },
+    resolver: zodResolver(searchSyncSelectionSchema),
+  });
+  const selectedPlan = form.watch();
+  const estimate = isGa4 ? null : searchSyncPreflightEstimate(selectedPlan);
   const propertyOptions = setup.properties;
   const selectedProperty = propertyOptions.find((option) => option.value === property);
   const grouped = isGa4
@@ -93,19 +117,17 @@ export function ConnectDrawerOauthSelection({
         options: propertyOptions,
         projectDomain: setup.projectDomain ?? "",
       });
-  function menuOption(
-    option: GooglePropertyOption,
-    secondary?: string,
-    disabled = false,
-  ): MenuSelectOption {
-    return {
-      ...option,
-      disabled,
-      label: propertyLabel(option),
-      secondary,
-      trailing: <PillBadge size="xs">{propertyBadge(option.kind)}</PillBadge>,
-    };
+  function select() {
+    if (isGa4) return onSelect();
+    void form.handleSubmit(onSelect)();
   }
+  const menuOption = (option: GooglePropertyOption, secondary?: string, disabled = false) => ({
+    ...option,
+    disabled,
+    label: propertyLabel(option),
+    secondary,
+    trailing: <PillBadge size="xs">{propertyBadge(option.kind)}</PillBadge>,
+  });
   const groups = grouped
     ? [
         {
@@ -136,6 +158,21 @@ export function ConnectDrawerOauthSelection({
         },
       ]
     : undefined;
+  const ga4ManualEntry =
+    isGa4 && allowManualEntry ? (
+      <Ga4PropertyManualEntry
+        hasOptions={Boolean(propertyOptions.length)}
+        manualEntry={manualEntry}
+        onErrorChange={onPropertyErrorChange}
+        onManualEntryChange={onManualEntryChange}
+        onPropertyChange={onPropertyChange}
+        onSelect={select}
+        pending={pending}
+        property={property}
+        propertyError={propertyError}
+        readOnly={readOnly}
+      />
+    ) : null;
 
   return (
     <div className="flex w-full flex-col gap-3 rounded-control border border-border bg-bg-elev p-3.5">
@@ -146,7 +183,7 @@ export function ConnectDrawerOauthSelection({
         <p className="m-0 mt-1 text-[11.5px] leading-5 text-fg-muted">
           {isGa4
             ? "Choose a property returned by Google Analytics, or enter its numeric ID manually."
-            : `${searchSyncPreflightCopy(syncPlan)} Domain properties cover all subdomains; URL prefixes cover one path.`}
+            : "Domain properties cover all subdomains; URL prefixes cover one path."}
         </p>
       </div>
       {propertyOptions.length > 0 ? (
@@ -166,27 +203,38 @@ export function ConnectDrawerOauthSelection({
               triggerClassName="min-h-[42px] w-full justify-between"
               value={property}
             />
+            {!isGa4 ? (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {planFields.map(([name, label, options]) => (
+                  <div key={name}>
+                    <FieldLabel label={label} />
+                    <MenuSelect
+                      ariaLabel={label}
+                      onChange={(value) =>
+                        form.setValue(
+                          name as keyof SearchSyncSelection,
+                          (name === "retentionMonths" ? Number(value) : value) as never,
+                        )
+                      }
+                      options={options}
+                      triggerClassName="mt-1.5 w-full justify-between"
+                      value={String(selectedPlan[name as keyof SearchSyncSelection])}
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : null}
+            {estimate ? (
+              <p className="m-0 text-[11.5px] leading-5 text-fg-muted">{estimate}</p>
+            ) : null}
             {selectedProperty ? (
               <p className="m-0 mt-1.5 text-[11.5px] leading-5 text-fg-muted">
                 {isGa4
                   ? `Property ID ${selectedProperty.value}`
-                  : `${permissionLabel(selectedProperty.permissionLevel)} · ${gscPropertyKindLabel(selectedProperty.kind as "domain" | "url-prefix")}`}
+                  : `${permissionLabel(selectedProperty.permissionLevel)} · ${selectedProperty.kind === "domain" ? "Domain property" : "URL prefix property"}`}
               </p>
             ) : null}
-            {isGa4 && allowManualEntry ? (
-              <Ga4PropertyManualEntry
-                hasOptions
-                manualEntry={false}
-                onErrorChange={onPropertyErrorChange}
-                onManualEntryChange={onManualEntryChange}
-                onPropertyChange={onPropertyChange}
-                onSelect={onSelect}
-                pending={pending}
-                property={property}
-                propertyError={propertyError}
-                readOnly={readOnly}
-              />
-            ) : null}
+            {ga4ManualEntry}
             <div className="flex w-full flex-wrap items-center justify-end gap-2">
               {onCancel || footerAction ? (
                 <div
@@ -206,7 +254,7 @@ export function ConnectDrawerOauthSelection({
                 disabled={!property || readOnly}
                 loading={pending}
                 loadingLabel="Connecting…"
-                onClick={onSelect}
+                onClick={select}
                 type="button"
                 variant="primary"
               >
@@ -238,20 +286,7 @@ export function ConnectDrawerOauthSelection({
           </span>
         </div>
       )}
-      {isGa4 && allowManualEntry && (manualEntry || !propertyOptions.length) ? (
-        <Ga4PropertyManualEntry
-          hasOptions={Boolean(propertyOptions.length)}
-          manualEntry={manualEntry}
-          onErrorChange={onPropertyErrorChange}
-          onManualEntryChange={onManualEntryChange}
-          onPropertyChange={onPropertyChange}
-          onSelect={onSelect}
-          pending={pending}
-          property={property}
-          propertyError={propertyError}
-          readOnly={readOnly}
-        />
-      ) : null}
+      {!propertyOptions.length || manualEntry ? ga4ManualEntry : null}
       {isGa4 && !propertyOptions.length && (retryAction || footerAction) ? (
         <div className="flex items-center justify-between gap-2">
           <div>{retryAction}</div>

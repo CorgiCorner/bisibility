@@ -8,7 +8,12 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SearchInsightsDrawerContext } from "./drawers/useDrawerHandlers";
 import { SearchInsightsBody } from "./SearchInsightsBody";
-import { storyFirstView, storyImportState, storyQueryRows } from "./search-insights-story-fixtures";
+import {
+  storyFirstView,
+  storyImportFacts,
+  storyImportState,
+  storyQueryRows,
+} from "./search-insights-story-fixtures";
 
 const mocks = vi.hoisted(() => ({ track: vi.fn() }));
 vi.mock("@/lib/analytics/client", () => ({ track: mocks.track }));
@@ -98,7 +103,16 @@ describe("SearchInsightsBody", () => {
 
   it("renders only the import-waiting reason in both empty cards before the first view is ready", () => {
     renderBody({
-      importState: { ...storyImportState, completedDays: 7, firstViewReady: false },
+      importState: {
+        ...storyImportState,
+        facts: {
+          ...storyImportFacts,
+          readyThrough: {
+            ...storyImportFacts.readyThrough,
+            d7: { current: false, previous: false },
+          },
+        },
+      },
       view: view({
         pages: { rows: [], total: 0 },
         queries: { rows: [], total: 0 },
@@ -117,12 +131,12 @@ describe("SearchInsightsBody", () => {
       expect(within(card).queryByRole("button")).not.toBeInTheDocument();
     }
     expect(screen.queryByText(/the two tables never sum to the KPI row/)).not.toBeInTheDocument();
-    expect(screen.queryByText(/7 of 28|7 finalized days/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/7 finalized days/)).not.toBeInTheDocument();
   });
 
   it("explains privacy only in an empty queries card when pages have traffic", () => {
     renderBody({
-      importState: { ...storyImportState, firstViewReady: true },
+      importState: storyImportState,
       view: view({ queries: { rows: [], total: 0 } }),
     });
 
@@ -139,7 +153,7 @@ describe("SearchInsightsBody", () => {
 
   it("uses the no-traffic reason in both empty cards once the window is covered", () => {
     renderBody({
-      importState: { ...storyImportState, firstViewReady: true },
+      importState: storyImportState,
       view: view({
         pages: { rows: [], total: 0 },
         queries: { rows: [], total: 0 },
@@ -200,6 +214,123 @@ describe("SearchInsightsBody", () => {
 
     expect(screen.getByText("Organic sessions (GA4)")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Connect" })).toBeInTheDocument();
+  });
+
+  it("keeps the sessions slot visible while a connected GA4 import catches up", () => {
+    renderBody({
+      view: view({
+        organicSessions: {
+          importState: {
+            ...storyImportState,
+            createdAt: "2026-07-01T00:00:00.000Z",
+            daysDone: 20,
+            daysTotal: 488,
+            finalizedThroughDate: null,
+            lastSyncStartedAt: "2026-07-08T02:00:00.000Z",
+            state: "running",
+            updatedAt: "2026-07-08T04:00:00.000Z",
+          },
+          property: "123456789",
+          status: "connected",
+        },
+        sessionsKpi: null,
+        sessionsReadable: false,
+      }),
+    });
+
+    expect(screen.getByText("Organic sessions")).toBeInTheDocument();
+    expect(screen.getByText("Pending")).toBeInTheDocument();
+    expect(screen.getByText("Running")).toBeInTheDocument();
+    expect(screen.getByText("Ready in ~4 hr")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Connect" })).not.toBeInTheDocument();
+  });
+
+  it("does not infer a GA4 ETA before the import has observed progress", () => {
+    renderBody({
+      view: view({
+        organicSessions: {
+          importState: {
+            ...storyImportState,
+            createdAt: "2026-07-08T02:00:00.000Z",
+            daysDone: 0,
+            daysTotal: 488,
+            finalizedThroughDate: null,
+            state: "running",
+            updatedAt: "2026-07-08T04:00:00.000Z",
+          },
+          property: "123456789",
+          status: "connected",
+        },
+        sessionsKpi: null,
+        sessionsReadable: false,
+      }),
+    });
+
+    expect(screen.getByText("Running")).toBeInTheDocument();
+    expect(screen.queryByText(/^Ready in /)).not.toBeInTheDocument();
+  });
+
+  it("keeps the sessions slot pending when completed GA4 data is one day behind GSC", () => {
+    renderBody({
+      importState: { ...storyImportState, newestFinalizedDate: "2026-07-08" },
+      view: view({
+        organicSessions: {
+          importState: {
+            ...storyImportState,
+            cursorDate: null,
+            finalizedThroughDate: "2026-07-07",
+            state: "completed",
+          },
+          property: "123456789",
+          status: "connected",
+        },
+        sessionsKpi: null,
+        sessionsReadable: false,
+      }),
+    });
+
+    expect(screen.getByText("Organic sessions")).toBeInTheDocument();
+    expect(screen.getByText("Waiting for today's GA4 data")).toBeInTheDocument();
+    expect(screen.getByText("GA4 has not finalized today's data yet.")).toBeInTheDocument();
+  });
+
+  it("describes other completed GA4 coverage gaps without calling them today's data", () => {
+    renderBody({
+      importState: { ...storyImportState, newestFinalizedDate: "2026-07-08" },
+      view: view({
+        organicSessions: {
+          importState: {
+            ...storyImportState,
+            cursorDate: null,
+            finalizedThroughDate: "2026-07-06",
+            state: "completed",
+          },
+          property: "123456789",
+          status: "connected",
+        },
+        sessionsKpi: null,
+        sessionsReadable: false,
+      }),
+    });
+
+    expect(screen.getByText("Complete")).toBeInTheDocument();
+    expect(screen.getByText("GA4 history does not cover this comparison yet.")).toBeInTheDocument();
+    expect(screen.queryByText("Waiting for today's GA4 data")).not.toBeInTheDocument();
+  });
+
+  it("names a connected source that needs reauthentication instead of dropping its KPI slot", () => {
+    renderBody({
+      view: view({
+        organicSessions: { importState: null, property: "123456789", status: "needs_reauth" },
+        sessionsKpi: null,
+        sessionsReadable: false,
+      }),
+    });
+
+    expect(screen.getByText("Organic sessions")).toBeInTheDocument();
+    expect(screen.getByText("Needs reauth")).toBeInTheDocument();
+    expect(screen.getByText("Reconnect GA4 before the import can continue.")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Connect" })).not.toBeInTheDocument();
   });
 
   it("keeps GSC metrics and tables around a localized GA4 setup card", () => {

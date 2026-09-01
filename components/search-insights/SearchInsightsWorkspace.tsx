@@ -58,7 +58,11 @@ export function SearchInsightsWorkspace({
           />
           {context.window ? (
             <>
-              <SearchInsightsPeriodMenu period={context.period} yoy={context.yoy} />
+              <SearchInsightsPeriodMenu
+                importFacts={context.importState?.facts}
+                period={context.period}
+                yoy={context.yoy}
+              />
               <SearchInsightsActions
                 exportAction={exportAction}
                 importState={context.importState}

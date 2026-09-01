@@ -1,9 +1,15 @@
 import { ProjectWriteModeProvider } from "@/components/shell/ProjectWriteModeProvider";
+import { searchSyncPlanSummary } from "@/lib/search-insights/sync/plan";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { ConnectDrawerOauth } from "./ConnectDrawerOauth";
 import { ConnectDrawerOauthSelection } from "./ConnectDrawerOauthSelection";
 import { integrationCategories } from "./integrations-fixtures";
+
+vi.mock("@/lib/search-insights/sync/plan", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/search-insights/sync/plan")>();
+  return { ...actual, searchSyncPlanSummary: vi.fn(actual.searchSyncPlanSummary) };
+});
 
 function readyGsc() {
   const provider = integrationCategories[1].providers[0];
@@ -81,6 +87,66 @@ describe("ConnectDrawerOauth", () => {
     );
 
     expect(screen.getByText(/Importing 3 months takes about 400 requests/)).toBeInTheDocument();
+  });
+
+  it("submits the in-form GSC depth and speed after updating the estimate locally", async () => {
+    const completePropertySelection = vi.fn(async (input) => ({ property: input.property }));
+    const provider = {
+      ...readyGsc(),
+      drawer: {
+        ...readyGsc().drawer,
+        googleOAuth: {
+          properties: [
+            {
+              kind: "domain" as const,
+              label: "example.com (Domain property)",
+              permissionLevel: "siteOwner",
+              value: "sc-domain:example.com",
+            },
+          ],
+          provider: "gsc" as const,
+        },
+      },
+    };
+
+    render(
+      <ConnectDrawerOauth
+        completePropertySelection={completePropertySelection}
+        projectId="prj_1"
+        provider={provider}
+        scopes={["webmasters"]}
+        syncPlan={{ daysTotal: 488, pace: "normal", retentionMonths: 16 }}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Import depth" })).toHaveTextContent("16 months");
+    expect(screen.getByRole("button", { name: "Import speed" })).toHaveTextContent("Standard");
+    vi.mocked(searchSyncPlanSummary).mockClear();
+
+    fireEvent.click(screen.getByRole("button", { name: "Import depth" }));
+    fireEvent.click(await screen.findByRole("menuitem", { name: "6 months" }));
+    fireEvent.click(screen.getByRole("button", { name: "Import speed" }));
+    fireEvent.click(await screen.findByRole("menuitem", { name: "Reduced" }));
+
+    expect(
+      screen.getByText(
+        "Importing 6 months takes about 700 requests to Google. First view in ~1 hr; full history in ~1.5 days at Reduced speed.",
+      ),
+    ).toBeInTheDocument();
+    expect(searchSyncPlanSummary).toHaveBeenLastCalledWith({
+      pace: "gentle",
+      retentionMonths: 6,
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Use selected property" }));
+    await waitFor(() =>
+      expect(completePropertySelection).toHaveBeenCalledWith({
+        pace: "gentle",
+        projectId: "prj_1",
+        property: "sc-domain:example.com",
+        retentionMonths: 6,
+      }),
+    );
   });
 
   it("does not show Search Console request estimates for GA4", () => {
@@ -167,8 +233,10 @@ describe("ConnectDrawerOauth", () => {
 
     await waitFor(() =>
       expect(completePropertySelection).toHaveBeenCalledWith({
+        pace: "gentle",
         projectId: "prj_1",
         property: "sc-domain:example.com",
+        retentionMonths: 3,
       }),
     );
     expect(await screen.findByText("Connected to example.com")).toBeInTheDocument();
@@ -246,9 +314,11 @@ describe("ConnectDrawerOauth", () => {
 
     await waitFor(() =>
       expect(saveStoredProperty).toHaveBeenCalledWith({
+        pace: "gentle",
         projectId: "prj_1",
         property: "sc-domain:example.com",
         provider: "gsc",
+        retentionMonths: 3,
       }),
     );
     expect(screen.getByRole("link", { name: "Reconnect account" })).toHaveAttribute(

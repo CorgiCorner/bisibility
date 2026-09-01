@@ -140,6 +140,22 @@ describe("OnboardingPage", () => {
     expect(mocks.getOnboardingProjectMarketKeys).not.toHaveBeenCalled();
   });
 
+  it("starts a fresh flow and passes the first website through with only the safety cap", async () => {
+    const firstWebsite = `not valid & still raw ${"x".repeat(2_100)}`;
+    const page = await OnboardingPage({
+      searchParams: Promise.resolve({ website: [firstWebsite, "ignored.example"] }),
+    });
+    render(page);
+
+    expect(mocks.requireReadableProject).not.toHaveBeenCalled();
+    expect(mocks.wizard).toHaveBeenCalledWith(
+      expect.objectContaining({
+        initialProject: null,
+        initialWebsite: firstWebsite.slice(0, 2_048),
+      }),
+    );
+  });
+
   it("stays on create-project when the first workspace has no domain yet", async () => {
     mocks.requireReadableProject.mockResolvedValue({
       project: { ...project, domain: null },

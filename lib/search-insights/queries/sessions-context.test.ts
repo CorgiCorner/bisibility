@@ -1,5 +1,6 @@
 import type { FinalizedWindow } from "@/lib/search-insights/dates";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { ImportObservabilityFacts } from "./import-observability";
 
 const mocks = vi.hoisted(() => ({
   prisma: {
@@ -58,10 +59,14 @@ describe("organicSessionsImportCoversWindow", () => {
     expect(organicSessionsImportCoversWindow(importState(), window)).toBe(true);
   });
 
-  it("rejects an import whose newest finalized date is too old", () => {
+  it("rejects a completed GA4 import one day behind the GSC window end", () => {
     expect(
       organicSessionsImportCoversWindow(
-        importState({ finalizedThroughDate: "2026-07-07" }),
+        importState({
+          cursorDate: null,
+          finalizedThroughDate: "2026-07-07",
+          state: "completed",
+        }),
         window,
       ),
     ).toBe(false);
@@ -88,13 +93,34 @@ describe("organicSessionsImportCoversWindow", () => {
 });
 
 describe("importStateView", () => {
-  it("carries the optional first data boundary into the presentation view", () => {
-    expect(
-      importStateView({
+  it("carries the single import facts selector into the presentation view", () => {
+    const facts: ImportObservabilityFacts = {
+      consecutiveDays: 7,
+      deepHistoryMonths: { completed: 0, target: 3 },
+      lastActivityAt: null,
+      lastProbeAt: null,
+      qualifyingDays: 7,
+      readyThrough: {
+        d7: { current: true, previous: false },
+        d28: { current: false, previous: false },
+        d90: { current: false, previous: false },
+      },
+      stall: {
+        expectedBatchMs: 0,
+        expectedDayMs: 0,
+        nextRequestInMs: 0,
+        silenceMs: 0,
+        thresholdMs: 0,
+      },
+      targetDays: 28,
+    };
+    const state = importStateView(
+      {
         capHitDays: 0,
         cursorDate: null,
         daysDone: 0,
         daysTotal: 57,
+        createdAt: new Date("2026-05-12T01:00:00.000Z"),
         earliestTargetDate: new Date("2026-05-12T00:00:00.000Z"),
         finalizedThroughDate: null,
         firstDataDate: new Date("2026-05-12T00:00:00.000Z"),
@@ -103,8 +129,34 @@ describe("importStateView", () => {
         newestFinalizedDate: new Date("2026-07-07T00:00:00.000Z"),
         pausedReason: null,
         state: "running",
-      }),
-    ).toMatchObject({ firstDataDate: "2026-05-12" });
+        updatedAt: new Date("2026-05-12T02:00:00.000Z"),
+      },
+      facts,
+    );
+
+    expect(state).toMatchObject({
+      createdAt: "2026-05-12T01:00:00.000Z",
+      facts,
+      firstDataDate: "2026-05-12",
+      updatedAt: "2026-05-12T02:00:00.000Z",
+    });
+    expect(state.facts).toBe(facts);
+    expect(Object.keys(state)).not.toEqual(
+      expect.arrayContaining([
+        "completedDays",
+        "consecutiveDays",
+        "deepHistoryMonths",
+        "etaLabel",
+        "firstViewReady",
+        "lastActivityAt",
+        "localReadableThrough",
+        "qualifyingDays",
+        "readyThrough",
+        "stall",
+        "targetDays",
+        "waiting",
+      ]),
+    );
   });
 });
 

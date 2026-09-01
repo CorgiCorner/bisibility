@@ -24,6 +24,7 @@ type Story = StoryObj<typeof meta>;
 
 const serpProviders = integrationCategories[0].providers;
 const analyticsProviders = integrationCategories[1].providers;
+const searchImportProgress = { qualifyingDays: 5, targetDays: 28 };
 
 export const ConnectedPrimary: Story = {
   args: { canManageProviders: true, canUpdateProject: true, provider: serpProviders[0] },
@@ -68,7 +69,7 @@ export const SearchBackfillTrafficNeverSynced: Story = {
         searchModule: {
           detail: "example.com",
           state: "backfill_running",
-          summary: "Backfill running · 37 of ~488 days",
+          summary: `Running · ${searchImportProgress.qualifyingDays} of ${searchImportProgress.targetDays} finalized days`,
         },
         trafficEnrichment: { state: "never_synced", summary: "Never synced" },
       },
@@ -90,7 +91,7 @@ export const SearchFirstViewReady: Story = {
       consumerStatuses: {
         searchModule: {
           state: "first_view_ready",
-          summary: "First 28-day view ready · full history still importing",
+          summary: "Running · 7-day view ready · history importing",
         },
         trafficEnrichment: { state: "last_synced", summary: "Last synced 3h ago" },
       },

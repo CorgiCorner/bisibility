@@ -137,7 +137,7 @@ export async function getSettings(projectId: string, options: { dateFormat?: Dat
       now,
     ),
     loadProviderAvailability(fullProject.providerConnections),
-    loadSearchSyncMetrics(fullProject.id, gscProperty, now),
+    loadSearchSyncMetrics(fullProject.id, gscProperty, searchSyncSettings, now),
   ]);
 
   const primarySerp = primaryProviderConnection(fullProject.providerConnections, "serp");
@@ -194,7 +194,14 @@ export async function getSettings(projectId: string, options: { dateFormat?: Dat
       searchSync: {
         ...searchSyncMetrics,
         connectionStatus,
-        lastQuotaPausedAt: searchSyncMetrics.lastQuotaPausedAt ? dateTime.formatDateTime(searchSyncMetrics.lastQuotaPausedAt) : null,
+        firstDataDate: iso(searchSyncMetrics.firstDataDate),
+        firstDataDateLabel: searchSyncMetrics.firstDataDate
+          ? dateTime.formatDate(searchSyncMetrics.firstDataDate)
+          : null,
+        lastQuotaPausedAt: searchSyncMetrics.lastQuotaPausedAt
+          ? dateTime.formatDate(searchSyncMetrics.lastQuotaPausedAt)
+          : null,
+        newestFinalizedDate: iso(searchSyncMetrics.newestFinalizedDate),
         lastActivityAt: iso(searchSyncMetrics.lastActivityAt),
         pauseStartedAt: iso(searchSyncMetrics.pauseStartedAt),
         ...searchSyncSettings,

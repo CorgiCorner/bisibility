@@ -15,7 +15,13 @@ import { zodResolver } from "@/lib/forms/zod-resolver";
 import { googleInstallUrl } from "@/lib/providers/analytics/google-install-url";
 import { appPath, asProjectRef } from "@/lib/routing/app-path";
 import { projectSearchSyncSchema } from "@/lib/schemas/project";
-import { resolveSearchSyncControl } from "@/lib/search-insights/sync/control-model";
+import { monthsBefore } from "@/lib/search-insights/dates";
+import {
+  resolveSearchSyncControl,
+  type SearchSyncControlFacts,
+} from "@/lib/search-insights/sync/control-model";
+import { searchSyncRequestSetsPerHour } from "@/lib/search-insights/sync/plan";
+import { searchSyncPreflightEstimate } from "@/lib/settings/search-sync-config";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -23,14 +29,11 @@ import { Controller, useForm } from "react-hook-form";
 import type { z } from "zod";
 
 type FormData = z.infer<typeof projectSearchSyncSchema>;
-export type SearchSyncMetrics = {
+export type SearchSyncMetrics = SearchSyncControlFacts & {
+  firstDataDate?: string | null;
+  firstDataDateLabel?: string | null;
   lastQuotaPausedAt: string | null;
-  connectionStatus?: "connected" | "connected_no_property" | "needs_reauth" | "not_connected";
-  lastActivityAt?: string | null;
-  pauseStartedAt?: string | null;
-  pausedReason?: string | null;
-  safeError?: string | null;
-  state?: string | null;
+  newestFinalizedDate?: string | null;
   plannedRemaining: number;
   requestsToday: number;
 };
@@ -50,10 +53,18 @@ const paceOptions = [
   { label: "Standard", value: "normal" },
   { label: "Reduced", value: "gentle" },
 ];
-const paceHelp = {
-  gentle: "Uses fewer provider requests and takes longer.",
-  normal: "Uses the normal provider request rate.",
-} as const;
+function clampedHistoryHelp(
+  metrics: SearchSyncMetrics,
+  retentionMonths: FormData["retentionMonths"],
+) {
+  if (!metrics.firstDataDate || !metrics.firstDataDateLabel || !metrics.newestFinalizedDate)
+    return null;
+  const firstDataDate = metrics.firstDataDate.slice(0, 10);
+  const newestFinalizedDate = metrics.newestFinalizedDate.slice(0, 10);
+  return firstDataDate > monthsBefore(newestFinalizedDate, retentionMonths)
+    ? `This property's Google history starts ${metrics.firstDataDateLabel} - deeper retention has nothing more to import.`
+    : null;
+}
 
 export function SearchDataSyncCard({
   canEdit,
@@ -74,10 +85,17 @@ export function SearchDataSyncCard({
     resolver: zodResolver(projectSearchSyncSchema),
   });
   const control = resolveSearchSyncControl(metrics);
+  const selectedRetentionMonths = form.watch("retentionMonths");
+  const selectedPace = form.watch("pace");
+  const estimate = searchSyncPreflightEstimate({
+    pace: selectedPace,
+    retentionMonths: selectedRetentionMonths,
+  });
+  const historyHelp = clampedHistoryHelp(metrics, selectedRetentionMonths);
   const reconnectHref = googleInstallUrl({
     projectId,
     provider: "gsc",
-    returnPath: appPath(asProjectRef(projectId), "settings", "tracking"),
+    returnPath: appPath(asProjectRef(projectId), "settings", "data-sources"),
   });
   async function runContextAction() {
     if (!canEdit || pauseBusy || !control.action || control.action === "reconnect") return;
@@ -148,6 +166,9 @@ export function SearchDataSyncCard({
                   />
                 )}
               />
+              {historyHelp ? (
+                <p className="m-0 mt-1.5 text-[11px] leading-[1.45] text-fg-muted">{historyHelp}</p>
+              ) : null}
             </SettingsField>
             <SettingsField className="max-w-none" width="field">
               <FieldLabel label="Import speed" />
@@ -168,7 +189,7 @@ export function SearchDataSyncCard({
                       value={field.value}
                     />
                     <p className="m-0 mt-1.5 text-[11px] leading-[1.45] text-fg-muted">
-                      {paceHelp[field.value]}
+                      {estimate}
                     </p>
                   </div>
                 )}
@@ -183,17 +204,26 @@ export function SearchDataSyncCard({
                 model={control}
                 onAction={runContextAction}
                 reconnectHref={reconnectHref}
+                suppressPauseTooltip
               />
             </div>
           </div>
-          <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 px-4 font-mono text-[11px] text-fg-muted">
-            <span>requests today: {metrics.requestsToday.toLocaleString("en-US")}</span>
+          <div className="mt-4 flex flex-wrap gap-x-2 gap-y-1 px-4 font-mono text-[11px] text-fg-muted">
+            <span>requests in current window: {metrics.requestsToday.toLocaleString("en-US")}</span>
+            <span aria-hidden>·</span>
+            <span>
+              configured pace: {searchSyncRequestSetsPerHour(pace).toLocaleString("en-US")} request
+              sets/hour
+            </span>
+            <span aria-hidden>·</span>
             <span>planned remaining: {metrics.plannedRemaining.toLocaleString("en-US")}</span>
-            <span>last quota pause: {metrics.lastQuotaPausedAt ?? "never"}</span>
           </div>
           <p className="m-0 mt-4 px-4 text-[12px] leading-[1.55] text-fg-muted">
-            This quota is shared with other tools using the same property. Decreasing depth never
-            deletes imported history.
+            This quota is shared with other tools using the same property.
+          </p>
+          <p className="m-0 mt-1 px-4 text-[12px] leading-[1.55] text-fg-muted">
+            Increasing depth extends the running import; decreasing depth keeps what is already
+            imported.
           </p>
         </form>
       )}

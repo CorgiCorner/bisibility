@@ -87,6 +87,7 @@ function signed(value: number, digits: number, suffix: string) {
 
 // No change has no direction: an arrow beside the word would assert one the copy denies.
 const UNCHANGED = { delta: "unchanged", dir: "flat" as const };
+const UNCOVERED_BASELINE = { delta: NO_BASELINE, dir: "flat" as const };
 
 // Neither window measured anything comparable, so the line reports that instead of a distance.
 const NOTHING_TO_COMPARE = { delta: NO_DATA, dir: "flat" as const };
@@ -148,35 +149,41 @@ export function positionDelta(current: WindowTotals, previous: WindowTotals) {
   return UNCHANGED;
 }
 
-export function searchInsightsKpis(totals: WindowTotalsPair): SearchInsightsKpi[] {
+export function searchInsightsKpis(
+  totals: WindowTotalsPair,
+  previousWindowCovered = true,
+): SearchInsightsKpi[] {
   const { current, previous } = totals;
   // One decision for the whole row: a compared period with no impressions holds no rows, so
   // every card reports the absence rather than measuring against numbers nobody recorded.
-  const from = (formatted: string) => (hasRows(previous) ? formatted : NO_DATA);
+  const from = (formatted: string) =>
+    previousWindowCovered && hasRows(previous) ? formatted : NO_DATA;
+  const guarded = (delta: Pick<SearchInsightsKpi, "delta" | "dir">) =>
+    previousWindowCovered ? delta : UNCOVERED_BASELINE;
   return [
     {
-      ...countDelta(current.clicks, previous.clicks),
+      ...guarded(countDelta(current.clicks, previous.clicks)),
       label: "Clicks",
       prev: from(formatCount(previous.clicks)),
       source: KPI_SOURCE,
       value: formatCount(current.clicks),
     },
     {
-      ...countDelta(current.impressions, previous.impressions),
+      ...guarded(countDelta(current.impressions, previous.impressions)),
       label: "Impressions",
       prev: from(formatCount(previous.impressions)),
       source: KPI_SOURCE,
       value: formatCount(current.impressions),
     },
     {
-      ...ctrDelta(current, previous),
+      ...guarded(ctrDelta(current, previous)),
       label: "CTR",
       prev: from(formatCtr(previous.ctr)),
       source: KPI_SOURCE,
       value: formatCtr(current.ctr),
     },
     {
-      ...positionDelta(current, previous),
+      ...guarded(positionDelta(current, previous)),
       label: "Avg position",
       prev: from(formatPosition(previous.position)),
       source: KPI_SOURCE,

@@ -8,6 +8,7 @@ import type { WorkerTemporalStatus } from "@/lib/ops/worker-temporal-identity";
 import type { SearchInsightsImportState } from "@/lib/search-insights/queries/context";
 import type { SearchInsightsFirstView } from "@/lib/search-insights/queries/first-view";
 import type { SearchInsightsOauthReturn as OauthReturn } from "@/lib/search-insights/queries/oauth-return";
+import type { SearchSyncControlFacts } from "@/lib/search-insights/sync/control-model";
 import type { SearchSyncPreflightPlan } from "@/lib/search-insights/sync/plan";
 
 /**
@@ -21,6 +22,7 @@ export async function SearchInsightsTrustStripSection({
   projectId,
   resumeAction,
   retryAction,
+  statusFacts,
   view,
   workerStatus,
 }: Readonly<{
@@ -29,6 +31,7 @@ export async function SearchInsightsTrustStripSection({
   resumeAction: SearchInsightsImportAction;
   retryAction: SearchInsightsImportAction;
   projectId: string;
+  statusFacts: SearchSyncControlFacts;
   view: Promise<SearchInsightsFirstView>;
   workerStatus: WorkerTemporalStatus;
 }>) {
@@ -37,7 +40,7 @@ export async function SearchInsightsTrustStripSection({
     <SearchInsightsTrustStrip
       coverage={data.coverage}
       deploymentMode={data.deploymentMode}
-      localViewReady={Boolean(importState?.firstViewReady)}
+      localViewReady={importState?.facts?.readyThrough.d7.current === true}
       providerAvailabilitySource={importState?.availabilityBoundarySource ?? null}
       providerAvailableThrough={importState?.newestFinalizedDate ?? null}
       importState={importState}
@@ -46,6 +49,7 @@ export async function SearchInsightsTrustStripSection({
       projectId={projectId}
       resumeAction={resumeAction}
       retryAction={retryAction}
+      statusFacts={statusFacts}
       workerStatus={workerStatus}
     />
   );

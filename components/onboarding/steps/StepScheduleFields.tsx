@@ -3,6 +3,7 @@ import { languageForLocationValue } from "@/components/onboarding/onboarding-loc
 import { FieldLabel, MenuSelect, type MenuSelectOption } from "@/components/ui";
 import { type SerpDepth, serpDepthValues } from "@/lib/serp/markets";
 import { FIELD_HELP } from "@/lib/settings/field-help";
+import { VISIBILITY_HORIZON, VISIBILITY_SHALLOW_CHECK_COPY } from "@/lib/visibility/definition";
 import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
 
@@ -51,7 +52,7 @@ export function SerpDepthWarning({
   currentDepth,
   initialDepth,
 }: Readonly<{ currentDepth: SerpDepth; initialDepth: SerpDepth }>) {
-  if (currentDepth >= initialDepth) {
+  if (currentDepth >= initialDepth && currentDepth >= VISIBILITY_HORIZON) {
     return null;
   }
   return (
@@ -62,7 +63,12 @@ export function SerpDepthWarning({
         size={13}
         weight="regular"
       />
-      <span>Rankings below Top {currentDepth} report as not found and skip alerts.</span>
+      <span>
+        {currentDepth < initialDepth
+          ? `Rankings below Top ${currentDepth} report as not found and skip alerts. `
+          : ""}
+        {currentDepth < VISIBILITY_HORIZON ? VISIBILITY_SHALLOW_CHECK_COPY : ""}
+      </span>
     </p>
   );
 }

@@ -39,7 +39,7 @@ export async function deliverSearchImportMilestone(input: {
               projectId: imported.projectId,
               property: imported.property,
             })
-          ).firstViewReady
+          ).readyThrough.d28.current
         : imported.state === "completed";
   if (!eligible) return { delivered: 0 };
   const property = propertyDisplayName(imported.property);

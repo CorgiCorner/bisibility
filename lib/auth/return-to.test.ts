@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   loginErrorReturnTo,
   mergeReturnToHash,
+  onboardingWebsiteFromReturnTo,
   returnToOrDefault,
   validateReturnTo,
 } from "./return-to";
@@ -39,6 +40,31 @@ describe("return-to validation", () => {
 
   it("falls back to the signed-in home for an invalid destination", () => {
     expect(returnToOrDefault("//evil.example")).toBe(appRootPath());
+  });
+
+  it("reads the exact website from a validated onboarding destination", () => {
+    const website = "https://www.example.com/a path?x=1&y=<b>raw</b>";
+    const destination = `/onboarding?${new URLSearchParams({ website })}`;
+
+    expect(onboardingWebsiteFromReturnTo(destination)).toBe(website);
+  });
+
+  it("caps a remembered onboarding website at the shared safety limit", () => {
+    const website = "x".repeat(2_049);
+    const destination = `/onboarding?${new URLSearchParams({ website })}`;
+
+    expect(onboardingWebsiteFromReturnTo(destination)).toBe(website.slice(0, 2_048));
+  });
+
+  it.each([
+    undefined,
+    "/onboarding",
+    "/onboarding?website=",
+    "/app?website=example.com",
+    "https://evil.example/onboarding?website=example.com",
+    "//evil.example/onboarding?website=example.com",
+  ])("does not read a remembered website from %s", (destination) => {
+    expect(onboardingWebsiteFromReturnTo(destination)).toBeNull();
   });
 
   it("carries the browser anchor in a query parameter", () => {

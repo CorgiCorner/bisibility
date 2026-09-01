@@ -1,26 +1,39 @@
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
+import { getWorkerLivenessDetails } from "@/lib/ops/liveness";
+import { compareWorkerTemporalIdentity } from "@/lib/ops/worker-temporal-identity";
 import { requireReadableProject } from "@/lib/queries/_auth";
 import { pacificQuotaDayRange } from "@/lib/search-insights/dates";
+import * as importObservabilityDb from "@/lib/search-insights/queries/import-observability-db";
+import { readSearchImportQueueFacts } from "@/lib/search-insights/queries/import-queue";
+import { searchSyncRequestSetsPerHour } from "@/lib/search-insights/sync/plan";
 import {
   resolveSearchSyncSettings,
   searchSyncPreflightPlan,
 } from "@/lib/settings/search-sync-config";
 import { deriveSearchSyncMetrics } from "@/lib/settings/search-sync-metrics-model";
+import { temporalDeploymentConfig } from "@/lib/temporal/deployment-config";
+import { describeSearchInsightsBackfillStatus } from "@/lib/temporal/search-insights-status";
 
 export async function loadSearchSyncMetrics(
   projectId: string,
   property: string | null,
+  settings: ReturnType<typeof resolveSearchSyncSettings>,
   now = new Date(),
 ) {
   if (!property)
     return {
+      firstDataDate: null,
       lastActivityAt: null,
       lastQuotaPausedAt: null,
+      newestFinalizedDate: null,
       pauseStartedAt: null,
       pausedReason: null,
+      observability: undefined,
       safeError: null,
+      queue: undefined,
+      runtime: undefined,
       state: null,
       plannedRemaining: 0,
       requestsToday: 0,
@@ -34,6 +47,30 @@ export async function loadSearchSyncMetrics(
       where: { attemptedAt: { gte: quotaDay.start, lt: quotaDay.end }, projectId, property },
     }),
   ]);
+  const [observability, queue, workflowStatus, workerLiveness] = await Promise.all([
+    row
+      ? importObservabilityDb.readImportObservability({
+          daysTotal: row.daysTotal,
+          earliestTargetDate: row.earliestTargetDate,
+          lastProbeAt: row.lastProbeAt,
+          newestFinalizedDate: row.newestFinalizedDate,
+          plannedRetentionMonths: settings.retentionMonths,
+          projectId,
+          property,
+          requestSetsPerHour: searchSyncRequestSetsPerHour(settings.pace),
+        })
+      : null,
+    row
+      ? readSearchImportQueueFacts({
+          createdAt: row.createdAt,
+          id: row.id,
+          projectId,
+          state: row.state,
+        })
+      : null,
+    describeSearchInsightsBackfillStatus(projectId, property),
+    getWorkerLivenessDetails(),
+  ]);
   return {
     ...deriveSearchSyncMetrics({
       daysDone: row?.daysDone ?? 0,
@@ -42,9 +79,23 @@ export async function loadSearchSyncMetrics(
       planned: Boolean(row?.earliestTargetDate),
       requestsToday: usage,
     }),
+    firstDataDate: row?.firstDataDate ?? null,
     lastActivityAt: row?.updatedAt ?? null,
+    newestFinalizedDate: row?.newestFinalizedDate ?? null,
     pauseStartedAt: row?.pauseStartedAt ?? null,
     pausedReason: row?.pausedReason ?? null,
+    observability: observability ?? undefined,
+    queue: queue ?? undefined,
+    runtime: {
+      workerStatus: {
+        status: workerLiveness.status,
+        temporalIdentityComparison: compareWorkerTemporalIdentity(
+          temporalDeploymentConfig(),
+          workerLiveness,
+        ),
+      },
+      workflowStatus,
+    },
     safeError: row?.lastError ?? null,
     state: row?.state ?? null,
   };

@@ -4,6 +4,7 @@ import { decryptSecret, encryptSecret } from "@/lib/providers/crypto";
 import { clearProviderRateLimitState, consumeProviderLimit } from "@/lib/providers/rate-limit";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  completeGooglePropertySelection,
   connectProvider,
   disconnectGoogleSearchConsole,
   disconnectProvider,
@@ -35,6 +36,8 @@ const mocks = vi.hoisted(() => {
     analyticsProvider,
     backfillLegacyProjectAllocationInLockedTransaction: vi.fn(),
     cancelPendingGoogleOAuth: vi.fn(),
+    completePendingGooglePropertySelection: vi.fn(),
+    getPendingGoogleOAuthProvider: vi.fn(),
     getActionActor: vi.fn(),
     loadStoredGoogleProperties: vi.fn(),
     provider,
@@ -62,6 +65,7 @@ const mocks = vi.hoisted(() => {
     requireProjectScope: vi.fn(),
     revalidatePath: vi.fn(),
     startTrafficSyncWorkflow: vi.fn(),
+    updateSearchSyncSettings: vi.fn(),
     saveStoredGoogleProperty: vi.fn(),
     writeAudit: vi.fn(),
   };
@@ -114,11 +118,15 @@ vi.mock("@/lib/temporal/traffic-client", () => ({
 }));
 vi.mock("@/lib/providers/analytics/google-oauth-pending", () => ({
   cancelPendingGoogleOAuth: mocks.cancelPendingGoogleOAuth,
-  completePendingGooglePropertySelection: vi.fn(),
+  completePendingGooglePropertySelection: mocks.completePendingGooglePropertySelection,
+  getPendingGoogleOAuthProvider: mocks.getPendingGoogleOAuthProvider,
 }));
 vi.mock("@/lib/providers/analytics/google-stored-property", () => ({
   loadStoredGoogleProperties: mocks.loadStoredGoogleProperties,
   saveStoredGoogleProperty: mocks.saveStoredGoogleProperty,
+}));
+vi.mock("./presence-settings", () => ({
+  updateSearchSyncSettings: mocks.updateSearchSyncSettings,
 }));
 vi.mock("./_shared", () => ({
   getActionActor: mocks.getActionActor,
@@ -182,6 +190,10 @@ describe("provider actions", () => {
     process.env.BISIBILITY_PROVIDER_RATE_LIMIT_DISABLED = "";
     process.env.BISIBILITY_PROVIDER_RATE_LIMIT_SERPAPI_PER_MINUTE = "";
     mocks.cancelPendingGoogleOAuth.mockResolvedValue({ status: "cancelled" });
+    mocks.completePendingGooglePropertySelection.mockResolvedValue({
+      property: "sc-domain:example.com",
+    });
+    mocks.getPendingGoogleOAuthProvider.mockResolvedValue("gsc");
     mocks.getActionActor.mockResolvedValue(mocks.actor);
     mocks.provider.testConnection.mockResolvedValue({ message: "ok", ok: true });
     mocks.analyticsProvider.testConnection.mockResolvedValue({ message: "ok", ok: true });
@@ -203,6 +215,7 @@ describe("provider actions", () => {
       runId: "run_1",
       workflowId: "maintenance-traffic-sync",
     });
+    mocks.updateSearchSyncSettings.mockResolvedValue({});
   });
 
   it("rejects invalid input before reading the actor", async () => {
@@ -251,6 +264,132 @@ describe("provider actions", () => {
     });
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/app/integrations");
     expect(result).toEqual({ property: "sc-domain:example.com", status: "saved" });
+  });
+
+  it("commits pending Search Console settings before selecting its property", async () => {
+    const events: string[] = [];
+    let commitSettings = () => undefined;
+    mocks.updateSearchSyncSettings.mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          events.push("projectDefaults update started");
+          commitSettings = () => {
+            events.push("projectDefaults update committed");
+            resolve();
+          };
+        }),
+    );
+    mocks.completePendingGooglePropertySelection.mockImplementation(async () => {
+      events.push("property service called");
+      return { property: "sc-domain:example.com" };
+    });
+
+    const selection = completeGooglePropertySelection({
+      pace: "gentle",
+      projectId: "prj_a00000000000000000000000",
+      property: "sc-domain:example.com",
+      retentionMonths: 6,
+    });
+
+    await vi.waitFor(() => {
+      expect(mocks.updateSearchSyncSettings).toHaveBeenCalledWith({
+        pace: "gentle",
+        projectId: "prj_a00000000000000000000000",
+        retentionMonths: 6,
+      });
+    });
+    expect(mocks.completePendingGooglePropertySelection).not.toHaveBeenCalled();
+
+    commitSettings();
+    await selection;
+
+    expect(events).toEqual([
+      "projectDefaults update started",
+      "projectDefaults update committed",
+      "property service called",
+    ]);
+  });
+
+  it("does not persist Search Console settings for a pending GA4 completion", async () => {
+    mocks.getPendingGoogleOAuthProvider.mockResolvedValue("ga4");
+
+    await completeGooglePropertySelection({
+      pace: "gentle",
+      projectId: "prj_a00000000000000000000000",
+      property: "123456789",
+      provider: "gsc",
+      retentionMonths: 6,
+    });
+
+    expect(mocks.getPendingGoogleOAuthProvider).toHaveBeenCalledWith(
+      "prj_a00000000000000000000000",
+    );
+    expect(mocks.updateSearchSyncSettings).not.toHaveBeenCalled();
+    expect(mocks.completePendingGooglePropertySelection).toHaveBeenCalledWith({
+      projectId: "prj_a00000000000000000000000",
+      property: "123456789",
+    });
+  });
+
+  it("commits stored Search Console settings before saving its property", async () => {
+    const events: string[] = [];
+    let commitSettings = () => undefined;
+    mocks.updateSearchSyncSettings.mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          events.push("projectDefaults update started");
+          commitSettings = () => {
+            events.push("projectDefaults update committed");
+            resolve();
+          };
+        }),
+    );
+    mocks.saveStoredGoogleProperty.mockImplementation(async () => {
+      events.push("property service called");
+      return { property: "sc-domain:example.com", status: "saved" as const };
+    });
+
+    const selection = saveStoredGoogleProperty({
+      pace: "normal",
+      projectId: "prj_a00000000000000000000000",
+      property: "sc-domain:example.com",
+      provider: "gsc",
+      retentionMonths: 12,
+    });
+
+    await vi.waitFor(() => {
+      expect(mocks.updateSearchSyncSettings).toHaveBeenCalledWith({
+        pace: "normal",
+        projectId: "prj_a00000000000000000000000",
+        retentionMonths: 12,
+      });
+    });
+    expect(mocks.saveStoredGoogleProperty).not.toHaveBeenCalled();
+
+    commitSettings();
+    await selection;
+
+    expect(events).toEqual([
+      "projectDefaults update started",
+      "projectDefaults update committed",
+      "property service called",
+    ]);
+  });
+
+  it.each([
+    ["pending selection", completeGooglePropertySelection],
+    ["stored selection", saveStoredGoogleProperty],
+  ])("rejects a half-specified sync choice for %s", async (_label, action) => {
+    await expect(
+      action({
+        projectId: "prj_a00000000000000000000000",
+        property: "sc-domain:example.com",
+        ...(action === saveStoredGoogleProperty ? { provider: "gsc" } : {}),
+        retentionMonths: 6,
+      }),
+    ).rejects.toThrow();
+
+    expect(mocks.updateSearchSyncSettings).not.toHaveBeenCalled();
   });
 
   it("connects the first provider with encrypted credentials and priority zero", async () => {

@@ -91,6 +91,10 @@ async function pendingForProject(projectId: string) {
   return { actor, cookieStore, pending, project };
 }
 
+export async function getPendingGoogleOAuthProvider(projectId: string) {
+  return (await pendingForProject(projectId))?.pending.provider ?? null;
+}
+
 export async function cancelPendingGoogleOAuth(projectId: string) {
   const context = await pendingForProject(projectId);
   if (!context) return { status: "not_found" as const };
