@@ -25,10 +25,11 @@ import { drawerFrameKey } from "./drawer-model";
 const ROW =
   "cursor-pointer border-b border-border-soft last:border-b-0 hover:bg-bg-sunken focus-visible:bg-bg-sunken";
 const CELL = "px-3.25 py-2.5 align-middle";
-const TEXT = "truncate font-mono text-ui-caption";
-const NUMBER = "px-1 text-right font-mono text-ui-caption font-semibold";
-const MUTED = "px-1 text-right font-mono text-ui-caption text-fg-muted";
-const DECISION = "flex items-center justify-end gap-1.5 font-mono text-ui-caption text-fg-muted";
+const TEXT = "truncate font-sans tabular-nums text-ui-caption";
+const NUMBER = "px-1 text-right font-sans tabular-nums text-ui-caption font-semibold";
+const MUTED = "px-1 text-right font-sans tabular-nums text-ui-caption text-fg-muted";
+const DECISION =
+  "flex items-center justify-end gap-1.5 font-sans tabular-nums text-ui-caption text-fg-muted";
 
 export type DrawerRow = {
   clicks: number;
@@ -215,7 +216,7 @@ export function DrawerOverlapRows({ label, onOpen, rows, seen }: Readonly<Drawer
                     {row.query}
                   </span>
                   <span
-                    className="shrink-0 rounded-control border border-border px-1.5 font-mono text-ui-micro text-fg-muted"
+                    className="shrink-0 rounded-control border border-border px-1.5 font-sans tabular-nums text-ui-micro text-fg-muted"
                     title={overlapBadgeTitle(row.pages)}
                   >
                     x{row.pages}
@@ -233,12 +234,12 @@ export function DrawerOverlapRows({ label, onOpen, rows, seen }: Readonly<Drawer
             {row.split.map((page) => (
               <tr key={page.url}>
                 <td
-                  className="truncate px-3.25 pb-1.5 pl-7.25 font-mono text-ui-micro text-fg-muted"
+                  className="truncate px-3.25 pb-1.5 pl-7.25 font-sans tabular-nums text-ui-micro text-fg-muted"
                   title={page.url}
                 >
                   {page.path}
                 </td>
-                <td className="px-1 pb-1.5 text-right font-mono text-ui-micro text-fg-muted">
+                <td className="px-1 pb-1.5 text-right font-sans tabular-nums text-ui-micro text-fg-muted">
                   {formatRowCount(page.clicks)}
                 </td>
                 <td />

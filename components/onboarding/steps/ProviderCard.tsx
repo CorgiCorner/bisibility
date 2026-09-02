@@ -66,7 +66,7 @@ export function ProviderCard({
         </span>
       </span>
       {state === "connected" && balance !== undefined ? (
-        <span className="pointer-events-none relative z-1 mt-3 block font-mono text-xs text-green-text">
+        <span className="pointer-events-none relative z-1 mt-3 block text-xs text-green-text tabular-nums">
           Balance: {balance}
         </span>
       ) : null}

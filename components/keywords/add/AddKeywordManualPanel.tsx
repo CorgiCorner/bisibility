@@ -43,7 +43,7 @@ export function AddKeywordManualPanel({
             </label>
             <span className={fieldMetaClass}>Required</span>
           </div>
-          <span className="font-mono text-[11px] text-fg-muted">
+          <span className="font-sans tabular-nums text-[11px] text-fg-muted">
             {count} {count === 1 ? "keyword" : "keywords"}
           </span>
         </div>
@@ -56,12 +56,14 @@ export function AddKeywordManualPanel({
           {...register("keywords")}
         />
         {errors.keywords ? (
-          <p className="mt-2 font-mono text-[11.5px] text-red-text">{errors.keywords.message}</p>
+          <p className="mt-2 font-sans tabular-nums text-[11.5px] text-red-text">
+            {errors.keywords.message}
+          </p>
         ) : null}
       </div>
 
       <div className="border-t border-border pt-4">
-        <p className="m-0 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
+        <p className="m-0 font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
           Options below apply to all keywords
         </p>
       </div>
@@ -72,16 +74,20 @@ export function AddKeywordManualPanel({
           Target URL
         </label>
         <div className="mt-2 flex items-center gap-2 rounded-control border border-border-control bg-transparent px-3 transition-colors focus-within:border-accent">
-          {domain ? <span className="font-mono text-[13px] text-fg-muted">{domain}</span> : null}
+          {domain ? (
+            <span className="font-sans tabular-nums text-[13px] text-fg-muted">{domain}</span>
+          ) : null}
           <input
-            className="min-w-0 flex-1 border-none bg-transparent py-2.5 font-mono text-[13px] text-fg outline-none placeholder:text-[12px] placeholder:leading-4 placeholder:text-fg-muted focus-visible:outline-none"
+            className="min-w-0 flex-1 border-none bg-transparent py-2.5 font-sans tabular-nums text-[13px] text-fg outline-none placeholder:text-[12px] placeholder:leading-4 placeholder:text-fg-muted focus-visible:outline-none"
             id="add-target-input"
             placeholder="/page"
             {...register("targetUrl")}
           />
         </div>
         {errors.targetUrl ? (
-          <p className="mt-2 font-mono text-[11.5px] text-red-text">{errors.targetUrl.message}</p>
+          <p className="mt-2 font-sans tabular-nums text-[11.5px] text-red-text">
+            {errors.targetUrl.message}
+          </p>
         ) : null}
         <p className="mt-[7px] text-[11.5px] text-fg-muted">
           This URL applies to all keywords. You can overwrite it above with{" "}
@@ -161,7 +167,9 @@ function MetadataField({
         placeholder={placeholder}
         {...register(name)}
       />
-      {error ? <p className="mt-2 font-mono text-[11.5px] text-red-text">{error.message}</p> : null}
+      {error ? (
+        <p className="mt-2 font-sans tabular-nums text-[11.5px] text-red-text">{error.message}</p>
+      ) : null}
     </div>
   );
 }

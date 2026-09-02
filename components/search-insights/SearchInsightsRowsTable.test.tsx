@@ -254,3 +254,92 @@ describe("the first-view tables", () => {
     expect(screen.getByRole("columnheader", { name: "Avg pos" }).className).toContain("px-1");
   });
 });
+
+describe("column sort controls", () => {
+  const DEFAULT_SORT = { direction: "desc", key: "clicks" } as const;
+
+  function renderQueries(
+    sort: { direction: "asc" | "desc"; key: string } = DEFAULT_SORT,
+    onSort = vi.fn(),
+  ) {
+    render(
+      <SearchInsightsQueriesTable
+        rows={queryRows(3)}
+        sort={{ onSort, value: sort as never }}
+        tracked={new Set()}
+      />,
+    );
+    return onSort;
+  }
+
+  // P7b: every column the read can order by is a control, and Actions is not a column.
+  it("makes every readable column a sort control, including the text column", () => {
+    renderQueries();
+
+    const table = screen.getByRole("table", { name: "Top queries" });
+    const sortable = within(table)
+      .getAllByRole("columnheader")
+      .filter((header) => header.hasAttribute("aria-sort"));
+    expect(sortable.map((header) => header.textContent)).toEqual([
+      "Query",
+      "Clicks",
+      "Impr",
+      "CTR",
+      "Avg pos",
+    ]);
+    for (const header of sortable) {
+      expect(within(header).getByRole("button")).toBeInTheDocument();
+    }
+  });
+
+  it("marks exactly one column active and leaves the rest unsorted", () => {
+    renderQueries({ direction: "asc", key: "ctr" });
+
+    const table = screen.getByRole("table", { name: "Top queries" });
+    const states = within(table)
+      .getAllByRole("columnheader")
+      .filter((header) => header.hasAttribute("aria-sort"))
+      .map((header) => header.getAttribute("aria-sort"));
+    expect(states).toEqual(["none", "none", "none", "ascending", "none"]);
+    expect(states.filter((state) => state !== "none")).toHaveLength(1);
+  });
+
+  it("opens a numeric column biggest-first and the text column A to Z", async () => {
+    const onSort = renderQueries();
+
+    await userEvent.click(screen.getByRole("button", { name: /Impr/ }));
+    expect(onSort).toHaveBeenCalledWith("impressions");
+
+    await userEvent.click(screen.getByRole("button", { name: /Query/ }));
+    expect(onSort).toHaveBeenCalledWith("text");
+  });
+
+  it("keeps the sessions column a plain label, because the read cannot order by it", () => {
+    render(
+      <SearchInsightsPagesTable
+        rows={[pageRow]}
+        showSessions
+        sort={{ onSort: vi.fn(), value: DEFAULT_SORT }}
+      />,
+    );
+
+    const table = screen.getByRole("table", { name: "Top pages" });
+    const sessions = within(table)
+      .getAllByRole("columnheader")
+      .find((header) => header.textContent?.includes("Sessions"));
+    expect(sessions).toBeDefined();
+    expect(sessions).not.toHaveAttribute("aria-sort");
+    expect(within(sessions as HTMLElement).queryByRole("button")).toBeNull();
+  });
+
+  it("leaves the head inert when the table is rendered without a sort controller", () => {
+    render(<SearchInsightsQueriesTable rows={queryRows(2)} tracked={new Set()} />);
+
+    const table = screen.getByRole("table", { name: "Top queries" });
+    expect(
+      within(table)
+        .getAllByRole("columnheader")
+        .some((header) => header.hasAttribute("aria-sort")),
+    ).toBe(false);
+  });
+});

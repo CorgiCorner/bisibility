@@ -34,7 +34,7 @@ export function FilterFacetPillSection({
               type="button"
             >
               {facet.label}
-              <span className="font-mono text-[10px] opacity-70">{facet.count}</span>
+              <span className="font-sans tabular-nums text-[10px] opacity-70">{facet.count}</span>
             </Pill>
           );
         })}

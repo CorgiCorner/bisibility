@@ -19,7 +19,7 @@ export function MigrateStepper({ step }: Readonly<{ step: number }>) {
             <span className="flex w-[58px] flex-none flex-col items-center gap-1.5">
               <span
                 className={cn(
-                  "grid h-[26px] w-[26px] place-items-center rounded-full border-[1.5px] font-mono text-[11px] font-semibold",
+                  "grid h-[26px] w-[26px] place-items-center rounded-full border-[1.5px] font-sans tabular-nums text-[11px] font-semibold",
                   active
                     ? "border-accent bg-accent-solid text-accent-on-solid"
                     : "border-border text-fg-muted",
@@ -122,7 +122,9 @@ export function EnableReadOnlyConfirmModal({
         Read-only mode stays on until you cancel the migration - it cannot be switched off from the
         next steps. If nothing happens for 24 hours it releases automatically.
       </p>
-      {error ? <p className="m-0 mt-3 font-mono text-[11.5px] text-red-text">{error}</p> : null}
+      {error ? (
+        <p className="m-0 mt-3 font-sans tabular-nums text-[11.5px] text-red-text">{error}</p>
+      ) : null}
     </Modal>
   );
 }
@@ -175,7 +177,9 @@ export function MarkMigratedConfirmModal({
       <p className="m-0 mt-2 text-xs leading-5 text-fg-muted">
         You can reactivate the project later from Settings if you ever need it again.
       </p>
-      {error ? <p className="m-0 mt-3 font-mono text-[11.5px] text-red-text">{error}</p> : null}
+      {error ? (
+        <p className="m-0 mt-3 font-sans tabular-nums text-[11.5px] text-red-text">{error}</p>
+      ) : null}
     </Modal>
   );
 }
@@ -256,7 +260,9 @@ export function CancelMigrationConfirmModal({
       <p className="m-0 mt-2 text-xs leading-5 text-fg-muted">
         Migration holds also auto-release after 24 hours of inactivity.
       </p>
-      {error ? <p className="m-0 mt-3 font-mono text-[11.5px] text-red-text">{error}</p> : null}
+      {error ? (
+        <p className="m-0 mt-3 font-sans tabular-nums text-[11.5px] text-red-text">{error}</p>
+      ) : null}
     </Modal>
   );
 }

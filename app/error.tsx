@@ -34,7 +34,7 @@ export default function ErrorBoundary({ error, reset }: Readonly<ErrorPageProps>
           >
             Try again
           </SystemPrimaryAction>
-          <SystemSecondaryAction href="/app">Back to dashboard</SystemSecondaryAction>
+          <SystemSecondaryAction href="/app">Back to app</SystemSecondaryAction>
         </>
       }
       description="The request fell outside a clean ranking run. Try again, or head back to the dashboard while we recover the route."

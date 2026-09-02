@@ -78,7 +78,7 @@ export const WithTrustStrip: Story = {
   args: {
     ...common,
     trustStrip: (
-      <p className="bg-bg-sunken px-4 py-3 font-mono text-ui-caption text-fg-muted">
+      <p className="bg-bg-sunken px-4 py-3 font-sans tabular-nums text-ui-caption text-fg-muted">
         Google data available through Jul 8, 2026
       </p>
     ),

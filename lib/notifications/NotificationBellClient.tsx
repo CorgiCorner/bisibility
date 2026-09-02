@@ -170,7 +170,7 @@ export function NotificationBellClient({
       >
         <Bell aria-hidden size={17} weight="regular" />
         {unreadCount > 0 ? (
-          <span className="absolute right-1.5 top-[5px] grid h-[15px] min-w-[15px] place-items-center rounded-full border-[1.5px] border-bg bg-accent-solid px-[3px] font-mono text-[9px] font-semibold leading-none text-accent-on-solid">
+          <span className="absolute right-1.5 top-[5px] grid h-[15px] min-w-[15px] place-items-center rounded-full border-[1.5px] border-bg bg-accent-solid px-[3px] font-sans tabular-nums text-[9px] font-semibold leading-none text-accent-on-solid">
             {unreadCount}
           </span>
         ) : null}
@@ -244,10 +244,10 @@ function NotificationRow({ item, onNavigate, unread }: Readonly<NotificationRowP
       </span>
       <span className="min-w-0 flex-1">
         <span className="block text-[13px] font-medium leading-[1.35] text-fg">{item.title}</span>
-        <span className="mt-0.5 block font-mono text-[11px] text-fg-muted">{detail}</span>
+        <span className="mt-0.5 block font-sans text-[11px] text-fg-muted">{detail}</span>
       </span>
       <span className="flex flex-none flex-col items-end gap-[5px]">
-        <span className="font-mono text-[10.5px] text-fg-muted">{item.time}</span>
+        <span className="font-sans tabular-nums text-[10.5px] text-fg-muted">{item.time}</span>
         <span
           className="h-[7px] w-[7px] rounded-full bg-accent"
           style={{ visibility: unread ? "visible" : "hidden" }}

@@ -35,7 +35,7 @@ export function DomainOverviewKpiRow({
     <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
       {kpis.map((kpi) => (
         <Card className="min-w-0 rounded-card px-4.5 py-4" key={kpi.label} size="md">
-          <div className="flex items-center gap-1.5 font-mono text-[10.5px] uppercase tracking-[0.8px] text-fg-muted">
+          <div className="flex items-center gap-1.5 font-sans tabular-nums text-[10.5px] uppercase tracking-[0.8px] text-fg-muted">
             <span className="truncate">{kpi.label}</span>
             <InfoTooltip text={definition} />
           </div>
@@ -50,7 +50,12 @@ export function DomainOverviewKpiRow({
               {kpi.value}
             </span>
             {kpi.delta ? (
-              <span className={cn("font-mono text-xs font-semibold", toneClass[kpi.deltaTone])}>
+              <span
+                className={cn(
+                  "font-sans tabular-nums text-xs font-semibold",
+                  toneClass[kpi.deltaTone],
+                )}
+              >
                 {kpi.delta}
               </span>
             ) : null}

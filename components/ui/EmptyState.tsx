@@ -96,9 +96,7 @@ export function EmptyState({
         </div>
       ) : null}
       {action ? <div className={compact ? "mt-3" : "mt-5.5"}>{action}</div> : null}
-      {footnote != null ? (
-        <div className="mt-3 font-mono text-[11px] text-fg-muted">{footnote}</div>
-      ) : null}
+      {footnote != null ? <div className="mt-3 text-[11px] text-fg-muted">{footnote}</div> : null}
     </div>
   );
 }

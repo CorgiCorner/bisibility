@@ -23,7 +23,7 @@ const barToneClasses: Record<HealthTone, string> = {
 function countPill(label: string, count: number, tone: HealthTone) {
   return (
     <span
-      className={`inline-flex rounded-full px-2.5 py-1 font-mono text-[10px] font-bold ${pillToneClasses[tone]}`}
+      className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold tabular-nums ${pillToneClasses[tone]}`}
     >
       {label} {countFormat.format(count)}
     </span>
@@ -58,7 +58,7 @@ export function AdminProviderHealth({ rows }: Readonly<{ rows: readonly Provider
             className="flex flex-wrap items-center gap-3 border-b border-border-soft px-0.5 py-3 last:border-0"
             key={row.provider}
           >
-            <span className="min-w-[4.75rem] shrink-0 font-mono text-xs font-bold text-fg">
+            <span className="min-w-[4.75rem] shrink-0 text-xs font-bold text-fg">
               {row.provider}
             </span>
             <span className="inline-flex flex-wrap items-center gap-1.5">
@@ -67,7 +67,7 @@ export function AdminProviderHealth({ rows }: Readonly<{ rows: readonly Provider
               {countPill("failed", row.failed, "failed")}
               {countPill("not run", row.notRun, "unknown")}
             </span>
-            <span className="font-mono text-[11px] text-fg-muted">
+            <span className="text-[11px] tabular-nums text-fg-muted">
               p95 last success: {ageLabel(row.p95AgeMs)}
             </span>
             <span className="ml-auto inline-flex min-w-[9.5rem] items-center gap-2">
@@ -79,7 +79,7 @@ export function AdminProviderHealth({ rows }: Readonly<{ rows: readonly Provider
                 />
               </span>
               <span
-                className={`whitespace-nowrap font-mono text-[11px] font-bold ${pillToneClasses[tone]}`}
+                className={`whitespace-nowrap text-[11px] font-bold tabular-nums ${pillToneClasses[tone]}`}
               >
                 {rateLabel(row.failureRatePercent)}
               </span>

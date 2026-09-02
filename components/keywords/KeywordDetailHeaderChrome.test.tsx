@@ -23,7 +23,7 @@ describe("KeywordDetailHeaderChrome", () => {
     const chip = id.parentElement;
     const copyButton = screen.getByRole("button", { name: "Copy ID" });
 
-    expect(id).toHaveClass("text-[11px]", "leading-normal");
+    expect(id).toHaveClass("font-mono", "text-[11px]");
     expect(chip).toHaveClass("h-[22px]", "gap-[5px]", "rounded-control", "px-2", "py-[3px]");
     expect(copyButton).toHaveClass("min-h-3", "min-w-3", "p-0");
     expect(copyButton).toHaveStyle({ minHeight: "12px", minWidth: "12px", padding: "0px" });

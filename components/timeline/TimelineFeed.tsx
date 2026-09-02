@@ -100,7 +100,7 @@ function TimelineGroupCard({
 }: Readonly<{ canDelete: boolean; group: TimelineGroup; projectId: string }>) {
   return (
     <section>
-      <div className="mb-[9px] font-mono text-[10px] uppercase tracking-[0.6px] text-fg-muted">
+      <div className="mb-[9px] font-sans tabular-nums text-[10px] uppercase tracking-[0.6px] text-fg-muted">
         {group.day}
       </div>
       <Card className="overflow-hidden p-0" size="lg">
@@ -175,7 +175,7 @@ function Pagination({ projectRef, view }: Readonly<{ projectRef: string; view: T
       ) : (
         <span />
       )}
-      <span className="font-mono text-[11px] text-fg-muted">Page {view.page}</span>
+      <span className="font-sans tabular-nums text-[11px] text-fg-muted">Page {view.page}</span>
       {view.hasNextPage ? (
         <Link
           className="inline-flex min-h-8 items-center rounded-control border border-border-control bg-bg-elev px-3 text-[12px] font-semibold text-fg-muted hover:border-accent hover:text-accent-text"
@@ -231,7 +231,7 @@ export function TimelineFeed({
               />
               <input
                 aria-label="Search timeline"
-                className={`${compactInputTypographyClassName} min-w-0 flex-1 bg-transparent font-mono text-fg outline-none focus-visible:outline-none`}
+                className={`${compactInputTypographyClassName} min-w-0 flex-1 bg-transparent font-sans tabular-nums text-fg outline-none focus-visible:outline-none`}
                 defaultValue={view.search}
                 name="q"
                 placeholder="Search timeline (type, URL, note)..."

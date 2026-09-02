@@ -57,7 +57,7 @@ function RangeFilter({
     <>
       <div className="mb-2 mt-3 flex items-center justify-between text-[12px] text-fg-muted">
         <span>{title}</span>
-        <span className="font-mono text-[11px] font-semibold text-accent-text">
+        <span className="font-sans tabular-nums text-[11px] font-semibold text-accent-text">
           {value[0]} - {value[1]}
         </span>
       </div>
@@ -70,7 +70,7 @@ function RangeFilter({
         sx={{ color: "var(--accent)", display: "block", mx: 0.5, width: "calc(100% - 8px)" }}
         value={value}
       />
-      <div className="flex justify-between font-mono text-[10px] text-fg-muted">
+      <div className="flex justify-between font-sans tabular-nums text-[10px] text-fg-muted">
         <span>0</span>
         <span>{max}</span>
       </div>
@@ -99,7 +99,7 @@ function TextFilter({
           {icon}
         </span>
         <input
-          className="min-w-0 flex-1 border-0 bg-transparent p-0 font-mono text-[12.5px] text-fg outline-none placeholder:text-fg-muted"
+          className="min-w-0 flex-1 border-0 bg-transparent p-0 font-sans tabular-nums text-[12.5px] text-fg outline-none placeholder:text-fg-muted"
           onChange={(event) => onChange(event.target.value)}
           placeholder={placeholder}
           type="text"
@@ -162,7 +162,7 @@ export function BacklinksFiltersDrawer({
       title={
         <span className="inline-flex items-center gap-2">
           Filters
-          <span className="grid h-[19px] min-w-[19px] place-items-center rounded-full bg-accent-soft px-1.5 font-mono text-[10.5px] font-semibold text-accent-text">
+          <span className="grid h-[19px] min-w-[19px] place-items-center rounded-full bg-accent-soft px-1.5 font-sans tabular-nums text-[10.5px] font-semibold text-accent-text">
             {activeCount}
           </span>
         </span>
@@ -186,7 +186,7 @@ export function BacklinksFiltersDrawer({
               <span className="min-w-0 flex-1 truncate text-[12.5px] font-medium text-fg">
                 {option.label}
               </span>
-              <span className="font-mono text-[11px] text-fg-muted">
+              <span className="font-sans tabular-nums text-[11px] text-fg-muted">
                 {linkTypeCounts[option.id]}
               </span>
             </label>

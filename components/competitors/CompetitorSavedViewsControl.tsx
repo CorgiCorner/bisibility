@@ -90,7 +90,7 @@ export function CompetitorSavedViewsControl({
           <CaretDown weight="regular" aria-hidden size={11} />
         </Button>
         {modified ? (
-          <span className="rounded-full bg-accent-soft px-2.5 py-1 font-mono text-[10px] font-semibold text-accent-text">
+          <span className="rounded-full bg-accent-soft px-2.5 py-1 font-sans tabular-nums text-[10px] font-semibold text-accent-text">
             Unsaved changes
           </span>
         ) : null}

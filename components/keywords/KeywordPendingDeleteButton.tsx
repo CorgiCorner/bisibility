@@ -63,7 +63,7 @@ export function KeywordPendingDeleteButton({
         open={confirmOpen}
       />
       {actionError ? (
-        <span className="font-mono text-[11px] text-red-text">{actionError}</span>
+        <span className="font-sans tabular-nums text-[11px] text-red-text">{actionError}</span>
       ) : null}
     </span>
   );

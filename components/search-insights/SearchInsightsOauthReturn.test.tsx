@@ -146,6 +146,62 @@ describe("SearchInsightsOauthReturn", () => {
     });
   });
 
+  /**
+   * The confirm button used to return to idle the moment the action resolved, because
+   * `router.refresh()` is fire-and-forget and `pending` was cleared in a `finally`. On the screen
+   * that produced the report that reads as "nothing happened", and the second click submits again.
+   */
+  it("stays disabled after a successful confirm until the refreshed render arrives", async () => {
+    const completeAction = vi.fn().mockResolvedValue({ property: "sc-domain:example.com" });
+    render(
+      <ToastProvider>
+        <SearchInsightsOauthReturn
+          cancelAction={vi.fn()}
+          completeAction={completeAction}
+          disconnectAction={vi.fn()}
+          projectId="prj_1"
+          setup={setup}
+          syncPlan={{ daysTotal: 488, pace: "normal", retentionMonths: 16 }}
+        />
+      </ToastProvider>,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "Use selected property" }));
+
+    expect(completeAction).toHaveBeenCalledTimes(1);
+    expect(routerMock.refresh).toHaveBeenCalledTimes(1);
+    const busy = await screen.findByRole("button", { name: "Connecting…" });
+    expect(screen.queryByRole("button", { name: "Use selected property" })).not.toBeInTheDocument();
+
+    // A second click on the same screen must not start a second connection. fireEvent bypasses the
+    // pointer-events guard, so this asserts the handler itself is closed, not just the cursor.
+    fireEvent.click(busy);
+    expect(completeAction).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns the confirm button to the customer when the action fails", async () => {
+    const completeAction = vi.fn().mockRejectedValue(new Error("Property is not verified."));
+    render(
+      <ToastProvider>
+        <SearchInsightsOauthReturn
+          cancelAction={vi.fn()}
+          completeAction={completeAction}
+          disconnectAction={vi.fn()}
+          projectId="prj_1"
+          setup={setup}
+          syncPlan={{ daysTotal: 488, pace: "normal", retentionMonths: 16 }}
+        />
+      </ToastProvider>,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "Use selected property" }));
+
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Use selected property" })).toBeEnabled(),
+    );
+    expect(routerMock.refresh).not.toHaveBeenCalled();
+  });
+
   it("keeps successful GA4 discovery selectable inside its local card", async () => {
     render(
       <ToastProvider>

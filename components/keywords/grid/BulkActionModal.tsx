@@ -105,7 +105,7 @@ export function BulkActionModal({
       title={title || undefined}
     >
       <div className="grid gap-3">
-        <p className="m-0 font-mono text-[11.5px] text-fg-muted">
+        <p className="m-0 font-sans tabular-nums text-[11.5px] text-fg-muted">
           Applies to {selectedRows.length} selected keyword{selectedRows.length === 1 ? "" : "s"}.
         </p>
         {mode === "tag" ? (
@@ -144,7 +144,7 @@ export function BulkActionModal({
           />
         ) : null}
         {actionError ? (
-          <p className="m-0 font-mono text-[11.5px] text-red-text">{actionError}</p>
+          <p className="m-0 font-sans tabular-nums text-[11.5px] text-red-text">{actionError}</p>
         ) : null}
       </div>
     </Modal>

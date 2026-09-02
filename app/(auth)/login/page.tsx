@@ -87,7 +87,7 @@ export default async function LoginPage({ searchParams }: Readonly<LoginPageProp
         </Link>
 
         <div className="max-w-[420px]">
-          <div className="font-mono text-[11px] uppercase tracking-[0.6px] text-accent-text">
+          <div className="text-[11px] uppercase tracking-[0.6px] text-accent-text">
             Open-source SEO platform
           </div>
           <h2 className="mt-3.5 mb-0 text-[32px] font-semibold leading-[1.2] tracking-[-1.1px]">
@@ -99,7 +99,7 @@ export default async function LoginPage({ searchParams }: Readonly<LoginPageProp
           </p>
         </div>
 
-        <div className="flex items-center gap-4.5 font-mono text-[11.5px] text-fg-muted">
+        <div className="flex items-center gap-4.5 text-[11.5px] text-fg-muted">
           {brandStats.map(({ icon: Icon, label, tone }) => (
             <span className="inline-flex items-center gap-1.5" key={label}>
               <Icon aria-hidden className={tone} size={14} weight="regular" />

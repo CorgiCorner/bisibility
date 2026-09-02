@@ -36,8 +36,8 @@ type BulkFrequencyFormProps = BulkFormChrome & {
 };
 
 const labelClass =
-  "flex flex-col gap-1.5 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted";
-const inputClass = `${inputClassName} min-h-10 rounded-control px-3 font-sans text-[13px] normal-case tracking-normal`;
+  "flex flex-col gap-1.5 font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted";
+const inputClass = `${inputClassName} min-h-10 rounded-control px-3 font-sans tabular-nums text-[13px] normal-case tracking-normal`;
 const frequencyOptions = [
   { label: "Daily", value: "daily" },
   { label: "Weekly", value: "weekly" },
@@ -47,7 +47,7 @@ const frequencyOptions = [
   { label: "Custom cron", value: "custom_cron" },
 ] as const;
 const frequencyTriggerClass =
-  "min-h-10 w-full justify-between rounded-control border-border-control bg-transparent px-3 font-sans text-[13px] font-normal normal-case tracking-normal";
+  "min-h-10 w-full justify-between rounded-control border-border-control bg-transparent px-3 font-sans tabular-nums text-[13px] font-normal normal-case tracking-normal";
 
 const noopUndo = () => undefined;
 
@@ -209,7 +209,7 @@ export function BulkFrequencyForm({
           {isSubmitting ? "Saving..." : "Set frequency"}
         </Button>
       )}
-      <p className="m-0 basis-full font-mono text-[11.5px] text-fg-muted">
+      <p className="m-0 basis-full font-sans tabular-nums text-[11.5px] text-fg-muted">
         {formattedDelta == null
           ? `Estimate unavailable for ${selectedRows.length} selected keyword${selectedRows.length === 1 ? "" : "s"}.`
           : `~ ${formattedDelta}/mo for ${selectedRows.length} keyword${selectedRows.length === 1 ? "" : "s"}`}

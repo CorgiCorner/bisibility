@@ -34,7 +34,7 @@ export function GoFurtherCards({ projectRef }: Readonly<{ projectRef: ProjectRef
   return (
     <section aria-labelledby="go-further-heading">
       <h2
-        className="text-left font-mono text-[10px] font-semibold uppercase leading-none tracking-[0.5px] text-fg-muted"
+        className="text-left font-sans tabular-nums text-[10px] font-semibold uppercase leading-none tracking-[0.5px] text-fg-muted"
         id="go-further-heading"
       >
         Go further

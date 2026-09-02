@@ -128,7 +128,7 @@ export const OtpInput = forwardRef<HTMLInputElement, OtpInputProps>(function Otp
               // biome-ignore lint/a11y/noAutofocus: HANDOFF-3 requires OTP autofocus without useEffect.
               autoFocus={index === 0}
               className={cn(
-                "aspect-square w-full min-w-0 rounded-control border-[1.5px] bg-transparent text-center font-mono text-[24px] font-semibold text-fg transition-colors focus:border-accent disabled:cursor-not-allowed disabled:text-fg-muted",
+                "aspect-square w-full min-w-0 rounded-control border-[1.5px] bg-transparent text-center font-mono text-[24px] tabular-nums font-semibold text-fg transition-colors focus:border-accent disabled:cursor-not-allowed disabled:text-fg-muted",
                 digit && "border-accent bg-accent-soft",
                 !digit && "border-border-control",
                 error && "border-red focus:border-red",

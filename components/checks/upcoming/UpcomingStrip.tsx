@@ -111,7 +111,7 @@ export function UpcomingStrip({
                 <h2 className="m-0 text-[17px] font-semibold leading-tight text-fg" id={titleId}>
                   {openDay.label}
                 </h2>
-                <p className="mb-0 mt-1 font-mono text-[11px] text-fg-muted">
+                <p className="mb-0 mt-1 font-sans tabular-nums text-[11px] text-fg-muted">
                   {formatCheckCount(openDay.count)} ·{" "}
                   {formatEstimatedCost(openDay.estimatedCostCents)} est.
                 </p>
@@ -133,7 +133,7 @@ export function UpcomingStrip({
                     key={`${sample.keywordId}-${sample.nextCheckAt}`}
                   >
                     <span className="truncate text-fg">{sample.keyword}</span>
-                    <span className="shrink-0 font-mono text-[11px] text-fg-muted">
+                    <span className="shrink-0 font-sans tabular-nums text-[11px] text-fg-muted">
                       <ZonedTime timeZone={timeZone} value={sample.nextCheckAt} />
                     </span>
                   </li>

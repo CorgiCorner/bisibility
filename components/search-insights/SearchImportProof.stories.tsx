@@ -149,7 +149,7 @@ export const BaselineSuppressed: Story = {
   render: () => (
     <ProofCanvas>
       <div className="flex flex-col gap-3">
-        <p className="m-0 font-mono text-ui-caption text-fg-muted">
+        <p className="m-0 font-sans tabular-nums text-ui-caption text-fg-muted">
           Previous 7-day window is not fully imported
         </p>
         <SearchInsightsKpiRow kpis={searchInsightsKpis(totals, false)} />

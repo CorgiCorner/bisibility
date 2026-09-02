@@ -91,14 +91,14 @@ export function UserMenu({
       <div className="flex items-center gap-2.5 px-[9px] pb-[11px] pt-[9px]">
         <Avatar
           alt=""
-          className="grid h-8.5 w-[34px] flex-none place-items-center rounded-control bg-accent-solid font-mono text-xs font-semibold text-accent-on-solid"
+          className="grid h-8.5 w-[34px] flex-none place-items-center rounded-control bg-accent-solid text-xs font-semibold text-accent-on-solid"
           initials={initials}
           src={avatarUrl}
         />
         <span className="min-w-0 flex-1">
           <span className="block text-[13px] font-semibold leading-tight">{name}</span>
-          <span className="block truncate font-mono text-[10.5px] text-fg-muted">{email}</span>
-          <span className="mt-1 block font-mono text-[9px] uppercase tracking-[0.4px] text-fg-muted">
+          <span className="block truncate text-[10.5px] text-fg-muted">{email}</span>
+          <span className="mt-1 block text-[9px] uppercase tracking-[0.4px] text-fg-muted">
             {roleLine}
           </span>
         </span>

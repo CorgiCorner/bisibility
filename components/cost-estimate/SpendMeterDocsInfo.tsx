@@ -48,7 +48,7 @@ export function SpendMeterDocsInfo({ action, sessionCents }: Readonly<SpendMeter
             Your monthly provider limit and current usage.
           </p>
           {sessionCents == null ? null : (
-            <p className="m-0 mt-1 font-mono text-[11px] text-fg-muted tabular-nums">
+            <p className="m-0 mt-1 font-sans text-[11px] text-fg-muted tabular-nums">
               {formatMoneyCents(sessionCents)} this session
             </p>
           )}

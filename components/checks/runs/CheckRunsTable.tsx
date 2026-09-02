@@ -47,7 +47,7 @@ function PositionDelta({ run }: Readonly<{ run: CheckRunRow }>) {
   const delta = run.previousPosition - run.position;
   if (delta === 0) {
     return (
-      <span className="rounded bg-bg-inset px-1.5 py-0.5 font-mono text-[9.5px] text-fg-muted">
+      <span className="rounded bg-bg-inset px-1.5 py-0.5 font-sans tabular-nums text-[9.5px] text-fg-muted">
         0
       </span>
     );
@@ -55,7 +55,7 @@ function PositionDelta({ run }: Readonly<{ run: CheckRunRow }>) {
   const Icon = delta > 0 ? ArrowUp : ArrowDown;
   return (
     <span
-      className={`inline-flex shrink-0 items-center gap-0.5 rounded px-1.5 py-0.5 font-mono text-[9.5px] font-semibold ${
+      className={`inline-flex shrink-0 items-center gap-0.5 rounded px-1.5 py-0.5 font-sans tabular-nums text-[9.5px] font-semibold ${
         delta > 0 ? "bg-green/10 text-green-text" : "bg-red/10 text-red-text"
       }`}
     >
@@ -74,7 +74,7 @@ function ProviderCell({ run }: Readonly<{ run: CheckRunRow }>) {
     <div className="flex min-w-0 flex-wrap items-center gap-1">
       <span className="truncate">{label}</span>
       {run.viaFallback ? (
-        <span className="rounded-full bg-yellow/10 px-1.5 py-0.5 font-mono text-[9.5px] font-semibold text-yellow-text">
+        <span className="rounded-full bg-yellow/10 px-1.5 py-0.5 font-sans tabular-nums text-[9.5px] font-semibold text-yellow-text">
           fallback
         </span>
       ) : null}
@@ -144,7 +144,7 @@ function RunCells({
           <Tooltip content={RESEARCH_METRICS_UNAVAILABLE_TOOLTIP}>
             <button
               aria-label={`no volume/KD: ${RESEARCH_METRICS_UNAVAILABLE_TOOLTIP}`}
-              className="mt-1 inline-flex cursor-help rounded-full border border-dashed border-border-control bg-bg-sunken px-1.5 py-0.5 font-mono text-[9.5px] font-semibold text-fg-muted"
+              className="mt-1 inline-flex cursor-help rounded-full border border-dashed border-border-control bg-bg-sunken px-1.5 py-0.5 font-sans tabular-nums text-[9.5px] font-semibold text-fg-muted"
               type="button"
             >
               no volume/KD
@@ -160,17 +160,19 @@ function RunCells({
         <ProviderCell run={run} />
       </td>
       {columns.depth ? (
-        <td className="px-3 py-3 font-mono text-[10.5px] text-fg-muted">
+        <td className="px-3 py-3 font-sans tabular-nums text-[10.5px] text-fg-muted">
           {typeof run.requestedDepth === "number" ? `Top ${run.requestedDepth}` : "-"}
         </td>
       ) : null}
       {columns.cost ? (
-        <td className="px-3 py-3 font-mono text-[10.5px] text-fg-muted">
+        <td className="px-3 py-3 font-sans tabular-nums text-[10.5px] text-fg-muted">
           <CostCell run={run} />
         </td>
       ) : null}
       {columns.when ? (
-        <td className="px-3 py-3 font-mono text-[10.5px] text-fg-muted">{formatWhen(run, now)}</td>
+        <td className="px-3 py-3 font-sans tabular-nums text-[10.5px] text-fg-muted">
+          {formatWhen(run, now)}
+        </td>
       ) : null}
     </>
   );

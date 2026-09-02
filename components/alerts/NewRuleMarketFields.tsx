@@ -26,7 +26,7 @@ export function NewRuleMarketFields({
 
   return (
     <section aria-label="Markets">
-      <div className="mb-[9px] font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
+      <div className="mb-[9px] font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
         Markets
       </div>
       <div className="flex flex-wrap gap-[7px]">
@@ -56,7 +56,7 @@ export function NewRuleMarketFields({
           );
         })}
       </div>
-      <p className="m-0 mt-[9px] font-mono text-[10.5px] leading-[1.5] text-fg-muted">
+      <p className="m-0 mt-[9px] font-sans tabular-nums text-[10.5px] leading-[1.5] text-fg-muted">
         Rule fires only for checks in the selected markets.
       </p>
     </section>
@@ -66,7 +66,7 @@ export function NewRuleMarketFields({
 export function RulePreview({ children }: Readonly<{ children: string }>) {
   return (
     <section>
-      <div className="mb-[9px] font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
+      <div className="mb-[9px] font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
         Preview
       </div>
       <div className="rounded-control border border-border bg-bg-sunken px-[15px] py-3.5 text-[13.5px] leading-[1.55]">

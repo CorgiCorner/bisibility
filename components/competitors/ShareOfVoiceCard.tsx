@@ -1,4 +1,4 @@
-import { Card, MonoText, SectionTitle } from "@/components/ui";
+import { Card, SectionTitle } from "@/components/ui";
 import type { CompetitorFilter, CompetitorKind, CompetitorMarket } from "@/lib/competitors/types";
 import { countLabel } from "@/lib/format/pluralize";
 import { InfoIcon as Info } from "@phosphor-icons/react";
@@ -52,13 +52,13 @@ export function ShareOfVoiceCard({
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex min-w-0 flex-col gap-1">
           <SectionTitle>Share of voice</SectionTitle>
-          <MonoText muted>
+          <span>
             Visibility across {countLabel(market.trackedKeywordCount, "tracked keyword")}
             {" / "}
             {market.location} / {market.languageLabel} /{" "}
             {market.device === "mobile" ? "Mobile" : "Desktop"}
             {market.checkedKeywordCount < market.trackedKeywordCount ? " · Partial data" : ""}
-          </MonoText>
+          </span>
         </div>
         <CompetitorFilterControls
           filter={filter}
@@ -103,7 +103,7 @@ export function ShareOfVoiceCard({
                     </span>
                     {competitor.kind === "Managed" ? (
                       <a
-                        className="block truncate font-mono text-[10px] text-fg-muted outline-none transition-colors hover:text-accent-text focus-visible:text-accent-text"
+                        className="block truncate font-sans tabular-nums text-[10px] text-fg-muted outline-none transition-colors hover:text-accent-text focus-visible:text-accent-text"
                         href={`https://${competitor.domain}`}
                         rel="noopener noreferrer"
                         target="_blank"
@@ -111,14 +111,14 @@ export function ShareOfVoiceCard({
                         {competitor.domain}
                       </a>
                     ) : competitor.label !== competitor.domain ? (
-                      <span className="block truncate font-mono text-[10px] text-fg-muted">
+                      <span className="block truncate font-sans tabular-nums text-[10px] text-fg-muted">
                         {competitor.domain}
                       </span>
                     ) : null}
                   </span>
                   {competitor.kind === "You" ? (
                     <span
-                      className="shrink-0 rounded-full px-2 py-0.5 font-mono text-[9px] font-semibold uppercase"
+                      className="shrink-0 rounded-full px-2 py-0.5 font-sans tabular-nums text-[9px] font-semibold uppercase"
                       style={{ backgroundColor: kind.background, color: kind.color }}
                     >
                       You
@@ -132,7 +132,7 @@ export function ShareOfVoiceCard({
                     style={{ backgroundColor: competitor.color, width: barWidth }}
                   />
                 </span>
-                <span className="w-full text-right font-mono text-xs text-fg-muted sm:w-[130px]">
+                <span className="w-full text-right font-sans tabular-nums text-xs text-fg-muted sm:w-[130px]">
                   {competitor.sharedKeywords} kw · {competitor.shareOfVoice}%
                 </span>
                 {managed ? (

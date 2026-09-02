@@ -25,7 +25,7 @@ export function CloudTopBar({
     <nav className="flex h-16 items-center justify-between gap-3 border-border border-b">
       <div className="flex min-w-0 items-center gap-[11px]">
         <BrandLockup className="flex-none" />
-        <span className="inline-flex flex-none items-center gap-1.5 rounded-full bg-accent-soft px-[9px] py-[3px] font-mono text-[10px] font-bold uppercase tracking-[0.4px] text-accent-text">
+        <span className="inline-flex flex-none items-center gap-1.5 rounded-full bg-accent-soft px-[9px] py-[3px] font-sans tabular-nums text-[10px] font-bold uppercase tracking-[0.4px] text-accent-text">
           <Cloud aria-hidden size={11} weight="regular" />
           Beta
         </span>
@@ -45,7 +45,7 @@ function SetupPill({ step }: Readonly<{ step: number }>) {
   const current = Math.min(Math.max(step, 1), CLOUD_ONBOARDING_TOTAL_STEPS);
 
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-bg-sunken px-[11px] py-1.5 font-mono text-[10.5px] font-semibold text-fg-muted">
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-bg-sunken px-[11px] py-1.5 font-sans tabular-nums text-[10.5px] font-semibold text-fg-muted">
       Setup / {current} of {CLOUD_ONBOARDING_TOTAL_STEPS}
     </span>
   );

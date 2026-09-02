@@ -105,7 +105,7 @@ export function SavedViewsControl({
         open={open}
         slotProps={{ paper: { sx: { border: "1px solid var(--border)", minWidth: 240 } } }}
       >
-        <div className="px-4 pb-1 pt-2 font-mono text-[10px] uppercase tracking-[0.6px] text-fg-muted">
+        <div className="px-4 pb-1 pt-2 font-sans tabular-nums text-[10px] uppercase tracking-[0.6px] text-fg-muted">
           Saved views
         </div>
         <MenuItem onClick={() => applyView(null)} selected={!activeViewId}>

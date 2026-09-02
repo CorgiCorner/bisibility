@@ -23,19 +23,19 @@ function KpiCard({ kpi }: Readonly<{ kpi: SearchInsightsKpi }>) {
   return (
     <div className="flex min-w-0 flex-col gap-1.5 rounded-card border border-border bg-bg-elev px-4 pb-4 pt-3.5">
       <span className="flex min-w-0 items-center gap-2">
-        <span className="min-w-0 truncate font-mono text-ui-micro uppercase tracking-wide text-fg-muted">
+        <span className="min-w-0 truncate font-sans tabular-nums text-ui-micro uppercase tracking-wide text-fg-muted">
           {kpi.label}
         </span>
         {/* Which system produced the number, on the number itself: two sources share this row. */}
-        <span className="shrink-0 rounded-full bg-bg-sunken px-1.5 py-px font-mono text-ui-micro tracking-wide text-fg-muted">
+        <span className="shrink-0 rounded-full bg-bg-sunken px-1.5 py-px font-sans tabular-nums text-ui-micro tracking-wide text-fg-muted">
           {kpi.source}
         </span>
       </span>
-      <span className="font-mono text-ui-h1">{kpi.value}</span>
+      <span className="font-sans tabular-nums text-ui-h1">{kpi.value}</span>
       <span
         className={cn(
-          "inline-flex items-center gap-1.5 whitespace-nowrap font-mono text-ui-caption",
-          // Improvement is the only thing that earns colour; everything else stays muted so a
+          "inline-flex items-center gap-1.5 whitespace-nowrap font-sans tabular-nums text-ui-caption",
+          // Improvement is the only thing that earns colour; everything else stays so a
           // normal week does not read as an alarm.
           up ? "text-green-text" : "text-fg-muted",
         )}
@@ -43,7 +43,7 @@ function KpiCard({ kpi }: Readonly<{ kpi: SearchInsightsKpi }>) {
         {Arrow ? <Arrow aria-hidden className="shrink-0" size={12} weight="regular" /> : null}
         {kpi.delta}
       </span>
-      <span className="whitespace-nowrap font-mono text-ui-micro text-fg-muted">
+      <span className="whitespace-nowrap font-sans tabular-nums text-ui-micro text-fg-muted">
         from {kpi.prev}
       </span>
     </div>
@@ -54,18 +54,20 @@ function PendingKpiCard({ pending }: Readonly<{ pending: OrganicSessionsPendingP
   return (
     <div className="flex min-w-0 flex-col gap-1.5 rounded-card border border-border bg-bg-elev px-4 pb-4 pt-3.5">
       <span className="flex min-w-0 items-center gap-2">
-        <span className="min-w-0 truncate font-mono text-ui-micro uppercase tracking-wide text-fg-muted">
+        <span className="min-w-0 truncate font-sans tabular-nums text-ui-micro uppercase tracking-wide text-fg-muted">
           {pending.label}
         </span>
-        <span className="shrink-0 rounded-full bg-bg-sunken px-1.5 py-px font-mono text-ui-micro tracking-wide text-fg-muted">
+        <span className="shrink-0 rounded-full bg-bg-sunken px-1.5 py-px font-sans tabular-nums text-ui-micro tracking-wide text-fg-muted">
           {pending.source}
         </span>
       </span>
-      <span className="font-mono text-ui-h1">Pending</span>
-      <span className="font-mono text-ui-caption text-fg-muted">{pending.status}</span>
+      <span className="font-sans tabular-nums text-ui-h1">Pending</span>
+      <span className="font-sans tabular-nums text-ui-caption text-fg-muted">{pending.status}</span>
       <span className="text-ui-micro text-fg-muted">{pending.reason}</span>
       {pending.readyIn ? (
-        <span className="font-mono text-ui-micro text-fg-muted">Ready in {pending.readyIn}</span>
+        <span className="font-sans tabular-nums text-ui-micro text-fg-muted">
+          Ready in {pending.readyIn}
+        </span>
       ) : null}
     </div>
   );

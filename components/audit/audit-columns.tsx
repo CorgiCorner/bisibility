@@ -19,7 +19,7 @@ function ActorEventCell({ row }: Readonly<GridRenderCellParams<AuditEntry>>) {
     <span className="flex h-full min-w-0 items-center gap-2.5 py-1">
       <Avatar
         alt=""
-        className="grid h-[26px] w-[26px] shrink-0 place-items-center rounded-control bg-bg-sunken font-mono text-[9.5px] font-semibold text-fg-muted"
+        className="grid h-[26px] w-[26px] shrink-0 place-items-center rounded-control bg-bg-sunken text-[9.5px] font-semibold text-fg-muted"
         initials={row.actor.initials}
         src={row.actor.avatarUrl}
       />
@@ -27,7 +27,7 @@ function ActorEventCell({ row }: Readonly<GridRenderCellParams<AuditEntry>>) {
         <span className="block truncate text-[12.5px] font-medium leading-[1.25] text-fg">
           {row.eventName}
         </span>
-        <span className="mt-0.5 block truncate font-mono text-[10px] leading-[1.2] text-fg-muted">
+        <span className="mt-0.5 block truncate text-[10px] leading-[1.2] text-fg-muted">
           {row.actor.email} / {row.source.channel.toUpperCase()}
         </span>
       </span>
@@ -65,7 +65,7 @@ export const auditColumns: GridColDef<AuditEntry>[] = [
     // 10px side padding leaves no slack at the design's 170px, so widen rather than clip.
     width: 198,
     renderCell: ({ row }) => (
-      <span className="whitespace-nowrap font-mono text-[11.5px] text-fg-muted">
+      <span className="whitespace-nowrap text-[11.5px] tabular-nums text-fg-muted">
         {row.timestampLabel}
       </span>
     ),

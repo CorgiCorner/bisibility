@@ -83,7 +83,7 @@ export function RankedKeywordSuggestionDrawer({
       description="Keywords your site already ranks for, ordered by estimated traffic."
       footer={
         <div className="flex flex-col gap-2">
-          <span className="font-mono text-[11.5px] text-fg-muted">
+          <span className="text-[11.5px] text-fg-muted tabular-nums">
             Spent this session: ${(spentCents / 100).toFixed(2)}
             {lastPageCached ? `. Page ${pageCount} cached.` : ""}
           </span>
@@ -131,7 +131,7 @@ export function RankedKeywordSuggestionDrawer({
         <Button onClick={selectTop} size="xs" type="button" variant="secondary">
           Top 3 by traffic
         </Button>
-        <span className="self-center font-mono text-[11px] text-fg-muted">
+        <span className="self-center text-[11px] text-fg-muted tabular-nums">
           {active.length} of {selectable.length} selected
         </span>
       </div>
@@ -141,7 +141,7 @@ export function RankedKeywordSuggestionDrawer({
           className="w-full min-w-[560px] border-collapse text-left text-[12px]"
         >
           <thead>
-            <tr className="border-b border-border font-mono text-[10px] uppercase text-fg-muted">
+            <tr className="border-b border-border text-[10px] uppercase text-fg-muted">
               <th className="w-10" />
               <th className="py-2">Keyword</th>
               <th>Position</th>

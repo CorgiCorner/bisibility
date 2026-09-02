@@ -13,10 +13,10 @@ function CopyRow({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
     <div className="flex items-center gap-2 border-border-soft border-b px-3.5 py-3 last:border-b-0">
       <span className="min-w-0 flex-1">
-        <span className="block font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
+        <span className="block font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
           {label}
         </span>
-        <span className="mt-1 block truncate font-mono text-[13px] font-semibold text-fg">
+        <span className="mt-1 block truncate font-sans tabular-nums text-[13px] font-semibold text-fg">
           {value}
         </span>
       </span>
@@ -28,7 +28,9 @@ function CopyRow({ label, value }: Readonly<{ label: string; value: string }>) {
 function DetailRow({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
     <div className="flex items-baseline justify-between gap-4 py-2">
-      <dt className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">{label}</dt>
+      <dt className="font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
+        {label}
+      </dt>
       <dd className="m-0 min-w-0 text-right text-[13px] text-fg">{value}</dd>
     </div>
   );

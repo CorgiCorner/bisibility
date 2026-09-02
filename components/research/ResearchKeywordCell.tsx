@@ -48,7 +48,7 @@ export function ResearchKeywordCell({
         </span>
       ) : null}
       {row.alreadyTracked ? (
-        <span className="rounded-full border border-border px-1.5 py-0.5 font-mono text-[9.5px] text-fg-muted">
+        <span className="rounded-full border border-border px-1.5 py-0.5 font-sans tabular-nums text-[9.5px] text-fg-muted">
           Tracked
         </span>
       ) : (
@@ -65,7 +65,7 @@ export function ResearchKeywordCell({
           )}
           {row.alreadySaved ? (
             <span
-              className="rounded-full border px-1.5 py-0.5 font-mono text-[9.5px] text-accent-text"
+              className="rounded-full border px-1.5 py-0.5 font-sans tabular-nums text-[9.5px] text-accent-text"
               style={{
                 borderColor: "color-mix(in srgb, var(--accent) 32%, var(--border))",
               }}

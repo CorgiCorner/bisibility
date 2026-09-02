@@ -32,7 +32,7 @@ export function researchResultsColumns(input: {
       minWidth: 92,
       renderCell: ({ row }) =>
         input.metricsAvailable ? (
-          <span className="font-mono text-[12px]">
+          <span className="font-sans tabular-nums text-[12px]">
             {row.searchVolume == null ? "-" : row.searchVolume.toLocaleString("en-US")}
           </span>
         ) : (
@@ -61,7 +61,7 @@ export function researchResultsColumns(input: {
       renderCell: ({ row }) =>
         input.metricsAvailable ? (
           <span
-            className="rounded-full border px-2 py-0.5 font-mono text-[11px] font-semibold"
+            className="rounded-full border px-2 py-0.5 font-sans tabular-nums text-[11px] font-semibold"
             style={difficultyPillStyle(row.difficulty)}
           >
             {row.difficulty ?? "-"}
@@ -77,7 +77,7 @@ export function researchResultsColumns(input: {
       minWidth: 78,
       renderCell: ({ row }) =>
         input.metricsAvailable ? (
-          <span className="font-mono text-[11.5px]">
+          <span className="font-sans tabular-nums text-[11.5px]">
             {row.cpcCents == null ? "-" : formatEstimateCents(row.cpcCents)}
           </span>
         ) : (

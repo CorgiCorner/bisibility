@@ -1,7 +1,6 @@
 import { cn } from "@/lib/ui/cn";
 import { cva } from "class-variance-authority";
 import { CopyButton } from "./CopyButton";
-import { MonoText, type MonoTextProps } from "./MonoText";
 
 export type IdChipProps = {
   value: string;
@@ -26,14 +25,12 @@ const idChipVariants = cva("inline-flex items-center", {
 });
 
 type IdChipSize = NonNullable<IdChipProps["size"]>;
-type MonoTextSize = NonNullable<MonoTextProps["size"]>;
-
-const monoTextSizeByIdChipSize = {
-  xs: "lg",
-  sm: "sm",
-  md: "md",
-  lg: "lg",
-} satisfies Record<IdChipSize, MonoTextSize>;
+const idTextSizeByIdChipSize = {
+  xs: "text-[11px]",
+  sm: "text-[9px]",
+  md: "text-[10px]",
+  lg: "text-[11px]",
+} satisfies Record<IdChipSize, string>;
 
 export function IdChip({
   value,
@@ -50,9 +47,7 @@ export function IdChip({
         className,
       )}
     >
-      <MonoText component="span" size={monoTextSizeByIdChipSize[size]} sx={{ color: "inherit" }}>
-        {value}
-      </MonoText>
+      <span className={cn("font-mono leading-[1.45]", idTextSizeByIdChipSize[size])}>{value}</span>
       <CopyButton
         aria-label={copyLabel}
         className={cn("shrink-0", copyClassName)}

@@ -52,7 +52,7 @@ function WorkspaceSearchHeader({
     <div className="-mx-1.5 -mt-1.5 mb-1.5 flex h-10 items-center gap-2 border-border border-b px-3">
       <input
         aria-label="Find project"
-        className="min-w-0 flex-1 bg-transparent font-mono text-[12px] text-fg outline-none placeholder:text-fg-muted [&::-webkit-search-cancel-button]:hidden"
+        className="min-w-0 flex-1 bg-transparent text-[12px] text-fg outline-none placeholder:text-fg-muted [&::-webkit-search-cancel-button]:hidden"
         onChange={(event) => onSearchChange(event.target.value)}
         onKeyDown={(event) => {
           if (event.key !== "Escape") event.stopPropagation();
@@ -62,7 +62,7 @@ function WorkspaceSearchHeader({
         type="search"
         value={search}
       />
-      <kbd className="flex-none rounded-control border border-border-control px-1.5 py-0.5 font-mono text-[9px] text-fg-muted">
+      <kbd className="flex-none rounded-control border border-border-control px-1.5 py-0.5 text-[9px] text-fg-muted">
         Esc
       </kbd>
     </div>
@@ -218,7 +218,7 @@ export function WorkspaceSwitcher({
               <span className="block text-[13px] font-medium leading-tight text-fg">
                 Create project
               </span>
-              <span className="mt-px block font-mono text-[10px] text-fg-muted">
+              <span className="mt-px block text-[10px] text-fg-muted">
                 Collaborate with others in a new project
               </span>
             </span>

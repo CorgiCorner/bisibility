@@ -70,7 +70,7 @@ export function SearchInsightsOauthSelection({
     <div className="overflow-hidden rounded-card border border-border bg-bg-elev">
       <div className="flex flex-col gap-4 p-5 sm:p-7">
         <div>
-          <p className="m-0 mb-1.5 font-mono text-[10.5px] uppercase tracking-[0.7px] text-fg-muted">
+          <p className="m-0 mb-1.5 font-sans tabular-nums text-[10.5px] uppercase tracking-[0.7px] text-fg-muted">
             VERIFIED PROPERTY
           </p>
           <MenuSelect

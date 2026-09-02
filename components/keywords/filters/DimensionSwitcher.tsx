@@ -126,7 +126,7 @@ export function DimensionSwitcher({
       className={cn(
         quietChipVariants({ size: "lg" }),
         chipShape,
-        "font-mono text-fg outline-none transition-colors hover:border-border-control hover:bg-bg-sunken focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted",
+        "font-sans tabular-nums text-fg outline-none transition-colors hover:border-border-control hover:bg-bg-sunken focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted",
       )}
       disabled={!canTrack || readOnly}
       onClick={(event) => {
@@ -177,7 +177,7 @@ export function DimensionSwitcher({
             },
           }}
         >
-          <div className="px-3.5 pb-1 pt-2 font-mono text-[9.5px] uppercase tracking-[0.5px] text-fg-muted">
+          <div className="px-3.5 pb-1 pt-2 font-sans tabular-nums text-[9.5px] uppercase tracking-[0.5px] text-fg-muted">
             {meta.name}
           </div>
           <MenuItem

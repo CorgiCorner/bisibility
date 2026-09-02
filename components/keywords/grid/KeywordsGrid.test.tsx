@@ -95,7 +95,7 @@ describe("KeywordsGrid pending state", () => {
     expect(screen.getByRole("button", { name: /columns/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /filters/i })).toBeInTheDocument();
     expect(
-      within(screen.getByTestId("keywords-import-labeled-action")).getByRole("button", {
+      within(screen.getByTestId("keywords-import-action")).getByRole("button", {
         name: /^Import$/i,
       }),
     ).toBeInTheDocument();
@@ -223,7 +223,7 @@ describe("KeywordsGrid pending state", () => {
       totalCount: 100,
     });
     fireEvent.click(
-      within(screen.getByTestId("keywords-export-labeled-action")).getByRole("button", {
+      within(screen.getByTestId("keywords-export-action")).getByRole("button", {
         name: /^Export$/i,
       }),
     );

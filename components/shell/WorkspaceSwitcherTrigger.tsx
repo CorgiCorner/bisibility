@@ -98,7 +98,7 @@ export function WorkspaceSwitcherTrigger({
                   project is also NAMED "New project", so the two collide and the second line
                   becomes noise. Drop it rather than print the same words twice. */}
               {sublabel && sublabel !== name ? (
-                <span className="block font-mono text-[10px] text-fg-muted">{sublabel}</span>
+                <span className="block text-[10px] text-fg-muted">{sublabel}</span>
               ) : null}
             </span>
             {/* --fg-muted, not --fg-faint: that token was retired and now aliases muted. */}

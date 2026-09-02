@@ -12,7 +12,7 @@ import type {
 } from "react-hook-form";
 
 const labelClass =
-  "flex flex-col gap-[7px] font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted";
+  "flex flex-col gap-[7px] font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted";
 const fieldClass = `${inputClassName} rounded-control px-3 py-2.5 text-[13px] font-medium`;
 const selectTriggerClass =
   "min-h-10 w-full justify-between rounded-control border-border-control bg-transparent px-3 text-[13px] font-medium normal-case tracking-normal";
@@ -42,7 +42,7 @@ export function TemplatePicker({
 }>) {
   return (
     <section>
-      <div className="mb-[9px] font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
+      <div className="mb-[9px] font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
         Template
       </div>
       <div className="flex flex-wrap gap-2">
@@ -156,7 +156,7 @@ export function RecipientFields({
 }>) {
   return (
     <div className="mt-3 flex flex-col gap-[7px]">
-      <span className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
+      <span className="font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
         Recipients
       </span>
       <MenuMultiSelect

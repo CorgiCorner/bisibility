@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, EmptyState, MonoText, SectionTitle } from "@/components/ui";
+import { Card, EmptyState, SectionTitle } from "@/components/ui";
 import type { UpcomingView } from "@/lib/checks/contract";
 import {
   CalendarBlankIcon as CalendarBlank,
@@ -76,9 +76,7 @@ function UpcomingHeader() {
   return (
     <div className="border-border border-b px-4 py-3.5">
       <SectionTitle>Upcoming</SectionTitle>
-      <MonoText className="truncate" muted>
-        Forecast
-      </MonoText>
+      <span className="truncate">Forecast</span>
     </div>
   );
 }

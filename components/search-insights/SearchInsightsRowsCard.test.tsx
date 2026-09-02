@@ -33,7 +33,7 @@ describe("SearchInsightsRowsCard", () => {
       "shrink-0",
       "px-2",
       "py-0.5",
-      "font-mono",
+      "font-sans tabular-nums",
       "text-ui-caption",
       "text-fg-muted",
     );

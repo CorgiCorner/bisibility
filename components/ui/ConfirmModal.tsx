@@ -118,11 +118,10 @@ export function ConfirmModal({
       {needsType ? (
         <div className="mt-4">
           <label className="mb-[7px] block text-[12px] text-fg-muted" htmlFor="confirm-type-word">
-            Type <strong className="font-mono font-semibold text-fg">{expectedWord}</strong> to
-            confirm
+            Type <strong className="font-semibold text-fg">{expectedWord}</strong> to confirm
           </label>
           <input
-            className="w-full rounded-control border border-border-control bg-transparent px-3 py-2.5 font-mono text-[13px] font-medium text-fg outline-none transition-colors placeholder:text-[12px] placeholder:leading-4 focus:border-red"
+            className="w-full rounded-control border border-border-control bg-transparent px-3 py-2.5 text-[13px] font-medium text-fg outline-none transition-colors placeholder:text-[12px] placeholder:leading-4 focus:border-red"
             id="confirm-type-word"
             onChange={(event) => setTyped(event.target.value)}
             placeholder={expectedWord}

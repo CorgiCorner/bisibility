@@ -36,7 +36,7 @@ function makeDateFormatter(timeZone: string) {
 }
 function Position({ row }: Readonly<{ row: CompareRow }>) {
   return (
-    <span className="whitespace-nowrap font-mono text-[11.5px] text-fg-muted">
+    <span className="whitespace-nowrap font-sans tabular-nums text-[11.5px] text-fg-muted">
       {row.from === null ? "-" : `#${row.from}`} -&gt; {row.to === null ? "-" : `#${row.to}`}
     </span>
   );
@@ -44,7 +44,7 @@ function Position({ row }: Readonly<{ row: CompareRow }>) {
 function Chip({ row }: Readonly<{ row: CompareRow }>) {
   return (
     <span
-      className={`rounded-full border px-2.5 py-1 font-mono text-[10px] ${CHIP_CLASS[row.state]}`}
+      className={`rounded-full border px-2.5 py-1 font-sans tabular-nums text-[10px] ${CHIP_CLASS[row.state]}`}
       title={row.tip}
     >
       {row.chip}
@@ -63,7 +63,7 @@ function ListResult({
   return (
     <div>
       <div className="flex flex-col gap-2 border-b border-border px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
-        <div className="flex flex-wrap gap-x-3 gap-y-1 font-mono text-[11px]">
+        <div className="flex flex-wrap gap-x-3 gap-y-1 font-sans tabular-nums text-[11px]">
           {STATS.map((item) => (
             <span key={item.state}>
               <strong className="text-fg">{result.stats[item.state]}</strong>{" "}
@@ -71,7 +71,7 @@ function ListResult({
             </span>
           ))}
         </div>
-        <p className="m-0 text-right font-mono text-[10.5px] text-fg-muted">
+        <p className="m-0 text-right font-sans tabular-nums text-[10.5px] text-fg-muted">
           Both checks retrieved the top {result.overlap}, so the comparison covers positions 1 to{" "}
           {result.overlap}.
         </p>
@@ -89,7 +89,7 @@ function ListResult({
                 {row.domain}
               </span>
               {tracked ? (
-                <span className="rounded-full border border-accent-solid px-2.5 py-1 font-mono text-[10px] text-accent-text">
+                <span className="rounded-full border border-accent-solid px-2.5 py-1 font-sans tabular-nums text-[10px] text-accent-text">
                   Your site
                 </span>
               ) : null}
@@ -115,13 +115,13 @@ function RefusedResult({
 }>) {
   return (
     <div className="m-4 rounded-control border border-dashed border-border bg-bg-sunken p-4">
-      <p className="m-0 flex items-center gap-2 font-mono text-[10px] text-fg-muted">
+      <p className="m-0 flex items-center gap-2 font-sans tabular-nums text-[10px] text-fg-muted">
         <Prohibit aria-hidden size={13} weight="regular" />
         {result.eyebrow}
       </p>
       <h4 className="m-0 mt-1 text-[13px] font-semibold">{result.title}</h4>
       <p className="m-0 mt-1 text-[12px] text-fg-muted">{result.body}</p>
-      <p className="m-0 mt-2 font-mono text-[10px] text-fg-muted">{result.rule}</p>
+      <p className="m-0 mt-2 font-sans tabular-nums text-[10px] text-fg-muted">{result.rule}</p>
       {fullPair && onPickFullPair ? (
         <Button
           onClick={() => onPickFullPair(fullPair.from, fullPair.to)}

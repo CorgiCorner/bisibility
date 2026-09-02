@@ -6,7 +6,7 @@ import { AdminProviderHealth } from "@/components/admin/AdminProviderHealth";
 import { AdminProviderUsageTable } from "@/components/admin/AdminProviderUsageTable";
 import { AdminSectionUnavailable } from "@/components/admin/AdminSectionUnavailable";
 import { AdminWorkerHealth } from "@/components/admin/AdminWorkerHealth";
-import { MonoText, tableHeaderClassName } from "@/components/ui";
+import { tableHeaderClassName } from "@/components/ui";
 import { checkFailureRate } from "@/lib/ops/instance-admin-health";
 import type { InstanceAdminDashboard } from "@/lib/queries/instance-admin";
 
@@ -173,7 +173,7 @@ export function AdminDashboard({ data }: Readonly<{ data: InstanceAdminDashboard
           </p>
         ) : null}
         {temporalIssues.length > 0 ? (
-          <ul className="mt-3 space-y-1 rounded-card bg-bg-sunken p-3 font-mono text-[11px] text-fg-muted">
+          <ul className="mt-3 space-y-1 rounded-card bg-bg-sunken p-3 text-[11px] text-fg-muted">
             {temporalIssues.map((issue) => (
               <li key={issue}>{issue}</li>
             ))}
@@ -218,7 +218,7 @@ export function AdminDashboard({ data }: Readonly<{ data: InstanceAdminDashboard
                     key={`${event.createdAt}:${event.kind}:${index}`}
                   >
                     <td className="py-2 pr-3">
-                      <MonoText>{event.kind}</MonoText>
+                      <span>{event.kind}</span>
                     </td>
                     <td className="py-2 pr-3">
                       <Badge status={event.severity} />
@@ -227,7 +227,7 @@ export function AdminDashboard({ data }: Readonly<{ data: InstanceAdminDashboard
                     <td className="py-2 pr-3">
                       <Badge status={event.deliveredAt ? "delivered" : "undelivered"} />
                     </td>
-                    <td className="py-2 font-mono text-fg-muted">{event.attempts}</td>
+                    <td className="py-2 tabular-nums text-fg-muted">{event.attempts}</td>
                   </tr>
                 ))}
               </tbody>

@@ -90,10 +90,10 @@ export function SaveCompetitorViewModal({
         id="save-competitor-view"
         onSubmit={handleSubmit((values) => void submit(values))}
       >
-        <label className="grid gap-2 font-mono text-[10px] uppercase text-fg-muted">
+        <label className="grid gap-2 font-sans tabular-nums text-[10px] uppercase text-fg-muted">
           View name
           <input
-            className="rounded-control border border-border-control bg-transparent px-3 py-2.5 font-sans text-[13.5px] normal-case text-fg outline-none focus:border-accent"
+            className="rounded-control border border-border-control bg-transparent px-3 py-2.5 font-sans tabular-nums text-[13.5px] normal-case text-fg outline-none focus:border-accent"
             placeholder="e.g. US mobile core set"
             {...register("name")}
           />

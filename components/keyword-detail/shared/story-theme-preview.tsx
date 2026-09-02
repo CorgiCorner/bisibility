@@ -7,7 +7,7 @@ export function KeywordDetailStoryThemes({ children }: Readonly<{ children: Reac
     <div className="grid gap-4 p-4 xl:grid-cols-2">
       {themes.map((theme) => (
         <section className="min-w-0 rounded-card bg-bg p-5 text-fg" data-theme={theme} key={theme}>
-          <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.6px] text-fg-muted">
+          <p className="mb-3 font-sans tabular-nums text-[10px] uppercase tracking-[0.6px] text-fg-muted">
             {theme} theme
           </p>
           {children}

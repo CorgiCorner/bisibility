@@ -46,7 +46,7 @@ export type TrackQueryDialogProps = {
   query: string | null;
 };
 
-const LABEL = "font-mono text-ui-micro uppercase tracking-wider text-fg-muted";
+const LABEL = "font-sans tabular-nums text-ui-micro uppercase tracking-wider text-fg-muted";
 const CHIP =
   "inline-flex min-h-7.5 max-w-full items-center gap-1.5 rounded-control border px-3 text-ui-caption font-medium transition-colors";
 const CHIP_ON = "border-border-control bg-accent-soft text-fg";
@@ -147,7 +147,9 @@ export function TrackQueryDialog({
                 <span className="truncate font-semibold">{option.name}</span>
                 <span className="text-fg-muted">/ {option.language}</span>
                 {option.disabled ? (
-                  <span className="font-mono text-ui-micro">{TRACK_DIALOG_COPY.paused}</span>
+                  <span className="font-sans tabular-nums text-ui-micro">
+                    {TRACK_DIALOG_COPY.paused}
+                  </span>
                 ) : null}
               </button>
             ))}
@@ -204,7 +206,7 @@ export function TrackQueryDialog({
         </div>
         <section className="flex flex-col gap-1.5 rounded-card border border-border bg-bg-sunken px-3.5 py-3">
           <span className={LABEL}>{TRACK_DIALOG_COPY.costTitle}</span>
-          <span className="font-mono text-ui-caption leading-normal">
+          <span className="font-sans tabular-nums text-ui-caption leading-normal">
             {trackCostLine(costContext, schedule, serpDepth)}
           </span>
           <span className="text-ui-caption leading-normal text-fg-muted">

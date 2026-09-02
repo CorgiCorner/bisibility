@@ -43,7 +43,7 @@ export function OnboardingStepper({
 
   return (
     <div className="mt-6">
-      <span className="font-mono text-xs text-fg-muted">
+      <span className="text-xs text-fg-muted tabular-nums">
         Step {currentStep} of {totalOnboardingSteps}
       </span>
       <div
@@ -119,7 +119,7 @@ function StepRailItem({
         {done ? (
           <Check aria-hidden size={15} weight="regular" />
         ) : (
-          <span aria-hidden className="font-mono text-[12px] font-semibold">
+          <span aria-hidden className="text-[12px] font-semibold tabular-nums">
             {step.n}
           </span>
         )}
@@ -134,7 +134,7 @@ function StepRailItem({
         >
           {step.title}
         </span>
-        <span className="block font-mono text-[10px] font-normal leading-snug text-fg-muted">
+        <span className="block text-[10px] font-normal leading-snug text-fg-muted">
           {step.desc}
         </span>
       </span>

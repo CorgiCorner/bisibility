@@ -39,7 +39,7 @@ export function ImportColumnMapping({
 }>) {
   return (
     <div className="mt-4 overflow-hidden rounded-card border border-border">
-      <div className="grid grid-cols-[minmax(0,1fr)_20px_minmax(0,1fr)] items-center gap-2 bg-bg-sunken px-[15px] py-2 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
+      <div className="grid grid-cols-[minmax(0,1fr)_20px_minmax(0,1fr)] items-center gap-2 bg-bg-sunken px-[15px] py-2 font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
         <span>In your file</span>
         <span />
         <span>Save as</span>
@@ -49,7 +49,7 @@ export function ImportColumnMapping({
           className="grid grid-cols-[minmax(0,1fr)_20px_minmax(0,1fr)] items-center gap-2 border-t border-border-soft px-[15px] py-[11px]"
           key={source.index}
         >
-          <span className="inline-flex min-w-0 items-center gap-[7px] font-mono text-[12.5px]">
+          <span className="inline-flex min-w-0 items-center gap-[7px] font-sans tabular-nums text-[12.5px]">
             <Table weight="regular" className="shrink-0 text-fg-muted" size={14} />
             <span className="truncate">{source.label}</span>
           </span>

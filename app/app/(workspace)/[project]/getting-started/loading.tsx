@@ -10,7 +10,7 @@ const cards = ["team", "ai", "github"] as const;
 
 export default function GettingStartedLoading() {
   return (
-    <PageContent aria-hidden className="grid gap-5">
+    <PageContent variant="constrained" className="grid gap-5">
       <div className="flex min-w-0 items-center gap-2">
         <Bar className="h-5 w-[74px]" />
         <Bar className="h-3.5 w-1 rounded-full" />

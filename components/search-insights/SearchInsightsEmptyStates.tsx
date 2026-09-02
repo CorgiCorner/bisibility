@@ -1,12 +1,13 @@
 "use client";
 
-import { Button, EmptyState, ModuleMark, Tooltip } from "@/components/ui";
+import { Button, EmptyState, ModuleMark } from "@/components/ui";
 import type { SearchInsightsImportAction } from "@/lib/actions/search-insights";
 import { googleInstallUrl } from "@/lib/providers/analytics/google-install-url";
 import { asProjectRef, searchConsolePath } from "@/lib/routing/app-path";
 import {
   resolveSearchBackfillPresentation,
   type SearchBackfillFacts,
+  type SearchBackfillKind,
 } from "@/lib/search-insights/sync/control-model";
 import {
   ArrowUpRight,
@@ -14,7 +15,9 @@ import {
   GoogleLogoIcon as GoogleLogo,
 } from "@phosphor-icons/react";
 import { SearchImportPauseControl } from "./SearchImportPauseControl";
+import { SearchInsightsRefresh } from "./SearchInsightsRefresh";
 import {
+  FIRST_VIEW_BLOCKED,
   NO_PROPERTY_BODY,
   NO_PROPERTY_CTA,
   NO_PROPERTY_TITLE,
@@ -22,7 +25,6 @@ import {
   REAUTH_CTA,
   REAUTH_TITLE,
 } from "./search-insights-copy";
-import { importObservabilityProgress } from "./search-insights-trust-model";
 
 export type SearchInsightsNoPropertyStateProps = {
   projectId: string;
@@ -76,6 +78,17 @@ export function SearchInsightsNoPropertyState({
   );
 }
 
+/**
+ * The states this screen leaves on its own. They are also the only window where the module has no
+ * strip to carry the refresh, so without one here the customer can only reload by hand. A state
+ * that waits on the customer instead - reauth, paused by you - gets no control: nothing to watch.
+ */
+const SELF_RESOLVING: ReadonlySet<SearchBackfillKind> = new Set([
+  "queued",
+  "running",
+  "waiting_worker",
+]);
+
 export type SearchInsightsNoDataStateProps = {
   facts: SearchBackfillFacts;
   projectId: string;
@@ -92,14 +105,13 @@ export function SearchInsightsNoDataState({
   retryAction,
 }: Readonly<SearchInsightsNoDataStateProps>) {
   const model = resolveSearchBackfillPresentation(facts);
-  const progress = importObservabilityProgress(facts.observability);
   const workerCaused = model.kind === "waiting_worker";
   const reconnectHref = googleInstallUrl({
     projectId,
     provider: "gsc",
     returnPath: searchInsightsModulePath(projectId),
   });
-  const action =
+  const primary =
     model.action === "reconnect" ? (
       <Button href={reconnectHref} variant="primary">
         Reconnect Search Console
@@ -119,29 +131,20 @@ export function SearchInsightsNoDataState({
         variant="primary"
       />
     ) : null;
+  const watching = SELF_RESOLVING.has(model.kind);
+  const action =
+    primary || watching ? (
+      <div className="flex flex-wrap items-center justify-center gap-2.5">
+        {primary}
+        {watching ? <SearchInsightsRefresh active /> : null}
+      </div>
+    ) : null;
   return (
     <EmptyState
       action={action}
       description={
         <>
-          {progress && model.kind !== "waiting_for_first_data" ? (
-            <>
-              <p className="m-0">
-                <span data-testid="qualifying-progress">{progress.qualifyingCounter}</span> are
-                imported for the first view.
-              </p>
-              <p className="m-0 mt-1.5" data-testid="deep-history-progress">
-                Deep history: {progress.deepHistory}.
-              </p>
-              <Tooltip content={progress.freshness.tooltip} semantics="description">
-                <p className="m-0 mt-1.5" data-testid="freshness-note">
-                  {progress.freshness.label}
-                </p>
-              </Tooltip>
-            </>
-          ) : (
-            <p className="m-0">{model.description}</p>
-          )}
+          <p className="m-0">{FIRST_VIEW_BLOCKED}</p>
           {model.supportingText ? <p className="m-0 mt-1.5">{model.supportingText}</p> : null}
         </>
       }

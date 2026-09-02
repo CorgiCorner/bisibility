@@ -52,7 +52,8 @@ describe("MenuSelect grouped", () => {
     const header = screen.getByText("Tracked markets");
     expect(header).toHaveAttribute("data-slot", "menu-group-header");
     expect(header).toHaveAttribute("role", "presentation");
-    expect(header).toHaveClass("MuiListSubheader-gutters", "font-mono", "uppercase");
+    expect(header).toHaveClass("MuiListSubheader-gutters", "uppercase");
+    expect(header).not.toHaveClass("font-mono");
     expect(header).not.toHaveClass("MuiListSubheader-sticky");
     expect(header).toHaveStyle({
       backgroundColor: "var(--bg-sunken)",

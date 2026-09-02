@@ -83,7 +83,7 @@ export async function CloudImportScreen({
     <>
       {config.topBar ? <CloudTopBar ctx={config.topBar} workspaceName={view.project.name} /> : null}
       <Link
-        className="mt-7 inline-flex items-center gap-1.5 font-mono text-[12px] font-semibold text-fg-muted transition-colors hover:text-fg"
+        className="mt-7 inline-flex items-center gap-1.5 font-sans tabular-nums text-[12px] font-semibold text-fg-muted transition-colors hover:text-fg"
         href={config.back.href}
       >
         <ArrowLeft aria-hidden size={13} weight="regular" />

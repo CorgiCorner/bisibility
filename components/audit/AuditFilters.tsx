@@ -182,21 +182,23 @@ export function AuditFilters({
               paper: { sx: { ...menuSelectPaperSx, minWidth: 232 } },
             }}
           >
-            <div className="px-3 pb-1 pt-2 font-mono text-[9.5px] uppercase tracking-[0.6px] text-fg-muted">
+            <div className="px-3 pb-1 pt-2 text-[9.5px] uppercase tracking-[0.6px] text-fg-muted">
               Export {pluralize(visibleCount, "event")}
             </div>
             <MenuItem onClick={() => runExport("csv")} sx={{ gap: "10px" }}>
               <FileCsv aria-hidden className="text-green-text" size={16} weight="regular" />
               <span className="flex flex-col">
                 <span className="text-[13px] text-fg">CSV</span>
-                <span className="text-[11px] text-fg-muted">Spreadsheet-ready table</span>
+                <span className="text-[11px] tabular-nums text-fg-muted">
+                  Spreadsheet-ready table
+                </span>
               </span>
             </MenuItem>
             <MenuItem onClick={() => runExport("json")} sx={{ gap: "10px" }}>
               <BracketsCurly aria-hidden className="text-blue-text" size={16} weight="regular" />
               <span className="flex flex-col">
                 <span className="text-[13px] text-fg">JSON</span>
-                <span className="text-[11px] text-fg-muted">Full event payloads</span>
+                <span className="text-[11px] tabular-nums text-fg-muted">Full event payloads</span>
               </span>
             </MenuItem>
             <div className="-mx-1.5 flex items-start gap-2 border-t border-border px-[18px] pb-2 pt-2 text-[10px] leading-[1.35] text-fg-muted">
@@ -205,7 +207,7 @@ export function AuditFilters({
             </div>
           </Menu>
         </div>
-        <span className="font-mono text-[11px] text-fg-muted">
+        <span className="text-[11px] tabular-nums text-fg-muted">
           {formatCount(visibleCount, totalCount, truncated)}
         </span>
       </div>

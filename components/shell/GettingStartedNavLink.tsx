@@ -1,8 +1,13 @@
 "use client";
 
+import {
+  GETTING_STARTED_RAIL_LABEL,
+  gettingStartedProgressAriaLabel,
+} from "@/components/getting-started/getting-started-copy";
 import { SetupProgressRing } from "@/components/getting-started/SetupProgressRing";
 import { Tooltip } from "@/components/ui";
 import { appPath } from "@/lib/routing/app-path";
+import { CheckIcon as Check } from "@phosphor-icons/react";
 import Link from "next/link";
 
 export type GettingStartedNavLinkProps = Readonly<{
@@ -11,6 +16,8 @@ export type GettingStartedNavLinkProps = Readonly<{
   doneCount: number;
   onNavigate?: () => void;
   projectRef: string;
+  setupComplete?: boolean;
+  settledCount: number;
   totalCount: number;
 }>;
 
@@ -20,21 +27,23 @@ export function GettingStartedNavLink({
   doneCount,
   onNavigate,
   projectRef,
+  setupComplete = false,
+  settledCount,
   totalCount,
 }: GettingStartedNavLinkProps) {
   const href = appPath(projectRef, "getting-started");
   const active = currentHref === href || currentHref.startsWith(`${href}/`);
-  const progressLabel = `${doneCount} of ${totalCount} setup steps complete`;
+  const progressLabel = gettingStartedProgressAriaLabel(settledCount, totalCount);
 
   return (
     <Tooltip
-      content={collapsed ? `Get set up, ${progressLabel}` : ""}
+      content={collapsed ? progressLabel : ""}
       placement="right"
       wrapperClassName={collapsed ? undefined : "w-full"}
     >
       <Link
         aria-current={active ? "page" : undefined}
-        aria-label={collapsed ? `Get set up, ${progressLabel}` : undefined}
+        aria-label={collapsed ? progressLabel : undefined}
         className={[
           "flex h-9 items-center rounded-control border border-border bg-bg-elev text-[13.5px] font-semibold text-fg transition-colors duration-150 hover:border-border-control hover:bg-bg-sunken active:bg-bg-inset focus-visible:-outline-offset-2",
           collapsed
@@ -46,9 +55,21 @@ export function GettingStartedNavLink({
         onClick={onNavigate}
       >
         <span className="grid h-[30px] w-[30px] flex-none place-items-center">
-          <SetupProgressRing doneCount={doneCount} size={20} totalCount={totalCount} />
+          {setupComplete ? (
+            <span
+              aria-hidden
+              className="grid size-5 place-items-center rounded-full bg-accent-solid text-accent-on-solid"
+              data-setup-complete-indicator
+            >
+              <Check size={12} weight="regular" />
+            </span>
+          ) : (
+            <SetupProgressRing doneCount={doneCount} size={20} totalCount={totalCount} />
+          )}
         </span>
-        {collapsed ? null : <span className="min-w-0 flex-1 truncate">Get set up</span>}
+        {collapsed ? null : (
+          <span className="min-w-0 flex-1 truncate">{GETTING_STARTED_RAIL_LABEL}</span>
+        )}
       </Link>
     </Tooltip>
   );

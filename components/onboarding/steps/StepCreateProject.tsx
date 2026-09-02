@@ -7,18 +7,23 @@ import {
 import {
   actionErrorMessage,
   feedbackClass,
-  inputClass,
   onboardingFormId,
 } from "@/components/onboarding/onboarding-form-utils";
-import { DataResidencyNote, FieldLabel } from "@/components/ui";
+import {
+  buildPublicDomainIconUrl,
+  DataResidencyNote,
+  DomainIconLayer,
+  FieldLabel,
+} from "@/components/ui";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import {
   type OnboardingWebsiteInput,
   onboardingWebsiteSchema,
   type WebsiteProjectIdentity,
 } from "@/lib/onboarding/website";
+import { GlobeIcon as Globe } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
-import { type FocusEvent, useRef, useState } from "react";
+import { type ChangeEvent, type FocusEvent, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 
@@ -77,6 +82,7 @@ export function StepCreateProject({
     initialProject?.domain ? { domain: initialProject.domain, name: initialProject.name } : null,
   );
   const [isDeriving, setIsDeriving] = useState(false);
+  const [faviconSrc, setFaviconSrc] = useState<string | null>(null);
   const derivationId = useRef(0);
   const {
     clearErrors,
@@ -103,6 +109,7 @@ export function StepCreateProject({
   async function deriveWebsite(event: FocusEvent<HTMLInputElement>) {
     websiteField.onBlur(event);
     const website = event.currentTarget.value;
+    setFaviconSrc(buildPublicDomainIconUrl({ domain: website }));
     const requestId = ++derivationId.current;
     const isValid = await trigger("website");
     if (
@@ -170,28 +177,55 @@ export function StepCreateProject({
       <div className="mt-5.5 flex max-w-[440px] flex-col gap-4">
         <div className="flex flex-col gap-[7px]">
           <FieldLabel
-            className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted"
+            className="text-[10px] uppercase tracking-[0.5px] text-fg-muted"
             help={WEBSITE_MATCHING_HINT}
             htmlFor="onboarding-website"
             label="Your website"
           />
-          <input
-            aria-describedby={errors.website ? "onboarding-website-error" : undefined}
-            aria-invalid={errors.website ? true : undefined}
-            aria-required="true"
-            className={`${inputClass} font-mono text-sm`}
-            id="onboarding-website"
-            placeholder="https://example.com"
-            required
-            {...websiteField}
-            onBlur={deriveWebsite}
-            onChange={(event) => {
-              derivationId.current += 1;
-              websiteField.onChange(event);
-              setIdentity(null);
-              setIsDeriving(false);
-            }}
-          />
+          <div
+            className="relative flex h-10 w-full min-w-0 items-center overflow-hidden rounded-lg bg-transparent font-sans text-sm font-normal text-fg ring-1 ring-border shadow-xs transition-[box-shadow] duration-[var(--motion-tooltip)] ease-[ease] motion-reduce:transition-none hover:ring-border-control focus-within:ring-[1.25px] focus-within:ring-accent focus-within:hover:ring-[1.25px] focus-within:hover:ring-accent has-[:disabled]:pointer-events-none has-[:disabled]:opacity-50 has-[[aria-invalid=true]]:ring-red/40"
+            data-slot="input-wrapper"
+          >
+            <span
+              aria-hidden
+              className="flex h-full w-10 shrink-0 items-center justify-center border-border border-r bg-bg-sunken text-fg-muted"
+            >
+              <span
+                className="relative grid size-5 place-items-center overflow-hidden rounded-[4px]"
+                data-testid="onboarding-domain-icon"
+              >
+                <Globe className="size-4" size={16} weight="regular" />
+                <DomainIconLayer
+                  layerClassName="rounded-[4px] border border-border"
+                  src={faviconSrc}
+                  testId="onboarding-domain-favicon"
+                />
+              </span>
+            </span>
+            <input
+              aria-describedby={errors.website ? "onboarding-website-error" : undefined}
+              aria-invalid={errors.website ? true : undefined}
+              aria-required="true"
+              autoCapitalize="none"
+              autoComplete="url"
+              className="h-full min-w-0 flex-1 bg-transparent px-3 font-sans text-sm text-fg outline-none placeholder:font-normal placeholder:text-sm placeholder:text-fg-muted focus-visible:outline-none"
+              id="onboarding-website"
+              inputMode="url"
+              placeholder="https://example.com"
+              required
+              spellCheck={false}
+              type="url"
+              {...websiteField}
+              onBlur={deriveWebsite}
+              onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                derivationId.current += 1;
+                websiteField.onChange(event);
+                setFaviconSrc(null);
+                setIdentity(null);
+                setIsDeriving(false);
+              }}
+            />
+          </div>
           {errors.website ? (
             <span className={`${feedbackClass} text-red-text`} id="onboarding-website-error">
               {errors.website.message}

@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { SystemLoadingPage, TerminalBlock } from "./SystemPage";
@@ -22,6 +23,13 @@ function expectDarkHairline(container: HTMLElement) {
 }
 
 describe("system terminal chrome", () => {
+  it("scopes terminal Mono to semantic code", () => {
+    const source = readFileSync("components/marketing/system/SystemPage.tsx", "utf8");
+
+    expect(source).not.toMatch(/<div[^>]*font-mono/);
+    expect(source).toMatch(/<code[^>]*className="block"/);
+  });
+
   it("uses the dark code-surface hairline when loaded", () => {
     const { container } = render(
       <TerminalBlock note="Not found" path="/missing" routes={["/docs"]} status="404" />,

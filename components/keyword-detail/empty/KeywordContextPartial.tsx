@@ -23,7 +23,7 @@ type MetricPillProps = {
 function MetricPill({ children, label }: Readonly<MetricPillProps>) {
   return (
     <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-bg-sunken px-2.5 py-1">
-      <span className="font-mono text-[9.5px] uppercase tracking-[0.5px] text-fg-muted">
+      <span className="font-sans tabular-nums text-[9.5px] uppercase tracking-[0.5px] text-fg-muted">
         {label}
       </span>
       <span className="text-[12px] font-semibold text-fg">{children}</span>
@@ -56,7 +56,7 @@ export function KeywordContextPartial({
                 style={{ backgroundColor: difficultyColor(difficulty.label) }}
               />
               <span>{difficulty.score}</span>
-              <span className="font-mono text-[9.5px] uppercase tracking-[0.4px] text-fg-muted">
+              <span className="font-sans tabular-nums text-[9.5px] uppercase tracking-[0.4px] text-fg-muted">
                 {difficulty.label}
               </span>
             </span>

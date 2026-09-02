@@ -30,7 +30,8 @@ const metricLabels: Record<HistoryMetric, string> = {
 };
 const axisTextStyle = {
   fill: "var(--fg-muted)",
-  fontFamily: "var(--font-mono), monospace",
+  fontFamily: "var(--font-sans), system-ui, sans-serif",
+  fontVariantNumeric: "tabular-nums",
   fontSize: 11,
 };
 
@@ -164,7 +165,7 @@ export function DomainOverviewPerformanceChart({
               <ChartLineUp aria-hidden size={22} weight="regular" />
             </span>
             <strong className="text-sm">Load monthly organic history</strong>
-            <span className="max-w-[360px] font-mono text-[11px] leading-relaxed text-fg-muted">
+            <span className="max-w-[360px] font-sans tabular-nums text-[11px] leading-relaxed text-fg-muted">
               {failed
                 ? "History could not be loaded. The overview report is still available."
                 : "History is cached for 12 hours. Switching metrics and ranges after loading is free."}

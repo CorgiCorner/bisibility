@@ -31,7 +31,7 @@ function LadderRow({
       ref={row.tracked ? trackedRef : undefined}
     >
       <span
-        className={`font-mono text-[12px] ${row.tracked ? "font-semibold text-fg" : "text-fg-muted"}`}
+        className={`font-sans tabular-nums text-[12px] ${row.tracked ? "font-semibold text-fg" : "text-fg-muted"}`}
       >
         #{row.position}
       </span>
@@ -50,12 +50,12 @@ function LadderRow({
             {row.title ?? row.domain}
           </span>
         )}
-        <span className="mt-0.5 block truncate font-mono text-[11px] text-fg-muted">
+        <span className="mt-0.5 block truncate font-sans tabular-nums text-[11px] text-fg-muted">
           {row.domain}
         </span>
       </span>
       {row.tracked ? (
-        <span className="rounded-full border border-accent-solid px-2.5 py-1 font-mono text-[10px] font-medium text-accent-text">
+        <span className="rounded-full border border-accent-solid px-2.5 py-1 font-sans tabular-nums text-[10px] font-medium text-accent-text">
           Your site
         </span>
       ) : null}
@@ -96,10 +96,10 @@ export function RetrievedResultsLadder({ results, trackedRef }: Readonly<LadderP
       </ol>
       {gap ? (
         <div className="m-3 rounded-control border border-dashed border-border bg-bg-sunken p-3">
-          <p className="m-0 font-mono text-[11px] font-medium uppercase text-fg-muted">
+          <p className="m-0 font-sans tabular-nums text-[11px] font-medium uppercase text-fg-muted">
             {gap.heading}
           </p>
-          <p className="m-0 mt-1 font-mono text-[11px] text-fg-muted">{gap.count}</p>
+          <p className="m-0 mt-1 font-sans tabular-nums text-[11px] text-fg-muted">{gap.count}</p>
           <p className="m-0 mt-2 text-[12px] leading-5 text-fg-muted">{gap.reason}</p>
         </div>
       ) : null}

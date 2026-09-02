@@ -15,7 +15,7 @@ export function DomainOverviewDistribution({ metrics }: Readonly<{ metrics: Doma
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <div>
           <h3 className="m-0 inline text-[14.5px] font-semibold">Position distribution</h3>
-          <span className="ml-2 font-mono text-[11px] text-fg-muted">
+          <span className="ml-2 font-sans tabular-nums text-[11px] text-fg-muted">
             {number.format(total)} keywords by organic position · Estimated
           </span>
         </div>
@@ -28,7 +28,7 @@ export function DomainOverviewDistribution({ metrics }: Readonly<{ metrics: Doma
             className="grid min-h-9 w-full grid-cols-1 items-center gap-1 rounded-control px-1.5 py-1 sm:grid-cols-[74px_minmax(0,1fr)_74px_58px] sm:gap-3"
             key={bucket.value}
           >
-            <span className="font-mono text-[12px] text-fg-muted">{bucket.label}</span>
+            <span className="font-sans tabular-nums text-[12px] text-fg-muted">{bucket.label}</span>
             <span
               aria-hidden
               className="h-2 overflow-hidden rounded-full border border-border-soft bg-bg-sunken"
@@ -38,10 +38,10 @@ export function DomainOverviewDistribution({ metrics }: Readonly<{ metrics: Doma
                 style={{ width: `${Math.max(2, (bucket.count / max) * 100)}%` }}
               />
             </span>
-            <strong className="font-mono text-[12.5px] sm:text-right">
+            <strong className="font-sans tabular-nums text-[12.5px] sm:text-right">
               {number.format(bucket.count)}
             </strong>
-            <span className="font-mono text-[11px] text-fg-muted sm:text-right">
+            <span className="font-sans tabular-nums text-[11px] text-fg-muted sm:text-right">
               {percent.format(share)}%
             </span>
           </div>

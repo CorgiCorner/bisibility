@@ -129,14 +129,17 @@ describe("SearchInsightsWorkspace", () => {
     expect(screen.queryByRole("button", { name: "Sync now" })).toBeNull();
   });
 
-  it("holds the provenance strip behind a divider and the module body below the card", () => {
-    renderWorkspace({
+  // The strip owns its own divider. A `<Suspense>` element is truthy even when the strip inside
+  // it resolves to nothing, so a divider painted from the card would outlive its child.
+  it("renders the provenance strip unwrapped and the module body below the card", () => {
+    const { container } = renderWorkspace({
       children: <p>Module body</p>,
       trustStrip: <p>Google data available through Jul 8</p>,
     });
 
     const strip = screen.getByText("Google data available through Jul 8");
-    expect(strip.parentElement).toHaveClass("border-t");
+    expect(strip.parentElement).not.toHaveClass("border-t");
+    expect(container.querySelectorAll(".border-t")).toHaveLength(0);
     expect(screen.getByText("Module body")).toBeInTheDocument();
   });
 

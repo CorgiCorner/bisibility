@@ -17,7 +17,7 @@ export function DataSourceNoDataPanel({ health }: Readonly<{ health: DataSourceH
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="text-[14.5px] font-semibold leading-normal text-fg">Data source</div>
-          <div className="mt-0.5 font-mono text-[11px] leading-normal text-fg-muted">
+          <div className="mt-0.5 font-sans tabular-nums text-[11px] leading-normal text-fg-muted">
             {health.description}
           </div>
         </div>
@@ -26,7 +26,7 @@ export function DataSourceNoDataPanel({ health }: Readonly<{ health: DataSourceH
       <div className="mt-4.5 grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-x-4.5 gap-y-3.5">
         {health.metrics.map((metric) => (
           <div className="min-w-0" key={metric.label}>
-            <div className="font-mono text-[10px] uppercase tracking-[0.6px] text-fg-muted">
+            <div className="font-sans tabular-nums text-[10px] uppercase tracking-[0.6px] text-fg-muted">
               {metric.label}
             </div>
             <div
@@ -57,7 +57,7 @@ export function RecentlyAddedCard({
         <div className="flex items-center text-sm font-semibold leading-normal text-fg">
           Recently added
         </div>
-        <div className="mt-[3px] font-mono text-[10.5px] leading-normal text-fg-muted">
+        <div className="mt-[3px] font-sans tabular-nums text-[10.5px] leading-normal text-fg-muted">
           Waiting for first check
         </div>
       </div>
@@ -71,11 +71,11 @@ export function RecentlyAddedCard({
             <span className="block truncate text-[13px] font-medium leading-normal text-fg">
               {row.keyword}
             </span>
-            <span className="mt-px block truncate font-mono text-[10.5px] leading-normal text-fg-muted">
+            <span className="mt-px block truncate font-sans tabular-nums text-[10.5px] leading-normal text-fg-muted">
               {row.note}
             </span>
           </span>
-          <span className="flex-none font-mono text-[11.5px] leading-normal text-fg-muted">
+          <span className="flex-none font-sans tabular-nums text-[11.5px] leading-normal text-fg-muted">
             {row.positionText}
           </span>
         </Link>

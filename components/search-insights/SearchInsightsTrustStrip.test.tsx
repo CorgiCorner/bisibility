@@ -4,6 +4,8 @@ import type { ImportObservabilityFacts } from "@/lib/search-insights/queries/imp
 import { isoFromFrozenNow } from "@/tests/clock";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { SearchInsightsContextCard } from "./SearchInsightsContextCard";
+import { SearchInsightsNoDataState } from "./SearchInsightsEmptyStates";
 import { SearchInsightsTrustStrip } from "./SearchInsightsTrustStrip";
 import { importRunningOwnershipCopy, OWNERSHIP_COPY } from "./search-insights-copy";
 
@@ -93,6 +95,118 @@ function tooltipText(element: HTMLElement) {
   return document.getElementById(element.getAttribute("aria-describedby") ?? "")?.textContent;
 }
 
+/**
+ * The page renders the strip and the empty card together whenever the finalized window is not
+ * open yet, which is exactly the state that used to print each provenance counter twice.
+ */
+/**
+ * The page hands the card a `<Suspense>` element that is truthy whether or not the strip inside it
+ * renders anything, so divider ownership has to sit with the strip. These drive the real card and
+ * the real strip together, which is the composition that produced the doubled border.
+ */
+describe("divider ownership", () => {
+  function renderInCard(overrides: Partial<Parameters<typeof SearchInsightsTrustStrip>[0]> = {}) {
+    return render(
+      <SearchInsightsContextCard
+        trustStrip={
+          <SearchInsightsTrustStrip
+            coverage={{ calculable: true, capHitDays: 0, clicksShare: 62, impressionsShare: 41 }}
+            deploymentMode="self-host"
+            importState={importStateWithFacts()}
+            incidents={[]}
+            localViewReady
+            pauseAction={pauseAction}
+            projectId="prj_test"
+            providerAvailabilitySource="metadata"
+            providerAvailableThrough="2026-07-08"
+            resumeAction={pauseAction}
+            statusFacts={runningStatusFacts}
+            workerStatus={matchedWorker}
+            {...overrides}
+          />
+        }
+      >
+        <span>Sub-bar</span>
+      </SearchInsightsContextCard>,
+    );
+  }
+
+  it("gives the provenance strip exactly one divider", () => {
+    renderInCard();
+
+    const strip = screen.getByRole("region", { name: "Data provenance" });
+    expect(strip).toHaveClass("border-t");
+    expect(strip.parentElement).not.toHaveClass("border-t");
+  });
+
+  it("gives the waiting strip exactly one divider", () => {
+    const { container } = renderInCard({ providerAvailableThrough: null });
+
+    const strip = screen.getByRole("region", { name: "Data provenance" });
+    expect(strip).toHaveClass("border-t");
+    // The waiting strip has no divided cells, so the strip's own rule is the only one on screen.
+    expect(container.querySelectorAll(".border-t")).toHaveLength(1);
+  });
+
+  it("leaves no divider when the strip renders nothing", () => {
+    const { container } = renderInCard({
+      localViewReady: false,
+      providerAvailableThrough: null,
+    });
+
+    expect(screen.queryByRole("region", { name: "Data provenance" })).not.toBeInTheDocument();
+    expect(container.querySelectorAll(".border-t")).toHaveLength(0);
+  });
+});
+
+describe("strip and empty card together", () => {
+  function renderStuckModule() {
+    return render(
+      <>
+        <SearchInsightsTrustStrip
+          coverage={{ calculable: false, capHitDays: 0, clicksShare: 0, impressionsShare: 0 }}
+          deploymentMode="self-host"
+          importState={importStateWithFacts()}
+          incidents={[]}
+          localViewReady
+          pauseAction={pauseAction}
+          projectId="prj_test"
+          providerAvailabilitySource="metadata"
+          providerAvailableThrough="2026-07-08"
+          resumeAction={pauseAction}
+          statusFacts={runningStatusFacts}
+          workerStatus={matchedWorker}
+        />
+        <SearchInsightsNoDataState
+          facts={runningStatusFacts}
+          pauseAction={pauseAction}
+          projectId="prj_test"
+          resumeAction={pauseAction}
+          retryAction={pauseAction}
+        />
+      </>,
+    );
+  }
+
+  it.each(["qualifying-progress", "deep-history-progress", "freshness-note"])(
+    "gives %s exactly one home",
+    (testId) => {
+      renderStuckModule();
+
+      expect(screen.getAllByTestId(testId)).toHaveLength(1);
+    },
+  );
+
+  it("keeps the counter values the strip already reported", () => {
+    renderStuckModule();
+
+    expect(screen.getByTestId("qualifying-progress")).toHaveTextContent(
+      `${observabilityFacts.qualifyingDays} of ${observabilityFacts.targetDays} finalized days`,
+    );
+    expect(screen.getByTestId("deep-history-progress")).toHaveTextContent("3 of 16 months");
+  });
+});
+
 describe("SearchInsightsTrustStrip", () => {
   it("uses the elevated surface for the full provenance strip", () => {
     renderStrip();
@@ -136,7 +250,7 @@ describe("SearchInsightsTrustStrip", () => {
     expect(date.textContent).toBe("Aug 26");
     expect(date).not.toHaveTextContent("2026");
     expect(date.childNodes).toHaveLength(1);
-    expect(date.firstElementChild).toHaveClass("font-mono");
+    expect(date.firstElementChild).toHaveClass("font-sans tabular-nums");
     const availability = screen.getByText("Final through", { exact: false });
     expect(availability).toBeInTheDocument();
     expect(availability.textContent).not.toMatch(/\s{2}/);
@@ -149,8 +263,9 @@ describe("SearchInsightsTrustStrip", () => {
     expect(container.textContent).not.toMatch(
       /Finalized through|imported through|locally finalized/i,
     );
+    // Days are imported; only a full window is missing, so the cell must not blame Google.
     expect(
-      screen.getByText("Coverage appears once the first finalized days are imported."),
+      screen.getByText("Coverage appears once the imported finalized days cover a full window."),
     ).toBeInTheDocument();
     expect(container.textContent).not.toMatch(
       /0% \/ 0%|Query text on|about three days|first data|,\s{2}|%.* \/ .*%/i,

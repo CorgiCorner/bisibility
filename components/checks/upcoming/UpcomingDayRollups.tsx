@@ -23,11 +23,11 @@ function DaySummary({ day }: Readonly<{ day: UpcomingDayGroup }>) {
     <>
       <span className="min-w-0 flex-1 text-left">
         <span className="block text-[13px] font-semibold text-fg">{day.label}</span>
-        <span className="mt-0.5 block font-mono text-[10.5px] text-fg-muted">
+        <span className="mt-0.5 block font-sans tabular-nums text-[10.5px] text-fg-muted">
           {formatCheckCount(day.count)}
         </span>
       </span>
-      <span className="shrink-0 font-mono text-[11px] font-semibold text-fg-muted">
+      <span className="shrink-0 font-sans tabular-nums text-[11px] font-semibold text-fg-muted">
         {formatEstimatedCost(day.estimatedCostCents)} est.
       </span>
     </>
@@ -43,7 +43,7 @@ function SampleRows({ day, timeZone }: Readonly<{ day: UpcomingDayGroup; timeZon
           key={`${sample.keywordId}-${sample.nextCheckAt}`}
         >
           <span className="truncate text-fg-muted">{sample.keyword}</span>
-          <span className="shrink-0 font-mono text-[10.5px] text-fg-muted">
+          <span className="shrink-0 font-sans tabular-nums text-[10.5px] text-fg-muted">
             <ZonedTime timeZone={timeZone} value={sample.nextCheckAt} />
           </span>
         </li>

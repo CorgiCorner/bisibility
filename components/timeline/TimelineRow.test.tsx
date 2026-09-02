@@ -69,7 +69,17 @@ describe("TimelineRow", () => {
     expect(screen.getByText("architect malaga")).toBeVisible();
     expect(screen.getByText("Malaga, Spain")).toBeVisible();
     expect(screen.getByText("Spanish")).toBeVisible();
-    expect(screen.getByRole("img", { name: "Mobile" })).toHaveAttribute("title", "Mobile");
+    const deviceIcon = screen.getByRole("img", { name: "Mobile" });
+    expect(deviceIcon).toHaveAttribute("title", "Mobile");
+    expect(deviceIcon).toHaveClass(
+      "inline-flex",
+      "size-3",
+      "shrink-0",
+      "items-center",
+      "justify-center",
+      "align-middle",
+      "leading-none",
+    );
     expect(screen.queryByText(/Keyword:/)).not.toBeInTheDocument();
   });
 

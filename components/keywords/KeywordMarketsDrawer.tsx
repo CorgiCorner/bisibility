@@ -207,7 +207,7 @@ export function KeywordMarketsDrawer({
         aria-label="Keyword target change"
         className="mt-5 rounded-control border border-border bg-bg-sunken px-3.5 py-3"
       >
-        <p className="m-0 font-mono text-[11px] text-fg">
+        <p className="m-0 font-sans tabular-nums text-[11px] text-fg">
           {selection.locationKeys.length} markets x {selection.devices.length}{" "}
           {selection.devices.length === 1 ? "device" : "devices"} = {nextCount} checks per run
         </p>

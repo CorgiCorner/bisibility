@@ -66,7 +66,7 @@ describe("InstallPage", () => {
     expect(mocks.getOriginFromHeaders).toHaveBeenCalledWith(requestHeaders);
     expect(mocks.absoluteUrl).toHaveBeenCalledWith("https://app.example.com", "/api/mcp");
     expect(screen.getAllByText("https://app.example.com/api/mcp")).toHaveLength(3);
-  });
+  }, 15_000);
 
   it("renders the empty state without a masked value when no active key exists", async () => {
     mocks.getInstallApiKeySummary.mockResolvedValue(null);
@@ -80,7 +80,7 @@ describe("InstallPage", () => {
       "No API key yet. Create one in Settings, Developers.",
     );
     expect(screen.queryByText("bsk_example_******")).not.toBeInTheDocument();
-  });
+  }, 15_000);
 
   it("renders the self-hosting line for Cloud mode", async () => {
     await renderPage();

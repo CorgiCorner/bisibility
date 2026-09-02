@@ -8,7 +8,7 @@ export function AddKeywordDrawerFeedback({
   return (
     <>
       {error ? (
-        <p className="flex items-center gap-1.5 font-mono text-[11.5px] text-red-text">
+        <p className="flex items-center gap-1.5 font-sans tabular-nums text-[11.5px] text-red-text">
           <X size={12} weight="regular" />
           {error}
         </p>

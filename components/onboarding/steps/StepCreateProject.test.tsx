@@ -56,6 +56,25 @@ describe("StepCreateProject", () => {
     expect(screen.queryByLabelText("Domain")).not.toBeInTheDocument();
   });
 
+  it("uses the landing-style domain input with a favicon after a valid blur", () => {
+    render(<StepCreateProject />);
+
+    const website = screen.getByLabelText("Your website");
+    const wrapper = website.closest('[data-slot="input-wrapper"]');
+
+    expect(wrapper).toHaveClass("h-10", "rounded-lg", "bg-transparent", "overflow-hidden");
+    expect(wrapper).not.toHaveClass("bg-white", "dark:bg-bg-elev", "focus-within:bg-bg-elev");
+    expect(screen.getByTestId("onboarding-domain-icon")).toBeInTheDocument();
+
+    fireEvent.change(website, { target: { value: "https://www.example.com/path" } });
+    fireEvent.blur(website);
+
+    expect(screen.getByTestId("onboarding-domain-favicon-probe")).toHaveAttribute(
+      "src",
+      "https://www.google.com/s2/favicons?domain=www.example.com&sz=32",
+    );
+  });
+
   it("shows the server-derived name without rewriting the entered URL", async () => {
     const deriveWebsiteAction = vi.fn(async () => ({
       domain: "example.co.uk",

@@ -2,14 +2,7 @@
 
 import { ApiKeyRevealContent } from "@/components/settings/api-keys/ApiKeyReveal";
 import { apiKeyScopeLabel, apiKeyScopeOptions } from "@/components/settings/api-keys/api-key-model";
-import {
-  Button,
-  ConfirmModal,
-  ExpiryChoiceGroup,
-  inputClassName,
-  Modal,
-  MonoText,
-} from "@/components/ui";
+import { Button, ConfirmModal, ExpiryChoiceGroup, inputClassName, Modal } from "@/components/ui";
 import type { DateFormatPreference } from "@/lib/format/user-datetime";
 import type { PersonalTokenData } from "@/lib/queries/personal-tokens";
 import type { IssuePersonalTokenInput } from "@/lib/schemas/personalToken";
@@ -43,8 +36,8 @@ const expiryOptions = [
   { days: 365, label: "1 year" },
   { days: null, label: "No expiry" },
 ] as const;
-const inputClass = `${inputClassName} mt-[7px] min-h-11 w-full rounded-control px-[13px] font-mono text-[13.5px] font-medium`;
-const labelClass = "font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted";
+const inputClass = `${inputClassName} mt-[7px] min-h-11 w-full rounded-control px-[13px] font-sans tabular-nums text-[13.5px] font-medium`;
+const labelClass = "font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted";
 export function PersonalTokensSection({
   dateFormat,
   issueToken,
@@ -124,16 +117,14 @@ export function PersonalTokensSection({
               <span className="min-w-0 flex-1">
                 <span className="block text-[13px] font-semibold">
                   {token.name}
-                  <span className="ml-2 rounded-control border border-border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
+                  <span className="ml-2 rounded-control border border-border px-1.5 py-0.5 font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
                     {apiKeyScopeLabel(token.scope)}
                   </span>
                 </span>
-                <MonoText className="mt-0.5 truncate" size="lg">
-                  {token.maskedValue}
-                </MonoText>
-                <MonoText className="mt-1" muted>
+                <span className="mt-0.5 truncate">{token.maskedValue}</span>
+                <span className="mt-1">
                   <PersonalTokenDateLabels dateFormat={dateFormat} token={token} />
-                </MonoText>
+                </span>
               </span>
               <button
                 aria-label={`Revoke ${token.name} token`}

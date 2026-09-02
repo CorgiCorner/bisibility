@@ -77,7 +77,9 @@ function ProviderRow({ provider }: Readonly<{ provider: ProviderHealthEntry }>) 
   return (
     <div className="grid min-w-0 grid-cols-[minmax(90px,132px)_minmax(90px,1fr)] items-baseline gap-3 py-1">
       <span className="truncate text-[12.5px] font-semibold text-fg">{provider.providerLabel}</span>
-      <p className="m-0 min-w-0 font-mono text-[10.5px] text-fg-muted">{parts.join(" · ")}</p>
+      <p className="m-0 min-w-0 font-sans tabular-nums text-[10.5px] text-fg-muted">
+        {parts.join(" · ")}
+      </p>
     </div>
   );
 }
@@ -141,7 +143,7 @@ export function ProviderHealth({
       className="mx-4 mt-3 rounded-card border border-border bg-bg-sunken px-3.5 py-3"
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="m-0 font-mono text-[10.5px] font-semibold uppercase tracking-[.05em] text-fg-muted">
+        <h3 className="m-0 font-sans tabular-nums text-[10.5px] font-semibold uppercase tracking-[.05em] text-fg-muted">
           Check delivery · {rangeCopy[range].caption}
         </h3>
         <HealthLink href={reorderProvidersHref} />
@@ -150,7 +152,7 @@ export function ProviderHealth({
         {deliveryVerdict(view, primaryLabel)}
       </p>
       <div className="mt-2.5 border-border-soft border-t pt-2.5">
-        <p className="m-0 font-mono text-[10.5px] leading-relaxed text-fg-muted">
+        <p className="m-0 font-sans tabular-nums text-[10.5px] leading-relaxed text-fg-muted">
           {routeFlow(view)}
         </p>
         {skipped ? (
@@ -163,7 +165,7 @@ export function ProviderHealth({
           </button>
         ) : null}
         <details className="mt-2">
-          <summary className="cursor-pointer font-mono text-[10px] uppercase tracking-[0.3px] text-fg-muted hover:text-fg">
+          <summary className="cursor-pointer font-sans tabular-nums text-[10px] uppercase tracking-[0.3px] text-fg-muted hover:text-fg">
             Per provider
           </summary>
           <div className="mt-2 space-y-1">

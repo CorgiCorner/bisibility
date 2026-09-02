@@ -46,7 +46,7 @@ function DeliveryStatus({ alert }: Readonly<{ alert: TriggeredAlertView }>) {
   const meta = deliveryStateMeta[alert.deliveryState];
 
   return (
-    <div className="mt-2 rounded-control border border-border-soft bg-bg-sunken px-2.5 py-2 font-mono text-[10.5px]">
+    <div className="mt-2 rounded-control border border-border-soft bg-bg-sunken px-2.5 py-2 font-sans tabular-nums text-[10.5px]">
       <div className={`font-semibold ${meta.className}`}>Delivery: {meta.label}</div>
       {alert.deliveryAttempts.map((attempt, index) => (
         <div className="mt-1 text-fg-muted" key={`${attempt.when}:${attempt.channel}:${index}`}>
@@ -88,12 +88,12 @@ export function UnreadSummary({
                 style={{ backgroundColor: meta.color }}
               />
               <span className="text-[15px] font-semibold">{count}</span>
-              <span className="font-mono text-[11px] text-fg-muted">{meta.label}</span>
+              <span className="font-sans tabular-nums text-[11px] text-fg-muted">{meta.label}</span>
             </span>
           );
         })}
       </div>
-      <span className="font-mono text-[11px] text-fg-muted sm:ml-auto">last 48h</span>
+      <span className="font-sans tabular-nums text-[11px] text-fg-muted sm:ml-auto">last 48h</span>
     </Card>
   );
 }
@@ -127,7 +127,7 @@ export function AlertFeedRow({
           <h3 className="m-0 text-[13.5px] font-semibold leading-snug">{alert.headline}</h3>
           {unread ? <span className="h-[7px] w-[7px] rounded-full bg-accent" /> : null}
         </div>
-        <div className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 font-mono text-xs">
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 font-sans tabular-nums text-xs">
           <span className="font-semibold text-fg">{alert.keyword}</span>
           <span className="inline-flex min-w-0 items-center gap-1.5 text-fg-muted">
             <span className="truncate">{alert.previous}</span>
@@ -140,12 +140,12 @@ export function AlertFeedRow({
           {alert.action}
         </p>
         {alert.targetUrl && alert.rankingUrl ? (
-          <div className="mt-2 grid gap-1 font-mono text-[10.5px] text-fg-muted">
+          <div className="mt-2 grid gap-1 font-sans tabular-nums text-[10.5px] text-fg-muted">
             <span className="truncate">Target URL: {alert.targetUrl}</span>
             <span className="truncate">Ranking URL: {alert.rankingUrl}</span>
           </div>
         ) : null}
-        <p className="m-0 mt-2 font-mono text-[10.5px] text-fg-muted">
+        <p className="m-0 mt-2 font-sans tabular-nums text-[10.5px] text-fg-muted">
           {meta.label} / {alert.rule} / Google / {alert.location} / {deviceLabel(alert.device)} /{" "}
           {alert.when}
         </p>

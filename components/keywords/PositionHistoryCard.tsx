@@ -39,7 +39,8 @@ type RangeLabel = (typeof RANGES)[number]["label"];
 
 const axisTextStyle = {
   fill: "var(--fg-muted)",
-  fontFamily: "var(--font-mono), monospace",
+  fontFamily: "var(--font-sans), system-ui, sans-serif",
+  fontVariantNumeric: "tabular-nums",
   fontSize: 11,
 };
 
@@ -155,13 +156,13 @@ export function PositionHistoryCard({
               value={scope}
             />
           ) : null}
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-bg-sunken px-3 py-1 font-mono text-[11px] text-fg-muted">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-bg-sunken px-3 py-1 font-sans tabular-nums text-[11px] text-fg-muted">
             <span aria-hidden className="h-2 w-2 rounded-full bg-accent-solid" />
             {allMarkets ? `${markets.length} markets` : latestChip}
           </span>
           <SegmentedControl
             ariaLabel="Position history range"
-            className="bg-bg-elev font-mono"
+            className="bg-bg-elev font-sans tabular-nums"
             fitContent
             onChange={(value) => setRange(value as RangeLabel)}
             options={RANGES.map((option) => ({
@@ -179,7 +180,7 @@ export function PositionHistoryCard({
             <div className="flex flex-col items-center gap-2 rounded-card border border-border bg-bg-elev px-5 py-4 text-center">
               <p className="m-0 text-[13px] font-semibold text-fg">{emptyStateTitle}</p>
               {displayedPosition !== null ? (
-                <span className="inline-flex items-center gap-2 rounded-full bg-bg-sunken px-3 py-1 font-mono text-[11px] text-fg-muted">
+                <span className="inline-flex items-center gap-2 rounded-full bg-bg-sunken px-3 py-1 font-sans tabular-nums text-[11px] text-fg-muted">
                   Current #{displayedPosition} | Next check {nextCheckLabel}
                 </span>
               ) : null}

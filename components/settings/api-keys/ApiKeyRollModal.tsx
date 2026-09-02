@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Modal, MonoText } from "@/components/ui";
+import { Button, Modal } from "@/components/ui";
 import { type RegenerateApiKeyInput, regenerateApiKeySchema } from "@/lib/schemas/apiKey";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import {
@@ -96,7 +96,7 @@ export function ApiKeyRollModal({
             <dd className="m-0 font-semibold">{apiKey.name}</dd>
             <dt className="text-fg-muted">Masked value</dt>
             <dd className="m-0">
-              <MonoText>{apiKey.maskedValue}</MonoText>
+              <span>{apiKey.maskedValue}</span>
             </dd>
             <dt className="text-fg-muted">Created</dt>
             <dd className="m-0">{apiKey.createdLabel}</dd>

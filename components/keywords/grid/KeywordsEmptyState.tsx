@@ -113,7 +113,7 @@ export function KeywordsEmptyState({
   // Keep the table chrome + column headers; replace the body with the first-keyword prompt.
   return (
     <div className="overflow-hidden rounded-card border border-border bg-bg-elev">
-      <div className="grid grid-cols-[minmax(0,2.2fr)_repeat(3,1fr)_1.4fr] gap-x-2.5 border-b border-border bg-bg-sunken px-4.5 py-[11px] font-mono text-[10px] uppercase tracking-[0.6px] text-fg-muted">
+      <div className="grid grid-cols-[minmax(0,2.2fr)_repeat(3,1fr)_1.4fr] gap-x-2.5 border-b border-border bg-bg-sunken px-4.5 py-[11px] font-sans tabular-nums text-[10px] uppercase tracking-[0.6px] text-fg-muted">
         {EMPTY_HEADERS.map((header) => (
           <span key={header}>{header}</span>
         ))}

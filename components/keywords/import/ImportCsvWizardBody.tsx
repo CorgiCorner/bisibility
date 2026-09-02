@@ -79,7 +79,7 @@ export function ImportCsvWizardBody({
       {step === 4 ? <ReviewStep parsedCount={parsedCount} review={review} /> : null}
       {step === 5 && result ? <DoneStep result={result} /> : null}
       {actionError ? (
-        <p className="mt-3 font-mono text-[11.5px] text-red-text">{actionError}</p>
+        <p className="mt-3 font-sans tabular-nums text-[11.5px] text-red-text">{actionError}</p>
       ) : null}
     </>
   );

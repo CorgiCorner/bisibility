@@ -163,8 +163,8 @@ export default async function InvitePage({ params }: Readonly<InvitePageProps>) 
     inviteAction = (
       <div className="mt-5 rounded-card border border-red bg-bg-sunken p-4">
         <p className="m-0 text-[13px] leading-relaxed text-fg-muted">
-          You are signed in as <span className="font-mono text-fg">{session.user.email}</span>. Sign
-          in as <span className="font-mono text-fg">{invite.email}</span> to accept this invite.
+          You are signed in as <span className="text-fg">{session.user.email}</span>. Sign in as{" "}
+          <span className="text-fg">{invite.email}</span> to accept this invite.
         </p>
         <div className="mt-3">
           <InviteSignOutButton returnTo={returnTo} />
@@ -179,7 +179,7 @@ export default async function InvitePage({ params }: Readonly<InvitePageProps>) 
         <span className="grid h-12 w-12 place-items-center rounded-card bg-accent-soft text-accent-solid">
           <CheckCircle aria-hidden size={24} weight="regular" />
         </span>
-        <p className="mt-5 mb-0 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
+        <p className="mt-5 mb-0 text-[10px] uppercase tracking-[0.5px] text-fg-muted">
           Team invite
         </p>
         <h1 className="mt-2 mb-0 text-[25px] font-semibold leading-tight">
@@ -192,7 +192,7 @@ export default async function InvitePage({ params }: Readonly<InvitePageProps>) 
           </div>
           <div className="flex items-center justify-between gap-3 text-[13px]">
             <span className="text-fg-muted">Invited email</span>
-            <span className="truncate font-mono text-fg">{invite.email}</span>
+            <span className="truncate text-fg">{invite.email}</span>
           </div>
           <div className="flex items-center justify-between gap-3 text-[13px]">
             <span className="inline-flex items-center gap-1.5 text-fg-muted">

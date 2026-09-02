@@ -35,7 +35,7 @@ const formContent = (
         Keywords
       </label>
       <textarea
-        className="mt-2 min-h-32 w-full resize-y rounded-control border border-border-control bg-transparent px-[13px] py-3 font-mono text-[13px] leading-[1.7] text-fg outline-none"
+        className="mt-2 min-h-32 w-full resize-y rounded-control border border-border-control bg-transparent px-[13px] py-3 text-[13px] leading-[1.7] text-fg outline-none"
         defaultValue={"open source analytics\nself hosted seo tool"}
         id="keyword-input"
       />
@@ -49,9 +49,7 @@ const formContent = (
           className="flex items-center justify-between gap-2 rounded-control border border-border bg-bg-sunken px-3 py-[9px]"
           key={label}
         >
-          <span className="font-mono text-[10px] uppercase tracking-[0.4px] text-fg-muted">
-            {label}
-          </span>
+          <span className="text-[10px] uppercase tracking-[0.4px] text-fg-muted">{label}</span>
           <span className="text-[13px] font-medium text-fg">Google</span>
         </div>
       ))}
@@ -80,9 +78,7 @@ export const FiltersOpen: Story = {
       <div className="flex flex-col gap-4">
         {["Ranking data", "Keyword attributes", "SERP features", "Tags"].map((label) => (
           <section className="border-b border-border-soft pb-4" key={label}>
-            <h3 className="m-0 font-mono text-[11px] uppercase tracking-[0.6px] text-fg-muted">
-              {label}
-            </h3>
+            <h3 className="m-0 text-[11px] uppercase tracking-[0.6px] text-fg-muted">{label}</h3>
             <div className="mt-3 grid grid-cols-2 gap-[7px]">
               <button
                 className="rounded-control border border-border-control bg-bg-elev px-3 py-[9px] text-left text-[12.5px] font-medium text-fg"

@@ -3,7 +3,7 @@ import { inputClassName } from "@/components/ui";
 // Shared Tailwind class strings for account-level forms and rows.
 
 export const fieldLabelClass =
-  "flex flex-col gap-1.5 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted";
+  "flex flex-col gap-1.5 font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted";
 
 export const fieldValueClass =
   "flex min-h-10 items-center rounded-control border border-border-control bg-transparent px-3 text-[13px] font-medium normal-case tracking-normal text-fg";

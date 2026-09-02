@@ -29,7 +29,7 @@ export type DomainChangeConfirmationProps = {
   requestDomainChange: (request: DomainChangeRequest) => Promise<unknown>;
 };
 
-const labelClass = "font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted";
+const labelClass = "font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted";
 
 export function DomainChangeConfirmation({
   currentDomain,
@@ -114,7 +114,7 @@ export function DomainChangeConfirmation({
           </label>
           <Input
             autoComplete="url"
-            className="mt-1.5 font-mono"
+            className="mt-1.5 font-sans tabular-nums"
             id="domain-change-next-domain"
             spellCheck={false}
             {...form.register("newDomain")}
@@ -133,7 +133,7 @@ export function DomainChangeConfirmation({
           </label>
           <Input
             autoComplete="off"
-            className="mt-1.5 font-mono"
+            className="mt-1.5 font-sans tabular-nums"
             id="domain-change-confirmation-domain"
             spellCheck={false}
             {...form.register("confirmationDomain")}
@@ -155,7 +155,7 @@ export function DomainChangeConfirmation({
           ) : null}
         </div>
         <div className="rounded-control border border-dashed border-border px-3 py-2.5">
-          <p className="m-0 font-mono text-[9.5px] uppercase tracking-[1.1px] text-fg-muted">
+          <p className="m-0 font-sans tabular-nums text-[9.5px] uppercase tracking-[1.1px] text-fg-muted">
             After you confirm
           </p>
           <p className="m-0 mt-1 text-[12px] leading-[1.55] text-fg-muted">

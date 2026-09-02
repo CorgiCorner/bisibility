@@ -182,7 +182,7 @@ export function NoDataKpiRow(props: Readonly<NoDataKpiRowProps>) {
             size="md"
             style={{ borderRadius: UI_RADIUS_ROLES.card, padding: "16px 18px" }}
           >
-            <div className="flex items-center gap-1 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
+            <div className="flex items-center gap-1 font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
               <span>{kpi.label}</span>
               {kpi.label === "Visibility" ? <InfoTooltip text={VISIBILITY_DESCRIPTION} /> : null}
             </div>
@@ -191,7 +191,9 @@ export function NoDataKpiRow(props: Readonly<NoDataKpiRowProps>) {
             >
               {value}
             </div>
-            <div className={`mt-1 font-mono text-[11px] leading-normal ${sublineClassName}`}>
+            <div
+              className={`mt-1 font-sans tabular-nums text-[11px] leading-normal ${sublineClassName}`}
+            >
               {subline}
             </div>
           </Card>

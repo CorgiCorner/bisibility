@@ -8,7 +8,7 @@ const meta = {
   decorators: [
     (Story) => (
       <div className="bg-bg p-6 text-fg">
-        <div className="flex items-center gap-1.5 font-mono text-[10px] uppercase text-fg-muted">
+        <div className="flex items-center gap-1.5 text-[10px] uppercase text-fg-muted">
           Frequency
           <Story />
         </div>

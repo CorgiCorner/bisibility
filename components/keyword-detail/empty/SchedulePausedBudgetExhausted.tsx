@@ -19,7 +19,7 @@ export function SchedulePausedBudgetExhausted({
           <EmptyModuleLabel>Next check</EmptyModuleLabel>
           <span className="text-[13px] font-semibold text-fg">Paused</span>
           <span aria-hidden className="h-3 border-l border-border" />
-          <span className="font-mono text-[10.5px] text-fg-muted">{pauseReason}</span>
+          <span className="font-sans tabular-nums text-[10.5px] text-fg-muted">{pauseReason}</span>
         </div>
         <Button disabled size="sm" type="button" variant="secondary">
           Run check

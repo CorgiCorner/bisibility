@@ -2,7 +2,7 @@
 
 import { MarketPicker, type MarketPickerChoice } from "@/components/markets/MarketPicker";
 import { DeveloperActionsMenu } from "@/components/settings/developers/DeveloperActionsMenu";
-import { AppDrawer, Button, Card, Modal, MonoText, SectionTitle, Switch } from "@/components/ui";
+import { AppDrawer, Button, Card, Modal, SectionTitle, Switch } from "@/components/ui";
 import type { AddProjectMarketsResult, ProjectMarketChoice } from "@/lib/actions/project-markets";
 import { formatMoneyCents } from "@/lib/format/money";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
@@ -161,12 +161,8 @@ export function TrackedMarketsContent({
                     ) : null}
                   </div>
                   <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11.5px] text-fg-muted">
-                    <MonoText size="sm">
-                      {active ? `${markets.perMarketChecks} checks per run` : "Paused"}
-                    </MonoText>
-                    <MonoText size="sm">
-                      {costLabel(market.monthlyCostCents, active ? "" : " if enabled")}
-                    </MonoText>
+                    <span>{active ? `${markets.perMarketChecks} checks per run` : "Paused"}</span>
+                    <span>{costLabel(market.monthlyCostCents, active ? "" : " if enabled")}</span>
                   </div>
                   <div className="ml-auto flex items-center gap-2">
                     <Switch
@@ -194,10 +190,10 @@ export function TrackedMarketsContent({
             })}
           </ul>
           <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2">
-            <MonoText size="sm">
+            <span>
               {activeCount} markets active / {activeCount * markets.perMarketChecks} checks per run
               / {costLabel(markets.monthlyCostCents)}
-            </MonoText>
+            </span>
           </div>
         </>
       ) : (

@@ -14,7 +14,9 @@ export function EmptyModuleCard({ children, className }: Readonly<EmptyModuleCar
 
 export function EmptyModuleLabel({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <p className="m-0 font-mono text-[10px] uppercase tracking-[0.6px] text-fg-muted">{children}</p>
+    <p className="m-0 font-sans tabular-nums text-[10px] uppercase tracking-[0.6px] text-fg-muted">
+      {children}
+    </p>
   );
 }
 
@@ -30,7 +32,7 @@ export function StaticRangeTabs({ selected }: Readonly<StaticRangeTabsProps>) {
   return (
     <SegmentedControl
       ariaLabel="Position history range"
-      className="bg-bg-elev font-mono"
+      className="bg-bg-elev font-sans tabular-nums"
       fitContent
       onChange={() => {}}
       options={ranges.map((range) => ({ label: range, value: range }))}
@@ -90,7 +92,7 @@ export function ChartEmptyMessage({
       {description ? (
         <p className="m-0 mt-1 text-[12px] leading-[1.5] text-fg-muted">{description}</p>
       ) : null}
-      <div className="mt-3 inline-flex max-w-full flex-wrap items-center justify-center gap-2 rounded-full bg-bg-sunken px-3 py-1 font-mono text-[10.5px] text-fg-muted">
+      <div className="mt-3 inline-flex max-w-full flex-wrap items-center justify-center gap-2 rounded-full bg-bg-sunken px-3 py-1 font-sans tabular-nums text-[10.5px] text-fg-muted">
         {footer}
       </div>
     </div>

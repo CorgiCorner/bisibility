@@ -1,7 +1,7 @@
 "use client";
 
 import { MarketPicker, type MarketPickerChoice } from "@/components/markets/MarketPicker";
-import { Button, MonoText } from "@/components/ui";
+import { Button } from "@/components/ui";
 import { addProjectMarkets, type ProjectMarketChoice } from "@/lib/actions/project-markets";
 import { fieldLabelClass, fieldMetaClass } from "@/lib/keywords/add-keyword-drawer-shared";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
@@ -139,14 +139,14 @@ export function ProjectMarketsSelector({
                   <span className="text-fg-muted">/ {market.languageLabel}</span>
                 </span>
                 {!market.researchAvailable ? (
-                  <MonoText component="span" muted size="md">
+                  <span className="font-sans text-[10px] tabular-nums" style={{ fontSize: "10px" }}>
                     no volume/KD
-                  </MonoText>
+                  </span>
                 ) : null}
                 {!active ? (
-                  <MonoText component="span" muted size="sm">
+                  <span className="font-sans text-[9px] tabular-nums" style={{ fontSize: "9px" }}>
                     PAUSED
-                  </MonoText>
+                  </span>
                 ) : null}
               </button>
             );

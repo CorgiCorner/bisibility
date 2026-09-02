@@ -30,9 +30,7 @@ export const Open: Story = {
     children: (
       <div className="flex flex-col gap-4.5">
         <div>
-          <div className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
-            Format
-          </div>
+          <div className="text-[10px] uppercase tracking-[0.5px] text-fg-muted">Format</div>
           <div className="mt-[9px] flex flex-col gap-[7px]">
             {["CSV", "JSON", "Google Sheet"].map((format) => (
               <button

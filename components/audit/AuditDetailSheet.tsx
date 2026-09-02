@@ -1,6 +1,6 @@
 "use client";
 
-import { CopyButton, IdChip, MonoText, Sheet } from "@/components/ui";
+import { CopyButton, IdChip, Sheet } from "@/components/ui";
 import type { AuditDiff, AuditEntry } from "@/lib/queries/audit";
 import { DownloadSimpleIcon as DownloadSimple } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
@@ -17,11 +17,7 @@ function formatDiffValue(value: AuditDiff["before"]) {
 }
 
 function FieldLabel({ children }: Readonly<{ children: string }>) {
-  return (
-    <div className="font-mono text-[9.5px] uppercase tracking-[0.5px] text-fg-muted">
-      {children}
-    </div>
-  );
+  return <div className="text-[9.5px] uppercase tracking-[0.5px] text-fg-muted">{children}</div>;
 }
 
 function DetailField({ children, label }: Readonly<{ children: ReactNode; label: string }>) {
@@ -35,7 +31,7 @@ function DetailField({ children, label }: Readonly<{ children: ReactNode; label:
 
 function DiffRows({ diff }: Readonly<{ diff: readonly AuditDiff[] }>) {
   return (
-    <div className="overflow-hidden rounded-control border border-border font-mono text-xs">
+    <div className="overflow-hidden rounded-control border border-border text-xs">
       {diff.map((item) => (
         <div className="border-border-soft border-b last:border-b-0" key={item.field}>
           {item.before !== null ? (
@@ -125,9 +121,9 @@ export function AuditDetailSheet({ entry, onClose }: Readonly<AuditDetailSheetPr
       title={
         <span className="block min-w-0">
           <span className="block truncate">{entry.eventName}</span>
-          <MonoText className="mt-1" component="span" muted size="lg">
+          <span className="mt-1 block text-[12px] tabular-nums text-fg-muted">
             {entry.timestampLabel}
-          </MonoText>
+          </span>
         </span>
       }
       widthVariant="form"
@@ -136,22 +132,20 @@ export function AuditDetailSheet({ entry, onClose }: Readonly<AuditDetailSheetPr
         <div className="grid gap-3.5 sm:grid-cols-2">
           <DetailField label="Actor">
             <div className="text-[13px] font-semibold text-fg">{entry.actor.name}</div>
-            <MonoText className="mt-0.5" component="div" size="lg">
-              {entry.actor.email}
-            </MonoText>
+            <div className="mt-0.5 text-[12px] text-fg">{entry.actor.email}</div>
             <IdChip className="mt-2" size="sm" value={entry.actor.id} />
           </DetailField>
           <DetailField label="Operation">
             <OperationPill operation={entry.operation} />
           </DetailField>
           <DetailField label="Resource">
-            <div className="font-mono text-xs text-fg">{entry.resource.name}</div>
+            <div className="text-xs text-fg">{entry.resource.name}</div>
             {entry.resource.id ? (
               <IdChip className="mt-2" size="sm" value={entry.resource.id} />
             ) : null}
           </DetailField>
           <DetailField label="Source">
-            <div className="flex min-w-0 items-center gap-1.5 font-mono text-xs text-fg">
+            <div className="flex min-w-0 items-center gap-1.5 text-xs text-fg">
               <span>{entry.source.channel.toUpperCase()}</span>
               <span className="text-fg-muted">·</span>
               <span className="truncate">{entry.source.ip}</span>
@@ -174,7 +168,7 @@ export function AuditDetailSheet({ entry, onClose }: Readonly<AuditDetailSheetPr
             </div>
           </div>
         ) : null}
-        <div className="flex flex-col gap-2 rounded-control border border-border px-[15px] py-[13px] font-mono text-[11.5px]">
+        <div className="flex flex-col gap-2 rounded-control border border-border px-[15px] py-[13px] text-[11.5px]">
           <MetadataRow copyable label="event_id" value={entry.metadata.event_id} />
           <MetadataRow copyable label="correlation_id" value={entry.metadata.correlation_id} />
           <MetadataRow label="app_version" value={entry.metadata.app_version} />

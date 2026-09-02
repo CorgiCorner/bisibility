@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 
 export function StepLabel({ index, title }: Readonly<{ index: number; title: string }>) {
   return (
-    <div className="mt-5 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
+    <div className="mt-5 font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
       Step {index} · {title}
     </div>
   );
@@ -25,8 +25,9 @@ export function TokenSourceStep({
         title={`Create a migration token on the ${targetLabel} destination`}
       />
       <p className="m-0 mt-2 text-[12.5px] leading-5 text-fg-muted">
-        The destination import page mints the <code className="font-mono">mig_...</code> token. It
-        is shown once there - copy it before leaving that page.
+        The destination import page mints the{" "}
+        <code className="font-sans tabular-nums">mig_...</code> token. It is shown once there - copy
+        it before leaving that page.
       </p>
       {children}
     </>

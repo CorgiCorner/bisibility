@@ -25,8 +25,8 @@ type BulkTagFormProps = BulkFormChrome & {
 };
 
 const labelClass =
-  "flex flex-col gap-1.5 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted";
-const inputClass = `${inputClassName} min-h-10 rounded-control px-3 font-sans text-[13px] normal-case tracking-normal`;
+  "flex flex-col gap-1.5 font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted";
+const inputClass = `${inputClassName} min-h-10 rounded-control px-3 font-sans tabular-nums text-[13px] normal-case tracking-normal`;
 
 const noopUndo = () => undefined;
 

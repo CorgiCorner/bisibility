@@ -32,11 +32,12 @@ describe("getting-started navigation", () => {
       <SidebarNav
         projectRef={projectRef}
         setupDoneCount={visible ? 1 : 4}
+        setupSettledCount={visible ? 1 : 4}
         setupTotalCount={4}
         showGettingStarted={visible}
       />,
     );
-    expect(Boolean(screen.queryByRole("link", { name: "Get set up" }))).toBe(visible);
+    expect(Boolean(screen.queryByRole("link", { name: "Get started" }))).toBe(visible);
   });
 
   it("renders the special entry outside normal nav semantics with a calculated ring", () => {
@@ -45,11 +46,12 @@ describe("getting-started navigation", () => {
       <SidebarNav
         projectRef={projectRef}
         setupDoneCount={1}
+        setupSettledCount={1}
         setupTotalCount={4}
         showGettingStarted
       />,
     );
-    const setupLink = screen.getByRole("link", { name: "Get set up" });
+    const setupLink = screen.getByRole("link", { name: "Get started" });
 
     expect(setupLink).toHaveAttribute("data-getting-started-nav");
     expect(setupLink).toHaveClass("border", "rounded-control", "bg-bg-elev");
@@ -59,19 +61,38 @@ describe("getting-started navigation", () => {
       "stroke-dasharray",
       "12.6 50.3",
     );
-    expect(container.querySelector('[data-nav-icon="Get set up"]')).toBeNull();
+    expect(container.querySelector('[data-nav-icon="Get started"]')).toBeNull();
 
     rerender(
       <SidebarNav
         projectRef={projectRef}
         setupDoneCount={3}
+        setupSettledCount={3}
         setupTotalCount={4}
         showGettingStarted
       />,
     );
     expect(
-      screen.getByRole("link", { name: "Get set up" }).querySelector("[data-progress-arc]"),
+      screen.getByRole("link", { name: "Get started" }).querySelector("[data-progress-arc]"),
     ).toHaveAttribute("stroke-dasharray", "37.7 50.3");
+  });
+
+  it("shows a done indicator when setup is complete but not acknowledged", () => {
+    setNavigationState({ pathname: appPath(projectRef, "dashboard") });
+    render(
+      <SidebarNav
+        projectRef={projectRef}
+        setupCompleted
+        setupDoneCount={4}
+        setupSettledCount={4}
+        setupTotalCount={4}
+        showGettingStarted
+      />,
+    );
+
+    const link = screen.getByRole("link", { name: "Get started" });
+    expect(link.querySelector("[data-setup-complete-indicator]")).not.toBeNull();
+    expect(link.querySelector("[data-progress-arc]")).toBeNull();
   });
 
   it("supports the collapsed setup entry with an accessible progress label", () => {
@@ -81,12 +102,13 @@ describe("getting-started navigation", () => {
         collapsed
         projectRef={projectRef}
         setupDoneCount={3}
+        setupSettledCount={3}
         setupTotalCount={4}
         showGettingStarted
       />,
     );
 
-    const link = screen.getByRole("link", { name: "Get set up, 3 of 4 setup steps complete" });
+    const link = screen.getByRole("link", { name: "Get started, 3 of 4 steps complete" });
     expect(link).toHaveClass("ml-5.5", "mb-2", "h-9", "w-9");
     expect(link).not.toHaveAttribute("title");
     expect(link.querySelector("[data-progress-ring]")).toHaveAttribute("width", "20");
@@ -105,12 +127,13 @@ describe("getting-started navigation", () => {
           canCreateWorkspace
           projectRef={projectRef}
           setupDoneCount={visible ? 4 : 4}
+          setupSettledCount={4}
           setupTotalCount={4}
           showGettingStarted={visible}
           workspaces={mockWorkspaces}
         />
       </AppThemeRoot>,
     );
-    expect(Boolean(screen.queryByRole("link", { name: "Get set up" }))).toBe(visible);
+    expect(Boolean(screen.queryByRole("link", { name: "Get started" }))).toBe(visible);
   });
 });

@@ -188,7 +188,6 @@ describe("ToolbarSearch", () => {
         "min-w-0",
         "flex-1",
         "bg-transparent",
-        "font-mono",
         "compact-text-12",
         "text-[12px]",
         "text-fg",
@@ -199,7 +198,7 @@ describe("ToolbarSearch", () => {
         "placeholder:text-fg-muted",
         "focus-visible:outline-none",
       );
-      expect(input).not.toHaveClass("text-[12.5px]", "border-0", "p-0");
+      expect(input).not.toHaveClass("font-mono", "text-[12.5px]", "border-0", "p-0");
     });
   });
 
@@ -275,13 +274,12 @@ describe("ToolbarSearch", () => {
         "border-0",
         "bg-transparent",
         "p-0",
-        "font-mono",
         "text-[12.5px]",
         "text-fg",
         "outline-none",
         "placeholder:text-fg-muted",
       );
-      expect(input).not.toHaveClass("text-[12px]", "focus-visible:outline-none");
+      expect(input).not.toHaveClass("font-mono", "text-[12px]", "focus-visible:outline-none");
     });
 
     it("preserves caller aria label, placeholder, value, and min-width", () => {

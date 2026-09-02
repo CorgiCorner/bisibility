@@ -108,7 +108,17 @@ export const FRESHNESS_UNKNOWN_NOTE = "Finalized days appear here once the first
 export const FRESHNESS_FINAL_PREFIX = "Final through";
 export const FRESHNESS_CHECKED_PREFIX = "checked";
 export const FRESHNESS_ADJUSTMENT_TOOLTIP = "Google may adjust recent data until it finalizes.";
-export const COVERAGE_EMPTY = "Coverage appears once the first finalized days are imported.";
+// The strip owns every provenance counter, so the empty card states only what the module is
+// waiting for. Seven consecutive finalized days plus aggregate cover is what opens the window.
+export const FIRST_VIEW_BLOCKED =
+  "The first view opens once seven consecutive finalized days are imported.";
+// Two different waits, and the cell must never blame the first when the second is what is
+// happening: a property mid-backfill has no finalized days yet, while a property whose boundary
+// moved has plenty but not yet a full window of them.
+export const COVERAGE_PENDING_FIRST_DAYS =
+  "Coverage appears once Google reports the first finalized days.";
+export const COVERAGE_PENDING_WINDOW =
+  "Coverage appears once the imported finalized days cover a full window.";
 export const COVERAGE_NOTE =
   "Google hides low-volume query text for privacy, so the rest is real traffic with no query attached.";
 export const IMPORT_PAUSED_LINE = "History import paused, resumes automatically";

@@ -28,7 +28,7 @@ export function PropertyName({ name, value }: Readonly<{ name: string; value: st
   return (
     <span
       aria-label={value}
-      className="flex min-w-0 overflow-hidden font-mono text-ui-caption"
+      className="flex min-w-0 overflow-hidden font-sans tabular-nums text-ui-caption"
       data-slot="property-name"
     >
       <span className="min-w-0 truncate">{head}</span>
@@ -64,7 +64,7 @@ export function PropertyListRow({
       <PropertyKindPill kind={option.kind} label={option.kindLabel} />
       {metadata ? (
         <span
-          className="col-start-2 col-end-4 mt-0.5 min-w-0 truncate font-mono text-[10px] uppercase tracking-wide text-fg-muted"
+          className="col-start-2 col-end-4 mt-0.5 min-w-0 truncate font-sans tabular-nums text-[10px] uppercase tracking-wide text-fg-muted"
           data-slot="property-metadata"
         >
           {metadata}
@@ -86,7 +86,7 @@ export function PropertyGroup({
   if (options.length === 0) return null;
   return (
     <section className="mt-4" aria-label={label}>
-      <p className="m-0 mb-1 font-mono text-[10px] uppercase tracking-wide text-fg-muted">
+      <p className="m-0 mb-1 font-sans tabular-nums text-[10px] uppercase tracking-wide text-fg-muted">
         {label}
       </p>
       <div className="max-h-[180px] overflow-y-auto rounded-control border border-border">

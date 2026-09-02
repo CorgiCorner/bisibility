@@ -215,9 +215,15 @@ describe("dashboard header titles", () => {
     });
   });
 
-  it("uses neutral getting-started metadata", () => {
+  it("uses state-aware getting-started metadata", () => {
     expect(headerMetaFor(appPath("prj_1", "getting-started"))).toEqual({
-      subtitle: "Set up your rank tracking workflow.",
+      subtitle: "Four steps to your first positions.",
+      title: "Get started",
+    });
+    expect(
+      headerMetaFor(appPath("prj_1", "getting-started"), { completed: true, totalCount: 4 }),
+    ).toEqual({
+      subtitle: "Done. Everything below is optional.",
       title: "Get started",
     });
   });

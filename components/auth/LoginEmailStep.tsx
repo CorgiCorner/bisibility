@@ -214,7 +214,7 @@ export function LoginEmailStep({
             })}
           </div>
 
-          <div className="my-5 flex items-center gap-3 font-mono text-[11px] text-fg-muted">
+          <div className="my-5 flex items-center gap-3 text-[11px] text-fg-muted">
             <span className="h-px flex-1 bg-border" />
             {"OR "}
             <span className="h-px flex-1 bg-border" />
@@ -230,14 +230,14 @@ export function LoginEmailStep({
         ) : (
           <form onSubmit={onSubmit}>
             <label
-              className="block font-mono text-[10.5px] uppercase tracking-[0.5px] text-fg-muted"
+              className="block text-[10.5px] uppercase tracking-[0.5px] text-fg-muted"
               htmlFor="login-email"
             >
               Email
             </label>
             <input
               autoComplete="email"
-              className="mt-[7px] box-border w-full rounded-control border border-border-control bg-transparent px-[13px] py-3 font-mono text-[14.5px] font-medium text-fg outline-none focus:border-accent"
+              className="mt-[7px] box-border w-full rounded-control border border-border-control bg-transparent px-[13px] py-3 text-[14.5px] font-medium text-fg outline-none focus:border-accent"
               disabled={isSubmitting}
               id="login-email"
               inputMode="email"
@@ -288,7 +288,7 @@ export function LoginEmailStep({
         )}
       </div>
       {demoEmail ? (
-        <p className="mt-3.5 mb-0 text-center font-mono text-[11.5px] text-fg-muted">
+        <p className="mt-3.5 mb-0 text-center text-[11.5px] text-fg-muted">
           <span className="font-semibold text-accent-text">Try the demo</span> &middot; {demoEmail}{" "}
           &middot; code 000000
         </p>

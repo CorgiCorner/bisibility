@@ -77,6 +77,8 @@ describe("NotificationBellClient", () => {
     );
     const bell = screen.getByRole("button", { name: "Notifications" });
     expect(bell).toHaveTextContent("1");
+    expect(screen.getByText("1")).toHaveClass("font-sans", "tabular-nums");
+    expect(screen.getByText("1")).not.toHaveClass("font-mono");
     expect(bell).toHaveClass("h-9", "w-9", "p-0", "text-fg-muted", "transition-colors");
     expect(bell).not.toHaveClass("border", "border-border-control", "bg-bg-elev");
     fireEvent.click(bell);
@@ -128,7 +130,11 @@ describe("NotificationBellClient", () => {
       "href",
       "/app/prj_1/rank-tracker?tab=checks&run=check_abcdefghijklmnopqrstuvwx",
     );
-    expect(screen.getByText("rank tracker: rank data provider unavailable")).toBeInTheDocument();
+    const detail = screen.getByText("rank tracker: rank data provider unavailable");
+    expect(detail).toHaveClass("font-sans");
+    expect(detail).not.toHaveClass("font-mono");
+    expect(screen.getByText("now")).toHaveClass("font-sans", "tabular-nums");
+    expect(screen.getByText("now")).not.toHaveClass("font-mono");
     expect(screen.queryByText("rank tracker on example.com")).not.toBeInTheDocument();
   });
 

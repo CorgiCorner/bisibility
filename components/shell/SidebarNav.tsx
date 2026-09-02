@@ -14,7 +14,9 @@ export type SidebarNavProps = {
   collapsed?: boolean;
   onNavigate?: () => void;
   projectRef: string;
+  setupCompleted?: boolean;
   setupDoneCount?: number;
+  setupSettledCount?: number;
   setupTotalCount?: number;
   showGettingStarted?: boolean;
 };
@@ -24,7 +26,9 @@ export function SidebarNav({
   collapsed = false,
   onNavigate,
   projectRef,
+  setupCompleted = false,
   setupDoneCount = 0,
+  setupSettledCount = 0,
   setupTotalCount = 4,
   showGettingStarted = false,
 }: Readonly<SidebarNavProps>) {
@@ -119,7 +123,7 @@ export function SidebarNav({
                   // this the expanded link announces as "Search Consolealpha".
                   aria-hidden
                   className={[
-                    "inline-flex flex-none items-center rounded-full px-[7px] py-0.5 font-mono text-[9.5px] font-semibold",
+                    "inline-flex flex-none items-center rounded-full px-[7px] py-0.5 text-[9.5px] font-semibold",
                     item.badge === "new"
                       ? "bg-accent-soft text-accent-text"
                       : "bg-nav-active text-fg-muted",
@@ -146,6 +150,8 @@ export function SidebarNav({
             doneCount={setupDoneCount}
             onNavigate={onNavigate}
             projectRef={projectRef}
+            setupComplete={setupCompleted}
+            settledCount={setupSettledCount}
             totalCount={setupTotalCount}
           />
         ) : null}
@@ -158,7 +164,7 @@ export function SidebarNav({
                 a UA line-height makes the settled heading taller than its ShellSkeleton
                 placeholder and the rail shifts on hydration. */}
           {collapsed ? null : (
-            <span className="block px-[11px] pt-3.5 pb-1 font-mono text-[10px] font-semibold uppercase leading-none tracking-[0.5px] text-fg-muted">
+            <span className="block px-[11px] pt-3.5 pb-1 text-[10px] font-semibold uppercase leading-none tracking-[0.5px] text-fg-muted">
               {group.label}
             </span>
           )}

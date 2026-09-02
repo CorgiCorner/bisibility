@@ -21,14 +21,14 @@ export const TargetUrlField = forwardRef<HTMLInputElement, TargetUrlFieldProps>(
     return (
       <div
         className={cn(
-          "flex min-w-0 flex-col gap-1.5 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted",
+          "flex min-w-0 flex-col gap-1.5 font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted",
           className,
         )}
       >
         <FieldLabel help={help} htmlFor={inputId} label={label} />
         <Input
           aria-label={label}
-          className="min-h-10 w-full rounded-control px-3 font-mono text-[13px] font-medium normal-case tracking-normal"
+          className="min-h-10 w-full rounded-control px-3 font-sans tabular-nums text-[13px] font-medium normal-case tracking-normal"
           {...inputProps}
           id={inputId}
           ref={ref}

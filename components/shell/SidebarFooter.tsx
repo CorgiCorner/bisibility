@@ -33,7 +33,7 @@ export function SidebarFooter({
       ) : null}
       {version ? (
         <p
-          className={`m-0 flex h-4 items-center font-mono leading-4 text-fg-muted ${
+          className={`m-0 flex h-4 items-center leading-4 text-fg-muted tabular-nums ${
             collapsed ? "justify-center text-[9px]" : "ml-auto text-[10px]"
           }`}
         >

@@ -158,7 +158,7 @@ export function OtpStep({
       {devOtpCode ? (
         // Above the resend row on purpose: on a demo instance without a mailer this hint is
         // the only way to learn the code, so it cannot be the least visible line on the page.
-        <p className="mt-3.5 text-center font-mono text-[12.5px] text-fg-muted">
+        <p className="mt-3.5 text-center text-[12.5px] text-fg-muted">
           Demo mode &middot; use code{" "}
           <span className="font-semibold text-accent-text">{devOtpCode}</span> to sign in
         </p>

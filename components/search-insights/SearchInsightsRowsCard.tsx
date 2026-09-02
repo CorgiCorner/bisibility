@@ -51,7 +51,7 @@ export function SearchInsightsRowsCard({
           <span className="text-ui-caption text-fg-muted">{caption}</span>
         </div>
         {empty ? null : (
-          <span className="shrink-0 px-2 py-0.5 font-mono text-ui-caption text-fg-muted">
+          <span className="shrink-0 px-2 py-0.5 font-sans tabular-nums text-ui-caption text-fg-muted">
             {counter}
           </span>
         )}
@@ -77,7 +77,7 @@ export function SearchInsightsRowsCard({
             </Button>
           ) : null}
           {more ? (
-            <span className="font-mono text-ui-caption text-fg-muted">
+            <span className="font-sans tabular-nums text-ui-caption text-fg-muted">
               {footerNote(shown, total)}
             </span>
           ) : null}

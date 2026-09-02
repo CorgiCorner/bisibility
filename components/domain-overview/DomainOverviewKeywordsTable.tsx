@@ -29,7 +29,8 @@ const currency = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 2,
   style: "currency",
 });
-const header = "font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-fg-muted";
+const header =
+  "font-sans tabular-nums text-[10px] font-medium uppercase tracking-[0.08em] text-fg-muted";
 
 type KeywordSort =
   | "cpc"
@@ -226,9 +227,11 @@ export function DomainOverviewKeywordsTable({
                   onChange={() => selection.toggleRow(row)}
                 />
                 <strong className="truncate text-[13.5px] font-medium">{row.keyword}</strong>
-                <span className="text-right font-mono text-[12.5px]">{row.position ?? "-"}</span>
+                <span className="text-right font-sans tabular-nums text-[12.5px]">
+                  {row.position ?? "-"}
+                </span>
                 <span
-                  className="text-right font-mono text-[12.5px] font-semibold"
+                  className="text-right font-sans tabular-nums text-[12.5px] font-semibold"
                   title={
                     row.estimatedTraffic == null
                       ? undefined
@@ -237,20 +240,24 @@ export function DomainOverviewKeywordsTable({
                 >
                   {row.estimatedTraffic == null ? "-" : formatDomainEstimate(row.estimatedTraffic)}
                 </span>
-                <span className="text-right font-mono text-[12.5px] text-fg-muted">
+                <span className="text-right font-sans tabular-nums text-[12.5px] text-fg-muted">
                   {row.searchVolume == null ? "-" : formatDomainCount(row.searchVolume)}
                 </span>
-                <span className="text-right font-mono text-[12.5px]">{row.difficulty ?? "-"}</span>
-                <span className="text-right font-mono text-[12px] text-fg-muted">
+                <span className="text-right font-sans tabular-nums text-[12.5px]">
+                  {row.difficulty ?? "-"}
+                </span>
+                <span className="text-right font-sans tabular-nums text-[12px] text-fg-muted">
                   {row.cpcCents == null ? "-" : currency.format(row.cpcCents / 100)}
                 </span>
-                <span className="w-fit rounded-full border border-border px-2 py-0.5 font-mono text-[9.5px] text-fg-muted">
+                <span className="w-fit rounded-full border border-border px-2 py-0.5 font-sans tabular-nums text-[9.5px] text-fg-muted">
                   {intentLabel(row.intent)}
                 </span>
-                <span className="truncate font-mono text-[11.5px] text-fg-muted">
+                <span className="truncate font-sans tabular-nums text-[11.5px] text-fg-muted">
                   {row.rankingUrl ?? "-"}
                 </span>
-                <span className={`${change.tone} text-right font-mono text-[12px] font-semibold`}>
+                <span
+                  className={`${change.tone} text-right font-sans tabular-nums text-[12px] font-semibold`}
+                >
                   {change.label}
                 </span>
               </div>
@@ -270,7 +277,9 @@ export function DomainOverviewKeywordsTable({
           >
             Load next {remaining == null ? 100 : Math.min(100, remaining)} keywords
             {estimateCents == null ? null : (
-              <span className="ml-1 font-mono">~{formatEstimateCents(estimateCents)}</span>
+              <span className="ml-1 font-sans tabular-nums">
+                ~{formatEstimateCents(estimateCents)}
+              </span>
             )}
           </Button>
           {loadMoreError ? (

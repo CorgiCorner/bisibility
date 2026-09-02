@@ -114,10 +114,6 @@ function renderNoData(overrides = {}, importFacts = observabilityFacts) {
   );
 }
 
-function tooltipText(element: HTMLElement) {
-  return document.getElementById(element.getAttribute("aria-describedby") ?? "")?.textContent;
-}
-
 describe("SearchInsightsNoDataState", () => {
   it("renders waiting for first data as its own honest empty state", () => {
     const { container } = renderNoData({
@@ -135,18 +131,36 @@ describe("SearchInsightsNoDataState", () => {
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
 
+  /**
+   * This card is the only surface in the pre-first-view window - the strip is not rendered yet -
+   * so a state that resolves itself has to offer a way to watch it resolve.
+   */
+  it.each([
+    ["queued", { pausedReason: null, state: "queued" }],
+    ["running", { pausedReason: null, state: "running" }],
+  ])("offers a refresh control while %s", (_name, overrides) => {
+    renderNoData(overrides);
+
+    expect(screen.getByRole("button", { name: "Refresh import status" })).toBeInTheDocument();
+  });
+
+  it("offers no refresh control for a state that waits on the customer", () => {
+    renderNoData({ connectionStatus: "needs_reauth" });
+
+    expect(screen.getByRole("heading", { name: "Needs reauth" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Refresh import status" })).not.toBeInTheDocument();
+  });
+
   it("renders the exact actor-neutral paused contract with exactly one Resume", () => {
     const { container } = renderNoData();
     expect(screen.getByRole("heading", { name: "Paused by you" })).toBeInTheDocument();
-    expect(screen.getByTestId("qualifying-progress")).toHaveTextContent(
-      `${observabilityFacts.qualifyingDays} of ${observabilityFacts.targetDays} finalized days`,
-    );
-    expect(screen.getByTestId("deep-history-progress")).toHaveTextContent(
-      "Deep history: 3 of 16 months.",
-    );
-    expect(tooltipText(screen.getByTestId("freshness-note"))).toBe(
-      "Last checked Aug 29, 10:00 Pacific. Google may adjust recent data until it finalizes.",
-    );
+    // The strip is the single home for the provenance counters; this card states the block only.
+    expect(
+      screen.getByText("The first view opens once seven consecutive finalized days are imported."),
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId("qualifying-progress")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("deep-history-progress")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("freshness-note")).not.toBeInTheDocument();
     expect(
       screen.getByText(
         "Paused on Aug 27, 2026. New finalized days will not be imported until you resume sync.",

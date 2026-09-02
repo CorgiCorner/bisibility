@@ -1,6 +1,6 @@
 "use client";
 
-import { CopyButton, MonoText } from "@/components/ui";
+import { CopyButton } from "@/components/ui";
 import { KeyIcon as Key } from "@phosphor-icons/react";
 import {
   apiKeyExpiryChoiceLabel,
@@ -44,22 +44,18 @@ export function ApiKeyRevealContent({
       </div>
       <div>
         <div className="flex items-center gap-2">
-          <div className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
+          <div className="font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
             API key
           </div>
-          <span className="rounded-control border border-border px-2 py-1 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
+          <span className="rounded-control border border-border px-2 py-1 font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
             Revealed once
           </span>
         </div>
         <div className="mt-[7px] flex items-center gap-2 rounded-control border border-border bg-transparent px-3 py-2.5">
-          <MonoText className="min-w-0 flex-1 truncate" size="lg">
-            {issuedKey.raw}
-          </MonoText>
+          <span className="min-w-0 flex-1 truncate">{issuedKey.raw}</span>
           <CopyButton label={`Copy ${issuedKey.name} key`} size="md" text={issuedKey.raw} />
         </div>
-        <MonoText className="mt-2" muted>
-          Stored prefix: {storedPrefix(issuedKey.maskedValue)}
-        </MonoText>
+        <span className="mt-2">Stored prefix: {storedPrefix(issuedKey.maskedValue)}</span>
       </div>
       {showProjectGuidance && issuedKey.scope && expiry ? (
         <div className="space-y-1.5 text-[12.5px] text-fg-muted">

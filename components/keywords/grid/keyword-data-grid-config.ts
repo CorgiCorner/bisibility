@@ -27,7 +27,8 @@ export const dataGridHeaderSx = {
   borderColor: "var(--border)",
   borderRadius: 0,
   color: "var(--fg-muted)",
-  fontFamily: "var(--font-mono), monospace",
+  fontFamily: "var(--font-sans), system-ui, sans-serif",
+  fontVariantNumeric: "tabular-nums",
   fontSize: "11px",
   fontWeight: 600,
   letterSpacing: "0.5px",
@@ -39,6 +40,7 @@ export const keywordGridSx = {
   border: 0,
   color: "var(--fg)",
   fontFamily: "var(--font-sans), system-ui, sans-serif",
+  fontVariantNumeric: "tabular-nums",
   "& .MuiDataGrid-cell": {
     alignItems: "center",
     borderColor: "var(--border-soft)",

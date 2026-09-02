@@ -56,7 +56,9 @@ export function SearchInsightsPeriodMenu({ importFacts, period, yoy }: Readonly<
             className="shrink-0 text-fg-muted"
             size={15}
           />
-          <span className="font-mono text-ui-caption">{periodTriggerLabel(period)}</span>
+          <span className="font-sans tabular-nums text-ui-caption">
+            {periodTriggerLabel(period)}
+          </span>
           <CaretDown aria-hidden className="shrink-0 text-fg-muted" size={11} weight="regular" />
         </span>
       </Button>
@@ -77,7 +79,9 @@ export function SearchInsightsPeriodMenu({ importFacts, period, yoy }: Readonly<
                 <span className={cn(option.disabled ? "text-fg-muted" : "text-fg")}>
                   {option.label}
                 </span>
-                <span className="font-mono text-ui-caption text-fg-muted">{option.sub}</span>
+                <span className="font-sans tabular-nums text-ui-caption text-fg-muted">
+                  {option.sub}
+                </span>
               </span>
               {option.id === period.id ? (
                 <Check

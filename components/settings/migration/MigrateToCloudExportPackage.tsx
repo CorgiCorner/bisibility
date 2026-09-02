@@ -60,7 +60,7 @@ export function ExportPackageCard({
   return (
     <>
       <div className="mt-4 overflow-hidden rounded-card border border-border">
-        <div className="bg-bg-sunken px-[15px] py-2.5 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
+        <div className="bg-bg-sunken px-[15px] py-2.5 font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
           Instance import package
         </div>
         <div className="flex items-center gap-3 border-border-soft border-t px-[15px] py-[13px]">
@@ -71,7 +71,7 @@ export function ExportPackageCard({
             <div className="text-[13px] font-semibold">
               {downloadedFilename ?? file?.filename ?? "No package exported yet"}
             </div>
-            <div className="font-mono text-[11px] text-fg-muted">
+            <div className="font-sans tabular-nums text-[11px] text-fg-muted">
               {file
                 ? `${file.counts.keywords} keywords / ${file.counts.rankChecks} rank checks`
                 : "Generated from the active project"}

@@ -1,6 +1,6 @@
 "use client";
 
-import { CopyButton, MonoText } from "@/components/ui";
+import { CopyButton } from "@/components/ui";
 import { KeyIcon as Key } from "@phosphor-icons/react";
 import type { IssuedDeployHook } from "./deploy-hook-model";
 
@@ -50,13 +50,11 @@ export function DeployHookRevealContent({
         </div>
       </div>
       <div>
-        <div className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
+        <div className="font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
           Webhook URL (contains the secret token)
         </div>
         <div className="mt-[7px] flex items-center gap-2 rounded-control border border-border bg-transparent px-3 py-2.5">
-          <MonoText className="min-w-0 flex-1 truncate" size="lg">
-            {webhookUrl}
-          </MonoText>
+          <span className="min-w-0 flex-1 truncate">{webhookUrl}</span>
           <CopyButton label={`Copy ${issuedHook.label} webhook URL`} size="md" text={webhookUrl} />
         </div>
         <p className="m-0 mt-1.5 text-[11.5px] leading-[1.5] text-fg-muted">
@@ -67,13 +65,11 @@ export function DeployHookRevealContent({
         </p>
       </div>
       <div>
-        <div className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
+        <div className="font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
           Bearer token (preferred)
         </div>
         <div className="mt-[7px] flex items-center gap-2 rounded-control border border-border bg-transparent px-3 py-2.5">
-          <MonoText className="min-w-0 flex-1 truncate" size="lg">
-            {issuedHook.raw}
-          </MonoText>
+          <span className="min-w-0 flex-1 truncate">{issuedHook.raw}</span>
           <CopyButton label={`Copy ${issuedHook.label} token`} size="md" text={issuedHook.raw} />
         </div>
         <p className="m-0 mt-1.5 text-[11.5px] leading-[1.5] text-fg-muted">
@@ -82,7 +78,7 @@ export function DeployHookRevealContent({
         </p>
       </div>
       <div>
-        <div className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
+        <div className="font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
           Test with curl
         </div>
         <div className="mt-[7px] flex items-start gap-2 rounded-control border border-border bg-code-bg px-3 py-2.5">

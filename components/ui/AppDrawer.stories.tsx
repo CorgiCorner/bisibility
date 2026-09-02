@@ -106,7 +106,7 @@ function StackedHarness() {
         bodyRef={bodyRef}
         headerLeading={
           <button
-            className="flex items-center gap-1.5 border-0 bg-transparent p-0 font-mono text-ui-micro uppercase tracking-wider text-fg-muted"
+            className="flex items-center gap-1.5 border-0 bg-transparent p-0 text-ui-micro uppercase tracking-wider text-fg-muted"
             onClick={() => bodyRef.current?.scrollTo({ top: 0 })}
             type="button"
           >

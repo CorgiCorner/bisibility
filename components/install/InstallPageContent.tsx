@@ -73,7 +73,7 @@ export function InstallPageContent({
               bisibility account.
             </p>
             <div className="flex min-h-[42px] items-center gap-2.5 rounded-control border border-border-control bg-transparent pl-3 pr-1.5">
-              <span className="min-w-0 flex-1 truncate font-mono text-[12.5px]">{mcpUrl}</span>
+              <span className="min-w-0 flex-1 truncate font-sans text-[12.5px]">{mcpUrl}</span>
               <CopyButton
                 className="ml-auto shrink-0 !h-8 !min-h-8 !min-w-8 !w-8 !rounded-control !p-0"
                 label="Copy MCP URL"
@@ -82,7 +82,7 @@ export function InstallPageContent({
               />
             </div>
             {isCloudHosted ? (
-              <p className="m-0 mt-2 font-mono text-[10.5px] text-fg-muted">
+              <p className="m-0 mt-2 font-sans text-[10.5px] text-fg-muted">
                 self-hosting? use your own address instead: &lt;your-instance&gt;/api/mcp
               </p>
             ) : null}
@@ -92,7 +92,7 @@ export function InstallPageContent({
             <div className="flex flex-wrap items-baseline gap-2.5">
               <h2 className="m-0 mb-0.5 text-[15px] font-semibold">API key</h2>
               {apiKey ? (
-                <span className="ml-auto font-mono text-[10.5px] text-fg-muted">
+                <span className="ml-auto font-sans text-[10.5px] text-fg-muted">
                   scope: {apiKey.scopeLabel}
                 </span>
               ) : null}
@@ -104,7 +104,7 @@ export function InstallPageContent({
             {apiKey ? (
               <>
                 <div className="flex min-h-[42px] items-center gap-1.5 rounded-control border border-border-control bg-transparent pl-3 pr-1.5">
-                  <span className="min-w-0 flex-1 truncate font-mono text-[12.5px]">
+                  <span className="min-w-0 flex-1 truncate font-sans text-[12.5px]">
                     {apiKey.maskedValue}
                   </span>
                 </div>
@@ -136,7 +136,7 @@ export function InstallPageContent({
           <h2 className="m-0 text-[15px] font-semibold">Skills</h2>
           {/* nav-active is #EDEAE1, the exact value the design calls surface-hover; bg-sunken is
               a 30% alpha that composites to near-invisible on the card. */}
-          <span className="ml-auto inline-flex items-center rounded-full bg-nav-active px-[9px] py-[3px] font-mono text-[10px] font-semibold text-yellow-text">
+          <span className="ml-auto inline-flex items-center rounded-full bg-nav-active px-[9px] py-[3px] font-sans text-[10px] font-semibold text-yellow-text">
             planned
           </span>
         </div>
@@ -150,14 +150,14 @@ export function InstallPageContent({
               className="flex min-h-[44px] w-full flex-col gap-0.5 border-t border-border-soft px-2 py-[9px]"
               key={skill.name}
             >
-              <span className="truncate font-mono text-[12px] font-semibold text-fg">
+              <span className="truncate font-sans text-[12px] font-semibold text-fg">
                 {skill.name}
               </span>
               <span className="text-[11.5px] text-fg-muted">{skill.note}</span>
             </div>
           ))}
         </div>
-        <p className="m-0 mt-3.5 font-mono text-[10.5px] text-fg-muted">
+        <p className="m-0 mt-3.5 font-sans text-[10.5px] text-fg-muted">
           the install command appears here once the first skill is ready
         </p>
       </section>

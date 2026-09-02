@@ -17,7 +17,7 @@ export type GithubStarsProps = {
 };
 
 const starsVariants = cva(
-  "group inline-flex items-center whitespace-nowrap font-mono no-underline transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid",
+  "group inline-flex items-center whitespace-nowrap tabular-nums no-underline transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid",
   {
     variants: {
       size: {

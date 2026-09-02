@@ -99,7 +99,7 @@ export function TeamPendingInvitesCard({
                 <EnvelopeSimple aria-hidden size={16} weight="regular" />
               </span>
               <span className="min-w-[160px] flex-1">
-                <span className="block truncate font-mono text-[12.5px] text-fg">
+                <span className="block truncate font-sans tabular-nums text-[12.5px] text-fg">
                   {invite.email}
                 </span>
                 <span className="mt-0.5 block truncate text-[11.5px] text-fg-muted">

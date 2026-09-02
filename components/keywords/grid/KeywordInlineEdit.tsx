@@ -199,7 +199,7 @@ export function KeywordInlineEdit({
         error={errors.targetUrl?.message}
         {...register("targetUrl")}
       />
-      <div className="flex flex-col gap-1.5 font-mono text-[11px] uppercase tracking-[0.5px] text-fg-muted">
+      <div className="flex flex-col gap-1.5 font-sans tabular-nums text-[11px] uppercase tracking-[0.5px] text-fg-muted">
         <FieldLabel help={FIELD_HELP.device} label="Device" />
         <input type="hidden" {...register("device")} />
         <MenuSelect
@@ -212,7 +212,7 @@ export function KeywordInlineEdit({
       </div>
       <div
         className={cn(
-          "flex flex-col gap-1.5 font-mono text-[11px] uppercase tracking-[0.5px] text-fg-muted",
+          "flex flex-col gap-1.5 font-sans tabular-nums text-[11px] uppercase tracking-[0.5px] text-fg-muted",
           layout === "inline" && "md:col-span-3",
         )}
       >
@@ -274,7 +274,7 @@ export function KeywordInlineEdit({
             </Button>
           ) : null}
           {actionError ? (
-            <span className="font-mono text-[11px] text-red-text">{actionError}</span>
+            <span className="font-sans tabular-nums text-[11px] text-red-text">{actionError}</span>
           ) : null}
           <LocationActionWarning message={actionWarning} />
         </div>

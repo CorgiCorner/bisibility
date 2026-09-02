@@ -15,7 +15,7 @@ const mobileIconOnlyButtonSx = {
 const compactIconOnlyButtonSx = {
   "@media (max-width:1279px)": {
     minWidth: 40,
-    "& .MuiButton-startIcon": {
+    "&& .MuiButton-startIcon": {
       marginLeft: 0,
       marginRight: 0,
     },
@@ -29,6 +29,7 @@ const labeledSecondaryButtonSx = {
 } satisfies SxProps<Theme>;
 
 type KeywordsToolbarButtonProps = Omit<ButtonProps, "sx"> & {
+  compactBelowXl?: boolean;
   iconOnly?: boolean;
   label: string;
   showTooltip: boolean;
@@ -37,6 +38,7 @@ type KeywordsToolbarButtonProps = Omit<ButtonProps, "sx"> & {
 
 export function KeywordsToolbarButton({
   children,
+  compactBelowXl = false,
   iconOnly = false,
   label,
   showTooltip,
@@ -52,14 +54,16 @@ export function KeywordsToolbarButton({
         className="shrink-0 whitespace-nowrap"
         size={size}
         sx={[
-          iconOnly ? compactIconOnlyButtonSx : mobileIconOnlyButtonSx,
+          iconOnly || compactBelowXl ? compactIconOnlyButtonSx : mobileIconOnlyButtonSx,
           { "& .MuiButton-startIcon > svg": { color: "currentColor" } },
           ...buttonSx,
           !iconOnly && props.variant === "secondary" ? labeledSecondaryButtonSx : false,
         ]}
         {...props}
       >
-        {iconOnly ? null : <span className="hidden lg:inline">{label}</span>}
+        {iconOnly ? null : (
+          <span className={compactBelowXl ? "hidden xl:inline" : "hidden lg:inline"}>{label}</span>
+        )}
         {children}
       </Button>
     </span>

@@ -39,13 +39,13 @@ export function AdminFailureBreakdown({
             data-admin-failure-group
             key={`${group.provider}:${group.errorSummary}`}
           >
-            <span className="min-w-[5.5rem] shrink-0 font-mono text-base font-bold tracking-tight text-fg">
+            <span className="min-w-[5.5rem] shrink-0 text-base font-bold tabular-nums tracking-tight text-fg">
               {countFormat.format(group.count)}
             </span>
             <span className="inline-flex min-w-0 items-center gap-2">
-              <span className="font-mono text-xs font-semibold text-fg">{group.errorSummary}</span>
+              <span className="text-xs font-semibold text-fg">{group.errorSummary}</span>
               <span aria-hidden="true" className="h-3 w-px bg-border" />
-              <span className="font-mono text-xs text-fg-muted">{group.provider}</span>
+              <span className="text-xs text-fg-muted">{group.provider}</span>
             </span>
             <span className="text-xs text-fg-muted">
               {concentrated
@@ -59,7 +59,7 @@ export function AdminFailureBreakdown({
                 ))}
               </span>
             ) : null}
-            <span className="ml-auto whitespace-nowrap font-mono text-[10px] text-fg-muted">
+            <span className="ml-auto whitespace-nowrap text-[10px] tabular-nums text-fg-muted">
               first seen {relativeTime(group.firstSeen, now)}
               <span
                 aria-hidden="true"

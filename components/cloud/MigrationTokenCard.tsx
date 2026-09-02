@@ -173,7 +173,7 @@ export function MigrationTokenCard({
             <p className="mt-1.5 max-w-[400px] text-[13px] leading-[1.55] text-fg-muted">
               {errorMessage ?? "No token was issued. Nothing was exposed."}
             </p>
-            <div className="mt-3.5 inline-flex items-center gap-[7px] rounded-control bg-bg-sunken px-[11px] py-[5px] font-mono text-[11px] text-fg-muted">
+            <div className="mt-3.5 inline-flex items-center gap-[7px] rounded-control bg-bg-sunken px-[11px] py-[5px] font-sans tabular-nums text-[11px] text-fg-muted">
               <WarningCircle aria-hidden className="text-red-text" size={13} weight="regular" />
               token_action_failed
             </div>

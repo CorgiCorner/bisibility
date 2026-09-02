@@ -17,7 +17,8 @@ export type PositionTrendCardProps = {
 
 const axisTextStyle = {
   fill: "var(--fg-muted)",
-  fontFamily: "var(--font-mono), monospace",
+  fontFamily: "var(--font-sans), system-ui, sans-serif",
+  fontVariantNumeric: "tabular-nums",
   fontSize: 11,
 };
 
@@ -57,7 +58,7 @@ export function PositionTrendCard({
         trailing={
           <span
             aria-hidden={empty || insufficient ? true : undefined}
-            className={`inline-flex flex-none items-center gap-1.5 font-mono text-[11px] text-fg-muted ${
+            className={`inline-flex flex-none items-center gap-1.5 font-sans tabular-nums text-[11px] text-fg-muted ${
               empty || insufficient ? "invisible" : ""
             }`}
           >

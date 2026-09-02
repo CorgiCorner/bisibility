@@ -22,7 +22,9 @@ export function FilterSection({
 }>) {
   return (
     <section className="border-b border-border-soft py-4.5 last:border-b-0 last:pb-1">
-      <div className="font-mono text-[11px] uppercase tracking-[0.6px] text-fg-muted">{title}</div>
+      <div className="font-sans tabular-nums text-[11px] uppercase tracking-[0.6px] text-fg-muted">
+        {title}
+      </div>
       {children}
     </section>
   );
@@ -65,7 +67,7 @@ export function FilterCheckTile({
       {Icon ? <Icon className="shrink-0 text-fg-muted" size={14} /> : null}
       <span className="min-w-0 flex-1 truncate text-[12.5px] font-medium text-fg">{label}</span>
       {typeof count === "number" ? (
-        <span className="font-mono text-[11px] text-fg-muted">{count}</span>
+        <span className="font-sans tabular-nums text-[11px] text-fg-muted">{count}</span>
       ) : null}
     </button>
   );

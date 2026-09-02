@@ -23,7 +23,7 @@ export function CostEstimateLine({
   deltaCents,
 }: Readonly<CostEstimateLineProps>) {
   return (
-    <p className={cn("m-0 font-mono text-xs leading-5 text-fg-muted", className)}>
+    <p className={cn("m-0 font-sans tabular-nums text-xs leading-5 text-fg-muted", className)}>
       ~{formatChecks(checksPerMonth)} checks/mo
       {costCents == null ? null : (
         <>

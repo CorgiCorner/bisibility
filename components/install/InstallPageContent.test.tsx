@@ -52,6 +52,26 @@ describe("InstallPageContent", () => {
     }
   });
 
+  it("uses Sans for URLs, key values, status, and labels while retaining command Mono", () => {
+    const { container } = render(<InstallPageContent {...props} />);
+
+    const endpointSection = screen
+      .getByRole("heading", { name: "MCP endpoint" })
+      .closest("section");
+    const keySection = screen.getByRole("heading", { name: "API key" }).closest("section");
+    expect(within(endpointSection as HTMLElement).getByText(props.mcpUrl)).not.toHaveClass(
+      "font-mono",
+    );
+    expect(within(keySection as HTMLElement).getByText(props.apiKey.maskedValue)).not.toHaveClass(
+      "font-mono",
+    );
+    expect(within(keySection as HTMLElement).getByText(/Read and write/)).not.toHaveClass(
+      "font-mono",
+    );
+    expect(screen.getByText("planned")).not.toHaveClass("font-mono");
+    expect(container.querySelector("pre")).toHaveClass("font-mono");
+  });
+
   it("renders the retained planned skills and omits removed catalog entries", () => {
     render(<InstallPageContent {...props} />);
 

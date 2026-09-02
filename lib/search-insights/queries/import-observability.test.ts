@@ -92,6 +92,52 @@ describe("selectImportObservabilityFacts", () => {
     ).toBe(false);
   });
 
+  describe("aggregate coverage across stored ranges", () => {
+    // Production shape: one plan-time aggregate that stopped at the boundary as it stood when the
+    // import was planned, then one range per incremental run walking the boundary forward.
+    const planTime = aggregate(addDays(boundary, -179), addDays(boundary, -9));
+    const incrementals = [
+      aggregate(addDays(boundary, -8), addDays(boundary, -6)),
+      aggregate(addDays(boundary, -5), addDays(boundary, -3)),
+      aggregate(addDays(boundary, -2), boundary),
+    ];
+
+    it("opens every preset once the stored ranges cover the window between them", () => {
+      const selected = facts(consecutive(90), {
+        aggregateRanges: [planTime, ...incrementals],
+      });
+
+      expect(selected.readyThrough.d7.current).toBe(true);
+      expect(selected.readyThrough.d28.current).toBe(true);
+      expect(selected.readyThrough.d90.current).toBe(true);
+    });
+
+    it("keeps the preset closed when the stored ranges leave a day uncovered", () => {
+      const gapped = facts(consecutive(90), {
+        aggregateRanges: [planTime, incrementals[0], incrementals[2]],
+      });
+
+      expect(gapped.readyThrough.d7.current).toBe(false);
+      expect(gapped.readyThrough.d28.current).toBe(false);
+    });
+
+    it("merges only ranges that pass every provenance qualifier", () => {
+      const foreign = incrementals.map((range) => ({ ...range, source: "bing" }));
+      expect(
+        facts(consecutive(90), { aggregateRanges: [planTime, ...foreign] }).readyThrough.d7,
+      ).toMatchObject({ current: false });
+
+      const unpersisted = incrementals.map((range) => ({ ...range, persistedAt: null }));
+      expect(
+        facts(consecutive(90), { aggregateRanges: [planTime, ...unpersisted] }).readyThrough.d7,
+      ).toMatchObject({ current: false });
+    });
+
+    it("still accepts a single wide plan-time range", () => {
+      expect(facts(consecutive(90)).readyThrough.d7.current).toBe(true);
+    });
+  });
+
   it("uses the newer durable activity and produces integer stall and deep-history facts", () => {
     const selected = facts(consecutive(90), {
       daysTotal: 93,

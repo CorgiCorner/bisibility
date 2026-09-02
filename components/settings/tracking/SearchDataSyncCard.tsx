@@ -208,7 +208,7 @@ export function SearchDataSyncCard({
               />
             </div>
           </div>
-          <div className="mt-4 flex flex-wrap gap-x-2 gap-y-1 px-4 font-mono text-[11px] text-fg-muted">
+          <div className="mt-4 flex flex-wrap gap-x-2 gap-y-1 px-4 font-sans tabular-nums text-[11px] text-fg-muted">
             <span>requests in current window: {metrics.requestsToday.toLocaleString("en-US")}</span>
             <span aria-hidden>·</span>
             <span>

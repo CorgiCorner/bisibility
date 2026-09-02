@@ -110,7 +110,7 @@ export function SavedKeywordsBulkBar({
   return (
     <div className="flex flex-wrap items-center gap-3 border-b border-[#e8d5c9] bg-accent-soft px-4 py-[9px]">
       <strong className="whitespace-nowrap text-[13px] text-accent-text">{count} selected</strong>
-      <span className="font-mono text-[11px] text-[#a85c22]">
+      <span className="font-sans tabular-nums text-[11px] text-[#a85c22]">
         {trackDisabledReason ??
           `tracking all ${count} adds ${
             estimate == null ? "an unavailable estimate" : `~${estimate}/mo`
@@ -138,7 +138,9 @@ export function SavedKeywordsBulkBar({
         >
           Track {count}
           {estimate == null ? null : (
-            <span className="ml-1.5 font-mono text-[12px] font-medium">~{estimate}/mo</span>
+            <span className="ml-1.5 font-sans tabular-nums text-[12px] font-medium">
+              ~{estimate}/mo
+            </span>
           )}
         </Button>
       ) : null}
@@ -174,7 +176,7 @@ export function SavedKeywordsFooter({
   const hasNext = end < total;
   return (
     <div className="flex flex-wrap items-center justify-between gap-5 border-t border-border px-4 py-3">
-      <span className="font-mono text-[11px] text-fg-muted">
+      <span className="font-sans tabular-nums text-[11px] text-fg-muted">
         Metrics are a snapshot from the research run / saving is free, nothing is checked until you
         track
       </span>
@@ -183,10 +185,10 @@ export function SavedKeywordsFooter({
           ariaLabel="Rows per page"
           onChange={(value) => onPageSizeChange(Number(value))}
           options={[10, 25, 50].map((value) => ({ label: String(value), value: String(value) }))}
-          triggerClassName="min-w-[126px] border-0 bg-transparent px-0 font-mono text-[12px]"
+          triggerClassName="min-w-[126px] border-0 bg-transparent px-0 font-sans tabular-nums text-[12px]"
           value={String(pageSize)}
         />
-        <span className="whitespace-nowrap font-mono text-[12px] text-fg-muted">
+        <span className="whitespace-nowrap font-sans tabular-nums text-[12px] text-fg-muted">
           {start}-{end} of {total}
         </span>
         <div className="flex gap-1">

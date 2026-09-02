@@ -29,7 +29,7 @@ export function NotificationPreferences({
       >
         <p className="m-0 text-[13px] leading-5 text-fg">
           Notifications are delivered to{" "}
-          <span className="font-mono font-medium">{preferences.email}</span>.
+          <span className="font-sans tabular-nums font-medium">{preferences.email}</span>.
         </p>
       </SettingsCard>
     </div>

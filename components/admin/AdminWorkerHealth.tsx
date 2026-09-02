@@ -1,6 +1,5 @@
 import { Badge, displayTime, Metric, Panel } from "@/components/admin/AdminPrimitives";
 import { AdminSectionUnavailable } from "@/components/admin/AdminSectionUnavailable";
-import { MonoText } from "@/components/ui";
 import type { MigrationComparison } from "@/lib/db/migration-state";
 import type { InstanceAdminDashboard } from "@/lib/queries/instance-admin";
 
@@ -44,20 +43,20 @@ export function AdminWorkerHealth({
             label="Last heartbeat"
             value={<span className="text-sm">{displayTime(worker.lastSeenAt)}</span>}
           />
-          <Metric label="Release" value={<MonoText>{worker.release}</MonoText>} />
-          <Metric label="Environment" value={<MonoText>{worker.environment}</MonoText>} />
-          <Metric label="Scheduler driver" value={<MonoText>{worker.schedulerDriver}</MonoText>} />
+          <Metric label="Release" value={<span>{worker.release}</span>} />
+          <Metric label="Environment" value={<span>{worker.environment}</span>} />
+          <Metric label="Scheduler driver" value={<span>{worker.schedulerDriver}</span>} />
           <Metric
             label="Schema status"
             value={<Badge status={schema.tone}>{schema.label}</Badge>}
           />
           <Metric
             label="Bundled migration"
-            value={<MonoText>{migrationName(worker.bundledMigration)}</MonoText>}
+            value={<span>{migrationName(worker.bundledMigration)}</span>}
           />
           <Metric
             label="Applied migration"
-            value={<MonoText>{migrationName(worker.appliedMigration)}</MonoText>}
+            value={<span>{migrationName(worker.appliedMigration)}</span>}
           />
           <Metric
             label="Slack ops"

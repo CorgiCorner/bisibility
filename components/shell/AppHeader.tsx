@@ -13,7 +13,9 @@ export type AppHeaderProps = {
   activeProjectId: string;
   canCreateWorkspace: boolean;
   projectRef: string;
+  setupCompleted?: boolean;
   setupDoneCount?: number;
+  setupSettledCount?: number;
   setupTotalCount?: number;
   showGettingStarted?: boolean;
   showHostedLinks?: boolean;
@@ -26,7 +28,9 @@ export function AppHeader({
   activeProjectId,
   canCreateWorkspace,
   projectRef,
+  setupCompleted = false,
   setupDoneCount = 0,
+  setupSettledCount = 0,
   setupTotalCount = 4,
   showGettingStarted = false,
   showHostedLinks = false,
@@ -40,7 +44,9 @@ export function AppHeader({
           activeProjectId={activeProjectId}
           canCreateWorkspace={canCreateWorkspace}
           projectRef={projectRef}
+          setupCompleted={setupCompleted}
           setupDoneCount={setupDoneCount}
+          setupSettledCount={setupSettledCount}
           setupTotalCount={setupTotalCount}
           showGettingStarted={showGettingStarted}
           showHostedLinks={showHostedLinks}
@@ -48,7 +54,7 @@ export function AppHeader({
           version={appVersion()}
           workspaces={workspaces}
         />
-        <AppHeaderTitle />
+        <AppHeaderTitle setupCompleted={setupCompleted} setupTotalCount={setupTotalCount} />
       </div>
       {/* Right cluster order: [spend meter] [search][bell][account]. */}
       <div className="flex flex-none items-center gap-6">

@@ -76,7 +76,7 @@ export function AddKeywordApiPanel({ projectId }: Readonly<AddKeywordApiPanelPro
       <div className="min-w-0 overflow-hidden rounded-control border border-code-border bg-code-bg">
         <div className="flex items-center justify-between gap-2 border-b border-code-border px-3 pt-2">
           <div
-            className="rounded-t-lg px-3 py-1.5 font-mono text-[11.5px]"
+            className="rounded-t-lg px-3 py-1.5 font-sans tabular-nums text-[11.5px]"
             style={{
               backgroundColor: "color-mix(in srgb, var(--code-bg) 92%, var(--code-fg))",
               color: "var(--code-fg)",
@@ -91,7 +91,7 @@ export function AddKeywordApiPanel({ projectId }: Readonly<AddKeywordApiPanelPro
       <p className="m-0 text-[11.5px] text-fg-muted">
         Full API reference at{" "}
         <a
-          className="font-mono text-accent-text hover:underline"
+          className="font-sans tabular-nums text-accent-text hover:underline"
           {...docsLinkProps(openapiHref, { external: true })}
         >
           {openapiHref}

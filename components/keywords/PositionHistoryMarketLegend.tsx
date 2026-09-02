@@ -42,7 +42,7 @@ export function PositionHistoryMarketLegend({
         <div className="mt-3 flex flex-wrap gap-2" aria-label="Compared markets">
           {visibleMarkets.map((target, index) => (
             <span
-              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-bg-sunken px-2.5 py-1 font-mono text-[10.5px] text-fg-muted"
+              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-bg-sunken px-2.5 py-1 font-sans tabular-nums text-[10.5px] text-fg-muted"
               key={target.id}
             >
               <span
@@ -59,7 +59,7 @@ export function PositionHistoryMarketLegend({
             </span>
           ))}
           {markets.length > 6 ? (
-            <span className="font-mono text-[10.5px] text-fg-muted">
+            <span className="font-sans tabular-nums text-[10.5px] text-fg-muted">
               +{markets.length - 6} more markets - filter in the grid to compare them
             </span>
           ) : null}

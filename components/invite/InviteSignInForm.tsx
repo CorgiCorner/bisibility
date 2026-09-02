@@ -112,14 +112,14 @@ export function InviteSignInForm({ email }: Readonly<{ email: string }>) {
           />
           <p className="m-0 text-[13px] leading-relaxed text-fg-muted">
             We sent a one-time code to{" "}
-            <span className="font-mono font-semibold text-fg">{emailForm.getValues("email")}</span>.
+            <span className="font-semibold text-fg">{emailForm.getValues("email")}</span>.
           </p>
         </div>
-        <label className="block font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
+        <label className="block text-[10px] uppercase tracking-[0.5px] text-fg-muted">
           {"Sign-in code "}
           <input
             autoComplete="one-time-code"
-            className="mt-2 block min-h-11 w-full rounded-control border border-border-control bg-transparent px-3 font-mono text-[15px] font-semibold tracking-[0.4px] text-fg outline-none focus:border-accent"
+            className="mt-2 block min-h-11 w-full rounded-control border border-border-control bg-transparent px-3 text-[15px] font-semibold tracking-[0.4px] text-fg outline-none focus:border-accent"
             disabled={pending}
             inputMode="numeric"
             maxLength={6}
@@ -151,11 +151,11 @@ export function InviteSignInForm({ email }: Readonly<{ email: string }>) {
 
   return (
     <form className="mt-5 space-y-3" onSubmit={emailForm.handleSubmit(requestCode)}>
-      <label className="block font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
+      <label className="block text-[10px] uppercase tracking-[0.5px] text-fg-muted">
         {"Invited email "}
         <input
           autoComplete="email"
-          className="mt-2 block min-h-11 w-full rounded-control border border-border-control bg-transparent px-3 font-mono text-[13.5px] font-medium text-fg outline-none focus:border-accent"
+          className="mt-2 block min-h-11 w-full rounded-control border border-border-control bg-transparent px-3 text-[13.5px] font-medium text-fg outline-none focus:border-accent"
           inputMode="email"
           readOnly
           type="email"

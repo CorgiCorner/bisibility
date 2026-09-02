@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { resolveSetupProgress, SETUP_STEP_DEFINITIONS, type SetupContext } from "./setup-steps";
+import {
+  isSetupComplete,
+  resolveSetupProgress,
+  SETUP_STEP_DEFINITIONS,
+  type SetupContext,
+} from "./setup-steps";
 
 const scheduledAt = new Date("2026-09-01T06:00:00.000Z");
 
@@ -175,7 +180,26 @@ describe("setup step definitions", () => {
       context({ completedCheckCount: 1, keywordCount: 3, providerExists: true }),
     );
     expect(progress.doneCount).toBe(4);
+    expect(progress.settledCount).toBe(4);
+    expect(progress.completed).toBe(true);
     expect(progress.steps).toHaveLength(4);
+  });
+
+  it("treats four done and one skipped as completed", () => {
+    const steps = [
+      { state: { family: "done" as const } },
+      { state: { family: "done" as const } },
+      { state: { family: "done" as const } },
+      { state: { family: "done" as const } },
+      { state: { family: "skipped" as const } },
+    ];
+    expect(isSetupComplete(steps)).toBe(true);
+    expect(
+      isSetupComplete([
+        ...steps.slice(0, 4),
+        { state: { family: "blocked", reason: "x", unblockedBy: "first_check" } },
+      ]),
+    ).toBe(false);
   });
 
   it("keeps authored user-visible strings free of U+2014", () => {

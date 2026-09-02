@@ -140,7 +140,7 @@ export function TeamMembersCard(props: Readonly<TeamMembersCardProps>) {
                   <Avatar
                     alt=""
                     className={cn(
-                      "grid h-8.5 w-[34px] shrink-0 place-items-center rounded-control font-mono text-xs font-semibold",
+                      "grid h-8.5 w-[34px] shrink-0 place-items-center rounded-control font-sans tabular-nums text-xs font-semibold",
                       avatarColors[member.color],
                     )}
                     initials={member.initials}
@@ -150,12 +150,12 @@ export function TeamMembersCard(props: Readonly<TeamMembersCardProps>) {
                     <span className="flex items-center gap-1.5 text-[13.5px] font-semibold">
                       <span className="truncate">{member.name}</span>
                       {member.isCurrentUser ? (
-                        <span className="inline-flex h-4 items-center rounded-full border border-border bg-bg-sunken px-1.5 font-mono text-[9px] font-semibold leading-none tracking-[0.3px] text-fg-muted">
+                        <span className="inline-flex h-4 items-center rounded-full border border-border bg-bg-sunken px-1.5 font-sans tabular-nums text-[9px] font-semibold leading-none tracking-[0.3px] text-fg-muted">
                           you
                         </span>
                       ) : null}
                     </span>
-                    <span className="block truncate font-mono text-[11.5px] text-fg-muted">
+                    <span className="block truncate font-sans tabular-nums text-[11.5px] text-fg-muted">
                       {member.email}
                     </span>
                     <span className="block truncate text-[11px] text-fg-muted">

@@ -119,7 +119,7 @@ export function BacklinksTableToolbar({
         >
           <FunnelSimple aria-hidden size={13} weight="regular" />
           Filters
-          <span className="grid h-[17px] min-w-[17px] place-items-center rounded-full bg-accent-soft px-1 font-mono text-[10px] font-semibold text-accent-text">
+          <span className="grid h-[17px] min-w-[17px] place-items-center rounded-full bg-accent-soft px-1 font-sans tabular-nums text-[10px] font-semibold text-accent-text">
             {filterCount}
           </span>
         </button>
@@ -139,7 +139,9 @@ export function BacklinksTableToolbar({
             type="button"
           >
             {item.label}
-            <span className="font-mono text-[11px] text-fg-muted">{counts[item.id]}</span>
+            <span className="font-sans tabular-nums text-[11px] text-fg-muted">
+              {counts[item.id]}
+            </span>
             {item.id !== "broken" ? (
               <span className="text-[10px] text-fg-muted">
                 {counts[item.id] === 1 ? "domain" : "domains"}

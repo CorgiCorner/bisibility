@@ -10,7 +10,7 @@ const meta = {
       <div className="grid gap-4 p-4 sm:grid-cols-2">
         {themes.map((theme) => (
           <section className="rounded-card bg-bg p-5 text-fg" data-theme={theme} key={theme}>
-            <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.6px] text-fg-muted">
+            <p className="mb-3 text-[10px] uppercase tracking-[0.6px] text-fg-muted">
               {theme} theme
             </p>
             <Story />
@@ -34,9 +34,7 @@ export const Compact: Story = {
       currentIndex={1}
       items={[1, 2, 3]}
       label={
-        <span className="font-mono text-[10px] uppercase tracking-[0.6px] text-fg-muted">
-          Step 2 of 3
-        </span>
+        <span className="text-[10px] uppercase tracking-[0.6px] text-fg-muted">Step 2 of 3</span>
       }
     />
   ),

@@ -4,8 +4,20 @@ import { headerMetaFor } from "@/components/shell/header-title";
 import { appRootPath } from "@/lib/routing/app-path";
 import { usePathname } from "next/navigation";
 
-export function AppHeaderTitle() {
-  const { headerVariant, subtitle, title } = headerMetaFor(usePathname() ?? appRootPath());
+type AppHeaderTitleProps = Readonly<{
+  setupCompleted?: boolean;
+  setupTotalCount?: number;
+}>;
+
+export function AppHeaderTitle({
+  setupCompleted = false,
+  setupTotalCount = 4,
+}: AppHeaderTitleProps) {
+  const pathname = usePathname() ?? appRootPath();
+  const { headerVariant, subtitle, title } = headerMetaFor(pathname, {
+    completed: setupCompleted,
+    totalCount: setupTotalCount,
+  });
   const settingsHeader = headerVariant === "settings";
 
   return (

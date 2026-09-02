@@ -35,7 +35,7 @@ export default async function OnboardingLayout({ children }: Readonly<Onboarding
             <span className="inline-flex items-center gap-1.5">
               <Avatar
                 alt=""
-                className="h-[22px] w-[22px] rounded-control bg-accent-solid font-mono text-[9px] font-semibold text-accent-on-solid"
+                className="h-[22px] w-[22px] rounded-control bg-accent-solid text-[9px] font-semibold text-accent-on-solid"
                 initials={initials}
                 src={avatarSrc}
               />
@@ -48,7 +48,7 @@ export default async function OnboardingLayout({ children }: Readonly<Onboarding
         </header>
         {children}
         <div className="mt-auto pt-14">
-          <footer className="flex flex-wrap items-center justify-between gap-3 border-border border-t pt-6 font-mono text-xs text-fg-muted">
+          <footer className="flex flex-wrap items-center justify-between gap-3 border-border border-t pt-6 text-xs text-fg-muted">
             <span>© 2026 bisibility</span>
             <ThemeSegments size="sm" />
           </footer>

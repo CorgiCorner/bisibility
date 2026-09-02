@@ -164,3 +164,56 @@ describe("getTopPages", () => {
     );
   });
 });
+
+describe("column sorting", () => {
+  beforeEach(() => {
+    mocks.prisma.$queryRaw.mockReset();
+    mocks.prisma.$queryRaw.mockResolvedValue([]);
+  });
+
+  it.each([
+    ["clicks", { direction: "desc", key: "clicks" }, 'SUM("clicks") DESC, "query" ASC'],
+    [
+      "impressions",
+      { direction: "asc", key: "impressions" },
+      'SUM("impressions") ASC, "query" ASC',
+    ],
+    [
+      "ctr",
+      { direction: "desc", key: "ctr" },
+      'SUM("clicks")::float8 / NULLIF(SUM("impressions"), 0) DESC NULLS LAST, "query" ASC',
+    ],
+    [
+      "position",
+      { direction: "asc", key: "position" },
+      'SUM("position" * "impressions") / NULLIF(SUM("impressions"), 0) ASC NULLS LAST, "query" ASC',
+    ],
+    ["text", { direction: "asc", key: "text" }, '"query" ASC'],
+  ] as const)("orders the whole window by %s in the read", async (_name, sort, expected) => {
+    await getTopQueries("prj_1", "sc-domain:example.com", window, { limit: 10, offset: 0, sort });
+
+    expect(statement().sql).toContain(`ORDER BY ${expected}`);
+  });
+
+  // Every metric sort ends on the unique text column, so two rows sharing a value keep a stable
+  // order across pages: without it a LIMIT/OFFSET boundary can repeat one row and drop another.
+  it.each(["clicks", "ctr", "impressions", "position"] as const)(
+    "breaks ties on the text when sorting by %s",
+    async (key) => {
+      await getTopPages("prj_1", "sc-domain:example.com", window, {
+        limit: 10,
+        offset: 0,
+        sort: { direction: "desc", key },
+      });
+
+      const orderBy = /ORDER BY([\s\S]*?)\n\s*LIMIT/.exec(statement().sql)?.[1]?.trim();
+      expect(orderBy).toMatch(/, "page" ASC$/);
+    },
+  );
+
+  it("falls back to the read's own default when no sort is asked for", async () => {
+    await getTopQueries("prj_1", "sc-domain:example.com", window, { limit: 10, offset: 0 });
+
+    expect(statement().sql).toContain('ORDER BY SUM("clicks") DESC, "query" ASC');
+  });
+});

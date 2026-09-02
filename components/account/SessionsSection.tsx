@@ -1,4 +1,3 @@
-import { MonoText } from "@/components/ui";
 import type { ActiveSession } from "@/lib/queries/account";
 import {
   DeviceMobileIcon as DeviceMobile,
@@ -50,14 +49,14 @@ export function SessionsSection({
                       {sessionLabel(session.device)}
                     </span>
                     {session.current ? (
-                      <span className="inline-flex items-center rounded-full bg-green/10 px-[7px] py-px font-mono text-[9px] text-green-text">
+                      <span className="inline-flex items-center rounded-full bg-green/10 px-[7px] py-px font-sans tabular-nums text-[9px] text-green-text">
                         This device
                       </span>
                     ) : null}
                   </span>
-                  <MonoText className="mt-0.5 truncate text-[11px]" muted>
+                  <span className="mt-0.5 truncate text-[11px]">
                     {session.location} · {session.createdLabel}
-                  </MonoText>
+                  </span>
                 </span>
                 {session.current ? null : (
                   <RevokeSessionButton revokeSession={revokeSession} sessionId={session.id} />

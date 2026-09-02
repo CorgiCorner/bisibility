@@ -50,14 +50,12 @@ export function WorkspaceRow({ workspace, active, onSelect }: Readonly<Workspace
         <span className="flex min-w-0 items-center gap-1.5 text-[13px] font-medium leading-tight text-fg">
           <span className="truncate">{workspace.name}</span>
           {workspace.isSample ? (
-            <span className="rounded-full border border-border px-1.5 py-px font-mono text-[9px] uppercase text-fg-muted">
+            <span className="rounded-full border border-border px-1.5 py-px text-[9px] uppercase text-fg-muted">
               Sample
             </span>
           ) : null}
         </span>
-        <span className="mt-px block font-mono text-[10px] text-fg-muted">
-          {workspaceRowMeta(workspace)}
-        </span>
+        <span className="mt-px block text-[10px] text-fg-muted">{workspaceRowMeta(workspace)}</span>
       </span>
       {/* Kept in the DOM on every row and toggled with visibility, so opening the menu never
           relayouts the rows. --accent-solid, not --accent: the check is a non-text indicator

@@ -141,7 +141,7 @@ export function TwoFactorChallengeForm({
 
       <div className="mt-5">
         <label
-          className="block font-mono text-[10.5px] uppercase tracking-[0.5px] text-fg-muted"
+          className="block text-[10.5px] uppercase tracking-[0.5px] text-fg-muted"
           htmlFor="two-factor-code"
         >
           {method === "totp" ? "Authenticator code" : "Backup code"}
@@ -149,7 +149,7 @@ export function TwoFactorChallengeForm({
         <input
           autoComplete={method === "totp" ? "one-time-code" : "off"}
           className={cn(
-            "mt-[7px] box-border w-full rounded-control border border-border-control bg-transparent px-[13px] py-3 font-mono text-[14.5px] font-medium text-fg outline-none focus:border-accent",
+            "mt-[7px] box-border w-full rounded-control border border-border-control bg-transparent px-[13px] py-3 text-[14.5px] font-medium tabular-nums text-fg outline-none focus:border-accent",
             form.formState.errors.code && "border-red focus:border-red",
           )}
           id="two-factor-code"

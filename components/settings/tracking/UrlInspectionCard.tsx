@@ -62,7 +62,7 @@ export function UrlInspectionCard({
         <fieldset className="contents" disabled={!canEdit}>
           <SettingsField width="field">
             <FieldLabel
-              className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted"
+              className="font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted"
               htmlFor="inspection-daily-limit"
               label="Daily inspection limit"
             />

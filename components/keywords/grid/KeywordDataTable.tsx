@@ -187,7 +187,7 @@ export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulk
         />
       )}
       {rowActionError ? (
-        <p className="m-0 border-b border-border px-4 py-2 font-mono text-[11.5px] text-red-text">
+        <p className="m-0 border-b border-border px-4 py-2 font-sans tabular-nums text-[11.5px] text-red-text">
           {rowActionError}
         </p>
       ) : null}

@@ -139,7 +139,8 @@ describe("SearchInsightsPropertyPicker", () => {
     ]);
     for (const [index, header] of [...headers].entries()) {
       expect(header).toHaveAttribute("role", "presentation");
-      expect(header).toHaveClass("MuiListSubheader-gutters", "font-mono", "uppercase");
+      expect(header).toHaveClass("MuiListSubheader-gutters", "uppercase");
+      expect(header).not.toHaveClass("font-mono");
       expect(header).not.toHaveClass("MuiListSubheader-sticky");
       expect(header).toHaveStyle({
         backgroundColor: "var(--bg-sunken)",

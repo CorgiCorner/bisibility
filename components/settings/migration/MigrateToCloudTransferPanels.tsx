@@ -153,10 +153,10 @@ function PushTransferPanel({
       </TokenSourceStep>
       <StepLabel index={2} title="Paste the migration token here" />
       <form className="mt-2 flex flex-col gap-3">
-        <label className="flex flex-col gap-[7px] font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
+        <label className="flex flex-col gap-[7px] font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
           {"Migration token "}
           <input
-            className="min-h-11 rounded-control border border-accent bg-transparent px-[13px] font-mono text-[13px] font-medium text-fg placeholder:text-[12px] placeholder:leading-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid"
+            className="min-h-11 rounded-control border border-accent bg-transparent px-[13px] font-sans tabular-nums text-[13px] font-medium text-fg placeholder:text-[12px] placeholder:leading-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid"
             placeholder="mig_************"
             {...form.register("token")}
           />
@@ -184,7 +184,9 @@ function PushTransferPanel({
       />
       <InfoBox icon="terminal">
         Destination preflight runs during transfer before import starts. REST import endpoint:{" "}
-        <code className="font-mono text-fg">{handoff?.apiImportUrl ?? "/api/v1/cloud/import"}</code>
+        <code className="font-sans tabular-nums text-fg">
+          {handoff?.apiImportUrl ?? "/api/v1/cloud/import"}
+        </code>
       </InfoBox>
     </>
   );

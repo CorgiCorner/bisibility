@@ -104,13 +104,10 @@
   }
 }
 
-/* HANDOFF-12: tabular figures on mono text so IDs/metrics/counts align. */
-.font-mono,
-code,
-kbd,
-pre,
-samp {
-  font-variant-numeric: tabular-nums;
+/* Tailwind generates `.font-mono` for explicitly allowlisted code and opaque
+   machine IDs. Keyboard keys are also exact machine-like glyphs. */
+kbd {
+  font-family: var(--font-mono);
 }
 
 /* HANDOFF-12: balanced wrapping on headings. */

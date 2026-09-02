@@ -41,7 +41,7 @@ function formatDuration(seconds: number) {
 
 function SourceChip({ provider }: Readonly<{ provider: string }>) {
   return (
-    <span className="inline-flex h-6 items-center rounded-full border border-border bg-bg-sunken px-2.5 font-mono text-[10.5px] text-fg-muted">
+    <span className="inline-flex h-6 items-center rounded-full border border-border bg-bg-sunken px-2.5 font-sans tabular-nums text-[10.5px] text-fg-muted">
       {providerLabel(provider)}
     </span>
   );
@@ -55,7 +55,7 @@ function StatGrid({ stats }: Readonly<{ stats: Stat[] }>) {
           className="rounded-control border border-border bg-bg-sunken px-3 py-2.5"
           key={stat.label}
         >
-          <p className="m-0 font-mono text-[10px] uppercase tracking-[0.65px] text-fg-muted">
+          <p className="m-0 font-sans tabular-nums text-[10px] uppercase tracking-[0.65px] text-fg-muted">
             {stat.label}
           </p>
           <p className="m-0 mt-1 text-[18px] font-semibold leading-none text-fg">
@@ -164,8 +164,8 @@ function LandingPagePerformanceCard({ pages }: Readonly<{ pages: PageTrafficSnap
           >
             <div className="flex flex-wrap items-center gap-2">
               <SourceChip provider={page.provider} />
-              <span className="font-mono text-[11.5px] text-fg">{page.path}</span>
-              <span className="font-mono text-[10.5px] text-fg-muted">
+              <span className="font-sans tabular-nums text-[11.5px] text-fg">{page.path}</span>
+              <span className="font-sans tabular-nums text-[10.5px] text-fg-muted">
                 last {page.windowDays} days
               </span>
             </div>

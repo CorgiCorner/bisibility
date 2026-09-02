@@ -251,7 +251,7 @@ export function ResearchSearchCard({
         {metricsScope ? (
           <div
             aria-label={`Metrics scope: ${metricsScope.country} - ${metricsScope.language}`}
-            className="-mx-4 -mb-4 mt-1 flex items-center gap-2 rounded-b-[12px] border-t border-border bg-bg-sunken px-4 py-2.5 font-mono text-[11.5px] text-fg-muted sm:-mx-5 sm:-mb-5 sm:px-5"
+            className="-mx-4 -mb-4 mt-1 flex items-center gap-2 rounded-b-[12px] border-t border-border bg-bg-sunken px-4 py-2.5 font-sans tabular-nums text-[11.5px] text-fg-muted sm:-mx-5 sm:-mb-5 sm:px-5"
             role="status"
           >
             <GlobeSimple weight="regular" aria-hidden size={14} />

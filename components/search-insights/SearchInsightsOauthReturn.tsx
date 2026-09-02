@@ -58,6 +58,7 @@ export function SearchInsightsOauthReturn({
     isGa4 && Boolean(setup.error) && setup.properties.length === 0,
   );
   const [retrying, startRetry] = useTransition();
+  const [settling, startSettling] = useTransition();
   const [pending, setPending] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [disconnectOpen, setDisconnectOpen] = useState(false);
@@ -88,6 +89,13 @@ export function SearchInsightsOauthReturn({
     }
   }
 
+  /**
+   * The connection is made by the time the action resolves, but the screen that replaces this one
+   * only arrives with the next server render. Clearing `pending` here - as a `finally` did - hands
+   * back an idle button on the screen the customer just left, which reads as a dropped click and
+   * invites a second submit that starts a second connection. The refresh runs inside a transition
+   * instead, so the control stays busy until that render commits, and only a failure gives it back.
+   */
   async function select(selection?: SearchSyncSelection) {
     setPending(true);
     setPropertyError(null);
@@ -97,10 +105,11 @@ export function SearchInsightsOauthReturn({
         projectId,
         property,
       });
-      router.refresh();
+      startSettling(() => {
+        router.refresh();
+      });
     } catch (error) {
       setPropertyError(actionErrorMessage(error, SELECT_FAILED));
-    } finally {
       setPending(false);
     }
   }
@@ -155,7 +164,7 @@ export function SearchInsightsOauthReturn({
           onPropertyChange={setProperty}
           onPropertyErrorChange={setPropertyError}
           onSelect={() => void select()}
-          pending={pending}
+          pending={pending || settling}
           property={property}
           propertyError={propertyError}
           readOnly={false}
@@ -195,7 +204,7 @@ export function SearchInsightsOauthReturn({
           onPropertyChange={setProperty}
           onPropertyErrorChange={setPropertyError}
           onSelect={(selection) => void select(selection)}
-          pending={pending}
+          pending={pending || settling}
           property={property}
           propertyError={propertyError}
           readOnly={false}

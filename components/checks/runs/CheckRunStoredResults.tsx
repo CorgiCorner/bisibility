@@ -19,7 +19,7 @@ export function CheckRunStoredResults({ keywordHref, run }: Readonly<Props>) {
 
   return (
     <div className="mt-2 border-t border-border-soft pt-2">
-      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[10.5px]">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 font-sans tabular-nums text-[10.5px]">
         <strong className="font-semibold text-fg">Retrieved results</strong>
         {retrieved != null ? (
           <span className="text-fg-muted">
@@ -28,7 +28,7 @@ export function CheckRunStoredResults({ keywordHref, run }: Readonly<Props>) {
         ) : null}
       </div>
       {stored.tier === "full" ? (
-        <p className="mt-1 font-mono text-[10.5px] text-fg-muted">
+        <p className="mt-1 font-sans tabular-nums text-[10.5px] text-fg-muted">
           {typeof run.position === "number"
             ? `Your result at #${run.position}`
             : depth != null
@@ -36,13 +36,13 @@ export function CheckRunStoredResults({ keywordHref, run }: Readonly<Props>) {
               : "Not found at this check"}
         </p>
       ) : (
-        <p className="mt-1 font-mono text-[10.5px] text-fg-muted">
+        <p className="mt-1 font-sans tabular-nums text-[10.5px] text-fg-muted">
           Compact record. One row per domain with its best position survived; titles, URLs and page
           features did not.
         </p>
       )}
       {showGap ? (
-        <div className="mt-1 font-mono text-[10.5px] text-fg-muted">
+        <div className="mt-1 font-sans tabular-nums text-[10.5px] text-fg-muted">
           <p className="m-0">{`Positions ${retrieved + 1}-${depth} not retrieved`}</p>
           <p className="m-0">
             {stored.stoppedAtResult

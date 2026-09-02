@@ -66,7 +66,9 @@ export function CompetitorScopeControls({
 
   return (
     <div className="flex flex-wrap items-center gap-2 rounded-control border border-border bg-bg-sunken px-3 py-2.5">
-      <span className="font-mono text-[11px] uppercase tracking-[0.5px] text-fg-muted">Market</span>
+      <span className="font-sans tabular-nums text-[11px] uppercase tracking-[0.5px] text-fg-muted">
+        Market
+      </span>
       <MarketCombobox
         ariaLabel="Competitor market"
         catalogMarkets={[]}
@@ -92,7 +94,7 @@ export function CompetitorScopeControls({
         size="toolbar"
         value={current.device}
       />
-      <span className="ml-auto flex items-center gap-1.5 font-mono text-[11px] text-fg-muted">
+      <span className="ml-auto flex items-center gap-1.5 font-sans tabular-nums text-[11px] text-fg-muted">
         <Info weight="regular" aria-hidden className="shrink-0 text-accent-text" size={13} />
         SOV compares one market (location + language) + device at a time
       </span>

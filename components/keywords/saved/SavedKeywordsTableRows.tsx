@@ -39,7 +39,7 @@ function SavedAt({ savedAt }: Readonly<{ savedAt: string }>) {
     <span
       aria-label={stale ? "Saved snapshot is getting stale" : undefined}
       className={cn(
-        "inline-flex items-center gap-1 font-mono text-[12px]",
+        "inline-flex items-center gap-1 font-sans tabular-nums text-[12px]",
         stale ? "text-yellow-text" : "text-fg-muted",
       )}
     >
@@ -147,7 +147,7 @@ export function SavedKeywordsTableRows({
                 <td className="px-1 py-2.5">
                   <KeywordCell row={row} />
                 </td>
-                <td className="px-1 py-2.5 text-right font-mono text-[13px] text-fg">
+                <td className="px-1 py-2.5 text-right font-sans tabular-nums text-[13px] text-fg">
                   {row.volume == null ? "-" : row.volume.toLocaleString("en-US")}
                 </td>
                 <td className="px-1 py-2.5">
@@ -158,13 +158,13 @@ export function SavedKeywordsTableRows({
                 </td>
                 <td className="px-1 py-2.5">
                   <span
-                    className="inline-grid h-6 min-w-6 place-items-center rounded-full border px-1 font-mono text-[10.5px] font-semibold"
+                    className="inline-grid h-6 min-w-6 place-items-center rounded-full border px-1 font-sans tabular-nums text-[10.5px] font-semibold"
                     style={difficultyPillStyle(row.difficulty)}
                   >
                     {row.difficulty ?? "-"}
                   </span>
                 </td>
-                <td className="px-1 py-2.5 text-right font-mono text-[13px] text-fg-muted">
+                <td className="px-1 py-2.5 text-right font-sans tabular-nums text-[13px] text-fg-muted">
                   {row.cpc == null ? "-" : formatEstimateCents(row.cpc * 100)}
                 </td>
                 <td className="px-1 py-2.5">
@@ -173,7 +173,7 @@ export function SavedKeywordsTableRows({
                 <td className="px-1 py-2.5">
                   <Link
                     aria-label={`${row.sourceSeed ?? "Research"} / ${row.location}`}
-                    className="inline-block max-w-full truncate rounded bg-bg-sunken px-1.5 py-0.5 font-mono text-[10px] text-fg-muted hover:text-accent-text"
+                    className="inline-block max-w-full truncate rounded bg-bg-sunken px-1.5 py-0.5 font-sans tabular-nums text-[10px] text-fg-muted hover:text-accent-text"
                     href={savedKeywordResearchHref(projectRef, row)}
                     onClick={(event) => event.stopPropagation()}
                   >

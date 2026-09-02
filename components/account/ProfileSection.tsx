@@ -1,6 +1,6 @@
 "use client";
 
-import { CopyButton, MonoText } from "@/components/ui";
+import { CopyButton } from "@/components/ui";
 import { updateProfileName } from "@/lib/actions/account";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { actionErrorMessage } from "@/lib/ui/action-error";
@@ -113,18 +113,12 @@ export function ProfileSection({
               {emailVerified ? "Verified via OTP" : "Unverified"}
             </span>
           </span>
-          <span className={cn(fieldValueClass, "font-mono")}>{email}</span>
+          <span className={cn(fieldValueClass, "font-sans tabular-nums")}>{email}</span>
         </div>
         <div className={cn(fieldLabelClass, "sm:col-span-2 sm:max-w-[50%]")}>
           {"User ID "}
           <span className="flex min-h-10 items-center gap-2 rounded-control border border-border bg-transparent px-3 normal-case tracking-normal text-fg">
-            <MonoText
-              className="min-w-0 flex-1 truncate text-fg"
-              size="lg"
-              sx={{ color: "inherit" }}
-            >
-              {publicId}
-            </MonoText>
+            <span className="min-w-0 flex-1 truncate font-mono text-fg">{publicId}</span>
             <CopyButton label="Copy user ID" size="sm" text={publicId} />
           </span>
         </div>

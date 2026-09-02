@@ -113,7 +113,7 @@ export function ManagedCompetitorControls({
             <X aria-hidden size={13} weight="regular" />
           </button>
         </span>
-        <span className="font-mono text-[10px] text-red-text">
+        <span className="font-sans tabular-nums text-[10px] text-red-text">
           {errors.label?.message ?? message}
         </span>
       </form>
@@ -149,7 +149,9 @@ export function ManagedCompetitorControls({
           </span>
         </Tooltip>
       ) : null}
-      {message ? <span className="font-mono text-[10px] text-red-text">{message}</span> : null}
+      {message ? (
+        <span className="font-sans tabular-nums text-[10px] text-red-text">{message}</span>
+      ) : null}
     </span>
   );
 }

@@ -180,7 +180,9 @@ export function RunChecksConfirmationModal({
               key={row.label}
             >
               <span className="text-[13px] text-fg-muted">{row.label}</span>
-              <span className="font-mono text-[13px] font-semibold text-fg">{row.value}</span>
+              <span className="font-sans tabular-nums text-[13px] font-semibold text-fg">
+                {row.value}
+              </span>
             </div>
           ))}
         </div>

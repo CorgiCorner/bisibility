@@ -54,7 +54,7 @@ function Segment({
 
 function Eyebrow({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-fg-muted">
+    <span className="font-sans tabular-nums text-[10px] uppercase tracking-[0.08em] text-fg-muted">
       {children}
     </span>
   );
@@ -126,7 +126,7 @@ export function RetrievedResultsHeader(props: Readonly<Props>) {
           value={props.selected}
         />
         {mode === "one" && props.current?.tier === "full" ? (
-          <span className="rounded-full border border-border px-2.5 py-1 font-mono text-[11px] text-fg-muted">
+          <span className="rounded-full border border-border px-2.5 py-1 font-sans tabular-nums text-[11px] text-fg-muted">
             {props.current.retrievedPositions}
             {props.current.requestedDepth ? ` of ${props.current.requestedDepth}` : ""} retrieved
           </span>

@@ -24,9 +24,10 @@ const severityOptions = [
   { label: "Critical", value: "critical" },
 ];
 
-const labelClass = "font-mono text-[10.5px] font-semibold uppercase tracking-[0.5px] text-fg-muted";
+const labelClass =
+  "font-sans tabular-nums text-[10.5px] font-semibold uppercase tracking-[0.5px] text-fg-muted";
 const severityTriggerClass =
-  "min-h-9 w-full justify-between rounded-control border-border-control bg-transparent px-3 font-sans text-[12px] font-semibold normal-case tracking-normal";
+  "min-h-9 w-full justify-between rounded-control border-border-control bg-transparent px-3 font-sans tabular-nums text-[12px] font-semibold normal-case tracking-normal";
 
 const defaultValues = (projectId: string): CreateSignalNoteInput => ({
   note: "",
@@ -137,7 +138,7 @@ function AddNoteFormControls({
             <label className="grid gap-1.5">
               <span className={labelClass}>URL</span>
               <input
-                className="h-9 min-w-0 rounded-control border border-border-control bg-transparent px-3 font-mono text-[12px] text-fg outline-none focus:border-accent"
+                className="h-9 min-w-0 rounded-control border border-border-control bg-transparent px-3 font-sans tabular-nums text-[12px] text-fg outline-none focus:border-accent"
                 placeholder="https://example.com/page"
                 type="url"
                 {...register("url")}
@@ -160,7 +161,7 @@ function AddNoteFormControls({
               />
             </label>
           </div>
-          <div className="min-h-4 font-mono text-[10.5px] text-red-text">
+          <div className="min-h-4 font-sans tabular-nums text-[10.5px] text-red-text">
             {errors.note?.message ?? errors.url?.message ?? message}
           </div>
         </form>

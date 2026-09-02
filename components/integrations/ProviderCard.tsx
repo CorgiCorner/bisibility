@@ -190,10 +190,10 @@ export function ProviderCard({
           <dl className="-mx-5 -mb-4.5 mt-3.5 flex flex-wrap gap-x-9 gap-y-3 border-border-soft border-t bg-bg-sunken/25 px-5 py-3.5 sm:col-span-2 sm:row-start-2">
             {provider.meta.map((row) => (
               <div key={row.label}>
-                <dt className="font-mono text-[9.5px] uppercase tracking-[0.5px] text-fg-muted">
+                <dt className="text-[9.5px] uppercase tracking-[0.5px] text-fg-muted">
                   {row.label}
                 </dt>
-                <dd className="m-0 mt-[3px] font-mono text-[12.5px] text-fg-muted">{row.value}</dd>
+                <dd className="m-0 mt-[3px] text-[12.5px] text-fg-muted">{row.value}</dd>
               </div>
             ))}
           </dl>

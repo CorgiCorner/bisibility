@@ -39,7 +39,7 @@ export type ProjectDetailsCardProps = {
   updateProject: UpdateProjectDetails;
 };
 
-const labelClass = "font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted";
+const labelClass = "font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted";
 const helpClass = "m-0 mt-1 text-[12px] leading-[1.55] text-fg-muted";
 
 export function ProjectDetailsCard({
@@ -117,7 +117,7 @@ export function ProjectDetailsCard({
             </span>
             <Input
               aria-describedby="general-project-domain-help"
-              className="mt-1.5 font-mono text-[12.5px]"
+              className="mt-1.5 font-sans tabular-nums text-[12.5px]"
               id="general-project-domain"
               readOnly
               value={project.domain ?? ""}
@@ -130,7 +130,7 @@ export function ProjectDetailsCard({
           <SettingsField width="field">
             <FieldLabel className={labelClass} label="Project ID" />
             <span className="mt-1.5 flex min-h-10 items-center gap-2 rounded-control border border-border bg-bg-sunken px-3">
-              <span className="min-w-0 flex-1 truncate font-mono text-[12.5px] text-fg-muted">
+              <span className="min-w-0 flex-1 truncate font-sans tabular-nums text-[12.5px] text-fg-muted">
                 {project.projectId}
               </span>
               <CopyButton label="Copy project ID" size="sm" text={project.projectId} />

@@ -5,7 +5,7 @@ import {
   countryValueForCode,
   type LocationFieldValue,
 } from "@/components/keywords/location-picker-data";
-import { Button, ExternalLink, Input, MonoText, Tooltip } from "@/components/ui";
+import { Button, ExternalLink, Input, Tooltip } from "@/components/ui";
 import { researchMetricsUnavailableNote } from "@/lib/serp/market-capability";
 import { MARKETING_URL } from "@/lib/site/site";
 import { CheckIcon as Check, MagnifyingGlassIcon as Search } from "@phosphor-icons/react";
@@ -137,11 +137,15 @@ export function MarketPicker({
         {choice.researchAvailable ? null : (
           // Terse on the row; the whole sentence is the row's description and the note
           // under the selection. Muted metadata, never an error treatment.
-          <span className="shrink-0 font-mono text-[9.5px] tracking-[0.3px] text-fg-muted">
+          <span className="shrink-0 font-sans tabular-nums text-[9.5px] tracking-[0.3px] text-fg-muted">
             no volume/KD
           </span>
         )}
-        {isTracked ? <MonoText size="sm">TRACKED</MonoText> : null}
+        {isTracked ? (
+          <span className="font-sans text-[9px] tabular-nums" style={{ fontSize: "9px" }}>
+            TRACKED
+          </span>
+        ) : null}
         {isSelected && !isTracked ? <Check aria-hidden size={15} weight="regular" /> : null}
       </button>
     );
@@ -179,9 +183,9 @@ export function MarketPicker({
           }`}
           id={labelId}
         >
-          <MonoText component="span" muted size="sm">
+          <span className="font-sans text-[9px] tabular-nums" style={{ fontSize: "9px" }}>
             {title}
-          </MonoText>
+          </span>
         </div>
         <div className="grid gap-1 px-1 pb-1">{items.map(languageRow)}</div>
       </fieldset>
@@ -199,9 +203,7 @@ export function MarketPicker({
       />
       <div className="mt-4">
         <div className="flex items-center justify-between gap-3">
-          <MonoText component="span" muted size="sm">
-            LANGUAGES
-          </MonoText>
+          <span>LANGUAGES</span>
           <button
             aria-controls={listId}
             aria-expanded={showMore}

@@ -25,7 +25,9 @@ type Story = StoryObj<typeof meta>;
 function Row({ children, label }: { children: ReactNode; label: string }) {
   return (
     <div className="grid grid-cols-[120px_minmax(0,1fr)] items-center gap-4">
-      <span className="font-mono text-[10.5px] font-semibold uppercase text-fg-muted">{label}</span>
+      <span className="font-sans tabular-nums text-[10.5px] font-semibold uppercase text-fg-muted">
+        {label}
+      </span>
       {children}
     </div>
   );

@@ -99,7 +99,6 @@ export {
 export { MenuSelectOptionItem } from "./MenuSelectOptionItem";
 export { Modal, type ModalProps, type ModalSize } from "./Modal";
 export { ModuleMark, type ModuleMarkProps, type ModuleMarkVariant } from "./ModuleMark";
-export { MonoText, type MonoTextProps } from "./MonoText";
 export { menuTransitionDuration, useMenuExitLifecycle } from "./menu-exit-lifecycle";
 export { PasswordInput, type PasswordInputProps } from "./PasswordInput";
 export { Pill, PillBadge, type PillBadgeProps, type PillProps } from "./Pill";
@@ -157,7 +156,7 @@ export {
   TooltipProvider,
   type TooltipSemantics,
 } from "./Tooltip";
-export { tableHeaderClassName } from "./table-header-styles";
+export { tableHeaderClassName, tableHeaderTypographyClassName } from "./table-header-styles";
 export type { ToastSeverity } from "./toast-presentation";
 export { toolbarControlClassName } from "./toolbar-control-styles";
 export { useBrowserTimeZone, ZonedTime, type ZonedTimeProps } from "./ZonedTime";

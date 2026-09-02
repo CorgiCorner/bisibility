@@ -1,3 +1,4 @@
+import { gettingStartedSubtitle } from "@/components/getting-started/getting-started-copy";
 import { appSectionPath } from "@/lib/routing/app-path";
 
 export type HeaderMeta = {
@@ -11,8 +12,13 @@ function matches(pathname: string, base: string): boolean {
   return pathname === base || pathname.startsWith(`${base}/`);
 }
 
+export type HeaderSetupState = Readonly<{
+  completed?: boolean;
+  totalCount?: number;
+}>;
+
 /** Derives the header title and subtitle from the current pathname. */
-export function headerMetaFor(pathname: string): HeaderMeta {
+export function headerMetaFor(pathname: string, setup?: HeaderSetupState): HeaderMeta {
   const sectionPath = appSectionPath(pathname);
 
   if (matches(sectionPath, "/account/security")) {
@@ -82,7 +88,10 @@ export function headerMetaFor(pathname: string): HeaderMeta {
   }
 
   if (matches(sectionPath, "/getting-started")) {
-    return sectionMeta("Get started", "Set up your rank tracking workflow.");
+    return sectionMeta(
+      "Get started",
+      gettingStartedSubtitle(setup?.completed ?? false, setup?.totalCount ?? 4),
+    );
   }
 
   if (matches(sectionPath, "/install")) {

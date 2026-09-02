@@ -39,7 +39,8 @@ type ResearchDetailPanelProps = {
 
 const axisTextStyle = {
   fill: "var(--fg-muted)",
-  fontFamily: "var(--font-mono), monospace",
+  fontFamily: "var(--font-sans), system-ui, sans-serif",
+  fontVariantNumeric: "tabular-nums",
   fontSize: 10,
 };
 
@@ -49,7 +50,7 @@ function metric(value: number | null, formatter = (item: number) => String(item)
 
 function Eyebrow({ children }: Readonly<{ children: string }>) {
   return (
-    <p className="m-0 font-mono text-[10px] font-semibold uppercase tracking-[0.5px] text-fg-muted">
+    <p className="m-0 font-sans tabular-nums text-[10px] font-semibold uppercase tracking-[0.5px] text-fg-muted">
       {children}
     </p>
   );
@@ -92,7 +93,7 @@ export function ResearchDetailPanel({
         </h2>
         {active && metricsAvailable ? (
           <span
-            className="rounded-full border px-2 py-0.5 font-mono text-[11px] font-semibold"
+            className="rounded-full border px-2 py-0.5 font-sans tabular-nums text-[11px] font-semibold"
             style={difficultyPillStyle(active.difficulty)}
             title={`Keyword difficulty ${active.difficulty ?? "-"}`}
           >
@@ -178,7 +179,7 @@ export function ResearchDetailPanel({
                 {active.variants.map((variant) => (
                   <div className="flex justify-between gap-3 text-[12px]" key={variant.keyword}>
                     <span className="truncate text-fg-muted">{variant.keyword}</span>
-                    <span className="font-mono text-fg-muted">
+                    <span className="font-sans tabular-nums text-fg-muted">
                       {metricsAvailable ? (
                         metric(variant.searchVolume, (value) => value.toLocaleString("en-US"))
                       ) : (
@@ -229,7 +230,7 @@ export function ResearchDetailPanel({
                 showSchedule
               />
             </div>
-            <p className="mb-3 mt-2 font-mono text-[11.5px] leading-5 text-fg-muted">
+            <p className="mb-3 mt-2 font-sans tabular-nums text-[11.5px] leading-5 text-fg-muted">
               {line.lead}
               {line.emphasis ? <span className="text-fg">{line.emphasis}</span> : null}
               {line.tail}
@@ -258,10 +259,10 @@ function Metric({
 }: Readonly<{ label: string; unavailable?: boolean; value: string }>) {
   return (
     <div className="rounded-control bg-bg-sunken p-3">
-      <span className="block font-mono text-[9.5px] uppercase tracking-[0.4px] text-fg-muted">
+      <span className="block font-sans tabular-nums text-[9.5px] uppercase tracking-[0.4px] text-fg-muted">
         {label}
       </span>
-      <strong className="mt-1 block font-mono text-[14px] text-fg">
+      <strong className="mt-1 block font-sans tabular-nums text-[14px] text-fg">
         {unavailable ? <ResearchUnavailableMetric label={`${label} unavailable`} /> : value}
       </strong>
     </div>

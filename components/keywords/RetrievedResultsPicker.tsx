@@ -71,7 +71,7 @@ export function RetrievedResultsPicker({
         aria-label={ariaLabel}
         className={cn(
           toolbarControlClassName,
-          "inline-flex min-h-[34px] max-w-full items-center gap-2 px-3 font-mono text-[12px]",
+          "inline-flex min-h-[34px] max-w-full items-center gap-2 px-3 font-sans tabular-nums text-[12px]",
         )}
         onClick={(event) => openMenu(event.currentTarget)}
         type="button"
@@ -115,14 +115,14 @@ export function RetrievedResultsPicker({
         />
         <div className="mx-2 mt-2 border-t border-border-soft px-3 pb-3 pt-3">
           <label
-            className="block font-mono text-[10px] uppercase tracking-[0.08em] text-fg-muted"
+            className="block font-sans tabular-nums text-[10px] uppercase tracking-[0.08em] text-fg-muted"
             htmlFor={`${ariaLabel}-jump-date`}
           >
             Jump to date
           </label>
           <input
             aria-label="Jump to date"
-            className="mt-2 min-h-[42px] w-full rounded-control border border-border-control bg-transparent px-3 font-mono text-[12px] text-fg"
+            className="mt-2 min-h-[42px] w-full rounded-control border border-border-control bg-transparent px-3 font-sans tabular-nums text-[12px] text-fg"
             id={`${ariaLabel}-jump-date`}
             onChange={(event) => {
               const date = event.target.value;
@@ -133,7 +133,7 @@ export function RetrievedResultsPicker({
             type="date"
             value={jumpDate}
           />
-          <p className="m-0 mt-2 font-mono text-[10.5px] leading-4 text-fg-muted">
+          <p className="m-0 mt-2 font-sans tabular-nums text-[10.5px] leading-4 text-fg-muted">
             Picks the closest comparable loaded check.
           </p>
         </div>

@@ -61,7 +61,7 @@ export function intentChipMeta(intent: string | null) {
 
 export function IntentChip({ intent }: Readonly<{ intent: string | null }>) {
   const meta = intentChipMeta(intent);
-  if (!meta) return <span className="font-mono text-[11px] text-fg-muted">-</span>;
+  if (!meta) return <span className="font-sans tabular-nums text-[11px] text-fg-muted">-</span>;
   return (
     <span
       className="rounded-full border px-2 py-0.5 text-[10.5px] font-semibold"

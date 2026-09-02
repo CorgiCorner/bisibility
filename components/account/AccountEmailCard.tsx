@@ -140,7 +140,7 @@ export function AccountEmailCard({
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center gap-2">
             <FieldLabel
-              className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted"
+              className="font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted"
               htmlFor="account-email"
               label="Account email"
             />

@@ -12,7 +12,7 @@ export function RankingUrlExternalLink({ href, path }: Readonly<RankingUrlExtern
   return (
     <Tooltip content="Open ranking URL in a new tab" semantics="description">
       <a
-        className="min-w-0 flex-1 truncate font-mono text-[12.5px] text-fg hover:text-accent-text hover:underline"
+        className="min-w-0 flex-1 truncate font-sans tabular-nums text-[12.5px] text-fg hover:text-accent-text hover:underline"
         href={href}
         rel="noreferrer noopener"
         target="_blank"

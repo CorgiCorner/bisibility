@@ -33,12 +33,12 @@ export function AdminProviderUsageTable({
           {usage.map((row) => (
             <tr className="border-b border-border-soft last:border-0" key={row.provider}>
               <td className="py-2 pr-3 font-semibold text-fg">{row.providerLabel}</td>
-              <td className="py-2 pr-3 font-mono">{count.format(row.checks)}</td>
-              <td className="py-2 pr-3 font-mono">{count.format(row.billableUnits)}</td>
-              <td className="py-2 pr-3 font-mono">
+              <td className="py-2 pr-3 tabular-nums">{count.format(row.checks)}</td>
+              <td className="py-2 pr-3 tabular-nums">{count.format(row.billableUnits)}</td>
+              <td className="py-2 pr-3 tabular-nums">
                 {row.referenceCostKnown ? money.format(row.referenceCostCents / 100) : "-"}
               </td>
-              <td className="py-2 font-mono text-[11px] text-fg-muted">{row.rateBasis}</td>
+              <td className="py-2 text-[11px] text-fg-muted">{row.rateBasis}</td>
             </tr>
           ))}
         </tbody>

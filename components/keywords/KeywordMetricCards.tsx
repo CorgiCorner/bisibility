@@ -37,7 +37,9 @@ const shortDate = new Intl.DateTimeFormat("en-US", { day: "numeric", month: "sho
 function SummaryCard({ children, label }: Readonly<SummaryCardProps>) {
   return (
     <Card className="min-h-[148px]" size="sm" sx={{ padding: "15px 16px" }}>
-      <p className="m-0 font-mono text-[10px] uppercase tracking-[0.65px] text-fg-muted">{label}</p>
+      <p className="m-0 font-sans tabular-nums text-[10px] uppercase tracking-[0.65px] text-fg-muted">
+        {label}
+      </p>
       <div className="mt-2.5">{children}</div>
     </Card>
   );
@@ -83,7 +85,7 @@ function PositionSummary({
             #{keyword.position}
           </span>
           <span
-            className={`inline-flex items-center gap-1 font-mono text-[11px] font-semibold ${deltaColor}`}
+            className={`inline-flex items-center gap-1 font-sans tabular-nums text-[11px] font-semibold ${deltaColor}`}
           >
             <DeltaIcon size={12} weight="regular" />
             {delta === null ? "New" : Math.abs(delta)}
@@ -95,7 +97,7 @@ function PositionSummary({
         </p>
       )}
       {tracked ? (
-        <div className="mt-2.5 grid gap-1 font-mono text-[11px] text-fg-muted">
+        <div className="mt-2.5 grid gap-1 font-sans tabular-nums text-[11px] text-fg-muted">
           {keyword.positionBaseline !== null ? (
             <span>Previous #{keyword.positionBaseline}</span>
           ) : null}
@@ -120,7 +122,7 @@ function RankingUrlSummary({ keyword }: Readonly<{ keyword: KeywordRow }>) {
     <SummaryCard label="Ranking URL">
       {keyword.rankingUrl ? (
         <a
-          className="flex items-center gap-1.5 font-mono text-[15px] font-semibold text-fg hover:text-accent-text hover:underline"
+          className="flex items-center gap-1.5 font-sans tabular-nums text-[15px] font-semibold text-fg hover:text-accent-text hover:underline"
           href={keyword.rankingUrl}
           rel="noreferrer noopener"
           target="_blank"
@@ -130,9 +132,11 @@ function RankingUrlSummary({ keyword }: Readonly<{ keyword: KeywordRow }>) {
           <ArrowUpRight aria-hidden size={13} weight="regular" />
         </a>
       ) : (
-        <span className="font-mono text-[15px] font-semibold text-fg-muted">No ranking URL</span>
+        <span className="font-sans tabular-nums text-[15px] font-semibold text-fg-muted">
+          No ranking URL
+        </span>
       )}
-      <div className="mt-2.5 grid gap-1 font-mono text-[11px] text-fg-muted">
+      <div className="mt-2.5 grid gap-1 font-sans tabular-nums text-[11px] text-fg-muted">
         {keyword.rankingUrl ? (
           <>
             {matchesTarget ? <span>Matches target</span> : null}
@@ -206,7 +210,7 @@ function WhatChangedSummary({
               {dimensions.rankingUrlChanged ? "Ranking URL changed" : "Ranking URL unchanged"}
             </span>
           </div>
-          <p className="m-0 mt-7 font-mono text-[10.5px] text-fg-muted">
+          <p className="m-0 mt-7 font-sans tabular-nums text-[10.5px] text-fg-muted">
             Compared with the check from {dateLabel(comparison)}
           </p>
         </>

@@ -10,7 +10,7 @@ export const MenuGroupHeading = Object.assign(
   function MenuGroupHeading({ children, first }: Readonly<MenuGroupHeadingProps>) {
     return (
       <ListSubheader
-        className="font-mono uppercase"
+        className="uppercase"
         data-slot="menu-group-header"
         disableSticky
         role="presentation"

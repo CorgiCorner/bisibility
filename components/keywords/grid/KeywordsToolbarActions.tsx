@@ -101,7 +101,7 @@ export function KeywordsToolbarActions({
         open={Boolean(anchorEl)}
         slotProps={{ paper: { sx: { border: "1px solid var(--border)" } } }}
       >
-        <div className="px-4 pb-1 pt-2 font-mono text-[11px] uppercase tracking-[0.6px] text-fg-muted">
+        <div className="px-4 pb-1 pt-2 font-sans tabular-nums text-[11px] uppercase tracking-[0.6px] text-fg-muted">
           Toggle columns
         </div>
         <MenuItem disabled sx={menuRowSx}>
@@ -133,7 +133,7 @@ export function KeywordsToolbarActions({
         variant="secondary"
       >
         {hasFilters ? (
-          <span className="ml-1 grid h-[17px] min-w-[17px] place-items-center rounded-full bg-accent-solid px-1 font-mono text-[11px] text-accent-on-solid">
+          <span className="ml-1 grid h-[17px] min-w-[17px] place-items-center rounded-full bg-accent-solid px-1 font-sans tabular-nums text-[11px] text-accent-on-solid">
             {filterCount}
           </span>
         ) : null}
@@ -200,12 +200,9 @@ export function KeywordsToolbarActions({
           </MenuItem>
         ) : null}
       </Menu>
-      <span
-        className="hidden lg:inline-flex xl:hidden"
-        data-testid="keywords-export-compact-action"
-      >
+      <span className="hidden lg:inline-flex" data-testid="keywords-export-action">
         <KeywordsToolbarButton
-          iconOnly
+          compactBelowXl
           label="Export"
           onClick={onOpenExport}
           showTooltip
@@ -215,52 +212,22 @@ export function KeywordsToolbarActions({
           variant="secondary"
         />
       </span>
-      <span className="hidden xl:inline-flex" data-testid="keywords-export-labeled-action">
-        <KeywordsToolbarButton
-          label="Export"
-          onClick={onOpenExport}
-          showTooltip={false}
-          startIcon={
-            <UploadSimple aria-hidden weight="regular" size={15} className="text-current" />
-          }
-          variant="secondary"
-        />
-      </span>
       {onImportCsv ? (
-        <>
-          <span
-            className="hidden lg:inline-flex xl:hidden"
-            data-testid="keywords-import-compact-action"
-          >
-            <ProjectReadOnlyTooltip>
-              <KeywordsToolbarButton
-                disabled={readOnly}
-                iconOnly
-                label="Import"
-                onClick={onImportCsv}
-                showTooltip
-                startIcon={
-                  <DownloadSimple aria-hidden weight="regular" size={15} className="text-current" />
-                }
-                variant="secondary"
-              />
-            </ProjectReadOnlyTooltip>
-          </span>
-          <span className="hidden xl:inline-flex" data-testid="keywords-import-labeled-action">
-            <ProjectReadOnlyTooltip>
-              <KeywordsToolbarButton
-                disabled={readOnly}
-                label="Import"
-                onClick={onImportCsv}
-                showTooltip={false}
-                startIcon={
-                  <DownloadSimple aria-hidden weight="regular" size={15} className="text-current" />
-                }
-                variant="secondary"
-              />
-            </ProjectReadOnlyTooltip>
-          </span>
-        </>
+        <span className="hidden lg:inline-flex" data-testid="keywords-import-action">
+          <ProjectReadOnlyTooltip>
+            <KeywordsToolbarButton
+              compactBelowXl
+              disabled={readOnly}
+              label="Import"
+              onClick={onImportCsv}
+              showTooltip
+              startIcon={
+                <DownloadSimple aria-hidden weight="regular" size={15} className="text-current" />
+              }
+              variant="secondary"
+            />
+          </ProjectReadOnlyTooltip>
+        </span>
       ) : null}
       {onAddKeyword ? (
         <ProjectReadOnlyTooltip>

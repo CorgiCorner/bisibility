@@ -1,14 +1,25 @@
 "use client";
 
+import {
+  FINISH_SETUP_CTA,
+  FINISH_SETUP_HELPER,
+  SEE_DASHBOARD_CTA,
+  SETUP_ACK_CHECKLIST_ERROR,
+  SETUP_ACK_WRITE_ERROR,
+  SETUP_COMPLETE_HEADLINE,
+  SETUP_FINISHED_HEADLINE,
+} from "@/components/getting-started/getting-started-copy";
 import { Button } from "@/components/ui";
+import type { AcknowledgeGettingStartedResult } from "@/lib/getting-started/acknowledge-result";
 import { appPath } from "@/lib/routing/app-path";
 import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 type GettingStartedCompletionProps = Readonly<{
   acknowledged: boolean;
-  onAcknowledge: (input: { projectRef: string }) => Promise<void>;
+  onAcknowledge: (input: { projectRef: string }) => Promise<AcknowledgeGettingStartedResult>;
   projectRef: string;
 }>;
 
@@ -20,25 +31,43 @@ export function GettingStartedCompletion({
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const dashboardHref = appPath(projectRef, "dashboard");
 
   if (acknowledged) {
     return (
-      <div className="flex min-h-12 items-center gap-2 rounded-control border border-border bg-bg-elev px-4 py-2.5 shadow-none">
-        <CheckCircle aria-hidden className="shrink-0 text-green-text" size={18} weight="regular" />
-        <p className="m-0 text-[13.5px] font-medium text-fg">Setup complete.</p>
-      </div>
+      <section className="rounded-card border border-border bg-bg-elev px-5 py-6 shadow-none sm:flex sm:items-center sm:justify-between sm:gap-5">
+        <div className="flex min-w-0 items-center gap-2">
+          <CheckCircle
+            aria-hidden
+            className="shrink-0 text-green-text"
+            size={18}
+            weight="regular"
+          />
+          <p className="m-0 text-[15px] font-semibold text-fg">{SETUP_FINISHED_HEADLINE}</p>
+        </div>
+        <div className="mt-4 sm:mt-0">
+          <Button className="w-full sm:w-auto" href={dashboardHref} variant="secondary">
+            {SEE_DASHBOARD_CTA}
+          </Button>
+        </div>
+      </section>
     );
   }
 
-  async function acknowledge() {
+  async function finishSetup() {
     setError(null);
     setPending(true);
     try {
-      await onAcknowledge({ projectRef });
-      router.push(appPath(projectRef, "dashboard"));
+      const result = await onAcknowledge({ projectRef });
+      if (!result.ok) {
+        setError(
+          result.reason === "write_failed" ? SETUP_ACK_WRITE_ERROR : SETUP_ACK_CHECKLIST_ERROR,
+        );
+        return;
+      }
       router.refresh();
     } catch {
-      setError("Setup changed before it could be completed. Review the checklist and try again.");
+      setError(SETUP_ACK_CHECKLIST_ERROR);
       router.refresh();
     } finally {
       setPending(false);
@@ -46,21 +75,28 @@ export function GettingStartedCompletion({
   }
 
   return (
-    <section className="rounded-card border border-border bg-bg-elev px-5 py-6 shadow-none sm:flex sm:items-center sm:justify-between sm:gap-5">
+    <section className="rounded-card border border-border bg-bg-elev px-5 py-6 shadow-none">
       <div className="flex min-w-0 items-center">
-        <p className="m-0 text-[15px] font-semibold text-fg">
-          Setup complete - first positions are in.
-        </p>
+        <p className="m-0 text-[15px] font-semibold text-fg">{SETUP_COMPLETE_HEADLINE}</p>
       </div>
-      <div className="mt-4 sm:mt-0">
-        <Button className="w-full sm:w-auto" loading={pending} onClick={acknowledge}>
-          See the dashboard
-        </Button>
-        {error ? (
-          <p className="m-0 mt-2 max-w-72 text-[12px] leading-5 text-danger-text" role="alert">
-            {error}
-          </p>
-        ) : null}
+      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-5">
+        <div className="flex flex-col gap-2">
+          <Button className="w-full sm:w-auto" loading={pending} onClick={finishSetup}>
+            {FINISH_SETUP_CTA}
+          </Button>
+          <p className="m-0 max-w-md text-[12px] leading-5 text-fg-muted">{FINISH_SETUP_HELPER}</p>
+          {error ? (
+            <p className="m-0 max-w-md text-[12px] leading-5 text-danger-text" role="alert">
+              {error}
+            </p>
+          ) : null}
+        </div>
+        <Link
+          className="text-[13px] font-semibold text-accent-text hover:text-accent"
+          href={dashboardHref}
+        >
+          {SEE_DASHBOARD_CTA}
+        </Link>
       </div>
     </section>
   );

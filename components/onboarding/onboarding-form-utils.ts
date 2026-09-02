@@ -6,7 +6,7 @@ export const onboardingFormId = "onboarding-step-form";
 export const inputClass = `${inputClassName} rounded-control px-[13px] py-[11px] font-medium`;
 
 export const labelClass =
-  "flex flex-col gap-[7px] font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted";
+  "flex flex-col gap-[7px] text-[10px] uppercase tracking-[0.5px] text-fg-muted";
 
 export const feedbackClass = "text-[11.5px] font-medium normal-case tracking-normal";
 

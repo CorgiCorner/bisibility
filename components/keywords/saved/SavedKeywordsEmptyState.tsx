@@ -20,7 +20,7 @@ export function SavedKeywordsEmptyState({ projectRef }: Readonly<{ projectRef: s
       <div className="grid grid-cols-[minmax(0,1.4fr)_90px_60px_70px_80px] items-center gap-2 border-b border-border px-4.5 py-2.5">
         {headers.map((header) => (
           <span
-            className={`font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-fg-muted ${header.className}`}
+            className={`font-sans tabular-nums text-[10px] font-medium uppercase tracking-[0.08em] text-fg-muted ${header.className}`}
             key={header.label}
           >
             {header.label}

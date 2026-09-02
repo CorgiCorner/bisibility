@@ -20,7 +20,7 @@ function formatCount(value: number) {
 }
 
 function countChip() {
-  return "rounded-control bg-bg-sunken px-[7px] py-0.5 font-mono text-[11px] text-fg-muted";
+  return "rounded-control bg-bg-sunken px-[7px] py-0.5 font-sans tabular-nums text-[11px] text-fg-muted";
 }
 
 function tabClass(active: boolean) {

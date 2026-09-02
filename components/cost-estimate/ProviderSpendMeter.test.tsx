@@ -20,6 +20,21 @@ describe("ProviderSpendMeter", () => {
     expect(screen.getByTitle("$0.10 + 28 searches recorded this month")).toBeInTheDocument();
     expect(container.textContent).not.toMatch(/utili(?:zation|sation)/i);
   });
+
+  it("renders sub-percent usage as less than one percent in the header", () => {
+    render(
+      <ProviderSpendMeter
+        capCents={5000}
+        docsHref="/docs"
+        spentCents={1}
+        tightest={{ provider: "SerpApi", usedPercent: 0.2 }}
+        usedPercent={0.2}
+        variant="header"
+      />,
+    );
+    expect(screen.getByText("SerpApi <1% used")).toBeInTheDocument();
+  });
+
   it("uses an explicit no-budget state without a bar", () => {
     render(
       <ProviderSpendMeter

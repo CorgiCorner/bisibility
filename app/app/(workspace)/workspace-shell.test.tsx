@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   deployment: { isCloud: false },
   lastExport: vi.fn(),
   listWorkspaces: vi.fn(),
+  loadSetupAcknowledgedAt: vi.fn(),
   loadSetupContext: vi.fn(),
   querySession: vi.fn(),
   supportWidget: vi.fn(() => <aside data-testid="support-extension" />),
@@ -120,6 +121,10 @@ vi.mock("@/lib/queries/cloud-beta-export", () => ({
 }));
 vi.mock("@/lib/queries/workspaces", () => ({ listWorkspaces: mocks.listWorkspaces }));
 vi.mock("@/lib/queries/setup-context", () => ({ loadSetupContext: mocks.loadSetupContext }));
+vi.mock("@/lib/getting-started/setup-acknowledgement", () => ({
+  isSetupAcknowledgedAt: (value: Date | null | undefined) => value != null,
+  loadSetupAcknowledgedAt: mocks.loadSetupAcknowledgedAt,
+}));
 vi.mock("next/headers", () => ({ cookies: mocks.cookies }));
 
 import { WorkspaceShell } from "./workspace-shell";
@@ -159,6 +164,7 @@ describe("workspace layout", () => {
       providerExists: false,
       schedule: { mode: "manual" },
     });
+    mocks.loadSetupAcknowledgedAt.mockResolvedValue(null);
     mocks.workerLiveness.mockResolvedValue({
       alertDeliveryTaskQueue: null,
       namespace: null,
@@ -208,13 +214,7 @@ describe("workspace layout", () => {
       providerExists: true,
       schedule: { mode: "manual" },
     });
-    const { addSetupAcknowledgement, serializeSetupAcknowledgements } = await import(
-      "@/lib/getting-started/setup-acknowledgement"
-    );
-    const value = serializeSetupAcknowledgements(addSetupAcknowledgement([], "user-1", projectRef));
-    mocks.cookies.mockResolvedValueOnce({
-      get: vi.fn((name: string) => (name === "getting-started-ack" ? { value } : undefined)),
-    });
+    mocks.loadSetupAcknowledgedAt.mockResolvedValueOnce(new Date("2026-09-01T00:00:00.000Z"));
     const result = await WorkspaceShell({
       activeProjectId: "project_1",
       children: <div>Workspace content</div>,

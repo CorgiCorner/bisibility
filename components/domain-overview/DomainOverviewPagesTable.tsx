@@ -158,21 +158,23 @@ export function DomainOverviewPagesTable({
                 data-testid="domain-page-row"
                 key={row.path}
               >
-                <span className="truncate font-mono text-[12.5px]">{row.path}</span>
+                <span className="truncate font-sans tabular-nums text-[12.5px]">{row.path}</span>
                 <span
-                  className="text-right font-mono text-[12.5px] font-semibold"
+                  className="text-right font-sans tabular-nums text-[12.5px] font-semibold"
                   title={row.etv == null ? undefined : formatDomainEstimateExact(row.etv)}
                 >
                   {row.etv == null ? "-" : formatDomainEstimate(row.etv)}
                 </span>
-                <span className="text-right font-mono text-[12.5px] text-fg-muted">
+                <span className="text-right font-sans tabular-nums text-[12.5px] text-fg-muted">
                   {row.keywordCount == null ? "-" : formatDomainCount(row.keywordCount)}
                 </span>
                 <span className="truncate text-[13px] text-fg-muted">{row.topKeyword ?? "-"}</span>
-                <span className="text-right font-mono text-[12.5px]">
+                <span className="text-right font-sans tabular-nums text-[12.5px]">
                   {row.topKeywordPosition ?? "-"}
                 </span>
-                <span className={`${change.tone} text-right font-mono text-[12px] font-semibold`}>
+                <span
+                  className={`${change.tone} text-right font-sans tabular-nums text-[12px] font-semibold`}
+                >
                   {change.label}
                 </span>
               </div>
@@ -192,7 +194,9 @@ export function DomainOverviewPagesTable({
           >
             Load next {Math.min(100, remaining)} pages
             {estimateCents == null ? null : (
-              <span className="ml-1 font-mono">~{formatEstimateCents(estimateCents)}</span>
+              <span className="ml-1 font-sans tabular-nums">
+                ~{formatEstimateCents(estimateCents)}
+              </span>
             )}
           </Button>
           {loadMoreError ? (

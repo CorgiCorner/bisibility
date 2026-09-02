@@ -176,7 +176,7 @@ export function TransferPanel({
           <div className="mt-0.5 text-[12px] text-fg-muted">{cfg.desc}</div>
         </div>
         <span
-          className={`inline-flex flex-none items-center gap-1.5 rounded-full bg-bg-sunken px-[11px] py-[5px] font-mono text-[10.5px] font-semibold ${tone.text}`}
+          className={`inline-flex flex-none items-center gap-1.5 rounded-full bg-bg-sunken px-[11px] py-[5px] font-sans tabular-nums text-[10.5px] font-semibold ${tone.text}`}
         >
           <span className={`h-1.5 w-1.5 rounded-full ${tone.dot}`} />
           {cfg.pill}
@@ -204,7 +204,7 @@ export function TransferPanel({
         <div className="grid gap-2 border-border-soft border-t px-5 py-3 sm:grid-cols-3">
           {counts.map((item) => (
             <div
-              className="rounded-control bg-bg-sunken px-3 py-2 font-mono text-[11px]"
+              className="rounded-control bg-bg-sunken px-3 py-2 font-sans tabular-nums text-[11px]"
               key={item}
             >
               {item}
@@ -216,7 +216,7 @@ export function TransferPanel({
       {job.state === "done" ? (
         <div className="flex items-center gap-[9px] border-border-soft border-t p-[14px_20px]">
           <LinkIcon aria-hidden className="flex-none text-fg-muted" size={15} weight="regular" />
-          <span className="min-w-0 flex-1 truncate font-mono text-[11.5px] text-fg-muted">
+          <span className="min-w-0 flex-1 truncate font-sans tabular-nums text-[11.5px] text-fg-muted">
             Import job {job.id}
           </span>
           <a
@@ -244,7 +244,7 @@ export function TransferPanel({
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-x-[11px] gap-y-2 font-mono text-[11px] text-fg-muted">
+          <div className="flex flex-wrap items-center gap-x-[11px] gap-y-2 font-sans tabular-nums text-[11px] text-fg-muted">
             <span className="text-red-text">failed</span>
             <span className="h-2.5 w-px bg-border" />
             <span>transfer_id {job.id ?? "pending"}</span>

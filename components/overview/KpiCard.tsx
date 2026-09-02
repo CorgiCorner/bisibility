@@ -29,7 +29,7 @@ export function KpiCard({
 
   return (
     <Card className="min-w-0 rounded-card px-4.5 py-4" size="md">
-      <div className="flex min-h-6 items-center gap-1 font-mono text-[10.5px] uppercase tracking-[0.8px] text-fg-muted">
+      <div className="flex min-h-6 items-center gap-1 font-sans tabular-nums text-[10.5px] uppercase tracking-[0.8px] text-fg-muted">
         <span className="truncate">{label}</span>
         {description ? <InfoTooltip text={description} /> : null}
       </div>
@@ -42,14 +42,14 @@ export function KpiCard({
           </span>
           {deltaAction === "check_runs" && projectRef ? (
             <Link
-              className={`ml-2 align-baseline font-mono text-xs font-semibold hover:underline ${deltaToneClassName[deltaTone]}`}
+              className={`ml-2 align-baseline font-sans tabular-nums text-xs font-semibold hover:underline ${deltaToneClassName[deltaTone]}`}
               href={rankTrackerTabPath(projectRef, "checks")}
             >
               {delta}
             </Link>
           ) : (
             <span
-              className={`ml-2 align-baseline font-mono text-xs font-semibold ${deltaToneClassName[deltaTone]}`}
+              className={`ml-2 align-baseline font-sans tabular-nums text-xs font-semibold ${deltaToneClassName[deltaTone]}`}
             >
               {delta}
             </span>
@@ -57,7 +57,9 @@ export function KpiCard({
         </span>
       </div>
       {detail ? (
-        <div className="mt-2 font-mono text-[11px] leading-normal text-fg-muted">{detail}</div>
+        <div className="mt-2 font-sans tabular-nums text-[11px] leading-normal text-fg-muted">
+          {detail}
+        </div>
       ) : null}
     </Card>
   );
