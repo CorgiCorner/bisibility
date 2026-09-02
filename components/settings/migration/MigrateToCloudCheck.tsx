@@ -163,7 +163,10 @@ export function CheckStep({
           </summary>
           <div className="mt-2 flex flex-col gap-1">
             {technicalDetails(compatibility).map((line) => (
-              <span className="wrap-break-word font-mono text-[11px] text-fg-muted" key={line}>
+              <span
+                className="wrap-break-word font-sans tabular-nums text-[11px] text-fg-muted"
+                key={line}
+              >
                 {line}
               </span>
             ))}
@@ -243,7 +246,9 @@ function StatusRow({ data }: Readonly<{ data: StatusRowData }>) {
         </span>
       </span>
       {data.variant === "status" ? (
-        <span className={`font-mono text-[11px] font-semibold ${tone.status}`}>{data.status}</span>
+        <span className={`font-sans tabular-nums text-[11px] font-semibold ${tone.status}`}>
+          {data.status}
+        </span>
       ) : null}
     </div>
   );

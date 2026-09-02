@@ -46,7 +46,7 @@ export type SearchInsightsDrawerProps = {
   tracked: ReadonlySet<string>;
 };
 
-const KICKER = "font-mono text-ui-micro uppercase tracking-wider text-fg-muted";
+const KICKER = "font-sans tabular-nums text-ui-micro uppercase tracking-wider text-fg-muted";
 
 const QUERY_SOURCE_TOOLTIP =
   "Opens this search on Google. What you see can differ from what Search Console measured - results vary by location, device, and personalization.";

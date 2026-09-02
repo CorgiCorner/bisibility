@@ -51,7 +51,7 @@ export default async function OAuthConsentPage({ searchParams }: Readonly<Consen
         </Link>
 
         <div className="max-w-[420px]">
-          <div className="font-mono text-[11px] uppercase tracking-[0.6px] text-accent-text">
+          <div className="text-[11px] uppercase tracking-[0.6px] text-accent-text">
             OAuth consent
           </div>
           <h1 className="mt-3.5 mb-0 text-[32px] font-semibold leading-[1.2] tracking-[-1.1px]">
@@ -60,7 +60,7 @@ export default async function OAuthConsentPage({ searchParams }: Readonly<Consen
           <p className="mt-3.5 mb-0 text-[15px] leading-[1.6] text-fg-muted">{copy.description}</p>
         </div>
 
-        <div className="font-mono text-[11px] text-fg-muted">
+        <div className="text-[11px] text-fg-muted">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-border px-2.5 py-1">
             <Fingerprint aria-hidden className="text-green-text" size={14} weight="regular" />
             PKCE S256

@@ -1,7 +1,7 @@
 "use client";
 
 import { useDeploymentMode } from "@/components/shell/DeploymentModeProvider";
-import { Button, MonoText, SectionTitle } from "@/components/ui";
+import { Button, SectionTitle } from "@/components/ui";
 import { reportAppError } from "@/lib/observability/error-reporting";
 import { FEEDBACK_URL, GITHUB_ISSUES_URL } from "@/lib/site/site";
 import {
@@ -89,7 +89,7 @@ export default function AppErrorBoundary({ error, reset }: Readonly<AppErrorBoun
     <div className="py-8">
       <div className="mx-auto w-full max-w-[720px] overflow-hidden rounded-card border border-border bg-bg">
         <div className="flex h-[46px] items-center justify-between gap-3 border-b border-border bg-bg-elev px-4.5">
-          <div className="flex min-w-0 items-center gap-[9px] font-mono text-[11px] text-fg-muted">
+          <div className="flex min-w-0 items-center gap-[9px] font-sans text-[11px] text-fg-muted">
             <span aria-hidden className="h-[7px] w-[7px] flex-none rounded-full bg-red" />
             <span className="truncate text-fg-muted">{viewPath}</span>
           </div>
@@ -100,13 +100,9 @@ export default function AppErrorBoundary({ error, reset }: Readonly<AppErrorBoun
           <span className="grid h-[52px] w-[52px] place-items-center rounded-card bg-[color-mix(in_srgb,var(--red)_10%,transparent)] text-red-text">
             <WarningCircle aria-hidden size={26} weight="regular" />
           </span>
-          <MonoText
-            className="font-semibold uppercase tracking-[1.7px]"
-            size="sm"
-            sx={{ color: "var(--red)", marginTop: "20px" }}
-          >
+          <p className="mt-5 font-sans text-[9px] font-semibold leading-[1.45] uppercase tracking-[1.7px] text-red-text">
             View error
-          </MonoText>
+          </p>
           <SectionTitle className="mt-3.5 text-[23px] tracking-[-0.7px]" component="h1" size="lg">
             This view stopped rendering
           </SectionTitle>

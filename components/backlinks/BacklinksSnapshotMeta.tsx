@@ -50,7 +50,7 @@ export function BacklinksSnapshotMeta({
       >
         {refreshing ? "Refreshing..." : "Refresh now"}{" "}
         {estimateCents == null ? null : (
-          <span className="font-mono">~{formatEstimateCents(estimateCents)}</span>
+          <span className="font-sans tabular-nums">~{formatEstimateCents(estimateCents)}</span>
         )}
       </button>
     </div>

@@ -1,5 +1,5 @@
 import { MarketChip } from "@/components/markets/MarketChip";
-import { Card, EmptyState, MonoText, Tooltip } from "@/components/ui";
+import { Card, EmptyState, Tooltip } from "@/components/ui";
 import { appPath } from "@/lib/routing/app-path";
 import { ArrowDownIcon as ArrowDown, ArrowUpIcon as ArrowUp } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
@@ -47,7 +47,7 @@ function Delta({ row }: Readonly<{ row: HighlightRow }>) {
   return (
     <Tooltip content={row.delta.title}>
       <span
-        className={`inline-flex items-center gap-0.5 font-mono text-[11px] font-semibold ${colorClassName}`}
+        className={`inline-flex items-center gap-0.5 font-sans tabular-nums text-[11px] font-semibold ${colorClassName}`}
       >
         <Icon aria-hidden size={12} weight="regular" />
         {row.delta.value}
@@ -80,9 +80,7 @@ export function HighlightLists({ lists, projectRef, rowHref }: Readonly<Highligh
           <Card className="flex min-w-0 flex-col overflow-hidden p-0" key={list.title} size="md">
             <div className="flex-none px-4.5 pb-3 pt-[15px]">
               <div className="flex items-center text-sm font-semibold text-fg">{list.title}</div>
-              <MonoText className="mt-[3px] block min-h-[2lh]" muted size="sm">
-                {list.subtitle}
-              </MonoText>
+              <span className="mt-[3px] block min-h-[2lh]">{list.subtitle}</span>
             </div>
             <div className="flex flex-1 flex-col">
               {list.rows.length === 0 ? (
@@ -101,13 +99,13 @@ export function HighlightLists({ lists, projectRef, rowHref }: Readonly<Highligh
                         {row.keyword}
                       </span>
                       <MarketIdentity row={row} />
-                      <span className="mt-2 block truncate font-mono text-[10.5px] text-fg-muted">
+                      <span className="mt-2 block truncate font-sans tabular-nums text-[10.5px] text-fg-muted">
                         {row.note}
                       </span>
                     </span>
                     <span className="inline-flex flex-none items-center gap-2">
                       <span
-                        className={`font-mono text-[13px] font-semibold ${
+                        className={`font-sans tabular-nums text-[13px] font-semibold ${
                           positionToneClassName[row.positionTone ?? "default"]
                         }`}
                       >

@@ -41,7 +41,7 @@ export function ComparisonScopeDrawer({
       description="Choose the exact keyword set used by share of voice, head-to-head ranks, and CSV exports."
       footer={
         <div className="flex items-center justify-between gap-3">
-          <span className="font-mono text-[11px] text-fg-muted">
+          <span className="font-sans tabular-nums text-[11px] text-fg-muted">
             {included.length} included · {excluded.size} excluded
           </span>
           <Button onClick={onClose}>Done</Button>
@@ -60,8 +60,12 @@ export function ComparisonScopeDrawer({
             ["Pending", included.length - completed],
           ].map(([label, value]) => (
             <span className="rounded-control border border-border bg-bg-sunken p-3" key={label}>
-              <span className="block font-mono text-[9px] uppercase text-fg-muted">{label}</span>
-              <span className="mt-1 block font-mono text-lg font-semibold">{value}</span>
+              <span className="block font-sans tabular-nums text-[9px] uppercase text-fg-muted">
+                {label}
+              </span>
+              <span className="mt-1 block font-sans tabular-nums text-lg font-semibold">
+                {value}
+              </span>
             </span>
           ))}
         </div>
@@ -117,7 +121,7 @@ export function ComparisonScopeDrawer({
                   <span className="block truncate text-[13px] font-medium">
                     {observation.keyword}
                   </span>
-                  <span className="mt-1 flex flex-wrap items-center gap-1.5 font-mono text-[10px] text-fg-muted">
+                  <span className="mt-1 flex flex-wrap items-center gap-1.5 font-sans tabular-nums text-[10px] text-fg-muted">
                     <span>{observation.completed ? "Check completed" : "Check pending"}</span>
                     {observation.tags.map((tag) => (
                       <span className="rounded bg-bg-sunken px-1.5 py-0.5" key={tag}>

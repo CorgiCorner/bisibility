@@ -95,11 +95,11 @@ export function HandoffPanel({
           <HandoffRow label="Import page" value={handoff.cloudImportUrl} />
           <HandoffRow label="Import API" value={handoff.apiImportUrl} />
           <div className="rounded-control border border-border bg-bg-sunken px-3.5 py-3">
-            <div className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
+            <div className="font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
               REST handoff
             </div>
             <div className="mt-1.5 flex items-center gap-2">
-              <code className="min-w-0 flex-1 truncate font-mono text-[11.5px] text-fg-muted">
+              <code className="min-w-0 flex-1 truncate font-sans tabular-nums text-[11.5px] text-fg-muted">
                 {handoff.apiRequest}
               </code>
               <CopyButton label="Copy REST handoff" size="md" text={handoff.apiRequest} />
@@ -136,21 +136,23 @@ function ImportCompletionSummary({
   const countEntries = Object.entries(completion.counts ?? {}).filter(([, value]) => value > 0);
   return (
     <div className="mt-4 w-full max-w-[420px] rounded-control border border-border bg-bg-sunken px-3.5 py-3 text-left">
-      <div className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
+      <div className="font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
         Import job {completion.jobId}
       </div>
       <div className="mt-2 flex flex-wrap gap-2">
         {countEntries.length > 0 ? (
           countEntries.map(([label, value]) => (
             <span
-              className="rounded-full border border-border bg-bg-elev px-2.5 py-1 font-mono text-[10.5px] text-fg-muted"
+              className="rounded-full border border-border bg-bg-elev px-2.5 py-1 font-sans tabular-nums text-[10.5px] text-fg-muted"
               key={label}
             >
               {label.replaceAll("_", " ")}: {value}
             </span>
           ))
         ) : (
-          <span className="font-mono text-[11px] text-fg-muted">No imported rows reported.</span>
+          <span className="font-sans tabular-nums text-[11px] text-fg-muted">
+            No imported rows reported.
+          </span>
         )}
       </div>
     </div>
@@ -219,7 +221,7 @@ export function DoneStep({
       </p>
       {completed ? <ImportCompletionSummary completion={completed} /> : null}
       <div className="mt-5.5 flex w-full max-w-[420px] items-center gap-2 rounded-control border border-border bg-transparent px-3.5 py-[11px]">
-        <span className="min-w-0 flex-1 truncate font-mono text-[11.5px] text-fg-muted">
+        <span className="min-w-0 flex-1 truncate font-sans tabular-nums text-[11.5px] text-fg-muted">
           {targetUrl ?? `Generate the ${targetLabel} handoff to copy a real URL`}
         </span>
         {targetUrl ? (
@@ -237,7 +239,7 @@ export function DoneStep({
         )}
       </div>
       {message ? <p className="m-0 mt-2 text-[12px] text-fg-muted">{message}</p> : null}
-      <p className="m-0 mt-3 font-mono text-[11px] text-fg-muted">
+      <p className="m-0 mt-3 font-sans tabular-nums text-[11px] text-fg-muted">
         Re-connect SERP and analytics providers on the destination before resuming scheduled checks.
       </p>
       <div className="mt-5 w-full max-w-[420px] rounded-card border border-border bg-bg px-3.5 py-3 text-left">
@@ -280,7 +282,9 @@ export function DoneStep({
           </>
         ) : null}
         {holdMessage ? (
-          <p className="m-0 mt-3 font-mono text-[11.5px] text-red-text">{holdMessage}</p>
+          <p className="m-0 mt-3 font-sans tabular-nums text-[11.5px] text-red-text">
+            {holdMessage}
+          </p>
         ) : null}
       </div>
     </div>
@@ -291,10 +295,12 @@ function HandoffRow({ label, value }: Readonly<{ label: string; value: string }>
   return (
     <div className="flex items-center gap-2 rounded-control border border-border bg-bg-sunken px-3.5 py-3">
       <span className="min-w-0 flex-1">
-        <span className="block font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
+        <span className="block font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
           {label}
         </span>
-        <span className="mt-1 block truncate font-mono text-[11.5px] text-fg-muted">{value}</span>
+        <span className="mt-1 block truncate font-sans tabular-nums text-[11.5px] text-fg-muted">
+          {value}
+        </span>
       </span>
       <CopyButton label={`Copy ${label}`} size="md" text={value} />
     </div>

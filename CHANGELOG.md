@@ -1,6 +1,14 @@
 # Changelog
 
-## Unreleased
+## [0.20.0] - 2026-09-02
+
+- Fixed Search Console Insights so previously imported data continues to unlock reports as the finalized window advances, with clearer coverage status.
+
+- Made Search Console property confirmation reliably land on the queued view, with a refresh action while imports complete.
+
+- Added sorting for all Top queries and Top pages columns across the full result window.
+
+- Improved setup with a durable Finish setup acknowledgement and corrected the landing and onboarding website field styling.
 
 ## [0.19.0] - 2026-09-01
 

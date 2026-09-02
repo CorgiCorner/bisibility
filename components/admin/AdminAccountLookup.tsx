@@ -2,7 +2,7 @@
 
 import { AdminAccountActions } from "@/components/admin/AdminAccountActions";
 import { displayTime } from "@/components/admin/AdminPrimitives";
-import { Button, Card, SectionTitle } from "@/components/ui";
+import { Button, Card, IdChip, SectionTitle } from "@/components/ui";
 import { lookupInstanceAdminAccount } from "@/lib/actions/instance-admin-account";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import {
@@ -37,8 +37,8 @@ const money = new Intl.NumberFormat("en-US", { currency: "USD", style: "currency
 function MetadataTile({ label, value }: Readonly<{ label: string; value: React.ReactNode }>) {
   return (
     <div className="flex min-w-0 flex-col rounded-card border border-border-soft bg-bg-elev px-3 py-2.5">
-      <div className="font-mono text-[9.5px] uppercase tracking-[0.4px] text-fg-muted">{label}</div>
-      <div className="mt-auto pt-1 text-[13px] font-semibold text-fg">{value}</div>
+      <div className="text-[9.5px] uppercase tracking-[0.4px] text-fg-muted">{label}</div>
+      <div className="mt-auto pt-1 text-[13px] font-semibold tabular-nums text-fg">{value}</div>
     </div>
   );
 }
@@ -53,10 +53,10 @@ function AccountMetadata({
   return (
     <div className="mt-4 rounded-card border border-border bg-bg-sunken px-4 py-4">
       <div className="flex flex-wrap items-center gap-2.5">
-        <span className="font-mono text-[12.5px] font-bold">{account.id}</span>
+        <IdChip size="sm" value={account.id} />
         <span aria-hidden className="h-3 w-px bg-border" />
-        <span className="font-mono text-[11.5px] text-fg-muted">{account.email}</span>
-        <span className="inline-flex rounded-full bg-green/10 px-2.5 py-1 font-mono text-[10px] font-bold uppercase text-green-text">
+        <span className="text-[11.5px] text-fg-muted">{account.email}</span>
+        <span className="inline-flex rounded-full bg-green/10 px-2.5 py-1 text-[10px] font-bold uppercase text-green-text">
           {account.status}
         </span>
       </div>
@@ -75,7 +75,7 @@ function AccountMetadata({
             account.providerConnectionsByKind.length === 0 ? (
               "0"
             ) : (
-              <span className="flex flex-col gap-0.5 font-mono text-[11px]">
+              <span className="flex flex-col gap-0.5 text-[11px]">
                 {account.providerConnectionsByKind.map((connection) => (
                   <span key={connection.kind}>
                     {connection.kind}: {count.format(connection.count)}
@@ -165,7 +165,7 @@ export function AdminAccountLookup() {
       </p>
       <form className="mt-3" onSubmit={handleSubmit(onSubmit)}>
         <label
-          className="font-mono text-[10px] uppercase tracking-[0.4px] text-fg-muted"
+          className="text-[10px] uppercase tracking-[0.4px] text-fg-muted"
           htmlFor="admin-account-identifier"
         >
           Exact email or user ID
@@ -180,7 +180,7 @@ export function AdminAccountLookup() {
             />
             <input
               aria-invalid={errors.identifier ? "true" : undefined}
-              className="min-w-0 flex-1 border-0 bg-transparent py-2 font-mono text-[12.5px] text-fg outline-none"
+              className="min-w-0 flex-1 border-0 bg-transparent py-2 text-[12.5px] text-fg outline-none"
               id="admin-account-identifier"
               placeholder="Exact email or user ID"
               spellCheck={false}

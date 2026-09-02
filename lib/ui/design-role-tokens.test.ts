@@ -114,7 +114,7 @@ describe("type-label composite utility", () => {
       decls.set(decl.prop, decl.value);
     });
 
-    expect(decls.get("font-family")).toBe("var(--font-mono), monospace");
+    expect(decls.get("font-family")).toBe("var(--font-sans), system-ui, sans-serif");
     expect(decls.get("font-size")).toBe("11px");
     expect(decls.get("font-weight")).toBe("600");
     expect(decls.get("line-height")).toBe("1.2");

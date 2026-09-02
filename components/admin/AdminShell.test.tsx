@@ -1,3 +1,5 @@
+import { readdirSync, readFileSync } from "node:fs";
+import { join, relative } from "node:path";
 import { appRootPath } from "@/lib/routing/app-path";
 import { setNavigationState } from "@/tests/next-navigation";
 import { render, screen } from "@testing-library/react";
@@ -54,5 +56,51 @@ describe("AdminShell", () => {
     expect(screen.getByText(label)).toHaveAttribute("aria-current", "page");
     expect(screen.getByRole("link", { name: "Operations" })).toHaveAttribute("href", "/app/admin");
     expect(screen.getByRole("link", { name: "Operations" })).not.toHaveAttribute("aria-current");
+  });
+});
+
+const ownedRoots = [
+  "components/integrations",
+  "components/admin",
+  "components/audit",
+  "app/app/admin",
+  "app/app/(workspace)/[project]/integrations",
+  "app/app/(workspace)/[project]/settings/(sections)/data-sources",
+] as const;
+
+function sourceFiles(root: string): string[] {
+  return readdirSync(root, { withFileTypes: true }).flatMap((entry) => {
+    const path = join(root, entry.name);
+    if (entry.isDirectory()) return sourceFiles(path);
+    if (!entry.name.endsWith(".tsx") || /\.(?:test|stories)\.tsx$/.test(entry.name)) return [];
+    return [path];
+  });
+}
+
+function forbiddenMonoUsages(path: string) {
+  return readFileSync(path, "utf8")
+    .split("\n")
+    .map((line, index) => ({ line, lineNumber: index + 1 }))
+    .filter(({ line }) => line.includes("font-mono"))
+    .map(
+      ({ line, lineNumber }) => `${relative(process.cwd(), path)}:${lineNumber}: ${line.trim()}`,
+    );
+}
+
+describe("owned typography semantics", () => {
+  it("uses Mono only for the diagnostics digest and raw stack trace", () => {
+    const violations = ownedRoots.flatMap(sourceFiles).flatMap(forbiddenMonoUsages);
+    const diagnosticsPath = "app/app/AppErrorDiagnostics.tsx";
+    const diagnostics = forbiddenMonoUsages(diagnosticsPath);
+    const diagnosticsSource = readFileSync(diagnosticsPath, "utf8");
+
+    expect([...violations, ...diagnostics]).toEqual([
+      expect.stringMatching(/AppErrorDiagnostics\.tsx:\d+: details\.digest && "font-mono",/),
+      expect.stringMatching(/AppErrorDiagnostics\.tsx:\d+: <pre className=.*font-mono/),
+    ]);
+    expect(diagnosticsSource).not.toContain("MonoText");
+    expect(diagnosticsSource).toMatch(
+      /<span\s+className=\{cn\([\s\S]*?details\.digest && "font-mono",[\s\S]*?\)\}\s*>\s*\{details\.digest \?\? "no reference"\}\s*<\/span>/u,
+    );
   });
 });

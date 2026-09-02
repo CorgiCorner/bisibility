@@ -1,5 +1,4 @@
 import { Card } from "@/components/ui/Card";
-import { MonoText } from "@/components/ui/MonoText";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import type { Meta, StoryObj } from "@storybook/react";
 
@@ -25,7 +24,9 @@ export const Default: Story = {
   render: () => (
     <Card className="max-w-sm">
       <SectionTitle>Position trend</SectionTitle>
-      <MonoText muted>Avg. Google position · lower is better</MonoText>
+      <p className="m-0 text-[10px] leading-[1.45] text-fg-muted">
+        Avg. Google position · lower is better
+      </p>
     </Card>
   ),
 };
@@ -36,9 +37,7 @@ export const Sizes: Story = {
       {sizes.map((size) => (
         <Card key={size} className="w-56" size={size}>
           <SectionTitle size={size}>{size.toUpperCase()} card</SectionTitle>
-          <MonoText muted size={size}>
-            Ranked keyword health
-          </MonoText>
+          <p className="m-0 text-[10px] leading-[1.45] text-fg-muted">Ranked keyword health</p>
         </Card>
       ))}
     </div>

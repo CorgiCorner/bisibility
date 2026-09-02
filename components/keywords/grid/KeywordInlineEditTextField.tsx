@@ -24,7 +24,7 @@ export function KeywordInlineEditTextField({
   return (
     <div
       className={cn(
-        "flex flex-col gap-1.5 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted",
+        "flex flex-col gap-1.5 font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted",
         wide && "md:col-span-3",
       )}
     >
@@ -33,7 +33,7 @@ export function KeywordInlineEditTextField({
         aria-label={label}
         className={cn(
           "min-h-10 rounded-control px-3 text-[13px] font-medium normal-case tracking-normal",
-          mono ? "font-mono" : "font-sans",
+          mono ? "font-sans tabular-nums" : "font-sans tabular-nums",
         )}
         {...inputProps}
         id={inputId}

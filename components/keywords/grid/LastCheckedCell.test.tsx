@@ -24,13 +24,7 @@ describe("LastCheckedCell", () => {
     );
 
     const chip = screen.getByText("3h ago");
-    expect(chip).toHaveClass(
-      "inline-flex",
-      "items-center",
-      "rounded-full",
-      "font-mono",
-      "font-semibold",
-    );
+    expect(chip).toHaveClass("inline-flex", "items-center", "rounded-full", "font-semibold");
   });
 
   it("renders a pending chip for a stale check", () => {
@@ -39,7 +33,7 @@ describe("LastCheckedCell", () => {
       { wrapper: withProvider() },
     );
 
-    expect(screen.getByText("8d ago")).toHaveClass("inline-flex", "rounded-full", "font-mono");
+    expect(screen.getByText("8d ago")).toHaveClass("inline-flex", "rounded-full");
   });
 
   it("renders a running chip", () => {
@@ -47,7 +41,7 @@ describe("LastCheckedCell", () => {
       wrapper: withProvider(),
     });
 
-    expect(screen.getByText("Running")).toHaveClass("inline-flex", "rounded-full", "font-mono");
+    expect(screen.getByText("Running")).toHaveClass("inline-flex", "rounded-full");
   });
 
   it("renders a failed chip", () => {
@@ -55,7 +49,7 @@ describe("LastCheckedCell", () => {
       wrapper: withProvider(),
     });
 
-    expect(screen.getByText("Failed")).toHaveClass("inline-flex", "rounded-full", "font-mono");
+    expect(screen.getByText("Failed")).toHaveClass("inline-flex", "rounded-full");
   });
 
   it("renders a not-checked chip when no check has run", () => {
@@ -63,7 +57,7 @@ describe("LastCheckedCell", () => {
       wrapper: withProvider(),
     });
 
-    expect(screen.getByText("Not checked")).toHaveClass("inline-flex", "rounded-full", "font-mono");
+    expect(screen.getByText("Not checked")).toHaveClass("inline-flex", "rounded-full");
   });
 
   it("renders a paused chip in read-only mode", () => {
@@ -72,10 +66,6 @@ describe("LastCheckedCell", () => {
       { wrapper: withProvider("migration_hold") },
     );
 
-    expect(screen.getByText("Paused - migration hold")).toHaveClass(
-      "inline-flex",
-      "rounded-full",
-      "font-mono",
-    );
+    expect(screen.getByText("Paused - migration hold")).toHaveClass("inline-flex", "rounded-full");
   });
 });

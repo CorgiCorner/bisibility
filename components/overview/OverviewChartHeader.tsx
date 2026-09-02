@@ -1,4 +1,4 @@
-import { ConclusionSubtitle, MonoText, SectionTitle } from "@/components/ui";
+import { ConclusionSubtitle, SectionTitle } from "@/components/ui";
 import type { ReactNode } from "react";
 
 type OverviewChartHeaderProps = {
@@ -20,9 +20,9 @@ export function OverviewChartHeader({
     <div className="flex min-h-[96px] items-start justify-between gap-3" data-overview-chart-header>
       <div className="min-w-0">
         <SectionTitle>{title}</SectionTitle>
-        <MonoText className="mt-[3px] block min-h-[2lh]" component="p" muted size="sm">
+        <p className="mt-[3px] block min-h-[2lh] font-sans text-[11px] leading-normal text-fg-muted">
           {definition}
-        </MonoText>
+        </p>
         <ConclusionSubtitle loading={captionLoading} text={caption} />
       </div>
       {trailing}

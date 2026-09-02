@@ -69,7 +69,7 @@ export function AlertTargetUrlDialog({
           {isSubmitting ? "Saving..." : "Save target URL"}
         </Button>
         {actionError ? (
-          <span className="font-mono text-[11px] text-red-text">{actionError}</span>
+          <span className="font-sans tabular-nums text-[11px] text-red-text">{actionError}</span>
         ) : null}
       </form>
     </AppDrawer>

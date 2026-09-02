@@ -4,7 +4,6 @@ import {
   Button,
   filterChipStateClassName,
   MenuSelect,
-  MonoText,
   SectionTitle,
   SegmentedControl,
   Tooltip,
@@ -73,7 +72,7 @@ export function CheckRunsHeader({
       <div className="flex flex-col gap-3 border-border border-b px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <SectionTitle id="check-runs-title">Check runs</SectionTitle>
-          <MonoText muted>Newest first</MonoText>
+          <span>Newest first</span>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <MenuSelect
@@ -169,7 +168,7 @@ export function CheckRunStats({ counts, filter, onFilterChange }: Readonly<Filte
             onClick={() => onFilterChange(tile.filter)}
             type="button"
           >
-            <span className="block font-mono text-[10.5px] font-semibold uppercase tracking-[.05em] text-fg-muted">
+            <span className="block font-sans tabular-nums text-[10.5px] font-semibold uppercase tracking-[.05em] text-fg-muted">
               {tile.label}
             </span>
             <span
@@ -230,7 +229,7 @@ export function CheckRunFilters({ counts, filter, onFilterChange }: Readonly<Fil
             type="button"
           >
             {item.label}
-            <span className="font-mono text-[10px] opacity-75">
+            <span className="font-sans tabular-nums text-[10px] opacity-75">
               {counts[item.count].toLocaleString("en-US")}
             </span>
           </button>

@@ -1,6 +1,6 @@
 import { SpendBar } from "@/components/cost-estimate/SpendBar";
 import { spendTone, spendToneTextClass } from "@/components/cost-estimate/spend-tone";
-import { MonoText, StatusPill } from "@/components/ui";
+import { StatusPill } from "@/components/ui";
 import { formatMoneyCents } from "@/lib/format/money";
 import { relativePast } from "@/lib/format/relative-time";
 import type { ProviderSpendConnection } from "@/lib/queries/provider-spend";
@@ -65,7 +65,7 @@ export function ProviderUsageRow({
             ) : null}
           </span>
           <span className="ml-auto flex min-w-[9rem] flex-1 flex-wrap items-center justify-end gap-2 text-right">
-            <span className="rounded-full border border-border bg-bg-sunken px-2 py-1 font-mono text-[9px] font-semibold uppercase text-fg-muted">
+            <span className="rounded-full border border-border bg-bg-sunken px-2 py-1 font-sans tabular-nums text-[9px] font-semibold uppercase text-fg-muted">
               {statusLabel(connection.state)}
             </span>
             <CaretDown
@@ -83,12 +83,14 @@ export function ProviderUsageRow({
                 percent={percent}
                 tone={tone}
               />
-              <span className={`shrink-0 font-mono text-[11px] ${allocationToneClass}`}>
+              <span
+                className={`shrink-0 font-sans tabular-nums text-[11px] ${allocationToneClass}`}
+              >
                 {allocationText(connection)}
               </span>
             </span>
             {availability(connection, now) ? (
-              <span className="mt-1 block font-mono text-[10px] text-fg-muted">
+              <span className="mt-1 block font-sans tabular-nums text-[10px] text-fg-muted">
                 {availability(connection, now)}
               </span>
             ) : null}
@@ -97,12 +99,10 @@ export function ProviderUsageRow({
         <div className="grid gap-4 border-t border-border-soft bg-bg-sunken/40 px-3 py-3 sm:grid-cols-2">
           {connection.features.map((feature) => (
             <div key={feature.feature}>
-              <MonoText className="tracking-[0.05em] uppercase" muted size="sm">
-                {feature.label}
-              </MonoText>
+              <span className="tracking-[0.05em] uppercase">{feature.label}</span>
               <p className="m-0 mt-1 text-[13px] font-semibold text-fg tabular-nums">
                 {feature.count.toLocaleString("en-US")}{" "}
-                <span className="font-mono text-[11px] font-normal text-fg-muted">
+                <span className="font-sans tabular-nums text-[11px] font-normal text-fg-muted">
                   · {formatMoneyCents(feature.costCents)}
                 </span>
               </p>

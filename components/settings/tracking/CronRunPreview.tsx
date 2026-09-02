@@ -38,7 +38,7 @@ export function CronRunPreview({
       </div>
       <ol className="m-0 mt-2 grid list-none gap-2 p-0 sm:grid-cols-3">
         {preview.runs.map((run, index) => (
-          <li className="font-mono text-[11.5px] text-fg-muted" key={run}>
+          <li className="font-sans tabular-nums text-[11.5px] text-fg-muted" key={run}>
             <span className="mr-1 text-fg-muted">{index + 1}.</span>
             {run}
           </li>

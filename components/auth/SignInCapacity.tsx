@@ -44,7 +44,7 @@ export function CapacityMeter({
           style={{ background: meterColor(meter), width: `${percentage}%` }}
         />
       </span>
-      <span className="inline-flex items-center whitespace-nowrap font-mono text-[11px] text-fg-muted">
+      <span className="inline-flex items-center whitespace-nowrap text-[11px] tabular-nums text-fg-muted">
         {label}
         <span className="ml-[5px] inline-flex">
           <InfoTooltip text={tooltip} />
@@ -176,7 +176,7 @@ export function JoinedToday({ count }: Readonly<{ count: number }>) {
     return null;
   }
   return (
-    <p className="mt-3.5 mb-0 text-center font-mono text-[11.5px] text-fg-muted">
+    <p className="mt-3.5 mb-0 text-center text-[11.5px] tabular-nums text-fg-muted">
       {count === 1 ? "1 person joined today" : `${count} people joined today`}
     </p>
   );

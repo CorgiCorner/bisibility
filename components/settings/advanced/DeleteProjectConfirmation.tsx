@@ -110,7 +110,7 @@ export function DeleteProjectConfirmation({
         </p>
         <div>
           <label
-            className="block font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted"
+            className="block font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted"
             htmlFor="delete-project-confirmation"
           >
             Type {expected} to confirm deletion
@@ -118,7 +118,7 @@ export function DeleteProjectConfirmation({
           <Input
             aria-label={`Type ${expected} to confirm deletion`}
             autoComplete="off"
-            className="mt-1.5 font-mono"
+            className="mt-1.5 font-sans tabular-nums"
             id="delete-project-confirmation"
             placeholder={expected}
             spellCheck={false}

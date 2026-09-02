@@ -108,7 +108,7 @@ export function SaveViewModal({
         onSubmit={handleSubmit((values) => void submit(values))}
       >
         <div className="flex items-center gap-2 rounded-control border border-dashed border-border bg-transparent px-3.5 py-3">
-          <span className="font-mono text-[9.5px] uppercase tracking-[0.5px] text-fg-muted">
+          <span className="font-sans tabular-nums text-[9.5px] uppercase tracking-[0.5px] text-fg-muted">
             Preview
           </span>
           <span className="inline-flex min-w-0 items-center gap-1.5 truncate rounded-control border border-border bg-accent-soft px-3 py-1.5 text-[12px] font-semibold text-accent-text">
@@ -117,10 +117,10 @@ export function SaveViewModal({
           </span>
         </div>
 
-        <label className="grid gap-[7px] font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
+        <label className="grid gap-[7px] font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
           {"View name "}
           <input
-            className="rounded-control border border-border-control bg-transparent px-3 py-2.5 font-sans text-[13.5px] font-medium normal-case tracking-normal text-fg outline-none placeholder:text-[12px] placeholder:leading-4 focus:border-accent"
+            className="rounded-control border border-border-control bg-transparent px-3 py-2.5 font-sans tabular-nums text-[13.5px] font-medium normal-case tracking-normal text-fg outline-none placeholder:text-[12px] placeholder:leading-4 focus:border-accent"
             placeholder="e.g. Product pages down"
             {...register("name")}
           />
@@ -139,7 +139,7 @@ export function SaveViewModal({
         </div>
 
         {errors.root ? (
-          <p className="m-0 flex items-center gap-1.5 font-mono text-[11.5px] text-red-text">
+          <p className="m-0 flex items-center gap-1.5 font-sans tabular-nums text-[11.5px] text-red-text">
             <X size={12} weight="regular" />
             {errors.root.message}
           </p>

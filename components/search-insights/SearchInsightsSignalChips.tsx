@@ -49,7 +49,9 @@ function Chip({
       </span>
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="flex items-baseline gap-2">
-          <span className="font-mono text-ui-section">{count.toLocaleString("en-US")}</span>
+          <span className="font-sans tabular-nums text-ui-section">
+            {count.toLocaleString("en-US")}
+          </span>
           <span className="text-ui-body font-semibold">{title}</span>
         </span>
         <span className="text-ui-caption text-fg-muted">{sub}</span>

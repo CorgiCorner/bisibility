@@ -123,7 +123,7 @@ export function FiltersDrawer({
         <span className="inline-flex items-baseline gap-2">
           <span>Filters</span>
           {activeCount > 0 ? (
-            <span className="font-mono text-[11px] font-medium text-fg-muted">
+            <span className="font-sans tabular-nums text-[11px] font-medium text-fg-muted">
               {activeCount} active
             </span>
           ) : null}
@@ -185,7 +185,7 @@ export function FiltersDrawer({
         <FilterSection icon={TextAa} title="Keyword attributes">
           <div className="mb-2 mt-[13px] flex items-center justify-between">
             <span className="text-[12px] text-fg-muted">Search volume / mo</span>
-            <span className="font-mono text-[11px] font-semibold text-accent-text">
+            <span className="font-sans tabular-nums text-[11px] font-semibold text-accent-text">
               {filters.volMin}k - {filters.volMax >= 50 ? "50k+" : `${filters.volMax}k`}
             </span>
           </div>
@@ -200,7 +200,7 @@ export function FiltersDrawer({
             sx={{ color: "var(--accent)", mx: 0.5 }}
             value={[filters.volMin, filters.volMax]}
           />
-          <div className="flex justify-between font-mono text-[10px] text-fg-muted">
+          <div className="flex justify-between font-sans tabular-nums text-[10px] text-fg-muted">
             <span>0</span>
             <span>50k+</span>
           </div>
@@ -210,7 +210,7 @@ export function FiltersDrawer({
           <div className="mt-2 flex items-center gap-2 rounded-control border border-border-control bg-transparent px-[11px] py-2 transition-colors focus-within:border-accent">
             <TextAa weight="regular" className="text-fg-muted" size={14} />
             <input
-              className="min-w-0 flex-1 bg-transparent font-mono text-[12.5px] text-fg outline-none focus-visible:outline-none"
+              className="min-w-0 flex-1 bg-transparent font-sans tabular-nums text-[12.5px] text-fg outline-none focus-visible:outline-none"
               id="keyword-contains"
               onChange={(event) => patch({ contains: event.target.value })}
               placeholder="e.g. open source"

@@ -15,20 +15,66 @@ import {
   type SearchInsightsQueryRow,
   type SearchInsightsRows,
 } from "./top-rows-model";
+import {
+  SEARCH_INSIGHTS_DEFAULT_SORT,
+  type SearchInsightsSort,
+  type SearchInsightsSortKey,
+} from "./top-rows-sort";
 import { searchInsightsWindowFilter } from "./window-filter";
 
 export type TopRowsPage = {
   limit: number;
   offset: number;
+  sort?: SearchInsightsSort;
 };
 
 export const EMPTY_ROWS = { rows: [], total: 0 } as const;
 
-// Fixed clicks-desc in v1; the text breaks ties so a page boundary can never repeat or skip a
-// row. Column sorting belongs to the explorer route, not to the first view.
+/** Only the ratios divide, so only they can be NULL for a row with no impressions. */
+const NULLABLE_SORT_KEYS: ReadonlySet<SearchInsightsSortKey> = new Set(["ctr", "position"]);
+
+/**
+ * The sort expressions, one per key, as SQL the read owns. Keys arrive from the client, so they
+ * index this table rather than reaching a statement: an ORDER BY assembled from request text is
+ * the one place a read of this shape can be turned into something else.
+ */
+function sortExpression(key: SearchInsightsSortKey, textColumn: Prisma.Sql) {
+  switch (key) {
+    case "clicks":
+      return Prisma.sql`SUM("clicks")`;
+    case "impressions":
+      return Prisma.sql`SUM("impressions")`;
+    case "ctr":
+      return Prisma.sql`SUM("clicks")::float8 / NULLIF(SUM("impressions"), 0)`;
+    case "position":
+      return Prisma.sql`SUM("position" * "impressions") / NULLIF(SUM("impressions"), 0)`;
+    default:
+      return textColumn;
+  }
+}
+
+/**
+ * The text column always breaks the tie, and it is unique per grouped row, so a page boundary can
+ * never repeat a row or drop one however many rows share a metric value. `NULLS LAST` in both
+ * directions keeps a row with no impressions - where CTR and position are undefined - at the end
+ * rather than at the head of an ascending sort, where it would read as the best result.
+ */
+function searchInsightsOrderBy(sort: SearchInsightsSort, textColumn: Prisma.Sql) {
+  const direction = sort.direction === "asc" ? Prisma.sql`ASC` : Prisma.sql`DESC`;
+  if (sort.key === "text") return Prisma.sql`${textColumn} ${direction}`;
+  const nulls = NULLABLE_SORT_KEYS.has(sort.key) ? Prisma.sql` NULLS LAST` : Prisma.empty;
+  return Prisma.sql`${sortExpression(sort.key, textColumn)} ${direction}${nulls}, ${textColumn} ASC`;
+}
+
+// The text always breaks ties, so a page boundary can never repeat or skip a row whichever
+// column the reader sorted by.
 function slice(page: TopRowsPage) {
   const limit = Math.max(0, Math.min(page.limit, ROWS_PAGE_LIMIT));
-  return { limit, offset: Math.max(0, page.offset) };
+  return {
+    limit,
+    offset: Math.max(0, page.offset),
+    sort: page.sort ?? SEARCH_INSIGHTS_DEFAULT_SORT,
+  };
 }
 
 /**
@@ -41,7 +87,7 @@ export async function getTopQueries(
   window: DateWindow,
   page: TopRowsPage,
 ): Promise<SearchInsightsRows<SearchInsightsQueryRow>> {
-  const { limit, offset } = slice(page);
+  const { limit, offset, sort } = slice(page);
   if (limit === 0) return EMPTY_ROWS;
   const rows = await prisma.$queryRaw<(AggregatedRow & { query: string })[]>(Prisma.sql`
     SELECT
@@ -53,7 +99,7 @@ export async function getTopQueries(
     FROM "search_analytics_query_daily"
     WHERE ${searchInsightsWindowFilter(projectId, property, window)}
     GROUP BY "query"
-    ORDER BY SUM("clicks") DESC, "query" ASC
+    ORDER BY ${searchInsightsOrderBy(sort, Prisma.sql`"query"`)}
     LIMIT ${limit} OFFSET ${offset}
   `);
   return queryRows(rows);
@@ -66,7 +112,7 @@ export async function getTopPages(
   page: TopRowsPage,
   sessionsProperty: string | null = null,
 ): Promise<SearchInsightsRows<SearchInsightsPageRow>> {
-  const { limit, offset } = slice(page);
+  const { limit, offset, sort } = slice(page);
   if (limit === 0) return EMPTY_ROWS;
   const rows = await prisma.$queryRaw<(AggregatedRow & { page: string })[]>(Prisma.sql`
     SELECT
@@ -78,7 +124,7 @@ export async function getTopPages(
     FROM "search_analytics_page_daily"
     WHERE ${searchInsightsWindowFilter(projectId, property, window)}
     GROUP BY "page"
-    ORDER BY SUM("clicks") DESC, "page" ASC
+    ORDER BY ${searchInsightsOrderBy(sort, Prisma.sql`"page"`)}
     LIMIT ${limit} OFFSET ${offset}
   `);
   const result = pageRows(rows);

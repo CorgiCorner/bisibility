@@ -8,8 +8,8 @@ describe("tableHeaderClassName", () => {
     expect(tableHeaderClassName).not.toContain("bg-[var(--table-header-bg)]");
   });
 
-  it("pins mono, 11px, uppercase, and 0.5px tracking for all headers", () => {
-    expect(tableHeaderClassName).toContain("font-mono");
+  it("pins Sans, 11px, uppercase, and 0.5px tracking for all headers", () => {
+    expect(tableHeaderClassName).not.toContain("font-mono");
     expect(tableHeaderClassName).toContain("text-[11px]");
     expect(tableHeaderClassName).toContain("uppercase");
     expect(tableHeaderClassName).toContain("tracking-[0.5px]");

@@ -74,7 +74,7 @@ function UnavailableMark({ label }: Readonly<{ label: string }>) {
   return (
     <span
       aria-label={`${label} is not available`}
-      className="font-mono text-[16px] leading-none text-fg-muted"
+      className="font-sans tabular-nums text-[16px] leading-none text-fg-muted"
       role="img"
     >
       –
@@ -175,12 +175,12 @@ export function NotificationChannelsCard({
             <input type="hidden" {...form.register("alertWebhook")} />
             <SettingsField width="full">
               <FieldLabel
-                className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted"
+                className="font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted"
                 label="Events and channels"
               />
               <div className="mt-2 overflow-x-auto">
                 <div className="min-w-[420px] overflow-hidden rounded-control border border-border">
-                  <div className="grid grid-cols-[minmax(150px,1.6fr)_repeat(2,minmax(82px,1fr))] bg-bg-sunken text-center font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
+                  <div className="grid grid-cols-[minmax(150px,1.6fr)_repeat(2,minmax(82px,1fr))] bg-bg-sunken text-center font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
                     <div className="px-3 py-2 text-left">Event</div>
                     {channels.map((channel) => (
                       <div className="px-2 py-2" key={channel.key}>

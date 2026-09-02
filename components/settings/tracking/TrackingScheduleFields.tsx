@@ -7,7 +7,7 @@ import { frequencyOptions } from "@/lib/settings/options";
 import { isSupportedProjectTimezone, timezoneSelectOptions } from "@/lib/settings/timezones";
 import type { UseFormReturn } from "react-hook-form";
 
-const labelClass = "font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted";
+const labelClass = "font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted";
 const triggerClass =
   "min-h-10 w-full justify-between rounded-control border-border-control bg-transparent px-3 text-[13px] font-medium normal-case tracking-normal";
 const frequencyMenuOptions = frequencyOptions.map((option) => ({
@@ -61,7 +61,7 @@ export function TrackingScheduleFields({
           <FieldLabel className={labelClass} htmlFor="tracking-cron" label="Cron expression" />
           <Input
             aria-describedby="tracking-cron-help"
-            className="mt-1.5 font-mono text-[12.5px]"
+            className="mt-1.5 font-sans tabular-nums text-[12.5px]"
             id="tracking-cron"
             {...cronRegistration}
             onBlur={(event) => {

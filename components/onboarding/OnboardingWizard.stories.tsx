@@ -213,7 +213,7 @@ function OnboardingStory({
             <span className="inline-flex items-center gap-1.5">
               <Avatar
                 alt=""
-                className="h-[22px] w-[22px] rounded-control bg-accent-solid font-mono text-[9px] font-semibold text-accent-on-solid"
+                className="h-[22px] w-[22px] rounded-control bg-accent-solid text-[9px] font-semibold text-accent-on-solid"
                 initials="AK"
                 src={null}
               />

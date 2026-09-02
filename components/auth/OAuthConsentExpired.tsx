@@ -20,9 +20,9 @@ export function OAuthConsentExpired({ client }: Readonly<{ client: OAuthConsentC
           : "Start a fresh login from your client."}
       </p>
       {copy.retryCommand ? (
-        <div className="mt-4 rounded-control bg-code-bg px-4 py-3 font-mono text-[12px] text-code-fg">
+        <div className="mt-4 rounded-control bg-code-bg px-4 py-3 font-sans text-[12px] text-code-fg">
           <span className="mr-3 text-code-faint">→</span>
-          {copy.retryCommand}
+          <code>{copy.retryCommand}</code>
         </div>
       ) : null}
       <p className="mt-4 mb-0 text-[12.5px] text-fg-muted">This tab can be closed.</p>

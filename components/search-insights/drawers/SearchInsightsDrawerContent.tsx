@@ -45,10 +45,10 @@ function ClicksPerDay({ perDay }: Readonly<{ perDay: readonly SearchInsightsDay[
   return (
     <div className="mt-4 rounded-card border border-border px-3.5 py-3.25">
       <div className="flex items-baseline justify-between gap-2.5">
-        <span className="font-mono text-ui-micro uppercase tracking-wider text-fg-muted">
+        <span className="font-sans tabular-nums text-ui-micro uppercase tracking-wider text-fg-muted">
           {DRAWER_COPY.clicksPerDay}
         </span>
-        <span className="font-mono text-ui-caption text-fg-muted">
+        <span className="font-sans tabular-nums text-ui-caption text-fg-muted">
           {drawerWindowLabel(perDay.length)}
         </span>
       </div>
@@ -84,10 +84,10 @@ function StatQuad({ content }: Readonly<{ content: DrawerContent }>) {
             className="flex flex-col gap-1 rounded-control border border-border px-2.75 py-2.5"
             key={stat.label}
           >
-            <span className="font-mono text-ui-micro uppercase tracking-wider text-fg-muted">
+            <span className="font-sans tabular-nums text-ui-micro uppercase tracking-wider text-fg-muted">
               {stat.label}
             </span>
-            <span className="font-mono text-ui-section">{stat.value}</span>
+            <span className="font-sans tabular-nums text-ui-section">{stat.value}</span>
           </div>
         ))}
       </div>
@@ -144,11 +144,11 @@ function Sessions({ content }: Readonly<{ content: DrawerContent }>) {
       <span className="inline-flex items-center gap-2 text-ui-caption">
         <ChartDonut weight="regular" aria-hidden className="text-fg-muted" size={15} />
         {DRAWER_COPY.sessions}
-        <span className="rounded-full bg-bg-sunken px-1.5 font-mono text-ui-micro tracking-wide text-fg-muted">
+        <span className="rounded-full bg-bg-sunken px-1.5 font-sans tabular-nums text-ui-micro tracking-wide text-fg-muted">
           GA4
         </span>
       </span>
-      <span className="font-mono text-ui-body font-semibold">
+      <span className="font-sans tabular-nums text-ui-body font-semibold">
         {formatRowCount(content.detail.sessions)}
       </span>
     </div>
@@ -188,7 +188,9 @@ export function SearchInsightsDrawerContent({
             {heading.title}
           </h3>
           {heading.count ? (
-            <span className="font-mono text-ui-micro text-fg-muted">{heading.count}</span>
+            <span className="font-sans tabular-nums text-ui-micro text-fg-muted">
+              {heading.count}
+            </span>
           ) : null}
         </div>
         {heading.note ? (

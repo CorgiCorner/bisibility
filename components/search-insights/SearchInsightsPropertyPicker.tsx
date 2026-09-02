@@ -208,10 +208,14 @@ export function SearchInsightsPropertyPicker({
       >
         <p className="m-0 text-[13px] leading-[1.55] text-fg-muted">
           Switch this project to{" "}
-          <strong className="font-mono font-medium text-fg">{pendingProperty?.displayName}</strong>?{" "}
-          {searchSyncPreflightCopy(syncPlan)} History already imported for{" "}
-          <strong className="font-mono font-medium text-fg">{property?.displayName}</strong> stays
-          stored, so you can switch back anytime.
+          <strong className="font-sans tabular-nums font-medium text-fg">
+            {pendingProperty?.displayName}
+          </strong>
+          ? {searchSyncPreflightCopy(syncPlan)} History already imported for{" "}
+          <strong className="font-sans tabular-nums font-medium text-fg">
+            {property?.displayName}
+          </strong>{" "}
+          stays stored, so you can switch back anytime.
         </p>
       </Modal>
     </>

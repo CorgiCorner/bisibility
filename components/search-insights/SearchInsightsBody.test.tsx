@@ -3,11 +3,12 @@ import type { LoadSearchInsightsRowsAction } from "@/lib/actions/search-insights
 import { ROWS_PAGE_LIMIT, SEARCH_INSIGHTS_ROWS_CAP } from "@/lib/search-insights/constants";
 import type { SearchInsightsImportState } from "@/lib/search-insights/queries/context";
 import type { SearchInsightsFirstView } from "@/lib/search-insights/queries/first-view";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SearchInsightsDrawerContext } from "./drawers/useDrawerHandlers";
 import { SearchInsightsBody } from "./SearchInsightsBody";
+import { ROW_HEIGHT } from "./search-insights-rows-model";
 import {
   storyFirstView,
   storyImportFacts,
@@ -17,6 +18,16 @@ import {
 
 const mocks = vi.hoisted(() => ({ track: vi.fn() }));
 vi.mock("@/lib/analytics/client", () => ({ track: mocks.track }));
+
+type RowsPageOutcome = Awaited<ReturnType<LoadSearchInsightsRowsAction>>;
+
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((next) => {
+    resolve = next;
+  });
+  return { promise, resolve };
+}
 
 function queryRows(count: number, prefix = "stored query") {
   return Array.from({ length: count }, (_, index) => ({
@@ -467,7 +478,166 @@ describe("SearchInsightsBody", () => {
       period: "28",
       projectId: "prj_1",
       property: "sc-domain:archived.example.com",
+      sort: { direction: "desc", key: "clicks" },
     });
+  });
+
+  /**
+   * P7c: the tables page a window with LIMIT/OFFSET, so a new order has to be a new read from the
+   * first row. Reordering the loaded array would sort the ten rows on screen and leave the other
+   * seventy contradicting the counter above them.
+   */
+  it("sends a new sort to the server read and starts again from the first row", async () => {
+    const loadRowsAction = vi.fn(async () => ({
+      kind: "queries" as const,
+      rows: queryRows(10, "resorted query"),
+      total: 80,
+      trackedTexts: [],
+    }));
+    renderBody({
+      loadRowsAction: loadRowsAction as never,
+      view: view({ queries: { rows: queryRows(10), total: 80 } }),
+    });
+
+    await userEvent.click(within(queriesCard()).getByRole("button", { name: /Impr/ }));
+
+    await waitFor(() => expect(loadRowsAction).toHaveBeenCalled());
+    expect(loadRowsAction).toHaveBeenCalledWith({
+      kind: "queries",
+      limit: 10,
+      offset: 0,
+      period: "28",
+      projectId: "prj_1",
+      property: "sc-domain:example.com",
+      sort: { direction: "desc", key: "impressions" },
+    });
+    // The rows on screen are the ones the server sent back for the new order.
+    await waitFor(() =>
+      expect(within(queriesCard()).getByText("resorted query 0")).toBeInTheDocument(),
+    );
+  });
+
+  it("keeps the sorted rows when an earlier Show all response settles afterwards", async () => {
+    const expansion = deferred<RowsPageOutcome>();
+    const sorted = deferred<RowsPageOutcome>();
+    const loadRowsAction = vi.fn((input: { offset: number; sort: { key: string } }) => {
+      if (input.sort.key === "clicks" && input.offset === 50) return expansion.promise;
+      return sorted.promise;
+    });
+    renderBody({
+      loadRowsAction: loadRowsAction as never,
+      view: view({ queries: { rows: queryRows(50, "initial query"), total: 80 } }),
+    });
+
+    const card = queriesCard();
+    await userEvent.click(within(card).getByRole("button", { name: /Show more/ }));
+    await userEvent.click(within(card).getByRole("button", { name: "Show all 80" }));
+    await waitFor(() =>
+      expect(loadRowsAction).toHaveBeenCalledWith(
+        expect.objectContaining({ offset: 50, sort: { direction: "desc", key: "clicks" } }),
+      ),
+    );
+
+    await userEvent.click(within(card).getByRole("button", { name: /Impr/ }));
+    await waitFor(() =>
+      expect(loadRowsAction).toHaveBeenCalledWith(
+        expect.objectContaining({ offset: 0, sort: { direction: "desc", key: "impressions" } }),
+      ),
+    );
+
+    await act(async () =>
+      sorted.resolve({
+        kind: "queries",
+        rows: queryRows(50, "sorted query"),
+        total: 80,
+        trackedTexts: [],
+      }),
+    );
+    await waitFor(() => expect(within(card).getByText("sorted query 0")).toBeInTheDocument());
+
+    await act(async () =>
+      expansion.resolve({
+        kind: "queries",
+        rows: queryRows(30, "expanded query"),
+        total: 80,
+        trackedTexts: [],
+      }),
+    );
+    await waitFor(() => expect(within(card).getByText("sorted query 0")).toBeInTheDocument());
+    expect(within(card).queryByText("expanded query 0")).not.toBeInTheDocument();
+  });
+
+  it("flips the direction when the active column is asked for again", async () => {
+    const loadRowsAction = vi.fn(async () => ({
+      kind: "queries" as const,
+      rows: queryRows(10, "resorted query"),
+      total: 80,
+      trackedTexts: [],
+    }));
+    renderBody({
+      loadRowsAction: loadRowsAction as never,
+      view: view({ queries: { rows: queryRows(10), total: 80 } }),
+    });
+
+    const clicks = () => within(queriesCard()).getByRole("button", { name: /Clicks/ });
+    await userEvent.click(clicks());
+
+    await waitFor(() =>
+      expect(loadRowsAction).toHaveBeenLastCalledWith(
+        expect.objectContaining({ sort: { direction: "asc", key: "clicks" } }),
+      ),
+    );
+
+    await userEvent.click(clicks());
+    await waitFor(() =>
+      expect(loadRowsAction).toHaveBeenLastCalledWith(
+        expect.objectContaining({ sort: { direction: "desc", key: "clicks" } }),
+      ),
+    );
+  });
+
+  /**
+   * P7d: a sorted window still pages. The server owns the order, so the two pages must arrive in
+   * that order with every row present exactly once - a repeated or dropped row at the boundary is
+   * what an unstable sort key produces.
+   */
+  it("pages a sorted window without repeating or dropping a row", async () => {
+    const sorted = queryRows(80, "sorted query");
+    const loadRowsAction = vi.fn(async (input: { limit: number; offset: number }) => ({
+      kind: "queries" as const,
+      rows: sorted.slice(input.offset, input.offset + input.limit),
+      total: 80,
+      trackedTexts: [],
+    }));
+    renderBody({
+      loadRowsAction: loadRowsAction as never,
+      view: view({ queries: { rows: sorted.slice(0, 50), total: 80 } }),
+    });
+
+    const card = queriesCard();
+    await userEvent.click(within(card).getByRole("button", { name: /Show more/ }));
+    await userEvent.click(within(card).getByRole("button", { name: /Show all 80/ }));
+
+    await waitFor(() => expect(within(card).getByText("80 of 80")).toBeInTheDocument());
+
+    // The expanded table virtualizes, so the boundary between the two pages is asserted where it
+    // actually falls: scrolled to row 50, the band must read as one contiguous run of the window.
+    const table = within(card).getByRole("table", { name: "Top queries" });
+    const region = table.parentElement as HTMLElement;
+    Object.defineProperty(region, "scrollTop", { configurable: true, value: ROW_HEIGHT * 40 });
+    fireEvent.scroll(region);
+
+    const shown = within(table)
+      .getAllByRole("row")
+      .map((row) => row.firstElementChild?.textContent ?? "")
+      .filter((text) => text.startsWith("sorted query"));
+    const first = sorted.findIndex((row) => row.query === shown[0]);
+    expect(first).toBeGreaterThanOrEqual(0);
+    // Contiguous, in order, and spanning the page boundary at row 50.
+    expect(shown).toEqual(sorted.slice(first, first + shown.length).map((row) => row.query));
+    expect(new Set(shown).size).toBe(shown.length);
+    expect(first).toBeLessThan(50);
+    expect(first + shown.length).toBeGreaterThan(50);
   });
 
   it("pages the rest of the window in, then lets the counter collapse it again", async () => {
@@ -495,6 +665,7 @@ describe("SearchInsightsBody", () => {
       period: "28",
       projectId: "prj_1",
       property: "sc-domain:example.com",
+      sort: { direction: "desc", key: "clicks" },
     });
 
     await userEvent.click(within(card).getByTitle("Back to the top 10 rows"));

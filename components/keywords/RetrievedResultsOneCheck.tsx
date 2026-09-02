@@ -23,7 +23,7 @@ type Props = {
 
 function Eyebrow({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-fg-muted">
+    <span className="font-sans tabular-nums text-[10px] uppercase tracking-[0.08em] text-fg-muted">
       {children}
     </span>
   );
@@ -40,7 +40,7 @@ function FeatureRow({ features }: Readonly<{ features: readonly string[] }>) {
       <Eyebrow>On the page</Eyebrow>
       {chips.map((chip) => (
         <Tooltip content={chip.description} key={chip.label} semantics="description">
-          <span className="rounded-full border border-border px-2.5 py-1 font-mono text-[10.5px] text-fg">
+          <span className="rounded-full border border-border px-2.5 py-1 font-sans tabular-nums text-[10.5px] text-fg">
             {chip.label}
           </span>
         </Tooltip>
@@ -83,7 +83,7 @@ function CompactState({
             key={entry.domain}
           >
             <span>{entry.domain}</span>
-            <span className="font-mono text-fg-muted">#{entry.bestPosition}</span>
+            <span className="font-sans tabular-nums text-fg-muted">#{entry.bestPosition}</span>
           </li>
         ))}
       </ul>
@@ -113,11 +113,11 @@ export function RetrievedResultsOneCheck({
         data-testid="retrieved-summary"
       >
         <Eyebrow>Your result</Eyebrow>
-        <strong className="font-mono text-[14px] text-fg">
+        <strong className="font-sans tabular-nums text-[14px] text-fg">
           {results.trackedPosition === null ? "not found" : `#${results.trackedPosition}`}
         </strong>
         {url ? (
-          <span className="min-w-0 flex-1 truncate font-mono text-[11.5px] text-fg-muted">
+          <span className="min-w-0 flex-1 truncate font-sans tabular-nums text-[11.5px] text-fg-muted">
             {url}
           </span>
         ) : (

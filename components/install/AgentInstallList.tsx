@@ -48,7 +48,7 @@ export function AgentInstallList({ mcpUrl }: Readonly<AgentInstallListProps>) {
             >
               <AgentIcon icon={agent.icon} />
               <span className="font-medium">{agent.label}</span>
-              <span className="ml-auto font-mono text-[10.5px] text-fg-muted">{agent.hint}</span>
+              <span className="ml-auto font-sans text-[10.5px] text-fg-muted">{agent.hint}</span>
               <Caret aria-hidden className="shrink-0 text-fg-muted" size={12} weight="regular" />
             </button>
             <div

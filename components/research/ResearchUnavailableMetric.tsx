@@ -3,7 +3,7 @@ import { RESEARCH_METRICS_UNAVAILABLE_TOOLTIP } from "@/lib/serp/market-capabili
 
 export function ResearchUnavailableMetric({
   label,
-  className = "font-mono text-fg-muted",
+  className = "font-sans tabular-nums text-fg-muted",
 }: Readonly<{ className?: string; label: string }>) {
   return (
     <Tooltip content={RESEARCH_METRICS_UNAVAILABLE_TOOLTIP}>

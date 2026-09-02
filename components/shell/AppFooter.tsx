@@ -83,10 +83,7 @@ export function AppFooter({
               {status.label}
             </ExternalLink>
             {status.detail ? (
-              <p
-                className="truncate font-mono text-[9px] leading-tight text-fg-muted"
-                title={status.detail}
-              >
+              <p className="truncate text-[9px] leading-tight text-fg-muted" title={status.detail}>
                 {status.detail}
               </p>
             ) : null}

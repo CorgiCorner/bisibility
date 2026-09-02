@@ -1,11 +1,5 @@
 import { displayTime } from "@/components/admin/AdminPrimitives";
-import {
-  Card,
-  CopyButton,
-  filterChipStateClassName,
-  SectionTitle,
-  StatusPill,
-} from "@/components/ui";
+import { Card, filterChipStateClassName, IdChip, SectionTitle, StatusPill } from "@/components/ui";
 import type {
   InstanceAdminAuditFilter,
   InstanceAdminAuditPage,
@@ -92,7 +86,7 @@ export function AdminAuditTable({ entries, filter, nextCursor }: Readonly<Instan
                 <col className="w-[12%]" />
               </colgroup>
               <thead>
-                <tr className="border-b border-border font-mono text-[10px] uppercase tracking-[0.4px] text-fg-muted">
+                <tr className="border-b border-border text-[10px] uppercase tracking-[0.4px] text-fg-muted">
                   <th className="px-0.5 pb-2 font-medium" scope="col">
                     Time
                   </th>
@@ -121,34 +115,28 @@ export function AdminAuditTable({ entries, filter, nextCursor }: Readonly<Instan
                         {displayTime(entry.createdAt)}
                       </td>
                       <td
-                        className="truncate px-2 py-2.5 font-mono text-[11px]"
+                        className="truncate px-2 py-2.5 text-[11px]"
                         title={entry.actorEmail ?? undefined}
                       >
                         {entry.actorEmail ?? "-"}
                       </td>
                       <td
-                        className="truncate px-2 py-2.5 font-mono text-[11.5px] font-semibold"
+                        className="truncate px-2 py-2.5 text-[11.5px] font-semibold"
                         title={entry.action}
                       >
                         {entry.action}
                       </td>
                       <td className="px-2 py-2.5">
-                        <span className="flex min-w-0 items-center gap-1">
-                          <span
-                            className="min-w-0 truncate font-mono text-[11px] text-fg-muted"
-                            title={target}
-                          >
-                            {target}
-                          </span>
-                          {entry.targetId ? (
-                            <CopyButton
-                              className="shrink-0"
-                              label={`Copy audit target ${target}`}
-                              size="sm"
-                              text={target}
-                            />
-                          ) : null}
-                        </span>
+                        {entry.targetId ? (
+                          <IdChip
+                            className="min-w-0 max-w-full border-0 bg-transparent px-0"
+                            copyLabel={`Copy audit target ${target}`}
+                            size="sm"
+                            value={target}
+                          />
+                        ) : (
+                          <span className="text-[11px] text-fg-muted">{target}</span>
+                        )}
                       </td>
                       <td className="px-2 py-2.5">
                         <AuditResultCell result={entry.result} />

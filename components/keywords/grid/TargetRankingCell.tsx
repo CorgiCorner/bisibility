@@ -11,7 +11,7 @@ type TargetRankingCellProps = {
 function UrlPath({ value }: Readonly<{ value: string }>) {
   return (
     <Tooltip content={value}>
-      <span className="min-w-0 truncate font-mono text-[11.5px] text-fg-muted">
+      <span className="min-w-0 truncate font-sans tabular-nums text-[11.5px] text-fg-muted">
         {pathFromUrl(value)}
       </span>
     </Tooltip>
@@ -37,7 +37,7 @@ export function TargetRankingCell({ row }: Readonly<TargetRankingCellProps>) {
   if (parent && parent.aggregate.rankingUrls.length > 1) {
     return (
       <Tooltip content={parent.aggregate.rankingUrls.join("\n")}>
-        <span className="font-mono text-[11.5px] text-fg-muted">
+        <span className="font-sans tabular-nums text-[11.5px] text-fg-muted">
           {parent.aggregate.rankingUrls.length} URLs
         </span>
       </Tooltip>
@@ -53,18 +53,18 @@ export function TargetRankingCell({ row }: Readonly<TargetRankingCellProps>) {
     <div className="flex w-full min-w-0 items-center gap-1.5 py-1 text-[11.5px] leading-tight">
       <div className="grid min-w-0 flex-1 gap-1">
         <div className="flex min-w-0 items-center gap-1.5">
-          <span className="w-[48px] shrink-0 font-mono text-[9.5px] uppercase text-fg-muted">
+          <span className="w-[48px] shrink-0 font-sans tabular-nums text-[9.5px] uppercase text-fg-muted">
             Target
           </span>
           {row.targetUrl ? <UrlPath value={row.targetUrl} /> : null}
         </div>
         <div className="flex min-w-0 items-center gap-1.5">
-          <span className="w-[48px] shrink-0 font-mono text-[9.5px] uppercase text-fg-muted">
+          <span className="w-[48px] shrink-0 font-sans tabular-nums text-[9.5px] uppercase text-fg-muted">
             Ranking
           </span>
           {row.rankingUrl ? (
             <a
-              className="min-w-0 truncate font-mono text-[11.5px] text-fg-muted hover:text-accent-text hover:underline"
+              className="min-w-0 truncate font-sans tabular-nums text-[11.5px] text-fg-muted hover:text-accent-text hover:underline"
               href={row.rankingUrl}
               onClick={(event) => event.stopPropagation()}
               rel="noreferrer noopener"
@@ -73,7 +73,7 @@ export function TargetRankingCell({ row }: Readonly<TargetRankingCellProps>) {
               {rankingLabel}
             </a>
           ) : (
-            <span className="font-mono text-[11px] text-fg-muted">{rankingLabel}</span>
+            <span className="font-sans tabular-nums text-[11px] text-fg-muted">{rankingLabel}</span>
           )}
         </div>
       </div>

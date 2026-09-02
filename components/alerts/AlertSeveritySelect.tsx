@@ -21,7 +21,7 @@ export function AlertSeveritySelect({
 }: Readonly<{ onChange: (value: AlertSeverity) => void; value: AlertSeverity }>) {
   return (
     <div className="flex flex-col gap-[7px]">
-      <span className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
+      <span className="font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
         Severity
       </span>
       <MenuSelect

@@ -5,6 +5,7 @@ import {
   getSearchInsightsRowsPage,
   type SearchInsightsRowsPage,
 } from "@/lib/search-insights/queries/first-view";
+import { SEARCH_INSIGHTS_SORT_KEYS } from "@/lib/search-insights/queries/top-rows-sort";
 import { z } from "zod";
 import { parseActionInput } from "./_shared";
 
@@ -18,6 +19,14 @@ const rowsSchema = z.object({
   period: z.string().trim().max(8).optional(),
   projectId: z.string().trim().min(1).max(120),
   property: z.string().trim().min(1).max(300),
+  // The sort key indexes the read's own expression table, so an unknown one is rejected here
+  // rather than reaching a statement.
+  sort: z
+    .object({
+      direction: z.enum(["asc", "desc"]),
+      key: z.enum(SEARCH_INSIGHTS_SORT_KEYS),
+    })
+    .optional(),
 });
 
 /**
@@ -33,6 +42,7 @@ export async function loadSearchInsightsRows(input: unknown): Promise<SearchInsi
     offset: data.offset,
     period: data.period,
     property: data.property,
+    sort: data.sort,
   });
 }
 

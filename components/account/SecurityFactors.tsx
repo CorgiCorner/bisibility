@@ -34,17 +34,8 @@ import { TwoFactorManagementForm } from "./TwoFactorManagementForm";
 import { createTotpQrDataUrl } from "./totp-qr";
 
 type Mode = "backup" | "disable" | "replace" | "setup";
-type SetupData = {
-  enrollmentId: string;
-  qrDataUrl: string | null;
-  secret: string;
-};
-
-type SecurityFactorsProps = {
-  hasPasswordCredential: boolean;
-  initiallyEnabled: boolean;
-};
-
+type SetupData = { enrollmentId: string; qrDataUrl: string | null; secret: string };
+type SecurityFactorsProps = { hasPasswordCredential: boolean; initiallyEnabled: boolean };
 function managementCopy(mode: Mode) {
   if (mode === "backup") {
     return {
@@ -70,7 +61,6 @@ function managementCopy(mode: Mode) {
     label: "Continue",
   };
 }
-
 export function SecurityFactors({
   hasPasswordCredential,
   initiallyEnabled,
@@ -88,7 +78,6 @@ export function SecurityFactors({
     mode: "onSubmit",
     resolver: zodResolver(completeTwoFactorEnrollmentSchema.pick({ code: true })),
   });
-
   function openMode(nextMode: Mode) {
     setMode((current) => (current === nextMode ? null : nextMode));
     setSetup(null);
@@ -96,7 +85,6 @@ export function SecurityFactors({
     setReauthRequired(false);
     setBackupCodes([]);
   }
-
   async function runManagementAction(values: TwoFactorManagementInput) {
     setMessage(null);
     if (mode === "setup" || mode === "replace") {
@@ -140,7 +128,6 @@ export function SecurityFactors({
       router.refresh();
     }
   }
-
   async function reauthenticate() {
     setPending(true);
     setMessage(null);
@@ -154,7 +141,6 @@ export function SecurityFactors({
       setPending(false);
     }
   }
-
   async function verifyNewAuthenticator(values: { code: string }) {
     if (!setup) return;
     setPending(true);
@@ -184,7 +170,6 @@ export function SecurityFactors({
       setPending(false);
     }
   }
-
   const copy = mode ? managementCopy(mode) : null;
   return (
     <AccountSection
@@ -231,7 +216,6 @@ export function SecurityFactors({
             </button>
           )}
         </div>
-
         {mode && !setup && copy ? (
           <TwoFactorManagementForm
             description={copy.description}
@@ -266,7 +250,9 @@ export function SecurityFactors({
               <div className="grid content-start gap-3">
                 <div className={fieldLabelClass}>
                   {"Secret "}
-                  <span className={cn(fieldValueClass, "break-all font-mono")}>{setup.secret}</span>
+                  <span className={cn(fieldValueClass, "break-all font-sans tabular-nums")}>
+                    {setup.secret}
+                  </span>
                 </div>
                 <label className={fieldLabelClass}>
                   {"New authenticator code "}

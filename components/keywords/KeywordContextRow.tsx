@@ -11,7 +11,7 @@ const unavailableCopy =
 function ContextChip({ children, label }: Readonly<ContextChipProps>) {
   return (
     <span className={quietChipVariants({ size: "lg" })}>
-      <span className="font-mono text-[9.5px] uppercase tracking-[0.5px] text-fg-muted">
+      <span className="font-sans tabular-nums text-[9.5px] uppercase tracking-[0.5px] text-fg-muted">
         {label}
       </span>
       <span className="inline-flex items-baseline gap-1 text-[12px] font-semibold text-fg">
@@ -50,7 +50,7 @@ export function KeywordContextRow({
 
   return (
     <section className="flex flex-wrap items-center gap-2.5 px-0.5">
-      <p className="m-0 mr-1 font-mono text-[10px] uppercase tracking-[0.65px] text-fg-muted">
+      <p className="m-0 mr-1 font-sans tabular-nums text-[10px] uppercase tracking-[0.65px] text-fg-muted">
         Keyword context
       </p>
       <span title={keyword.volumeKnown === false ? unavailableCopy : undefined}>
@@ -69,9 +69,11 @@ export function KeywordContextRow({
             "n/a"
           ) : (
             <>
-              <span className="font-mono text-[11px] text-yellow-text">{keyword.difficulty}</span>
+              <span className="font-sans tabular-nums text-[11px] text-yellow-text">
+                {keyword.difficulty}
+              </span>
               {keyword.hasTag !== false ? (
-                <span className="font-mono text-[9.5px] uppercase text-fg-muted">
+                <span className="font-sans tabular-nums text-[9.5px] uppercase text-fg-muted">
                   {difficultyLabel(keyword.difficulty)}
                 </span>
               ) : null}
@@ -80,7 +82,7 @@ export function KeywordContextRow({
         </ContextChip>
       </span>
       <ContextChip label="Intent">{intent}</ContextChip>
-      <span className="font-mono text-[10.5px] text-fg-muted">for {provenance}</span>
+      <span className="font-sans tabular-nums text-[10.5px] text-fg-muted">for {provenance}</span>
     </section>
   );
 }

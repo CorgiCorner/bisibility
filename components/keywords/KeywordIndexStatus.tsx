@@ -47,7 +47,7 @@ export function KeywordIndexStatus({
   if (!display) return null;
 
   return (
-    <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border-soft pt-3 font-mono text-[11px] text-fg-muted">
+    <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border-soft pt-3 font-sans tabular-nums text-[11px] text-fg-muted">
       <span className="uppercase tracking-[0.5px] text-fg-muted">Index status</span>
       {display.chips.map((chip) => (
         <span

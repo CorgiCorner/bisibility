@@ -39,7 +39,7 @@ export type AccountEmailChangeStepsProps = {
 
 type Step = "current" | "details" | "new";
 
-const labelClass = "font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted";
+const labelClass = "font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted";
 
 function FieldMessage({ error, id }: Readonly<{ error?: FieldError; id: string }>) {
   if (!error) return null;

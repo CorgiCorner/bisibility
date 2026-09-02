@@ -77,7 +77,7 @@ function GroupCard({
       </span>
       <div className="min-w-0 flex-1">
         <h3 className="m-0 text-[13px] font-semibold text-fg">{meta.title}</h3>
-        <p className="m-0 mt-0.5 font-mono text-[10.5px] text-fg-muted">{quantity}</p>
+        <p className="m-0 mt-0.5 font-sans tabular-nums text-[10.5px] text-fg-muted">{quantity}</p>
         <p className="m-0 mt-2 text-[12px] leading-relaxed text-fg-muted">{meta.description}</p>
         <Link
           className="mt-2.5 inline-flex items-center gap-1 text-[11.5px] font-semibold text-accent-text outline-none hover:text-accent-text focus-visible:underline"

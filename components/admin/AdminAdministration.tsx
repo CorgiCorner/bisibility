@@ -46,8 +46,8 @@ function deltaLabel(metric: GrowthMetric) {
 function GrowthCard({ label, metric }: Readonly<{ label: string; metric: GrowthMetric }>) {
   return (
     <div className="flex min-w-0 flex-col rounded-card border border-border-soft bg-bg-sunken px-3 py-2.5">
-      <div className="font-mono text-[10px] uppercase tracking-[0.4px] text-fg-muted">{label}</div>
-      <div className="mt-auto pt-1 text-xl font-semibold tracking-[-0.4px] text-fg">
+      <div className="text-[10px] uppercase tracking-[0.4px] text-fg-muted">{label}</div>
+      <div className="mt-auto pt-1 text-xl font-semibold tabular-nums tracking-[-0.4px] text-fg">
         {count.format(metric.total)}
       </div>
       <svg
@@ -65,7 +65,7 @@ function GrowthCard({ label, metric }: Readonly<{ label: string; metric: GrowthM
           vectorEffect="non-scaling-stroke"
         />
       </svg>
-      <div className="mt-1.5 font-mono text-[10px] text-fg-muted">{deltaLabel(metric)}</div>
+      <div className="mt-1.5 text-[10px] text-fg-muted">{deltaLabel(metric)}</div>
     </div>
   );
 }
@@ -82,10 +82,10 @@ function Growth({ data }: Readonly<{ data: InstanceAdminAdministration }>) {
           <GrowthCard key={card.key} label={card.label} metric={data.growth[card.key]} />
         ))}
         <div className="flex min-w-0 flex-col rounded-card border border-border-soft bg-bg-sunken px-3 py-2.5">
-          <div className="font-mono text-[10px] uppercase tracking-[0.4px] text-fg-muted">
+          <div className="text-[10px] uppercase tracking-[0.4px] text-fg-muted">
             Active accounts (approx.)
           </div>
-          <div className="pt-1 text-xl font-semibold tracking-[-0.4px] text-fg">
+          <div className="pt-1 text-xl font-semibold tabular-nums tracking-[-0.4px] text-fg">
             {count.format(data.activeAccountsApprox)}
           </div>
           <p className="mb-0 mt-auto pt-2 text-[10px] leading-relaxed text-fg-muted">
@@ -123,7 +123,7 @@ function TopConsumption({
               <col className="w-[21%]" />
             </colgroup>
             <thead>
-              <tr className="border-b border-border font-mono text-[10px] uppercase tracking-[0.4px] text-fg-muted">
+              <tr className="border-b border-border text-[10px] uppercase tracking-[0.4px] text-fg-muted">
                 <th className="px-0.5 pb-2 font-medium" scope="col">
                   Project ID
                 </th>
@@ -158,20 +158,18 @@ function TopConsumption({
                       />
                     </td>
                     <td className="px-2 py-2">
-                      <span className="block font-mono text-xs font-semibold">
-                        {row.providerLabel}
-                      </span>
-                      <span className="mt-0.5 block font-mono text-[10px] text-fg-muted">
+                      <span className="block text-xs font-semibold">{row.providerLabel}</span>
+                      <span className="mt-0.5 block text-[10px] text-fg-muted">
                         {row.rateBasis}
                       </span>
                     </td>
-                    <td className="px-2 py-2 font-mono text-xs font-semibold">
+                    <td className="px-2 py-2 text-xs font-semibold tabular-nums">
                       {count.format(row.checks)}
                     </td>
-                    <td className="px-2 py-2 font-mono text-xs">
+                    <td className="px-2 py-2 text-xs tabular-nums">
                       {count.format(row.billableUnits)}
                     </td>
-                    <td className="px-2 py-2 font-mono text-xs">
+                    <td className="px-2 py-2 text-xs tabular-nums">
                       {row.referenceCostKnown ? money.format(row.referenceCostCents / 100) : "-"}
                     </td>
                     <td className="px-2 py-2">
@@ -186,7 +184,7 @@ function TopConsumption({
                             style={{ width: `${share}%` }}
                           />
                         </span>
-                        <span className="min-w-10 text-right font-mono text-[10.5px] text-fg-muted">
+                        <span className="min-w-10 text-right text-[10.5px] tabular-nums text-fg-muted">
                           {row.sharePercent.toFixed(1)}%
                         </span>
                       </span>

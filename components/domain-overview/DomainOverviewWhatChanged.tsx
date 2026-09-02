@@ -30,7 +30,7 @@ export function DomainOverviewWhatChanged({
           <h3 className="m-0 text-[14.5px] font-semibold">Ranking changes</h3>
           <InfoTooltip text="Compared with DataForSEO's previous index check. The API does not provide that check's date. These are estimated indexed keywords, not your tracked rankings." />
         </div>
-        <span className="shrink-0 whitespace-nowrap font-mono text-[10px] uppercase tracking-[0.06em] text-fg-muted">
+        <span className="shrink-0 whitespace-nowrap font-sans tabular-nums text-[10px] uppercase tracking-[0.06em] text-fg-muted">
           index updated {sourceDateLabel(sourceSnapshotAt)}
         </span>
       </div>
@@ -45,7 +45,7 @@ export function DomainOverviewWhatChanged({
                   <Icon aria-hidden className={tone} size={13} weight="regular" />
                   {row.label}
                 </span>
-                <strong className={`${tone} font-mono text-[13px]`}>
+                <strong className={`${tone} font-sans tabular-nums text-[13px]`}>
                   {row.sign}
                   {number.format(row.value)}
                 </strong>

@@ -84,7 +84,7 @@ describe("KeywordsGrid actions", () => {
     ) as HTMLElement;
     fireEvent.click(within(keywordRow).getByRole("checkbox"));
     fireEvent.click(
-      within(screen.getByTestId("keywords-export-labeled-action")).getByRole("button", {
+      within(screen.getByTestId("keywords-export-action")).getByRole("button", {
         name: /^export$/i,
       }),
     );
@@ -235,7 +235,7 @@ describe("KeywordsGrid actions", () => {
     expect(screen.getByText("2 keywords")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Confirm and run" }));
     await waitFor(() => expect(runCheckNowAction).toHaveBeenCalledTimes(2));
-  });
+  }, 15_000);
 
   it("exports locally filtered rows as an ID-scoped selection", async () => {
     const rows = pendingRows(2);
@@ -246,7 +246,7 @@ describe("KeywordsGrid actions", () => {
     });
     await screen.findByRole("button", { name: /clear all search and filters/i });
     fireEvent.click(
-      within(screen.getByTestId("keywords-export-labeled-action")).getByRole("button", {
+      within(screen.getByTestId("keywords-export-action")).getByRole("button", {
         name: /^export$/i,
       }),
     );

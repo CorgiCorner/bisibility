@@ -19,7 +19,7 @@ export function ChartNoDataOverlay({
           <Icon aria-hidden data-icon={Icon.displayName} size={20} weight="regular" />
         </span>
         <span className="text-sm font-semibold text-fg">{title}</span>
-        <span className="font-mono text-[11px] text-fg-muted">{description}</span>
+        <span className="font-sans tabular-nums text-[11px] text-fg-muted">{description}</span>
       </div>
     </div>
   );

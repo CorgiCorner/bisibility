@@ -1,10 +1,19 @@
 "use client";
 
-import { Button, tableHeaderClassName } from "@/components/ui";
+import { Button, tableHeaderTypographyClassName } from "@/components/ui";
 import type { SearchInsightsQueryRow } from "@/lib/search-insights/queries/top-rows-model";
+import type {
+  SearchInsightsSort,
+  SearchInsightsSortKey,
+} from "@/lib/search-insights/queries/top-rows-sort";
 import { trackedKey } from "@/lib/search-insights/queries/tracked-model";
 import { cn } from "@/lib/ui/cn";
-import { CaretRightIcon as CaretRight } from "@phosphor-icons/react";
+import {
+  ArrowDownIcon as ArrowDown,
+  ArrowsDownUpIcon as ArrowsDownUp,
+  ArrowUpIcon as ArrowUp,
+  CaretRightIcon as CaretRight,
+} from "@phosphor-icons/react";
 import { type ReactNode, useState } from "react";
 import {
   TRACK_DIALOG_COPY,
@@ -14,6 +23,7 @@ import {
   TRACKED_TITLE,
 } from "./search-insights-copy";
 import {
+  ariaSortValue,
   formatRowCount,
   formatRowCtr,
   formatRowPosition,
@@ -36,7 +46,7 @@ import {
 export { ROW_HEIGHT_CLASS } from "./search-insights-rows-model";
 
 export const CELL = "px-4 py-0 align-middle";
-export const NUMERIC = "px-1 text-right font-mono text-ui-caption";
+export const NUMERIC = "px-1 text-right font-sans tabular-nums text-ui-caption";
 export const ROW =
   "group cursor-pointer border-b border-border-soft text-ui-body transition-colors hover:bg-bg-sunken focus-visible:bg-bg-sunken";
 // Quick actions are hover-or-focus only where a pointer can hover. A touch device has no
@@ -48,12 +58,54 @@ const NO_ADDING: ReadonlySet<string> = new Set();
 
 export type HeaderCell = ModuleTableHeader;
 
+export type ModuleTableSort = {
+  onSort: (key: SearchInsightsSortKey) => void;
+  value: SearchInsightsSort;
+};
+
+// The indicator is always present on a sortable column, so activating one never reflows the head.
+const SORT_ICON = { ascending: ArrowUp, descending: ArrowDown, none: ArrowsDownUp } as const;
+
+function SortableHeader({
+  header,
+  sort,
+  state,
+}: Readonly<{
+  header: HeaderCell;
+  sort: ModuleTableSort;
+  state: "ascending" | "descending" | "none";
+}>) {
+  const Icon = SORT_ICON[state];
+  const key = header.sortKey;
+  return (
+    <button
+      className={cn(
+        "inline-flex w-full items-center gap-1 rounded-control uppercase tracking-[0.5px]",
+        "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid",
+        state === "none" ? "text-fg-muted" : "text-fg",
+        header.align ? "justify-end" : "justify-start",
+      )}
+      onClick={key ? () => sort.onSort(key) : undefined}
+      type="button"
+    >
+      {header.label}
+      <Icon
+        aria-hidden
+        className={state === "none" ? "opacity-40" : undefined}
+        size={11}
+        weight="regular"
+      />
+    </button>
+  );
+}
+
 export function SearchInsightsTableShell({
   children,
   count,
   headers,
   label,
   scroll,
+  sort,
   variant,
 }: Readonly<{
   children: (range: { end: number; start: number }) => ReactNode;
@@ -61,6 +113,7 @@ export function SearchInsightsTableShell({
   headers: readonly HeaderCell[];
   label: string;
   scroll: boolean;
+  sort?: ModuleTableSort;
   variant: ModuleTableVariant;
 }>) {
   const [scrollTop, setScrollTop] = useState(0);
@@ -87,29 +140,38 @@ export function SearchInsightsTableShell({
             <col className={columnClass} key={`${columnClass}-${index}`} />
           ))}
         </colgroup>
-        <thead className={tableHeaderClassName}>
+        <thead className={tableHeaderTypographyClassName}>
           <tr>
-            {headers.map((header) => (
-              <th
-                className={cn(
-                  // A header never wraps: it names the column, and AVG POS breaking in two is the one label in
-                  // this table wide enough to try. The numeric headers take the padding of the numbers below
-                  // them, so the two right edges line up.
-                  "sticky top-0 z-1 whitespace-nowrap bg-table-header-bg px-4 py-2 font-normal",
-                  header.align ? "px-1 text-right" : "text-left",
-                  header.title && "cursor-help",
-                )}
-                key={header.label}
-                scope="col"
-                title={header.title}
-              >
-                {header.label === "Actions" ? (
-                  <span className="sr-only">Actions</span>
-                ) : (
-                  header.label
-                )}
-              </th>
-            ))}
+            {headers.map((header) => {
+              const state = sort ? ariaSortValue(sort.value, header.sortKey) : "none";
+              const sortable = Boolean(sort && header.sortKey);
+              return (
+                <th
+                  aria-sort={sortable ? state : undefined}
+                  className={cn(
+                    // A header never wraps: it names the column, and AVG POS breaking in two is the one label in
+                    // this table wide enough to try. The numeric headers take the padding of the numbers below
+                    // them, so the two right edges line up. The head sits on the card surface and is ruled off
+                    // by the same border the rows use, so it reads as the top of the table rather than a band
+                    // above it; the fill is what makes a sticky head opaque, so it is the surface, not a tint.
+                    "sticky top-0 z-1 whitespace-nowrap border-b border-border-soft bg-bg-elev px-4 py-2 font-normal",
+                    header.align ? "px-1 text-right" : "text-left",
+                    header.title && !sortable && "cursor-help",
+                  )}
+                  key={header.label}
+                  scope="col"
+                  title={header.title}
+                >
+                  {header.label === "Actions" ? (
+                    <span className="sr-only">Actions</span>
+                  ) : sortable && sort ? (
+                    <SortableHeader header={header} sort={sort} state={state} />
+                  ) : (
+                    header.label
+                  )}
+                </th>
+              );
+            })}
           </tr>
         </thead>
         <tbody>
@@ -142,6 +204,7 @@ export type SearchInsightsQueriesTableProps = {
   onTrack?: (row: SearchInsightsQueryRow) => void;
   rows: readonly SearchInsightsQueryRow[];
   scroll?: boolean;
+  sort?: ModuleTableSort;
   tracked: ReadonlySet<string>;
 };
 
@@ -151,6 +214,7 @@ export function SearchInsightsQueriesTable({
   onTrack,
   rows,
   scroll = false,
+  sort,
   tracked,
 }: Readonly<SearchInsightsQueriesTableProps>) {
   return (
@@ -159,6 +223,7 @@ export function SearchInsightsQueriesTable({
       headers={QUERY_HEADERS}
       label="Top queries"
       scroll={scroll}
+      sort={sort}
       variant="queries"
     >
       {(range) =>
@@ -187,7 +252,7 @@ export function SearchInsightsQueriesTable({
               <td className={cn(CELL, "text-right")}>
                 {isTracked || adding.has(row.query) ? (
                   <span
-                    className="inline-flex items-center font-mono text-ui-micro text-fg-muted"
+                    className="inline-flex items-center font-sans tabular-nums text-ui-micro text-fg-muted"
                     title={isTracked ? TRACKED_TITLE : undefined}
                   >
                     {isTracked ? TRACKED_LABEL : TRACK_DIALOG_COPY.adding}

@@ -118,7 +118,7 @@ export function TagsSegmentsCard({
         <div className="flex flex-wrap items-center gap-2">
           {draftTags.map((tag) => (
             <span
-              className="inline-flex h-7 items-center gap-1.5 rounded-full border border-border bg-bg-sunken py-0 pl-2.5 pr-1.5 font-mono text-[11px] text-fg"
+              className="inline-flex h-7 items-center gap-1.5 rounded-full border border-border bg-bg-sunken py-0 pl-2.5 pr-1.5 font-sans tabular-nums text-[11px] text-fg"
               key={tagKey(tag.label)}
             >
               {tag.label}

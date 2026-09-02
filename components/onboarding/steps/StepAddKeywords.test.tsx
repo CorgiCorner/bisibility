@@ -43,13 +43,16 @@ describe("StepAddKeywords", () => {
 
     const textarea = keywordBox();
     expect(textarea).toHaveClass(
-      "font-mono",
       "text-[13px]",
       "font-normal",
       "leading-[1.7]",
       "placeholder:font-normal",
     );
-    expect(textarea).not.toHaveClass("placeholder:text-[12px]", "placeholder:leading-4");
+    expect(textarea).not.toHaveClass(
+      "font-mono",
+      "placeholder:text-[12px]",
+      "placeholder:leading-4",
+    );
   });
 
   it("previews trimmed unique keywords and ignored duplicate lines", () => {

@@ -176,10 +176,10 @@ export function AlertsPageContent({
             <div className="flex flex-wrap items-center justify-between gap-3 border-border border-b px-4.5 py-3.5">
               <div className="flex flex-wrap items-center gap-2.5">
                 <SectionTitle>Triggered alerts</SectionTitle>
-                <span className="rounded-full bg-bg-sunken px-2 py-0.5 font-mono text-[10.5px] font-semibold text-fg-muted">
+                <span className="rounded-full bg-bg-sunken px-2 py-0.5 font-sans tabular-nums text-[10.5px] font-semibold text-fg-muted">
                   {liveAlerts.length} loaded
                 </span>
-                <span className="font-mono text-[11px] text-fg-muted">last 48h</span>
+                <span className="font-sans tabular-nums text-[11px] text-fg-muted">last 48h</span>
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <SegmentedControl
@@ -191,7 +191,9 @@ export function AlertsPageContent({
                     label: (
                       <>
                         {item.label}
-                        <span className="font-mono text-[10px] text-fg-muted">{item.count}</span>
+                        <span className="font-sans tabular-nums text-[10px] text-fg-muted">
+                          {item.count}
+                        </span>
                       </>
                     ),
                     value: item.id,
@@ -227,7 +229,7 @@ export function AlertsPageContent({
               </div>
             )}
             <div className="flex flex-wrap items-center justify-between gap-3 bg-bg-sunken px-4.5 py-3">
-              <span className="font-mono text-[11px] text-fg-muted">
+              <span className="font-sans tabular-nums text-[11px] text-fg-muted">
                 Showing {shownCount} of {pluralize(filteredAlerts.length, "loaded alert")}
               </span>
               <div className="flex flex-wrap items-center gap-2.5">
@@ -259,7 +261,7 @@ export function AlertsPageContent({
       )}
       {canCreate ? (
         <section>
-          <div className="mb-2.5 font-mono text-[10.5px] uppercase text-fg-muted">
+          <div className="mb-2.5 font-sans tabular-nums text-[10.5px] uppercase text-fg-muted">
             Create from template
           </div>
           <div className="flex flex-wrap gap-2">

@@ -1,10 +1,16 @@
+import "server-only";
+
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { resolveAuthSecret } from "@/lib/auth/secret";
+import { prisma } from "@/lib/db/prisma";
 import { isPublicIdOfType } from "@/lib/db/public-id";
+import { cookies } from "next/headers";
+import { cache } from "react";
 
 export const SETUP_ACKNOWLEDGEMENT_COOKIE = "getting-started-ack";
-export const SETUP_ACKNOWLEDGEMENT_MAX_AGE = 60 * 60 * 24 * 365;
 const MAX_ACKNOWLEDGEMENTS = 40;
+
+const perRequestCache: typeof cache = typeof cache === "function" ? cache : (fn) => fn;
 
 export type SetupAcknowledgement = Readonly<{ projectRef: string; userId: string }>;
 
@@ -52,26 +58,9 @@ export function parseSetupAcknowledgements(raw: string | undefined): SetupAcknow
   }
 }
 
-export function addSetupAcknowledgement(
-  entries: readonly SetupAcknowledgement[],
-  userId: string,
-  projectRef: string,
-): SetupAcknowledgement[] {
-  const retained = entries.filter(
-    (entry) => entry.userId !== userId || entry.projectRef !== projectRef,
-  );
-  return [...retained, { projectRef, userId }].slice(-MAX_ACKNOWLEDGEMENTS);
-}
-
 export function serializeSetupAcknowledgements(entries: readonly SetupAcknowledgement[]): string {
   const bounded = entries.slice(-MAX_ACKNOWLEDGEMENTS);
-  while (bounded.length > 0) {
-    const payload = encodeURIComponent(JSON.stringify(bounded));
-    const serialized = `${payload}.${signature(payload)}`;
-    if (serialized.length <= 3500) return serialized;
-    bounded.shift();
-  }
-  const payload = encodeURIComponent("[]");
+  const payload = encodeURIComponent(JSON.stringify(bounded));
   return `${payload}.${signature(payload)}`;
 }
 
@@ -84,3 +73,76 @@ export function isSetupAcknowledged(
     (entry) => entry.userId === userId && entry.projectRef === projectRef,
   );
 }
+
+export function isSetupAcknowledgedAt(value: Date | null | undefined): boolean {
+  return value != null;
+}
+
+async function readMembershipAcknowledgement(
+  userId: string,
+  projectRef: string,
+): Promise<Date | null> {
+  if (!isPublicIdOfType(projectRef, "prj")) {
+    return null;
+  }
+
+  const membership = await prisma.membership.findFirst({
+    select: { setupAcknowledgedAt: true },
+    where: { userId, project: { publicId: projectRef } },
+  });
+
+  return membership?.setupAcknowledgedAt ?? null;
+}
+
+export async function markSetupAcknowledged(userId: string, projectRef: string): Promise<void> {
+  if (!isPublicIdOfType(projectRef, "prj")) {
+    throw new Error("Project not found.");
+  }
+
+  const membership = await prisma.membership.findFirst({
+    select: { id: true, setupAcknowledgedAt: true },
+    where: { userId, project: { publicId: projectRef } },
+  });
+
+  if (!membership) {
+    throw new Error("Project not found.");
+  }
+
+  if (membership.setupAcknowledgedAt) {
+    return;
+  }
+
+  await prisma.membership.update({
+    data: { setupAcknowledgedAt: new Date() },
+    where: { id: membership.id },
+  });
+}
+
+async function backfillLegacyCookieAcknowledgements(
+  userId: string,
+  cookieValue: string | undefined,
+): Promise<void> {
+  const entries = parseSetupAcknowledgements(cookieValue).filter(
+    (entry) => entry.userId === userId,
+  );
+  for (const entry of entries) {
+    await markSetupAcknowledged(userId, entry.projectRef);
+  }
+}
+
+export const loadSetupAcknowledgedAt = perRequestCache(
+  async (userId: string, projectRef: string): Promise<Date | null> => {
+    const stored = await readMembershipAcknowledgement(userId, projectRef);
+    if (stored) {
+      return stored;
+    }
+
+    const cookieValue = (await cookies()).get(SETUP_ACKNOWLEDGEMENT_COOKIE)?.value;
+    if (!isSetupAcknowledged(cookieValue, userId, projectRef)) {
+      return null;
+    }
+
+    await backfillLegacyCookieAcknowledgements(userId, cookieValue);
+    return (await readMembershipAcknowledgement(userId, projectRef)) ?? new Date();
+  },
+);

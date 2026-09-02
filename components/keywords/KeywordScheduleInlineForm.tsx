@@ -38,8 +38,8 @@ type KeywordScheduleInlineFormProps = {
 };
 
 const labelClass =
-  "flex flex-col gap-1.5 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted";
-const inputClass = `${inputClassName} min-h-10 rounded-control px-3 font-sans text-[13px] font-medium normal-case tracking-normal`;
+  "flex flex-col gap-1.5 font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted";
+const inputClass = `${inputClassName} min-h-10 rounded-control px-3 font-sans tabular-nums text-[13px] font-medium normal-case tracking-normal`;
 const triggerClass =
   "min-h-10 w-full justify-between rounded-control border-border-control bg-transparent px-3 text-[13px] font-medium normal-case tracking-normal";
 const depthOptions = (projectDepth: SerpDepth) => [
@@ -234,7 +234,7 @@ export function KeywordScheduleInlineForm({
       {providerRate ? (
         <div className={labelClass}>
           <span>Estimated provider cost</span>
-          <span className="flex min-h-10 items-center rounded-control bg-bg-sunken px-3 font-mono text-[12px] text-fg">
+          <span className="flex min-h-10 items-center rounded-control bg-bg-sunken px-3 font-sans tabular-nums text-[12px] text-fg">
             {projectedCostCents == null
               ? "Unavailable"
               : `~ ${formatEstimateCents(projectedCostCents)}/month`}
@@ -254,18 +254,20 @@ export function KeywordScheduleInlineForm({
       {showStatus ? (
         <div className={layout === "inline" ? "md:col-span-2 xl:col-span-full" : undefined}>
           {scheduleSource === "project" ? (
-            <span className="font-mono text-[11px] text-fg-muted">Inherits project default</span>
+            <span className="font-sans tabular-nums text-[11px] text-fg-muted">
+              Inherits project default
+            </span>
           ) : null}
           {message ? (
-            <span className="ml-3 font-mono text-[11px] text-fg-muted">{message}</span>
+            <span className="ml-3 font-sans tabular-nums text-[11px] text-fg-muted">{message}</span>
           ) : null}
           {depthWarning && serpDepth !== null ? (
-            <span className="ml-3 font-mono text-[11px] text-yellow-text">
+            <span className="ml-3 font-sans tabular-nums text-[11px] text-yellow-text">
               {serpDepthDecreaseWarning(serpDepth)}
             </span>
           ) : null}
           {visibilityExcluded ? (
-            <span className="ml-3 font-mono text-[11px] text-yellow-text">
+            <span className="ml-3 font-sans tabular-nums text-[11px] text-yellow-text">
               {VISIBILITY_SHALLOW_CHECK_COPY}
             </span>
           ) : null}

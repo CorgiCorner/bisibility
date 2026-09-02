@@ -68,7 +68,7 @@ export function AddKeywordCsvPanel({
           <label className="text-[12.5px] font-semibold text-fg" htmlFor="add-csv-input">
             Paste CSV
           </label>
-          <span className="font-mono text-[11px] text-fg-muted">
+          <span className="font-sans tabular-nums text-[11px] text-fg-muted">
             {parsedCount} {parsedCount === 1 ? "keyword" : "keywords"} parsed
           </span>
         </div>
@@ -80,7 +80,7 @@ export function AddKeywordCsvPanel({
           value={csvText}
         />
         {errorMessage ? (
-          <p className="mt-2 font-mono text-[11.5px] text-red-text">{errorMessage}</p>
+          <p className="mt-2 font-sans tabular-nums text-[11.5px] text-red-text">{errorMessage}</p>
         ) : null}
       </div>
 

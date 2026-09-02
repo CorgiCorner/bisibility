@@ -38,7 +38,7 @@ export function RecentAuditCard({ entries, projectId }: Readonly<RecentAuditCard
             >
               <Avatar
                 alt=""
-                className="row-span-2 h-8.5 w-[34px] rounded-control border border-border bg-bg-sunken font-mono text-[10px] font-semibold text-fg-muted sm:row-span-1"
+                className="row-span-2 h-8.5 w-[34px] rounded-control border border-border bg-bg-sunken font-sans tabular-nums text-[10px] font-semibold text-fg-muted sm:row-span-1"
                 initials={entry.actor.initials}
                 src={entry.actor.avatarUrl}
               />
@@ -57,7 +57,7 @@ export function RecentAuditCard({ entries, projectId }: Readonly<RecentAuditCard
                 </div>
               </div>
               <time
-                className="col-start-2 font-mono text-[10px] text-fg-muted sm:col-start-3"
+                className="col-start-2 font-sans tabular-nums text-[10px] text-fg-muted sm:col-start-3"
                 dateTime={entry.timestamp}
               >
                 {entry.timestampLabel}

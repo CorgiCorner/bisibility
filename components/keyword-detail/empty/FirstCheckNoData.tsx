@@ -51,7 +51,7 @@ export function FirstCheckNoData({
           <p className="m-0 mt-2 text-[15px] font-semibold text-fg-muted">
             {firstCheckPositionLabel(safeTrackedDepth)}
           </p>
-          <p className="m-0 mt-auto pt-3 font-mono text-[10.5px] text-fg-muted">
+          <p className="m-0 mt-auto pt-3 font-sans tabular-nums text-[10.5px] text-fg-muted">
             Tracked since {trackedSince}
           </p>
         </FirstCheckCard>
@@ -65,7 +65,7 @@ export function FirstCheckNoData({
           <p className="m-0 mt-1 text-[12px] leading-[1.5] text-fg-muted">
             One more check is needed to establish a trend.
           </p>
-          <p className="m-0 mt-auto pt-3 font-mono text-[10.5px] text-fg-muted">
+          <p className="m-0 mt-auto pt-3 font-sans tabular-nums text-[10.5px] text-fg-muted">
             Next check: {nextCheckLabel}
           </p>
         </FirstCheckCard>

@@ -1,4 +1,4 @@
-import { Card, InfoTooltip, MonoText, SectionTitle } from "@/components/ui";
+import { Card, InfoTooltip, SectionTitle } from "@/components/ui";
 import type { KeywordRow, RankingUrlEvent } from "@/lib/queries/keywords";
 import { rankObservationState } from "@/lib/serp/rank-depth";
 import { MinusIcon as Minus, WarningIcon as Warning } from "@phosphor-icons/react/ssr";
@@ -74,13 +74,13 @@ export function RankingUrlHistory({ keyword }: Readonly<{ keyword: KeywordRow }>
             <SectionTitle>Ranking URL history</SectionTitle>
             <InfoTooltip text={HISTORY_EXPLANATION} />
             {changeState === "diff" ? (
-              <span className="inline-flex h-6 items-center gap-1 rounded-full border border-yellow px-2 font-mono text-[10.5px] font-semibold text-yellow-text">
+              <span className="inline-flex h-6 items-center gap-1 rounded-full border border-yellow px-2 font-sans tabular-nums text-[10.5px] font-semibold text-yellow-text">
                 <Warning size={11} weight="regular" />
                 URL changed
               </span>
             ) : null}
             {changeState === "no_change" ? (
-              <span className="inline-flex items-center gap-1 font-mono text-[10.5px] text-fg-muted">
+              <span className="inline-flex items-center gap-1 font-sans tabular-nums text-[10.5px] text-fg-muted">
                 <Minus size={12} weight="regular" />
                 No change
               </span>
@@ -108,12 +108,9 @@ export function RankingUrlHistory({ keyword }: Readonly<{ keyword: KeywordRow }>
                   }`}
                 />
               </span>
-              <MonoText
-                className="col-start-2 row-start-1 w-[108px] text-fg-muted"
-                component="span"
-              >
+              <span className="col-start-2 row-start-1 w-[108px] text-fg-muted">
                 {periodDateRange(event)}
-              </MonoText>
+              </span>
               <div className="col-span-2 col-start-2 row-start-2 min-w-0 sm:col-span-1 sm:col-start-3 sm:row-start-1">
                 <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5">
                   <RankingUrlExternalLink href={event.url} path={pathFromUrl(event.url)} />
@@ -125,7 +122,7 @@ export function RankingUrlHistory({ keyword }: Readonly<{ keyword: KeywordRow }>
                 </div>
               </div>
               <span className="col-start-3 row-start-1 flex flex-none items-center gap-[7px] sm:col-start-4">
-                <span className="font-mono text-[13px] font-semibold text-fg">
+                <span className="font-sans tabular-nums text-[13px] font-semibold text-fg">
                   {positionLabel(event)}
                 </span>
               </span>

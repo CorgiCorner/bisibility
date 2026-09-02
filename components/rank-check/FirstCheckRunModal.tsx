@@ -91,7 +91,7 @@ function FirstCheckRunPlanRows({
         <div className={index % 2 === 0 ? "bg-bg-sunken" : "bg-bg-elev"} key={row.label}>
           <div className="flex items-center justify-between gap-4 px-4 py-3">
             <span className="text-[13px] text-fg-muted">{row.label}</span>
-            <span className="text-right font-mono text-[13px] font-semibold text-fg">
+            <span className="text-right font-sans tabular-nums text-[13px] font-semibold text-fg">
               {row.value}
             </span>
           </div>
@@ -129,7 +129,7 @@ function FirstCheckRunPlanBody({
 
       <section className="grid gap-2" aria-labelledby="provider-order-heading">
         <h3
-          className="m-0 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted"
+          className="m-0 font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted"
           id="provider-order-heading"
         >
           Provider fallback order
@@ -140,7 +140,7 @@ function FirstCheckRunPlanBody({
               className="flex items-center gap-3 rounded-control border border-border px-3.5 py-2.5"
               key={provider}
             >
-              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent-soft font-mono text-[10px] font-semibold text-accent-text">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent-soft font-sans tabular-nums text-[10px] font-semibold text-accent-text">
                 {index + 1}
               </span>
               <span className="text-[13px] font-semibold text-fg">{displayProvider(provider)}</span>
@@ -151,7 +151,7 @@ function FirstCheckRunPlanBody({
 
       <section className="grid gap-2" aria-labelledby="check-scope-heading">
         <h3
-          className="m-0 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted"
+          className="m-0 font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted"
           id="check-scope-heading"
         >
           Check scope
@@ -161,7 +161,7 @@ function FirstCheckRunPlanBody({
 
       <SegmentedControl
         label={`Run scope - ${plan.readyCount} keyword${plan.readyCount === 1 ? "" : "s"} ready`}
-        labelClassName="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted"
+        labelClassName="font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted"
         name="first-check-run-scope"
         onChange={onRunScopeChange}
         options={options}

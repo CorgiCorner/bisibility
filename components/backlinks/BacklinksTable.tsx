@@ -222,7 +222,9 @@ export function BacklinksTable({
               type="button"
             >
               {loadingMore ? "Loading 100 more..." : "Load 100 more"}{" "}
-              <span className="font-mono">~{formatEstimateCents(loadMoreEstimateCents)}</span>
+              <span className="font-sans tabular-nums">
+                ~{formatEstimateCents(loadMoreEstimateCents)}
+              </span>
             </button>
           ) : null}
           {loadMoreError ? (

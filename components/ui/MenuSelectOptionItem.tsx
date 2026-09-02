@@ -52,7 +52,7 @@ export function MenuSelectOptionItem({
           {option.secondary ? (
             <span
               className={cn(
-                "block font-mono text-[11px] text-fg-muted",
+                "block text-[11px] text-fg-muted",
                 option.noWrap && "whitespace-nowrap",
               )}
             >

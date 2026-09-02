@@ -19,8 +19,8 @@ export function SetupStepper({ current }: Readonly<{ current: SetupStep }>) {
               aria-current={state === "current" ? "step" : undefined}
               className={
                 state === "current"
-                  ? "grid h-6 w-6 place-items-center rounded-full bg-accent-solid font-mono text-[11px] font-semibold text-accent-on-solid"
-                  : "grid h-6 w-6 place-items-center rounded-full bg-bg-sunken font-mono text-[11px] font-semibold text-fg-muted"
+                  ? "grid h-6 w-6 place-items-center rounded-full bg-accent-solid text-[11px] font-semibold text-accent-on-solid tabular-nums"
+                  : "grid h-6 w-6 place-items-center rounded-full bg-bg-sunken text-[11px] font-semibold text-fg-muted tabular-nums"
               }
               data-step-state={state}
             >
@@ -41,7 +41,7 @@ export function SetupStepper({ current }: Readonly<{ current: SetupStep }>) {
           </div>
         );
       })}
-      <span className="ml-auto font-mono text-[10px] uppercase tracking-[0.09em] text-fg-muted">
+      <span className="ml-auto text-[10px] uppercase tracking-[0.09em] text-fg-muted">
         Instance setup
       </span>
     </div>

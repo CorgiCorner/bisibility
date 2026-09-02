@@ -1,9 +1,17 @@
 import { describe, expect, it } from "vitest";
 import {
+  fieldMetaClass,
   hasPerLineTarget,
   keywordTargetLineError,
   parseKeywordTargetLines,
 } from "./add-keyword-drawer-shared";
+
+describe("keyword drawer typography", () => {
+  it("keeps decorative field metadata in Sans", () => {
+    expect(fieldMetaClass).toContain("font-sans");
+    expect(fieldMetaClass).not.toContain("font-mono");
+  });
+});
 
 describe("parseKeywordTargetLines", () => {
   it("treats a plain line as a keyword with no target", () => {

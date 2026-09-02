@@ -93,7 +93,7 @@ function LocationGroup({
 }: Readonly<LocationGroupProps>) {
   return (
     <span className="block">
-      <span className="block px-3 pb-1 pt-2 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
+      <span className="block px-3 pb-1 pt-2 font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
         {label}
       </span>
       {options.map((option, index) => {

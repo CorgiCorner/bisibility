@@ -32,22 +32,20 @@ function ClientBox({ client }: Readonly<{ client: OAuthConsentClient }>) {
   return (
     <div className="mt-4 rounded-control bg-bg-inset px-[13px] py-[11px]">
       <div className="flex items-center gap-2">
-        <span className="font-mono text-[10.5px] uppercase tracking-[0.5px] text-fg-muted">
-          Client
-        </span>
+        <span className="text-[10.5px] uppercase tracking-[0.5px] text-fg-muted">Client</span>
         {client.dynamic ? (
-          <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-bg-elev px-2 py-0.5 font-mono text-[10px] font-semibold text-fg-muted">
+          <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-bg-elev px-2 py-0.5 text-[10px] font-semibold text-fg-muted">
             DCR
             <InfoTooltip text="Registered dynamically, so the id is random. Only approve one you just triggered yourself." />
           </span>
         ) : null}
       </div>
       <p className="mt-1.5 mb-0 text-[13px] font-semibold text-fg">{client.name}</p>
-      <p className="mt-0.5 mb-0 break-all font-mono text-[11.5px] font-semibold text-fg-muted">
+      <p className="mt-0.5 mb-0 break-all text-[11.5px] font-semibold text-fg-muted">
         {client.id || "Unknown client"}
       </p>
       {client.redirectUri ? (
-        <p className="mt-1.5 mb-0 flex items-start gap-2 break-all font-mono text-[10.5px] text-fg-muted">
+        <p className="mt-1.5 mb-0 flex items-start gap-2 break-all text-[10.5px] text-fg-muted">
           <ArrowUDownLeft aria-hidden className="mt-0.5 shrink-0" size={13} weight="regular" />
           {client.redirectUri}
         </p>
@@ -68,7 +66,9 @@ function TokenLifetime({
           Access token
           <InfoTooltip text="The short-lived credential this client uses to call bisibility. It expires after 1 hour." />
         </dt>
-        <dd className="ml-auto font-mono font-semibold text-fg">{OAUTH_ACCESS_TOKEN_TTL_LABEL}</dd>
+        <dd className="ml-auto font-semibold text-fg tabular-nums">
+          {OAUTH_ACCESS_TOKEN_TTL_LABEL}
+        </dd>
       </div>
       {refresh ? (
         <div className="mt-2 flex items-center gap-2 text-[12.5px]">
@@ -77,7 +77,7 @@ function TokenLifetime({
             Refresh access
             <InfoTooltip text="Allows this client to obtain new access tokens for up to 30 days without asking you to approve every hour." />
           </dt>
-          <dd className="ml-auto font-mono font-semibold text-fg">
+          <dd className="ml-auto font-semibold text-fg tabular-nums">
             {OAUTH_REFRESH_TOKEN_TTL_LABEL}
           </dd>
         </div>
@@ -87,7 +87,7 @@ function TokenLifetime({
           <div className="flex items-center gap-2 text-[12.5px]">
             <Key aria-hidden className="text-fg-muted" size={14} weight="regular" />
             <dt className="text-fg-muted">API token</dt>
-            <dd className="ml-auto font-mono font-semibold text-fg">{API_TOKEN_EXPIRY_LABEL}</dd>
+            <dd className="ml-auto font-semibold text-fg tabular-nums">{API_TOKEN_EXPIRY_LABEL}</dd>
           </div>
           <p className="mt-2 mb-0 text-[12px] leading-[1.5] text-fg-muted">
             Approval lets this client create a personal API token for your account. The client
@@ -121,7 +121,7 @@ export function OAuthConsentRequest({
           <ShieldCheck aria-hidden size={21} weight="regular" />
         </span>
         <div>
-          <p className="m-0 font-mono text-[10.5px] uppercase tracking-[0.5px] text-fg-muted">
+          <p className="m-0 text-[10.5px] uppercase tracking-[0.5px] text-fg-muted">
             Authorization request
           </p>
           <h2 className="mt-1 mb-0 text-[19px] font-semibold tracking-[-0.6px] text-fg">
@@ -129,7 +129,7 @@ export function OAuthConsentRequest({
           </h2>
         </div>
         <span
-          className={`ml-auto inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-[11px] font-semibold ${
+          className={`ml-auto inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold tabular-nums ${
             expiring ? "border-red/40 text-red-text" : "border-border text-fg-muted"
           }`}
         >

@@ -72,9 +72,7 @@ export function LocationSelectionChips({
 
   return (
     <div className="grid gap-2">
-      <div className="font-mono text-[10px] uppercase tracking-[0.4px] text-fg-muted">
-        Locations
-      </div>
+      <div className="text-[10px] uppercase tracking-[0.4px] text-fg-muted">Locations</div>
       <div className="flex flex-wrap gap-2">
         {values.map((value) => (
           <span className={chipClass} key={value.canonicalKey}>

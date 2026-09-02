@@ -9,7 +9,7 @@ import type { ReactNode } from "react";
 
 const boxClass =
   "flex items-center justify-between gap-2 rounded-control border border-border-control bg-transparent px-[13px] py-[11px] transition-colors";
-const labelClass = "font-mono text-[10px] uppercase tracking-[0.4px] text-fg-muted";
+const labelClass = "text-[10px] uppercase tracking-[0.4px] text-fg-muted";
 const depthOptions = serpDepthValues.map((depth) => ({
   label: `Top ${depth}`,
   value: String(depth),

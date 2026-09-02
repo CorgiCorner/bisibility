@@ -18,8 +18,8 @@ import { gravatarUrl } from "@/lib/avatar/gravatar";
 import { isCloud } from "@/lib/deployment/deployment";
 import { workspaceRoleLine } from "@/lib/format/workspace-role-line";
 import {
-  isSetupAcknowledged,
-  SETUP_ACKNOWLEDGEMENT_COOKIE,
+  isSetupAcknowledgedAt,
+  loadSetupAcknowledgedAt,
 } from "@/lib/getting-started/setup-acknowledgement";
 import { resolveSetupProgress } from "@/lib/getting-started/setup-steps";
 import { getWorkerLivenessDetails } from "@/lib/ops/liveness";
@@ -58,6 +58,7 @@ export async function WorkspaceShell({
     instanceAdminSession,
     supportWidget,
     setupContext,
+    setupAcknowledgedAt,
   ] = await Promise.all([
     listWorkspaces(),
     loadWorkspaceBudgetSummary(activeProjectId, now),
@@ -71,6 +72,7 @@ export async function WorkspaceShell({
         })
       : Promise.resolve(null),
     loadSetupContext(projectRef),
+    loadSetupAcknowledgedAt(session.user.id, projectRef),
   ]);
   const workerLiveness = instanceAdminSession ? await getWorkerLivenessDetails() : null;
   const temporalIdentityComparison = workerLiveness
@@ -89,14 +91,8 @@ export async function WorkspaceShell({
     cookieStore.get(CLOUD_BETA_DISMISSAL_COOKIE)?.value,
   );
   const setupProgress = resolveSetupProgress(setupContext);
-  const setupCompleted = setupProgress.doneCount === setupProgress.totalCount;
-  const showGettingStarted =
-    !setupCompleted ||
-    !isSetupAcknowledged(
-      cookieStore.get(SETUP_ACKNOWLEDGEMENT_COOKIE)?.value,
-      session.user.id,
-      projectRef,
-    );
+  const setupCompleted = setupProgress.completed;
+  const showGettingStarted = !setupCompleted || !isSetupAcknowledgedAt(setupAcknowledgedAt);
 
   // Header meta + user role line follow the active workspace.
   const roleLine = workspaceRoleLine(active.role, active.name, active.domain);
@@ -123,7 +119,9 @@ export async function WorkspaceShell({
               activeProjectId={active.publicId}
               canCreateWorkspace={canCreateWorkspace}
               projectRef={projectRef}
+              setupCompleted={setupCompleted}
               setupDoneCount={setupProgress.doneCount}
+              setupSettledCount={setupProgress.settledCount}
               setupTotalCount={setupProgress.totalCount}
               showGettingStarted={showGettingStarted}
               showHostedLinks={isCloud}
@@ -156,7 +154,9 @@ export async function WorkspaceShell({
                 activeProjectId={active.publicId}
                 canCreateWorkspace={canCreateWorkspace}
                 projectRef={projectRef}
+                setupCompleted={setupCompleted}
                 setupDoneCount={setupProgress.doneCount}
+                setupSettledCount={setupProgress.settledCount}
                 setupTotalCount={setupProgress.totalCount}
                 showGettingStarted={showGettingStarted}
                 showHostedLinks={isCloud}

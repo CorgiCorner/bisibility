@@ -6,7 +6,7 @@ import type {
   PendingAction,
 } from "@/components/integrations/ConnectDrawerSchema";
 import { providerCredentialFields } from "@/components/integrations/provider-auth";
-import { Button, inputClassName, MonoText, PasswordInput } from "@/components/ui";
+import { Button, inputClassName, PasswordInput } from "@/components/ui";
 import { COST_ESTIMATE_PER_CHECK_LABEL } from "@/lib/integrations/settings-copy";
 import type { IntegrationProviderData } from "@/lib/integrations/types";
 import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react";
@@ -17,17 +17,16 @@ type FormProps = {
   provider: IntegrationProviderData;
 };
 
-const labelClass =
-  "flex flex-col gap-[7px] font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted";
+const labelClass = "flex flex-col gap-[7px] text-[10px] uppercase tracking-[0.5px] text-fg-muted";
 
-const inputClass = `${inputClassName} rounded-control px-[13px] py-[11px] font-mono text-[13px] font-medium`;
+const inputClass = `${inputClassName} rounded-control px-[13px] py-[11px] text-[13px] font-medium`;
 
 function FieldError({ error }: { error?: unknown }) {
   let message: string | null = null;
   if (error instanceof Error) message = error.message;
   if (typeof error === "string") message = error;
   return error ? (
-    <span className="font-mono text-[10px] normal-case tracking-normal text-red-text">
+    <span className="text-[10px] normal-case tracking-normal text-red-text">
       {message ?? "Invalid value"}
     </span>
   ) : null;
@@ -99,7 +98,7 @@ export function CostField({
         type="number"
         {...form.register("costPerCheck", { valueAsNumber: true })}
       />
-      <span className="font-mono text-[10px] normal-case tracking-normal text-fg-muted">
+      <span className="text-[10px] normal-case tracking-normal text-fg-muted">
         {errors.costPerCheck?.message
           ? String(errors.costPerCheck.message)
           : provider.drawer.costHelp}
@@ -111,16 +110,12 @@ export function CostField({
 export function ActivityList({ provider }: Readonly<Pick<FormProps, "provider">>) {
   return (
     <section className="overflow-hidden rounded-control border border-border">
-      <MonoText
-        className="bg-bg-sunken px-3.5 py-[11px] uppercase tracking-[0.5px]"
-        muted
-        size="sm"
-      >
+      <div className="bg-bg-sunken px-3.5 py-[11px] text-[10px] uppercase tracking-[0.5px] text-fg-muted">
         Recent activity
-      </MonoText>
+      </div>
       {provider.drawer.activities.map((row) => (
         <div
-          className="flex items-center justify-between gap-3 border-border-soft border-t px-3.5 py-[11px] font-mono text-[11px]"
+          className="flex items-center justify-between gap-3 border-border-soft border-t px-3.5 py-[11px] text-[11px]"
           key={row.label}
         >
           <span className="text-fg-muted">{row.label}</span>
@@ -156,9 +151,9 @@ export function ActionNotice({ notice }: Readonly<{ notice: Notice }>) {
         </Button>
       ) : null}
       {typeof notice.balance === "number" ? (
-        <MonoText className="mt-2 block" size="sm">
+        <span className="mt-2 block text-[10px] tabular-nums text-fg">
           Balance: ${notice.balance.toFixed(4)}
-        </MonoText>
+        </span>
       ) : null}
     </div>
   );

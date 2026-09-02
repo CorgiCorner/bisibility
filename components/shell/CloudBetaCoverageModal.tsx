@@ -42,9 +42,7 @@ function PolicyColumn({
   const coveredTone = tone === "covered";
   return (
     <section className="min-w-0 rounded-card border border-border bg-bg-elev p-3.5">
-      <h3 className="m-0 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
-        {title}
-      </h3>
+      <h3 className="m-0 text-[10px] uppercase tracking-[0.5px] text-fg-muted">{title}</h3>
       <ul className="m-0 mt-3 grid list-none gap-3 p-0">
         {items.map((item) => (
           <li className="flex items-start gap-2 text-[12px] leading-[1.45]" key={item}>
@@ -108,7 +106,7 @@ export function CloudBetaCoverageModal({
         </div>
 
         <section>
-          <h3 className="m-0 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
+          <h3 className="m-0 text-[10px] uppercase tracking-[0.5px] text-fg-muted">
             Who does what
           </h3>
           <div className="mt-2 grid gap-2">
@@ -147,7 +145,7 @@ export function CloudBetaCoverageModal({
         </section>
 
         <section>
-          <h3 className="m-0 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
+          <h3 className="m-0 text-[10px] uppercase tracking-[0.5px] text-fg-muted">
             When the beta ends
           </h3>
           <div className="mt-2 flex items-start gap-3 rounded-control border border-border px-3.5 py-3">

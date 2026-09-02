@@ -138,7 +138,7 @@ export function BudgetEditModal({
                       <StatusPill label="Primary" showDot={false} size="sm" status="optional" />
                     ) : null}
                   </div>
-                  <p className="m-0 mt-1 font-mono text-[10px] text-fg-muted">
+                  <p className="m-0 mt-1 font-sans tabular-nums text-[10px] text-fg-muted">
                     {connection.allocation
                       ? `Current: ${initialValue(connection)} ${connection.unit === "cents" ? "USD" : "searches"}`
                       : "No budget"}

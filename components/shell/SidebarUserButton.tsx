@@ -64,7 +64,7 @@ export function SidebarUserButton({
         <Avatar
           alt=""
           className={cn(
-            "grid flex-none place-items-center rounded-control bg-bg-elev font-mono font-semibold text-accent-text transition-colors",
+            "grid flex-none place-items-center rounded-control bg-bg-elev font-semibold text-accent-text transition-colors",
             collapsed
               ? "h-8 w-8 border border-border text-[10.5px] group-hover:bg-bg-sunken"
               : "h-8 w-8 border border-border-control text-xs",

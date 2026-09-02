@@ -23,14 +23,14 @@ function itemMetadata(item: CsvKeywordReviewItem) {
 function ItemStatus({ item }: Readonly<{ item: CsvKeywordReviewItem }>) {
   if (item.issues[0]) {
     return (
-      <span className="ml-auto flex-none rounded-full bg-bg-sunken px-2 py-0.5 font-mono text-[10.5px] text-red-text">
+      <span className="ml-auto flex-none rounded-full bg-bg-sunken px-2 py-0.5 font-sans tabular-nums text-[10.5px] text-red-text">
         Row {item.row}: {item.issues[0].message}
       </span>
     );
   }
   if (item.alreadyTracked) {
     return (
-      <span className="ml-auto flex-none rounded-full bg-bg-sunken px-2 py-0.5 font-mono text-[10.5px] text-yellow-text">
+      <span className="ml-auto flex-none rounded-full bg-bg-sunken px-2 py-0.5 font-sans tabular-nums text-[10.5px] text-yellow-text">
         Already tracked - will be skipped
       </span>
     );
@@ -67,14 +67,14 @@ export function AddKeywordCsvReview({ items, onEdit }: Readonly<AddKeywordCsvRev
             className="flex items-center gap-3 border-t border-border-soft px-3.5 py-2.5 first:border-t-0"
             key={item.key}
           >
-            <span className="w-6 flex-none font-mono text-[11px] text-fg-muted">
+            <span className="w-6 flex-none font-sans tabular-nums text-[11px] text-fg-muted">
               {item.position}
             </span>
             <span className="min-w-0 flex-1">
               <span className="block truncate text-[13px] font-medium text-fg">
                 {item.keyword || `Row ${item.row}`}
               </span>
-              <span className="block truncate font-mono text-[10.5px] text-fg-muted">
+              <span className="block truncate font-sans tabular-nums text-[10.5px] text-fg-muted">
                 {itemMetadata(item)}
               </span>
             </span>
@@ -82,7 +82,7 @@ export function AddKeywordCsvReview({ items, onEdit }: Readonly<AddKeywordCsvRev
           </div>
         ))}
         {remaining > 0 ? (
-          <div className="border-t border-border-soft px-3.5 py-2.5 font-mono text-[11px] text-fg-muted">
+          <div className="border-t border-border-soft px-3.5 py-2.5 font-sans tabular-nums text-[11px] text-fg-muted">
             +{remaining} more
           </div>
         ) : null}

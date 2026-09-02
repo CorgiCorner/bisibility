@@ -66,10 +66,10 @@ export function GoogleConnectedSummary({
       </div>
       <dl className="m-0 mt-3 grid gap-2">
         <div>
-          <dt className="font-mono text-[9.5px] uppercase tracking-[0.5px] text-fg-muted">
+          <dt className="text-[9.5px] uppercase tracking-[0.5px] text-fg-muted">
             Selected property
           </dt>
-          <dd className="m-0 mt-1 flex min-w-0 items-center justify-between gap-2 font-mono text-[12.5px] text-fg">
+          <dd className="m-0 mt-1 flex min-w-0 items-center justify-between gap-2 text-[12.5px] text-fg">
             <span className="min-w-0 truncate">
               {property ? (isGsc ? googlePropertyDisplayName(property) : property) : "Not selected"}
             </span>

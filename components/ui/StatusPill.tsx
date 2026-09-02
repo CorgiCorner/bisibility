@@ -37,7 +37,7 @@ const statusMeta = {
 } satisfies Record<StatusKind, { label: string; color: string }>;
 
 const chipVariants = cva(
-  "inline-flex items-center rounded-full border border-border bg-bg-sunken font-mono font-semibold leading-none tracking-[0.3px] text-fg-muted",
+  "inline-flex items-center rounded-full border border-border bg-bg-sunken font-semibold leading-none tracking-[0.3px] text-fg-muted",
   {
     variants: {
       size: {

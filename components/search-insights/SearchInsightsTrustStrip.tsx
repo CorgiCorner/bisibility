@@ -20,8 +20,9 @@ import { SearchInsightsRefresh } from "./SearchInsightsRefresh";
 import { SearchInsightsWaitingStrip } from "./SearchInsightsWaitingStrip";
 import { SearchSyncStatusControl } from "./SearchSyncStatusControl";
 import {
-  COVERAGE_EMPTY,
   COVERAGE_NOTE,
+  COVERAGE_PENDING_FIRST_DAYS,
+  COVERAGE_PENDING_WINDOW,
   INCIDENT_PILL,
   retentionOwnershipCopy,
   TRUST_LABELS,
@@ -50,9 +51,9 @@ export type SearchInsightsTrustStripProps = {
   workerStatus: WorkerTemporalStatus;
 };
 const CELL = "flex flex-col gap-1.5 px-4 py-3";
-const LABEL = "font-mono text-ui-micro uppercase tracking-wide text-fg-muted";
+const LABEL = "font-sans tabular-nums text-ui-micro uppercase tracking-wide text-fg-muted";
 const FACT = "text-ui-body text-fg";
-const VALUE = "font-mono font-semibold";
+const VALUE = "font-sans tabular-nums font-semibold";
 const NOTE = "mt-auto pt-2 text-ui-caption text-fg-muted";
 function Cell({
   children,
@@ -82,9 +83,9 @@ function EmphasizedDate({
   const showYear = !compact && year.length > 0;
   return (
     <strong className="font-semibold" data-testid="provider-available-date">
-      <span className="font-mono">{day}</span>
+      <span className="font-sans tabular-nums">{day}</span>
       {showYear ? <span>, </span> : null}
-      {showYear ? <span className="font-mono">{year}</span> : null}
+      {showYear ? <span className="font-sans tabular-nums">{year}</span> : null}
     </strong>
   );
 }
@@ -92,7 +93,7 @@ function IncidentPill({ incidents }: Readonly<{ incidents: readonly DataIncident
   if (incidents.length === 0) return null;
   return (
     <Tooltip content={incidentTooltip(incidents)}>
-      <span className="cursor-help rounded-full bg-bg-inset px-2 py-0.5 font-mono text-ui-micro text-fg-muted">
+      <span className="cursor-help rounded-full bg-bg-inset px-2 py-0.5 font-sans tabular-nums text-ui-micro text-fg-muted">
         {INCIDENT_PILL}
       </span>
     </Tooltip>
@@ -195,7 +196,10 @@ export function SearchInsightsTrustStrip({
   }
 
   return (
-    <section aria-label="Data provenance" className="grid grid-cols-1 bg-bg-elev xl:grid-cols-3">
+    <section
+      aria-label="Data provenance"
+      className="grid grid-cols-1 border-t border-border bg-bg-elev xl:grid-cols-3"
+    >
       <Cell label={TRUST_LABELS.freshness} trailing={<IncidentPill incidents={incidents} />}>
         <span className={FACT}>
           {providerAvailabilitySource === "metadata"
@@ -225,7 +229,11 @@ export function SearchInsightsTrustStrip({
             <span className={NOTE}>{COVERAGE_NOTE}</span>
           </>
         ) : (
-          <span className={FACT}>{COVERAGE_EMPTY}</span>
+          <span className={FACT}>
+            {(facts?.qualifyingDays ?? 0) > 0
+              ? COVERAGE_PENDING_WINDOW
+              : COVERAGE_PENDING_FIRST_DAYS}
+          </span>
         )}
       </Cell>
       <Cell divided label={TRUST_LABELS.retention}>

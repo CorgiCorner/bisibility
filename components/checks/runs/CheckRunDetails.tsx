@@ -25,7 +25,7 @@ export function CountryLevelBadge() {
     <Tooltip content={countryLevelTooltip}>
       <button
         aria-label={`country-level: ${countryLevelTooltip}`}
-        className="inline-flex cursor-help rounded-full border border-dashed border-yellow/55 bg-yellow/10 px-1.5 py-0.5 font-mono text-[9.5px] font-semibold text-yellow-text"
+        className="inline-flex cursor-help rounded-full border border-dashed border-yellow/55 bg-yellow/10 px-1.5 py-0.5 font-sans tabular-nums text-[9.5px] font-semibold text-yellow-text"
         type="button"
       >
         country-level
@@ -99,10 +99,10 @@ function AttemptRow({
         <span>{outcome}</span>
         {attempt.degradedToCountry ? <CountryLevelBadge /> : null}
       </span>
-      <span className="font-mono text-[10.5px] text-fg-muted">
+      <span className="font-sans tabular-nums text-[10.5px] text-fg-muted">
         {typeof attempt.costCents === "number" ? formatMoney(attempt.costCents) : "-"}
       </span>
-      <span className="min-w-9 text-right font-mono text-[10.5px] text-fg-muted">
+      <span className="min-w-9 text-right font-sans tabular-nums text-[10.5px] text-fg-muted">
         {formatDuration(attempt.durationMs) ?? "-"}
       </span>
     </div>
@@ -132,7 +132,7 @@ function HiddenMeta({ columns, now, run }: Readonly<HiddenMetaProps>) {
   }
   if (items.length === 0) return null;
   return (
-    <div className="flex flex-wrap gap-x-3 gap-y-1 font-mono text-[10.5px] text-fg-muted">
+    <div className="flex flex-wrap gap-x-3 gap-y-1 font-sans tabular-nums text-[10.5px] text-fg-muted">
       {items}
     </div>
   );
@@ -152,7 +152,7 @@ export function CheckRunDetails({ columns, keywordHref, now, run }: Readonly<Det
       : formatDuration(run.durationMs);
   return (
     <div className="bg-bg-sunken px-4 py-3">
-      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[10.5px] text-fg-muted">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 font-sans tabular-nums text-[10.5px] text-fg-muted">
         <strong className="font-semibold text-fg">
           {run.attempts.length > 0 ? "Provider chain" : "Run details"}
         </strong>
@@ -163,7 +163,7 @@ export function CheckRunDetails({ columns, keywordHref, now, run }: Readonly<Det
       <HiddenMeta columns={columns} now={now} run={run} />
       {run.status === "failed" && run.error && isInternalErrorString(run.error) ? (
         <p
-          className="mt-2 line-clamp-3 whitespace-pre-wrap break-words rounded-control bg-bg-inset px-2.5 py-2 font-mono text-[10.5px] leading-relaxed text-fg-muted"
+          className="mt-2 line-clamp-3 whitespace-pre-wrap break-words rounded-control bg-bg-inset px-2.5 py-2 font-sans tabular-nums text-[10.5px] leading-relaxed text-fg-muted"
           title={run.error}
         >
           {run.error}

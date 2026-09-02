@@ -1,4 +1,4 @@
-import { MonoText, Tooltip } from "@/components/ui";
+import { Tooltip } from "@/components/ui";
 import { marketGridParent } from "@/lib/keywords/market-grid-model";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { appPath } from "@/lib/routing/app-path";
@@ -14,7 +14,7 @@ import {
 } from "@phosphor-icons/react";
 import Link from "next/link";
 
-const noDataClassName = "font-mono text-xs font-semibold text-fg-muted";
+const noDataClassName = "font-sans tabular-nums text-xs font-semibold text-fg-muted";
 
 function formatVolume(volume: number) {
   if (volume >= 10000) return `${(volume / 1000).toFixed(0)}k`;
@@ -61,7 +61,7 @@ export function MarketKeywordCell({
           <span className="bv-keyword-title block truncate text-[13.5px] font-semibold text-fg">
             {row.keyword}
           </span>
-          <span className="block font-mono text-[10.5px] text-fg-muted">
+          <span className="block font-sans tabular-nums text-[10.5px] text-fg-muted">
             {marketCount} {marketCount === 1 ? "market" : "markets"} /{" "}
             {parent.aggregate.activeTargetCount} active targets
           </span>
@@ -101,7 +101,9 @@ export function MarketPositionCell({ row }: Readonly<GridRenderCellParams<Keywor
     return <span>{`Not found in top ${row.trackedDepth ?? 100}`}</span>;
 
   const value = (
-    <span className="font-mono text-[13.5px] font-semibold text-fg">#{row.position}</span>
+    <span className="font-sans tabular-nums text-[13.5px] font-semibold text-fg">
+      #{row.position}
+    </span>
   );
   return parent ? (
     <Tooltip content={`Best position across ${parent.aggregate.activeTargetCount} active targets`}>
@@ -156,10 +158,10 @@ export function MarketVolumeCell({ row }: Readonly<GridRenderCellParams<KeywordR
       }
     >
       <span>
-        <MonoText component="span" size="lg">
+        <span>
           {formatVolume(row.volume)}
           {parent?.aggregate.hasPartiallyUnsupportedVolume ? "+" : ""}
-        </MonoText>
+        </span>
       </span>
     </Tooltip>
   );
@@ -167,7 +169,7 @@ export function MarketVolumeCell({ row }: Readonly<GridRenderCellParams<KeywordR
 
 export function MarketDifficultyCell({ row }: Readonly<GridRenderCellParams<KeywordRow>>) {
   const parent = marketGridParent(row);
-  if (parent?.aggregate.difficulty === "mixed") return <MonoText component="span">mixed</MonoText>;
+  if (parent?.aggregate.difficulty === "mixed") return <span>mixed</span>;
   if (row.difficultyKnown === false) return <NoDataValue label="No difficulty data" />;
-  return <MonoText component="span">{row.difficulty}</MonoText>;
+  return <span>{row.difficulty}</span>;
 }

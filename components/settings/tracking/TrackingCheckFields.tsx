@@ -13,7 +13,7 @@ import { useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import { Controller } from "react-hook-form";
 
-const labelClass = "font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted";
+const labelClass = "font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted";
 const triggerClass =
   "min-h-10 w-full justify-between rounded-control border-border-control bg-transparent px-3 text-[13px] font-medium normal-case tracking-normal";
 const deviceOptions = serpDeviceOptions.map((option) => ({ ...option }));

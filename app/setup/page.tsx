@@ -29,7 +29,7 @@ function SetupFrame({ children }: Readonly<{ children: React.ReactNode }>) {
           <BrandLockup />
         </Link>
         {children}
-        <p className="m-0 text-center font-mono text-[10.5px] text-fg-muted">
+        <p className="m-0 text-center text-[10.5px] text-fg-muted tabular-nums">
           self-hosted · v{packageJson.version}
         </p>
       </div>

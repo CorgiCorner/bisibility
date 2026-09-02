@@ -10,7 +10,7 @@ import {
   developerListClassName,
   developerRowClassName,
 } from "@/components/settings/developers/developer-settings-layout";
-import { Button, ConfirmModal, ExternalLink, MonoText, StatusPill } from "@/components/ui";
+import { Button, ConfirmModal, ExternalLink, StatusPill } from "@/components/ui";
 import {
   type IssueApiKeyInput,
   type RegenerateApiKeyInput,
@@ -97,9 +97,7 @@ export function ApiKeysCard({
             <div className={developerRowClassName} data-api-key-row="" key={apiKey.id}>
               <span className="min-w-0 flex-1">
                 <span className="block text-[13.5px] font-semibold">{apiKey.name}</span>
-                <MonoText className="mt-0.5 truncate" size="lg">
-                  {apiKey.maskedValue}
-                </MonoText>
+                <span className="mt-0.5 truncate">{apiKey.maskedValue}</span>
                 <span className="mt-0.5 block text-[11.5px] text-fg-muted">
                   {apiKey.createdLabel} · {apiKey.lastUsedLabel}
                 </span>

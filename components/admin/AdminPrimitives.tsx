@@ -37,7 +37,7 @@ export function Badge({ children, status }: Readonly<{ children?: ReactNode; sta
   return (
     <span
       className={cn(
-        "inline-flex rounded-full px-2 py-1 font-mono text-[10px] font-semibold uppercase tracking-wide",
+        "inline-flex rounded-full px-2 py-1 text-[10px] font-semibold uppercase tracking-wide",
         statusTone(status),
       )}
     >

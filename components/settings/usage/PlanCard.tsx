@@ -121,13 +121,13 @@ export function PlanCard({
           ) : canSubmitPricingFeedback ? (
             <form className="border-t border-border-soft pt-4" onSubmit={form.handleSubmit(submit)}>
               <FieldLabel
-                className="font-mono text-[10px] tracking-[0.5px] text-fg-muted uppercase"
+                className="font-sans tabular-nums text-[10px] tracking-[0.5px] text-fg-muted uppercase"
                 htmlFor="hosted-monthly-price"
                 label="What would you pay per month?"
               />
               <div className="mt-1.5 flex flex-col gap-2 sm:flex-row sm:items-start">
                 <SettingsField className="flex items-center gap-2" width="field">
-                  <span aria-hidden className="font-mono text-[13px] text-fg-muted">
+                  <span aria-hidden className="font-sans tabular-nums text-[13px] text-fg-muted">
                     $
                   </span>
                   <Input

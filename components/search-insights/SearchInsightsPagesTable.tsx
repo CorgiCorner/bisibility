@@ -5,6 +5,7 @@ import { cn } from "@/lib/ui/cn";
 import { ArrowUpRightIcon as ArrowUpRight } from "@phosphor-icons/react";
 import {
   CELL,
+  type ModuleTableSort,
   NUMERIC,
   ROW,
   ROW_HEIGHT_CLASS,
@@ -25,6 +26,7 @@ export type SearchInsightsPagesTableProps = {
   rows: readonly SearchInsightsPageRow[];
   scroll?: boolean;
   showSessions?: boolean;
+  sort?: ModuleTableSort;
 };
 
 export function SearchInsightsPagesTable({
@@ -32,6 +34,7 @@ export function SearchInsightsPagesTable({
   rows,
   scroll = false,
   showSessions = false,
+  sort,
 }: Readonly<SearchInsightsPagesTableProps>) {
   return (
     <SearchInsightsTableShell
@@ -39,6 +42,7 @@ export function SearchInsightsPagesTable({
       headers={moduleTableHeaders(showSessions ? "pagesWithSessions" : "pages")}
       label="Top pages"
       scroll={scroll}
+      sort={sort}
       variant={showSessions ? "pagesWithSessions" : "pages"}
     >
       {(range) =>
@@ -53,7 +57,10 @@ export function SearchInsightsPagesTable({
               onKeyDown={tableRowKeys(open)}
               tabIndex={0}
             >
-              <td className={cn(CELL, "truncate font-mono text-ui-caption")} title={row.url}>
+              <td
+                className={cn(CELL, "truncate font-sans tabular-nums text-ui-caption")}
+                title={row.url}
+              >
                 {row.path}
               </td>
               <td className={cn(CELL, NUMERIC, "font-semibold")}>{formatRowCount(row.clicks)}</td>

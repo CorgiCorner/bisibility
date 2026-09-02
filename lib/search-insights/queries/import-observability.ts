@@ -87,18 +87,41 @@ function completeDays(rows: readonly DurablePartition[]) {
     .map(([date]) => ({ date, completedAt: completedAt.get(date) ?? 0 }));
 }
 
-function aggregateCovers(ranges: readonly DurableAggregateRange[], start: string, end: string) {
-  return ranges.some(
-    (range) =>
-      range.operation === "aggregate" &&
-      range.source === "gsc" &&
-      range.searchType === "web" &&
-      range.dataState === "final" &&
-      range.dimensions === "date" &&
-      range.persistedAt !== null &&
-      range.startDate <= start &&
-      range.endDate >= end,
+function qualifyingRange(range: DurableAggregateRange) {
+  return (
+    range.operation === "aggregate" &&
+    range.source === "gsc" &&
+    range.searchType === "web" &&
+    range.dataState === "final" &&
+    range.dimensions === "date" &&
+    range.persistedAt !== null
   );
+}
+
+/**
+ * The plan-time aggregate spans only the window that existed when the import was planned; every
+ * incremental run afterwards stores a range covering just its own day list. Once the finalized
+ * boundary moves, no single stored range spans a preset window, so containment has to be asked of
+ * the merged union rather than of any one row. Ranges that overlap or meet on consecutive
+ * calendar days merge into one interval; a genuinely uncovered day still breaks the run and keeps
+ * the preset closed.
+ */
+function aggregateCovers(ranges: readonly DurableAggregateRange[], start: string, end: string) {
+  const sorted = ranges
+    .filter(qualifyingRange)
+    .sort((left, right) => left.startDate.localeCompare(right.startDate));
+  let mergedStart: string | null = null;
+  let mergedEnd = "";
+  for (const range of sorted) {
+    if (mergedStart !== null && range.startDate <= addDays(mergedEnd, 1)) {
+      if (range.endDate > mergedEnd) mergedEnd = range.endDate;
+    } else {
+      mergedStart = range.startDate;
+      mergedEnd = range.endDate;
+    }
+    if (mergedStart <= start && mergedEnd >= end) return true;
+  }
+  return false;
 }
 
 function rangeReady(

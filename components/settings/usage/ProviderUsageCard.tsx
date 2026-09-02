@@ -1,11 +1,12 @@
 "use client";
 
+import { formatProviderBudgetUsedLabel } from "@/components/cost-estimate/provider-spend-label";
 import { SpendBar } from "@/components/cost-estimate/SpendBar";
 import { spendTone } from "@/components/cost-estimate/spend-tone";
 import { BudgetEditModal } from "@/components/settings/usage/BudgetEditModal";
 import { ProviderUsageRow } from "@/components/settings/usage/ProviderUsageRow";
 import { UsageCard } from "@/components/settings/usage/UsageCard";
-import { Button, ExternalLink, MonoText } from "@/components/ui";
+import { Button, ExternalLink } from "@/components/ui";
 import type { updateProviderConnectionAllocationAction } from "@/lib/actions/provider-allocation";
 import { formatMoneyCents } from "@/lib/format/money";
 import { createUserDateTimeFormatter } from "@/lib/format/user-datetime";
@@ -27,9 +28,7 @@ type ProviderUsageCardProps = {
 function Kpi({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
     <div>
-      <MonoText className="tracking-[0.05em] uppercase" muted size="sm">
-        {label}
-      </MonoText>
+      <span className="tracking-[0.05em] uppercase">{label}</span>
       <p className="m-0 mt-[5px] text-[15px] font-semibold text-fg tabular-nums">{value}</p>
     </div>
   );
@@ -144,16 +143,14 @@ export function ProviderUsageCard({
       ) : null}
       <section className="mt-4" aria-label="Budget used">
         <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-          <MonoText className="tracking-[0.08em] uppercase" muted size="sm">
-            Budget used
-          </MonoText>
+          <span className="tracking-[0.08em] uppercase">Budget used</span>
           {summary.tightest ? (
-            <span className="font-mono text-[11px] text-fg-muted">
-              tightest: {summary.tightest.provider} · {Math.round(summary.tightest.usedPercent)}%
-              used
+            <span className="font-sans tabular-nums text-[11px] text-fg-muted">
+              tightest: {summary.tightest.provider} ·{" "}
+              {formatProviderBudgetUsedLabel(summary.tightest.usedPercent)}
             </span>
           ) : (
-            <span className="font-mono text-[11px] text-fg-muted">No budget set</span>
+            <span className="font-sans tabular-nums text-[11px] text-fg-muted">No budget set</span>
           )}
         </div>
         {summary.maxUsedPercent == null ? null : (
@@ -165,7 +162,7 @@ export function ProviderUsageCard({
             tone={summaryTone}
           />
         )}
-        <p className="m-0 mt-2 font-mono text-[11px] text-fg-muted">
+        <p className="m-0 mt-2 font-sans tabular-nums text-[11px] text-fg-muted">
           {projectionExplanation(usage)}
         </p>
       </section>

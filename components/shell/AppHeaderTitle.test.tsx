@@ -39,4 +39,21 @@ describe("AppHeaderTitle", () => {
     ).not.toHaveClass("font-mono");
     expect(screen.queryByText("example.com")).not.toBeInTheDocument();
   });
+
+  it("uses the open checklist subtitle before setup completion", () => {
+    setNavigationState({ pathname: "/app/prj_7Kd2Qf9m/getting-started" });
+
+    render(<AppHeaderTitle setupCompleted={false} />);
+
+    expect(screen.getByText("Four steps to your first positions.")).toBeInTheDocument();
+  });
+
+  it("uses the optional follow-up subtitle after setup completion", () => {
+    setNavigationState({ pathname: "/app/prj_7Kd2Qf9m/getting-started" });
+
+    render(<AppHeaderTitle setupCompleted />);
+
+    expect(screen.getByText("Done. Everything below is optional.")).toBeInTheDocument();
+    expect(screen.queryByText("Four steps to your first positions.")).not.toBeInTheDocument();
+  });
 });

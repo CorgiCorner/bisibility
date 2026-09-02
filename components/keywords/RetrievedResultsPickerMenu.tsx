@@ -16,7 +16,7 @@ type Props = {
 };
 function Heading({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <p className="m-0 px-3 pb-2 pt-3 font-mono text-[10px] uppercase tracking-[0.08em] text-fg-muted">
+    <p className="m-0 px-3 pb-2 pt-3 font-sans tabular-nums text-[10px] uppercase tracking-[0.08em] text-fg-muted">
       {children}
     </p>
   );
@@ -43,7 +43,7 @@ function RowButton({
       aria-disabled={disabledReason ? "true" : undefined}
       aria-label={label}
       disabled={Boolean(disabledReason)}
-      className={`grid w-full grid-cols-[minmax(0,1fr)_50px_100px_18px] items-start gap-2 rounded-control px-3 py-2 text-left font-mono text-[12px] ${selected ? "bg-bg-sunken" : ""} ${disabledReason ? "cursor-not-allowed text-fg-muted opacity-65" : "text-fg hover:bg-bg-sunken"}`}
+      className={`grid w-full grid-cols-[minmax(0,1fr)_50px_100px_18px] items-start gap-2 rounded-control px-3 py-2 text-left font-sans tabular-nums text-[12px] ${selected ? "bg-bg-sunken" : ""} ${disabledReason ? "cursor-not-allowed text-fg-muted opacity-65" : "text-fg hover:bg-bg-sunken"}`}
       onClick={() => {
         if (!disabledReason) onSelect(entry);
       }}
@@ -83,11 +83,11 @@ function PresetButton({
     >
       <span>
         <strong className="block font-medium">{preset.label}</strong>
-        <span className="mt-1 block font-mono text-[10.5px] text-fg-muted">
+        <span className="mt-1 block font-sans tabular-nums text-[10.5px] text-fg-muted">
           {formatDate(preset.entry.checkedAt)} · {retainedLabel(preset.entry)}
         </span>
       </span>
-      <span className="text-right font-mono text-fg-muted">
+      <span className="text-right font-sans tabular-nums text-fg-muted">
         {preset.entry.position === null ? "" : `#${preset.entry.position}`}
       </span>
     </button>

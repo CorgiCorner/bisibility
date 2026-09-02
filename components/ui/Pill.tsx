@@ -25,7 +25,7 @@ export function PillBadge({ className, size = "sm", ...props }: Readonly<PillBad
   return (
     <span
       className={cn(
-        "inline-flex shrink-0 items-center rounded-full border border-border bg-bg-sunken font-mono uppercase tracking-wide text-fg-muted",
+        "inline-flex shrink-0 items-center rounded-full border border-border bg-bg-sunken uppercase tracking-wide text-fg-muted",
         pillBadgeSizeClassName[size],
         className,
       )}

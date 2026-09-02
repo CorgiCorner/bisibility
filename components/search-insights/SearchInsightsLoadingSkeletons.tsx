@@ -27,7 +27,10 @@ export function SearchInsightsContextLoading() {
 
 export function SearchInsightsTrustStripLoading() {
   return (
-    <div aria-hidden className="grid grid-cols-1 bg-bg-sunken xl:grid-cols-3">
+    <div
+      aria-hidden
+      className="grid grid-cols-1 border-t border-border bg-bg-sunken xl:grid-cols-3"
+    >
       {[0, 1, 2].map((cell) => (
         <div
           className={cn(

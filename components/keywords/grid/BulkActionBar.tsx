@@ -120,7 +120,7 @@ export function BulkActionBar({
   return (
     <div className="grid gap-2 border-b border-border px-4 py-[11px]">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="mr-1 font-mono text-[12.5px] font-semibold text-fg">
+        <span className="mr-1 font-sans tabular-nums text-[12.5px] font-semibold text-fg">
           {selectedRows.length} selected
         </span>
         {onRunChecks && canUpdateKeyword ? (
@@ -257,7 +257,7 @@ export function BulkActionBar({
         />
       ) : null}
       {actionError && mode === null ? (
-        <p className="m-0 font-mono text-[11.5px] text-red-text">{actionError}</p>
+        <p className="m-0 font-sans tabular-nums text-[11.5px] text-red-text">{actionError}</p>
       ) : null}
     </div>
   );

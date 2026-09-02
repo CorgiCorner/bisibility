@@ -139,7 +139,7 @@ export function KeywordDetailHeaderChrome({
           </div>
           <div
             aria-label="Keyword check metadata"
-            className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[10.5px] text-fg-muted"
+            className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 font-sans tabular-nums text-[10.5px] text-fg-muted"
           >
             <span>
               Target{" "}
@@ -161,7 +161,7 @@ export function KeywordDetailHeaderChrome({
             ) : null}
             <span aria-hidden className="h-[11px] w-px bg-border" />
             <a
-              className="inline-flex items-center gap-1 font-sans text-[11.5px] font-medium text-accent-text hover:underline focus-visible:underline"
+              className="inline-flex items-center gap-1 font-sans tabular-nums text-[11.5px] font-medium text-accent-text hover:underline focus-visible:underline"
               href={liveSerpHref}
               rel="noreferrer noopener"
               target="_blank"

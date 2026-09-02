@@ -7,6 +7,11 @@ import type {
   SearchInsightsPageRow,
   SearchInsightsQueryRow,
 } from "@/lib/search-insights/queries/top-rows-model";
+import {
+  SEARCH_INSIGHTS_SORT_DEFAULT_DIRECTION,
+  type SearchInsightsSort,
+  type SearchInsightsSortKey,
+} from "@/lib/search-insights/queries/top-rows-sort";
 import type { KeyboardEvent } from "react";
 import {
   COLLAPSE_LABEL,
@@ -137,4 +142,21 @@ export function windowedRange(input: { count: number; height: number; scrollTop:
 
 export function windowedPadding(range: { end: number; start: number }, count: number) {
   return { bottom: Math.max(0, count - range.end) * ROW_HEIGHT, top: range.start * ROW_HEIGHT };
+}
+
+/**
+ * A header cycles between exactly three states: unsorted, then the column's own default direction,
+ * then the other one. Re-clicking never returns to unsorted - the table is always ordered by
+ * something, and "unsorted" is only what the other columns are.
+ */
+export function nextSort(current: SearchInsightsSort, key: SearchInsightsSortKey) {
+  if (current.key !== key) {
+    return { direction: SEARCH_INSIGHTS_SORT_DEFAULT_DIRECTION[key], key };
+  }
+  return { direction: current.direction === "asc" ? ("desc" as const) : ("asc" as const), key };
+}
+
+export function ariaSortValue(current: SearchInsightsSort, key: SearchInsightsSortKey | undefined) {
+  if (!key || current.key !== key) return "none" as const;
+  return current.direction === "asc" ? ("ascending" as const) : ("descending" as const);
 }

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { KeywordsToolbarActions } from "./KeywordsToolbarActions";
 
@@ -103,53 +103,31 @@ describe("KeywordsToolbarActions", () => {
     expect(onImportCsv).toHaveBeenCalledOnce();
   });
 
-  it("splits compact and labeled transfer actions at the xl breakpoint", () => {
+  it("renders exactly one accessible desktop action per transfer operation", () => {
     render(<KeywordsToolbarActions {...props} density="compact" onImportCsv={vi.fn()} />);
 
-    for (const [action, label] of [
-      ["export", "Export"],
-      ["import", "Import"],
-    ] as const) {
-      const compact = screen.getByTestId(`keywords-${action}-compact-action`);
-      const labeled = screen.getByTestId(`keywords-${action}-labeled-action`);
-      expect(compact).toHaveClass("lg:inline-flex", "xl:hidden");
-      expect(labeled).toHaveClass("xl:inline-flex");
-      expect(within(compact).getByRole("button")).toHaveAccessibleName(label);
-      expect(within(labeled).getByRole("button")).toHaveAccessibleName(label);
-    }
+    expect(screen.getAllByRole("button", { name: "Export" })).toHaveLength(1);
+    expect(screen.getAllByRole("button", { name: "Import" })).toHaveLength(1);
   });
 
-  it("gives compact transfer icons accessible tooltip labels", () => {
+  it("keeps each transfer action compact below xl and labeled at xl", () => {
     render(<KeywordsToolbarActions {...props} density="compact" onImportCsv={vi.fn()} />);
 
     for (const [action, label] of [
       ["export", "Export"],
       ["import", "Import"],
     ] as const) {
-      const compactAction = within(
-        screen.getByTestId(`keywords-${action}-compact-action`),
-      ).getByRole("button");
-      expect(compactAction).not.toHaveTextContent(action);
-      expect(compactAction.querySelectorAll("svg")).toHaveLength(1);
-      expect(compactAction.closest('[data-toolbar-tooltip="true"]')).toHaveAttribute(
+      const actionContainer = screen.getByTestId(`keywords-${action}-action`);
+      expect(actionContainer).toHaveClass("hidden", "lg:inline-flex");
+
+      const button = screen.getByRole("button", { name: label });
+      expect(button).toHaveTextContent(label);
+      expect(button.querySelectorAll("svg")).toHaveLength(1);
+      expect(button).toHaveStyle({ minWidth: 40 });
+      expect(button.closest('[data-toolbar-tooltip="true"]')).toHaveAttribute(
         "data-tooltip-label",
         label,
       );
-    }
-  });
-
-  it("keeps labeled transfer actions for xl desktop", () => {
-    render(<KeywordsToolbarActions {...props} density="compact" onImportCsv={vi.fn()} />);
-
-    for (const [action, label] of [
-      ["export", "Export"],
-      ["import", "Import"],
-    ] as const) {
-      const desktopAction = within(
-        screen.getByTestId(`keywords-${action}-labeled-action`),
-      ).getByRole("button");
-      expect(desktopAction).toHaveTextContent(label);
-      expect(desktopAction.querySelectorAll("svg")).toHaveLength(1);
     }
   });
 });

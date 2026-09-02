@@ -83,7 +83,7 @@ export function KeywordDetailCheckSplitButton({
           paper: { sx: menuSelectPaperSx },
         }}
       >
-        <div className="px-3 pb-1 pt-2 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
+        <div className="px-3 pb-1 pt-2 font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
           Check depth
         </div>
         {options.map((option) => (

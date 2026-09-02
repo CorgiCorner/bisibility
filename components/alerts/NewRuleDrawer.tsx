@@ -58,7 +58,7 @@ type NewRuleDrawerProps = {
 };
 
 const labelClass =
-  "flex flex-col gap-[7px] font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted";
+  "flex flex-col gap-[7px] font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted";
 const fieldClass = `${inputClassName} rounded-control px-3 py-2.5 text-[13px] font-medium`;
 const selectTriggerClass =
   "mb-3 min-h-10 w-full justify-between rounded-control border-border-control bg-transparent px-3 text-[13px] font-medium";
@@ -235,7 +235,7 @@ export function NewRuleDrawer({
           setValue={setValue}
         />
         <section>
-          <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
+          <div className="mb-2 font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
             Condition
           </div>
           <input type="hidden" {...register("conditionType")} />
@@ -256,7 +256,7 @@ export function NewRuleDrawer({
             errors={errors}
             register={register}
           />
-          <div className="mt-[9px] flex items-center gap-[7px] font-mono text-[11.5px] text-fg-muted">
+          <div className="mt-[9px] flex items-center gap-[7px] font-sans tabular-nums text-[11.5px] text-fg-muted">
             <ClockCountdown weight="regular" aria-hidden size={13} />
             Evaluation: {selected.evalMode}
           </div>
@@ -279,7 +279,7 @@ export function NewRuleDrawer({
         />
         {actionError ? (
           <p
-            className="m-0 flex items-center gap-1.5 font-mono text-[11.5px] text-red-text"
+            className="m-0 flex items-center gap-1.5 font-sans tabular-nums text-[11.5px] text-red-text"
             role="alert"
           >
             <X aria-hidden size={12} weight="regular" />
@@ -287,7 +287,7 @@ export function NewRuleDrawer({
           </p>
         ) : null}
         {actionWarning ? (
-          <p className="m-0 flex items-start gap-1.5 font-mono text-[11.5px] text-yellow-text">
+          <p className="m-0 flex items-start gap-1.5 font-sans tabular-nums text-[11.5px] text-yellow-text">
             <WarningCircle aria-hidden className="mt-0.5 shrink-0" size={12} weight="regular" />
             {actionWarning}
           </p>

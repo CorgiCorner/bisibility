@@ -23,7 +23,7 @@ export function SearchPerformanceAwaitingFirstSync() {
     <EmptyModuleCard>
       <div className="flex flex-wrap items-center gap-2">
         <EmptyModuleTitle>Search performance</EmptyModuleTitle>
-        <span className="inline-flex h-6 items-center rounded-full border border-border bg-bg-sunken px-2.5 font-mono text-[10.5px] text-fg-muted">
+        <span className="inline-flex h-6 items-center rounded-full border border-border bg-bg-sunken px-2.5 font-sans tabular-nums text-[10.5px] text-fg-muted">
           Search Console
         </span>
       </div>

@@ -1,3 +1,4 @@
+import { formatProviderBudgetUsedLabel } from "@/components/cost-estimate/provider-spend-label";
 import {
   buildSpendSegments,
   type ProviderSpendInput,
@@ -147,7 +148,7 @@ function Legend({ segments, tone }: Readonly<{ segments: SpendSegment[]; tone: S
               backgroundColor: tone === "normal" ? segment.color : toneSegmentColor[tone],
             }}
           />
-          <span className="font-mono text-[10px] text-fg-muted tabular-nums">
+          <span className="font-sans text-[10px] text-fg-muted tabular-nums">
             {segment.label} {formatMoneyCents(segment.spentCents)}
           </span>
         </span>
@@ -158,7 +159,7 @@ function Legend({ segments, tone }: Readonly<{ segments: SpendSegment[]; tone: S
 
 function MeterEyebrow({ header = false }: Readonly<{ header?: boolean }>) {
   return (
-    <span className="font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-fg-muted">
+    <span className="font-sans tabular-nums text-[10px] font-medium uppercase tracking-[0.08em] text-fg-muted">
       {header ? "BUDGET" : "MONTHLY BUDGET"}
     </span>
   );
@@ -208,7 +209,7 @@ export function ProviderSpendMeter({
         <div className="mt-2 flex flex-wrap items-baseline gap-2 whitespace-nowrap">
           <span
             className={cn(
-              "font-mono text-[26px] font-semibold tracking-[-0.02em] tabular-nums",
+              "font-sans text-[26px] font-semibold tracking-[-0.02em] tabular-nums",
               amountToneClass ?? "text-fg",
             )}
           >
@@ -228,7 +229,7 @@ export function ProviderSpendMeter({
             <Legend segments={segments} tone={tone} />
           </div>
         )}
-        <div className="mt-2.5 flex flex-col gap-1 font-mono text-xs tabular-nums">
+        <div className="mt-2.5 flex flex-col gap-1 font-sans text-xs tabular-nums">
           {tone === "exhausted" ? <span className="text-red-text">cap reached</span> : null}
           {sessionCents == null ? null : (
             <span className={cn(tone === "normal" ? "text-fg-muted" : spendToneTextClass[tone])}>
@@ -250,7 +251,7 @@ export function ProviderSpendMeter({
         <div className="flex flex-wrap items-center justify-between gap-x-2.5 gap-y-1">
           <MeterEyebrow />
           <span className="flex items-center gap-3 whitespace-nowrap">
-            <span className={cn("font-mono text-xs tabular-nums", amountToneClass ?? "text-fg")}>
+            <span className={cn("font-sans text-xs tabular-nums", amountToneClass ?? "text-fg")}>
               {amounts}
             </span>
             {action}
@@ -259,7 +260,7 @@ export function ProviderSpendMeter({
         {hasCap ? <MeterBar {...meterProps} heightClass="h-1" segments={segments} /> : null}
         {hasCap ? (
           <div className="flex justify-end">
-            <span className="font-mono text-[10px] text-fg-muted tabular-nums">
+            <span className="font-sans text-[10px] text-fg-muted tabular-nums">
               {formatMoneyCents(remaining)} left
             </span>
           </div>
@@ -280,9 +281,9 @@ export function ProviderSpendMeter({
           <MeterEyebrow header />
           <SpendMeterDocsInfo action={headerAction} sessionCents={sessionCents} />
         </span>
-        <span className="font-mono text-[10px] tracking-[0.04em] text-fg-muted tabular-nums">
+        <span className="font-sans text-[10px] tracking-[0.04em] text-fg-muted tabular-nums">
           {tightest
-            ? `${tightest.provider} ${Math.round(tightest.usedPercent)}% used`
+            ? `${tightest.provider} ${formatProviderBudgetUsedLabel(tightest.usedPercent)}`
             : "No budget set"}
         </span>
       </div>

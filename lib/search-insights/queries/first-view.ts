@@ -23,6 +23,7 @@ import type {
   SearchInsightsQueryRow,
   SearchInsightsRows,
 } from "./top-rows-model";
+import type { SearchInsightsSort } from "./top-rows-sort";
 import { getTrackedQueryTexts } from "./tracked";
 
 export type SearchInsightsFirstView = {
@@ -147,6 +148,7 @@ export async function getSearchInsightsRowsPage(
     offset: number;
     period?: string;
     property: string;
+    sort?: SearchInsightsSort;
   },
 ): Promise<SearchInsightsRowsPage> {
   const scope = await loadSearchInsightsScope(projectRef, {
@@ -162,7 +164,7 @@ export async function getSearchInsightsRowsPage(
       : { kind: "queries", rows: [], total: 0, trackedTexts: [] };
   }
 
-  const page = { limit: input.limit, offset: input.offset };
+  const page = { limit: input.limit, offset: input.offset, sort: input.sort };
   if (input.kind === "pages") {
     const sessionsProperty = organicSessionsPropertyForWindow(organicSessions, finalized);
     const pages = await getTopPages(

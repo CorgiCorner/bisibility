@@ -27,7 +27,7 @@ import {
   progressWidthClass,
 } from "./search-insights-trust-model";
 
-const LABEL = "font-mono text-ui-micro uppercase tracking-wide text-fg-muted";
+const LABEL = "font-sans tabular-nums text-ui-micro uppercase tracking-wide text-fg-muted";
 const FACT = "text-ui-body text-fg";
 
 function WorkerWaitingTooltip() {
@@ -113,7 +113,7 @@ export function SearchInsightsWaitingStrip({
   return (
     <section
       aria-label="Data provenance"
-      className="flex flex-wrap items-center gap-x-2 gap-y-1 bg-bg-elev px-4 py-3"
+      className="flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-border bg-bg-elev px-4 py-3"
     >
       <span className={LABEL}>{TRUST_LABELS.freshness}</span>
       {showActiveSegments && presentation.showProgress ? (

@@ -26,7 +26,7 @@ function percentLabel(value: number | null): string {
 function HealthPill({ label, tone }: Readonly<{ label: string; tone: HealthTone }>) {
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-mono text-[10px] font-bold ${toneClasses[tone]}`}
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold ${toneClasses[tone]}`}
       data-tone={tone}
     >
       <span aria-hidden="true" className={`h-1.5 w-1.5 rounded-full ${dotClasses[tone]}`} />

@@ -1,7 +1,7 @@
 "use client";
 
 import type { ClientDeploymentMode } from "@/components/shell/DeploymentModeProvider";
-import { Button, MonoText } from "@/components/ui";
+import { Button } from "@/components/ui";
 import { sanitizeErrorReport } from "@/lib/errors/sanitize-error-report";
 import { cn } from "@/lib/ui/cn";
 import {
@@ -92,17 +92,17 @@ export function AppErrorDiagnostics({
           size={13}
           weight="regular"
         />
-        <MonoText
-          className="flex-none font-semibold tracking-[0.4px]"
-          component="span"
-          size="sm"
-          sx={{ color: "var(--fg)" }}
+        <span
+          className={cn(
+            "flex-none text-[9px] font-semibold leading-[1.45] tracking-[0.4px] text-fg",
+            details.digest && "font-mono",
+          )}
         >
           {details.digest ?? "no reference"}
-        </MonoText>
-        <MonoText className="truncate" component="span" muted size="sm" suppressHydrationWarning>
+        </span>
+        <span className="truncate text-[9px] tabular-nums text-fg-muted" suppressHydrationWarning>
           {details.name} · {details.occurredAt}
-        </MonoText>
+        </span>
         <span className="ml-auto flex-none text-[11.5px] font-semibold text-fg-muted">
           {open ? "Hide trace" : "Show trace"}
         </span>
@@ -113,14 +113,9 @@ export function AppErrorDiagnostics({
           className="flex items-center justify-between gap-3 border-b py-2 pl-3.5 pr-2.5"
           style={{ borderColor: "var(--code-border)" }}
         >
-          <MonoText
-            className="uppercase tracking-[1.2px]"
-            component="span"
-            size="sm"
-            sx={{ color: "var(--code-faint)", fontSize: "11.5px" }}
-          >
+          <span className="text-[11.5px] uppercase tracking-[1.2px] text-code-faint">
             Stack trace
-          </MonoText>
+          </span>
           <Button
             onClick={handleCopy}
             size="sm"

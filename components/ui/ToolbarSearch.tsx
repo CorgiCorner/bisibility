@@ -22,10 +22,10 @@ export type ToolbarSearchProps = {
 };
 
 const toolbarInputClassName =
-  "compact-text-12 min-w-0 flex-1 bg-transparent font-mono text-[12px] leading-4 text-fg outline-none placeholder:text-[12px] placeholder:leading-4 placeholder:text-fg-muted focus-visible:outline-none";
+  "compact-text-12 min-w-0 flex-1 bg-transparent text-[12px] leading-4 text-fg outline-none placeholder:text-[12px] placeholder:leading-4 placeholder:text-fg-muted focus-visible:outline-none";
 
 const outlinedInputClassName =
-  "min-w-0 flex-1 border-0 bg-transparent p-0 font-mono text-[12.5px] text-fg outline-none placeholder:text-[12px] placeholder:leading-4 placeholder:text-fg-muted";
+  "min-w-0 flex-1 border-0 bg-transparent p-0 text-[12.5px] text-fg outline-none placeholder:text-[12px] placeholder:leading-4 placeholder:text-fg-muted";
 
 export function ToolbarSearch({
   className,

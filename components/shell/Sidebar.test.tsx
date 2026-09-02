@@ -472,12 +472,12 @@ describe("Sidebar", () => {
       "rounded-full",
       "px-[7px]",
       "py-0.5",
-      "font-mono",
       "text-[9.5px]",
       "font-semibold",
       "bg-nav-active",
       "text-fg-muted",
     );
+    expect(alpha).not.toHaveClass("font-mono");
     expanded.unmount();
 
     const collapsed = render(shell(true));

@@ -21,7 +21,6 @@ describe("TargetRankingCell", () => {
       "rounded-full",
       "border",
       "bg-bg-sunken",
-      "font-mono",
       "font-semibold",
     );
     expect(matchStatus.parentElement?.parentElement).toHaveClass("shrink-0", "self-center");

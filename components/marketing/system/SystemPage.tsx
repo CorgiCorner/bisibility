@@ -55,14 +55,14 @@ export function SystemPage({
         <a className="flex min-w-0" href="/">
           <BrandLockup />
         </a>
-        <span className="font-mono text-[11px] text-fg-muted">{statusLabel}</span>
+        <span className="font-sans text-[11px] text-fg-muted">{statusLabel}</span>
       </div>
 
       <section className="flex flex-1 flex-col items-center justify-center px-6 pb-[90px] pt-10 text-center">
         <span className="grid h-16 w-16 place-items-center rounded-card bg-accent-soft text-accent-solid">
           <Binoculars aria-hidden size={34} weight="regular" />
         </span>
-        <p className="mb-0 mt-6 font-mono text-[13px] tracking-[0.5px] text-accent">{kicker}</p>
+        <p className="mb-0 mt-6 font-sans text-[13px] tracking-[0.5px] text-accent">{kicker}</p>
         <h1 className="mb-0 mt-3 max-w-[760px] text-[34px] font-semibold leading-[1.05] tracking-[-1.6px] sm:text-[44px] lg:text-[52px]">
           {title}
         </h1>
@@ -94,26 +94,28 @@ export function TerminalBlock({ note, path, routes, status }: Readonly<TerminalB
         <span className="h-[9px] w-[9px] rounded-full bg-green" />
       </div>
       <div
-        className="overflow-x-auto p-[14px_15px] font-mono text-[12px] leading-[1.8] text-code-fg"
+        className="overflow-x-auto p-[14px_15px] font-sans text-[12px] leading-[1.8] text-code-fg"
         style={{
           backgroundColor: "color-mix(in srgb, var(--code-bg) 88%, var(--bg))",
         }}
       >
-        <div className="whitespace-nowrap">
-          <span className="text-accent">GET</span> {path}
-          <span className="text-code-faint"> -&gt; </span>
-          <span className="text-red-text">{status}</span>
-        </div>
-        <div className="whitespace-nowrap text-code-faint"># {note}</div>
-        <div className="whitespace-nowrap">
-          {routes.map((route, index) => (
-            <span key={route}>
-              {index > 0 ? " " : null}
-              <span className="text-blue-text">-&gt;</span>
-              {route}
-            </span>
-          ))}
-        </div>
+        <code className="block">
+          <span className="block whitespace-nowrap">
+            <span className="text-accent">GET</span> {path}
+            <span className="text-code-faint"> -&gt; </span>
+            <span className="text-red-text">{status}</span>
+          </span>
+          <span className="block whitespace-nowrap text-code-faint"># {note}</span>
+          <span className="block whitespace-nowrap">
+            {routes.map((route, index) => (
+              <span key={route}>
+                {index > 0 ? " " : null}
+                <span className="text-blue-text">-&gt;</span>
+                {route}
+              </span>
+            ))}
+          </span>
+        </code>
       </div>
     </div>
   );
@@ -126,7 +128,7 @@ export function SystemLoadingPage() {
         <a className="flex min-w-0" href="/">
           <BrandLockup />
         </a>
-        <span className="font-mono text-[11px] text-fg-muted">INDEXING</span>
+        <span className="font-sans text-[11px] text-fg-muted">INDEXING</span>
       </div>
 
       <section className="flex flex-1 flex-col items-center justify-center px-6 pb-[90px] pt-10 text-center">

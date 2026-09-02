@@ -18,7 +18,7 @@ type WebhookEndpointEditorProps = {
 
 const fieldClass = `${inputClassName} min-h-10 w-full rounded-control px-3 py-2 text-[13px]`;
 const labelClass =
-  "flex flex-col gap-1.5 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted";
+  "flex flex-col gap-1.5 font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted";
 
 export function WebhookEndpointEditor({
   action,
@@ -77,7 +77,7 @@ export function WebhookEndpointEditor({
           : "Private and loopback destinations are blocked by the active webhook guard."}
       </p>
       {endpoints.length > 0 ? (
-        <ul className="my-2 grid gap-1 p-0 font-mono text-[10.5px] text-fg-muted">
+        <ul className="my-2 grid gap-1 p-0 font-sans tabular-nums text-[10.5px] text-fg-muted">
           {endpoints.map((endpoint) => (
             <WebhookEndpointRow
               deleteAction={deleteAction}
@@ -90,7 +90,9 @@ export function WebhookEndpointEditor({
           ))}
         </ul>
       ) : (
-        <p className="my-2 font-mono text-[10.5px] text-yellow-text">No endpoint configured yet.</p>
+        <p className="my-2 font-sans tabular-nums text-[10.5px] text-yellow-text">
+          No endpoint configured yet.
+        </p>
       )}
       <div className="mt-3 grid gap-2.5">
         <label className={labelClass}>

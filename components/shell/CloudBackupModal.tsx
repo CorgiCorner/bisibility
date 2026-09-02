@@ -107,7 +107,7 @@ export function CloudBackupModal({
           <span className="mt-1 flex flex-wrap items-center gap-2 text-[12.5px] font-normal tracking-normal text-fg-muted">
             <span>A full copy of {projectName} you can restore into self-host</span>
             <span
-              className="inline-flex rounded-full border border-border bg-bg-sunken px-2 py-0.5 font-mono text-[9.5px] font-medium leading-none tracking-[0.25px] text-fg-muted"
+              className="inline-flex rounded-full border border-border bg-bg-sunken px-2 py-0.5 text-[9.5px] font-medium leading-none tracking-[0.25px] text-fg-muted"
               data-testid="cloud-backup-export-status"
             >
               {lastExportLabel}
@@ -126,9 +126,7 @@ export function CloudBackupModal({
         }}
       >
         <section>
-          <div className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
-            Included
-          </div>
+          <div className="text-[10px] uppercase tracking-[0.5px] text-fg-muted">Included</div>
           <div className="mt-2 grid gap-1.5">
             {CLOUD_BACKUP_SECTIONS.map((section) => (
               <div
@@ -146,7 +144,7 @@ export function CloudBackupModal({
                   <span className="block text-[10.5px] text-fg-muted">{section.description}</span>
                 </span>
                 {section.countable ? (
-                  <span className="font-mono text-[10px] text-fg-muted">
+                  <span className="text-[10px] text-fg-muted tabular-nums">
                     {counts[section.countKey].toLocaleString("en-US")}
                   </span>
                 ) : null}

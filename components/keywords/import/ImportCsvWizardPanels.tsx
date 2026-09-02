@@ -79,7 +79,7 @@ export function TemplateStep() {
       <div className="mt-4.5 min-w-0 overflow-hidden rounded-control border border-code-border bg-code-bg">
         <div className="flex items-center justify-between gap-2 border-b border-code-border px-3 pt-2">
           <div
-            className="rounded-t-lg px-3 py-1.5 font-mono text-[11.5px]"
+            className="rounded-t-lg px-3 py-1.5 font-sans tabular-nums text-[11.5px]"
             style={{
               backgroundColor: "color-mix(in srgb, var(--code-bg) 92%, var(--code-fg))",
               color: "var(--code-fg)",
@@ -127,19 +127,19 @@ export function UploadStep({
           <label className="text-[12.5px] font-semibold text-fg" htmlFor="import-csv-input">
             Paste CSV
           </label>
-          <span className="font-mono text-[11px] text-fg-muted">
+          <span className="font-sans tabular-nums text-[11px] text-fg-muted">
             {parsedCount} {parsedCount === 1 ? "keyword" : "keywords"} parsed
           </span>
         </div>
         <textarea
-          className="mt-2 min-h-[122px] w-full resize-y rounded-control border border-border-control bg-transparent px-[13px] py-3 font-mono text-[12px] leading-[1.7] text-fg outline-none focus:border-accent"
+          className="mt-2 min-h-[122px] w-full resize-y rounded-control border border-border-control bg-transparent px-[13px] py-3 font-sans tabular-nums text-[12px] leading-[1.7] text-fg outline-none focus:border-accent"
           id="import-csv-input"
           onChange={(event) => onCsvTextChange(event.target.value)}
           placeholder={csvExample}
           value={csvText}
         />
         {errorMessage ? (
-          <p className="mt-2 font-mono text-[11.5px] text-red-text">{errorMessage}</p>
+          <p className="mt-2 font-sans tabular-nums text-[11.5px] text-red-text">{errorMessage}</p>
         ) : null}
       </div>
     </div>
@@ -236,7 +236,7 @@ export function ReviewStep({
           during validation. Fix the file or its project markets, then go back to include them.
         </div>
       ) : null}
-      <div className="mt-4 rounded-card border border-border bg-bg-sunken px-4 py-3 font-mono text-[12px] text-fg-muted">
+      <div className="mt-4 rounded-card border border-border bg-bg-sunken px-4 py-3 font-sans tabular-nums text-[12px] text-fg-muted">
         {label}
       </div>
     </div>
@@ -256,7 +256,7 @@ export function DoneStep({ result }: Readonly<{ result: ImportResultSummary }>) 
       </p>
       <LocationActionWarning message={warning} />
       {result.errors.length ? (
-        <div className="mt-4 max-h-32 w-full overflow-auto rounded-control bg-bg-sunken p-3 text-left font-mono text-[11px] text-red-text">
+        <div className="mt-4 max-h-32 w-full overflow-auto rounded-control bg-bg-sunken p-3 text-left font-sans tabular-nums text-[11px] text-red-text">
           {result.errors.slice(0, 6).map((error) => (
             <div key={`${error.row}-${error.message}`}>
               Row {error.row}: {error.message}

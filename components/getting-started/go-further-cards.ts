@@ -13,25 +13,25 @@ export type GoFurtherCard = Readonly<{
 export function goFurtherCards(projectRef: ProjectRef): readonly GoFurtherCard[] {
   return [
     {
-      description: "Roles and views your whole team sees",
+      description: "Give your team access, with roles.",
       external: false,
       href: settingsSectionHref(projectRef, "team"),
       id: "team",
       title: "Invite teammates",
     },
     {
-      description: "Works with Claude, ChatGPT, and more",
+      description: "Connect Claude, ChatGPT or any MCP client.",
       external: false,
       href: appPath(projectRef, "install"),
       id: "ai",
       title: "Ask AI about your rankings",
     },
     {
-      description: "Support the project",
+      description: "Free and open source - a star helps.",
       external: true,
       href: GITHUB_URL,
       id: "github",
-      title: "Star on GitHub",
+      title: "Star bisibility on GitHub",
     },
   ];
 }

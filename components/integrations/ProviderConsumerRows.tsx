@@ -42,16 +42,13 @@ function ConsumerCopy({
     <div className="min-w-0">
       <h4 className="m-0 text-[12.5px] font-semibold text-fg">{label}</h4>
       {summary === "Not configured" ? null : (
-        <p className="m-0 mt-1 font-mono text-[11.5px] leading-[1.5] text-fg-muted">{summary}</p>
+        <p className="m-0 mt-1 text-[11.5px] leading-[1.5] text-fg-muted">{summary}</p>
       )}
       {supportingCopy ? (
         <p className="m-0 mt-0.5 text-[11.5px] leading-[1.45] text-fg-muted">{supportingCopy}</p>
       ) : null}
       {status.detail ? (
-        <p
-          className="m-0 mt-0.5 truncate font-mono text-[10.5px] text-fg-muted"
-          title={status.detail}
-        >
+        <p className="m-0 mt-0.5 truncate text-[10.5px] text-fg-muted" title={status.detail}>
           {status.detail}
         </p>
       ) : null}

@@ -15,7 +15,7 @@ import {
 import { useState } from "react";
 import type { CloudImportPackageFile } from "./cloud-token";
 import { assertPackageFileSize, parsePackageContent, parsePackageUpload } from "./package-content";
-import { postImportPackage } from "./package-transfer-helpers";
+import { packageCountSummary, postImportPackage } from "./package-transfer-helpers";
 import { downloadWorkspacePackage } from "./workspace-package-download";
 
 type ExportPackageAction = (input: { projectId: string }) => Promise<CloudImportPackageFile>;
@@ -30,17 +30,6 @@ type ServerTransferAction = (input: { projectId: string; token: string }) => Pro
   file?: CloudImportPackageFile;
 }>;
 type TransferProgress = { message: string; sentChunks: number; totalChunks: number };
-function packageCountSummary(file: CloudImportPackageFile) {
-  const counts = file.counts;
-  return [
-    `${counts.keywords} keywords`,
-    `${counts.rankChecks} rank checks`,
-    `${counts.alertRules} alert rules`,
-    `${counts.competitors} competitors`,
-    `${counts.notificationPreferences} notification preferences`,
-    `${counts.savedViews} saved views`,
-  ].join(" / ");
-}
 type PackageTransferPanelProps = {
   disabled?: boolean;
   exportPackageAction: ExportPackageAction;
@@ -80,10 +69,12 @@ function TransferStatus({
       {file ? (
         <div className="mx-5 mb-4 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-control border border-border bg-bg-sunken px-3.5 py-3">
           <CheckCircle aria-hidden className="text-green-text" size={15} weight="regular" />
-          <span className="min-w-0 flex-1 truncate font-mono text-[11.5px] text-fg-muted">
+          <span className="min-w-0 flex-1 truncate font-sans tabular-nums text-[11.5px] text-fg-muted">
             {displayedFilename ?? file.filename}
           </span>
-          <span className="font-mono text-[11px] text-fg-muted">{packageCountSummary(file)}</span>
+          <span className="font-sans tabular-nums text-[11px] text-fg-muted">
+            {packageCountSummary(file)}
+          </span>
         </div>
       ) : null}
       {progress ? (
@@ -91,7 +82,7 @@ function TransferStatus({
           <div className="flex items-center justify-between gap-3 text-[12px]">
             <span className="font-medium text-fg-muted">{progress.message}</span>
             {progress.totalChunks > 0 ? (
-              <span className="font-mono text-[11px] text-fg-muted">
+              <span className="font-sans tabular-nums text-[11px] text-fg-muted">
                 {progress.sentChunks} of {progress.totalChunks}
               </span>
             ) : null}

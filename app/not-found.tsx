@@ -24,7 +24,7 @@ export default function NotFound() {
     <SystemPage
       actions={
         <>
-          <SystemPrimaryAction href={appRootPath()}>Back to dashboard</SystemPrimaryAction>
+          <SystemPrimaryAction href={appRootPath()}>Back to app</SystemPrimaryAction>
           <SystemSecondaryAction href={selfHost ? "/login" : "/"}>
             {selfHost ? "Go to sign in" : "Go to homepage"}
           </SystemSecondaryAction>

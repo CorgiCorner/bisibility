@@ -145,7 +145,7 @@ export function SetupWizard({ mailerConfigured }: Readonly<{ mailerConfigured: b
             </p>
           </div>
           <form className="flex flex-col gap-3.5" onSubmit={form.handleSubmit(requestCode)}>
-            <label className="flex flex-col gap-[7px] font-mono text-[10.5px] font-semibold uppercase tracking-[0.06em] text-fg-muted">
+            <label className="flex flex-col gap-[7px] text-[10.5px] font-semibold uppercase tracking-[0.06em] text-fg-muted">
               Your name
               <input
                 aria-invalid={Boolean(errors.name)}
@@ -157,7 +157,7 @@ export function SetupWizard({ mailerConfigured }: Readonly<{ mailerConfigured: b
             {errors.name ? (
               <p className="-mt-2 m-0 text-[13px] text-red-text">{errors.name.message}</p>
             ) : null}
-            <label className="flex flex-col gap-[7px] font-mono text-[10.5px] font-semibold uppercase tracking-[0.06em] text-fg-muted">
+            <label className="flex flex-col gap-[7px] text-[10.5px] font-semibold uppercase tracking-[0.06em] text-fg-muted">
               Email address
               <input
                 aria-invalid={Boolean(errors.email)}

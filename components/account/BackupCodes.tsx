@@ -39,7 +39,7 @@ export function BackupCodes({ codes }: Readonly<{ codes: readonly string[] }>) {
       <div className="grid gap-1.5 sm:grid-cols-2">
         {codes.map((code) => (
           <code
-            className="rounded-control border border-border-soft bg-bg-elev px-2 py-1 font-mono text-[12px] text-fg"
+            className="rounded-control border border-border-soft bg-bg-elev px-2 py-1 font-sans tabular-nums text-[12px] text-fg"
             key={code}
           >
             {code}

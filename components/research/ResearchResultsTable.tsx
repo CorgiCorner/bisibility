@@ -139,7 +139,7 @@ export function ResearchResultsTable({
         >
           Filters
           {filterCount > 0 ? (
-            <span className="ml-1 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-accent-soft px-1 font-mono text-[9.5px] text-accent-text">
+            <span className="ml-1 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-accent-soft px-1 font-sans tabular-nums text-[9.5px] text-accent-text">
               {filterCount}
             </span>
           ) : null}

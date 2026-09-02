@@ -42,7 +42,7 @@ export function AddKeywordDrawerFooter({
   return (
     <div className="flex flex-col gap-3">
       {activeTab === "manual" ? (
-        <p className="m-0 font-mono text-[11.5px] leading-5 text-fg-muted">
+        <p className="m-0 font-sans tabular-nums text-[11.5px] leading-5 text-fg-muted">
           {keywordCount} {keywordCount === 1 ? "keyword" : "keywords"} x {marketCount}{" "}
           {marketCount === 1 ? "market" : "markets"} x {deviceCount}{" "}
           {deviceCount === 1 ? "device" : "devices"} = {keywordCount * marketCount * deviceCount}{" "}

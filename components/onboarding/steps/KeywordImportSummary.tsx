@@ -50,7 +50,7 @@ export function KeywordImportSummary({
     <OnboardingCostSummary>
       <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
         <span>
-          <span className="block font-mono text-fg">
+          <span className="block text-fg tabular-nums">
             {keywordCheckSummary(keywordCount, locationCount, deviceCount)}
           </span>
           <span className="block">{monthlyLine}</span>

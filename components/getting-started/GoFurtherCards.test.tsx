@@ -12,7 +12,7 @@ describe("GoFurtherCards", () => {
     render(<GoFurtherCards projectRef={projectRef} />);
 
     expect(screen.getByRole("heading", { name: "Go further" })).toHaveClass(
-      "font-mono",
+      "font-sans tabular-nums",
       "text-[10px]",
       "uppercase",
     );
@@ -27,8 +27,12 @@ describe("GoFurtherCards", () => {
     expect(screen.getByRole("link", { name: /Ask AI about your rankings/ })).not.toHaveAttribute(
       "target",
     );
-    expect(screen.getByText("Works with Claude, ChatGPT, and more")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Star on GitHub/ })).toHaveAttribute(
+    expect(screen.getByText("Give your team access, with roles.")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Ask AI about your rankings/ })).not.toHaveAttribute(
+      "target",
+    );
+    expect(screen.getByText("Connect Claude, ChatGPT or any MCP client.")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Star bisibility on GitHub/ })).toHaveAttribute(
       "href",
       GITHUB_URL,
     );
@@ -55,11 +59,11 @@ describe("GoFurtherCards", () => {
     expect(screen.getByRole("link", { name: /Ask AI about your rankings/ })).not.toHaveAttribute(
       "target",
     );
-    expect(screen.getByRole("link", { name: /Star on GitHub/ })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Star bisibility on GitHub/ })).toHaveAttribute(
       "target",
       "_blank",
     );
-    expect(screen.getByRole("link", { name: /Star on GitHub/ })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Star bisibility on GitHub/ })).toHaveAttribute(
       "rel",
       "noreferrer noopener",
     );

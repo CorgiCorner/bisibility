@@ -23,7 +23,7 @@ type AddCompetitorDrawerProps = {
 };
 
 const labelClass =
-  "flex flex-col gap-[7px] font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted";
+  "flex flex-col gap-[7px] font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted";
 const fieldClass = `${inputClassName} rounded-control px-[13px] py-[11px] text-[14px] font-medium`;
 
 function labelFromDomain(domain: string) {
@@ -126,12 +126,12 @@ export function AddCompetitorDrawer({
         <label className={labelClass}>
           {"Domain "}
           <input
-            className={`${fieldClass} font-mono`}
+            className={`${fieldClass} font-sans tabular-nums`}
             disabled={isSubmitting}
             placeholder="competitor.example"
             {...register("domain")}
           />
-          <span className="font-mono text-[10px] normal-case tracking-normal text-fg-muted">
+          <span className="font-sans tabular-nums text-[10px] normal-case tracking-normal text-fg-muted">
             {errors.domain?.message ?? "Bare domains work best. We normalize https:// and www."}
           </span>
         </label>
@@ -144,13 +144,13 @@ export function AddCompetitorDrawer({
             placeholder="Example competitor"
             {...register("label")}
           />
-          <span className="font-mono text-[10px] normal-case tracking-normal text-fg-muted">
+          <span className="font-sans tabular-nums text-[10px] normal-case tracking-normal text-fg-muted">
             {errors.label?.message ?? "Optional. Used in the charts and head-to-head table."}
           </span>
         </label>
 
         <section className="overflow-hidden rounded-card border border-border">
-          <div className="bg-bg-sunken px-[15px] py-3 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
+          <div className="bg-bg-sunken px-[15px] py-3 font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
             Observed in your SERPs
           </div>
           {suggestions.length > 0 ? (
@@ -159,12 +159,12 @@ export function AddCompetitorDrawer({
                 className="flex items-center gap-3 border-border-soft border-t px-[15px] py-3"
                 key={suggestion.domain}
               >
-                <span className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-control bg-bg-sunken font-mono text-[11px] font-semibold text-fg-muted">
+                <span className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-control bg-bg-sunken font-sans tabular-nums text-[11px] font-semibold text-fg-muted">
                   {suggestion.initials}
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block text-[13px] font-semibold">{suggestion.domain}</span>
-                  <span className="block font-mono text-[10.5px] text-fg-muted">
+                  <span className="block font-sans tabular-nums text-[10.5px] text-fg-muted">
                     {suggestion.overlap} observed keywords
                   </span>
                 </span>
@@ -196,7 +196,7 @@ export function AddCompetitorDrawer({
           </span>
         </div>
         {actionError ? (
-          <span className="font-mono text-[11px] text-red-text">{actionError}</span>
+          <span className="font-sans tabular-nums text-[11px] text-red-text">{actionError}</span>
         ) : null}
       </form>
     </Sheet>

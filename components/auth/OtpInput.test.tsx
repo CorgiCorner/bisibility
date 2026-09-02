@@ -13,6 +13,12 @@ function boxes() {
 }
 
 describe("OtpInput", () => {
+  it("renders OTP digits in Mono", () => {
+    render(<Harness initial={["1"]} />);
+
+    expect(boxes()[0]).toHaveClass("font-mono");
+  });
+
   it("keeps empty cells transparent and only highlights populated cells", () => {
     render(<Harness initial={["1"]} />);
 

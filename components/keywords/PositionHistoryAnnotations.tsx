@@ -41,7 +41,8 @@ export function TargetReferenceLine({ target }: Readonly<{ target: number }>) {
       labelAlign="start"
       labelStyle={{
         fill: "var(--fg-muted)",
-        fontFamily: "var(--font-mono), monospace",
+        fontFamily: "var(--font-sans), system-ui, sans-serif",
+        fontVariantNumeric: "tabular-nums",
         fontSize: 10,
         fontWeight: 600,
         letterSpacing: "0.5px",
@@ -106,8 +107,9 @@ export function LatestPositionAnnotation({
       />
       <text
         fill="var(--fg-muted)"
-        fontFamily="var(--font-mono), monospace"
+        fontFamily="var(--font-sans), system-ui, sans-serif"
         fontSize={10}
+        style={{ fontVariantNumeric: "tabular-nums" }}
         fontWeight={400}
         textAnchor="end"
         x={chipRight - 5}

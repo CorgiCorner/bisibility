@@ -170,7 +170,7 @@ export function Calendar({
       </div>
       <div
         aria-hidden
-        className="mb-1 grid grid-cols-7 gap-1 font-mono text-[10px] font-semibold uppercase tracking-[.04em] text-fg-muted"
+        className="mb-1 grid grid-cols-7 gap-1 text-[10px] tabular-nums font-semibold uppercase tracking-[.04em] text-fg-muted"
       >
         {WEEKDAY_LABELS.map((label) => (
           <span className="grid h-6 place-items-center" key={label}>

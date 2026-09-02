@@ -63,7 +63,7 @@ export function OnboardingMarkets({
       id="onboarding-markets"
       tabIndex={-1}
     >
-      <div className="font-mono text-[10px] uppercase tracking-[0.4px] text-fg-muted">Markets</div>
+      <div className="text-[10px] uppercase tracking-[0.4px] text-fg-muted">Markets</div>
       <div className="mt-2 flex flex-wrap gap-2">
         {values.map((value) => (
           <span
@@ -71,7 +71,7 @@ export function OnboardingMarkets({
             key={value.canonicalKey}
           >
             <span className="min-w-0 truncate">{value.displayName}</span>
-            <span className="font-mono text-[11px] text-fg-muted">/</span>
+            <span className="text-[11px] text-fg-muted">/</span>
             <span className="text-fg-muted">{languageForLocationValue(value)}</span>
             <Button
               aria-label={`Remove ${value.displayName} / ${languageForLocationValue(value)}`}

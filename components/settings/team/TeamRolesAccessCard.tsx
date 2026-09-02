@@ -71,7 +71,7 @@ export function TeamRolesAccessCard() {
     >
       <div className="overflow-x-auto rounded-control border border-border">
         <div className="min-w-[600px]">
-          <div className="grid grid-cols-[minmax(220px,1.5fr)_repeat(4,1fr)] border-b border-border bg-bg-sunken px-4 py-3 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
+          <div className="grid grid-cols-[minmax(220px,1.5fr)_repeat(4,1fr)] border-b border-border bg-bg-sunken px-4 py-3 font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
             <span>Capability</span>
             {displayedRoles.map((role) => (
               <span

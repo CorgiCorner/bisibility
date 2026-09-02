@@ -1,3 +1,4 @@
+import type { SearchInsightsSortKey } from "@/lib/search-insights/queries/top-rows-sort";
 import { AVG_POSITION_TIP, SESSIONS_JOIN_TIP } from "./search-insights-copy";
 
 /**
@@ -55,7 +56,27 @@ export const moduleTableColumnOrder = {
 
 export type ModuleTableVariant = keyof typeof moduleTableColumnOrder;
 
-export type ModuleTableHeader = { align?: boolean; label: string; title?: string };
+export type ModuleTableHeader = {
+  align?: boolean;
+  label: string;
+  /** The read's sort key, on the columns the read can order by. */
+  sortKey?: SearchInsightsSortKey;
+  title?: string;
+};
+
+/**
+ * Sessions is deliberately absent. It is read by a second statement, keyed by a hash of the
+ * landing path that only the application can derive, so the page query cannot order by it - see
+ * `top-rows.ts`. A header with no key renders as a plain label rather than a control that would
+ * sort the loaded page and misdescribe the rest of the window.
+ */
+const MODULE_TABLE_SORT_KEY: Partial<Record<ModuleTableColumnName, SearchInsightsSortKey>> = {
+  clicks: "clicks",
+  ctr: "ctr",
+  impressions: "impressions",
+  position: "position",
+  text: "text",
+};
 
 type ModuleTableHeaderDescriptor = ModuleTableHeader & {
   labels?: Partial<Record<ModuleTableVariant, string>>;
@@ -88,11 +109,13 @@ const moduleTableHeaderByColumn = {
 export function moduleTableHeaders(variant: ModuleTableVariant): readonly ModuleTableHeader[] {
   return moduleTableColumnOrder[variant].map((name) => {
     const descriptor = moduleTableHeaderByColumn[name];
-    if ("labels" in descriptor) {
-      const labels: Partial<Record<ModuleTableVariant, string>> = descriptor.labels;
-      return { ...descriptor, label: labels[variant] ?? descriptor.label };
-    }
-    return descriptor;
+    const sortKey = MODULE_TABLE_SORT_KEY[name];
+    const label =
+      "labels" in descriptor
+        ? ((descriptor.labels as Partial<Record<ModuleTableVariant, string>>)[variant] ??
+          descriptor.label)
+        : descriptor.label;
+    return { ...descriptor, label, ...(sortKey ? { sortKey } : {}) };
   });
 }
 

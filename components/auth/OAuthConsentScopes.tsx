@@ -83,7 +83,7 @@ function ScopeChip({ scope }: Readonly<{ scope: ScopeItem }>) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-control border px-2.5 py-1 font-mono text-[11px] leading-none",
+        "inline-flex items-center gap-1.5 rounded-control border px-2.5 py-1 text-[11px] leading-none",
         scope.broad
           ? "border-red/30 bg-red/10 text-red-text"
           : "border-border bg-bg-elev text-fg-muted",
@@ -103,7 +103,7 @@ export function OAuthConsentScopes({
   return (
     <section className="mt-4" aria-labelledby="requested-scopes-title">
       <p
-        className="m-0 font-mono text-[10.5px] uppercase tracking-[0.5px] text-fg-muted"
+        className="m-0 text-[10.5px] uppercase tracking-[0.5px] text-fg-muted"
         id="requested-scopes-title"
       >
         Requested scopes

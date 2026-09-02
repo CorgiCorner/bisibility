@@ -43,7 +43,7 @@ function SummaryRow({
         <span className="shrink-0 pt-px text-[13px] text-fg-muted">{label}</span>
         <span className="min-w-0 text-right">
           <span
-            className="flex min-w-0 items-center justify-end gap-2 font-mono text-[13px] font-normal text-fg"
+            className="flex min-w-0 items-center justify-end gap-2 text-[13px] font-normal text-fg"
             data-summary-value
           >
             <span aria-label={`${label}: ${value}`} className="min-w-0 truncate whitespace-nowrap">
@@ -116,7 +116,7 @@ export function StepFirstCheckReview({
             options={timezoneSelectOptions(timezone)}
             searchable
             searchPlaceholder="City or region"
-            triggerClassName="min-h-0 min-w-0 border-0 bg-transparent px-0 font-mono text-xs text-fg-muted hover:border-0 focus-visible:border-0"
+            triggerClassName="min-h-0 min-w-0 border-0 bg-transparent px-0 text-xs text-fg-muted hover:border-0 focus-visible:border-0"
             value={timezone}
           />
         </SummaryRow>

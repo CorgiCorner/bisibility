@@ -80,7 +80,7 @@ function DeviceIcon({ device }: Readonly<{ device: string }>) {
 const headerChipClassName = quietChipVariants({ size: "lg" });
 const headerChipSelectClassName = cn(
   headerChipClassName,
-  "font-mono text-fg-muted outline-none transition-colors hover:border-accent hover:text-fg focus-visible:border-accent focus-visible:outline-2 focus-visible:outline-accent-solid disabled:cursor-default",
+  "font-sans tabular-nums text-fg-muted outline-none transition-colors hover:border-accent hover:text-fg focus-visible:border-accent focus-visible:outline-2 focus-visible:outline-accent-solid disabled:cursor-default",
 );
 
 function SwitcherButton({
@@ -94,7 +94,9 @@ function SwitcherButton({
     <button
       aria-haspopup={onClick ? "menu" : undefined}
       className={
-        onClick ? headerChipSelectClassName : cn(headerChipClassName, "font-mono text-fg-muted")
+        onClick
+          ? headerChipSelectClassName
+          : cn(headerChipClassName, "font-sans tabular-nums text-fg-muted")
       }
       disabled={!onClick}
       onClick={onClick ? (event) => onClick(event.currentTarget) : undefined}

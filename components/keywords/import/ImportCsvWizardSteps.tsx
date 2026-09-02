@@ -15,6 +15,8 @@ import {
   TableIcon as Table,
 } from "@phosphor-icons/react";
 
+export { DoneStep } from "./ImportCsvWizardDoneStep";
+
 const steps = ["Template", "Upload", "Map", "Review", "Done"] as const;
 const mapRows = [
   ["keyword", "Keyword", "required"],
@@ -43,7 +45,7 @@ export function ImportStepper({ step }: Readonly<{ step: number }>) {
           <div className="flex min-w-0 flex-1 items-center" key={label}>
             <span className="flex w-[54px] shrink-0 flex-col items-center gap-1.5">
               <span
-                className="grid h-[26px] w-[26px] place-items-center rounded-full border-[1.5px] font-mono text-[11px] font-semibold"
+                className="grid h-[26px] w-[26px] place-items-center rounded-full border-[1.5px] font-sans tabular-nums text-[11px] font-semibold"
                 style={{
                   backgroundColor: current
                     ? "var(--accent)"
@@ -94,7 +96,7 @@ export function TemplateStep() {
         Download template.csv
       </Button>
       <div className="mt-4.5 overflow-hidden rounded-control border border-border">
-        <div className="flex items-center justify-between bg-code-bg px-[13px] py-2 font-mono text-[10.5px] text-code-faint">
+        <div className="flex items-center justify-between bg-code-bg px-[13px] py-2 font-sans tabular-nums text-[10.5px] text-code-faint">
           <span>template.csv</span>
           <span className="text-green-text">UTF-8</span>
         </div>
@@ -107,7 +109,7 @@ export function TemplateStep() {
           const item = column === "keyword" ? "keyword*" : column;
           return (
             <span
-              className="rounded-control bg-bg-sunken px-[9px] py-[3px] font-mono text-[11px] text-fg-muted first:bg-accent-soft first:font-semibold first:text-accent-text"
+              className="rounded-control bg-bg-sunken px-[9px] py-[3px] font-sans tabular-nums text-[11px] text-fg-muted first:bg-accent-soft first:font-semibold first:text-accent-text"
               key={item}
             >
               {item}
@@ -150,7 +152,7 @@ export function UploadStep() {
         </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-[13px] font-semibold">acme-keywords-q2.csv</span>
-          <span className="block font-mono text-[11px] text-fg-muted">
+          <span className="block font-sans tabular-nums text-[11px] text-fg-muted">
             248 rows · 5 columns · 18 KB
           </span>
         </span>
@@ -169,7 +171,7 @@ export function MapStep() {
       <h3 className="m-0 text-[15px] font-semibold">Map columns</h3>
       <p className="m-0 mt-1.5 text-[13px] text-fg-muted">We matched your columns automatically.</p>
       <div className="mt-4 overflow-hidden rounded-card border border-border">
-        <div className="grid grid-cols-[1fr_24px_1fr] gap-2.5 bg-bg-sunken px-[15px] py-[9px] font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
+        <div className="grid grid-cols-[1fr_24px_1fr] gap-2.5 bg-bg-sunken px-[15px] py-[9px] font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
           <span>CSV column</span>
           <span />
           <span>bisibility field</span>
@@ -179,14 +181,16 @@ export function MapStep() {
             className="grid grid-cols-[1fr_24px_1fr] items-center gap-2.5 border-t border-border-soft px-[15px] py-[11px]"
             key={csv}
           >
-            <span className="inline-flex min-w-0 items-center gap-[7px] font-mono text-[12.5px]">
+            <span className="inline-flex min-w-0 items-center gap-[7px] font-sans tabular-nums text-[12.5px]">
               <Table weight="regular" className="shrink-0 text-fg-muted" size={14} />
               <span className="truncate">{csv}</span>
             </span>
             <ArrowRight className="text-fg-muted" size={13} weight="regular" />
             <span className="inline-flex items-center justify-between gap-2 rounded-control border border-border bg-bg-elev px-[11px] py-[7px] text-[12.5px] font-medium">
               {field}
-              {req ? <span className="font-mono text-[10px] text-accent-text">{req}</span> : null}
+              {req ? (
+                <span className="font-sans tabular-nums text-[10px] text-accent-text">{req}</span>
+              ) : null}
             </span>
           </div>
         ))}
@@ -220,7 +224,7 @@ export function ReviewStep({
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h3 className="m-0 text-[15px] font-semibold">Review and confirm</h3>
-        <div className="flex gap-2 font-mono text-[11px]">
+        <div className="flex gap-2 font-sans tabular-nums text-[11px]">
           <span className="rounded-full px-[9px] py-[3px] font-semibold text-green-text [background:color-mix(in_srgb,var(--green)_12%,transparent)]">
             245 new
           </span>
@@ -249,7 +253,7 @@ export function ReviewStep({
         </div>
       </div>
       <div className="mt-3.5 overflow-hidden rounded-card border border-border">
-        <div className="grid grid-cols-[1.7fr_1.3fr_50px_64px] gap-2 bg-bg-sunken px-3.5 py-[9px] font-mono text-[10px] uppercase tracking-[0.4px] text-fg-muted">
+        <div className="grid grid-cols-[1.7fr_1.3fr_50px_64px] gap-2 bg-bg-sunken px-3.5 py-[9px] font-sans tabular-nums text-[10px] uppercase tracking-[0.4px] text-fg-muted">
           <span>Keyword</span>
           <span>Target URL</span>
           <span>Geo</span>
@@ -261,46 +265,24 @@ export function ReviewStep({
             key={keyword}
           >
             <span className="truncate font-medium">{keyword}</span>
-            <span className="truncate font-mono text-[11.5px] text-fg-muted">{url}</span>
-            <span className="font-mono text-[11px] text-fg-muted">{country}</span>
+            <span className="truncate font-sans tabular-nums text-[11.5px] text-fg-muted">
+              {url}
+            </span>
+            <span className="font-sans tabular-nums text-[11px] text-fg-muted">{country}</span>
             {dup ? (
-              <span className="rounded-control px-[7px] py-0.5 font-mono text-[9.5px] font-semibold text-yellow-text [background:color-mix(in_srgb,var(--yellow)_14%,transparent)]">
+              <span className="rounded-control px-[7px] py-0.5 font-sans tabular-nums text-[9.5px] font-semibold text-yellow-text [background:color-mix(in_srgb,var(--yellow)_14%,transparent)]">
                 {dup}
               </span>
             ) : null}
           </div>
         ))}
-        <div className="border-t border-border-soft px-3.5 py-[9px] text-center font-mono text-[11px] text-fg-muted">
+        <div className="border-t border-border-soft px-3.5 py-[9px] text-center font-sans tabular-nums text-[11px] text-fg-muted">
           + 244 more rows
         </div>
       </div>
       <div className="mt-3.5 flex items-center gap-2 text-[12px] text-fg-muted">
         <Info weight="regular" size={14} />
         History is not back-filled.
-      </div>
-    </div>
-  );
-}
-
-export function DoneStep() {
-  return (
-    <div className="flex flex-col items-center px-4 py-[30px] text-center">
-      <span className="grid h-14 w-14 place-items-center rounded-card text-green-text [background:color-mix(in_srgb,var(--green)_12%,transparent)]">
-        <CheckCircle size={30} weight="regular" />
-      </span>
-      <h3 className="m-0 mt-4.5 text-[18px] font-semibold tracking-[-0.4px]">Import complete</h3>
-      <p className="m-0 mt-[7px] max-w-[340px] text-[13.5px] leading-[1.55] text-fg-muted">
-        245 keywords added, 3 duplicates skipped. First positions appear after the next check.
-      </p>
-      <div className="mt-5.5 flex gap-6">
-        {["245 Added", "3 Skipped", "0 Failed"].map((item) => (
-          <span className="text-center" key={item}>
-            <span className="block text-[22px] font-semibold">{item.split(" ")[0]}</span>
-            <span className="font-mono text-[10px] uppercase tracking-[0.4px] text-fg-muted">
-              {item.split(" ")[1]}
-            </span>
-          </span>
-        ))}
       </div>
     </div>
   );

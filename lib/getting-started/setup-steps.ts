@@ -9,6 +9,8 @@ export type SetupCta = {
 
 export type SetupStepState =
   | { family: "done" }
+  // Settled like done. No current definition emits this; the competitors skip will.
+  | { family: "skipped" }
   | { cta: SetupCta; family: "action" }
   | {
       accelerate?: SetupCta;
@@ -107,13 +109,28 @@ export const SETUP_STEP_DEFINITIONS = [
   },
 ] as const satisfies readonly StepDefinition[];
 
+export type ResolvedSetupStep = {
+  definition: StepDefinition;
+  state: SetupStepState;
+};
+
+export function isStepSettled(state: SetupStepState): boolean {
+  return state.family === "done" || state.family === "skipped";
+}
+
+export function isSetupComplete(steps: readonly Pick<ResolvedSetupStep, "state">[]): boolean {
+  return steps.length > 0 && steps.every(({ state }) => isStepSettled(state));
+}
+
 export function resolveSetupProgress(ctx: SetupContext) {
   const steps = SETUP_STEP_DEFINITIONS.map((definition) => ({
     definition,
     state: definition.resolve(ctx),
   }));
   return {
+    completed: isSetupComplete(steps),
     doneCount: steps.filter(({ state }) => state.family === "done").length,
+    settledCount: steps.filter(({ state }) => isStepSettled(state)).length,
     steps,
     totalCount: steps.length,
   };

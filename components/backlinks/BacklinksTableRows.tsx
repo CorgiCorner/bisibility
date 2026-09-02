@@ -65,7 +65,7 @@ function Flags({ row }: Readonly<{ row: Pick<BacklinksRow, "flags" | "lostAt" | 
       ) : null}
       {row.flags.map((flag) => (
         <span
-          className={`rounded-control border px-1.5 py-px font-mono text-[10px] ${
+          className={`rounded-control border px-1.5 py-px font-sans tabular-nums text-[10px] ${
             flag === "sitewide"
               ? "border-yellow/60 text-yellow-text"
               : "border-border text-fg-muted"
@@ -105,18 +105,24 @@ function DataCells({
       <span className={`truncate ${status.status === "lost" ? "line-through" : ""}`}>{source}</span>
       <span className="grid min-w-0">
         <span className="truncate text-[13px]">{anchor ? `“${anchor}”` : "(image link)"}</span>
-        <span className="truncate font-mono text-[10.5px] text-fg-muted">→ {target}</span>
+        <span className="truncate font-sans tabular-nums text-[10.5px] text-fg-muted">
+          → {target}
+        </span>
       </span>
       <Flags row={{ ...status, flags }} />
-      <span className="text-right font-mono text-[12.5px]">{domainAuthority ?? ""}</span>
+      <span className="text-right font-sans tabular-nums text-[12.5px]">
+        {domainAuthority ?? ""}
+      </span>
       <span
-        className={`text-right font-mono text-[12.5px] ${
+        className={`text-right font-sans tabular-nums text-[12.5px] ${
           spam != null && spam >= 5 ? "text-yellow-text" : ""
         }`}
       >
         {spam?.toFixed(1) ?? ""}
       </span>
-      <span className="text-right font-mono text-[12.5px] text-fg-muted">{links ?? ""}</span>
+      <span className="text-right font-sans tabular-nums text-[12.5px] text-fg-muted">
+        {links ?? ""}
+      </span>
       <span className="whitespace-nowrap text-[12px] text-fg-muted">{shortDate(firstSeen)}</span>
     </>
   );

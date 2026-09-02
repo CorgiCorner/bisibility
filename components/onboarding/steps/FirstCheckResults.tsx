@@ -61,7 +61,7 @@ function ResultTarget({ row }: Readonly<{ row: FirstCheckResultRow }>) {
     <span className="mt-1 flex min-w-0 items-center gap-1.5">
       <span className="inline-flex h-6 min-w-0 items-center gap-1 rounded-full border border-border bg-bg-elev px-2 text-[11px] text-fg">
         <span className="truncate">{row.market.locationLabel}</span>
-        <span className="font-mono text-[10px] text-fg-muted">/</span>
+        <span className="text-[10px] text-fg-muted">/</span>
         <span className="truncate text-fg-muted">{row.market.languageLabel}</span>
       </span>
       <span

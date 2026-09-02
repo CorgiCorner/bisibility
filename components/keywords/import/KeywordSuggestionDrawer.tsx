@@ -46,7 +46,7 @@ type KeywordSuggestionDrawerProps = {
 };
 
 const FILTER_THRESHOLD = 25;
-const metricCell = "w-16 shrink-0 text-right font-mono text-[11.5px] tabular-nums text-fg-muted";
+const metricCell = "w-16 shrink-0 text-right font-sans text-[11.5px] tabular-nums text-fg-muted";
 const bulkButtonSx = {
   color: "var(--fg-muted)",
   fontWeight: 400,
@@ -105,7 +105,7 @@ function SuggestionRow({
       />
       <span className="min-w-0 flex-1 truncate text-fg">{suggestion.query}</span>
       {disabled ? (
-        <span className="shrink-0 rounded-full border border-border bg-bg-sunken px-2 py-0.5 font-mono text-[9.5px] uppercase tracking-[0.3px] text-fg-muted">
+        <span className="shrink-0 rounded-full border border-border bg-bg-sunken px-2 py-0.5 font-sans tabular-nums text-[9.5px] uppercase tracking-[0.3px] text-fg-muted">
           Tracked
         </span>
       ) : null}
@@ -155,7 +155,7 @@ export function KeywordSuggestionDrawer({
       description="Sanitized Search Console queries. Pick the ones to track."
       footer={
         <div className="flex flex-col gap-2">
-          <span className="font-mono text-[11.5px] text-fg-muted">
+          <span className="font-sans tabular-nums text-[11.5px] text-fg-muted">
             {costLine(confirmed.length, costContext)}
           </span>
           <div className="flex items-center justify-end gap-2.5">
@@ -234,7 +234,7 @@ export function KeywordSuggestionDrawer({
         </label>
       ) : null}
 
-      <div className="mt-3 flex items-center gap-3 border-b border-border px-1 pb-1.5 font-mono text-[9.5px] uppercase tracking-[0.3px] text-fg-muted">
+      <div className="mt-3 flex items-center gap-3 border-b border-border px-1 pb-1.5 font-sans tabular-nums text-[9.5px] uppercase tracking-[0.3px] text-fg-muted">
         <span className="w-4 shrink-0" />
         <span className="min-w-0 flex-1">Query</span>
         <span className="w-16 shrink-0 text-right">Clicks</span>

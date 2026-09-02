@@ -118,7 +118,7 @@ export function KeywordsFilterBar({
           className={`mt-3 flex min-w-0 flex-wrap items-center gap-2 ${scopeChipOnly ? "lg:hidden" : ""}`}
         >
           {hasFilters ? (
-            <span className="mr-1 font-mono text-[10px] font-semibold uppercase tracking-[0.6px] text-fg-muted">
+            <span className="mr-1 font-sans tabular-nums text-[10px] font-semibold uppercase tracking-[0.6px] text-fg-muted">
               Active filters
             </span>
           ) : null}

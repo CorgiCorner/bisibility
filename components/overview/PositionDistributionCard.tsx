@@ -16,7 +16,8 @@ export type PositionDistributionCardProps = {
 
 const axisTextStyle = {
   fill: "var(--fg-muted)",
-  fontFamily: "var(--font-mono), monospace",
+  fontFamily: "var(--font-sans), system-ui, sans-serif",
+  fontVariantNumeric: "tabular-nums",
   fontSize: 10,
 };
 
@@ -89,10 +90,10 @@ function BarInteractionLayer({
           >
             {isHovered ? (
               <span className="pointer-events-none absolute left-1/2 top-0 z-10 flex -translate-x-1/2 flex-col items-center gap-px whitespace-nowrap rounded-control bg-code-bg px-[9px] py-1.5 text-code-fg">
-                <span className="font-mono text-[11px] font-semibold">
+                <span className="font-sans tabular-nums text-[11px] font-semibold">
                   {keywordCountLabel(bucket.count)}
                 </span>
-                <span className="font-mono text-[9.5px] text-code-faint">
+                <span className="font-sans tabular-nums text-[9.5px] text-code-faint">
                   {bucket.label} · {bucketPercentLabel(bucket.count, total)}
                 </span>
               </span>
@@ -167,7 +168,8 @@ export function PositionDistributionCard({
                 "& .MuiBarElement-root": { rx: 5, ry: 5 },
                 "& .MuiBarLabel-root": {
                   fill: "var(--fg-muted)",
-                  fontFamily: "var(--font-mono), monospace",
+                  fontFamily: "var(--font-sans), system-ui, sans-serif",
+                  fontVariantNumeric: "tabular-nums",
                   fontSize: 11,
                   fontWeight: 400,
                   transform: "translateY(-4px)",

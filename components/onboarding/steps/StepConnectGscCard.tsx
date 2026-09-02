@@ -220,7 +220,7 @@ export function StepConnectGscCard({
                 value={property}
               />
               {selected ? (
-                <span className="break-all rounded-control bg-bg-sunken px-3 py-2 font-mono text-[12px] text-fg">
+                <span className="break-all rounded-control bg-bg-sunken px-3 py-2 text-[12px] text-fg">
                   {selected.value}
                 </span>
               ) : null}

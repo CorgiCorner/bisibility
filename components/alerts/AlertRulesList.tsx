@@ -74,7 +74,7 @@ export function AlertRulesList({
       <Card className="overflow-hidden p-0" size="md">
         <div className="border-border border-b px-4.5 py-3.5">
           <SectionTitle>Alert rules</SectionTitle>
-          <p className="m-0 mt-1 font-mono text-[11px] leading-normal text-fg-muted">
+          <p className="m-0 mt-1 font-sans tabular-nums text-[11px] leading-normal text-fg-muted">
             Rules are evaluated after rank checks. Each rule allows{" "}
             {MAX_ALERT_DELIVERIES_PER_RULE_PER_DAY} delivery batches per UTC day, and one batch can
             fan out across every selected destination.
@@ -99,24 +99,24 @@ export function AlertRulesList({
                 <div className="flex flex-wrap items-center gap-2">
                   <h3 className="m-0 text-sm font-semibold">{rule.name}</h3>
                   <span
-                    className="rounded-full px-2 py-0.5 font-mono text-[10px] font-semibold"
+                    className="rounded-full px-2 py-0.5 font-sans tabular-nums text-[10px] font-semibold"
                     style={{ backgroundColor: severity.background, color: severity.color }}
                   >
                     {severity.label}
                   </span>
                   <span
-                    className="rounded-full px-2 py-0.5 font-mono text-[10px] font-semibold"
+                    className="rounded-full px-2 py-0.5 font-sans tabular-nums text-[10px] font-semibold"
                     style={{ backgroundColor: status.background, color: status.color }}
                   >
                     {status.label}
                   </span>
                   {rule.depthConflict ? (
-                    <span className="rounded-full bg-yellow/15 px-2 py-0.5 font-mono text-[10px] font-semibold text-yellow-text">
+                    <span className="rounded-full bg-yellow/15 px-2 py-0.5 font-sans tabular-nums text-[10px] font-semibold text-yellow-text">
                       won't fire below top {rule.depthConflict.trackedDepth}
                     </span>
                   ) : null}
                 </div>
-                <div className="mt-1.5 flex flex-wrap gap-x-3.5 gap-y-1.5 font-mono text-[11.5px] text-fg-muted">
+                <div className="mt-1.5 flex flex-wrap gap-x-3.5 gap-y-1.5 font-sans tabular-nums text-[11.5px] text-fg-muted">
                   <span className="text-fg-muted">{rule.condition}</span>
                   <span className="inline-flex items-center gap-1">
                     <FunnelSimple weight="regular" aria-hidden size={12} />

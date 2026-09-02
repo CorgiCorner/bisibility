@@ -4,7 +4,7 @@ import {
   ProjectReadOnlyTooltip,
   useProjectWriteMode,
 } from "@/components/shell/ProjectWriteModeProvider";
-import { Card, MonoText, Switch } from "@/components/ui";
+import { Card, Switch } from "@/components/ui";
 import type { IntegrationProviderData, ProviderActionHandlers } from "@/lib/integrations/types";
 import { compareProviderChainEntries } from "@/lib/rank-check/provider-chain-order";
 import {
@@ -150,7 +150,7 @@ export function SerpFallbackOrder({
         key={provider.id}
       >
         <span
-          className={`flex h-7 w-7 items-center justify-center rounded-full font-mono text-[11px] font-semibold ${
+          className={`flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-semibold tabular-nums ${
             isEnabled ? "bg-accent-soft text-accent-text" : "bg-bg-sunken text-fg-muted"
           }`}
         >
@@ -219,7 +219,7 @@ export function SerpFallbackOrder({
             </ProjectReadOnlyTooltip>
           </div>
         ) : canManageProviders ? (
-          <span className="font-mono text-[10px] uppercase text-fg-muted">Not connected</span>
+          <span className="text-[10px] uppercase text-fg-muted">Not connected</span>
         ) : null}
       </li>
     );
@@ -229,10 +229,12 @@ export function SerpFallbackOrder({
     <Card className="overflow-hidden p-0" size="md">
       <div className="border-border-soft border-b px-4 py-3.5">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <MonoText className="uppercase tracking-[0.5px]" size="sm">
+          <span className="text-[10px] uppercase tracking-[0.5px] text-fg">
             SERP fallback order
-          </MonoText>
-          <MonoText muted>{pending ? "Saving order…" : `${active.length} active`}</MonoText>
+          </span>
+          <span className="text-[11px] text-fg-muted">
+            {pending ? "Saving order…" : `${active.length} active`}
+          </span>
         </div>
         <p className="m-0 mt-2 text-[12.5px] leading-5 text-fg-muted">
           Rank checks try active providers from top to bottom. If one fails or is rate-limited,

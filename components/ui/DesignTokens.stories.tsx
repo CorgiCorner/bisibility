@@ -34,15 +34,19 @@ function DesignTokens() {
               >
                 <p className={t.role}>{t.label}</p>
                 <p className="text-ui-caption text-fg-muted">{t.desc}</p>
-                <code className="type-label text-fg-muted">{t.role}</code>
+                <code className="text-[11px] font-semibold leading-[1.2] tracking-[0.5px] text-fg-muted uppercase">
+                  {t.role}
+                </code>
               </article>
             ))}
             <article className="space-y-2 rounded-card border border-border bg-bg-elev p-4">
               <p className="type-label">Type Label</p>
               <p className="text-ui-caption text-fg-muted">
-                11px / 1.2 / 600 / mono / uppercase / 0.5px
+                11px / 1.2 / 600 / sans / uppercase / 0.5px
               </p>
-              <code className="type-label text-fg-muted">type-label</code>
+              <code className="text-[11px] font-semibold leading-[1.2] tracking-[0.5px] text-fg-muted uppercase">
+                type-label
+              </code>
             </article>
           </div>
         </section>
@@ -56,7 +60,9 @@ function DesignTokens() {
                 <p className="text-ui-caption text-fg-muted">
                   {r.label} - {r.px}
                 </p>
-                <code className="type-label text-fg-muted">{r.role}</code>
+                <code className="text-[11px] font-semibold leading-[1.2] tracking-[0.5px] text-fg-muted uppercase">
+                  {r.role}
+                </code>
               </article>
             ))}
           </div>
@@ -70,14 +76,18 @@ function DesignTokens() {
                 <p className="text-ui-body font-semibold">max-w-content</p>
               </div>
               <p className="text-ui-caption text-fg-muted">1200px</p>
-              <code className="type-label text-fg-muted">max-w-content</code>
+              <code className="text-[11px] font-semibold leading-[1.2] tracking-[0.5px] text-fg-muted uppercase">
+                max-w-content
+              </code>
             </article>
             <article className="space-y-2 rounded-card border border-border bg-bg-elev p-4">
               <div className="w-full max-w-settings border-b-2 border-accent pb-2">
                 <p className="text-ui-body font-semibold">max-w-settings</p>
               </div>
               <p className="text-ui-caption text-fg-muted">780px</p>
-              <code className="type-label text-fg-muted">max-w-settings</code>
+              <code className="text-[11px] font-semibold leading-[1.2] tracking-[0.5px] text-fg-muted uppercase">
+                max-w-settings
+              </code>
             </article>
           </div>
         </section>
@@ -96,7 +106,9 @@ function DesignTokens() {
                     style={{ backgroundColor: tokens[name] }}
                   />
                   <div className="flex items-center justify-between gap-3 p-3">
-                    <span className="type-label text-fg-muted">--{name}</span>
+                    <code className="text-[11px] font-semibold leading-[1.2] tracking-[0.5px] text-fg-muted uppercase">
+                      --{name}
+                    </code>
                     <span className="type-label text-fg-muted">{tokens[name]}</span>
                   </div>
                 </article>

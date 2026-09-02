@@ -32,7 +32,7 @@ export function RecentResearchSearches({
   const now = new Date();
   return (
     <section aria-label="Recent searches">
-      <div className="mb-2 flex items-center gap-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.5px] text-fg-muted">
+      <div className="mb-2 flex items-center gap-1.5 font-sans tabular-nums text-[10px] font-semibold uppercase tracking-[0.5px] text-fg-muted">
         <Clock weight="regular" size={13} /> Recent searches
       </div>
       <div className="flex gap-2 overflow-x-auto pb-1">
@@ -51,10 +51,10 @@ export function RecentResearchSearches({
               <strong className="max-w-[180px] truncate text-[12px] font-semibold">
                 {search.seed}
               </strong>
-              <span className="font-mono text-[10px] text-fg-muted">
+              <span className="font-sans tabular-nums text-[10px] text-fg-muted">
                 {search.market} - {relativePast(new Date(search.createdAt), now)}
               </span>
-              <span className="rounded-full bg-accent-soft px-2 py-0.5 font-mono text-[9.5px] text-accent-text">
+              <span className="rounded-full bg-accent-soft px-2 py-0.5 font-sans tabular-nums text-[9.5px] text-accent-text">
                 {freeFor(search.cachedUntil)}
               </span>
             </button>

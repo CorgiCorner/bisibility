@@ -1,8 +1,8 @@
-import { MonoText, Tooltip } from "@/components/ui";
+import { Tooltip } from "@/components/ui";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import type { GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 
-const noDataClassName = "font-mono text-xs font-semibold text-fg-muted";
+const noDataClassName = "font-sans tabular-nums text-xs font-semibold text-fg-muted";
 const trafficTooltip = "Connect Search Console to see traffic";
 
 function TrafficNoDataValue() {
@@ -25,20 +25,12 @@ function TrafficNumberCell({
   value,
 }: Readonly<GridRenderCellParams<KeywordRow, number | null | undefined>>) {
   if (value == null) return <TrafficNoDataValue />;
-  return (
-    <MonoText component="span" size="lg">
-      {formatCount(value)}
-    </MonoText>
-  );
+  return <span>{formatCount(value)}</span>;
 }
 
 function CtrCell({ value }: Readonly<GridRenderCellParams<KeywordRow, number | null | undefined>>) {
   if (value == null) return <TrafficNoDataValue />;
-  return (
-    <MonoText component="span" size="lg">
-      {(value * 100).toFixed(1)}%
-    </MonoText>
-  );
+  return <span>{(value * 100).toFixed(1)}%</span>;
 }
 
 export const trafficColumns: GridColDef<KeywordRow>[] = [

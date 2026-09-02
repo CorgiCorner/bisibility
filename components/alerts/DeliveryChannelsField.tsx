@@ -62,7 +62,7 @@ export function DeliveryChannelsField({
           weight="regular"
         />
         <span className="flex-1 text-[13px] font-semibold">In-app feed</span>
-        <span className="font-mono text-[10px] text-accent-text">always on</span>
+        <span className="font-sans tabular-nums text-[10px] text-accent-text">always on</span>
       </label>
       {deliveryChannels.map(({ Icon, label, name }) => {
         const checked = channels.includes(name);
@@ -118,7 +118,7 @@ export function DeliveryChannelsField({
               </Tooltip>
             ) : (
               <span
-                className={`font-mono text-[10px] ${checked ? "text-accent-text" : "text-fg-muted"}`}
+                className={`font-sans tabular-nums text-[10px] ${checked ? "text-accent-text" : "text-fg-muted"}`}
               >
                 {checked ? "selected" : "optional"}
               </span>

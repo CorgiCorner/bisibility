@@ -67,7 +67,7 @@ export function HeadToHeadTable({ market, onExport }: Readonly<HeadToHeadTablePr
       <div className="flex flex-wrap items-center justify-between gap-3 border-border border-b px-4.5 py-[15px]">
         <div className="flex min-w-0 flex-col gap-1">
           <SectionTitle>Shared keywords · head-to-head</SectionTitle>
-          <p className="m-0 font-mono text-[11px] text-fg-muted">
+          <p className="m-0 font-sans tabular-nums text-[11px] text-fg-muted">
             {market.location} / {market.languageLabel} /{" "}
             {market.device === "mobile" ? "Mobile" : "Desktop"} · {market.sharedKeywordCount} shared
             of {market.trackedKeywordCount} tracked
@@ -95,7 +95,7 @@ export function HeadToHeadTable({ market, onExport }: Readonly<HeadToHeadTablePr
       </div>
 
       {!hasCompetitors ? (
-        <div className="bg-bg-sunken px-4.5 py-3 font-mono text-[10.5px] text-fg-muted">
+        <div className="bg-bg-sunken px-4.5 py-3 font-sans tabular-nums text-[10.5px] text-fg-muted">
           Add at least one competitor to compare head-to-head rankings.
         </div>
       ) : null}
@@ -103,7 +103,7 @@ export function HeadToHeadTable({ market, onExport }: Readonly<HeadToHeadTablePr
       <div className="overflow-x-auto">
         <div className="min-w-[720px]">
           <div
-            className="grid gap-x-2.5 border-border border-b bg-bg-sunken px-4.5 py-2.5 font-mono text-[10px] uppercase text-fg-muted"
+            className="grid gap-x-2.5 border-border border-b bg-bg-sunken px-4.5 py-2.5 font-sans tabular-nums text-[10px] uppercase text-fg-muted"
             style={{ gridTemplateColumns }}
           >
             <span>Keyword</span>
@@ -125,7 +125,7 @@ export function HeadToHeadTable({ market, onExport }: Readonly<HeadToHeadTablePr
               <span className="truncate text-[13px] font-medium">{row.keyword}</span>
               {columns.map((column, index) => (
                 <span
-                  className="font-mono text-[13px] font-semibold"
+                  className="font-sans tabular-nums text-[13px] font-semibold"
                   key={column.domain}
                   style={{ color: rankColor(index, row.gap) }}
                 >
@@ -133,7 +133,7 @@ export function HeadToHeadTable({ market, onExport }: Readonly<HeadToHeadTablePr
                 </span>
               ))}
               <span
-                className="text-right font-mono text-xs font-semibold"
+                className="text-right font-sans tabular-nums text-xs font-semibold"
                 style={{ color: gapColor(row.gap) }}
               >
                 {formatGap(row.gap)}

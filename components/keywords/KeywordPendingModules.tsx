@@ -55,7 +55,9 @@ function pathLabel(value: string | null) {
 function SummaryCard({ children, label }: Readonly<{ children: ReactNode; label: string }>) {
   return (
     <Card className="min-h-[148px]" size="sm" sx={{ padding: "15px 16px" }}>
-      <p className="m-0 font-mono text-[10px] uppercase tracking-[0.65px] text-fg-muted">{label}</p>
+      <p className="m-0 font-sans tabular-nums text-[10px] uppercase tracking-[0.65px] text-fg-muted">
+        {label}
+      </p>
       <div className="mt-2.5">{children}</div>
     </Card>
   );
@@ -71,7 +73,7 @@ function PositionTile({
   return (
     <SummaryCard label="Position">
       <p className="m-0 text-[15px] font-semibold leading-none text-fg-muted">{copy.badge}</p>
-      <p className="m-0 mt-3 font-mono text-[10.5px] text-fg-muted">
+      <p className="m-0 mt-3 font-sans tabular-nums text-[10.5px] text-fg-muted">
         Tracked since {dateLabel(keyword.createdAt)}
       </p>
     </SummaryCard>
@@ -82,10 +84,12 @@ function RankingUrlTile({ keyword }: Readonly<{ keyword: KeywordRow }>) {
   return (
     <SummaryCard label="Ranking URL">
       <p className="m-0 text-[15px] font-semibold text-fg-muted">No ranking URL yet</p>
-      <p className="m-0 mt-2.5 font-mono text-[11px] text-fg-muted">
+      <p className="m-0 mt-2.5 font-sans tabular-nums text-[11px] text-fg-muted">
         Target {pathLabel(keyword.targetUrl)}
       </p>
-      <p className="m-0 mt-4 font-mono text-[10.5px] text-fg-muted">No URL ranking yet</p>
+      <p className="m-0 mt-4 font-sans tabular-nums text-[10.5px] text-fg-muted">
+        No URL ranking yet
+      </p>
     </SummaryCard>
   );
 }

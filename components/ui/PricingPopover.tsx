@@ -41,7 +41,7 @@ export function PricingPopover({
       transformOrigin={{ horizontal: "right", vertical: "top" }}
     >
       <div className="w-[330px] max-w-[calc(100vw-32px)] p-4 text-fg">
-        <p className="mb-2.5 mt-0 font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-fg-muted">
+        <p className="mb-2.5 mt-0 text-[10px] font-medium uppercase tracking-[0.08em] text-fg-muted">
           {eyebrow}
         </p>
         <div className="divide-y divide-border">
@@ -53,7 +53,7 @@ export function PricingPopover({
               key={`${index}-${row.label}`}
             >
               <span>{row.label}</span>
-              <span className="whitespace-nowrap text-right font-mono text-fg-muted">
+              <span className="whitespace-nowrap text-right text-fg-muted tabular-nums">
                 {row.value}
               </span>
             </div>

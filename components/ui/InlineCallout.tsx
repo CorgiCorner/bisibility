@@ -5,8 +5,8 @@ import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
 
 /**
- * Inline monospace code chip (Slack-backtick style) for env vars and identifiers
- * shown inside a callout. Exported so other env-var alerts reuse the same chip.
+ * Inline code chip for syntax and configuration fragments shown inside a callout.
+ * Callers must not use it for standalone tokens, secrets, URLs, or labels.
  */
 export const inlineCalloutCodeClass =
   "whitespace-nowrap rounded bg-bg-sunken px-1.5 py-0.5 font-mono text-[11px] text-fg";

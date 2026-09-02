@@ -1,6 +1,9 @@
+import {
+  GETTING_STARTED_RAIL_LABEL,
+  gettingStartedProgressAriaLabel,
+} from "@/components/getting-started/getting-started-copy";
 import { SetupProgressRing } from "@/components/getting-started/SetupProgressRing";
 import { CheckIcon as Check } from "@phosphor-icons/react/dist/ssr";
-import Link from "next/link";
 import {
   type CompletionAcknowledgementMode,
   gettingStartedHeaderProgressModel,
@@ -16,17 +19,18 @@ export type GettingStartedHeaderProgressProps = Readonly<{
 export function GettingStartedHeaderProgress({
   completionMode,
   progress,
-  projectRef,
 }: GettingStartedHeaderProgressProps) {
-  const model = gettingStartedHeaderProgressModel(progress, projectRef, completionMode);
+  const model = gettingStartedHeaderProgressModel(progress, completionMode);
 
   return (
     <div className="flex min-w-0 items-center justify-between gap-4">
       <div
         className="flex min-w-0 items-center gap-2"
-        aria-label={`Get set up, ${model.countLabel}`}
+        aria-label={gettingStartedProgressAriaLabel(progress.settledCount, progress.totalCount)}
       >
-        <span className="text-[15px] font-semibold leading-[1.35] text-fg">Get set up</span>
+        <span className="text-[15px] font-semibold leading-[1.35] text-fg">
+          {GETTING_STARTED_RAIL_LABEL}
+        </span>
         <span aria-hidden className="text-[13.5px] leading-[1.35] text-fg-muted">
           ·
         </span>
@@ -47,17 +51,6 @@ export function GettingStartedHeaderProgress({
           </>
         )}
       </div>
-      {model.dashboardHref ? (
-        <Link
-          aria-hidden={model.dashboardVisibility === "hidden" || undefined}
-          className="text-[13px] font-semibold text-accent-text hover:text-accent"
-          hidden={model.dashboardVisibility === "hidden"}
-          href={model.dashboardHref}
-          tabIndex={model.dashboardVisibility === "hidden" ? -1 : undefined}
-        >
-          Go to dashboard
-        </Link>
-      ) : null}
     </div>
   );
 }

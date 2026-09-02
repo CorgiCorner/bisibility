@@ -91,7 +91,7 @@ describe("EmptyState", () => {
     expect(screen.getByRole("heading", { name: "Compact" })).toHaveClass("mt-2.5");
   });
 
-  it("renders the mono footnote after the action", () => {
+  it("renders the Sans footnote after the action", () => {
     render(
       <EmptyState
         action={<button type="button">Do it</button>}
@@ -102,7 +102,7 @@ describe("EmptyState", () => {
     );
 
     const footnote = screen.getByText("Activates later");
-    expect(footnote).toHaveClass("font-mono");
+    expect(footnote).not.toHaveClass("font-mono");
     const button = screen.getByRole("button", { name: "Do it" });
     expect(
       button.compareDocumentPosition(footnote) & Node.DOCUMENT_POSITION_FOLLOWING,

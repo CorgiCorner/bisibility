@@ -187,7 +187,7 @@ export function DomainOverviewAnalyzeCard({
             >
               <Info weight="regular" aria-hidden className="shrink-0 text-fg-muted" size={13} />
               Detected: {resolvedScope === "subdomain" ? "subdomain" : "whole domain"}
-              <span className="truncate font-mono text-[11.5px]">{target}</span>
+              <span className="truncate font-sans tabular-nums text-[11.5px]">{target}</span>
               {detected === "subdomain" ? (
                 <button
                   className="shrink-0 font-semibold text-accent-text hover:underline"
@@ -212,7 +212,8 @@ export function DomainOverviewAnalyzeCard({
         </div>
         {report && !matchesReport ? (
           <p className="text-[12px] text-fg-muted" id="domain-overview-report-target-note">
-            Results below are still for <span className="font-mono">{report.target}</span>.
+            Results below are still for{" "}
+            <span className="font-sans tabular-nums">{report.target}</span>.
           </p>
         ) : null}
       </form>

@@ -128,7 +128,7 @@ export function OnboardingCard({
         currentIndex={displayedStage - 1}
         items={[1, 2, 3]}
         label={
-          <span className="font-mono text-[10px] uppercase tracking-[0.6px] text-fg-muted">
+          <span className="font-sans tabular-nums text-[10px] uppercase tracking-[0.6px] text-fg-muted">
             Step {displayedStage} of 3
           </span>
         }

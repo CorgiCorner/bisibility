@@ -25,21 +25,21 @@ export function MigrationDestinationField({
   return (
     <div className="mt-4 flex flex-col gap-[7px]">
       <label
-        className="font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted"
+        className="font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted"
         htmlFor={inputId}
       >
         {direction === "to-cloud" ? "Destination URL" : "Self-host URL"}
       </label>
       <input
         aria-describedby={describedBy || undefined}
-        className="min-h-11 rounded-control border border-border-control bg-transparent px-[13px] font-sans text-[13px] font-medium text-fg outline-none placeholder:text-[12px] placeholder:leading-4 focus:border-accent"
+        className="min-h-11 rounded-control border border-border-control bg-transparent px-[13px] font-sans tabular-nums text-[13px] font-medium text-fg outline-none placeholder:text-[12px] placeholder:leading-4 focus:border-accent"
         id={inputId}
         placeholder="https://rank.example.com"
         {...form.register("targetOrigin")}
       />
       {direction === "to-cloud" ? (
         <span
-          className="font-sans text-[11.5px] normal-case tracking-normal text-fg-muted"
+          className="font-sans tabular-nums text-[11.5px] normal-case tracking-normal text-fg-muted"
           id={helperId}
         >
           Prefilled from this instance&apos;s configuration. You can change it before running the
@@ -48,7 +48,7 @@ export function MigrationDestinationField({
       ) : null}
       {error ? (
         <span
-          className="font-sans text-[11.5px] normal-case tracking-normal text-red-text"
+          className="font-sans tabular-nums text-[11.5px] normal-case tracking-normal text-red-text"
           id={errorId}
         >
           {error.message}

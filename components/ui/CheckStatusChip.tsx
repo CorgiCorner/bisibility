@@ -19,7 +19,7 @@ export function CheckStatusChip({ kind, label }: Readonly<CheckStatusChipProps>)
 
   return (
     <span
-      className="inline-flex items-center gap-1.5 rounded-full px-2 py-[4px] font-mono text-[10.5px] font-semibold leading-none"
+      className="inline-flex items-center gap-1.5 rounded-full px-2 py-[4px] text-[10.5px] font-semibold leading-none"
       style={{
         backgroundColor: `color-mix(in srgb, ${meta.color} 12%, transparent)`,
         color: "var(--fg)",

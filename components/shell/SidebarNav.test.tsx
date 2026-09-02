@@ -89,9 +89,11 @@ describe("SidebarNav", () => {
       "inline-flex",
       "flex-none",
       "rounded-full",
-      "font-mono",
       "text-[9.5px]",
       "font-semibold",
+    );
+    expect(within(gcsInsights as HTMLAnchorElement).getByText("alpha")).not.toHaveClass(
+      "font-mono",
     );
     expanded.unmount();
 

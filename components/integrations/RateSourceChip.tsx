@@ -29,10 +29,7 @@ function sourceLabel(rate: RateSourceChipProps) {
 export function RateSourceChip(rate: Readonly<RateSourceChipProps>) {
   return (
     <span
-      className={cn(
-        "inline-flex items-center gap-[5px] font-mono text-[10px]",
-        sourceClass[rate.source],
-      )}
+      className={cn("inline-flex items-center gap-[5px] text-[10px]", sourceClass[rate.source])}
     >
       <span aria-hidden className="h-[5px] w-[5px] rounded-full bg-current" />
       {sourceLabel(rate)}

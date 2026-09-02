@@ -72,9 +72,9 @@ export const numberFieldSx = {
   width: 112,
   "& .MuiInputBase-input": {
     color: "var(--fg)",
-    fontFamily: "var(--font-mono), monospace",
+    fontFamily: "var(--font-sans), sans-serif",
     fontSize: "13px",
-    // One value treatment for every slider: mono, semibold, in --fg. The accent was reserved
+    // One value treatment for every slider: Sans, semibold, in --fg. The accent is reserved
     // for the track and the selected segment, so the number no longer competes with them.
     fontWeight: 600,
     padding: "9px 10px",
@@ -150,7 +150,7 @@ export function formatChecks(value: number): string {
 }
 
 export const monoHintClass =
-  "ml-1 font-mono text-[11px] font-medium text-fg-muted whitespace-nowrap";
+  "ml-1 font-sans text-[11px] font-medium text-fg-muted whitespace-nowrap";
 
 export function hintLabel(label: string, hint: string) {
   return createElement(

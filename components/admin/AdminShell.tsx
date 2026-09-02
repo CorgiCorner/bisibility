@@ -17,7 +17,7 @@ export function AdminShell({ children }: Readonly<{ children: ReactNode }>) {
             <BrandLockup className="sm:hidden" markOnly />
             <BrandLockup className="hidden sm:inline-flex" />
             <span aria-hidden className="hidden h-4 w-px bg-border md:block" />
-            <span className="hidden font-mono text-[11px] uppercase tracking-[0.5px] text-fg-muted md:inline">
+            <span className="hidden text-[11px] uppercase tracking-[0.5px] text-fg-muted md:inline">
               Instance admin
             </span>
           </div>

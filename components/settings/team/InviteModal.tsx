@@ -138,7 +138,7 @@ export function InviteModal({
             We emailed an invite to {sentEmail}. You can also share this link directly.
           </p>
           <div className="mt-4 flex w-full items-center gap-2 rounded-control border border-border bg-transparent px-3 py-[9px]">
-            <span className="min-w-0 flex-1 truncate font-mono text-[11.5px] text-fg-muted">
+            <span className="min-w-0 flex-1 truncate font-sans tabular-nums text-[11.5px] text-fg-muted">
               {inviteLink}
             </span>
             <CopyButton label="Copy invite link" size="md" text={inviteLink} />
@@ -147,7 +147,7 @@ export function InviteModal({
       ) : (
         <form id="invite-teammate-form" onSubmit={form.handleSubmit(onSubmit)}>
           <label
-            className="block font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted"
+            className="block font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted"
             htmlFor="invite-email"
           >
             Email address
@@ -155,7 +155,7 @@ export function InviteModal({
           <input
             aria-describedby={form.formState.errors.email ? "invite-email-error" : undefined}
             aria-invalid={Boolean(form.formState.errors.email)}
-            className="mt-[7px] min-h-11 w-full rounded-control border border-border-control bg-transparent px-[13px] font-mono text-[13.5px] font-medium text-fg outline-none placeholder:text-[12px] placeholder:leading-4 focus:border-accent"
+            className="mt-[7px] min-h-11 w-full rounded-control border border-border-control bg-transparent px-[13px] font-sans tabular-nums text-[13.5px] font-medium text-fg outline-none placeholder:text-[12px] placeholder:leading-4 focus:border-accent"
             id="invite-email"
             inputMode="email"
             placeholder="teammate@acme.dev"
@@ -167,7 +167,7 @@ export function InviteModal({
               {form.formState.errors.email.message}
             </div>
           ) : null}
-          <div className="mt-4 font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted">
+          <div className="mt-4 font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
             Role
           </div>
           <div className="mt-[9px] flex flex-col gap-[7px]">

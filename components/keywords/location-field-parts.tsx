@@ -8,7 +8,7 @@ export const locationFieldClassByVariant = {
 } as const;
 
 export const locationFieldLabelClass =
-  "m-0 flex min-w-0 flex-col gap-1.5 border-0 p-0 font-mono text-[10px] uppercase tracking-[0.4px] text-fg-muted";
+  "m-0 flex min-w-0 flex-col gap-1.5 border-0 p-0 font-sans tabular-nums text-[10px] uppercase tracking-[0.4px] text-fg-muted";
 
 export function LocationClearButton({ onClick }: Readonly<{ onClick: () => void }>) {
   return (

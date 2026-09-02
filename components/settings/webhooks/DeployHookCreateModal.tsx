@@ -21,8 +21,8 @@ export type DeployHookCreateModalProps = {
   projectId?: string;
 };
 
-const inputClass = `${inputClassName} mt-[7px] min-h-11 w-full rounded-control px-[13px] font-mono text-[13.5px] font-medium`;
-const labelClass = "font-mono text-[10px] uppercase tracking-[0.5px] text-fg-muted";
+const inputClass = `${inputClassName} mt-[7px] min-h-11 w-full rounded-control px-[13px] font-sans tabular-nums text-[13.5px] font-medium`;
+const labelClass = "font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted";
 
 export function DeployHookCreateModal({
   createHook,

@@ -38,7 +38,7 @@ export function CredentialFieldInput({
       {password ? (
         <PasswordInput
           {...accessibility}
-          className={`${inputClass} truncate pr-12 font-mono text-sm`}
+          className={`${inputClass} truncate pr-12 text-sm`}
           disabled={disabled}
           id={id}
           placeholder={placeholder}
@@ -48,7 +48,7 @@ export function CredentialFieldInput({
         <input
           {...accessibility}
           autoComplete="off"
-          className={`${inputClass} font-mono text-sm`}
+          className={`${inputClass} text-sm`}
           disabled={disabled}
           id={id}
           placeholder={placeholder}

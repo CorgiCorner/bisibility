@@ -15,7 +15,9 @@ export type MobileNavProps = {
   canCreateWorkspace: boolean;
   defaultOpen?: boolean;
   projectRef: string;
+  setupCompleted?: boolean;
   setupDoneCount?: number;
+  setupSettledCount?: number;
   setupTotalCount?: number;
   showGettingStarted?: boolean;
   showHostedLinks?: boolean;
@@ -30,7 +32,9 @@ export function MobileNav({
   canCreateWorkspace,
   defaultOpen = false,
   projectRef,
+  setupCompleted = false,
   setupDoneCount = 0,
+  setupSettledCount = 0,
   setupTotalCount = 4,
   showGettingStarted = false,
   showHostedLinks = false,
@@ -84,7 +88,9 @@ export function MobileNav({
               activeHref={activeHref}
               onNavigate={close}
               projectRef={projectRef}
+              setupCompleted={setupCompleted}
               setupDoneCount={setupDoneCount}
+              setupSettledCount={setupSettledCount}
               setupTotalCount={setupTotalCount}
               showGettingStarted={showGettingStarted}
             />
